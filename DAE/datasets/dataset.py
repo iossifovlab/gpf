@@ -116,7 +116,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if 'unaffected' not in selected_phenotypes:
             def f(v):
                 return 'prb' in v.inChS and \
-                    v.study.get_attr('study.phenotype') in selected_phenotypes
+                    v.phenotype in selected_phenotypes
             return f
 
         selected_phenotypes.remove('unaffected')
@@ -127,7 +127,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
         def fm(v):
             return 'sib' in v.inChS or \
-                v.study.get_attr('study.phenotype') in selected_phenotypes
+                v.phenotype in selected_phenotypes
         return fm
 
     def get_in_child(self, safe=True, **kwargs):
@@ -168,8 +168,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             if selected_phenotypes is not None and \
                     'unaffected' not in selected_phenotypes:
                 studies = filter(
-                    lambda st: st.get_attr(
-                        'study.phenotype') in selected_phenotypes,
+                    lambda st: not st.has_attr('study.phenotype') or
+                    st.get_attr('study.phenotype') in selected_phenotypes,
                     studies
                 )
         return studies
@@ -521,11 +521,10 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         seen_vs = set()
         for st in self.get_denovo_studies(safe=safe, **kwargs):
             for v in st.get_denovo_variants(**denovo_filters):
-                v_key = v.familyId + v.location + v.variant
-                if v_key in seen_vs:
+                if v.key in seen_vs:
                     continue
                 yield v
-                seen_vs.add(v_key)
+                seen_vs.add(v.key)
 
     def get_transmitted_variants(self, safe=True, **kwargs):
         transmitted_filters = self.get_transmitted_filters(safe=safe, **kwargs)
@@ -648,16 +647,12 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                         if key in genotype_column_keys}
 
         def augment_vars(v):
-            chProf = "".join((p.role + p.gender for p in v.memberInOrder[2:]))
-
-            v.atts["_ch_prof_"] = chProf
             v.atts["pedigree"] = v.pedigree_v3(legend)
-            family = families.get(v.familyId, None)
-            fatts = family.atts if family else {}
-            for (_, _, key, _) in pheno_columns:
-                v.atts[key] = fatts.get(key, '')
-
-            v._phenotype_ = v.study.get_attr('study.phenotype')
+            if v.familyId:
+                family = families.get(v.familyId, None)
+                fatts = family.atts if family else {}
+                for (_, _, key, _) in pheno_columns:
+                    v.atts[key] = fatts.get(key, '')
 
             for key, value in gene_weights.items():
                 genes = {effect['sym'] for effect in v.geneEffect}

@@ -57,11 +57,11 @@ def test_get_denovo_variants_vip(vip):
 
     vs = vip.get_variants_preview(**query)
     v = vs.next()
-    assert len(v) == 26  # 19
+    assert len(v) == 26
     assert 'Proband IQs NvIQ' in v
     assert 'Proband IQs vIQ' in v
 
-    assert len(v) == 26  # 19
+    assert len(v) == 26
     _families = vip.pheno_db.families
     count = 0
     for v in vs:

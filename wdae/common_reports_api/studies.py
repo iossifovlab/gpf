@@ -2,16 +2,17 @@ from DAE import vDB
 from collections import Counter, defaultdict
 from helpers.logger import LOGGER
 from precompute.register import Precompute
+import preloaded
 import cPickle
 import zlib
 
+from permissions import belongs_to_dataset
 
 def family_buffer(studies):
     fam_buff = defaultdict(dict)
     for study in studies:
         for f in study.families.values():
-            for p in [f.memberInOrder[c]
-                      for c in xrange(2, len(f.memberInOrder))]:
+            for p in f.memberInOrder:
                 if p.personId in fam_buff[f.familyId]:
                     prev_p = fam_buff[f.familyId][p.personId]
                     if prev_p.role != p.role or prev_p.gender != p.gender:
@@ -53,6 +54,8 @@ def build_header_summary(studies):
 def get_transmitted_studies_names():
     r = []
     for stN in vDB.get_study_names():
+        if not belongs_to_dataset(stN):
+            continue
         st = vDB.get_study(stN)
         if not st.has_transmitted:
             continue
@@ -69,13 +72,18 @@ def get_denovo_studies_names():
     r = []
 
     for stGN in vDB.get_study_group_names():
+        if not belongs_to_dataset(stGN):
+            continue
         stG = vDB.get_study_group(stGN)
         order = stG.get_attr('wdae.production.order')
         if not order:
             continue
-        r.append((int(order), stGN, stG.description))
+        r.append((int(order), stGN,
+            "%s (%s)" % (stG.description, ', '.join(stG.studyNames))))
 
     for stN in vDB.get_study_names():
+        if not belongs_to_dataset(stN):
+            continue
         st = vDB.get_study(stN)
         if not st.has_denovo:
             continue
@@ -87,6 +95,18 @@ def get_denovo_studies_names():
     r = [(stN, dsc) for _o, stN, dsc in sorted(r)]
     return r
 
+def get_sorted_datasets():
+    datasets = preloaded.register.get('datasets').get_factory().get_datasets()
+    return sorted(datasets,
+        key=lambda ds: ds.descriptor.get('wdae.production.order', '0'))
+
+def get_datasets_names():
+    return [(dataset.descriptor['name'], '')
+            for dataset in get_sorted_datasets()]
+
+def get_all_studies_names():
+    return get_datasets_names() + get_denovo_studies_names() + \
+        get_transmitted_studies_names()
 
 class StudiesSummaries(Precompute):
     def __init__(self):
@@ -111,13 +131,7 @@ class StudiesSummaries(Precompute):
     def build_studies_summaries(cls):
         summaries = []
         seen = set()
-        for summary in cls.__build_denovo_studies_summaries():
-            if summary['study name'] in seen:
-                continue
-            summaries.append(summary)
-            seen.add(summary['study name'])
-
-        for summary in cls.__build_transmitted_studies_summaries():
+        for summary in cls.__build_studies_summaries():
             if summary['study name'] in seen:
                 continue
             summaries.append(summary)
@@ -141,7 +155,19 @@ class StudiesSummaries(Precompute):
         }
 
     @classmethod
-    def __build_studies_summaries(cls, summary, studies):
+    def __build_studies_summaries(cls):
+        result = [
+            cls.__build_single_studies_summary(dataset.descriptor['name'], '',
+                dataset.studies)
+            for dataset in get_sorted_datasets()
+        ]
+        result += [cls.__build_single_studies_summary(name, description,
+                        vDB.get_studies(name))
+                   for name, description in get_all_studies_names()]
+        return result 
+
+    @classmethod
+    def __build_single_studies_summary(cls, name, description, studies):
         phenotype = set()
         study_type = set()
         study_year = set()
@@ -150,8 +176,7 @@ class StudiesSummaries(Precompute):
         has_transmitted = False
 
         for study in studies:
-            if study.get_attr('study.phenotype'):
-                phenotype.add(study.get_attr('study.phenotype'))
+            phenotype.update(study.phenotypes)
             if study.get_attr('study.type'):
                 study_type.add(study.get_attr('study.type'))
             if study.get_attr('study.year'):
@@ -176,7 +201,9 @@ class StudiesSummaries(Precompute):
 
         fams_stat = build_header_summary(studies)
 
-        summary.update({
+        return {
+            "study name": name,
+            "description": description,
             "phenotype": ', '.join(phenotype),
             "study type": ', '.join(study_type),
             "study year": ', '.join(study_year),
@@ -186,67 +213,4 @@ class StudiesSummaries(Precompute):
             "number of siblings": fams_stat[2]['sib'],
             "denovo": has_denovo,
             "transmitted": has_transmitted,
-        })
-
-        return summary
-
-    @classmethod
-    def __build_denovo_studies_summaries(cls):
-        r = []
-
-        for study_group_name in vDB.get_study_group_names():
-            group = vDB.get_study_group(study_group_name)
-            order = group.get_attr('wdae.production.order')
-            if not order:
-                continue
-            studies_names = ','.join(group.studyNames)
-            studies = vDB.get_studies(studies_names)
-
-            summary = {
-                'study name': study_group_name,
-                'description': "%s (%s)" % (group.description,
-                                            studies_names.replace(',', ', '))
-            }
-            cls.__build_studies_summaries(summary, studies)
-
-            r.append((int(order), summary))
-
-        for study_name in vDB.get_study_names():
-            study = vDB.get_study(study_name)
-            if not study.has_denovo:
-                continue
-            order = study.get_attr('wdae.production.order')
-            if not order:
-                continue
-            summary = {
-                'study name': study_name,
-                'description': study.description
-            }
-            cls.__build_studies_summaries(summary, [study])
-
-            r.append((int(order), summary))
-
-        r = [s for _o, s in sorted(r)]
-        return r
-
-    @classmethod
-    def __build_transmitted_studies_summaries(cls):
-        r = []
-
-        for study_name in vDB.get_study_names():
-            study = vDB.get_study(study_name)
-            if not study.has_transmitted:
-                continue
-
-            order = study.get_attr('wdae.production.order')
-            if not order:
-                continue
-            summary = {
-                'study name': study_name,
-                'description': study.description
-            }
-            cls.__build_studies_summaries(summary, [study])
-            r.append((int(order), summary))
-
-        r = [s for _o, s in sorted(r)]
-        return r
+        }

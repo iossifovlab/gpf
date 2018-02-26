@@ -40,7 +40,6 @@ class DatasetsFactory(dict):
 
     def get_dataset(self, dataset_id):
         if dataset_id in self:
-            logger.info("dataset {} found in dataset cache".format(dataset_id))
             return self[dataset_id]
         else:
             logger.warn("dataset {} NOT FOUND in dataset cache".format(
@@ -57,6 +56,12 @@ class DatasetsFactory(dict):
             result.append(self.get_dataset(dataset_descriptor['id']))
 
         return result
+
+    def get_dataset_by_name(self, name):
+        for desc in self.datasets_config.get_datasets():
+            if desc['name'] == name:
+                return self.get_dataset(desc['id'])
+        return None
 
     def get_description_datasets(self):
         datasets_ids = self.datasets_config.get_dataset_ids()

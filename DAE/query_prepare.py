@@ -105,8 +105,8 @@ def prepare_denovo_phenotype_gender_filter1(data, st):
 
     pheno_filter = []
     if study_pheno_type in pheno_types and study_type in study_types:
-        pheno_filter.append('autism only')
-        pheno_filter.append('autism and unaffected')
+        pheno_filter.append('affected only')
+        pheno_filter.append('affected and unaffected')
 
     if 'unaffected' in pheno_types and study_type in study_types:
         pheno_filter.append('unaffected only')

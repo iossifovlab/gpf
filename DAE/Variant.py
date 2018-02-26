@@ -5,6 +5,11 @@ Created on Oct 21, 2015
 '''
 import numpy as np
 import operator
+import logging
+
+from Family import Person
+
+LOGGER = logging.getLogger(__name__)
 
 
 def normalRefCopyNumber(location, gender):
@@ -25,10 +30,24 @@ def normalRefCopyNumber(location, gender):
 
             if gender == 'M':
                 return 1
+            elif gender == 'U':
+                LOGGER.warn(
+                    'unspecified gender when calculating normal number of allels '
+                    'in chr%s',
+                    location
+                )
+                return 1
             elif gender != 'F':
                 raise Exception('weird gender ' + gender)
     elif chrome in ['chrY', 'Y', '24', 'chr24']:
         if gender == 'M':
+            return 1
+        elif gender == 'U':
+            LOGGER.warn(
+                'unspecified gender when calculating normal number of allels '
+                'in chr%s',
+                location
+            )
             return 1
         elif gender == 'F':
             return 0
@@ -162,7 +181,9 @@ class Variant:
     def __init__(self, atts, familyIdAtt="familyId", locationAtt="location",
                  variantAtt="variant", bestStAtt="bestState", bestStColSep=-1,
                  countsAtt="counts", effectGeneAtt="effectGene",
-                 altFreqPrcntAtt="all.altFreq"):
+                 altFreqPrcntAtt="all.altFreq", genderAtt='gender',
+                 phenotypeAtt='phenotype', studyNameAtt='studyName',
+                 sampleIdAtt='SampleID'):
         self.atts = atts
 
         self.familyIdAtt = familyIdAtt
@@ -173,6 +194,10 @@ class Variant:
         self.countsAtt = countsAtt
         self.effectGeneAtt = effectGeneAtt
         self.altFreqPrcntAtt = altFreqPrcntAtt
+        self.genderAtt = genderAtt
+        self.phenotypeAtt = phenotypeAtt
+        self.studyNameAtt = studyNameAtt
+        self.sampleIdAtt = sampleIdAtt
 
     def get_attr(self, attr):
         return self.atts.get(attr, None)
@@ -183,12 +208,15 @@ class Variant:
             return self._familyId
         except AttributeError:
             pass
-        self._familyId = str(self.atts[self.familyIdAtt])
+        self._familyId = self.atts.get(self.familyIdAtt,
+            self.atts.get(self.sampleIdAtt))
+        self._familyId = str(
+            self._familyId) if self._familyId else self._familyId
         return self._familyId
 
     @property
     def studyName(self):
-        return self.study.name
+        return self.atts.get(self.studyNameAtt, self.study.name)
 
     @property
     def location(self):
@@ -256,32 +284,29 @@ class Variant:
         try:
             return self._memberInOrder
         except AttributeError:
-            family = self.study.families[self.familyId]
-            self._memberInOrder = family.memberInOrder
+            if self.familyId:
+                family = self.study.families[self.familyId]
+                self._memberInOrder = family.memberInOrder
+            else:
+                person = Person(self.atts)
+                person.personId = None
+                person.gender = self.atts.get(self.genderAtt, 'U')
+                person.role = 'sib' if self.phenotype == 'unaffected' else 'prb'
+                self._memberInOrder = [person]
         return self._memberInOrder
 
     @property
     def inChS(self):
-        mbrs = self.memberInOrder
-        # mbrs = elf.study.families[self.familyId].memberInOrder
-        bs = self.bestSt
         childStr = ''
-        for c in xrange(2, len(mbrs)):
-            if isVariant(bs, c, self.location, mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
+        for index, person in enumerate(self.memberInOrder):
+            if person.is_child and \
+                    isVariant(self.bestSt, index, self.location, person.gender):
+                childStr += (person.role + person.gender)
         return childStr
 
     @property
     def phenoInChS(self):
-        mbrs = self.memberInOrder
-        # mbrs = elf.study.families[self.familyId].memberInOrder
-        bs = self.bestSt
-        childStr = ''
-        for c in xrange(2, len(mbrs)):
-            if isVariant(bs, c, self.location, mbrs[c].gender):
-                childStr += (mbrs[c].role + mbrs[c].gender)
-        phenotype = self.study.get_attr('study.phenotype')
-        return childStr.replace('prb', phenotype)
+        return self.inChS.replace('prb', self.phenotype)
 
     @property
     def fromParentS(self):
@@ -300,7 +325,10 @@ class Variant:
 
     @property
     def phenotype(self):
-        return self.atts.get('phenotype', self.study.get_attr('study.phenotype'))
+        if len(self.study.phenotypes) == 1:
+            return self.study.phenotypes[0]
+        else:
+            return self.atts.get(self.phenotypeAtt, None)
 
     @property
     def family_atts(self):
@@ -319,7 +347,7 @@ class Variant:
         mbrs = self.memberInOrder
         bs = self.bestSt
 
-        ph = self.study.get_attr('study.phenotype')
+        ph = self.phenotype
         colors = None
         if self.study.name[:3] == 'VIP' and \
                 hasattr(self.study, 'genetic_status'):
@@ -345,8 +373,7 @@ class Variant:
         return res
 
     def __eq__(self, other):
-        return (self.variant == other.variant and self.location == other.location
-            and self.familyId == other.familyId)
+        return self.key == other.key
 
     def __lt__(self, other):
         return self.sort_key < other.sort_key
@@ -354,12 +381,18 @@ class Variant:
     CHROMOSOMES_ORDER = dict(
         {str(x): '0' + str(x) for x in range(1, 10)}.items() +
         {str(x): str(x) for x in range(10, 23)}.items() +
-        { 'X': '23', 'Y': '24' }.items())
+        {'X': '23', 'Y': '24'}.items())
 
     @property
     def sort_key(self):
         chromosome, position = self.location.split(':')
-        return (self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome), int(position.split('-')[0]))
+        return (self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome),
+                int(position.split('-')[0]))
+
+    @property
+    def key(self):
+        return (self.familyId if self.familyId else '',
+            self.location, self.variant)
 
     def pedigree_v3(self, legend):
         def get_color(p):
@@ -370,28 +403,22 @@ class Variant:
         members = self.memberInOrder
         bs = self.bestSt
 
-        mom = members[0]
-        dad = members[1]
-
-        res = [
-            [[self.familyId, mom.personId, '', '',
-              mom.gender, get_color(mom)],
-             variant_count_v3(bs, 0, self.location,
-                              mom.gender, denovo_parent)],
-            [[self.familyId, dad.personId, '', '',
-              dad.gender, get_color(dad)],
-             variant_count_v3(bs, 1, self.location,
-                              dad.gender, denovo_parent)]
-        ]
-
-        for c, p in enumerate(members[2:], 2):
-            res.append(
-                [[self.familyId, p.personId, dad.personId, mom.personId,
-                  p.gender, get_color(p)],
-                 variant_count_v3(bs, c, self.location,
-                                  dad.gender, denovo_parent)]
-            )
-        res = [reduce(operator.add, row) for row in res]
+        res = []
+        dad_id, mom_id = '', ''
+        for index, person in enumerate(members):
+            person_list = [self.familyId, person.personId,
+                           person.gender, get_color(person)]
+            if person.is_child:
+                person_list[2:2] += [dad_id, mom_id]
+            else:
+                person_list[2:2] += ['', '']
+                if person.role == "mom":
+                    mom_id = person.personId
+                elif person.role == "dad":
+                    dad_id = person.personId
+            res.append(person_list +
+                       variant_count_v3(bs, index, self.location,
+                                        person.gender, denovo_parent))
         return res
 
     def denovo_parent(self):
@@ -417,80 +444,83 @@ class Variant:
 
 
 PRESENT_IN_CHILD_FILTER_MAPPING = {
-    "autism only":
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
-    "affected only":
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
-    "unaffected only":
-    lambda inCh: (len(inCh) == 4 and 's' == inCh[0]),
-    "autism and unaffected":
-    lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
-    "affected and unaffected":
-    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh),
-    "neither":
-    lambda inCh: len(inCh) == 0,
+    'affected only':
+        lambda inCh, gender: len(inCh) == 4 and 'p' == inCh[0] and
+    (not gender or gender == inCh[3]),
+    'unaffected only':
+        lambda inCh, gender: len(inCh) == 4 and 's' == inCh[0] and
+    (not gender or gender == inCh[3]),
+    'affected and unaffected':
+        lambda inCh, gender: len(inCh) >= 8 and 'p' == inCh[0] and
+    (not gender or gender == inCh[3] or gender == inCh[7]),
+    'neither':
+        lambda inCh, gender: len(inCh) == 0,
+    'gender':
+        lambda inCh, gender: gender in inCh,
 
-    ("autism only", 'F'):
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
-    ("affected only", 'F'):
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
-    ("unaffected only", 'F'):
-    lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'F' == inCh[3]),
-    ("autism and unaffected", 'F'):
-    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
-                  ('F' in inCh)),
-    ("affected and unaffected", 'F'):
-    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
-                  ('F' in inCh)),
-    ("neither", 'F'):
-    lambda inCh: (len(inCh) == 0),
-
-    ("autism only", 'M'):
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
-    ("affected only", 'M'):
-    lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
-    ("unaffected only", 'M'):
-    lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'M' == inCh[3]),
-    ("autism and unaffected", 'M'):
-    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
-                  ('M' in inCh)),
-    ("affected and unaffected", 'M'):
-    lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
-                  ('M' in inCh)),
-    ("neither", 'M'):
-    lambda inCh: (len(inCh) == 0),
-    'F':
-    lambda inCh: ('F' in inCh),
-    'M':
-    lambda inCh: ('M' in inCh),
+    #     "autism only":
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
+    #     "affected only":
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0]),
+    #     "unaffected only":
+    #     lambda inCh: (len(inCh) == 4 and 's' == inCh[0]),
+    #     "autism and unaffected":
+    #     lambda inCh: (len(inCh) >= 8 and 'p' == inCh[0]),
+    #     "affected and unaffected":
+    #     lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh),
+    #     "neither":
+    #     lambda inCh: len(inCh) == 0,
+    #
+    #     ("autism only", 'F'):
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
+    #     ("affected only", 'F'):
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'F' == inCh[3]),
+    #     ("unaffected only", 'F'):
+    #     lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'F' == inCh[3]),
+    #     ("autism and unaffected", 'F'):
+    #     lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+    #                   ('F' in inCh)),
+    #     ("affected and unaffected", 'F'):
+    #     lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+    #                   ('F' in inCh)),
+    #     ("neither", 'F'):
+    #     lambda inCh: (len(inCh) == 0),
+    #
+    #     ("autism only", 'M'):
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
+    #     ("affected only", 'M'):
+    #     lambda inCh: (len(inCh) == 4 and 'p' == inCh[0] and 'M' == inCh[3]),
+    #     ("unaffected only", 'M'):
+    #     lambda inCh: (len(inCh) == 4 and 's' == inCh[0] and 'M' == inCh[3]),
+    #     ("autism and unaffected", 'M'):
+    #     lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+    #                   ('M' in inCh)),
+    #     ("affected and unaffected", 'M'):
+    #     lambda inCh: (len(inCh) >= 8 and 'p' in inCh and 's' in inCh and
+    #                   ('M' in inCh)),
+    #     ("neither", 'M'):
+    #     lambda inCh: (len(inCh) == 0),
+    #     'F':
+    #     lambda inCh: ('F' in inCh),
+    #     'M':
+    #     lambda inCh: ('M' in inCh),
 }
 
 
 def present_in_child_filter(present_in_child=None, gender=None):
     fall = []
-    if present_in_child and gender:
-        assert len(gender) == 1
-        g = gender[0]
-        if len(present_in_child) == 4:
-            fall = [PRESENT_IN_CHILD_FILTER_MAPPING[g]]
-        else:
-            fall = [PRESENT_IN_CHILD_FILTER_MAPPING[(pic, g)]
-                    for pic in present_in_child]
-    elif present_in_child:
-        if len(present_in_child) < 4:
-            fall = [PRESENT_IN_CHILD_FILTER_MAPPING[pic]
-                    for pic in present_in_child]
-    elif gender:
-        assert len(gender) == 1
-        g = gender[0]
-        fall = [PRESENT_IN_CHILD_FILTER_MAPPING[g]]
 
-    if len(fall) == 0:
-        return None
-    elif len(fall) == 1:
-        return fall[0]
+    if present_in_child and len(present_in_child) != 4:
+        fall = [PRESENT_IN_CHILD_FILTER_MAPPING[pic]
+                for pic in present_in_child]
+        if gender is None:
+            gender = [None]
+    elif gender:
+        fall = [PRESENT_IN_CHILD_FILTER_MAPPING['gender']]
     else:
-        return lambda inCh: any([f(inCh) for f in fall])
+        return None
+
+    return lambda inCh: any([f(inCh, g) for f in fall for g in gender])
 
 
 def present_in_parent_filter(present_in_parent):

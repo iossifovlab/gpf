@@ -12,7 +12,7 @@ from precompute import register
 from common_reports_api.families import FamiliesDataCSV
 from common_reports_api.serializers import StudyVariantReportsSerializer
 from common_reports_api.studies import get_denovo_studies_names,\
-    get_transmitted_studies_names
+    get_transmitted_studies_names, get_all_studies_names
 from common_reports_api.permissions import user_has_study_permission
 import itertools
 
@@ -64,8 +64,7 @@ class ReportStudies(APIView):
     def get(self, _request):
         seen = set()
         names = []
-        for name in itertools.chain(get_denovo_studies_names(),
-                                    get_transmitted_studies_names()):
+        for name in itertools.chain(get_all_studies_names()):
             if name[0] in seen:
                 continue
             names.append(name)

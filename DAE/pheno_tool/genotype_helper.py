@@ -29,8 +29,8 @@ class VariantsType(object):
 
     `gene_syms` -- list of gene symbols
 
-    `present_in_child` -- list of present in child specifiers ("autism only",
-    "unaffected only", "autism and unaffected", "proband only",
+    `present_in_child` -- list of present in child specifiers ("affected only",
+    "unaffected only", "affected and unaffected", "proband only",
     "sibling only", "proband and sibling", "neither").
 
     `present_in_parent` -- list of present in parent specifiers ("mother only",
@@ -50,7 +50,7 @@ class VariantsType(object):
         self,
         effect_types=None,
         gene_syms=None,
-        present_in_child=['autism only', 'autism and unaffected'],
+        present_in_child=['affected only', 'affected and unaffected'],
         present_in_parent=['neither'],
         rarity='ultraRare',
         rarity_max=None,

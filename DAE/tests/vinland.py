@@ -22,8 +22,8 @@ for msrId in phdb.get_instrument_measures('vineland_ii'):
             res = tool.calc(
                 VT(effect_types=[effT],
                    present_in_parent=['neither'],
-                   present_in_child=['autism only',
-                                     'autism and unaffected',
+                   present_in_child=['affected only',
+                                     'affected and unaffected',
                                      'unaffected only']
                    )
             )

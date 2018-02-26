@@ -8,7 +8,7 @@ transmitted studies into MySQL MYISAM tables.
 
 @author:     lubo
 
-@contact:    lchorbadjiev@setelis.com
+@contact:    lubomir.chorbadjiev@gmail.com
 '''
 
 import sys

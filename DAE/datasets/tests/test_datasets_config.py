@@ -3,6 +3,7 @@ Created on Jan 20, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
 
 import unittest
 from datasets.config import DatasetsConfig
@@ -19,7 +20,7 @@ class DatasetsConfigTest(unittest.TestCase):
         datasets = self.dataset_config.get_datasets()
 
         self.assertIsNotNone(datasets)
-        self.assertEquals(6, len(datasets))
+        self.assertEquals(7, len(datasets))
 
     def test_dataset_sd(self):
         ds = self.dataset_config.get_dataset_desc('SD')

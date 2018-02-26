@@ -127,7 +127,7 @@ class Tools(object):
         command = "gunzip -c %(filename)s | "\
             "mysql -h%(host)s -P%(port)s -u%(user)s -p%(passwd)s %(db)s" % \
             params
-        print "executing command: %s" % command
+        print("executing command: %s" % command)
         os.system(command)
 
     def import_family_variants(self, family_filename):
@@ -191,18 +191,15 @@ USAGE
 
         parser.add_argument(
             '-s', '--summary',
-            dest='summary_filename',
-            default='sql_summary_variants_myisam.sql.gz')
+            dest='summary_filename')
 
         parser.add_argument(
             '-f', '--family',
-            dest='family_filename',
-            default='sql_family_variants_myisam.sql.gz')
+            dest='family_filename')
 
         parser.add_argument(
             '-e', '--geneeffect',
-            dest='gene_effect_filename',
-            default='sql_gene_effect_variants_myisam.sql.gz')
+            dest='gene_effect_filename')
 
         parser.add_argument(
             '-H', '--host',
@@ -248,6 +245,12 @@ USAGE
         family_filename = args.family_filename
         gene_effect_filename = args.gene_effect_filename
         summary_filename = args.summary_filename
+        if family_filename:
+            assert os.path.exists(family_filename)
+        if gene_effect_filename:
+            assert os.path.exists(gene_effect_filename)
+        if summary_filename:
+            assert os.path.exists(summary_filename)
 
         print("Working with sql files:")
         print(" - summary: %s" % summary_filename)
@@ -257,10 +260,13 @@ USAGE
         print("db conf: %s" % get_db_args(args))
         print("tool db conf: %s" % tools.get_db_conf())
 
-        tools.drop_all_tables()
-        tools.import_family_variants(family_filename)
-        tools.import_gene_effect_variants(gene_effect_filename)
-        tools.import_summary_variants(summary_filename)
+        # tools.drop_all_tables()
+        if family_filename:
+            tools.import_family_variants(family_filename)
+        if gene_effect_filename:
+            tools.import_gene_effect_variants(gene_effect_filename)
+        if summary_filename:
+            tools.import_summary_variants(summary_filename)
 
         return 0
     except KeyboardInterrupt:
