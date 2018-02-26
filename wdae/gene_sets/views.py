@@ -3,6 +3,8 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import ast
 from copy import deepcopy
 from rest_framework import views, status
