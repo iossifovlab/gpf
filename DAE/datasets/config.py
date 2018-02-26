@@ -129,6 +129,7 @@ class DatasetsConfig(object):
         has_transmitted = \
             self._get_boolean(section, 'genotypeBrowser.hasTransmitted')
         has_cnv = self._get_boolean(section, 'genotypeBrowser.hasCNV')
+        has_complex = self._get_boolean(section, 'genotypeBrowser.hasComplex')
         has_present_in_child = self._get_boolean(
             section, 'genotypeBrowser.hasPresentInChild')
         has_present_in_parent = self._get_boolean(
@@ -173,6 +174,7 @@ class DatasetsConfig(object):
             'hasPresentInChild': has_present_in_child,
             'hasPresentInParent': has_present_in_parent,
             'hasCNV': has_cnv,
+            'hasComplex': has_complex,
             'hasStudyTypes': study_types,
             'hasFamilyFilters': family_filters,
             'hasPedigreeSelector': pedigree_selector,

@@ -13,7 +13,7 @@ def test_get_variants_denovo(
         VT(
             effect_types=['LGDs'],
             gene_syms=autism_candidates_genes,
-            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_child=['affected only', 'affected and unaffected'],
             present_in_parent=['neither'],
         ))
     variants = [v for v in vs]
@@ -27,7 +27,7 @@ def test_get_variants_father_ultra_rare(
         VT(
             effect_types=['LGDs'],
             gene_syms=autism_candidates_genes,
-            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_child=['affected only', 'affected and unaffected'],
             present_in_parent=[
                 'father only',
                 'mother and father',
@@ -54,8 +54,8 @@ def test_get_variants_father_rarity(
         effect_types=['LGDs'],
         gene_syms=autism_candidates_genes,
         present_in_child=[
-            'autism only',
-            'autism and unaffected',
+            'affected only',
+            'affected and unaffected',
             'neither'],
         present_in_parent=[
             'father only',
@@ -97,7 +97,7 @@ def test_get_variants_father_interval(
         rarity_max=50.0,
         rarity_min=1.0,
         present_in_child=[
-            'autism only', 'autism and unaffected', 'neither'],
+            'affected only', 'affected and unaffected', 'neither'],
         present_in_parent=[
             'father only',
             'mother and father',
@@ -132,7 +132,7 @@ def test_get_single_gene_all(
             gene_syms=['POGZ'],
             rarity='all',
             present_in_child=[
-                'autism only', 'autism and unaffected', 'neither'],
+                'affected only', 'affected and unaffected', 'neither'],
             present_in_parent=[
                 'father only',
                 'mother and father',
@@ -153,7 +153,7 @@ def test_get_single_gene_persons_variants_all(
             gene_syms=['POGZ'],
             rarity='all',
             present_in_child=[
-                'autism only', 'autism and unaffected', 'neither'],
+                'affected only', 'affected and unaffected', 'neither'],
             present_in_parent=['father only', 'mother only',
                                'mother and father', 'neither'],
         )
@@ -167,7 +167,7 @@ def test_get_persons_variants_denovo(
     res = genotype_helper.get_persons_variants(
         VT(
             effect_types=['LGDs'],
-            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_child=['affected only', 'affected and unaffected'],
             present_in_parent=['neither'],
             gene_syms=autism_candidates_genes,
         )
@@ -184,7 +184,7 @@ def test_get_person_variants_father_all(
             gene_syms=autism_candidates_genes,
             rarity='rare',
             rarity_max=10.0,
-            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_child=['affected only', 'affected and unaffected'],
             present_in_parent=['father only', 'mother and father', 'neither'],
         )
     )
@@ -197,7 +197,7 @@ def test_get_person_variants_father_all(
             gene_syms=autism_candidates_genes,
             rarity='rare',
             rarity_max=10.0,
-            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_child=['affected only', 'affected and unaffected'],
             present_in_parent=['father only', 'mother and father', 'neither'],
         )
     )
@@ -220,7 +220,7 @@ def test_get_lgds_variants_for_family(
         VT(
             effect_types=['LGDs'],
             present_in_child=[
-                'autism only', 'unaffected only', 'autism and unaffected',
+                'affected only', 'unaffected only', 'affected and unaffected',
                 'neither'],
             present_in_parent=[
                 'father only', 'mother only', 'mother and father',
@@ -239,7 +239,7 @@ def test_get_persons_variants_df_denovo(
     res = genotype_helper.get_persons_variants_df(
         VT(
             effect_types=['LGDs'],
-            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_child=['affected only', 'affected and unaffected'],
             present_in_parent=['neither'],
             gene_syms=autism_candidates_genes,
         )

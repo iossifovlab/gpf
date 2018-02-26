@@ -23,7 +23,7 @@ def phdb(request):
 def default_request(request):
     data = {
         'effect_types': ['LGDs'],
-        'present_in_child': ['autism only', 'autism and unaffected'],
+        'present_in_child': ['affected only', 'affected and unaffected'],
         'present_in_parent': ['neither'],
     }
     return data

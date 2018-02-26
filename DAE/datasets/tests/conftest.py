@@ -36,6 +36,11 @@ def sd(request,  datasets_factory):
 
 
 @pytest.fixture(scope='session')
+def denovodb(request,  datasets_factory):
+    return datasets_factory.get_dataset('denovo_db')
+
+
+@pytest.fixture(scope='session')
 def ssc_pheno(request):
     pf = DAE.pheno
     db = pf.get_pheno_db('ssc')
