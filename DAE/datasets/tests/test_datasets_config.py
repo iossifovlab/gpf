@@ -20,8 +20,7 @@ class DatasetsConfigTest(unittest.TestCase):
         datasets = self.dataset_config.get_datasets()
 
         self.assertIsNotNone(datasets)
-        print([d['id'] for d in datasets])
-        self.assertEquals(6, len(datasets))
+        self.assertEquals(7, len(datasets))
 
     def test_dataset_sd(self):
         ds = self.dataset_config.get_dataset_desc('SD')

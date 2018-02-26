@@ -50,7 +50,7 @@ def get(key):
     global _REGISTER
 
     try:
-        preload = _REGISTER.get(key)
+        preload = _REGISTER[key]
         if not preload.is_loaded():
             preload.load()
         return preload.get()

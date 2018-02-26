@@ -6,22 +6,20 @@ Created on Feb 16, 2017
 from __future__ import print_function
 
 import os
-from gene.config import GeneInfoConfig
-import sqlite3
-# from denovo_gene_sets import build_denovo_gene_sets
-from GeneTerms import loadGeneTerm, GeneTerms
 import traceback
-from DAE import vDB
-from itertools import groupby
+import sqlite3
+from itertools import groupby, chain
+from collections import OrderedDict
 import cPickle
-from pheno.pheno_regression import PhenoRegression
 import logging
 
+# from denovo_gene_sets import build_denovo_gene_sets
+from gene.config import GeneInfoConfig
+from datasets.config import DatasetsConfig
+from GeneTerms import loadGeneTerm
+from DAE import vDB
+
 LOGGER = logging.getLogger(__name__)
-
-
-class CacheMixin(object):
-    pass
 
 
 class GeneSetsCollection(GeneInfoConfig):
@@ -72,9 +70,6 @@ class GeneSetsCollection(GeneInfoConfig):
         assert self.gene_sets_descriptions is not None
         return self.gene_sets_descriptions
 
-    def get_gene_sets_types(self):
-        return []
-
     def get_gene_sets_types_legend(self):
         return []
 
@@ -116,108 +111,114 @@ class DenovoGeneSetsType(object):
 
 
 class DenovoGeneSetsCollection(GeneInfoConfig):
-    GENE_SETS_TYPES = [
-        'autism',
-        'congenital heart disease',
-        'epilepsy',
-        'intellectual disability',
-        'schizophrenia',
-        'unaffected'
-    ]
-    GENE_SETS_TYPES_LEGEND = {
-        "autism": {
-            "color": "#e35252 ",
-            "id": "autism",
-            "name": "autism"
-        },
-        "congenital heart disease": {
-            "color": "#b8008a ",
-            "id": "congenital heart disease",
-            "name": "congenital heart disease"
-        },
-        "epilepsy": {
-            "color": "#e3d252 ",
-            "id": "epilepsy",
-            "name": "epilepsy"
-        },
-        "intellectual disability": {
-            "color": "#99d8e8 ",
-            "id": "intellectual disability",
-            "name": "intellectual disability"
-        },
-        "schizophrenia": {
-            "color": "#98e352 ",
-            "id": "schizophrenia",
-            "name": "schizophrenia"
-        },
-        "unaffected": {
-            "color": "#ffffff ",
-            "id": "unaffected",
-            "name": "unaffected"
-        },
-    }
-    DENOVO_STUDIES_COLLECTION = "ALL WHOLE EXOME"
 
     def __init__(self):
         super(DenovoGeneSetsCollection, self).__init__()
+        self.gsc_id = 'denovo'
+        self.datasets_config = DatasetsConfig()
+        self._init_config()
+        self.cache = {}
 
-        self.gene_sets_types = self.GENE_SETS_TYPES
-        self.gene_sets_collection_desc = None
-        self.gene_sets_names = None
+    def _init_config(self):
+        self.datasets_pedigree_selectors = OrderedDict()
+        for pedigree_selector_str in self._get_att_list(
+                'datasets.pedigreeSelectors'):
+            pedigree_selector = pedigree_selector_str.split(':')
+            self.datasets_pedigree_selectors[pedigree_selector[0]] = {
+                'id': pedigree_selector[1],
+                'source': pedigree_selector[2]
+            }
 
-    def load_cache(self):
-        cachename = self.config.get('cache', 'file')
-        if not os.path.exists(cachename):
-            return None
+        self.effect_types = [
+            {'value': effect_type_arr[0], 'name': effect_type_arr[1]}
+            for effect_type_arr in map(
+                lambda effect_type_str: effect_type_str.split(':'),
+                self._get_att_list('effectTypes'))
+        ]
 
-        with open(cachename, 'r') as infile:
-            result = cPickle.load(infile)
-            return result
+        self.variant_criterias = []
+        self.criterias_by_phenotype_names = set()
+        for variant_criteria_id in self._get_att_list('variantCriterias'):
+            source = self._get_att(
+                'variantCriterias.{}.source'.format(variant_criteria_id))
+            segments_arrs = map(
+                lambda segment_str: segment_str.split(':'),
+                self._get_att_list(
+                    'variantCriterias.{}.segments'.format(
+                        variant_criteria_id)))
+            self.variant_criterias.append(
+                [{
+                    'property': source,
+                    'name': segment_arr[0],
+                    'value': segment_arr[1],
+                    'type': segment_arr[2]
+                }
+                    for segment_arr in segments_arrs]
+            )
+            self.criterias_by_phenotype_names.update(
+                [segment_arr[0]
+                 for segment_arr in segments_arrs])
 
-    def save_cache(self, computed):
-        cachename = self.config.get('cache', 'file')
-        cachedir = os.path.dirname(cachename)
-        if not os.path.exists(cachedir):
-            os.makedirs(cachedir)
-        with open(cachename, 'w') as outfile:
-            cPickle.dump(computed, outfile)
+        self.criterias_by_phenotype_names.update({'Recurrent', 'Single'})
+        self.gene_sets_names = self._get_att_list('geneSetsNames')
+
+    def _get_att_list(self, att_name):
+        return self.gene_info.getGeneTermAttList(self.gsc_id, att_name)
+
+    def _get_att(self, att_name):
+        return self.gene_info.getGeneTermAtt(self.gsc_id, att_name)
 
     def load(self):
-        computed = self.load_cache()
-        if computed is None:
-            computed = self.build_denovo_gene_sets()
-            self.save_cache(computed)
+        if len(self.cache) == 0:
+            self._pickle_cache()
+        return self.get_gene_sets()
 
-        self.gene_sets_collection = {}
-        for gene_sets_type, gene_term in computed.items():
-            self.gene_sets_collection[gene_sets_type] = \
-                DenovoGeneSetsType(gene_term)
-        self.gene_sets_collection_desc = {}
+    def _pickle_cache(self):
+        cache_file_path = self.gene_info.getGeneTermAtt(self.gsc_id, 'file')
+        if os.path.exists(cache_file_path):
+            infile = open(cache_file_path, 'r')
+            self.cache = cPickle.load(infile)
+        else:
+            self._generate_cache()
+            infile = open(cache_file_path, 'w')
+            cPickle.dump(self.cache, infile)
 
-        self.gene_sets_names = \
-            self.gene_sets_collection[self.gene_sets_types[0]].get_gene_sets()
-        return self.gene_sets_collection
+    def _generate_cache(self):
+        for dataset in self._get_dataset_descs():
+            self._gene_sets_for(dataset)
 
-    def get_gene_sets_types(self):
-        return self.gene_sets_types
+    def _get_dataset_descs(self):
+        return [self.datasets_config.get_dataset_desc(gid)
+                for gid in self.datasets_pedigree_selectors.keys()]
 
     def get_gene_sets_types_legend(self):
-        result = [
-            self.GENE_SETS_TYPES_LEGEND[gt]
-            for gt in self.get_gene_sets_types()
-        ]
-        return result
+        return [{
+            'datasetId': dataset_desc['id'],
+            'datasetName': dataset_desc['name'],
+            'phenotypes': self._get_configured_dataset_legend(dataset_desc)
+        } for dataset_desc in self._get_dataset_descs()]
 
-    def get_gene_sets(self, gene_sets_types=[], **kwargs):
-        gene_sets_types = [
-            gst for gst in gene_sets_types
-            if gst in self.gene_sets_types
-        ]
+    def _get_configured_dataset_legend(self, dataset_desc):
+        configured_pedigree_selector_id = self.datasets_pedigree_selectors[
+            dataset_desc['id']]['id']
+        for pedigree_selector in dataset_desc['pedigreeSelectors']:
+            if pedigree_selector['id'] == configured_pedigree_selector_id:
+                return pedigree_selector.domain
+        return None
 
-        if gene_sets_types == []:
-            gene_sets_types = ['autism']
+    @staticmethod
+    def _filter_out_empty_types(gene_sets_types):
+        return {k: v for k, v in gene_sets_types.iteritems() if len(v) > 0}
 
-        gene_sets_types_desc = ','.join(gene_sets_types)
+    @staticmethod
+    def _format_description(gene_sets_types):
+        return '{}::{}'.format(
+            ', '.join(set(gene_sets_types.keys())),
+            ', '.join(set(chain(*gene_sets_types.values()))))
+
+    def get_gene_sets(self, gene_sets_types={'SD': ['autism']}, **kwargs):
+        gene_sets_types = self._filter_out_empty_types(gene_sets_types)
+        gene_sets_types_desc = self._format_description(gene_sets_types)
         result = []
         for gsn in self.gene_sets_names:
             gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
@@ -229,25 +230,9 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             })
         return result
 
-    def _get_gene_set_syms(self, gene_set_name, gene_sets_types):
-        result = [
-            self.gene_sets_collection[gst].get_gene_set_syms(gene_set_name)
-            for gst in gene_sets_types
-        ]
-
-        syms = reduce(
-            lambda s1, s2: s1 | s2,
-            result)
-        return syms
-
-    def get_gene_set(self, gene_set_id, gene_sets_types=[], **kwargs):
-        gene_sets_types = [
-            gst for gst in gene_sets_types
-            if gst in self.gene_sets_types
-        ]
-
-        if gene_sets_types == []:
-            gene_sets_types = ['autism']
+    def get_gene_set(self, gene_set_id,
+                     gene_sets_types={'SD': ['autism']}, **kwargs):
+        gene_sets_types = self._filter_out_empty_types(gene_sets_types)
         syms = self._get_gene_set_syms(gene_set_id, gene_sets_types)
         if not syms:
             return None
@@ -256,293 +241,122 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             "name": gene_set_id,
             "count": len(syms),
             "syms": syms,
-            "desc": "{} ({})".format(gene_set_id, ";".join(gene_sets_types)),
+            "desc": "{} ({})".format(
+                gene_set_id, self._format_description(gene_sets_types))
         }
 
-    @staticmethod
-    def genes_sets(denovo_studies,
-                   in_child=None,
-                   effect_types=None,
-                   gene_syms=None,
-                   measure=None,
-                   mmax=None,
-                   mmin=None):
+    def _get_gene_set_syms(self, gene_set_id, gene_sets_types):
+        gene_set_syms = set()
+        for dataset_id, phenotypes in gene_sets_types.iteritems():
+            gene_set_syms.update(
+                self._get_gene_set_syms_for_dataset(
+                    gene_set_id, dataset_id, phenotypes))
+        return gene_set_syms
 
-        vs = vDB.get_denovo_variants(denovo_studies,
-                                     effectTypes=effect_types,
-                                     inChild=in_child,
-                                     geneSyms=gene_syms)
+    def _get_gene_set_syms_for_dataset(self, name, dataset_id, phenotypes):
+        criterias = name.split('.')
+        effect_type = criterias[0]
+        effect_type_subsets = self.cache[dataset_id][effect_type]
 
-        if not (mmin or mmax):
-            return {ge['sym'] for v in vs for ge in v.requestedGeneEffects}
-        if mmin and measure:
-            return {ge['sym']
-                    for v in vs for ge in v.requestedGeneEffects
-                    if measure.get(v.familyId, -1000) >= mmin}
-        if mmax and measure:
-            return {ge['sym']
-                    for v in vs for ge in v.requestedGeneEffects
-                    if measure.get(v.familyId, 1000) < mmax}
-        return None
+        criterias_by_phenotype = self.criterias_by_phenotype_names \
+            .intersection(criterias)
+        other_criterias = set(criterias[1:]) - criterias_by_phenotype
 
-    @staticmethod
-    def genes_set_prepare_counting(
-            denovo_studies,
-            in_child=None,
-            effect_types=None,
-            gene_set=None):
+        result = set()
 
-        vs = vDB.get_denovo_variants(denovo_studies,
-                                     effectTypes=effect_types,
-                                     inChild=in_child,
-                                     geneSyms=gene_set)
-        gnSorted = sorted([[ge['sym'], v]
-                           for v in vs for ge in v.requestedGeneEffects])
-        sym2Vars = {sym: [t[1] for t in tpi]
-                    for sym, tpi in groupby(gnSorted, key=lambda x: x[0])}
-        sym2FN = {sym: len(set([v.familyId for v in vs]))
-                  for sym, vs in sym2Vars.items()}
-        return sym2FN
+        for _, phenotype_subsets in filter(
+                lambda item: item[0] in phenotypes,
+                effect_type_subsets.iteritems()):
+            pheno_genes = set().union(*phenotype_subsets.values())
+            for criteria in criterias_by_phenotype:
+                pheno_genes &= phenotype_subsets.get(criteria, set())
+            result |= pheno_genes
 
-    @staticmethod
-    def genes_set_recurrent(
-            denovo_studies,
-            in_child=None,
-            effect_types=None,
-            gene_set=None):
+        for criteria in other_criterias:
+            result &= effect_type_subsets.get(criteria, set())
 
-        sym2FN = DenovoGeneSetsCollection.genes_set_prepare_counting(
-            denovo_studies, in_child,
-            effect_types, gene_set)
-        return {g for g, nf in sym2FN.items() if nf > 1}
-
-    @staticmethod
-    def genes_set_single(
-            denovo_studies,
-            in_child=None,
-            effect_types=None,
-            gene_set=None):
-
-        sym2FN = DenovoGeneSetsCollection.genes_set_prepare_counting(
-            denovo_studies, in_child,
-            effect_types, gene_set)
-        return {g for g, nf in sym2FN.items() if nf == 1}
-
-    def sib_sets(self, studies):
-        res = {
-            "LGDs": self.genes_sets(
-                studies,
-                in_child='sib',
-                effect_types='LGDs'),
-            "LGDs.Recurrent": self.genes_set_recurrent(
-                studies,
-                in_child="sib",
-                effect_types="LGDs"),
-            "LGDs.WE.Recurrent": self.genes_set_recurrent(
-                [st for st in studies
-                 if st.get_attr('study.type') == 'WE'],
-                in_child="sib",
-                effect_types="LGDs"),
-            "Missense.Recurrent": self.genes_set_recurrent(
-                studies,
-                in_child='sib',
-                effect_types='missense'),
-            "Missense.WE.Recurrent": self.genes_set_recurrent(
-                [st for st in studies
-                 if st.get_attr('study.type') == 'WE'],
-                in_child="sib",
-                effect_types="missense"),
-            "Missense": self.genes_sets(
-                studies,
-                in_child='sib',
-                effect_types='missense'),
-            "Synonymous": self.genes_sets(
-                studies,
-                in_child='sib',
-                effect_types='synonymous'),
-            "Synonymous.Recurrent": self.genes_set_recurrent(
-                studies,
-                in_child='sib',
-                effect_types='synonymous'),
-            "Synonymous.WE.Recurrent": self.genes_set_recurrent(
-                [st for st in studies
-                 if st.get_attr('study.type') == 'WE'],
-                in_child="sib",
-                effect_types="synonymous"),
-            "CNV": self.genes_sets(
-                studies,
-                in_child='sib',
-                effect_types='CNVs'),
-            "Dup": self.genes_sets(
-                studies,
-                in_child='sib',
-                effect_types='CNV+'),
-            "Del": self.genes_sets(
-                studies,
-                in_child='sib',
-                effect_types='CNV-'),
-        }
-        return res
-
-    def get_nonverbal_iq(self):
-        from pheno.pheno_factory import PhenoFactory
-        pf = PhenoFactory()
-        pheno_db = pf.get_pheno_db('ssc')
-        pheno_reg = PhenoRegression.build_from_config('ssc')
-        assert pheno_db is not None
-        measure_id = pheno_reg.get_nonverbal_iq_measure_id(None)
-        nvIQ = pheno_db.get_measure_values(measure_id)
-        assert nvIQ is not None
-
-        res = {}
-        for person_id, value in nvIQ.items():
-            family_id = person_id.split('.')[0]
-            res[family_id] = value
-        return res
-
-    def prb_set(self, studies):
-        nvIQ = self.get_nonverbal_iq()
-
-        res = {
-            "LGDs": self.genes_sets(
-                studies,
-                in_child='prb',
-                effect_types='LGDs'),
-
-            "LGDs.Male": self.genes_sets(
-                studies,
-                in_child='prbM',
-                effect_types='LGDs'),
-
-            "LGDs.Female": self.genes_sets(
-                studies,
-                in_child='prbF',
-                effect_types='LGDs'),
-
-            "LGDs.Recurrent": self.genes_set_recurrent(
-                studies,
-                in_child="prb",
-                effect_types="LGDs"),
-
-            "LGDs.WE.Recurrent": self.genes_set_recurrent(
-                [st for st in studies
-                 if st.get_attr('study.type') == 'WE'],
-                in_child="prb",
-                effect_types="LGDs"),
-
-            "LGDs.Single": self.genes_set_single(
-                studies,
-                in_child="prb",
-                effect_types="LGDs"),
-
-            "LGDs.LowIQ": self.genes_sets(
-                studies,
-                in_child='prb',
-                effect_types='LGDs',
-                measure=nvIQ,
-                mmax=90),
-
-            "LGDs.HighIQ": self.genes_sets(
-                studies,
-                in_child='prb',
-                effect_types='LGDs',
-                measure=nvIQ,
-                mmin=90),
-
-            #             "LGDs.FMRP": self.genes_sets(
-            #                 studies,
-            #                 in_child='prb',
-            #                 effect_types='LGDs',
-            #                 gene_syms=set_genes("main:FMR1-targets")),
-
-            "Missense.Recurrent": self.genes_set_recurrent(
-                studies,
-                in_child="prb",
-                effect_types="missense"),
-
-            "Missense.WE.Recurrent": self.genes_set_recurrent(
-                [st for st in studies
-                 if st.get_attr('study.type') == 'WE'],
-                in_child="prb",
-                effect_types="missense"),
-
-            "Missense": self.genes_sets(
-                studies,
-                in_child="prb",
-                effect_types="missense"),
-            "Missense.Male": self.genes_sets(
-                studies,
-                in_child="prbM",
-                effect_types="missense"),
-            "Missense.Female": self.genes_sets(
-                studies,
-                in_child="prbF",
-                effect_types="missense"),
-            "Synonymous.Recurrent": self.genes_set_recurrent(
-                studies,
-                in_child="prb",
-                effect_types="synonymous"),
-
-            "Synonymous.WE.Recurrent": self.genes_set_recurrent(
-                [st for st in studies
-                 if st.get_attr('study.type') == 'WE'],
-                in_child="prb",
-                effect_types="synonymous"),
-            "Synonymous": self.genes_sets(
-                studies,
-                in_child="prb",
-                effect_types="synonymous"),
-            "CNV": self.genes_sets(
-                studies,
-                in_child="prb",
-                effect_types="CNVs"),
-            "CNV.Recurrent": self.genes_set_recurrent(
-                studies,
-                in_child="prb",
-                effect_types="CNVs"),
-            "Dup": self.genes_sets(
-                studies,
-                in_child="prb",
-                effect_types="CNV+"),
-            "Del": self.genes_sets(
-                studies,
-                in_child="prb",
-                effect_types="CNV-"),
-        }
-        return res
-
-    @staticmethod
-    def add_set(gene_terms, setname, genes, desc=None):
-        if not genes:
-            return
-        if desc:
-            gene_terms.tDesc[setname] = desc
-        else:
-            gene_terms.tDesc[setname] = ''
-        for gsym in genes:
-            gene_terms.t2G[setname][gsym] += 1
-            gene_terms.g2T[gsym][setname] += 1
-
-    def build_denovo_gene_sets(self):
-        denovo_studies = vDB.get_studies(self.DENOVO_STUDIES_COLLECTION)
-        denovo_studies = denovo_studies[:]
-        result = {}
-        for phenotype in self.GENE_SETS_TYPES[:-1]:
-            gene_terms = GeneTerms()
-            studies = [
-                st for st in denovo_studies
-                if st.get_attr('study.phenotype') == phenotype
-            ]
-            res = self.prb_set(studies)
-            for gene_set_name, gene_set in res.items():
-                self.add_set(gene_terms, gene_set_name, gene_set)
-            result[phenotype] = gene_terms
-        gene_terms = GeneTerms()
-        res = self.sib_sets(denovo_studies)
-        for gene_set_name, gene_set in res.items():
-            self.add_set(gene_terms, gene_set_name, gene_set)
-        result['unaffected'] = gene_terms
         return result
+
+    def _gene_sets_for(self, dataset):
+        dataset_cache = {
+            effect_type['name']:
+            {phenotype['id']: {}
+             for phenotype in self._get_configured_dataset_legend(dataset)}
+            for effect_type in self.effect_types}
+        self.cache[dataset['id']] = dataset_cache
+        pedigree_selector = self.datasets_pedigree_selectors[
+            dataset['id']]['source']
+        for effect_type in self.effect_types:
+            variants = list(vDB.get_denovo_variants(
+                dataset['studies'],
+                effectTypes=effect_type['value']))
+            effect_cache = dataset_cache[effect_type['name']]
+            for criteria in chain(*self.variant_criterias):
+                key = criteria['name']
+                for variant in filter(
+                        lambda v: self._matches(v, criteria), variants):
+                    gene_symbols = {ge['sym']
+                                    for ge in variant.requestedGeneEffects}
+                    if 'sib' in variant.inChS:
+                        effect_cache.setdefault('unaffected', {}) \
+                            .setdefault(key, set()).update(gene_symbols)
+                    if 'prb' in variant.inChS:
+                        if pedigree_selector in variant.family_atts:
+                            effect_cache.setdefault(
+                                variant.family_atts[pedigree_selector], {}) \
+                                .setdefault(key, set()).update(gene_symbols)
+
+            # recurrent / non recurrent
+            gene_summary_list = sorted(
+                [(ge['sym'], 'prb' in v.inChS, 'sib' in v.inChS,
+                  v.family_atts.get(pedigree_selector), v.familyId)
+                 for v in variants for ge in v.requestedGeneEffects])
+            gene_counts = {gene: len(set(gene_families))
+                           for gene, gene_families
+                           in groupby(gene_summary_list, key=lambda x: x[0:4])}
+
+            for (gene, in_prb,
+                 in_sib, phenotype), count in gene_counts.iteritems():
+                count_type = 'Recurrent' if count > 1 else 'Single'
+                if in_prb and phenotype is not None:
+                    effect_cache.setdefault(phenotype, {}) \
+                        .setdefault(count_type, set()).add(gene)
+                if in_sib:
+                    effect_cache.setdefault('unaffected', {}) \
+                        .setdefault(count_type, set()).add(gene)
+
+            # study type
+            for variant in variants:
+                study_type = variant.study.get_attr('study.type')
+                effect_cache.setdefault(study_type, set())\
+                    .update({ge['sym'] for ge in variant.requestedGeneEffects})
+
+    @classmethod
+    def _matches(cls, variant, criteria):
+        prop = criteria['property']
+        value = variant.get_attr(prop)
+        if value is None:
+            family = variant.study.families.get(variant.familyId)
+            if family is not None and prop in family.atts:
+                value = family.atts[prop]
+            else:
+                return False
+
+        cmp_value = criteria['value']
+        criteria_type = criteria['type']
+
+        if criteria_type == 'eq':
+            return value == cmp_value
+        elif criteria_type == 'neq':
+            return value != cmp_value
+        elif criteria_type == 'lt':
+            return value < cmp_value
+        elif criteria_type == 'gt':
+            return value > cmp_value
+        elif criteria_type == 'in':
+            return cmp_value in value
+        else:
+            raise Exception('Unknown criteria type: {}'.format(criteria_type))
 
 
 class GeneSetsCollections(GeneInfoConfig):
@@ -574,12 +388,8 @@ class GeneSetsCollections(GeneInfoConfig):
             formatStr = self.gene_info.getGeneTermAtt(gsc_id, "webFormatStr")
             if not label or not formatStr:
                 continue
-            gene_sets_types = []
-            if gsc_id == 'denovo':
-                gene_sets_types = [
-                    DenovoGeneSetsCollection.GENE_SETS_TYPES_LEGEND[gt]
-                    for gt in DenovoGeneSetsCollection.GENE_SETS_TYPES
-                ]
+            gene_sets_types = self.get_gene_sets_collection(gsc_id)\
+                .get_gene_sets_types_legend()
             self.gene_sets_collections_desc.append(
                 {
                     'desc': label,
@@ -603,8 +413,9 @@ class GeneSetsCollections(GeneInfoConfig):
                 gsc = DenovoGeneSetsCollection()
             else:
                 gsc = GeneSetsCollection(gene_sets_collection_id)
-            if gsc.load():
-                self.gene_sets_collections[gene_sets_collection_id] = gsc
+            gsc.load()
+            self.gene_sets_collections[gene_sets_collection_id] = gsc
+
         return self.gene_sets_collections.get(gene_sets_collection_id, None)
 
     def get_gene_sets(self, gene_sets_collection_id, gene_sets_types=[]):

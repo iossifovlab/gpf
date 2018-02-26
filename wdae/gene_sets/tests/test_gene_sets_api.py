@@ -3,13 +3,13 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
-
-from rest_framework import status
-from rest_framework.test import APITestCase
 from django.utils.http import urlencode
+from rest_framework import status
+
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
-class Test(APITestCase):
+class Test(BaseAuthenticatedUserTest):
 
     def test_gene_sets_collections(self):
         url = "/api/v3/gene_sets/gene_sets_collections"
@@ -21,14 +21,16 @@ class Test(APITestCase):
 
         denovo = data[1]
         self.assertEquals('denovo', denovo['name'])
-        self.assertEquals(6, len(denovo['types']))
+        self.assertEquals(4, len(denovo['types']))
 
     def test_gene_set_download(self):
         url = "/api/v3/gene_sets/gene_set_download"
         query = {
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs",
-            "geneSetsTypes": ["autism", "epilepsy"]
+            "geneSetsTypes": {
+                "SD": ["autism", "epilepsy"]
+            }
         }
         response = self.client.post(url, query, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
@@ -41,7 +43,9 @@ class Test(APITestCase):
         query = {
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.Recurrent",
-            "geneSetsTypes": ["autism", ],
+            "geneSetsTypes": {
+                "SD": ["autism"]
+            }
         }
         response = self.client.post(url, query, format='json')
         self.assertEquals(status.HTTP_200_OK, response.status_code)
@@ -54,7 +58,9 @@ class Test(APITestCase):
         query = {
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.BadBad",
-            "geneSetsTypes": ["autism", ],
+            "geneSetsTypes": {
+                "SD": ["autism"]
+            }
         }
         response = self.client.post(url, query, format='json')
         self.assertEquals(status.HTTP_404_NOT_FOUND, response.status_code)
@@ -82,7 +88,9 @@ class Test(APITestCase):
         query = {
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs",
-            "geneSetsTypes": "autism,epilepsy",
+            "geneSetsTypes": {
+                "SD": ["autism", "epilepsy"]
+            }
         }
         request = "{}?{}".format(url, urlencode(query))
         response = self.client.get(request)
@@ -96,7 +104,9 @@ class Test(APITestCase):
         query = {
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs",
-            "geneSetsTypes": "autism",
+            "geneSetsTypes": {
+                "SD": ["autism"]
+            }
         }
         request = "{}?{}".format(url, urlencode(query))
         response = self.client.get(request)
@@ -110,7 +120,9 @@ class Test(APITestCase):
         query = {
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.Recurrent",
-            "geneSetsTypes": "autism",
+            "geneSetsTypes": {
+                "SD": ["autism"]
+            }
         }
         request = "{}?{}".format(url, urlencode(query))
         response = self.client.get(request)
@@ -124,7 +136,9 @@ class Test(APITestCase):
         query = {
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.BadBad",
-            "geneSetsTypes": "autism",
+            "geneSetsTypes": {
+                "SD": ["autism"]
+            }
         }
         request = "{}?{}".format(url, urlencode(query))
         response = self.client.get(request)

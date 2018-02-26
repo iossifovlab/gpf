@@ -199,6 +199,9 @@ class Variant:
         self.studyNameAtt = studyNameAtt
         self.sampleIdAtt = sampleIdAtt
 
+    def get_attr(self, attr):
+        return self.atts.get(attr, None)
+
     @property
     def familyId(self):
         try:
@@ -326,6 +329,10 @@ class Variant:
             return self.study.phenotypes[0]
         else:
             return self.atts.get(self.phenotypeAtt, None)
+
+    @property
+    def family_atts(self):
+        return self.study.families[self.familyId].atts
 
     VIP_COLORS = {
         'deletion': '#e35252',
