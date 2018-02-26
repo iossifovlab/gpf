@@ -1,4 +1,6 @@
-import { Component, OnInit, Input, Output, EventEmitter, Host } from '@angular/core';
+import { 
+  Component, OnInit, Input, Output, EventEmitter, Host, ViewChild
+ } from '@angular/core';
 import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { QueryStateCollector } from '../query/query-state-provider';
@@ -6,7 +8,7 @@ import { DatasetsService } from '../datasets/datasets.service';
 import { SaveQuery } from '../query/common-query-data';
 import { GenotypeBrowserComponent } from '../genotype-browser/genotype-browser.component';
 import { SaveQueryService } from './save-query.service';
-
+import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-save-query-button',
@@ -17,6 +19,10 @@ export class SaveQueryButtonComponent implements OnInit {
 
   @Input()
   queryType: string;
+
+  @ViewChild(NgbDropdown)
+  dropdown: NgbDropdown;
+
 
   private urlUUID: string;
   private url: string;
@@ -49,12 +55,18 @@ export class SaveQueryButtonComponent implements OnInit {
                   });
           },
           error => {
+            this.resetState();
+            this.dropdown.close();
           });
       } else {
-        this.savedUrlUUID = null;
-        this.url = null;
+        this.resetState();
       }
       
+    }
+
+    private resetState() {
+        this.savedUrlUUID = null;
+        this.url = null;
     }
 
 
