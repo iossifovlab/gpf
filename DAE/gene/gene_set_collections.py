@@ -22,6 +22,7 @@ from pheno.pheno_regression import PhenoRegression
 
 LOGGER = logging.getLogger(__name__)
 
+
 class GeneSetsCollection(GeneInfoConfig):
 
     def __init__(self, gene_sets_collection_id):
@@ -109,6 +110,7 @@ class DenovoGeneSetsType(object):
         keys = sorted(keys)
         return keys
 
+
 class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def __init__(self):
@@ -129,7 +131,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             }
 
         self.effect_types = [
-            {'value': effect_type_arr[0], 'name' : effect_type_arr[1]}
+            {'value': effect_type_arr[0], 'name': effect_type_arr[1]}
             for effect_type_arr in map(
                 lambda effect_type_str: effect_type_str.split(':'),
                 self._get_att_list('effectTypes'))
@@ -151,11 +153,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                     'name': segment_arr[0],
                     'value': segment_arr[1],
                     'type': segment_arr[2]
-                 }
-                 for segment_arr in segments_arrs]
+                }
+                    for segment_arr in segments_arrs]
             )
-            self.criterias_by_phenotype_names.update([segment_arr[0]
-                for segment_arr in segments_arrs])
+            self.criterias_by_phenotype_names.update(
+                [segment_arr[0]
+                 for segment_arr in segments_arrs])
 
         self.criterias_by_phenotype_names.update({'Recurrent', 'Single'})
         self.gene_sets_names = self._get_att_list('geneSetsNames')
@@ -174,20 +177,20 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _pickle_cache(self):
         cache_file_path = self.gene_info.getGeneTermAtt(self.gsc_id, 'file')
         if os.path.exists(cache_file_path):
-            file = open(cache_file_path, 'r')
-            self.cache = cPickle.load(file)
+            infile = open(cache_file_path, 'r')
+            self.cache = cPickle.load(infile)
         else:
             self._generate_cache()
-            file = open(cache_file_path, 'w')
-            cPickle.dump(self.cache, file)
+            infile = open(cache_file_path, 'w')
+            cPickle.dump(self.cache, infile)
 
     def _generate_cache(self):
         for dataset in self._get_dataset_descs():
             self._gene_sets_for(dataset)
 
     def _get_dataset_descs(self):
-        return [self.datasets_config.get_dataset_desc(id)
-                for id in self.datasets_pedigree_selectors.keys()]
+        return [self.datasets_config.get_dataset_desc(gid)
+                for gid in self.datasets_pedigree_selectors.keys()]
 
     def get_gene_sets_types_legend(self):
         return [{
@@ -198,7 +201,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def _get_configured_dataset_legend(self, dataset_desc):
         configured_pedigree_selector_id = self.datasets_pedigree_selectors[
-                dataset_desc['id']]['id']
+            dataset_desc['id']]['id']
         for pedigree_selector in dataset_desc['pedigreeSelectors']:
             if pedigree_selector['id'] == configured_pedigree_selector_id:
                 return pedigree_selector.domain
@@ -274,19 +277,20 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def _gene_sets_for(self, dataset):
         dataset_cache = {effect_type['name']:
-                            {phenotype['id']: {}
+                         {phenotype['id']: {}
                              for phenotype in self._get_configured_dataset_legend(dataset)}
                          for effect_type in self.effect_types}
         self.cache[dataset['id']] = dataset_cache
         pedigree_selector = self.datasets_pedigree_selectors[dataset['id']]['source']
         for effect_type in self.effect_types:
             variants = list(vDB.get_denovo_variants(dataset['studies'],
-                effectTypes=effect_type['value']))
+                                                    effectTypes=effect_type['value']))
             effect_cache = dataset_cache[effect_type['name']]
             for criteria in chain(*self.variant_criterias):
                 key = criteria['name']
                 for variant in filter(lambda v: self._matches(v, criteria), variants):
-                    gene_symbols = {ge['sym'] for ge in variant.requestedGeneEffects}
+                    gene_symbols = {ge['sym']
+                                    for ge in variant.requestedGeneEffects}
                     if 'sib' in variant.inChS:
                         effect_cache.setdefault('unaffected', {}) \
                             .setdefault(key, set()).update(gene_symbols)
@@ -299,7 +303,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             # recurrent / non recurrent
             gene_summary_list = sorted(
                 [(ge['sym'], 'prb' in v.inChS, 'sib' in v.inChS,
-                      v.family_atts.get(pedigree_selector), v.familyId)
+                  v.family_atts.get(pedigree_selector), v.familyId)
                  for v in variants for ge in v.requestedGeneEffects])
             gene_counts = {gene: len(set(gene_families))
                            for gene, gene_families
@@ -346,6 +350,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             return cmp_value in value
         else:
             raise Exception('Unknown criteria type: {}'.format(criteria_type))
+
 
 class GeneSetsCollections(GeneInfoConfig):
 
