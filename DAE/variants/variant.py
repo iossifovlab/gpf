@@ -358,6 +358,8 @@ class FamilyVariant(VariantBase):
                 p1 = tgt[:, 1]
                 p2 = tgt[:, 2]
 
+                # FIXME: check for unknown genotype
+
                 if self.check_mendelian_trio(ch, p1, p2):
                     ti = Inheritance.mendelian
                 elif self.check_denovo_trio(ch, p1, p2):
