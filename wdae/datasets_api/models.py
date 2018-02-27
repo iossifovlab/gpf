@@ -18,11 +18,8 @@ class Dataset(models.Model):
         return self.dataset_id
 
     @classmethod
-    def recreate_dataset_perm(cls, dataset_id, authorized_groups):
+    def recreate_dataset_perm(cls, dataset_id, authorized_groups=None):
         datasetObject, _ = cls.objects.get_or_create(dataset_id=dataset_id)
-
-        for group in Group.objects.all():
-            remove_perm('view', group, datasetObject)
 
         groups = [dataset_id]
         if authorized_groups is not None:

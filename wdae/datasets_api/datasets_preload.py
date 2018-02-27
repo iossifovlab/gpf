@@ -25,7 +25,7 @@ class DatasetsPreload(Preload, Precompute):
     def precompute(self):
         try:
             for ds in self.dataset_config.get_datasets():
-                Dataset.recreate_dataset_perm(ds['id'], ds['authorizedGroups'])
+                Dataset.recreate_dataset_perm(ds['id'])
         except OperationalError:
             # Database migrations are probably not run yet, ignore exception
             pass
