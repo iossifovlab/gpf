@@ -10,6 +10,7 @@ import re
 from DAE import genomesDB
 import numpy as np
 from variants.attributes import Inheritance
+from anaconda_navigator import static
 
 
 SUB_RE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
@@ -249,6 +250,28 @@ class FamilyVariant(VariantBase):
             self._best_st = np.stack(best, axis=0)
         return self._best_st
 
+    @staticmethod
+    def check_mendelian_trio(ch, p1, p2):
+        m1 = (ch[0] == p1[0] or ch[0] == p1[1]) and \
+            (ch[1] == p2[0] or ch[1] == p2[1])
+        m2 = (ch[0] == p2[0] or ch[0] == p2[1]) and \
+            (ch[1] == p1[0] or ch[1] == p1[1])
+        return m1 or m2
+
+    @staticmethod
+    def check_denovo_trio(ch, p1, p2):
+        return p2[0] == p2[1] == p1[0] == p1[1] and \
+            ((ch[0] != p1[0] or ch[1] != p1[0]) or
+             (ch[0] != p2[0] or ch[1] != p2[0]))
+
+    @staticmethod
+    def check_omission_trio(ch, p1, p2):
+        return (p1[0] == p1[1]) and \
+            (p2[0] == p2[1]) and \
+            (p1[0] != p2[0]) and \
+            ((ch[0] != p1[0] or ch[1] != p1[0]) or
+             (ch[0] != p2[0] or ch[1] != p2[0]))
+
     def is_mendelian(self):
         if self._is_mendelian is None:
             mendelians = []
@@ -259,11 +282,7 @@ class FamilyVariant(VariantBase):
                 p1 = tgt[:, 1]
                 p2 = tgt[:, 2]
 
-                m1 = (ch[0] == p1[0] or ch[0] == p1[1]) and \
-                    (ch[1] == p2[0] or ch[1] == p2[1])
-                m2 = (ch[0] == p2[0] or ch[0] == p2[1]) and \
-                    (ch[1] == p1[0] or ch[1] == p1[1])
-                mendelians.append(m1 or m2)
+                mendelians.append(self.check_mendelian_trio(ch, p1, p2))
             self._is_mendelian = all(mendelians)
         return self._is_mendelian
 
@@ -277,18 +296,7 @@ class FamilyVariant(VariantBase):
                 p1 = tgt[:, 1]
                 p2 = tgt[:, 2]
 
-#                 m1 = (ch[0] != p1[0] and ch[0] != p1[1]) or \
-#                     (ch[1] != p2[0] and ch[1] != p2[1])
-#                 m2 = (ch[0] != p2[0] and ch[0] != p2[1]) or \
-#                     (ch[1] != p1[0] and ch[1] != p1[1])
-#                 denovos.append(
-#                     m1 and m2 and
-#                     p1[0] == p1[1] and p2[0] == p2[1])
-
-                d = p2[0] == p2[1] == p1[0] == p1[1] and \
-                    ((ch[0] != p1[0] or ch[1] != p1[0]) or
-                     (ch[0] != p2[0] or ch[1] != p2[0]))
-                denovos.append(d)
+                denovos.append(self.check_denovo_trio(ch, p1, p2))
             self._is_denovo = any(denovos)
         return self._is_denovo
 
@@ -302,20 +310,7 @@ class FamilyVariant(VariantBase):
                 p1 = tgt[:, 1]
                 p2 = tgt[:, 2]
 
-                o = (p1[0] == p1[1]) and \
-                    (p2[0] == p2[1]) and \
-                    (p1[0] != p2[0]) and \
-                    ((ch[0] != p1[0] or ch[1] != p1[0]) or
-                     (ch[0] != p2[0] or ch[1] != p2[0]))
-
-#                 m1 = (ch[0] != p1[0] and ch[0] != p1[1]) or \
-#                     (ch[1] != p2[0] and ch[1] != p2[1])
-#                 m2 = (ch[0] != p2[0] and ch[0] != p2[1]) or \
-#                     (ch[1] != p1[0] and ch[1] != p1[1])
-#                 omissions.append(
-#                     m1 and m2 and
-#                     (np.all(p1 != 0) or np.all(p2 != 0)))
-                omissions.append(o)
+                omissions.append(self.check_omission_trio(ch, p1, p2))
 
             self._is_omission = any(omissions)
         return self._is_omission

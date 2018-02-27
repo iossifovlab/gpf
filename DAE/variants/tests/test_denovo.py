@@ -85,6 +85,15 @@ def test_denovo_quad_2(fv2):
     assert not v.is_omission()
 
 
+def test_denovo_quad_3(fv2):
+    v = fv2.clone()
+    v.gt = np.array([[1, 1, 1, 1],
+                     [1, 1, 1, 0]])
+    assert not v.is_mendelian()
+    assert v.is_denovo()
+    assert not v.is_omission()
+
+
 def test_not_denovo_quad_1(fv2):
     v = fv2.clone()
     v.gt = np.array([[1, 0, 0, 1],
