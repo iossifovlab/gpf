@@ -124,7 +124,8 @@ class QLeaf(QNode):
 
     def __init__(self, vals):
         assert isinstance(vals, set)
-        assert all([isinstance(v, enum.Enum) for v in vals])
+        assert all([isinstance(v, enum.Enum) for v in vals]) or \
+            all([isinstance(v, str) for v in vals])
         super(QLeaf, self).__init__(vals=vals)
 
 
@@ -183,9 +184,9 @@ class QEq(QLeaf):
 
 class AQVisitor(ast.NodeVisitor):
 
-    def __init__(self, attr_class, *args, **kwargs):
+    def __init__(self, attr_converter, *args, **kwargs):
         ast.NodeVisitor.__init__(self, *args, **kwargs)
-        self.attr_class = attr_class
+        self.attr_converter = attr_converter
 
     def visit(self, node):
         return ast.NodeVisitor.visit(self, node)
@@ -193,9 +194,8 @@ class AQVisitor(ast.NodeVisitor):
     def visit_Call(self, node):
         assert isinstance(node, ast.Call)
         assert node.func.id in set(['eq', 'any', 'all'])
-        assert all([a.id in self.attr_class.__members__ for a in node.args])
 
-        vals = set([self.attr_class.from_name(a.id) for a in node.args])
+        vals = set([self.attr_converter(a.id) for a in node.args])
         pred = node.func.id
         if pred == 'eq':
             return QEq(vals)
@@ -222,8 +222,7 @@ class AQVisitor(ast.NodeVisitor):
 
     def visit_Name(self, node):
         assert isinstance(node.ctx, ast.Load)
-        assert node.id in self.attr_class.__members__
-        attr = self.attr_class.from_name(node.id)
+        attr = self.attr_converter(node.id)
         return QAny(set([attr]))
 
     def visit_UnaryOp(self, node):
@@ -245,7 +244,10 @@ class AQVisitor(ast.NodeVisitor):
 
 
 class AQuery(object):
-    ATTR_CLASS = None
+
+    @staticmethod
+    def attr_converter(a):
+        return str(a)
 
     def __init__(self, qnode):
         self.qnode = qnode
@@ -287,20 +289,26 @@ class AQuery(object):
     @classmethod
     def parse(cls, query):
         tree = ast.parse(query, mode='eval')
-        visitor = AQVisitor(cls.ATTR_CLASS)
+        visitor = AQVisitor(cls.attr_converter)
         return cls(visitor.visit(tree))
 
 
 class RoleQuery(AQuery):
-    ATTR_CLASS = Role
+    @staticmethod
+    def attr_converter(a):
+        return Role.from_name(a)
 
 
 class SexQuery(AQuery):
-    ATTR_CLASS = Sex
+    @staticmethod
+    def attr_converter(a):
+        return Sex.from_name(a)
 
 
 class InheritanceQuery(AQuery):
-    ATTR_CLASS = Inheritance
+    @staticmethod
+    def attr_converter(a):
+        return Inheritance.from_name(a)
 
 # class RoleQuery(object):
 #
