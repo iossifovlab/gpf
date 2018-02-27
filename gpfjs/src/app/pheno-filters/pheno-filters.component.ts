@@ -14,7 +14,10 @@ import { plainToClass } from 'class-transformer';
   selector: 'gpf-pheno-filters',
   templateUrl: './pheno-filters.component.html',
   styleUrls: ['./pheno-filters.component.css'],
-  providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => PhenoFiltersComponent) }]
+  providers: [{
+    provide: QueryStateProvider,
+    useExisting: forwardRef(() => PhenoFiltersComponent)
+  }]
 })
 export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implements OnChanges {
   @Input() dataset: Dataset;
@@ -38,40 +41,41 @@ export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implemen
           return [
             phenoFilter, plainToClass(ContinuousFilterState, phenoFilter)
           ] as [PhenoFilter, PhenoFilterState];
-        }
-        console.log(phenoFilter);
-        const categoricalFilterState = new CategoricalFilterState(
-          phenoFilter.name,
-          phenoFilter.measureType,
-          phenoFilter.measureFilter.role,
-          phenoFilter.measureFilter.measure,
-        );
+        } else if (phenoFilter.measureType === 'categorical') {
+          const categoricalFilterState = new CategoricalFilterState(
+            phenoFilter.name,
+            phenoFilter.measureType,
+            phenoFilter.measureFilter.role,
+            phenoFilter.measureFilter.measure,
+          );
 
-        return [
-          phenoFilter, categoricalFilterState
-        ] as [PhenoFilter, PhenoFilterState];
+          return [
+            phenoFilter, categoricalFilterState
+          ] as [PhenoFilter, PhenoFilterState];
+
+          }
+
+          return [phenoFilter, null] as [PhenoFilter, PhenoFilterState];
 
       });
-
-    console.log(this.phenoFiltersState);
   }
 
   get categoricalPhenoFilters() {
     return this.phenoFiltersState.filter(
-      ([_, phenoFilter]) => phenoFilter.measureType === 'categorical'
+      ([_, phenoFilter]) => phenoFilter && phenoFilter.measureType === 'categorical'
     );
   }
 
   get continuousPhenoFilters() {
     return this.phenoFiltersState.filter(
-      ([_, phenoFilter]) => phenoFilter.measureType === 'continuous'
+      ([_, phenoFilter]) => phenoFilter && phenoFilter.measureType === 'continuous'
     );
   }
 
   getState() {
     return this.validateAndGetState(this.phenoFiltersState)
       .map(phenoFiltersState => ({
-        phenoFilters: phenoFiltersState.map(x => x[1]).filter(f => !f.isEmpty())
+        phenoFilters: phenoFiltersState.map(x => x[1]).filter(f => f && !f.isEmpty())
       }));
   }
 

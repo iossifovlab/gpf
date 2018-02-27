@@ -47,15 +47,21 @@ export class DatasetsComponent implements OnInit {
         }
       });
 
-    this.selectedDataset$.subscribe(selectedDataset => {
-      if (!selectedDataset) {
-        return;
-      }
-      this.registerAlertVisible = !selectedDataset.accessRights;
-      if (selectedDataset.accessRights) {
-        this.selectedDatasetChange.emit(selectedDataset);
-      }
-    });
+    this.usersService.getUserInfoObservable()
+      .subscribe(_ => {
+        this.datasetsService.reloadSelectedDataset();
+      });
+
+    this.selectedDataset$
+      .subscribe(selectedDataset => {
+        if (!selectedDataset) {
+          return;
+        }
+        this.registerAlertVisible = !selectedDataset.accessRights;
+        if (selectedDataset.accessRights) {
+          this.selectedDatasetChange.emit(selectedDataset);
+        }
+      });
   }
 
   selectDataset(dataset: Dataset) {

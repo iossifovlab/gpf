@@ -1,5 +1,8 @@
 {{ continuousFilterState['name'] }}:
-<gpf-pheno-measure-selector [(selectedMeasure)]="selectedMeasure">
+<gpf-pheno-measure-selector
+    [(selectedMeasure)]="selectedMeasure"
+    [initialSelectedMeasure]="continuousFilterState.measure"
+    (measuresChange)="updateMeasures($event)" >
 </gpf-pheno-measure-selector>
 
 <gpf-continuous-filter

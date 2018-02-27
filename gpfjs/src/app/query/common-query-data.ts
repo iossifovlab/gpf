@@ -5,7 +5,7 @@ import { GeneWeightsState } from '../gene-weights/gene-weights-store';
 export interface GeneSetState {
   geneSetsCollection: string;
   geneSet: string;
-  geneSetsTypes?: string[];
+  geneSetsTypes?: Object;
 }
 
 
@@ -47,13 +47,10 @@ export class CommonQueryData {
       !geneSetsState.geneSet) {
       return null;
     }
-    let geneSetsTypes = Array
-      .from(geneSetsState.geneSetsTypes)
-      .map(t => t.id);
     return {
       geneSetsCollection: geneSetsState.geneSetsCollection.name,
       geneSet: geneSetsState.geneSet.name,
-      geneSetsTypes: geneSetsTypes
+      geneSetsTypes: geneSetsState.geneSetsTypes
     };
   }
 

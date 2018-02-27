@@ -1,6 +1,6 @@
-import { DoCheck, ContentChildren, QueryList, ViewChildren, forwardRef, OnChanges } from '@angular/core';
+import { DoCheck, OnDestroy, ContentChildren, QueryList, ViewChildren, forwardRef, OnChanges } from '@angular/core';
 
-import { Subject, Observable } from 'rxjs';
+import { ReplaySubject, Observable, Subscription } from 'rxjs';
 import { Scheduler } from 'rxjs';
 
 import { validationErrorsToStringArray, toValidationObservable } from '../utils/to-observable-with-validation';
@@ -32,9 +32,10 @@ export abstract class QueryStateWithErrorsProvider extends QueryStateProvider {
 
 }
 
-export abstract class QueryStateCollector implements DoCheck {
+export abstract class QueryStateCollector implements DoCheck, OnDestroy {
   private stateObjectString = '';
-  private stateChange$ = new Subject<boolean>();
+  private stateChange$ = new ReplaySubject<boolean>(1);
+  private subscriptions = new Array<Subscription>();
 
   @ViewChildren(forwardRef(() => QueryStateProvider))
   directContentChildren: QueryList<QueryStateProvider>;
@@ -60,9 +61,18 @@ export abstract class QueryStateCollector implements DoCheck {
     this.stateChange$.next(true);
   }
 
+  ngOnDestroy() {
+    for (let subscruption of this.subscriptions) {
+      subscruption.unsubscribe();
+    }
+    this.subscriptions = new Array<Subscription>();
+  }
+
   getStateChange() {
+    this.stateObjectString = '';
+
     let observable = Observable
-      .combineLatest(this.stateChange$, this.directContentChildren.changes, this.contentChildren.changes)
+      .merge(this.stateChange$, this.directContentChildren.changes, this.contentChildren.changes)
       .subscribeOn(Scheduler.queue)
       .share();
 
@@ -89,10 +99,10 @@ export abstract class QueryStateCollector implements DoCheck {
       .subscribeOn(Scheduler.queue);
   }
 
-  detectNextStateChange(lambda: () => any, errorLambda?: (any) => any) {
-    this.getStateChange()
+  detectNextStateChange(lambda: () => any) {
+    this.subscriptions.push(this.getStateChange()
       .subscribe(_ => {
         lambda();
-      });
+      }));
   }
 }

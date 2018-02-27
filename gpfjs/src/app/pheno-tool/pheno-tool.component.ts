@@ -34,33 +34,28 @@ export class PhenoToolComponent extends QueryStateCollector
   }
 
   ngAfterViewInit() {
-    // FIXME: figure out when to do checks
-    // this.store.subscribe(
-    //   (param) => {
-        let stateArray = this.collectState();
-        Observable.zip(...stateArray)
-          .subscribe(state => {
-            let stateObject = Object.assign({}, ...state);
-            this.phenoToolState = Object.assign({},
-                                          { datasetId: this.selectedDatasetId },
-                                          stateObject);
-          },
-          error => {
-            console.warn(error);
-          });
-      // });
+    this.detectNextStateChange(() => {
+      let stateArray = this.collectState();
+      Observable.zip(...stateArray)
+        .subscribe(state => {
+          let stateObject = Object.assign({}, ...state);
+          this.phenoToolState = Object.assign(
+            {},
+            { datasetId: this.selectedDatasetId },
+            stateObject);
+        },
+        error => {
+          console.warn(error);
+        });
+    });
   }
 
   ngOnInit() {
-    this.route.parent.params.subscribe(
-      (params: Params) => {
-        this.selectedDatasetId = params['dataset'];
-        this.datasetsService.getDataset(this.selectedDatasetId).subscribe(
-          (dataset: Dataset) => {
-            this.selectedDataset = dataset;
-        });
-      }
-    );
+    this.datasetsService.getSelectedDataset()
+      .subscribe(dataset => {
+        this.selectedDatasetId = dataset.id;
+        this.selectedDataset = dataset;
+      });
   }
 
   submitQuery() {

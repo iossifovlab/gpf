@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Headers, Http, Response, RequestOptions } from '@angular/http';
-import { Observable } from 'rxjs';
+import { Observable, Scheduler } from 'rxjs';
 
 import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
@@ -26,20 +26,16 @@ export class DatasetsService {
     private config: ConfigService,
     private usersService: UsersService
   ) {
-    Observable
-      .combineLatest(this.datasets$, this._selectedDatasetId$)
-      .map(([datasets, selectedDatasetId]) => {
+    this._selectedDatasetId$.asObservable()
+      .switchMap(selectedDatasetId => {
         if (!selectedDatasetId) {
-          return null;
-        }
-        let selectedDataset = datasets.find(ds => ds.id === selectedDatasetId);
-
-        if (!selectedDataset) {
-          this._selectedDatasetId$.next('');
+          return Observable.of(null);
         }
 
-        return selectedDataset;
+        return this.getDataset(selectedDatasetId);
       })
+      .catch(errors => Observable.of(null))
+      .filter(a => !!a)
       .subscribe(dataset => {
         this.selectedDataset$.next(dataset);
       });
@@ -48,17 +44,15 @@ export class DatasetsService {
       .map(user => user.email || '')
       .distinctUntilChanged()
       .subscribe(() => {
-        this.getDatasets().take(1).subscribe(() => {});
+        this.reloadAllDatasets();
       });
   }
 
   getDatasets(): Observable<Dataset[]> {
     let options = new RequestOptions({ withCredentials: true });
-    return this.http
-      .get(this.datasetUrl, options)
+    return this.http.get(this.datasetUrl, options)
       .map(res => {
         let datasets = Dataset.fromJsonArray(res.json().data);
-        console.log("Next datasets", datasets);
         this.datasets$.next(datasets);
         return datasets;
       });
@@ -66,9 +60,9 @@ export class DatasetsService {
 
   getDataset(datasetId: string): Observable<Dataset> {
     let url = `${this.datasetUrl}${datasetId}`;
+    let options = new RequestOptions({ withCredentials: true });
 
-    return this.http
-      .get(url)
+    return this.http.get(url, options)
       .map(res => {
         return Dataset.fromJson(res.json().data);
       });
@@ -86,8 +80,12 @@ export class DatasetsService {
     }
   }
 
+  reloadSelectedDataset() {
+    this._selectedDatasetId$.next(this._selectedDatasetId$.value);
+  }
+
   getSelectedDataset() {
-    return this.selectedDataset$.asObservable();
+    return this.selectedDataset$.asObservable().subscribeOn(Scheduler.async);
   }
 
   getDatasetsObservable() {
@@ -96,5 +94,9 @@ export class DatasetsService {
 
   hasSelectedDataset() {
     return !!this._selectedDatasetId$.getValue();
+  }
+
+  private reloadAllDatasets() {
+    this.getDatasets().take(1).subscribe(() => {});
   }
 }

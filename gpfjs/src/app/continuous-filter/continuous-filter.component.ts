@@ -1,4 +1,4 @@
-import { Component, OnInit, OnChanges, Input } from '@angular/core';
+import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
 import { ContinuousFilterState, PhenoFiltersState } from '../pheno-filters/pheno-filters';
@@ -43,35 +43,23 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
           .getMeasurePartitions(datasetId, measureName, internalRangeStart, internalRangeEnd);
       });
 
-    this.partitions.subscribe(
-      (partitions) => {
+    this.partitions
+      .subscribe(partitions => {
         this.rangesCounts = [partitions.leftCount, partitions.midCount, partitions.rightCount];
-    });
+      });
   }
 
-  restoreContinuousFilter(state) {
-    let filter = state.find(f => f.id === this.filterId);
-    if (filter && filter.measure === this.measureName) {
-      this.rangeStart = filter.mmin;
-      this.rangeEnd = filter.mmax;
-    }
-  }
-
-  ngOnChanges() {
+  ngOnChanges(changes: SimpleChanges) {
     if (this.datasetId && this.measureName) {
-      this.measuresService.getMeasureHistogram(this.datasetId, this.measureName).subscribe(
-        (histogramData) => {
+      this.measuresService.getMeasureHistogram(this.datasetId, this.measureName)
+        .subscribe(histogramData => {
           this.histogramData = histogramData;
-          this.continuousFilterState.mmin = histogramData.min;
-          this.continuousFilterState.mmax = histogramData.max;
-
-          this.stateRestoreService.getState(this.constructor.name + this.filterId)
-            .take(1)
-            .subscribe(state => {
-              if (state['phenoFilters']) {
-                this.restoreContinuousFilter(state['phenoFilters']);
-              }
-            });
+          if (!this.continuousFilterState.mmin) {
+            this.continuousFilterState.mmin = histogramData.min;
+          }
+          if (!this.continuousFilterState.mmax) {
+            this.continuousFilterState.mmax = histogramData.max;
+          }
         });
     }
   }
