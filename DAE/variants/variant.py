@@ -41,6 +41,11 @@ def dae2vcf_variant(chrom, position, var):
     raise NotImplementedError('weird variant: ' + var)
 
 
+def mat2str(mat, col_sep="", row_sep="/"):
+    return row_sep.join([col_sep.join([str(n) for n in mat[i, :]])
+                         for i in xrange(mat.shape[0])])
+
+
 class VariantBase(object):
 
     def __init__(self, chromosome, position, reference, alternative):
@@ -272,13 +277,18 @@ class FamilyVariant(VariantBase):
                 p1 = tgt[:, 1]
                 p2 = tgt[:, 2]
 
-                m1 = (ch[0] != p1[0] and ch[0] != p1[1]) or \
-                    (ch[1] != p2[0] and ch[1] != p2[1])
-                m2 = (ch[0] != p2[0] and ch[0] != p2[1]) or \
-                    (ch[1] != p1[0] and ch[1] != p1[1])
-                denovos.append(
-                    m1 and m2 and
-                    np.all(p1 == 0) and np.all(p2 == 0))
+#                 m1 = (ch[0] != p1[0] and ch[0] != p1[1]) or \
+#                     (ch[1] != p2[0] and ch[1] != p2[1])
+#                 m2 = (ch[0] != p2[0] and ch[0] != p2[1]) or \
+#                     (ch[1] != p1[0] and ch[1] != p1[1])
+#                 denovos.append(
+#                     m1 and m2 and
+#                     p1[0] == p1[1] and p2[0] == p2[1])
+
+                d = p2[0] == p2[1] == p1[0] == p1[1] and \
+                    ((ch[0] != p1[0] or ch[1] != p1[0]) or
+                     (ch[0] != p2[0] or ch[1] != p2[0]))
+                denovos.append(d)
             self._is_denovo = any(denovos)
         return self._is_denovo
 
@@ -292,13 +302,21 @@ class FamilyVariant(VariantBase):
                 p1 = tgt[:, 1]
                 p2 = tgt[:, 2]
 
-                m1 = (ch[0] != p1[0] and ch[0] != p1[1]) or \
-                    (ch[1] != p2[0] and ch[1] != p2[1])
-                m2 = (ch[0] != p2[0] and ch[0] != p2[1]) or \
-                    (ch[1] != p1[0] and ch[1] != p1[1])
-                omissions.append(
-                    m1 and m2 and
-                    (np.all(p1 != 0) or np.all(p2 != 0)))
+                o = (p1[0] == p1[1]) and \
+                    (p2[0] == p2[1]) and \
+                    (p1[0] != p2[0]) and \
+                    ((ch[0] != p1[0] or ch[1] != p1[0]) or
+                     (ch[0] != p2[0] or ch[1] != p2[0]))
+
+#                 m1 = (ch[0] != p1[0] and ch[0] != p1[1]) or \
+#                     (ch[1] != p2[0] and ch[1] != p2[1])
+#                 m2 = (ch[0] != p2[0] and ch[0] != p2[1]) or \
+#                     (ch[1] != p1[0] and ch[1] != p1[1])
+#                 omissions.append(
+#                     m1 and m2 and
+#                     (np.all(p1 != 0) or np.all(p2 != 0)))
+                omissions.append(o)
+
             self._is_omission = any(omissions)
         return self._is_omission
 
