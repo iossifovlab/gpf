@@ -56,7 +56,7 @@ def test_non_mendelian(uagre):
     for v in vs:
         if not v.is_mendelian():
             count += 1
-    assert count == 139
+    assert count == 140
 
 
 def test_empty_query(uagre):

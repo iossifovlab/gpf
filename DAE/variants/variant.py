@@ -112,9 +112,6 @@ class FamilyVariant(VariantBase):
         self.gt = None
 
         self._best_st = None
-        self._is_mendelian = None
-        self._is_denovo = None
-        self._is_omission = None
         self._inheritance = None
 
         self._variant_in_members = None
@@ -279,47 +276,13 @@ class FamilyVariant(VariantBase):
              (ch[1] == p1[0] or ch[1] == p2[0]))
 
     def is_mendelian(self):
-        if self._is_mendelian is None:
-            mendelians = []
-            for _pid, trio in self.family.trios.items():
-                index = self.family.members_index(trio)
-                tgt = self.gt[:, index]
-                ch = tgt[:, 0]
-                p1 = tgt[:, 1]
-                p2 = tgt[:, 2]
-
-                mendelians.append(self.check_mendelian_trio(ch, p1, p2))
-            self._is_mendelian = all(mendelians)
-        return self._is_mendelian
+        return self.inheritance == Inheritance.mendelian
 
     def is_denovo(self):
-        if self._is_denovo is None:
-            denovos = []
-            for _pid, trio in self.family.trios.items():
-                index = self.family.members_index(trio)
-                tgt = self.gt[:, index]
-                ch = tgt[:, 0]
-                p1 = tgt[:, 1]
-                p2 = tgt[:, 2]
-
-                denovos.append(self.check_denovo_trio(ch, p1, p2))
-            self._is_denovo = any(denovos)
-        return self._is_denovo
+        return self.inheritance == Inheritance.denovo
 
     def is_omission(self):
-        if self._is_omission is None:
-            omissions = []
-            for _pid, trio in self.family.trios.items():
-                index = self.family.members_index(trio)
-                tgt = self.gt[:, index]
-                ch = tgt[:, 0]
-                p1 = tgt[:, 1]
-                p2 = tgt[:, 2]
-
-                omissions.append(self.check_omission_trio(ch, p1, p2))
-
-            self._is_omission = any(omissions)
-        return self._is_omission
+        return self.inheritance == Inheritance.omission
 
     @staticmethod
     def combine_inheritance(*inheritance):
@@ -352,26 +315,27 @@ class FamilyVariant(VariantBase):
     def inheritance(self):
         if self._inheritance is None:
             inherits = []
-            for _pid, trio in self.family.trios.items():
-                index = self.family.members_index(trio)
-                tgt = self.gt[:, index]
-                ch = tgt[:, 0]
-                p1 = tgt[:, 1]
-                p2 = tgt[:, 2]
+            if np.any(self.gt == -1):
+                self._inheritance = Inheritance.unknown
+            else:
+                for _pid, trio in self.family.trios.items():
+                    index = self.family.members_index(trio)
+                    tgt = self.gt[:, index]
+                    ch = tgt[:, 0]
+                    p1 = tgt[:, 1]
+                    p2 = tgt[:, 2]
 
-                # FIXME: check for unknown genotype
-
-                if self.check_mendelian_trio(ch, p1, p2):
-                    ti = Inheritance.mendelian
-                elif self.check_denovo_trio(ch, p1, p2):
-                    ti = Inheritance.denovo
-                elif self.check_omission_trio(ch, p1, p2):
-                    ti = Inheritance.omission
-                else:
-                    print("strange inheritance:", trio, mat2str(tgt))
-                    ti = Inheritance.unknown
-                inherits.append(ti)
-            self._inheritance = self.combine_inheritance(*inherits)
+                    if self.check_mendelian_trio(ch, p1, p2):
+                        ti = Inheritance.mendelian
+                    elif self.check_denovo_trio(ch, p1, p2):
+                        ti = Inheritance.denovo
+                    elif self.check_omission_trio(ch, p1, p2):
+                        ti = Inheritance.omission
+                    else:
+                        print("strange inheritance:", trio, mat2str(tgt))
+                        ti = Inheritance.unknown
+                    inherits.append(ti)
+                self._inheritance = self.combine_inheritance(*inherits)
 
         return self._inheritance
 

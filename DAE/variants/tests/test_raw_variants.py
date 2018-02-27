@@ -114,7 +114,7 @@ def test_query_persons_all(uagre):
 
     vs = uagre.query_variants(
         person_ids=['AU1921202', 'AU1921211'])
-    assert len(list(vs)) == 433
+    assert len(list(vs)) == 434
 
 
 def test_query_persons_combined(uagre):
