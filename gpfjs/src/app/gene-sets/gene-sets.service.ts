@@ -20,8 +20,10 @@ export class GeneSetsService {
   ) { }
 
   getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
+    let headers = new Headers({ 'Content-Type': 'application/json' });
+    let options = new RequestOptions({ headers: headers, withCredentials: true });
     return this.http
-      .get(this.geneSetsCollectionsUrl)
+      .get(this.geneSetsCollectionsUrl, options)
       .map(res => {
         return GeneSetsCollection.fromJsonArray(res.json());
       });
@@ -29,7 +31,7 @@ export class GeneSetsService {
 
   getGeneSets(selectedGeneSetsCollection: string, searchTerm: string, geneSetsTypes: Object): Observable<GeneSet[]> {
     let headers = new Headers({ 'Content-Type': 'application/json' });
-    let options = new RequestOptions({ headers: headers });
+    let options = new RequestOptions({ headers: headers, withCredentials: true });
     return this.http
       .post(this.geneSetsSearchUrl, {
         geneSetsCollection: selectedGeneSetsCollection,
