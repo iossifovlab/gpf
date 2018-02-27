@@ -320,17 +320,67 @@ class FamilyVariant(VariantBase):
             self._is_omission = any(omissions)
         return self._is_omission
 
+    @staticmethod
+    def combine_inheritance(*inheritance):
+        inherits = np.array([i.value for i in inheritance])
+        inherits = np.array(inherits)
+        if np.any(inherits == Inheritance.unknown.value):
+            return Inheritance.unknown
+        elif np.all(inherits == Inheritance.mendelian.value):
+            return Inheritance.mendelian
+        elif np.all(np.logical_or(
+                inherits == Inheritance.mendelian.value,
+                inherits == Inheritance.denovo.value)):
+            return Inheritance.denovo
+        elif np.all(np.logical_or(
+                inherits == Inheritance.mendelian.value,
+                inherits == Inheritance.omission.value)):
+            return Inheritance.omission
+        elif np.all(np.logical_or(
+                inherits == Inheritance.mendelian.value,
+                np.logical_or(
+                    inherits == Inheritance.omission.value,
+                    inherits == Inheritance.denovo.value
+                ))):
+            return Inheritance.other
+        else:
+            print("strange inheritance:", inherits)
+            return Inheritance.unknown
+
     @property
     def inheritance(self):
         if self._inheritance is None:
-            if self.is_mendelian():
-                self._inheritance = Inheritance.mendelian
-            elif self.is_denovo():
-                self._inheritance = Inheritance.denovo
-            elif self.is_omission():
-                self._inheritance = Inheritance.omission
-            elif self.is_unknown():
-                self._inheritance = Inheritance.unknown
-            else:
-                self._inheritance = Inheritance.other
+            inherits = []
+            for _pid, trio in self.family.trios.items():
+                index = self.family.members_index(trio)
+                tgt = self.gt[:, index]
+                ch = tgt[:, 0]
+                p1 = tgt[:, 1]
+                p2 = tgt[:, 2]
+
+                if self.check_mendelian_trio(ch, p1, p2):
+                    ti = Inheritance.mendelian
+                elif self.check_denovo_trio(ch, p1, p2):
+                    ti = Inheritance.denovo
+                elif self.check_omission_trio(ch, p1, p2):
+                    ti = Inheritance.omission
+                else:
+                    print("strange inheritance:", trio, mat2str(tgt))
+                    ti = Inheritance.unknown
+                inherits.append(ti)
+            self._inheritance = self.combine_inheritance(*inherits)
+
         return self._inheritance
+
+#         if self._inheritance is None:
+#             if self.is_mendelian():
+#                 self._inheritance = Inheritance.mendelian
+#             elif self.is_denovo():
+#                 self._inheritance = Inheritance.denovo
+#             elif self.is_omission():
+#                 self._inheritance = Inheritance.omission
+#             elif self.is_unknown():
+#                 self._inheritance = Inheritance.unknown
+#             else:
+#                 self._inheritance = Inheritance.other
+#         return self._inheritance

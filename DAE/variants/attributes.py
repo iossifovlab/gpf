@@ -83,6 +83,9 @@ class Sex(enum.Enum):
     def from_value(val):
         return Sex(int(val))
 
+    def __repr__(self):
+        return self.name
+
 
 class Inheritance(enum.Enum):
     mendelian = 1
@@ -95,6 +98,9 @@ class Inheritance(enum.Enum):
     def from_name(name):
         assert name in Inheritance.__members__
         return Inheritance[name]
+
+    def __repr__(self):
+        return self.name
 
 
 class QNode(object):
