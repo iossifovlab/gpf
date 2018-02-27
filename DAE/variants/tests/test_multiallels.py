@@ -8,7 +8,7 @@ import numpy as np
 
 
 def test_query_regions(uagre):
-    regions = [Region("1", 900718, 900719)]
+    regions = [Region("1", 900718, 900718)]
     vs = uagre.query_variants(regions=regions)
     assert vs is not None
     vl = list(vs)

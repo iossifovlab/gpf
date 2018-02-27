@@ -237,6 +237,7 @@ class FamilyVariant(VariantBase):
         if self._best_st is None:
             ref = (2 * np.ones(len(self.family), dtype=np.int8))
             alt_alleles = []
+
             for anum in range(1, len(self.alt) + 1):
                 alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
                 alt_gt[self.gt == anum] = 1
