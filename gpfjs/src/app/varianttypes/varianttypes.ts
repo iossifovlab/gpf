@@ -6,5 +6,5 @@ export class VariantTypes {
   @Validate(SetNotEmpty, {
     message: 'select at least one'
   })
-  selected: Set<string> = new Set(['sub', 'ins', 'del']);
+  selected: Set<string> = new Set(['sub', 'ins', 'del', 'complex']);
 }

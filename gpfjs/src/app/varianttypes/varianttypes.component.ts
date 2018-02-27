@@ -26,6 +26,9 @@ export class VarianttypesComponent extends QueryStateWithErrorsProvider
   @Input()
   hasCNV = false;
 
+  @Input()
+  hasComplex = false;
+
   constructor(
     private stateRestoreService: StateRestoreService,
     private datasetsService: DatasetsService
@@ -51,6 +54,9 @@ export class VarianttypesComponent extends QueryStateWithErrorsProvider
 
   selectAll(): void {
     let selected = new Set(['sub', 'ins', 'del']);
+    if (this.hasComplex) {
+      selected.add('complex');
+    }
     if (this.hasCNV) {
       selected.add('CNV');
     }
@@ -62,7 +68,8 @@ export class VarianttypesComponent extends QueryStateWithErrorsProvider
   }
 
   variantTypesCheckValue(variantType: string, value: boolean): void {
-    if (variantType === 'sub' || variantType === 'ins' || variantType === 'del' || variantType === 'CNV') {
+    if (variantType === 'sub' || variantType === 'ins' || variantType === 'del' ||
+        variantType === 'CNV' || variantType == 'complex') {
       if (value) {
         this.variantTypes.selected.add(variantType);
       } else {

@@ -34,7 +34,7 @@ export class GenderComponent extends QueryStateWithErrorsProvider implements OnI
         if (state['gender']) {
           this.selectNone();
           for (let gender of state['gender']) {
-            if (gender === 'female' || gender === 'male') {
+            if (gender === 'female' || gender === 'male' || gender === 'unspecified') {
              this.gender[gender] = true;
             }
           }
@@ -45,15 +45,17 @@ export class GenderComponent extends QueryStateWithErrorsProvider implements OnI
   selectAll() {
     this.gender.male = true;
     this.gender.female = true;
+    this.gender.unspecified = true;
   }
 
   selectNone() {
     this.gender.male = false;
     this.gender.female = false;
+    this.gender.unspecified = false;
   }
 
   genderCheckValue(gender: string, value: boolean): void {
-    if (gender === 'female' || gender === 'male') {
+    if (gender === 'female' || gender === 'male' || gender === 'unspecified') {
       this.gender[gender] = value;
     }
   }

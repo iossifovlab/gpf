@@ -26,6 +26,16 @@
             <span class="gender-icon female"></span>
           </label>
         </div>
+        <div class="checkbox">
+          <label>
+            <input
+                #unspecifiedCheckbox
+                type="checkbox"
+                [checked]="gender.unspecified"
+                (change)="genderCheckValue('unspecified',unspecifiedCheckbox.checked)">
+            <span class="gender-icon unspecified"></span>
+          </label>
+        </div>
     </div>
 
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
