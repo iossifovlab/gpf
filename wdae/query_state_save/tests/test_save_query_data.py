@@ -12,7 +12,7 @@ def save_object(data, page, save_endpoint, client):
 
     assert response.status_code == status.HTTP_201_CREATED
 
-    return response.data.get("url", "")
+    return response.data.get("uuid")
 
 
 def load_object(url_code, load_endpoint, client):
