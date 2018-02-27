@@ -10,7 +10,6 @@ import re
 from DAE import genomesDB
 import numpy as np
 from variants.attributes import Inheritance
-from anaconda_navigator import static
 
 
 SUB_RE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
@@ -260,9 +259,13 @@ class FamilyVariant(VariantBase):
 
     @staticmethod
     def check_denovo_trio(ch, p1, p2):
-        return p2[0] == p2[1] == p1[0] == p1[1] and \
-            ((ch[0] != p1[0] or ch[1] != p1[0]) or
-             (ch[0] != p2[0] or ch[1] != p2[0]))
+        return (p2[0] == p2[1] == p1[0] == p1[1] and
+                ((ch[0] != p1[0] or ch[1] != p1[0]) or
+                 (ch[0] != p2[0] or ch[1] != p2[0]))) or \
+            ((p1[0] == p1[1]) and
+             (p2[0] == p2[1]) and
+             ((ch[0] != p1[0] and ch[0] != p2[0]) or
+              (ch[1] != p1[0] and ch[1] != p2[0])))
 
     @staticmethod
     def check_omission_trio(ch, p1, p2):
@@ -270,7 +273,9 @@ class FamilyVariant(VariantBase):
             (p2[0] == p2[1]) and \
             (p1[0] != p2[0]) and \
             ((ch[0] != p1[0] or ch[1] != p1[0]) or
-             (ch[0] != p2[0] or ch[1] != p2[0]))
+             (ch[0] != p2[0] or ch[1] != p2[0])) and \
+            ((ch[0] == p1[0] or ch[0] == p2[0]) and
+             (ch[1] == p1[0] or ch[1] == p2[0]))
 
     def is_mendelian(self):
         if self._is_mendelian is None:

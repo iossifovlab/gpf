@@ -7,6 +7,7 @@ from __future__ import print_function
 
 from RegionOperations import Region
 import numpy as np
+from variants.variant import mat2str
 
 
 def test_mendelian(uagre):
@@ -15,8 +16,8 @@ def test_mendelian(uagre):
 
     for v in variants:
         print(v, v.is_mendelian(), v.effect_type)
-        print(v.best_st)
-        print(v.gt)
+        print(mat2str(v.best_st))
+        print(mat2str(v.gt))
 
 
 def test_mendelian_trio_1(fv1):

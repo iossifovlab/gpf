@@ -53,7 +53,8 @@ class Role(enum.Enum):
         unknown
 
     def __repr__(self):
-        return "{}: {:023b}".format(self.name, self.value)
+        return self.name
+        # return "{}: {:023b}".format(self.name, self.value)
 
     @staticmethod
     def from_name(name):
