@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, Input, forwardRef, ViewChild,
-         ChangeDetectorRef } from '@angular/core';
+         OnDestroy } from '@angular/core';
 import { Dataset } from '../datasets/datasets';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
@@ -21,10 +21,8 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
   @Input() genotypeBrowserState: Object;
   @ViewChild('tabset') ngbTabset;
 
-
   constructor(
-    private stateRestoreService: StateRestoreService,
-    private changeDetectorRef: ChangeDetectorRef
+    private stateRestoreService: StateRestoreService
   ) {
     super();
   }
@@ -43,6 +41,9 @@ export class FamilyFiltersBlockComponent extends QueryStateCollector implements 
 
         }
       );
+  }
+
+  ngOnDestroy() {
   }
 
 }

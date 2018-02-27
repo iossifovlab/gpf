@@ -27,7 +27,7 @@ export class DatasetsTableComponent implements OnInit {
     this.datasets$ = this.datasetsService.getDatasets().share();
     this.users$ = this.usersService.getAllUsers().share();
 
-    this.tableData$ = Observable.combineLatest([this.datasets$, this.users$])
+    this.tableData$ = Observable.combineLatest(this.datasets$, this.users$)
       .take(1)
       .map(([datasets, users]) => this.toDatasetTableRow(datasets, users));
   }
