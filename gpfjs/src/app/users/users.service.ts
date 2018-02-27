@@ -94,7 +94,7 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        throw new Error(error.json().error_msg);
+        return Observable.throw(new Error(error.json().error_msg));
       });
   }
 
@@ -108,7 +108,7 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        throw new Error(error.json().error_msg);
+        return Observable.throw(new Error(error.json().error_msg));
       });
   }
 
