@@ -17,7 +17,9 @@ import logging
 from gene.config import GeneInfoConfig
 from datasets.config import DatasetsConfig
 from GeneTerms import loadGeneTerm
-from DAE import vDB
+# from DAE import vDB
+import DAE
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -287,7 +289,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         pedigree_selector = self.datasets_pedigree_selectors[
             dataset['id']]['source']
         for effect_type in self.effect_types:
-            variants = list(vDB.get_denovo_variants(
+            variants = list(DAE.vDB.get_denovo_variants(
                 dataset['studies'],
                 effectTypes=effect_type['value']))
             effect_cache = dataset_cache[effect_type['name']]
