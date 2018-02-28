@@ -27,3 +27,14 @@ class GroupRetrieveSerializer(GroupSerializer):
     def get_datasets(self, group):
         datasets = shortcuts.get_objects_for_group(group, 'view', klass=Dataset)
         return map(lambda d: d.dataset_id, datasets)
+
+
+class PermissionChangeSerializer(serializers.Serializer):
+
+    groupId = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all()
+    )
+
+    datasetId = serializers.PrimaryKeyRelatedField(
+        queryset=Dataset.objects.all()
+    )
