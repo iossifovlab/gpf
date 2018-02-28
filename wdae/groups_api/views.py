@@ -66,6 +66,9 @@ class RevokePermissionToGroupView(views.APIView):
         dataset = Dataset.objects.get(pk=serializer.data['datasetId'])
         group = Group.objects.get(pk=serializer.data['groupId'])
 
+        if group.name in dataset.default_groups:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         remove_perm('view', group, dataset)
 
         return Response(status=status.HTTP_200_OK)

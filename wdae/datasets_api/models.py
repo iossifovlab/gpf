@@ -14,6 +14,10 @@ class Dataset(models.Model):
             ('view', 'View dataset'),
         )
 
+    @property
+    def default_groups(self):
+        return self.DEFAULT_GROUPS_FOR_DATASET + [self.dataset_id]
+
     def __repr__(self):
         return self.dataset_id
 
@@ -21,11 +25,9 @@ class Dataset(models.Model):
     def recreate_dataset_perm(cls, dataset_id, authorized_groups=None):
         datasetObject, _ = cls.objects.get_or_create(dataset_id=dataset_id)
 
-        groups = [dataset_id]
+        groups = datasetObject.default_groups
         if authorized_groups is not None:
             groups += authorized_groups
-        if cls.DEFAULT_GROUPS_FOR_DATASET is not None:
-            groups += cls.DEFAULT_GROUPS_FOR_DATASET
         LOGGER.error("recreating groups: {}".format(groups))
         for group_name in set(groups):
             group, _created = Group.objects.get_or_create(name=group_name)

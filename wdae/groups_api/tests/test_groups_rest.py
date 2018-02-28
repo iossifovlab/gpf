@@ -1,8 +1,12 @@
+import pytest
+
 from guardian.models import Group
 from guardian import shortcuts
 from rest_framework import status
 
 from guardian.shortcuts import assign_perm
+from guardian.shortcuts import get_perms
+from datasets_api.models import Dataset
 
 
 def test_admin_can_get_groups(admin_client, groups_endpoint):
@@ -219,3 +223,22 @@ def test_not_admin_cant_revoke_permissions(
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert user.has_perm('view', dataset)
+
+
+def test_cant_revoke_default_permissions(
+        user_client, revoke_permission_url, dataset):
+    Dataset.recreate_dataset_perm(dataset.dataset_id, [])
+
+    assert len(dataset.default_groups) > 0
+
+    for group_name in dataset.default_groups:
+        group = Group.objects.get(name=group_name)
+        data = {
+            'datasetId': dataset.id,
+            'groupId': group.id
+        }
+
+        response = user_client.post(revoke_permission_url, data, format='json')
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert 'view' in get_perms(group, dataset)
