@@ -7,7 +7,7 @@ from __future__ import print_function
 
 from RegionOperations import Region
 from variants.attributes import Inheritance
-# import numpy as np
+import numpy as np
 
 
 def test_query_regions(uagre):
@@ -21,8 +21,9 @@ def test_query_regions(uagre):
         print(v, v.alt)
         print(v.gt)
         print(v.best_st)
-        assert v.best_st.shape == (2, 9)
+
         assert v.inheritance == Inheritance.unknown
 
-#         assert np.all(np.sum(v.best_st, axis=0) == 2)
-#         assert np.all(v.best_st >= 0)
+        assert v.best_st.shape == (2, 9)
+        assert np.all(v.best_st[:, 0] == -1)
+        assert np.all(v.best_st[:, 6] == -1)

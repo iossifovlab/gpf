@@ -234,6 +234,8 @@ class FamilyVariant(VariantBase):
         if self._best_st is None:
             ref = (2 * np.ones(len(self.family), dtype=np.int8))
             alt_alleles = []
+            unknown = np.any(self.gt == -1, axis=0)
+            print(unknown)
 
             for anum in range(1, len(self.alt) + 1):
                 alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
@@ -245,6 +247,8 @@ class FamilyVariant(VariantBase):
             best = [ref]
             best.extend(alt_alleles)
             self._best_st = np.stack(best, axis=0)
+            self._best_st[:, unknown] = -1
+
         return self._best_st
 
     @staticmethod
