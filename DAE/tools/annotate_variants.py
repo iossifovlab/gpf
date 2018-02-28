@@ -13,6 +13,12 @@ import time
 import datetime
 from DAE import *
 
+def set_order(option, opt_str, value, parser):
+    setattr(parser.values, option.dest, value)
+    if not hasattr(parser.values, 'order'):
+        parser.values.order = []
+    parser.values.order.append(option.dest)
+
 def get_argument_parser():
     desc = """Program to annotate variants (substitutions & indels & cnvs)"""
     parser = optparse.OptionParser(version='%prog version 2.2 10/October/2013', description=desc, add_help_option=False)
@@ -37,7 +43,11 @@ def get_argument_parser():
     parser.add_option('-G', help='genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19> ', type='string', action='store')
     parser.add_option('--Graw', help='outside genome file', type='string', action='store')
 
-    parser.add_option('-I', help='geneIDs mapping file; use None for no gene name mapping', default="default"  , type='string', action='store')
+    parser.add_option('-I', help='geneIDs mapping file; use None for no gene name mapping', default="default", type='string', action='store')
+
+    parser.add_option('--effect-type', type='string', action='callback', callback=set_order)
+    parser.add_option('--effect-gene', type='string', action='callback', callback=set_order)
+    parser.add_option('--effect-details', type='string', action='callback', callback=set_order)
 
     return parser
 
@@ -62,6 +72,7 @@ def print_help():
     print("-G G                             genome ID (GATK_ResourceBundle_5777_b37_phiX174, hg19)")
     print("--Graw=GRAW                      outside genome file ")
     print("-I I                             geneIDs mapping file; use None for no gene name mapping ")
+
     print("\n----------------------------------------------------------------\n\n")
 
 def give_column_number(s, header):
@@ -95,24 +106,32 @@ class EffectAnnotator(object):
 
     def _init_cols(self):
         opts = self.opts
+        header = self.header
 
         if opts.x == None and opts.c == None:
             opts.x = "location"
         if (opts.v == None and opts.a == None) and (opts.v == None and opts.t == None):
             opts.v = "variant"
 
-        self.chrCol = assign_values(opts.c, self.header)
-        self.posCol = assign_values(opts.p, self.header)
-        self.locCol = assign_values(opts.x, self.header)
-        self.varCol = assign_values(opts.v, self.header)
-        self.altCol = assign_values(opts.a, self.header)
-        self.refCol = assign_values(opts.r, self.header)
-        self.typeCol = assign_values(opts.t, self.header)
-        self.seqCol = assign_values(opts.q, self.header)
-        self.lengthCol = assign_values(opts.l, self.header)
+        self.chrCol = assign_values(opts.c, header)
+        self.posCol = assign_values(opts.p, header)
+        self.locCol = assign_values(opts.x, header)
+        self.varCol = assign_values(opts.v, header)
+        self.altCol = assign_values(opts.a, header)
+        self.refCol = assign_values(opts.r, header)
+        self.typeCol = assign_values(opts.t, header)
+        self.seqCol = assign_values(opts.q, header)
+        self.lengthCol = assign_values(opts.l, header)
 
         self.argColumnNs = [self.chrCol, self.posCol, self.locCol, self.varCol,
             self.refCol, self.altCol, self.lengthCol, self.seqCol, self.typeCol]
+
+        if hasattr(opts, 'order'):
+            new_col_labels = [getattr(opts, col) for col in opts.order]
+        else:
+            opts.order = ['effect_type', 'effect_gene', 'effect_details']
+            new_col_labels = ['effectType', 'effectGene', 'effectDetails']
+        self.header = header + new_col_labels
 
     def _init_variant_annotation(self):
         opts = self.opts
@@ -150,15 +169,11 @@ class EffectAnnotator(object):
 
         sys.stderr.write("GENOME: " + GA.genomicFile + "\n")
         sys.stderr.write("GENE MODEL FILES: " + gmDB.location + "\n")
-
         self.annotation_helper = VariantAnnotation(GA, gmDB, promoter_len=opts.prom_len)
-
 
     def annotate_file(self, input, output):
         if self.opts.no_header == False:
-            output.write("\t".join(self.header + ["effectType", "effectGene", "effectDetails"]) + "\n")
-
-        argColumnNs = self.argColumnNs
+            output.write("\t".join(self.header) + "\n")
 
         sys.stderr.write("...processing....................\n")
         k = 0
@@ -171,17 +186,17 @@ class EffectAnnotator(object):
             if k%1000 == 0:
                 sys.stderr.write(str(k) + " lines processed\n")
 
-            line = self.annotate_line(l[:-1].split("\t"))
+            line = self.annotate_line(l[:-1].split("\t"), self.opts.order)
 
             output.write("\t".join(line) + "\n")
 
-    def annotate_line(self, line):
+    def annotate_line(self, line, new_cols_order):
         params = [line[i-1] if i!=None else None for i in self.argColumnNs]
 
         effects = self.annotation_helper.do_annotate_variant(*params)
-        desc = self.annotation_helper.effect_description(effects)
+        effect_type, effect_gene, effect_details = self.annotation_helper.effect_description(effects)
 
-        return line + list(desc)
+        return line + [locals()[col] for col in new_cols_order]
 
 
 def main():
