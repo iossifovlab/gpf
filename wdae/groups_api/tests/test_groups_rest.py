@@ -1,42 +1,8 @@
-from functools import partial
-import pytest
-from django.core.urlresolvers import reverse
 from guardian.models import Group
 from guardian import shortcuts
 from rest_framework import status
 
-from datasets_api.models import Dataset
-
-
-@pytest.fixture()
-def groups_endpoint():
-    return reverse('groups-list')
-
-
-@pytest.fixture()
-def groups_instance_url():
-    return group_url
-
-
-def group_url(group_id):
-    return reverse('groups-detail', kwargs={'pk': group_id})
-
-
-@pytest.fixture()
-def groups_model():
-    return Group
-
-
-@pytest.fixture()
-def group(db, groups_model):
-    return groups_model.objects.create(name='New Group')
-
-
-@pytest.fixture()
-def group_with_user(db, group, user):
-    user.groups.add(group)
-
-    return group, user
+from guardian.shortcuts import assign_perm
 
 
 def test_admin_can_get_groups(admin_client, groups_endpoint):
@@ -154,9 +120,9 @@ def test_no_empty_groups_are_accessible(
     assert response.status_code is status.HTTP_404_NOT_FOUND
 
 
-def test_empty_group_with_permissions_is_shown(admin_client, groups_endpoint):
+def test_empty_group_with_permissions_is_shown(
+        admin_client, groups_endpoint, dataset):
     groups_count = Group.objects.count()
-    dataset = Dataset.objects.create(dataset_id='My Dataset')
     group = Group.objects.create(name='New Group')
 
     shortcuts.assign_perm('view', group, dataset)
@@ -173,9 +139,8 @@ def test_empty_group_with_permissions_is_shown(admin_client, groups_endpoint):
 
 
 def test_group_has_all_datasets(
-        admin_client, groups_instance_url, group_with_user):
+        admin_client, groups_instance_url, group_with_user, dataset):
     group, _ = group_with_user
-    dataset = Dataset.objects.create(dataset_id='My Dataset')
 
     response = admin_client.get(groups_instance_url(group.id))
     assert response.status_code is status.HTTP_200_OK
@@ -189,4 +154,68 @@ def test_group_has_all_datasets(
     assert response.data['datasets'][0] == dataset.dataset_id
 
 
+def test_grant_permission_for_group(
+        admin_client, group_with_user, grant_permission_url, dataset):
+    group, user = group_with_user
+    data = {
+        'datasetId': dataset.id,
+        'groupId': group.id
+    }
 
+    assert not user.has_perm('view', dataset)
+
+    response = admin_client.post(grant_permission_url, data, format='json')
+
+    assert response.status_code == status.HTTP_200_OK
+    assert user.has_perm('view', dataset)
+
+
+def test_not_admin_cant_grant_permissions(
+        user_client, group_with_user, grant_permission_url, dataset):
+    group, user = group_with_user
+    data = {
+        'datasetId': dataset.id,
+        'groupId': group.id
+    }
+
+    assert not user.has_perm('view', dataset)
+
+    response = user_client.post(grant_permission_url, data, format='json')
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert not user.has_perm('view', dataset)
+
+
+def test_revoke_permission_for_group(
+        admin_client, group_with_user, revoke_permission_url, dataset):
+    group, user = group_with_user
+    data = {
+        'datasetId': dataset.id,
+        'groupId': group.id
+    }
+
+    assign_perm('view', group, dataset)
+
+    assert user.has_perm('view', dataset)
+
+    response = admin_client.post(revoke_permission_url, data, format='json')
+
+    assert response.status_code == status.HTTP_200_OK
+    assert not user.has_perm('view', dataset)
+
+
+def test_not_admin_cant_revoke_permissions(
+        user_client, group_with_user, revoke_permission_url, dataset):
+    group, user = group_with_user
+    data = {
+        'datasetId': dataset.id,
+        'groupId': group.id
+    }
+    assign_perm('view', group, dataset)
+
+    assert user.has_perm('view', dataset)
+
+    response = user_client.post(revoke_permission_url, data, format='json')
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert user.has_perm('view', dataset)
