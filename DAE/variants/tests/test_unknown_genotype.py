@@ -17,13 +17,14 @@ def test_query_regions(uagre):
     vl = list(vs)
     assert len(vl) == 1
 
-    for v in vl:
-        print(v, v.alt)
-        print(v.gt)
-        print(v.best_st)
+    v = vl[0]
 
-        assert v.inheritance == Inheritance.unknown
+    print(v, v.alt)
+    print(v.gt)
+    print(v.best_st)
 
-        assert v.best_st.shape == (2, 9)
-        assert np.all(v.best_st[:, 0] == -1)
-        assert np.all(v.best_st[:, 6] == -1)
+    assert v.inheritance == Inheritance.unknown
+
+    assert v.best_st.shape == (2, 9)
+    assert np.all(v.best_st[:, 0] == -1)
+    assert np.all(v.best_st[:, 6] == -1)
