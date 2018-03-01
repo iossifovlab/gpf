@@ -252,7 +252,7 @@ class FamilyVariant(VariantBase):
         return self._best_st
 
     @staticmethod
-    def check_mendelian_trio(ch, p1, p2):
+    def check_mendelian_trio(p1, p2, ch):
         m1 = (ch[0] == p1[0] or ch[0] == p1[1]) and \
             (ch[1] == p2[0] or ch[1] == p2[1])
         m2 = (ch[0] == p2[0] or ch[0] == p2[1]) and \
@@ -260,24 +260,61 @@ class FamilyVariant(VariantBase):
         return m1 or m2
 
     @staticmethod
-    def check_denovo_trio(ch, p1, p2):
-        return (p2[0] == p2[1] == p1[0] == p1[1] and
-                ((ch[0] != p1[0] or ch[1] != p1[0]) or
-                 (ch[0] != p2[0] or ch[1] != p2[0]))) or \
-            ((p1[0] == p1[1]) and
-             (p2[0] == p2[1]) and
-             ((ch[0] != p1[0] and ch[0] != p2[0]) or
-              (ch[1] != p1[0] and ch[1] != p2[0])))
+    def check_denovo_trio(p1, p2, ch):
+        pred2 = ((p1[0] == p1[1]) and
+                 (p2[0] == p2[1]) and
+                 ((ch[0] != p1[0] and ch[0] != p2[0]) or
+                  (ch[1] != p1[0] and ch[1] != p2[0])))
+
+        pred4 = (((p1[0] != p1[1] and p2[0] != p2[1]) and
+                  ((np.any(ch[0] == p1) and np.all(ch[1] != p2)) or
+                   (np.any(ch[1] == p1) and np.all(ch[0] != p2)))) or
+                 ((p1[0] != p1[1] and p2[0] != p2[1]) and
+                  ((np.any(ch[0] == p2) and np.all(ch[1] != p1)) or
+                     (np.any(ch[1] == p2) and np.all(ch[0] != p1)))))
+        pred5 = p1[0] == p1[1] and p2[0] != p2[1] and \
+            ((ch[0] == p1[0] and np.any(ch[1] != p2)) or
+             (ch[1] == p1[0] and np.any(ch[0] != p2)))
+        pred6 = p2[0] == p2[1] and p1[0] != p1[1] and\
+            ((ch[0] == p2[0] and np.any(ch[1] != p1)) or
+             (ch[1] == p2[0] and np.any(ch[0] != p1)))
+
+        pred7 = p2[0] == p2[1] and p1[0] != p1[1] and \
+            np.all(ch != p2[0]) and \
+            np.all(ch != p1[0]) and \
+            np.all(ch != p1[1])
+        pred8 = p1[0] == p1[1] and p2[0] != p2[1] and \
+            np.all(ch != p1[0]) and \
+            np.all(ch != p2[0]) and \
+            np.all(ch != p2[1])
+
+        # print(pred2, pred4, pred5, pred6, pred7, pred8)
+
+        return pred2 or pred4 or pred5 or pred6 or pred7 or pred8
 
     @staticmethod
-    def check_omission_trio(ch, p1, p2):
-        return (p1[0] == p1[1]) and \
-            (p2[0] == p2[1]) and \
-            (p1[0] != p2[0]) and \
-            ((ch[0] != p1[0] or ch[1] != p1[0]) or
-             (ch[0] != p2[0] or ch[1] != p2[0])) and \
-            ((ch[0] == p1[0] or ch[0] == p2[0]) and
-             (ch[1] == p1[0] or ch[1] == p2[0]))
+    def check_omission_trio(p1, p2, ch):
+        return ((p1[0] == p1[1]) and
+                (p2[0] == p2[1]) and
+                (p1[0] != p2[0]) and
+                ((ch[0] != p1[0] or ch[1] != p1[0]) or
+                 (ch[0] != p2[0] or ch[1] != p2[0])) and
+                ((ch[0] == p1[0] or ch[0] == p2[0]) and
+                 (ch[1] == p1[0] or ch[1] == p2[0]))) or \
+            ((p1[0] == p1[1] and ch[0] != p1[0] and ch[1] != p1[0]) or
+             (p2[0] == p2[1] and ch[0] != p2[0] and ch[1] != p2[0]))
+
+    @staticmethod
+    def calc_inheritance_trio(p1, p2, ch):
+        if FamilyVariant.check_mendelian_trio(p1, p2, ch):
+            return Inheritance.mendelian
+        elif FamilyVariant.check_denovo_trio(p1, p2, ch):
+            return Inheritance.denovo
+        elif FamilyVariant.check_omission_trio(p1, p2, ch):
+            return Inheritance.omission
+        else:
+            print("strange inheritance:", p1, p2, ch)
+            return Inheritance.unknown
 
     def is_mendelian(self):
         return self.inheritance == Inheritance.mendelian
@@ -329,16 +366,7 @@ class FamilyVariant(VariantBase):
                     p1 = tgt[:, 1]
                     p2 = tgt[:, 2]
 
-                    if self.check_mendelian_trio(ch, p1, p2):
-                        ti = Inheritance.mendelian
-                    elif self.check_denovo_trio(ch, p1, p2):
-                        ti = Inheritance.denovo
-                    elif self.check_omission_trio(ch, p1, p2):
-                        ti = Inheritance.omission
-                    else:
-                        print("strange inheritance:", trio, mat2str(tgt))
-                        ti = Inheritance.unknown
-                    inherits.append(ti)
+                    inherits.append(self.calc_inheritance_trio(p1, p2, ch))
                 self._inheritance = self.combine_inheritance(*inherits)
 
         return self._inheritance

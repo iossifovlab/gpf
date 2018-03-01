@@ -13,7 +13,7 @@ def test_query_inheritance(uagre):
     for v in vl:
         assert v.is_denovo() or v.is_omission()
 
-    assert len(vl) == 138
+    assert len(vl) == 139
 
 
 def test_query_inheritance_denovo(uagre):
@@ -24,7 +24,7 @@ def test_query_inheritance_denovo(uagre):
     for v in vl:
         assert v.is_denovo()
 
-    assert len(vl) == 94
+    assert len(vl) == 95
 
 
 def test_query_inheritance_omission(uagre):
