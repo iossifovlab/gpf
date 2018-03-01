@@ -13,28 +13,37 @@ import { UserGroup } from '../users-groups/users-groups';
   templateUrl: './user-groups-selector.component.html',
   styleUrls: ['./user-groups-selector.component.css']
 })
-export class UserGroupsSelectorComponent implements OnInit, DoCheck {
+export class UserGroupsSelectorComponent implements OnInit, DoCheck, OnChanges {
   configurationOptions: Select2Options;
   data: Select2OptionData[];
   @ViewChild('selector') selector: Select2Component;
 
   @Input() groups: UserGroup[];
-  @Input() user: User;
-  @Output() groupsChange = new EventEmitter();
+  // @Input() user: User;
+  @Output() groupsChange = new EventEmitter(true);
   private lastEmail = '';
   private element: JQuery;
 
+  @Input() alwaysSelectedGroups: string[] = [];
+  @Input() selected: string[] = [];
+
   constructor() { }
 
+    ngOnChanges(changes: SimpleChanges) {
+      if ('alwaysSelectedGroups' in changes && this.element) {
+        let prev = changes.alwaysSelectedGroups.previousValue;
+        let curr = changes.alwaysSelectedGroups.currentValue;
+        
+        if (curr.length != prev.length || curr.some((v,i)=> v !== prev[i])) {
+          console.log("updating with", this.element.val());
 
-  ngDoCheck() {
-    if (!this.user && this.lastEmail) {
-      this.lastEmail = '';
-    } else if (this.user && this.user.email !== this.lastEmail) {
-      this.changeSelectedGroups(this.element.val());
-      this.lastEmail = this.user.email;
+          this.changeSelectedGroups(this.element.val());
+        }
+      }
     }
-  }
+
+    ngDoCheck() {
+    }
 
   ngOnInit() {
     this.element = jQuery(this.selector.selector.nativeElement);
@@ -49,14 +58,15 @@ export class UserGroupsSelectorComponent implements OnInit, DoCheck {
 
     this.data = this.toSelectOptions(this.groups);
   }
-
+  
   toSelectOptions(groups: UserGroup[]) {
+
     return this.filterProtectedGroups(groups.map(group => group.name))
       .map(group => {
         return {
           id: group,
           text: group,
-          selected: this.user.groups.indexOf(group) !== -1
+          selected: this.selected.indexOf(group) !== -1
         } as Select2OptionData;
       });
   }
@@ -70,7 +80,8 @@ export class UserGroupsSelectorComponent implements OnInit, DoCheck {
   }
 
   getProtectedGroups() {
-    return ['any_user', this.user.email];
+    return this.alwaysSelectedGroups;
+    // ['any_user', this.user.email];
   }
 
   filterProtectedGroups(groups: string[]) {
