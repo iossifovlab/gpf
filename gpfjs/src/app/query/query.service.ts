@@ -29,8 +29,9 @@ export class QueryService {
   }
 
   getGenotypePreviewByFilter(filter: QueryData): Observable<GenotypePreviewsArray> {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    let options = new RequestOptions({
+      headers: this.headers, withCredentials: true
+    });
 
     return this.http.post(this.genotypePreviewUrl, filter, options)
       .map(this.parseGenotypePreviewResponse);
