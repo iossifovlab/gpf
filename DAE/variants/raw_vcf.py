@@ -8,7 +8,7 @@ from __future__ import print_function
 import numpy as np
 from variants.loader import RawVariantsLoader
 from variants.family import Families, Family
-from variants.variant import FamilyVariant
+from variants.variant import FamilyVariant, mat2str
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
 from RegionOperations import Region
@@ -197,6 +197,4 @@ if __name__ == "__main__":
     vs = fvars.query_variants(regions=regions)
 
     for v in vs:
-        print(v)
-        print(v.gt)
-        print(v.best_st)
+        print(v, mat2str(v.best_st))
