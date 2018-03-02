@@ -98,8 +98,13 @@ def assign_values(param, header=None):
 
 class EffectAnnotator(object):
 
-    def __init__(self, opts, header=None):
-        self.opts = opts
+    def __init__(self, opts=None, args=None, header=None):
+        if opts is not None:
+            self.opts = opts
+        elif args is not None:
+            (self.opts, _) = get_argument_parser().parse_args(args)
+        else:
+            raise ValueError('Either opts or args argument must be provided')
         self.header = header
         self._init_cols()
         self._init_variant_annotation()
@@ -186,17 +191,19 @@ class EffectAnnotator(object):
             if k%1000 == 0:
                 sys.stderr.write(str(k) + " lines processed\n")
 
-            line = self.annotate_line(l[:-1].split("\t"), self.opts.order)
+            line = l[:-1].split("\t")
+            line_annotations = self.line_annotations(line, self.opts.order)
+            line.extend(line_annotations)
 
             output.write("\t".join(line) + "\n")
 
-    def annotate_line(self, line, new_cols_order):
+    def line_annotations(self, line, new_cols_order):
         params = [line[i-1] if i!=None else None for i in self.argColumnNs]
 
         effects = self.annotation_helper.do_annotate_variant(*params)
         effect_type, effect_gene, effect_details = self.annotation_helper.effect_description(effects)
 
-        return line + [locals()[col] for col in new_cols_order]
+        return [locals()[col] for col in new_cols_order]
 
 
 def main():
@@ -241,7 +248,7 @@ def main():
         out = sys.stdout
 
 
-    annotator = EffectAnnotator(opts, first_line)
+    annotator = EffectAnnotator(opts=opts, header=first_line)
     annotator.annotate_file(variantFile, out)
 
     out.write("# PROCESSING DETAILS:\n")
