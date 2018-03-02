@@ -190,8 +190,8 @@ if __name__ == "__main__":
         inheritance='denovo or omission',
     )
     for c, v in enumerate(vs):
-        print(c, v, v.effect_type, v.effect_gene, v.inheritance, sep="\t")
-        print(v.best_st)
+        print(c, v, mat2str(v.best_st),
+              v.effect_type, v.effect_gene, v.inheritance)
 
     regions = [Region("1", 900718, 900719)]
     vs = fvars.query_variants(regions=regions)
