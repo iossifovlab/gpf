@@ -22,8 +22,9 @@ class MultiAnnotator(object):
         'effects': EffectAnnotator
     }
 
-    def __init__(self, config_file, header):
+    def __init__(self, config_file, header=None, reannotate=False):
         self.header = header
+        self.reannotate = reannotate
         self.config = ConfigParser.SafeConfigParser()
         self.config.read(config_file)
 
@@ -32,19 +33,31 @@ class MultiAnnotator(object):
 
         self.annotators = []
         new_columns_labels = []
+        columns_labels = {}
         for annotation_step in annotation_steps:
-            args = self.config.get('annotation', 'steps.{}.args'.format(annotation_step))
-            columns_str = self.config.get('annotation', 'steps.{}.columns'.format(annotation_step))
-            columns = [tuple([token.strip() for token in column.split(':')])
+            args = self.config.get('annotation',
+                'steps.{}.args'.format(annotation_step))
+            columns_str = self.config.get('annotation',
+                'steps.{}.columns'.format(annotation_step))
+            step_columns = [tuple([token.strip() for token in column.split(':')])
                        for column in columns_str.split(',')]
+            columns_labels.update(dict(step_columns))
             self.annotators.append({
                 'instance': self.ANNOTATOR_CLASSES[annotation_step](
                     args=args.split(' '), header=header),
-                'columns': [column[0] for column in columns]
+                'columns': [column[0] for column in step_columns]
             })
-            new_columns_labels.extend([column[1] for column in columns])
+            new_columns_labels.extend([column[1] for column in step_columns])
 
-        if header is not None:
+        if reannotate is not None:
+            reannotate_labels = {columns_labels[column] for column in reannotate}
+            if not reannotate_labels.issubset(self.header):
+                raise ValueError('All reannotate columns should be present in the input file header!')
+            self.reannotate_indices = {
+                column: self.header.index(columns_labels[column])
+                for column in reannotate
+            }
+        elif header is not None:
             self.header += new_columns_labels
 
     def annotate_file(self, input, output):
@@ -63,8 +76,18 @@ class MultiAnnotator(object):
                 sys.stderr.write(str(k) + " lines processed\n")
 
             line = l[:-1].split("\t")
-            for annotator in annotators:
-                line.extend(annotator['instance'].line_annotations(line, annotator['columns']))
+            if self.reannotate:
+                for annotator in annotators:
+                    columns_to_update = [column
+                        for column in annotator['columns']
+                        if column in self.reannotate]
+                    values = annotator['instance'].line_annotations(line, columns_to_update)
+                    for index in range(0, len(columns_to_update)):
+                        position = self.reannotate_indices[columns_to_update[index]]
+                        line[position] = values[index]
+            else:
+                for annotator in annotators:
+                    line.extend(annotator['instance'].line_annotations(line, annotator['columns']))
 
             output.write("\t".join(line) + "\n")
 
@@ -75,6 +98,7 @@ def get_argument_parser():
     parser.add_option('-h', '--help', default=False, action='store_true')
     parser.add_option('-H', help='no header in the input file', default=False,  action='store_true', dest='no_header')
     parser.add_option('-c', '--config', help='config file location', action='store')
+    parser.add_option('--reannotate', help='columns in the input file to reannotate', action='store')
     return parser
 
 
@@ -84,6 +108,7 @@ def print_help():
     print("-h, --help                       show this help message and exit")
     print("-H                               no header in the input file ")
     print("-c, --config                     config file location")
+    print("--reannotate                     columns in the input file to reannotate")
     print("\nConfig file format:\n")
     print("[annotation]")
     print("steps=<annotation step>[,<annotation step>]*")
@@ -129,7 +154,7 @@ def main():
 
     if opts.no_header == False:
         header_str = variantFile.readline()
-        header = header_str.split()
+        header = header_str[:-1].split('\t')
     else:
         header = None
 
@@ -138,7 +163,10 @@ def main():
     else:
         out = sys.stdout
 
-    annotator = MultiAnnotator(opts.config, header)
+    if opts.reannotate:
+        opts.reannotate = {token.strip() for token in opts.reannotate.split(',')}
+
+    annotator = MultiAnnotator(opts.config, header, opts.reannotate)
     annotator.annotate_file(variantFile, out)
 
     if infile != '-':
