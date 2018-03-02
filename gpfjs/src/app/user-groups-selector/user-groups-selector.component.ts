@@ -1,6 +1,6 @@
 import {
   Component, OnInit, Input, EventEmitter, Output, OnChanges, SimpleChanges,
-  DoCheck, ViewChild, ElementRef
+  ViewChild, ElementRef
 } from '@angular/core';
 
 import { Select2OptionData, Select2Component } from 'ng2-select2';
@@ -13,13 +13,12 @@ import { UserGroup } from '../users-groups/users-groups';
   templateUrl: './user-groups-selector.component.html',
   styleUrls: ['./user-groups-selector.component.css']
 })
-export class UserGroupsSelectorComponent implements OnInit, DoCheck, OnChanges {
+export class UserGroupsSelectorComponent implements OnInit, OnChanges {
   configurationOptions: Select2Options;
   data: Select2OptionData[];
   @ViewChild('selector') selector: Select2Component;
 
   @Input() groups: UserGroup[];
-  // @Input() user: User;
   @Output() groupsChange = new EventEmitter(true);
   private lastEmail = '';
   private element: JQuery;
@@ -29,21 +28,24 @@ export class UserGroupsSelectorComponent implements OnInit, DoCheck, OnChanges {
 
   constructor() { }
 
-    ngOnChanges(changes: SimpleChanges) {
-      if ('alwaysSelectedGroups' in changes && this.element) {
-        let prev = changes.alwaysSelectedGroups.previousValue;
-        let curr = changes.alwaysSelectedGroups.currentValue;
-        
-        if (curr.length != prev.length || curr.some((v,i)=> v !== prev[i])) {
-          console.log("updating with", this.element.val());
-
-          this.changeSelectedGroups(this.element.val());
-        }
+  ngOnChanges(changes: SimpleChanges) {
+    if ('alwaysSelectedGroups' in changes && this.element) {
+      let prev = changes.alwaysSelectedGroups.previousValue;
+      let curr = changes.alwaysSelectedGroups.currentValue;
+      
+      if (curr.length != prev.length || curr.some((v,i)=> v !== prev[i])) {
+        this.changeSelectedGroups(this.element.val());
       }
     }
 
-    ngDoCheck() {
+    if ('groups' in changes) {
+      let current = changes.groups.currentValue;
+      let previous = changes.groups.previousValue;
+      if (!previous || current.length !== previous.length || current.some((v, i) => v != previous[i])) {
+        this.data = this.toSelectOptions(changes.groups.currentValue);
+      }
     }
+  }
 
   ngOnInit() {
     this.element = jQuery(this.selector.selector.nativeElement);

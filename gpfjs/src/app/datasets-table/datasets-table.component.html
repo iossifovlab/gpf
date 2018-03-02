@@ -4,7 +4,10 @@
       <gpf-table-column>
         <gpf-table-header caption="Dataset" field="dataset"></gpf-table-header>
         <gpf-table-content>
-          <gpf-table-subcontent field="dataset">
+          <gpf-table-subcontent>
+            <span *gpfTableCellContent="let data">
+              {{ data.dataset.name || data.dataset.id }}
+            </span>
           </gpf-table-subcontent>
         </gpf-table-content>
       </gpf-table-column>
@@ -16,6 +19,8 @@
               <div *ngFor="let group of data.groups">
                 {{ group }}
               </div>
+              <input [ngbTypeahead]="searchGroups(data.groups)"
+                (selectItem)="updatePermissions(data.dataset, $event.item)" />
             </span>
           </gpf-table-subcontent>
         </gpf-table-content>
