@@ -105,14 +105,14 @@ class Study:
 
         self.phenotypes = []
         if self.vdb._config.has_option(self._configSection, 'study.phenotype'):
-            phenotypes = self.vdb._config.get(self._configSection, 'study.phenotype')
+            phenotypes = self.vdb._config.get(
+                self._configSection, 'study.phenotype')
             self.phenotypes = [p.strip() for p in phenotypes.split(',')]
 
         self.phdb = None
 
         self._families = None
         self._badFamilies = None
-
 
     def __repr__(self):
         return '<{}: {}>'.format(self.__class__.__name__, self.name)
@@ -334,7 +334,7 @@ class Study:
         if fdFormat not in fmMethod:
             raise Exception("Unknown Family File Format: " + fdFormat)
         print("Loading family data from: {} for collection {}".format(
-             fdFile, self.name), file=sys.stderr)
+            fdFile, self.name), file=sys.stderr)
 
         self._families, self._badFamilies = fmMethod[fdFormat](fdFile)
 
@@ -345,6 +345,9 @@ class Study:
             return
         phenotype = self.phenotypes[0]
         for fam in self._families.values():
+            fam.phenotype = phenotype
+            fam.atts['phenotype'] = phenotype
+
             for p in fam.memberInOrder:
                 if p.role == 'prb':
                     p.phenotype = phenotype
