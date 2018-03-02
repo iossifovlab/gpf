@@ -35,6 +35,9 @@ class PermissionChangeSerializer(serializers.Serializer):
         queryset=Group.objects.all()
     )
 
-    datasetId = serializers.PrimaryKeyRelatedField(
-        queryset=Dataset.objects.all()
+    datasetId = serializers.SlugRelatedField(
+        queryset=Dataset.objects.all(),
+        # read_only=True,
+        slug_field='dataset_id'
+
     )

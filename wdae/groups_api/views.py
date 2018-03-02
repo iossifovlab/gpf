@@ -45,9 +45,9 @@ class GrantPermissionToGroupView(views.APIView):
     def post(self, request):
         serializer = PermissionChangeSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        dataset = Dataset.objects.get(pk=serializer.data['datasetId'])
+        dataset = Dataset.objects.get(dataset_id=serializer.data['datasetId'])
         group = Group.objects.get(pk=serializer.data['groupId'])
 
         assign_perm('view', group, dataset)
@@ -63,7 +63,7 @@ class RevokePermissionToGroupView(views.APIView):
         if not serializer.is_valid():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        dataset = Dataset.objects.get(pk=serializer.data['datasetId'])
+        dataset = Dataset.objects.get(dataset_id=serializer.data['datasetId'])
         group = Group.objects.get(pk=serializer.data['groupId'])
 
         if group.name in dataset.default_groups:

@@ -162,7 +162,7 @@ def test_grant_permission_for_group(
         admin_client, group_with_user, grant_permission_url, dataset):
     group, user = group_with_user
     data = {
-        'datasetId': dataset.id,
+        'datasetId': dataset.dataset_id,
         'groupId': group.id
     }
 
@@ -178,7 +178,7 @@ def test_not_admin_cant_grant_permissions(
         user_client, group_with_user, grant_permission_url, dataset):
     group, user = group_with_user
     data = {
-        'datasetId': dataset.id,
+        'datasetId': dataset.dataset_id,
         'groupId': group.id
     }
 
@@ -194,7 +194,7 @@ def test_revoke_permission_for_group(
         admin_client, group_with_user, revoke_permission_url, dataset):
     group, user = group_with_user
     data = {
-        'datasetId': dataset.id,
+        'datasetId': dataset.dataset_id,
         'groupId': group.id
     }
 
@@ -212,7 +212,7 @@ def test_not_admin_cant_revoke_permissions(
         user_client, group_with_user, revoke_permission_url, dataset):
     group, user = group_with_user
     data = {
-        'datasetId': dataset.id,
+        'datasetId': dataset.dataset_id,
         'groupId': group.id
     }
     assign_perm('view', group, dataset)
@@ -234,7 +234,7 @@ def test_cant_revoke_default_permissions(
     for group_name in dataset.default_groups:
         group = Group.objects.get(name=group_name)
         data = {
-            'datasetId': dataset.id,
+            'datasetId': dataset.dataset_id,
             'groupId': group.id
         }
 
