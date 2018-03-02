@@ -26,8 +26,15 @@
                   title="Remove group">
                 </gpf-small-remove-button>
               </div>
-              <input [ngbTypeahead]="searchGroups(data.groups)"
-                (selectItem)="updatePermissions(data.dataset, $event.item)" />
+              <div class="input-group">
+                <input #input
+                  class="form-control"
+                  [ngbTypeahead]="searchGroups(data.groups)"
+                  container="body"/>
+                <div class="input-group-btn">
+                  <button class="btn btn-online-secondary" (click)="updatePermissions(data.dataset, input.value)">Add</button>
+                </div>
+              </div>
             </span>
           </gpf-table-subcontent>
         </gpf-table-content>

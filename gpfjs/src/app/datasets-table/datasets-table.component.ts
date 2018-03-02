@@ -35,8 +35,6 @@ export class DatasetsTableComponent implements OnInit {
     this.users$ = this.usersService.getAllUsers().share();
 
     this.tableData$ = Observable.combineLatest(this.datasets$, this.users$)
-      .take(1)
-      .do(() => {console.log("table update")})
       .map(([datasets, users]) => this.toDatasetTableRow(datasets, users));
 
     this.userGroupsService.getAllGroups()
@@ -82,10 +80,12 @@ export class DatasetsTableComponent implements OnInit {
 
   updatePermissions(dataset, groupName) {
     let group = this.groups.find(g => g.name === groupName);
+    if (!group) {
+      return;
+    }
     this.userGroupsService.grantPermission(group, dataset)
       .take(1)
       .subscribe(() => {
-        console.log("refresing datasets")
         this.datasetsRefresh$.next(true);
       });
   }
@@ -117,10 +117,12 @@ export class DatasetsTableComponent implements OnInit {
 
   removeGroup(dataset: Dataset, groupName: string) {
     let group = this.groups.find(g => g.name === groupName);
+    if (!group) {
+      return;
+    }
     this.userGroupsService.revokePermission(group, dataset)
       .take(1)
       .subscribe(() => {
-        console.log("refresing datasets")
         this.datasetsRefresh$.next(true);
       });
   }

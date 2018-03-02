@@ -28,7 +28,6 @@ export class SmallRemoveButtonComponent implements OnInit {
   }
 
   onClick(event: any) {
-    console.log("inOnClick");
     this.clicked.next(event);
   }
 
