@@ -137,6 +137,7 @@ import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-vi
 import { GenotypeBrowserMetaViewComponent } from './genotype-browser-meta-view/genotype-browser-meta-view.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
+import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
 
 const appRoutes: Routes = [
   {
@@ -322,6 +323,7 @@ const appRoutes: Routes = [
     GenotypeBrowserMetaViewComponent,
     GenotypePreviewFieldComponent,
     ErrorsAlertComponent,
+    SmallRemoveButtonComponent,
   ],
   imports: [
     BrowserModule,

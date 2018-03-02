@@ -1,0 +1,44 @@
+<ng-template #confirmation let-options="options">
+  <div [ngClass]="[
+    'popover',
+    'show',
+    'bs-popover-' + options.placement,
+    options.popoverClass
+  ]">
+    <div style="left: calc(50% - 5px)" class="arrow"></div>
+    <h3 class="popover-header" [innerHTML]="options.title"></h3>
+    <div class="popover-body">
+      <p [innerHTML]="options.message"></p>
+      <div class="row">
+        <div
+          class="col-xs-12 col-12 text-center">
+          <button
+            *ngIf="!options.hideConfirmButton"
+            [mwlFocus]="options.focusButton === 'confirm'"
+            [class]="'btn btn-' + options.confirmButtonType"
+            (click)="options.onConfirm({clickEvent: $event})"
+            [innerHtml]="options.confirmText">
+          </button>
+          <button
+            *ngIf="!options.hideCancelButton"
+            [mwlFocus]="options.focusButton === 'cancel'"
+            [class]="'btn btn-' + options.cancelButtonType"
+            (click)="options.onCancel({clickEvent: $event})"
+            [innerHtml]="options.cancelText">
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+<button
+  *ngIf="hide"
+  class="close clickable"
+  mwlConfirmationPopover
+  [confirmText]="confirmText"
+  [title]="title"
+  [customTemplate]="confirmation"
+  [message]="message"
+  (confirm)="onClick($event)">
+  <div style="font-size: 1.3rem;">&times;</div>
+</button>

@@ -36,6 +36,7 @@ export class DatasetsTableComponent implements OnInit {
 
     this.tableData$ = Observable.combineLatest(this.datasets$, this.users$)
       .take(1)
+      .do(() => {console.log("table update")})
       .map(([datasets, users]) => this.toDatasetTableRow(datasets, users));
 
     this.userGroupsService.getAllGroups()
@@ -108,6 +109,20 @@ export class DatasetsTableComponent implements OnInit {
 
   searchGroups = (groups: string[]) => {
     return (text$: Observable<string>) => this.search(groups, text$)
+  }
+
+  isDefaultGroup(dataset: Dataset, group: string) {
+    return dataset.getDefaultGroups().indexOf(group) !== -1;
+  }
+
+  removeGroup(dataset: Dataset, groupName: string) {
+    let group = this.groups.find(g => g.name === groupName);
+    this.userGroupsService.revokePermission(group, dataset)
+      .take(1)
+      .subscribe(() => {
+        console.log("refresing datasets")
+        this.datasetsRefresh$.next(true);
+      });
   }
 
 }

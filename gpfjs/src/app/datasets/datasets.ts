@@ -253,6 +253,9 @@ export class Dataset extends IdName {
     return jsonArray.map((json) => Dataset.fromJson(json));
   }
 
+  getDefaultGroups() {
+    return ['any_dataset', this.id];
+  }
 
   constructor(
     readonly id: string,
