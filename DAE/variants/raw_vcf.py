@@ -80,7 +80,6 @@ class AlleleCounter(object):
         gt = gt[:, np.logical_not(unknown)]
 
         n_parents_called = gt.shape[1]
-
         result = {
             'gt': mat2str(gt),
             'n_parents_called': n_parents_called,
@@ -93,7 +92,12 @@ class AlleleCounter(object):
 
         for alt_allele, alt in enumerate(vcf.ALT):
             n_alt_allele = np.sum(gt == alt_allele + 1)
-            alt_allele_freq = (100.0 * n_alt_allele) / (2.0 * n_parents_called)
+            if n_parents_called == 0:
+                print(vcf.start, mat2str(gt), n_parents_called, n_alt_allele)
+                alt_allele_freq = 0
+            else:
+                alt_allele_freq = \
+                    (100.0 * n_alt_allele) / (2.0 * n_parents_called)
             alleles_counts.append(n_alt_allele)
             alleles_frequencies.append(alt_allele_freq)
 

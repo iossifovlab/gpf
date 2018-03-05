@@ -15,8 +15,20 @@ def pytest_addoption(parser):
                      help="run SSC WG tests")
 
 
-def slow():
-    pytest.mark.skipif(
-        not pytest.config.getoption("--runslow"),  # @UndefinedVariable
-        reason="need --runslow option to run"
-    )
+def pytest_collection_modifyitems(config, items):
+    if not config.getoption("--runveryslow"):
+        # --runveryslow given in cli: do not skip slow tests
+        skip_veryslow = pytest.mark.skip(
+            reason="need --runveryslow option to run")
+        for item in items:
+            if "veryslow" in item.keywords:
+                item.add_marker(skip_veryslow)
+
+    if not config.getoption("--runslow") and \
+            not config.getoption("--runveryslow"):
+        # --runslow given in cli: do not skip slow tests
+        skip_slow = pytest.mark.skip(
+            reason="need --runslow option to run")
+        for item in items:
+            if "slow" in item.keywords:
+                item.add_marker(skip_slow)

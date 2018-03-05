@@ -35,7 +35,7 @@ def ustudy(ustudy_config):
 
 
 @pytest.fixture(scope='session')
-def rvcf_config():
+def nvcf_config():
     from variants.default_settings import DATA_DIR
     prefix = os.path.join(DATA_DIR, "ssc_nygc/nssc")
     config = Configure.from_prefix(prefix)
@@ -43,8 +43,36 @@ def rvcf_config():
 
 
 @pytest.fixture(scope='session')
-def rvcf(rvcf_config):
-    fvariants = RawFamilyVariants(rvcf_config)
+def nvcf(nvcf_config):
+    fvariants = RawFamilyVariants(nvcf_config)
+    return fvariants
+
+
+@pytest.fixture(scope='session')
+def uvcf_config():
+    from variants.default_settings import DATA_DIR
+    prefix = os.path.join(DATA_DIR, "ssc_nygc/ussc")
+    config = Configure.from_prefix(prefix)
+    return config
+
+
+@pytest.fixture(scope='session')
+def uvcf(uvcf_config):
+    fvariants = RawFamilyVariants(uvcf_config)
+    return fvariants
+
+
+@pytest.fixture(scope='session')
+def fvcf_config():
+    from variants.default_settings import DATA_DIR
+    prefix = os.path.join(DATA_DIR, "ssc_nygc/ssc")
+    config = Configure.from_prefix(prefix)
+    return config
+
+
+@pytest.fixture(scope='session')
+def fvcf(fvcf_config):
+    fvariants = RawFamilyVariants(fvcf_config)
     return fvariants
 
 
