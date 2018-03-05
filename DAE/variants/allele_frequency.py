@@ -39,11 +39,20 @@ class AlleleCounter(object):
             'n_parents_called': n_parents_called,
             'percent_parents_called': (100.0 * n_parents_called) / self.parents
         }
+        alleles_frequencies = []
+        alleles_counts = []
+
         for alt_allele, alt in enumerate(vcf.ALT):
             n_alt_allele = np.sum(gt == alt_allele + 1)
+            alt_allele_freq = (100.0 * n_alt_allele) / (2.0 * n_parents_called)
+            alleles_counts.append(n_alt_allele)
+            alleles_frequencies.append(alt_allele_freq)
+
             result[alt] = {
                 'n_alt_allele': n_alt_allele,
-                'alt_allele_freq':
-                (100.0 * n_alt_allele) / 2.0 * n_parents_called
+                'alt_allele_freq': alt_allele_freq,
             }
+        result['n_alt_alleles'] = tuple(alleles_counts)
+        result['alt_allele_freq'] = tuple(alleles_frequencies)
+
         return result
