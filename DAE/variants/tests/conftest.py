@@ -15,6 +15,23 @@ from variants.loader import RawVariantsLoader
 from variants.raw_vcf import RawFamilyVariants
 from variants.variant import FamilyVariant
 import os
+import tempfile
+import shutil
+
+
+@pytest.fixture
+def temp_filename(request):
+    dirname = tempfile.mkdtemp(suffix='_eff', prefix='variants_')
+
+    def fin():
+        shutil.rmtree(dirname)
+
+    request.addfinalizer(fin)
+    output = os.path.join(
+        dirname,
+        'annotation.parquet'
+    )
+    return output
 
 
 @pytest.fixture(scope='session')

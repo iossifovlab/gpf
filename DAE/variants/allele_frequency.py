@@ -57,9 +57,9 @@ class VcfAlleleFrequency(object):
                 'n_alt_allele': n_alt_allele,
                 'alt_allele_freq': alt_allele_freq,
             }
-        result['n_alt_alleles'] = tuple(alleles_counts)
-        result['alt_alleles_freq'] = tuple(alleles_frequencies)
-        result['n_ref_alleles'] = n_ref_alleles
+        result['n_alt_alleles'] = np.array(alleles_counts)
+        result['alt_alleles_freq'] = np.array(alleles_frequencies)
+        result['n_ref_alleles'] = np.array(n_ref_alleles)
 
         assert n_parents_called * 2 == sum(alleles_counts) + n_ref_alleles
         return result
@@ -86,5 +86,6 @@ class VcfAlleleFrequency(object):
         vars_df['n_alt_alleles'] = n_alt_alleles
         vars_df['n_ref_alleles'] = n_ref_alleles
         vars_df['alt_allele_freq'] = alt_alleles_freq
+        print(vars_df.head())
 
         return vars_df

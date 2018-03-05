@@ -22,12 +22,19 @@ class VCFWrapper(object):
         self.vcf_file = filename
         self.vcf = VCF(filename)
         self._samples = None
+        self._vars = None
 
     @property
     def samples(self):
         if self._samples is None:
             self._samples = np.array(self.vcf.samples)
         return self._samples
+
+    @property
+    def vars(self):
+        if self._vars is None:
+            self._vars = list(self.vcf)
+        return self._vars
 
 
 class RawVariantsLoader(object):

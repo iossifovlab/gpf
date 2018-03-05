@@ -14,7 +14,7 @@ from variants.variant import FamilyVariant
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
 from RegionOperations import Region
-from variants.vcf_utils import samples_to_alleles_index, mat2str
+from variants.vcf_utils import samples_to_alleles_index, mat2str, VcfFamily
 from variants.allele_frequency import VcfAlleleFrequency
 
 
@@ -33,24 +33,6 @@ def parse_gene_effect(effect):
         return [{'eff': effect, 'sym': ""}]
 
     return split_gene_effect(effect)
-
-
-class VcfFamily(Family):
-
-    def __init__(self, family_id, ped_df):
-        super(VcfFamily, self).__init__(family_id, ped_df)
-
-        self.samples = self.ped_df.index.values
-        self.alleles = samples_to_alleles_index(self.samples)
-
-    def vcf_samples_index(self, person_ids):
-        return self.ped_df[
-            self.ped_df['personId'].isin(set(person_ids))
-        ].index.values
-
-    def vcf_alleles_index(self, person_ids):
-        p = self.vcf_samples_index(person_ids)
-        return samples_to_alleles_index(p)
 
 
 class RawFamilyVariants(FamiliesBase):
@@ -95,15 +77,15 @@ class RawFamilyVariants(FamiliesBase):
         assert np.all(self.samples == self.ped_df['sampleId'].values)
 
         self.vars_df = loader.load_annotation()
-        self.vcf_vars = list(self.vcf.vcf)
+        self.vcf_vars = self.vcf.vars
         assert len(self.vars_df) == len(self.vcf_vars)
         assert np.all(self.vars_df.index.values ==
                       np.arange(len(self.vars_df)))
 
-        if 'n_parents_called' not in self.vars_df.columns:
-            allele_counter = VcfAlleleFrequency(self)
-            self.vars_df = allele_counter.calc_allele_frequencies(
-                self.vars_df, self.vcf_vars)
+#         if 'n_parents_called' not in self.vars_df.columns:
+#             allele_counter = VcfAlleleFrequency(self)
+#             self.vars_df = allele_counter.calc_allele_frequencies(
+#                 self.vars_df, self.vcf_vars)
 
     def filter_regions(self, v, regions):
         for reg in regions:
