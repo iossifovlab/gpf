@@ -5,7 +5,7 @@ Created on Mar 5, 2018
 '''
 from __future__ import print_function
 
-from variants.allele_frequency import AlleleCounter
+from variants.raw_vcf import AlleleCounter
 
 
 def test_allele_counter_simple(ustudy):
