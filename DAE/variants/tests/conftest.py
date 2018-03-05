@@ -14,6 +14,7 @@ from variants.family import Family
 from variants.loader import RawVariantsLoader
 from variants.raw_vcf import RawFamilyVariants
 from variants.variant import FamilyVariant
+import os
 
 
 @pytest.fixture(scope='session')
@@ -30,6 +31,20 @@ def ustudy_loader(ustudy_config):
 @pytest.fixture(scope='session')
 def ustudy(ustudy_config):
     fvariants = RawFamilyVariants(ustudy_config)
+    return fvariants
+
+
+@pytest.fixture(scope='session')
+def rvcf_config():
+    from variants.default_settings import DATA_DIR
+    prefix = os.path.join(DATA_DIR, "ssc_nygc/ussc")
+    config = Configure.from_prefix(prefix)
+    return config
+
+
+@pytest.fixture(scope='session')
+def rvcf(rvcf_config):
+    fvariants = RawFamilyVariants(rvcf_config)
     return fvariants
 
 
