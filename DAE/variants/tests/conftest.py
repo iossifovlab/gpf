@@ -17,19 +17,19 @@ from variants.variant import FamilyVariant
 
 
 @pytest.fixture(scope='session')
-def uagre_config():
+def ustudy_config():
     config = Configure.from_config()
     return config
 
 
 @pytest.fixture(scope='session')
-def uagre_loader(uagre_config):
-    return RawVariantsLoader(uagre_config)
+def ustudy_loader(ustudy_config):
+    return RawVariantsLoader(ustudy_config)
 
 
 @pytest.fixture(scope='session')
-def uagre(uagre_config):
-    fvariants = RawFamilyVariants(uagre_config)
+def ustudy(ustudy_config):
+    fvariants = RawFamilyVariants(ustudy_config)
     return fvariants
 
 

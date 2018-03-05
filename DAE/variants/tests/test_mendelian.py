@@ -10,8 +10,8 @@ import numpy as np
 from variants.variant import mat2str
 
 
-def test_mendelian(uagre):
-    variants = uagre.query_variants(
+def test_mendelian(ustudy):
+    variants = ustudy.query_variants(
         family_id=['AU1921'], regions=[Region("1", 11541, 54721)])
 
     for v in variants:

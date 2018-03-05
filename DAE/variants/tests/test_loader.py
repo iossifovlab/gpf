@@ -6,8 +6,8 @@ Created on Feb 7, 2018
 from variants.loader import VariantMatcher
 
 
-def test_load_annotation(uagre_loader):
-    annotation = uagre_loader.load_annotation()
+def test_load_annotation(ustudy_loader):
+    annotation = ustudy_loader.load_annotation()
     assert annotation is not None
     assert 'effectDetails' in annotation.columns
     print(annotation['effectDetails'].str.len().max())
@@ -27,7 +27,7 @@ def test_load_annotation(uagre_loader):
 #     assert vs is not None
 
 
-def test_matcher(uagre_config):
-    matcher = VariantMatcher(uagre_config)
+def test_matcher(ustudy_config):
+    matcher = VariantMatcher(ustudy_config)
     matcher.match()
     assert len(matcher.vars_df) == len(matcher.vcf_vars)

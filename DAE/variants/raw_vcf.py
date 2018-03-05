@@ -7,7 +7,7 @@ from __future__ import print_function
 
 import numpy as np
 from variants.loader import RawVariantsLoader
-from variants.family import Families, Family
+from variants.family import FamiliesBase, Family
 from variants.variant import FamilyVariant, mat2str
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
@@ -54,7 +54,7 @@ class VcfFamily(Family):
         return VcfFamily.samples_to_alleles_index(p)
 
 
-class RawFamilyVariants(Families):
+class RawFamilyVariants(FamiliesBase):
 
     def __init__(self, config=None, prefix=None):
         super(RawFamilyVariants, self).__init__()

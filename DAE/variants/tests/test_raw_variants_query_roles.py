@@ -7,48 +7,48 @@ from __future__ import print_function
 from variants.attributes import Role, RoleQuery
 
 
-def test_query_roles_dad(uagre):
+def test_query_roles_dad(ustudy):
     genes = ['NOC2L']
 
     role_query = RoleQuery.any_of(Role.dad)
-    vs = uagre.query_variants(roles=role_query, genes=genes)
+    vs = ustudy.query_variants(roles=role_query, genes=genes)
     vl = list(vs)
     assert len(vl) == 34
 
 
-def test_query_roles_mom(uagre):
+def test_query_roles_mom(ustudy):
     genes = ['NOC2L']
 
     role_query = RoleQuery.any_of(Role.mom)
-    vs = uagre.query_variants(roles=role_query, genes=genes)
+    vs = ustudy.query_variants(roles=role_query, genes=genes)
     vl = list(vs)
     assert len(vl) == 36
 
 
-def test_query_roles_prb(uagre):
+def test_query_roles_prb(ustudy):
     genes = ['NOC2L']
     role_query = RoleQuery.any_of(Role.prb)
 
-    vs = uagre.query_variants(roles=role_query, genes=genes)
+    vs = ustudy.query_variants(roles=role_query, genes=genes)
     vl = list(vs)
     assert len(vl) == 33
 
 
-def test_query_roles_grandparents(uagre):
+def test_query_roles_grandparents(ustudy):
     genes = ['NOC2L']
 
     role_query = RoleQuery.any_of(
         Role.maternal_grandmother, Role.maternal_grandfather)
-    vs = uagre.query_variants(roles=role_query, genes=genes)
+    vs = ustudy.query_variants(roles=role_query, genes=genes)
     vl = list(vs)
 
     assert len(vl) == 37
 
 
-def test_query_roles_grandparents_string(uagre):
+def test_query_roles_grandparents_string(ustudy):
     genes = ['NOC2L']
 
-    vs = uagre.query_variants(
+    vs = ustudy.query_variants(
         roles='any(maternal_grandmother, maternal_grandfather)',
         genes=genes)
     vl = list(vs)

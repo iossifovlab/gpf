@@ -7,9 +7,9 @@ from RegionOperations import Region
 import numpy as np
 
 
-def test_query_regions(uagre):
+def test_query_regions(ustudy):
     regions = [Region("1", 900718, 900718)]
-    vs = uagre.query_variants(regions=regions)
+    vs = ustudy.query_variants(regions=regions)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 1

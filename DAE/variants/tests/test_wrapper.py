@@ -6,9 +6,9 @@ Created on Feb 7, 2018
 import numpy as np
 
 
-def test_wrapper_simple(uagre_loader):
-    ped_df = uagre_loader.load_pedigree()
-    vcf = uagre_loader.load_vcf()
+def test_wrapper_simple(ustudy_loader):
+    ped_df = ustudy_loader.load_pedigree()
+    vcf = ustudy_loader.load_vcf()
 
     samples = vcf.vcf.samples
     print(samples)

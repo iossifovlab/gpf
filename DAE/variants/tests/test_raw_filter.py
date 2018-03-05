@@ -9,7 +9,7 @@ from variants.attributes import RoleQuery, Role
 
 
 # @pytest.mark.skip
-def test_query_by_filter(uagre):
+def test_query_by_filter(ustudy):
     genes = ['NOC2L']
 
     rq1 = RoleQuery.any_of(Role.dad)
@@ -35,14 +35,14 @@ def test_query_by_filter(uagre):
         return r1 and (not r2)
     assert ffun(vals)
 
-    vs = uagre.query_variants(
+    vs = ustudy.query_variants(
         genes=genes,
         roles=rq
     )
     vl = list(vs)
     assert len(vl) == 13
 
-    vs = uagre.query_variants(
+    vs = ustudy.query_variants(
         genes=genes,
         filter=lambda v: ffun(v.variant_in_roles)
     )

@@ -54,8 +54,8 @@ def test_seq_query_complex():
     assert not q.match([Sex.unspecified])
 
 
-def test_query_sexes_male_only(uagre):
-    vs = uagre.query_variants(sexes='male and not female')
+def test_query_sexes_male_only(ustudy):
+    vs = ustudy.query_variants(sexes='male and not female')
     vl = list(vs)
 
     assert len(vl) == 42
@@ -63,8 +63,8 @@ def test_query_sexes_male_only(uagre):
         assert set(v.variant_in_sexes) == set([Sex.male])
 
 
-def test_query_sexes_male_only_eq(uagre):
-    vs = uagre.query_variants(sexes='eq(male)')
+def test_query_sexes_male_only_eq(ustudy):
+    vs = ustudy.query_variants(sexes='eq(male)')
     vl = list(vs)
 
     assert len(vl) == 42
@@ -72,8 +72,8 @@ def test_query_sexes_male_only_eq(uagre):
         assert set(v.variant_in_sexes) == set([Sex.male])
 
 
-def test_query_sexes_female_only(uagre):
-    vs = uagre.query_variants(sexes='female and not male')
+def test_query_sexes_female_only(ustudy):
+    vs = ustudy.query_variants(sexes='female and not male')
     vl = list(vs)
 
     assert len(vl) == 36
@@ -81,8 +81,8 @@ def test_query_sexes_female_only(uagre):
         assert set(v.variant_in_sexes) == set([Sex.female])
 
 
-def test_query_sexes_female_only_eq(uagre):
-    vs = uagre.query_variants(sexes='eq(female)')
+def test_query_sexes_female_only_eq(ustudy):
+    vs = ustudy.query_variants(sexes='eq(female)')
     vl = list(vs)
 
     assert len(vl) == 36
@@ -90,8 +90,8 @@ def test_query_sexes_female_only_eq(uagre):
         assert set(v.variant_in_sexes) == set([Sex.female])
 
 
-def test_query_sexes_single_sex_only(uagre):
-    vs = uagre.query_variants(
+def test_query_sexes_single_sex_only(ustudy):
+    vs = ustudy.query_variants(
         sexes="(male and not female) or (female and not male)")
     assert vs is not None
 
@@ -102,8 +102,8 @@ def test_query_sexes_single_sex_only(uagre):
     assert len(vl) == 78
 
 
-def test_query_sexes_single_sex_only_eq(uagre):
-    vs = uagre.query_variants(
+def test_query_sexes_single_sex_only_eq(ustudy):
+    vs = ustudy.query_variants(
         sexes="eq(male) or eq(female)")
     assert vs is not None
 

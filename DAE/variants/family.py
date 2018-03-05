@@ -20,10 +20,18 @@ class Person(object):
         self.sex = atts['sex']
         self.role = atts['role']
         self.status = atts['status']
+        self.mom = atts['momId']
+        self.dad = atts['dadId']
 
     def __repr__(self):
         return "Person({}; {}; {})".format(
             self.personId, self.role, self.gender)
+
+    def has_mom(self):
+        return not (self.mom is None or self.mom == '0')
+
+    def has_dad(self):
+        return not (self.dad is None or self.dad == '0')
 
 
 class Family(object):
@@ -79,7 +87,7 @@ class Family(object):
         return roles_df['personId'].values
 
 
-class Families(object):
+class FamiliesBase(object):
 
     def __init__(self, ped_df=None):
         self.ped_df = ped_df
@@ -101,3 +109,6 @@ class Families(object):
             if fam.family_id not in res:
                 res[fam.family_id] = fam
         return res
+
+    def individuals_without_parents(self):
+        pass
