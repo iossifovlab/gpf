@@ -5,48 +5,8 @@ Created on Feb 13, 2018
 '''
 from __future__ import print_function
 
-import re
-
-from DAE import genomesDB
 import numpy as np
 from variants.attributes import Inheritance
-
-
-SUB_RE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
-INS_RE = re.compile('^ins\(([ACGT]+)\)$')
-DEL_RE = re.compile('^del\((\d+)\)$')
-
-GA = genomesDB.get_genome()  # @UndefinedVariable
-
-
-def dae2vcf_variant(chrom, position, var):
-    # print(chrom, position, var)
-
-    match = SUB_RE.match(var)
-    if match:
-        return chrom, position, match.group(1), match.group(2)
-
-    match = INS_RE.match(var)
-    if match:
-        alt_suffix = match.group(1)
-        reference = GA.getSequence(chrom, position - 1, position - 1)
-        return chrom, position - 1, reference, reference + alt_suffix
-
-    match = DEL_RE.match(var)
-    if match:
-        count = int(match.group(1))
-        reference = GA.getSequence(chrom, position - 1, position + count - 1)
-        return chrom, position - 1, reference, reference[0]
-
-    raise NotImplementedError('weird variant: ' + var)
-
-
-def mat2str(mat, col_sep="", row_sep="/"):
-    return row_sep.join([
-        col_sep.join(
-            [str(n) if n >= 0 else "?" for n in mat[i, :]]
-        )
-        for i in xrange(mat.shape[0])])
 
 
 class VariantBase(object):
@@ -62,9 +22,9 @@ class VariantBase(object):
         return '{}:{} {}->{}'.format(
             self.chromosome, self.position, self.reference, self.alternative)
 
-    @staticmethod
-    def from_dae_variant(chrom, pos, variant):
-        return VariantBase(*dae2vcf_variant(chrom, pos, variant))
+#     @staticmethod
+#     def from_dae_variant(chrom, pos, variant):
+#         return VariantBase(*dae2vcf_variant(chrom, pos, variant))
 
     @staticmethod
     def from_vcf_variant(variant):
@@ -126,9 +86,9 @@ class FamilyVariant(VariantBase):
         return FamilyVariant(
             v.chromosome, v.position, v.reference, v.alternative)
 
-    @staticmethod
-    def from_dae_variant(chrom, pos, variant):
-        return FamilyVariant(*dae2vcf_variant(chrom, pos, variant))
+#     @staticmethod
+#     def from_dae_variant(chrom, pos, variant):
+#         return FamilyVariant(*dae2vcf_variant(chrom, pos, variant))
 
     @staticmethod
     def from_vcf_variant(variant):

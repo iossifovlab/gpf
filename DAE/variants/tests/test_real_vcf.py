@@ -3,7 +3,7 @@ Created on Mar 5, 2018
 
 @author: lubo
 '''
-from variants.variant import mat2str
+from variants.vcf_utils import mat2str
 import pytest
 
 

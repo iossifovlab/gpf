@@ -4,13 +4,12 @@ Created on Mar 5, 2018
 @author: lubo
 '''
 from __future__ import print_function
-
-from variants.raw_vcf import AlleleCounter
+from variants.allele_frequency import VcfAlleleFrequency
 
 
 def test_allele_counter_simple(ustudy):
 
-    counter = AlleleCounter(ustudy)
+    counter = VcfAlleleFrequency(ustudy)
     assert counter is not None
 
     persons = ustudy.persons_without_parents()
@@ -24,7 +23,7 @@ def test_allele_counter_simple(ustudy):
 
 
 def test_allels_counter_simple_vcf(ustudy):
-    counter = AlleleCounter(ustudy)
+    counter = VcfAlleleFrequency(ustudy)
 
     for v in ustudy.vcf_vars:
         res = counter.count_alt_allele(v)

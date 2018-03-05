@@ -7,7 +7,7 @@ from __future__ import print_function
 
 from RegionOperations import Region
 import numpy as np
-from variants.variant import mat2str
+from variants.vcf_utils import mat2str
 
 
 def test_mendelian(ustudy):
