@@ -17,6 +17,7 @@ class Person(object):
             self.atts = {}
         assert 'personId' in atts
         self.person_id = atts['personId']
+        self.index = atts['index']
         self.sex = atts['sex']
         self.role = atts['role']
         self.status = atts['status']
@@ -25,13 +26,16 @@ class Person(object):
 
     def __repr__(self):
         return "Person({}; {}; {})".format(
-            self.personId, self.role, self.gender)
+            self.person_id, self.role, self.sex)
 
     def has_mom(self):
         return not (self.mom is None or self.mom == '0')
 
     def has_dad(self):
         return not (self.dad is None or self.dad == '0')
+
+    def has_parent(self):
+        return self.has_dad() or self.has_mom()
 
 
 class Family(object):
@@ -110,5 +114,14 @@ class FamiliesBase(object):
                 res[fam.family_id] = fam
         return res
 
-    def individuals_without_parents(self):
-        pass
+    def persons_without_parents(self):
+        person = []
+        for fam in self.families.values():
+            print(fam)
+            for p in fam.members_in_order:
+                if not p.has_parent():
+                    person.append(p)
+        return person
+
+    def persons_index(self, persons):
+        return sorted([p.index for p in persons])

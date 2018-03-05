@@ -56,6 +56,9 @@ class Role(enum.Enum):
         return self.name
         # return "{}: {:023b}".format(self.name, self.value)
 
+    def __str__(self):
+        return self.name
+
     @staticmethod
     def from_name(name):
         if name in Role.__members__:
@@ -84,6 +87,9 @@ class Sex(enum.Enum):
         return Sex(int(val))
 
     def __repr__(self):
+        return self.name
+
+    def __str__(self):
         return self.name
 
 
