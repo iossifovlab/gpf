@@ -93,7 +93,7 @@ class AlleleCounter(object):
         for alt_allele, alt in enumerate(vcf.ALT):
             n_alt_allele = np.sum(gt == alt_allele + 1)
             if n_parents_called == 0:
-                print(vcf.start, mat2str(gt), n_parents_called, n_alt_allele)
+                # print(vcf.start, mat2str(gt), n_parents_called, n_alt_allele)
                 alt_allele_freq = 0
             else:
                 alt_allele_freq = \
