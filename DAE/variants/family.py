@@ -17,6 +17,7 @@ class Person(object):
             self.atts = {}
         assert 'personId' in atts
         self.person_id = atts['personId']
+        self.sample_id = atts['sampleId']
         self.index = atts['index']
         self.sex = atts['sex']
         self.role = atts['role']
@@ -117,7 +118,6 @@ class FamiliesBase(object):
     def persons_without_parents(self):
         person = []
         for fam in self.families.values():
-            print(fam)
             for p in fam.members_in_order:
                 if not p.has_parent():
                     person.append(p)

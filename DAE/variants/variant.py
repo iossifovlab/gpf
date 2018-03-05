@@ -42,8 +42,11 @@ def dae2vcf_variant(chrom, position, var):
 
 
 def mat2str(mat, col_sep="", row_sep="/"):
-    return row_sep.join([col_sep.join([str(n) for n in mat[i, :]])
-                         for i in xrange(mat.shape[0])])
+    return row_sep.join([
+        col_sep.join(
+            [str(n) if n >= 0 else "?" for n in mat[i, :]]
+        )
+        for i in xrange(mat.shape[0])])
 
 
 class VariantBase(object):

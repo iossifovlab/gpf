@@ -65,6 +65,9 @@ class RawVariantsLoader(object):
             },
             comment="#",
         )
+        if 'sampleId' not in ped_df.columns:
+            sample_ids = pd.Series(data=ped_df['personId'].values)
+            ped_df['sampleId'] = sample_ids
         return ped_df
 
     def load_vcf(self):

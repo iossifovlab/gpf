@@ -65,6 +65,7 @@ class AlleleCounter(object):
         self.independent = self.family_variants.persons_without_parents()
         self.independent_index = \
             np.array(self.family_variants.persons_index(self.independent))
+
         self.parents = len(self.independent)
 
     def count_alt_allele(self, vcf):
@@ -145,15 +146,34 @@ class RawFamilyVariants(FamiliesBase):
 
         self._load()
 
+    def _match_pedigree_to_samples(self, ped_df, samples):
+        samples_needed = set(samples)
+        assert samples_needed.issubset(set(ped_df['sampleId'].values))
+
+        pedigree = []
+        for record in ped_df.to_dict(orient='record'):
+            if record['sampleId'] in samples_needed:
+                pedigree.append(record)
+        assert len(pedigree) == len(samples)
+        samples_list = list(samples)
+
+        pedigree = sorted(
+            pedigree, key=lambda p: samples_list.index(p['sampleId']))
+
+        ped_df = pd.DataFrame(pedigree)
+        return ped_df
+
     def _load(self):
         loader = RawVariantsLoader(self.config)
         self.ped_df = loader.load_pedigree()
-        self.families_build(self.ped_df, family_class=VcfFamily)
 
         self.vcf = loader.load_vcf()
         self.samples = self.vcf.samples
 
-        assert np.all(self.samples == self.ped_df['personId'].values)
+        self.ped_df = self._match_pedigree_to_samples(
+            self.ped_df, self.samples)
+        self.families_build(self.ped_df, family_class=VcfFamily)
+        assert np.all(self.samples == self.ped_df['sampleId'].values)
 
         self.vars_df = loader.load_annotation()
         self.vcf_vars = list(self.vcf.vcf)
@@ -165,7 +185,6 @@ class RawFamilyVariants(FamiliesBase):
             allele_counter = AlleleCounter(self)
             self.vars_df = allele_counter.calc_allele_frequencies(
                 self.vars_df, self.vcf_vars)
-            print(self.vars_df.head())
 
     def filter_regions(self, v, regions):
         for reg in regions:

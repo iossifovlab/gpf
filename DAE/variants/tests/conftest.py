@@ -37,7 +37,7 @@ def ustudy(ustudy_config):
 @pytest.fixture(scope='session')
 def rvcf_config():
     from variants.default_settings import DATA_DIR
-    prefix = os.path.join(DATA_DIR, "ssc_nygc/ussc")
+    prefix = os.path.join(DATA_DIR, "ssc_nygc/nssc")
     config = Configure.from_prefix(prefix)
     return config
 
