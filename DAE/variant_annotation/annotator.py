@@ -92,18 +92,19 @@ class VariantAnnotator:
             effects.append(EffectFactory.create_effect("intergenic"))
         return effects
 
-    def do_annotate_variant(self, chr=None, position=None, loc=None, var=None,
-                            ref=None, alt=None, length=None, seq=None,
-                            typ=None):
-        variant = Variant(chr, position, loc, var, ref, alt, length, seq, typ)
+    def do_annotate_variant(self, chrom=None, position=None, loc=None,
+                            var=None, ref=None, alt=None, length=None,
+                            seq=None, typ=None):
+        variant = Variant(
+            chrom, position, loc, var, ref, alt, length, seq, typ)
         return self.annotate(variant)
 
     @classmethod
-    def annotate_variant(cls, gm, refG, chr=None, position=None, loc=None,
+    def annotate_variant(cls, gm, refG, chrom=None, position=None, loc=None,
                          var=None, ref=None, alt=None, length=None, seq=None,
                          typ=None, promoter_len=0):
         annotator = VariantAnnotator(refG, gm, promoter_len=promoter_len)
-        effects = annotator.do_annotate_variant(chr, position, loc, var, ref,
+        effects = annotator.do_annotate_variant(chrom, position, loc, var, ref,
                                                 alt, length, seq, typ)
         desc = annotator.effect_description(effects)
 
