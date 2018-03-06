@@ -1,7 +1,7 @@
 import { 
   Component, OnInit, Input, Output, EventEmitter, Host, ViewChild
  } from '@angular/core';
-import { Location } from '@angular/common';
+import { Location, PlatformLocation } from '@angular/common';
 import { Router } from '@angular/router';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { DatasetsService } from '../datasets/datasets.service';
@@ -36,7 +36,6 @@ export class SaveQueryButtonComponent implements OnInit {
     private location: Location,
     // should be provided by a parent component..
   	private parentComponent: QueryStateCollector 
-
   ) { }
 
   ngOnInit() {
@@ -69,7 +68,6 @@ export class SaveQueryButtonComponent implements OnInit {
         this.url = null;
     }
 
-
     createUrl() {
         if (!this.urlUUID) {
             return '';
@@ -78,7 +76,7 @@ export class SaveQueryButtonComponent implements OnInit {
         if (this.savedUrlUUID != this.urlUUID) {
             let pathname = this.router.createUrlTree(
                 ["load-query", this.urlUUID]).toString();
-
+            pathname = this.location.prepareExternalUrl(pathname);
             this.url = window.location.origin + pathname;
             this.savedUrlUUID = this.urlUUID;
         }
