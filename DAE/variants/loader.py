@@ -42,9 +42,10 @@ class RawVariantsLoader(object):
     def __init__(self, config):
         self.config = config
 
-    def load_annotation(self):
+    def load_annotation(self, storage='csv'):
         assert self.config.annotation
-        return self.load_annotation_file(self.config.annotation)
+        return self.load_annotation_file(
+            self.config.annotation, storage=storage)
 
     @staticmethod
     def convert_array_of(token, dtype):
@@ -60,23 +61,42 @@ class RawVariantsLoader(object):
         return RawVariantsLoader.convert_array_of(token, float)
 
     @staticmethod
-    def load_annotation_file(filename, sep='\t'):
+    def load_annotation_file(filename, sep='\t', storage='csv'):
         assert os.path.exists(filename)
-        with open(filename, 'r') as infile:
-            annot_df = pd.read_csv(
-                infile, sep=sep, index_col=False,
-                dtype={
-                    'chr': str,
-                    'position': np.int32,
-                    'n_alt_alleles': np.object_,
-                },
-                converters={
-                    'n_alt_alleles':
-                    RawVariantsLoader.convert_array_of_ints,
-                    'alt_allele_freq':
-                    RawVariantsLoader.convert_array_of_floats,
-                })
-        return annot_df
+        if storage == 'csv':
+            with open(filename, 'r') as infile:
+                annot_df = pd.read_csv(
+                    infile, sep=sep, index_col=False,
+                    dtype={
+                        'chr': str,
+                        'position': np.int32,
+                        'n_alt_alleles': np.object_,
+                    },
+                    converters={
+                        'n_alt_alleles':
+                        RawVariantsLoader.convert_array_of_ints,
+                        'alt_allele_freq':
+                        RawVariantsLoader.convert_array_of_floats,
+                    })
+            return annot_df
+        elif storage == 'parquet':
+            annot_df = pd.read_parquet(filename)
+            return annot_df
+        else:
+            raise ValueError("unexpected input format: {}".format(storage))
+
+    @staticmethod
+    def save_annotation_file(vars_df, filename, sep='\t', storage='csv'):
+        if storage == 'csv':
+            vars_df.to_csv(
+                filename,
+                index=False,
+                sep=sep
+            )
+        elif storage == 'parquet':
+            vars_df.to_parquet(filename)
+        else:
+            raise ValueError("unexpected output format: {}".format(storage))
 
     def load_pedigree(self):
         assert self.config.pedigree

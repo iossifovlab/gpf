@@ -29,7 +29,7 @@ def temp_filename(request):
     request.addfinalizer(fin)
     output = os.path.join(
         dirname,
-        'annotation.parquet'
+        'annotation.tmp'
     )
     return output
 

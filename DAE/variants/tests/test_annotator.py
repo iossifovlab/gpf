@@ -5,7 +5,6 @@ Created on Mar 5, 2018
 '''
 from __future__ import print_function
 
-import pandas as pd
 import numpy as np
 
 from variants.annotator import AlleleFrequencyAnnotator
@@ -21,9 +20,10 @@ def test_allele_freq_annotator_parquet_experiment(nvcf, temp_filename):
     vars_df = annotator.annotate()
     assert vars_df is not None
 
-    vars_df.to_parquet(temp_filename)
-
-    vars1_df = pd.read_parquet(temp_filename)
+    RawVariantsLoader.save_annotation_file(
+        vars_df, temp_filename, storage='parquet')
+    vars1_df = RawVariantsLoader.load_annotation_file(
+        temp_filename, storage='parquet')
 
     for v1, v2 in zip(vars_df.to_dict(orient='record'),
                       vars1_df.to_dict(orient='record')):
@@ -43,10 +43,10 @@ def test_allele_freq_annotator_csv_experiment(nvcf, temp_filename):
     vars_df = annotator.annotate()
     assert vars_df is not None
 
-    vars_df.to_csv(temp_filename, index=False)
-
+    RawVariantsLoader.save_annotation_file(
+        vars_df, temp_filename, storage='csv')
     vars1_df = RawVariantsLoader.load_annotation_file(
-        temp_filename, sep=",")
+        temp_filename, storage='csv')
 
     print(vars1_df.head())
 
