@@ -93,6 +93,20 @@ def fvcf(fvcf_config):
     return fvariants
 
 
+@pytest.fixture(scope='session')
+def nvcf19_config():
+    from variants.default_settings import DATA_DIR
+    prefix = os.path.join(DATA_DIR, "spark/nspark")
+    config = Configure.from_prefix(prefix)
+    return config
+
+
+@pytest.fixture(scope='session')
+def nvcf19(nvcf19_config):
+    fvariants = RawFamilyVariants(nvcf19_config)
+    return fvariants
+
+
 PED1 = """
 # SIMPLE TRIO
 familyId,    personId,    dadId,    momId,    sex,   status,    role

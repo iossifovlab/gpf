@@ -15,6 +15,7 @@ from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
 from RegionOperations import Region
 from variants.vcf_utils import VcfFamily
+import sys
 
 
 def split_gene_effect(effects):
@@ -48,30 +49,34 @@ class RawFamilyVariants(FamiliesBase):
 
     def _match_pedigree_to_samples(self, ped_df, samples):
         samples_needed = set(samples)
-        assert samples_needed.issubset(set(ped_df['sampleId'].values))
+        pedigree_samples = set(ped_df['sampleId'].values)
+        missing_samples = samples_needed.difference(pedigree_samples)
+        print("pedigree missing samples: ", missing_samples, file=sys.stderr)
+
+        samples_needed = samples_needed.difference(missing_samples)
+        assert samples_needed.issubset(pedigree_samples)
 
         pedigree = []
         for record in ped_df.to_dict(orient='record'):
             if record['sampleId'] in samples_needed:
                 pedigree.append(record)
-        assert len(pedigree) == len(samples)
-        samples_list = list(samples)
+        assert len(pedigree) == len(samples_needed)
+        samples_list = [s for s in samples if s in samples_needed]
 
         pedigree = sorted(
             pedigree, key=lambda p: samples_list.index(p['sampleId']))
 
         ped_df = pd.DataFrame(pedigree)
-        return ped_df
+        return ped_df, np.array(samples_list)
 
     def _load(self):
         loader = RawVariantsLoader(self.config)
         self.ped_df = loader.load_pedigree()
 
         self.vcf = loader.load_vcf()
-        self.samples = self.vcf.samples
 
-        self.ped_df = self._match_pedigree_to_samples(
-            self.ped_df, self.samples)
+        self.ped_df, self.samples = self._match_pedigree_to_samples(
+            self.ped_df, self.vcf.samples)
         self.families_build(self.ped_df, family_class=VcfFamily)
         assert np.all(self.samples == self.ped_df['sampleId'].values)
 
