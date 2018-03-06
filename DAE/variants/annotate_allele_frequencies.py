@@ -5,6 +5,9 @@ Created on Mar 5, 2018
 '''
 import numpy as np
 import pandas as pd
+
+from variants.family import FamiliesBase
+from variants.vcf_utils import VcfFamily
 from variants.vcf_utils import samples_to_alleles_index, mat2str
 
 
@@ -20,13 +23,13 @@ class VcfAlleleFrequency(object):
 
         self.parents = len(self.independent)
 
-    def count_alt_allele(self, vcf):
-        assert self.independent
-        assert self.independent_index is not None
+    @staticmethod
+    def count_alt_allele(vcf_var, independent_samples):
+        n_independent_parents = len(independent_samples)
 
-        gt = vcf.gt_idxs[
-            samples_to_alleles_index(self.independent_index)]
-        gt = gt.reshape([2, len(self.independent_index)], order='F')
+        gt = vcf_var.gt_idxs[
+            samples_to_alleles_index(independent_samples)]
+        gt = gt.reshape([2, len(independent_samples)], order='F')
 
         unknown = np.any(gt == -1, axis=0)
         gt = gt[:, np.logical_not(unknown)]
@@ -35,14 +38,15 @@ class VcfAlleleFrequency(object):
         result = {
             'gt': mat2str(gt),
             'n_parents_called': n_parents_called,
-            'percent_parents_called': (100.0 * n_parents_called) / self.parents
+            'percent_parents_called':
+            (100.0 * n_parents_called) / n_independent_parents
         }
         alleles_frequencies = []
         alleles_counts = []
 
         n_ref_alleles = np.sum(gt == 0)
 
-        for alt_allele, alt in enumerate(vcf.ALT):
+        for alt_allele, alt in enumerate(vcf_var.ALT):
             n_alt_allele = np.sum(gt == alt_allele + 1)
             if n_parents_called == 0:
                 # print(vcf.start, mat2str(gt), n_parents_called, n_alt_allele)
@@ -74,7 +78,7 @@ class VcfAlleleFrequency(object):
         alt_alleles_freq = pd.Series(index=vars_df.index, dtype=np.object_)
 
         for index, v in enumerate(vcf_vars):
-            res = self.count_alt_allele(v)
+            res = self.count_alt_allele(v, self.independent_index)
             n_parents_called[index] = res['n_parents_called']
             n_ref_alleles[index] = res['n_ref_alleles']
             percent_parents_called[index] = res['percent_parents_called']
@@ -86,6 +90,29 @@ class VcfAlleleFrequency(object):
         vars_df['n_alt_alleles'] = n_alt_alleles
         vars_df['n_ref_alleles'] = n_ref_alleles
         vars_df['alt_allele_freq'] = alt_alleles_freq
+        print(vars_df.head())
+
+        return vars_df
+
+
+class AlleleFrequencyAnnotator(FamiliesBase):
+
+    def __init__(self, ped_df, vcf, vars_df):
+        super(AlleleFrequencyAnnotator, self).__init__()
+
+        self.ped_df = ped_df
+        self.vcf = vcf
+        self.vcf_vars = vcf.vars
+        self.vars_df = vars_df
+
+        self.families_build(ped_df, family_class=VcfFamily)
+
+    def annotate(self):
+        print(self.vars_df.head())
+
+        allele_counter = VcfAlleleFrequency(self)
+        vars_df = allele_counter.calc_allele_frequencies(
+            self.vars_df, self.vcf_vars)
         print(vars_df.head())
 
         return vars_df

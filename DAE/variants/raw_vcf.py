@@ -9,13 +9,12 @@ import numpy as np
 import pandas as pd
 
 from variants.loader import RawVariantsLoader
-from variants.family import FamiliesBase, Family
+from variants.family import FamiliesBase
 from variants.variant import FamilyVariant
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
 from RegionOperations import Region
-from variants.vcf_utils import samples_to_alleles_index, mat2str, VcfFamily
-from variants.allele_frequency import VcfAlleleFrequency
+from variants.vcf_utils import VcfFamily
 
 
 def split_gene_effect(effects):
@@ -183,6 +182,7 @@ class RawFamilyVariants(FamiliesBase):
 
 if __name__ == "__main__":
     import os
+    from variants.vcf_utils import mat2str
 
     prefix = os.environ.get(
         "DAE_UAGRE_PREFIX",

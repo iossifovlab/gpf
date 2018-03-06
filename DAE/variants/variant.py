@@ -22,10 +22,6 @@ class VariantBase(object):
         return '{}:{} {}->{}'.format(
             self.chromosome, self.position, self.reference, self.alternative)
 
-#     @staticmethod
-#     def from_dae_variant(chrom, pos, variant):
-#         return VariantBase(*dae2vcf_variant(chrom, pos, variant))
-
     @staticmethod
     def from_vcf_variant(variant):
         # assert len(variant.ALT) == 1

@@ -5,10 +5,10 @@ Created on Mar 5, 2018
 '''
 from __future__ import print_function
 
-import numpy as np
-
-from variants.annotator import AlleleFrequencyAnnotator
 import pytest
+
+import numpy as np
+from variants.annotate_allele_frequencies import AlleleFrequencyAnnotator
 from variants.loader import RawVariantsLoader
 
 
