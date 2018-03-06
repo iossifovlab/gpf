@@ -8,16 +8,16 @@ from __future__ import print_function
 import pytest
 
 import numpy as np
-from variants.annotate_allele_frequencies import AlleleFrequencyAnnotator
+from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.loader import RawVariantsLoader
 
 
 def test_allele_freq_annotator_parquet_experiment(nvcf, temp_filename):
 
-    annotator = AlleleFrequencyAnnotator(nvcf.ped_df, nvcf.vcf, nvcf.vars_df)
+    annotator = VcfAlleleFrequencyAnnotator(nvcf)
     assert annotator is not None
 
-    vars_df = annotator.annotate()
+    vars_df = annotator.annotate(nvcf.vars_df, nvcf.vcf_vars)
     assert vars_df is not None
 
     RawVariantsLoader.save_annotation_file(
@@ -37,10 +37,10 @@ def test_allele_freq_annotator_parquet_experiment(nvcf, temp_filename):
 
 def test_allele_freq_annotator_csv_experiment(nvcf, temp_filename):
 
-    annotator = AlleleFrequencyAnnotator(nvcf.ped_df, nvcf.vcf, nvcf.vars_df)
+    annotator = VcfAlleleFrequencyAnnotator(nvcf)
     assert annotator is not None
 
-    vars_df = annotator.annotate()
+    vars_df = annotator.annotate(nvcf.vars_df, nvcf.vcf_vars)
     assert vars_df is not None
 
     RawVariantsLoader.save_annotation_file(

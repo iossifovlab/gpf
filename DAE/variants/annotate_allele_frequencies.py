@@ -11,25 +11,24 @@ from variants.vcf_utils import VcfFamily
 from variants.vcf_utils import samples_to_alleles_index, mat2str
 
 
-class VcfAlleleFrequency(object):
+class VcfAlleleFrequencyAnnotator(object):
 
     def __init__(self, family_variants):
-        super(VcfAlleleFrequency, self).__init__()
+        super(VcfAlleleFrequencyAnnotator, self).__init__()
         self.family_variants = family_variants
 
         self.independent = self.family_variants.persons_without_parents()
         self.independent_index = \
             np.array(self.family_variants.persons_index(self.independent))
 
-        self.parents = len(self.independent)
+        self.n_independent_parents = len(self.independent)
 
-    @staticmethod
-    def count_alt_allele(vcf_var, independent_samples):
-        n_independent_parents = len(independent_samples)
+    def annotate_variant(self, vcf_variant):
+        n_independent_parents = self.n_independent_parents
 
-        gt = vcf_var.gt_idxs[
-            samples_to_alleles_index(independent_samples)]
-        gt = gt.reshape([2, len(independent_samples)], order='F')
+        gt = vcf_variant.gt_idxs[
+            samples_to_alleles_index(self.independent_index)]
+        gt = gt.reshape([2, len(self.independent_index)], order='F')
 
         unknown = np.any(gt == -1, axis=0)
         gt = gt[:, np.logical_not(unknown)]
@@ -46,7 +45,7 @@ class VcfAlleleFrequency(object):
 
         n_ref_alleles = np.sum(gt == 0)
 
-        for alt_allele, alt in enumerate(vcf_var.ALT):
+        for alt_allele, alt in enumerate(vcf_variant.ALT):
             n_alt_allele = np.sum(gt == alt_allele + 1)
             if n_parents_called == 0:
                 # print(vcf.start, mat2str(gt), n_parents_called, n_alt_allele)
@@ -68,7 +67,7 @@ class VcfAlleleFrequency(object):
         assert n_parents_called * 2 == sum(alleles_counts) + n_ref_alleles
         return result
 
-    def calc_allele_frequencies(self, vars_df, vcf_vars):
+    def annotate(self, vars_df, vcf_vars):
         n_parents_called = pd.Series(index=vars_df.index, dtype=np.int16)
         n_ref_alleles = pd.Series(index=vars_df.index, dtype=np.int16)
         percent_parents_called = pd.Series(
@@ -78,7 +77,7 @@ class VcfAlleleFrequency(object):
         alt_alleles_freq = pd.Series(index=vars_df.index, dtype=np.object_)
 
         for index, v in enumerate(vcf_vars):
-            res = self.count_alt_allele(v, self.independent_index)
+            res = self.annotate_variant(v)
             n_parents_called[index] = res['n_parents_called']
             n_ref_alleles[index] = res['n_ref_alleles']
             percent_parents_called[index] = res['percent_parents_called']
@@ -90,29 +89,28 @@ class VcfAlleleFrequency(object):
         vars_df['n_alt_alleles'] = n_alt_alleles
         vars_df['n_ref_alleles'] = n_ref_alleles
         vars_df['alt_allele_freq'] = alt_alleles_freq
-        print(vars_df.head())
 
         return vars_df
 
 
-class AlleleFrequencyAnnotator(FamiliesBase):
-
-    def __init__(self, ped_df, vcf, vars_df):
-        super(AlleleFrequencyAnnotator, self).__init__()
-
-        self.ped_df = ped_df
-        self.vcf = vcf
-        self.vcf_vars = vcf.vars
-        self.vars_df = vars_df
-
-        self.families_build(ped_df, family_class=VcfFamily)
-
-    def annotate(self):
-        print(self.vars_df.head())
-
-        allele_counter = VcfAlleleFrequency(self)
-        vars_df = allele_counter.calc_allele_frequencies(
-            self.vars_df, self.vcf_vars)
-        print(vars_df.head())
-
-        return vars_df
+# class AlleleFrequencyAnnotator(FamiliesBase):
+#
+#     def __init__(self, ped_df, vcf, vars_df):
+#         super(AlleleFrequencyAnnotator, self).__init__()
+#
+#         self.ped_df = ped_df
+#         self.vcf = vcf
+#         self.vcf_vars = vcf.vars
+#         self.vars_df = vars_df
+#
+#         self.families_build(ped_df, family_class=VcfFamily)
+#
+#     def annotate(self):
+#         print(self.vars_df.head())
+#
+#         allele_counter = VcfAlleleFrequency(self)
+#         vars_df = allele_counter.calc_allele_frequencies(
+#             self.vars_df, self.vcf_vars)
+#         print(vars_df.head())
+#
+#         return vars_df

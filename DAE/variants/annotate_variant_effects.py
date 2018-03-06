@@ -3,6 +3,11 @@ Created on Mar 6, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
+import numpy as np
+import pandas as pd
+
 from variant_annotation.annotator import VariantAnnotator
 from DAE import genomesDB
 from variant_annotation.variant import Variant
@@ -34,7 +39,19 @@ class VariantEffectsAnnotator(object):
         return result
 
     def annotate(self, vars_df, vcf_vars):
+        effect_types = pd.Series(index=vars_df.index, dtype=np.object_)
+        effect_genes = pd.Series(index=vars_df.index, dtype=np.object_)
+        effect_details = pd.Series(index=vars_df.index, dtype=np.object_)
 
         for index, v in enumerate(vcf_vars):
             effects = self.annotate_variant(v)
-            print(index, v.REF, v.ALT, v.start, effects)
+            effects = np.array(effects)
+            effect_types[index] = effects[:, 0]
+            effect_genes[index] = effects[:, 1]
+            effect_details[index] = effects[:, 2]
+
+        vars_df['effect_types'] = effect_types
+        vars_df['effect_genes'] = effect_genes
+        vars_df['effect_details'] = effect_details
+
+        return vars_df
