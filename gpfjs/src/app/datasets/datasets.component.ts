@@ -66,6 +66,10 @@ export class DatasetsComponent implements OnInit {
   }
 
   selectDataset(dataset: Dataset) {
+    if (dataset.description) {
+      this.router.navigate(['/', 'datasets', dataset.id, 'description']);
+    } else {
       this.router.navigate(['/', 'datasets', dataset.id]);
+    }
   }
 }
