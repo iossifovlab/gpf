@@ -44,14 +44,37 @@ class RawVariantsLoader(object):
 
     def load_annotation(self):
         assert self.config.annotation
-        assert os.path.exists(self.config.annotation)
+        return self.load_annotation_file(self.config.annotation)
 
-        with open(self.config.annotation, 'r') as infile:
+    @staticmethod
+    def convert_array_of(token, dtype):
+        token = token.strip()[1:-1]
+        return np.fromstring(token, dtype=dtype, sep=' ')
+
+    @staticmethod
+    def convert_array_of_ints(token):
+        return RawVariantsLoader.convert_array_of(token, int)
+
+    @staticmethod
+    def convert_array_of_floats(token):
+        return RawVariantsLoader.convert_array_of(token, float)
+
+    @staticmethod
+    def load_annotation_file(filename, sep='\t'):
+        assert os.path.exists(filename)
+        with open(filename, 'r') as infile:
             annot_df = pd.read_csv(
-                infile, sep='\t', index_col=False,
+                infile, sep=sep, index_col=False,
                 dtype={
                     'chr': str,
                     'position': np.int32,
+                    'n_alt_alleles': np.object_,
+                },
+                converters={
+                    'n_alt_alleles':
+                    RawVariantsLoader.convert_array_of_ints,
+                    'alt_allele_freq':
+                    RawVariantsLoader.convert_array_of_floats,
                 })
         return annot_df
 
