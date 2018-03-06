@@ -49,7 +49,7 @@ def test_query_effect_types(ustudy):
     vs = ustudy.query_variants(effect_types=effect_types)
     assert vs is not None
     vl = list(vs)
-    assert len(vl) == 3
+    assert len(vl) == 2
 
 
 def test_query_genes_and_effect_types(ustudy):
