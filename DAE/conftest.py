@@ -13,10 +13,30 @@ def pytest_addoption(parser):
                      help="run very slow tests")
     parser.addoption("--ssc_wg", action="store_true",
                      help="run SSC WG tests")
+    parser.addoption("--nomysql", action="store_true",
+                     help="skip tests that require mysql")
 
 
-def slow():
-    pytest.mark.skipif(
-        not pytest.config.getoption("--runslow"),  # @UndefinedVariable
-        reason="need --runslow option to run"
-    )
+def pytest_collection_modifyitems(config, items):
+    if not config.getoption("--runveryslow"):
+        # --runveryslow given in cli: do not skip slow tests
+        skip_veryslow = pytest.mark.skip(
+            reason="need --runveryslow option to run")
+        for item in items:
+            if "veryslow" in item.keywords:
+                item.add_marker(skip_veryslow)
+
+    if not config.getoption("--runslow") and \
+            not config.getoption("--runveryslow"):
+        # --runslow given in cli: do not skip slow tests
+        skip_slow = pytest.mark.skip(
+            reason="need --runslow option to run")
+        for item in items:
+            if "slow" in item.keywords:
+                item.add_marker(skip_slow)
+
+    if config.getoption("--nomysql"):
+        skip_mysql = pytest.mark.skip(reason="need mysql data")
+        for item in items:
+            if "mysql" in item.keywords:
+                item.add_marker(skip_mysql)
