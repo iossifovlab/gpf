@@ -13,7 +13,6 @@ from variants.family import FamiliesBase
 from variants.variant import FamilyVariant
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
-from RegionOperations import Region
 from variants.vcf_utils import VcfFamily
 import sys
 
@@ -199,22 +198,19 @@ if __name__ == "__main__":
     import os
     from variants.vcf_utils import mat2str
 
-    prefix = os.environ.get(
-        "DAE_UAGRE_PREFIX",
-        "/home/lubo/Work/seq-pipeline/data-raw-dev/nagre/nano_agre1"
+    prefix = os.path.join(
+        os.environ.get(
+            "DAE_DATA_DIR",
+            "/home/lubo/Work/seq-pipeline/data-raw-dev/"
+        ),
+        "spark/nspark"
     )
 
     fvars = RawFamilyVariants(prefix=prefix)
 
     vs = fvars.query_variants(
-        inheritance='denovo or omission',
+        inheritance='denovo or unknown',
     )
     for c, v in enumerate(vs):
-        print(c, v, mat2str(v.best_st),
+        print(c, v, mat2str(v.best_st), mat2str(v.gt),
               v.effect_type, v.effect_gene, v.inheritance)
-
-    regions = [Region("1", 900718, 900719)]
-    vs = fvars.query_variants(regions=regions)
-
-    for v in vs:
-        print(v, mat2str(v.best_st), mat2str(v.gt))
