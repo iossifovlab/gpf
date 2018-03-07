@@ -7,6 +7,7 @@ Created on May 22, 2017
 from DAE import vDB
 from transmitted.legacy_query import TransmissionLegacy
 from transmitted.mysql_query import MysqlTransmittedQuery
+import pytest
 
 
 # def test_get_variants_father_ultra_rare(
@@ -25,6 +26,7 @@ from transmitted.mysql_query import MysqlTransmittedQuery
 #     assert 176 == len(variants)
 
 
+@pytest.mark.mysql
 def test_compare_father_ultra_rare(autism_candidates_genes):
     transmitted_study = vDB.get_study("w1202s766e611")
 
@@ -61,6 +63,7 @@ def test_compare_father_ultra_rare(autism_candidates_genes):
     assert len(mvs) == 39
 
 
+@pytest.mark.mysql
 def test_compare_father_rarity(autism_candidates_genes):
     transmitted_study = vDB.get_study("w1202s766e611")
 

@@ -17,6 +17,7 @@ import precompute
 import preloaded
 from common_reports_api.studies import get_all_studies_names
 from common_reports_api.permissions import get_datasets_by_study
+from Variant import isVariant
 
 LOGGER = logging.getLogger(__name__)
 
@@ -94,10 +95,15 @@ class ChildrenCounter(CounterBase):
             self.children_unspecified
 
     def check_phenotype(self, person):
-        if self.phenotype_id == 'unaffected':
-            return person.role == 'sib'
-        else:
-            return person.role == 'prb'
+        if person.role in set(['sib', 'prb']) and \
+                self.phenotype_id == person.phenotype:
+            return True
+        return False
+        #         if self.phenotype_id == 'unaffected':
+        #             return person.role == 'sib'
+        #         else:
+        #             return person.role == 'prb'
+        # return self.phenotype_id == person.phenotype
 
     def build(self, all_studies):
         studies = self.filter_studies(all_studies)
@@ -326,7 +332,14 @@ class DenovoEventsCounter(CounterBase):
                 if kk not in seen:
                     hasNew = True
                     seen.add(kk)
-            if hasNew:
+            has_phenotype = False
+            for index, p in enumerate(v.memberInOrder):
+                if p.is_child and \
+                        isVariant(v.bestSt, index, v.location, p.gender) and \
+                        p.phenotype == self.phenotype_id:
+                    has_phenotype = True
+                    break
+            if hasNew and has_phenotype:
                 ret.append(v)
         return ret
 

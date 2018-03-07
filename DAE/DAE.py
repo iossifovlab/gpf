@@ -29,26 +29,27 @@ vDB = VariantsDB(config.daeDir,
                  giDB=giDB, phDB=None, genomesDB=genomesDB)
 
 
-# def get_gene_sets_symNS(geneSetsDef, denovoStudies=None):
-#     if geneSetsDef == 'denovo':
-#         geneTerms = vDB.get_denovo_sets(denovoStudies)
-#     else:
-#         try:
-#             geneTerms = giDB.getGeneTerms(geneSetsDef)
-#         except:
-#             geneTerms = loadGeneTerm(geneSetsDef)
-# 
-#         if geneTerms.geneNS == 'id':
-#             def rF(x):
-#                 if x in giDB.genes:
-#                     return giDB.genes[x].sym
-#             geneTerms.renameGenes("sym", rF)
-# 
-#         if geneTerms.geneNS != 'sym':
-#             raise Exception('Only work with id or sym namespace')
-#     return geneTerms
+def get_gene_sets_symNS(geneSetsDef, denovoStudies=None):
+    if geneSetsDef == 'denovo':
+        geneTerms = vDB.get_denovo_sets(denovoStudies)
+    else:
+        try:
+            geneTerms = giDB.getGeneTerms(geneSetsDef)
+        except:
+            geneTerms = loadGeneTerm(geneSetsDef)
+ 
+        if geneTerms.geneNS == 'id':
+            def rF(x):
+                if x in giDB.genes:
+                    return giDB.genes[x].sym
+            geneTerms.renameGenes("sym", rF)
+ 
+        if geneTerms.geneNS != 'sym':
+            raise Exception('Only work with id or sym namespace')
+    return geneTerms
 
 pheno = PhenoFactory()
+
 
 if __name__ == "__main__":
     print "hi"

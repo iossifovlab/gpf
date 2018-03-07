@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+./wdae/manage.py recompute
+
 py.test -v --cov-config coveragerc \
     --junitxml=wdae/junit.xml \
     --cov common_reports_api \

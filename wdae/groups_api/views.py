@@ -1,6 +1,5 @@
 from guardian.models import Group
 from django.db.models import Count, Q
-
 from rest_framework import viewsets
 from rest_framework import permissions
 from rest_framework import mixins
