@@ -62,5 +62,5 @@ class WdaePrecomputeConfig(AppConfig):
         logger.warn("WdaePrecomputeConfig.read() started...")
         AppConfig.ready(self)
         self._check_pheno_browser_api_cache()
-        self._load_precomputed()
         self._load_preloaded()
+        self._load_precomputed()

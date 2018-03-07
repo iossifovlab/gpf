@@ -27,5 +27,6 @@ urlpatterns = patterns(
     url(r'^api/v3/common_reports', include('common_reports_api.urls')),
     url(r'^api/v3/genomic_scores', include('genomic_scores_api.urls')),
     url(r'^api/v3/groups', include('groups_api.urls')),
+    url(r'^api/v3/query_state', include('query_state_save.urls')),
     url(r'^admin/', include(admin.site.urls)),
 )

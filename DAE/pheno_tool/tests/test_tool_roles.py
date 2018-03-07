@@ -18,7 +18,7 @@ def test_siblings(phdb, autism_candidates_genes, all_ssc_studies):
             effect_types=['nonsynonymous', ],
             gene_syms=autism_candidates_genes,
             present_in_child=[
-                'autism only', 'unaffected only', 'autism and unaffected'],
+                'affected only', 'unaffected only', 'affected and unaffected'],
             present_in_parent=[
                 'mother only', 'mother and father', 'neither'],
         )
@@ -38,7 +38,7 @@ def test_prb_or_sib(phdb, autism_candidates_genes, all_ssc_studies):
             effect_types=['nonsynonymous', ],
             gene_syms=autism_candidates_genes,
             present_in_child=[
-                'autism only', 'unaffected only', 'autism and unaffected'],
+                'affected only', 'unaffected only', 'affected and unaffected'],
             present_in_parent=[
                 'mother only', 'mother and father', 'neither'],
         )

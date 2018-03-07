@@ -9,7 +9,6 @@ from Config import Config
 import collections
 import os
 
-from datasets.metadataset import MetaDataset
 from pheno.common import ROLES_FILTER_DEFAULT_ROLES, ROLES_GRAPHS_DEFINITION
 
 
@@ -88,18 +87,17 @@ class DatasetsConfig(object):
             })
             self.config.read(dae_config.variantsDBconfFile)
 
-    def get_datasets(self, include_meta=False):
+    def get_datasets(self):
         return [self.get_dataset_desc(dataset_id)
-                for dataset_id in self.get_dataset_ids(include_meta)]
+                for dataset_id in self.get_dataset_ids()]
 
-    def get_dataset_ids(self, include_meta=False):
+    def get_dataset_ids(self):
         res = []
         for section in self.config.sections():
             (section_type, section_id) = self.split_section(section)
             if section_id is None:
                 continue
-            if section_type == 'dataset' and \
-                    (include_meta or section_id != MetaDataset.ID):
+            if section_type == 'dataset':
                 res.append(section_id)
         return res
 
@@ -149,6 +147,7 @@ class DatasetsConfig(object):
         has_transmitted = \
             self._get_boolean(section, 'genotypeBrowser.hasTransmitted')
         has_cnv = self._get_boolean(section, 'genotypeBrowser.hasCNV')
+        has_complex = self._get_boolean(section, 'genotypeBrowser.hasComplex')
         has_present_in_child = self._get_boolean(
             section, 'genotypeBrowser.hasPresentInChild')
         has_present_in_parent = self._get_boolean(
@@ -195,6 +194,7 @@ class DatasetsConfig(object):
             'hasPresentInChild': has_present_in_child,
             'hasPresentInParent': has_present_in_parent,
             'hasCNV': has_cnv,
+            'hasComplex': has_complex,
             'hasStudyTypes': study_types,
             'hasFamilyFilters': family_filters,
             'hasPedigreeSelector': pedigree_selector,

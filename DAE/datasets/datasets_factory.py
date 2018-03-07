@@ -29,16 +29,17 @@ class DatasetsFactory(dict):
         if dataset_id != MetaDataset.ID:
             dataset = Dataset(dataset_descriptor)
         else:
+            all_dataset_ids = self.datasets_config.get_dataset_ids()
+            all_dataset_ids.remove(MetaDataset.ID)
             dataset = MetaDataset(
                 self.datasets_config.get_dataset_desc(MetaDataset.ID),
                 [self.get_dataset(dataset_id)
-                 for dataset_id in self.datasets_config.get_dataset_ids()])
+                 for dataset_id in all_dataset_ids])
         dataset.load()
         return dataset
 
     def get_dataset(self, dataset_id):
         if dataset_id in self:
-            logger.info("dataset {} found in dataset cache".format(dataset_id))
             return self[dataset_id]
         else:
             logger.warn("dataset {} NOT FOUND in dataset cache".format(
@@ -56,8 +57,18 @@ class DatasetsFactory(dict):
 
         return result
 
+    def get_dataset_by_name(self, name):
+        for desc in self.datasets_config.get_datasets():
+            if desc['name'] == name:
+                return self.get_dataset(desc['id'])
+        return None
+
     def get_description_datasets(self):
-        datasets_description = self.datasets_config.get_datasets()
+        datasets_ids = self.datasets_config.get_dataset_ids()
+        datasets_ids.remove(MetaDataset.ID)
+        datasets_description = [self.datasets_config.get_dataset_desc(dataset_id)
+                for dataset_id in datasets_ids]
+
         result = []
         for desc in datasets_description:
             dataset_id = desc['id']

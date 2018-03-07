@@ -15,5 +15,5 @@ def gscs(request):
 
 def test_load_cache(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
-    computed = denovo.load_cache()
+    computed = denovo.load()
     assert computed is not None

@@ -140,7 +140,7 @@ def test_tool_with_filters_result_phenotype_and_genotype(
             effect_types=['nonsynonymous', ],
             gene_syms=autism_candidates_genes,
             present_in_child=[
-                'autism only', 'unaffected only', 'autism and unaffected'],
+                'affected only', 'unaffected only', 'affected and unaffected'],
             present_in_parent=[
                 'mother only', 'mother and father', 'neither'],
         )

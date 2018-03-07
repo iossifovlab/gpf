@@ -13,6 +13,7 @@ from copy import deepcopy
 class Gender(enum.Enum):
     M = 1
     F = 2
+    U = 3
 
 
 class Status(enum.Enum):
@@ -56,20 +57,10 @@ class MeasureType(enum.Enum):
 
     @staticmethod
     def from_str(measure_type):
-        if measure_type == MeasureType.continuous.name:
-            return MeasureType.continuous
-        elif measure_type == MeasureType.ordinal.name:
-            return MeasureType.ordinal
-        elif measure_type == MeasureType.categorical.name:
-            return MeasureType.categorical
-        elif measure_type == MeasureType.other.raw:
-            return MeasureType.raw
-        elif measure_type == measure_type.text.name:
-            return MeasureType.text
-        elif measure_type == MeasureType.skipped.name:
-            return MeasureType.skipped
+        if measure_type in MeasureType.__members__:
+            return MeasureType[measure_type]
         else:
-            assert ValueError("unexpected measure type"), measure_type
+            raise ValueError("unexpected measure type", measure_type)
 
     @staticmethod
     def is_numeric(measure_type):
