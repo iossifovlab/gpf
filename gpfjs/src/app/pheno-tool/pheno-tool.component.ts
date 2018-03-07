@@ -13,7 +13,11 @@ import { ConfigService } from '../config/config.service';
   selector: 'gpf-pheno-tool',
 
   templateUrl: './pheno-tool.component.html',
-  styleUrls: ['./pheno-tool.component.css']
+  styleUrls: ['./pheno-tool.component.css'],
+  providers: [{
+    provide: QueryStateCollector,
+    useExisting: PhenoToolComponent
+  }]
 })
 export class PhenoToolComponent extends QueryStateCollector
     implements OnInit, AfterViewInit {
@@ -31,6 +35,18 @@ export class PhenoToolComponent extends QueryStateCollector
     readonly configService: ConfigService,
   ) {
     super();
+  }
+
+  getCurrentState() {
+    let state = this.collectState();
+
+    return Observable.zip(...state)
+      .map(state => {
+        let stateObject = Object.assign(
+          { datasetId: this.selectedDatasetId },
+          ...state);
+        return stateObject;
+      });
   }
 
   ngAfterViewInit() {

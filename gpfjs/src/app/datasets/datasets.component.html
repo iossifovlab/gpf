@@ -27,6 +27,9 @@
           </div>
         </div>
       </li>
+      <li *ngIf="selectedDataset.description" class="nav-item">
+        <a class="nav-link" routerLink="description" routerLinkActive="active">Dataset Description</a>
+      </li>
       <li *ngIf="selectedDataset.genotypeBrowser" class="nav-item">
         <a class="nav-link" routerLink="browser" routerLinkActive="active">Genotype Browser</a>
       </li>
@@ -38,9 +41,6 @@
       </li>
       <li *ngIf="selectedDataset.phenotypeGenotypeTool" class="nav-item">
         <a class="nav-link" routerLink="phenoTool" routerLinkActive="active">Phenotype Tool</a>
-      </li>
-      <li *ngIf="selectedDataset.description" class="nav-item">
-        <a class="nav-link" routerLink="description" routerLinkActive="active">Dataset Description</a>
       </li>
     </ul>
   </nav>

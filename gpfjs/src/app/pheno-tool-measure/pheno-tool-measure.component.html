@@ -2,7 +2,7 @@
   <div class="row">
     <div class="col-lg-6">
       Proband Pheno Measure
-  	  <gpf-pheno-measure-selector [(selectedMeasure)]="phenoToolMeasure.measure">
+  	  <gpf-pheno-measure-selector [(selectedMeasure)]="phenoToolMeasure.measure" (measuresChange)="measuresUpdate($event)">
       </gpf-pheno-measure-selector>
     </div>
     <div class="col-lg-6">
@@ -11,6 +11,7 @@
         <label>
           <input
             type="checkbox"
+            [checked]="phenoToolMeasure.normalizeBy.indexOf('age') !== -1"
             (change)="onNormalizeByChange('age', $event);">
           age
         </label>
@@ -19,6 +20,7 @@
         <label>
           <input
             type="checkbox"
+            [checked]="phenoToolMeasure.normalizeBy.indexOf('non-verbal iq') !== -1"
             (change)="onNormalizeByChange('non-verbal iq', $event);">
           non verbal IQ
         </label>

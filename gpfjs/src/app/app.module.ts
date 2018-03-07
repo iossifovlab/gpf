@@ -138,6 +138,9 @@ import { GenotypeBrowserMetaViewComponent } from './genotype-browser-meta-view/g
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
 import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
+import { SaveQueryButtonComponent } from './save-query-button/save-query-button.component';
+import { SaveQueryService } from './save-query-button/save-query.service';
+import { LoadQueryComponent } from './load-query/load-query.component';
 
 const appRoutes: Routes = [
   {
@@ -228,6 +231,10 @@ const appRoutes: Routes = [
         component: UserEditComponent
       }
     ]
+  },
+  {
+    path: 'load-query/:uuid',
+    component: LoadQueryComponent
   },
   {
     path: '**',
@@ -323,6 +330,8 @@ const appRoutes: Routes = [
     GenotypeBrowserMetaViewComponent,
     GenotypePreviewFieldComponent,
     ErrorsAlertComponent,
+    SaveQueryButtonComponent,
+    LoadQueryComponent,
     SmallRemoveButtonComponent,
   ],
   imports: [
@@ -365,7 +374,8 @@ const appRoutes: Routes = [
     UsersGroupsService,
     ChromosomeService,
     { provide: Http, useClass: RedirectOnErrorHttpService,
-      deps: [XHRBackend, RequestOptions, Injector]}
+      deps: [XHRBackend, RequestOptions, Injector]},
+    SaveQueryService
   ],
 
   entryComponents: [
