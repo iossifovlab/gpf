@@ -37,7 +37,7 @@ def parse_gene_effect(effect):
 
 class RawFamilyVariants(FamiliesBase):
 
-    def __init__(self, config=None, prefix=None, annotate=False):
+    def __init__(self, config=None, prefix=None, annotator=None):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix(prefix)
@@ -45,7 +45,7 @@ class RawFamilyVariants(FamiliesBase):
         assert self.config is not None
         assert isinstance(self.config, Configure)
 
-        self._load(annotate)
+        self._load(annotator)
 
     def _match_pedigree_to_samples(self, ped_df, samples):
         samples_needed = set(samples)
@@ -69,7 +69,7 @@ class RawFamilyVariants(FamiliesBase):
         ped_df = pd.DataFrame(pedigree)
         return ped_df, np.array(samples_list)
 
-    def _load(self, annotate):
+    def _load(self, annotator):
         loader = RawVariantsLoader(self.config)
         self.ped_df = loader.load_pedigree()
 
@@ -82,10 +82,20 @@ class RawFamilyVariants(FamiliesBase):
 
         self.vcf_vars = self.vcf.vars
 
-        if not annotate:
+        if annotator is None:
             self.vars_df = loader.load_annotation()
         else:
-            pass
+            records = []
+            for v in self.vcf_vars:
+                records.append((v.CHROM, v.start, v.REF, ",".join(v.ALT)))
+            self.vars_df = pd.DataFrame.from_records(
+                data=records,
+                columns=['chr', 'posistion', 'refA', 'altA'])
+            print(self.vars_df.head())
+
+            annotator.setup(self)
+            self.vars_df = annotator.annotate(self.vars_df, self.vcf_vars)
+            print(self.vars_df.head())
 
         assert len(self.vars_df) == len(self.vcf_vars)
         assert np.all(self.vars_df.index.values ==
@@ -207,4 +217,4 @@ if __name__ == "__main__":
     vs = fvars.query_variants(regions=regions)
 
     for v in vs:
-        print(v, mat2str(v.best_st))
+        print(v, mat2str(v.best_st), mat2str(v.gt))

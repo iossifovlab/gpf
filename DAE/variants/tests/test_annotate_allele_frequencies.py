@@ -16,7 +16,9 @@ import pytest
 @pytest.mark.skip
 def test_allele_freq_annotator_parquet_experiment(nvcf, temp_filename):
 
-    annotator = VcfAlleleFrequencyAnnotator(nvcf)
+    annotator = VcfAlleleFrequencyAnnotator()
+    annotator.setup(nvcf)
+
     assert annotator is not None
 
     vars_df = annotator.annotate(nvcf.vars_df, nvcf.vcf_vars)
@@ -47,7 +49,9 @@ def test_allele_freq_annotator_parquet_experiment(nvcf, temp_filename):
 
 def test_allele_freq_annotator_csv_experiment(nvcf, temp_filename):
 
-    annotator = VcfAlleleFrequencyAnnotator(nvcf)
+    annotator = VcfAlleleFrequencyAnnotator()
+    annotator.setup(nvcf)
+
     assert annotator is not None
 
     vars_df = annotator.annotate(nvcf.vars_df, nvcf.vcf_vars)

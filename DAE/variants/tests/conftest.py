@@ -17,6 +17,12 @@ from variants.variant import FamilyVariant
 import os
 import tempfile
 import shutil
+from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
+
+
+@pytest.fixture(scope='session')
+def effect_annotator():
+    return VcfVariantEffectsAnnotator()
 
 
 @pytest.fixture

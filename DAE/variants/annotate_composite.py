@@ -9,6 +9,9 @@ import numpy as np
 
 class AnnotatorBase(object):
 
+    def setup(self, family_variants):
+        pass
+
     def columns(self):
         return self.COLUMNS
 
@@ -37,6 +40,12 @@ class AnnotatorComposite(AnnotatorBase):
     def __init__(self, annotators):
         self.annotators = annotators
         self._columns = None
+
+    def setup(self, family_variants):
+        super(AnnotatorComposite, self).setup(family_variants)
+
+        for annot in self.annotators:
+            annot.setup(family_variants)
 
     def columns(self):
         if self._columns is None:

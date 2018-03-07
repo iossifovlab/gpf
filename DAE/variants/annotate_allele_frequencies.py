@@ -17,8 +17,16 @@ class VcfAlleleFrequencyAnnotator(AnnotatorBase):
         'all.nRefAlls',
     ]
 
-    def __init__(self, family_variants):
+    def __init__(self):
         super(VcfAlleleFrequencyAnnotator, self).__init__()
+        self.family_variants = None
+        self.independent = None
+        self.independent_index = None
+        self.n_independent_parents = None
+
+    def setup(self, family_variants):
+        super(VcfAlleleFrequencyAnnotator, self).setup(family_variants)
+
         self.family_variants = family_variants
 
         self.independent = self.family_variants.persons_without_parents()

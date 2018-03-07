@@ -9,7 +9,9 @@ from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 
 def test_allele_counter_simple(ustudy):
 
-    counter = VcfAlleleFrequencyAnnotator(ustudy)
+    counter = VcfAlleleFrequencyAnnotator()
+    counter.setup(ustudy)
+
     assert counter is not None
 
     persons = ustudy.persons_without_parents()
@@ -23,7 +25,8 @@ def test_allele_counter_simple(ustudy):
 
 
 def test_allels_counter_simple_vcf(ustudy):
-    counter = VcfAlleleFrequencyAnnotator(ustudy)
+    counter = VcfAlleleFrequencyAnnotator()
+    counter.setup(ustudy)
 
     for v in ustudy.vcf_vars:
         res = counter.annotate_variant(v)
