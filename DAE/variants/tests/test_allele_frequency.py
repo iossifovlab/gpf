@@ -27,4 +27,5 @@ def test_allels_counter_simple_vcf(ustudy):
 
     for v in ustudy.vcf_vars:
         res = counter.annotate_variant(v)
-        print(res)
+        # print(res)
+        assert res is not None

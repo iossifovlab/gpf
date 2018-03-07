@@ -101,7 +101,7 @@ class RawFamilyVariants(FamiliesBase):
 
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
-        gene_effects = parse_gene_effect(v.effect_gene)
+        gene_effects = parse_gene_effect(v.effect_gene[0])
         if effect_types is None:
             return [ge for ge in gene_effects if ge['sym'] in genes]
         if genes is None:

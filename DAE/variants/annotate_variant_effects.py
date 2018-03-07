@@ -50,8 +50,8 @@ class VariantEffectsAnnotator(object):
             effect_genes[index] = effects[:, 1]
             effect_details[index] = effects[:, 2]
 
-        vars_df['effect_types'] = effect_types
-        vars_df['effect_genes'] = effect_genes
-        vars_df['effect_details'] = effect_details
+        vars_df['effectType'] = effect_types
+        vars_df['effectGene'] = effect_genes
+        vars_df['effectDetails'] = effect_details
 
         return vars_df

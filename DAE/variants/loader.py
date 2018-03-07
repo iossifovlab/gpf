@@ -38,6 +38,7 @@ class VCFWrapper(object):
 
 
 class RawVariantsLoader(object):
+    SEP = '!'
 
     def __init__(self, config):
         self.config = config
@@ -61,6 +62,12 @@ class RawVariantsLoader(object):
         return RawVariantsLoader.convert_array_of(token, float)
 
     @staticmethod
+    def convert_array_of_strings(token):
+        token = token.strip()
+        words = [w.strip() for w in token.split(RawVariantsLoader.SEP)]
+        return np.array(words)
+
+    @staticmethod
     def load_annotation_file(filename, sep='\t', storage='csv'):
         assert os.path.exists(filename)
         if storage == 'csv':
@@ -70,13 +77,18 @@ class RawVariantsLoader(object):
                     dtype={
                         'chr': str,
                         'position': np.int32,
-                        'n_alt_alleles': np.object_,
                     },
                     converters={
-                        'n_alt_alleles':
+                        'all.nAltAlls':
                         RawVariantsLoader.convert_array_of_ints,
-                        'alt_allele_freq':
+                        'all.altFreq':
                         RawVariantsLoader.convert_array_of_floats,
+                        'effectType':
+                        RawVariantsLoader.convert_array_of_strings,
+                        'effectGene':
+                        RawVariantsLoader.convert_array_of_strings,
+                        'effectDetails':
+                        RawVariantsLoader.convert_array_of_strings,
                     })
             return annot_df
         elif storage == 'parquet':
@@ -87,14 +99,22 @@ class RawVariantsLoader(object):
 
     @staticmethod
     def save_annotation_file(vars_df, filename, sep='\t', storage='csv'):
+        def convert_array_of_strings(a): return RawVariantsLoader.SEP.join(a)
         if storage == 'csv':
+            vars_df = vars_df.copy()
+            vars_df['effectType'] = vars_df['effectType'].\
+                apply(convert_array_of_strings)
+            vars_df['effectGene'] = vars_df['effectGene'].\
+                apply(convert_array_of_strings)
+            vars_df['effectDetails'] = vars_df['effectDetails'].\
+                apply(convert_array_of_strings)
             vars_df.to_csv(
                 filename,
                 index=False,
-                sep=sep
+                sep=sep,
             )
         elif storage == 'parquet':
-            vars_df.to_parquet(filename)
+            vars_df.to_parquet(filename, engine='pyarrow')
         else:
             raise ValueError("unexpected output format: {}".format(storage))
 
