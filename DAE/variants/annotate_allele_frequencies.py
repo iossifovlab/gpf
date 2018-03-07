@@ -4,11 +4,18 @@ Created on Mar 5, 2018
 @author: lubo
 '''
 import numpy as np
-import pandas as pd
-from variants.vcf_utils import samples_to_alleles_index, mat2str
+from variants.annotate_composite import AnnotatorBase
+from variants.vcf_utils import samples_to_alleles_index
 
 
-class VcfAlleleFrequencyAnnotator(object):
+class VcfAlleleFrequencyAnnotator(AnnotatorBase):
+    COLUMNS = [
+        'all.nParCalled',
+        'all.prcntParCalled',
+        'all.nAltAlls',
+        'all.altFreq',
+        'all.nRefAlls',
+    ]
 
     def __init__(self, family_variants):
         super(VcfAlleleFrequencyAnnotator, self).__init__()
@@ -31,18 +38,15 @@ class VcfAlleleFrequencyAnnotator(object):
         gt = gt[:, np.logical_not(unknown)]
 
         n_parents_called = gt.shape[1]
-        result = {
-            'gt': mat2str(gt),
-            'n_parents_called': n_parents_called,
-            'percent_parents_called':
-            (100.0 * n_parents_called) / n_independent_parents
-        }
+        percent_parents_called = (
+            100.0 * n_parents_called) / n_independent_parents
+
         alleles_frequencies = []
         alleles_counts = []
 
         n_ref_alleles = np.sum(gt == 0)
 
-        for alt_allele, alt in enumerate(vcf_variant.ALT):
+        for alt_allele in range(len(vcf_variant.ALT)):
             n_alt_allele = np.sum(gt == alt_allele + 1)
             if n_parents_called == 0:
                 alt_allele_freq = 0
@@ -52,38 +56,30 @@ class VcfAlleleFrequencyAnnotator(object):
             alleles_counts.append(n_alt_allele)
             alleles_frequencies.append(alt_allele_freq)
 
-            result[alt] = {
-                'n_alt_allele': n_alt_allele,
-                'alt_allele_freq': alt_allele_freq,
-            }
-        result['n_alt_alleles'] = np.array(alleles_counts)
-        result['alt_alleles_freq'] = np.array(alleles_frequencies)
-        result['n_ref_alleles'] = n_ref_alleles
-
         assert n_parents_called * 2 == sum(alleles_counts) + n_ref_alleles
-        return result
+        return (n_parents_called, percent_parents_called,
+                np.array(alleles_counts),
+                np.array(alleles_frequencies), n_ref_alleles)
 
-    def annotate(self, vars_df, vcf_vars):
-        n_parents_called = pd.Series(index=vars_df.index, dtype=np.int16)
-        n_ref_alleles = pd.Series(index=vars_df.index, dtype=np.int16)
-        percent_parents_called = pd.Series(
-            index=vars_df.index, dtype=np.float32)
-
-        n_alt_alleles = pd.Series(index=vars_df.index, dtype=np.object_)
-        alt_alleles_freq = pd.Series(index=vars_df.index, dtype=np.object_)
-
-        for index, v in enumerate(vcf_vars):
-            res = self.annotate_variant(v)
-            n_parents_called[index] = res['n_parents_called']
-            n_ref_alleles[index] = res['n_ref_alleles']
-            percent_parents_called[index] = res['percent_parents_called']
-            n_alt_alleles[index] = res['n_alt_alleles']
-            alt_alleles_freq[index] = res['alt_alleles_freq']
-
-        vars_df['all.nParCalled'] = n_parents_called
-        vars_df['all.prcntParCalled'] = percent_parents_called
-        vars_df['all.nAltAlls'] = n_alt_alleles
-        vars_df['all.nRefAlls'] = n_ref_alleles
-        vars_df['all.altFreq'] = alt_alleles_freq
-
-        return vars_df
+#     def annotate(self, vars_df, vcf_vars):
+#         n_parents_called = pd.Series(index=vars_df.index, dtype=np.int16)
+#         n_ref_alleles = pd.Series(index=vars_df.index, dtype=np.int16)
+#         percent_parents_called = pd.Series(
+#             index=vars_df.index, dtype=np.float32)
+#
+#         n_alt_alleles = pd.Series(index=vars_df.index, dtype=np.object_)
+#         alt_alleles_freq = pd.Series(index=vars_df.index, dtype=np.object_)
+#
+#         for index, v in enumerate(vcf_vars):
+#             res = self.annotate_variant(v)
+#             n_parents_called[index], percent_parents_called[index], \
+#                 n_alt_alleles[index], alt_alleles_freq[index], \
+#                 n_ref_alleles[index] = res
+#
+#         vars_df['all.nParCalled'] = n_parents_called
+#         vars_df['all.prcntParCalled'] = percent_parents_called
+#         vars_df['all.nAltAlls'] = n_alt_alleles
+#         vars_df['all.nRefAlls'] = n_ref_alleles
+#         vars_df['all.altFreq'] = alt_alleles_freq
+#
+#         return vars_df

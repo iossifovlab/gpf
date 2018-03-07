@@ -37,7 +37,7 @@ def parse_gene_effect(effect):
 
 class RawFamilyVariants(FamiliesBase):
 
-    def __init__(self, config=None, prefix=None):
+    def __init__(self, config=None, prefix=None, annotate=False):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix(prefix)
@@ -45,7 +45,7 @@ class RawFamilyVariants(FamiliesBase):
         assert self.config is not None
         assert isinstance(self.config, Configure)
 
-        self._load()
+        self._load(annotate)
 
     def _match_pedigree_to_samples(self, ped_df, samples):
         samples_needed = set(samples)
@@ -69,7 +69,7 @@ class RawFamilyVariants(FamiliesBase):
         ped_df = pd.DataFrame(pedigree)
         return ped_df, np.array(samples_list)
 
-    def _load(self):
+    def _load(self, annotate):
         loader = RawVariantsLoader(self.config)
         self.ped_df = loader.load_pedigree()
 
@@ -80,16 +80,16 @@ class RawFamilyVariants(FamiliesBase):
         self.families_build(self.ped_df, family_class=VcfFamily)
         assert np.all(self.samples == self.ped_df['sampleId'].values)
 
-        self.vars_df = loader.load_annotation()
         self.vcf_vars = self.vcf.vars
+
+        if not annotate:
+            self.vars_df = loader.load_annotation()
+        else:
+            pass
+
         assert len(self.vars_df) == len(self.vcf_vars)
         assert np.all(self.vars_df.index.values ==
                       np.arange(len(self.vars_df)))
-
-#         if 'n_parents_called' not in self.vars_df.columns:
-#             allele_counter = VcfAlleleFrequency(self)
-#             self.vars_df = allele_counter.calc_allele_frequencies(
-#                 self.vars_df, self.vcf_vars)
 
     def filter_regions(self, v, regions):
         for reg in regions:

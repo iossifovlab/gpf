@@ -11,6 +11,7 @@ import numpy as np
 
 
 def assert_annotation_equals(vars_df, vars1_df):
+
     for v1, v2 in zip(vars_df.to_dict(orient='record'),
                       vars1_df.to_dict(orient='record')):
         for k in v1.keys():

@@ -14,7 +14,7 @@ class Configure(ConfigBox):
         super(Configure, self).__init__(data, **kwargs)
         assert os.path.exists(self.pedigree), self.pedigree
         assert os.path.exists(self.vcf), self.vcf
-        assert os.path.exists(self.annotation), self.annotation
+        # assert os.path.exists(self.annotation), self.annotation
 
     @staticmethod
     def from_config(work_dir=None, filename=None):

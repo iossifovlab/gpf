@@ -44,12 +44,6 @@ def test_annotate_variant_effects_fvcf(fvcf):
     annotator.annotate(fvcf.vars_df, fvcf.vcf_vars)
 
 
-def test_annotate_variant_effects_nvcf19(nvcf19):
-    annotator = VariantEffectsAnnotator()
-    vars_df = annotator.annotate(nvcf19.vars_df, nvcf19.vcf_vars)
-    print(vars_df.head())
-
-
 def test_annotator_variants_effects_csv_experiment(nvcf19, temp_filename):
 
     annotator = VariantEffectsAnnotator()

@@ -120,9 +120,6 @@ f1,          p1,          d1,       m1,       1,     2,         prb
 def fam1():
     ped_df = RawVariantsLoader.load_pedigree_file(
         StringIO.StringIO(PED1), sep=",")
-    print(ped_df.dtypes)
-    print(ped_df)
-    print(ped_df.to_dict(orient='records'))
 
     family = Family("f1", ped_df)
     assert len(family.trios) == 1
@@ -150,9 +147,6 @@ f1,          s1,          d1,       m1,       1,      1,         sib
 def fam2():
     ped_df = RawVariantsLoader.load_pedigree_file(
         StringIO.StringIO(PED2), sep=',')
-    print(ped_df.dtypes)
-    print(ped_df)
-    print(ped_df.to_dict(orient='records'))
 
     family = Family("f1", ped_df)
     assert len(family.trios) == 2
