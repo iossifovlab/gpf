@@ -10,36 +10,36 @@ from variants.vcf_utils import mat2str
 
 
 def test_denovo_trio_1(fv1):
-    v = fv1.clone()
-    v.gt = np.array([[0, 0, 1],
-                     [0, 0, 0]])
+    gt = np.array([[0, 0, 1],
+                   [0, 0, 0]])
+    v = fv1(gt)
     print(mat2str(v.gt), mat2str(v.best_st))
     assert not v.is_mendelian()
     assert v.is_denovo()
 
 
 def test_denovo_trio_2(fv1):
-    v = fv1.clone()
-    v.gt = np.array([[0, 0, 1],
-                     [0, 0, 1]])
+    gt = np.array([[0, 0, 1],
+                   [0, 0, 1]])
+    v = fv1(gt)
     print(mat2str(v.gt), mat2str(v.best_st))
     assert not v.is_mendelian()
     assert v.is_denovo()
 
 
 def test_denovo_trio_3(fv1):
-    v = fv1.clone()
-    v.gt = np.array([[0, 0, 0],
-                     [0, 0, 1]])
+    gt = np.array([[0, 0, 0],
+                   [0, 0, 1]])
+    v = fv1(gt)
     print(mat2str(v.gt), mat2str(v.best_st))
     assert not v.is_mendelian()
     assert v.is_denovo()
 
 
 def test_not_denovo_trio_1(fv1):
-    v = fv1.clone()
-    v.gt = np.array([[0, 0, 0],
-                     [0, 0, 0]])
+    gt = np.array([[0, 0, 0],
+                   [0, 0, 0]])
+    v = fv1(gt)
     print(mat2str(v.gt), mat2str(v.best_st))
     assert v.is_reference()
     assert not v.is_mendelian()
@@ -48,9 +48,9 @@ def test_not_denovo_trio_1(fv1):
 
 
 def test_not_denovo_trio_2(fv1):
-    v = fv1.clone()
-    v.gt = np.array([[0, 1, 0],
-                     [0, 1, 0]])
+    gt = np.array([[0, 1, 0],
+                   [0, 1, 0]])
+    v = fv1(gt)
     print(mat2str(v.gt), mat2str(v.best_st))
     assert not v.is_mendelian()
     assert not v.is_denovo()
@@ -58,9 +58,9 @@ def test_not_denovo_trio_2(fv1):
 
 
 def test_not_denovo_trio_3(fv1):
-    v = fv1.clone()
-    v.gt = np.array([[1, 1, 0],
-                     [1, 1, 1]])
+    gt = np.array([[1, 1, 0],
+                   [1, 1, 1]])
+    v = fv1(gt)
     print(mat2str(v.gt), mat2str(v.best_st))
     assert not v.is_mendelian()
 
@@ -69,36 +69,36 @@ def test_not_denovo_trio_3(fv1):
 
 
 def test_denovo_quad_1(fv2):
-    v = fv2.clone()
-    v.gt = np.array([[0, 0, 1, 0],
-                     [0, 0, 0, 0]])
+    gt = np.array([[0, 0, 1, 0],
+                   [0, 0, 0, 0]])
+    v = fv2(gt)
     assert not v.is_mendelian()
     assert v.is_denovo()
     assert not v.is_omission()
 
 
 def test_denovo_quad_2(fv2):
-    v = fv2.clone()
-    v.gt = np.array([[0, 0, 0, 1],
-                     [0, 0, 0, 0]])
+    gt = np.array([[0, 0, 0, 1],
+                   [0, 0, 0, 0]])
+    v = fv2(gt)
     assert not v.is_mendelian()
     assert v.is_denovo()
     assert not v.is_omission()
 
 
 def test_denovo_quad_3(fv2):
-    v = fv2.clone()
-    v.gt = np.array([[1, 1, 1, 1],
-                     [1, 1, 1, 0]])
+    gt = np.array([[1, 1, 1, 1],
+                   [1, 1, 1, 0]])
+    v = fv2(gt)
     assert not v.is_mendelian()
     assert v.is_denovo()
     assert not v.is_omission()
 
 
 def test_not_denovo_quad_1(fv2):
-    v = fv2.clone()
-    v.gt = np.array([[1, 0, 0, 1],
-                     [0, 0, 0, 0]])
+    gt = np.array([[1, 0, 0, 1],
+                   [0, 0, 0, 0]])
+    v = fv2(gt)
     assert v.is_mendelian()
     assert not v.is_denovo()
     assert not v.is_omission()

@@ -13,7 +13,7 @@ from variants.configure import Configure
 from variants.family import Family
 from variants.loader import RawVariantsLoader
 from variants.raw_vcf import RawFamilyVariants
-from variants.variant import FamilyVariant
+from variants.variant import FamilyVariant, SummaryVariant
 import os
 import tempfile
 import shutil
@@ -82,8 +82,8 @@ def nvcf_config():
 
 
 @pytest.fixture(scope='session')
-def nvcf(nvcf_config):
-    fvariants = RawFamilyVariants(nvcf_config)
+def nvcf(nvcf_config, composite_annotator):
+    fvariants = RawFamilyVariants(nvcf_config, annotator=composite_annotator)
     return fvariants
 
 
@@ -149,10 +149,15 @@ def fam1():
 
 
 @pytest.fixture(scope='session')
-def fv1(fam1):
-    v = FamilyVariant("1", 11539, "T", "TA")
-    v.set_family(fam1)
-    return v
+def sv():
+    return SummaryVariant("1", 11539, "T", "TA,TG")
+
+
+@pytest.fixture(scope='session')
+def fv1(sv, fam1):
+    def rfun(gt):
+        return FamilyVariant.from_summary_variant(sv, fam1, gt=gt)
+    return rfun
 
 
 PED2 = """
@@ -176,10 +181,10 @@ def fam2():
 
 
 @pytest.fixture(scope='session')
-def fv2(fam2):
-    v = FamilyVariant("1", 11539, "T", "TA")
-    v.set_family(fam2)
-    return v
+def fv2(sv, fam2):
+    def rfun(gt):
+        return FamilyVariant.from_summary_variant(sv, fam2, gt=gt)
+    return rfun
 
 
 PED3 = """
@@ -204,7 +209,7 @@ def fam3():
 
 
 @pytest.fixture(scope='session')
-def fv3(fam3):
-    v = FamilyVariant("1", 11539, "T", "TA")
-    v.set_family(fam3)
-    return v
+def fv3(sv, fam3):
+    def rfun(gt):
+        return FamilyVariant.from_summary_variant(sv, fam3, gt=gt)
+    return rfun

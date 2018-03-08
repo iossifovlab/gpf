@@ -7,6 +7,8 @@ from __future__ import print_function
 
 import numpy as np
 from variants.attributes import Inheritance
+from variants.vcf_utils import mat2str
+import sys
 
 
 class VariantBase(object):
@@ -64,24 +66,41 @@ class VariantBase(object):
     def __contains__(self, item):
         return item in self._atts
 
+    def update_atts(self, atts):
+        self._atts.update(atts)
+
+
+class SummaryVariant(VariantBase):
+
+    def __init__(self, chromosome, position, reference, alternative, atts={}):
+        super(SummaryVariant, self).__init__(
+            chromosome, position, reference, alternative, atts=atts)
+
 
 class FamilyVariant(VariantBase):
 
-    def __init__(self, chromosome, position, reference, alternative, atts={}):
+    def __init__(self, summary_variant, family, gt, alt_index):
         super(FamilyVariant, self).__init__(
-            chromosome, position, reference, alternative, atts=atts)
-        self.n_par_called = None
-        self.prcnt_par_called = None
-        self.n_alt_allels = None
-        self.alt_freq = None
+            summary_variant.chromosome,
+            summary_variant.position,
+            summary_variant.reference,
+            summary_variant.alternative)
 
-        self.effect_type = None
-        self.effect_gene = None
-        self.effect_details = None
+        self.family = family
+        self.gt = gt
 
-        self.family = None
-        self.vcf = None
-        self.gt = None
+        atts = {}
+        for k, v in summary_variant._atts.items():
+            if isinstance(v, np.ndarray):
+                if alt_index is not None:
+                    atts[k] = v[alt_index]
+            else:
+                atts[k] = v
+        self._atts = atts
+
+        self.effect_type = self.get_attr('effectType')
+        self.effect_gene = self.get_attr('effectGene')
+        self.effect_details = self.get_attr('effectDetails')
 
         self._best_st = None
         self._inheritance = None
@@ -90,23 +109,60 @@ class FamilyVariant(VariantBase):
         self._variant_in_roles = None
         self._variant_in_sexes = None
 
+#     def set_family(self, family):
+#         self.family = family
+#         return self
+#
+#     def set_genotype(self, gt):
+#         self.gt = gt
+#         return self
+#
+#     def set_summary(self, sv):
+#         self.effect_type = sv['effectType']
+#         self.effect_gene = sv['effectGene']
+#         self.effect_details = sv['effectDetails']
+#
+#         self._atts.update(sv)
+#         return self
+
     @staticmethod
-    def from_variant_base(v):
-        return FamilyVariant(
-            v.chromosome, v.position, v.reference, v.alternative, atts=v._atts)
+    def from_summary_variant(sv, family, gt=None, vcf=None):
+        if gt is None:
+            assert vcf is not None
+            gt = vcf.gt_idxs[family.alleles]
+            gt = gt.reshape([2, len(family)], order='F')
+
+        if len(FamilyVariant.calc_alt_alleles(gt)) > 1:
+            print(
+                "multiple alternative alleles in {}: family: {}, gt: {})"
+                .format(sv, family.family_id, mat2str(gt)), file=sys.stderr)
+            return None
+        alt_index = FamilyVariant.calc_alt_allele_index(gt)
+        fv = FamilyVariant(sv, family, gt, alt_index)
+        return fv
+
+    @staticmethod
+    def calc_alt_alleles(gt):
+        return set(gt.flatten()).difference({-1, 0})
+
+    @staticmethod
+    def calc_alt_allele_index(gt):
+        alt_alleles = FamilyVariant.calc_alt_alleles(gt)
+        alt_count = len(alt_alleles)
+        if alt_count > 1 or alt_count == 0:
+            return None
+        else:
+            alt_index, = tuple(alt_alleles)
+            return alt_index - 1
 
 #     @staticmethod
-#     def from_dae_variant(chrom, pos, variant):
-#         return FamilyVariant(*dae2vcf_variant(chrom, pos, variant))
-
-    @staticmethod
-    def from_vcf_variant(variant):
-        assert len(variant.ALT) == 1
-        print(
-            variant.CHROM, variant.start + 1,
-            variant.REF, str(variant.ALT[0]))
-        return FamilyVariant(
-            variant.CHROM, variant.start, variant.REF, str(variant.ALT[0]))
+#     def from_vcf_variant(variant):
+#         assert len(variant.ALT) == 1
+#         print(
+#             variant.CHROM, variant.start + 1,
+#             variant.REF, str(variant.ALT[0]))
+#         return FamilyVariant(
+#             variant.CHROM, variant.start, variant.REF, str(variant.ALT[0]))
 
     @property
     def location(self):
@@ -156,46 +212,22 @@ class FamilyVariant(VariantBase):
         v.set_summary(row)
         return v
 
-    def set_family(self, family):
-        self.family = family
-        return self
 
-    def set_genotype(self, vcf, gt=None):
-        self.vcf = vcf
-        if gt is not None:
-            self.gt = gt
-        else:
-            gt = vcf.gt_idxs[self.family.alleles]
-            self.gt = gt.reshape([2, len(self.family)], order='F')
-        return self
-
-    def set_summary(self, sv):
-        self.effect_type = sv['effectType']
-        self.effect_gene = sv['effectGene']
-        self.effect_details = sv['effectDetails']
-
-        self._atts.update(sv)
-        return self
-
-    def clone(self):
-        v = FamilyVariant.from_variant_base(self)
-        v.n_par_called = self.n_par_called
-        v.prcnt_par_called = self.prcnt_par_called
-        v.n_alt_allels = self.n_alt_allels
-        v.alt_freq = self.alt_freq
-
-        v.effect_type = self.effect_type
-        v.effect_gene = self.effect_gene
-        v.effect_details = self.effect_details
-
-        v.family = self.family
-        v.vcf = self.vcf
-        v.gt = self.gt
-
-        v._best_st = None
-        v._gt = None
-
-        return v
+#     def clone(self):
+#         v = FamilyVariant.from_variant_base(self)
+#
+#         v.effect_type = self.effect_type
+#         v.effect_gene = self.effect_gene
+#         v.effect_details = self.effect_details
+#
+#         v.family = self.family
+#         # v.vcf = self.vcf
+#         v.gt = self.gt
+#
+#         v._best_st = None
+#         v._gt = None
+#
+#         return v
 
     @property
     def best_st(self):

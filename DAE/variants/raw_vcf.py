@@ -10,7 +10,7 @@ import pandas as pd
 
 from variants.loader import RawVariantsLoader
 from variants.family import FamiliesBase
-from variants.variant import FamilyVariant
+from variants.variant import FamilyVariant, SummaryVariant
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
 from variants.vcf_utils import VcfFamily
@@ -121,7 +121,7 @@ class RawFamilyVariants(FamiliesBase):
 
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
-        gene_effects = parse_gene_effect(v.effect_gene[0])
+        gene_effects = parse_gene_effect(v.effect_gene)
         if effect_types is None:
             return [ge for ge in gene_effects if ge['sym'] in genes]
         if genes is None:
@@ -200,12 +200,13 @@ class RawFamilyVariants(FamiliesBase):
         for index, row in enumerate(df.to_dict(orient='records')):
             vcf = variants[index]
 
-            summary_variant = FamilyVariant.from_dict(row)
+            summary_variant = SummaryVariant.from_dict(row)
 
             for fam in self.families.values():
-                v = summary_variant.clone(). \
-                    set_family(fam). \
-                    set_genotype(vcf)
+                v = FamilyVariant.from_summary_variant(
+                    summary_variant, fam, vcf=vcf)
+                if v is None:
+                    continue
                 yield v
 
 

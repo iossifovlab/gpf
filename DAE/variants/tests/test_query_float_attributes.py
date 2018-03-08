@@ -8,7 +8,6 @@ import numpy as np
 
 from RegionOperations import Region
 from variants.raw_vcf import RawFamilyVariants
-from variants.variant import FamilyVariant
 from variants.vcf_utils import mat2str
 import pytest
 
@@ -25,8 +24,9 @@ def test_alt_all_freq(ustudy):
         assert 'all.altFreq' in v
 
 
-def test_filter_real_attr():
-    v = FamilyVariant("1", 1, "A", "G", atts={"a": 1, "b": np.array([2, 3])})
+def test_filter_real_attr(fv1):
+    v = fv1(np.array([[0, 0, 0], [0, 0, 0]]))
+    v.update_atts({"a": 1, "b": np.array([2, 3])})
 
     assert RawFamilyVariants.filter_real_attr(
         v, ['a', (1, 2), (3, 4)])
