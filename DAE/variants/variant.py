@@ -283,6 +283,9 @@ class FamilyVariant(VariantBase):
             print("strange inheritance:", p1, p2, ch)
             return Inheritance.unknown
 
+    def is_reference(self):
+        return self.inheritance == Inheritance.reference
+
     def is_mendelian(self):
         return self.inheritance == Inheritance.mendelian
 
@@ -325,6 +328,8 @@ class FamilyVariant(VariantBase):
             inherits = []
             if np.any(self.gt == -1):
                 self._inheritance = Inheritance.unknown
+            elif np.all(self.gt == 0):
+                self._inheritance = Inheritance.reference
             else:
                 for _pid, trio in self.family.trios.items():
                     index = self.family.members_index(trio)

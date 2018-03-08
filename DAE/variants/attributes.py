@@ -94,10 +94,11 @@ class Sex(enum.Enum):
 
 
 class Inheritance(enum.Enum):
-    mendelian = 1
-    denovo = 1 << 1
-    omission = 1 << 2
-    other = 1 << 3
+    reference = 1
+    mendelian = 1 << 1
+    denovo = 1 << 2
+    omission = 1 << 3
+    other = 1 << 4
     unknown = 1 << 15
 
     @staticmethod

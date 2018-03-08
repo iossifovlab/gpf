@@ -18,7 +18,7 @@ def test_study_load(ustudy):
 
 
 def test_query_regions(ustudy):
-    regions = [Region("1", 11540, 11541)]
+    regions = [Region("1", 11539, 11541)]
     vs = ustudy.query_variants(regions=regions)
     assert vs is not None
     vl = list(vs)
@@ -27,8 +27,8 @@ def test_query_regions(ustudy):
 
 def test_query_regions_2(ustudy):
     regions = [
-        Region("1", 11540, 11541),
-        Region("1", 54710, 54721)
+        Region("1", 11539, 11541),
+        Region("1", 54709, 54721)
     ]
     vs = ustudy.query_variants(regions=regions)
     assert vs is not None

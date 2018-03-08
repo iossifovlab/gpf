@@ -8,7 +8,7 @@ import numpy as np
 
 
 def test_query_regions(ustudy):
-    regions = [Region("1", 900718, 900718)]
+    regions = [Region("1", 900717, 900717)]
     vs = ustudy.query_variants(regions=regions)
     assert vs is not None
     vl = list(vs)

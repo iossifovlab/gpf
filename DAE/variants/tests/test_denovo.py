@@ -41,7 +41,8 @@ def test_not_denovo_trio_1(fv1):
     v.gt = np.array([[0, 0, 0],
                      [0, 0, 0]])
     print(mat2str(v.gt), mat2str(v.best_st))
-    assert v.is_mendelian()
+    assert v.is_reference()
+    assert not v.is_mendelian()
     assert not v.is_denovo()
     assert not v.is_omission()
 

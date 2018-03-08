@@ -24,7 +24,8 @@ def test_mendelian_trio_1(fv1):
     v = fv1.clone()
     v.gt = np.array([[0, 0, 0],
                      [0, 0, 0]])
-    assert v.is_mendelian()
+    assert not v.is_mendelian()
+    assert v.is_reference()
 
 
 def test_non_mendelian_trio_1(fv1):
@@ -80,7 +81,8 @@ def test_mendelian_quad_1(fv2):
     v = fv2.clone()
     v.gt = np.array([[0, 0, 0, 0],
                      [0, 0, 0, 0]])
-    assert v.is_mendelian()
+    assert not v.is_mendelian()
+    assert v.is_reference()
 
 
 def test_mendelian_quad_2(fv2):
@@ -157,7 +159,8 @@ def test_mendelian_multi_1(fv3):
     v = fv3.clone()
     v.gt = np.array([[0, 0, 0, 0, 0],
                      [0, 0, 0, 0, 0]])
-    assert v.is_mendelian()
+    assert not v.is_mendelian()
+    assert v.is_reference()
 
 
 def test_mendelian_multi_2(fv3):
