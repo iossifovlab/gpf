@@ -1,0 +1,56 @@
+'''
+Created on Mar 8, 2018
+
+@author: lubo
+'''
+from __future__ import print_function
+import numpy as np
+
+from RegionOperations import Region
+from variants.raw_vcf import RawFamilyVariants
+from variants.variant import FamilyVariant
+from variants.vcf_utils import mat2str
+import pytest
+
+
+def test_alt_all_freq(ustudy):
+    regions = [Region("1", 10000, 15000)]
+    vs = ustudy.query_variants(regions=regions)
+
+    for v in vs:
+        print(v._atts)
+        assert 'all.nAltAlls' in v
+        assert 'all.nParCalled' in v
+        assert 'all.prcntParCalled' in v
+        assert 'all.altFreq' in v
+
+
+def test_filter_real_attr():
+    v = FamilyVariant("1", 1, "A", "G", atts={"a": 1, "b": np.array([2, 3])})
+
+    assert RawFamilyVariants.filter_real_attr(
+        v, ['a', (1, 2), (3, 4)])
+
+    assert RawFamilyVariants.filter_real_attr(
+        v, ['a', [1, 2], [3, 4]])
+
+    assert not RawFamilyVariants.filter_real_attr(
+        v, ['a', [1.1, 2], [3, 4]])
+
+    assert RawFamilyVariants.filter_real_attr(
+        v, ['b', [1, 2], [3, 4]])
+
+
+@pytest.mark.slow
+def test_rare_transmitted_variants(nvcf19):
+
+    vs = nvcf19.query_variants(
+        inheritance='mendelian',
+        real_attr_filter=['all.altFreq', (1e-8, 1)]
+    )
+
+    for c, v in enumerate(vs):
+        print(c, v, v.family_id,
+              v.inheritance, mat2str(v.best_st),
+              v['effectType'],
+              v['all.altFreq'])

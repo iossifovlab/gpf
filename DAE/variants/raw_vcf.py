@@ -89,12 +89,12 @@ class RawFamilyVariants(FamiliesBase):
                 records.append((v.CHROM, v.start, v.REF, ",".join(v.ALT)))
             self.vars_df = pd.DataFrame.from_records(
                 data=records,
-                columns=['chr', 'posistion', 'refA', 'altA'])
-            print(self.vars_df.head())
+                columns=['chr', 'position', 'refA', 'altA'])
 
             annotator.setup(self)
             self.vars_df = annotator.annotate(self.vars_df, self.vcf_vars)
-            print(self.vars_df.head())
+
+        print(self.vars_df.head())
 
         assert len(self.vars_df) == len(self.vcf_vars)
         assert np.all(self.vars_df.index.values ==
@@ -107,6 +107,17 @@ class RawFamilyVariants(FamiliesBase):
                     reg.stop >= v.position:
                 return True
         return False
+
+    @staticmethod
+    def filter_real_attr(v, real_attr_filter):
+        attr = real_attr_filter[0]
+        value = v.get_attr(attr)
+        if value is None:
+            return False
+        ranges = real_attr_filter[1:]
+        return any(
+            [np.any(value >= rmin) and np.any(value <= rmax)
+             for (rmin, rmax) in ranges])
 
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
@@ -147,6 +158,10 @@ class RawFamilyVariants(FamiliesBase):
             if not query.match([v.inheritance]):
                 return False
 
+        if 'real_attr_filter' in kwargs:
+            if not self.filter_real_attr(v, kwargs['real_attr_filter']):
+                return False
+
         if 'filter' in kwargs:
             func = kwargs['filter']
             if not func(v):
@@ -182,7 +197,7 @@ class RawFamilyVariants(FamiliesBase):
             raise StopIteration()
 
         variants = self.vcf_vars
-        for index, row in df.iterrows():
+        for index, row in enumerate(df.to_dict(orient='records')):
             vcf = variants[index]
 
             summary_variant = FamilyVariant.from_dict(row)

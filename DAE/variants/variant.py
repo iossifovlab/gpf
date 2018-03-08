@@ -11,7 +11,8 @@ from variants.attributes import Inheritance
 
 class VariantBase(object):
 
-    def __init__(self, chromosome, position, reference, alternative):
+    def __init__(self, chromosome, position, reference, alternative, atts={}):
+        self._atts = atts
         self.chromosome = chromosome
         self.position = position
         self.reference = reference
@@ -28,10 +29,10 @@ class VariantBase(object):
         return VariantBase(
             variant.CHROM, variant.start + 1, variant.REF, str(variant.ALT[0]))
 
-    @staticmethod
-    def from_dict(row):
-        v = FamilyVariant(
-            row['chr'], row['position'], row['refA'], row['altA'])
+    @classmethod
+    def from_dict(cls, row):
+        v = cls(
+            row['chr'], row['position'], row['refA'], row['altA'], atts=row)
         return v
 
     def __eq__(self, other):
@@ -51,12 +52,24 @@ class VariantBase(object):
         return int(self.chromosome) >= int(other.chromosome) and \
             self.position > other.position
 
+    def get_attr(self, item):
+        return self._atts.get(item)
+
+    def has_attr(self, item):
+        return item in self._atts
+
+    def __getitem__(self, item):
+        return self.get_attr(item)
+
+    def __contains__(self, item):
+        return item in self._atts
+
 
 class FamilyVariant(VariantBase):
 
-    def __init__(self, chromosome, position, reference, alternative):
+    def __init__(self, chromosome, position, reference, alternative, atts={}):
         super(FamilyVariant, self).__init__(
-            chromosome, position, reference, alternative)
+            chromosome, position, reference, alternative, atts=atts)
         self.n_par_called = None
         self.prcnt_par_called = None
         self.n_alt_allels = None
@@ -80,7 +93,7 @@ class FamilyVariant(VariantBase):
     @staticmethod
     def from_variant_base(v):
         return FamilyVariant(
-            v.chromosome, v.position, v.reference, v.alternative)
+            v.chromosome, v.position, v.reference, v.alternative, atts=v._atts)
 
 #     @staticmethod
 #     def from_dae_variant(chrom, pos, variant):
@@ -157,15 +170,11 @@ class FamilyVariant(VariantBase):
         return self
 
     def set_summary(self, sv):
-        # self.n_par_called = sv['all.nParCalled']
-        # self.prcnt_par_called = sv['all.prcntParCalled']
-        # self.n_alt_allels = sv['all.nAltAlls']
-        # self.alt_freq = sv['all.altFreq']
-
         self.effect_type = sv['effectType']
         self.effect_gene = sv['effectGene']
         self.effect_details = sv['effectDetails']
 
+        self._atts.update(sv)
         return self
 
     def clone(self):

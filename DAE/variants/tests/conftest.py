@@ -18,11 +18,27 @@ import os
 import tempfile
 import shutil
 from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
+from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
+from variants.annotate_composite import AnnotatorComposite
 
 
 @pytest.fixture(scope='session')
 def effect_annotator():
     return VcfVariantEffectsAnnotator()
+
+
+@pytest.fixture(scope='session')
+def allele_freq_annotator():
+    return VcfAlleleFrequencyAnnotator()
+
+
+@pytest.fixture(scope='session')
+def composite_annotator(effect_annotator, allele_freq_annotator):
+
+    return AnnotatorComposite(annotators=[
+        effect_annotator,
+        allele_freq_annotator,
+    ])
 
 
 @pytest.fixture
@@ -52,8 +68,8 @@ def ustudy_loader(ustudy_config):
 
 
 @pytest.fixture(scope='session')
-def ustudy(ustudy_config):
-    fvariants = RawFamilyVariants(ustudy_config)
+def ustudy(ustudy_config, composite_annotator):
+    fvariants = RawFamilyVariants(ustudy_config, annotator=composite_annotator)
     return fvariants
 
 
@@ -108,8 +124,8 @@ def nvcf19_config():
 
 
 @pytest.fixture(scope='session')
-def nvcf19(nvcf19_config):
-    fvariants = RawFamilyVariants(nvcf19_config)
+def nvcf19(nvcf19_config, composite_annotator):
+    fvariants = RawFamilyVariants(nvcf19_config, annotator=composite_annotator)
     return fvariants
 
 
