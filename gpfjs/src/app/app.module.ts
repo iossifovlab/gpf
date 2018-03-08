@@ -1,8 +1,8 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, Injector } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpModule, Http, XHRBackend } from '@angular/http';
-import { RequestOptions } from '@angular/http';
+import { HttpModule } from '@angular/http';
+import { RequestOptions, Http, XHRBackend } from '@angular/http';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -66,7 +66,7 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule, Routes, Router } from '@angular/router';
 import { StateRestoreService } from './store/state-restore.service';
 import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
@@ -137,6 +137,9 @@ import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-vi
 import { GenotypeBrowserMetaViewComponent } from './genotype-browser-meta-view/genotype-browser-meta-view.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
+import { SaveQueryButtonComponent } from './save-query-button/save-query-button.component';
+import { SaveQueryService } from './save-query-button/save-query.service';
+import { LoadQueryComponent } from './load-query/load-query.component';
 import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.component';
 import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
 import { VisPedigreeInputComponent } from './vis-pedigree-input/vis-pedigree-input.component';
@@ -240,6 +243,10 @@ const appRoutes: Routes = [
     ]
   },
   {
+    path: 'load-query/:uuid',
+    component: LoadQueryComponent
+  },
+  {
     path: '**',
     redirectTo: 'datasets'
   },
@@ -333,6 +340,8 @@ const appRoutes: Routes = [
     GenotypeBrowserMetaViewComponent,
     GenotypePreviewFieldComponent,
     ErrorsAlertComponent,
+    SaveQueryButtonComponent,
+    LoadQueryComponent,
     PerfectlyDrawablePedigreeComponent,
     VisPedigreeInputComponent,
     NonPdpPedigreesComponent,
@@ -380,6 +389,7 @@ const appRoutes: Routes = [
     ChromosomeService,
     { provide: Http, useClass: RedirectOnErrorHttpService,
       deps: [XHRBackend, RequestOptions, Injector]},
+    SaveQueryService,
     PedigreeMockService,
     PerfectlyDrawablePedigreeService
   ],

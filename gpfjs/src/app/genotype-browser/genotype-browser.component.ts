@@ -15,7 +15,11 @@ import { Dataset } from '../datasets/datasets';
 @Component({
   selector: 'gpf-genotype-browser',
   templateUrl: './genotype-browser.component.html',
-  styleUrls: ['./genotype-browser.component.css']
+  styleUrls: ['./genotype-browser.component.css'],
+  providers: [{
+    provide: QueryStateCollector,
+    useExisting: GenotypeBrowserComponent
+  }]
 })
 export class GenotypeBrowserComponent extends QueryStateCollector
     implements OnInit, OnChanges, AfterViewInit {
@@ -26,7 +30,6 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   selectedDatasetId: string;
   selectedDataset$: Observable<Dataset>;
   private genotypeBrowserState: Object;
-  isMissenseSelected = false;
 
   constructor(
     private queryService: QueryService,
@@ -40,35 +43,32 @@ export class GenotypeBrowserComponent extends QueryStateCollector
     super();
   }
 
+  getCurrentState() {
+    let state = this.collectState();
+
+    return Observable.zip(...state)
+      .map(state => {
+        let stateObject = Object.assign(
+          { datasetId: this.selectedDatasetId },
+          ...state);
+        return stateObject;
+      });
+  }
+
   ngAfterViewInit() {
     this.detectNextStateChange(() => {
-        let stateArray = this.collectState();
-        Observable.zip(...stateArray)
+        this.getCurrentState()
         .take(1)
         .subscribe(
           state => {
             this.genotypePreviewsArray = null;
-            let stateObject = Object.assign({}, ...state);
-            this.isMissenseSelected = stateObject.effectTypes.includes('Missense');
-            this.genotypeBrowserState = Object.assign({},
-                                          { datasetId: this.selectedDatasetId },
-                                          stateObject);
-            this.router.navigate(
-              [ '.', { state: JSON.stringify(stateObject) }],
-              { relativeTo: this.route }
-            );
+            this.genotypeBrowserState = state;
           },
           error => {
             this.genotypePreviewsArray = null;
             console.warn(error);
           });
       });
-
-    this.route.params.take(1).subscribe(
-      (params: Params) => {
-        this.stateRestoreService.onParamsUpdate(params['state']);
-      }
-    );
   }
 
   ngOnInit() {
@@ -81,14 +81,11 @@ export class GenotypeBrowserComponent extends QueryStateCollector
 
   submitQuery() {
     this.loadingService.setLoadingStart();
-    let stateArray = this.collectState();
-    Observable.zip(...stateArray)
+    this.getCurrentState()
       .subscribe(state => {
         this.genotypePreviewsArray = null;
-        let queryData = Object.assign({},
-                                      {datasetId: this.selectedDatasetId},
-                                      ...state);
-        this.queryService.getGenotypePreviewByFilter(queryData).subscribe(
+        this.genotypeBrowserState = state;
+        this.queryService.getGenotypePreviewByFilter(state).subscribe(
           (genotypePreviewsArray) => {
             console.log(genotypePreviewsArray);
             this.genotypePreviewsArray = genotypePreviewsArray;
@@ -109,14 +106,10 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   }
 
   onSubmit(event) {
-    let stateArray = this.collectState();
-    Observable.zip(...stateArray)
+    this.getCurrentState()
     .subscribe(
       state => {
-        let queryData = Object.assign({},
-                                      {datasetId: this.selectedDatasetId},
-                                      ...state);
-        event.target.queryData.value = JSON.stringify(queryData);
+        event.target.queryData.value = JSON.stringify(state);
         event.target.submit();
       },
       error => null

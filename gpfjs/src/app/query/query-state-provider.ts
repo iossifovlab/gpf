@@ -4,6 +4,7 @@ import { ReplaySubject, Observable, Subscription } from 'rxjs';
 import { Scheduler } from 'rxjs';
 
 import { validationErrorsToStringArray, toValidationObservable } from '../utils/to-observable-with-validation';
+import { SaveQuery } from '../query/common-query-data';
 
 import * as _ from 'lodash';
 
@@ -32,7 +33,7 @@ export abstract class QueryStateWithErrorsProvider extends QueryStateProvider {
 
 }
 
-export abstract class QueryStateCollector implements DoCheck, OnDestroy {
+export abstract class QueryStateCollector implements DoCheck, OnDestroy, SaveQuery {
   private stateObjectString = '';
   private stateChange$ = new ReplaySubject<boolean>(1);
   private subscriptions = new Array<Subscription>();
@@ -67,6 +68,16 @@ export abstract class QueryStateCollector implements DoCheck, OnDestroy {
     }
     this.subscriptions = new Array<Subscription>();
   }
+
+  getCurrentState() {
+      let state = this.collectState();
+
+      return Observable.zip(...state)
+        .map(state => {
+          let stateObject = Object.assign({}, ...state);
+          return stateObject;
+        });
+    }
 
   getStateChange() {
     this.stateObjectString = '';

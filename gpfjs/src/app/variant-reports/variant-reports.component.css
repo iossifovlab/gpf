@@ -17,3 +17,8 @@
 .centered {
   text-align: center;
 }
+
+.variants-report-content {
+    width: 100%;
+    padding: 30px;
+}

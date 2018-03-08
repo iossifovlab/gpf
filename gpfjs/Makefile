@@ -3,7 +3,7 @@ all:
 
 wdae:
 	rm -rf dist/
-	ng build --aot -e prod --bh '/gpfjs/' -d '/static/gpfjs/'
+	ng build --prod --aot -e prod --bh '/gpfjs/' -d '/static/gpfjs/'
 	mkdir -p ../gpf/wdae/gpfjs/static/gpfjs
 	cp -r dist/* ../gpf/wdae/gpfjs/static/gpfjs
 	rm ../gpf/wdae/gpfjs/static/gpfjs/*.map

@@ -56,16 +56,16 @@ export class GroupsBulkRemoveComponent implements OnInit {
 
     let allUsers = this.usersService.getAllUsers().take(1);
 
-    return Observable.combineLatest([parameterIds, allUsers])
-    .switchMap(([ids, users]: [number[], User[]]) => {
-      let filteredUsers = users.filter(u => ids.indexOf(u.id) !== -1);
-      if (filteredUsers.length !== ids.length) {
-        this.router.navigate(['..'], { relativeTo: this.route });
-        return Observable.throw('unknown ids...');
-      }
+    return Observable.combineLatest(parameterIds, allUsers)
+      .switchMap(([ids, users]: [number[], User[]]) => {
+        let filteredUsers = users.filter(u => ids.indexOf(u.id) !== -1);
+        if (filteredUsers.length !== ids.length) {
+          this.router.navigate(['..'], { relativeTo: this.route });
+          return Observable.throw('unknown ids...');
+        }
 
-      return Observable.of(filteredUsers);
-    });
+        return Observable.of(filteredUsers);
+      });
   }
 
   groupsToOptions(groups: UserGroup[]) {

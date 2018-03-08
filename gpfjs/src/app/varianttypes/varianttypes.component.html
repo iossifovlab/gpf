@@ -35,6 +35,14 @@
       </label>
     </div>
 
+    <div *ngIf="hasComplex" class="checkbox">
+      <label> <input
+        #complexCheckbox
+        type="checkbox"
+        [checked]="variantTypes.selected.has('complex')"
+        (change)="variantTypesCheckValue('complex', complexCheckbox.checked)"> complex
+      </label>
+    </div>
     <div *ngIf="hasCNV" class="checkbox">
       <label> <input
         #cnvCheckbox

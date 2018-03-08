@@ -1,9 +1,11 @@
 import { Component, OnInit, Input, forwardRef } from '@angular/core';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { Observable } from 'rxjs';
+import { Observable, ReplaySubject } from 'rxjs';
 import { validationErrorsToStringArray, toValidationObservable } from '../utils/to-observable-with-validation';
 import { PhenoToolMeasure }  from './pheno-tool-measure';
 import { ValidationError } from 'class-validator';
+import { StateRestoreService } from '../store/state-restore.service';
+import { ContinuousMeasure } from '../measures/measures';
 
 @Component({
   selector: 'gpf-pheno-tool-measure',
@@ -17,11 +19,27 @@ import { ValidationError } from 'class-validator';
 export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider implements OnInit {
   phenoToolMeasure = new PhenoToolMeasure();
 
-  constructor() {
+  measuresLoaded$ = new ReplaySubject<Array<ContinuousMeasure>>()
+
+  constructor(
+    private stateRestoreService: StateRestoreService
+  ) {
     super();
   }
 
   ngOnInit() {
+    Observable.combineLatest(
+      this.stateRestoreService.getState(this.constructor.name),
+      this.measuresLoaded$)
+      .take(1)
+      .subscribe(([state, measures]) => {
+        if (state['measureId'] && state['normalizeBy']) {
+          this.phenoToolMeasure.measure = 
+            measures.find(m => m.name === state['measureId']);
+
+          this.phenoToolMeasure.normalizeBy = state['normalizeBy'];
+        }
+      });
   }
 
   getState() {
@@ -30,6 +48,10 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
         measureId: state.measure.name,
         normalizeBy: state.normalizeBy
       }));
+  }
+
+  measuresUpdate(measures: Array<ContinuousMeasure>) {
+    this.measuresLoaded$.next(measures);
   }
 
   onNormalizeByChange(value: any, event): void {
