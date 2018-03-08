@@ -51,6 +51,7 @@
     "sprintf-js": "^1.1.1",
     "tether": "^1.4.0",
     "ts-helpers": "^1.1.1",
+    "vis": "^4.21.0",
     "zone.js": "^0.8.14"
   },
   "devDependencies": {
