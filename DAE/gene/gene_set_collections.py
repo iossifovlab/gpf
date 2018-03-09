@@ -194,7 +194,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     @staticmethod
     def _filter_out_empty_types(gene_sets_types):
-        return {k: v for k, v in gene_sets_types.iteritems() if len(v) > 0}
+        return {k: v for k, v in gene_sets_types.iteritems() if v}
 
     @staticmethod
     def _format_description(gene_sets_types):
@@ -208,12 +208,13 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         result = []
         for gsn in self.gene_sets_names:
             gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
-            result.append({
-                'name': gsn,
-                'count': len(gene_set_syms),
-                'syms': gene_set_syms,
-                'desc': '{} ({})'.format(gsn, gene_sets_types_desc)
-            })
+            if gene_set_syms:
+                result.append({
+                    'name': gsn,
+                    'count': len(gene_set_syms),
+                    'syms': gene_set_syms,
+                    'desc': '{} ({})'.format(gsn, gene_sets_types_desc)
+                })
         return result
 
     def get_gene_set(self, gene_set_id,
