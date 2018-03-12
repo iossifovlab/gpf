@@ -15,7 +15,7 @@ def test_annotate_variant_effects_ustudy(
         ustudy, temp_filename, effect_annotator):
 
     annotator = effect_annotator
-    vars_df = annotator.annotate(ustudy.vars_df, ustudy.vcf_vars)
+    vars_df = annotator.annotate(ustudy.annot_df, ustudy.vcf_vars)
 
     stored_df = vars_df.copy()
     RawVariantsLoader.save_annotation_file(
@@ -30,19 +30,19 @@ def test_annotate_variant_effects_ustudy(
 @pytest.mark.skip
 def test_annotate_variant_effects_nvcf(nvcf, effect_annotator):
     annotator = effect_annotator
-    annotator.annotate(nvcf.vars_df, nvcf.vcf_vars)
+    annotator.annotate(nvcf.annot_df, nvcf.vcf_vars)
 
 
 @pytest.mark.skip
 def test_annotate_variant_effects_uvcf(uvcf, effect_annotator):
     annotator = effect_annotator
-    annotator.annotate(uvcf.vars_df, uvcf.vcf_vars)
+    annotator.annotate(uvcf.annot_df, uvcf.vcf_vars)
 
 
 @pytest.mark.skip
 def test_annotate_variant_effects_fvcf(fvcf, effect_annotator):
     annotator = effect_annotator
-    annotator.annotate(fvcf.vars_df, fvcf.vcf_vars)
+    annotator.annotate(fvcf.annot_df, fvcf.vcf_vars)
 
 
 def test_annotator_variants_effects_csv_experiment(
@@ -51,14 +51,14 @@ def test_annotator_variants_effects_csv_experiment(
     annotator = effect_annotator
     assert annotator is not None
 
-    vars_df = annotator.annotate(nvcf19.vars_df, nvcf19.vcf_vars)
-    assert vars_df is not None
+    annot_df = annotator.annotate(nvcf19.annot_df, nvcf19.vcf_vars)
+    assert annot_df is not None
 
-    stored_df = vars_df.copy()
+    stored_df = annot_df.copy()
     RawVariantsLoader.save_annotation_file(
-        vars_df, temp_filename, storage='csv')
-    assert_annotation_equals(vars_df, stored_df)
+        annot_df, temp_filename, storage='csv')
+    assert_annotation_equals(annot_df, stored_df)
 
     vars1_df = RawVariantsLoader.load_annotation_file(
         temp_filename, storage='csv')
-    assert_annotation_equals(vars_df, vars1_df)
+    assert_annotation_equals(annot_df, vars1_df)

@@ -11,10 +11,10 @@ from variants.attributes import Role, RoleQuery
 
 def test_study_load(ustudy):
 
-    assert ustudy.vars_df is not None
+    assert ustudy.annot_df is not None
     assert ustudy.vcf_vars is not None
 
-    assert len(ustudy.vars_df) == len(ustudy.vcf_vars)
+    assert len(ustudy.annot_df) == len(ustudy.vcf_vars)
 
 
 def test_query_regions(ustudy):

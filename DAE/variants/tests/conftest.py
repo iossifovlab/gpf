@@ -96,8 +96,8 @@ def uvcf_config():
 
 
 @pytest.fixture(scope='session')
-def uvcf(uvcf_config):
-    fvariants = RawFamilyVariants(uvcf_config)
+def uvcf(uvcf_config, composite_annotator):
+    fvariants = RawFamilyVariants(uvcf_config, annotator=composite_annotator)
     return fvariants
 
 

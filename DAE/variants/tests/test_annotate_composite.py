@@ -15,9 +15,9 @@ def test_annotate_composite_simple(ustudy, effect_annotator):
     ])
 
     annotator.setup(ustudy)
-    vars_df = annotator.annotate(ustudy.vars_df, ustudy.vcf_vars)
-    assert vars_df is not None
-    print(vars_df.head())
+    annot_df = annotator.annotate(ustudy.annot_df, ustudy.vcf_vars)
+    assert annot_df is not None
+    print(annot_df.head())
 
 
 def test_annotate_composite_simple_vcf19(nvcf19, effect_annotator):
@@ -27,7 +27,7 @@ def test_annotate_composite_simple_vcf19(nvcf19, effect_annotator):
     ])
 
     annotator.setup(nvcf19)
-    vars_df = annotator.annotate(nvcf19.vars_df, nvcf19.vcf_vars)
+    vars_df = annotator.annotate(nvcf19.annot_df, nvcf19.vcf_vars)
     assert vars_df is not None
     print(vars_df.head())
 

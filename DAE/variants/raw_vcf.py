@@ -82,21 +82,21 @@ class RawFamilyVariants(FamiliesBase):
         self.vcf_vars = self.vcf.vars
 
         if annotator is None:
-            self.vars_df = loader.load_annotation()
+            self.annot_df = loader.load_annotation()
         else:
             records = []
             for v in self.vcf_vars:
                 records.append((v.CHROM, v.start + 1, v.REF, np.array(v.ALT)))
-            self.vars_df = pd.DataFrame.from_records(
+            self.annot_df = pd.DataFrame.from_records(
                 data=records,
                 columns=['chr', 'position', 'refA', 'altA'])
 
             annotator.setup(self)
-            self.vars_df = annotator.annotate(self.vars_df, self.vcf_vars)
+            self.annot_df = annotator.annotate(self.annot_df, self.vcf_vars)
 
-        assert len(self.vars_df) == len(self.vcf_vars)
-        assert np.all(self.vars_df.index.values ==
-                      np.arange(len(self.vars_df)))
+        assert len(self.annot_df) == len(self.vcf_vars)
+        assert np.all(self.annot_df.index.values ==
+                      np.arange(len(self.annot_df)))
 
     def filter_regions(self, v, regions):
         for reg in regions:
@@ -170,8 +170,8 @@ class RawFamilyVariants(FamiliesBase):
         return True
 
     def query_variants(self, **kwargs):
-        df = self.vars_df
-        vs = self.wrap_variants(df)
+        annot_df = self.annot_df
+        vs = self.wrap_variants(annot_df)
 
         if 'roles' in kwargs and isinstance(kwargs['roles'], str):
             query = RoleQuery.parse(kwargs['roles'])
@@ -190,12 +190,12 @@ class RawFamilyVariants(FamiliesBase):
                 continue
             yield v
 
-    def wrap_variants(self, df):
-        if df is None:
+    def wrap_variants(self, annot_df):
+        if annot_df is None:
             raise StopIteration()
 
         variants = self.vcf_vars
-        for index, row in enumerate(df.to_dict(orient='records')):
+        for index, row in enumerate(annot_df.to_dict(orient='records')):
             vcf = variants[index]
 
             summary_variant = SummaryVariant.from_dict(row)

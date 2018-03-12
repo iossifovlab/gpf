@@ -21,7 +21,7 @@ def test_allele_freq_annotator_parquet_experiment(nvcf, temp_filename):
 
     assert annotator is not None
 
-    vars_df = annotator.annotate(nvcf.vars_df, nvcf.vcf_vars)
+    vars_df = annotator.annotate(nvcf.annot_df, nvcf.vcf_vars)
     assert vars_df is not None
 
     print(vars_df.head())
@@ -54,7 +54,7 @@ def test_allele_freq_annotator_csv_experiment(nvcf, temp_filename):
 
     assert annotator is not None
 
-    vars_df = annotator.annotate(nvcf.vars_df, nvcf.vcf_vars)
+    vars_df = annotator.annotate(nvcf.annot_df, nvcf.vcf_vars)
     assert vars_df is not None
 
     RawVariantsLoader.save_annotation_file(
