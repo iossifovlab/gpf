@@ -79,7 +79,7 @@ def get_effect_types_set(s):
     for i in s:
         try:
             R.extend(Groups[i])
-        except:
+        except KeyError:
             R.append(i)
 
     return set(R)

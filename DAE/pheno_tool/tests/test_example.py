@@ -31,7 +31,7 @@ def test_example_1():
         VT(
             effect_types=['LGDs'],
             gene_syms=gene_syms,
-            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_child=['affected only', 'affected and unaffected'],
             present_in_parent=['neither'],
         )
     )
@@ -62,7 +62,7 @@ def test_example_2():
             gene_syms=gene_syms,
             rarity='rare',
             rarity_max=10.0,
-            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_child=['affected only', 'affected and unaffected'],
             present_in_parent=['father only', 'mother only',
                                'mother and father', 'neither'],
         )
