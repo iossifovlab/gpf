@@ -73,30 +73,31 @@ def cshl_format(pos, ref, alt):
     if len(r) == len(a) and len(r) == 0:
         print('ref {:s} is the same as alt {:s}'.format(
             ref, alt), file=sys.stderr)
-        return p, 'complex(' + r + '->' + a + ')'
+        return p, 'complex(' + r + '->' + a + ')', 0
 
     if len(r) == len(a) and len(r) == 1:
         wx = 'sub(' + r + '->' + a + ')'
-        return p, wx
+        return p, wx, 1
 
     if len(r) > len(a) and len(a) == 0:
         wx = 'del(' + str(len(r)) + ')'
-        return p, wx
+        return p, wx, len(r)
 
     # len(ref) < len(alt):
     if len(r) < len(a) and len(r) == 0:
         wx = 'ins(' + a + ')'
-        return p, wx
+        return p, wx, len(a)
 
-    return p, 'complex(' + r + '->' + a + ')'
+    return p, 'complex(' + r + '->' + a + ')', max(len(r), len(a))
 
 
 def vcf2cshl(pos, ref, alts):
-    vrt, pxx = list(), list()
+    vrt, pxx, lens = list(), list(), list()
     for alt in alts:
-        p, v = cshl_format(pos, ref, alt)
+        p, vt, vl = cshl_format(pos, ref, alt)
 
         pxx.append(p)
-        vrt.append(v)
+        vrt.append(vt)
+        lens.append(vl)
 
-    return np.array(pxx), np.array(vrt)
+    return np.array(pxx), np.array(vrt), np.array(lens)

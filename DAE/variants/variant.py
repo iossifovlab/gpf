@@ -80,10 +80,11 @@ class SummaryVariant(VariantBase):
     def __init__(self, chromosome, start, reference, alternative, atts={}):
         super(SummaryVariant, self).__init__(
             chromosome, start, reference, alternative, atts=atts)
-        position, variant = vcf2cshl(start, reference, alternative)
+        position, variant, lengths = vcf2cshl(start, reference, alternative)
         self._atts.update({
             'position': position,
-            'variant': variant
+            'variant': variant,
+            'lengths': lengths,
         })
 
 
@@ -114,6 +115,7 @@ class FamilyVariant(VariantBase):
 
         self.position = self.get_attr('position', self.start)
         self.variant = self.get_attr('variant')
+        self.length = self.get_attr('length', 0)
 
         self._best_st = None
         self._inheritance = None
@@ -126,6 +128,9 @@ class FamilyVariant(VariantBase):
         return '{}:{} {} vcf({}->{})'.format(
             self.chromosome, self.position,
             self.variant, self.reference, ','.join(self.alt))
+
+    def __len__(self):
+        return self.length
 
     @staticmethod
     def from_summary_variant(sv, family, gt=None, vcf=None):
