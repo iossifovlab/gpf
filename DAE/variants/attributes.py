@@ -220,15 +220,14 @@ class AQVisitor(ast.NodeVisitor):
 
     def visit_BoolOp(self, node):
         assert isinstance(node, ast.BoolOp)
-        assert len(node.values) == 2
+        assert len(node.values) >= 2
 
-        left = self.visit(node.values[0])
-        right = self.visit(node.values[1])
+        leafs = [self.visit(n) for n in node.values]
 
         if isinstance(node.op, ast.And):
-            return QAnd([left, right])
+            return QAnd(leafs)
         elif isinstance(node.op, ast.Or):
-            return QOr([left, right])
+            return QOr(leafs)
 
     def visit_Name(self, node):
         assert isinstance(node.ctx, ast.Load)

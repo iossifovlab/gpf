@@ -105,3 +105,47 @@ def test_role_query_parse_bit_or_simple():
     assert rq.match([Role.prb])
 
     assert not rq.match([Role.dad])
+
+
+def test_role_query_parse_bit_multiple_or_simple():
+    rq = RoleQuery.parse("prb | sib | mom | dad")
+    assert rq is not None
+
+    assert rq.match([Role.prb, Role.sib])
+    assert rq.match([Role.prb, Role.sib, Role.dad])
+    assert rq.match([Role.dad, Role.mom])
+
+    assert not rq.match([Role.maternal_grandfather])
+
+
+def test_role_query_parse_multiple_or_simple():
+    rq = RoleQuery.parse("prb or sib or mom or dad")
+    assert rq is not None
+
+    assert rq.match([Role.prb, Role.sib])
+    assert rq.match([Role.prb, Role.sib, Role.dad])
+    assert rq.match([Role.dad, Role.mom])
+
+    assert not rq.match([Role.maternal_grandfather])
+
+
+def test_role_query_parse_multiple_and_simple():
+    rq = RoleQuery.parse("prb and sib and mom and dad")
+    assert rq is not None
+
+    assert rq.match([Role.prb, Role.sib, Role.mom, Role.dad])
+
+    assert not rq.match([Role.dad, Role.mom])
+    assert not rq.match([Role.prb, Role.sib])
+    assert not rq.match([Role.maternal_grandfather])
+
+
+def test_role_query_parse_multiple_bit_and_simple():
+    rq = RoleQuery.parse("prb & sib & mom & dad")
+    assert rq is not None
+
+    assert rq.match([Role.prb, Role.sib, Role.mom, Role.dad])
+
+    assert not rq.match([Role.dad, Role.mom])
+    assert not rq.match([Role.prb, Role.sib])
+    assert not rq.match([Role.maternal_grandfather])
