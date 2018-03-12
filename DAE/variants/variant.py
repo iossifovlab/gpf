@@ -120,9 +120,9 @@ class FamilyVariant(VariantBase):
         self._variant_in_sexes = None
 
     def __repr__(self):
-        return '{}:{}({}) {}'.format(
-            self.chromosome, self.position, self.start,
-            self.variant, self.effect_type)
+        return '{}:{} {} ({}->{})'.format(
+            self.chromosome, self.position,
+            self.variant, self.reference, ','.join(self.alt))
 
     @staticmethod
     def from_summary_variant(sv, family, gt=None, vcf=None):

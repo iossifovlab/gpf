@@ -10,34 +10,33 @@ import ast
 
 class Role(enum.Enum):
 
-    prb = 1
-    sib = 1 << 1
-    child = 1 << 2
+    maternal_grandmother = 1
+    maternal_grandfather = 1 << 1
+    paternal_grandmother = 1 << 2
+    paternal_grandfather = 1 << 3
 
-    maternal_half_sibling = 1 << 3
-    paternal_half_sibling = 1 << 4
+    mom = 1 << 4
+    dad = 1 << 5
+    parent = 1 << 6
 
-    parent = 1 << 5
+    maternal_aunt = 1 << 7
+    maternal_uncle = 1 << 8
+    paternal_aunt = 1 << 9
+    paternal_uncle = 1 << 10
 
-    mom = 1 << 6
-    dad = 1 << 7
+    step_mom = 1 << 11
+    step_dad = 1 << 12
 
-    step_mom = 1 << 8
-    step_dad = 1 << 9
-    spouse = 1 << 10
+    prb = 1 << 13
+    sib = 1 << 14
+    child = 1 << 15
 
-    maternal_cousin = 1 << 11
-    paternal_cousin = 1 << 12
+    maternal_half_sibling = 1 << 16
+    paternal_half_sibling = 1 << 17
 
-    maternal_uncle = 1 << 13
-    maternal_aunt = 1 << 14
-    paternal_uncle = 1 << 15
-    paternal_aunt = 1 << 16
-
-    maternal_grandmother = 1 << 17
-    maternal_grandfather = 1 << 18
-    paternal_grandmother = 1 << 19
-    paternal_grandfather = 1 << 20
+    maternal_cousin = 1 << 18
+    paternal_cousin = 1 << 29
+    spouse = 1 << 20
 
     unknown = 1 << 31
 

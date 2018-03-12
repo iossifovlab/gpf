@@ -16,6 +16,7 @@ class Person(object):
         else:
             self.atts = {}
         assert 'personId' in atts
+        self.family_id = atts['familyId']
         self.person_id = atts['personId']
         self.sample_id = atts['sampleId']
         self.index = atts['index']
@@ -26,8 +27,8 @@ class Person(object):
         self.dad = atts['dadId']
 
     def __repr__(self):
-        return "Person({}; {}; {})".format(
-            self.person_id, self.role, self.sex)
+        return "Person({} ({}); {}; {})".format(
+            self.person_id, self.family_id, self.role, self.sex)
 
     def has_mom(self):
         return not (self.mom is None or self.mom == '0')

@@ -144,6 +144,23 @@ class RawVariantsLoader(object):
             ped_df['sampleId'] = sample_ids
         return ped_df
 
+    @staticmethod
+    def save_pedigree_file(ped_df, filename, storage='csv', sep='\t'):
+        assert storage == 'csv'
+        ped_df = RawVariantsLoader.sort_pedigree(ped_df.copy())
+        ped_df['sex'] = ped_df['sex'].apply(lambda s: s.value)
+        if np.all(ped_df['personId'].values == ped_df['sampleId'].values):
+            ped_df = ped_df.drop(axis=1, columns=['sampleId'])
+
+        ped_df.to_csv(filename, index=False, sep=sep)
+
+    @staticmethod
+    def sort_pedigree(ped_df):
+        ped_df['role_order'] = ped_df['role'].apply(lambda r: r.value)
+        ped_df = ped_df.sort_values(by=['familyId', 'role_order'])
+        ped_df = ped_df.drop(axis=1, columns=['role_order'])
+        return ped_df
+
     def load_vcf(self):
         assert self.config.vcf
         assert os.path.exists(self.config.vcf)

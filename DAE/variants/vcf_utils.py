@@ -73,7 +73,7 @@ def cshl_format(pos, ref, alt):
     if len(r) == len(a) and len(r) == 0:
         print('ref {:s} is the same as alt {:s}'.format(
             ref, alt), file=sys.stderr)
-        return p, None
+        return p, 'complex(' + r + '->' + a + ')'
 
     if len(r) == len(a) and len(r) == 1:
         wx = 'sub(' + r + '->' + a + ')'

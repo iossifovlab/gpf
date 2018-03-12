@@ -60,13 +60,13 @@ class RawFamilyVariants(FamiliesBase):
             if record['sampleId'] in samples_needed:
                 pedigree.append(record)
         assert len(pedigree) == len(samples_needed)
-        samples_list = [s for s in samples if s in samples_needed]
 
+        pedigree_order = list(ped_df['sampleId'].values)
         pedigree = sorted(
-            pedigree, key=lambda p: samples_list.index(p['sampleId']))
+            pedigree, key=lambda p: pedigree_order.index(p['sampleId']))
 
         ped_df = pd.DataFrame(pedigree)
-        return ped_df, np.array(samples_list)
+        return ped_df, ped_df['sampleId'].values
 
     def _load(self, annotator):
         loader = RawVariantsLoader(self.config)
@@ -93,8 +93,6 @@ class RawFamilyVariants(FamiliesBase):
 
             annotator.setup(self)
             self.vars_df = annotator.annotate(self.vars_df, self.vcf_vars)
-
-        print(self.vars_df.head())
 
         assert len(self.vars_df) == len(self.vcf_vars)
         assert np.all(self.vars_df.index.values ==
@@ -213,6 +211,10 @@ class RawFamilyVariants(FamiliesBase):
 if __name__ == "__main__":
     import os
     from variants.vcf_utils import mat2str
+    from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
+    from variants.annotate_allele_frequencies import \
+        VcfAlleleFrequencyAnnotator
+    from variants.annotate_composite import AnnotatorComposite
 
     prefix = os.path.join(
         os.environ.get(
@@ -222,11 +224,17 @@ if __name__ == "__main__":
         "spark/nspark"
     )
 
-    fvars = RawFamilyVariants(prefix=prefix)
+    annotator = AnnotatorComposite(annotators=[
+        VcfVariantEffectsAnnotator(),
+        VcfAlleleFrequencyAnnotator(),
+    ])
+
+    fvars = RawFamilyVariants(prefix=prefix, annotator=annotator)
 
     vs = fvars.query_variants(
-        inheritance='denovo or unknown',
+        inheritance='unknown',
     )
     for c, v in enumerate(vs):
-        print(c, v, mat2str(v.best_st), mat2str(v.gt),
-              v.effect_type, v.effect_gene, v.inheritance)
+        print(c, v, v.family_id, mat2str(v.best_st),
+              v.effect_type, v.effect_gene, v.inheritance,
+              v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'))

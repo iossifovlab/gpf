@@ -46,7 +46,7 @@ def test_vcf2cshl_variant_format2():
 
     ps, vs = vcf2cshl(1, 'AA', ['AA'])
     assert ps[0] == 1
-    assert vs[0] is None
+    assert vs[0] == 'complex(->)'
 
     ps, vs = vcf2cshl(1, 'AA', ['AC'])
     assert ps[0] == 2
