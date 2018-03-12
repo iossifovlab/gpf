@@ -23,8 +23,8 @@ def main():
         variants_type = VT(
             effect_types=[et],
             present_in_parent=['neither'],
-            present_in_child=['autism only',
-                              'autism and unaffected',
+            present_in_child=['affected only',
+                              'affected and unaffected',
                               'unaffected only']
         )
         persons_variants = genotype_helper.get_persons_variants_df(

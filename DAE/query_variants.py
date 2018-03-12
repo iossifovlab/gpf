@@ -56,9 +56,7 @@ def prepare_inchild(data):
 
 
 PRESENT_IN_CHILD_TYPES = [
-    "autism only",
     "unaffected only",
-    "autism and unaffected",
     "affected only",
     "affected and unaffected",
     "neither",

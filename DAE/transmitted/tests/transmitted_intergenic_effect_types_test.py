@@ -7,6 +7,7 @@ import unittest
 from DAE import vDB
 from transmitted.legacy_query import TransmissionLegacy
 from transmitted.mysql_query import MysqlTransmittedQuery
+import pytest
 
 
 def count(vs):
@@ -16,6 +17,7 @@ def count(vs):
     return count
 
 
+@pytest.mark.mysql
 class Test(unittest.TestCase):
 
     @classmethod

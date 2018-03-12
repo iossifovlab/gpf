@@ -61,7 +61,7 @@ def test_tool_present_in_parent_ultra_rare(
         VT(
             effect_types=['LGDs'],
             gene_syms=gene_set,
-            present_in_child=['autism only', 'autism and unaffected'],
+            present_in_child=['affected only', 'affected and unaffected'],
             present_in_parent=['father only', 'mother only',
                                'mother and father', 'neither']
         ),

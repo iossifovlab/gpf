@@ -21,7 +21,7 @@ def test_variant_types_missing(variant_types):
 
 def test_variant_types_all(variant_types):
     data = {
-        'variantTypes': ["CNV", "del", "ins", "sub", ]
+        'variantTypes': ["CNV", "del", "ins", "sub", "complex"]
     }
     assert variant_types.get_variant_types(**data) is None
 

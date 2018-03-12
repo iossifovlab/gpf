@@ -27,7 +27,7 @@ def test_effect_type_vs_worst_effect_counterexample():
         "families": "All",
         "gender": "female,male",
         "geneRegion": "1:244552291-244552292",
-        "presentInChild": "autism and unaffected,autism only,"
+        "presentInChild": "affected and unaffected,affected only,"
         "neither,unaffected only",
         "presentInParent": "neither",
         "variantTypes": "CNV,del,ins,sub",

@@ -113,6 +113,11 @@ class GeneInfoDB:
         if self.config.has_option('geneTerms.' + id,attName):
             return self.config.get('geneTerms.' + id, attName)
 
+    def getGeneTermAttList(self, id, attName):
+        att = self.getGeneTermAtt(id, attName)
+        if att is not None:
+            return att.split(',')
+
     def getGeneTerms(self,id="main",inNS="sym"):
         fl = self.config.get('geneTerms.' + id, "file")
         gt = loadGeneTerm(fl)

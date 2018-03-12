@@ -3,6 +3,7 @@ Created on Mar 3, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
 
 
 def count(vs):
@@ -99,6 +100,8 @@ def test_get_variants_with_autism_and_unaffected(sd):
     vs = sd.get_variants(**query)
     assert vs is not None
     vs = list(vs)
+    for v in vs:
+        print(v.familyId, v.studyName, v.location, v.variant)
     assert 5 == count(vs)
 
 
@@ -161,3 +164,40 @@ def test_get_variants_with_rarity_interval(ssc):
     vs = ssc.get_variants(**query)
     assert vs is not None
     assert 3 == count(vs)
+
+
+def test_get_complex_variants(denovodb):
+    query = {
+        "datasetId": "denovo_db",
+        "effectTypes": [
+            "Nonsense",
+            "Frame-shift",
+            "Splice-site"
+        ],
+        "variantTypes": [
+            "complex"
+        ],
+    }
+    vs = denovodb.get_variants(**query)
+    assert vs is not None
+    assert 1 == count(vs)
+
+
+def test_get_unspecified_gender_variants(denovodb):
+    query = {
+        "datasetId": "denovo_db",
+        "effectTypes": [
+            "Nonsense",
+            "Frame-shift",
+            "Splice-site"
+        ],
+        "variantTypes": [
+            "complex"
+        ],
+        "gender": [
+            "unspecified"
+        ]
+    }
+    vs = denovodb.get_variants(**query)
+    assert vs is not None
+    assert 1 == count(vs)

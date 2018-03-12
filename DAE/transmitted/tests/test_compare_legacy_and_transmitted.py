@@ -7,6 +7,7 @@ Created on May 22, 2017
 from DAE import vDB
 from transmitted.legacy_query import TransmissionLegacy
 from transmitted.mysql_query import MysqlTransmittedQuery
+import pytest
 
 
 # def test_get_variants_father_ultra_rare(
@@ -16,7 +17,7 @@ from transmitted.mysql_query import MysqlTransmittedQuery
 #         VT(
 #             effect_types=['LGDs'],
 #             gene_syms=autism_candidates_genes,
-#             present_in_child=['autism only', 'autism and unaffected'],
+#             present_in_child=['affected only', 'affected and unaffected'],
 #             present_in_parent=[
 #                 'father only', 'mother and father', 'neither'],
 #         )
@@ -25,6 +26,7 @@ from transmitted.mysql_query import MysqlTransmittedQuery
 #     assert 176 == len(variants)
 
 
+@pytest.mark.mysql
 def test_compare_father_ultra_rare(autism_candidates_genes):
     transmitted_study = vDB.get_study("w1202s766e611")
 
@@ -33,7 +35,7 @@ def test_compare_father_ultra_rare(autism_candidates_genes):
         'maxAltFreqPrcnt': -1,
         'minAltFreqPrcnt': -1,
         'ultraRareOnly': True,
-        'presentInChild': ['autism only', 'autism and unaffected'],
+        'presentInChild': ['affected only', 'affected and unaffected'],
         'presentInParent': ['father only', 'mother and father'],
         'geneSyms': autism_candidates_genes,
         'effectTypes': [
@@ -61,6 +63,7 @@ def test_compare_father_ultra_rare(autism_candidates_genes):
     assert len(mvs) == 39
 
 
+@pytest.mark.mysql
 def test_compare_father_rarity(autism_candidates_genes):
     transmitted_study = vDB.get_study("w1202s766e611")
 
@@ -68,7 +71,7 @@ def test_compare_father_rarity(autism_candidates_genes):
         'minParentsCalled': -1,
         'maxAltFreqPrcnt': 1.0,
         'minAltFreqPrcnt': -1,
-        'presentInChild': ['autism only', 'autism and unaffected'],
+        'presentInChild': ['affected only', 'affected and unaffected'],
         'presentInParent': ['father only', 'mother and father', 'neither'],
         'geneSyms': autism_candidates_genes,
         'effectTypes': [

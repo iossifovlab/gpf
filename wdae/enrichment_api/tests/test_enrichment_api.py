@@ -29,7 +29,9 @@ class Test(APITestCase):
             'geneSet': {
                 'geneSetsCollection': 'denovo',
                 'geneSet': 'LGDs.Recurrent',
-                'geneSetsTypes': ['autism'],
+                'geneSetsTypes': {
+                    'SD': ['autism']
+                }
             }
         }
         url = '/api/v3/enrichment/test'
@@ -71,7 +73,9 @@ class Test(APITestCase):
             'geneSet': {
                 'geneSetsCollection': 'denovo',
                 'geneSet': 'LGDs.Recurrent',
-                'geneSetsTypes': ['autism'],
+                'geneSetsTypes': {
+                    'SD': ['autism']
+                }
             }
         }
         url = '/api/v3/enrichment/test'
