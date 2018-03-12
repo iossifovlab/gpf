@@ -110,8 +110,8 @@ def fvcf_config():
 
 
 @pytest.fixture(scope='session')
-def fvcf(fvcf_config):
-    fvariants = RawFamilyVariants(fvcf_config)
+def fvcf(fvcf_config, composite_annotator):
+    fvariants = RawFamilyVariants(fvcf_config, annotator=composite_annotator)
     return fvariants
 
 

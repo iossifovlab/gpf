@@ -3,6 +3,7 @@ Created on Mar 5, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
 from variants.vcf_utils import mat2str
 import pytest
 
