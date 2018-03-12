@@ -212,23 +212,6 @@ class FamilyVariant(VariantBase):
         v.set_summary(row)
         return v
 
-
-#     def clone(self):
-#         v = FamilyVariant.from_variant_base(self)
-#
-#         v.effect_type = self.effect_type
-#         v.effect_gene = self.effect_gene
-#         v.effect_details = self.effect_details
-#
-#         v.family = self.family
-#         # v.vcf = self.vcf
-#         v.gt = self.gt
-#
-#         v._best_st = None
-#         v._gt = None
-#
-#         return v
-
     @property
     def best_st(self):
         if self._best_st is None:
@@ -260,48 +243,21 @@ class FamilyVariant(VariantBase):
 
     @staticmethod
     def check_denovo_trio(p1, p2, ch):
-        pred2 = ((p1[0] == p1[1]) and
-                 (p2[0] == p2[1]) and
-                 ((ch[0] != p1[0] and ch[0] != p2[0]) or
-                  (ch[1] != p1[0] and ch[1] != p2[0])))
-
-        pred4 = (((p1[0] != p1[1] and p2[0] != p2[1]) and
-                  ((np.any(ch[0] == p1) and np.all(ch[1] != p2)) or
-                   (np.any(ch[1] == p1) and np.all(ch[0] != p2)))) or
-                 ((p1[0] != p1[1] and p2[0] != p2[1]) and
-                  ((np.any(ch[0] == p2) and np.all(ch[1] != p1)) or
-                     (np.any(ch[1] == p2) and np.all(ch[0] != p1)))))
-        pred5 = p1[0] == p1[1] and p2[0] != p2[1] and \
-            ((ch[0] == p1[0] and np.any(ch[1] != p2)) or
-             (ch[1] == p1[0] and np.any(ch[0] != p2)))
-        pred6 = p2[0] == p2[1] and p1[0] != p1[1] and\
-            ((ch[0] == p2[0] and np.any(ch[1] != p1)) or
-             (ch[1] == p2[0] and np.any(ch[0] != p1)))
-
-        pred7 = p2[0] == p2[1] and p1[0] != p1[1] and \
-            np.all(ch != p2[0]) and \
-            np.all(ch != p1[0]) and \
-            np.all(ch != p1[1])
-        pred8 = p1[0] == p1[1] and p2[0] != p2[1] and \
-            np.all(ch != p1[0]) and \
-            np.all(ch != p2[0]) and \
-            np.all(ch != p2[1])
-
-        # print(pred2, pred4, pred5, pred6, pred7, pred8)
-
-        return pred2 or pred4 or pred5 or pred6 or pred7 or pred8
+        new_alleles = set(ch).difference(set(p1) | set(p2))
+        return bool(new_alleles)
 
     @staticmethod
     def check_omission_trio(p1, p2, ch):
-        return ((p1[0] == p1[1]) and
-                (p2[0] == p2[1]) and
-                (p1[0] != p2[0]) and
-                ((ch[0] != p1[0] or ch[1] != p1[0]) or
-                 (ch[0] != p2[0] or ch[1] != p2[0])) and
-                ((ch[0] == p1[0] or ch[0] == p2[0]) and
-                 (ch[1] == p1[0] or ch[1] == p2[0]))) or \
-            ((p1[0] == p1[1] and ch[0] != p1[0] and ch[1] != p1[0]) or
-             (p2[0] == p2[1] and ch[0] != p2[0] and ch[1] != p2[0]))
+        child_alleles = set(ch)
+        p1res = False
+        p2res = False
+
+        if p1[0] == p1[1]:
+            p1res = not bool(p1[0] in child_alleles)
+        if p2[0] == p2[1]:
+            p2res = not bool(p2[0] in child_alleles)
+
+        return p1res or p2res
 
     @staticmethod
     def calc_inheritance_trio(p1, p2, ch):
