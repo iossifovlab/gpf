@@ -235,6 +235,6 @@ if __name__ == "__main__":
         inheritance='unknown',
     )
     for c, v in enumerate(vs):
-        print(c, v, v.family_id, mat2str(v.best_st),
+        print(c, v, v.family_id, mat2str(v.best_st), mat2str(v.gt),
               v.effect_type, v.effect_gene, v.inheritance,
               v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'))

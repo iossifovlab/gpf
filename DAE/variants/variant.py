@@ -56,8 +56,11 @@ class VariantBase(object):
         return int(self.chromosome) >= int(other.chromosome) and \
             self.start > other.start
 
-    def get_attr(self, item):
-        return self._atts.get(item)
+    def get_attr(self, item, default=None):
+        val = self._atts.get(item)
+        if val is None:
+            return default
+        return val
 
     def has_attr(self, item):
         return item in self._atts
@@ -109,7 +112,7 @@ class FamilyVariant(VariantBase):
         self.effect_gene = self.get_attr('effectGene')
         self.effect_details = self.get_attr('effectDetails')
 
-        self.position = self.get_attr('position')
+        self.position = self.get_attr('position', self.start)
         self.variant = self.get_attr('variant')
 
         self._best_st = None
@@ -120,7 +123,7 @@ class FamilyVariant(VariantBase):
         self._variant_in_sexes = None
 
     def __repr__(self):
-        return '{}:{} {} ({}->{})'.format(
+        return '{}:{} {} vcf({}->{})'.format(
             self.chromosome, self.position,
             self.variant, self.reference, ','.join(self.alt))
 
