@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-<<<<<<< HEAD
 # py.test -v --cov-config coveragerc \
 #     --junitxml=wdae/junit.xml \
 #     --cov common_reports_api \
@@ -30,6 +29,7 @@
 #     --cov transmitted \
 #     --cov utils \
 #     wdae/
+
 
 
 py.test -v --cov-config coveragerc \
