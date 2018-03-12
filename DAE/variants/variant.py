@@ -320,16 +320,3 @@ class FamilyVariant(VariantBase):
                 self._inheritance = self.combine_inheritance(*inherits)
 
         return self._inheritance
-
-#         if self._inheritance is None:
-#             if self.is_mendelian():
-#                 self._inheritance = Inheritance.mendelian
-#             elif self.is_denovo():
-#                 self._inheritance = Inheritance.denovo
-#             elif self.is_omission():
-#                 self._inheritance = Inheritance.omission
-#             elif self.is_unknown():
-#                 self._inheritance = Inheritance.unknown
-#             else:
-#                 self._inheritance = Inheritance.other
-#         return self._inheritance
