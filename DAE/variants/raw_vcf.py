@@ -86,7 +86,7 @@ class RawFamilyVariants(FamiliesBase):
         else:
             records = []
             for v in self.vcf_vars:
-                records.append((v.CHROM, v.start, v.REF, ",".join(v.ALT)))
+                records.append((v.CHROM, v.start + 1, v.REF, np.array(v.ALT)))
             self.vars_df = pd.DataFrame.from_records(
                 data=records,
                 columns=['chr', 'position', 'refA', 'altA'])

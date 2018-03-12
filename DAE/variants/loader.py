@@ -79,6 +79,8 @@ class RawVariantsLoader(object):
                         'position': np.int32,
                     },
                     converters={
+                        'altA':
+                        RawVariantsLoader.convert_array_of_strings,
                         'all.nAltAlls':
                         RawVariantsLoader.convert_array_of_ints,
                         'all.altFreq':
@@ -102,6 +104,8 @@ class RawVariantsLoader(object):
         def convert_array_of_strings(a): return RawVariantsLoader.SEP.join(a)
         if storage == 'csv':
             vars_df = vars_df.copy()
+            vars_df['altA'] = vars_df['altA'].\
+                apply(convert_array_of_strings)
             vars_df['effectType'] = vars_df['effectType'].\
                 apply(convert_array_of_strings)
             vars_df['effectGene'] = vars_df['effectGene'].\

@@ -17,7 +17,7 @@ def test_11540_gt(ustudy):
     # assert v.position == 11540
 
     print(v, v.is_mendelian())
-    assert v.position == 11539
+    assert v.position == 11541
 
     print(v.gt)
     assert np.all(np.array(

@@ -4,6 +4,7 @@ Created on Feb 7, 2018
 @author: lubo
 '''
 from variants.loader import VariantMatcher
+import pytest
 
 
 def test_load_annotation(ustudy_loader):
@@ -27,6 +28,7 @@ def test_load_annotation(ustudy_loader):
 #     assert vs is not None
 
 
+@pytest.mark.skip
 def test_matcher(ustudy_config):
     matcher = VariantMatcher(ustudy_config)
     matcher.match()

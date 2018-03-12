@@ -99,4 +99,4 @@ def vcf2cshl(pos, ref, alts):
         pxx.append(p)
         vrt.append(v)
 
-    return zip(pxx, vrt)
+    return np.array(pxx), np.array(vrt)

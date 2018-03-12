@@ -17,7 +17,12 @@ def assert_annotation_equals(vars_df, vars1_df):
         for k in v1.keys():
             res = v1[k] == v2[k]
             if isinstance(res, np.ndarray):
-                if v1[k].dtype.type is np.string_:
+                # print(k, v1[k], v2[k], type(v1[k]), type(v2[k]),
+                #       v1[k].dtype.type, v2[k].dtype.type,
+                #       v1[k].dtype, v2[k].dtype)
+
+                if v1[k].dtype.type is np.string_ or \
+                        v1[k].dtype.type is np.unicode_:
                     assert np.all(res)
                 else:
                     assert np.allclose(v1[k], v2[k], rtol=1e-5)

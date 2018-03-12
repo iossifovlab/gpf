@@ -7,29 +7,31 @@ from __future__ import print_function
 
 import numpy as np
 from variants.attributes import Inheritance
-from variants.vcf_utils import mat2str
+from variants.vcf_utils import mat2str, vcf2cshl
 import sys
 
 
 class VariantBase(object):
 
-    def __init__(self, chromosome, position, reference, alternative, atts={}):
+    def __init__(self, chromosome, start, reference, alternatives, atts={}):
         self._atts = atts
         self.chromosome = chromosome
-        self.position = position
+        self.start = start
         self.reference = reference
-        self.alternative = alternative
-        self.alt = alternative.split(',')
+        self.alt = alternatives
 
     def __repr__(self):
         return '{}:{} {}->{}'.format(
-            self.chromosome, self.position, self.reference, self.alternative)
+            self.chromosome, self.start, self.reference, self.alt)
+
+#     @property
+#     def alternative(self):
+#         return ','.join(self.alt)
 
     @staticmethod
     def from_vcf_variant(variant):
-        # assert len(variant.ALT) == 1
         return VariantBase(
-            variant.CHROM, variant.start + 1, variant.REF, str(variant.ALT[0]))
+            variant.CHROM, variant.start, variant.REF, variant.ALT)
 
     @classmethod
     def from_dict(cls, row):
@@ -39,20 +41,20 @@ class VariantBase(object):
 
     def __eq__(self, other):
         return self.chromosome == other.chromosome and \
-            self.position == other.position and \
+            self.start == other.start and \
             self.reference == other.reference and \
-            self.alternative == other.alternative
+            self.alt == other.alt
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __lt__(self, other):
         return int(self.chromosome) <= int(other.chromosome) and \
-            self.position < other.position
+            self.start < other.start
 
     def __gt__(self, other):
         return int(self.chromosome) >= int(other.chromosome) and \
-            self.position > other.position
+            self.start > other.start
 
     def get_attr(self, item):
         return self._atts.get(item)
@@ -72,9 +74,14 @@ class VariantBase(object):
 
 class SummaryVariant(VariantBase):
 
-    def __init__(self, chromosome, position, reference, alternative, atts={}):
+    def __init__(self, chromosome, start, reference, alternative, atts={}):
         super(SummaryVariant, self).__init__(
-            chromosome, position, reference, alternative, atts=atts)
+            chromosome, start, reference, alternative, atts=atts)
+        position, variant = vcf2cshl(start, reference, alternative)
+        self._atts.update({
+            'position': position,
+            'variant': variant
+        })
 
 
 class FamilyVariant(VariantBase):
@@ -82,9 +89,9 @@ class FamilyVariant(VariantBase):
     def __init__(self, summary_variant, family, gt, alt_index):
         super(FamilyVariant, self).__init__(
             summary_variant.chromosome,
-            summary_variant.position,
+            summary_variant.start,
             summary_variant.reference,
-            summary_variant.alternative)
+            summary_variant.alt)
 
         self.family = family
         self.gt = gt
@@ -102,6 +109,9 @@ class FamilyVariant(VariantBase):
         self.effect_gene = self.get_attr('effectGene')
         self.effect_details = self.get_attr('effectDetails')
 
+        self.position = self.get_attr('position')
+        self.variant = self.get_attr('variant')
+
         self._best_st = None
         self._inheritance = None
 
@@ -109,21 +119,10 @@ class FamilyVariant(VariantBase):
         self._variant_in_roles = None
         self._variant_in_sexes = None
 
-#     def set_family(self, family):
-#         self.family = family
-#         return self
-#
-#     def set_genotype(self, gt):
-#         self.gt = gt
-#         return self
-#
-#     def set_summary(self, sv):
-#         self.effect_type = sv['effectType']
-#         self.effect_gene = sv['effectGene']
-#         self.effect_details = sv['effectDetails']
-#
-#         self._atts.update(sv)
-#         return self
+    def __repr__(self):
+        return '{}:{}({}) {}'.format(
+            self.chromosome, self.position, self.start,
+            self.variant, self.effect_type)
 
     @staticmethod
     def from_summary_variant(sv, family, gt=None, vcf=None):
@@ -154,15 +153,6 @@ class FamilyVariant(VariantBase):
         else:
             alt_index, = tuple(alt_alleles)
             return alt_index - 1
-
-#     @staticmethod
-#     def from_vcf_variant(variant):
-#         assert len(variant.ALT) == 1
-#         print(
-#             variant.CHROM, variant.start + 1,
-#             variant.REF, str(variant.ALT[0]))
-#         return FamilyVariant(
-#             variant.CHROM, variant.start, variant.REF, str(variant.ALT[0]))
 
     @property
     def location(self):

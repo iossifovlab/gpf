@@ -8,6 +8,7 @@ from __future__ import print_function
 from RegionOperations import Region
 import numpy as np
 from variants.variant import SummaryVariant, FamilyVariant
+from variants.vcf_utils import mat2str
 
 
 def test_multiallele_family_variant(fam1):
@@ -44,8 +45,10 @@ def test_multiallele_family_variant(fam1):
 
 
 def test_query_regions(ustudy):
-    regions = [Region("1", 900717, 900717)]
+    regions = [Region("1", 900718, 900718)]
     vs = ustudy.query_variants(regions=regions)
     assert vs is not None
     vl = list(vs)
-    assert len(vl) == 0
+    for v in vl:
+        print(v, mat2str(v.gt), mat2str(v.best_st))
+    assert len(vl) == 1
