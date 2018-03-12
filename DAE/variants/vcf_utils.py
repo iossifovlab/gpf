@@ -3,8 +3,12 @@ Created on Mar 5, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import numpy as np
 from variants.family import Family
+from itertools import izip
+import sys
 
 
 def samples_to_alleles_index(samples):
@@ -36,3 +40,63 @@ class VcfFamily(Family):
     def vcf_alleles_index(self, person_ids):
         p = self.vcf_samples_index(person_ids)
         return samples_to_alleles_index(p)
+
+
+def trim_str(pos, ref, alt):
+    for n, s in enumerate(izip(ref[::-1], alt[::-1])):
+        if s[0] != s[1]:
+            break
+    # not made simple
+    if ref[-(n + 1)] == alt[-(n + 1)]:
+        r, a = ref[:-(n + 1)], alt[:-(n + 1)]
+    else:
+        if n == 0:
+            r, a = ref[:], alt[:]
+        else:
+            r, a = ref[:-n], alt[:-n]
+
+    if len(r) == 0 or len(a) == 0:
+        return pos, r, a
+
+    for n, s in enumerate(izip(r, a)):
+        if s[0] != s[1]:
+            break
+
+    if r[n] == a[n]:
+        return pos + n + 1, r[n + 1:], a[n + 1:]
+
+    return pos + n, r[n:], a[n:]
+
+
+def cshl_format(pos, ref, alt):
+    p, r, a = trim_str(pos, ref, alt)
+    if len(r) == len(a) and len(r) == 0:
+        print('ref {:s} is the same as alt {:s}'.format(
+            ref, alt), file=sys.stderr)
+        return p, None
+
+    if len(r) == len(a) and len(r) == 1:
+        wx = 'sub(' + r + '->' + a + ')'
+        return p, wx
+
+    if len(r) > len(a) and len(a) == 0:
+        wx = 'del(' + str(len(r)) + ')'
+        return p, wx
+
+    # len(ref) < len(alt):
+    if len(r) < len(a) and len(r) == 0:
+        wx = 'ins(' + a + ')'
+        return p, wx
+
+    return p, 'complex(' + r + '->' + a + ')'
+
+
+def vcf2cshl(pos, ref, alts):
+    vrt, pxx = list(), list()
+    for alt in alts:
+        p, v = cshl_format(pos, ref, alt)
+
+        pxx.append(p)
+        vrt.append(v)
+
+    return zip(pxx, vrt)
