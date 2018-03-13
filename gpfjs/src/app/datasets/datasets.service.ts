@@ -19,14 +19,14 @@ export class DatasetsService {
   private headers = new Headers({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
   private selectedDataset$ = new ReplaySubject<Dataset>(1);
-  private _selectedDatasetId$ = new BehaviorSubject<string>(null);
+  private selectedDatasetId$ = new BehaviorSubject<string>(null);
 
   constructor(
     private http: Http,
     private config: ConfigService,
     private usersService: UsersService
   ) {
-    this._selectedDatasetId$.asObservable()
+    this.selectedDatasetId$.asObservable()
       .switchMap(selectedDatasetId => {
         if (!selectedDatasetId) {
           return Observable.of(null);
@@ -69,19 +69,19 @@ export class DatasetsService {
   }
 
   setSelectedDataset(dataset: Dataset): void {
-    if (this._selectedDatasetId$.getValue() !== dataset.id) {
-      this._selectedDatasetId$.next(dataset.id);
+    if (this.selectedDatasetId$.getValue() !== dataset.id) {
+      this.selectedDatasetId$.next(dataset.id);
     }
   }
 
   setSelectedDatasetById(datasetId: string): void {
-    if (this._selectedDatasetId$.getValue() !== datasetId) {
-      this._selectedDatasetId$.next(datasetId);
+    if (this.selectedDatasetId$.getValue() !== datasetId) {
+      this.selectedDatasetId$.next(datasetId);
     }
   }
 
   reloadSelectedDataset() {
-    this._selectedDatasetId$.next(this._selectedDatasetId$.value);
+    this.selectedDatasetId$.next(this.selectedDatasetId$.value);
   }
 
   getSelectedDataset() {
@@ -93,7 +93,7 @@ export class DatasetsService {
   }
 
   hasSelectedDataset() {
-    return !!this._selectedDatasetId$.getValue();
+    return !!this.selectedDatasetId$.getValue();
   }
 
   private reloadAllDatasets() {

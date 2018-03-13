@@ -70,7 +70,7 @@
           <div class="form-group">
             <label for="groups">Default groups</label>
             <div class="groupsInput">
-              <select2 [data]="getDefaultGroups()" [options]="lockedOptions"></select2>
+              <select2 [data]="getDefaultGroupsSelect2()" [options]="lockedOptions"></select2>
             </div>
           </div>
         </div>
@@ -81,7 +81,12 @@
           <div class="form-group">
             <label for="groups">Other Groups</label>
             <div class="groupsInput">
-              <gpf-user-groups-selector [groups]="groups" [user]="user" (groupsChange)="updateGroups($event)"></gpf-user-groups-selector>
+              <gpf-user-groups-selector
+                [groups]="groups"
+                [selected]="user.groups"
+                [alwaysSelectedGroups]="getDefaultGroups()"
+                (groupsChange)="updateGroups($event)">
+              </gpf-user-groups-selector>
             </div>
           </div>
         </div>

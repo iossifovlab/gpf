@@ -137,6 +137,7 @@ import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-vi
 import { GenotypeBrowserMetaViewComponent } from './genotype-browser-meta-view/genotype-browser-meta-view.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
+import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
 import { SaveQueryButtonComponent } from './save-query-button/save-query-button.component';
 import { SaveQueryService } from './save-query-button/save-query.service';
 import { LoadQueryComponent } from './load-query/load-query.component';
@@ -331,6 +332,7 @@ const appRoutes: Routes = [
     ErrorsAlertComponent,
     SaveQueryButtonComponent,
     LoadQueryComponent,
+    SmallRemoveButtonComponent,
   ],
   imports: [
     BrowserModule,
