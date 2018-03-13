@@ -4,7 +4,10 @@
       <gpf-table-column>
         <gpf-table-header caption="Dataset" field="dataset"></gpf-table-header>
         <gpf-table-content>
-          <gpf-table-subcontent field="dataset">
+          <gpf-table-subcontent>
+            <span *gpfTableCellContent="let data">
+              {{ data.dataset.name || data.dataset.id }}
+            </span>
           </gpf-table-subcontent>
         </gpf-table-content>
       </gpf-table-column>
@@ -15,6 +18,22 @@
             <span *gpfTableCellContent="let data">
               <div *ngFor="let group of data.groups">
                 {{ group }}
+                <gpf-small-remove-button
+                  (clicked)="removeGroup(data.dataset, group)"
+                  [hide]="!isDefaultGroup(data.dataset, group)"
+                  message="Removing the group '{{ group }}' could change which users have access to the dataset {{ data.dataset.id }}."
+                  confirmText="Remove group"
+                  title="Remove group">
+                </gpf-small-remove-button>
+              </div>
+              <div class="input-group">
+                <input #input
+                  class="form-control"
+                  [ngbTypeahead]="searchGroups(data.groups)"
+                  container="body"/>
+                <div class="input-group-btn">
+                  <button class="btn btn-online-secondary" (click)="updatePermissions(data.dataset, input.value)">Add</button>
+                </div>
               </div>
             </span>
           </gpf-table-subcontent>

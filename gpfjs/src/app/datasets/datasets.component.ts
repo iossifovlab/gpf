@@ -31,7 +31,6 @@ export class DatasetsComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log("datasets component init");
     this.route.params.subscribe(
       (params: Params) => {
         this.datasetsService.setSelectedDatasetById(params['dataset']);
@@ -66,6 +65,10 @@ export class DatasetsComponent implements OnInit {
   }
 
   selectDataset(dataset: Dataset) {
+    if (dataset.description) {
+      this.router.navigate(['/', 'datasets', dataset.id, 'description']);
+    } else {
       this.router.navigate(['/', 'datasets', dataset.id]);
+    }
   }
 }
