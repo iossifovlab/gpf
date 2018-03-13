@@ -164,8 +164,7 @@ class DaeToVcf(object):
         writer.open()
 
         for variant in variant_map.values():
-            samples = self._generate_samples(variant, ordered_cohort)
-            writer.write_variant(variant, samples)
+            writer.write_variant(variant)
             # variant.samples = None
 
         writer.close()
@@ -197,17 +196,6 @@ class DaeToVcf(object):
             )
             for index, p in enumerate(variant.memberInOrder)
         }
-
-    @staticmethod
-    def _generate_samples(variant, cohort):
-        empty = {'GT': '0/0', 'AD': '0,0'}
-
-        get = collections.OrderedDict(
-            ((k, v.to_dict())
-             for k, v in variant.samples.items())).get
-        samples = map(lambda i: get(i, empty), cohort)
-
-        return samples
 
     ORDERED_GENOTYPE_INFO = ['0/0', '0', '0/1', '1', '1/1']
 
@@ -280,7 +268,7 @@ class VcfWriter(object):
     def _assert_open(self):
         assert self._writer is not None
 
-    def write_variant(self, variant, samples):
+    def write_variant(self, variant):
         self._assert_open()
         # print("SAMPLES", variant.samples)
 
@@ -305,6 +293,7 @@ class VcfWriter(object):
         calldata_tuple = make_calldata_tuple(variant.format.split(':'))
 
         # variant.samples = self._get_public_sample_data(variant_samples)
+        samples = self._generate_samples(variant, self.samples_labels)
 
         record_samples = map(
             lambda x: _Call(record, reverse_map[x[0]],
@@ -341,6 +330,17 @@ class VcfWriter(object):
 
         return template
 
+    @staticmethod
+    def _generate_samples(variant, cohort):
+        empty = {'GT': '0/0', 'AD': '0,0'}
+
+        get = collections.OrderedDict(
+            ((k, v.to_dict())
+             for k, v in variant.samples.items())).get
+        samples = map(lambda i: get(i, empty), cohort)
+
+        return samples
+
 
 class VcfVariant(object):
 
@@ -349,6 +349,8 @@ class VcfVariant(object):
                  format_='.', samples=None):
         if not samples:
             samples = {}
+        if not info:
+            info = {}
 
         self.chromosome = chromosome
         self.position = position

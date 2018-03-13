@@ -3,7 +3,8 @@ import numpy as np
 import argparse
 from pedigrees.pedigree_reader import PedigreeReader
 from utils.tabix_csv_reader import TabixCsvDictReader
-from converters.dae2vcf import VcfVariant, vcfVarFormat, VcfVariantSample
+from converters.dae2vcf import VcfVariant, vcfVarFormat, VcfVariantSample, \
+    VcfWriter
 
 from collections import OrderedDict
 
@@ -41,7 +42,7 @@ class FamilyVariantGenerator(object):
                 continue
 
             chromosome = read_variant[self.chromosome_column]
-            position = read_variant[self.position_column]
+            position = int(read_variant[self.position_column])
             _, _, reference, alternative = vcfVarFormat(
                 "{}:{}".format(chromosome, position),
                 read_variant[self.variant_column])
@@ -52,6 +53,14 @@ class FamilyVariantGenerator(object):
 
             for family in self.families:
                 for member in family.independent_members():
+                    allele1_has_variant = has_variant(frequency)
+                    allele2_has_variant = has_variant(frequency)
+
+                    alternative_alleles_count = \
+                        int(allele1_has_variant) + int(allele2_has_variant)
+
+                    if alternative_alleles_count == 0:
+                        continue
                     genotype = '0/0'
 
                     if key not in variants:
@@ -60,10 +69,13 @@ class FamilyVariantGenerator(object):
                             position=position,
                             reference=reference,
                             alternative=alternative,
+                            format_='GT:AD'
                         )
 
-                    if has_variant(frequency):
+                    if alternative_alleles_count == 1:
                         genotype = '0/1'
+                    elif alternative_alleles_count == 2:
+                        genotype = '1/1'
 
                     variant = variants[key]
 
@@ -84,6 +96,7 @@ def main():
     parser.add_argument(
         'pedigree',
         help='pedigree file of the families for which to generate variants')
+    parser.add_argument('--output', help='output vcf file', default='output.vcf')
 
     args = parser.parse_args()
 
@@ -92,7 +105,20 @@ def main():
 
     generator = FamilyVariantGenerator(args.variants, families)
 
-    print(generator.generate())
+    variants = generator.generate()
+    ordered_cohort = list({i.id for f in families for i in f.members})
+
+    writer = VcfWriter(args.output, ordered_cohort)
+
+    writer.open()
+
+    for variant in variants.values():
+        writer.write_variant(variant)
+
+    writer.close()
+
+    print("variants generated: {}".format(len(variants)))
+
 
 
 
