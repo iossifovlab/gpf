@@ -50,8 +50,8 @@ class RawVariantsLoader(object):
 
     @staticmethod
     def convert_array_of(token, dtype):
-        token = token.strip()[1:-1]
-        return np.fromstring(token, dtype=dtype, sep=' ')
+        token = token.strip()
+        return np.fromstring(token, dtype=dtype, sep=RawVariantsLoader.SEP)
 
     @staticmethod
     def convert_array_of_ints(token):
@@ -102,6 +102,11 @@ class RawVariantsLoader(object):
     @staticmethod
     def save_annotation_file(vars_df, filename, sep='\t', storage='csv'):
         def convert_array_of_strings(a): return RawVariantsLoader.SEP.join(a)
+
+        def convert_array_of_numbers(a):
+            return RawVariantsLoader.SEP.join([
+                str(v) for v in a
+            ])
         if storage == 'csv':
             vars_df = vars_df.copy()
             vars_df['altA'] = vars_df['altA'].\
@@ -112,6 +117,10 @@ class RawVariantsLoader(object):
                 apply(convert_array_of_strings)
             vars_df['effectDetails'] = vars_df['effectDetails'].\
                 apply(convert_array_of_strings)
+            vars_df['all.nAltAlls'] = vars_df['all.nAltAlls'].\
+                apply(convert_array_of_numbers)
+            vars_df['all.altFreq'] = vars_df['all.altFreq'].\
+                apply(convert_array_of_numbers)
             vars_df.to_csv(
                 filename,
                 index=False,

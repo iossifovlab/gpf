@@ -6,6 +6,7 @@ Created on Mar 7, 2018
 from variants.annotate_composite import AnnotatorComposite
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.raw_vcf import RawFamilyVariants
+from variants.loader import RawVariantsLoader
 
 
 def test_annotate_composite_simple(ustudy, effect_annotator):
@@ -52,3 +53,13 @@ def test_annotate_on_load_vcf19(nvcf19_config, effect_annotator):
 
     fvariants = RawFamilyVariants(nvcf19_config, annotator=annotator)
     assert fvariants is not None
+
+
+def test_do_annotate_test_nvcf19_files(nvcf19, composite_annotator):
+    RawVariantsLoader.save_annotation_file(
+        nvcf19.annot_df, "nvcf19-eff.tmp", storage='csv')
+
+
+def test_do_annotate_test_ustudy_files(ustudy, composite_annotator):
+    RawVariantsLoader.save_annotation_file(
+        ustudy.annot_df, "ustudy-eff.tmp", storage='csv')
