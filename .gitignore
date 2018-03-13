@@ -16,3 +16,4 @@ coverage.xml
 junit.xml
 logs
 output
+*.tmp
