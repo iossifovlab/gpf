@@ -19,5 +19,4 @@ urlpatterns = [
     url(r'^/partitions$',
         views.GeneWeightsPartitionsView.as_view(),
         name="gene_weights_partitions")
-
 ]
