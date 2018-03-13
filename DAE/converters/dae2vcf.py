@@ -348,7 +348,7 @@ class VcfVariant(object):
                  alternative='.', quality=100, filter_='.', info=None,
                  format_='.', samples=None):
         if not samples:
-            samples = []
+            samples = {}
 
         self.chromosome = chromosome
         self.position = position

@@ -1,5 +1,6 @@
 from pheno.common import Role
 
+
 class Family:
 
     def __init__(self, atts=None):
@@ -32,4 +33,3 @@ class Person:
     @property
     def is_child(self):
         return self.role == Role.prb or self.role == Role.sib
-

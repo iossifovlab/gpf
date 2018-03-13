@@ -9,160 +9,121 @@ import collections
 from interval_sandwich import SandwichInstance, SandwichSolver
 from layout import Layout
 from drawing import PDFLayoutDrawer, OffsetLayoutDrawer
+from pedigrees.pedigree_reader import PedigreeReader
 
 
-class CsvPedigreeReader(object):
+def create_sandwich_instance(self):
+    id_to_individual = defaultdict(Individual)
+    id_to_mating_unit = {}
 
-    def read_file(self, file):
-        families = {}
-        reader = csv.DictReader(file, delimiter='\t')
-        for row in reader:
-            kwargs = {
-                "family_id": row["familyId"],
-                "id": row["personId"],
-                "father": row["dadId"],
-                "mother": row["momId"],
-                "sex": row["gender"],
-                "label": "",
-                "effect": row["status"],
-            }
-            member = PedigreeMember(**kwargs)
-            if member.family_id not in families:
-                families[member.family_id] = Pedigree([member])
+    for member in self.members:
+        mother = id_to_individual[member.mother]
+        father = id_to_individual[member.father]
 
-            families[member.family_id].members.append(member)
+        mating_unit_key = member.mother + "," + member.father
+        # print("key", mating_unit_key)
+        if mother != father and not (mating_unit_key in id_to_mating_unit):
+            id_to_mating_unit[mating_unit_key] = MatingUnit(mother, father)
 
-        return families.values()
+        individual = id_to_individual[member.id]
+        individual.member = member
+
+        if mother != father:
+            parental_unit = id_to_mating_unit[mating_unit_key]
+            individual.parents = parental_unit
+            parental_unit.children.individuals.add(individual)
+
+    try:
+        del id_to_individual["0"]
+    except KeyError:
+        pass
+
+    try:
+        del id_to_individual[""]
+    except KeyError:
+        pass
+
+    individuals = set(id_to_individual.values())
+    mating_units = set(id_to_mating_unit.values())
+    sibship_units = set([mu.children for mu in id_to_mating_unit.values()])
+
+    all_vertices = individuals | mating_units | sibship_units
+
+    if len(individuals) != 0:
+        individuals.__iter__().next().add_rank(0)
+        _fix_rank(individuals)
+
+    # Ea-
+    same_rank_edges = {frozenset([i1, i2])
+                       for i1 in individuals for i2 in individuals
+                       if i1 is not i2 and i1.rank is i2.rank}
+    multiple_partners_edges = {
+        frozenset([i1, i2])
+        for i1 in individuals
+        for i2 in [m.other_parent(i1) for m in i1.mating_units]
+        if len(i1.mating_units) > 2
+    }
+    same_rank_edges -= multiple_partners_edges
+    same_rank_edges = set(map(tuple, same_rank_edges))
+
+    # Eb+
+    mating_edges = {(i, m) for i in individuals for m in mating_units
+                    if i.individual_set().issubset(m.individual_set())}
+    # Eb-
+    same_generation_not_mates = \
+        {(i, m) for i in individuals for m in mating_units
+         if i.generation_ranks() == m.generation_ranks()}
+    same_generation_not_mates = same_generation_not_mates - mating_edges
+
+    # Ec+
+    sibship_edges = {(i, s) for i in individuals for s in sibship_units
+                     if i.individual_set().issubset(s.individual_set())}
+    # Ec-
+    same_generation_not_siblings = \
+        {(i, s) for i in individuals for s in sibship_units
+         if i.parents is not None and
+            i.generation_ranks() == s.generation_ranks()}
+    same_generation_not_siblings = same_generation_not_siblings \
+        - sibship_edges
+
+    # Ed+
+    mates_siblings_edges = {(m, s) for m in mating_units
+                            for s in sibship_units
+                            if(m.children.individual_set() is
+                                s.individual_set())}
+
+    # Ee-
+    intergenerational_edges = \
+        {(m, a) for m in mating_units for a in sibship_units | mating_units
+         if (m.generation_ranks() & a.generation_ranks() == set()) and
+         (m.individual_set() & a.individual_set() == set())}
+    intergenerational_edges -= mates_siblings_edges
+
+    required_set = mating_edges | sibship_edges | mates_siblings_edges
+    forbidden_set = same_rank_edges | same_generation_not_mates \
+        | same_generation_not_siblings | intergenerational_edges
+
+    # print("same_rank_edges", len(same_rank_edges), same_rank_edges)
+    # print("same_generation_not_mates",
+    #       len(same_generation_not_mates), same_generation_not_mates)
+    # print("same_generation_not_siblings",
+    #       len(same_generation_not_siblings), same_generation_not_siblings)
+    # print("intergenerational_edges",
+    #       len(intergenerational_edges), intergenerational_edges)
+
+    # print("all vertices", len(all_vertices), all_vertices)
+    # print("required edges", len(required_set), required_set)
+    # print("forbidden edges", len(forbidden_set), forbidden_set)
+
+    return SandwichInstance.from_sets(
+        all_vertices, required_set, forbidden_set)
 
 
-class PedigreeMember(object):
-    def __init__(self, id, family_id, mother, father, sex, effect, label):
-        self.id = id
-        self.family_id = family_id
-        self.mother = mother
-        self.father = father
-        self.sex = sex
-        self.label = label
-
-
-class Pedigree(object):
-
-    def __init__(self, members):
-        self.members = members
-        self.family_id = members[0].family_id if len(members) > 0 else ""
-
-    def create_sandwich_instance(self):
-        id_to_individual = defaultdict(Individual)
-        id_to_mating_unit = {}
-
-        for member in self.members:
-            mother = id_to_individual[member.mother]
-            father = id_to_individual[member.father]
-
-            mating_unit_key = member.mother + "," + member.father
-            # print("key", mating_unit_key)
-            if mother != father and not (mating_unit_key in id_to_mating_unit):
-                id_to_mating_unit[mating_unit_key] = MatingUnit(mother, father)
-
-            individual = id_to_individual[member.id]
-            individual.member = member
-
-            if mother != father:
-                parental_unit = id_to_mating_unit[mating_unit_key]
-                individual.parents = parental_unit
-                parental_unit.children.individuals.add(individual)
-
-        try:
-            del id_to_individual["0"]
-        except KeyError:
-            pass
-
-        try:
-            del id_to_individual[""]
-        except KeyError:
-            pass
-
-        individuals = set(id_to_individual.values())
-        mating_units = set(id_to_mating_unit.values())
-        sibship_units = set([mu.children for mu in id_to_mating_unit.values()])
-
-        all_vertices = individuals | mating_units | sibship_units
-
-        if len(individuals) != 0:
-            individuals.__iter__().next().add_rank(0)
-            Pedigree._fix_rank(individuals)
-
-        # Ea-
-        same_rank_edges = {frozenset([i1, i2])
-                           for i1 in individuals for i2 in individuals
-                           if i1 is not i2 and i1.rank is i2.rank}
-        multiple_partners_edges = {
-            frozenset([i1, i2])
-            for i1 in individuals
-            for i2 in [m.other_parent(i1) for m in i1.mating_units]
-            if len(i1.mating_units) > 2
-        }
-        same_rank_edges -= multiple_partners_edges
-        same_rank_edges = set(map(tuple, same_rank_edges))
-
-        # Eb+
-        mating_edges = {(i, m) for i in individuals for m in mating_units
-                        if i.individual_set().issubset(m.individual_set())}
-        # Eb-
-        same_generation_not_mates = \
-            {(i, m) for i in individuals for m in mating_units
-             if i.generation_ranks() == m.generation_ranks()}
-        same_generation_not_mates = same_generation_not_mates - mating_edges
-
-        # Ec+
-        sibship_edges = {(i, s) for i in individuals for s in sibship_units
-                         if i.individual_set().issubset(s.individual_set())}
-        # Ec-
-        same_generation_not_siblings = \
-            {(i, s) for i in individuals for s in sibship_units
-             if i.parents is not None and
-                i.generation_ranks() == s.generation_ranks()}
-        same_generation_not_siblings = same_generation_not_siblings \
-            - sibship_edges
-
-        # Ed+
-        mates_siblings_edges = {(m, s) for m in mating_units
-                                for s in sibship_units
-                                if(m.children.individual_set() is
-                                    s.individual_set())}
-
-        # Ee-
-        intergenerational_edges = \
-            {(m, a) for m in mating_units for a in sibship_units | mating_units
-             if (m.generation_ranks() & a.generation_ranks() == set()) and
-             (m.individual_set() & a.individual_set() == set())}
-        intergenerational_edges -= mates_siblings_edges
-
-        required_set = mating_edges | sibship_edges | mates_siblings_edges
-        forbidden_set = same_rank_edges | same_generation_not_mates \
-            | same_generation_not_siblings | intergenerational_edges
-
-        # print("same_rank_edges", len(same_rank_edges), same_rank_edges)
-        # print("same_generation_not_mates",
-        #       len(same_generation_not_mates), same_generation_not_mates)
-        # print("same_generation_not_siblings",
-        #       len(same_generation_not_siblings), same_generation_not_siblings)
-        # print("intergenerational_edges",
-        #       len(intergenerational_edges), intergenerational_edges)
-
-        # print("all vertices", len(all_vertices), all_vertices)
-        # print("required edges", len(required_set), required_set)
-        # print("forbidden edges", len(forbidden_set), forbidden_set)
-
-        return SandwichInstance.from_sets(
-            all_vertices, required_set, forbidden_set)
-
-    @staticmethod
-    def _fix_rank(individuals):
-        max_rank = reduce(lambda acc, i: max(acc, i.rank), individuals, 0)
-        for individual in individuals:
-            individual.rank -= max_rank
-            individual.rank = -individual.rank
+def _fix_rank(individuals):
+    max_rank = reduce(lambda acc, i: max(acc, i.rank), individuals, 0)
+    for individual in individuals:
+        individual.rank -= max_rank
+        individual.rank = -individual.rank
 
 
 class IndividualGroup(object):
@@ -344,7 +305,7 @@ def main():
 
     args = parser.parse_args()
     with open(args.file, "r") as input_file:
-        pedigrees = CsvPedigreeReader().read_file(input_file)
+        pedigrees = PedigreeReader().read_file(input_file)
 
     pdf_drawer = PDFLayoutDrawer(args.output)
     layout_saver = None
