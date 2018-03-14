@@ -4,6 +4,7 @@ import os, sys
 import time, datetime
 import optparse
 import ConfigParser
+import pysam
 
 from annotate_variants import EffectAnnotator
 from add_missense_scores import MissenseScoresAnnotator
@@ -76,7 +77,7 @@ class MultiAnnotator(object):
             if k%1000 == 0:
                 sys.stderr.write(str(k) + " lines processed\n")
 
-            line = l[:-1].split("\t")
+            line = l.split("\t")
             if self.reannotate:
                 for annotator in annotators:
                     columns_to_update = [column
@@ -100,6 +101,7 @@ def get_argument_parser():
     parser.add_option('-H', help='no header in the input file', default=False,  action='store_true', dest='no_header')
     parser.add_option('-c', '--config', help='config file location', action='store')
     parser.add_option('--reannotate', help='columns in the input file to reannotate', action='store')
+    parser.add_option('--region', help='region to annotate (chr:begin-end)', action='store')
     return parser
 
 
@@ -151,11 +153,14 @@ def main():
     if infile=='-':
         variantFile = sys.stdin
     else:
-        variantFile = open(infile)
+        variantFile = pysam.TabixFile(infile)
 
     if opts.no_header == False:
-        header_str = variantFile.readline()
-        header = header_str[:-1].split('\t')
+        if infile == '-':
+            header_str = variantFile.readline()[:-1]
+        else:
+            header_str = variantFile.header.next()
+        header = header_str[1:].split('\t')
     else:
         header = None
 
@@ -168,7 +173,8 @@ def main():
         opts.reannotate = {token.strip() for token in opts.reannotate.split(',')}
 
     annotator = MultiAnnotator(opts.config, header, opts.reannotate)
-    annotator.annotate_file(variantFile, out)
+
+    annotator.annotate_file(variantFile.fetch(region=opts.region), out)
 
     if infile != '-':
         variantFile.close()

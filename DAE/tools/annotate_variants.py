@@ -4,7 +4,6 @@
 # written by Ewa
 
 import optparse
-from subprocess import call
 import re, os.path
 import GenomeAccess
 from GeneModelFiles import *
