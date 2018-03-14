@@ -5,7 +5,7 @@ import os
 
 
 class MissenseScoresDB:
-    chromosomes = range(1, 23) + ['M', 'X', 'Y']
+    chromosomes = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
     columns = {}
 
     def __init__(self):
@@ -16,11 +16,14 @@ class MissenseScoresDB:
             for i, column in enumerate(reader.next()):
                 self.columns[i] = column
 
+        self.tbxs = {chromosome: pysam.Tabixfile(self.path.format(chromosome))
+                     for chromosome in self.chromosomes}
+
     def get_field_names(self):
         return self.columns.values()
 
     def get_missense_score(self, variant):
-        tbx = pysam.Tabixfile(self.path.format(variant.chromosome))
+        tbx = self.tbxs[variant.chromosome]
         for row in tbx.fetch(variant.chromosome, variant.position - 1,
                              variant.position,  parser=pysam.asTuple()):
             try:

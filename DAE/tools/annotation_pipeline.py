@@ -6,6 +6,7 @@ import optparse
 import ConfigParser
 
 from annotate_variants import EffectAnnotator
+from add_missense_scores import MissenseScoresAnnotator
 
 ''' config
 [annotation]
@@ -19,7 +20,8 @@ steps.effects.columns=effect_type:effect type,...
 class MultiAnnotator(object):
 
     ANNOTATOR_CLASSES = {
-        'effects': EffectAnnotator
+        'effects': EffectAnnotator,
+        'missense': MissenseScoresAnnotator
     }
 
     def __init__(self, config_file, header=None, reannotate=False):
@@ -40,16 +42,17 @@ class MultiAnnotator(object):
             columns_str = self.config.get('annotation',
                 'steps.{}.columns'.format(annotation_step))
             step_columns = [tuple([token.strip() for token in column.split(':')])
-                       for column in columns_str.split(',')]
+                            for column in columns_str.split(',')]
             columns_labels.update(dict(step_columns))
+            if not reannotate and self.header is not None:
+                self.header.extend([column[1] for column in step_columns])
             self.annotators.append({
                 'instance': self.ANNOTATOR_CLASSES[annotation_step](
-                    args=args.split(' '), header=header),
+                    args=args.split(), header=self.header),
                 'columns': [column[0] for column in step_columns]
             })
-            new_columns_labels.extend([column[1] for column in step_columns])
 
-        if reannotate is not None:
+        if reannotate:
             reannotate_labels = {columns_labels[column] for column in reannotate}
             if not reannotate_labels.issubset(self.header):
                 raise ValueError('All reannotate columns should be present in the input file header!')
@@ -57,8 +60,6 @@ class MultiAnnotator(object):
                 column: self.header.index(columns_labels[column])
                 for column in reannotate
             }
-        elif header is not None:
-            self.header += new_columns_labels
 
     def annotate_file(self, input, output):
         if self.header:
