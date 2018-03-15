@@ -2,15 +2,23 @@
 import numpy as np
 import argparse
 from pedigrees.pedigree_reader import PedigreeReader
+from pedigrees.pedigrees import FamilyConnections
 from utils.tabix_csv_reader import TabixCsvDictReader
 from converters.dae2vcf import VcfVariant, vcfVarFormat, VcfVariantSample, \
     VcfWriter
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 
 def has_variant(frequency):
     return np.random.choice([False, True], p=[1-frequency, frequency])
+
+
+def affected_inherited_alleles(dad_affected_alleles, mom_affected_alleles):
+    from_dad = np.random.choice(([1] * dad_affected_alleles + [0, 0])[:2])
+    from_mom = np.random.choice(([1] * mom_affected_alleles + [0, 0])[:2])
+
+    return from_dad + from_mom
 
 
 class FamilyVariantGenerator(object):
@@ -28,7 +36,10 @@ class FamilyVariantGenerator(object):
         self.variant_column = variant_column
 
     def generate(self):
-        return self._generate_for_independent_members()
+        variants = self._generate_for_independent_members()
+        print("generated for independent members")
+        self._generate_with_mendelian_inheritance(variants)
+        return variants
 
     def _generate_for_independent_members(self):
         tabix_variants = TabixCsvDictReader(self.variants_file)
@@ -88,6 +99,64 @@ class FamilyVariantGenerator(object):
         tabix_variants.close()
         return variants
 
+    def _generate_with_mendelian_inheritance(self, variants_in_independent):
+        for family in self.families:
+            connected_family = FamilyConnections.from_pedigree(family)
+            independent_members = set(family.independent_members())
+
+            connected_family.add_ranks()
+
+            current_rank = 0
+            max_rank = connected_family.max_rank()
+
+            while current_rank <= max_rank:
+                individuals_on_level = connected_family \
+                    .get_individuals_with_rank(current_rank)
+
+                for individual in individuals_on_level:
+                    if individual.member in independent_members:
+                        continue
+                    self._mendelian_inheritance(
+                        individual, variants_in_independent
+                    )
+
+                current_rank += 1
+
+    def _mendelian_inheritance(self, individual, variants_in_independent):
+        # print("individual", individual)
+        parents = individual.parents
+
+        dad_id = parents.father.member.id
+        mom_id = parents.mother.member.id
+
+        # print(dad_id, mom_id)
+
+        for variant in variants_in_independent.values():
+            dad_affected_alleles_count = \
+                self._get_affected_alleles_count(variant, dad_id)
+            mom_affected_alleles_count = \
+                self._get_affected_alleles_count(variant, mom_id)
+
+            affected_alleles = affected_inherited_alleles(
+                dad_affected_alleles_count, mom_affected_alleles_count)
+
+            if affected_alleles != 0:
+                variant.samples[individual.member.id] = VcfVariantSample(
+                    individual.member.id,
+                    '0/1' if affected_alleles == 1 else '1/1',
+                    '0,0'
+                )
+
+    @staticmethod
+    def _get_affected_alleles_count(variant, sample):
+        result = 0
+
+        variant_sample = variant.get_sample(sample)
+        if variant_sample:
+            result = variant_sample.alternative_alleles_count()
+
+        return result
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -118,11 +187,6 @@ def main():
     writer.close()
 
     print("variants generated: {}".format(len(variants)))
-
-
-
-
-
 
 
 if __name__ == '__main__':

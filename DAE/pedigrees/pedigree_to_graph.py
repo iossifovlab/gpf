@@ -1,47 +1,19 @@
 #!/usr/bin/env python2.7
-import abc
-from collections import defaultdict
 import argparse
 import csv
-from functools import reduce
 import collections
 
 from interval_sandwich import SandwichInstance, SandwichSolver
 from layout import Layout
 from drawing import PDFLayoutDrawer, OffsetLayoutDrawer
 from pedigrees.pedigree_reader import PedigreeReader
+from pedigrees.pedigrees import FamilyConnections
 
 
-def create_sandwich_instance(self):
-    id_to_individual = defaultdict(Individual)
-    id_to_mating_unit = {}
-
-    for member in self.members:
-        mother = id_to_individual[member.mother]
-        father = id_to_individual[member.father]
-
-        mating_unit_key = member.mother + "," + member.father
-        # print("key", mating_unit_key)
-        if mother != father and not (mating_unit_key in id_to_mating_unit):
-            id_to_mating_unit[mating_unit_key] = MatingUnit(mother, father)
-
-        individual = id_to_individual[member.id]
-        individual.member = member
-
-        if mother != father:
-            parental_unit = id_to_mating_unit[mating_unit_key]
-            individual.parents = parental_unit
-            parental_unit.children.individuals.add(individual)
-
-    try:
-        del id_to_individual["0"]
-    except KeyError:
-        pass
-
-    try:
-        del id_to_individual[""]
-    except KeyError:
-        pass
+def create_sandwich_instance(family):
+    family_connections = FamilyConnections.from_pedigree(family)
+    id_to_individual = family_connections.id_to_individual
+    id_to_mating_unit = family_connections.id_to_mating_unit
 
     individuals = set(id_to_individual.values())
     mating_units = set(id_to_mating_unit.values())
@@ -49,9 +21,11 @@ def create_sandwich_instance(self):
 
     all_vertices = individuals | mating_units | sibship_units
 
-    if len(individuals) != 0:
-        individuals.__iter__().next().add_rank(0)
-        _fix_rank(individuals)
+    family_connections.add_ranks()
+
+    # if len(individuals) != 0:
+    #     individuals.__iter__().next().add_rank(0)
+    #     _fix_rank(individuals)
 
     # Ea-
     same_rank_edges = {frozenset([i1, i2])
@@ -117,123 +91,6 @@ def create_sandwich_instance(self):
 
     return SandwichInstance.from_sets(
         all_vertices, required_set, forbidden_set)
-
-
-def _fix_rank(individuals):
-    max_rank = reduce(lambda acc, i: max(acc, i.rank), individuals, 0)
-    for individual in individuals:
-        individual.rank -= max_rank
-        individual.rank = -individual.rank
-
-
-class IndividualGroup(object):
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
-    def individual_set(self):
-        return {}
-
-    def generation_ranks(self):
-        return {i.rank for i in self.individual_set()}
-
-    @abc.abstractmethod
-    def children_set(self):
-        return {}
-
-    def __repr__(self):
-        return self.__class__.__name__[0].lower() + \
-               "{" + ",".join(sorted(map(repr, self.individual_set()))) + "}"
-
-
-class Individual(IndividualGroup):
-    NO_RANK = -3673473456
-
-    def __init__(self, mating_units=None, member=None, parents=None,
-                 rank=NO_RANK):
-
-        if mating_units is None:
-            mating_units = []
-
-        self.mating_units = mating_units
-        self.member = member
-        self.parents = parents
-        self.rank = rank
-
-    def individual_set(self):
-        return {self}
-
-    def children_set(self):
-        return {c for mu in self.mating_units for c in mu.children_set()}
-
-    def add_rank(self, rank):
-        if self.rank != Individual.NO_RANK:
-            return
-
-        self.rank = rank
-
-        for mu in self.mating_units:
-            for child in mu.children.individuals:
-                child.add_rank(rank - 1)
-
-            mu.father.add_rank(rank)
-            mu.mother.add_rank(rank)
-
-        if self.parents:
-            if self.parents.father:
-                self.parents.father.add_rank(rank + 1)
-            if self.parents.mother:
-                self.parents.mother.add_rank(rank + 1)
-
-    def __repr__(self):
-        return str(self.member.id)
-
-    def are_siblings(self, other_individual):
-        return (self.parents is not None and
-                self.parents == other_individual.parents)
-
-    def are_mates(self, other_individual):
-        return len(set(self.mating_units) &
-                   set(other_individual.mating_units)) == 1
-
-
-class SibshipUnit(IndividualGroup):
-    def __init__(self, individuals=None):
-        if individuals is None:
-            individuals = set()
-
-        self.individuals = individuals
-
-    def individual_set(self):
-        return self.individuals
-
-    def children_set(self):
-        return set()
-
-
-class MatingUnit(IndividualGroup):
-
-    def __init__(self, mother, father, children=None):
-        if children is None:
-            children = SibshipUnit()
-
-        self.mother = mother
-        self.father = father
-        self.children = children
-
-        self.mother.mating_units.append(self)
-        self.father.mating_units.append(self)
-
-    def individual_set(self):
-        return {self.mother, self.father}
-
-    def children_set(self):
-        return set(self.children.individuals)
-
-    def other_parent(self, this_parent):
-        assert this_parent == self.mother or this_parent == self.father
-        if this_parent == self.mother:
-            return self.father
-        return self.mother
 
 
 class LayoutSaver(object):
@@ -315,7 +172,7 @@ def main():
             args.file, args.save_layout, args.layout_column)
 
     for family in sorted(pedigrees, key=lambda x: x.family_id):
-        sandwich_instance = family.create_sandwich_instance()
+        sandwich_instance = create_sandwich_instance(family)
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:
@@ -323,7 +180,7 @@ def main():
             print("No intervals")
         if intervals:
             individuals_intervals = filter(
-                lambda interval: isinstance(interval.vertex, Individual),
+                lambda interval: interval.vertex.is_individual(),
                 intervals
             )
             mating_units = {mu for i in individuals_intervals

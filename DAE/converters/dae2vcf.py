@@ -368,6 +368,16 @@ class VcfVariant(object):
             self.chromosome, self.position, self.reference, self.alternative,
             len(self.samples), self.samples)
 
+    def has_variant(self, sample_id):
+        return any(
+            s.sample_id == sample_id and s.genotype != '0/0'
+            for s in self.samples.values())
+
+    def get_sample(self, sample_id):
+        return next(
+            (s for s in self.samples.values() if s.sample_id == sample_id),
+            None)
+
     @staticmethod
     def get_variant_key(chromosome, position, reference, alternative):
         return "{}:{};{}:{}".format(
@@ -388,9 +398,14 @@ class VcfVariantSample(object):
             'AD': self.allele_depth
         }
 
-    # @staticmethod
-    # def samples_to_dict(samples):
-    #     return {s.sample_id: s.to_dict() for s in samples}
+    def alternative_alleles_count(self):
+        if self.genotype == '0/0':
+            return 0
+        if self.genotype == '0/1':
+            return 1
+        if self.genotype == '1/1':
+            return 2
+        raise ValueError('Unknown genotype: {}'.format(self.genotype))
 
 
 class PyVcfTemplate(object):
