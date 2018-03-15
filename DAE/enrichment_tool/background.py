@@ -272,6 +272,7 @@ class SamochaBackground(BackgroundBase):
 
         df['F'] = pd.Series(2, index=df.index)
         df['M'] = pd.Series(2, index=df.index)
+        df['U'] = pd.Series(2, index=df.index)
 
         for gene_name in df['gene']:
             gene_loc = df['gene'] == gene_name

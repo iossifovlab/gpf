@@ -169,7 +169,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                     'unaffected' not in selected_phenotypes:
                 studies = filter(
                     lambda st: not st.has_attr('study.phenotype') or
-                    st.get_attr('study.phenotype') in selected_phenotypes,
+                    bool(set(st.phenotypes) & selected_phenotypes),
                     studies
                 )
         return studies

@@ -296,6 +296,10 @@ class Variant:
         return self._memberInOrder
 
     @property
+    def children_in_order(self):
+        return [p for p in self.memberInOrder if p.is_child]
+
+    @property
     def inChS(self):
         childStr = ''
         for index, person in enumerate(self.memberInOrder):
