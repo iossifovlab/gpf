@@ -465,8 +465,8 @@ class Study:
     def gender_converter_by_name_or_value(gender_name_or_value):
         if gender_name_or_value in Gender.__members__:
             return Gender[gender_name_or_value]
-        raise ValueError('not standard gender: {}'.format(gender_name_or_value))
-        # return Gender(gender_name_or_value)
+        # raise ValueError('not standard gender: {}'.format(gender_name_or_value))
+        return Gender(int(gender_name_or_value))
 
     @staticmethod
     def role_converter(role):
