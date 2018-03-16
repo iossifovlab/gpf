@@ -17,6 +17,7 @@ type OrderedIndividuals = Array<Individual>;
 @Component({
   selector: 'gpf-pedigree-chart',
   templateUrl: './pedigree-chart.component.html',
+  styleUrls: ['./pedigree-chart.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PedigreeChartComponent implements OnInit {
@@ -28,6 +29,9 @@ export class PedigreeChartComponent implements OnInit {
   positionedIndividuals = new Array<IndividualWithPosition[]>();
   private idToPosition: Map<string, IndividualWithPosition> = new Map();
 
+  static maximized = false
+  width = 0;
+  height = 0;
 
   @Input()
   set family(data: PedigreeData[]) {
@@ -83,6 +87,14 @@ export class PedigreeChartComponent implements OnInit {
 
         this.pedigreeDataWithLayout = this.positionedIndividuals
           .reduce((acc, individuals) => acc.concat(individuals), []);
+
+        this.width = this.pedigreeDataWithLayout
+          .map(i => i.xUpperLeftCorner + i.size + 1)
+          .reduce((acc, current) => Math.max(acc, current), 0);
+
+        this.height = this.pedigreeDataWithLayout
+          .map(i => i.yUpperLeftCorner + i.size + 1)
+          .reduce((acc, current) => Math.max(acc, current), 0);
         });
   }
 

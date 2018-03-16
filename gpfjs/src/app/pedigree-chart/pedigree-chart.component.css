@@ -1,0 +1,12 @@
+.fullscreen {
+	position: absolute;
+	left: 2%;
+	margin: 0 auto;
+	max-width: 96%;
+	max-height: 96%;
+    overflow: auto;
+    background: white;
+    height: auto;
+    border: 1px solid #dddddd;
+	padding: 10px;
+}
