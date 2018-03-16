@@ -31,8 +31,13 @@ class Test(APITestCase):
         assert data['result']
 
         res = data['result'][0]
-        self.assertEquals(170, res['LGDs']['all']['count'])
-        self.assertEquals(25, res['LGDs']['rec']['count'])
+        self.assertEquals(0, res['LGDs']['all']['count'])
+        self.assertEquals(0, res['LGDs']['rec']['count'])
+
+        res = data['result'][3]
+        self.assertEquals('autism', res['selector'])
+        self.assertEquals(78, res['LGDs']['all']['count'])
+        self.assertEquals(8, res['LGDs']['rec']['count'])
 
         res = data['result'][-1]
         self.assertEquals('unaffected', res['selector'])
