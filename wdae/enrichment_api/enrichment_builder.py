@@ -33,7 +33,8 @@ class EnrichmentBuilder(object):
             person_grouping_selector)
 
         children_stats = gh.get_children_stats()
-        children_count = children_stats['M'] + children_stats['F'] + children_stats['U']
+        children_count = children_stats['M'] + \
+            children_stats['F'] + children_stats['U']
 
         if children_count <= 0:
             return None
@@ -48,7 +49,7 @@ class EnrichmentBuilder(object):
 
             results[effect_type] = enrichment_results
         results['childrenStats'] = gh.get_children_stats()
-        results['selector'] = person_grouping_selector
+        # results['selector'] = person_grouping_selector
         results['geneSymbols'] = list(self.gene_syms)
         results['personGroupingId'] = person_grouping
         results['personGroupingValue'] = person_grouping_selector
@@ -69,6 +70,8 @@ class EnrichmentBuilder(object):
                 person_grouping_id,
                 person_grouping_selector['id'])
             if res:
+                res['personGroupingValue'] = person_grouping_selector['name']
+                res['selector'] = person_grouping_selector['name']
                 results.append(res)
         self.results = results
         return self.results
