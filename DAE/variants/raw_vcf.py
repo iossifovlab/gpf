@@ -56,9 +56,16 @@ class RawFamilyVariants(FamiliesBase):
         assert samples_needed.issubset(pedigree_samples)
 
         pedigree = []
+        seen = set()
         for record in ped_df.to_dict(orient='record'):
             if record['sampleId'] in samples_needed:
+                if record['sampleId'] in seen:
+                    print("double:", record['sampleId'], record)
+                    continue
                 pedigree.append(record)
+                seen.add(record['sampleId'])
+                
+        print(len(pedigree), len(samples_needed))
         assert len(pedigree) == len(samples_needed)
 
         pedigree_order = list(ped_df['sampleId'].values)
