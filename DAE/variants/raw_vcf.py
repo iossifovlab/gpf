@@ -36,7 +36,7 @@ def parse_gene_effect(effect):
 
 class RawFamilyVariants(FamiliesBase):
 
-    def __init__(self, config=None, prefix=None, annotator=None):
+    def __init__(self, config=None, prefix=None, annotator=None, region=None):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix(prefix)
@@ -44,7 +44,7 @@ class RawFamilyVariants(FamiliesBase):
         assert self.config is not None
         assert isinstance(self.config, Configure)
 
-        self._load(annotator)
+        self._load(annotator, region)
 
     def _match_pedigree_to_samples(self, ped_df, samples):
         samples_needed = set(samples)
@@ -64,7 +64,7 @@ class RawFamilyVariants(FamiliesBase):
                     continue
                 pedigree.append(record)
                 seen.add(record['sampleId'])
-                
+
         print(len(pedigree), len(samples_needed))
         assert len(pedigree) == len(samples_needed)
 
@@ -75,11 +75,11 @@ class RawFamilyVariants(FamiliesBase):
         ped_df = pd.DataFrame(pedigree)
         return ped_df, ped_df['sampleId'].values
 
-    def _load(self, annotator):
+    def _load(self, annotator, region):
         loader = RawVariantsLoader(self.config)
         self.ped_df = loader.load_pedigree()
 
-        self.vcf = loader.load_vcf()
+        self.vcf = loader.load_vcf(region)
 
         self.ped_df, self.samples = self._match_pedigree_to_samples(
             self.ped_df, self.vcf.samples)

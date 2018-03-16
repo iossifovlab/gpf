@@ -141,7 +141,7 @@ class FamilyVariant(VariantBase):
 
         if len(FamilyVariant.calc_alt_alleles(gt)) > 1:
             print(
-                "multiple alternative alleles in {}: family: {}, gt: {})"
+                "WARN: multiple alternative alleles in {}: family: {}, gt: {})"
                 .format(sv, family.family_id, mat2str(gt)), file=sys.stderr)
             return None
         alt_index = FamilyVariant.calc_alt_allele_index(gt)

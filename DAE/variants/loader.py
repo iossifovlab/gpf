@@ -18,11 +18,12 @@ from variants.variant import VariantBase
 
 class VCFWrapper(object):
 
-    def __init__(self, filename):
+    def __init__(self, filename, region=None):
         self.vcf_file = filename
-        self.vcf = VCF(filename)
+        self.vcf = VCF(filename, lazy=True)
         self._samples = None
         self._vars = None
+        self.region = region
 
     @property
     def samples(self):
@@ -33,7 +34,10 @@ class VCFWrapper(object):
     @property
     def vars(self):
         if self._vars is None:
-            self._vars = list(self.vcf)
+            if self.region:
+                self._vars = list(self.vcf(self.region))
+            else:
+                self._vars = list(self.vcf)
         return self._vars
 
 
@@ -170,11 +174,11 @@ class RawVariantsLoader(object):
         ped_df = ped_df.drop(axis=1, columns=['role_order'])
         return ped_df
 
-    def load_vcf(self):
+    def load_vcf(self, region=None):
         assert self.config.vcf
         assert os.path.exists(self.config.vcf)
 
-        return VCFWrapper(self.config.vcf)
+        return VCFWrapper(self.config.vcf, region)
 
 
 @jit

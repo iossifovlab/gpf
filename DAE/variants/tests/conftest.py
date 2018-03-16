@@ -124,6 +124,14 @@ def nvcf19_config():
 
 
 @pytest.fixture(scope='session')
+def vcf19_config():
+    from variants.default_settings import DATA_DIR
+    prefix = os.path.join(DATA_DIR, "spark/spark")
+    config = Configure.from_prefix(prefix)
+    return config
+
+
+@pytest.fixture(scope='session')
 def nvcf19(nvcf19_config, composite_annotator):
     fvariants = RawFamilyVariants(nvcf19_config, annotator=composite_annotator)
     return fvariants

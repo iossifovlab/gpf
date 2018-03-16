@@ -47,9 +47,13 @@ class Configure(ConfigBox):
 
     @staticmethod
     def from_prefix(prefix):
+        vcf_filename = '{}.vcf'.format(prefix)
+        if not os.path.exists(vcf_filename):
+            vcf_filename = '{}.vcf.gz'.format(prefix)
+
         conf = {
             'pedigree': '{}.ped'.format(prefix),
-            'vcf': '{}.vcf'.format(prefix),
+            'vcf': vcf_filename,
             'annotation': '{}-eff.txt'.format(prefix),
         }
         return Configure(conf)
