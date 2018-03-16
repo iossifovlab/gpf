@@ -29,7 +29,7 @@ export class PedigreeChartComponent implements OnInit {
   positionedIndividuals = new Array<IndividualWithPosition[]>();
   private idToPosition: Map<string, IndividualWithPosition> = new Map();
 
-  static maximized = false
+  maximized = false
   width = 0;
   height = 0;
 
@@ -130,11 +130,16 @@ export class PedigreeChartComponent implements OnInit {
           acc.push([person]);
         }
         return acc;
-      }, [])
+      }, [] as IndividualWithPosition[][])
       .sort((arr1, arr2) => arr1[0].yCenter - arr2[0].yCenter);
+    
+      // for (let line of individuals) {
+      //   line = line.sort((i1, i2) => i1.xCenter - i2.xCenter);
+      // }
 
 
-    return individuals;
+    return individuals
+      .map(line => line.sort((i1, i2) => i1.xCenter - i2.xCenter));
   }
 
   getIndividualsByRank(individuals: IntervalForVertex<Individual>[]) {
@@ -547,6 +552,9 @@ export class PedigreeChartComponent implements OnInit {
 
     for (let i = 0; i < individuals.length; i++) {
       let current = individuals[i];
+      if (!current.individual.parents) {
+        continue;
+      }
       for (let j = individuals.length - 1; j > i; j--) {
         let other = individuals[j];
         if (current.individual.areSiblings(other.individual)) {
