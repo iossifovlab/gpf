@@ -33,7 +33,7 @@ class EnrichmentBuilder(object):
             person_grouping_selector)
 
         children_stats = gh.get_children_stats()
-        children_count = children_stats['M'] + children_stats['F']
+        children_count = children_stats['M'] + children_stats['F'] + children_stats['U']
 
         if children_count <= 0:
             return None
