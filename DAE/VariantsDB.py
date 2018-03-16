@@ -135,6 +135,11 @@ class Study:
         if self.has_attr(attName):
             return self.vdb._config.get(self._configSection, attName)
 
+    def types(self):
+        if self.has_attr('study.type'):
+            return self.get_attr('study.type').split(',')
+        return []
+
     def _get_transmitted_impl(self, callSet):
         if callSet not in self.transmission_impl:
             conf = TransmissionConfig(self, callSet)
@@ -921,7 +926,15 @@ class VariantsDB:
         seenVs = set()
         if isinstance(studies, str):
             studies = self.get_studies(studies)
-        for study in filter(lambda st: st.has_denovo, studies):
+        denovo_studies = filter(lambda st: st.has_denovo, studies)
+        if 'studyTypes' in filters:
+            studyTypes = filters['studyTypes']
+            studyTypes = {studyTypes} if type(studyTypes) == str else set(studyTypes)
+            denovo_studies = filter(
+                lambda st: not studyTypes.isdisjoint(st.types()),
+                denovo_studies)
+            del filters['studyTypes']
+        for study in denovo_studies:
             for v in study.get_denovo_variants(**filters):
                 vKey = v.familyId + v.location + v.variant
                 if vKey in seenVs:
