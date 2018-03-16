@@ -125,16 +125,19 @@ class CounterBase(object):
             'all': EnrichmentResult('all'),
             'rec': EnrichmentResult('rec'),
             'male': EnrichmentResult('male'),
-            'female': EnrichmentResult('female')
+            'female': EnrichmentResult('female'),
+            'unspecified': EnrichmentResult('unspecified'),
         }
 
     def _set_result_events(self, all_events, rec_events,
-                           male_events, female_events):
+                           male_events, female_events,
+                           unspecified_events):
         result = self._create_event_result()
         result['all'].events = all_events
         result['rec'].events = rec_events
         result['male'].events = male_events
         result['female'].events = female_events
+        result['unspecified'].events = unspecified_events
         return result
 
 
@@ -147,6 +150,7 @@ class EventsCounter(CounterBase):
     def events(self, variants):
         male_variants = [v for v in variants if v.inChS[3] == 'M']
         female_variants = [v for v in variants if v.inChS[3] == 'F']
+        unspecified_variants = [v for v in variants if v.inChS[3] == 'U']
 
         all_events = filter_denovo_one_event_per_family(
             variants)
@@ -156,10 +160,12 @@ class EventsCounter(CounterBase):
             male_variants)
         female_events = filter_denovo_one_event_per_family(
             female_variants)
+        unspecified_events = filter_denovo_one_event_per_family(
+            unspecified_variants)
 
         result = self._set_result_events(
             all_events, rec_events,
-            male_events, female_events)
+            male_events, female_events, unspecified_events)
         return result
 
 
@@ -172,12 +178,16 @@ class GeneEventsCounter(CounterBase):
     def events(self, variants):
         male_variants = [v for v in variants if v.inChS[3] == 'M']
         female_variants = [v for v in variants if v.inChS[3] == 'F']
+        unspecified_variants = [v for v in variants if v.inChS[3] == 'U']
 
         all_events = filter_denovo_one_gene_per_events(variants)
         rec_events = filter_denovo_one_gene_per_recurrent_events(variants)
         male_events = filter_denovo_one_gene_per_events(male_variants)
         female_events = filter_denovo_one_gene_per_events(female_variants)
+        unspecified_events = filter_denovo_one_gene_per_events(
+            unspecified_variants)
 
         result = self._set_result_events(
-            all_events, rec_events, male_events, female_events)
+            all_events, rec_events, male_events, female_events,
+            unspecified_events)
         return result

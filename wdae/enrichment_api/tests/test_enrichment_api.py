@@ -3,13 +3,45 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
-
+from __future__ import print_function
 
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 
 class Test(APITestCase):
+
+    def test_gene_set_denovo_main_autism_candidates_denovo_db(self):
+        data = {
+            'datasetId': 'denovo_db',
+            'enrichmentBackgroundModel': 'synonymousBackgroundModel',
+            'enrichmentCountingModel': 'enrichmentGeneCounting',
+            'geneSet': {
+                'geneSetsCollection': 'main',
+                'geneSet': 'autism candidates from Iossifov PNAS 2015',
+            }
+        }
+        url = '/api/v3/enrichment/test'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        data = response.data
+
+        print(data['result'])
+        assert data['result']
+
+        res = data['result'][0]
+        self.assertEquals(0, res['LGDs']['all']['count'])
+        self.assertEquals(0, res['LGDs']['rec']['count'])
+
+        res = data['result'][3]
+        self.assertEquals('autism', res['selector'])
+        self.assertEquals(78, res['LGDs']['all']['count'])
+        self.assertEquals(8, res['LGDs']['rec']['count'])
+
+        res = data['result'][-1]
+        self.assertEquals('unaffected', res['selector'])
+        self.assertEquals(19, res['LGDs']['all']['count'])
 
     def test_bad_request(self):
         data = {
