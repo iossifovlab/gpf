@@ -147,6 +147,16 @@ def vcf19r(vcf19_config, composite_annotator):
     return builder
 
 
+@pytest.fixture(scope='session')
+def sample_vcf(composite_annotator):
+    def builder(path):
+        a_data = relative_to_this_test_folder(path)
+        a_conf = Configure.from_prefix(a_data)
+        fvars = RawFamilyVariants(a_conf, annotator=composite_annotator)
+        return fvars
+    return builder
+
+
 PED1 = """
 # SIMPLE TRIO
 familyId,    personId,    dadId,    momId,    sex,   status,    role
@@ -231,3 +241,10 @@ def fv3(sv, fam3):
     def rfun(gt):
         return FamilyVariant.from_summary_variant(sv, fam3, gt=gt)
     return rfun
+
+
+def relative_to_this_test_folder(path):
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        path
+    )

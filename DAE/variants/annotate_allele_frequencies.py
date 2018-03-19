@@ -44,7 +44,6 @@ class VcfAlleleFrequencyAnnotator(AnnotatorBase):
 
         unknown = np.any(gt == -1, axis=0)
         gt = gt[:, np.logical_not(unknown)]
-        print(np.sum(gt))
 
         n_parents_called = gt.shape[1]
         percent_parents_called = (

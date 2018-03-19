@@ -1,0 +1,31 @@
+'''
+Created on Mar 19, 2018
+
+@author: lubo
+'''
+from __future__ import print_function
+
+# from variants.tests.conftest import relative_to_this_test_folder
+# from variants.configure import Configure
+# from icecream import ic
+# from variants.raw_vcf import RawFamilyVariants
+from variants.vcf_utils import mat2str
+
+
+# def test_with_fixture_vcf_file(composite_annotator):
+#     a_data = relative_to_this_test_folder("fixtures/a")
+#     a_conf = Configure.from_prefix(a_data)
+#     ic(a_conf)
+#
+#     fvars = RawFamilyVariants(a_conf, annotator=composite_annotator)
+#     vs = fvars.query_variants()
+#
+#     for v in vs:
+#         print(v, v.family_id, mat2str(v.best_st), mat2str(v.gt),
+#               v.inheritance)
+
+
+def test_members_in_family_order_genotype(sample_vcf):
+    fvars = sample_vcf("fixtures/b")
+    for v in fvars.query_variants():
+        print(v, mat2str(v.best_st), mat2str(v.gt), v.inheritance)
