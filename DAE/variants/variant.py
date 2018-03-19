@@ -178,6 +178,30 @@ class FamilyVariant(VariantBase):
             return alt_index - 1
 
     @property
+    def best_st(self):
+        if self._best_st is None:
+            ref = (2 * np.ones(len(self.family), dtype=np.int8))
+            unknown = np.any(self.gt == -1, axis=0)
+            alt_alleles = FamilyVariant.calc_alt_alleles(self.gt)
+            assert len(alt_alleles) <= 1
+
+            if not alt_alleles:
+                alt = np.zeros(len(self.family))
+            else:
+                anum = next(iter(alt_alleles))
+                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+                alt_gt[self.gt == anum] = 1
+
+                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                ref = ref - alt
+
+            best = [ref, alt]
+            self._best_st = np.stack(best, axis=0)
+            self._best_st[:, unknown] = -1
+
+        return self._best_st
+
+    @property
     def location(self):
         return "{}:{}".format(self.chromosome, self.position)
 
@@ -224,27 +248,6 @@ class FamilyVariant(VariantBase):
             row['chr'], row['position'], row['refA'], row['altA'])
         v.set_summary(row)
         return v
-
-    @property
-    def best_st(self):
-        if self._best_st is None:
-            ref = (2 * np.ones(len(self.family), dtype=np.int8))
-            alt_alleles = []
-            unknown = np.any(self.gt == -1, axis=0)
-
-            for anum in range(1, len(self.alt) + 1):
-                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                alt_gt[self.gt == anum] = 1
-
-                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-                ref = ref - alt
-                alt_alleles.append(alt)
-            best = [ref]
-            best.extend(alt_alleles)
-            self._best_st = np.stack(best, axis=0)
-            self._best_st[:, unknown] = -1
-
-        return self._best_st
 
     @staticmethod
     def check_mendelian_trio(p1, p2, ch):

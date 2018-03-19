@@ -17,6 +17,7 @@ def test_trios_multi_single_allele1(sample_vcf):
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
         assert v.inheritance == Inheritance.mendelian
+        assert v.best_st.shape == (2, 3)
 
 
 def test_trios_multi_single_allele2(sample_vcf):
@@ -26,6 +27,7 @@ def test_trios_multi_single_allele2(sample_vcf):
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
         assert v.inheritance == Inheritance.mendelian
+        assert v.best_st.shape == (2, 3)
 
 
 def test_trios_multi_all_reference(sample_vcf):
@@ -35,6 +37,7 @@ def test_trios_multi_all_reference(sample_vcf):
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
         assert v.inheritance == Inheritance.reference
+        assert v.best_st.shape == (2, 3)
 
 
 def test_trios_multi_unknown(sample_vcf):
@@ -44,6 +47,7 @@ def test_trios_multi_unknown(sample_vcf):
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
         assert v.inheritance == Inheritance.unknown
+        assert v.best_st.shape == (2, 3)
 
 
 def test_trios_multi_multi(sample_vcf):
@@ -53,6 +57,7 @@ def test_trios_multi_multi(sample_vcf):
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
         assert v.inheritance == Inheritance.unknown
+        assert v.best_st.shape == (2, 3)
 
 
 def test_trios_multi_multi3(sample_vcf):
@@ -62,6 +67,7 @@ def test_trios_multi_multi3(sample_vcf):
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
         assert v.inheritance == Inheritance.unknown
+        assert v.best_st.shape == (2, 3)
 
     fvars = sample_vcf("fixtures/trios_multi")
     vs = list(fvars.query_variants(regions=[Region('1', 11506, 11506)]))
@@ -69,3 +75,4 @@ def test_trios_multi_multi3(sample_vcf):
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
         assert v.inheritance == Inheritance.unknown
+        assert v.best_st.shape == (2, 3)
