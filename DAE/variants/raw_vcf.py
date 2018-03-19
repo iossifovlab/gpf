@@ -65,7 +65,6 @@ class RawFamilyVariants(FamiliesBase):
                 pedigree.append(record)
                 seen.add(record['sampleId'])
 
-        print(len(pedigree), len(samples_needed))
         assert len(pedigree) == len(samples_needed)
 
         pedigree_order = list(ped_df['sampleId'].values)
