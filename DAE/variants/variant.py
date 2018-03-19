@@ -5,10 +5,11 @@ Created on Feb 13, 2018
 '''
 from __future__ import print_function
 
+# from icecream import ic
+
 import numpy as np
 from variants.attributes import Inheritance
-from variants.vcf_utils import mat2str, vcf2cshl
-import sys
+from variants.vcf_utils import vcf2cshl
 
 
 class VariantBase(object):
@@ -139,14 +140,23 @@ class FamilyVariant(VariantBase):
             gt = vcf.gt_idxs[family.alleles]
             gt = gt.reshape([2, len(family)], order='F')
 
-        if len(FamilyVariant.calc_alt_alleles(gt)) > 1:
-            print(
-                "WARN: multiple alternative alleles in {}: family: {}, gt: {})"
-                .format(sv, family.family_id, mat2str(gt)), file=sys.stderr)
-            return []
         alt_index = FamilyVariant.calc_alt_allele_index(gt)
+        alt_alleles = FamilyVariant.calc_alt_alleles(gt)
+
         if alt_index is not None:
             return [FamilyVariant(sv, family, gt, alt_index)]
+        elif len(alt_alleles) > 1:
+            res = []
+            for alt in sorted(alt_alleles):
+                a_gt = np.copy(gt)
+                mask = np.logical_not(
+                    np.logical_or(
+                        a_gt == 0,
+                        a_gt == alt
+                    ))
+                a_gt[mask] = -1
+                res.append(FamilyVariant(sv, family, a_gt, alt - 1))
+            return res
         else:
             res = []
             for alt_index in range(len(sv.alt)):

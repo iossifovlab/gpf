@@ -56,7 +56,7 @@ def test_non_mendelian(ustudy):
     for v in vs:
         if not v.is_mendelian():
             count += 1
-    assert count == 138
+    assert count == 142
 
 
 def test_empty_query(ustudy):

@@ -83,7 +83,7 @@ def test_query_genes_3(ustudy):
     vs = ustudy.query_variants(genes=genes)
     assert vs is not None
     vl = list(vs)
-    assert len(vl) == 111
+    assert len(vl) == 113
 
 
 def test_query_persons(ustudy):
@@ -110,11 +110,11 @@ def test_query_persons_all(ustudy):
         person_ids=['AU1921202'])
     assert vs is not None
     vl = list(vs)
-    assert len(vl) == 360
+    assert len(vl) == 362
 
     vs = ustudy.query_variants(
         person_ids=['AU1921202', 'AU1921211'])
-    assert len(list(vs)) == 432
+    assert len(list(vs)) == 436
 
 
 def test_query_persons_combined(ustudy):

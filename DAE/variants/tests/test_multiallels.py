@@ -53,4 +53,4 @@ def test_query_regions(ustudy):
     vl = list(vs)
     for v in vl:
         print(v, mat2str(v.gt), mat2str(v.best_st))
-    assert len(vl) == 1
+    assert len(vl) == 3
