@@ -28,6 +28,7 @@ class VcfFamily(Family):
 
     def __init__(self, family_id, ped_df):
         super(VcfFamily, self).__init__(family_id, ped_df)
+        assert 'sampleIndex' in ped_df.columns
 
         self.samples = self.ped_df['sampleIndex'].values
         self.alleles = samples_to_alleles_index(self.samples)
@@ -35,7 +36,7 @@ class VcfFamily(Family):
     def vcf_samples_index(self, person_ids):
         return self.ped_df[
             self.ped_df['personId'].isin(set(person_ids))
-        ].index.values
+        ]['sampleIndex'].values
 
     def vcf_alleles_index(self, person_ids):
         p = self.vcf_samples_index(person_ids)

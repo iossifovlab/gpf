@@ -31,7 +31,7 @@ class VcfAlleleFrequencyAnnotator(AnnotatorBase):
 
         self.independent = self.family_variants.persons_without_parents()
         self.independent_index = \
-            np.array(self.family_variants.persons_index(self.independent))
+            np.array(self.family_variants.persons_samples(self.independent))
 
         self.n_independent_parents = len(self.independent)
 

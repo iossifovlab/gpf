@@ -6,18 +6,18 @@ Created on Mar 12, 2018
 from __future__ import print_function
 
 from RegionOperations import Region
-from variants.vcf_utils import mat2str, VcfFamily
-from variants.family import FamiliesBase
+from variants.vcf_utils import mat2str
+from variants.family import FamiliesBase, Family
 from variants.loader import RawVariantsLoader
 import StringIO
 from variants.attributes import Role
 
 
 '''
-2235 1:908193(908193) sub(T->G) SF0043014 212/010 000/010 intron PLEKHN1:intron denovo 0 0.0
-2236 1:908193(908193) sub(T->G) SF0033119 212/010 000/010 intron PLEKHN1:intron denovo 0 0.0
-2237 1:908193(908193) sub(T->G) SF0014912 122/100 000/100 intron PLEKHN1:intron denovo 0 0.0
-2238 1:908193(908193) sub(T->G) SF0042658 212/010 000/010 intron PLEKHN1:intron denovo 0 0.0
+2235 1:908193(908193) sub(T->G) SF0043014 212/010 000/010 denovo 0 0.0
+2236 1:908193(908193) sub(T->G) SF0033119 212/010 000/010 denovo 0 0.0
+2237 1:908193(908193) sub(T->G) SF0014912 122/100 000/100 denovo 0 0.0
+2238 1:908193(908193) sub(T->G) SF0042658 212/010 000/010 denovo 0 0.0
 '''
 
 
@@ -62,7 +62,7 @@ def test_pedigree_keep_family_order_local():
     ped_df = RawVariantsLoader.load_pedigree_file(
         StringIO.StringIO(PED_FILE1), sep=",")
     families = FamiliesBase(ped_df)
-    families.families_build(ped_df, family_class=VcfFamily)
+    families.families_build(ped_df, family_class=Family)
 
     f = families.families['SF0043014']
     print(f.members_in_order)

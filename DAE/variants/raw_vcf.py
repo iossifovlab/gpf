@@ -61,7 +61,6 @@ class RawFamilyVariants(FamiliesBase):
         for record in ped_df.to_dict(orient='record'):
             if record['sampleId'] in samples_needed:
                 if record['sampleId'] in seen:
-                    print("double:", record['sampleId'], record)
                     continue
                 record['sampleIndex'] = samples.index(record['sampleId'])
                 pedigree.append(record)
@@ -105,6 +104,9 @@ class RawFamilyVariants(FamiliesBase):
         assert len(self.annot_df) == len(self.vcf_vars)
         assert np.all(self.annot_df.index.values ==
                       np.arange(len(self.annot_df)))
+
+    def persons_samples(self, persons):
+        return sorted([p.get_attr('sampleIndex') for p in persons])
 
     def filter_regions(self, v, regions):
         for reg in regions:

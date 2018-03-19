@@ -39,6 +39,9 @@ class Person(object):
     def has_parent(self):
         return self.has_dad() or self.has_mom()
 
+    def get_attr(self, item):
+        return self.atts.get(item)
+
 
 class Family(object):
 
