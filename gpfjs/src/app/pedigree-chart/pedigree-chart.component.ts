@@ -1,6 +1,6 @@
 import { Input, Component, OnInit, ChangeDetectionStrategy, HostListener,  AfterViewInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { difference } from '../utils/sets-helper';
 
 import { IntervalForVertex } from '../utils/interval-sandwich';
@@ -30,6 +30,8 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
   positionedIndividuals = new Array<IndividualWithPosition[]>();
   private idToPosition: Map<string, IndividualWithPosition> = new Map();
 
+  static miximizedChart = new Subject<PedigreeChartComponent>();
+
   maximized = false;
   width = 0;
   height = 0;
@@ -52,7 +54,16 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
     private changeDetectorRef: ChangeDetectorRef
   ) { }
 
+  private maximizeSubscription: Subscription;
+
   ngOnInit() {
+    this.maximizeSubscription = PedigreeChartComponent.miximizedChart
+      .subscribe(chart => {
+        if (chart != this && this.maximized) {
+          this.maximized = false;
+          this.changeDetectorRef.markForCheck();
+        }
+      });
     this.pedigreeDataWithLayout = [];
     this.lines = [];
 
@@ -108,6 +119,13 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
         this.scaleSvg();
   }
 
+  ngOnDestroy() {
+    if (this.maximizeSubscription) {
+      this.maximizeSubscription.unsubscribe();
+      this.maximizeSubscription = null;
+    }
+  }
+
   ngAfterViewInit() {
     // console.log(this.element);
     this.resizeService.addResizeEventListener(this.element.nativeElement, (elem) => {
@@ -139,6 +157,15 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
     }
 
     this.changeDetectorRef.markForCheck();
+  }
+
+  toggleMaximize() {
+    if (!this.maximized) {
+      this.maximized = true;
+      PedigreeChartComponent.miximizedChart.next(this);
+    } else {
+      this.maximized = false;
+    }
   }
 
   getScaleString() {
