@@ -12,7 +12,7 @@ from django.http.response import StreamingHttpResponse
 import json
 from pheno.common import Role, Gender
 import logging
-
+from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +112,7 @@ class PhenoToolView(APIView):
                 " + ".join(normalize_by)
             )
 
+    @expand_gene_set
     def post(self, request):
         data = request.data
         try:
@@ -161,6 +162,7 @@ class PhenoToolDownload(PhenoToolView):
         result.fillna(0, inplace=True)
         return result
 
+    @expand_gene_set
     def post(self, request):
         data = self._parse_query_params(request.data)
         effectTypes = data['effectTypes']

@@ -7,7 +7,6 @@ from DAE import pheno, vDB
 import itertools
 from query_variants import generate_response
 from common.query_base import QueryBase, GeneSymsMixin
-from gene.gene_set_collections import GeneSetsCollections
 from gene.weights import WeightsLoader
 from datasets.family_pheno_base import FamilyPhenoQueryMixin
 from pheno.pheno_regression import PhenoRegression
@@ -20,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 class Dataset(QueryBase, FamilyPhenoQueryMixin):
     GENE_WEIGHTS_LOADER = None
-    GENE_SETS_LOADER = None
 
     def __init__(self, dataset_descriptor):
         self.descriptor = dataset_descriptor
@@ -179,20 +177,6 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return self._filter_studies(studies, safe, **kwargs)
 
     @classmethod
-    def get_gene_set(cls, **kwargs):
-        gene_sets_collection, gene_set, gene_sets_types = \
-            GeneSymsMixin.get_gene_set_query(**kwargs)
-        if not gene_sets_collection or not gene_set:
-            return set([])
-        if gene_sets_types is None:
-            gene_sets_types = []
-        if cls.GENE_SETS_LOADER is None:
-            cls.GENE_SETS_LOADER = GeneSetsCollections()
-        genes = cls.GENE_SETS_LOADER.get_gene_set(
-            gene_sets_collection, gene_set, gene_sets_types)
-        return genes['syms']
-
-    @classmethod
     def get_gene_weights(cls, **kwargs):
         weights_id, range_start, range_end = \
             GeneSymsMixin.get_gene_weights_query(**kwargs)
@@ -212,8 +196,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
     @classmethod
     def get_gene_syms(cls, **kwargs):
         result = cls.get_gene_symbols(**kwargs) | \
-            cls.get_gene_weights(**kwargs) | \
-            cls.get_gene_set(**kwargs)
+            cls.get_gene_weights(**kwargs)
         if result:
             return result
         else:
