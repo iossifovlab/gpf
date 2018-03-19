@@ -10,6 +10,7 @@ from __future__ import print_function
 # from icecream import ic
 # from variants.raw_vcf import RawFamilyVariants
 from variants.vcf_utils import mat2str
+from variants.attributes import Role
 
 
 # def test_with_fixture_vcf_file(composite_annotator):
@@ -26,6 +27,8 @@ from variants.vcf_utils import mat2str
 
 
 def test_members_in_family_order_genotype(sample_vcf):
-    fvars = sample_vcf("fixtures/b")
+    fvars = sample_vcf("fixtures/members_in_order1")
     for v in fvars.query_variants():
         print(v, mat2str(v.best_st), mat2str(v.gt), v.inheritance)
+        assert 'gpa' in v.variant_in_members
+        assert Role.paternal_grandfather in v.variant_in_roles

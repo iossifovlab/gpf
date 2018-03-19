@@ -29,7 +29,7 @@ class VcfFamily(Family):
     def __init__(self, family_id, ped_df):
         super(VcfFamily, self).__init__(family_id, ped_df)
 
-        self.samples = self.ped_df.index.values
+        self.samples = self.ped_df['sampleIndex'].values
         self.alleles = samples_to_alleles_index(self.samples)
 
     def vcf_samples_index(self, person_ids):

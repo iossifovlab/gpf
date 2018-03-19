@@ -47,6 +47,7 @@ class RawFamilyVariants(FamiliesBase):
         self._load(annotator, region)
 
     def _match_pedigree_to_samples(self, ped_df, samples):
+        samples = list(samples)
         samples_needed = set(samples)
         pedigree_samples = set(ped_df['sampleId'].values)
         missing_samples = samples_needed.difference(pedigree_samples)
@@ -62,6 +63,7 @@ class RawFamilyVariants(FamiliesBase):
                 if record['sampleId'] in seen:
                     print("double:", record['sampleId'], record)
                     continue
+                record['sampleIndex'] = samples.index(record['sampleId'])
                 pedigree.append(record)
                 seen.add(record['sampleId'])
 
