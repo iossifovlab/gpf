@@ -42,6 +42,17 @@ def composite_annotator(effect_annotator, allele_freq_annotator):
 
 
 @pytest.fixture
+def temp_dirname(request):
+    dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
+
+    def fin():
+        shutil.rmtree(dirname)
+
+    request.addfinalizer(fin)
+    return dirname
+
+
+@pytest.fixture
 def temp_filename(request):
     dirname = tempfile.mkdtemp(suffix='_eff', prefix='variants_')
 

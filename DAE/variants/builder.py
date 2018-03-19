@@ -1,0 +1,56 @@
+'''
+Created on Mar 19, 2018
+
+@author: lubo
+'''
+import os
+
+from variants.configure import Configure
+from variants.raw_vcf import RawFamilyVariants
+from GeneModelFiles import load_gene_models
+from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
+from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
+from variants.annotate_composite import AnnotatorComposite
+from variants.loader import RawVariantsLoader
+
+
+def load_genome(genome_file=None):
+    if genome_file is not None:
+        assert os.path.exists(genome_file)
+        from GenomeAccess import openRef
+        return openRef(genome_file)
+    else:
+        from DAE import genomesDB
+        return genomesDB.get_genome()  # @UndefinedVariable
+
+
+def load_gene_models(gene_models_file=None):
+    if gene_models_file is not None:
+        assert os.path.exists(gene_models_file)
+        return load_gene_models(gene_models_file)
+    else:
+        from DAE import genomesDB
+        return genomesDB.get_gene_models()  # @UndefinedVariable
+
+
+def variants_builder(prefix, genome_file=None, gene_models_file=None):
+    conf = Configure.from_prefix(prefix)
+    if os.path.exists(conf.annotation):
+        fvars = RawFamilyVariants(conf)
+        return fvars
+
+    genome = load_genome(genome_file)
+    gene_models = load_gene_models(gene_models_file)
+
+    effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
+    freq_annotator = VcfAlleleFrequencyAnnotator()
+
+    annotator = AnnotatorComposite(annotators=[
+        effect_annotator,
+        freq_annotator
+    ])
+
+    fvars = RawFamilyVariants(conf, annotator=annotator)
+    RawVariantsLoader.save_annotation_file(fvars.annot_df, conf.annotation)
+
+    return fvars
