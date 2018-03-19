@@ -8,7 +8,6 @@ from __future__ import print_function
 import numpy as np
 from variants.family import Family
 from itertools import izip
-import sys
 
 
 def samples_to_alleles_index(samples):
@@ -72,8 +71,8 @@ def trim_str(pos, ref, alt):
 def cshl_format(pos, ref, alt):
     p, r, a = trim_str(pos, ref, alt)
     if len(r) == len(a) and len(r) == 0:
-        print('ref {:s} is the same as alt {:s}'.format(
-            ref, alt), file=sys.stderr)
+        # print('ref {:s} is the same as alt {:s}'.format(
+        #     ref, alt), file=sys.stderr)
         return p, 'complex(' + r + '->' + a + ')', 0
 
     if len(r) == len(a) and len(r) == 1:

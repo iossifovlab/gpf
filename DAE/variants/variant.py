@@ -96,7 +96,10 @@ class FamilyVariant(VariantBase):
             summary_variant.chromosome,
             summary_variant.start,
             summary_variant.reference,
-            summary_variant.alt)
+            summary_variant.alt[alt_index])
+
+        self.summary = summary_variant
+        self.alt_index = alt_index
 
         self.family = family
         self.gt = gt
@@ -204,6 +207,21 @@ class FamilyVariant(VariantBase):
     @property
     def location(self):
         return "{}:{}".format(self.chromosome, self.position)
+
+    @property
+    def variant_type(self):
+        vt = self.variant[0]
+        if vt == 's':
+            return 'sub'
+        elif vt == 'i':
+            return 'ins'
+        elif vt == 'd':
+            return 'del'
+        elif vt == 'c':
+            return 'complex'
+        else:
+            raise ValueError("unexpected variant type: {}".format(
+                self.variant))
 
     @property
     def members_in_order(self):

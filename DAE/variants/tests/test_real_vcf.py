@@ -24,16 +24,19 @@ def test_nvcf_all_variants(nvcf):
     assert nvcf is not None
 
     for v in nvcf.query_variants():
-        print(v, v.family_id, mat2str(v.best_st), v.inheritance)
+        print(v, v.family_id, mat2str(v.best_st),
+              v.inheritance, v.variant_type)
 
 
 @pytest.mark.slow
 def test_uvcf_all_variants(uvcf):
     for v in uvcf.query_variants():
-        print(v, v.family_id, mat2str(v.best_st), v.inheritance)
+        print(v, v.family_id, mat2str(v.best_st),
+              v.inheritance, v.variant_type)
 
 
 @pytest.mark.veryslow
 def test_fvcf_all_variants(fvcf):
     for v in fvcf.query_variants():
-        print(v, v.family_id, mat2str(v.best_st), v.inheritance)
+        print(v, v.family_id, mat2str(v.best_st),
+              v.inheritance, v.variant_type)

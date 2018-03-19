@@ -14,7 +14,6 @@ from variants.variant import FamilyVariant, SummaryVariant
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
 from variants.vcf_utils import VcfFamily
-import sys
 
 
 def split_gene_effect(effects):
@@ -51,7 +50,6 @@ class RawFamilyVariants(FamiliesBase):
         samples_needed = set(samples)
         pedigree_samples = set(ped_df['sampleId'].values)
         missing_samples = samples_needed.difference(pedigree_samples)
-        print("pedigree missing samples: ", missing_samples, file=sys.stderr)
 
         samples_needed = samples_needed.difference(missing_samples)
         assert samples_needed.issubset(pedigree_samples)

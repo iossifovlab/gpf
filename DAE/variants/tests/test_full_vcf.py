@@ -16,7 +16,7 @@ def test_open_raw_vcf_with_region(vcf19r):
         inheritance='mendelian')
     for c, v in enumerate(vs):
         print(c, v, v.family_id, mat2str(v.best_st), v.inheritance,
-              v.effect_type, v.effect_gene,
+              v.effect_type, v.effect_gene, v.variant_type,
               v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'))
         assert v.get_attr('all.nAltAlls') > 0
 
