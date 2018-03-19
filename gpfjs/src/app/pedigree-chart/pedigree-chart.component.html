@@ -1,15 +1,14 @@
-<div class="clickable" width="100%" height="100%"
+<div #wrapper class="clickable" width="100%" height="100%"
 	[ngClass]="{'fullscreen': maximized}"
 	(click)="maximized = !maximized">
-	<svg [attr.height.px]="height" [attr.width.px]="width">
+	<svg [attr.height.px]="height" [attr.width.px]="width" [attr.transform]="getScaleString()" transform-origin="top left">
 		<svg:line *ngFor="let line of lines"
 			[attr.x1]=line.startX
 			[attr.y1]=line.startY
 			[attr.x2]=line.endX
 			[attr.y2]=line.endY
 			stroke="black"
-			stroke-width="1"
-		/>
+			stroke-width="1" />
 
 		<svg:g gpf-pedigree-chart-member
 			*ngFor="let pedigree of pedigreeDataWithLayout"

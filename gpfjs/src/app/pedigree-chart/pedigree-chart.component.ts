@@ -1,4 +1,4 @@
-import { Input, Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Input, Component, OnInit, ChangeDetectionStrategy, HostListener,  AfterViewInit, ViewChild, ChangeDetectorRef } from '@angular/core';
 
 import { Observable, BehaviorSubject } from 'rxjs';
 import { difference } from '../utils/sets-helper';
@@ -11,6 +11,7 @@ import {
 
 import { IndividualWithPosition, Line, ParentalUnit, 
   MatingUnitWithIntervals, IndividualSet, Individual, MatingUnit } from './pedigree-data';
+import { ResizeService } from '../table/resize.service';
 
 type OrderedIndividuals = Array<Individual>;
 
@@ -20,7 +21,7 @@ type OrderedIndividuals = Array<Individual>;
   styleUrls: ['./pedigree-chart.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PedigreeChartComponent implements OnInit {
+export class PedigreeChartComponent implements OnInit, AfterViewInit {
 
   pedigreeDataWithLayout: IndividualWithPosition[];
   lines: Line[];
@@ -29,9 +30,13 @@ export class PedigreeChartComponent implements OnInit {
   positionedIndividuals = new Array<IndividualWithPosition[]>();
   private idToPosition: Map<string, IndividualWithPosition> = new Map();
 
-  maximized = false
+  maximized = false;
   width = 0;
   height = 0;
+  scale = 1.0;
+
+  @ViewChild('wrapper')
+  private element;
 
   @Input()
   set family(data: PedigreeData[]) {
@@ -42,7 +47,9 @@ export class PedigreeChartComponent implements OnInit {
   levels$: Observable<Array<OrderedIndividuals>>;
 
   constructor(
-    private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService
+    private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService,
+    private resizeService: ResizeService,
+    private changeDetectorRef: ChangeDetectorRef
   ) { }
 
   ngOnInit() {
@@ -75,7 +82,7 @@ export class PedigreeChartComponent implements OnInit {
             
             console.warn("drawing optimizing", Date.now() - start, "ms");
           });
-      })
+      });
 
     sandwichResults$
       .take(1)
@@ -95,7 +102,47 @@ export class PedigreeChartComponent implements OnInit {
         this.height = this.pedigreeDataWithLayout
           .map(i => i.yUpperLeftCorner + i.size + 1)
           .reduce((acc, current) => Math.max(acc, current), 0);
+        
         });
+
+        this.scaleSvg();
+  }
+
+  ngAfterViewInit() {
+    // console.log(this.element);
+    this.resizeService.addResizeEventListener(this.element.nativeElement, (elem) => {
+        this.scaleSvg();
+    });
+    setTimeout(() => {
+        this.scaleSvg();
+
+    });
+  }
+
+  scaleSvg() {
+    if (!this.element) {
+      return;
+    }
+    let box = this.element.nativeElement.getBoundingClientRect();
+    if (!box) {
+      return;
+    }
+    let height = box.height;
+    let width = box.width;
+
+    if (this.maximized) {
+      this.scale = 1.0;
+    } else if (this.width && this.height) {
+      this.scale = Math.min(1.0, width / this.width, height / this.height);
+    } else {
+      return;
+    }
+
+    this.changeDetectorRef.markForCheck();
+  }
+
+  getScaleString() {
+    return `scale(${this.scale})`;
   }
 
   private loadPositions(family: PedigreeData[]) {
@@ -134,9 +181,8 @@ export class PedigreeChartComponent implements OnInit {
       .sort((arr1, arr2) => arr1[0].yCenter - arr2[0].yCenter);
     
       // for (let line of individuals) {
-      //   line = line.sort((i1, i2) => i1.xCenter - i2.xCenter);
+      //   line = line.sort((i1, i2) => i1.xCenter '(window:resize)': 'onResize($event)'- i2.xCenter);
       // }
-
 
     return individuals
       .map(line => line.sort((i1, i2) => i1.xCenter - i2.xCenter));
