@@ -7,6 +7,7 @@ from variants.annotate_composite import AnnotatorComposite
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.raw_vcf import RawFamilyVariants
 from variants.loader import RawVariantsLoader
+import pytest
 
 
 def test_annotate_composite_simple(ustudy, effect_annotator):
@@ -21,6 +22,7 @@ def test_annotate_composite_simple(ustudy, effect_annotator):
     print(annot_df.head())
 
 
+@pytest.mark.slow
 def test_annotate_composite_simple_vcf19(nvcf19, effect_annotator):
     annotator = AnnotatorComposite(annotators=[
         effect_annotator,
@@ -45,6 +47,7 @@ def test_annotate_on_load(ustudy_config, ustudy, effect_annotator):
     assert fvariants is not None
 
 
+@pytest.mark.slow
 def test_annotate_on_load_vcf19(nvcf19_config, effect_annotator):
     annotator = AnnotatorComposite(annotators=[
         effect_annotator,

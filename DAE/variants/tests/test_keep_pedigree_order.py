@@ -11,6 +11,7 @@ from variants.family import FamiliesBase, Family
 from variants.loader import RawVariantsLoader
 import StringIO
 from variants.attributes import Role
+import pytest
 
 
 '''
@@ -21,6 +22,7 @@ from variants.attributes import Role
 '''
 
 
+@pytest.mark.slow
 def test_denovo_order_experiment(nvcf19):
     regions = [
         Region("1", 908193, 908193),
@@ -75,6 +77,7 @@ def test_pedigree_keep_family_order_local():
     assert f.members_in_order[-1].role == Role.prb
 
 
+@pytest.mark.slow
 def test_pedigree_keep_family_order(nvcf19):
     families = nvcf19
 

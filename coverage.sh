@@ -32,7 +32,7 @@
 
 
 
-py.test -v --cov-config coveragerc \
+py.test --runslow -v --cov-config coveragerc \
     --junitxml=DAE/junit.xml \
     --cov-append \
     --cov-report html \
