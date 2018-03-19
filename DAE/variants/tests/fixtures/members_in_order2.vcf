@@ -1,0 +1,6 @@
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##contig=<ID=1>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom	dad	gpa	ch2	ch3	gma	ch1
+1	11539	.	T	G	.	.	.	GT	0/0	0/0	0/1	0/0	0/1	0/0	0/0
+1	11540	.	T	G	.	.	.	GT	0/0	0/0	0/1	0/0	0/0	0/1	0/0

@@ -26,8 +26,16 @@ from variants.attributes import Role
 #               v.inheritance)
 
 
-def test_members_in_family_order_genotype(sample_vcf):
+def test_members_in_order1_genotype(sample_vcf):
     fvars = sample_vcf("fixtures/members_in_order1")
+    for v in fvars.query_variants():
+        print(v, mat2str(v.best_st), mat2str(v.gt), v.inheritance)
+        assert 'gpa' in v.variant_in_members
+        assert Role.paternal_grandfather in v.variant_in_roles
+
+
+def test_members_in_order2_genotype(sample_vcf):
+    fvars = sample_vcf("fixtures/members_in_order2")
     for v in fvars.query_variants():
         print(v, mat2str(v.best_st), mat2str(v.gt), v.inheritance)
         assert 'gpa' in v.variant_in_members
