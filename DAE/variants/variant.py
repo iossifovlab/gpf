@@ -113,13 +113,18 @@ class FamilyVariant(VariantBase):
                 atts[k] = v
         self._atts = atts
 
+        self.position = self.get_attr('position', self.start)
+        self.variant = self.get_attr('variant')
+        self.length = self.get_attr('length', 0)
+
         self.effect_type = self.get_attr('effectType')
         self.effect_gene = self.get_attr('effectGene')
         self.effect_details = self.get_attr('effectDetails')
 
-        self.position = self.get_attr('position', self.start)
-        self.variant = self.get_attr('variant')
-        self.length = self.get_attr('length', 0)
+        self.n_alt_alls = self.get_attr('all.nAltAlls')
+        self.alt_alls_freq = self.get_attr('all.altFreq')
+        self.n_par_called = self.get_attr('all.nParCalled')
+        self.prcnt_par_called = self.get_attr('all.prcntParCalled')
 
         self._best_st = None
         self._inheritance = None

@@ -26,6 +26,10 @@ def test_nvcf_all_variants(nvcf):
     for v in nvcf.query_variants():
         print(v, v.family_id, mat2str(v.best_st),
               v.inheritance, v.variant_type)
+        assert v.n_alt_alls is not None
+        assert v.alt_alls_freq is not None
+        assert v.n_par_called is not None
+        assert v.prcnt_par_called is not None
 
 
 @pytest.mark.slow
@@ -33,6 +37,10 @@ def test_uvcf_all_variants(uvcf):
     for v in uvcf.query_variants():
         print(v, v.family_id, mat2str(v.best_st),
               v.inheritance, v.variant_type)
+        assert v.n_alt_alls is not None
+        assert v.alt_alls_freq is not None
+        assert v.n_par_called is not None
+        assert v.prcnt_par_called is not None
 
 
 @pytest.mark.veryslow
