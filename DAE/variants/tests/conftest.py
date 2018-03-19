@@ -184,7 +184,7 @@ def sv():
 @pytest.fixture(scope='session')
 def fv1(sv, fam1):
     def rfun(gt):
-        return FamilyVariant.from_summary_variant(sv, fam1, gt=gt)
+        return next(iter(FamilyVariant.from_summary_variant(sv, fam1, gt=gt)))
     return rfun
 
 
@@ -211,7 +211,7 @@ def fam2():
 @pytest.fixture(scope='session')
 def fv2(sv, fam2):
     def rfun(gt):
-        return FamilyVariant.from_summary_variant(sv, fam2, gt=gt)
+        return next(iter(FamilyVariant.from_summary_variant(sv, fam2, gt=gt)))
     return rfun
 
 
@@ -239,7 +239,7 @@ def fam3():
 @pytest.fixture(scope='session')
 def fv3(sv, fam3):
     def rfun(gt):
-        return FamilyVariant.from_summary_variant(sv, fam3, gt=gt)
+        return next(iter(FamilyVariant.from_summary_variant(sv, fam3, gt=gt)))
     return rfun
 
 

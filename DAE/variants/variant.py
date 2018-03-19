@@ -143,10 +143,15 @@ class FamilyVariant(VariantBase):
             print(
                 "WARN: multiple alternative alleles in {}: family: {}, gt: {})"
                 .format(sv, family.family_id, mat2str(gt)), file=sys.stderr)
-            return None
+            return []
         alt_index = FamilyVariant.calc_alt_allele_index(gt)
-        fv = FamilyVariant(sv, family, gt, alt_index)
-        return fv
+        if alt_index is not None:
+            return [FamilyVariant(sv, family, gt, alt_index)]
+        else:
+            res = []
+            for alt_index in range(len(sv.alt)):
+                res.append(FamilyVariant(sv, family, gt, alt_index))
+            return res
 
     @staticmethod
     def calc_alt_alleles(gt):

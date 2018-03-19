@@ -211,11 +211,10 @@ class RawFamilyVariants(FamiliesBase):
             summary_variant = SummaryVariant.from_dict(row)
 
             for fam in self.families.values():
-                v = FamilyVariant.from_summary_variant(
+                vs = FamilyVariant.from_summary_variant(
                     summary_variant, fam, vcf=vcf)
-                if v is None:
-                    continue
-                yield v
+                for v in vs:
+                    yield v
 
 
 if __name__ == "__main__":
