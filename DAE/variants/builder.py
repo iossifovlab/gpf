@@ -14,7 +14,7 @@ from variants.annotate_composite import AnnotatorComposite
 from variants.loader import RawVariantsLoader
 
 
-def load_genome(genome_file=None):
+def get_genome(genome_file=None):
     if genome_file is not None:
         assert os.path.exists(genome_file)
         from GenomeAccess import openRef
@@ -24,7 +24,7 @@ def load_genome(genome_file=None):
         return genomesDB.get_genome()  # @UndefinedVariable
 
 
-def load_gene_models(gene_models_file=None):
+def get_gene_models(gene_models_file=None):
     if gene_models_file is not None:
         assert os.path.exists(gene_models_file)
         return load_gene_models(gene_models_file)
@@ -39,8 +39,8 @@ def variants_builder(prefix, genome_file=None, gene_models_file=None):
         fvars = RawFamilyVariants(conf)
         return fvars
 
-    genome = load_genome(genome_file)
-    gene_models = load_gene_models(gene_models_file)
+    genome = get_genome(genome_file)
+    gene_models = get_gene_models(gene_models_file)
 
     effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
     freq_annotator = VcfAlleleFrequencyAnnotator()
