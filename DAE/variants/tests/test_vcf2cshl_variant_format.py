@@ -126,3 +126,19 @@ def test_vcf2cshl_variant_format3():
     assert ps[0] == 1
     assert vs[0] == "sub(A->C)"
     assert ls[0] == 1
+
+    ps, vs, ls = vcf2cshl(1, 'AAAAAA', ['AAAAAAC'])
+    assert ps[0] == 7
+    assert vs[0] == "ins(C)"
+    assert ls[0] == 1
+
+
+def test_insert_long():
+    print("")
+    ref = 'CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT'
+    alt = 'CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT' \
+        'CCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT'
+    ps, vs, ls = vcf2cshl(1, ref, [alt])
+    print(ps, vs, ls)
+
+    assert ps[0] == 2  # FIXME

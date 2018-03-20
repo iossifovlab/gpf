@@ -31,7 +31,7 @@ class VcfVariantEffectsAnnotator(AnnotatorBase):
         for alt in vcf_variant.ALT:
             variant = Variant(
                 chrom=vcf_variant.CHROM,
-                position=vcf_variant.start,
+                position=vcf_variant.start + 1,
                 ref=vcf_variant.REF,
                 alt=alt)
             effects = self.variant_annotator.annotate(variant)

@@ -61,7 +61,6 @@ def trim_str(pos, ref, alt):
     for n, s in enumerate(izip(r, a)):
         if s[0] != s[1]:
             break
-
     if r[n] == a[n]:
         return pos + n + 1, r[n + 1:], a[n + 1:]
 

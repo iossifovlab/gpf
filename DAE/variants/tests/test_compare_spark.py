@@ -8,6 +8,9 @@ from variants.vcf_utils import mat2str
 from RegionOperations import Region
 from variants.attributes import VariantType as VT
 import pytest
+from variant_annotation.multitool.adapters.old import OldVariantAnnotation
+from variant_annotation.gene_codes import NuclearCode
+import logging
 
 
 @pytest.mark.slow
@@ -147,8 +150,20 @@ def test_compare_1_905970(nvcf19):
     assert v1.family_id == 'SF0010944'
 
 
+@pytest.fixture(scope='session')
+def old_annotator():
+    from DAE import genomesDB
+    genome = genomesDB.get_genome()  # @UndefinedVariable
+    gene_models = genomesDB.get_gene_models()  # @UndefinedVariable
+
+    annotator = OldVariantAnnotation(
+        genome, gene_models, code=NuclearCode(), promoter_len=0)
+    return annotator
+
+
 @pytest.mark.slow
-def test_compare_all_lgds_1_908275(nvcf19):
+def test_compare_all_lgds_1_908275(nvcf19, old_annotator, effect_annotator):
+    logging.basicConfig(level=logging.DEBUG)
     regions = [
         Region('1', 874817, 874817),
         Region('1', 889455, 889455),
@@ -165,9 +180,18 @@ def test_compare_all_lgds_1_908275(nvcf19):
     )
     vl = list(vs)
     for v in vl:
+        print("")
         print(v, v.family_id, mat2str(v.best_st), v.inheritance,
               v.effect_type, v.effect_gene,
               v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'),
               sep='\t')
+        _effects, desc = old_annotator.annotate_variant(
+            chr=v.chromosome,
+            position=v.position,
+            var=v.variant)
+        print("N:>", v.effect_type, v.effect_gene, v.effect_details)
+        print("V:>", v.chromosome, v.start, v.reference, v.alt)
+        for d in desc:
+            print("E:>", d.effect_type, d.effect_details)
 
     assert len(vl) == 9
