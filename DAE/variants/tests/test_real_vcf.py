@@ -8,13 +8,6 @@ from variants.vcf_utils import mat2str
 import pytest
 
 
-def slow():
-    pytest.mark.skipif(
-        not pytest.config.getoption("--runslow"),  # @UndefinedVariable
-        reason="need --runslow option to run"
-    )
-
-
 def test_nvcf_config(nvcf_config):
     print(nvcf_config)
     assert nvcf_config is not None

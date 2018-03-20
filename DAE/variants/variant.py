@@ -8,7 +8,7 @@ from __future__ import print_function
 # from icecream import ic
 
 import numpy as np
-from variants.attributes import Inheritance
+from variants.attributes import Inheritance, VariantType
 from variants.vcf_utils import vcf2cshl
 
 
@@ -134,9 +134,9 @@ class FamilyVariant(VariantBase):
         self._variant_in_sexes = None
 
     def __repr__(self):
-        return '{}:{} {} vcf({}->{})'.format(
+        return '{}:{} {}'.format(
             self.chromosome, self.position,
-            self.variant, self.reference, ','.join(self.alt))
+            self.variant)
 
     def __len__(self):
         return self.length
@@ -217,13 +217,13 @@ class FamilyVariant(VariantBase):
     def variant_type(self):
         vt = self.variant[0]
         if vt == 's':
-            return 'sub'
+            return VariantType.substitution
         elif vt == 'i':
-            return 'ins'
+            return VariantType.insertion
         elif vt == 'd':
-            return 'del'
+            return VariantType.deletion
         elif vt == 'c':
-            return 'complex'
+            return VariantType.complex
         else:
             raise ValueError("unexpected variant type: {}".format(
                 self.variant))

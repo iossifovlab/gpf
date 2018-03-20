@@ -112,6 +112,34 @@ class Inheritance(enum.Enum):
         return self.name
 
 
+class VariantType(enum.Enum):
+    substitution = 1
+    insertion = 1 << 1
+    deletion = 1 << 2
+    complex = 1 << 3
+    CNV = 1 << 4
+
+    @staticmethod
+    def from_name(name):
+        if name == 'sub' or name == 'substitution':
+            return VariantType.substitution
+        elif name == 'ins' or name == 'insertion':
+            return VariantType.insertion
+        elif name == 'del' or name == 'deletion':
+            return VariantType.deletion
+        elif name == 'complex':
+            return VariantType.complex
+        elif name == 'CNV':
+            return VariantType.cnv
+        raise ValueError("unexpected variant type: {}".format(name))
+
+    def __repr__(self):
+        return self.name[:3]
+
+    def __str__(self):
+        return self.name[:3]
+
+
 class QNode(object):
     def __init__(self, vals=None, children=None):
         self.vals = vals
