@@ -48,6 +48,8 @@ def test_inheritance_quad(sample_vcf, region, count, inheritance):
 @pytest.mark.parametrize("region,count,inheritance", [
     (Region('1', 11500, 11500), 1, Inheritance.reference),
     (Region('1', 11501, 11510), 3, Inheritance.mendelian),
+    (Region('1', 11511, 11520), 1, Inheritance.omission),
+    (Region('1', 11521, 11530), 1, Inheritance.other),
 ])
 def test_inheritance_multi(sample_vcf, region, count, inheritance):
     fvars = sample_vcf("fixtures/inheritance_multi")

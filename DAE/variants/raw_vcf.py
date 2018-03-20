@@ -207,6 +207,7 @@ class RawFamilyVariants(FamiliesBase):
             vcf = variants[index]
 
             summary_variant = SummaryVariant.from_dict(row)
+            summary_variant.vcf = vcf
 
             for fam in self.families.values():
                 vs = FamilyVariant.from_summary_variant(

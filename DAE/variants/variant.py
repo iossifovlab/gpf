@@ -5,7 +5,7 @@ Created on Feb 13, 2018
 '''
 from __future__ import print_function
 
-# from icecream import ic
+from icecream import ic
 
 import numpy as np
 from variants.attributes import Inheritance

@@ -32,8 +32,8 @@ def rgns2BedFile(rgns, bedFN):
 
 class Region:
 
-    def __init__(self, chrom, start, stop):
-        self.chr = chrom
+    def __init__(self, chr, start, stop):
+        self.chr = chr
         self.start = start
         self.stop = stop
 
