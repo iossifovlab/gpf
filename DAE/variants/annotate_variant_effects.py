@@ -35,6 +35,20 @@ class VcfVariantEffectsAnnotator(AnnotatorBase):
                 ref=vcf_variant.REF,
                 alt=alt)
             effects = self.variant_annotator.annotate(variant)
+            effects = self.do_annotate_variant(
+                chrom=vcf_variant.CHROM,
+                position=vcf_variant.start + 1,
+                ref=vcf_variant.REF,
+                alt=alt)
             result.append(self.variant_annotator.effect_description(effects))
         result = np.array(result)
         return result[:, 0], result[:, 1], result[:, 2]
+
+    def do_annotate_variant(self, chrom, position, ref, alt):
+        variant = Variant(
+            chrom=chrom,
+            position=position,
+            ref=ref,
+            alt=alt)
+        effects = self.variant_annotator.annotate(variant)
+        return effects

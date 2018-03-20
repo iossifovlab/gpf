@@ -21,16 +21,20 @@ def test_compare_1_874817(nvcf19):
         # effect_types=['frame-shift', 'nonsense', 'splice-site']
     )
     vl = list(vs)
-    assert len(vl) == 2
-    for v in vl:
-        print(v, v.family_id, mat2str(v.best_st), v.inheritance,
-              v.effect_type, v.effect_gene,
-              v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'),
-              sep='\t')
+    assert len(vl) == 1
+    [v1] = vl
+    assert v1.variant_type == VT.deletion
 
-    [v1, v2] = vl
-    assert v1.variant_type == VT.insertion
-    assert v2.variant_type == VT.deletion
+#     assert len(vl) == 2
+#     for v in vl:
+#         print(v, v.family_id, mat2str(v.best_st), v.inheritance,
+#               v.effect_type, v.effect_gene,
+#               v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'),
+#               sep='\t')
+#
+#     [v1, v2] = vl
+#     assert v1.variant_type == VT.insertion
+#     assert v2.variant_type == VT.deletion
 
 
 @pytest.mark.slow
@@ -190,11 +194,11 @@ def test_compare_all_1_908275(nvcf19, old_annotator):
             position=v.position,
             var=v.variant)
         print("N:>", v.effect_type, v.effect_gene, v.effect_details)
-        print("V:>", v.chromosome, v.start, v.reference, v.alt)
+        print("V:>", v.chromosome, v.start, v.reference, v.alternatives)
         for d in desc:
             print("E:>", d.effect_type, d.effect_details)
 
-    assert len(vl) == 9
+    assert len(vl) == 8
 
 
 @pytest.mark.slow
@@ -215,7 +219,7 @@ def test_compare_all_lgds_1_908275(nvcf19, old_annotator):
             position=v.position,
             var=v.variant)
         print("N:>", v.effect_type, v.effect_gene, v.effect_details)
-        print("V:>", v.chromosome, v.start, v.reference, v.alt)
+        print("V:>", v.chromosome, v.start, v.reference, v.alternatives)
         for d in desc:
             print("E:>", d.effect_type, d.effect_details)
 

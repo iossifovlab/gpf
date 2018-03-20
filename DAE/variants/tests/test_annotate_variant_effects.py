@@ -11,6 +11,7 @@ from variants.loader import RawVariantsLoader
 from variants.tests.common import assert_annotation_equals
 
 
+@pytest.mark.slow
 def test_annotate_variant_effects_ustudy(
         ustudy, temp_filename, effect_annotator):
 
@@ -45,6 +46,7 @@ def test_annotate_variant_effects_fvcf(fvcf, effect_annotator):
     annotator.annotate(fvcf.annot_df, fvcf.vcf_vars)
 
 
+@pytest.mark.slow
 def test_annotator_variants_effects_csv_experiment(
         nvcf19, temp_filename, effect_annotator):
 
@@ -62,3 +64,21 @@ def test_annotator_variants_effects_csv_experiment(
     vars1_df = RawVariantsLoader.load_annotation_file(
         temp_filename, storage='csv')
     assert_annotation_equals(annot_df, vars1_df)
+
+
+def test_effects_annotation(effect_annotator):
+    chrom, pos, ref, alts = (
+        "1",
+        874816,
+        'CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT',
+        [
+            'C',
+            'CTCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT',
+            'CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT'
+            'CCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT'
+        ]
+    )
+
+    for alt in alts:
+        effects = effect_annotator.do_annotate_variant(chrom, pos, ref, alt)
+        print(effects)

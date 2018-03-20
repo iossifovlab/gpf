@@ -78,6 +78,13 @@ class VariantDetail(object):
         return AlleleItems(details)
 
 
+class EffectDetail(object):
+    def __init__(self, worst_effect, gene_effect, effect_details):
+        self.worst = worst_effect
+        self.gene = gene_effect
+        self.transcript = effect_details
+
+
 class SummaryVariantFull(VariantBase):
     def __init__(self, chromosome, start, reference, alternative, atts={}):
         super(SummaryVariantSimple, self).__init__(
