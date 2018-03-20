@@ -5,7 +5,7 @@ Created on Mar 20, 2018
 '''
 from __future__ import print_function
 
-from icecream import ic
+# from icecream import ic
 
 from variants.variant import VariantBase
 from variants.vcf_utils import vcf2cshl

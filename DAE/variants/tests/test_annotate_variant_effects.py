@@ -4,6 +4,7 @@ Created on Mar 6, 2018
 @author: lubo
 '''
 from __future__ import print_function
+# from icecream import ic
 
 import pytest
 
@@ -80,5 +81,72 @@ def test_effects_annotation(effect_annotator):
     )
 
     for alt in alts:
+        print("")
+        print("REF, ALT:>", ref, alt)
         effects = effect_annotator.do_annotate_variant(chrom, pos, ref, alt)
-        print(effects)
+        for effect in effects:
+            print(
+                ref, ",", alt, ":>",
+                effect.gene,
+                effect.transcript_id,
+                effect.strand,
+                effect.effect,
+                effect.prot_pos,
+                effect.prot_length,
+                effect.aa_change
+            )
+
+
+@pytest.mark.parametrize("variant", [
+    "1:1558774:G:A",
+    "1:71418630:A:G",
+    "1:71439935:C:CG",
+    "1:186077583:T:G",
+    "1:186157005:C:T",
+    "1:186281435:A:G",
+    "2:234676519:C:T",
+    "13:111290774:C:T",
+])
+def test_variant_effect_annotation(variant, effect_annotator):
+    [chrom, pos, ref, alts] = variant.split(":")
+    for alt in alts.split(','):
+        print("")
+        print("REF, ALT:>", ref, alt)
+        effects = effect_annotator.do_annotate_variant(
+            chrom, int(pos), ref, alt)
+        for effect in effects:
+            print(
+                ref, ",", alt, ":>",
+                effect.gene,
+                effect.transcript_id,
+                effect.strand,
+                effect.effect,
+                effect.prot_pos,
+                effect.prot_length,
+                effect.aa_change
+            )
+        print(effect_annotator.variant_annotator.effect_description(effects))
+
+
+@pytest.mark.parametrize("variant", [
+    "13:111290774:C:T",
+])
+def test_variant_effect_annotation_test_transcript(variant, effect_annotator):
+    [chrom, pos, ref, alts] = variant.split(":")
+    for alt in alts.split(','):
+        print("")
+        print("REF, ALT:>", ref, alt)
+        effects = effect_annotator.do_annotate_variant(
+            chrom, int(pos), ref, alt)
+        for effect in effects:
+            print(
+                ref, ",", alt, ":>",
+                effect.gene,
+                effect.transcript_id,
+                effect.strand,
+                effect.effect,
+                effect.prot_pos,
+                effect.prot_length,
+                effect.aa_change
+            )
+        print(effect_annotator.variant_annotator.effect_description(effects))
