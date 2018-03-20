@@ -7,7 +7,7 @@
     <ngb-accordion *ngIf="selectedGeneSetsCollection?.types" activeIds="denovo-geneset-type-0" destroyOnHide="false"
         #acc="ngbAccordion" class="gene-sets-types row-sm-3">
       <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types; let i = index" id="denovo-geneset-type-{{i}}">
-        <ng-template ngbPanelTitle>
+        <ng-template ngbPanelTitle *ngIf="selectedGeneSetsCollection?.types?.length > 1">
           <span class="dropdown-toggle">{{ type.datasetName }}</span>
         </ng-template>
         <ng-template ngbPanelContent>
