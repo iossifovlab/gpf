@@ -5,8 +5,10 @@ Created on Mar 16, 2018
 '''
 from __future__ import print_function
 from variants.vcf_utils import mat2str
+import pytest
 
 
+@pytest.mark.slow
 def test_open_raw_vcf_with_region(vcf19r):
     region = "7:121000000-121010000"
     fvars = vcf19r(region)
@@ -26,6 +28,7 @@ def test_open_raw_vcf_with_region(vcf19r):
         assert v.prcnt_par_called is not None
 
 
+@pytest.mark.slow
 def test_raw_vcf_bad_frequency(vcf19r):
     fvars = vcf19r("1:897008-897010")
     vs = fvars.query_variants(

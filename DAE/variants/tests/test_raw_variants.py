@@ -58,7 +58,7 @@ def test_query_genes_and_effect_types(ustudy):
     vs = ustudy.query_variants(effect_types=effect_types, genes=genes)
     assert vs is not None
     vl = list(vs)
-    assert len(vl) == 1
+    assert len(vl) == 2
 
     vs = ustudy.query_variants(genes=genes)
     assert vs is not None
@@ -69,7 +69,7 @@ def test_query_genes_and_effect_types(ustudy):
         effect_types=['frame-shift', 'missense'], genes=genes)
     assert vs is not None
     vl = list(vs)
-    assert len(vl) == 1
+    assert len(vl) == 2
 
     vs = ustudy.query_variants(
         effect_types=['missense', 'synonymous'], genes=genes)
@@ -95,14 +95,14 @@ def test_query_persons(ustudy):
         person_ids=['AU1921202'])
     assert vs is not None
     vl = list(vs)
-    assert len(vl) == 1
+    assert len(vl) == 2
 
     vs = ustudy.query_variants(
         genes=genes, effect_types=effect_types,
         person_ids=['AU1921202', 'AU1921211'])
     assert vs is not None
     vl = list(vs)
-    assert len(vl) == 1
+    assert len(vl) == 2
 
 
 def test_query_persons_all(ustudy):
@@ -125,7 +125,7 @@ def test_query_persons_combined(ustudy):
         person_ids=['AU1921202'])
     assert vs is not None
     vl = list(vs)
-    assert len(vl) == 1
+    assert len(vl) == 2
 
     vs = ustudy.query_variants(
         genes=genes, effect_types=effect_types,
@@ -145,7 +145,7 @@ def test_query_families(ustudy):
         family_ids=family_ids)
     assert vs is not None
     vl = list(vs)
-    assert len(vl) == 1
+    assert len(vl) == 2
 
 
 def test_query_families_0(ustudy):
