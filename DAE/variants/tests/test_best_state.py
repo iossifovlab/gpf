@@ -16,6 +16,7 @@ def test_trios_multi_single_allele1(sample_vcf):
         print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
         assert v.inheritance == Inheritance.mendelian
         assert v.best_st.shape == (2, 3)
+        assert len(mat2str(v.best_st)) == 7
 
 
 def test_trios_multi_all_reference(sample_vcf):
@@ -26,3 +27,4 @@ def test_trios_multi_all_reference(sample_vcf):
         print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
         assert v.inheritance == Inheritance.reference
         assert v.best_st.shape == (2, 3)
+        assert len(mat2str(v.best_st)) == 7

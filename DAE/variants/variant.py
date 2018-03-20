@@ -194,7 +194,7 @@ class FamilyVariant(VariantBase):
             assert len(alt_alleles) <= 1
 
             if not alt_alleles:
-                alt = np.zeros(len(self.family))
+                alt = np.zeros(len(self.family), dtype=np.int8)
             else:
                 anum = next(iter(alt_alleles))
                 alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
