@@ -54,7 +54,7 @@ def test_inheritance_quad(sample_vcf, region, count, inheritance):
 def test_inheritance_multi(sample_vcf, region, count, inheritance):
     fvars = sample_vcf("fixtures/inheritance_multi")
     vs = list(fvars.query_variants(regions=[region]))
-    # assert len(vs) == count
+    assert len(vs) == count
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
 
