@@ -17,7 +17,7 @@ class FamilyVariantSimple(VariantBase):
             summary_variant.chromosome,
             summary_variant.start,
             summary_variant.reference,
-            summary_variant.alt[alt_index])
+            summary_variant.alternatives[alt_index])
 
         self.summary = summary_variant
         self.alt_index = alt_index
@@ -88,7 +88,7 @@ class FamilyVariantSimple(VariantBase):
             return res
         else:
             res = []
-            for alt_index in range(len(sv.alt)):
+            for alt_index in range(len(sv.alternatives)):
                 res.append(cls(sv, family, gt, alt_index))
             return res
 

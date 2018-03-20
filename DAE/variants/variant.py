@@ -14,15 +14,12 @@ class VariantBase(object):
         self.chromosome = chromosome
         self.start = start
         self.reference = reference
-        self.alt = alternatives
+        self.alternatives = alternatives
 
     def __repr__(self):
         return '{}:{} {}->{}'.format(
-            self.chromosome, self.start, self.reference, self.alt)
-
-#     @property
-#     def alternative(self):
-#         return ','.join(self.alt)
+            self.chromosome, self.start,
+            self.reference, self.alternatives)
 
     @staticmethod
     def from_vcf_variant(variant):
@@ -39,7 +36,7 @@ class VariantBase(object):
         return self.chromosome == other.chromosome and \
             self.start == other.start and \
             self.reference == other.reference and \
-            self.alt == other.alt
+            self.alternatives == other.alternatives
 
     def __ne__(self, other):
         return not self.__eq__(other)

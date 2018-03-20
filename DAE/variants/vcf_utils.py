@@ -43,6 +43,22 @@ class VcfFamily(Family):
 
 
 def trim_str(pos, ref, alt):
+    for n, s in enumerate(izip(ref, alt)):
+        if s[0] != s[1]:
+            break
+
+    if ref[n] == alt[n]:
+        ref = ref[n + 1:]
+        alt = alt[n + 1:]
+        pos += (n + 1)
+    else:
+        ref = ref[n:]
+        alt = alt[n:]
+        pos += n
+
+    if len(ref) == 0 or len(alt) == 0:
+        return pos, ref, alt
+
     for n, s in enumerate(izip(ref[::-1], alt[::-1])):
         if s[0] != s[1]:
             break
@@ -54,17 +70,10 @@ def trim_str(pos, ref, alt):
             r, a = ref[:], alt[:]
         else:
             r, a = ref[:-n], alt[:-n]
-
     if len(r) == 0 or len(a) == 0:
         return pos, r, a
 
-    for n, s in enumerate(izip(r, a)):
-        if s[0] != s[1]:
-            break
-    if r[n] == a[n]:
-        return pos + n + 1, r[n + 1:], a[n + 1:]
-
-    return pos + n, r[n:], a[n:]
+    return pos, r, a
 
 
 def cshl_format(pos, ref, alt):

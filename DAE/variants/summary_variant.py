@@ -13,10 +13,10 @@ from variants.vcf_utils import vcf2cshl
 
 class SummaryVariantSimple(VariantBase):
 
-    def __init__(self, chromosome, start, reference, alternative, atts={}):
+    def __init__(self, chromosome, start, reference, alternatives, atts={}):
         super(SummaryVariantSimple, self).__init__(
-            chromosome, start, reference, alternative, atts=atts)
-        position, variant, lengths = vcf2cshl(start, reference, alternative)
+            chromosome, start, reference, alternatives, atts=atts)
+        position, variant, lengths = vcf2cshl(start, reference, alternatives)
         self._atts.update({
             'position': position,
             'variant': variant,
@@ -57,7 +57,32 @@ class AlleleItems(object):
         return iter(self.items)
 
 
+class VariantDetail(object):
+    def __init__(self, chrom, position, variant, length):
+        self.length = length
+        self.type = None
+        self.chrom = chrom
+        self.cshl_position = position
+        self.cshl_variant = variant
+
+    @property
+    def cshl_location(self):
+        return "{}:{}".format(self.chrom, self.cshl_position)
+
+    @staticmethod
+    def from_vcf(chrom, position, reference, alternative):
+        details = [
+            VariantDetail(chrom, p, v, l)
+            for (p, v, l) in zip(vcf2cshl(position, reference, alternative))
+        ]
+        return AlleleItems(details)
+
+
 class SummaryVariantFull(VariantBase):
     def __init__(self, chromosome, start, reference, alternative, atts={}):
         super(SummaryVariantSimple, self).__init__(
             chromosome, start, reference, alternative, atts=atts)
+
+        self.alt = AlleleItems(alternative)
+        self.alt_details = VariantDetail.from_vcf(
+            chromosome, start, reference, alternative)
