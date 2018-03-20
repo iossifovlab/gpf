@@ -1,3 +1,79 @@
+## Full VCF summary variant
+
+* v.familyId 
+* v.location 
+* v.ref 
+* v.alt[ai] 
+* v.altDetails[ai] 
+    * variantLengths 
+    * type 
+    * legacyLocation 
+    * legacyVariant 
+* v.effect[ai] 
+    * worst 
+    * gene[gei] 
+        * symbol  
+        * effect 
+    * transcript[transcriptId] 
+        * effect 
+        * geneSymbol 
+        * details 
+* v.requestedGeneEffect[ai][gei] 
+    * symbol 
+    * effect 
+* v.best_state 
+
+|     | p1 | p2 |....|
+|-----|----|----|----|
+| Ref |    |    |    |
+| Alt1|    |    |    |
+| Alt2|    |    |    |
+|-----|----|----|----|
+
+
+* v.genotypes[pi] 
+
+    listOfAlles most will be of length 2, but may be different (proper X in 
+    boys may have one; CNVs representation may use 1; ). 
+    
+    Use empty list for unknown?? Or [-1,-1]?? 
+
+    For example: 
+    ```
+    v.genotypes = [[0,0], [0,1], [0,0], [0,1]] 
+    ```
+    or 
+    ```
+    v.genotypes = [[1,1], [0,2], [1,0], [1,2]]
+    ```
+    For X with a boy and a girl: 
+    ```
+    v.genotypes = [[0,1], [0], [1], [0,0]] 
+    ```
+ 
+    Preliminary idea for CNVs
+    ``` 
+    [[2], [1], [2], [1]] 
+    ```
+    or 
+    ```
+    [[1], [1], [0], [2]]
+    ``` 
+    or 
+    ```
+    [[2], [2], [1], [2]], [[2],[2],[2],[3]] 
+    ```
+ 
+
+For example: 
+
+```python
+print v.alt[1], "has the following effect", V.effect[0].worst 
+
+for ge in V.effect[1].gene:   
+    print ge.effect, ge.symbol 
+```
+
 
 ## Multi-allelic variants
 

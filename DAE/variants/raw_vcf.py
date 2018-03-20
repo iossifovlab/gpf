@@ -10,10 +10,11 @@ import pandas as pd
 
 from variants.loader import RawVariantsLoader
 from variants.family import FamiliesBase
-from variants.variant import FamilyVariant, SummaryVariant
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
 from variants.vcf_utils import VcfFamily
+from variants.summary_variant import SummaryVariantSimple
+from variants.family_variant import FamilyVariantSimple
 
 
 def split_gene_effect(effects):
@@ -206,11 +207,11 @@ class RawFamilyVariants(FamiliesBase):
         for index, row in enumerate(annot_df.to_dict(orient='records')):
             vcf = variants[index]
 
-            summary_variant = SummaryVariant.from_dict(row)
+            summary_variant = SummaryVariantSimple.from_dict(row)
             summary_variant.vcf = vcf
 
             for fam in self.families.values():
-                vs = FamilyVariant.from_summary_variant(
+                vs = FamilyVariantSimple.from_summary_variant(
                     summary_variant, fam, vcf=vcf)
                 for v in vs:
                     yield v

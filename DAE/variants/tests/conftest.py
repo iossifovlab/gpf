@@ -13,13 +13,14 @@ from variants.configure import Configure
 from variants.family import Family
 from variants.loader import RawVariantsLoader
 from variants.raw_vcf import RawFamilyVariants
-from variants.variant import FamilyVariant, SummaryVariant
 import os
 import tempfile
 import shutil
 from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
+from variants.summary_variant import SummaryVariantSimple
+from variants.family_variant import FamilyVariantSimple
 
 
 @pytest.fixture(scope='session')
@@ -189,13 +190,14 @@ def fam1():
 
 @pytest.fixture(scope='session')
 def sv():
-    return SummaryVariant("1", 11539, "T", "TA,TG")
+    return SummaryVariantSimple("1", 11539, "T", "TA,TG")
 
 
 @pytest.fixture(scope='session')
 def fv1(sv, fam1):
     def rfun(gt):
-        return next(iter(FamilyVariant.from_summary_variant(sv, fam1, gt=gt)))
+        return next(iter(
+            FamilyVariantSimple.from_summary_variant(sv, fam1, gt=gt)))
     return rfun
 
 
@@ -222,7 +224,8 @@ def fam2():
 @pytest.fixture(scope='session')
 def fv2(sv, fam2):
     def rfun(gt):
-        return next(iter(FamilyVariant.from_summary_variant(sv, fam2, gt=gt)))
+        return next(iter(
+            FamilyVariantSimple.from_summary_variant(sv, fam2, gt=gt)))
     return rfun
 
 
@@ -250,7 +253,8 @@ def fam3():
 @pytest.fixture(scope='session')
 def fv3(sv, fam3):
     def rfun(gt):
-        return next(iter(FamilyVariant.from_summary_variant(sv, fam3, gt=gt)))
+        return next(iter(
+            FamilyVariantSimple.from_summary_variant(sv, fam3, gt=gt)))
     return rfun
 
 

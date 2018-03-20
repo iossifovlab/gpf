@@ -7,14 +7,15 @@ from __future__ import print_function
 
 from RegionOperations import Region
 import numpy as np
-from variants.variant import SummaryVariant, FamilyVariant
 from variants.vcf_utils import mat2str
 import pytest
+from variants.summary_variant import SummaryVariantSimple
+from variants.family_variant import FamilyVariantSimple
 
 
 @pytest.mark.skip("changing wrapping of multiallele variants")
 def test_multiallele_family_variant(fam1):
-    sv = SummaryVariant(
+    sv = SummaryVariantSimple(
         "1", 11539, "T", "TA,TG",
         atts={
             'effectType': np.array(['intron', 'intron']),
@@ -23,25 +24,25 @@ def test_multiallele_family_variant(fam1):
     gt = np.array([[0, 0, 0],
                    [0, 0, 0]])
 
-    fv = FamilyVariant.from_summary_variant(sv, fam1, gt=gt)
+    fv = FamilyVariantSimple.from_summary_variant(sv, fam1, gt=gt)
     assert fv is not None
     print(fv, fv['effectType'], fv['all.altFreq'])
 
     gt = np.array([[-1, 0, 0],
                    [0, 1, 0]])
-    fv = FamilyVariant.from_summary_variant(sv, fam1, gt=gt)
+    fv = FamilyVariantSimple.from_summary_variant(sv, fam1, gt=gt)
     assert fv is not None
 
     print(fv, fv['effectType'], fv['all.altFreq'])
 
     gt = np.array([[-1, 0, 0],
                    [0, 1, 2]])
-    fv = FamilyVariant.from_summary_variant(sv, fam1, gt=gt)
+    fv = FamilyVariantSimple.from_summary_variant(sv, fam1, gt=gt)
     assert fv is None
 
     gt = np.array([[-1, 0, 0],
                    [0, 2, 2]])
-    fv = FamilyVariant.from_summary_variant(sv, fam1, gt=gt)
+    fv = FamilyVariantSimple.from_summary_variant(sv, fam1, gt=gt)
     assert fv is not None
     print(fv, fv['effectType'], fv['all.altFreq'])
 
