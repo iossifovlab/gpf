@@ -162,7 +162,7 @@ def old_annotator():
 
 
 @pytest.mark.slow
-def test_compare_all_lgds_1_908275(nvcf19, old_annotator, effect_annotator):
+def test_compare_all_1_908275(nvcf19, old_annotator):
     logging.basicConfig(level=logging.DEBUG)
     regions = [
         Region('1', 874817, 874817),
@@ -177,6 +177,31 @@ def test_compare_all_lgds_1_908275(nvcf19, old_annotator, effect_annotator):
         regions=regions,
         inheritance='mendelian or denovo',
         # effect_types=['frame-shift', 'nonsense', 'splice-site']
+    )
+    vl = list(vs)
+    for v in vl:
+        print("")
+        print(v, v.family_id, mat2str(v.best_st), v.inheritance,
+              v.effect_type, v.effect_gene,
+              v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'),
+              sep='\t')
+        _effects, desc = old_annotator.annotate_variant(
+            chr=v.chromosome,
+            position=v.position,
+            var=v.variant)
+        print("N:>", v.effect_type, v.effect_gene, v.effect_details)
+        print("V:>", v.chromosome, v.start, v.reference, v.alt)
+        for d in desc:
+            print("E:>", d.effect_type, d.effect_details)
+
+    assert len(vl) == 9
+
+
+@pytest.mark.slow
+def test_compare_all_lgds_1_908275(nvcf19, old_annotator):
+    vs = nvcf19.query_variants(
+        inheritance='mendelian or denovo',
+        effect_types=['frame-shift', 'nonsense', 'splice-site']
     )
     vl = list(vs)
     for v in vl:
