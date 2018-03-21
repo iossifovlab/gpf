@@ -38,7 +38,7 @@ class AlleleItems(object):
         else:
             if index is None or index < 0:
                 return index
-            elif not index:
+            elif not 1 <= index <= self.size:
                 raise IndexError("invalid allele index: {}".format(index))
             return index - 1
 
