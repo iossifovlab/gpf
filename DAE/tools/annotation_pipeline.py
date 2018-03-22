@@ -10,6 +10,7 @@ import pysam
 
 from annotate_variants import EffectAnnotator
 from add_missense_scores import MissenseScoresAnnotator
+from annotate_with_genomic_scores import GenomicScoresAnnotator
 
 def str_to_class(val):
     return reduce(getattr, val.split("."), sys.modules[__name__])
