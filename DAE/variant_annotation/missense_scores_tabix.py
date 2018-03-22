@@ -8,8 +8,10 @@ class MissenseScoresDB:
     chromosomes = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
     columns = {}
 
-    def __init__(self):
-        self.path = os.path.join(os.environ['dbNSFP_PATH'])
+    def __init__(self, path=None):
+        self.path = path
+        if path is None:
+            self.path = os.path.join(os.environ['dbNSFP_PATH'])
 
         with gzip.open(self.path.format(self.chromosomes[0]), 'rb') as f:
             reader = csv.reader(f, delimiter='\t')

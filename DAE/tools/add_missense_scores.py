@@ -5,12 +5,9 @@ from variant_annotation.missense_scores_tabix import MissenseScoresDB
 from variant_annotation.variant import Variant
 import argparse
 
-mDB = MissenseScoresDB()
-
 def get_argument_parser():
     parser = argparse.ArgumentParser(
-        description='Add missense scores from dbSNFP',
-        epilog="Supported columns:\n" + '\n'.join(mDB.get_field_names()))
+        description='Add missense scores from dbSNFP')
     parser.add_argument('--input-file')
     parser.add_argument('--output-file')
     parser.add_argument('-c', help='chromosome column number/name', action='store')
@@ -18,6 +15,7 @@ def get_argument_parser():
     parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
     parser.add_argument('-v', help='variant column number/name', action='store')
     parser.add_argument('-e', help='effect type column number/name', action='store')
+    parser.add_argument('--dbnsfp', help='path to dbNSFP', action='store')
     parser.add_argument('--columns', action='append', default=[], dest="columns")
     return parser
 
@@ -49,7 +47,7 @@ class MissenseScoresAnnotator(object):
         if self.opts.columns is not None:
             self.header.extend(self.opts.columns)
         self._init_cols()
-        self.mDB = mDB
+        self.mDB = MissenseScoresDB(opts.dbnsfp)
 
     def _init_cols(self):
         opts = self.opts
