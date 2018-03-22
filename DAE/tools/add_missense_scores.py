@@ -3,6 +3,7 @@ import csv
 import sys
 from variant_annotation.missense_scores_tabix import MissenseScoresDB
 from variant_annotation.variant import Variant
+from utilities import *
 import argparse
 
 def get_argument_parser():
@@ -18,26 +19,6 @@ def get_argument_parser():
     parser.add_argument('--dbnsfp', help='path to dbNSFP', action='store')
     parser.add_argument('--columns', action='append', default=[], dest="columns")
     return parser
-
-def give_column_number(s, header):
-    try:
-        c = header.index(s)
-        return(c+1)
-    except:
-        sys.stderr.write("Used parameter: " + s + " does NOT exist in the input file header\n")
-        sys.exit(-678)
-
-def assign_values(param, header=None):
-    if param == None:
-        return(param)
-    try:
-        param = int(param)
-    except:
-        if header == None:
-            sys.stderr.write("You cannot use column names when the file doesn't have a header (-H option set)!\n")
-            sys.exit(-49)
-        param = give_column_number(param, header)
-    return(param)
 
 class MissenseScoresAnnotator(object):
 

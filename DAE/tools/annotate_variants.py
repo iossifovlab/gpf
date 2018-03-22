@@ -8,6 +8,7 @@ import re, os.path, sys
 import GenomeAccess
 from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import VariantAnnotator as VariantAnnotation
+from utilities import *
 import time
 import datetime
 
@@ -73,26 +74,6 @@ def print_help():
 
     print("\n----------------------------------------------------------------\n\n")
 
-def give_column_number(s, header):
-    try:
-        c = header.index(s)
-        return(c+1)
-    except:
-        sys.stderr.write("Used parameter: " + s + " does NOT exist in the input file header\n")
-        sys.exit(-678)
-
-
-def assign_values(param, header=None):
-    if param == None:
-        return(param)
-    try:
-        param = int(param)
-    except:
-        if header == None:
-            sys.stderr.write("You cannot use column names when the file doesn't have a header (-H option set)!\n")
-            sys.exit(-49)
-        param = give_column_number(param, header)
-    return(param)
 
 class EffectAnnotator(object):
 
