@@ -4,13 +4,12 @@
 # written by Ewa
 
 import optparse
-import re, os.path
+import re, os.path, sys
 import GenomeAccess
-from GeneModelFiles import *
+from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import VariantAnnotator as VariantAnnotation
 import time
 import datetime
-from DAE import *
 
 def set_order(option, opt_str, value, parser):
     setattr(parser.values, option.dest, value)
@@ -136,6 +135,9 @@ class EffectAnnotator(object):
         opts = self.opts
         if opts.I == "None":
             opts.I = None
+
+        if opts.Graw == None:
+            from DAE import genomesDB
 
         if opts.G == None and opts.Graw == None:
             GA = genomesDB.get_genome()
