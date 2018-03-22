@@ -6,7 +6,6 @@
 from GenomicScores import load_genomic_scores
 from utilities import *
 import optparse
-import time
 
 def get_argument_parser():
     desc = """Program to annotate genomic positions with genomic scores (GERP, PhyloP, phastCons, nt, GC, cov)"""
@@ -20,59 +19,6 @@ def get_argument_parser():
     parser.add_option('-S', help='scores subset [string - colon separated]', action='store')
     parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
     return parser
-
-def main():
-    start=time.time()
-
-    (opts, args) = get_argument_parser().parse_args()
-
-    infile = '-'
-    outfile = None
-
-    if len(args) > 0:
-        infile = args[0]
-
-    if infile != '-' and os.path.exists(infile) == False:
-        raise Exception("The given input file does not exist!")
-
-    if len(args) > 1:
-        outfile = args[1]
-    if outfile == '-':
-        outfile = None
-
-    if infile == '-':
-        variantFile = sys.stdin
-    else:
-        variantFile = open(infile)
-
-    if opts.no_header == False:
-        header_str = variantFile.readline()
-        header = header_str.split()
-    else:
-        header = None
-
-    if outfile != None:
-        out = open(outfile, 'w')
-    else:
-        out = std.out
-
-    annotator = GenomicScoresAnnotator(opts, header=header)
-    annotator.annotate_file(variantFile, out)
-
-    if infile != '-':
-        variantFile.close()
-
-    if outfile != None:
-        out.write("# PROCESSING DETAILS:\n")
-        out.write("# " + time.asctime() + "\n")
-        out.write("# " + " ".join(sys.argv) + "\n")
-        sys.stderr.write("Output file saved as: " + outfile + "\n")
-    else:
-        sys.stderr.write("# PROCESSING DETAILS:\n# " + time.asctime() + "\n# " + " ".join(sys.argv) + "\n")
-
-    if outfile != None:
-        out.close()
-
 
 class GenomicScoresAnnotator(object):
 
@@ -129,4 +75,4 @@ class GenomicScoresAnnotator(object):
 
 
 if __name__ == '__main__':
-    main()
+    main(get_argument_parser(), GenomicScoresAnnotator)

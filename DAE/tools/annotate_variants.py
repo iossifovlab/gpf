@@ -9,8 +9,6 @@ import GenomeAccess
 from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import VariantAnnotator as VariantAnnotation
 from utilities import *
-import time
-import datetime
 
 def set_order(option, opt_str, value, parser):
     setattr(parser.values, option.dest, value)
@@ -185,66 +183,7 @@ class EffectAnnotator(object):
         return [locals()[col] for col in new_cols_order]
 
 
-def main():
-    start=time.time()
-
-    (opts, args) = get_argument_parser().parse_args()
-
-    if opts.help:
-        print_help()
-        sys.exit(0)
-
-
-    infile = '-'
-    outfile = None
-
-    if len(args) > 0:
-        infile = args[0]
-
-    if infile != '-' and os.path.exists(infile) == False:
-        sys.stderr.write("The given input file does not exist!\n")
-        sys.exit(-78)
-
-    if len(args) > 1:
-        outfile = args[1]
-    if outfile=='-':
-        outfile = None
-
-    if infile=='-':
-        variantFile = sys.stdin
-    else:
-        variantFile = open(infile)
-
-    if opts.no_header == False:
-        first_line_str = variantFile.readline()
-        first_line = first_line_str.split()
-    else:
-        first_line = None
-
-    if outfile != None:
-        out = open(outfile, 'w')
-    else:
-        out = sys.stdout
-
-
-    annotator = EffectAnnotator(opts=opts, header=first_line)
-    annotator.annotate_file(variantFile, out)
-
-    out.write("# PROCESSING DETAILS:\n")
-    out.write("# " + time.asctime() + "\n")
-    out.write("# " + " ".join(sys.argv[1:]) + "\n")
-
-
-    if infile != '-':
-        variantFile.close()
-
-    if outfile != None:
-        out.close()
-        sys.stderr.write("Output file saved as: " + outfile + "\n")
-
-
-    sys.stderr.write("The program was running for [h:m:s]: " + str(datetime.timedelta(seconds=round(time.time()-start,0))) + "\n")
 
 
 if __name__ == "__main__":
-    main()
+    main(get_argument_parser(), EffectAnnotator)
