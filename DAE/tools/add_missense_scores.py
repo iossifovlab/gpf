@@ -43,13 +43,8 @@ def assign_values(param, header=None):
 
 class MissenseScoresAnnotator(object):
 
-    def __init__(self, opts=None, args=None, header=None):
-        if opts is not None:
-            self.opts = opts
-        elif args is not None:
-            self.opts = get_argument_parser().parse_args(args)
-        else:
-            raise ValueError('Either opts or args argument must be provided')
+    def __init__(self, opts, header=None):
+        self.opts = opts
         self.header = header
         if self.opts.columns is not None:
             self.header.extend(self.opts.columns)

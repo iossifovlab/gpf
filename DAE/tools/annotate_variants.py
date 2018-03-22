@@ -97,13 +97,8 @@ def assign_values(param, header=None):
 
 class EffectAnnotator(object):
 
-    def __init__(self, opts=None, args=None, header=None):
-        if opts is not None:
-            self.opts = opts
-        elif args is not None:
-            (self.opts, _) = get_argument_parser().parse_args(args)
-        else:
-            raise ValueError('Either opts or args argument must be provided')
+    def __init__(self, opts, header=None):
+        self.opts = opts
         self.header = header
         self._init_cols()
         self._init_variant_annotation()
@@ -130,7 +125,7 @@ class EffectAnnotator(object):
         self.argColumnNs = [self.chrCol, self.posCol, self.locCol, self.varCol,
             self.refCol, self.altCol, self.lengthCol, self.seqCol, self.typeCol]
 
-        if hasattr(opts, 'order'):
+        if hasattr(opts, 'order') and opts.order is not None:
             new_col_labels = [getattr(opts, col) for col in opts.order]
         else:
             opts.order = ['effect_type', 'effect_gene', 'effect_details']
@@ -173,6 +168,8 @@ class EffectAnnotator(object):
 
         sys.stderr.write("GENOME: " + GA.genomicFile + "\n")
         sys.stderr.write("GENE MODEL FILES: " + gmDB.location + "\n")
+        if opts.prom_len is None:
+            opts.prom_len = 0
         self.annotation_helper = VariantAnnotation(GA, gmDB, promoter_len=opts.prom_len)
 
     def annotate_file(self, input, output):

@@ -4,53 +4,39 @@ import os, sys
 import time, datetime
 import optparse
 import ConfigParser
+import common.config
+from box import Box
 import pysam
 
 from annotate_variants import EffectAnnotator
 from add_missense_scores import MissenseScoresAnnotator
 
-''' config
-[annotation]
-
-steps=effects,missense scores
-steps.effects.args=-c chr -p position -v variant
-steps.effects.columns=effect_type:effect type,...
-
-'''
+def str_to_class(val):
+    return reduce(getattr, val.split("."), sys.modules[__name__])
 
 class MultiAnnotator(object):
-
-    ANNOTATOR_CLASSES = {
-        'effects': EffectAnnotator,
-        'missense': MissenseScoresAnnotator
-    }
 
     def __init__(self, config_file, header=None, reannotate=False):
         self.header = header
         self.reannotate = reannotate
-        self.config = ConfigParser.SafeConfigParser()
-        self.config.read(config_file)
-
-        annotation_steps = [step.strip()
-                 for step in self.config.get('annotation', 'steps').split(',')]
+        config_parser = ConfigParser.SafeConfigParser()
+        config_parser.optionxform = str
+        config_parser.read(config_file)
+        self.config = Box(common.config.to_dict(config_parser),
+            default_box=True, default_box_attr=None)
 
         self.annotators = []
         new_columns_labels = []
         columns_labels = {}
-        for annotation_step in annotation_steps:
-            args = self.config.get('annotation',
-                'steps.{}.args'.format(annotation_step))
-            columns_str = self.config.get('annotation',
-                'steps.{}.columns'.format(annotation_step))
-            step_columns = [tuple([token.strip() for token in column.split(':')])
-                            for column in columns_str.split(',')]
-            columns_labels.update(dict(step_columns))
+        for annotation_step in config_parser.sections():
+            annotation_step_config = self.config[annotation_step]
+            columns_labels.update(annotation_step_config.columns)
             if not reannotate and self.header is not None:
-                self.header.extend([column[1] for column in step_columns])
+                self.header.extend(annotation_step_config.columns.values())
             self.annotators.append({
-                'instance': self.ANNOTATOR_CLASSES[annotation_step](
-                    args=args.split(), header=self.header),
-                'columns': [column[0] for column in step_columns]
+                'instance': str_to_class(annotation_step)(
+                    annotation_step_config.options, self.header),
+                'columns': annotation_step_config.columns.keys()
             })
 
         if reannotate:
