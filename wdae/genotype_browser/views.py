@@ -22,6 +22,7 @@ from query_variants import join_line, generate_web_response, generate_response
 from datasets_api.permissions import IsDatasetAllowed
 from datasets.metadataset import MetaDataset
 import logging
+from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +70,7 @@ class QueryPreviewView(QueryBaseView):
             'rows': limitted_rows
         }
 
+    @expand_gene_set
     def post(self, request):
         LOGGER.info(log_filter(request, "query v3 preview request: " +
                                str(request.data)))
@@ -133,6 +135,7 @@ class QueryDownloadView(QueryBaseView):
             else:
                 break
 
+    @expand_gene_set
     def post(self, request):
         LOGGER.info(log_filter(request, "query v3 download request: " +
                                str(request.data)))

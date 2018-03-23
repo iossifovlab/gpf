@@ -17,7 +17,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(200, response.status_code)
 
         data = response.data
-        self.assertEquals(8, len(data))
+        self.assertEquals(9, len(data))
 
         denovo = data[1]
         self.assertEquals('denovo', denovo['name'])
