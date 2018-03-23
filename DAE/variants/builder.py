@@ -8,7 +8,7 @@ import os
 from variants.configure import Configure
 from variants.raw_vcf import RawFamilyVariants
 from GeneModelFiles import load_gene_models
-from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
+from variants.annotate_variant_effects import VcfVariantEffectsAnnotatorSimple
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
 from variants.loader import RawVariantsLoader
@@ -42,7 +42,7 @@ def variants_builder(prefix, genome_file=None, gene_models_file=None):
     genome = get_genome(genome_file)
     gene_models = get_gene_models(gene_models_file)
 
-    effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
+    effect_annotator = VcfVariantEffectsAnnotatorSimple(genome, gene_models)
     freq_annotator = VcfAlleleFrequencyAnnotator()
 
     annotator = AnnotatorComposite(annotators=[

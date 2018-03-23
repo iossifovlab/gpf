@@ -220,7 +220,8 @@ class RawFamilyVariants(FamiliesBase):
 if __name__ == "__main__":
     import os
     from variants.vcf_utils import mat2str
-    from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
+    from variants.annotate_variant_effects import \
+        VcfVariantEffectsAnnotatorSimple
     from variants.annotate_allele_frequencies import \
         VcfAlleleFrequencyAnnotator
     from variants.annotate_composite import AnnotatorComposite
@@ -234,7 +235,7 @@ if __name__ == "__main__":
     )
 
     annotator = AnnotatorComposite(annotators=[
-        VcfVariantEffectsAnnotator(),
+        VcfVariantEffectsAnnotatorSimple(),
         VcfAlleleFrequencyAnnotator(),
     ])
 

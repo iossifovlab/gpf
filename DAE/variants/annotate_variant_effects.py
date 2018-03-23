@@ -16,7 +16,7 @@ GA = genomesDB.get_genome()  # @UndefinedVariable
 gmDB = genomesDB.get_gene_models()  # @UndefinedVariable
 
 
-class VcfVariantEffectsAnnotator(AnnotatorBase):
+class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
     COLUMNS = ['effectType', 'effectGene', 'effectDetails']
 
     def __init__(self, genome=GA, gene_models=gmDB):
@@ -40,9 +40,12 @@ class VcfVariantEffectsAnnotator(AnnotatorBase):
                 position=vcf_variant.start + 1,
                 ref=vcf_variant.REF,
                 alt=alt)
-            result.append(self.variant_annotator.effect_description(effects))
+            result.append(self.wrap_effects(effects))
         result = np.array(result)
         return result[:, 0], result[:, 1], result[:, 2]
+
+    def wrap_effects(self, effects):
+        raise NotImplementedError()
 
     def do_annotate_variant(self, chrom, position, ref, alt):
         variant = Variant(
@@ -52,3 +55,27 @@ class VcfVariantEffectsAnnotator(AnnotatorBase):
             alt=alt)
         effects = self.variant_annotator.annotate(variant)
         return effects
+
+
+class VcfVariantEffectsAnnotatorSimple(VcfVariantEffectsAnnotatorBase):
+    COLUMNS = ['effectType', 'effectGene', 'effectDetails']
+
+    def __init__(self, genome=GA, gene_models=gmDB):
+        super(VcfVariantEffectsAnnotatorSimple, self).__init__(
+            genome, gene_models)
+
+    def wrap_effects(self, effects):
+        return self.variant_annotator.effect_description(effects)
+
+
+class VcfVariantEffectsAnnotatorFull(VcfVariantEffectsAnnotatorBase):
+    COLUMNS = ['effectType', 'effectGene', 'effectDetails']
+
+    def __init__(self, genome=GA, gene_models=gmDB):
+        super(VcfVariantEffectsAnnotatorFull, self).__init__(
+            genome, gene_models)
+
+    def wrap_effects(self, effects):
+        effect_type, effect_gene, _ = \
+            self.variant_annotator.effect_simplify(effects)
+        return (effect_type, effect_gene, effects)

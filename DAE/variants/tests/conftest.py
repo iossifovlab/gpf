@@ -16,7 +16,9 @@ from variants.raw_vcf import RawFamilyVariants
 import os
 import tempfile
 import shutil
-from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
+from variants.annotate_variant_effects import \
+    VcfVariantEffectsAnnotatorSimple,\
+    VcfVariantEffectsAnnotatorFull
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
 from variants.summary_variant import SummaryVariantSimple
@@ -25,7 +27,12 @@ from variants.family_variant import FamilyVariantSimple
 
 @pytest.fixture(scope='session')
 def effect_annotator():
-    return VcfVariantEffectsAnnotator()
+    return VcfVariantEffectsAnnotatorSimple()
+
+
+@pytest.fixture(scope='session')
+def effect_annotator_full():
+    return VcfVariantEffectsAnnotatorFull()
 
 
 @pytest.fixture(scope='session')

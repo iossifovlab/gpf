@@ -78,11 +78,48 @@ class VariantDetail(object):
         return AlleleItems(details)
 
 
+class EffectGene(object):
+    def __init__(self, symbol=None, effect=None):
+        self.symbol = symbol
+        self.effect = effect
+
+    def __repr__(self):
+        return "{}:{}".format(self.symbol, self.effect)
+
+    def __str__(self):
+        return self.__repr__()
+
+    @classmethod
+    def from_gene_effects(cls, gene_effects):
+        result = []
+        for symbol, effect in gene_effects:
+            result.append(cls.from_tuple((symbol, effect)))
+        return result
+
+    @classmethod
+    def from_string(cls, data):
+        return cls.from_tuple(data.split(":"))
+
+    @classmethod
+    def from_tuple(cls, (symbol, effect)):
+        return EffectGene(symbol, effect)
+
+
+class EffectTranscript(object):
+
+    def __init__(self):
+        pass
+
+
 class EffectDetail(object):
-    def __init__(self, worst_effect, gene_effect, effect_details):
+    def __init__(self, worst_effect, gene_effects, effect_details):
         self.worst = worst_effect
-        self.gene = gene_effect
+        self.gene = EffectGene.from_gene_effects(gene_effects)
         self.transcript = effect_details
+
+    @classmethod
+    def from_effects(cls, effect_type, gene_effects, effects):
+        return EffectDetail(effect_type, gene_effects, effects)
 
 
 class SummaryVariantFull(VariantBase):

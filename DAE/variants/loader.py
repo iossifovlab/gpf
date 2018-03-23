@@ -105,7 +105,8 @@ class RawVariantsLoader(object):
 
     @staticmethod
     def save_annotation_file(vars_df, filename, sep='\t', storage='csv'):
-        def convert_array_of_strings(a): return RawVariantsLoader.SEP.join(a)
+        def convert_array_of_strings(a):
+            return RawVariantsLoader.SEP.join([str(e) for e in a])
 
         def convert_array_of_numbers(a):
             return RawVariantsLoader.SEP.join([
