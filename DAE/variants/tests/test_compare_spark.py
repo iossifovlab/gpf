@@ -201,7 +201,7 @@ def test_compare_all_1_908275(nvcf19, old_annotator):
     assert len(vl) == 8
 
 
-@pytest.mark.slow
+@pytest.mark.skip
 def test_compare_all_lgds_1_908275(nvcf19, old_annotator):
     vs = nvcf19.query_variants(
         inheritance='mendelian or denovo',
