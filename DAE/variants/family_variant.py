@@ -27,7 +27,7 @@ class FamilyVariantSimple(VariantBase):
 
         atts = {}
         for k, v in summary_variant._atts.items():
-            if isinstance(v, np.ndarray):
+            if isinstance(v, np.ndarray) or isinstance(v, list):
                 if alt_index is not None:
                     atts[k] = v[alt_index]
             else:

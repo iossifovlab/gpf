@@ -108,4 +108,4 @@ def vcf2cshl(pos, ref, alts):
         vrt.append(vt)
         lens.append(vl)
 
-    return np.array(pxx), np.array(vrt), np.array(lens)
+    return pxx, vrt, lens

@@ -182,7 +182,9 @@ class VariantAnnotator:
                 set_worst_effect = True
 
             if effect_type == "intergenic":
-                return("intergenic", "intergenic", "intergenic")
+                return ("intergenic",
+                        [("intergenic", "intergenic")],
+                        "intergenic")
 
             if effect_type == "no-mutation":
                 return("no-mutation", "no-mutation", "no-mutation")

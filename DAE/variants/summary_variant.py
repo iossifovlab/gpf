@@ -71,9 +71,11 @@ class VariantDetail(object):
 
     @staticmethod
     def from_vcf(chrom, position, reference, alternative):
+        variant_details = vcf2cshl(position, reference, alternative)
+        variant_details = zip(*variant_details)
         details = [
             VariantDetail(chrom, p, v, l)
-            for (p, v, l) in zip(vcf2cshl(position, reference, alternative))
+            for (p, v, l) in variant_details
         ]
         return AlleleItems(details)
 
@@ -111,20 +113,23 @@ class EffectTranscript(object):
         pass
 
 
-class EffectDetail(object):
-    def __init__(self, worst_effect, gene_effects, effect_details):
+class Effect(object):
+    def __init__(self, worst_effect, gene_effects, efffect_transcripts):
         self.worst = worst_effect
         self.gene = EffectGene.from_gene_effects(gene_effects)
-        self.transcript = effect_details
 
     @classmethod
-    def from_effects(cls, effect_type, gene_effects, effects):
-        return EffectDetail(effect_type, gene_effects, effects)
+    def from_effects(cls, effect_types, effect_genes, effect_transcripts):
+        result = []
+        for et, eg, et in zip(effect_types, effect_genes, effect_transcripts):
+            eff = Effect(et, eg, et)
+            result.append(eff)
+        return AlleleItems(result)
 
 
 class SummaryVariantFull(VariantBase):
     def __init__(self, chromosome, start, reference, alternative, atts={}):
-        super(SummaryVariantSimple, self).__init__(
+        super(SummaryVariantFull, self).__init__(
             chromosome, start, reference, alternative, atts=atts)
 
         self.alt = AlleleItems(alternative)
@@ -133,5 +138,11 @@ class SummaryVariantFull(VariantBase):
 
     @classmethod
     def from_annot_df(cls, row):
-        pass
-        #sv = SummaryVariantFull(row['chr'], row['position'],)
+        sv = SummaryVariantFull(
+            row['chr'], row['position'], row['refA'], row['altA'])
+        sv.details = VariantDetail.from_vcf(
+            row['chr'], row['position'], row['refA'], row['altA'])
+
+        sv.effect = Effect.from_effects(
+            row['effectType'], row['effectGene'], row['effectDetails'])
+        return sv

@@ -10,7 +10,7 @@ import pytest
 
 from variants.loader import RawVariantsLoader
 from variants.tests.common import assert_annotation_equals
-from variants.summary_variant import EffectDetail
+from variants.summary_variant import Effect
 
 
 # @pytest.mark.slow
@@ -156,7 +156,7 @@ from variants.summary_variant import EffectDetail
 #         res = effect_annotator_full.wrap_effects(effects)
 #         print(res)
 #
-#         ed = EffectDetail.from_effects(*res)
+#         ed = Effect.from_effects(*res)
 #
 #         print(ed.worst)
 #         print(ed.gene)

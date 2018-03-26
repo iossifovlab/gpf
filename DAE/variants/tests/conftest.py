@@ -149,6 +149,22 @@ def nvcf19(nvcf19_config, composite_annotator):
 
 
 @pytest.fixture(scope='session')
+def composite_annotator_full(effect_annotator_full, allele_freq_annotator):
+
+    return AnnotatorComposite(annotators=[
+        effect_annotator_full,
+        allele_freq_annotator,
+    ])
+
+
+@pytest.fixture(scope='session')
+def nvcf19f(nvcf19_config, composite_annotator_full):
+    fvariants = RawFamilyVariants(
+        nvcf19_config, annotator=composite_annotator_full)
+    return fvariants
+
+
+@pytest.fixture(scope='session')
 def vcf19_config():
     from variants.default_settings import DATA_DIR
     prefix = os.path.join(DATA_DIR, "spark/spark")
