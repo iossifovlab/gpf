@@ -43,6 +43,7 @@ class VCFWrapper(object):
 
 class RawVariantsLoader(object):
     SEP = '!'
+    SEP2 = '|'
 
     def __init__(self, config):
         self.config = config
@@ -106,7 +107,12 @@ class RawVariantsLoader(object):
     @staticmethod
     def save_annotation_file(vars_df, filename, sep='\t', storage='csv'):
         def convert_array_of_strings(a):
-            return RawVariantsLoader.SEP.join([str(e) for e in a])
+            return RawVariantsLoader.SEP.join(a)
+
+        def convert_array_of_lists(a):
+            return RawVariantsLoader.SEP.join(
+                [RawVariantsLoader.SEP2.join(str(e)) for e in a]
+            )
 
         def convert_array_of_numbers(a):
             return RawVariantsLoader.SEP.join([
@@ -119,9 +125,9 @@ class RawVariantsLoader(object):
             vars_df['effectType'] = vars_df['effectType'].\
                 apply(convert_array_of_strings)
             vars_df['effectGene'] = vars_df['effectGene'].\
-                apply(convert_array_of_strings)
+                apply(convert_array_of_lists)
             vars_df['effectDetails'] = vars_df['effectDetails'].\
-                apply(convert_array_of_strings)
+                apply(convert_array_of_lists)
             vars_df['all.nAltAlls'] = vars_df['all.nAltAlls'].\
                 apply(convert_array_of_numbers)
             vars_df['all.altFreq'] = vars_df['all.altFreq'].\

@@ -130,3 +130,8 @@ class SummaryVariantFull(VariantBase):
         self.alt = AlleleItems(alternative)
         self.alt_details = VariantDetail.from_vcf(
             chromosome, start, reference, alternative)
+
+    @classmethod
+    def from_annot_df(cls, row):
+        pass
+        #sv = SummaryVariantFull(row['chr'], row['position'],)
