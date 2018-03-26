@@ -13,8 +13,7 @@ from variants.family import FamiliesBase
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
 from variants.vcf_utils import VcfFamily
-from variants.summary_variant import SummaryVariantSimple
-from variants.family_variant import FamilyVariantSimple
+from variants.variant_simple import VariantFactorySimple
 
 
 def split_gene_effect(effects):
@@ -38,7 +37,8 @@ def parse_gene_effect(effect):
 
 class RawFamilyVariants(FamiliesBase):
 
-    def __init__(self, config=None, prefix=None, annotator=None, region=None):
+    def __init__(self, config=None, prefix=None, annotator=None, region=None,
+                 variant_factory=VariantFactorySimple):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix(prefix)
@@ -46,6 +46,7 @@ class RawFamilyVariants(FamiliesBase):
         assert self.config is not None
         assert isinstance(self.config, Configure)
 
+        self.VF = variant_factory
         self._load(annotator, region)
 
     def _match_pedigree_to_samples(self, ped_df, samples):
@@ -209,11 +210,11 @@ class RawFamilyVariants(FamiliesBase):
         for index, row in enumerate(annot_df.to_dict(orient='records')):
             vcf = variants[index]
 
-            summary_variant = SummaryVariantSimple.from_dict(row)
+            summary_variant = self.VF.summary_variant_from_dict(row)
             summary_variant.vcf = vcf
 
             for fam in self.families.values():
-                vs = FamilyVariantSimple.from_summary_variant(
+                vs = self.VF.family_variant_from_vcf(
                     summary_variant, fam, vcf=vcf)
                 for v in vs:
                     yield v

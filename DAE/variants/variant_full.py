@@ -1,28 +1,17 @@
 '''
-Created on Mar 20, 2018
+Created on Mar 26, 2018
 
 @author: lubo
 '''
 from __future__ import print_function
 
-# from icecream import ic
-
+import numpy as np
+from variants.family_variant import FamilyVariantBase
 from variants.variant import VariantBase
+from variants.vcf_utils import VcfFamily
 from variants.vcf_utils import vcf2cshl
+
 from variants.attributes import VariantType
-
-
-class SummaryVariantSimple(VariantBase):
-
-    def __init__(self, chromosome, start, reference, alternatives, atts={}):
-        super(SummaryVariantSimple, self).__init__(
-            chromosome, start, reference, alternatives, atts=atts)
-        position, variant, lengths = vcf2cshl(start, reference, alternatives)
-        self._atts.update({
-            'position': position,
-            'variant': variant,
-            'lengths': lengths,
-        })
 
 
 class AlleleItems(object):
@@ -167,7 +156,7 @@ class SummaryVariantFull(VariantBase):
         return "{}:{}".format(self.chromosome, self.position)
 
     @classmethod
-    def from_annot_df(cls, row):
+    def from_dict(cls, row):
         sv = SummaryVariantFull(
             row['chr'], row['position'], row['refA'], row['altA'])
         sv.details = VariantDetail.from_vcf(
@@ -176,3 +165,86 @@ class SummaryVariantFull(VariantBase):
         sv.effect = Effect.from_effects(
             row['effectType'], row['effectGene'], row['effectDetails'])
         return sv
+
+
+class FamilyVariantFull(FamilyVariantBase):
+
+    def __init__(self, summary_variant, family, gt):
+        super(FamilyVariantFull, self).__init__()
+
+        self.summary = summary_variant
+        self.family = family
+        self.gt = gt
+
+        self.alt_alleles = self.calc_alt_alleles(self.gt)
+
+    @classmethod
+    def from_vcf(cls, sv, family, vcf):
+        assert isinstance(family, VcfFamily)
+        assert vcf is not None
+
+        gt = vcf.gt_idxs[family.alleles]
+        gt = gt.reshape([2, len(family)], order='F')
+
+        return [FamilyVariantFull(sv, family, gt)]
+
+    @property
+    def alt(self):
+        return self.summary.alt
+
+    @property
+    def alternatives(self):
+        return self.summary.alternatives
+
+    @property
+    def chromosome(self):
+        return self.summary.chromosome
+
+    @property
+    def position(self):
+        return self.summary.position
+
+    @property
+    def reference(self):
+        return self.summary.reference
+
+    @property
+    def alt_details(self):
+        return self.summary.alt_details
+
+    @property
+    def effect(self):
+        return self.summary.effect
+
+    @property
+    def best_st(self):
+        if self._best_st is None:
+            ref = (2 * np.ones(len(self.family), dtype=np.int8))
+            unknown = np.any(self.gt == -1, axis=0)
+
+            balt = []
+            for anum in self.summary.alt_alleles:
+                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+                alt_gt[self.gt == anum] = 1
+
+                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                ref = ref - alt
+                balt.append(alt)
+
+            best = [ref]
+            best.extend(balt)
+            self._best_st = np.stack(best, axis=0)
+            self._best_st[:, unknown] = -1
+
+        return self._best_st
+
+
+class VariantFactoryFull(object):
+
+    @staticmethod
+    def summary_variant_from_dict(data):
+        return SummaryVariantFull.from_dict(data)
+
+    @staticmethod
+    def family_variant_from_vcf(summary_variant, family, vcf):
+        return FamilyVariantFull.from_vcf(summary_variant, family, vcf)

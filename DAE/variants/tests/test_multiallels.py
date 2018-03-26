@@ -9,8 +9,7 @@ from RegionOperations import Region
 import numpy as np
 from variants.vcf_utils import mat2str
 import pytest
-from variants.summary_variant import SummaryVariantSimple
-from variants.family_variant import FamilyVariantSimple
+from variants.variant_simple import SummaryVariantSimple, FamilyVariantSimple
 
 
 @pytest.mark.skip("changing wrapping of multiallele variants")

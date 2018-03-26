@@ -6,11 +6,10 @@ Created on Mar 6, 2018
 from __future__ import print_function
 # from icecream import ic
 
-import pytest
+# import pytest
 
 from variants.loader import RawVariantsLoader
-from variants.tests.common import assert_annotation_equals
-from variants.summary_variant import Effect
+# from variants.tests.common import assert_annotation_equals
 
 
 # @pytest.mark.slow
@@ -170,7 +169,7 @@ def test_annotate_variant_effects_ustudy(
 
     print(vars_df.head())
 
-    stored_df = vars_df.copy()
+    _stored_df = vars_df.copy()
     RawVariantsLoader.save_annotation_file(
         vars_df, "annot.tmp", storage='csv')
     # assert_annotation_equals(vars_df, stored_df)
