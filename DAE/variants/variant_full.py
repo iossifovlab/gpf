@@ -62,6 +62,12 @@ class AlleleItems(object):
     def __len__(self):
         return self.size
 
+    def __repr__(self):
+        return self.items.__repr__()
+
+    def __str__(self):
+        return str(self.items)
+
 
 class VariantDetail(object):
     def __init__(self, chrom, position, variant, length):
@@ -192,7 +198,7 @@ class FamilyVariantFull(FamilyVariantBase):
         self.family = family
         self.gt = gt
 
-        self.alt_alleles = self.calc_alt_alleles(self.gt)
+        self.falt_alleles = self.calc_alt_alleles(self.gt)
 
     @classmethod
     def from_vcf(cls, sv, family, vcf):
@@ -207,6 +213,10 @@ class FamilyVariantFull(FamilyVariantBase):
     @property
     def alt(self):
         return self.summary.alt
+
+    @property
+    def alt_alleles(self):
+        return self.summary.alt_alleles
 
     @property
     def alternatives(self):

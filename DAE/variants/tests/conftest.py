@@ -161,7 +161,8 @@ def composite_annotator_full(effect_annotator_full, allele_freq_annotator):
 @pytest.fixture(scope='session')
 def nvcf19f(nvcf19_config, composite_annotator_full):
     fvariants = RawFamilyVariants(
-        nvcf19_config, annotator=composite_annotator_full)
+        nvcf19_config, annotator=composite_annotator_full,
+        variant_factory=VariantFactoryFull)
     return fvariants
 
 

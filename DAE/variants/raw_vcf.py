@@ -125,9 +125,16 @@ class RawFamilyVariants(FamiliesBase):
         if value is None:
             return False
         ranges = real_attr_filter[1:]
-        return any(
-            [np.any(value >= rmin) and np.any(value <= rmax)
-             for (rmin, rmax) in ranges])
+
+        result = [
+            (val >= rmin) and (val <= rmax) for val in value
+            for (rmin, rmax) in ranges
+        ]
+
+        result = [
+            tv for (tv, aa) in zip(result, v.alt_alleles)
+            if aa in v.falt_alleles]
+        return any(result)
 
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):

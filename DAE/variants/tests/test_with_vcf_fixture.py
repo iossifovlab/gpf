@@ -11,6 +11,7 @@ from __future__ import print_function
 # from variants.raw_vcf import RawFamilyVariants
 from variants.vcf_utils import mat2str
 from variants.attributes import Role
+from RegionOperations import Region
 # import pytest
 
 
@@ -45,7 +46,8 @@ def test_members_in_order2_genotype(simple_vcf):
 
 def test_freq_trios_2(simple_vcf):
     fvars = simple_vcf("fixtures/trios2")
-    vs = list(fvars.query_variants(family_ids=['f1']))
+    vs = list(fvars.query_variants(
+        family_ids=['f1'], regions=[Region("1", 11539, 11540)]))
     assert len(vs) == 2
 
     v1 = vs[0]
@@ -83,7 +85,8 @@ def test_members_in_order2_genotype_full(full_vcf):
 
 def test_freq_trios_2_full(full_vcf):
     fvars = full_vcf("fixtures/trios2")
-    vs = list(fvars.query_variants(family_ids=['f1']))
+    vs = list(fvars.query_variants(
+        family_ids=['f1'], regions=[Region("1", 11539, 11540)]))
     assert len(vs) == 2
 
     v1 = vs[0]

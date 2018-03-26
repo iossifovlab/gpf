@@ -26,7 +26,7 @@ class FamilyVariantBase(object):
 
     @staticmethod
     def calc_alt_alleles(gt):
-        return set(gt.flatten()).difference({-1, 0})
+        return sorted(list(set(gt.flatten()).difference({-1, 0})))
 
     @classmethod
     def calc_alt_allele_index(cls, gt):
