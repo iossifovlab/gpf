@@ -96,3 +96,8 @@ def test_allele_items_iter():
 
     item = next(it)
     assert item == 2
+
+
+def test_allele_items_join():
+    all_items = AlleleItems(['A', 'B'])
+    assert "A,B" == ",".join(all_items)

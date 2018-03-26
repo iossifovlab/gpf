@@ -12,7 +12,7 @@ def test_effect_gene_serialization():
     assert str(eg) == 'a:b'
 
 
-def test_summary_variants_simple(nvcf19f):
+def test_summary_variants_full(nvcf19f):
     for index, row in nvcf19f.annot_df.iterrows():
         sv = SummaryVariantFull.from_annot_df(row)
         assert sv is not None

@@ -9,6 +9,7 @@ from __future__ import print_function
 
 from variants.variant import VariantBase
 from variants.vcf_utils import vcf2cshl
+from variants.attributes import VariantType
 
 
 class SummaryVariantSimple(VariantBase):
@@ -56,6 +57,9 @@ class AlleleItems(object):
     def __iter__(self):
         return iter(self.items)
 
+    def __len__(self):
+        return self.size
+
 
 class VariantDetail(object):
     def __init__(self, chrom, position, variant, length):
@@ -64,6 +68,23 @@ class VariantDetail(object):
         self.chrom = chrom
         self.cshl_position = position
         self.cshl_variant = variant
+
+    @property
+    def variant_type(self):
+        vt = self.variant[0]
+        if vt == 's':
+            return VariantType.substitution
+        elif vt == 'i':
+            return VariantType.insertion
+        elif vt == 'd':
+            return VariantType.deletion
+        elif vt == 'c':
+            return VariantType.complex
+        elif vt == 'C':
+            return VariantType.CNV
+        else:
+            raise ValueError("unexpected variant type: {}".format(
+                self.variant))
 
     @property
     def cshl_location(self):
@@ -135,6 +156,15 @@ class SummaryVariantFull(VariantBase):
         self.alt = AlleleItems(alternative)
         self.alt_details = VariantDetail.from_vcf(
             chromosome, start, reference, alternative)
+        self.alt_alleles = range(1, len(alternative) + 1)
+
+    @property
+    def position(self):
+        return self.start
+
+    @property
+    def location(self):
+        return "{}:{}".format(self.chromosome, self.position)
 
     @classmethod
     def from_annot_df(cls, row):
