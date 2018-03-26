@@ -8,7 +8,7 @@ from __future__ import print_function
 import numpy as np
 from variants.family_variant import FamilyVariantBase
 from variants.variant import VariantBase
-from variants.vcf_utils import vcf2cshl
+from variants.vcf_utils import vcf2cshl, VcfFamily
 
 from variants.attributes import VariantType
 
@@ -76,6 +76,8 @@ class FamilyVariantSimple(VariantBase, FamilyVariantBase):
 
     @classmethod
     def from_summary_variant(cls, sv, family, gt=None, vcf=None):
+        assert isinstance(family, VcfFamily)
+
         if gt is None:
             assert vcf is not None
             gt = vcf.gt_idxs[family.alleles]

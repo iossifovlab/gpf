@@ -24,8 +24,8 @@ def test_alt_all_freq(ustudy):
         assert 'all.altFreq' in v
 
 
-def test_filter_real_attr(fv1):
-    v = fv1(np.array([[0, 0, 0], [0, 0, 0]]))
+def test_filter_real_attr(sv):
+    v = sv
     v.update_atts({"a": 1, "b": np.array([2, 3])})
 
     assert RawFamilyVariants.filter_real_attr(

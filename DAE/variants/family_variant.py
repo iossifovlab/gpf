@@ -172,3 +172,10 @@ class FamilyVariantBase(object):
                 for pid in self.variant_in_members
             ])
         return self._variant_in_sexes
+
+    @staticmethod
+    def from_family_genotype(family, gt):
+        fv = FamilyVariantBase()
+        fv.family = family
+        fv.gt = gt
+        return fv

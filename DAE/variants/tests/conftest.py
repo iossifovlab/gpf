@@ -22,6 +22,7 @@ from variants.annotate_variant_effects import \
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
 from variants.variant_simple import SummaryVariantSimple, FamilyVariantSimple
+from variants.family_variant import FamilyVariantBase
 
 
 @pytest.fixture(scope='session')
@@ -216,10 +217,9 @@ def sv():
 
 
 @pytest.fixture(scope='session')
-def fv1(sv, fam1):
+def fv1(fam1):
     def rfun(gt):
-        return next(iter(
-            FamilyVariantSimple.from_summary_variant(sv, fam1, gt=gt)))
+        return FamilyVariantBase.from_family_genotype(fam1, gt)
     return rfun
 
 
@@ -246,8 +246,7 @@ def fam2():
 @pytest.fixture(scope='session')
 def fv2(sv, fam2):
     def rfun(gt):
-        return next(iter(
-            FamilyVariantSimple.from_summary_variant(sv, fam2, gt=gt)))
+        return FamilyVariantBase.from_family_genotype(fam2, gt)
     return rfun
 
 
@@ -275,8 +274,7 @@ def fam3():
 @pytest.fixture(scope='session')
 def fv3(sv, fam3):
     def rfun(gt):
-        return next(iter(
-            FamilyVariantSimple.from_summary_variant(sv, fam3, gt=gt)))
+        return FamilyVariantBase.from_family_genotype(fam3, gt)
     return rfun
 
 
