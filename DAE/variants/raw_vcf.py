@@ -14,6 +14,7 @@ from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
 from variants.vcf_utils import VcfFamily
 from variants.variant_simple import VariantFactorySimple
+from variants.variant_full import VariantFactoryFull
 
 
 def split_gene_effect(effects):

@@ -23,7 +23,7 @@ def test_inheritance_trio(simple_vcf, region, count, inheritance):
     vs = list(fvars.query_variants(regions=[region]))
     assert len(vs) == count
     for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
+        print(v, mat2str(v.best_st), v.inheritance)
         assert v.inheritance == inheritance
         assert len(mat2str(v.best_st)) == 7
 
@@ -39,7 +39,7 @@ def test_inheritance_quad(simple_vcf, region, count, inheritance):
     vs = list(fvars.query_variants(regions=[region]))
     assert len(vs) == count
     for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
+        print(v, mat2str(v.best_st), v.inheritance)
 
         assert v.inheritance == inheritance
         assert len(mat2str(v.best_st)) == 9
@@ -56,7 +56,7 @@ def test_inheritance_multi(simple_vcf, region, count, inheritance):
     vs = list(fvars.query_variants(regions=[region]))
     assert len(vs) == count
     for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance, v.effect_type)
+        print(v, mat2str(v.best_st), v.inheritance)
 
         assert v.inheritance == inheritance
         assert len(mat2str(v.best_st)) == 15

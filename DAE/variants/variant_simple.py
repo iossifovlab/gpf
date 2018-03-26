@@ -11,21 +11,7 @@ from variants.variant import VariantBase
 from variants.vcf_utils import vcf2cshl, VcfFamily
 
 from variants.attributes import VariantType
-
-
-class SummaryVariantSimple(VariantBase):
-
-    def __init__(self, chromosome, start, reference, alternatives, atts={}):
-        super(SummaryVariantSimple, self).__init__(
-            chromosome, start, reference, alternatives, atts=atts)
-        position, variant, lengths = vcf2cshl(start, reference, alternatives)
-        self._atts.update({
-            'position': position,
-            'variant': variant,
-            'lengths': lengths,
-        })
-
-        self.alt_alleles = range(1, len(alternatives) + 1)
+from variants.variant_full import SummaryVariantFull
 
 
 class FamilyVariantSimple(VariantBase, FamilyVariantBase):
@@ -57,17 +43,17 @@ class FamilyVariantSimple(VariantBase, FamilyVariantBase):
 
         self.position = self.start
 
-        self.effect_type = self.get_attr('effectType')
-        self.effect_gene = self.get_attr('effectGene')
-        self.effect_details = self.get_attr('effectDetails')
-
-        self.n_alt_alls = self.get_attr('all.nAltAlls')
-        self.alt_alls_freq = self.get_attr('all.altFreq')
-        self.n_par_called = self.get_attr('all.nParCalled')
-        self.prcnt_par_called = self.get_attr('all.prcntParCalled')
-
-        self.alt_alleles = [self.alt_index + 1]
-        self.falt_alleles = self.calc_alt_alleles(gt)
+#         self.effect_type = self.get_attr('effectType')
+#         self.effect_gene = self.get_attr('effectGene')
+#         self.effect_details = self.get_attr('effectDetails')
+#
+#         self.n_alt_alls = self.get_attr('all.nAltAlls')
+#         self.alt_alls_freq = self.get_attr('all.altFreq')
+#         self.n_par_called = self.get_attr('all.nParCalled')
+#         self.prcnt_par_called = self.get_attr('all.prcntParCalled')
+#
+#         self.alt_alleles = [self.alt_index + 1]
+#         self.falt_alleles = self.calc_alt_alleles(gt)
 
     def __repr__(self):
         return '{}:{} {}->{}'.format(
@@ -164,7 +150,7 @@ class VariantFactorySimple(object):
 
     @staticmethod
     def summary_variant_from_dict(data):
-        return SummaryVariantSimple.from_dict(data)
+        return SummaryVariantFull.from_dict(data)
 
     @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):
