@@ -28,6 +28,8 @@ def split_gene_effect(effects):
 
 
 def parse_gene_effect(effect):
+    if isinstance(effect, list):
+        return [{'eff': eff, 'sym': sym} for (eff, sym) in effect]
     if effect in set(["CNV+", "CNV-", "intergenic"]):
         return [{'eff': effect, 'sym': ""}]
 
