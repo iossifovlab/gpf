@@ -16,8 +16,21 @@ from variants.attributes import VariantType
 
 class AlleleItems(object):
 
-    def __init__(self, items):
-        self.items = items
+    def __init__(self, items, alt_alleles=None):
+        if not hasattr(items, '__iter__'):
+            items = [items]
+
+        if alt_alleles is None:
+            self.items = items
+            self.alt_alleles = range(1, len(self.items) + 1)
+        else:
+            assert len(alt_alleles) == len(items) or len(items) == 1
+            if len(items) == 1:
+                item = items[0]
+                self.items = [item for _ in alt_alleles]
+            else:
+                self.items = items
+
         self.size = len(items)
 
     def _to_zero_based(self, index):
@@ -140,12 +153,15 @@ class Effect(object):
 class SummaryVariantFull(VariantBase):
     def __init__(self, chromosome, start, reference, alternative, atts={}):
         super(SummaryVariantFull, self).__init__(
-            chromosome, start, reference, alternative, atts=atts)
+            chromosome, start, reference, alternative, atts={})
 
         self.alt = AlleleItems(alternative)
         self.alt_details = VariantDetail.from_vcf(
             chromosome, start, reference, alternative)
         self.alt_alleles = range(1, len(alternative) + 1)
+
+        for key, val in atts.items():
+            self._atts[key] = AlleleItems(val, self.alt_alleles)
 
     @property
     def position(self):
@@ -248,7 +264,7 @@ class FamilyVariantFull(FamilyVariantBase):
         return item in self.summary._atts
 
     def __getitem__(self, item):
-        return self.summary.get_attr(item)
+        return self.get_attr(item)
 
     def __contains__(self, item):
         return item in self.summary._atts
