@@ -25,6 +25,8 @@ class SummaryVariantSimple(VariantBase):
             'lengths': lengths,
         })
 
+        self.alt_alleles = range(1, len(alternatives) + 1)
+
 
 class FamilyVariantSimple(VariantBase, FamilyVariantBase):
 
@@ -44,18 +46,16 @@ class FamilyVariantSimple(VariantBase, FamilyVariantBase):
         self.family = family
         self.gt = gt
 
-        atts = {}
-        for k, v in summary_variant._atts.items():
-            if isinstance(v, np.ndarray) or isinstance(v, list):
-                if alt_index is not None:
-                    atts[k] = v[alt_index]
-            else:
-                atts[k] = v
-        self._atts = atts
+#         atts = {}
+#         for k, v in summary_variant._atts.items():
+#             if isinstance(v, np.ndarray) or isinstance(v, list):
+#                 if alt_index is not None:
+#                     atts[k] = v[alt_index]
+#             else:
+#                 atts[k] = v
+        self._atts = summary_variant._atts
 
-        self.position = self.get_attr('position', self.start)
-        self.variant = self.get_attr('variant')
-        self.length = self.get_attr('length', 0)
+        self.position = self.start
 
         self.effect_type = self.get_attr('effectType')
         self.effect_gene = self.get_attr('effectGene')
@@ -66,10 +66,13 @@ class FamilyVariantSimple(VariantBase, FamilyVariantBase):
         self.n_par_called = self.get_attr('all.nParCalled')
         self.prcnt_par_called = self.get_attr('all.prcntParCalled')
 
+        self.alt_alleles = [self.alt_index + 1]
+        self.falt_alleles = self.calc_alt_alleles(gt)
+
     def __repr__(self):
-        return '{}:{} {}'.format(
+        return '{}:{} {}->{}'.format(
             self.chromosome, self.position,
-            self.variant)
+            self.reference, self.alternatives)
 
     def __len__(self):
         return self.length
