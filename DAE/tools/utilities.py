@@ -1,6 +1,5 @@
-import sys
-import time
-import datetime
+import sys, os
+import time, datetime
 
 def give_column_number(s, header):
     try:
@@ -27,11 +26,6 @@ def main(argument_parser, annotator_factory):
 
     (opts, args) = argument_parser.parse_args()
 
-    if opts.help:
-        print_help()
-        sys.exit(0)
-
-
     infile = '-'
     outfile = None
 
@@ -54,7 +48,7 @@ def main(argument_parser, annotator_factory):
 
     if opts.no_header == False:
         header_str = variantFile.readline()
-        header = header_str.split()
+        header = header_str.split('\t')
     else:
         header = None
 
