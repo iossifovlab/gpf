@@ -21,8 +21,9 @@ from variants.annotate_variant_effects import \
     VcfVariantEffectsAnnotatorFull
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
-from variants.variant_simple import SummaryVariantSimple, FamilyVariantSimple
 from variants.family_variant import FamilyVariantBase
+from variants.variant_full import VariantFactoryFull
+from variants.variant_simple import SummaryVariantSimple
 
 
 @pytest.fixture(scope='session')
@@ -188,6 +189,18 @@ def simple_vcf(composite_annotator):
         a_data = relative_to_this_test_folder(path)
         a_conf = Configure.from_prefix(a_data)
         fvars = RawFamilyVariants(a_conf, annotator=composite_annotator)
+        return fvars
+    return builder
+
+
+@pytest.fixture(scope='session')
+def full_vcf(composite_annotator_full):
+    def builder(path):
+        a_data = relative_to_this_test_folder(path)
+        a_conf = Configure.from_prefix(a_data)
+        fvars = RawFamilyVariants(
+            a_conf, annotator=composite_annotator_full,
+            variant_factory=VariantFactoryFull)
         return fvars
     return builder
 

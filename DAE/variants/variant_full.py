@@ -158,7 +158,7 @@ class SummaryVariantFull(VariantBase):
     @classmethod
     def from_dict(cls, row):
         sv = SummaryVariantFull(
-            row['chr'], row['position'], row['refA'], row['altA'])
+            row['chr'], row['position'], row['refA'], row['altA'], atts=row)
         sv.details = VariantDetail.from_vcf(
             row['chr'], row['position'], row['refA'], row['altA'])
 
@@ -237,6 +237,21 @@ class FamilyVariantFull(FamilyVariantBase):
             self._best_st[:, unknown] = -1
 
         return self._best_st
+
+    def get_attr(self, item, default=None):
+        val = self.summary._atts.get(item)
+        if val is None:
+            return default
+        return val
+
+    def has_attr(self, item):
+        return item in self.summary._atts
+
+    def __getitem__(self, item):
+        return self.summary.get_attr(item)
+
+    def __contains__(self, item):
+        return item in self.summary._atts
 
 
 class VariantFactoryFull(object):

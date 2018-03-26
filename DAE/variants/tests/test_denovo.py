@@ -6,7 +6,6 @@ Created on Feb 27, 2018
 from __future__ import print_function
 
 import numpy as np
-from variants.vcf_utils import mat2str
 
 
 def test_denovo_trio_1(fv1):
