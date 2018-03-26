@@ -26,24 +26,24 @@ from variants.attributes import Role
 #               v.inheritance)
 
 
-def test_members_in_order1_genotype(sample_vcf):
-    fvars = sample_vcf("fixtures/members_in_order1")
+def test_members_in_order1_genotype(simple_vcf):
+    fvars = simple_vcf("fixtures/members_in_order1")
     for v in fvars.query_variants():
         print(v, mat2str(v.best_st), mat2str(v.gt), v.inheritance)
         assert 'gpa' in v.variant_in_members
         assert Role.paternal_grandfather in v.variant_in_roles
 
 
-def test_members_in_order2_genotype(sample_vcf):
-    fvars = sample_vcf("fixtures/members_in_order2")
+def test_members_in_order2_genotype(simple_vcf):
+    fvars = simple_vcf("fixtures/members_in_order2")
     for v in fvars.query_variants():
         print(v, mat2str(v.best_st), mat2str(v.gt), v.inheritance)
         assert 'gpa' in v.variant_in_members
         assert Role.paternal_grandfather in v.variant_in_roles
 
 
-def test_freq_trios_2(sample_vcf):
-    fvars = sample_vcf("fixtures/trios2")
+def test_freq_trios_2(simple_vcf):
+    fvars = simple_vcf("fixtures/trios2")
     vs = list(fvars.query_variants(family_ids=['f1']))
     assert len(vs) == 2
 

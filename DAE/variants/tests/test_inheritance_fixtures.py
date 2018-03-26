@@ -18,8 +18,8 @@ from variants.vcf_utils import mat2str
     (Region('1', 11521, 11530), 4, Inheritance.denovo),
     (Region('1', 11531, 11540), 1, Inheritance.unknown),
 ])
-def test_inheritance_trio(sample_vcf, region, count, inheritance):
-    fvars = sample_vcf("fixtures/inheritance_trio")
+def test_inheritance_trio(simple_vcf, region, count, inheritance):
+    fvars = simple_vcf("fixtures/inheritance_trio")
     vs = list(fvars.query_variants(regions=[region]))
     assert len(vs) == count
     for v in vs:
@@ -34,8 +34,8 @@ def test_inheritance_trio(sample_vcf, region, count, inheritance):
     (Region('1', 11511, 11520), 3, Inheritance.omission),
     (Region('1', 11521, 11530), 2, Inheritance.denovo),
 ])
-def test_inheritance_quad(sample_vcf, region, count, inheritance):
-    fvars = sample_vcf("fixtures/inheritance_quad")
+def test_inheritance_quad(simple_vcf, region, count, inheritance):
+    fvars = simple_vcf("fixtures/inheritance_quad")
     vs = list(fvars.query_variants(regions=[region]))
     assert len(vs) == count
     for v in vs:
@@ -51,8 +51,8 @@ def test_inheritance_quad(sample_vcf, region, count, inheritance):
     (Region('1', 11511, 11520), 1, Inheritance.omission),
     (Region('1', 11521, 11530), 1, Inheritance.other),
 ])
-def test_inheritance_multi(sample_vcf, region, count, inheritance):
-    fvars = sample_vcf("fixtures/inheritance_multi")
+def test_inheritance_multi(simple_vcf, region, count, inheritance):
+    fvars = simple_vcf("fixtures/inheritance_multi")
     vs = list(fvars.query_variants(regions=[region]))
     assert len(vs) == count
     for v in vs:

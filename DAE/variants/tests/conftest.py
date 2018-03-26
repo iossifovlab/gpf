@@ -183,7 +183,7 @@ def vcf19r(vcf19_config, composite_annotator):
 
 
 @pytest.fixture(scope='session')
-def sample_vcf(composite_annotator):
+def simple_vcf(composite_annotator):
     def builder(path):
         a_data = relative_to_this_test_folder(path)
         a_conf = Configure.from_prefix(a_data)
