@@ -11,14 +11,14 @@ import pytest
 
 
 @pytest.mark.skip
-def test_annotate_composite_simple(ustudy, effect_annotator):
+def test_annotate_composite_simple(ustudy_single, effect_annotator):
     annotator = AnnotatorComposite(annotators=[
         effect_annotator,
         VcfAlleleFrequencyAnnotator(),
     ])
 
-    annotator.setup(ustudy)
-    annot_df = annotator.annotate(ustudy.annot_df, ustudy.vcf_vars)
+    annotator.setup(ustudy_single)
+    annot_df = annotator.annotate(ustudy_single.annot_df, ustudy_single.vcf_vars)
     assert annot_df is not None
     print(annot_df.head())
 
@@ -37,13 +37,13 @@ def test_annotate_composite_simple_vcf19(nvcf19, effect_annotator):
 
 
 @pytest.mark.skip
-def test_annotate_on_load(ustudy_config, ustudy, effect_annotator):
+def test_annotate_on_load(ustudy_config, ustudy_single, effect_annotator):
     annotator = AnnotatorComposite(annotators=[
         effect_annotator,
         VcfAlleleFrequencyAnnotator(),
     ])
 
-    annotator.setup(ustudy)
+    annotator.setup(ustudy_single)
 
     fvariants = RawFamilyVariants(ustudy_config, annotator=annotator)
     assert fvariants is not None
@@ -65,6 +65,6 @@ def test_annotate_on_load_vcf19(nvcf19_config, effect_annotator):
 #         nvcf19.annot_df, "nvcf19-eff.tmp", storage='csv')
 #
 #
-# def test_do_annotate_test_ustudy_files(ustudy, composite_annotator):
+# def test_do_annotate_test_ustudy_files(ustudy_single, composite_annotator):
 #     RawVariantsLoader.save_annotation_file(
-#         ustudy.annot_df, "ustudy-eff.tmp", storage='csv')
+#         ustudy_single.annot_df, "ustudy_single-eff.tmp", storage='csv')

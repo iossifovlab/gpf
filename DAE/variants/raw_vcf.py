@@ -39,7 +39,7 @@ def parse_gene_effect(effect):
 class RawFamilyVariants(FamiliesBase):
 
     def __init__(self, config=None, prefix=None, annotator=None, region=None,
-                 variant_factory=VariantFactorySingle):
+                 variant_factory=VariantFactory):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix(prefix)

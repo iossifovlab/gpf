@@ -12,9 +12,9 @@ from variants.vcf_utils import mat2str
 import pytest
 
 
-def test_alt_all_freq(ustudy):
+def test_alt_all_freq(ustudy_single):
     regions = [Region("1", 10000, 15000)]
-    vs = ustudy.query_variants(regions=regions)
+    vs = ustudy_single.query_variants(regions=regions)
 
     for v in vs:
         assert 'all.nAltAlls' in v
@@ -88,8 +88,8 @@ def test_freq_single_family_full(full_vcf):
     assert v1.family_id == 'f1'
 
 
-def test_freq_single_family_simple(simple_vcf):
-    fvars = simple_vcf("fixtures/trios2")
+def test_freq_single_family_simple(single_vcf):
+    fvars = single_vcf("fixtures/trios2")
     vs = fvars.query_variants(
         real_attr_filter=['all.altFreq', (0, 12.5)],
         regions=[Region("1", 11541, 11542)]

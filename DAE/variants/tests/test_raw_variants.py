@@ -9,95 +9,95 @@ from RegionOperations import Region
 from variants.attributes import Role, RoleQuery
 
 
-def test_study_load(ustudy):
+def test_study_load(ustudy_single):
 
-    assert ustudy.annot_df is not None
-    assert ustudy.vcf_vars is not None
+    assert ustudy_single.annot_df is not None
+    assert ustudy_single.vcf_vars is not None
 
-    assert len(ustudy.annot_df) == len(ustudy.vcf_vars)
+    assert len(ustudy_single.annot_df) == len(ustudy_single.vcf_vars)
 
 
-def test_query_regions(ustudy):
+def test_query_regions(ustudy_single):
     regions = [Region("1", 11539, 11541)]
-    vs = ustudy.query_variants(regions=regions)
+    vs = ustudy_single.query_variants(regions=regions)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 1
 
 
-def test_query_regions_2(ustudy):
+def test_query_regions_2(ustudy_single):
     regions = [
         Region("1", 11539, 11541),
         Region("1", 54709, 54721)
     ]
-    vs = ustudy.query_variants(regions=regions)
+    vs = ustudy_single.query_variants(regions=regions)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 3
 
 
-def test_query_genes(ustudy):
+def test_query_genes(ustudy_single):
     genes = ['FAM87B']
-    vs = ustudy.query_variants(genes=genes)
+    vs = ustudy_single.query_variants(genes=genes)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 7
 
 
-def test_query_effect_types(ustudy):
+def test_query_effect_types(ustudy_single):
     effect_types = ['missense']
-    vs = ustudy.query_variants(effect_types=effect_types)
+    vs = ustudy_single.query_variants(effect_types=effect_types)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 3
 
 
-def test_query_genes_and_effect_types(ustudy):
+def test_query_genes_and_effect_types(ustudy_single):
     genes = ['NOC2L']
     effect_types = ['missense']
-    vs = ustudy.query_variants(effect_types=effect_types, genes=genes)
+    vs = ustudy_single.query_variants(effect_types=effect_types, genes=genes)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 2
 
-    vs = ustudy.query_variants(genes=genes)
+    vs = ustudy_single.query_variants(genes=genes)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 44
 
-    vs = ustudy.query_variants(
+    vs = ustudy_single.query_variants(
         effect_types=['frame-shift', 'missense'], genes=genes)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 2
 
-    vs = ustudy.query_variants(
+    vs = ustudy_single.query_variants(
         effect_types=['missense', 'synonymous'], genes=genes)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 5
 
 
-def test_query_genes_3(ustudy):
+def test_query_genes_3(ustudy_single):
     genes = ['FAM87B', 'SAMD11', 'NOC2L']
-    vs = ustudy.query_variants(genes=genes)
+    vs = ustudy_single.query_variants(genes=genes)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 113
 
 
-def test_query_persons(ustudy):
+def test_query_persons(ustudy_single):
     genes = ['NOC2L']
     effect_types = ['missense']
 
-    vs = ustudy.query_variants(
+    vs = ustudy_single.query_variants(
         genes=genes, effect_types=effect_types,
         person_ids=['AU1921202'])
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 2
 
-    vs = ustudy.query_variants(
+    vs = ustudy_single.query_variants(
         genes=genes, effect_types=effect_types,
         person_ids=['AU1921202', 'AU1921211'])
     assert vs is not None
@@ -105,29 +105,29 @@ def test_query_persons(ustudy):
     assert len(vl) == 2
 
 
-def test_query_persons_all(ustudy):
-    vs = ustudy.query_variants(
+def test_query_persons_all(ustudy_single):
+    vs = ustudy_single.query_variants(
         person_ids=['AU1921202'])
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 362
 
-    vs = ustudy.query_variants(
+    vs = ustudy_single.query_variants(
         person_ids=['AU1921202', 'AU1921211'])
     assert len(list(vs)) == 436
 
 
-def test_query_persons_combined(ustudy):
+def test_query_persons_combined(ustudy_single):
     genes = ['NOC2L']
     effect_types = ['missense']
-    vs = ustudy.query_variants(
+    vs = ustudy_single.query_variants(
         genes=genes, effect_types=effect_types,
         person_ids=['AU1921202'])
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 2
 
-    vs = ustudy.query_variants(
+    vs = ustudy_single.query_variants(
         genes=genes, effect_types=effect_types,
         person_ids=['AU1921201', 'AU1921305'])
     assert vs is not None
@@ -135,11 +135,11 @@ def test_query_persons_combined(ustudy):
     assert len(vl) == 1
 
 
-def test_query_families(ustudy):
+def test_query_families(ustudy_single):
     genes = ['NOC2L']
     effect_types = ['missense']
     family_ids = ['AU1921']
-    vs = ustudy.query_variants(
+    vs = ustudy_single.query_variants(
         genes=genes,
         effect_types=effect_types,
         family_ids=family_ids)
@@ -148,11 +148,11 @@ def test_query_families(ustudy):
     assert len(vl) == 2
 
 
-def test_query_families_0(ustudy):
+def test_query_families_0(ustudy_single):
     genes = ['NOC2L']
     effect_types = ['missense']
     family_ids = ['wrong_family_id']
-    vs = ustudy.query_variants(
+    vs = ustudy_single.query_variants(
         genes=genes,
         effect_types=effect_types,
         family_ids=family_ids)
@@ -161,8 +161,8 @@ def test_query_families_0(ustudy):
     assert len(vl) == 0
 
 
-def test_query_variants_single(ustudy):
-    vs = ustudy.query_variants(
+def test_query_variants_single(ustudy_single):
+    vs = ustudy_single.query_variants(
         regions=[Region("1", 11540, 11541)])
     for v in vs:
         print(v, "mendelian: ", v.is_mendelian())
@@ -171,8 +171,8 @@ def test_query_variants_single(ustudy):
         assert v.is_mendelian()
 
 
-def test_query_variants_persons_all(ustudy):
-    vs = ustudy.query_variants(
+def test_query_variants_persons_all(ustudy_single):
+    vs = ustudy_single.query_variants(
         genes=['FAM87B'],
         person_ids=['AU1921202'])
     for v in vs:
@@ -181,11 +181,11 @@ def test_query_variants_persons_all(ustudy):
         print(v.best_st)
 
 
-def test_query_variants_roles_dad(ustudy):
+def test_query_variants_roles_dad(ustudy_single):
     genes = ['NOC2L']
     role_query = RoleQuery.any_of(Role.dad)
 
-    vs = ustudy.query_variants(
+    vs = ustudy_single.query_variants(
         genes=genes,
         roles=role_query
     )

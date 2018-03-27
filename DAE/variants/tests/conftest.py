@@ -19,21 +19,16 @@ import shutil
 import numpy as np
 
 from variants.annotate_variant_effects import \
-    VcfVariantEffectsAnnotatorSimple,\
     VcfVariantEffectsAnnotatorFull
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
 from variants.family_variant import FamilyVariantBase
-from variants.variant import VariantFactory, SummaryVariant
+from variants.variant import VariantFactory, SummaryVariant,\
+    VariantFactorySingle
 
 
 @pytest.fixture(scope='session')
 def effect_annotator():
-    return VcfVariantEffectsAnnotatorFull()
-
-
-@pytest.fixture(scope='session')
-def effect_annotator_full():
     return VcfVariantEffectsAnnotatorFull()
 
 
@@ -43,10 +38,10 @@ def allele_freq_annotator():
 
 
 @pytest.fixture(scope='session')
-def composite_annotator(effect_annotator_full, allele_freq_annotator):
+def composite_annotator(effect_annotator, allele_freq_annotator):
 
     return AnnotatorComposite(annotators=[
-        effect_annotator_full,
+        effect_annotator,
         allele_freq_annotator,
     ])
 
@@ -89,9 +84,10 @@ def ustudy_loader(ustudy_config):
 
 
 @pytest.fixture(scope='session')
-def ustudy(ustudy_config, composite_annotator_full):
+def ustudy_single(ustudy_config, composite_annotator):
     fvariants = RawFamilyVariants(
-        ustudy_config, annotator=composite_annotator_full)
+        ustudy_config, annotator=composite_annotator,
+        variant_factory=VariantFactorySingle)
     return fvariants
 
 
@@ -146,24 +142,17 @@ def nvcf19_config():
 
 
 @pytest.fixture(scope='session')
-def nvcf19(nvcf19_config, composite_annotator):
-    fvariants = RawFamilyVariants(nvcf19_config, annotator=composite_annotator)
+def nvcf19s(nvcf19_config, composite_annotator):
+    fvariants = RawFamilyVariants(
+        nvcf19_config, annotator=composite_annotator,
+        variant_factory=VariantFactorySingle)
     return fvariants
 
 
 @pytest.fixture(scope='session')
-def composite_annotator_full(effect_annotator_full, allele_freq_annotator):
-
-    return AnnotatorComposite(annotators=[
-        effect_annotator_full,
-        allele_freq_annotator,
-    ])
-
-
-@pytest.fixture(scope='session')
-def nvcf19f(nvcf19_config, composite_annotator_full):
+def nvcf19f(nvcf19_config, composite_annotator):
     fvariants = RawFamilyVariants(
-        nvcf19_config, annotator=composite_annotator_full,
+        nvcf19_config, annotator=composite_annotator,
         variant_factory=VariantFactory)
     return fvariants
 
@@ -187,22 +176,24 @@ def vcf19r(vcf19_config, composite_annotator):
 
 
 @pytest.fixture(scope='session')
-def simple_vcf(composite_annotator_full):
+def single_vcf(composite_annotator):
     def builder(path):
         a_data = relative_to_this_test_folder(path)
         a_conf = Configure.from_prefix(a_data)
-        fvars = RawFamilyVariants(a_conf, annotator=composite_annotator_full)
+        fvars = RawFamilyVariants(
+            a_conf, annotator=composite_annotator,
+            variant_factory=VariantFactorySingle)
         return fvars
     return builder
 
 
 @pytest.fixture(scope='session')
-def full_vcf(composite_annotator_full):
+def full_vcf(composite_annotator):
     def builder(path):
         a_data = relative_to_this_test_folder(path)
         a_conf = Configure.from_prefix(a_data)
         fvars = RawFamilyVariants(
-            a_conf, annotator=composite_annotator_full,
+            a_conf, annotator=composite_annotator,
             variant_factory=VariantFactory)
         return fvars
     return builder

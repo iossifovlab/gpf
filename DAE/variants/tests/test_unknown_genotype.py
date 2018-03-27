@@ -10,9 +10,9 @@ from variants.attributes import Inheritance
 import numpy as np
 
 
-def test_query_regions(ustudy):
+def test_query_regions(ustudy_single):
     regions = [Region("1", 900719, 900719)]
-    vs = ustudy.query_variants(regions=regions)
+    vs = ustudy_single.query_variants(regions=regions)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 1

@@ -5,8 +5,8 @@ Created on Feb 23, 2018
 '''
 
 
-def test_query_inheritance(ustudy):
-    vs = ustudy.query_variants(inheritance='denovo or omission')
+def test_query_inheritance(ustudy_single):
+    vs = ustudy_single.query_variants(inheritance='denovo or omission')
     assert vs is not None
     vl = list(vs)
 
@@ -16,8 +16,8 @@ def test_query_inheritance(ustudy):
     assert len(vl) == 137
 
 
-def test_query_inheritance_denovo(ustudy):
-    vs = ustudy.query_variants(inheritance='denovo')
+def test_query_inheritance_denovo(ustudy_single):
+    vs = ustudy_single.query_variants(inheritance='denovo')
     assert vs is not None
     vl = list(vs)
 
@@ -27,8 +27,8 @@ def test_query_inheritance_denovo(ustudy):
     assert len(vl) == 94
 
 
-def test_query_inheritance_omission(ustudy):
-    vs = ustudy.query_variants(inheritance='omission')
+def test_query_inheritance_omission(ustudy_single):
+    vs = ustudy_single.query_variants(inheritance='omission')
     assert vs is not None
     vl = list(vs)
 
@@ -38,8 +38,8 @@ def test_query_inheritance_omission(ustudy):
     assert len(vl) == 43
 
 
-def test_query_inheritance_other(ustudy):
-    vs = ustudy.query_variants(inheritance='other')
+def test_query_inheritance_other(ustudy_single):
+    vs = ustudy_single.query_variants(inheritance='other')
     assert vs is not None
     vl = list(vs)
 

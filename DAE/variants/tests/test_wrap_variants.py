@@ -10,8 +10,8 @@ from variants.attributes import Inheritance
 from variants.vcf_utils import mat2str
 
 
-def test_trios_multi_single_allele1(simple_vcf):
-    fvars = simple_vcf("fixtures/trios_multi")
+def test_trios_multi_single_allele1(single_vcf):
+    fvars = single_vcf("fixtures/trios_multi")
     vs = list(fvars.query_variants(regions=[Region('1', 11500, 11500)]))
     assert len(vs) == 1
     for v in vs:
@@ -19,8 +19,8 @@ def test_trios_multi_single_allele1(simple_vcf):
         assert v.best_st.shape == (2, 3)
 
 
-def test_trios_multi_single_allele2(simple_vcf):
-    fvars = simple_vcf("fixtures/trios_multi")
+def test_trios_multi_single_allele2(single_vcf):
+    fvars = single_vcf("fixtures/trios_multi")
     vs = list(fvars.query_variants(regions=[Region('1', 11501, 11501)]))
     assert len(vs) == 1
     for v in vs:
@@ -28,8 +28,8 @@ def test_trios_multi_single_allele2(simple_vcf):
         assert v.best_st.shape == (2, 3)
 
 
-def test_trios_multi_all_reference(simple_vcf):
-    fvars = simple_vcf("fixtures/trios_multi")
+def test_trios_multi_all_reference(single_vcf):
+    fvars = single_vcf("fixtures/trios_multi")
     vs = list(fvars.query_variants(regions=[Region('1', 11502, 11502)]))
     assert len(vs) == 2
     for v in vs:
@@ -37,8 +37,8 @@ def test_trios_multi_all_reference(simple_vcf):
         assert v.best_st.shape == (2, 3)
 
 
-def test_trios_multi_unknown(simple_vcf):
-    fvars = simple_vcf("fixtures/trios_multi")
+def test_trios_multi_unknown(single_vcf):
+    fvars = single_vcf("fixtures/trios_multi")
     vs = list(fvars.query_variants(regions=[Region('1', 11503, 11503)]))
     assert len(vs) == 2
     for v in vs:
@@ -46,8 +46,8 @@ def test_trios_multi_unknown(simple_vcf):
         assert v.best_st.shape == (2, 3)
 
 
-def test_trios_multi_multi(simple_vcf):
-    fvars = simple_vcf("fixtures/trios_multi")
+def test_trios_multi_multi(single_vcf):
+    fvars = single_vcf("fixtures/trios_multi")
     vs = list(fvars.query_variants(regions=[Region('1', 11504, 11504)]))
     assert len(vs) == 2
     for v in vs:
@@ -55,15 +55,15 @@ def test_trios_multi_multi(simple_vcf):
         assert v.best_st.shape == (2, 3)
 
 
-def test_trios_multi_multi3(simple_vcf):
-    fvars = simple_vcf("fixtures/trios_multi")
+def test_trios_multi_multi3(single_vcf):
+    fvars = single_vcf("fixtures/trios_multi")
     vs = list(fvars.query_variants(regions=[Region('1', 11505, 11505)]))
     assert len(vs) == 3
     for v in vs:
         assert v.inheritance == Inheritance.unknown
         assert v.best_st.shape == (2, 3)
 
-    fvars = simple_vcf("fixtures/trios_multi")
+    fvars = single_vcf("fixtures/trios_multi")
     vs = list(fvars.query_variants(regions=[Region('1', 11506, 11506)]))
     assert len(vs) == 2
     for v in vs:
