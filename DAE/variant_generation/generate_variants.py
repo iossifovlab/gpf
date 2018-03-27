@@ -1,24 +1,35 @@
 #!/usr/bin/env python
 import numpy as np
 import argparse
+import gzip
+from collections import OrderedDict
+from csv import DictReader
+from multiprocessing import Pool, Lock
+from functools import partial
+
 from pedigrees.pedigree_reader import PedigreeReader
 from pedigrees.pedigrees import FamilyConnections
-from utils.tabix_csv_reader import TabixCsvDictReader
 from converters.dae2vcf import VcfVariant, vcfVarFormat, VcfVariantSample, \
     VcfWriter
 
-from collections import OrderedDict, defaultdict
+
+def has_variant(frequency, choices_count=1):
+    return np.random.choice(
+        [False, True], p=[1-frequency, frequency], size=choices_count)
 
 
-def has_variant(frequency):
-    return np.random.choice([False, True], p=[1-frequency, frequency])
+AFFECTED_ALLELES_CHOICES = [[0, 0], [1, 0], [1, 1]]
 
 
 def affected_inherited_alleles(dad_affected_alleles, mom_affected_alleles):
-    from_dad = np.random.choice(([1] * dad_affected_alleles + [0, 0])[:2])
-    from_mom = np.random.choice(([1] * mom_affected_alleles + [0, 0])[:2])
+    from_dad = np.random.choice(AFFECTED_ALLELES_CHOICES[dad_affected_alleles])
+    from_mom = np.random.choice(AFFECTED_ALLELES_CHOICES[mom_affected_alleles])
 
     return from_dad + from_mom
+
+
+def apply(self, variant):
+    return self._generate_variants(variant)
 
 
 class FamilyVariantGenerator(object):
@@ -35,68 +46,93 @@ class FamilyVariantGenerator(object):
         self.position_column = position_column
         self.variant_column = variant_column
 
-    def generate(self):
-        variants = self._generate_for_independent_members()
-        print("generated for independent members")
-        self._generate_with_mendelian_inheritance(variants)
-        return variants
+    def generate(self, writer):
+        result = 0
+        pool = Pool(6)
 
-    def _generate_for_independent_members(self):
-        tabix_variants = TabixCsvDictReader(self.variants_file)
+        with gzip.open(self.variants_file) as variants_file:
+            reader = DictReader(variants_file, delimiter='\t')
+
+            for generated_variants in pool.imap(partial(apply, self), reader,
+                                                chunksize=1000):
+                for generated in generated_variants.values():
+                    writer.write_variant(generated)
+
+                result += len(generated_variants)
+
+        return result
+
+    def _generate_variants(self, variant):
+        result = self._generate_for_independent_members(variant)
+        self._generate_with_mendelian_inheritance(result)
+
+        return result
+
+    def _generate_for_independent_members(self, variant):
+
+        # with gzip.open(self.variants_file) as variants_file:
+        # tabix_variants = TabixCsvDictReader(self.variants_file)
+        #     reader = DictReader(variants_file, delimiter='\t')
 
         variants = OrderedDict()
+        choices_count = \
+            sum(len(f.independent_members()) for f in self.families) * 2
 
-        for read_variant in tabix_variants:
-            frequency = float(read_variant[self.frequency_column]) / 100.0
+        # print(read_variant)
+        frequency = float(variant[self.frequency_column]) / 100.0
 
-            if frequency == 0.0:
-                continue
+        if frequency == 0.0:
+            return variants
 
-            chromosome = read_variant[self.chromosome_column]
-            position = int(read_variant[self.position_column])
-            _, _, reference, alternative = vcfVarFormat(
-                "{}:{}".format(chromosome, position),
-                read_variant[self.variant_column])
+        # print(choices_count)
 
-            key = VcfVariant.get_variant_key(
-                chromosome, position=position, reference=reference,
-                alternative=alternative)
+        choices = has_variant(frequency, choices_count)
+        choices_index = 0
 
-            for family in self.families:
-                for member in family.independent_members():
-                    allele1_has_variant = has_variant(frequency)
-                    allele2_has_variant = has_variant(frequency)
+        chromosome = variant[self.chromosome_column]
+        position = int(variant[self.position_column])
+        _, _, reference, alternative = vcfVarFormat(
+            "{}:{}".format(chromosome, position),
+            variant[self.variant_column])
 
-                    alternative_alleles_count = \
-                        int(allele1_has_variant) + int(allele2_has_variant)
+        key = VcfVariant.get_variant_key(
+            chromosome, position=position, reference=reference,
+            alternative=alternative)
 
-                    if alternative_alleles_count == 0:
-                        continue
-                    genotype = '0/0'
+        for family in self.families:
+            for member in family.independent_members():
+                allele1_has_variant = choices[choices_index]
+                choices_index += 1
+                allele2_has_variant = choices[choices_index]
+                choices_index += 1
 
-                    if key not in variants:
-                        variants[key] = VcfVariant(
-                            chromosome=chromosome,
-                            position=position,
-                            reference=reference,
-                            alternative=alternative,
-                            format_='GT:AD'
-                        )
+                alternative_alleles_count = \
+                    int(allele1_has_variant) + int(allele2_has_variant)
 
-                    if alternative_alleles_count == 1:
-                        genotype = '0/1'
-                    elif alternative_alleles_count == 2:
-                        genotype = '1/1'
+                if alternative_alleles_count == 0:
+                    continue
+                genotype = '1/1'
 
-                    variant = variants[key]
-
-                    variant.samples[member.id] = VcfVariantSample(
-                        member.id,
-                        genotype,
-                        '0,0'
+                if key not in variants:
+                    variants[key] = VcfVariant(
+                        chromosome=chromosome,
+                        position=position,
+                        reference=reference,
+                        alternative=alternative,
+                        format_='GT:AD'
                     )
 
-        tabix_variants.close()
+                if alternative_alleles_count == 1:
+                    genotype = '0/1'
+
+                v = variants[key]
+
+                v.samples[member.id] = VcfVariantSample(
+                    member.id,
+                    genotype,
+                    '0,0'
+                )
+
         return variants
 
     def _generate_with_mendelian_inheritance(self, variants_in_independent):
@@ -108,6 +144,7 @@ class FamilyVariantGenerator(object):
 
             current_rank = 0
             max_rank = connected_family.max_rank()
+            # print("max_rank", max_rank)
 
             while current_rank <= max_rank:
                 individuals_on_level = connected_family \
@@ -136,6 +173,9 @@ class FamilyVariantGenerator(object):
                 self._get_affected_alleles_count(variant, dad_id)
             mom_affected_alleles_count = \
                 self._get_affected_alleles_count(variant, mom_id)
+
+            if dad_affected_alleles_count + mom_affected_alleles_count == 0:
+                continue
 
             affected_alleles = affected_inherited_alleles(
                 dad_affected_alleles_count, mom_affected_alleles_count)
@@ -174,19 +214,17 @@ def main():
 
     generator = FamilyVariantGenerator(args.variants, families)
 
-    variants = generator.generate()
     ordered_cohort = list({i.id for f in families for i in f.members})
-
     writer = VcfWriter(args.output, ordered_cohort)
 
     writer.open()
 
-    for variant in variants.values():
-        writer.write_variant(variant)
+    variants_count = generator.generate(writer)
+
 
     writer.close()
 
-    print("variants generated: {}".format(len(variants)))
+    print("variants generated: {}".format(variants_count))
 
 
 if __name__ == '__main__':
