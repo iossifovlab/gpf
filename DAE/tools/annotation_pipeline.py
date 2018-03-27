@@ -29,13 +29,14 @@ class MultiAnnotator(object):
         self.annotators = []
         new_columns_labels = []
         columns_labels = {}
+        # config_parser.sections() this gives the sections in order which is important
         for annotation_step in config_parser.sections():
             annotation_step_config = self.config[annotation_step]
             columns_labels.update(annotation_step_config.columns)
             if not reannotate and self.header is not None:
                 self.header.extend(annotation_step_config.columns.values())
             self.annotators.append({
-                'instance': str_to_class(annotation_step)(
+                'instance': str_to_class(annotation_step_config.annotator)(
                     annotation_step_config.options, self.header),
                 'columns': annotation_step_config.columns.keys()
             })
