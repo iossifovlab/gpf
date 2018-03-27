@@ -1,6 +1,6 @@
 .fullscreen {
 	position: absolute !important;
-	left: 2%;
+	left: 50%;
 	margin: 0 auto;
 	max-width: 96%;
 	max-height: 96%;
@@ -10,4 +10,5 @@
     border: 1px solid #dddddd;
 	padding: 10px;
 	z-index: 1;
+	transform: translateX(-50%);
 }
