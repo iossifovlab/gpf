@@ -181,9 +181,9 @@ class Effect(object):
         self.gene = EffectGene.from_gene_effects(gene_effects)
 
     @classmethod
-    def from_effects(cls, effect_types, effect_genes, effect_transcripts):
+    def from_effects(cls, effect_types, effect_genes, transcripts):
         result = []
-        for et, eg, trans in zip(effect_types, effect_genes, effect_transcripts):
+        for et, eg, trans in zip(effect_types, effect_genes, transcripts):
             eff = Effect(et, eg, trans)
             result.append(eff)
         return AlleleItems(result)
