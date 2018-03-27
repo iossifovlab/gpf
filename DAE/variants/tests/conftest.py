@@ -229,7 +229,7 @@ def fam1():
 
 @pytest.fixture(scope='session')
 def sv():
-    return SummaryVariantFull("1", 11539, "T", "TA,TG")
+    return SummaryVariantFull("1", 11539, "T", ["TA", "TG"])
 
 
 @pytest.fixture(scope='session')
