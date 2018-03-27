@@ -4,7 +4,6 @@
 # by Ewa
 
 from dbSNP import load_dbSNP
-from VariantAnnotation import load_variant
 from utilities import *
 import sys
 import optparse
@@ -78,7 +77,7 @@ class DbSNPAnnotator(object):
             
             output.write("\t".join(line + line_annotations) + "\n")
 
-    def line_annotations(self, line, columns_in_order)
+    def line_annotations(self, line, columns_in_order):
         params = [line[i-1] if i != None else None for i in self.argColumnNs]
 
         column_values_indices = [self.score_names.index(col)
