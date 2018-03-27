@@ -23,12 +23,12 @@ import pytest
 
 
 @pytest.mark.slow
-def test_denovo_order_experiment(nvcf19):
+def test_denovo_order_experiment(nvcf19s):
     regions = [
         Region("1", 908193, 908193),
     ]
 
-    vs = nvcf19.query_variants(
+    vs = nvcf19s.query_variants(
         regions=regions,
         inheritance='denovo')
     for v in vs:
@@ -78,8 +78,8 @@ def test_pedigree_keep_family_order_local():
 
 
 @pytest.mark.slow
-def test_pedigree_keep_family_order(nvcf19):
-    families = nvcf19
+def test_pedigree_keep_family_order(nvcf19s):
+    families = nvcf19s
 
     f = families.families['SF0043014']
     print(f.members_in_order)

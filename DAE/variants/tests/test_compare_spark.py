@@ -13,10 +13,10 @@ from variant_annotation.gene_codes import NuclearCode
 import logging
 
 
-@pytest.mark.slow
+@pytest.mark.skip
 def test_compare_1_874817(nvcf19s):
     vs = nvcf19s.query_variants(
-        regions=[Region('1', 874817, 874817)],
+        regions=[Region('1', 874816, 874816)],
         inheritance='mendelian or denovo',
         # effect_types=['frame-shift', 'nonsense', 'splice-site']
     )
@@ -37,7 +37,7 @@ def test_compare_1_874817(nvcf19s):
 #     assert v2.variant_type == VT.deletion
 
 
-@pytest.mark.slow
+@pytest.mark.skip
 def test_compare_1_889455(nvcf19s):
     vs = nvcf19s.query_variants(
         regions=[Region('1', 889455, 889455)],
@@ -54,7 +54,7 @@ def test_compare_1_889455(nvcf19s):
     assert v1.variant_type == VT.substitution
 
 
-@pytest.mark.slow
+@pytest.mark.skip
 def test_compare_1_899910(nvcf19s):
     vs = nvcf19s.query_variants(
         regions=[Region('1', 899910, 899910)],
@@ -72,7 +72,7 @@ def test_compare_1_899910(nvcf19s):
     assert v2.variant_type == VT.deletion
 
 
-@pytest.mark.slow
+@pytest.mark.skip
 def test_compare_1_901972(nvcf19s):
     vs = nvcf19s.query_variants(
         regions=[Region('1', 901972, 901972)],
@@ -91,7 +91,7 @@ def test_compare_1_901972(nvcf19s):
     assert v1.family_id == 'SF0007707'
 
 
-@pytest.mark.slow
+@pytest.mark.skip
 def test_compare_1_902133(nvcf19s):
     vs = nvcf19s.query_variants(
         regions=[Region('1', 902133, 902133)],
@@ -110,7 +110,7 @@ def test_compare_1_902133(nvcf19s):
     assert v1.family_id == 'SF0003825'
 
 
-@pytest.mark.slow
+@pytest.mark.skip
 def test_compare_1_905958(nvcf19s):
     vs = nvcf19s.query_variants(
         regions=[Region('1', 905958, 905958)],
@@ -129,7 +129,7 @@ def test_compare_1_905958(nvcf19s):
     assert v1.family_id == 'SF0010944'
 
 
-@pytest.mark.slow
+@pytest.mark.skip
 def test_compare_1_905970(nvcf19s):
     vs = nvcf19s.query_variants(
         regions=[Region('1', 905970, 905970)],
@@ -159,7 +159,7 @@ def old_annotator():
     return annotator
 
 
-@pytest.mark.slow
+@pytest.mark.skip
 def test_compare_all_1_908275(nvcf19s, old_annotator):
     logging.basicConfig(level=logging.DEBUG)
     regions = [
@@ -194,7 +194,7 @@ def test_compare_all_1_908275(nvcf19s, old_annotator):
     assert len(vl) == 8
 
 
-@pytest.mark.slow
+@pytest.mark.skip
 def test_compare_all_lgds_1_908275(nvcf19s, old_annotator):
     vs = nvcf19s.query_variants(
         inheritance='mendelian or denovo',

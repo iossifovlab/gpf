@@ -21,13 +21,8 @@ def test_open_raw_vcf_with_region(vcf19r):
               v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'))
         assert v.get_attr('all.nAltAlls') > 0
 
-        assert v.n_alt_alls is not None
-        assert v.alt_alls_freq is not None
-        assert v.n_par_called is not None
-        assert v.prcnt_par_called is not None
 
-
-@pytest.mark.slow
+@pytest.mark.skip
 def test_raw_vcf_bad_frequency(vcf19r):
     fvars = vcf19r("1:897008-897010")
     vs = fvars.query_variants(
@@ -40,8 +35,3 @@ def test_raw_vcf_bad_frequency(vcf19r):
         print(v.variant_in_members)
 
         assert v.get_attr('all.nAltAlls') > 0
-
-        assert v.n_alt_alls is not None
-        assert v.alt_alls_freq is not None
-        assert v.n_par_called is not None
-        assert v.prcnt_par_called is not None

@@ -183,8 +183,8 @@ class Effect(object):
     @classmethod
     def from_effects(cls, effect_types, effect_genes, effect_transcripts):
         result = []
-        for et, eg, et in zip(effect_types, effect_genes, effect_transcripts):
-            eff = Effect(et, eg, et)
+        for et, eg, trans in zip(effect_types, effect_genes, effect_transcripts):
+            eff = Effect(et, eg, trans)
             result.append(eff)
         return AlleleItems(result)
 
