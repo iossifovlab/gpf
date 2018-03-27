@@ -248,7 +248,10 @@ class FamilyVariant(FamilyVariantBase):
 
         self.summary = summary_variant
         self.family = family
-        self.gt = gt
+
+        self.gt = np.copy(gt)
+        unknown = np.any(self.gt == -1, axis=0)
+        self.gt[:, unknown] = -1
 
         self.falt_alleles = self.calc_alt_alleles(self.gt)
 
@@ -320,6 +323,10 @@ class FamilyVariant(FamilyVariantBase):
             self._best_st[:, unknown] = -1
 
         return self._best_st
+
+    @property
+    def genotype(self):
+        return self.gt.T
 
     def get_attr(self, item, default=None):
         val = self.summary._atts.get(item)
