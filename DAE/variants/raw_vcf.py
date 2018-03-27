@@ -13,7 +13,7 @@ from variants.family import FamiliesBase
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
 from variants.vcf_utils import VcfFamily
-from variants.variant import VariantFactorySingle
+# from variants.variant import VariantFactorySingle
 from variants.variant import VariantFactory
 
 

@@ -31,7 +31,7 @@ def test_variants_build_multi(temp_dirname):
 
 
 def test_variants_builder():
-    prefix = 'fixtures/effects_trio'
+    prefix = relative_to_this_test_folder('fixtures/effects_trio')
 
     genome_file = os.path.join(
         os.environ.get("DAE_DB_DIR"),
