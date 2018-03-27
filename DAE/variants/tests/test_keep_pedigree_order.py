@@ -33,7 +33,7 @@ def test_denovo_order_experiment(nvcf19s):
         inheritance='denovo')
     for v in vs:
         print(v, v.family_id, mat2str(v.best_st), mat2str(v.gt),
-              v.effect_type, v.effect_gene, v.inheritance,
+              v.inheritance,
               v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'))
         print(v.members_in_order)
         print(v.members_ids)

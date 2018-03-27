@@ -41,9 +41,9 @@ def test_filter_real_attr(fv_one):
 
 
 @pytest.mark.slow
-def test_rare_transmitted_variants(nvcf19):
+def test_rare_transmitted_variants(nvcf19s):
 
-    vs = nvcf19.query_variants(
+    vs = nvcf19s.query_variants(
         inheritance='mendelian',
         real_attr_filter=['all.altFreq', (1e-8, 1)]
     )
