@@ -18,20 +18,21 @@ def test_annotate_composite_simple(ustudy_single, effect_annotator):
     ])
 
     annotator.setup(ustudy_single)
-    annot_df = annotator.annotate(ustudy_single.annot_df, ustudy_single.vcf_vars)
+    annot_df = annotator.annotate(
+        ustudy_single.annot_df, ustudy_single.vcf_vars)
     assert annot_df is not None
     print(annot_df.head())
 
 
-@pytest.mark.slow
-def test_annotate_composite_simple_vcf19(nvcf19, effect_annotator):
+@pytest.mark.skip
+def test_annotate_composite_simple_vcf19(nvcf19s, effect_annotator):
     annotator = AnnotatorComposite(annotators=[
         effect_annotator,
         VcfAlleleFrequencyAnnotator(),
     ])
 
-    annotator.setup(nvcf19)
-    vars_df = annotator.annotate(nvcf19.annot_df, nvcf19.vcf_vars)
+    annotator.setup(nvcf19s)
+    vars_df = annotator.annotate(nvcf19s.annot_df, nvcf19s.vcf_vars)
     assert vars_df is not None
     print(vars_df.head())
 

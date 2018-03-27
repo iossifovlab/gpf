@@ -57,15 +57,15 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
         return effects
 
 
-class VcfVariantEffectsAnnotatorSimple(VcfVariantEffectsAnnotatorBase):
-    COLUMNS = ['effectType', 'effectGene', 'effectDetails']
-
-    def __init__(self, genome=GA, gene_models=gmDB):
-        super(VcfVariantEffectsAnnotatorSimple, self).__init__(
-            genome, gene_models)
-
-    def wrap_effects(self, effects):
-        return self.variant_annotator.effect_description(effects)
+# class VcfVariantEffectsAnnotatorSimple(VcfVariantEffectsAnnotatorBase):
+#     COLUMNS = ['effectType', 'effectGene', 'effectDetails']
+#
+#     def __init__(self, genome=GA, gene_models=gmDB):
+#         super(VcfVariantEffectsAnnotatorSimple, self).__init__(
+#             genome, gene_models)
+#
+#     def wrap_effects(self, effects):
+#         return self.variant_annotator.effect_description(effects)
 
 
 class VcfVariantEffectsAnnotatorFull(VcfVariantEffectsAnnotatorBase):
