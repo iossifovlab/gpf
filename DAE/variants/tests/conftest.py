@@ -16,6 +16,8 @@ from variants.raw_vcf import RawFamilyVariants
 import os
 import tempfile
 import shutil
+import numpy as np
+
 from variants.annotate_variant_effects import \
     VcfVariantEffectsAnnotatorSimple,\
     VcfVariantEffectsAnnotatorFull
@@ -235,6 +237,12 @@ def fv1(fam1):
     def rfun(gt):
         return FamilyVariantBase.from_family_genotype(fam1, gt)
     return rfun
+
+
+@pytest.fixture(scope='session')
+def fv_one(fam1, sv):
+    return VariantFactoryFull.family_variant_from_gt(
+        sv, fam1, np.array([[1, 1, 1], [0, 0, 0]]))[0]
 
 
 PED2 = """

@@ -25,8 +25,8 @@ def test_family_variants_full(nvcf19f):
             continue
 
         for fam in nvcf19f.families.values():
-            vs = FamilyVariantFull.from_vcf(
-                summary_variant, fam, vcf)
+            vs = FamilyVariantFull.from_summary_variant(
+                summary_variant, fam, vcf=vcf)
             for v in vs:
                 if v.inheritance == Inheritance.reference:
                     continue

@@ -5,19 +5,19 @@ Created on Feb 14, 2018
 '''
 from __future__ import print_function
 
-from RegionOperations import Region
+# from RegionOperations import Region
 import numpy as np
-from variants.vcf_utils import mat2str
+# from variants.vcf_utils import mat2str
 
 
-def test_mendelian(ustudy):
-    variants = ustudy.query_variants(
-        family_id=['AU1921'], regions=[Region("1", 11541, 54721)])
-
-    for v in variants:
-        print(v, v.is_mendelian(), v.effect_type)
-        print(mat2str(v.best_st))
-        print(mat2str(v.gt))
+# def test_mendelian(ustudy):
+#     variants = ustudy.query_variants(
+#         family_id=['AU1921'], regions=[Region("1", 11541, 54721)])
+#
+#     for v in variants:
+#         print(v, v.is_mendelian())
+#         print(mat2str(v.best_st))
+#         print(mat2str(v.gt))
 
 
 def test_mendelian_trio_1(fv1):

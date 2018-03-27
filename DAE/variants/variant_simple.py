@@ -11,57 +11,17 @@ from variants.variant import VariantBase
 from variants.vcf_utils import vcf2cshl, VcfFamily
 
 from variants.attributes import VariantType
-from variants.variant_full import SummaryVariantFull
+from variants.variant_full import SummaryVariantFull, FamilyVariantFull
 
 
-class FamilyVariantSimple(VariantBase, FamilyVariantBase):
+class FamilyVariantSimple(FamilyVariantFull):
 
     def __init__(self, summary_variant, family, gt, alt_index):
-        VariantBase.__init__(
-            self,
-            summary_variant.chromosome,
-            summary_variant.start,
-            summary_variant.reference,
-            summary_variant.alternatives[alt_index])
+        super(FamilyVariantSimple, self).__init__(
+            summary_variant, family, gt)
 
-        FamilyVariantBase.__init__(self)
-
-        self.summary = summary_variant
         self.alt_index = alt_index
-
-        self.family = family
-        self.gt = gt
-
-#         atts = {}
-#         for k, v in summary_variant._atts.items():
-#             if isinstance(v, np.ndarray) or isinstance(v, list):
-#                 if alt_index is not None:
-#                     atts[k] = v[alt_index]
-#             else:
-#                 atts[k] = v
-        self._atts = summary_variant._atts
-
-        self.position = self.start
-
-#         self.effect_type = self.get_attr('effectType')
-#         self.effect_gene = self.get_attr('effectGene')
-#         self.effect_details = self.get_attr('effectDetails')
-#
-#         self.n_alt_alls = self.get_attr('all.nAltAlls')
-#         self.alt_alls_freq = self.get_attr('all.altFreq')
-#         self.n_par_called = self.get_attr('all.nParCalled')
-#         self.prcnt_par_called = self.get_attr('all.prcntParCalled')
-#
-#         self.alt_alleles = [self.alt_index + 1]
-#         self.falt_alleles = self.calc_alt_alleles(gt)
-
-    def __repr__(self):
-        return '{}:{} {}->{}'.format(
-            self.chromosome, self.position,
-            self.reference, self.alternatives)
-
-    def __len__(self):
-        return self.length
+        self.falt_alleles = [alt_index + 1]
 
     @classmethod
     def from_summary_variant(cls, sv, family, gt=None, vcf=None):
@@ -119,32 +79,6 @@ class FamilyVariantSimple(VariantBase, FamilyVariantBase):
 
         return self._best_st
 
-    @property
-    def location(self):
-        return "{}:{}".format(self.chromosome, self.position)
-
-    @property
-    def variant_type(self):
-        vt = self.variant[0]
-        if vt == 's':
-            return VariantType.substitution
-        elif vt == 'i':
-            return VariantType.insertion
-        elif vt == 'd':
-            return VariantType.deletion
-        elif vt == 'c':
-            return VariantType.complex
-        else:
-            raise ValueError("unexpected variant type: {}".format(
-                self.variant))
-
-#     @staticmethod
-#     def from_dict(row):
-#         v = FamilyVariantSimple(
-#             row['chr'], row['position'], row['refA'], row['altA'])
-#         v.set_summary(row)
-#         return v
-
 
 class VariantFactorySimple(object):
 
@@ -155,4 +89,9 @@ class VariantFactorySimple(object):
     @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):
         return FamilyVariantSimple.from_summary_variant(
-            summary_variant, family, gt=None, vcf=vcf)
+            summary_variant, family, vcf=vcf)
+
+    @staticmethod
+    def family_variant_from_gt(summary_variant, family, gt):
+        return FamilyVariantSimple.from_summary_variant(
+            summary_variant, family, gt=gt)

@@ -159,15 +159,15 @@ class Effect(object):
 class SummaryVariantFull(VariantBase):
     def __init__(self, chromosome, start, reference, alternative, atts={}):
         super(SummaryVariantFull, self).__init__(
-            chromosome, start, reference, alternative, atts={})
+            chromosome, start, reference, alternative)
 
         self.alt = AlleleItems(alternative)
         self.alt_details = VariantDetail.from_vcf(
             chromosome, start, reference, alternative)
         self.alt_alleles = range(1, len(alternative) + 1)
 
-        for key, val in atts.items():
-            self._atts[key] = AlleleItems(val, self.alt_alleles)
+        self._atts = {}
+        self.update_atts(atts)
 
     @property
     def position(self):
@@ -188,6 +188,25 @@ class SummaryVariantFull(VariantBase):
             row['effectType'], row['effectGene'], row['effectDetails'])
         return sv
 
+    def get_attr(self, item, default=None):
+        val = self._atts.get(item)
+        if val is None:
+            return default
+        return val
+
+    def has_attr(self, item):
+        return item in self._atts
+
+    def __getitem__(self, item):
+        return self.get_attr(item)
+
+    def __contains__(self, item):
+        return item in self._atts
+
+    def update_atts(self, atts):
+        for key, val in atts.items():
+            self._atts[key] = AlleleItems(val, self.alt_alleles)
+
 
 class FamilyVariantFull(FamilyVariantBase):
 
@@ -201,12 +220,13 @@ class FamilyVariantFull(FamilyVariantBase):
         self.falt_alleles = self.calc_alt_alleles(self.gt)
 
     @classmethod
-    def from_vcf(cls, sv, family, vcf):
-        assert isinstance(family, VcfFamily)
-        assert vcf is not None
+    def from_summary_variant(cls, sv, family, gt=None, vcf=None):
+        if gt is None:
+            assert vcf is not None
+            assert isinstance(family, VcfFamily)
 
-        gt = vcf.gt_idxs[family.alleles]
-        gt = gt.reshape([2, len(family)], order='F')
+            gt = vcf.gt_idxs[family.alleles]
+            gt = gt.reshape([2, len(family)], order='F')
 
         return [FamilyVariantFull(sv, family, gt)]
 
@@ -229,6 +249,10 @@ class FamilyVariantFull(FamilyVariantBase):
     @property
     def position(self):
         return self.summary.position
+
+    @property
+    def location(self):
+        return "{}:{}".format(self.chromosome, self.position)
 
     @property
     def reference(self):
@@ -288,4 +312,10 @@ class VariantFactoryFull(object):
 
     @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):
-        return FamilyVariantFull.from_vcf(summary_variant, family, vcf)
+        return FamilyVariantFull.from_summary_variant(
+            summary_variant, family, vcf=vcf)
+
+    @staticmethod
+    def family_variant_from_gt(summary_variant, family, gt):
+        return FamilyVariantFull.from_summary_variant(
+            summary_variant, family, gt=gt)

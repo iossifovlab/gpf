@@ -8,34 +8,9 @@ from __future__ import print_function
 
 # from icecream import ic
 
-class ExtendedAttributes(object):
+class VariantBase(object):
 
-    def __init__(self, atts={}):
-        self._atts = atts
-
-    def get_attr(self, item, default=None):
-        val = self._atts.get(item)
-        if val is None:
-            return default
-        return val
-
-    def has_attr(self, item):
-        return item in self._atts
-
-    def __getitem__(self, item):
-        return self.get_attr(item)
-
-    def __contains__(self, item):
-        return item in self._atts
-
-    def update_atts(self, atts):
-        self._atts.update(atts)
-
-
-class VariantBase(ExtendedAttributes):
-
-    def __init__(self, chromosome, start, reference, alternatives, atts={}):
-        super(VariantBase, self).__init__(atts)
+    def __init__(self, chromosome, start, reference, alternatives):
 
         self.chromosome = chromosome
         self.start = start

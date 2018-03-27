@@ -39,7 +39,7 @@ def parse_gene_effect(effect):
 class RawFamilyVariants(FamiliesBase):
 
     def __init__(self, config=None, prefix=None, annotator=None, region=None,
-                 variant_factory=VariantFactoryFull):
+                 variant_factory=VariantFactorySimple):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix(prefix)
@@ -127,15 +127,14 @@ class RawFamilyVariants(FamiliesBase):
             return False
         ranges = real_attr_filter[1:]
 
-        result = [
-            (val >= rmin) and (val <= rmax) for val in value
-            for (rmin, rmax) in ranges
-        ]
-
-        result = [
-            tv for (tv, aa) in zip(result, v.alt_alleles)
-            if aa in v.falt_alleles]
-        return any(result)
+        for aa in v.falt_alleles:
+            val = value[aa]
+            result = [
+                (val >= rmin) and (val <= rmax) for (rmin, rmax) in ranges
+            ]
+            if any(result):
+                return True
+        return False
 
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
@@ -145,16 +144,19 @@ class RawFamilyVariants(FamiliesBase):
             gene_effects = v.effect[aa].gene
 
             if effect_types is None:
-                result = [ge for ge in gene_effects if ge.symbol in genes]
+                result = [
+                    ge for ge in gene_effects if ge.symbol in genes]
                 if result:
                     return True
             elif genes is None:
-                result = [ge for ge in gene_effects if ge.effect in effect_types]
+                result = [
+                    ge for ge in gene_effects if ge.effect in effect_types]
                 if result:
                     return True
             else:
-                result = [ge for ge in gene_effects
-                          if ge.effect in effect_types and ge.symbol in genes]
+                result = [
+                    ge for ge in gene_effects
+                    if ge.effect in effect_types and ge.symbol in genes]
                 if result:
                     return True
         return False
