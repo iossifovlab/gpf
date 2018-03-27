@@ -21,7 +21,8 @@ class FamilyVariantSimple(FamilyVariantFull):
             summary_variant, family, gt)
 
         self.alt_index = alt_index
-        self.falt_alleles = [alt_index + 1]
+        # self.falt_alleles = [alt_index + 1]
+        assert len(self.falt_alleles) <= 1
 
     @classmethod
     def from_summary_variant(cls, sv, family, gt=None, vcf=None):

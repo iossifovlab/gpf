@@ -97,10 +97,10 @@ def test_freq_single_family_simple(simple_vcf):
     vl = list(vs)
     for v in vl:
         print(v, v.family_id, mat2str(v.best_st), v['all.altFreq'])
-    assert len(vl) == 4
+    assert len(vl) == 2
 
     v0 = vl[0]
     v1 = vl[1]
 
-    assert v0.family_id == 'f1'
-    assert v1.family_id == 'f2'
+    assert v0.family_id == 'f2'
+    assert v1.family_id == 'f1'
