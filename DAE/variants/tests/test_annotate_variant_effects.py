@@ -9,6 +9,7 @@ from __future__ import print_function
 # import pytest
 
 from variants.loader import RawVariantsLoader
+import pytest
 # from variants.tests.common import assert_annotation_equals
 
 
@@ -161,6 +162,7 @@ from variants.loader import RawVariantsLoader
 #         print(ed.gene)
 
 
+@pytest.mark.skip
 def test_annotate_variant_effects_ustudy(
         nvcf19, temp_filename, effect_annotator_full):
 

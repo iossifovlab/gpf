@@ -27,7 +27,7 @@ from variants.variant_full import VariantFactoryFull, SummaryVariantFull
 
 @pytest.fixture(scope='session')
 def effect_annotator():
-    return VcfVariantEffectsAnnotatorSimple()
+    return VcfVariantEffectsAnnotatorFull()
 
 
 @pytest.fixture(scope='session')
@@ -41,10 +41,10 @@ def allele_freq_annotator():
 
 
 @pytest.fixture(scope='session')
-def composite_annotator(effect_annotator, allele_freq_annotator):
+def composite_annotator(effect_annotator_full, allele_freq_annotator):
 
     return AnnotatorComposite(annotators=[
-        effect_annotator,
+        effect_annotator_full,
         allele_freq_annotator,
     ])
 
@@ -87,8 +87,9 @@ def ustudy_loader(ustudy_config):
 
 
 @pytest.fixture(scope='session')
-def ustudy(ustudy_config, composite_annotator):
-    fvariants = RawFamilyVariants(ustudy_config, annotator=composite_annotator)
+def ustudy(ustudy_config, composite_annotator_full):
+    fvariants = RawFamilyVariants(
+        ustudy_config, annotator=composite_annotator_full)
     return fvariants
 
 

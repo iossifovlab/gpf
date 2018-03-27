@@ -39,7 +39,7 @@ def parse_gene_effect(effect):
 class RawFamilyVariants(FamiliesBase):
 
     def __init__(self, config=None, prefix=None, annotator=None, region=None,
-                 variant_factory=VariantFactorySimple):
+                 variant_factory=VariantFactoryFull):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix(prefix)
@@ -139,13 +139,25 @@ class RawFamilyVariants(FamiliesBase):
 
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
-        gene_effects = parse_gene_effect(v.effect_gene)
-        if effect_types is None:
-            return [ge for ge in gene_effects if ge['sym'] in genes]
-        if genes is None:
-            return [ge for ge in gene_effects if ge['eff'] in effect_types]
-        return [ge for ge in gene_effects
-                if ge['eff'] in effect_types and ge['sym'] in genes]
+        assert effect_types is not None or genes is not None
+
+        for aa in v.falt_alleles:
+            gene_effects = v.effect[aa].gene
+
+            if effect_types is None:
+                result = [ge for ge in gene_effects if ge.symbol in genes]
+                if result:
+                    return True
+            elif genes is None:
+                result = [ge for ge in gene_effects if ge.effect in effect_types]
+                if result:
+                    return True
+            else:
+                result = [ge for ge in gene_effects
+                          if ge.effect in effect_types and ge.symbol in genes]
+                if result:
+                    return True
+        return False
 
     def filter_variant(self, v, **kwargs):
         if 'regions' in kwargs:

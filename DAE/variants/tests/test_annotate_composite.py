@@ -10,6 +10,7 @@ from variants.raw_vcf import RawFamilyVariants
 import pytest
 
 
+@pytest.mark.skip
 def test_annotate_composite_simple(ustudy, effect_annotator):
     annotator = AnnotatorComposite(annotators=[
         effect_annotator,
@@ -35,6 +36,7 @@ def test_annotate_composite_simple_vcf19(nvcf19, effect_annotator):
     print(vars_df.head())
 
 
+@pytest.mark.skip
 def test_annotate_on_load(ustudy_config, ustudy, effect_annotator):
     annotator = AnnotatorComposite(annotators=[
         effect_annotator,
