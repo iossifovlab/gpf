@@ -25,11 +25,24 @@ class PedigreeMember(object):
 class Pedigree(object):
 
     def __init__(self, members):
-        self.members = members
+        self._members = members
         self.family_id = members[0].family_id if len(members) > 0 else ""
+        self._independent_members = None
+
+    @property
+    def members(self):
+        return self._members
+
+    def add_member(self, member):
+        self._members.append(member)
+        self._independent_members = None
 
     def independent_members(self):
-        return [m for m in self.members if m.has_known_parents()]
+        if not self._independent_members:
+            self._independent_members = \
+                [m for m in self._members if m.has_known_parents()]
+
+        return self._independent_members
 
 
 class FamilyConnections(object):

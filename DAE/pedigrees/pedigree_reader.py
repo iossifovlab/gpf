@@ -16,7 +16,7 @@ class PedigreeReader(object):
                     "id": row["personId"],
                     "father": row["dadId"],
                     "mother": row["momId"],
-                    "sex": row["gender"],
+                    "sex": row["sex"],
                     "label": "",
                     "effect": row["status"],
                 }
@@ -24,7 +24,7 @@ class PedigreeReader(object):
                 if member.family_id not in families:
                     families[member.family_id] = Pedigree([member])
                 else:
-                    families[member.family_id].members.append(member)
+                    families[member.family_id].add_member(member)
 
         if return_as_dict:
             return families

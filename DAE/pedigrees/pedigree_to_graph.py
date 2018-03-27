@@ -6,8 +6,8 @@ import collections
 from interval_sandwich import SandwichInstance, SandwichSolver
 from layout import Layout
 from drawing import PDFLayoutDrawer, OffsetLayoutDrawer
-from pedigrees.pedigree_reader import PedigreeReader
-from pedigrees.pedigrees import FamilyConnections
+from pedigree_reader import PedigreeReader
+from pedigrees import FamilyConnections
 
 
 def create_sandwich_instance(family):
@@ -161,8 +161,7 @@ def main():
         help="layout column name to be used when saving the layout")
 
     args = parser.parse_args()
-    with open(args.file, "r") as input_file:
-        pedigrees = PedigreeReader().read_file(input_file)
+    pedigrees = PedigreeReader().read_file(args.file)
 
     pdf_drawer = PDFLayoutDrawer(args.output)
     layout_saver = None

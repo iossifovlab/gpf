@@ -364,7 +364,7 @@ class VcfVariant(object):
         self.samples = samples
 
     def __repr__(self):
-        return '{}:{} {}->{} ({}){}'.format(
+        return '{}:{} {}->{} ({}):{}'.format(
             self.chromosome, self.position, self.reference, self.alternative,
             len(self.samples), self.samples)
 
@@ -374,9 +374,7 @@ class VcfVariant(object):
             for s in self.samples.values())
 
     def get_sample(self, sample_id):
-        return next(
-            (s for s in self.samples.values() if s.sample_id == sample_id),
-            None)
+        return self.samples.get(sample_id, None)
 
     @staticmethod
     def get_variant_key(chromosome, position, reference, alternative):
