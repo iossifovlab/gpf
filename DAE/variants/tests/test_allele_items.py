@@ -6,7 +6,7 @@ Created on Mar 20, 2018
 from __future__ import print_function
 
 import pytest
-from variants.variant_full import AlleleItems
+from variants.variant import AlleleItems
 
 
 def test_allele_items():

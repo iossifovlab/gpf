@@ -3,7 +3,7 @@ Created on Mar 23, 2018
 
 @author: lubo
 '''
-from variants.variant_full import EffectGene, SummaryVariantFull
+from variants.variant import EffectGene, SummaryVariant
 
 
 def test_effect_gene_serialization():
@@ -14,5 +14,5 @@ def test_effect_gene_serialization():
 
 def test_summary_variants_full(nvcf19f):
     for _index, row in nvcf19f.annot_df.iterrows():
-        sv = SummaryVariantFull.from_dict(row)
+        sv = SummaryVariant.from_dict(row)
         assert sv is not None
