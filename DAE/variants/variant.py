@@ -112,7 +112,7 @@ class VariantDetail(object):
 
     @property
     def variant_type(self):
-        vt = self.variant[0]
+        vt = self.cshl_variant[0]
         if vt == 's':
             return VariantType.substitution
         elif vt == 'i':
