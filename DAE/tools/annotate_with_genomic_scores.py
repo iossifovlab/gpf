@@ -19,11 +19,10 @@ def get_argument_parser():
     parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
     return parser
 
-class GenomicScoresAnnotator(object):
+class GenomicScoresAnnotator(AnnotatorBase):
 
     def __init__(self, opts, header=None):
-        self.opts = opts
-        self.header = header
+        super(GenomicScoresAnnotator, self).__init__(opts, header)
 
         if opts.x == None and opts.c == None:
             opts.x = "location"
@@ -46,19 +45,11 @@ class GenomicScoresAnnotator(object):
             self.scores = opts.S.split(";")
         else:
             self.scores = self.genomic_scores._score_names
+        self.header = self.header + self.scores
 
-    def annotate_file(self, input, output):
-        if self.opts.no_header == False:
-            output.write("\t".join(self.header + self.scores) + "\n")
-        sys.stderr.write("...processing....................\n")
-
-        for l in input:
-            if l[0] == "#":
-               output.write(l)
-               continue
-            line = l[:-1].split("\t")
-            line_scores = self.line_annotations(line, self.scores)
-            output.write("\t".join(line + line_scores) + "\n")
+    @property
+    def new_columns(self):
+        return self.scores
 
     def line_annotations(self, line, scores_in_order):
         if self.locCol != None:
@@ -69,7 +60,7 @@ class GenomicScoresAnnotator(object):
         line_scores = map(str,
             self.genomic_scores.get_score(location, scores_in_order))
         if not line_scores:
-            line_scores = ['NA'] * len(self.scores)
+            line_scores = ['NA'] * len(scores_in_order)
         return line_scores
 
 

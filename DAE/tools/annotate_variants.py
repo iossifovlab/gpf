@@ -47,36 +47,11 @@ def get_argument_parser():
 
     return parser
 
-def print_help():
-    print("\n\n----------------------------------------------------------------\n\nProgram to annotate genomic variants - by Ewa, v2.2, 10/Oct/2013" )
-    print("BASIC USAGE: annotate_variant.py INFILE <OUTFILE> <options>\n")
-    print("-h, --help                       show this help message and exit")
-    print("-c CHROM                         chromosome column number/name ")
-    print("-p POS                           position column number/name")
-    print("-x LOC                           location (chr:pos) column number/name ")
-    print("-v VAR                           variant column number/name ")
-    print("-a ALT                           alternative allele (FOR SUBSTITUTIONS ONLY) column number/name")
-    print("-r REF                           reference allele (FOR SUBSTITUTIONS ONLY) column number/name")
-    print("-t TYPE                          type of mutation column number/name ")
-    print("-q SEQ                           seq column number/name ")
-    print("-l LEN                           length column number/name")
-    print("-P PROM_LEN                      promoter length ")
-    print("-H                               no header in the input file ")
-    print("-T T                             gene models ID <RefSeq, CCDS, knownGene> ")
-    print("--Traw=TRAW                      outside gene models file path")
-    print("--TrawFormat=TRAWFORMAT          outside gene models format (refseq, ccds, knowngene)")
-    print("-G G                             genome ID (GATK_ResourceBundle_5777_b37_phiX174, hg19)")
-    print("--Graw=GRAW                      outside genome file ")
-    print("-I I                             geneIDs mapping file; use None for no gene name mapping ")
 
-    print("\n----------------------------------------------------------------\n\n")
-
-
-class EffectAnnotator(object):
+class EffectAnnotator(AnnotatorBase):
 
     def __init__(self, opts, header=None):
-        self.opts = opts
-        self.header = header
+        super(EffectAnnotator, self).__init__(opts, header)
         self._init_cols()
         self._init_variant_annotation()
 
@@ -152,26 +127,9 @@ class EffectAnnotator(object):
             opts.prom_len = 0
         self.annotation_helper = VariantAnnotation(GA, gmDB, promoter_len=opts.prom_len)
 
-    def annotate_file(self, input, output):
-        if self.opts.no_header == False:
-            output.write("\t".join(self.header) + "\n")
-
-        sys.stderr.write("...processing....................\n")
-        k = 0
-
-        for l in input:
-            if l[0] == "#":
-                output.write(l)
-                continue
-            k += 1
-            if k%1000 == 0:
-                sys.stderr.write(str(k) + " lines processed\n")
-
-            line = l[:-1].split("\t")
-            line_annotations = self.line_annotations(line, self.opts.order)
-            line.extend(line_annotations)
-
-            output.write("\t".join(line) + "\n")
+    @property
+    def new_columns(self):
+        return self.opts.order
 
     def line_annotations(self, line, new_cols_order):
         params = [line[i-1] if i!=None else None for i in self.argColumnNs]

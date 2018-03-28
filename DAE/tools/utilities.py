@@ -1,5 +1,47 @@
 import sys, os
 import time, datetime
+from abc import ABCMeta, abstractmethod
+
+class AnnotatorBase():
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self, opts, header=None):
+        self.opts = opts
+        self.header = header
+
+    def annotate_file(self, input, output):
+        if self.opts.no_header == False:
+            output.write("\t".join(self.header) + "\n")
+
+        sys.stderr.write("...processing....................\n")
+        k = 0
+
+        for l in input:
+            if l[0] == "#":
+                output.write(l)
+                continue
+            k += 1
+            if k%1000 == 0:
+                sys.stderr.write(str(k) + " lines processed\n")
+
+            line = l[:-1].split("\t")
+            line_annotations = self.line_annotations(line, self.new_columns)
+            output.write("\t".join(line + line_annotations) + "\n")
+
+    @property
+    @abstractmethod
+    def new_columns(self):
+        """
+            New columns to be added to the original variants.
+        """
+
+    @abstractmethod
+    def line_annotations(self, line, new_columns):
+        """
+            Method returning annotations for the given line
+            in the order from new_columns parameter.
+        """
 
 def give_column_number(s, header):
     try:
