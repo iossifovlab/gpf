@@ -16,6 +16,7 @@ from enrichment_api.enrichment_builder import EnrichmentBuilder
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
 import logging
+from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 # from memory_profiler import profile
 # fp = open('memory_profiler_basic_mean.log', 'w+')
@@ -150,7 +151,7 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
             return desc
         return None
 
-    # @profile(precision=precision, stream=fp)
+    @expand_gene_set
     def post(self, request):
         query = request.data
         dataset_id = query.get('datasetId', None)

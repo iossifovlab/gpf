@@ -3,6 +3,8 @@ Created on Apr 24, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+
 from collections import Counter
 
 
@@ -50,7 +52,7 @@ class StudiesGenotypeHelper(GenotypeHelper):
         counter = Counter()
         for st in self.denovo_studies:
             for fid, fam in st.families.items():
-                for p in fam.memberInOrder[2:]:
+                for p in fam.children_in_order:
                     iid = "{}:{}".format(fid, p.personId)
                     if iid in seen:
                         continue
@@ -96,7 +98,7 @@ class DatasetGenotypeHelper(GenotypeHelper):
             studyTypes=self.study_types)
         for st in enrichment_studies:
             for fid, fam in st.families.items():
-                for p in fam.memberInOrder[2:]:
+                for p in fam.children_in_order:
                     iid = "{}:{}".format(fid, p.personId)
                     if iid in seen:
                         continue
