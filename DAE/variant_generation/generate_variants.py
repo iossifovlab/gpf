@@ -28,7 +28,7 @@ def affected_inherited_alleles(dad_affected_alleles, mom_affected_alleles):
     return from_dad + from_mom
 
 
-def apply(self, variant):
+def generate_variants_func(self, variant):
     return self._generate_variants(variant)
 
 
@@ -53,8 +53,9 @@ class FamilyVariantGenerator(object):
         with gzip.open(self.variants_file) as variants_file:
             reader = DictReader(variants_file, delimiter='\t')
 
-            for generated_variants in pool.imap(partial(apply, self), reader,
-                                                chunksize=1000):
+            for generated_variants in pool.imap(
+                    partial(generate_variants_func, self), reader,
+                    chunksize=1000):
                 for generated in generated_variants.values():
                     writer.write_variant(generated)
 
