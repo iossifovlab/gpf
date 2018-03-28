@@ -12,6 +12,10 @@ class Family:
     def __repr__(self):
         return "Family({}: {})".format(self.familyId, self.memberInOrder)
 
+    @property
+    def children_in_order(self):
+        return [p for p in self.memberInOrder if p.is_child]
+
 
 class Person:
 

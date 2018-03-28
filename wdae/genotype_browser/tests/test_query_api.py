@@ -29,6 +29,25 @@ EXAMPLE_REQUEST_SSC = {
     }
 }
 
+EXAMPLE_REQUEST_SD = {
+    "datasetId": "SD",
+    "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
+    "gender": ["female", "male"],
+    "variantTypes": [
+        "del", "ins", "sub",
+    ],
+    "geneSet": {
+        "geneSetsCollection": "main",
+        "geneSet": "autism candidates from Iossifov PNAS 2015",
+        "geneSetsTypes": []
+    },
+    "pedigreeSelector": {
+        "id": "phenotype",
+        "checkedValues": ["autism", "unaffected", "congenital heart disease",
+            "epilepsy", "schizophrenia", "intellectual disability"]
+    }
+}
+
 
 class Test(BaseAuthenticatedUserTest):
 
@@ -50,6 +69,18 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEquals(3, len(res['legend']))
         self.assertEquals(422, int(res['count']))
         self.assertEquals(422, len(res['rows']))
+
+    def test_query_preview_with_gene_set(self):
+        data = copy.deepcopy(EXAMPLE_REQUEST_SD)
+
+        response = self.client.post(
+            self.URL, data, format='json')
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        res = response.data
+
+        self.assertEquals(7, len(res['legend']))
+        self.assertEquals(264, int(res['count']))
+        self.assertEquals(264, len(res['rows']))
 
     def test_missing_dataset(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SSC)

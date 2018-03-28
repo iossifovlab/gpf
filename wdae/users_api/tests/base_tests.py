@@ -14,6 +14,7 @@ class BaseAuthenticatedUserTest(APITestCase):
     @classmethod
     def setUpClass(cls):
         super(BaseAuthenticatedUserTest, cls).setUpClass()
+        Dataset.recreate_dataset_perm('META', [])
         Dataset.recreate_dataset_perm('SD', [])
         Dataset.recreate_dataset_perm('SSC', [])
         Dataset.recreate_dataset_perm('VIP', [])

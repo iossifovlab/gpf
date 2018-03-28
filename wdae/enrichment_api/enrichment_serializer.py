@@ -43,7 +43,7 @@ class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
 
     def serialize_common_filter(
             self, grouping_results, effect_type, result,
-            gender=['male', 'female']):
+            gender=['male', 'female', 'unspecified']):
 
         effect_types_fixed = self.build_effect_types(effect_type)
         effect_types_fixed = self.build_effect_types_naming(effect_types_fixed)

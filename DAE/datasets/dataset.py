@@ -7,7 +7,6 @@ from DAE import pheno, vDB
 import itertools
 from query_variants import generate_response
 from common.query_base import QueryBase, GeneSymsMixin
-from gene.gene_set_collections import GeneSetsCollections
 from gene.weights import WeightsLoader
 from datasets.family_pheno_base import FamilyPhenoQueryMixin
 from pheno.pheno_regression import PhenoRegression
@@ -20,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 class Dataset(QueryBase, FamilyPhenoQueryMixin):
     GENE_WEIGHTS_LOADER = None
-    GENE_SETS_LOADER = None
 
     def __init__(self, dataset_descriptor):
         self.descriptor = dataset_descriptor
@@ -153,44 +151,35 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         studies = self.denovo_studies[:]
         return self._filter_studies(studies, safe, **kwargs)
 
+    def _selected_phenotypes(self, safe, **kwargs):
+        person_grouping = self.get_pedigree_selector(
+            safe=safe, default=False, **kwargs)
+        selected_phenotypes = None
+        if person_grouping is not None and \
+                person_grouping['id'] == 'phenotype':
+            selected_phenotypes = person_grouping.get_checked_values(
+                safe=safe, **kwargs)
+        return selected_phenotypes
+
     def _filter_studies(self, studies, safe, **kwargs):
         study_types = self.get_study_types(safe=safe, **kwargs)
         if study_types is not None:
             studies = filter(
                 lambda st: st.get_attr('study.type').lower() in study_types,
                 studies)
-        person_grouping = self.get_pedigree_selector(
-            safe=safe, default=False, **kwargs)
-        if person_grouping is not None and \
-                person_grouping['id'] == 'phenotype':
-            selected_phenotypes = person_grouping.get_checked_values(
-                safe=safe, **kwargs)
-            if selected_phenotypes is not None and \
-                    'unaffected' not in selected_phenotypes:
-                studies = filter(
-                    lambda st: not st.has_attr('study.phenotype') or
-                    st.get_attr('study.phenotype') in selected_phenotypes,
-                    studies
-                )
+        selected_phenotypes = self._selected_phenotypes(safe, **kwargs)
+        if selected_phenotypes is not None and \
+                'unaffected' not in selected_phenotypes:
+            studies = filter(
+                lambda st: not st.has_attr('study.phenotype') or
+                bool(set(st.phenotypes) & selected_phenotypes),
+                studies
+            )
         return studies
 
     def get_transmitted_studies(self, safe=True, **kwargs):
         studies = self.transmitted_studies[:]
         return self._filter_studies(studies, safe, **kwargs)
-
-    @classmethod
-    def get_gene_set(cls, **kwargs):
-        gene_sets_collection, gene_set, gene_sets_types = \
-            GeneSymsMixin.get_gene_set_query(**kwargs)
-        if not gene_sets_collection or not gene_set:
-            return set([])
-        if gene_sets_types is None:
-            gene_sets_types = []
-        if cls.GENE_SETS_LOADER is None:
-            cls.GENE_SETS_LOADER = GeneSetsCollections()
-        genes = cls.GENE_SETS_LOADER.get_gene_set(
-            gene_sets_collection, gene_set, gene_sets_types)
-        return genes['syms']
 
     @classmethod
     def get_gene_weights(cls, **kwargs):
@@ -212,8 +201,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
     @classmethod
     def get_gene_syms(cls, **kwargs):
         result = cls.get_gene_symbols(**kwargs) | \
-            cls.get_gene_weights(**kwargs) | \
-            cls.get_gene_set(**kwargs)
+            cls.get_gene_weights(**kwargs)
         if result:
             return result
         else:
@@ -520,10 +508,17 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         denovo_filters = self.get_denovo_filters(safe, **kwargs)
         if denovo_filters.get('familyIds', None) == []:
             raise StopIteration()
+        selected_phenotypes = self._selected_phenotypes(safe, **kwargs)
+        if selected_phenotypes:
+            selected_phenotypes = \
+                selected_phenotypes.difference({'unaffected'})
         seen_vs = set()
         for st in self.get_denovo_studies(safe=safe, **kwargs):
             for v in st.get_denovo_variants(**denovo_filters):
                 if v.key in seen_vs:
+                    continue
+                if selected_phenotypes and \
+                        v.phenotype not in selected_phenotypes:
                     continue
                 yield v
                 seen_vs.add(v.key)
