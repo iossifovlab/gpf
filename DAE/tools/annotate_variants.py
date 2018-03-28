@@ -18,8 +18,7 @@ def set_order(option, opt_str, value, parser):
 
 def get_argument_parser():
     desc = """Program to annotate variants (substitutions & indels & cnvs)"""
-    parser = optparse.OptionParser(version='%prog version 2.2 10/October/2013', description=desc, add_help_option=False)
-    parser.add_option('-h', '--help', default=False, action='store_true')
+    parser = optparse.OptionParser(version='%prog version 2.2 10/October/2013', description=desc)
     parser.add_option('-c', help='chromosome column number/name', action='store')
     parser.add_option('-p', help='position column number/name', action='store')
     parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
@@ -42,9 +41,9 @@ def get_argument_parser():
 
     parser.add_option('-I', help='geneIDs mapping file; use None for no gene name mapping', default="default", type='string', action='store')
 
-    parser.add_option('--effect-type', type='string', action='callback', callback=set_order)
-    parser.add_option('--effect-gene', type='string', action='callback', callback=set_order)
-    parser.add_option('--effect-details', type='string', action='callback', callback=set_order)
+    parser.add_option('--effect-type', help='name to use for effect type column', type='string', action='callback', callback=set_order)
+    parser.add_option('--effect-gene', help='name to use for effect gene column', type='string', action='callback', callback=set_order)
+    parser.add_option('--effect-details', help='name to use for effect details column', type='string', action='callback', callback=set_order)
 
     return parser
 
@@ -181,8 +180,6 @@ class EffectAnnotator(object):
         effect_type, effect_gene, effect_details = self.annotation_helper.effect_description(effects)
 
         return [locals()[col] for col in new_cols_order]
-
-
 
 
 if __name__ == "__main__":

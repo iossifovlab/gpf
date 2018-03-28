@@ -9,8 +9,7 @@ import optparse
 
 def get_argument_parser():
     desc = """Program to annotate genomic positions with genomic scores (GERP, PhyloP, phastCons, nt, GC, cov)"""
-    parser = optparse.OptionParser(version='%prog version 1.0 12/December/2013', description=desc, add_help_option=False)
-    parser.add_option('-h', '--help', default=False, action='store_true')
+    parser = optparse.OptionParser(version='%prog version 1.0 12/December/2013', description=desc)
     parser.add_option('-c', help='chromosome column number/name', action='store')
     parser.add_option('--chr-format', help='chromosome format [hg19|GATK]', action='store')
     parser.add_option('-p', help='position column number/name', action='store')

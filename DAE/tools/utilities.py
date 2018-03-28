@@ -47,7 +47,7 @@ def main(argument_parser, annotator_factory):
         variantFile = open(infile)
 
     if opts.no_header == False:
-        header_str = variantFile.readline()
+        header_str = variantFile.readline()[:-1]
         header = header_str.split('\t')
     else:
         header = None
