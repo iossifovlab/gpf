@@ -397,12 +397,13 @@ class VcfVariantSample(object):
         }
 
     def alternative_alleles_count(self):
-        if self.genotype == '0/0':
-            return 0
-        if self.genotype == '0/1':
-            return 1
-        if self.genotype == '1/1':
-            return 2
+        return len(self.genotype.split("/").filter(lambda x: x != 0))
+        # if self.genotype == '0/0':
+        #     return 0
+        # if self.genotype == '0/1':
+        #     return 1
+        # if self.genotype == '1/1':
+        #     return 2
         raise ValueError('Unknown genotype: {}'.format(self.genotype))
 
 
