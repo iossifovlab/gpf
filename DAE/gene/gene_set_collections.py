@@ -200,7 +200,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     @staticmethod
     def _filter_gene_sets_types(gene_sets_types, permitted_datasets):
         return {k: v
-                for k, v in gene_sets_types.iteritems()
+                for k, v in gene_sets_types.items()
                 if v and (permitted_datasets is None or k in permitted_datasets)}
 
     @staticmethod
@@ -252,10 +252,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         standard_criterias = criterias - {'Recurrent', 'Single'}
 
         genes_families = {}
-        for dataset_id, pedigree_selector_values in gene_sets_types.iteritems():
+        for dataset_id, pedigree_selector_values in gene_sets_types.items():
             for pedigree_selector_value in pedigree_selector_values:
-                cache = self.cache.get(dataset_id, {}).get(pedigree_selector_value, {})
-                genes_families.update(self._get_gene_families(cache, standard_criterias))
+                ds_pedigree_genes_families = self._get_gene_families(self.cache,
+                    {dataset_id, pedigree_selector_value} | standard_criterias)
+                for gene, families in ds_pedigree_genes_families.items():
+                    genes_families.setdefault(gene, set()).update(families)
 
         if 'Recurrent' in criterias or 'Single' in criterias:
             if 'Recurrent' in criterias:
@@ -264,7 +266,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 filter_lambda = lambda item: len(item[1]) == 1
 
             matching_genes = map(lambda item: item[0],
-                filter(filter_lambda, genes_families.iteritems()))
+                filter(filter_lambda, genes_families.items()))
         else:
             matching_genes = genes_families.keys()
         return set(matching_genes)
@@ -281,7 +283,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 # still not the end of the tree
                 for key in cache_keys:
                     for gene, families in cls._get_gene_families(cache[key],
-                            criterias).iteritems():
+                            criterias).items():
                         result.setdefault(gene, set()).update(families)
             elif len(criterias) == 0:
                 # end of tree with satisfied criterias
