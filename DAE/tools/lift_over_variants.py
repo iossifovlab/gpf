@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+
+import sys
+import optparse
+from pyliftover import LiftOver
+from utilities import *
+
+def get_argument_parser():
+    desc = """Program to annotate variants (substitutions & indels & cnvs)"""
+    parser = optparse.OptionParser(version='%prog version 2.2 10/October/2013', description=desc)
+    parser.add_option('-c', help='chromosome column number/name', action='store')
+    parser.add_option('-p', help='position column number/name', action='store')
+    parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_option('-F', '--file', help='lift over description file path', type='string', action='store')
+    parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
+    parser.add_option('--new-p', help='name for the generated position column', default='positionLiftOver', action='store')
+    return parser
+
+
+class LiftOverAnnotator(AnnotatorBase):
+
+    def __init__(self, opts, header=None):
+        super(LiftOverAnnotator, self).__init__(opts, header)
+
+        chrCol = assign_values(opts.c, header)
+        posCol = assign_values(opts.p, header)
+        locCol = assign_values(opts.x, header)
+
+        self.argCols = filter(lambda c: c is not None, [chrCol, posCol, locCol])
+        self._new_columns = ['new_p']
+        self.header = self.header + [opts.new_p]
+        self.lift_over = LiftOver(opts.file)
+
+    @property
+    def new_columns(self):
+        return self._new_columns
+
+    def line_annotations(self, line, new_columns):
+        args = [line[col-1] for col in self.argCols]
+        if len(args) == 1:
+            args = args[0].split(':')
+        chr, pos = args
+        if 'chr' not in chr:
+            chr = 'chr{}'.format(chr)
+        pos = map(lambda p: int(p) - 1, pos.split('-'))
+
+        convert_result = [self.lift_over.convert_coordinate(chr, p) for p in pos]
+
+        result = []
+        for positions in convert_result:
+            if len(positions) == 0:
+                return ['']
+            else:
+                if len(positions) > 1:
+                    sys.stderr.write(
+                        'Position {} has more than one corresponding'
+                        ' position in target assembly.'.format(pos))
+                result.append(str(positions[0][1] + 1))
+        return ['-'.join(result)]
+
+
+if __name__ == "__main__":
+    main(get_argument_parser(), LiftOverAnnotator)
