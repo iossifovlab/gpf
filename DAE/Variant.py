@@ -29,28 +29,28 @@ def normalRefCopyNumber(location, gender):
         if pos < 60001 or (pos > 2699520 and pos < 154931044) \
                 or pos > 155260560:
 
-            if gender == 'M':
+            if gender == Gender.M.name:
                 return 1
-            elif gender == 'U':
+            elif gender == Gender.U.name:
                 LOGGER.warn(
                     'unspecified gender when calculating normal number of allels '
                     'in chr%s',
                     location
                 )
                 return 1
-            elif gender != 'F':
+            elif gender != Gender.F.name:
                 raise Exception('weird gender ' + gender)
     elif chrome in ['chrY', 'Y', '24', 'chr24']:
-        if gender == 'M':
+        if gender == Gender.M.name:
             return 1
-        elif gender == 'U':
+        elif gender == Gender.U.name:
             LOGGER.warn(
                 'unspecified gender when calculating normal number of allels '
                 'in chr%s',
                 location
             )
             return 1
-        elif gender == 'F':
+        elif gender == Gender.F.name:
             return 0
         else:
             raise Exception('gender needed')
