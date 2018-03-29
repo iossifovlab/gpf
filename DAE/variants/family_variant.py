@@ -151,7 +151,9 @@ class FamilyVariantBase(object):
     @property
     def variant_in_members(self):
         if self._variant_in_members is None:
-            index = np.nonzero(np.sum(self.gt, axis=0))
+            gt = np.copy(self.gt)
+            gt[gt == -1] = 0
+            index = np.nonzero(np.sum(gt, axis=0))
             self._variant_in_members = set(self.members_ids[index])
         return self._variant_in_members
 
