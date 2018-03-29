@@ -38,13 +38,13 @@ def build_header_summary(studies):
     for fmd in fam_buff.values():
         child_cnt_hist[len(fmd)] += 1
 
-        fam_conf = "".join([fmd[pid].role + fmd[pid].gender
-                            for pid in sorted(fmd.keys(),
-                                              key=lambda x: (fmd[x].role, x))])
+        fam_conf = "".join([fmd[pid].role.name + fmd[pid].gender.name
+                            for pid in sorted(
+                            fmd.keys(), key=lambda x: (fmd[x].role.name, x))])
         fam_type_cnt[fam_conf] += 1
         for p in fmd.values():
-            child_type_cnt[p.role + p.gender] += 1
-            child_type_cnt[p.role] += 1
+            child_type_cnt[p.role.name + p.gender.name] += 1
+            child_type_cnt[p.role.name] += 1
 
     fam_total = len(fam_buff)
 

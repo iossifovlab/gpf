@@ -10,7 +10,6 @@ import vcf as PyVCF
 from pprint import pprint
 from vcf.parser import _Contig, _Format, _Info, _Filter, _Call
 from vcf.model import make_calldata_tuple
-import copy
 
 
 GA = genomesDB.get_genome()

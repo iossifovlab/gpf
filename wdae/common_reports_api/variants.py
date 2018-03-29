@@ -39,9 +39,9 @@ class CommonBase(object):
 
     @staticmethod
     def family_configuration(family):
-        return "".join([family[pid].role + family[pid].gender
-                        for pid in sorted(family.keys(),
-                                          key=lambda x: (family[x].role, x))])
+        return "".join([family[pid].role.name + family[pid].gender.name
+                        for pid in sorted(
+                        family.keys(), key=lambda x: (family[x].role.name, x))])
 
 
 class CounterBase(CommonBase):
@@ -335,8 +335,8 @@ class DenovoEventsCounter(CounterBase):
             has_phenotype = False
             for index, p in enumerate(v.memberInOrder):
                 if p.is_child and \
-                        isVariant(v.bestSt, index, v.location, p.gender) and \
-                        p.phenotype == self.phenotype_id:
+                        isVariant(v.bestSt, index, v.location, p.gender.name) \
+                        and p.phenotype == self.phenotype_id:
                     has_phenotype = True
                     break
             if hasNew and has_phenotype:
