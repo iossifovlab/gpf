@@ -7,12 +7,6 @@ import pytest
 from gene.gene_set_collections import GeneSetsCollections
 
 
-@pytest.fixture(scope='session')
-def gscs(request):
-    res = GeneSetsCollections()
-    return res
-
-
 def test_denovo_gene_sets_exist(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
     assert denovo is not None
