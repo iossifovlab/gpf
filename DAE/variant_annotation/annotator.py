@@ -11,7 +11,6 @@ from .effect_checkers.intron import IntronicEffectChecker
 from effect import EffectFactory
 from .variant import Variant
 from .annotation_request import AnnotationRequestFactory
-from icecream import ic
 import logging
 
 
