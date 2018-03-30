@@ -284,11 +284,9 @@ class VariantDetail(object):
         self.cshl_variant = variant
 
     def __repr__(self):
-        return "{} {} {} ({})".format(
+        return "{} {}".format(
             self.cshl_location,
-            str(self.variant_type),
-            self.cshl_variant,
-            self.length)
+            self.cshl_variant)
 
     @property
     def variant_type(self):

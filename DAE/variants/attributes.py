@@ -346,6 +346,18 @@ class InheritanceQuery(AQuery):
     def attr_converter(a):
         return Inheritance.from_name(a)
 
+
+class VariantTypeQuery(AQuery):
+    @staticmethod
+    def attr_converter(a):
+        return VariantType.from_name(a)
+
+    @classmethod
+    def parse(cls, query):
+        query = query.replace("del", "deletion")
+        return super(VariantTypeQuery, cls).parse(query)
+
+
 # class RoleQuery(object):
 #
 #     def __init__(self, value, complement=Role.all.value):

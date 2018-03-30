@@ -29,3 +29,20 @@ def test_variant_effect_annotation(variant, variant_type, position):
     for detail in details:
         assert detail.variant_type == variant_type
         assert detail.cshl_position == position
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("variant_types,query", [
+    (set([VariantType.substitution]), "sub"),
+    (set([VariantType.deletion, VariantType.insertion]), "del or ins"),
+    (set([VariantType.complex]), "complex"),
+])
+def test_query_by_variant_type(nvcf19f, variant_types, query):
+    vs = nvcf19f.query_variants(
+        variant_type=query)
+    vs = list(vs)
+
+    assert len(vs) > 0
+    for v in vs:
+        vts = set([ad.variant_type for ad in v.alt_details])
+        assert variant_types.intersection(vts)

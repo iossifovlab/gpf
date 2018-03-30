@@ -11,7 +11,8 @@ import pandas as pd
 from variants.loader import RawVariantsLoader
 from variants.family import FamiliesBase
 from variants.configure import Configure
-from variants.attributes import RoleQuery, SexQuery, InheritanceQuery
+from variants.attributes import RoleQuery, SexQuery, InheritanceQuery,\
+    VariantTypeQuery
 from variants.vcf_utils import VcfFamily
 # from variants.variant import VariantFactorySingle
 from variants.variant import VariantFactory
@@ -189,6 +190,10 @@ class RawFamilyVariants(FamiliesBase):
             query = kwargs['inheritance']
             if not query.match([v.inheritance]):
                 return False
+        if 'variant_type' in kwargs:
+            query = kwargs['variant_type']
+            if not query.match([ad.variant_type for ad in v.alt_details]):
+                return False
 
         if 'real_attr_filter' in kwargs:
             if not self.filter_real_attr(v, kwargs['real_attr_filter']):
@@ -219,6 +224,11 @@ class RawFamilyVariants(FamiliesBase):
             query = InheritanceQuery.parse(kwargs['inheritance'])
             kwargs['inheritance'] = query
 
+        if 'variant_type' in kwargs and \
+                isinstance(kwargs['variant_type'], str):
+            query = VariantTypeQuery.parse(kwargs['variant_type'])
+            kwargs['variant_type'] = query
+
         for v in vs:
             if not self.filter_variant(v, **kwargs):
                 continue
@@ -245,7 +255,7 @@ if __name__ == "__main__":
     import os
     from variants.vcf_utils import mat2str
     from variants.annotate_variant_effects import \
-        VcfVariantEffectsAnnotatorFull
+        VcfVariantEffectsAnnotator
     from variants.annotate_allele_frequencies import \
         VcfAlleleFrequencyAnnotator
     from variants.annotate_composite import AnnotatorComposite
@@ -259,7 +269,7 @@ if __name__ == "__main__":
     )
 
     annotator = AnnotatorComposite(annotators=[
-        VcfVariantEffectsAnnotatorFull(),
+        VcfVariantEffectsAnnotator(),
         VcfAlleleFrequencyAnnotator(),
     ])
 
