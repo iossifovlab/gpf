@@ -110,11 +110,11 @@ def test_query_persons_all(ustudy_single):
         person_ids=['AU1921202'])
     assert vs is not None
     vl = list(vs)
-    assert len(vl) == 362
+    assert len(vl) == 361
 
     vs = ustudy_single.query_variants(
         person_ids=['AU1921202', 'AU1921211'])
-    assert len(list(vs)) == 436
+    assert len(list(vs)) == 435
 
 
 def test_query_persons_combined(ustudy_single):

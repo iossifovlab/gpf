@@ -92,7 +92,7 @@ class FamilyVariantBase(object):
     def combine_inheritance(*inheritance):
         inherits = np.array([i.value for i in inheritance])
         inherits = np.array(inherits)
-        if np.any(inherits == Inheritance.unknown.value):
+        if len(inherits) == 0 or np.any(inherits == Inheritance.unknown.value):
             return Inheritance.unknown
         elif np.all(inherits == Inheritance.mendelian.value):
             return Inheritance.mendelian
