@@ -70,8 +70,12 @@ def test_serialize_deserialize_transcript_effect(
         print(effect_annotator.transcript_effect(effects2))
 
 
-def test_serialize_csv(full_vcf, temp_filename):
-    fvars = full_vcf("fixtures/effects_trio_multi")
+@pytest.mark.parametrize("fixture_name", [
+    "fixtures/effects_trio_multi",
+    "fixtures/effects_trio"
+])
+def test_serialize_csv(fixture_name, full_vcf, temp_filename):
+    fvars = full_vcf(fixture_name)
 
     assert fvars.annot_df is not None
 

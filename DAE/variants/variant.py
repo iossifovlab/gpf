@@ -349,14 +349,36 @@ class EffectGene(object):
 
 class EffectTranscript(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, transcript_id, details):
+        self.transcript_id = transcript_id
+        self.details = details
+
+    def __repr__(self):
+        return "{}:{}".format(self.transcript_id, self.details)
+
+    def __str__(self):
+        return self.__repr__()
+
+    @classmethod
+    def from_tuple(cls, t):
+        (transcript_id, details) = tuple(t)
+        return EffectTranscript(transcript_id, details)
+
+    @classmethod
+    def from_effect_transcripts(cls, effect_transcripts):
+        result = {}
+        for transcript_id, details in effect_transcripts:
+            result[transcript_id] = EffectTranscript.from_tuple(
+                (transcript_id, details))
+        return result
 
 
 class Effect(object):
-    def __init__(self, worst_effect, gene_effects, efffect_transcripts):
+    def __init__(self, worst_effect, gene_effects, effect_transcripts):
         self.worst = worst_effect
         self.gene = EffectGene.from_gene_effects(gene_effects)
+        self.transcript = EffectTranscript.from_effect_transcripts(
+            effect_transcripts)
 
     @classmethod
     def from_effects(cls, effect_types, effect_genes, transcripts):
