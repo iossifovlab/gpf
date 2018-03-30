@@ -11,6 +11,7 @@ from variants.tests.conftest import relative_to_this_test_folder
 import os
 from variants.builder import variants_builder as VB
 from variants.vcf_utils import mat2str
+import pytest
 
 
 def test_variants_build_multi(temp_dirname):
@@ -60,3 +61,24 @@ def test_variants_builder(temp_dirname):
         for aa in v.falt_alleles:
             print(v.effect[aa].worst, v.effect[aa].gene)
             print(v['all.nAltAlls'][aa], v['all.altFreq'][aa])
+
+
+@pytest.mark.skip
+def test_variants_build_twice(temp_dirname):
+
+    conf = Configure.from_prefix(
+        relative_to_this_test_folder("fixtures/trios_multi"))
+
+    shutil.copy(conf.pedigree, temp_dirname)
+    shutil.copy(conf.vcf, temp_dirname)
+
+    prefix = os.path.join(temp_dirname, "trios_multi")
+
+    fvars = VB(prefix)
+    assert fvars is not None
+    conf = Configure.from_prefix(prefix)
+
+    assert os.path.exists(conf.annotation)
+
+    # test that annotation is not called and is read from file
+    fvars = VB(prefix)

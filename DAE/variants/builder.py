@@ -35,9 +35,9 @@ def get_gene_models(gene_models_file=None):
 
 def variants_builder(prefix, genome_file=None, gene_models_file=None):
     conf = Configure.from_prefix(prefix)
-    #     if os.path.exists(conf.annotation):
-    #         fvars = RawFamilyVariants(conf)
-    #         return fvars
+    if os.path.exists(conf.annotation):
+        fvars = RawFamilyVariants(conf)
+        return fvars
 
     genome = get_genome(genome_file)
     gene_models = get_gene_models(gene_models_file)
