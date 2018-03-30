@@ -28,7 +28,10 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
         assert self.variant_annotator is not None
 
     def annotate_variant(self, vcf_variant):
-        result = []
+        worst_effects = []
+        gene_effects = []
+        transcript_effects = []
+
         for alt in vcf_variant.ALT:
             variant = Variant(
                 chrom=vcf_variant.CHROM,
@@ -41,9 +44,12 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
                 position=vcf_variant.start + 1,
                 ref=vcf_variant.REF,
                 alt=alt)
-            result.append(self.wrap_effects(effects))
-        result = np.array(result)
-        return result[:, 0], result[:, 1], result[:, 2]
+            we, ge, et = self.wrap_effects(effects)
+            worst_effects.append(we)
+            gene_effects.append(ge)
+            transcript_effects.append(et)
+        return np.array(worst_effects), \
+            np.array(gene_effects), np.array(transcript_effects)
 
     def wrap_effects(self, effects):
         raise NotImplementedError()
@@ -66,9 +72,7 @@ class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
             genome, gene_models)
 
     def wrap_effects(self, effects):
-        effect_type, effect_gene, _ = \
-            self.effect_simplify(effects)
-        return (effect_type, np.array(effect_gene), effects)
+        return self.effect_simplify(effects)
 
     @classmethod
     def effect_severity(cls, effect):

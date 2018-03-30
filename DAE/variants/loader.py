@@ -11,9 +11,7 @@ from cyvcf2 import VCF
 import numpy as np
 import pandas as pd
 
-from numba import jit
 from variants.attributes import Role, Sex
-from variants.variant import VariantBase, EffectGene
 
 
 class VCFWrapper(object):
@@ -111,7 +109,7 @@ class RawVariantsLoader(object):
                         'effectGene':
                         cls.gene_effects_deserialize,
                         'effectDetails':
-                        cls.convert_array_of_strings,
+                        cls.gene_effects_deserialize,
                     })
             return annot_df
         elif storage == 'parquet':
@@ -143,7 +141,7 @@ class RawVariantsLoader(object):
             vars_df['effectGene'] = vars_df['effectGene'].\
                 apply(cls.gene_effects_serialize)
             vars_df['effectDetails'] = vars_df['effectDetails'].\
-                apply(convert_array_of_lists)
+                apply(cls.gene_effects_serialize)
             vars_df['all.nAltAlls'] = vars_df['all.nAltAlls'].\
                 apply(convert_array_of_numbers)
             vars_df['all.altFreq'] = vars_df['all.altFreq'].\
