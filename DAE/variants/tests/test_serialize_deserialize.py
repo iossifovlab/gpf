@@ -91,6 +91,7 @@ def test_serialize_csv(fixture_name, full_vcf, temp_filename):
     assert_annotation_equals(annot_df, fvars.annot_df)
 
 
+@pytest.mark.slow
 def test_serialize_csv_vcf19(nvcf19f, temp_filename):
     fvars = nvcf19f
 

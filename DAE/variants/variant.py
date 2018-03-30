@@ -283,6 +283,13 @@ class VariantDetail(object):
         self.cshl_position = position
         self.cshl_variant = variant
 
+    def __repr__(self):
+        return "{} {} {} ({})".format(
+            self.cshl_location,
+            str(self.variant_type),
+            self.cshl_variant,
+            self.length)
+
     @property
     def variant_type(self):
         vt = self.cshl_variant[0]
