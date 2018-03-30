@@ -4,31 +4,52 @@ Created on Mar 5, 2018
 @author: lubo
 '''
 from __future__ import print_function
-from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
+import pytest
+from RegionOperations import Region
+from variants.vcf_utils import mat2str
 
 
-def test_allele_counter_simple(ustudy_single):
+@pytest.mark.parametrize("region,count,freq0,freq1", [
+    (Region('1', 11539, 11539), 2, 75.0, 25.0),
+    (Region('1', 11540, 11540), 2, 75.0, 25.0),
+    (Region('1', 11541, 11541), 2, 87.5, 12.5),
+    (Region('1', 11542, 11542), 2, 87.5, 12.5),
+    (Region('1', 11550, 11550), 2, 100.0, 0.0),
+    (Region('1', 11553, 11553), 2, 100.0, 0.0),
+    (Region('1', 11551, 11551), 2, 0.0, 100.0),
+    (Region('1', 11552, 11552), 2, 0.0, 100.0),
+])
+def test_variant_frequency(full_vcf, region, count, freq0, freq1):
+    fvars = full_vcf("fixtures/trios2")
+    vs = list(fvars.query_variants(
+        regions=[region]))
+    assert len(vs) == count
+    for v in vs:
+        print(v, mat2str(v.best_st), v.inheritance)
+        print(v.frequency)
 
-    counter = VcfAlleleFrequencyAnnotator()
-    counter.setup(ustudy_single)
-
-    assert counter is not None
-
-    persons = ustudy_single.persons_without_parents()
-    print(persons)
-
-    assert persons
-    persons_index = ustudy_single.persons_index(persons)
-    print(persons_index)
-
-    assert persons_index
+        assert freq0 == pytest.approx(v.frequency[0], 1e-2)
+        assert freq1 == pytest.approx(v.frequency[1], 1e-2)
 
 
-def test_allels_counter_simple_vcf(ustudy_single):
-    counter = VcfAlleleFrequencyAnnotator()
-    counter.setup(ustudy_single)
+@pytest.mark.parametrize("region,count,freq0,freq1,freq2", [
+    (Region('1', 11600, 11600), 2, 100.0, 0.0, 0.0),
+    (Region('1', 11601, 11601), 2, 75.0, 25.0, 0.0),
+    (Region('1', 11604, 11604), 2, 75.0, 25.0, 0.0),
+    (Region('1', 11602, 11602), 2, 75.0, 0.0, 25.0),
+    (Region('1', 11603, 11603), 2, 75.0, 0.0, 25.0),
+    (Region('1', 11605, 11605), 2, 50.0, 25.0, 25.0),
+])
+def test_variant_frequency_multi(full_vcf, region, count, freq0, freq1, freq2):
+    fvars = full_vcf("fixtures/trios2")
+    vs = list(fvars.query_variants(
+        regions=[region]))
+    assert len(vs) == count
+    for v in vs:
+        print(v, mat2str(v.best_st), v.inheritance)
+        print(v.frequency)
+        assert len(v.frequency) == 3
 
-    for v in ustudy_single.vcf_vars:
-        res = counter.annotate_variant(v)
-        # print(res)
-        assert res is not None
+        assert freq0 == pytest.approx(v.frequency[0], 1e-2)
+        assert freq1 == pytest.approx(v.frequency[1], 1e-2)
+        assert freq2 == pytest.approx(v.frequency[2], 1e-2)

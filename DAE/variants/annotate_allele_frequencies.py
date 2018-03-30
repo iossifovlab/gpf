@@ -15,6 +15,7 @@ class VcfAlleleFrequencyAnnotator(AnnotatorBase):
         'all.nAltAlls',
         'all.altFreq',
         'all.nRefAlls',
+        'all.refFreq',
     ]
 
     def __init__(self):
@@ -53,7 +54,9 @@ class VcfAlleleFrequencyAnnotator(AnnotatorBase):
         alleles_counts = []
 
         n_ref_alleles = np.sum(gt == 0)
-
+        ref_freq = 0.0
+        if n_parents_called > 0:
+            ref_freq = (100.0 * n_ref_alleles) / (2.0 * n_parents_called)
         for alt_allele in range(len(vcf_variant.ALT)):
             n_alt_allele = np.sum(gt == alt_allele + 1)
             if n_parents_called == 0:
@@ -67,7 +70,9 @@ class VcfAlleleFrequencyAnnotator(AnnotatorBase):
         assert n_parents_called * 2 == sum(alleles_counts) + n_ref_alleles
         return (n_parents_called, percent_parents_called,
                 np.array(alleles_counts),
-                np.array(alleles_frequencies), n_ref_alleles)
+                np.array(alleles_frequencies),
+                n_ref_alleles,
+                ref_freq)
 
 #     def annotate(self, vars_df, vcf_vars):
 #         n_parents_called = pd.Series(index=vars_df.index, dtype=np.int16)

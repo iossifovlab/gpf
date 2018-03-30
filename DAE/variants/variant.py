@@ -219,6 +219,8 @@ class SummaryVariant(VariantBase):
 
         sv.effect = Effect.from_effects(
             row['effectType'], row['effectGene'], row['effectDetails'])
+        sv.frequency = [row['all.refFreq']]
+        sv.frequency.extend(row['all.altFreq'])
         return sv
 
     def get_attr(self, item, default=None):
@@ -303,6 +305,10 @@ class FamilyVariant(FamilyVariantBase):
         return self.summary.effect
 
     @property
+    def frequency(self):
+        return self.summary.frequency
+
+    @property
     def best_st(self):
         if self._best_st is None:
             ref = (2 * np.ones(len(self.family), dtype=np.int8))
@@ -368,7 +374,6 @@ class FamilyVariantSingle(FamilyVariant):
             summary_variant, family, gt)
 
         self.alt_index = alt_index
-        # self.falt_alleles = [alt_index + 1]
         assert len(self.falt_alleles) <= 1
 
     @classmethod
