@@ -19,7 +19,7 @@ import shutil
 import numpy as np
 
 from variants.annotate_variant_effects import \
-    VcfVariantEffectsAnnotatorFull
+    VcfVariantEffectsAnnotator
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
 from variants.variant import VariantFactory, SummaryVariant,\
@@ -28,7 +28,7 @@ from variants.variant import VariantFactory, SummaryVariant,\
 
 @pytest.fixture(scope='session')
 def effect_annotator():
-    return VcfVariantEffectsAnnotatorFull()
+    return VcfVariantEffectsAnnotator()
 
 
 @pytest.fixture(scope='session')

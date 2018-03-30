@@ -10,6 +10,7 @@ import numpy as np
 from variant_annotation.annotator import VariantAnnotator
 from variant_annotation.variant import Variant
 from variants.annotate_composite import AnnotatorBase
+import itertools
 
 
 GA = genomesDB.get_genome()  # @UndefinedVariable
@@ -57,25 +58,71 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
         return effects
 
 
-# class VcfVariantEffectsAnnotatorSimple(VcfVariantEffectsAnnotatorBase):
-#     COLUMNS = ['effectType', 'effectGene', 'effectDetails']
-#
-#     def __init__(self, genome=GA, gene_models=gmDB):
-#         super(VcfVariantEffectsAnnotatorSimple, self).__init__(
-#             genome, gene_models)
-#
-#     def wrap_effects(self, effects):
-#         return self.variant_annotator.effect_description(effects)
-
-
-class VcfVariantEffectsAnnotatorFull(VcfVariantEffectsAnnotatorBase):
+class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
     COLUMNS = ['effectType', 'effectGene', 'effectDetails']
 
     def __init__(self, genome=GA, gene_models=gmDB):
-        super(VcfVariantEffectsAnnotatorFull, self).__init__(
+        super(VcfVariantEffectsAnnotator, self).__init__(
             genome, gene_models)
 
     def wrap_effects(self, effects):
         effect_type, effect_gene, _ = \
-            self.variant_annotator.effect_simplify(effects)
-        return (effect_type, effect_gene, effects)
+            self.effect_simplify(effects)
+        return (effect_type, np.array(effect_gene), effects)
+
+    @classmethod
+    def effect_severity(cls, effect):
+        return - VariantAnnotator.Severity[effect.effect]
+
+    @classmethod
+    def sort_effects(cls, effects):
+        sorted_effects = sorted(
+            effects,
+            key=lambda v: cls.effect_severity(v))
+        return sorted_effects
+
+    @classmethod
+    def worst_effect(cls, effects):
+        sorted_effects = cls.sort_effects(effects)
+        return sorted_effects[0].effect
+
+    @classmethod
+    def gene_effect(cls, effects):
+        sorted_effects = cls.sort_effects(effects)
+        worst_effect = sorted_effects[0].effect
+        if worst_effect == 'intergenic':
+            return [('intergenic', 'intergenic')]
+        if worst_effect == 'no-mutation':
+            return [('no-mutation', 'no-mutation')]
+
+        result = []
+        for _severity, severity_effects in itertools.groupby(
+                sorted_effects, cls.effect_severity):
+            for gene, gene_effects in itertools.groupby(
+                    severity_effects, lambda e: e.gene):
+                result.append((gene, next(gene_effects).effect))
+        return result
+
+    @classmethod
+    def transcript_effect(cls, effects):
+        worst_effect = cls.worst_effect(effects)
+        if worst_effect == 'intergenic':
+            return [('intergenic', 'intergenic')]
+        if worst_effect == 'no-mutation':
+            return [('no-mutation', 'no-mutation')]
+
+        result = {}
+        for effect in effects:
+            result[effect.transcript_id] = effect.create_effect_details()
+        return list(result.items())
+
+    @classmethod
+    def effect_simplify(cls, effects):
+        if effects[0].effect == 'unk_chr':
+            return ('unk_chr', ('unk_chr', 'unk_chr'), ('unk_chr', 'unk_chr'))
+
+        return (
+            cls.worst_effect(effects),
+            cls.gene_effect(effects),
+            cls.transcript_effect(effects)
+        )

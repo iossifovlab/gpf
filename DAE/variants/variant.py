@@ -337,8 +337,13 @@ class EffectGene(object):
     def from_string(cls, data):
         return cls.from_tuple(data.split(":"))
 
+    @staticmethod
+    def to_string(gene_effects):
+        return str(gene_effects)
+
     @classmethod
-    def from_tuple(cls, (symbol, effect)):
+    def from_tuple(cls, t):
+        (symbol, effect) = tuple(t)
         return EffectGene(symbol, effect)
 
 

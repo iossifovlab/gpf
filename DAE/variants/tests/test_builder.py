@@ -30,8 +30,13 @@ def test_variants_build_multi(temp_dirname):
     assert os.path.exists(conf.annotation)
 
 
-def test_variants_builder():
-    prefix = relative_to_this_test_folder('fixtures/effects_trio')
+def test_variants_builder(temp_dirname):
+    conf = Configure.from_prefix(
+        relative_to_this_test_folder("fixtures/effects_trio"))
+    shutil.copy(conf.pedigree, temp_dirname)
+    shutil.copy(conf.vcf, temp_dirname)
+
+    prefix = os.path.join(temp_dirname, "effects_trio")
 
     genome_file = os.path.join(
         os.environ.get("DAE_DB_DIR"),

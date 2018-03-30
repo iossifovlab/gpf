@@ -13,7 +13,7 @@ import pandas as pd
 
 from numba import jit
 from variants.attributes import Role, Sex
-from variants.variant import VariantBase
+from variants.variant import VariantBase, EffectGene
 
 
 class VCFWrapper(object):
@@ -42,8 +42,9 @@ class VCFWrapper(object):
 
 
 class RawVariantsLoader(object):
-    SEP = '!'
+    SEP1 = '!'
     SEP2 = '|'
+    SEP3 = ':'
 
     def __init__(self, config):
         self.config = config
@@ -56,7 +57,7 @@ class RawVariantsLoader(object):
     @staticmethod
     def convert_array_of(token, dtype):
         token = token.strip()
-        return np.fromstring(token, dtype=dtype, sep=RawVariantsLoader.SEP)
+        return np.fromstring(token, dtype=dtype, sep=RawVariantsLoader.SEP1)
 
     @staticmethod
     def convert_array_of_ints(token):
@@ -69,11 +70,26 @@ class RawVariantsLoader(object):
     @staticmethod
     def convert_array_of_strings(token):
         token = token.strip()
-        words = [w.strip() for w in token.split(RawVariantsLoader.SEP)]
+        words = [w.strip() for w in token.split(RawVariantsLoader.SEP1)]
         return np.array(words)
 
-    @staticmethod
-    def load_annotation_file(filename, sep='\t', storage='csv'):
+    @classmethod
+    def gene_effects_serialize(cls, all_gene_effects):
+        return cls.SEP1.join(
+            [cls.SEP2.join(
+                [cls.SEP3.join(ge) for ge in gene_effects])
+             for gene_effects in all_gene_effects])
+
+    @classmethod
+    def gene_effects_deserialize(cls, all_gene_effects):
+        return np.array([
+            [tuple(ge.split(cls.SEP3))
+             for ge in gene_effects.split(cls.SEP2)]
+            for gene_effects in all_gene_effects.split(cls.SEP1)
+        ])
+
+    @classmethod
+    def load_annotation_file(cls, filename, sep='\t', storage='csv'):
         assert os.path.exists(filename)
         if storage == 'csv':
             with open(filename, 'r') as infile:
@@ -85,17 +101,17 @@ class RawVariantsLoader(object):
                     },
                     converters={
                         'altA':
-                        RawVariantsLoader.convert_array_of_strings,
+                        cls.convert_array_of_strings,
                         'all.nAltAlls':
-                        RawVariantsLoader.convert_array_of_ints,
+                        cls.convert_array_of_ints,
                         'all.altFreq':
-                        RawVariantsLoader.convert_array_of_floats,
+                        cls.convert_array_of_floats,
                         'effectType':
-                        RawVariantsLoader.convert_array_of_strings,
+                        cls.convert_array_of_strings,
                         'effectGene':
-                        RawVariantsLoader.convert_array_of_strings,
+                        cls.gene_effects_deserialize,
                         'effectDetails':
-                        RawVariantsLoader.convert_array_of_strings,
+                        cls.convert_array_of_strings,
                     })
             return annot_df
         elif storage == 'parquet':
@@ -104,18 +120,18 @@ class RawVariantsLoader(object):
         else:
             raise ValueError("unexpected input format: {}".format(storage))
 
-    @staticmethod
-    def save_annotation_file(vars_df, filename, sep='\t', storage='csv'):
+    @classmethod
+    def save_annotation_file(cls, vars_df, filename, sep='\t', storage='csv'):
         def convert_array_of_strings(a):
-            return RawVariantsLoader.SEP.join(a)
+            return RawVariantsLoader.SEP1.join(a)
 
         def convert_array_of_lists(a):
-            return RawVariantsLoader.SEP.join(
+            return RawVariantsLoader.SEP1.join(
                 [RawVariantsLoader.SEP2.join(str(e)) for e in a]
             )
 
         def convert_array_of_numbers(a):
-            return RawVariantsLoader.SEP.join([
+            return RawVariantsLoader.SEP1.join([
                 str(v) for v in a
             ])
         if storage == 'csv':
@@ -125,7 +141,7 @@ class RawVariantsLoader(object):
             vars_df['effectType'] = vars_df['effectType'].\
                 apply(convert_array_of_strings)
             vars_df['effectGene'] = vars_df['effectGene'].\
-                apply(convert_array_of_lists)
+                apply(cls.gene_effects_serialize)
             vars_df['effectDetails'] = vars_df['effectDetails'].\
                 apply(convert_array_of_lists)
             vars_df['all.nAltAlls'] = vars_df['all.nAltAlls'].\
