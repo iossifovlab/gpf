@@ -40,7 +40,9 @@ def test_variant_frequency(full_vcf, region, count, freq0, freq1):
     (Region('1', 11603, 11603), 2, 75.0, 0.0, 25.0),
     (Region('1', 11605, 11605), 2, 50.0, 25.0, 25.0),
 ])
-def test_variant_frequency_multi(full_vcf, region, count, freq0, freq1, freq2):
+def test_variant_frequency_multi_alleles(
+        full_vcf, region, count, freq0, freq1, freq2):
+
     fvars = full_vcf("fixtures/trios2")
     vs = list(fvars.query_variants(
         regions=[region]))
