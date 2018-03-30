@@ -46,7 +46,6 @@ class VariantBase(object):
             self.start > other.start
 
 
-
 class FamilyVariantBase(object):
 
     def __init__(self):
@@ -238,7 +237,7 @@ class AlleleItems(object):
             else:
                 self.items = items
 
-        self.size = len(items)
+        self.size = len(self.items)
 
     def _to_zero_based(self, index):
         if isinstance(index, slice):
@@ -373,7 +372,7 @@ class SummaryVariant(VariantBase):
             chromosome, start, reference, alternative)
         self.alt_alleles = range(1, len(alternative) + 1)
 
-        self._atts = {}
+        self.atts = {}
         self.update_atts(atts)
 
     @property
@@ -398,23 +397,23 @@ class SummaryVariant(VariantBase):
         return sv
 
     def get_attr(self, item, default=None):
-        val = self._atts.get(item)
+        val = self.atts.get(item)
         if val is None:
             return default
         return val
 
     def has_attr(self, item):
-        return item in self._atts
+        return item in self.atts
 
     def __getitem__(self, item):
         return self.get_attr(item)
 
     def __contains__(self, item):
-        return item in self._atts
+        return item in self.atts
 
     def update_atts(self, atts):
         for key, val in atts.items():
-            self._atts[key] = AlleleItems(val, self.alt_alleles)
+            self.atts[key] = AlleleItems(val, self.alt_alleles)
 
 
 class FamilyVariant(FamilyVariantBase):
@@ -508,20 +507,21 @@ class FamilyVariant(FamilyVariantBase):
     def genotype(self):
         return self.gt.T
 
+    @property
+    def atts(self):
+        return self.summary.atts
+
     def get_attr(self, item, default=None):
-        val = self.summary._atts.get(item)
-        if val is None:
-            return default
-        return val
+        return self.summary.get_attr(item, default)
 
     def has_attr(self, item):
-        return item in self.summary._atts
+        return self.summary.has_attr(item)
 
     def __getitem__(self, item):
         return self.get_attr(item)
 
     def __contains__(self, item):
-        return item in self.summary._atts
+        return item in self.summary
 
 
 class VariantFactory(object):
