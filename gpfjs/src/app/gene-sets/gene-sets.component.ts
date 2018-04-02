@@ -145,6 +145,7 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
   }
 
   setSelectedGeneType(datasetId: string, geneType: string, value: boolean) {
+    this.selectedGeneSet = null;
     if (value) {
       this.geneSetsState.select(datasetId, geneType);
     } else {
