@@ -17,13 +17,15 @@ export class ChildrenStats {
   static fromJson(json: any): ChildrenStats {
     return new ChildrenStats(
       json['M'],
-      json['F']
+      json['F'],
+      json['U']
     );
   }
 
   constructor(
     readonly male: number,
-    readonly female: number
+    readonly female: number,
+    readonly unspecified: number
   ) { }
 }
 
