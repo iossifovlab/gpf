@@ -134,10 +134,13 @@ class EffectAnnotator(AnnotatorBase):
     def line_annotations(self, line, new_cols_order):
         params = [line[i-1] if i!=None else None for i in self.argColumnNs]
 
-        effects = self.annotation_helper.do_annotate_variant(*params)
-        effect_type, effect_gene, effect_details = self.annotation_helper.effect_description(effects)
+        try:
+            effects = self.annotation_helper.do_annotate_variant(*params)
+            effect_type, effect_gene, effect_details = self.annotation_helper.effect_description(effects)
+            return [locals()[col] for col in new_cols_order]
+        except ValueError as e:
+            return ['' for col in new_cols_order]
 
-        return [locals()[col] for col in new_cols_order]
 
 
 if __name__ == "__main__":

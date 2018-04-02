@@ -59,10 +59,13 @@ class MissenseScoresAnnotator(object):
     def line_annotations(self, line, new_cols_order):
         if line[self.effectTypeColumn-1]:
             params = [line[i-1] if i!=None else None for i in self.argColumnNs]
-            variant = Variant(*params)
-            missense_scores = self.mDB.get_missense_score(variant)
-            if missense_scores is not None:
-                return [missense_scores[k] for k in new_cols_order]
+            try:
+                variant = Variant(*params)
+                missense_scores = self.mDB.get_missense_score(variant)
+                if missense_scores is not None:
+                    return [missense_scores[k] for k in new_cols_order]
+            except ValueError as e:
+                pass
         return ['' for col in new_cols_order]
 
 
