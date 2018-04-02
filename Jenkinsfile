@@ -32,7 +32,8 @@ pipeline {
     }
     stage('Prepare') {
       steps {
-
+        echo "PATH is: $PATH"
+        echo "WD is: $WD"
       }
     }
     stage('Build') {
