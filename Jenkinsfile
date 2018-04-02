@@ -37,9 +37,6 @@ pipeline {
       }
     }
     stage('Build') {
-        agent {
-            label "nemo"
-        }
         steps {
             checkout([
                 $class: 'GitSCM', 
