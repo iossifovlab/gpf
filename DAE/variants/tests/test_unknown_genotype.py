@@ -19,7 +19,7 @@ def test_query_regions(ustudy_single):
 
     v = vl[0]
 
-    print(v, v.alternatives)
+    print(v, v.alt)
     print(v.gt)
     print(v.best_st)
 

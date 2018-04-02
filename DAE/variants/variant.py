@@ -15,6 +15,24 @@ from variants.attributes import VariantType, Inheritance
 
 
 class VariantBase(object):
+    """
+    VariantBase is a base class for variants. It supports description of
+    a variant in *a la VCF* style.
+
+    Expected parameters of the constructor are:
+
+    :param chromosome: chromosome label where variant is located
+    :param start: start position of the variant using *VCF* convention
+    :param reference: reference DNA string
+    :param alternatives: list of alternative DNA strings
+
+    Each object of `VariantBase` has following fields:
+
+    :ivar chromosome: chromosome lable where variant is located
+    :ivar start: start position of the variant using *VCF* convention
+    :ivar reference: reference DNA string
+    :ivar alternatives: list of alternative DNA strings
+    """
 
     def __init__(self, chromosome, start, reference, alternatives):
 
@@ -395,7 +413,30 @@ class Effect(object):
 
 
 class SummaryVariant(VariantBase):
+    """
+    `SummaryVariant` represents summary variants for given position.
+
+    :ivar alt: 1-based list of alternative DNA strings describing the variant
+    :ivar effect: 1-based list of `Effect`, that describes variant effects.
+    :ivar frequency: 0-base list of frequencies for variant.
+    :ivar alt_alleles:
+    :ivar atts: Additional attributes describing this variant.
+    :ivar details: 1-based list of `VariantDetails`, that describes variant.
+
+
+
+    """
+
     def __init__(self, chromosome, start, reference, alternative, atts={}):
+        """
+        Expected parameters of the constructor are:
+
+        :param chromosome: chromosome label where variant is located
+        :param start: start position of the variant using *VCF* convention
+        :param reference: reference DNA string
+        :param alternatives: list of alternative DNA strings
+        :param atts: additional variant attributes
+        """
         super(SummaryVariant, self).__init__(
             chromosome, start, reference, alternative)
 
@@ -409,14 +450,40 @@ class SummaryVariant(VariantBase):
 
     @property
     def position(self):
+        """
+        returns VCF start of the variant.
+        """
         return self.start
 
     @property
     def location(self):
+        """
+        Returns string representation of location of the variant constructed
+        from chromosome label and position "<chromsome>:<position>".
+        """
         return "{}:{}".format(self.chromosome, self.position)
 
-    @classmethod
-    def from_dict(cls, row):
+    @staticmethod
+    def from_dict(row):
+        """
+        Factory method for constructing `SummaryVariants` from dictionary.
+
+        The dictionary should contain following elements:
+
+        * `chr` - chromosome label
+        * `position` - a VCF style start positon of the variant
+        * `refA` - reference allele for variant
+        * `altA` - list of alternative alleles
+        * `effectType` - list of worst effects matching each alternative allele
+        * `effectGene` - list of effect type and gene symbol for each alternative alleles.
+        * `effectDetails` - list of transcript effects matching eash alternative alleles.
+        * `all.refFreq` - frequency of the reference allele
+        * `all.altFreq` - list of frequencies for each the alternative alleles.
+
+        All elements of the dictionary `row` are stored as additional attributes
+        of the variant. These attributes are accessible through `get_attr`, 
+        `has_attr`, `__getitem__` and `__contains__` methods of summary variant.
+        """
         sv = SummaryVariant(
             row['chr'], row['position'], row['refA'], row['altA'], atts=row)
         sv.details = VariantDetail.from_vcf(
@@ -429,21 +496,39 @@ class SummaryVariant(VariantBase):
         return sv
 
     def get_attr(self, item, default=None):
+        """
+        looks up values matching key `item` in additional attributes passed
+        on creation of the variant.
+        """
         val = self.atts.get(item)
         if val is None:
             return default
         return val
 
     def has_attr(self, item):
+        """
+        checks if additional variant attributes contain values for key `item`.
+        """
         return item in self.atts
 
     def __getitem__(self, item):
+        """
+        allows using of standard dictionary access to additional variant
+        attributes. For example `sv['all.altFreq']` will return value matching
+        key `all.altFreq` from addtional variant attributes.
+        """
         return self.get_attr(item)
 
     def __contains__(self, item):
+        """
+        checks if additional variant attributes contains value for key `item`.
+        """
         return item in self.atts
 
     def update_atts(self, atts):
+        """
+        updates additional attributes of variant using dictionary `atts`.
+        """
         for key, val in atts.items():
             self.atts[key] = AltAlleleItems(val, self.alt_alleles)
 
@@ -475,15 +560,18 @@ class FamilyVariant(FamilyVariantBase):
 
     @property
     def alt(self):
+        """
+        1-based list of alternative DNA strings describing the variant
+        """
         return self.summary.alt
 
     @property
     def alt_alleles(self):
         return self.summary.alt_alleles
 
-    @property
-    def alternatives(self):
-        return self.summary.alternatives
+#     @property
+#     def alternatives(self):
+#         return self.summary.alternatives
 
     @property
     def chromosome(self):
@@ -503,14 +591,23 @@ class FamilyVariant(FamilyVariantBase):
 
     @property
     def alt_details(self):
+        """
+        1-based list of `VariantDetails`, that describes variant.
+        """
         return self.summary.alt_details
 
     @property
     def effect(self):
+        """
+        1-based list of `Effect`, that describes variant effects.
+        """
         return self.summary.effect
 
     @property
     def frequency(self):
+        """
+        0-base list of frequencies for variant.
+        """
         return self.summary.frequency
 
     @property
@@ -541,6 +638,9 @@ class FamilyVariant(FamilyVariantBase):
 
     @property
     def atts(self):
+        """
+        Additional attributes describing this variant.
+        """
         return self.summary.atts
 
     def get_attr(self, item, default=None):

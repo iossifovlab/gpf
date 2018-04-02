@@ -53,19 +53,32 @@ Example usage of `variants` package::
     :show-inheritance:
 
     
-variants.variant module
+VariantBase - a base class for variants
 -----------------------
     
-.. autoclass:: variant.VariantBase
-    :members:
-    :inherited-members:
+.. autoclass:: variants.variant.VariantBase
+    :members: chromosome, start, reference, alternatives
+    :undoc-members:
+    :special-members: __eq__, __ne__, __lt__, __gt__
 
 SummaryVariant - representation of summary variants
 ---------------------------------------------------
 
-.. autoclass:: variant.SummaryVariant
+.. autoclass:: variants.variant.SummaryVariant
     :members:
+    :special-members: __init__, __getitem__, __contains__ 
+    :undoc-members:
     :inherited-members:
+
+FamilyVariant - representation of family variants
+---------------------------------------------------
+
+.. autoclass:: variants.variant.FamilyVariant
+    :members:
+    :special-members: __init__, __getitem__, __contains__ 
+    :undoc-members:
+    :inherited-members:
+
 
 
 variants.family module
