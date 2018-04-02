@@ -1,2 +1,2 @@
-def test_inheritance_trio_can_init(inheritance_trio):
-    assert inheritance_trio is not None
+def test_inheritance_trio_can_init(inheritance_trio_wrapper):
+    assert inheritance_trio_wrapper is not None

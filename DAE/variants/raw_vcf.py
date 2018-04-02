@@ -143,6 +143,7 @@ class RawFamilyVariants(FamiliesBase):
 
         for aa in v.falt_alleles:
             gene_effects = v.effect[aa].gene
+            print(gene_effects)
 
             if effect_types is None:
                 result = [

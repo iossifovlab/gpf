@@ -9,7 +9,7 @@ from variants.raw_vcf import RawFamilyVariants
 class DatasetFactory(object):
 
     @staticmethod
-    def make_dataset(name, prefix):
+    def make_dataset(name, prefix, _class=Dataset):
         effect_annotator = VcfVariantEffectsAnnotator()
         allele_frequency_annotator = VcfAlleleFrequencyAnnotator()
 
@@ -20,4 +20,4 @@ class DatasetFactory(object):
 
         variants = RawFamilyVariants(config, annotator=composite_annotator)
 
-        return Dataset(name, variants)
+        return _class(name, variants)
