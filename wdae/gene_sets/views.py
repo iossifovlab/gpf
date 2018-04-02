@@ -26,31 +26,12 @@ class GeneSetsBaseView(views.APIView):
         self.gscs = register.get('gene_sets_collections')
 
     @classmethod
-    def permitted_datasets(cls, dataset_ids, user):
+    def permitted_datasets(cls, user):
+        dataset_ids = register.get('datasets').get_config().get_dataset_ids()
         return filter(
             lambda dataset_id: IsDatasetAllowed.user_has_permission(
                 user, dataset_id),
             dataset_ids)
-
-    @classmethod
-    def permitted_denovo_gene_sets_types(cls, gene_sets_types, user):
-        if type(gene_sets_types) is list:
-            permitted_datasets = cls.permitted_datasets(
-                {gene_set_type['datasetId']
-                    for gene_set_type in gene_sets_types},
-                user)
-            return filter(lambda gene_set_type:
-                          gene_set_type['datasetId'] in permitted_datasets,
-                          gene_sets_types)
-        elif type(gene_sets_types) is dict:
-            permitted_datasets = cls.permitted_datasets(
-                set(gene_sets_types.keys()), user)
-            return {k: v
-                    for k, v in gene_sets_types.iteritems()
-                    if k in permitted_datasets}
-        else:
-            raise ValueError()
-
 
 class GeneSetsCollectionsView(GeneSetsBaseView):
 
@@ -58,15 +39,8 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
         super(GeneSetsCollectionsView, self).__init__()
 
     def get(self, request):
-        gene_sets_collections = deepcopy(self.gscs.get_gene_sets_collections())
-
-        for gene_sets_collection in gene_sets_collections:
-            if gene_sets_collection['name'] == 'denovo':
-                permitted_types = self.permitted_denovo_gene_sets_types(
-                    gene_sets_collection['types'], request.user)
-                gene_sets_collection['types'] = permitted_types
-                break
-
+        gene_sets_collections = deepcopy(self.gscs.get_gene_sets_collections(
+            self.permitted_datasets(request.user)))
         return Response(gene_sets_collections, status=status.HTTP_200_OK)
 
 
@@ -100,14 +74,9 @@ class GeneSetsView(GeneSetsBaseView):
         if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if 'geneSetsTypes' in data:
-            gene_sets_types = self.permitted_denovo_gene_sets_types(
-                data['geneSetsTypes'], request.user)
-        else:
-            gene_sets_types = []
-
-        gene_sets = self.gscs.get_gene_sets(
-            gene_sets_collection_id, gene_sets_types)
+        gene_sets_types = data.get('geneSetsTypes', [])
+        gene_sets = self.gscs.get_gene_sets(gene_sets_collection_id,
+            gene_sets_types, self.permitted_datasets(request.user))
 
         response = gene_sets
         if 'filter' in data:
@@ -160,20 +129,16 @@ class GeneSetDownloadView(GeneSetsBaseView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data['geneSetsCollection']
         gene_set_id = data['geneSet']
+        gene_sets_types = data.get('geneSetsTypes', [])
 
         if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if 'geneSetsTypes' in data:
-            gene_sets_types = self.permitted_denovo_gene_sets_types(
-                data['geneSetsTypes'], user)
-        else:
-            gene_sets_types = []
-
         gene_set = self.gscs.get_gene_set(
             gene_sets_collection_id,
             gene_set_id,
-            gene_sets_types
+            gene_sets_types,
+            self.permitted_datasets(user)
         )
         if gene_set is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
