@@ -7,7 +7,7 @@ from __future__ import print_function
 
 from DAE import vDB
 from itertools import groupby
-import pytest
+# import pytest
 
 
 def recSingleGenes(studies, inChild, effectTypes, phenotype):
