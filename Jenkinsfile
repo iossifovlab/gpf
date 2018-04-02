@@ -32,17 +32,7 @@ pipeline {
     }
     stage('Prepare') {
       steps {
-        checkout([
-            $class: 'GitSCM', 
-            branches: [[name: '*/master']], 
-            doGenerateSubmoduleConfigurations: false, 
-            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'gpf']], 
-            submoduleCfg: [], 
-            userRemoteConfigs: [[
-                credentialsId: 'dea7a214-d183-4735-a7d5-ed8076dd0e0d', 
-                url: 'git@github.com:seqpipe/gpf.git'
-            ]]
-        ])
+
       }
     }
     stage('Build') {
@@ -50,6 +40,17 @@ pipeline {
             label "dory"
         }
         steps {
+            checkout([
+                $class: 'GitSCM', 
+                branches: [[name: '*/master']], 
+                doGenerateSubmoduleConfigurations: false, 
+                extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'gpf']], 
+                submoduleCfg: [], 
+                userRemoteConfigs: [[
+                    credentialsId: 'dea7a214-d183-4735-a7d5-ed8076dd0e0d', 
+                    url: 'git@github.com:seqpipe/gpf.git'
+                ]]
+            ])
             sh '''
               echo $HOME
               echo $WORKSPACE
