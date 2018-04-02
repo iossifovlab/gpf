@@ -38,7 +38,7 @@ pipeline {
     }
     stage('Build') {
         agent {
-            label "dory"
+            label "nemo"
         }
         steps {
             checkout([
@@ -64,22 +64,22 @@ pipeline {
 
             '''
         }
+    }
+
+  }
+  post {
+    success {
+        slackSend (
+          color: '#00FF00',
+          message: "SUCCESSFUL: Job '${env.JOB_NAME} " +
+                   "[${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
+        )
         post {
             success {
                 fingerprint 'gpf-html.tar.gz'
                 archive 'gpf-html.tar.gz'
             }
         }
-    }
-
-  }
-  post {
-    success {
-      slackSend (
-        color: '#00FF00',
-        message: "SUCCESSFUL: Job '${env.JOB_NAME} " +
-                 "[${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
-      )
     }
     failure {
       slackSend (
