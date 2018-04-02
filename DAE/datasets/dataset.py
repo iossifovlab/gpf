@@ -1,5 +1,7 @@
 import itertools
 
+from RegionOperations import Region
+
 
 class Dataset(object):
 
@@ -40,6 +42,9 @@ class DatasetWrapper(Dataset):
         limit = None
         if 'limit' in kwargs:
             limit = kwargs['limit']
+
+        if 'regions' in kwargs:
+            kwargs['regions'] = map(Region.from_str, kwargs['regions'])
 
         return itertools.islice(
             super(DatasetWrapper, self).get_variants(**kwargs), limit)

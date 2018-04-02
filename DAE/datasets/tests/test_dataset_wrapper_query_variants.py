@@ -69,11 +69,11 @@ def test_query_effect_types_variants(effect_types, count, quads2_wrapper):
     assert len(variants) == count
 
 
-# @pytest.mark.parametrize("regions,count", [
-#     (["1:0-100000000"], 16),
-#     (["2:0-100000000"], 16),
-# ])
-# def test_query_regions_variants(regions, count, quads2_wrapper):
-#     variants = list(quads2_wrapper.get_variants(regions=regions))
-#
-#     assert len(variants) == count
+@pytest.mark.parametrize("regions,count", [
+    (["1:0-100000000"], 22),
+    (["2:0-100000000"], 6),
+])
+def test_query_regions_variants(regions, count, quads2_wrapper):
+    variants = list(quads2_wrapper.get_variants(regions=regions))
+
+    assert len(variants) == count

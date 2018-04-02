@@ -7,6 +7,7 @@
 from collections import namedtuple
 from collections import defaultdict
 import copy
+import re
 
 
 def bedFile2Rgns(bedFN):
@@ -31,6 +32,9 @@ def rgns2BedFile(rgns, bedFN):
 
 
 class Region:
+    REGION_REGEXP2 = re.compile(
+        "^(chr)?(\d+|[Xx]):([\d]{1,3}(,?[\d]{3})*)"
+        "(-([\d]{1,3}(,?[\d]{3})*))?$")
 
     def __init__(self, chr, start, stop):
         self.chr = chr
@@ -56,6 +60,35 @@ class Region:
 
     def len(self):
         return self.stop - self.start + 1
+
+    @classmethod
+    def parse_str(cls, region_str):
+        m = cls.REGION_REGEXP2.match(region_str)
+        if not m:
+            return None
+        chrome, start, end = m.group(2), m.group(3), m.group(6)
+        if not start:
+            return None
+        start = int(start.replace(',', ''))
+        if not end:
+            end = start
+        else:
+            end = int(end.replace(',', ''))
+
+        if start > end:
+            return None
+        return chrome, start, end
+
+    @staticmethod
+    def from_str(region_str):
+        parsed = Region.parse_str(region_str)
+        if not parsed:
+            return None
+
+        chromosome, start, end = parsed
+
+        return Region(chromosome, start, end)
+
 
 
 def all_regions_from_chr(R, chrom):
