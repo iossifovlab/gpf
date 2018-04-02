@@ -7,7 +7,7 @@ from __future__ import print_function
 
 from DAE import vDB
 from itertools import groupby
-import pytest
+# import pytest
 
 
 def recSingleGenes(studies, inChild, effectTypes, phenotype):
@@ -19,7 +19,7 @@ def recSingleGenes(studies, inChild, effectTypes, phenotype):
                        if v.phenotype == phenotype])
     sym2Vars = {sym: [t[1] for t in tpi]
                 for sym, tpi in groupby(gnSorted, key=lambda x: x[0])}
-    sym2FN = {sym: len(set([v.familyId for v in vs]))
+    sym2FN = {sym: len({v.familyId for v in vs})
               for sym, vs in sym2Vars.items()}
     return {g for g, nf in sym2FN.items() if nf > 1}, \
         {g for g, nf in sym2FN.items() if nf == 1}
@@ -41,7 +41,6 @@ def test_ssc_recurrent(ssc, gscs):
     assert set(recurrent) == gs['syms']
 
 
-@pytest.mark.skip
 def test_denovo_db_recurrent(denovodb, gscs):
     assert denovodb is not None
     studies = denovodb.get_denovo_studies()
@@ -93,8 +92,7 @@ def test_spark_recurrent(spark, gscs):
     assert len(recurrent) == gs['count']
 
 
-@pytest.mark.skip
-def test_ssc_sd_spark_recurrent_combined(ssc, spark, gscs):
+def test_ssc_spark_recurrent_combined(ssc, spark, gscs):
     studies = ssc.get_denovo_studies()
     studies.extend(spark.get_denovo_studies())
 

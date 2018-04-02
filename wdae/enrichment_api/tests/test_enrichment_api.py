@@ -36,12 +36,12 @@ class Test(APITestCase):
 
         res = data['result'][3]
         self.assertEquals('autism', res['selector'])
-        self.assertEquals(78, res['LGDs']['all']['count'])
+        self.assertEquals(95, res['LGDs']['all']['count'])
         self.assertEquals(8, res['LGDs']['rec']['count'])
 
         res = data['result'][-1]
         self.assertEquals('unaffected', res['selector'])
-        self.assertEquals(19, res['LGDs']['all']['count'])
+        self.assertEquals(48, res['LGDs']['all']['count'])
 
     def test_bad_request(self):
         data = {

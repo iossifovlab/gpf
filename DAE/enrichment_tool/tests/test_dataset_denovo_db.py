@@ -24,11 +24,11 @@ def test_enrichment_tool_gene_events(denovo_db,
     assert enrichment_results is not None
 
     er = enrichment_results
-    assert 78 == len(er['all'].events)
+    assert 95 == len(er['all'].events)
     assert 8 == len(er['rec'].events)
     assert 0 == len(er['male'].events)
     assert 0 == len(er['female'].events)
-    assert 78 == len(er['unspecified'].events)
+    assert 95 == len(er['unspecified'].events)
 
 
 def test_enrichment_tool_events(denovo_db,
@@ -48,8 +48,8 @@ def test_enrichment_tool_events(denovo_db,
 
     er = enrichment_results
 
-    assert 93 == len(er['all'].events)
+    assert 111 == len(er['all'].events)
     assert 8 == len(er['rec'].events)
     assert 0 == len(er['male'].events)
     assert 0 == len(er['female'].events)
-    assert 93 == len(er['unspecified'].events)
+    assert 111 == len(er['unspecified'].events)
