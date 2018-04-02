@@ -400,7 +400,8 @@ class Variant:
 
     def pedigree_v3(self, legend):
         def get_color(p):
-            return legend.get_color(p.atts[legend.id])
+            return legend.get_color(
+                p.atts[legend.id] if p.role == 'prb' else 'unaffected')
 
         denovo_parent = self.denovo_parent()
 
