@@ -220,7 +220,7 @@ class FamilyVariantBase(object):
         return fv
 
 
-class AlleleItems(object):
+class AltAlleleItems(object):
 
     def __init__(self, items, alt_alleles=None):
         if not hasattr(items, '__iter__'):
@@ -317,7 +317,7 @@ class VariantDetail(object):
             VariantDetail(chrom, p, v, l)
             for (p, v, l) in variant_details
         ]
-        return AlleleItems(details)
+        return AltAlleleItems(details)
 
 
 class EffectGene(object):
@@ -391,7 +391,7 @@ class Effect(object):
         for et, eg, trans in zip(effect_types, effect_genes, transcripts):
             eff = Effect(et, eg, trans)
             result.append(eff)
-        return AlleleItems(result)
+        return AltAlleleItems(result)
 
 
 class SummaryVariant(VariantBase):
@@ -399,7 +399,7 @@ class SummaryVariant(VariantBase):
         super(SummaryVariant, self).__init__(
             chromosome, start, reference, alternative)
 
-        self.alt = AlleleItems(alternative)
+        self.alt = AltAlleleItems(alternative)
         self.alt_details = VariantDetail.from_vcf(
             chromosome, start, reference, alternative)
         self.alt_alleles = range(1, len(alternative) + 1)
@@ -445,7 +445,7 @@ class SummaryVariant(VariantBase):
 
     def update_atts(self, atts):
         for key, val in atts.items():
-            self.atts[key] = AlleleItems(val, self.alt_alleles)
+            self.atts[key] = AltAlleleItems(val, self.alt_alleles)
 
 
 class FamilyVariant(FamilyVariantBase):

@@ -6,11 +6,11 @@ Created on Mar 20, 2018
 from __future__ import print_function
 
 import pytest
-from variants.variant import AlleleItems
+from variants.variant import AltAlleleItems
 
 
 def test_allele_items():
-    all_items = AlleleItems([1, 2, 3])
+    all_items = AltAlleleItems([1, 2, 3])
 
     assert all_items[1] == 1
     assert all_items[3] == 3
@@ -36,7 +36,7 @@ def test_allele_items():
 
 
 def test_allele_negative_index():
-    all_items = AlleleItems([1, 2, 3])
+    all_items = AltAlleleItems([1, 2, 3])
 
     assert all_items[-1] == 3
     assert all_items[-3] == 1
@@ -49,7 +49,7 @@ def test_allele_negative_index():
 
 
 def test_allele_items_slices_positive_step():
-    all_items = AlleleItems([1, 2, 3, 4])
+    all_items = AltAlleleItems([1, 2, 3, 4])
 
     items = all_items[::1]
     assert len(items) == 4
@@ -73,7 +73,7 @@ def test_allele_items_slices_positive_step():
 
 
 def test_allele_items_slices_negative_step():
-    all_items = AlleleItems([1, 2, 3, 4])
+    all_items = AltAlleleItems([1, 2, 3, 4])
 
     items = all_items[::-1]
     assert len(items) == 4
@@ -85,7 +85,7 @@ def test_allele_items_slices_negative_step():
 
 
 def test_allele_items_iter():
-    all_items = AlleleItems([1, 2, 3, 4])
+    all_items = AltAlleleItems([1, 2, 3, 4])
 
     items = [i for i in all_items]
     assert [1, 2, 3, 4] == items
@@ -99,5 +99,5 @@ def test_allele_items_iter():
 
 
 def test_allele_items_join():
-    all_items = AlleleItems(['A', 'B'])
+    all_items = AltAlleleItems(['A', 'B'])
     assert "A,B" == ",".join(all_items)
