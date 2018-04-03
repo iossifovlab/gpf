@@ -6,10 +6,10 @@ Created on Feb 17, 2017
 from __future__ import print_function
 
 from rest_framework import status
-from rest_framework.test import APITestCase
+from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
-class Test(APITestCase):
+class Test(BaseAuthenticatedUserTest):
 
     def test_gene_set_denovo_main_autism_candidates_denovo_db(self):
         data = {
@@ -36,12 +36,12 @@ class Test(APITestCase):
 
         res = data['result'][3]
         self.assertEquals('autism', res['selector'])
-        self.assertEquals(95, res['LGDs']['all']['count'])
+        self.assertEquals(78, res['LGDs']['all']['count'])
         self.assertEquals(8, res['LGDs']['rec']['count'])
 
         res = data['result'][-1]
         self.assertEquals('unaffected', res['selector'])
-        self.assertEquals(48, res['LGDs']['all']['count'])
+        self.assertEquals(19, res['LGDs']['all']['count'])
 
     def test_bad_request(self):
         data = {
