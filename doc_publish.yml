@@ -1,0 +1,12 @@
+---
+- name: deploy seqpipe source
+  hosts: all
+  tasks:
+    - name: delete old documentation directory
+      file: path={{ doc_publish_dir }}/html state=absent
+
+    - name: copy angular application
+      synchronize: >
+        src='gpf/DAE/docs/_build/html' 
+        dest={{ doc_publish_dir }}/html
+        recursive=yes
