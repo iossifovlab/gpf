@@ -6,7 +6,7 @@ Created on Feb 13, 2018
 from __future__ import print_function
 
 import numpy as np
-from variants.vcf_utils import VcfFamily
+from variants.family import VcfFamily
 from variants.vcf_utils import vcf2cshl
 
 from variants.attributes import VariantType, Inheritance
@@ -300,15 +300,19 @@ class SummaryVariant(VariantBase):
         * `position` - a VCF style start positon of the variant
         * `refA` - reference allele for variant
         * `altA` - list of alternative alleles
-        * `effectType` - list of worst effects matching each alternative allele
-        * `effectGene` - list of effect type and gene symbol for each alternative alleles.
-        * `effectDetails` - list of transcript effects matching eash alternative alleles.
+        * `effectType` - list of worst effects matching each alternative
+           allele.
+        * `effectGene` - list of effect type and gene symbol for each
+           alternative alleles.
+        * `effectDetails` - list of transcript effects matching eash
+           alternative alleles.
         * `all.refFreq` - frequency of the reference allele
         * `all.altFreq` - list of frequencies for each the alternative alleles.
 
-        All elements of the dictionary `row` are stored as additional attributes
-        of the variant. These attributes are accessible through `get_attr`, 
-        `has_attr`, `__getitem__` and `__contains__` methods of summary variant.
+        All elements of the dictionary `row` are stored as additional
+        attributes of the variant. These attributes are accessible through
+        `get_attr`, `has_attr`, `__getitem__` and `__contains__` methods of
+        summary variant.
         """
         sv = SummaryVariant(
             row['chr'], row['position'], row['refA'], row['altA'], atts=row)

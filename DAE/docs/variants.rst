@@ -53,6 +53,26 @@ Example usage of `variants` package::
     :show-inheritance:
 
     
+Family - representation of a family
+-----------------------
+    
+.. autoclass:: variants.family.Family
+    :members:
+    :undoc-members:
+    :special-members: __init__, __len__
+
+
+VcfFamily - representation of a family with some specialization for VCF variants
+-----------------------
+    
+.. autoclass:: variants.family.VcfFamily
+    :members:
+    :undoc-members:
+    :special-members: __init__, __len__
+    :inherited-members:
+
+
+
 VariantBase - a base class for variants
 -----------------------
     
@@ -60,6 +80,7 @@ VariantBase - a base class for variants
     :members: chromosome, start, reference, alternatives
     :undoc-members:
     :special-members: __eq__, __ne__, __lt__, __gt__
+
 
 SummaryVariant - representation of summary variants
 ---------------------------------------------------
@@ -77,7 +98,6 @@ FamilyVariant - representation of family variants
     :members:
     :special-members: __init__, __getitem__, __contains__ 
     :undoc-members:
-    :inherited-members:
 
 
 
