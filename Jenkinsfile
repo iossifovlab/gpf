@@ -76,6 +76,7 @@ pipeline {
             echo $HOME
             echo $WORKSPACE
             pwd
+            hostname
             ./doc_publish.sh
         '''
     }
