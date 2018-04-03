@@ -118,3 +118,5 @@ class Test(BaseAuthenticatedUserTest):
 
         self.assertEquals(386, data['result'][0]['LGDs']['all']['count'])
         self.assertEquals(28, data['result'][0]['LGDs']['rec']['count'])
+        self.assertEquals(
+            "Gene Set: LGDs.Recurrent (SD:autism) (45)", data['desc'])

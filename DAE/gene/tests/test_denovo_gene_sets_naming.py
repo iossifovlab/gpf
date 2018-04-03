@@ -21,7 +21,9 @@ def test_denovo_get_gene_set_sd_denovo_db_lgds_autism_and_epilepsy(gscs):
             'denovo_db': ['autism', 'epilepsy'],
         })
     assert lgds is not None
-    assert lgds['count'] == 614
+    assert lgds['count'] == 597
     assert lgds['name'] == 'LGDs'
-    assert lgds['desc'] == \
-        'LGDs (SD:autism,epilepsy;denovo_db:autism,epilepsy)'
+    #     assert lgds['desc'] == \
+    #         'LGDs (SD:autism,epilepsy;denovo_db:autism,epilepsy)'
+    assert "SD:autism,epilepsy" in lgds['desc']
+    assert "denovo_db:autism,epilepsy" in lgds['desc']

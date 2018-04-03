@@ -117,18 +117,10 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
         self.datasets_factory = self.datasets.get_factory()
 
     def enrichment_description(self, query):
-        gene_sets_collection, gene_set, gene_sets_types = \
-            GeneSymsMixin.get_gene_set_query(**query)
+        gene_set = query.get('geneSet')
         if gene_set:
-            if gene_sets_types:
-                desc = "Gene Set: {} - {} ({})".format(
-                    gene_sets_collection,
-                    gene_set,
-                    ','.join(gene_sets_types))
-            else:
-                desc = "Gene Set: {} - {}".format(
-                    gene_sets_collection,
-                    gene_set)
+            desc = "Gene Set: {}".format(
+                gene_set)
             return desc
         weights_id, range_start, range_end = \
             GeneSymsMixin.get_gene_weights_query(**query)
