@@ -24,11 +24,11 @@ def test_enrichment_tool_gene_events_autism(
     assert enrichment_results is not None
 
     er = enrichment_results
-    assert 95 == len(er['all'].events)
+    assert 78 == len(er['all'].events)
     assert 8 == len(er['rec'].events)
     assert 0 == len(er['male'].events)
     assert 0 == len(er['female'].events)
-    assert 95 == len(er['unspecified'].events)
+    assert 78 == len(er['unspecified'].events)
 
 
 def test_enrichment_tool_gene_events_cantu_syndrome(
