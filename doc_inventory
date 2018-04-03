@@ -2,5 +2,5 @@
 nemo ansible_ssh_host=nemo.local ansible_ssh_user=jenkins
 
 [internal:vars]
-doc_publish_dir="/var/jenkins/jobs/seqpipe/jobs/gpf-documentation/"
+doc_publish_dir="/var/lib/jenkins/jobs/seqpipe/jobs/gpf-documentation"
 html_publish_dir="{{doc_publish_dir}}/html"
