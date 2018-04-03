@@ -70,12 +70,8 @@ pipeline {
           message: "SUCCESSFUL: Job '${env.JOB_NAME} " +
                    "[${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
         )
-        post {
-            success {
-                fingerprint 'gpf-html.tar.gz'
-                archive 'gpf-html.tar.gz'
-            }
-        }
+        fingerprint 'gpf-html.tar.gz'
+        archive 'gpf-html.tar.gz'
     }
     failure {
       slackSend (
