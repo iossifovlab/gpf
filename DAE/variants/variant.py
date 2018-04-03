@@ -248,9 +248,9 @@ class SummaryVariant(VariantBase):
     :ivar alt_alleles:
     :ivar atts: Additional attributes describing this variant.
     :ivar details: 1-based list of `VariantDetails`, that describes variant.
+    :ivar effect: 1-based list of `Effect` for each alternative allele.
 
-
-
+    :ivar effect: 1-based list of `Effect` for each alternative allele.
     """
 
     def __init__(self, chromosome, start, reference, alternative, atts={}):
