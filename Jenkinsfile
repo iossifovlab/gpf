@@ -77,7 +77,7 @@ pipeline {
             echo $WORKSPACE
             pwd
             hostname
-            ansible-playbook -vvv -i doc_inventory doc_publish.yml
+            ansible-playbook -i doc_inventory doc_publish.yml
         '''
     }
     failure {
