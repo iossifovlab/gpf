@@ -8,5 +8,5 @@
     - name: copy DAE html documentation
       synchronize: >
         src='gpf/DAE/docs/_build/html' 
-        dest={{ doc_publish_dir }}/html
+        dest={{ doc_publish_dir }}/
         recursive=yes
