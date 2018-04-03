@@ -72,6 +72,12 @@ pipeline {
         )
         archive 'gpf-html.tar.gz'
         fingerprint 'gpf-html.tar.gz'
+        sh '''
+            echo $HOME
+            echo $WORKSPACE
+            pwd
+            ./doc_publish.sh
+        '''
     }
     failure {
       slackSend (
