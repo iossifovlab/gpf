@@ -5,7 +5,7 @@ pipeline {
   environment {
     WD = pwd()
     DAE_SOURCE_DIR = "$WD/gpf/DAE"
-    DAE_DB_DIR=$HOME/data/data-work/
+    DAE_DB_DIR="$HOME/data/data-work/"
     
     PATH = "$DAE_SOURCE_DIR/tools:$DAE_SOURCE_DIR/tests:$DAE_SOURCE_DIR/pheno/prepare:$HOME/anaconda2/bin:$PATH"
     PYTHONPATH = "$DAE_SOURCE_DIR:$DAE_SOURCE_DIR/tools:$PYTHONPATH"
