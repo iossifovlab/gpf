@@ -15,7 +15,7 @@ pipeline {
   }
   triggers {
     cron('@weekly')
-    triggers { upstream(upstreamProjects: 'seqpipe/gpf/variants', threshold: hudson.model.Result.SUCCESS) }
+    upstream(upstreamProjects: 'seqpipe/gpf/variants', threshold: hudson.model.Result.SUCCESS)
   }
   stages {
     stage ('Start') {
