@@ -39,7 +39,7 @@ pipeline {
         steps {
             checkout([
                 $class: 'GitSCM', 
-                branches: [[name: '*/master']], 
+                branches: [[name: '*/variants']], 
                 doGenerateSubmoduleConfigurations: false, 
                 extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'gpf']], 
                 submoduleCfg: [], 
