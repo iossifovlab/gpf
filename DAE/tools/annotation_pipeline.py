@@ -54,7 +54,7 @@ class MultiAnnotator(object):
 
     def annotate_file(self, input, output):
         if self.header:
-            output.write("\t".join(self.header) + "\n")
+            output.write("#" + "\t".join(self.header) + "\n")
 
         sys.stderr.write("...processing....................\n")
         k = 0
@@ -67,7 +67,7 @@ class MultiAnnotator(object):
             if k%1000 == 0:
                 sys.stderr.write(str(k) + " lines processed\n")
 
-            line = l.split("\t")
+            line = l.rstrip('\n').split("\t")
             if self.reannotate:
                 for annotator in annotators:
                     columns_to_update = [column
@@ -86,37 +86,19 @@ class MultiAnnotator(object):
 
 def get_argument_parser():
     desc = """Program to annotate variants combining multiple annotating tools"""
-    parser = optparse.OptionParser(description=desc, add_help_option=False)
-    parser.add_option('-h', '--help', default=False, action='store_true')
+    parser = optparse.OptionParser(description=desc, add_help_option=True)
     parser.add_option('-H', help='no header in the input file', default=False,  action='store_true', dest='no_header')
     parser.add_option('-c', '--config', help='config file location', action='store')
     parser.add_option('--reannotate', help='columns in the input file to reannotate', action='store')
-    parser.add_option('--region', help='region to annotate (chr:begin-end)', action='store')
+    parser.add_option('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)', action='store')
+
     return parser
-
-
-def print_help():
-    print("\n\n----------------------------------------------------------------\n\nProgram to combine annotation tools for genomic variants")
-    print("BASIC USAGE: annotate_variant.py <INFILE> <OUTFILE> <options>\n")
-    print("-h, --help                       show this help message and exit")
-    print("-H                               no header in the input file ")
-    print("-c, --config                     config file location")
-    print("--reannotate                     columns in the input file to reannotate")
-    print("\nConfig file format:\n")
-    print("[annotation]")
-    print("steps=<annotation step>[,<annotation step>]*")
-    print("steps.<annotation step>.args=<arguments to pass to <annotation step>>")
-    print("steps.<annotation step>.columns=<output column key>:<column label>[,<output column key>:<column label>]*")
 
 
 def main():
     start=time.time()
 
     (opts, args) = get_argument_parser().parse_args()
-
-    if opts.help:
-        print_help()
-        sys.exit(0)
 
     infile = '-'
     outfile = None
@@ -142,15 +124,19 @@ def main():
 
     if infile=='-':
         variantFile = sys.stdin
+    elif opts.region:
+        variantFile = pysam.TabixFile(infile).fetch(region=opts.region)
     else:
-        variantFile = pysam.TabixFile(infile)
+        variantFile = open(infile)
 
     if opts.no_header == False:
-        if infile == '-':
+        if opts.region is None:
             header_str = variantFile.readline()[:-1]
         else:
             header_str = variantFile.header.next()
-        header = header_str[1:].split('\t')
+        if header_str[0] == '#':
+            header_str = header_str[1:]
+        header = header_str.split('\t')
     else:
         header = None
 
@@ -164,7 +150,7 @@ def main():
 
     annotator = MultiAnnotator(opts.config, header, opts.reannotate)
 
-    annotator.annotate_file(variantFile.fetch(region=opts.region), out)
+    annotator.annotate_file(variantFile, out)
 
     if infile != '-':
         variantFile.close()
