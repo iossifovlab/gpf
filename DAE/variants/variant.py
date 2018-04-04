@@ -243,14 +243,16 @@ class SummaryVariant(VariantBase):
     `SummaryVariant` represents summary variants for given position.
 
     :ivar alt: 1-based list of alternative DNA strings describing the variant
-    :ivar effect: 1-based list of `Effect`, that describes variant effects.
+    :ivar effect: 1-based list of :class:`variants.variant.Effect`, that 
+          describes variant effects.
+    
     :ivar frequency: 0-base list of frequencies for variant.
     :ivar alt_alleles:
     :ivar atts: Additional attributes describing this variant.
     :ivar details: 1-based list of `VariantDetails`, that describes variant.
     :ivar effect: 1-based list of `Effect` for each alternative allele.
 
-    :ivar effect: 1-based list of `Effect` for each alternative allele.
+    :effect: 1-based list of `Effect` for each alternative allele.
     """
 
     def __init__(self, chromosome, start, reference, alternative, atts={}):
