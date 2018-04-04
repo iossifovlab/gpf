@@ -128,3 +128,26 @@ def test_query_present_in_child_and_roles(quads2_wrapper):
         presentInChild=["affected only"], roles="dad"))
 
     assert len(variants) == 2
+
+
+@pytest.mark.parametrize(
+    "option,count",
+    [
+        (["mother only"], 2),
+        (["father only"], 1),
+        (["mother and father"], 10),
+        (["neither"], 15),
+        (["mother and father", "mother only"], 12),
+        (["mother only", "neither"], 17),
+        ([
+             "mother only", "father only", "mother and father",
+             "neither"
+         ], 28),
+    ],
+    ids=repr
+)
+def test_query_present_in_parent(option, count, quads2_wrapper):
+    variants = list(quads2_wrapper.get_variants(
+        presentInParent=option))
+
+    assert len(variants) == count

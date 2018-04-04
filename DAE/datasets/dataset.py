@@ -29,11 +29,8 @@ class DatasetWrapper(Dataset):
     }
 
     # inChild
-    ##### presentInChild
-    ##### presentInParent
     # genomicScores
     # geneSyms
-    ##### limit
     # callSet
     # minParentsCalled
     # maxAltFreqPrcnt
@@ -58,23 +55,25 @@ class DatasetWrapper(Dataset):
             super(DatasetWrapper, self).get_variants(**kwargs), limit)
 
     def _transform_present_in_child(self, kwargs):
-        print("kwargs", kwargs)
         roles_query = None
 
         for filter_option in kwargs['presentInChild']:
             new_roles = None
 
             if filter_option == 'affected only':
-                new_roles = AQuery.any_of(Role.prb).and_not_(AQuery.any_of(Role.sib))
+                new_roles = AQuery.any_of(Role.prb) \
+                    .and_not_(AQuery.any_of(Role.sib))
 
             if filter_option == 'unaffected only':
-                new_roles = AQuery.any_of(Role.sib).and_not_(AQuery.any_of(Role.prb))
+                new_roles = AQuery.any_of(Role.sib) \
+                    .and_not_(AQuery.any_of(Role.prb))
 
             if filter_option == 'affected and unaffected':
                 new_roles = AQuery.all_of(Role.prb, Role.sib)
 
             if filter_option == 'neither':
-                new_roles = AQuery.any_of(Role.prb).not_().and_not_(AQuery.any_of(Role.sib))
+                new_roles = AQuery.any_of(Role.prb).not_() \
+                    .and_not_(AQuery.any_of(Role.sib))
 
             if new_roles:
                 if not roles_query:
@@ -85,12 +84,42 @@ class DatasetWrapper(Dataset):
         if roles_query:
             original_roles = kwargs.get('roles', None)
             if original_roles is not None:
-                print("original_roles is not none")
                 original_roles_query = RoleQuery.parse(original_roles)
-                print(original_roles_query)
                 kwargs['roles'] = original_roles_query.and_(roles_query)
             else:
                 kwargs['roles'] = roles_query
 
     def _transform_present_in_parent(self, kwargs):
-        pass
+        roles_query = None
+
+        for filter_option in kwargs['presentInParent']:
+            new_roles = None
+
+            if filter_option == 'mother only':
+                new_roles = AQuery.any_of(Role.mom) \
+                    .and_not_(AQuery.any_of(Role.dad))
+
+            if filter_option == 'father only':
+                new_roles = AQuery.any_of(Role.dad) \
+                    .and_not_(AQuery.any_of(Role.mom))
+
+            if filter_option == 'mother and father':
+                new_roles = AQuery.all_of(Role.dad, Role.mom)
+
+            if filter_option == 'neither':
+                new_roles = AQuery.any_of(Role.dad).not_() \
+                    .and_not_(AQuery.any_of(Role.mom))
+
+            if new_roles:
+                if not roles_query:
+                    roles_query = new_roles
+                else:
+                    roles_query.or_(new_roles)
+
+        if roles_query:
+            original_roles = kwargs.get('roles', None)
+            if original_roles is not None:
+                original_roles_query = RoleQuery.parse(original_roles)
+                kwargs['roles'] = original_roles_query.and_(roles_query)
+            else:
+                kwargs['roles'] = roles_query
