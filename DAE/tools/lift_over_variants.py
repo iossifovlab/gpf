@@ -13,7 +13,9 @@ def get_argument_parser():
     parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
     parser.add_option('-F', '--file', help='lift over description file path', type='string', action='store')
     parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
+    parser.add_option('--new-c', help='name for the generated chromosome column', default='chrLiftOver', action='store')
     parser.add_option('--new-p', help='name for the generated position column', default='positionLiftOver', action='store')
+    parser.add_option('--new-p', help='name for the generated location (chr:pos) column', default='locationLiftOver', action='store')
     return parser
 
 
@@ -22,13 +24,21 @@ class LiftOverAnnotator(AnnotatorBase):
     def __init__(self, opts, header=None):
         super(LiftOverAnnotator, self).__init__(opts, header)
 
-        chrCol = assign_values(opts.c, header)
-        posCol = assign_values(opts.p, header)
-        locCol = assign_values(opts.x, header)
+        if opts.x is not None:
+            assert(opts.c is None)
+            assert(opts.p is None)
+            self.argCols = [assign_values(opts.x, header)]
+            self._new_columns = ['new_x']
+            labels = [opts.new_x]
+        else:
+            assert(opts.c is not None)
+            assert(opts.p is not None)
+            self.argCols = [assign_values(opts.c, header),
+                assign_values(opts.p, header)]
+            self._new_columns = ['new_c', 'new_p']
+            labels = [opts.new_x, opts.new_p]
 
-        self.argCols = filter(lambda c: c is not None, [chrCol, posCol, locCol])
-        self._new_columns = ['new_p']
-        self.header = self.header + [opts.new_p]
+        self.header = self.header + labels
         self.lift_over = LiftOver(opts.file)
 
     @property
@@ -39,24 +49,29 @@ class LiftOverAnnotator(AnnotatorBase):
         args = [line[col-1] for col in self.argCols]
         if len(args) == 1:
             args = args[0].split(':')
-        chr, pos = args
-        if 'chr' not in chr:
-            chr = 'chr{}'.format(chr)
-        pos = map(lambda p: int(p) - 1, pos.split('-'))
+        chromosome, position = args
+        if 'chr' not in chromosome:
+            chromosome = 'chr{}'.format(chromosome)
+        positions = map(lambda p: int(p) - 1, position.split('-'))
 
-        convert_result = [self.lift_over.convert_coordinate(chr, p) for p in pos]
+        convert_result = [self.lift_over.convert_coordinate(chromosome, p)
+                          for p in positions]
 
         result = []
         for positions in convert_result:
             if len(positions) == 0:
-                return ['']
+                return ['' for i in new_columns]
             else:
                 if len(positions) > 1:
                     sys.stderr.write(
                         'Position {} has more than one corresponding'
-                        ' position in target assembly.'.format(pos))
+                        ' position in target assembly.'.format(position))
                 result.append(str(positions[0][1] + 1))
-        return ['-'.join(result)]
+
+        new_c = convert_result[0][0][0]
+        new_p = '-'.join(result)
+        new_x = '{}:{}'.format(new_c, new_p)
+        return [locals()[col] for col in new_columns]
 
 
 if __name__ == "__main__":
