@@ -197,10 +197,10 @@ class FamilyVariantBase(object):
     @property
     def variant_in_roles(self):
         if self._variant_in_roles is None:
-            self._variant_in_roles = [
+            self._variant_in_roles = set([
                 self.family.persons[pid]['role']
                 for pid in self.variant_in_members
-            ]
+            ])
         return self._variant_in_roles
 
     @property

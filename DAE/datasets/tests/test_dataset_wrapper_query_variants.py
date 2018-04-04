@@ -1,5 +1,7 @@
 import pytest
 
+from variants.attributes import Role
+
 
 def test_query_all_variants(inheritance_trio_wrapper):
     variants = list(inheritance_trio_wrapper.get_variants())
@@ -40,8 +42,8 @@ def test_query_family_variants(families, count, quads2_wrapper):
 
 
 @pytest.mark.parametrize("sex,count", [
-    ("M", 10),
-    ("F", 12),
+    ("M", 15),
+    ("F", 15),
 ])
 def test_query_sexes_variants(sex, count, quads2_wrapper):
     variants = list(quads2_wrapper.get_variants(sexes=sex))
@@ -61,7 +63,7 @@ def test_query_variant_type_variants(variant_type, count, quads2_wrapper):
 
 
 @pytest.mark.parametrize("effect_types,count", [
-    (["intergenic"], 16),
+    (["intergenic"], 18),
 ])
 def test_query_effect_types_variants(effect_types, count, quads2_wrapper):
     variants = list(quads2_wrapper.get_variants(effect_types=effect_types))
@@ -77,3 +79,52 @@ def test_query_regions_variants(regions, count, quads2_wrapper):
     variants = list(quads2_wrapper.get_variants(regions=regions))
 
     assert len(variants) == count
+
+
+@pytest.mark.parametrize(
+    "option,count",
+    [
+        (["affected only"], 7),
+        (["unaffected only"], 0),
+        (["affected and unaffected"], 1),
+        (["neither"], 20),
+        (["affected and unaffected", "affected only"], 8),
+        (["affected only", "neither"], 27),
+        ([
+             "affected only", "unaffected only", "affected and unaffected",
+             "neither"
+         ], 28),
+    ],
+    ids=repr
+)
+def test_query_present_in_child(option, count, quads2_wrapper):
+    variants = list(quads2_wrapper.get_variants(
+        presentInChild=option))
+
+    assert len(variants) == count
+
+
+@pytest.mark.parametrize(
+    "option,raw_query",
+    [
+        (["affected only"], "prb and not sib"),
+        (["unaffected only"], "sib and not prb"),
+        (["affected and unaffected"], "sib and prb"),
+        (["neither"], "not sib and not prb"),
+    ],
+    ids=repr
+)
+def test_query_present_in_child_compared_to_raw(
+        option, raw_query, quads2_wrapper):
+    vs = quads2_wrapper._variants.query_variants(roles=raw_query)
+    vs = list(vs)
+
+    variants = list(quads2_wrapper.get_variants(presentInChild=option))
+    assert len(vs) == len(variants)
+
+
+def test_query_present_in_child_and_roles(quads2_wrapper):
+    variants = list(quads2_wrapper.get_variants(
+        presentInChild=["affected only"], roles="dad"))
+
+    assert len(variants) == 2

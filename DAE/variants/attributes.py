@@ -304,6 +304,10 @@ class AQuery(object):
         self.qnode = QOr([self.qnode, QNot([rq.qnode])])
         return self
 
+    def not_(self):
+        self.qnode = QNot([self.qnode])
+        return self
+
     @classmethod
     def any_of(cls, *vals):
         qnode = QAny(set(vals))
