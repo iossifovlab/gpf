@@ -29,6 +29,8 @@ class RelabelChromosomeAnnotator(AnnotatorBase):
 
     def line_annotations(self, line, new_columns):
         chromosome = line[self.chrCol - 1]
+        if not chromosome:
+            return [chromosome]
         if 'chr' in chromosome:
             return [chromosome.replace('chr', '')]
         else:
