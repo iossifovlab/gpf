@@ -25,13 +25,14 @@ class MissenseScoresDB:
         return self.columns.values()
 
     def get_missense_score(self, variant):
-        tbx = self.tbxs[variant.chromosome]
-        for row in tbx.fetch(variant.chromosome, variant.position - 1,
-                             variant.position,  parser=pysam.asTuple()):
-            try:
-                if (row[2] == variant.reference
-                        and row[3] == variant.alternate):
-                    return {self.columns[i]: value
-                            for i, value in enumerate(row)}
-            except ValueError:
-                break
+        if variant.chromosome in self.tbxs:
+            tbx = self.tbxs[variant.chromosome]
+            for row in tbx.fetch(variant.chromosome, variant.position - 1,
+                                 variant.position,  parser=pysam.asTuple()):
+                try:
+                    if (row[2] == variant.reference
+                            and row[3] == variant.alternate):
+                        return {self.columns[i]: value
+                                for i, value in enumerate(row)}
+                except ValueError:
+                    break
