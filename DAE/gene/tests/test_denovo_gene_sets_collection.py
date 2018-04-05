@@ -38,7 +38,7 @@ def test_denovo_get_gene_set_sd_syn_autism_and_epilepsy(gscs):
 def test_denovo_get_gene_sets_sd_autism(gscs):
     gene_sets = gscs.get_gene_sets('denovo', {'SD': ['autism']})
     assert gene_sets is not None
-    assert len(gene_sets) == 14
+    assert len(gene_sets) == 19
     gs = gene_sets[0]
     assert gs['count'] == 546
     assert gs['name'] == 'LGDs'
@@ -46,7 +46,7 @@ def test_denovo_get_gene_sets_sd_autism(gscs):
 def test_denovo_get_gene_sets_sd_unaffected(gscs):
     gene_sets = gscs.get_gene_sets('denovo', {'SD': ['unaffected']})
     assert gene_sets is not None
-    assert len(gene_sets) == 14
+    assert len(gene_sets) == 17
     gs = gene_sets[0]
     assert gs['count'] == 222
     assert gs['name'] == 'LGDs'
@@ -56,7 +56,7 @@ def test_denovo_get_gene_sets_sd_autism_and_epilepsy(gscs):
         'denovo',
         gene_sets_types={'SD': ['autism', 'epilepsy']})
     assert gene_sets is not None
-    assert len(gene_sets) == 14
+    assert len(gene_sets) == 19
     gs = gene_sets[0]
     assert gs['count'] == 576
     assert gs['name'] == 'LGDs'
@@ -104,7 +104,7 @@ def test_denovo_get_gene_set_sd_vip_syn_autism_and_epilepsy(gscs):
 def test_denovo_get_gene_sets_sd_ssc_autism(gscs):
     gene_sets = gscs.get_gene_sets('denovo', {'SD': ['autism'], 'SSC': ['autism']})
     assert gene_sets is not None
-    assert len(gene_sets) == 14
+    assert len(gene_sets) == 19
     gs = gene_sets[0]
     assert gs['count'] == 546
     assert gs['name'] == 'LGDs'
@@ -114,7 +114,7 @@ def test_denovo_get_gene_sets_sd_ssc_autism_and_epilepsy(gscs):
         'denovo',
         gene_sets_types={'SD': ['autism', 'epilepsy'], 'SSC': ['autism']})
     assert gene_sets is not None
-    assert len(gene_sets) == 14
+    assert len(gene_sets) == 19
     gs = gene_sets[0]
     assert gs['count'] == 576
     assert gs['name'] == 'LGDs'

@@ -146,6 +146,15 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                  }
                  for segment_arr in segments_arrs]
             )
+
+        self.recurrency_criterias = {}
+        for recurrency_criteria_str in self._get_att_list('recurrencyCriteria.segments'):
+            name, from_count, to_count = recurrency_criteria_str.strip().split(':')
+            self.recurrency_criterias[name] = {
+                'from': int(from_count),
+                'to': int(to_count)
+            }
+
         self.gene_sets_names = self._get_att_list('geneSetsNames')
 
     def _get_att_list(self, att_name):
@@ -249,7 +258,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def _get_gene_set_syms(self, gene_set_id, gene_sets_types):
         criterias = set(gene_set_id.split('.'))
-        standard_criterias = criterias - {'Recurrent', 'Single'}
+        recurrency_criterias = criterias & set(self.recurrency_criterias.keys())
+        standard_criterias = criterias - recurrency_criterias
+        if len(recurrency_criterias) > 0:
+            recurrency_criteria = self.recurrency_criterias[next(iter(recurrency_criterias))]
+        else:
+            recurrency_criteria = None
 
         genes_families = {}
         for dataset_id, pedigree_selector_values in gene_sets_types.items():
@@ -259,11 +273,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 for gene, families in ds_pedigree_genes_families.items():
                     genes_families.setdefault(gene, set()).update(families)
 
-        if 'Recurrent' in criterias or 'Single' in criterias:
-            if 'Recurrent' in criterias:
-                filter_lambda = lambda item: len(item[1]) > 1
+        if recurrency_criteria:
+            if recurrency_criteria['to'] < 0:
+                filter_lambda = lambda item: len(item[1]) >= recurrency_criteria['from']
             else:
-                filter_lambda = lambda item: len(item[1]) == 1
+                filter_lambda = lambda item: len(item[1]) >= recurrency_criteria['from'] \
+                    and len(item[1]) < recurrency_criteria['to']
 
             matching_genes = map(lambda item: item[0],
                 filter(filter_lambda, genes_families.items()))
