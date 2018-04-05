@@ -198,6 +198,19 @@ def full_vcf(composite_annotator):
     return builder
 
 
+@pytest.fixture(scope='session')
+def data_vcf19(composite_annotator):
+    def builder(path):
+        from variants.default_settings import DATA_DIR
+        a_prefix = os.path.join(DATA_DIR, path)
+        a_conf = Configure.from_prefix(a_prefix)
+        fvars = RawFamilyVariants(
+            a_conf, annotator=composite_annotator,
+            variant_factory=VariantFactory)
+        return fvars
+    return builder
+
+
 PED1 = """
 # SIMPLE TRIO
 familyId,    personId,    dadId,    momId,    sex,   status,    role
