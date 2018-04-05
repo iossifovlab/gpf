@@ -18,4 +18,4 @@ logs
 output
 *.tmp
 *.swp
-/gpf-html.tar.gz
+gpf-html.tar.gz

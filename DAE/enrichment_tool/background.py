@@ -272,6 +272,7 @@ class SamochaBackground(BackgroundBase):
 
         df['F'] = pd.Series(2, index=df.index)
         df['M'] = pd.Series(2, index=df.index)
+        df['U'] = pd.Series(2, index=df.index)
 
         for gene_name in df['gene']:
             gene_loc = df['gene'] == gene_name
@@ -381,13 +382,19 @@ class SamochaBackground(BackgroundBase):
             len(female_result.overlapped),
             female_result.expected)
 
+        children_count = children_stats['M'] + children_stats['U'] \
+            + children_stats['F']
         # p = (p_boys + p_girls) / 2.0
-        p = (children_stats['M'] * p_boys + children_stats['F'] * p_girls) / \
-            (children_stats['M'] + children_stats['F'])
+        p = ((children_stats['M'] + children_stats['U']) * p_boys +
+             children_stats['F'] * p_girls) / \
+            (children_count)
 #         result.rec_expected = \
 #             (children_stats['M'] + children_stats['F']) * p * p
-        rec_result.expected = (children_stats['M'] + children_stats['F']) * \
-            p * len(rec_result.events) / len(all_result.events)
+        if len(rec_result.events) == 0 or len(all_result.events) == 0:
+            rec_result.expected = 0
+        else:
+            rec_result.expected = children_count * \
+                p * len(rec_result.events) / len(all_result.events)
 
         rec_result.pvalue = poisson_test(
             len(rec_result.overlapped),

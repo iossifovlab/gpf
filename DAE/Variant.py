@@ -297,6 +297,10 @@ class Variant:
         return self._memberInOrder
 
     @property
+    def children_in_order(self):
+        return [p for p in self.memberInOrder if p.is_child]
+
+    @property
     def inChS(self):
         childStr = ''
         for index, person in enumerate(self.memberInOrder):
@@ -397,7 +401,8 @@ class Variant:
 
     def pedigree_v3(self, legend):
         def get_color(p):
-            return legend.get_color(p.atts[legend.id])
+            return legend.get_color(
+                p.atts[legend.id] if p.role == 'prb' else 'unaffected')
 
         denovo_parent = self.denovo_parent()
 
