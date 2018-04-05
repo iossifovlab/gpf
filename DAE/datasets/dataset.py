@@ -33,8 +33,6 @@ class DatasetWrapper(Dataset):
     # geneSyms
     # callSet
     # minParentsCalled
-    #### maxAltFreqPrcnt
-    #### minAltFreqPrcnt
     # ultraRareOnly
     # TMM_ALL
     def get_variants(self, **kwargs):
@@ -62,13 +60,15 @@ class DatasetWrapper(Dataset):
         min_value = float('-inf')
         max_value = float('inf')
 
-        if 'minAltFrequencyPercent' in kwargs and \
-                kwargs['minAltFrequencyPercent'] is not None:
-            min_value = kwargs['minAltFrequencyPercent']
+        if 'minAltFrequencyPercent' in kwargs:
+            if kwargs['minAltFrequencyPercent'] is not None:
+                min_value = kwargs['minAltFrequencyPercent']
+            kwargs.pop('minAltFrequencyPercent')
 
-        if 'maxAltFrequencyPercent' in kwargs and \
-                kwargs['maxAltFrequencyPercent'] is not None:
-            max_value = kwargs['maxAltFrequencyPercent']
+        if 'maxAltFrequencyPercent' in kwargs:
+            if kwargs['maxAltFrequencyPercent'] is not None:
+                max_value = kwargs['maxAltFrequencyPercent']
+            kwargs.pop('maxAltFrequencyPercent')
 
         value_range = (min_value, max_value)
         print(value_range)
@@ -117,6 +117,8 @@ class DatasetWrapper(Dataset):
             else:
                 kwargs['roles'] = roles_query
 
+        kwargs.pop('presentInChild')
+
     def _transform_present_in_parent(self, kwargs):
         roles_query = None
 
@@ -151,3 +153,5 @@ class DatasetWrapper(Dataset):
                 kwargs['roles'] = original_roles_query.and_(roles_query)
             else:
                 kwargs['roles'] = roles_query
+
+        kwargs.pop('presentInParent')
