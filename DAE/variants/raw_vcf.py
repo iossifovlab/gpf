@@ -115,27 +115,25 @@ class RawFamilyVariants(FamiliesBase):
     def filter_regions(self, v, regions):
         for reg in regions:
             if reg.chr == v.chromosome and \
-                    reg.start <= v.position and \
-                    reg.stop >= v.position:
+                    reg.start <= v.position <= reg.stop:
                 return True
         return False
 
     @staticmethod
     def filter_real_attr(v, real_attr_filter):
-        attr = real_attr_filter[0]
-        value = v.get_attr(attr)
-        if value is None:
-            return False
-        ranges = real_attr_filter[1:]
+        for key, ranges in real_attr_filter.items():
+            if not v.has_attr(key):
+                return False
 
-        for aa in v.falt_alleles:
-            val = value[aa]
-            result = [
-                (val >= rmin) and (val <= rmax) for (rmin, rmax) in ranges
-            ]
-            if any(result):
-                return True
-        return False
+            value = v.get_attr(key)
+            for aa in v.falt_alleles:
+                val = value[aa]
+                result = [
+                    rmin <= val <= rmax for (rmin, rmax) in ranges
+                ]
+                if not any(result):
+                    return False
+        return True
 
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
@@ -143,7 +141,6 @@ class RawFamilyVariants(FamiliesBase):
 
         for aa in v.falt_alleles:
             gene_effects = v.effect[aa].gene
-            print(gene_effects)
 
             if effect_types is None:
                 result = [
@@ -203,10 +200,7 @@ class RawFamilyVariants(FamiliesBase):
         if 'filter' in kwargs:
             func = kwargs['filter']
             if not func(v):
-                print("F:", v.variant_in_roles)
                 return False
-            else:
-                print("T:", v.variant_in_roles)
         return True
 
     def query_variants(self, **kwargs):

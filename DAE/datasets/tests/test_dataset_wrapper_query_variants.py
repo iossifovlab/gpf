@@ -86,10 +86,10 @@ def test_query_regions_variants(regions, count, quads2_wrapper):
     [
         (["affected only"], 7),
         (["unaffected only"], 0),
-        (["affected and unaffected"], 1),
-        (["neither"], 20),
-        (["affected and unaffected", "affected only"], 8),
-        (["affected only", "neither"], 27),
+        (["affected and unaffected"], 2),
+        (["neither"], 19),
+        (["affected and unaffected", "affected only"], 9),
+        (["affected only", "neither"], 26),
         ([
              "affected only", "unaffected only", "affected and unaffected",
              "neither"
@@ -149,5 +149,58 @@ def test_query_present_in_child_and_roles(quads2_wrapper):
 def test_query_present_in_parent(option, count, quads2_wrapper):
     variants = list(quads2_wrapper.get_variants(
         presentInParent=option))
+
+    assert len(variants) == count
+
+
+@pytest.mark.parametrize(
+    "option,count",
+    [
+        (None, 28),
+        (25, 21),
+        (50, 14),
+        (100, 14),
+    ]
+)
+def test_quary_min_alt_frequency(option, count, quads2_wrapper):
+    variants = list(quads2_wrapper.get_variants(
+        minAltFrequencyPercent=option))
+
+    assert len(variants) == count
+
+
+@pytest.mark.parametrize(
+    "option,count",
+    [
+        (None, 28),
+        (0, 14),
+        (12.5, 17),
+        (25, 24),
+        (100, 28),
+    ]
+)
+def test_quary_max_alt_frequency(option, count, quads2_wrapper):
+    variants = list(quads2_wrapper.get_variants(
+        maxAltFrequencyPercent=option))
+
+    assert len(variants) == count
+
+
+# FIXME: this is questionable for reference variants
+@pytest.mark.parametrize(
+    "minFreq,maxFreq,count",
+    [
+        (None, None, 28),
+        (0, 0, 14),
+        (0, 12.5, 17),
+        (12.6, 25, 17),
+        (25.1, 100, 14),
+        (100, 100, 14),
+    ]
+)
+def test_quary_max_alt_frequency(minFreq, maxFreq, count, quads2_wrapper):
+    variants = list(quads2_wrapper.get_variants(
+        minAltFrequencyPercent=minFreq,
+        maxAltFrequencyPercent=maxFreq))
 
     assert len(variants) == count

@@ -303,7 +303,7 @@ class VariantDetail(object):
             return VariantType.CNV
         else:
             raise ValueError("unexpected variant type: {}".format(
-                self.variant))
+                self.cshl_variant))
 
     @property
     def cshl_location(self):

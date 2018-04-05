@@ -33,8 +33,8 @@ class DatasetWrapper(Dataset):
     # geneSyms
     # callSet
     # minParentsCalled
-    # maxAltFreqPrcnt
-    # minAltFreqPrcnt
+    #### maxAltFreqPrcnt
+    #### minAltFreqPrcnt
     # ultraRareOnly
     # TMM_ALL
     def get_variants(self, **kwargs):
@@ -51,8 +51,36 @@ class DatasetWrapper(Dataset):
         if 'presentInParent' in kwargs:
             self._transform_present_in_parent(kwargs)
 
+        if 'minAltFrequencyPercent' in kwargs or \
+                'maxAltFrequencyPercent' in kwargs:
+            self._transform_min_max_alt_frequency(kwargs)
+
         return itertools.islice(
             super(DatasetWrapper, self).get_variants(**kwargs), limit)
+
+    def _transform_min_max_alt_frequency(self, kwargs):
+        min_value = float('-inf')
+        max_value = float('inf')
+
+        if 'minAltFrequencyPercent' in kwargs and \
+                kwargs['minAltFrequencyPercent'] is not None:
+            min_value = kwargs['minAltFrequencyPercent']
+
+        if 'maxAltFrequencyPercent' in kwargs and \
+                kwargs['maxAltFrequencyPercent'] is not None:
+            max_value = kwargs['maxAltFrequencyPercent']
+
+        value_range = (min_value, max_value)
+        print(value_range)
+
+        value = 'all.altFreq'
+        if 'real_attr_filter' not in kwargs:
+            kwargs['real_attr_filter'] = {}
+
+        if value not in kwargs['real_attr_filter']:
+            kwargs['real_attr_filter'][value] = []
+
+        kwargs['real_attr_filter'][value].append(value_range)
 
     def _transform_present_in_child(self, kwargs):
         roles_query = None
