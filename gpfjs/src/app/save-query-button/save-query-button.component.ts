@@ -1,13 +1,11 @@
 import { 
   Component, OnInit, Input, Output, EventEmitter, Host, ViewChild
  } from '@angular/core';
-import { Location, PlatformLocation } from '@angular/common';
-import { Router } from '@angular/router';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { DatasetsService } from '../datasets/datasets.service';
 import { SaveQuery } from '../query/common-query-data';
 import { GenotypeBrowserComponent } from '../genotype-browser/genotype-browser.component';
-import { SaveQueryService } from './save-query.service';
+import { QueryService } from '../query/query.service';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
@@ -31,9 +29,7 @@ export class SaveQueryButtonComponent implements OnInit {
 
   constructor(
   	private datasetsService: DatasetsService,
-    private saveQueryService: SaveQueryService,
-    private router: Router,
-    private location: Location,
+    private queryService: QueryService,
     // should be provided by a parent component..
   	private parentComponent: QueryStateCollector 
   ) { }
@@ -47,7 +43,7 @@ export class SaveQueryButtonComponent implements OnInit {
         this.parentComponent.getCurrentState()
           .take(1)
           .subscribe(state => {
-              this.saveQueryService.saveQuery(state, this.queryType)
+              this.queryService.saveQuery(state, this.queryType)
                   .take(1)
                   .subscribe(response => {
                       this.urlUUID = response["uuid"];
@@ -73,11 +69,8 @@ export class SaveQueryButtonComponent implements OnInit {
             return '';
         }
 
-        if (this.savedUrlUUID != this.urlUUID) {
-            let pathname = this.router.createUrlTree(
-                ["load-query", this.urlUUID]).toString();
-            pathname = this.location.prepareExternalUrl(pathname);
-            this.url = window.location.origin + pathname;
+        if (this.savedUrlUUID != this.urlUUID) {            
+            this.url = this.queryService.getLoadUrl(this.urlUUID);
             this.savedUrlUUID = this.urlUUID;
         }
 
