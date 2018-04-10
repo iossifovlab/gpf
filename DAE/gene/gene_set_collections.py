@@ -8,7 +8,7 @@ from __future__ import print_function
 import os
 import traceback
 import sqlite3
-from itertools import groupby, chain, product
+from itertools import chain, product
 from collections import OrderedDict
 import cPickle
 import logging
@@ -142,9 +142,10 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 [{
                     'property': standard_criteria_id,
                     'name': segment_arr[0],
-                    'value': segment_arr[1].split('.') if '.' in segment_arr[1] else segment_arr[1]
-                 }
-                 for segment_arr in segments_arrs]
+                    'value': segment_arr[1].split('.')
+                    if '.' in segment_arr[1] else segment_arr[1]
+                }
+                    for segment_arr in segments_arrs]
             )
         self.gene_sets_names = self._get_att_list('geneSetsNames')
 
@@ -186,7 +187,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 'phenotypes': self._get_configured_dataset_legend(dataset_desc)
             }
             for dataset_desc in self._get_dataset_descs()
-            if permitted_datasets is None or dataset_desc['id'] in permitted_datasets
+            if permitted_datasets is None or
+            dataset_desc['id'] in permitted_datasets
         ]
 
     def _get_configured_dataset_legend(self, dataset_desc):
@@ -201,10 +203,17 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _filter_gene_sets_types(gene_sets_types, permitted_datasets):
         return {k: v
                 for k, v in gene_sets_types.items()
-                if v and (permitted_datasets is None or k in permitted_datasets)}
+                if v and (permitted_datasets is None or
+                          k in permitted_datasets)}
 
     @staticmethod
-    def _format_description(gene_sets_types, include_datasets_desc=True):
+    def _format_description(
+            gene_sets_types, include_datasets_desc=False,
+            full_description=True):
+        if full_description:
+            return ";".join(["{}:{}".format(d, ",".join(p))
+                             for d, p in gene_sets_types.items()])
+
         pedigree_selectors = ', '.join(set(chain(*gene_sets_types.values())))
         if include_datasets_desc:
             return '{}::{}'.format(
@@ -214,9 +223,11 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             return pedigree_selectors
 
     def get_gene_sets(self, gene_sets_types={'SD': ['autism']}, **kwargs):
-        gene_sets_types = self._filter_gene_sets_types(gene_sets_types,
+        gene_sets_types = self._filter_gene_sets_types(
+            gene_sets_types,
             kwargs.get('permitted_datasets'))
-        gene_sets_types_desc = self._format_description(gene_sets_types,
+        gene_sets_types_desc = self._format_description(
+            gene_sets_types,
             kwargs.get('include_datasets_desc', True))
         result = []
         for gsn in self.gene_sets_names:
@@ -231,8 +242,9 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return result
 
     def get_gene_set(self, gene_set_id, gene_sets_types={'SD': ['autism']},
-            **kwargs):
-        gene_sets_types = self._filter_gene_sets_types(gene_sets_types,
+                     **kwargs):
+        gene_sets_types = self._filter_gene_sets_types(
+            gene_sets_types,
             kwargs.get('permitted_datasets'))
         syms = self._get_gene_set_syms(gene_set_id, gene_sets_types)
         if not syms:
@@ -242,9 +254,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             "name": gene_set_id,
             "count": len(syms),
             "syms": syms,
-            "desc": "{} ({})".format(gene_set_id,
-                self._format_description(gene_sets_types,
-                    kwargs.get('include_datasets_desc', True)))
+            "desc": "{} ({})".format(
+                gene_set_id,
+                self._format_description(
+                    gene_sets_types,
+                    kwargs.get('include_datasets_desc', False),
+                    kwargs.get('full_dataset_desc', True)))
         }
 
     def _get_gene_set_syms(self, gene_set_id, gene_sets_types):
@@ -254,19 +269,20 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         genes_families = {}
         for dataset_id, pedigree_selector_values in gene_sets_types.items():
             for pedigree_selector_value in pedigree_selector_values:
-                ds_pedigree_genes_families = self._get_gene_families(self.cache,
+                ds_pedigree_genes_families = self._get_gene_families(
+                    self.cache,
                     {dataset_id, pedigree_selector_value} | standard_criterias)
                 for gene, families in ds_pedigree_genes_families.items():
                     genes_families.setdefault(gene, set()).update(families)
 
         if 'Recurrent' in criterias or 'Single' in criterias:
             if 'Recurrent' in criterias:
-                filter_lambda = lambda item: len(item[1]) > 1
+                def filter_lambda(item): return len(item[1]) > 1
             else:
-                filter_lambda = lambda item: len(item[1]) == 1
+                def filter_lambda(item): return len(item[1]) == 1
 
             matching_genes = map(lambda item: item[0],
-                filter(filter_lambda, genes_families.items()))
+                                 filter(filter_lambda, genes_families.items()))
         else:
             matching_genes = genes_families.keys()
         return set(matching_genes)
@@ -282,7 +298,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             if type(cache[cache_keys[0]]) != set:
                 # still not the end of the tree
                 for key in cache_keys:
-                    for gene, families in cls._get_gene_families(cache[key],
+                    for gene, families in cls._get_gene_families(
+                            cache[key],
                             criterias).items():
                         result.setdefault(gene, set()).update(families)
             elif len(criterias) == 0:
@@ -296,7 +313,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _gene_sets_for(self, dataset):
         pedigree_selector = self.datasets_pedigree_selectors[
             dataset['id']]['source']
-        pedigree_selector_values = map(lambda value: value['id'],
+        pedigree_selector_values = map(
+            lambda value: value['id'],
             self._get_configured_dataset_legend(dataset))
 
         dataset_cache = {value: {} for value in pedigree_selector_values}
@@ -306,12 +324,13 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             search_args = {criteria['property']: criteria['value']
                            for criteria in criterias_combination}
             variants = list(DAE.vDB.get_denovo_variants(dataset['studies'],
-                **search_args))
+                                                        **search_args))
             for pedigree_selector_value in pedigree_selector_values:
                 cache = self._init_criterias_cache(
-                    dataset_cache[pedigree_selector_value], criterias_combination)
+                    dataset_cache[pedigree_selector_value],
+                    criterias_combination)
                 self._add_genes_families(cache, pedigree_selector,
-                    pedigree_selector_value, variants)
+                                         pedigree_selector_value, variants)
 
     @staticmethod
     def _init_criterias_cache(dataset_cache, criterias_combination):
@@ -322,7 +341,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     @classmethod
     def _add_genes_families(cls, cache, pedigree_selector,
-            pedigree_selector_value, variants):
+                            pedigree_selector_value, variants):
         for variant in cls._filter_by_pedigree_selector(
                 pedigree_selector, pedigree_selector_value,
                 variants):
@@ -356,7 +375,7 @@ class MetaDenovoGeneSetsCollection(DenovoGeneSetsCollection):
                         ' generated cache file')
 
     def get_gene_sets(self, gene_sets_types={MetaDataset.ID: ['autism']},
-            **kwargs):
+                      **kwargs):
         permitted_datasets = kwargs.get('permitted_datasets', [MetaDataset.ID])
         permitted_datasets.remove(MetaDataset.ID)
         denovo_gene_sets_types = {datasetId: gene_sets_types[MetaDataset.ID]
@@ -367,7 +386,7 @@ class MetaDenovoGeneSetsCollection(DenovoGeneSetsCollection):
             include_datasets_desc=False)
 
     def get_gene_set(self, gene_set_id,
-            gene_sets_types={MetaDataset.ID: ['autism']}, **kwargs):
+                     gene_sets_types={MetaDataset.ID: ['autism']}, **kwargs):
         permitted_datasets = kwargs.get('permitted_datasets', [MetaDataset.ID])
         permitted_datasets.remove(MetaDataset.ID)
         denovo_gene_sets_types = {datasetId: gene_sets_types[MetaDataset.ID]
@@ -408,7 +427,8 @@ class GeneSetsCollections(GeneInfoConfig):
             if not label or not formatStr:
                 continue
             gene_sets_types = self.get_gene_sets_collection(gsc_id)\
-                .get_gene_sets_types_legend(permitted_datasets=permitted_datasets)
+                .get_gene_sets_types_legend(
+                    permitted_datasets=permitted_datasets)
             self.gene_sets_collections_desc.append(
                 {
                     'desc': label,
@@ -440,18 +460,18 @@ class GeneSetsCollections(GeneInfoConfig):
         return self.gene_sets_collections.get(gene_sets_collection_id, None)
 
     def get_gene_sets(self, gene_sets_collection_id, gene_sets_types=[],
-            permitted_datasets=None):
+                      permitted_datasets=None):
         gsc = self.get_gene_sets_collection(gene_sets_collection_id)
         if gsc is None:
             return None
 
         return gsc.get_gene_sets(gene_sets_types,
-            permitted_datasets=permitted_datasets)
+                                 permitted_datasets=permitted_datasets)
 
     def get_gene_set(self, gene_sets_collection_id, gene_set_id,
-            gene_sets_types=[], permitted_datasets=None):
+                     gene_sets_types=[], permitted_datasets=None):
         gsc = self.get_gene_sets_collection(gene_sets_collection_id)
         if gsc is None:
             return None
         return gsc.get_gene_set(gene_set_id, gene_sets_types,
-            permitted_datasets=permitted_datasets)
+                                permitted_datasets=permitted_datasets)
