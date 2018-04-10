@@ -137,9 +137,10 @@ class EnrichmentTestView(APIView, EnrichmentModelsMixin):
             else:
                 desc = "Gene Weights: {}".format(weights_id)
             return desc
-        gene_syms = GeneSymsMixin.get_gene_symbols()
+        gene_syms = GeneSymsMixin.get_gene_symbols(**query)
         if gene_syms:
-            desc = "Gene Symbols: {}".format(gene_syms)
+            desc = "Gene Symbols: {}".format(
+                ",".join(gene_syms))
             return desc
         return None
 
