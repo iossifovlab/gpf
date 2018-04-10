@@ -139,7 +139,6 @@ import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
 import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
 import { SaveQueryButtonComponent } from './save-query-button/save-query-button.component';
-import { SaveQueryService } from './save-query-button/save-query.service';
 import { LoadQueryComponent } from './load-query/load-query.component';
 
 const appRoutes: Routes = [
@@ -375,7 +374,6 @@ const appRoutes: Routes = [
     ChromosomeService,
     { provide: Http, useClass: RedirectOnErrorHttpService,
       deps: [XHRBackend, RequestOptions, Injector]},
-    SaveQueryService
   ],
 
   entryComponents: [
