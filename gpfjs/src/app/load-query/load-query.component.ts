@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { SaveQueryService } from '../save-query-button/save-query.service';
+import { QueryService } from '../query/query.service';
 import { StateRestoreService } from '../store/state-restore.service';
 import { DatasetsService } from '../datasets/datasets.service';
 
@@ -20,7 +20,7 @@ const PAGE_TYPE_TO_NAVIGATE = {
 export class LoadQueryComponent implements OnInit {
 
   constructor(
-    private saveQueryService: SaveQueryService,
+    private queryService: QueryService,
     private stateRestoreService: StateRestoreService,
     private datasetsService: DatasetsService,
     private route: ActivatedRoute,
@@ -40,7 +40,7 @@ export class LoadQueryComponent implements OnInit {
   }
 
   private loadQuery(uuid: string) {
-      this.saveQueryService.loadQuery(uuid)
+      this.queryService.loadQuery(uuid)
           .take(1)
           .subscribe(response => {
               let queryData = response['data'];
