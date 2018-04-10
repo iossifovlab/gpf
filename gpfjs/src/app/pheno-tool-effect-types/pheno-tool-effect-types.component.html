@@ -28,7 +28,7 @@
       </div>
       <div class="col-lg-4">
         <gpf-effecttypes-column
-          *ngIf="hasCNV | async"
+          *ngIf="hasCNV"
           [effectTypesLabels]="phenoToolCNV"
           [effectTypes]="effectTypes"
           (effectTypeEvent)="onEffectTypeChange($event)">

@@ -1,4 +1,4 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { Component, Input, OnInit, forwardRef } from '@angular/core';
 import { QueryStateCollector } from '../query/query-state-provider'
 
 @Component({
@@ -8,6 +8,9 @@ import { QueryStateCollector } from '../query/query-state-provider'
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => PhenoToolGenotypeBlockComponent) }]
 })
 export class PhenoToolGenotypeBlockComponent extends QueryStateCollector  implements OnInit {
+
+  @Input()
+  hasCNV = false;
 
   constructor() {
     super(); 
