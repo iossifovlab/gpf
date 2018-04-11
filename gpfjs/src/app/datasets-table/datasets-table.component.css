@@ -1,0 +1,4 @@
+.height-limited {
+    max-height: 252px;
+    overflow: auto;
+}
