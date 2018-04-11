@@ -53,7 +53,7 @@ class MetaDataset(Dataset):
 
         augment_vars = self._get_var_augmenter(safe=safe, **kwargs)
         return itertools.imap(augment_vars,
-            self.__distinct(self._phenotype_filter(all_variants)))
+            self.__distinct(self._phenotype_filter(all_variants, **kwargs)))
 
     def __get_variants_from_study(self, study, safe=True, **kwargs):
         variant_iterators = []
