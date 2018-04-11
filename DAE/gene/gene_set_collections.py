@@ -417,10 +417,7 @@ class GeneSetsCollections(GeneInfoConfig):
         return self.db is not None
 
     def get_gene_sets_collections(self, permitted_datasets=None):
-        if self.gene_sets_collections_desc:
-            return self.gene_sets_collections_desc
-
-        self.gene_sets_collections_desc = []
+        gene_sets_collections_desc = []
         for gsc_id in self.gene_info.getGeneTermIds():
             label = self.gene_info.getGeneTermAtt(gsc_id, "webLabel")
             formatStr = self.gene_info.getGeneTermAtt(gsc_id, "webFormatStr")
@@ -429,7 +426,7 @@ class GeneSetsCollections(GeneInfoConfig):
             gene_sets_types = self.get_gene_sets_collection(gsc_id)\
                 .get_gene_sets_types_legend(
                     permitted_datasets=permitted_datasets)
-            self.gene_sets_collections_desc.append(
+            gene_sets_collections_desc.append(
                 {
                     'desc': label,
                     'name': gsc_id,
@@ -438,7 +435,7 @@ class GeneSetsCollections(GeneInfoConfig):
                 }
             )
 
-        return self.gene_sets_collections_desc
+        return gene_sets_collections_desc
 
     def has_gene_sets_collection(self, gsc_id):
         return any([
