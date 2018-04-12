@@ -380,7 +380,7 @@ class Variant:
         return self.key == other.key
 
     def __lt__(self, other):
-        return self.sort_key < other.sort_key
+        return self.key < other.key
 
     CHROMOSOMES_ORDER = dict(
         {str(x): '0' + str(x) for x in range(1, 10)}.items() +
@@ -388,15 +388,12 @@ class Variant:
         {'X': '23', 'Y': '24'}.items())
 
     @property
-    def sort_key(self):
+    def key(self):
         chromosome, position = self.location.split(':')
         return (self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome),
-                int(position.split('-')[0]))
-
-    @property
-    def key(self):
-        return (self.familyId if self.familyId else '',
-            self.location, self.variant)
+                int(position.split('-')[0]),
+                self.variant,
+                self.familyId if self.familyId else '')
 
     def pedigree_v3(self, legend):
         def get_color(p):
