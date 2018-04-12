@@ -3,6 +3,7 @@ import itertools
 
 from RegionOperations import Region
 from variants.attributes import Role, AQuery, RoleQuery, QLeaf, QAnd, QNot
+# from datasets.helpers import transform_variants_to_lists
 
 
 class Dataset(object):
