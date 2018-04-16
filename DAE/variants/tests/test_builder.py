@@ -59,7 +59,7 @@ def test_variants_builder(temp_dirname):
     for c, v in enumerate(vs):
         print(c, v, v.family_id, mat2str(v.best_st), sep='\t')
         for aa in v.falt_alleles:
-            print(v.effect[aa].worst, v.effect[aa].gene)
+            print(v.effects[aa].worst, v.effects[aa].genes)
             print(v['all.nAltAlls'][aa], v['all.altFreq'][aa])
 
 

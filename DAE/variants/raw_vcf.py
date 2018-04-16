@@ -142,7 +142,7 @@ class RawFamilyVariants(FamiliesBase):
         assert effect_types is not None or genes is not None
 
         for aa in v.falt_alleles:
-            gene_effects = v.effect[aa].gene
+            gene_effects = v.effects[aa].genes
 
             if effect_types is None:
                 result = [

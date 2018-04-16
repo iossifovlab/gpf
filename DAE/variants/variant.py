@@ -225,8 +225,8 @@ class EffectTranscript(object):
 class Effect(object):
     def __init__(self, worst_effect, gene_effects, effect_transcripts):
         self.worst = worst_effect
-        self.gene = EffectGene.from_gene_effects(gene_effects)
-        self.transcript = EffectTranscript.from_effect_transcripts(
+        self.genes = EffectGene.from_gene_effects(gene_effects)
+        self.transcripts = EffectTranscript.from_effect_transcripts(
             effect_transcripts)
 
     @classmethod
@@ -242,12 +242,12 @@ class SummaryVariant(VariantBase):
     """
     `SummaryVariant` represents summary variants for given position.
 
-    :ivar alt: 1-based list of alternative DNA strings describing the variant
-    :ivar effect: 1-based list of :class:`variants.variant.Effect`, that 
+    :ivar alts: 1-based list of alternative DNA strings describing the variant
+    :ivar effect: 1-based list of :class:`variants.variant.Effect`, that
           describes variant effects.
-    
+
     :ivar frequency: 0-base list of frequencies for variant.
-    :ivar alt_alleles:
+    :ivar alt_alleles: list of alternative alleles indexes
     :ivar atts: Additional attributes describing this variant.
     :ivar details: 1-based list of `VariantDetails`, that describes variant.
     :ivar effect: 1-based list of `Effect` for each alternative allele.
@@ -268,7 +268,7 @@ class SummaryVariant(VariantBase):
         super(SummaryVariant, self).__init__(
             chromosome, start, reference, alternative)
 
-        self.alt = AltAlleleItems(alternative)
+        self.alts = AltAlleleItems(alternative)
         self.alt_details = VariantDetail.from_vcf(
             chromosome, start, reference, alternative)
         self.alt_alleles = range(1, len(alternative) + 1)
@@ -321,10 +321,10 @@ class SummaryVariant(VariantBase):
         sv.details = VariantDetail.from_vcf(
             row['chr'], row['position'], row['refA'], row['altA'])
 
-        sv.effect = Effect.from_effects(
+        sv.effects = Effect.from_effects(
             row['effectType'], row['effectGene'], row['effectDetails'])
-        sv.frequency = [row['all.refFreq']]
-        sv.frequency.extend(row['all.altFreq'])
+        sv.frequencies = [row['all.refFreq']]
+        sv.frequencies.extend(row['all.altFreq'])
         return sv
 
     def get_attr(self, item, default=None):
@@ -405,7 +405,7 @@ class FamilyVariant(object):
     def __repr__(self):
         return '{}:{} {}->{} {}'.format(
             self.chromosome, self.position,
-            self.reference, ",".join(self.alt),
+            self.reference, ",".join(self.alts),
             self.family_id)
 
     @classmethod
@@ -420,11 +420,11 @@ class FamilyVariant(object):
         return [FamilyVariant(sv, family, gt)]
 
     @property
-    def alt(self):
+    def alts(self):
         """
         1-based list of alternative DNA strings describing the variant
         """
-        return self.summary.alt
+        return self.summary.alts
 
     @property
     def alt_alleles(self):
@@ -458,18 +458,18 @@ class FamilyVariant(object):
         return self.summary.alt_details
 
     @property
-    def effect(self):
+    def effects(self):
         """
         1-based list of `Effect`, that describes variant effects.
         """
-        return self.summary.effect
+        return self.summary.effects
 
     @property
-    def frequency(self):
+    def frequencies(self):
         """
         0-base list of frequencies for variant.
         """
-        return self.summary.frequency
+        return self.summary.frequencies
 
     @property
     def best_st(self):
