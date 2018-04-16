@@ -116,7 +116,7 @@ class GeneInfoDB:
     def getGeneTermAttList(self, id, attName):
         att = self.getGeneTermAtt(id, attName)
         if att is not None:
-            return att.split(',')
+            return [a.strip() for a in att.split(',')]
 
     def getGeneTerms(self,id="main",inNS="sym"):
         fl = self.config.get('geneTerms.' + id, "file")
