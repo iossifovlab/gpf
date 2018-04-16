@@ -92,26 +92,6 @@ class GeneSetsCollection(GeneInfoConfig):
         }
 
 
-class DenovoGeneSetsType(object):
-
-    def __init__(self, gene_term):
-        self.gene_term = gene_term
-
-    def get_gene_set_syms(self, gene_set_id, **kwargs):
-        assert self.gene_term is not None
-
-        if gene_set_id not in self.gene_term.t2G:
-            LOGGER.warn("gene set {} not found...".format(gene_set_id))
-            return set()
-        syms = self.gene_term.t2G[gene_set_id].keys()
-        return set(syms)
-
-    def get_gene_sets(self):
-        keys = self.gene_term.tDesc.keys()[:]
-        keys = sorted(keys)
-        return keys
-
-
 class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def __init__(self, gsc_id='denovo'):
@@ -149,8 +129,10 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             )
 
         self.recurrency_criterias = {}
-        for recurrency_criteria_str in self._get_att_list('recurrencyCriteria.segments'):
-            name, from_count, to_count = recurrency_criteria_str.strip().split(':')
+        for recurrency_criteria_str in self._get_att_list(
+                'recurrencyCriteria.segments'):
+            name, from_count, to_count = \
+                recurrency_criteria_str.strip().split(':')
             self.recurrency_criterias[name] = {
                 'from': int(from_count),
                 'to': int(to_count)
@@ -179,13 +161,18 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             infile = open(cache_file_path, 'w')
             cPickle.dump(self.cache, infile)
 
-    def _generate_cache(self):
-        for dataset in self._get_dataset_descs():
+    def build_cache(self, datasets=None):
+        self._generate_cache(datasets)
+
+    def _generate_cache(self, datasets=None):
+        for dataset in self._get_dataset_descs(datasets):
             self._gene_sets_for(dataset)
 
-    def _get_dataset_descs(self):
+    def _get_dataset_descs(self, datasets=None):
+        if datasets is None:
+            datasets = self.datasets_pedigree_selectors.keys()
         return [self.datasets_config.get_dataset_desc(gid)
-                for gid in self.datasets_pedigree_selectors.keys()]
+                for gid in datasets]
 
     def get_gene_sets_types_legend(self, **kwargs):
         permitted_datasets = kwargs.get('permitted_datasets')
@@ -199,6 +186,13 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             if permitted_datasets is None or
             dataset_desc['id'] in permitted_datasets
         ]
+
+    def get_dataset_phenotypes(self, dataset_id):
+        legend = self.get_gene_sets_types_legend(permitted_datasets=None)
+        res = {
+            r['datasetId']: r for r in legend
+        }
+        return [p['id'] for p in res[dataset_id]['phenotypes']]
 
     def _get_configured_dataset_legend(self, dataset_desc):
         configured_pedigree_selector_id = self.datasets_pedigree_selectors[
@@ -271,12 +265,27 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                     kwargs.get('full_dataset_desc', True)))
         }
 
+    def gene_set(self, gene_set_id, gene_sets_types={'SD': ['autims']}):
+        gs = self.get_gene_set(gene_set_id, gene_sets_types)
+        return gs['syms']
+
+    def get_denovo_sets(self, gene_sets_types={'SD': ['autims']}):
+        for k, v in gene_sets_types.items():
+            if not v:
+                v = self.get_dataset_phenotypes(k)
+                gene_sets_types[k] = v
+
+        gss = self.get_gene_sets(gene_sets_types)
+        return {g['name']: g['syms'] for g in gss}
+
     def _get_gene_set_syms(self, gene_set_id, gene_sets_types):
         criterias = set(gene_set_id.split('.'))
-        recurrency_criterias = criterias & set(self.recurrency_criterias.keys())
+        recurrency_criterias = criterias & set(
+            self.recurrency_criterias.keys())
         standard_criterias = criterias - recurrency_criterias
         if len(recurrency_criterias) > 0:
-            recurrency_criteria = self.recurrency_criterias[next(iter(recurrency_criterias))]
+            recurrency_criteria = self.recurrency_criterias[next(
+                iter(recurrency_criterias))]
         else:
             recurrency_criteria = None
 
@@ -291,10 +300,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         if recurrency_criteria:
             if recurrency_criteria['to'] < 0:
-                filter_lambda = lambda item: len(item[1]) >= recurrency_criteria['from']
+                def filter_lambda(item): return len(
+                    item[1]) >= recurrency_criteria['from']
             else:
-                filter_lambda = lambda item: len(item[1]) >= recurrency_criteria['from'] \
-                    and len(item[1]) < recurrency_criteria['to']
+                def filter_lambda(item):
+                    return len(item[1]) >= recurrency_criteria['from'] \
+                        and len(item[1]) < recurrency_criteria['to']
 
             matching_genes = map(lambda item: item[0],
                                  filter(filter_lambda, genes_families.items()))
@@ -322,7 +333,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 result.update(cache)
             return result
         next_key = next_keys.pop()
-        next_criterias = criterias - {next_key}
+        # next_criterias = criterias - {next_key}
         return cls._get_gene_families(cache[next_key], criterias - {next_key})
 
     def _gene_sets_for(self, dataset):
@@ -410,6 +421,19 @@ class MetaDenovoGeneSetsCollection(DenovoGeneSetsCollection):
             gene_set_id, denovo_gene_sets_types,
             permitted_datasets=permitted_datasets,
             include_datasets_desc=False)
+
+    def get_denovo_sets(self, phenotypes=['autism']):
+        if phenotypes is None:
+            phenotypes = self.get_dataset_phenotypes(MetaDataset.ID)
+        gene_sets_types = {MetaDataset.ID: phenotypes}
+        gss = self.get_gene_sets(
+            gene_sets_types,
+            permitted_datasets=self.datasets_config.get_dataset_ids())
+        return {g['name']: g['syms'] for g in gss}
+
+    def get_dataset_phenotypes(self):
+        return super(MetaDenovoGeneSetsCollection, self).\
+            get_dataset_phenotypes(MetaDataset.ID)
 
 
 class GeneSetsCollections(GeneInfoConfig):

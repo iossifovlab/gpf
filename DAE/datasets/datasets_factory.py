@@ -66,8 +66,9 @@ class DatasetsFactory(dict):
     def get_description_datasets(self):
         datasets_ids = self.datasets_config.get_dataset_ids()
         datasets_ids.remove(MetaDataset.ID)
-        datasets_description = [self.datasets_config.get_dataset_desc(dataset_id)
-                for dataset_id in datasets_ids]
+        datasets_description = [
+            self.datasets_config.get_dataset_desc(dataset_id)
+            for dataset_id in datasets_ids]
 
         result = []
         for desc in datasets_description:
