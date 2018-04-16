@@ -14,9 +14,9 @@ def test_phenotypes_sd(sd):
     phenotypes = sd.get_phenotypes()
     assert [
         'autism',
-        'congenital heart disease',
+        'congenital_heart_disease',
         'epilepsy',
-        'intellectual disability',
+        'intellectual_disability',
         'schizophrenia',
         'unaffected'
     ] == phenotypes

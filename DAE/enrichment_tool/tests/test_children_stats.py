@@ -59,7 +59,7 @@ def test_children_stats_dataset(sd):
 
 
 def test_children_stats_intellectual_disability_sd(sd):
-    gh = GH.from_dataset(sd, 'phenotype', 'intellectual disability')
+    gh = GH.from_dataset(sd, 'phenotype', 'intellectual_disability')
     children_stats = gh.get_children_stats()
 
     assert children_stats['F'] == 85
@@ -75,7 +75,7 @@ def test_children_stats_autism_sd(sd):
 
 
 def test_children_stats_congenital_heart_disease_sd(sd):
-    gh = GH.from_dataset(sd, 'phenotype', 'congenital heart disease')
+    gh = GH.from_dataset(sd, 'phenotype', 'congenital_heart_disease')
     children_stats = gh.get_children_stats()
 
     assert children_stats['F'] == 467  # 467
