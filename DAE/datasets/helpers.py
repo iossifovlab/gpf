@@ -96,9 +96,9 @@ def transform_variants_to_lists(variants, attrs, sep='\t'):
 
 
 def get_variants_web_preview(
-        variants, attrs, sep='\t', max_variants_count=1000):
+        variants, attrs, separator='\t', max_variants_count=1000):
     VARIANTS_HARD_MAX = 2000
-    rows = transform_variants_to_lists(variants, attrs, sep)
+    rows = transform_variants_to_lists(variants, attrs, separator)
     count = min(max_variants_count, VARIANTS_HARD_MAX)
 
     limited_rows = itertools.islice(rows, count)
