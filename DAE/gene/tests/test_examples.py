@@ -40,7 +40,8 @@ for specifying denovo gene set:
 * recurrncyCriteria - criteria that could be use in counting events
 
 The available denovo gene sets are specified in `geneSetsNames, that could
-combine `standardCriteria` and `recurrencyCriteria` into signle denovo gene set.
+combine `standardCriteria` and `recurrencyCriteria` into signle denovo gene
+set.
 
 For example `LGDs.WE.Triple` combines `LGDs` effect criteria, `WE` study type
 criteria and `Triple` recurrency criteria.
@@ -68,7 +69,6 @@ geneSetsNames=LGDs,LGDs.Male,LGDs.Female,LGDs.Recurrent,LGDs.Single,LGDs.Triple,
     Synonymous,Synonymous.WE,Synonymous.WE.Recurrent,Synonymous.WE.Triple
 ```
 """
-
 
 
 def test_example2_denovo_gene_sets():
