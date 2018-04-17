@@ -22,10 +22,9 @@ def denovo_db_full():
     filename = os.path.join(
         dirname,
         "denovo-db.variants.annotated.dedup.txt")
+    print("denovo db full:", filename)
 
     dst.vdb._config.set(dst._configSection, denovo_files_prop, filename)
-    filename = dst.vdb._config.get(dst._configSection, denovo_files_prop)
-
     dst = vDB.get_study("denovo_db")
     return dst
 
@@ -102,6 +101,7 @@ def test_denovo_db_autism_coding_in_prb_on_X_problematic(denovo_db_full):
             count += 1
     print("problematic variants:", count)
     assert count == 0
+
 
 def test_denovo_db_problematic_variant(denovo_db_full):
     vs = denovo_db_full.get_denovo_variants(
