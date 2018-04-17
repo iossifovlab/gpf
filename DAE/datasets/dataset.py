@@ -31,7 +31,6 @@ class DatasetWrapper(Dataset):
 
     # inChild
     # genomicScores
-    # geneSyms
     # callSet
     # minParentsCalled
     # ultraRareOnly
@@ -53,6 +52,10 @@ class DatasetWrapper(Dataset):
         if 'minAltFrequencyPercent' in kwargs or \
                 'maxAltFrequencyPercent' in kwargs:
             self._transform_min_max_alt_frequency(kwargs)
+
+        if 'geneSyms' in kwargs:
+            kwargs['genes'] = 'geneSyms'
+            kwargs.pop('geneSyms')
 
         return itertools.islice(
             super(DatasetWrapper, self).get_variants(**kwargs), limit)
