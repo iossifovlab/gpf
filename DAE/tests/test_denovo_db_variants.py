@@ -15,8 +15,7 @@ def denovo_db_full():
 
     assert 'denovo_db' in vDB._studies
     dst = vDB._studies['denovo_db']
-    denovo_files_prop = "denovoCalls.files"
-    filename = dst.vdb._config.get(dst._configSection, denovo_files_prop)
+    filename = dst.vdb._config.get(dst._configSection, 'denovoCalls.files')
     dirname = os.path.dirname(filename)
 
     filename = os.path.join(
@@ -24,14 +23,16 @@ def denovo_db_full():
         "denovo-db.variants.annotated.dedup.txt")
     print("denovo db full:", filename)
 
-    dst.vdb._config.set(dst._configSection, denovo_files_prop, filename)
+    dst.vdb._config.set(dst._configSection, "denovoCalls.full.files", filename)
     dst = vDB.get_study("denovo_db")
+
     return dst
 
 
 def test_denovo_db_reconfigure(denovo_db_full):
 
-    vs = denovo_db_full.get_denovo_variants(regionS="X:1-155270560")
+    vs = denovo_db_full.get_denovo_variants(
+        regionS="X:1-155270560", callSet='full')
     vs = list(vs)
     assert vs
 
@@ -41,7 +42,8 @@ def test_denovo_db_reconfigure(denovo_db_full):
 
 def test_denovo_db_autism_on_X(denovo_db_full):
 
-    vs = denovo_db_full.get_denovo_variants(regionS="X:1-155270560")
+    vs = denovo_db_full.get_denovo_variants(
+        regionS="X:1-155270560", callSet='full')
     vs = list(vs)
     assert vs
 
@@ -58,7 +60,8 @@ def test_denovo_db_autism_coding_in_prb_on_X(denovo_db_full):
     vs = denovo_db_full.get_denovo_variants(
         inChild="prb",
         effectTypes=coding_effects,
-        regionS="X:1-155270560"
+        regionS="X:1-155270560",
+        callSet='full'
     )
     vs = list(vs)
     assert vs
@@ -75,7 +78,8 @@ def test_denovo_db_autism_coding_in_prb_on_X_problematic(denovo_db_full):
     vs = denovo_db_full.get_denovo_variants(
         inChild="prb",
         effectTypes=coding_effects,
-        regionS="X:1-155270560"
+        regionS="X:1-155270560",
+        callSet='full'
     )
     vs = list(vs)
     assert vs
@@ -105,7 +109,8 @@ def test_denovo_db_autism_coding_in_prb_on_X_problematic(denovo_db_full):
 
 def test_denovo_db_problematic_variant(denovo_db_full):
     vs = denovo_db_full.get_denovo_variants(
-        regionS="X:153588164-153588164"
+        regionS="X:153588164-153588164",
+        callSet='full'
     )
     vs = list(vs)
     assert len(vs) == 1
