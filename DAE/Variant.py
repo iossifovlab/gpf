@@ -36,7 +36,7 @@ def normalRefCopyNumber(location, gender):
                     'in chr%s',
                     location
                 )
-                return 1
+                # return 1
             elif gender != 'F':
                 raise Exception('weird gender ' + gender)
     elif chrome in ['chrY', 'Y', '24', 'chr24']:
