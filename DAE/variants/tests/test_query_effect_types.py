@@ -18,6 +18,6 @@ def test_query_effect_types(nvcf19f):
     for v in vs:
         print(v, v.family_id, mat2str(v.best_st), v.falt_alleles, sep='\t')
         for aa in v.falt_alleles:
-            print("\t:>", v.effect[aa].worst,
-                  v.effect[aa].gene, v['all.nAltAlls'][aa],
+            print("\t:>", v.effects[aa].worst,
+                  v.effects[aa].genes, v['all.nAltAlls'][aa],
                   v['all.altFreq'][aa], sep='\t')
