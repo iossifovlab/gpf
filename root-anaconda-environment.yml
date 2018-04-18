@@ -6,6 +6,7 @@ channels:
 dependencies:
 - bcftools=1.5=3
 - htslib=1.5=0
+- pyliftover=0.3=py27_0
 - pysam=0.12.0.1=htslib1.5_0
 - samtools=1.5=2
 - _license=1.1=py27_1
