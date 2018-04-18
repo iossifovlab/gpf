@@ -4,6 +4,7 @@ Created on Feb 6, 2017
 @author: lubo
 '''
 import itertools
+import pprint
 
 from rest_framework import views, status
 from rest_framework.response import Response
@@ -70,8 +71,9 @@ class QueryPreviewView(QueryBaseView):
             response = self.__prepare_variants_response(
                 **generate_web_response(
                     dataset.get_variants(safe=True, **data),
-                    dataset.get_preview_columns()))
+                    dataset.preview_columns))
 
+            pprint.pprint(response)
             response['legend'] = dataset.get_legend(safe=True, **data)
 
             return Response(response, status=status.HTTP_200_OK)
@@ -153,7 +155,7 @@ class QueryDownloadView(QueryBaseView):
 
             dataset = self.datasets_factory.get_dataset(data['datasetId'])
 
-            columns = dataset.get_download_columns()
+            columns = dataset.download_columns
             try:
                 columns.remove('pedigree')
             except ValueError:

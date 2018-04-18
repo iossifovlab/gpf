@@ -8,12 +8,27 @@ from variants.attributes import Role, AQuery, RoleQuery, QLeaf, QAnd, QNot
 
 class Dataset(object):
 
-    def __init__(self, name, variants):
-        self.name = name
+    def __init__(self, name, variants, preview_columns=None, download_columns=None):
+        if preview_columns is None:
+            preview_columns = []
+
+        if download_columns is None:
+            download_columns = []
+
         self._variants = variants
+
+        self.name = name
+        self.preview_columns = preview_columns
+        self.download_columns = download_columns
 
     def get_variants(self, **kwargs):
         return self._variants.query_variants(**kwargs)
+
+    def get_column_labels(self):
+        return ['']
+
+    def get_legend(self, *args, **kwargs):
+        return []
 
 
 class DatasetWrapper(Dataset):
@@ -56,6 +71,11 @@ class DatasetWrapper(Dataset):
         if 'geneSyms' in kwargs:
             kwargs['genes'] = 'geneSyms'
             kwargs.pop('geneSyms')
+
+        for key in list(kwargs.keys()):
+            if key in self.FILTER_RENAMES_MAP:
+                kwargs[self.FILTER_RENAMES_MAP[key]] = kwargs[key]
+                kwargs.pop(key)
 
         return itertools.islice(
             super(DatasetWrapper, self).get_variants(**kwargs), limit)
