@@ -1,334 +1,174 @@
 #!/usr/bin/env python
 
-import gzip
-from heapq import heappush,heappop
-import pysam
-import os
+import optparse
 import sys
-from DAE import *
+import gzip
+import pysam
 
-# tF = "/home/iossifov/work/T115/data-dev/bbbb/w1202s766e611/transmissionIndex-HW-DNRM.txt.bgz"
-fF = "/home/iossifov/work/T115/data-dev/bbbb/EVS/EVS.format.Both.txt.bgz"
+import GenomeAccess
+from utilities import *
 
-# tF = "/home/iossifov/work/T115/data-dev/study/w1202s766e611/transmissionIndex-HW-DNRM.txt.bgz"
-# fF = "/home/iossifov/work/T115/data-dev/study/EVS/EVS.format.Both.txt.bgz"
+def get_argument_parser():
+    desc = """Program to annotate variants with frequencies"""
+    parser = optparse.OptionParser(description=desc)
+    parser.add_option('-c', help='chromosome column number/name', action='store')
+    parser.add_option('-p', help='position column number/name', action='store')
+    parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_option('-v', help='variant column number/name', action='store')
 
-class BlockFile:
-    def __init__(bf,fl):
-        bf.fl = fl 
-        bf.hdrL = bf.fl.readline()
+    parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
 
-        hdrCs = bf.hdrL.strip().split("\t")
-        bf.locationInd = -1
-        bf.chrInd = -1
-        bf.posInd = -1
+    parser.add_option('-G', help='genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19> ', type='string', action='store')
+    parser.add_option('--Graw', help='outside genome file', type='string', action='store')
 
-        try:
-            bf.locationInd = hdrCs.index("location")
-        except ValueError:
-            bf.chrInd = hdrCs.index("chr") 
-            bf.posInd = hdrCs.index("position") 
-        
-        bf._chMap = {"X":23, "Y":24}
-        for chN in xrange(1,23):
-            bf._chMap[str(chN)] = chN    
+    parser.add_option('-F', '--scores-file', help='file containing the scores', type='string', action='store')
+    parser.add_option('--direct', help='the score files is tabix indexed', default=False, action='store_true')
+    parser.add_option('--score-column', help='column in score file that contains the score (default: all.altFreq)', default='all.altFreq', type='string', action='store')
+    parser.add_option('--label', help='label of the new column; defaults to the name of the score column', type='string', action='store')
 
-        bf._nextLine()
-        bf.key = (0,0)
-        bf.nextBlock()
+    return parser
 
-    def line2K(bf,lncs):
-        if bf.locationInd > 0:
-            ch,pos = lncs[bf.locationInd].split(":")
-            pos = int(pos)
-        else:
-            ch = lncs[bf.chrInd]
-            pos = int(lncs[bf.posInd])
-
-        try:
-            chN = bf._chMap[ch]
-        except KeyError:
-            chN = 100 
-        return (chN,pos)
-    
-
-    def _nextLine(bf):
-        ln = bf.fl.readline()
-        while ln and ln[0] == '#':
-            ln = bf.fl.readline()
-        if ln:
-            bf.nextLine = ln.strip().split('\t')
-        else:
-            bf.nextLine = None
-        
-    def nextBlock(bf):
-        bf.block = []
-        if not bf.nextLine:
-            bf.key = None
-            return False
-
-        prevKey = bf.key
-        bf.key = bf.line2K(bf.nextLine)
-        assert bf.key > prevKey
-
-        while bf.nextLine and bf.line2K(bf.nextLine) == bf.key:
-            bf.block.append(bf.nextLine)
-            bf._nextLine()
-        return True
-        
-
-class JoinFiles:
-    def __init__(self,bfFiles):
-        self.bfFiles = bfFiles 
-        self.hp = []
-
-        for bfI,bf in enumerate(self.bfFiles):
-            if bf.key:
-                heappush(self.hp,((bf.key,bfI)))
-
-    def next(self):
-        if len(self.hp)==0:
-            return False 
-
-        r = [None for x in self.bfFiles]
-        k  = self.hp[0][0]
-        while self.hp and self.hp[0][0] == k:
-            tk,bfI = heappop(self.hp)
-            bf = self.bfFiles[bfI]
-            r[bfI] = bf.block
-            bf.nextBlock()
-            if bf.key:
-                heappush(self.hp,((bf.key,bfI)))
-        self.k = k 
-        self.rs = r
-        return True
-           
-
-chrInd = {}
-# faiFN="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa.fai"
-faiFN=genomesDB.get_genome().genomicIndexFile
-FAIF = open(faiFN)
-chrName = [ ln.split("\t")[0]  for ln in FAIF ]
-FAIF.close()
-chrInd = { chN:chI  for chI,chN in enumerate(chrName) }
-
- 
-class TMFile:
-    def __init__(self,fN):
-        self.fN = fN
-        self.F = gzip.open(self.fN, 'rb')
-        self.hdrL = self.F.readline().strip()
-        self.hdrCs = self.hdrL.split("\t")
-    
-        self.chrCI = self.hdrCs.index("chr")
-        self.posCI = self.hdrCs.index("position")
-        self.varCI = self.hdrCs.index("variant")
-
-    def lines(self):
-        for ln in self.F:
-            if ln[0] == '#':
-                continue 
-            cs = ln.strip("\n\r").split('\t')
-
-            ch = cs[self.chrCI]
-            pos = int(cs[self.posCI])
-            chI = chrInd[ch]
-            vr = cs[self.varCI]
-            key = (chI,pos,vr)
-
-            yield (key,cs)
-
-    def close(self):
-        self.F.close()
-
-
-class DNVFile:
-    def __init__(self,fN):
-        self.fN = fN
-        self.F = open(self.fN)
-        self.hdrL = self.F.readline().strip()
-        self.hdrCs = self.hdrL.split("\t")
-
-        self.locCI = self.hdrCs.index("location")
-        self.varCI = self.hdrCs.index("variant")
-    
-
-    def lines(self):
-        for ln in self.F:
-            if ln[0] == '#':
-                continue 
-            cs = ln.strip("\n\r").split('\t')
-
-            ch,pos = cs[self.locCI].split(":")
-            pos = int(pos)
-            chI = chrInd[ch]
-            vr = cs[self.varCI]
-            key = (chI,pos,vr)
-
-            yield (key,cs)
-    
-
-
-    def close(self):
-        self.F.close()
-
-       
-def openFile(fN):
-    if fN.endswith(".txt.bgz"):
-        return TMFile(fN)
-    else:
-        return DNVFile(fN)
 
 class IterativeAccess:
-    def __init__(self,fN,clmnN):
-        self.fN = fN
-        self.clmnN = clmnN 
-        self.tmf =  TMFile(fN)
-        self.tmfLines = self.tmf.lines() 
-        self.clmnI = self.tmf.hdrCs.index(self.clmnN)
-        self.currKey = (-1,0,0)
 
-    def getV(self,k):
-        if self.currKey < k:
-            for self.currKey,self.currCs in self.tmfLines:
-                if self.currKey >= k:
-                    break
-            if self.currKey < k:
-                self.currKey = (100000,0,0)
+    def __init__(self, chr_indices, file_name, score_column):
+        self.chr_indices = chr_indices
+        self.file = gzip.open(file_name, 'rb')
+        self.header = self.file.readline().rstrip('\n').split('\t')
+        self.chr_index = self.header.index('chr')
+        self.pos_index = self.header.index('position')
+        self.var_index = self.header.index('variant')
+        self.score_index = self.header.index(score_column)
+        self.current = (-1, 0, 0)
 
-        if self.currKey == k:
-            return self.currCs[self.clmnI]
-        return 
+    def next_line(self):
+        line = self.file.readline()
+        if line is not None:
+            line = line.rstrip('\n')
+        if line != '':
+            return line.split('\t')
+        else:
+            return None
 
-    def close(self):
-        self.tmf.close() 
-                
+    def key_of(self, line):
+        return (self.chr_indices[line[self.chr_index]],
+            int(line[self.pos_index]),
+            line[self.var_index])
+
+    def get_score(self, search_key):
+        while self.current < search_key:
+            self.current_line = self.next_line()
+            if self.current_line is None:
+                break
+            self.current = self.key_of(self.current_line)
+
+        if self.current < search_key:
+            self.current = (100000, 0, 0)
+
+        if self.current == search_key and self.current_line:
+            return self.current_line[self.score_index]
+        return ''
+
+    def __del__(self):
+        self.file.close()
+
 
 class DirectAccess:
-    def __init__(self,fN,clmnN):
-        self.fN = fN
-        self.clmnN = clmnN 
-        tmf =  TMFile(fN)
-        self.clmnI = tmf.hdrCs.index(self.clmnN)
-        self.varI = tmf.varCI
-        tmf.close()
-        self.F = pysam.Tabixfile(self.fN)
 
-    def getV(self,k):
-        chI,pos,vr = k
-        ch = chrName[chI]
+    def __init__(self, chr_names, file_name, score_column):
+        self.chr_names = chr_names
+        with gzip.open(file_name) as file:
+            self.header = file.readline().strip('\n\r').split('\t')
+        self.score_index = self.header.index(score_column)
+        self.var_index = self.header.index('variant')
+        self.file = pysam.Tabixfile(file_name)
 
+    def get_score(self, search_key):
+        chr, pos, var = search_key
+        chr = self.chr_names[chr]
 
         try:
-            for l in self.F.fetch(ch, pos-1, pos):
-                cs = l.strip("\n\r").split("\t")
-                if vr != cs[self.varI]:
+            for l in self.file.fetch(chr, pos-1, pos):
+                line = l.strip("\n\r").split("\t")
+                if var != line[self.var_index]:
                     continue
-                return cs[self.clmnI]
+                return line[self.score_index]
         except ValueError:
-            pass 
-        return 
-        
-    def close(self):
-        self.F.close() 
+            pass
+        return ''
 
-if __name__ == "__old_main__":
-
-    fClmN = "all.altFreq"
-    tClmN = "gosho"
-
-    DAF = DirectAccess(fF,fClmN)
-    IAF = IterativeAccess(fF,fClmN)
-
-    FF = openFile(fF)
-    FT = openFile(tF)
-
-    fClmNI = FF.hdrCs.index(fClmN)
-
-    FFI = FF.lines()
-
-    fk = (-1, 0, 0)
-
-    for tk,tcs in FT.lines():
-        if fk<tk:
-            for fk,fcs in FFI:
-                if fk>=tk:
-                    break
-            if fk<tk:
-                ffk = (100000,0,0)
+    def __del__(self):
+        self.file.close()
 
 
-        v = 'gosho'
-        if fk==tk:
-            v = fcs[fClmNI]
+class FrequencyAnnotator(AnnotatorBase):
 
-        daV = DAF.getV(tk)
-        iaV = IAF.getV(tk)
+    def __init__(self, opts, header=None):
+        super(FrequencyAnnotator, self).__init__(opts, header)
+        self._init_cols()
+        self._init_chr_index()
+        self._init_score_file()
+        self.header.append(opts.label if opts.label else score_column)
 
-        tcs.append(fcs[fClmNI])
-        print tk,v,daV,iaV
+    def _init_chr_index(self):
+        opts = self.opts
 
-        if v != daV:
-            x10
-        if v != iaV:
-            x10
-        
-    FT.close()
-    FF.close()
-    
+        if opts.Graw == None:
+            from DAE import genomesDB
 
-    ''' 
-    bfs = [BlockFile(F1), BlockFile(F2)]
+        if opts.G == None and opts.Graw == None:
+            genome = genomesDB.get_genome()
+        elif opts.Graw == None:
+            genome = genomesDB.get_genome(opts.G)
+        else:
+            genome = GenomeAccess.openRef(opts.Graw)
 
-    jf = JoinFiles(bfs)
-    while jf.next():
-        if jf.rs[0] and jf.rs[1]:
-            print jf.k 
-            print "\t0:",jf.rs[0]
-            print "\t1:",jf.rs[1]
-    '''
+        with open(genome.genomicIndexFile) as genomic_index:
+            self.chr_names = [ln.split("\t")[0] for ln in genomic_index]
+            self.chr_indices = {chr: index
+                                for index, chr in enumerate(self.chr_names)}
+
+    def _init_cols(self):
+        opts = self.opts
+        header = self.header
+        if opts.x == None and opts.c == None:
+            opts.x = "location"
+        if (opts.v == None and opts.a == None) and (opts.v == None and opts.t == None):
+            opts.v = "variant"
+
+        chrCol = assign_values(opts.c, header)
+        posCol = assign_values(opts.p, header)
+        locCol = assign_values(opts.x, header)
+        varCol = assign_values(opts.v, header)
+
+        self.argColumnNs = [chrCol, posCol, locCol, varCol]
+
+    def _init_score_file(self):
+        if not self.opts.scores_file:
+            sys.stderr.write("You should provide a score file location.\n")
+            sys.exit(-78)
+        else:
+            if self.opts.direct:
+                self.file = DirectAccess(self.chr_names, self.opts.scores_file,
+                    self.opts.score_column)
+            else:
+                self.file = IterativeAccess(self.chr_indices,
+                    self.opts.scores_file, self.opts.score_column)
+
+    @property
+    def new_columns(self):
+        return [self.opts.score_column]
+
+    def _get_score(self, chr=None, pos=None, loc=None, var=None):
+        if loc != None:
+            chr, pos = loc.split(':')
+        return self.file.get_score((self.chr_indices[chr], int(pos), var))
+
+
+    def line_annotations(self, line, new_columns):
+        params = [line[i-1] if i!=None else None for i in self.argColumnNs]
+        return [self._get_score(*params)]
+
 
 if __name__ == "__main__":
-    tFN = "/home/iossifov/work/T115/data-dev/bbbb/IossifovWE2014/Supplement-T2-eventsTable-annot.txt"
-    if len(sys.argv) > 1:
-        tFN = sys.argv[1]
-
-    accessMode = "direct"
-    if len(sys.argv) > 2:
-        accessMode = sys.argv[2]
-
-    freqAttFN = vDB._config.get("DEFAULT","wd") + "/freqAtts.txt" 
-    if len(sys.argv) > 3:
-        freqAttFN = sys.argv[3]
-
-
-    modeConstructor = {"direct": DirectAccess, "iterative":IterativeAccess} 
-
-    tF = openFile(tFN)
-
-    outHdr = list(tF.hdrCs)
-    freqAttF = open(freqAttFN)
-
-    fFS = []
-    for l in freqAttF:
-        ffN,tAN,fAT = l.strip().split("\t")
-        try:
-            tANI = tF.hdrCs.index(tAN)
-        except ValueError:
-            tANI = -1
-            outHdr.append(tAN)
-        
-        AF = modeConstructor[accessMode](vDB._config.get("DEFAULT","studyDir") + "/" + ffN,fAT)
-        fFS.append((AF,tANI))
-
-    print "\t".join(outHdr)
-    for tk,tcs in tF.lines():
-        for AF,tANI in fFS:
-            v = AF.getV(tk) 
-            if not v:
-                v = ""
-            if tANI == -1:
-                tcs.append(v)
-            else:
-                tcs[tANI] = v
-        print "\t".join(tcs)
+    main(get_argument_parser(), FrequencyAnnotator)
