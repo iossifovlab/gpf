@@ -69,9 +69,6 @@ class IterativeAccess:
             return self.current_line[self.score_index]
         return ''
 
-    def __del__(self):
-        self.file.close()
-
 
 class DirectAccess:
 
@@ -96,10 +93,6 @@ class DirectAccess:
         except ValueError:
             pass
         return ''
-
-    def __del__(self):
-        self.file.close()
-
 
 class FrequencyAnnotator(AnnotatorBase):
 
