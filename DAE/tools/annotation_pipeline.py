@@ -126,7 +126,8 @@ def main():
     if infile=='-':
         variantFile = sys.stdin
     elif opts.region:
-        variantFile = pysam.TabixFile(infile).fetch(region=opts.region)
+        tabix_file = pysam.TabixFile(infile)
+        variantFile = tabix_file.fetch(region=opts.region)
     else:
         variantFile = open(infile)
 
@@ -134,7 +135,7 @@ def main():
         if opts.region is None:
             header_str = variantFile.readline()[:-1]
         else:
-            header_str = variantFile.header.next()
+            header_str = tabix_file.header.next()
         if header_str[0] == '#':
             header_str = header_str[1:]
         header = header_str.split('\t')
