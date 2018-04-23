@@ -1,4 +1,5 @@
 import itertools
+import functools
 
 DEFAULT_COLUMN_TITLES = {
     'familyId': 'family id',
@@ -34,12 +35,19 @@ DEFAULT_COLUMN_TITLES = {
 }
 
 
+def merge_dicts(*dicts):
+    result = {}
+    for dictionary in dicts:
+        result.update(dictionary)
+    return result
+
+
 def ge2str(gs):
-    return "|".join(x['sym'] + ":" + x['eff'] for x in gs)
+    return "|".join(g.symbol + ":" + g.effect for x in gs for g in x.gene)
 
 
-def mat2str(mat, colSep=" ", rowSep="/"):
-    return rowSep.join([colSep.join([str(n) for n in mat[i, :]])
+def mat2str(mat, col_sep=" ", row_sep="/"):
+    return row_sep.join([col_sep.join([str(n) for n in mat[i, :]])
                         for i in xrange(mat.shape[0])])
 
 
@@ -59,46 +67,63 @@ def gene_effect_get_genes(gs):
     return ';'.join(genes)
 
 
+STANDARD_ATTRS = {
+    "family": "family_id",
+    "location": "location",
+    "vcf": "vcf",
+}
+
+
+def get_standard_attr(key, v):
+    return getattr(v, STANDARD_ATTRS[key])
+
+
+STANDARD_ATTRS_LAMBDAS = {
+    key: functools.partial(get_standard_attr, key)
+    for key, val in STANDARD_ATTRS.items()
+}
+
 SPECIAL_ATTRS_FORMAT = {
-    "bestSt": mat2str,
-    "counts": mat2str,
-    "geneEffect": ge2str,
-    "requestedGeneEffects": ge2str,
+    "bestSt": lambda v: mat2str(getattr(v, "bestSt")),
+    "counts": lambda v: mat2str(getattr(v, "counts")),
+    "genotype": lambda v: mat2str(getattr(v, "genotype")),
+    "effect": lambda v: ge2str(getattr(v, "effect")),
+    "requestedGeneEffects": lambda v:
+        ge2str(getattr(v, "requestedGeneEffects")),
 }
 
 SPECIAL_GENE_EFFECTS = {
-    "genes": gene_effect_get_genes,
-    "worstEffect": gene_effect_get_worst_effect
+    "genes": lambda v: gene_effect_get_genes(getattr(v, "genes")),
+    "worstEffect": lambda v: gene_effect_get_worst_effect(getattr(v, "genes"))
 }
 
 
-def transform_variants_to_lists(variants, attrs, sep='\t'):
+SPECIAL_ATTRS = merge_dicts(
+    SPECIAL_ATTRS_FORMAT,
+    SPECIAL_GENE_EFFECTS,
+    STANDARD_ATTRS_LAMBDAS
+)
+
+
+def transform_variants_to_lists(variants, attrs):
     for v in variants:
         row_variant = []
         for attr in attrs:
             try:
-                if attr in SPECIAL_ATTRS_FORMAT:
-                    row_variant.append(SPECIAL_ATTRS_FORMAT[attr](getattr(v, attr, '')))
-                elif attr in SPECIAL_GENE_EFFECTS:
-                    row_variant.append(SPECIAL_GENE_EFFECTS[attr](
-                        getattr(v, 'requestedGeneEffects')))
-                elif attr in v.atts:
-                    val = v.atts[attr]
-                    if not isinstance(val, list):
-                        val = str(val).replace(sep, ';').replace("'", '"')
-                    row_variant.append(val if val and val != 'False' and
-                                val != 'None' else "")
+                if attr in SPECIAL_ATTRS:
+                    row_variant.append(SPECIAL_ATTRS[attr](v))
                 else:
-                    row_variant.append(getattr(v, attr))
-            except Exception:
+                    row_variant.append(str(getattr(v, attr, '')))
+            except (AttributeError, KeyError) as e:
+                print(attr, type(e), e)
                 row_variant.append('')
         yield row_variant
 
 
 def get_variants_web_preview(
-        variants, attrs, separator='\t', max_variants_count=1000):
+        variants, attrs, max_variants_count=1000):
     VARIANTS_HARD_MAX = 2000
-    rows = transform_variants_to_lists(variants, attrs, separator)
+    rows = transform_variants_to_lists(variants, attrs)
     count = min(max_variants_count, VARIANTS_HARD_MAX)
 
     limited_rows = itertools.islice(rows, count)
@@ -111,5 +136,5 @@ def get_variants_web_preview(
     return {
         'count': count,
         'cols': attrs,
-        'rows': limited_rows
+        'rows': list(limited_rows)
     }

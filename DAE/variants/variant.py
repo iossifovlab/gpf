@@ -540,6 +540,10 @@ class FamilyVariant(FamilyVariantBase):
         return self.gt.T
 
     @property
+    def vcf(self):
+        return '{}:{}'.format(self.reference, ','.join(self.alt))
+
+    @property
     def atts(self):
         return self.summary.atts
 

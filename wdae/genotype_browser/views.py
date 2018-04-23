@@ -22,6 +22,7 @@ import json
 from query_variants import join_line, generate_web_response, generate_response
 from datasets_api.permissions import IsDatasetAllowed
 from datasets.metadataset import MetaDataset
+from datasets.helpers import get_variants_web_preview
 import logging
 
 logger = logging.getLogger(__name__)
@@ -68,12 +69,12 @@ class QueryPreviewView(QueryBaseView):
 
             dataset = self.datasets_factory.get_dataset(dataset_id)
 
-            response = self.__prepare_variants_response(
-                **generate_web_response(
+            response = get_variants_web_preview(
                     dataset.get_variants(safe=True, **data),
-                    dataset.preview_columns))
+                    dataset.preview_columns
+            )
 
-            pprint.pprint(response)
+            # pprint.pprint(response)
             response['legend'] = dataset.get_legend(safe=True, **data)
 
             return Response(response, status=status.HTTP_200_OK)
