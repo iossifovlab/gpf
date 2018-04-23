@@ -171,6 +171,13 @@ class RawVariantsLoader(object):
                 'role': lambda r: Role.from_name(r),
                 'sex': lambda s: Sex.from_value(s),
             },
+            dtype={
+                'familyId': str,
+                'personId': str,
+                'sampleId': str,
+                'momId': str,
+                'dadId': str,
+            },
             comment="#",
         )
         if 'sampleId' not in ped_df.columns:

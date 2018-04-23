@@ -22,10 +22,10 @@ def test_single_alt_allele_effects(full_vcf, region, worst_effect):
         regions=[region]))
     assert len(vs) == 1
     for v in vs:
-        assert len(v.effect) == 1
-        assert v.effect[1].worst == worst_effect
-        assert v.effect[1].transcript is not None
-        print(v.effect[1].transcript)
+        assert len(v.effects) == 1
+        assert v.effects[1].worst == worst_effect
+        assert v.effects[1].transcripts is not None
+        print(v.effects[1].transcripts)
 
 
 @pytest.mark.parametrize("region,worst_effect", [
@@ -39,9 +39,9 @@ def test_multi_alt_allele_effects(full_vcf, region, worst_effect):
         regions=[region]))
     assert len(vs) == 1
     for v in vs:
-        assert len(v.effect) == 2
-        assert v.effect[1].worst == worst_effect[0]
-        assert v.effect[2].worst == worst_effect[1]
+        assert len(v.effects) == 2
+        assert v.effects[1].worst == worst_effect[0]
+        assert v.effects[2].worst == worst_effect[1]
 
 
 @pytest.mark.parametrize("region,worst_effect", [
@@ -59,6 +59,6 @@ def test_multi_alt_allele_effects_match_family(full_vcf, region, worst_effect):
         checked = False
         for aa in v.falt_alleles:
             checked = True
-            assert v.effect[aa].worst == worst_effect[0]
-            assert v.effect[aa].transcript is not None
+            assert v.effects[aa].worst == worst_effect[0]
+            assert v.effects[aa].transcripts is not None
         assert checked

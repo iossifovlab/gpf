@@ -23,7 +23,7 @@ from variants.annotate_variant_effects import \
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
 from variants.variant import VariantFactory, SummaryVariant,\
-    VariantFactorySingle, FamilyVariantBase
+    VariantFactorySingle, FamilyVariant
 
 
 @pytest.fixture(scope='session')
@@ -198,6 +198,19 @@ def full_vcf(composite_annotator):
     return builder
 
 
+@pytest.fixture(scope='session')
+def data_vcf19(composite_annotator):
+    def builder(path):
+        from variants.default_settings import DATA_DIR
+        a_prefix = os.path.join(DATA_DIR, path)
+        a_conf = Configure.from_prefix(a_prefix)
+        fvars = RawFamilyVariants(
+            a_conf, annotator=composite_annotator,
+            variant_factory=VariantFactory)
+        return fvars
+    return builder
+
+
 PED1 = """
 # SIMPLE TRIO
 familyId,    personId,    dadId,    momId,    sex,   status,    role
@@ -223,9 +236,9 @@ def sv():
 
 
 @pytest.fixture(scope='session')
-def fv1(fam1):
+def fv1(fam1, sv):
     def rfun(gt):
-        return FamilyVariantBase.from_family_genotype(fam1, gt)
+        return FamilyVariant(sv, fam1, gt)
     return rfun
 
 
@@ -258,7 +271,7 @@ def fam2():
 @pytest.fixture(scope='session')
 def fv2(sv, fam2):
     def rfun(gt):
-        return FamilyVariantBase.from_family_genotype(fam2, gt)
+        return FamilyVariant(sv, fam2, gt)
     return rfun
 
 
@@ -286,7 +299,7 @@ def fam3():
 @pytest.fixture(scope='session')
 def fv3(sv, fam3):
     def rfun(gt):
-        return FamilyVariantBase.from_family_genotype(fam3, gt)
+        return FamilyVariant(sv, fam3, gt)
     return rfun
 
 

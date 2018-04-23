@@ -24,6 +24,7 @@ from datasets_api.permissions import IsDatasetAllowed
 from datasets.metadataset import MetaDataset
 from datasets.helpers import get_variants_web_preview
 import logging
+from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,28 @@ class QueryPreviewView(QueryBaseView):
     def __init__(self):
         super(QueryPreviewView, self).__init__()
 
+    def __prepare_variants_response(self, cols, rows):
+        limitted_rows = []
+        count = 0
+        for row in rows:
+            count += 1
+            if count <= self.MAX_SHOWN_VARIANTS:
+                limitted_rows.append(row)
+            if count > self.MAX_VARIANTS:
+                break
+
+        if count <= self.MAX_VARIANTS:
+            count = str(count)
+        else:
+            count = 'more than {}'.format(self.MAX_VARIANTS)
+
+        return {
+            'count': count,
+            'cols': cols,
+            'rows': limitted_rows
+        }
+
+    @expand_gene_set
     def post(self, request):
         LOGGER.info(log_filter(request, "query v3 preview request: " +
                                str(request.data)))
@@ -89,27 +112,6 @@ class QueryPreviewView(QueryBaseView):
 
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    def __prepare_variants_response(self, cols, rows):
-        limitted_rows = []
-        count = 0
-        for row in rows:
-            count += 1
-            if count <= self.MAX_SHOWN_VARIANTS:
-                limitted_rows.append(row)
-            if count > self.MAX_VARIANTS:
-                break
-
-        if count <= self.MAX_VARIANTS:
-            count = str(count)
-        else:
-            count = 'more than {}'.format(self.MAX_VARIANTS)
-
-        return {
-            'count': count,
-            'cols': cols,
-            'rows': limitted_rows
-        }
-
 
 class QueryDownloadView(QueryBaseView):
 
@@ -136,6 +138,7 @@ class QueryDownloadView(QueryBaseView):
             else:
                 break
 
+    @expand_gene_set
     def post(self, request):
         LOGGER.info(log_filter(request, "query v3 download request: " +
                                str(request.data)))

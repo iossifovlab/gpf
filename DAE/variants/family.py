@@ -6,6 +6,7 @@ Created on Feb 13, 2018
 from __future__ import print_function
 
 import numpy as np
+from variants.vcf_utils import samples_to_alleles_index
 
 
 class Person(object):
@@ -94,6 +95,25 @@ class Family(object):
         if len(roles_df) == 0:
             return []
         return roles_df['personId'].values
+
+
+class VcfFamily(Family):
+
+    def __init__(self, family_id, ped_df):
+        super(VcfFamily, self).__init__(family_id, ped_df)
+        assert 'sampleIndex' in ped_df.columns
+
+        self.samples = self.ped_df['sampleIndex'].values
+        self.alleles = samples_to_alleles_index(self.samples)
+
+    def vcf_samples_index(self, person_ids):
+        return self.ped_df[
+            self.ped_df['personId'].isin(set(person_ids))
+        ]['sampleIndex'].values
+
+    def vcf_alleles_index(self, person_ids):
+        p = self.vcf_samples_index(person_ids)
+        return samples_to_alleles_index(p)
 
 
 class FamiliesBase(object):

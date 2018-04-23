@@ -26,9 +26,9 @@ def test_serialize_deserialize_worst_effect(
     vs = fvars.query_variants(regions=[region])
     for v in vs:
         effects1 = effect_annotator.do_annotate_variant(
-            v.chromosome, v.position, v.reference, v.alt[1])
+            v.chromosome, v.position, v.reference, v.alts[1])
         effects2 = effect_annotator.do_annotate_variant(
-            v.chromosome, v.position, v.reference, v.alt[2])
+            v.chromosome, v.position, v.reference, v.alts[2])
         print(effects1, effects2)
         assert worst_effect[0] == effect_annotator.worst_effect(effects1)
         assert worst_effect[1] == effect_annotator.worst_effect(effects2)
@@ -45,9 +45,9 @@ def test_serialize_deserialize_gene_effect(
     vs = fvars.query_variants(regions=[region])
     for v in vs:
         effects1 = effect_annotator.do_annotate_variant(
-            v.chromosome, v.position, v.reference, v.alt[1])
+            v.chromosome, v.position, v.reference, v.alts[1])
         effects2 = effect_annotator.do_annotate_variant(
-            v.chromosome, v.position, v.reference, v.alt[2])
+            v.chromosome, v.position, v.reference, v.alts[2])
         print(effect_annotator.gene_effect(effects1))
         print(effect_annotator.gene_effect(effects2))
 
@@ -63,9 +63,9 @@ def test_serialize_deserialize_transcript_effect(
     vs = fvars.query_variants(regions=[region])
     for v in vs:
         effects1 = effect_annotator.do_annotate_variant(
-            v.chromosome, v.position, v.reference, v.alt[1])
+            v.chromosome, v.position, v.reference, v.alts[1])
         effects2 = effect_annotator.do_annotate_variant(
-            v.chromosome, v.position, v.reference, v.alt[2])
+            v.chromosome, v.position, v.reference, v.alts[2])
         print(effect_annotator.transcript_effect(effects1))
         print(effect_annotator.transcript_effect(effects2))
 

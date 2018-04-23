@@ -7,14 +7,6 @@ import numpy as np
 import pandas as pd
 
 from enrichment_tool.background import SamochaBackground
-import pytest
-
-
-@pytest.fixture(scope='module')
-def background(request):
-    bg = SamochaBackground()
-    bg.precompute()
-    return bg
 
 
 def test_samocha_background_default():
@@ -42,21 +34,21 @@ def compare_samocha_backgrounds(df1, df2):
     assert np.all(index)
 
 
-def test_compare_two_background_tables(background):
-    df1 = background.background
+def test_compare_two_background_tables(samocha_background):
+    df1 = samocha_background.background
     assert df1 is not None
 
-    df2 = pd.read_csv(background.filename)
+    df2 = pd.read_csv(samocha_background.filename)
     assert df2 is not None
 
     compare_samocha_backgrounds(df1, df2)
 
 
-def test_model_serialize(background):
-    data = background.serialize()
+def test_model_serialize(samocha_background):
+    data = samocha_background.serialize()
     assert data is not None
 
     background2 = SamochaBackground()
     background2.deserialize(data)
     compare_samocha_backgrounds(
-        background.background, background2.background)
+        samocha_background.background, background2.background)

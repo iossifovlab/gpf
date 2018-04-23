@@ -13,7 +13,7 @@ from variants.family import FamiliesBase
 from variants.configure import Configure
 from variants.attributes import RoleQuery, SexQuery, InheritanceQuery,\
     VariantTypeQuery
-from variants.vcf_utils import VcfFamily
+from variants.family import VcfFamily
 # from variants.variant import VariantFactorySingle
 from variants.variant import VariantFactory
 
@@ -140,7 +140,7 @@ class RawFamilyVariants(FamiliesBase):
         assert effect_types is not None or genes is not None
 
         for aa in v.falt_alleles:
-            gene_effects = v.effect[aa].gene
+            gene_effects = v.effects[aa].genes
 
             if effect_types is None:
                 result = [
