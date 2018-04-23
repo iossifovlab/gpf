@@ -155,8 +155,10 @@ class FrequencyAnnotator(AnnotatorBase):
     def _get_score(self, chr=None, pos=None, loc=None, var=None):
         if loc != None:
             chr, pos = loc.split(':')
-        return self.file.get_score((self.chr_indices[chr], int(pos), var))
-
+        if chr != '':
+            return self.file.get_score((self.chr_indices[chr], int(pos), var))
+        else:
+            return ''
 
     def line_annotations(self, line, new_columns):
         params = [line[i-1] if i!=None else None for i in self.argColumnNs]
