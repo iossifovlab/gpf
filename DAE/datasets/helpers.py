@@ -1,5 +1,8 @@
 import itertools
 import functools
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 DEFAULT_COLUMN_TITLES = {
     'familyId': 'family id',
@@ -43,7 +46,7 @@ def merge_dicts(*dicts):
 
 
 def ge2str(gs):
-    return "|".join(g.symbol + ":" + g.effect for x in gs for g in x.gene)
+    return "|".join(g.symbol + ":" + g.effects for x in gs for g in x.genes)
 
 
 def mat2str(mat, col_sep=" ", row_sep="/"):
@@ -67,10 +70,80 @@ def gene_effect_get_genes(gs):
     return ';'.join(genes)
 
 
+def normalRefCopyNumber(location, gender):
+    clnInd = location.find(":")
+    chrome = location[0:clnInd]
+
+    if chrome in ['chrX', 'X', '23', 'chr23']:
+        if '-' in location:
+            dshInd = location.find('-')
+            pos = int(location[clnInd + 1:dshInd])
+        else:
+            pos = int(location[clnInd + 1:])
+
+        # hg19 pseudo autosomes region: chrX:60001-2699520
+        # and chrX:154931044-155260560
+        if pos < 60001 or (pos > 2699520 and pos < 154931044) \
+                or pos > 155260560:
+
+            if gender == 'M':
+                return 1
+            elif gender == 'U':
+                LOGGER.warn(
+                    'unspecified gender when calculating normal number of allels '
+                    'in chr%s',
+                    location
+                )
+                return 1
+            elif gender != 'F':
+                raise Exception('weird gender ' + gender)
+    elif chrome in ['chrY', 'Y', '24', 'chr24']:
+        if gender == 'M':
+            return 1
+        elif gender == 'U':
+            LOGGER.warn(
+                'unspecified gender when calculating normal number of allels '
+                'in chr%s',
+                location
+            )
+            return 1
+        elif gender == 'F':
+            return 0
+        else:
+            raise Exception('gender needed')
+    return 2
+
+
+def variant_count_v3(bs, c, location=None, gender=None, denovo_parent=None):
+    normal = 2
+    if location:
+        normal = normalRefCopyNumber(location, gender)
+        # print("variantCount: {}, {}, {}".format(
+        # location, gender, normalRefCN))
+        ref = bs[0, c]
+        # print("count: {}".format(count))
+        count = 0
+        if bs.shape[0] == 2:
+            alles = bs[1, c]
+            if alles != 0:
+                if ref == normal:
+                    print("location: {}, gender: {}, c: {}, normal: {}, bs: {}"
+                          .format(location, gender, c, normal, bs))
+                count = alles
+        elif bs.shape[0] == 1:
+            if normal != ref:
+                count = ref
+
+        if c != denovo_parent:
+            return [count, 0]
+        else:
+            return [0, 1]
+
+
 STANDARD_ATTRS = {
     "family": "family_id",
     "location": "location",
-    "vcf": "vcf",
+    "variant": "vcf",
 }
 
 
@@ -87,7 +160,8 @@ SPECIAL_ATTRS_FORMAT = {
     "bestSt": lambda v: mat2str(getattr(v, "bestSt")),
     "counts": lambda v: mat2str(getattr(v, "counts")),
     "genotype": lambda v: mat2str(getattr(v, "genotype")),
-    "effect": lambda v: ge2str(getattr(v, "effect")),
+    "pedigree": lambda v: generate_pedigree(v,),
+    "effects": lambda v: ge2str(getattr(v, "effects")),
     "requestedGeneEffects": lambda v:
         ge2str(getattr(v, "requestedGeneEffects")),
 }
@@ -118,6 +192,24 @@ def transform_variants_to_lists(variants, attrs):
                 print(attr, type(e), e)
                 row_variant.append('')
         yield row_variant
+
+
+def generate_pedigree(variant):
+    result = []
+    for index, member in enumerate(variant.members_in_order):
+        # FIXME: add missing denovo parent parameter to variant_count_v3 call
+        result.append([
+            variant.family_id,
+            member.person_id,
+            member.mom if member.has_mom() else '',
+            member.dad if member.has_dad() else '',
+            member.sex.short(),
+            '#ffffff'
+            ] + variant_count_v3(
+                variant.best_st, index, variant.location, member.sex.short())
+        )
+
+    return result
 
 
 def get_variants_web_preview(

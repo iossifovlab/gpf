@@ -6,7 +6,7 @@ Created on Feb 13, 2018
 from __future__ import print_function
 
 import numpy as np
-from variants.vcf_utils import VcfFamily
+from variants.family import VcfFamily
 from variants.vcf_utils import vcf2cshl
 
 from variants.attributes import VariantType, Inheritance
@@ -499,7 +499,7 @@ class FamilyVariant(object):
 
     @property
     def vcf(self):
-        return '{}:{}'.format(self.reference, ','.join(self.alt))
+        return '{}:{}'.format(self.reference, ','.join(self.alts))
 
     @property
     def atts(self):

@@ -91,6 +91,9 @@ class Sex(enum.Enum):
     def __str__(self):
         return self.name
 
+    def short(self):
+        return self.name[0].upper()
+
 
 class Inheritance(enum.Enum):
     reference = 1
