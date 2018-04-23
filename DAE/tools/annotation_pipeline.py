@@ -154,7 +154,7 @@ def main():
 
     annotator.annotate_file(variantFile, out)
 
-    if infile != '-':
+    if infile != '-' and not opts.region:
         variantFile.close()
 
     if outfile != None:
