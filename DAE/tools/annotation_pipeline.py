@@ -135,7 +135,7 @@ def main():
         if opts.region is None:
             header_str = variantFile.readline()[:-1]
         else:
-            header_str = tabix_file.header.next()
+            header_str = list(tabix_file.header)[0]
         if header_str[0] == '#':
             header_str = header_str[1:]
         header = header_str.split('\t')
