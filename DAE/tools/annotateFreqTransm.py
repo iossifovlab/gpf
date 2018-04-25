@@ -31,8 +31,9 @@ def get_argument_parser():
 
 class IterativeAccess:
 
-    def __init__(self, chr_indices, file_name, score_column):
-        self.chr_indices = chr_indices
+    XY_INDEX = {'X': 23, 'Y': 24}
+
+    def __init__(self, file_name, score_column):
         self.file = gzip.open(file_name, 'rb')
         self.header = self.file.readline().rstrip('\n').split('\t')
         self.chr_index = self.header.index('chr')
@@ -51,11 +52,16 @@ class IterativeAccess:
             return None
 
     def key_of(self, line):
-        return (self.chr_indices[line[self.chr_index]],
+        return (self.chr_to_int(line[self.chr_index]),
             int(line[self.pos_index]),
             line[self.var_index])
 
-    def get_score(self, search_key):
+    def chr_to_int(self, chr):
+        chr = chr.replace('chr', '')
+        return self.XY_INDEX.get(chr, int(chr))
+
+    def get_score(self, chr, pos, var):
+        search_key = (self.chr_to_int(chr), pos, var)
         while self.current < search_key:
             self.current_line = self.next_line()
             if self.current_line is None:
@@ -72,18 +78,14 @@ class IterativeAccess:
 
 class DirectAccess:
 
-    def __init__(self, chr_names, file_name, score_column):
-        self.chr_names = chr_names
+    def __init__(self, file_name, score_column):
         with gzip.open(file_name) as file:
             self.header = file.readline().strip('\n\r').split('\t')
         self.score_index = self.header.index(score_column)
         self.var_index = self.header.index('variant')
         self.file = pysam.Tabixfile(file_name)
 
-    def get_score(self, search_key):
-        chr, pos, var = search_key
-        chr = self.chr_names[chr]
-
+    def get_score(self, chr, pos, var):
         try:
             for l in self.file.fetch(chr, pos-1, pos):
                 line = l.strip("\n\r").split("\t")
@@ -99,27 +101,8 @@ class FrequencyAnnotator(AnnotatorBase):
     def __init__(self, opts, header=None):
         super(FrequencyAnnotator, self).__init__(opts, header)
         self._init_cols()
-        self._init_chr_index()
         self._init_score_file()
-        self.header.append(opts.label if opts.label else score_column)
-
-    def _init_chr_index(self):
-        opts = self.opts
-
-        if opts.Graw == None:
-            from DAE import genomesDB
-
-        if opts.G == None and opts.Graw == None:
-            genome = genomesDB.get_genome()
-        elif opts.Graw == None:
-            genome = genomesDB.get_genome(opts.G)
-        else:
-            genome = GenomeAccess.openRef(opts.Graw)
-
-        with open(genome.genomicIndexFile) as genomic_index:
-            self.chr_names = [ln.split("\t")[0] for ln in genomic_index]
-            self.chr_indices = {chr: index
-                                for index, chr in enumerate(self.chr_names)}
+        self.header.append(opts.label if opts.label else opts.score_column)
 
     def _init_cols(self):
         opts = self.opts
@@ -142,11 +125,11 @@ class FrequencyAnnotator(AnnotatorBase):
             sys.exit(-78)
         else:
             if self.opts.direct:
-                self.file = DirectAccess(self.chr_names, self.opts.scores_file,
+                self.file = DirectAccess(self.opts.scores_file,
                     self.opts.score_column)
             else:
-                self.file = IterativeAccess(self.chr_indices,
-                    self.opts.scores_file, self.opts.score_column)
+                self.file = IterativeAccess(self.opts.scores_file,
+                    self.opts.score_column)
 
     @property
     def new_columns(self):
@@ -156,7 +139,7 @@ class FrequencyAnnotator(AnnotatorBase):
         if loc != None:
             chr, pos = loc.split(':')
         if chr != '':
-            return self.file.get_score((self.chr_indices[chr], int(pos), var))
+            return self.file.get_score(chr, int(pos), var)
         else:
             return ''
 
