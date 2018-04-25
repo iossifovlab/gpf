@@ -54,7 +54,6 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
 
         self.configs = {conf.dataset_name: conf for conf in configs}
 
-
     @property
     def dataset_ids(self):
         return list(self.configs.keys())

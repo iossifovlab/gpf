@@ -154,7 +154,6 @@ class RawFamilyVariants(FamiliesBase):
                 effect_types = [e.lower() for e in effect_types]
                 result = [
                     ge for ge in gene_effects if ge.effect in effect_types]
-                print("result", result, bool(result))
                 if result:
                     return True
             else:
@@ -166,13 +165,12 @@ class RawFamilyVariants(FamiliesBase):
         return False
 
     def filter_variant(self, v, **kwargs):
-        # logger.info("kwargs " + str(kwargs))
         if 'regions' in kwargs:
             # logger.info("in regions")
             if not self.filter_regions(v, kwargs['regions']):
                 return False
         if 'genes' in kwargs or 'effect_types' in kwargs:
-            logger.info("in genes")
+            # logger.info("in genes")
             if not self.filter_gene_effects(
                     v, kwargs.get('effect_types'), kwargs.get('genes')):
                 return False
@@ -192,7 +190,6 @@ class RawFamilyVariants(FamiliesBase):
             if not query.match(v.variant_in_roles):
                 return False
         if 'sexes' in kwargs:
-            logger.info("in sexes")
             query = kwargs['sexes']
             if not query.match(v.variant_in_sexes):
                 return False

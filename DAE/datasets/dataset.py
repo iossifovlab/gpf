@@ -2,7 +2,8 @@ from __future__ import print_function
 import itertools
 
 from RegionOperations import Region
-from variants.attributes import Role, AQuery, RoleQuery, QLeaf, QAnd, QNot
+from variants.attributes import Role, AQuery, RoleQuery, QLeaf, QAnd, QNot, \
+    SexQuery, Sex
 import logging
 # from datasets.helpers import transform_variants_to_lists
 
@@ -41,7 +42,7 @@ class DatasetWrapper(Dataset):
 
     FILTER_RENAMES_MAP = {
         'familyIds': 'family_ids',
-        # 'gender': 'sexes',
+        'gender': 'sexes',
         'geneSyms': 'genes',
         # 'variantTypes': 'variant_type',
         'effectTypes': 'effect_types',
@@ -79,7 +80,9 @@ class DatasetWrapper(Dataset):
 
         if 'sexes' in kwargs:
             sexes = kwargs['sexes']
-            kwargs['sexes'] = AQuery.any_of(*sexes)
+            # FIXME: this should be handled by AQuery..
+            sexes = [Sex.from_name(sex) for sex in sexes]
+            kwargs['sexes'] = SexQuery.any_of(*sexes)
 
         return itertools.islice(
             super(DatasetWrapper, self).get_variants(inheritance="denovo or mendelian", **kwargs), limit)
