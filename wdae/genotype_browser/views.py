@@ -91,6 +91,7 @@ class QueryPreviewView(QueryBaseView):
                     dataset_ids)
 
             dataset = self.datasets_factory.get_dataset(dataset_id)
+            LOGGER.info("dataset " + str(dataset))
 
             response = get_variants_web_preview(
                     dataset.get_variants(safe=True, **data),

@@ -57,14 +57,13 @@ def mat2str(mat, col_sep=" ", row_sep="/"):
 def gene_effect_get_worst_effect(gs):
     if len(gs) == 0:
         return ''
-    return gs[0]['eff']
+    return ','.join([e.worst for e in gs])
 
 
 def gene_effect_get_genes(gs):
     if len(gs) == 0:
         return ''
-    # genes_set = set([g['sym'] for g in gs if g['eff'] == gs[0]['eff']])
-    genes_set = set([g['sym'] for g in gs])
+    genes_set = set([x.symbol for g in gs for x in g.genes])
     genes = list(genes_set)
 
     return ';'.join(genes)
@@ -164,17 +163,13 @@ SPECIAL_ATTRS_FORMAT = {
     "effects": lambda v: ge2str(getattr(v, "effects")),
     "requestedGeneEffects": lambda v:
         ge2str(getattr(v, "requestedGeneEffects")),
-}
-
-SPECIAL_GENE_EFFECTS = {
-    "genes": lambda v: gene_effect_get_genes(getattr(v, "genes")),
-    "worstEffect": lambda v: gene_effect_get_worst_effect(getattr(v, "genes"))
+    "genes": lambda v: gene_effect_get_genes(getattr(v, "effects")),
+    "worstEffect": lambda v: gene_effect_get_worst_effect(getattr(v, "effects"))
 }
 
 
 SPECIAL_ATTRS = merge_dicts(
     SPECIAL_ATTRS_FORMAT,
-    SPECIAL_GENE_EFFECTS,
     STANDARD_ATTRS_LAMBDAS
 )
 

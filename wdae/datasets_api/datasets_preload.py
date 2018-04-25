@@ -5,6 +5,7 @@ Created on Feb 17, 2017
 '''
 from django.conf import settings
 
+from datasets.dataset import DatasetWrapper
 from datasets.datasets_definition import DirectoryEnabledDatasetsDefinition
 from preloaded.register import Preload
 from datasets.dataset_factory import DatasetFactory
@@ -16,6 +17,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+logger.info("HELLO")
+
 
 class DatasetsPreload(Preload, Precompute):
 
@@ -23,7 +26,8 @@ class DatasetsPreload(Preload, Precompute):
         super(DatasetsPreload, self).__init__()
         # self.dataset_config = DatasetConfig()
         self.dataset_definition = DirectoryEnabledDatasetsDefinition()
-        self.factory = DatasetFactory(self.dataset_definition)
+        self.factory = DatasetFactory(
+            self.dataset_definition, _class=DatasetWrapper)
 
     def precompute(self):
         try:
@@ -58,6 +62,7 @@ class DatasetsPreload(Preload, Precompute):
         if preload_active:
             for dset in self.dataset_definition.get_all_dataset_configs():
                 dataset_id = dset.dataset_id
+                logger.info(dataset_id)
                 self.factory.get_dataset(dataset_id)
 
     def get(self):

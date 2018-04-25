@@ -655,6 +655,9 @@ class FamilyVariant(object):
 
     @property
     def variant_in_roles(self):
+        print(self.location)
+        print("variant_in_members", self.variant_in_members)
+        print("inheritance", self.inheritance)
         if self._variant_in_roles is None:
             self._variant_in_roles = [
                 self.family.persons[pid]['role']

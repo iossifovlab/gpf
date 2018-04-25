@@ -51,41 +51,20 @@ class DatasetConfig(ConfigBox):
                                     "fromparent", "inchild", "effect", "count",
                                     "geneeffect", "effectdetails", "weights",
                                     "freq", "scores"],
-                "phenoColumns": [{
-                                     "slots": [{
-                                                   "source": "scq.summary_score",
-                                                   "role": "prb",
-                                                   "name": "Summary",
-                                                   "id": "prb.scq.summary_score"
-                                               }, {
-                                                   "source": "scq.final_score",
-                                                   "role": "prb",
-                                                   "name": "Final",
-                                                   "id": "prb.scq.final_score"
-                                               }],
-                                     "id": "scores",
-                                     "name": "SCQ Scores"
-                                 }],
+                "phenoColumns": [],
                 "hasFamilyFilters": False,
                 "hasDenovo": True,
                 "familyStudyFilters": None,
                 "mainForm": "default",
-                "phenoFilters": [{
-                                     "measureType": "continuous",
-                                     "measureFilter": {
-                                         "filterType": "multi",
-                                         "role": "prb"
-                                     },
-                                     "name": "Proband Continuous"
-                                 }],
+                "phenoFilters": [],
                 "hasPresentInParent": True,
                 "hasStudyTypes": False,
                 "hasComplex": False,
                 "genotypeColumns": [{
                                         "source": None,
                                         "slots": [{
-                                                      "id": "familyId",
-                                                      "source": "familyId",
+                                                      "id": "family",
+                                                      "source": "family",
                                                       "name": "family id",
                                                       "format": "%s"
                                                   }, {
@@ -96,11 +75,6 @@ class DatasetConfig(ConfigBox):
                                                   }],
                                         "id": "family",
                                         "name": "family"
-                                    }, {
-                                        "source": "_phenotype_",
-                                        "slots": [],
-                                        "id": "phenotype",
-                                        "name": "study phenotype"
                                     }, {
                                         "source": None,
                                         "slots": [{
@@ -116,21 +90,6 @@ class DatasetConfig(ConfigBox):
                                                   }],
                                         "id": "variant",
                                         "name": "variant"
-                                    }, {
-                                        "source": "bestSt",
-                                        "slots": [],
-                                        "id": "best",
-                                        "name": "family genotype"
-                                    }, {
-                                        "source": "fromParentS",
-                                        "slots": [],
-                                        "id": "fromparent",
-                                        "name": "from parent"
-                                    }, {
-                                        "source": "inChS",
-                                        "slots": [],
-                                        "id": "inchild",
-                                        "name": "in child"
                                     }, {
                                         "source": "pedigree",
                                         "slots": [{
@@ -149,8 +108,8 @@ class DatasetConfig(ConfigBox):
                                     }, {
                                         "source": None,
                                         "slots": [{
-                                                      "id": "effectType",
-                                                      "source": "effectType",
+                                                      "id": "worstEffect",
+                                                      "source": "worstEffect",
                                                       "name": "worst effect type",
                                                       "format": "%s"
                                                   }, {
@@ -161,65 +120,9 @@ class DatasetConfig(ConfigBox):
                                                   }],
                                         "id": "effect",
                                         "name": "effect"
-                                    }, {
-                                        "source": "counts",
-                                        "slots": [],
-                                        "id": "count",
-                                        "name": "count"
-                                    }, {
-                                        "source": "geneEffect",
-                                        "slots": [],
-                                        "id": "geneeffect",
-                                        "name": "all effects"
-                                    }, {
-                                        "source": "effectDetails",
-                                        "slots": [],
-                                        "id": "effectdetails",
-                                        "name": "effect details"
-                                    }, {
-                                        "source": None,
-                                        "slots": [{
-                                                      "id": "LGD_rank",
-                                                      "source": "LGD_rank",
-                                                      "name": "LGD rank",
-                                                      "format": "LGD %d"
-                                                  }, {
-                                                      "id": "RVIS_rank",
-                                                      "source": "RVIS_rank",
-                                                      "name": "RVIS rank",
-                                                      "format": "RVIS %d"
-                                                  }, {
-                                                      "id": "pLI_rank",
-                                                      "source": "pLI_rank",
-                                                      "name": "pLI rank",
-                                                      "format": "pLI %d"
-                                                  }],
-                                        "id": "weights",
-                                        "name": "vulnerability/intolerance"
-                                    }, {
-                                        "source": None,
-                                        "slots": [{
-                                                      "id": "SSC-freq",
-                                                      "source": "SSC-freq",
-                                                      "name": "SSC",
-                                                      "format": "SSC %.2f %%"
-                                                  }, {
-                                                      "id": "EVS-freq",
-                                                      "source": "EVS-freq",
-                                                      "name": "EVS",
-                                                      "format": "EVS %.2f %%"
-                                                  }, {
-                                                      "id": "E65-freq",
-                                                      "source": "E65-freq",
-                                                      "name": "E65",
-                                                      "format": "E65 %.2f %%"
-                                                  }],
-                                        "id": "freq",
-                                        "name": "allele freq"
                                     }],
                 "hasTransmitted": True,
-                "previewColumns": ["family", "variant", "genotype", "effect",
-                                   "weights", "freq", "scores"],
+                "previewColumns": ["family", "variant", "genotype", "effect"],
                 "hasCNV": True,
                 "genomicMetrics": [{
                                        "id": "SSC-freq",

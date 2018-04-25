@@ -3,7 +3,10 @@ import itertools
 
 from RegionOperations import Region
 from variants.attributes import Role, AQuery, RoleQuery, QLeaf, QAnd, QNot
+import logging
 # from datasets.helpers import transform_variants_to_lists
+
+logger = logging.getLogger(__name__)
 
 
 class Dataset(object):
@@ -38,8 +41,9 @@ class DatasetWrapper(Dataset):
 
     FILTER_RENAMES_MAP = {
         'familyIds': 'family_ids',
-        'gender': 'sexes',
-        'variantTypes': 'variant_type',
+        # 'gender': 'sexes',
+        'geneSyms': 'genes',
+        # 'variantTypes': 'variant_type',
         'effectTypes': 'effect_types',
         'regionS': 'regions',
     }
@@ -68,17 +72,17 @@ class DatasetWrapper(Dataset):
                 'maxAltFrequencyPercent' in kwargs:
             self._transform_min_max_alt_frequency(kwargs)
 
-        if 'geneSyms' in kwargs:
-            kwargs['genes'] = 'geneSyms'
-            kwargs.pop('geneSyms')
-
         for key in list(kwargs.keys()):
             if key in self.FILTER_RENAMES_MAP:
                 kwargs[self.FILTER_RENAMES_MAP[key]] = kwargs[key]
                 kwargs.pop(key)
 
+        if 'sexes' in kwargs:
+            sexes = kwargs['sexes']
+            kwargs['sexes'] = AQuery.any_of(*sexes)
+
         return itertools.islice(
-            super(DatasetWrapper, self).get_variants(**kwargs), limit)
+            super(DatasetWrapper, self).get_variants(inheritance="denovo or mendelian", **kwargs), limit)
 
     def _transform_min_max_alt_frequency(self, kwargs):
         min_value = float('-inf')
@@ -109,37 +113,37 @@ class DatasetWrapper(Dataset):
     def _transform_present_in_child(self, kwargs):
         roles_query = None
 
-        for filter_option in kwargs['presentInChild']:
-            new_roles = None
-
-            if filter_option == 'affected only':
-                new_roles = AQuery.any_of(Role.prb) \
-                    .and_not_(AQuery.any_of(Role.sib))
-
-            if filter_option == 'unaffected only':
-                new_roles = AQuery.any_of(Role.sib) \
-                    .and_not_(AQuery.any_of(Role.prb))
-
-            if filter_option == 'affected and unaffected':
-                new_roles = AQuery.all_of(Role.prb, Role.sib)
-
-            if filter_option == 'neither':
-                new_roles = AQuery.any_of(Role.prb).not_() \
-                    .and_not_(AQuery.any_of(Role.sib))
-
-            if new_roles:
-                if not roles_query:
-                    roles_query = new_roles
-                else:
-                    roles_query.or_(new_roles)
-
-        if roles_query:
-            original_roles = kwargs.get('roles', None)
-            if original_roles is not None:
-                original_roles_query = RoleQuery.parse(original_roles)
-                kwargs['roles'] = original_roles_query.and_(roles_query)
-            else:
-                kwargs['roles'] = roles_query
+        # for filter_option in kwargs['presentInChild']:
+        #     new_roles = None
+        #
+        #     if filter_option == 'affected only':
+        #         new_roles = AQuery.any_of(Role.prb) \
+        #             .and_not_(AQuery.any_of(Role.sib))
+        #
+        #     if filter_option == 'unaffected only':
+        #         new_roles = AQuery.any_of(Role.sib) \
+        #             .and_not_(AQuery.any_of(Role.prb))
+        #
+        #     if filter_option == 'affected and unaffected':
+        #         new_roles = AQuery.all_of(Role.prb, Role.sib)
+        #
+        #     if filter_option == 'neither':
+        #         new_roles = AQuery.any_of(Role.prb).not_() \
+        #             .and_not_(AQuery.any_of(Role.sib))
+        #
+        #     if new_roles:
+        #         if not roles_query:
+        #             roles_query = new_roles
+        #         else:
+        #             roles_query.or_(new_roles)
+        #
+        # if roles_query:
+        #     original_roles = kwargs.get('roles', None)
+        #     if original_roles is not None:
+        #         original_roles_query = RoleQuery.parse(original_roles)
+        #         kwargs['roles'] = original_roles_query.and_(roles_query)
+        #     else:
+        #         kwargs['roles'] = roles_query
 
         kwargs.pop('presentInChild')
 
