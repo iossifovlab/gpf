@@ -40,7 +40,7 @@ class MultiAnnotator(object):
                 self.header.extend(annotation_step_config.columns.values())
             self.annotators.append({
                 'instance': str_to_class(annotation_step_config.annotator)(
-                    annotation_step_config.options, self.header),
+                    annotation_step_config.options, list(self.header)),
                 'columns': annotation_step_config.columns.keys()
             })
 
