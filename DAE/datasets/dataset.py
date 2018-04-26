@@ -1,11 +1,11 @@
 from __future__ import print_function
 import itertools
+import logging
 
 from RegionOperations import Region
-from variants.attributes import Role, AQuery, RoleQuery, QLeaf, QAnd, QNot, \
-    SexQuery, Sex, VariantTypeQuery, VariantType
-import logging
-# from datasets.helpers import transform_variants_to_lists
+from variants.attributes import Role, AQuery, RoleQuery, SexQuery, Sex, \
+    VariantTypeQuery, VariantType
+from helpers import EFFECT_TYPES_MAPPING
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +89,15 @@ class DatasetWrapper(Dataset):
             variant_types = [VariantType.from_name(t) for t in variant_types]
             variant_types = VariantTypeQuery.any_of(*variant_types)
             kwargs['variant_type'] = variant_types
+
+        if 'effect_types' in kwargs:
+            effect_types = kwargs['effect_types']
+            effect_types = [
+                EFFECT_TYPES_MAPPING[effect] for effect in effect_types
+            ]
+            kwargs['effect_types'] = [
+                item for sublist in effect_types for item in sublist
+            ]
 
         return itertools.islice(
             super(DatasetWrapper, self).get_variants(**kwargs), limit)

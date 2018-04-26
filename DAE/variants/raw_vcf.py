@@ -151,7 +151,6 @@ class RawFamilyVariants(FamiliesBase):
                 if result:
                     return True
             elif genes is None:
-                effect_types = [e.lower() for e in effect_types]
                 result = [
                     ge for ge in gene_effects if ge.effect in effect_types]
                 if result:

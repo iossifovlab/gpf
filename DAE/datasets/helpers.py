@@ -227,3 +227,24 @@ def get_variants_web_preview(
         'cols': attrs,
         'rows': list(limited_rows)
     }
+
+
+EFFECT_TYPES_MAPPING = {
+    "Nonsense": ["nonsense"],
+    "Frame-shift": ["frame-shift"],
+    "Splice-site": ["splice-site"],
+    "Missense": ["missense"],
+    "Non-frame-shift": ["no-frame-shift"],
+    "No-frame-shift-newStop": ["no-frame-shift-newStop"],
+    "noStart": ["noStart"],
+    "noEnd": ["noEnd"],
+    "Synonymous": ["synonymous"],
+    "Non coding": ["non-coding"],
+    "Intron": ["intron"],
+    "Intergenic": ["intergenic"],
+    "3'-UTR": ["3'UTR", "3'UTR-intron"],
+    "5'-UTR": ["5'UTR", "5'UTR-intron"],
+    "CNV": ["CNV+", "CNV-"],
+    "CNV+": ["CNV+"],
+    "CNV-": ["CNV-"],
+}
