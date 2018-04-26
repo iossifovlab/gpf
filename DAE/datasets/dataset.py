@@ -85,7 +85,7 @@ class DatasetWrapper(Dataset):
             kwargs['sexes'] = SexQuery.any_of(*sexes)
 
         return itertools.islice(
-            super(DatasetWrapper, self).get_variants(inheritance="denovo or mendelian", **kwargs), limit)
+            super(DatasetWrapper, self).get_variants(**kwargs), limit)
 
     def _transform_min_max_alt_frequency(self, kwargs):
         min_value = float('-inf')
@@ -116,37 +116,37 @@ class DatasetWrapper(Dataset):
     def _transform_present_in_child(self, kwargs):
         roles_query = None
 
-        # for filter_option in kwargs['presentInChild']:
-        #     new_roles = None
-        #
-        #     if filter_option == 'affected only':
-        #         new_roles = AQuery.any_of(Role.prb) \
-        #             .and_not_(AQuery.any_of(Role.sib))
-        #
-        #     if filter_option == 'unaffected only':
-        #         new_roles = AQuery.any_of(Role.sib) \
-        #             .and_not_(AQuery.any_of(Role.prb))
-        #
-        #     if filter_option == 'affected and unaffected':
-        #         new_roles = AQuery.all_of(Role.prb, Role.sib)
-        #
-        #     if filter_option == 'neither':
-        #         new_roles = AQuery.any_of(Role.prb).not_() \
-        #             .and_not_(AQuery.any_of(Role.sib))
-        #
-        #     if new_roles:
-        #         if not roles_query:
-        #             roles_query = new_roles
-        #         else:
-        #             roles_query.or_(new_roles)
-        #
-        # if roles_query:
-        #     original_roles = kwargs.get('roles', None)
-        #     if original_roles is not None:
-        #         original_roles_query = RoleQuery.parse(original_roles)
-        #         kwargs['roles'] = original_roles_query.and_(roles_query)
-        #     else:
-        #         kwargs['roles'] = roles_query
+        for filter_option in kwargs['presentInChild']:
+            new_roles = None
+
+            if filter_option == 'affected only':
+                new_roles = AQuery.any_of(Role.prb) \
+                    .and_not_(AQuery.any_of(Role.sib))
+
+            if filter_option == 'unaffected only':
+                new_roles = AQuery.any_of(Role.sib) \
+                    .and_not_(AQuery.any_of(Role.prb))
+
+            if filter_option == 'affected and unaffected':
+                new_roles = AQuery.all_of(Role.prb, Role.sib)
+
+            if filter_option == 'neither':
+                new_roles = AQuery.any_of(Role.prb).not_() \
+                    .and_not_(AQuery.any_of(Role.sib))
+
+            if new_roles:
+                if not roles_query:
+                    roles_query = new_roles
+                else:
+                    roles_query.or_(new_roles)
+
+        if roles_query:
+            original_roles = kwargs.get('roles', None)
+            if original_roles is not None:
+                original_roles_query = RoleQuery.parse(original_roles)
+                kwargs['roles'] = original_roles_query.and_(roles_query)
+            else:
+                kwargs['roles'] = roles_query
 
         kwargs.pop('presentInChild')
 

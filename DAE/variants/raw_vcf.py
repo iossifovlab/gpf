@@ -175,17 +175,17 @@ class RawFamilyVariants(FamiliesBase):
                     v, kwargs.get('effect_types'), kwargs.get('genes')):
                 return False
         if 'person_ids' in kwargs:
-            logger.info("in person_ids")
+            # logger.info("in person_ids")
             person_ids = kwargs['person_ids']
             if not v.variant_in_members & set(person_ids):
                 return False
         if 'family_ids' in kwargs:
-            logger.info("in family_ids")
+            # logger.info("in family_ids")
             family_ids = kwargs['family_ids']
             if v.family_id not in family_ids:
                 return False
         if 'roles' in kwargs:
-            logger.info("in roles, variant_in_roles " + str(v.variant_in_roles))
+            # logger.info("in roles, variant_in_roles " + str(v.variant_in_roles))
             query = kwargs['roles']
             if not query.match(v.variant_in_roles):
                 return False
@@ -194,28 +194,28 @@ class RawFamilyVariants(FamiliesBase):
             if not query.match(v.variant_in_sexes):
                 return False
         if 'inheritance' in kwargs:
-            logger.info("in inheritance")
+            # logger.info("in inheritance")
             query = kwargs['inheritance']
-            logger.info("query " + str(query))
+            # logger.info("query " + str(query))
             if not query.match([v.inheritance]):
                 return False
         if 'variant_type' in kwargs:
-            logger.info("in variant_type")
+            # logger.info("in variant_type")
             query = kwargs['variant_type']
             if not query.match([ad.variant_type for ad in v.alt_details]):
                 return False
 
         if 'real_attr_filter' in kwargs:
-            logger.info("in real_attr_filter")
+            # logger.info("in real_attr_filter")
             if not self.filter_real_attr(v, kwargs['real_attr_filter']):
                 return False
 
         if 'filter' in kwargs:
-            logger.info("in filter")
+            # logger.info("in filter")
             func = kwargs['filter']
             if not func(v):
                 return False
-        logger.info("returning true")
+        # logger.info("returning true")
         return True
 
     def query_variants(self, **kwargs):
