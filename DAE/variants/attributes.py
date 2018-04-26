@@ -133,7 +133,7 @@ class VariantType(enum.Enum):
         elif name == 'complex':
             return VariantType.complex
         elif name == 'CNV':
-            return VariantType.cnv
+            return VariantType.CNV
         raise ValueError("unexpected variant type: {}".format(name))
 
     def __repr__(self):

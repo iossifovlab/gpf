@@ -3,7 +3,7 @@ import itertools
 
 from RegionOperations import Region
 from variants.attributes import Role, AQuery, RoleQuery, QLeaf, QAnd, QNot, \
-    SexQuery, Sex
+    SexQuery, Sex, VariantTypeQuery, VariantType
 import logging
 # from datasets.helpers import transform_variants_to_lists
 
@@ -43,8 +43,8 @@ class DatasetWrapper(Dataset):
     FILTER_RENAMES_MAP = {
         'familyIds': 'family_ids',
         'gender': 'sexes',
-        'geneSyms': 'genes',
-        # 'variantTypes': 'variant_type',
+        'geneSymbols': 'genes',
+        'variantTypes': 'variant_type',
         'effectTypes': 'effect_types',
         'regionS': 'regions',
     }
@@ -83,6 +83,12 @@ class DatasetWrapper(Dataset):
             # FIXME: this should be handled by AQuery..
             sexes = [Sex.from_name(sex) for sex in sexes]
             kwargs['sexes'] = SexQuery.any_of(*sexes)
+
+        if 'variant_type' in kwargs:
+            variant_types = kwargs['variant_type']
+            variant_types = [VariantType.from_name(t) for t in variant_types]
+            variant_types = VariantTypeQuery.any_of(*variant_types)
+            kwargs['variant_type'] = variant_types
 
         return itertools.islice(
             super(DatasetWrapper, self).get_variants(**kwargs), limit)
