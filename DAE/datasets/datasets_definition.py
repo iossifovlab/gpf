@@ -7,17 +7,20 @@ from datasets.dataset_config import DatasetConfig
 class DatasetsDefinition(object):
     __metaclass__ = abc.ABCMeta
 
-    @abc.abstractmethod
-    def get_dataset_config(self, dataset_id):
-        raise NotImplementedError()
+    configs = {}
 
-    @abc.abstractmethod
-    def get_all_dataset_configs(self):
-        raise NotImplementedError()
-
-    @abc.abstractproperty
+    @property
     def dataset_ids(self):
-        raise NotImplementedError()
+        return list(self.configs.keys())
+
+    def get_dataset_config(self, dataset_id):
+        if dataset_id not in self.configs:
+            return None
+
+        return self.configs[dataset_id]
+
+    def get_all_dataset_configs(self):
+        return list(self.configs.values())
 
 
 class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
@@ -52,18 +55,17 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
         for config_path in config_paths:
             configs.append(DatasetConfig.from_config(config_path))
 
-        self.configs = {conf.dataset_name: conf for conf in configs}
+        self.configs = {conf.dataset_id: conf for conf in configs}
 
-    @property
-    def dataset_ids(self):
-        return list(self.configs.keys())
 
-    def get_dataset_config(self, dataset_id):
-        if dataset_id not in self.configs:
-            return None
+class SingleFileDatasetsDefinition(DatasetsDefinition):
 
-        return self.configs[dataset_id]
+    def __init__(self, config_path, work_dir=None):
+        self.config_path = config_path
 
-    def get_all_dataset_configs(self):
-        return list(self.configs.values())
+        config = DatasetConfig.from_config(config_path, work_dir)
 
+        self.configs = {
+            config.dataset_id: config
+        }
+        print(self.configs)

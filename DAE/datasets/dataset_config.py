@@ -13,6 +13,7 @@ class DatasetConfig(ConfigBox):
         assert self.variants_prefix
         assert self.preview_columns
         assert self.download_columns
+        assert self.data_dir
 
         print("download_columns", self.list('preview_columns'))
         print("download_columns", self.list('download_columns'))
@@ -22,7 +23,9 @@ class DatasetConfig(ConfigBox):
         if work_dir is None:
             from default_settings import DATA_DIR
             work_dir = DATA_DIR
-        assert os.path.exists(path)
+        if not os.path.exists(path):
+            path = os.path.join(work_dir, path)
+        assert os.path.exists(path), path
 
         config = reusables.config_dict(
             path,
@@ -33,7 +36,12 @@ class DatasetConfig(ConfigBox):
             }
         )
 
-        return DatasetConfig(config['dataset'])
+        result = DatasetConfig(config['dataset'])
+        if not os.path.isabs(result.variants_prefix):
+            result.variants_prefix = os.path.join(
+                result.data_dir, result.variants_prefix)
+
+        return result
 
     def get_dataset_description(self):
         return {
