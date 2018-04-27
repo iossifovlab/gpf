@@ -15,7 +15,7 @@ import logging
 
 # from denovo_gene_sets import build_denovo_gene_sets
 from gene.config import GeneInfoConfig
-from datasets.config import DatasetsConfig
+from datasets.config_old import DatasetsConfig
 from datasets.metadataset import MetaDataset
 from GeneTerms import loadGeneTerm
 # from DAE import vDB
