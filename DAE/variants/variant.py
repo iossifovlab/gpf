@@ -255,7 +255,8 @@ class SummaryVariant(VariantBase):
     :effect: 1-based list of `Effect` for each alternative allele.
     """
 
-    def __init__(self, chromosome, start, reference, alternative, atts={}):
+    def __init__(self, chromosome, start, reference, alternative, effects=None,
+                 frequencies=None, atts=None):
         """
         Expected parameters of the constructor are:
 
@@ -267,11 +268,15 @@ class SummaryVariant(VariantBase):
         """
         super(SummaryVariant, self).__init__(
             chromosome, start, reference, alternative)
+        if atts is None:
+            atts = {}
 
         self.alts = AltAlleleItems(alternative)
-        self.alt_details = VariantDetail.from_vcf(
+        self.details = VariantDetail.from_vcf(
             chromosome, start, reference, alternative)
         self.alt_alleles = range(1, len(alternative) + 1)
+        self.effects = effects
+        self.frequencies = frequencies
 
         self.atts = {}
         self.update_atts(atts)
@@ -316,15 +321,16 @@ class SummaryVariant(VariantBase):
         `get_attr`, `has_attr`, `__getitem__` and `__contains__` methods of
         summary variant.
         """
-        sv = SummaryVariant(
-            row['chr'], row['position'], row['refA'], row['altA'], atts=row)
-        sv.details = VariantDetail.from_vcf(
-            row['chr'], row['position'], row['refA'], row['altA'])
-
-        sv.effects = Effect.from_effects(
+        row = row.copy()
+        effects = Effect.from_effects(
             row['effectType'], row['effectGene'], row['effectDetails'])
-        sv.frequencies = [row['all.refFreq']]
-        sv.frequencies.extend(row['all.altFreq'])
+
+        frequencies = [row['all.refFreq']]
+        frequencies.extend(row['all.altFreq'])
+
+        sv = SummaryVariant(
+            row['chr'], row['position'], row['refA'], row['altA'], effects,
+            frequencies, atts=row)
         return sv
 
     def get_attr(self, item, default=None):
