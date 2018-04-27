@@ -14,6 +14,7 @@ from annotate_with_genomic_scores import GenomicScoresAnnotator
 from lift_over_variants import LiftOverAnnotator
 from relabel_chromosome import RelabelChromosomeAnnotator
 from annotateFreqTransm import FrequencyAnnotator
+from annotate_with_multiple_scores import MultipleScoresAnnotator
 
 def str_to_class(val):
     return reduce(getattr, val.split("."), sys.modules[__name__])
