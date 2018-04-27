@@ -49,6 +49,7 @@ class DatasetWrapper(Dataset):
         'regionS': 'regions',
     }
 
+    # Not implemented:
     # inChild
     # genomicScores
     # callSet
@@ -80,7 +81,7 @@ class DatasetWrapper(Dataset):
 
         if 'sexes' in kwargs:
             sexes = kwargs['sexes']
-            # FIXME: this should be handled by AQuery..
+            # FIXME: this should be handled by SexQuery..
             sexes = [Sex.from_name(sex) for sex in sexes]
             kwargs['sexes'] = SexQuery.any_of(*sexes)
 
