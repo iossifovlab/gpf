@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import optparse
 
-from utilities import *
+from utilities import main
 from annotate_score_base import ScoreAnnotator
 
 

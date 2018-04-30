@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 import csv
 import sys
 from variant_annotation.missense_scores_tabix import MissenseScoresDB
@@ -39,7 +39,7 @@ class MissenseScoresAnnotator(object):
         if opts.v is None:
             opts.v = 'variant'
         if opts.e is None:
-            opts.e = 'effectType'
+            opts.e = 'effectTyer'
 
         self.argColumnNs = []
         for opt in [opts.c, opts.p, opts.x, opts.v]:
@@ -69,8 +69,8 @@ class MissenseScoresAnnotator(object):
 
 if __name__ == "__main__":
     opts = get_argument_parser().parse_args()
-    with open(args.input_file, "r") as csvfile, \
-            open(args.output_file, "w") as output:
+    with open(opts.input_file, "r") as csvfile, \
+            open(opts.output_file, "w") as output:
         header = csvfile.readline()
         annotator = MissenseScoresAnnotator(opts=opts, header=header.split('\t'))
         annotator.annotate_file(csvfile, output)
