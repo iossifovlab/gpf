@@ -3,6 +3,7 @@ import sys, glob
 import optparse
 from collections import OrderedDict
 from box import Box
+from jproperties import Properties
 
 from utilities import *
 from annotate_score_base import ScoreAnnotator
@@ -24,11 +25,6 @@ def get_argument_parser():
 
     parser.add_option('--scores', help='comma separated list of scores to annotate with',
         type='string', action='store')
-    parser.add_option('--scores-columns',
-        help='comma separated list of columns to get the score; '
-             'you should specify a score column for each score '
-             '(defaults to score names)',
-        type='string', action='store')
     parser.add_option('--labels',
         help='comma separated list of labels for the new columns in the output file '
              '(defaults to score names)',
@@ -44,7 +40,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
         self._init_scores()
         if self.opts.labels is not None:
             self.header.extend(self.opts.labels.split(','))
-        else:
+        elif self.scores is not None:
             self.header.extend(self.scores)
 
     def _init_score_directory(self):
@@ -53,34 +49,49 @@ class MultipleScoresAnnotator(AnnotatorBase):
             self.scores_directory = os.path.join(os.environ['GFD_DIR'])
 
     def _init_scores(self):
-        if self.opts.scores is None:
-            sys.stderr.write('--scores option is mandatory')
-            sys.exit(-12)
-        
-        self.scores = self.opts.scores.split(',')
-        if self.opts.scores_columns is None:
-            scores_columns = self.scores
-        else:
-            scores_columns = self.opts.scores_columns.split(',')
-        
         self.annotators = {}
-        for (score, column) in list(zip(self.scores, scores_columns)):
-            self.annotators[score] = ScoreAnnotator(
-                self._opts_for_single_annotator(score, column),
-                list(self.header), [], ['chrom', 'chromStart', 'chromEnd'])
+        if self.opts.scores is not None:
+            self.scores = self.opts.scores.split(',')
+            for score in self.scores:
+                self._annotator_for(score)
+        else:
+            self.scores = None
 
-    def _opts_for_single_annotator(self, score, column):
+    def _annotator_for(self, score):
+        if score not in self.annotators:
+            self.annotators[score] = ScoreAnnotator(
+                self._opts_for_single_annotator(score),
+                list(self.header), [], ['chrom', 'chromStart', 'chromEnd'])
+        return self.annotators[score]
+
+    def _opts_for_single_annotator(self, score):
         opts = self.opts
         score_directory = self.scores_directory + '/' + score
+
+        if not os.path.isdir(score_directory):
+            sys.stderr.write('directory for "{}" not found, please provide only valid scores'.format(score))
+            sys.exit(-78)
+
         tabix_files = glob.glob(score_directory + '/*.tbi')
         if len(tabix_files) == 0:
             sys.stderr.write('could not find .tbi file for score {}'.format(score))
             sys.exit(-64)
+
+        params_file = score_directory + '/params.txt'
+        if not os.path.exists(params_file):
+            sys.stderr.write('could not find params.txt file for score {}'.format(score))
+            sys.exit(-50)
+
+        params = Properties({'format': score})
+        with open(params_file, "r") as file:
+            params.load(file)
+        score_column = params['format'].data
+
         config = {
             'c': opts.c,
             'p': opts.p,
             'x': opts.x,
-            'score_column': column,
+            'score_column': score_column,
             'direct': True,
             'scores_file': tabix_files[0].replace('.tbi', '')
         }
@@ -88,12 +99,15 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
     @property
     def new_columns(self):
+        if self.scores is None:
+            sys.stderr.write('--scores option is mandatory')
+            sys.exit(-12)
         return self.scores
 
     def line_annotations(self, line, new_cols_order):
         result = []
         for col in new_cols_order:
-            result.extend(self.annotators[col].line_annotations(line, [col]))
+            result.extend(self._annotator_for(col).line_annotations(line, [col]))
         return result
 
 

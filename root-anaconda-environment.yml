@@ -250,6 +250,7 @@ dependencies:
   - et-xmlfile==1.0.1
   - gunicorn==19.7.1
   - ipython-genutils==0.1.0
+  - jproperties==1.0.1
   - jupyter-client==4.4.0
   - jupyter-console==5.0.0
   - jupyter-core==4.2.0
