@@ -15,7 +15,6 @@ def get_argument_parser():
     parser.add_argument('-p', help='position column number/name', action='store')
     parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
     parser.add_argument('-v', help='variant column number/name', action='store')
-    parser.add_argument('-e', help='effect type column number/name', action='store')
     parser.add_argument('--dbnsfp', help='path to dbNSFP', action='store')
     parser.add_argument('--columns', action='append', default=[], dest="columns")
     return parser
@@ -38,13 +37,10 @@ class MissenseScoresAnnotator(object):
             opts.x = 'location'
         if opts.v is None:
             opts.v = 'variant'
-        if opts.e is None:
-            opts.e = 'effectTyer'
 
         self.argColumnNs = []
         for opt in [opts.c, opts.p, opts.x, opts.v]:
             self.argColumnNs.append(assign_values(opt, header))
-        self.effectTypeColumn = assign_values(opts.e, header)
 
     def annotate_file(self, input, output):
         opts = self.opts
@@ -57,13 +53,12 @@ class MissenseScoresAnnotator(object):
             writer.writerow(row)
 
     def line_annotations(self, line, new_cols_order):
-        if line[self.effectTypeColumn-1]:
-            params = [line[i-1] if i!=None else None for i in self.argColumnNs]
-            if all(map(lambda param: param != '', params)):
-                variant = Variant(*params)
-                missense_scores = self.mDB.get_missense_score(variant)
-                if missense_scores is not None:
-                    return [missense_scores[k] for k in new_cols_order]
+        params = [line[i-1] if i!=None else None for i in self.argColumnNs]
+        if all(map(lambda param: param != '', params)):
+            variant = Variant(*params)
+            missense_scores = self.mDB.get_missense_score(variant)
+            if missense_scores is not None:
+                return [missense_scores[k] for k in new_cols_order]
         return ['' for col in new_cols_order]
 
 
