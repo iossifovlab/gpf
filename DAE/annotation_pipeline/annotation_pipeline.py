@@ -9,6 +9,7 @@ from box import Box
 import pysam
 
 from tools import *
+from tools.utilities import assign_values
 
 def str_to_class(val):
     return reduce(getattr, val.split("."), sys.modules[__name__])
@@ -27,12 +28,17 @@ class MultiAnnotator(object):
         self.annotators = []
         new_columns_labels = []
         columns_labels = {}
+        self.virtual_columns_indices = []
         # config_parser.sections() this gives the sections in order which is important
         for annotation_step in config_parser.sections():
             annotation_step_config = self.config[annotation_step]
             columns_labels.update(annotation_step_config.columns)
             if not reannotate and self.header is not None:
                 self.header.extend(annotation_step_config.columns.values())
+            if annotation_step_config.virtuals is not None:
+                self.virtual_columns_indices.extend(
+                    [assign_values(annotation_step_config.columns[column.strip()], self.header) - 1
+                     for column in annotation_step_config.virtuals.split(',')])
             self.annotators.append({
                 'instance': str_to_class(annotation_step_config.annotator)(
                     annotation_step_config.options, list(self.header)),
@@ -50,6 +56,8 @@ class MultiAnnotator(object):
 
     def annotate_file(self, input, output):
         if self.header:
+            for i in self.virtual_columns_indices:
+                    del self.header[i]
             output.write("#" + "\t".join(self.header) + "\n")
 
         sys.stderr.write("...processing....................\n")
@@ -76,6 +84,8 @@ class MultiAnnotator(object):
             else:
                 for annotator in annotators:
                     line.extend(annotator['instance'].line_annotations(line, annotator['columns']))
+                for i in self.virtual_columns_indices:
+                    del line[i]
 
             output.write("\t".join(line) + "\n")
 
