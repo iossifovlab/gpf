@@ -59,43 +59,46 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
     def _annotator_for(self, score):
         if score not in self.annotators:
-            self.annotators[score] = ScoreAnnotator(
-                self._opts_for_single_annotator(score),
-                list(self.header), [], ['chrom', 'chromStart', 'chromEnd'])
+            opts = self.opts
+            score_directory = self.scores_directory + '/' + score
+
+            if not os.path.isdir(score_directory):
+                sys.stderr.write('directory for "{}" not found, please provide only valid scores'.format(score))
+                sys.exit(-78)
+
+            tabix_files = glob.glob(score_directory + '/*.tbi')
+            if len(tabix_files) == 0:
+                sys.stderr.write('could not find .tbi file for score {}'.format(score))
+                sys.exit(-64)
+
+            params_file = score_directory + '/params.txt'
+            if not os.path.exists(params_file):
+                sys.stderr.write('could not find params.txt file for score {}'.format(score))
+                sys.exit(-50)
+
+            params = Properties({'format': score})
+            with open(params_file, 'r') as file:
+                params.load(file)
+            score_column = params['format'].data
+
+            score_header_file = score_directory + '/' + params['scoreDescFile'].data[1:-1]
+            with open(score_header_file, 'r') as file:
+                score_header = file.readline().strip('\n\r').split('\t')
+
+            config = {
+                'c': opts.c,
+                'p': opts.p,
+                'x': opts.x,
+                'score_column': score_column,
+                'direct': True,
+                'scores_file': tabix_files[0].replace('.tbi', '')
+            }
+
+            score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
+            self.annotators[score] = ScoreAnnotator(score_annotator_opts,
+                list(self.header), [], score_header)
+
         return self.annotators[score]
-
-    def _opts_for_single_annotator(self, score):
-        opts = self.opts
-        score_directory = self.scores_directory + '/' + score
-
-        if not os.path.isdir(score_directory):
-            sys.stderr.write('directory for "{}" not found, please provide only valid scores'.format(score))
-            sys.exit(-78)
-
-        tabix_files = glob.glob(score_directory + '/*.tbi')
-        if len(tabix_files) == 0:
-            sys.stderr.write('could not find .tbi file for score {}'.format(score))
-            sys.exit(-64)
-
-        params_file = score_directory + '/params.txt'
-        if not os.path.exists(params_file):
-            sys.stderr.write('could not find params.txt file for score {}'.format(score))
-            sys.exit(-50)
-
-        params = Properties({'format': score})
-        with open(params_file, "r") as file:
-            params.load(file)
-        score_column = params['format'].data
-
-        config = {
-            'c': opts.c,
-            'p': opts.p,
-            'x': opts.x,
-            'score_column': score_column,
-            'direct': True,
-            'scores_file': tabix_files[0].replace('.tbi', '')
-        }
-        return Box(config, default_box=True, default_box_attr=None)
 
     @property
     def new_columns(self):
