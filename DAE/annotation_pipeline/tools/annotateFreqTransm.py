@@ -19,6 +19,7 @@ def get_argument_parser():
     parser.add_option('--direct', help='the score files is tabix indexed', default=False, action='store_true')
 
     parser.add_option('--score-column', help='column in score file that contains the score (default: all.altFreq)', default='all.altFreq', type='string', action='store')
+    parser.add_option('--default-value', help='default value if score for variant is not found', default='', type='string', action='store')
     parser.add_option('--label', help='label of the new column; defaults to the name of the score column', type='string', action='store')
 
     return parser

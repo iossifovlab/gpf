@@ -10,8 +10,9 @@ class IterativeAccess:
 
     XY_INDEX = {'X': 23, 'Y': 24}
 
-    def __init__(self, score_file_name, score_column, chr_column,
-            pos_begin_column, pos_end_column, *search_columns):
+    def __init__(self, score_file_name, score_default_value, score_column,
+            chr_column, pos_begin_column, pos_end_column, *search_columns):
+        self.score_default_value = score_default_value
         self.file = gzip.open(score_file_name, 'rb')
         self.header = self.file.readline().rstrip('\n').split('\t')
         self.chr_index = self.header.index(chr_column)
@@ -54,12 +55,14 @@ class IterativeAccess:
         elif int(self.current_line[self.pos_begin_index]) <= pos:
             if [self.current_line[i] for i in self.search_indices] == list(args):
                 return self.current_line[self.score_index]
-        return ''
+        return self.score_default_value
 
 
 class DirectAccess:
 
-    def __init__(self, score_file_name, score_column, *search_columns):
+    def __init__(self, score_file_name, score_default_value, score_column,
+            *search_columns):
+        self.score_default_value = score_default_value
         with gzip.open(score_file_name) as file:
             self.header = file.readline().strip('\n\r').split('\t')
         self.search_columns = search_columns
@@ -76,7 +79,7 @@ class DirectAccess:
                     return line[self.score_index]
         except ValueError:
             pass
-        return ''
+        return self.score_default_value
 
 
 class ScoreAnnotator(AnnotatorBase):
@@ -110,10 +113,12 @@ class ScoreAnnotator(AnnotatorBase):
         else:
             if self.opts.direct:
                 self.file = DirectAccess(self.opts.scores_file,
-                    self.opts.score_column, *self.columns_in_score_file[3:])
+                    self.opts.default_value, self.opts.score_column,
+                    *self.columns_in_score_file[3:])
             else:
                 self.file = IterativeAccess(self.opts.scores_file,
-                    self.opts.score_column, *self.columns_in_score_file)
+                    self.opts.default_value, self.opts.score_column,
+                    *self.columns_in_score_file)
 
     @property
     def new_columns(self):
