@@ -76,10 +76,11 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 sys.stderr.write('could not find params.txt file for score {}'.format(score))
                 sys.exit(-50)
 
-            params = Properties({'format': score})
+            params = Properties({'format': score, 'noScoreValue': ''})
             with open(params_file, 'r') as file:
                 params.load(file)
             score_column = params['format'].data
+            score_default_value = params['noScoreValue'].data
 
             score_header_file = score_directory + '/' + params['scoreDescFile'].data[1:-1]
             with open(score_header_file, 'r') as file:
@@ -90,6 +91,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 'p': opts.p,
                 'x': opts.x,
                 'score_column': score_column,
+                'default_value': score_default_value,
                 'direct': True,
                 'scores_file': tabix_files[0].replace('.tbi', '')
             }
