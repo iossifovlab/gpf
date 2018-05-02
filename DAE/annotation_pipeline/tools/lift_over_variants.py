@@ -50,8 +50,6 @@ class LiftOverAnnotator(AnnotatorBase):
         if len(args) == 1:
             args = args[0].split(':')
         chromosome, position = args
-        if 'chr' not in chromosome:
-            chromosome = 'chr{}'.format(chromosome)
         positions = map(lambda p: int(p) - 1, position.split('-'))
 
         convert_result = [self.lift_over.convert_coordinate(chromosome, p)
