@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import optparse
+import argparse
 
 from utilities import main
 from annotate_score_base import ScoreAnnotator
@@ -7,20 +7,20 @@ from annotate_score_base import ScoreAnnotator
 
 def get_argument_parser():
     desc = """Program to annotate variants with frequencies"""
-    parser = optparse.OptionParser(description=desc)
-    parser.add_option('-c', help='chromosome column number/name', action='store')
-    parser.add_option('-p', help='position column number/name', action='store')
-    parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
-    parser.add_option('-v', help='variant column number/name', action='store')
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('-c', help='chromosome column number/name', action='store')
+    parser.add_argument('-p', help='position column number/name', action='store')
+    parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_argument('-v', help='variant column number/name', action='store')
 
-    parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
+    parser.add_argument('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
 
-    parser.add_option('-F', '--scores-file', help='file containing the scores', type='string', action='store')
-    parser.add_option('--direct', help='the score files is tabix indexed', default=False, action='store_true')
+    parser.add_argument('-F', '--scores-file', help='file containing the scores', type=str, action='store')
+    parser.add_argument('--direct', help='the score files is tabix indexed', default=False, action='store_true')
 
-    parser.add_option('--score-column', help='column in score file that contains the score (default: all.altFreq)', default='all.altFreq', type='string', action='store')
-    parser.add_option('--default-value', help='default value if score for variant is not found', default='', type='string', action='store')
-    parser.add_option('--label', help='label of the new column; defaults to the name of the score column', type='string', action='store')
+    parser.add_argument('--score-column', help='column in score file that contains the score (default: all.altFreq)', default='all.altFreq', type=str, action='store')
+    parser.add_argument('--default-value', help='default value if score for variant is not found', default='', type=str, action='store')
+    parser.add_argument('--label', help='label of the new column; defaults to the name of the score column', type=str, action='store')
 
     return parser
 

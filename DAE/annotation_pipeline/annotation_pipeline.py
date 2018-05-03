@@ -2,7 +2,7 @@
 
 import os, sys
 import time, datetime
-import optparse
+import argparse
 import ConfigParser
 import common.config
 from box import Box
@@ -92,22 +92,22 @@ class MultiAnnotator(object):
 
 def get_argument_parser():
     desc = """Program to annotate variants combining multiple annotating tools"""
-    parser = optparse.OptionParser(description=desc, add_help_option=True)
-    parser.add_option('-H', help='no header in the input file', default=False,  action='store_true', dest='no_header')
-    parser.add_option('-c', '--config', help='config file location', action='store')
-    parser.add_option('--reannotate', help='columns in the input file to reannotate', action='store')
-    parser.add_option('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)', action='store')
-
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('-H', help='no header in the input file', default=False,  action='store_true', dest='no_header')
+    parser.add_argument('-c', '--config', help='config file location', required=True, action='store')
+    parser.add_argument('--reannotate', help='columns in the input file to reannotate', action='store')
+    parser.add_argument('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)', action='store')
+    parser.add_argument('infile', nargs='?', action='store',
+        default='-', help='path to input file; defaults to stdin')
+    parser.add_argument('outfile', nargs='?', action='store',
+        default='-', help='path to output file; defaults to stdout')
     return parser
 
 
 def main():
     start=time.time()
 
-    (opts, args) = get_argument_parser().parse_args()
-
-    infile = '-'
-    outfile = None
+    opts = get_argument_parser().parse_args()
 
     if not opts.config:
         sys.stderr.write("You should provide a config file location.\n")
@@ -116,25 +116,17 @@ def main():
         sys.stderr.write("The provided config file does not exist!\n")
         sys.exit(-78)
 
-    if len(args) > 0:
-        infile = args[0]
-
-    if infile != '-' and os.path.exists(infile) == False:
+    if opts.infile != '-' and os.path.exists(opts.infile) == False:
         sys.stderr.write("The given input file does not exist!\n")
         sys.exit(-78)
 
-    if len(args) > 1:
-        outfile = args[1]
-    if outfile=='-':
-        outfile = None
-
-    if infile=='-':
+    if opts.infile == '-':
         variantFile = sys.stdin
     elif opts.region:
-        tabix_file = pysam.TabixFile(infile)
+        tabix_file = pysam.TabixFile(opts.infile)
         variantFile = tabix_file.fetch(region=opts.region)
     else:
-        variantFile = open(infile)
+        variantFile = open(opts.infile)
 
     if opts.no_header == False:
         if opts.region is None:
@@ -147,8 +139,8 @@ def main():
     else:
         header = None
 
-    if outfile != None:
-        out = open(outfile, 'w')
+    if opts.outfile != '-':
+        out = open(opts.outfile, 'w')
     else:
         out = sys.stdout
 
@@ -159,12 +151,12 @@ def main():
 
     annotator.annotate_file(variantFile, out)
 
-    if infile != '-' and not opts.region:
+    if opts.infile != '-' and not opts.region:
         variantFile.close()
 
-    if outfile != None:
+    if opts.outfile != '-':
         out.close()
-        sys.stderr.write("Output file saved as: " + outfile + "\n")
+        sys.stderr.write("Output file saved as: " + opts.outfile + "\n")
 
     sys.stderr.write("The program was running for [h:m:s]: " + str(datetime.timedelta(seconds=round(time.time()-start,0))) + "\n")
 

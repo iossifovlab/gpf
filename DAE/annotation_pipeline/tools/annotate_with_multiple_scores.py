@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys, glob
-import optparse
+import argparse
 from collections import OrderedDict
 from box import Box
 from jproperties import Properties
@@ -11,24 +11,24 @@ from annotate_score_base import ScoreAnnotator
 
 def get_argument_parser():
     desc = """Program to annotate variants with multiple score files"""
-    parser = optparse.OptionParser(description=desc)
-    parser.add_option('-c', help='chromosome column number/name', action='store')
-    parser.add_option('-p', help='position column number/name', action='store')
-    parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('-c', help='chromosome column number/name', action='store')
+    parser.add_argument('-p', help='position column number/name', action='store')
+    parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
 
-    parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
+    parser.add_argument('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
 
-    parser.add_option('-D', '--scores-directory',
+    parser.add_argument('-D', '--scores-directory',
         help='directory containing the scores - each score should have its own subdirectory '
-              '(defaults to $GFD_DIR)',
-        type='string', action='store')
+             '(defaults to $GFD_DIR)',
+        action='store')
 
-    parser.add_option('--scores', help='comma separated list of scores to annotate with',
-        type='string', action='store')
-    parser.add_option('--labels',
+    parser.add_argument('--scores', help='comma separated list of scores to annotate with',
+        action='store')
+    parser.add_argument('--labels',
         help='comma separated list of labels for the new columns in the output file '
              '(defaults to score names)',
-        type='string', action='store')
+        action='store')
     return parser
 
 

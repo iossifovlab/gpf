@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 
 import sys
-import optparse
+import argparse
 from pyliftover import LiftOver
 from utilities import *
 
 def get_argument_parser():
     desc = """Program to annotate variants (substitutions & indels & cnvs)"""
-    parser = optparse.OptionParser(version='%prog version 2.2 10/October/2013', description=desc)
-    parser.add_option('-c', help='chromosome column number/name', action='store')
-    parser.add_option('-p', help='position column number/name', action='store')
-    parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
-    parser.add_option('-F', '--file', help='lift over description file path', type='string', action='store')
-    parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
-    parser.add_option('--new-c', help='name for the generated chromosome column', default='chrLiftOver', action='store')
-    parser.add_option('--new-p', help='name for the generated position column', default='positionLiftOver', action='store')
-    parser.add_option('--new-p', help='name for the generated location (chr:pos) column', default='locationLiftOver', action='store')
+    parser = argparse.ArgumentParser(version='%prog version 2.2 10/October/2013', description=desc)
+    parser.add_argument('-c', help='chromosome column number/name', action='store')
+    parser.add_argument('-p', help='position column number/name', action='store')
+    parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_argument('-F', '--file', help='lift over description file path', required=True, action='store')
+    parser.add_argument('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
+    parser.add_argument('--new-c', help='name for the generated chromosome column', default='chrLiftOver', action='store')
+    parser.add_argument('--new-p', help='name for the generated position column', default='positionLiftOver', action='store')
+    parser.add_argument('--new-x', help='name for the generated location (chr:pos) column', default='locationLiftOver', action='store')
     return parser
 
 
@@ -36,7 +36,7 @@ class LiftOverAnnotator(AnnotatorBase):
             self.argCols = [assign_values(opts.c, header),
                 assign_values(opts.p, header)]
             self._new_columns = ['new_c', 'new_p']
-            labels = [opts.new_x, opts.new_p]
+            labels = [opts.new_c, opts.new_p]
 
         self.header = self.header + labels
         self.lift_over = LiftOver(opts.file)

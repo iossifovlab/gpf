@@ -5,18 +5,18 @@
 
 from GenomicScores import load_genomic_scores
 from utilities import *
-import optparse
+import argparse
 
 def get_argument_parser():
     desc = """Program to annotate genomic positions with genomic scores (GERP, PhyloP, phastCons, nt, GC, cov)"""
-    parser = optparse.OptionParser(version='%prog version 1.0 12/December/2013', description=desc)
-    parser.add_option('-c', help='chromosome column number/name', action='store')
-    parser.add_option('--chr-format', help='chromosome format [hg19|GATK]', action='store')
-    parser.add_option('-p', help='position column number/name', action='store')
-    parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
-    parser.add_option('-F', help='genomic score file', action='store')
-    parser.add_option('-S', help='scores subset [string - colon separated]', action='store')
-    parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('-c', help='chromosome column number/name', action='store')
+    parser.add_argument('--chr-format', help='chromosome format [hg19|GATK]', action='store')
+    parser.add_argument('-p', help='position column number/name', action='store')
+    parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_argument('-F', help='genomic score file', action='store')
+    parser.add_argument('-S', help='scores subset [string - colon separated]', action='store')
+    parser.add_argument('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
     return parser
 
 class GenomicScoresAnnotator(AnnotatorBase):
