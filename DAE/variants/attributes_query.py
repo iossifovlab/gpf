@@ -1,4 +1,4 @@
-from lark import Lark, Tree
+from lark import Lark, Tree, InlineTransformer
 from lark.lexer import Token
 
 QUERY_GRAMMAR = """
@@ -6,17 +6,17 @@ QUERY_GRAMMAR = """
 
     ?expression: test
 
-    ?test: or
+    ?test: logical_or
 
-    ?or: and (" " "or" " " and)*
+    ?logical_or: logical_and (" " "or" " " logical_and)*
 
-    ?and: molecule (" " "and" " " molecule)*
+    ?logical_and: molecule (" " "and" " " molecule)*
 
     ?molecule: functions
-        | not
+        | negation
         | atom
 
-    not: "not" " " molecule
+    negation: "not" " " molecule -> negation
 
     ?functions: any | all | eq
 
@@ -58,3 +58,75 @@ def is_tree(object):
 
 def is_token(object):
     return isinstance(object, Token)
+
+
+def is_and(object):
+    return is_tree(object) and object.data == "logical_and"
+
+
+def is_or(object):
+    return is_tree(object) and object.data == "logical_or"
+
+
+def is_not(object):
+    return is_tree(object) and object.data == "negation"
+
+
+def is_all(object):
+    return is_tree(object) and object.data == "all"
+
+
+def is_any(object):
+    return is_tree(object) and object.data == "any"
+
+
+def is_eq(object):
+    return is_tree(object) and object.data == "eq"
+
+
+class Matcher(object):
+
+    def __init__(self, matcher):
+        assert matcher is not None
+        self.matcher = matcher
+
+    def match(self, array):
+        if not isinstance(array, set):
+            array = set(array)
+        return self.matcher(array)
+
+
+class QueryMatchTransformer(InlineTransformer):
+
+    def _get_func(self, name):
+        print("_get_func " + name)
+        return super(QueryMatchTransformer, self)._get_func(name)
+
+    def _transform_all_tokens(self, arguments):
+        return [self._transform_token(arg) for arg in arguments]
+
+    def _transform_token(self, argument):
+        if is_token(argument):
+            return lambda l: argument.value in l
+        assert callable(argument)
+        return argument
+
+    def negation(self, *args):
+        args = self._transform_all_tokens(args)
+        assert len(args) == 1
+        arg = args[0]
+        return lambda l: not arg(l)
+
+    def logical_and(self, *args):
+        args = self._transform_all_tokens(args)
+        return lambda l: all(f(l) for f in args)
+
+    def logical_or(self, *args):
+        args = self._transform_all_tokens(args)
+        return lambda l: any(f(l) for f in args)
+
+    def start(self, *args):
+        assert len(args) == 1
+        args = self._transform_all_tokens(args)
+        return Matcher(args[0])
+

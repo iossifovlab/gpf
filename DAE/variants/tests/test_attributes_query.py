@@ -1,5 +1,6 @@
 import pytest
-from variants.attributes_query import token, tree, is_tree, is_token
+from variants.attributes_query import token, tree, is_tree, is_token, \
+    is_and, is_not
 
 
 def test_can_match_simple_query(parser):
@@ -51,8 +52,8 @@ def test_can_match_simple_parentheses(parser):
 @pytest.mark.parametrize("input,expected_tree", [
     [
         "(some or other) and third",
-        tree("and", [
-            tree("or", [
+        tree("logical_and", [
+            tree("logical_or", [
                 token("some"),
                 token("other")
             ]),
@@ -61,9 +62,9 @@ def test_can_match_simple_parentheses(parser):
     ],
     [
         "some or (other and third)",
-        tree("or", [
+        tree("logical_or", [
             token("some"),
-            tree("and", [
+            tree("logical_and", [
                 token("other"),
                 token("third")
             ]),
@@ -160,9 +161,9 @@ def test_ambiguity_is_resolved_through_priority_correctly(
 
     assert tree_.data != "_ambig"
 
-    expected_tree = tree("and", [
-        tree("not", [token("some")]),
-        tree("not", [token("other")]),
+    expected_tree = tree("logical_and", [
+        tree("negation", [token("some")]),
+        tree("negation", [token("other")]),
     ])
     print(tree_.children[0].pretty())
     print(ambiguous_tree.children[0].pretty())
@@ -182,12 +183,98 @@ def test_can_match_not_and_binary_op(parser):
     tree = parser.parse("not some and not other")
     assert tree is not None
     print(tree)
-    assert tree.children[0].data == "and"
+    assert is_and(tree.children[0])
 
 
 def test_can_match_not_and_priority_expression(parser):
     tree = parser.parse("not (some and other)")
     assert tree is not None
     print(tree)
-    assert tree.children[0].data == "not"
+    assert is_not(tree.children[0])
 
+
+def parse_and_transform(parser, transformer, query, input):
+    tree = parser.parse(query)
+    print tree.pretty()
+    assert tree is not None
+    matcher = transformer.transform(tree)
+    assert matcher is not None
+
+    input_list = []
+    if input:
+        input_list = input.split(",")
+
+    return matcher.match(input_list)
+
+
+@pytest.mark.parametrize("input,output", [
+    ["one,two,three", False],
+    ["some,two,three", True],
+    ["some", True],
+    ["", False],
+])
+def test_can_filter_simple_tokens(parser, transformer, input, output):
+    assert parse_and_transform(parser, transformer, "some", input) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    ["one,two,three", True],
+    ["some,two,three", False],
+    ["some", False],
+    ["", True],
+])
+def test_can_filter_not(parser, transformer, input, output):
+    assert parse_and_transform(parser, transformer, "not some", input) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    ["one,two,three", False],
+    ["some,two,three", False],
+    ["other,two,three", False],
+    ["some,other,three", True],
+    ["", False]
+])
+def test_can_filter_and(parser, transformer, input, output):
+    assert parse_and_transform(
+        parser, transformer, "some and other", input
+    ) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    ["one,two,three", False],
+    ["some,two,three", True],
+    ["other,two,three", True],
+    ["some,other,three", True],
+    ["", False]
+])
+def test_can_filter_or(parser, transformer, input, output):
+    assert parse_and_transform(
+        parser, transformer, "some or other", input
+    ) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    ["one,two,three", True],
+    ["some,two,three", False],
+    ["other,two,three", False],
+    ["some,other,three", False],
+    ["", True]
+])
+def test_can_filter_complex_query(parser, transformer, input, output):
+    assert parse_and_transform(
+        parser, transformer, "not some and not other", input
+    ) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    ["one,two,three", False],
+    ["some,two,three", True],
+    ["other,two,third", True],
+    ["other,two,three", False],
+    ["some,other,three", True],
+    ["", False]
+])
+def test_can_filter_very_complex_query(parser, transformer, input, output):
+    assert parse_and_transform(
+        parser, transformer, "some or (other and third)", input
+    ) == output
