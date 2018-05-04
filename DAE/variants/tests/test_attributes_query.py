@@ -278,3 +278,57 @@ def test_can_filter_very_complex_query(parser, transformer, input, output):
     assert parse_and_transform(
         parser, transformer, "some or (other and third)", input
     ) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    ["one,two,three", False],
+    ["some,two,three", False],
+    ["other,two,three", False],
+    ["some,other,three", True],
+    ["", False]
+])
+def test_can_filter_simple_all(parser, transformer, input, output):
+    assert parse_and_transform(
+        parser, transformer, "all(some, other)", input
+    ) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    ["one,two,three", False],
+    ["some,two,three", False],
+    ["other,two,three", True],
+    ["some,other,three", True],
+    ["", False]
+])
+def test_can_filter_complex_all(parser, transformer, input, output):
+    assert parse_and_transform(
+        parser, transformer, "all(some, other) or all(other, two)", input
+    ) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    ["one,two,three", False],
+    ["some,two,three", True],
+    ["other,two,three", True],
+    ["some,other,three", True],
+    ["", False]
+])
+def test_can_filter_simple_any(parser, transformer, input, output):
+    print parser.parse("any(some, other)")
+    assert parse_and_transform(
+        parser, transformer, "any(some, other)", input
+    ) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    ["one,two", False],
+    ["some,two", False],
+    ["other,two", False],
+    ["some,other", True],
+    ["some,other,third", False],
+    ["", False]
+])
+def test_can_filter_simple_eq(parser, transformer, input, output):
+    assert parse_and_transform(
+        parser, transformer, "eq(some, other)", input
+    ) == output

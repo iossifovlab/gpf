@@ -18,16 +18,16 @@ QUERY_GRAMMAR = """
 
     ?functions: any | all | eq
 
-    any: "any"i "(" arglist ")"
+    any: "any"i "(" _arglist ")"
 
-    all: "all"i "(" arglist ")"
+    all: "all"i "(" _arglist ")"
 
-    eq: "eq"i "(" arglist ")"
+    eq: "eq"i "(" _arglist ")"
 
     ?atom: "(" logical_or ")"
         | NAME
 
-    arglist: (NAME "," )* NAME [","]
+    _arglist: (NAME "," )* NAME [","]
 
     %import common.CNAME -> NAME
     %import common.WS_INLINE -> WS
@@ -103,3 +103,14 @@ class QueryMatchTransformer(InlineTransformer):
         args = self._transform_all_tokens(args)
         return Matcher(self.tree, self.parser, args[0])
 
+    def eq(self, *args):
+        for arg in args:
+            assert is_token(arg)
+        to_match = {arg.value for arg in args}
+        return lambda x: x == to_match
+
+    def any(self, *args):
+        return self.logical_or(*args)
+
+    def all(self, *args):
+        return self.logical_and(*args)
