@@ -1,6 +1,6 @@
 import pytest
-from variants.attributes_query import token, tree, is_tree, is_token, \
-    is_and, is_not
+from variants.attributes_query_builder import is_token, and_node, or_node, \
+    is_tree, not_node, token, is_and, is_not
 
 
 def test_can_match_simple_query(parser):
@@ -52,8 +52,8 @@ def test_can_match_simple_parentheses(parser):
 @pytest.mark.parametrize("input,expected_tree", [
     [
         "(some or other) and third",
-        tree("logical_and", [
-            tree("logical_or", [
+        and_node([
+            or_node([
                 token("some"),
                 token("other")
             ]),
@@ -62,9 +62,9 @@ def test_can_match_simple_parentheses(parser):
     ],
     [
         "some or (other and third)",
-        tree("logical_or", [
+        or_node([
             token("some"),
-            tree("logical_and", [
+            and_node([
                 token("other"),
                 token("third")
             ]),
@@ -161,9 +161,9 @@ def test_ambiguity_is_resolved_through_priority_correctly(
 
     assert tree_.data != "_ambig"
 
-    expected_tree = tree("logical_and", [
-        tree("negation", [token("some")]),
-        tree("negation", [token("other")]),
+    expected_tree = and_node([
+        not_node([token("some")]),
+        not_node([token("other")]),
     ])
     print(tree_.children[0].pretty())
     print(ambiguous_tree.children[0].pretty())
@@ -197,7 +197,7 @@ def parse_and_transform(parser, transformer, query, input):
     tree = parser.parse(query)
     print tree.pretty()
     assert tree is not None
-    matcher = transformer.transform(tree)
+    matcher = transformer(parser).transform(tree)
     assert matcher is not None
 
     input_list = []

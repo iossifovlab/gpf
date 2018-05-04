@@ -327,4 +327,4 @@ def parser_with_ambiguity():
 
 @pytest.fixture()
 def transformer():
-    return QueryMatchTransformer()
+    return QueryMatchTransformer

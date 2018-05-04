@@ -1,12 +1,10 @@
-from lark import Lark, Tree, InlineTransformer
-from lark.lexer import Token
+from lark import Lark, InlineTransformer
+from variants.attributes_query_builder import is_token
 
 QUERY_GRAMMAR = """
     start: expression
 
-    ?expression: test
-
-    ?test: logical_or
+    ?expression: logical_or
 
     ?logical_or: logical_and (" " "or" " " logical_and)*
 
@@ -26,12 +24,10 @@ QUERY_GRAMMAR = """
 
     eq: "eq"i "(" arglist ")"
 
-    ?atom: "(" test ")"
+    ?atom: "(" logical_or ")"
         | NAME
 
-    arglist: (arg "," )* arg [","]
-
-    arg: NAME
+    arglist: (NAME "," )* NAME [","]
 
     %import common.CNAME -> NAME
     %import common.WS_INLINE -> WS
@@ -44,59 +40,36 @@ parser_with_ambiguity = Lark(QUERY_GRAMMAR, ambiguity='explicit')
 parser = Lark(QUERY_GRAMMAR)
 
 
-def token(value):
-    return Token("NAME", value)
-
-
-def tree(operation, children):
-    return Tree(operation, children)
-
-
-def is_tree(object):
-    return isinstance(object, Tree)
-
-
-def is_token(object):
-    return isinstance(object, Token)
-
-
-def is_and(object):
-    return is_tree(object) and object.data == "logical_and"
-
-
-def is_or(object):
-    return is_tree(object) and object.data == "logical_or"
-
-
-def is_not(object):
-    return is_tree(object) and object.data == "negation"
-
-
-def is_all(object):
-    return is_tree(object) and object.data == "all"
-
-
-def is_any(object):
-    return is_tree(object) and object.data == "any"
-
-
-def is_eq(object):
-    return is_tree(object) and object.data == "eq"
-
-
 class Matcher(object):
 
-    def __init__(self, matcher):
+    def __init__(self, tree, parser, matcher):
         assert matcher is not None
+        assert tree is not None
+        assert parser is not None
+
         self.matcher = matcher
+        self.tree = tree
+        self.parser = parser
 
     def match(self, array):
         if not isinstance(array, set):
             array = set(array)
         return self.matcher(array)
 
+    def pretty(self):
+        return self.tree.pretty()
+
 
 class QueryMatchTransformer(InlineTransformer):
+    
+    def __init__(self, parser):
+        super(QueryMatchTransformer, self).__init__()
+        self.parser = parser
+        self.tree = None
+
+    def transform(self, tree):
+        self.tree = tree
+        return super(QueryMatchTransformer, self).transform(tree)
 
     def _get_func(self, name):
         print("_get_func " + name)
@@ -128,5 +101,5 @@ class QueryMatchTransformer(InlineTransformer):
     def start(self, *args):
         assert len(args) == 1
         args = self._transform_all_tokens(args)
-        return Matcher(args[0])
+        return Matcher(self.tree, self.parser, args[0])
 
