@@ -8,6 +8,57 @@ from datasets.tests.requests import EXAMPLE_QUERY_SD, EXAMPLE_QUERY_SSC,\
 import copy
 
 
+def test_get_denovo_variants_vip(vip):
+
+    query = {
+        "datasetId": "VIP",
+        "genomicScores": [],
+        "pedigreeSelector": {
+            "id": "16pstatus",
+            "checkedValues": [
+                "triplication",
+            ]
+        },
+        "presentInParent": {
+            "presentInParent": [
+                "neither"
+            ],
+        },
+        "gender": [
+            "female",
+            "male",
+            "unspecified"
+        ],
+        "variantTypes": [
+            "sub",
+            "ins",
+            "del"
+        ],
+        "effectTypes": [
+            "Nonsense",
+            "Frame-shift",
+            "Splice-site"
+        ]
+    }
+
+    legend = vip.get_pedigree_selector(**query)
+    assert legend is not None
+
+    vs = vip.get_variants_preview(**query)
+
+    res = [v for v in vs]
+    assert 2 == len(res)
+
+    vv = {k: v for (k, v) in zip(res[0], res[1])}
+    print(vv)
+    pedigree = vv['genotype']
+    print(pedigree)
+
+    assert len(pedigree) == 5
+    p = pedigree[2]
+    assert p[1] == '14752.x12'
+
+
 def test_get_denovo_variants_sd(sd):
     query = copy.deepcopy(EXAMPLE_QUERY_SD)
     query['familyIds'] = ['11563']
