@@ -6,7 +6,7 @@
                 </gpf-table-header>
                 <gpf-table-header>
                     <gpf-table-subheader *ngFor="let slot of column.slots" caption="{{ slot.name }}"
-                      [comparator]=comparator(slot.source)>
+                      [comparator]=comparator(slot.id)>
                     </gpf-table-subheader>
                 </gpf-table-header>
                 <gpf-table-content>
