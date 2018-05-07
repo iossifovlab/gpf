@@ -4,7 +4,7 @@ Created on Oct 21, 2015
 @author: lubo
 '''
 from Variant import parseGeneEffect, filter_gene_effect, Variant,\
-    present_in_parent_filter, present_in_child_filter
+    present_in_parent_filter, present_in_child_filter, chromosome_prefix
 import gzip
 import pysam
 import copy
@@ -21,6 +21,8 @@ class TransmissionLegacy(TransmissionConfig):
         super(TransmissionLegacy, self).__init__(study, call_set)
         assert self._get_params("format") == 'legacy' or \
             self._get_params('indexFile') is not None
+
+        self.CHROMOSOME_PREFIX = chromosome_prefix()
 
     def genomic_scores_filter(self, atts, genomicScores):
         try:
@@ -146,6 +148,8 @@ class TransmissionLegacy(TransmissionConfig):
 
             for reg in regionS:
                 try:
+                    if self.CHROMOSOME_PREFIX not in reg:
+                        reg = self.CHROMOSOME_PREFIX + reg
                     f = tbf.fetch(reg)
                     for v in self.filter_transmitted_variants(
                             f, colNms,

@@ -3,6 +3,8 @@ Created on Oct 21, 2015
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import numpy as np
 import operator
 import logging
@@ -10,6 +12,25 @@ import logging
 from Family import Person
 
 LOGGER = logging.getLogger(__name__)
+
+
+def chromosome_prefix(genomes_db=None):
+    if genomes_db is None:
+        from DAE import genomesDB
+        genome = genomesDB.get_genome()  # @UndefinedVariable
+    else:
+        genome = genomes_db.get_genome()
+
+    assert genome is not None
+    with open(genome.genomicIndexFile) as genomic_index:
+        chr_names = [ln.split("\t")[0] for ln in genomic_index]
+        chr1 = chr_names[0]
+        assert chr1 == "1" or chr1 == "chr1"
+        if "chr" in chr1:
+            return "chr"
+        else:
+            return ""
+
 
 
 def normalRefCopyNumber(location, gender):
@@ -209,7 +230,7 @@ class Variant:
         except AttributeError:
             pass
         self._familyId = self.atts.get(self.familyIdAtt,
-            self.atts.get(self.sampleIdAtt))
+                                       self.atts.get(self.sampleIdAtt))
         self._familyId = str(
             self._familyId) if self._familyId else self._familyId
         return self._familyId
