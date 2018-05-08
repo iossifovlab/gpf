@@ -193,18 +193,21 @@ def test_can_match_not_and_priority_expression(parser):
     assert is_not(tree.children[0])
 
 
-def parse_and_transform(parser, transformer, query, input):
+def parse_and_transform(
+        parser, transformer, query, input, token_converter=None):
     tree = parser.parse(query)
     print tree.pretty()
     assert tree is not None
-    matcher = transformer(parser).transform(tree)
+    matcher = transformer(parser, token_converter).transform(tree)
     assert matcher is not None
 
-    input_list = []
-    if input:
-        input_list = input.split(",")
+    if not input:
+        input = []
 
-    return matcher.match(input_list)
+    if isinstance(input, str):
+        input = input.split(",")
+
+    return matcher.match(input)
 
 
 @pytest.mark.parametrize("input,output", [
@@ -332,3 +335,53 @@ def test_can_filter_simple_eq(parser, transformer, input, output):
     assert parse_and_transform(
         parser, transformer, "eq(some, other)", input
     ) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    [[1], True],
+    [[1, 2, 3, 4], True],
+    [[2, 3, 4], False],
+    [[], False]
+])
+def test_token_simple_transformer_works(parser, transformer, input, output):
+    assert parse_and_transform(
+        parser, transformer, "some", input, token_converter=lambda _: 1
+    ) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    [[1], False],
+    [[1, 2, 3, 4], True],
+    [[2, 3, 4], False],
+    [[], False]
+])
+def test_token_and_transformer(parser, transformer, input, output):
+    token_map = {
+        "some": 1,
+        "other": 2
+    }
+
+    assert parse_and_transform(
+        parser, transformer, "some and other", input,
+        token_converter=lambda x: token_map[x]
+    ) == output
+
+
+@pytest.mark.parametrize("input,output", [
+    [[1], False],
+    [[1, 2, 3, 4], False],
+    [[2, 3, 4], False],
+    [[1, 2], True],
+    [[], False]
+])
+def test_token_eq_transformer(parser, transformer, input, output):
+    token_map = {
+        "some": 1,
+        "other": 2
+    }
+
+    assert parse_and_transform(
+        parser, transformer, "eq(some, other)", input,
+        token_converter=lambda x: token_map[x]
+    ) == output
+

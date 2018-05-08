@@ -1,4 +1,8 @@
+import functools
+
 from lark import Lark, InlineTransformer
+
+from variants.attributes import Role, Inheritance, VariantType, Sex
 from variants.attributes_query_builder import is_token
 
 QUERY_GRAMMAR = """
@@ -60,27 +64,32 @@ class Matcher(object):
         return self.tree.pretty()
 
 
-class QueryMatchTransformer(InlineTransformer):
+class QueryTransformer(InlineTransformer):
     
-    def __init__(self, parser):
-        super(QueryMatchTransformer, self).__init__()
+    def __init__(self, parser, token_converter=None):
+        super(QueryTransformer, self).__init__()
+
+        if token_converter is None:
+            token_converter = lambda x: x
+
         self.parser = parser
         self.tree = None
+        self.token_transformer = token_converter
 
     def transform(self, tree):
         self.tree = tree
-        return super(QueryMatchTransformer, self).transform(tree)
+        return super(QueryTransformer, self).transform(tree)
 
-    def _get_func(self, name):
-        print("_get_func " + name)
-        return super(QueryMatchTransformer, self)._get_func(name)
+    # def _get_func(self, name):
+    #     print("_get_func " + name)
+    #     return super(QueryTransformer, self)._get_func(name)
 
     def _transform_all_tokens(self, arguments):
         return [self._transform_token(arg) for arg in arguments]
 
     def _transform_token(self, argument):
         if is_token(argument):
-            return lambda l: argument.value in l
+            return lambda l: self.token_transformer(argument.value) in l
         assert callable(argument)
         return argument
 
@@ -105,8 +114,8 @@ class QueryMatchTransformer(InlineTransformer):
 
     def eq(self, *args):
         for arg in args:
-            assert is_token(arg)
-        to_match = {arg.value for arg in args}
+            assert is_token(arg), "eq expects only elements, not an expression"
+        to_match = {self.token_transformer(arg.value) for arg in args}
         return lambda x: x == to_match
 
     def any(self, *args):
@@ -114,3 +123,30 @@ class QueryMatchTransformer(InlineTransformer):
 
     def all(self, *args):
         return self.logical_and(*args)
+
+
+def roles_converter(a):
+    return Role.from_name(a)
+
+
+def sex_converter(a):
+    return Sex.from_name(a)
+
+
+def inheritance_converter(a):
+    return Inheritance.from_name(a)
+
+
+def variant_type_converter(a):
+    return VariantType.from_name(a)
+
+
+RoleQuery = functools.partial(QueryTransformer, token_converter=roles_converter)
+
+SexQuery = functools.partial(QueryTransformer, token_converter=sex_converter)
+
+InheritanceQuery = functools.partial(
+    QueryTransformer, token_converter=inheritance_converter)
+
+VariantTypeQuery = functools.partial(
+    QueryTransformer, token_converter=variant_type_converter)
