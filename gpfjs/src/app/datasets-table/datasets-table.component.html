@@ -43,11 +43,11 @@
         <gpf-table-header caption="Users with access"></gpf-table-header>
         <gpf-table-content>
           <gpf-table-subcontent>
-            <span *gpfTableCellContent="let data">
+            <div *gpfTableCellContent="let data" class="height-limited">
               <div *ngFor="let user of data.users">
                 {{ user.email }}
               </div>
-            </span>
+            </div>
           </gpf-table-subcontent>
         </gpf-table-content>
       </gpf-table-column>
