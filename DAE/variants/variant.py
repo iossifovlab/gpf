@@ -457,11 +457,11 @@ class FamilyVariant(object):
         return self.summary.reference
 
     @property
-    def alt_details(self):
+    def details(self):
         """
         1-based list of `VariantDetails`, that describes variant.
         """
-        return self.summary.alt_details
+        return self.summary.details
 
     @property
     def effects(self):
