@@ -111,6 +111,8 @@ class ScoreAnnotator(AnnotatorBase):
             sys.stderr.write("You should provide a score file location.\n")
             sys.exit(-78)
         else:
+            if self.opts.default_value is None:
+                self.opts.default_value = ''
             if self.opts.direct:
                 self.file = DirectAccess(self.opts.scores_file,
                     self.opts.default_value, self.opts.score_column,
