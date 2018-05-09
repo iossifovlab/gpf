@@ -98,7 +98,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
             self.annotators[score] = ScoreAnnotator(score_annotator_opts,
-                list(self.header), [], score_header)
+                list(self.header), [], score_header, score_header[:3])
 
         return self.annotators[score]
 

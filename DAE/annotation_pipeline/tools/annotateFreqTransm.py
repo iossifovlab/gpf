@@ -33,7 +33,7 @@ class FrequencyAnnotator(ScoreAnnotator):
         if opts.score_column is None:
             opts.score_column = 'all.altFreq'
         super(FrequencyAnnotator, self).__init__(opts, header, [opts.v],
-            ['chr', 'position', 'position', 'variant'])
+            None, ['chr', 'position', 'position', 'variant'])
 
 if __name__ == "__main__":
     main(get_argument_parser(), FrequencyAnnotator)

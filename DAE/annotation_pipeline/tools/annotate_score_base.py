@@ -10,11 +10,14 @@ class IterativeAccess:
 
     XY_INDEX = {'X': 23, 'Y': 24}
 
-    def __init__(self, score_file_name, score_default_value, score_column,
-            chr_column, pos_begin_column, pos_end_column, *search_columns):
+    def __init__(self, score_file_name, score_file_header, score_default_value,
+            score_column, chr_column, pos_begin_column, pos_end_column,
+            *search_columns):
         self.score_default_value = score_default_value
+        self.header = score_file_header
         self.file = gzip.open(score_file_name, 'rb')
-        self.header = self.file.readline().rstrip('\n').split('\t')
+        if self.header is None:
+            self.header = self.file.readline().rstrip('\n').split('\t')
         self.chr_index = self.header.index(chr_column)
         self.pos_begin_index = self.header.index(pos_begin_column)
         self.pos_end_index = self.header.index(pos_end_column)
@@ -60,14 +63,16 @@ class IterativeAccess:
 
 class DirectAccess:
 
-    def __init__(self, score_file_name, score_default_value, score_column,
-            *search_columns):
+    def __init__(self, score_file_name, score_file_header, score_default_value,
+            score_column, *search_columns):
         self.score_default_value = score_default_value
-        with gzip.open(score_file_name) as file:
-            self.header = file.readline().strip('\n\r').split('\t')
+        self.header = score_file_header
+        if self.header is None:
+            with gzip.open(score_file_name, 'rb') as file:
+                self.header = file.readline().rstrip('\n').split('\t')
         self.search_columns = search_columns
         self.search_indices = [self.header.index(col)
-                                  for col in search_columns]
+                               for col in search_columns]
         self.score_index = self.header.index(score_column)
         self.file = pysam.Tabixfile(score_file_name)
 
@@ -85,10 +90,12 @@ class DirectAccess:
 class ScoreAnnotator(AnnotatorBase):
 
     def __init__(self, opts, header=None, search_columns=[],
-            columns_in_score_file=['chr', 'position', 'position']):
+            score_file_header=None,
+            score_file_index_columns=['chr', 'position', 'position']):
         super(ScoreAnnotator, self).__init__(opts, header)
         self.search_columns = search_columns
-        self.columns_in_score_file = columns_in_score_file
+        self.score_file_header = score_file_header
+        self.score_file_index_columns = score_file_index_columns
         self._init_cols()
         self._init_score_file()
         self.header.append(opts.label if opts.label else opts.score_column)
@@ -115,12 +122,14 @@ class ScoreAnnotator(AnnotatorBase):
                 self.opts.default_value = ''
             if self.opts.direct:
                 self.file = DirectAccess(self.opts.scores_file,
+                    self.score_file_header,
                     self.opts.default_value, self.opts.score_column,
-                    *self.columns_in_score_file[3:])
+                    *self.score_file_index_columns[3:])
             else:
                 self.file = IterativeAccess(self.opts.scores_file,
+                    self.score_file_header,
                     self.opts.default_value, self.opts.score_column,
-                    *self.columns_in_score_file)
+                    *self.score_file_index_columns)
 
     @property
     def new_columns(self):
