@@ -3,47 +3,49 @@
 # Oct 9th 2013
 # written by Ewa
 
-import optparse
+import argparse
 import re, os.path, sys
 import GenomeAccess
 from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import VariantAnnotator as VariantAnnotation
 from utilities import *
 
-def set_order(option, opt_str, value, parser):
-    setattr(parser.values, option.dest, value)
-    if not hasattr(parser.values, 'order'):
-        parser.values.order = []
-    parser.values.order.append(option.dest)
+class ColumnOrderAction(argparse.Action):
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
+        if not hasattr(namespace, 'order'):
+            namespace.order = []
+        namespace.order.append(self.dest)
 
 def get_argument_parser():
     desc = """Program to annotate variants (substitutions & indels & cnvs)"""
-    parser = optparse.OptionParser(version='%prog version 2.2 10/October/2013', description=desc)
-    parser.add_option('-c', help='chromosome column number/name', action='store')
-    parser.add_option('-p', help='position column number/name', action='store')
-    parser.add_option('-x', help='location (chr:pos) column number/name', action='store')
-    parser.add_option('-v', help='variant column number/name', action='store')
-    parser.add_option('-a', help='alternative allele (FOR SUBSTITUTIONS ONLY) column number/name', action='store')
-    parser.add_option('-r', help='reference allele (FOR SUBSTITUTIONS ONLY) column number/name', action='store')
-    parser.add_option('-t', help='type of mutation column number/name', action='store')
-    parser.add_option('-q', help='seq column number/name', action='store')
-    parser.add_option('-l', help ='length column number/name', action='store')
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('-c', help='chromosome column number/name', action='store')
+    parser.add_argument('-p', help='position column number/name', action='store')
+    parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_argument('-v', help='variant column number/name', action='store')
+    parser.add_argument('-a', help='alternative allele (FOR SUBSTITUTIONS ONLY) column number/name', action='store')
+    parser.add_argument('-r', help='reference allele (FOR SUBSTITUTIONS ONLY) column number/name', action='store')
+    parser.add_argument('-t', help='type of mutation column number/name', action='store')
+    parser.add_argument('-q', help='seq column number/name', action='store')
+    parser.add_argument('-l', help ='length column number/name', action='store')
 
-    parser.add_option('-P', help='promoter length', default=0, action='store', type='int', dest = "prom_len")
-    parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
+    parser.add_argument('-P', help='promoter length', default=0, action='store', type=int, dest = "prom_len")
+    parser.add_argument('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
 
-    parser.add_option('-T', help='gene models ID <RefSeq, CCDS, knownGene>', type='string', action='store')
-    parser.add_option('--Traw', help='outside gene models file path', type='string', action='store')
-    parser.add_option('--TrawFormat', help='outside gene models format (refseq, ccds, knowngene)', type='string', action='store')
+    parser.add_argument('-T', help='gene models ID <RefSeq, CCDS, knownGene>', type=str, action='store')
+    parser.add_argument('--Traw', help='outside gene models file path', type=str, action='store')
+    parser.add_argument('--TrawFormat', help='outside gene models format (refseq, ccds, knowngene)', type=str, action='store')
 
-    parser.add_option('-G', help='genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19> ', type='string', action='store')
-    parser.add_option('--Graw', help='outside genome file', type='string', action='store')
+    parser.add_argument('-G', help='genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19> ', type=str, action='store')
+    parser.add_argument('--Graw', help='outside genome file', type=str, action='store')
 
-    parser.add_option('-I', help='geneIDs mapping file; use None for no gene name mapping', default="default", type='string', action='store')
+    parser.add_argument('-I', help='geneIDs mapping file; use None for no gene name mapping', default="default", type=str, action='store')
 
-    parser.add_option('--effect-type', help='name to use for effect type column', type='string', action='callback', callback=set_order)
-    parser.add_option('--effect-gene', help='name to use for effect gene column', type='string', action='callback', callback=set_order)
-    parser.add_option('--effect-details', help='name to use for effect details column', type='string', action='callback', callback=set_order)
+    parser.add_argument('--effect-type', help='name to use for effect type column', type=str, action=ColumnOrderAction)
+    parser.add_argument('--effect-gene', help='name to use for effect gene column', type=str, action=ColumnOrderAction)
+    parser.add_argument('--effect-details', help='name to use for effect details column', type=str, action=ColumnOrderAction)
 
     return parser
 

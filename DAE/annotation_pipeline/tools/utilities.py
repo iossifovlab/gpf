@@ -63,30 +63,26 @@ def assign_values(param, header=None):
         param = give_column_number(param, header)
     return(param)
 
+
+
 def main(argument_parser, annotator_factory):
     start=time.time()
 
-    (opts, args) = argument_parser.parse_args()
+    argument_parser.add_argument('infile', nargs='?', action='store',
+        default='-', help='path to input file; defaults to stdin')
+    argument_parser.add_argument('outfile', nargs='?', action='store',
+        default='-', help='path to output file; defaults to stdout')
 
-    infile = '-'
-    outfile = None
+    opts = argument_parser.parse_args()
 
-    if len(args) > 0:
-        infile = args[0]
-
-    if infile != '-' and os.path.exists(infile) == False:
+    if opts.infile != '-' and os.path.exists(opts.infile) == False:
         sys.stderr.write("The given input file does not exist!\n")
         sys.exit(-78)
 
-    if len(args) > 1:
-        outfile = args[1]
-    if outfile=='-':
-        outfile = None
-
-    if infile=='-':
+    if opts.infile=='-':
         variantFile = sys.stdin
     else:
-        variantFile = open(infile)
+        variantFile = open(opts.infile)
 
     if opts.no_header == False:
         header_str = variantFile.readline()[:-1]
@@ -94,8 +90,8 @@ def main(argument_parser, annotator_factory):
     else:
         header = None
 
-    if outfile != None:
-        out = open(outfile, 'w')
+    if opts.outfile != '-':
+        out = open(opts.outfile, 'w')
     else:
         out = sys.stdout
 
@@ -106,11 +102,11 @@ def main(argument_parser, annotator_factory):
     out.write("# " + time.asctime() + "\n")
     out.write("# " + " ".join(sys.argv[1:]) + "\n")
 
-    if infile != '-':
+    if opts.infile != '-':
         variantFile.close()
 
-    if outfile != None:
+    if opts.outfile != '-':
         out.close()
-        sys.stderr.write("Output file saved as: " + outfile + "\n")
+        sys.stderr.write("Output file saved as: " + opts.outfile + "\n")
 
     sys.stderr.write("The program was running for [h:m:s]: " + str(datetime.timedelta(seconds=round(time.time()-start,0))) + "\n")

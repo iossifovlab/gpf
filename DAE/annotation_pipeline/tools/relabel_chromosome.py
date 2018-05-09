@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 
 import sys
-import optparse
+import argparse
 from utilities import *
 
 def get_argument_parser():
     desc = """Program to relabel chromosome with or without 'chr' prefix"""
-    parser = optparse.OptionParser(description=desc)
-    parser.add_option('-c', help='chromosome column number/name', action='store')
-    parser.add_option('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
-    parser.add_option('--new-c', help='name for the generated chromosome column', default='relabledChr', action='store')
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('-c', help='chromosome column number/name', action='store')
+    parser.add_argument('-H', help='no header in the input file', default=False,  action='store_true', dest='no_header')
+    parser.add_argument('--new-c', help='name for the generated chromosome column', default='relabledChr', action='store')
     return parser
 
 
