@@ -1,6 +1,7 @@
 import functools
 
 from lark import Lark, InlineTransformer
+from lark.reconstruct import Reconstructor
 
 from variants.attributes import Role, Inheritance, VariantType, Sex
 from variants.attributes_query_builder import is_token
@@ -54,6 +55,7 @@ class Matcher(object):
         self.matcher = matcher
         self.tree = tree
         self.parser = parser
+        self._reconstructor = Reconstructor(parser)
 
     def match(self, array):
         if not isinstance(array, set):
@@ -62,6 +64,9 @@ class Matcher(object):
 
     def pretty(self):
         return self.tree.pretty()
+
+    def query_str(self):
+        self._reconstructor.reconstruct(self.tree)
 
 
 class QueryTransformer(InlineTransformer):
