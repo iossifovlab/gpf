@@ -27,7 +27,7 @@ def test_check_overlap1(data_vcf19, family_ids):
             v, mat2str(v.gt), mat2str(v.best_st),
             ",".join([p.sample_id for p in v.members_in_order]))
         for aa in v.falt_alleles:
-            print("\t", aa, ":>", v.alt_details[aa])
+            print("\t", aa, ":>", v.details[aa])
 
 
 @pytest.mark.skip
@@ -49,7 +49,7 @@ def test_check_overlap2(data_vcf19, family_ids):
             v, mat2str(v.gt), mat2str(v.best_st),
             ",".join([p.sample_id for p in v.members_in_order]))
         for aa in v.falt_alleles:
-            print("\t", aa, ":>", v.alt_details[aa])
+            print("\t", aa, ":>", v.details[aa])
 
 
 @pytest.mark.skip
@@ -70,4 +70,4 @@ def test_check_overlap1_12901_11391_simple(data_vcf19, family_ids):
             v, mat2str(v.gt), mat2str(v.best_st),
             ",".join([p.sample_id for p in v.members_in_order]))
         for aa in v.falt_alleles:
-            print("\t", aa, ":>", v.alt_details[aa])
+            print("\t", aa, ":>", v.details[aa])

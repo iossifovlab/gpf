@@ -44,5 +44,5 @@ def test_query_by_variant_type(nvcf19f, variant_types, query):
 
     assert len(vs) > 0
     for v in vs:
-        vts = set([ad.variant_type for ad in v.alt_details])
+        vts = set([ad.variant_type for ad in v.details])
         assert variant_types.intersection(vts)

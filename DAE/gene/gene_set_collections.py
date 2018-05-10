@@ -8,7 +8,7 @@ from __future__ import print_function
 import os
 import traceback
 import sqlite3
-from itertools import groupby, chain, product
+from itertools import chain, product
 from collections import OrderedDict
 import cPickle
 import logging
