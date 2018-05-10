@@ -1,4 +1,5 @@
 import pytest
+
 from variants.attributes_query_builder import is_token, and_node, or_node, \
     is_tree, not_node, token, is_and, is_not
 
@@ -384,4 +385,14 @@ def test_token_eq_transformer(parser, transformer, input, output):
         parser, transformer, "eq(some, other)", input,
         token_converter=lambda x: token_map[x]
     ) == output
+
+
+@pytest.mark.skip("query_str causes endless loop")
+def test_can_reconstruct_single_token(parser, transformer):
+    query = "not some and not other"
+    tree = parser.parse(query)
+    print(tree, tree.data, tree.children)
+    matcher = transformer(parser).transform(tree)
+
+    assert matcher.query_str() == query
 
