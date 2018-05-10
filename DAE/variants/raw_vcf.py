@@ -11,8 +11,8 @@ import pandas as pd
 from variants.loader import RawVariantsLoader
 from variants.family import FamiliesBase
 from variants.configure import Configure
-from variants.attributes import RoleQuery, SexQuery, InheritanceQuery,\
-    VariantTypeQuery
+from variants.attributes_query import RoleQuery, SexQuery, InheritanceQuery,\
+    VariantTypeQuery, parser
 from variants.family import VcfFamily
 # from variants.variant import VariantFactorySingle
 from variants.variant import VariantFactory
@@ -192,7 +192,7 @@ class RawFamilyVariants(FamiliesBase):
                 return False
         if 'variant_type' in kwargs:
             query = kwargs['variant_type']
-            if not query.match([ad.variant_type for ad in v.alt_details]):
+            if not query.match([ad.variant_type for ad in v.details]):
                 return False
 
         if 'real_attr_filter' in kwargs:
@@ -213,21 +213,25 @@ class RawFamilyVariants(FamiliesBase):
         vs = self.wrap_variants(annot_df)
 
         if 'roles' in kwargs and isinstance(kwargs['roles'], str):
-            query = RoleQuery.parse(kwargs['roles'])
-            kwargs['roles'] = query
+            tree = parser.parse(kwargs['roles'])
+            matcher = RoleQuery(parser).transform(tree)
+            kwargs['roles'] = matcher
 
         if 'sexes' in kwargs and isinstance(kwargs['sexes'], str):
-            query = SexQuery.parse(kwargs['sexes'])
-            kwargs['sexes'] = query
+            tree = parser.parse(kwargs['sexes'])
+            matcher = SexQuery(parser).transform(tree)
+            kwargs['sexes'] = matcher
 
         if 'inheritance' in kwargs and isinstance(kwargs['inheritance'], str):
-            query = InheritanceQuery.parse(kwargs['inheritance'])
-            kwargs['inheritance'] = query
+            tree = parser.parse(kwargs['inheritance'])
+            matcher = InheritanceQuery(parser).transform(tree)
+            kwargs['inheritance'] = matcher
 
         if 'variant_type' in kwargs and \
                 isinstance(kwargs['variant_type'], str):
-            query = VariantTypeQuery.parse(kwargs['variant_type'])
-            kwargs['variant_type'] = query
+            tree = parser.parse(kwargs['variant_type'])
+            matcher = VariantTypeQuery(parser).transform(tree)
+            kwargs['variant_type'] = matcher
 
         for v in vs:
             if not self.filter_variant(v, **kwargs):

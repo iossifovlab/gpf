@@ -208,8 +208,8 @@ def test_compare_all_lgds_1_908275(nvcf19s, old_annotator):
               sep='\t')
         _effects, desc = old_annotator.annotate_variant(
             chr=v.chromosome,
-            position=v.alt_details[1].cshl_position,
-            var=v.alt_details[1].cshl_variant)
+            position=v.details[1].cshl_position,
+            var=v.details[1].cshl_variant)
         print("N:>", v.effect[1].worst, v.effect[1].gene)
         print("V:>", v.chromosome, v.position, v.reference, v.alternatives)
         for d in desc:

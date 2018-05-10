@@ -24,6 +24,11 @@ from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
 from variants.variant import VariantFactory, SummaryVariant,\
     VariantFactorySingle, FamilyVariant
+from variants.attributes_query import parser as attributes_query_parser, \
+    QueryTransformer
+
+from variants.attributes_query import \
+    parser_with_ambiguity as attributes_query_parser_with_ambiguity
 
 
 @pytest.fixture(scope='session')
@@ -308,3 +313,18 @@ def relative_to_this_test_folder(path):
         os.path.dirname(os.path.realpath(__file__)),
         path
     )
+
+
+@pytest.fixture()
+def parser():
+    return attributes_query_parser
+
+
+@pytest.fixture()
+def parser_with_ambiguity():
+    return attributes_query_parser_with_ambiguity
+
+
+@pytest.fixture()
+def transformer():
+    return QueryTransformer
