@@ -173,7 +173,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
 
         assert 422 == len(res)
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
             study_phenotype = variant['study phenotype']
             assert study_phenotype == 'autism'
@@ -193,7 +193,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert 64 == len(res)
 
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
             study_phenotype = variant['study phenotype']
             assert study_phenotype == 'autism'
@@ -214,7 +214,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert 622 == len(res)
 
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
             study_phenotype = variant['study phenotype']
             assert study_phenotype == 'autism'
@@ -235,7 +235,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert 233 == len(res)
 
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
             study_phenotype = variant['study phenotype']
             assert study_phenotype in [
@@ -260,7 +260,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert 93 == len(res)
 
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
             study_phenotype = variant['study phenotype']
             assert study_phenotype == 'autism'
@@ -281,7 +281,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert 20 == len(res)
 
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
             study_phenotype = variant['study phenotype']
             assert study_phenotype in [
