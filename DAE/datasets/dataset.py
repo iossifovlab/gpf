@@ -118,7 +118,6 @@ class DatasetWrapper(Dataset):
             kwargs.pop('maxAltFrequencyPercent')
 
         value_range = (min_value, max_value)
-        print(value_range)
 
         value = 'all.altFreq'
         if 'real_attr_filter' not in kwargs:
@@ -173,7 +172,7 @@ class DatasetWrapper(Dataset):
         if original_roles is not None:
             if isinstance(original_roles, str):
                 original_roles = role_query.parse(original_roles)
-            kwargs['roles'] = and_node([original_roles] + roles_query)
+            kwargs['roles'] = and_node([original_roles, roles_query])
         else:
             kwargs['roles'] = roles_query
 
@@ -221,6 +220,6 @@ class DatasetWrapper(Dataset):
         if original_roles is not None:
             if isinstance(original_roles, str):
                 original_roles = role_query.parse(original_roles)
-            kwargs['roles'] = and_node([original_roles] + roles_query)
+            kwargs['roles'] = and_node([original_roles, roles_query])
         else:
             kwargs['roles'] = roles_query
