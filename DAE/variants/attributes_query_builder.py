@@ -51,15 +51,42 @@ def is_eq(object):
     return is_tree(object) and object.data == EQ_NODE
 
 
+def expand_children(child):
+    if not is_tree(child) or is_token(child) or child.data != 'start':
+        return [child]
+    result = []
+    for child in child.children:
+        result.extend(expand_children(child))
+    return result
+
+
+def substitute_beginning(children):
+    result = []
+
+    for child in children:
+        result.extend(expand_children(child))
+
+    return result
+
+
 def and_node(children):
+    if len(children) == 1:
+        return children[0]
+    children = substitute_beginning(children)
     return tree(AND_NODE, children)
 
 
 def or_node(children):
+    if len(children) == 1:
+        return children[0]
+
+    children = substitute_beginning(children)
     return tree(OR_NODE, children)
 
 
-def not_node(children):
+def not_node(child):
+    children = expand_children(child)
+    assert len(children) == 1
     return tree(NOT_NODE, children)
 
 

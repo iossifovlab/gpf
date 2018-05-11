@@ -1,10 +1,12 @@
 import functools
 
-from lark import Lark, InlineTransformer
+from lark import Lark, InlineTransformer, Tree
 from lark.reconstruct import Reconstructor
+from lark.tree import Discard
 
 from variants.attributes import Role, Inheritance, VariantType, Sex
-from variants.attributes_query_builder import is_token
+from variants.attributes_query_builder import is_token, tree as create_tree,\
+    is_tree
 
 QUERY_GRAMMAR = """
     start: expression
@@ -71,7 +73,7 @@ class Matcher(object):
 
 class QueryTransformer(InlineTransformer):
     
-    def __init__(self, parser, token_converter=None):
+    def __init__(self, parser=parser, token_converter=None):
         super(QueryTransformer, self).__init__()
 
         if token_converter is None:
@@ -79,24 +81,46 @@ class QueryTransformer(InlineTransformer):
 
         self.parser = parser
         self.tree = None
-        self.token_transformer = token_converter
+        self.token_converter = token_converter
+
+    def _transform(self, tree):
+        items = []
+        for c in tree.children:
+            try:
+                items.append(self._transform(c) if isinstance(c, Tree) else c)
+            except Discard:
+                pass
+        try:
+            f = self._get_func(tree.data)
+        except AttributeError:
+            return self.__default__(tree.data, items)
+        else:
+            return f(items)
+
+    def parse(self, expression):
+        return self.parser.parse(expression)
+
+    def parse_and_transform(self, expression):
+        return self.transform(self.parse(expression))
 
     def transform(self, tree):
-        self.tree = tree
-        return super(QueryTransformer, self).transform(tree)
+        if is_token(tree) or tree.data != 'start':
+            tree = create_tree('start', [tree])
 
-    # def _get_func(self, name):
-    #     print("_get_func " + name)
-    #     return super(QueryTransformer, self)._get_func(name)
+        self.tree = tree
+        print(tree)
+
+        return self._transform(tree)
 
     def _transform_all_tokens(self, arguments):
         return [self._transform_token(arg) for arg in arguments]
 
     def _transform_token(self, argument):
         if is_token(argument):
-            return lambda l: self.token_transformer(argument.value) in l
-        assert callable(argument)
-        return argument
+            return lambda l: self.token_converter(argument.value) in l
+        if callable(argument):
+            return argument
+        raise TypeError("unknown type", type(argument), argument)
 
     def negation(self, *args):
         args = self._transform_all_tokens(args)
@@ -120,7 +144,7 @@ class QueryTransformer(InlineTransformer):
     def eq(self, *args):
         for arg in args:
             assert is_token(arg), "eq expects only elements, not an expression"
-        to_match = {self.token_transformer(arg.value) for arg in args}
+        to_match = {self.token_converter(arg.value) for arg in args}
         return lambda x: x == to_match
 
     def any(self, *args):
@@ -146,12 +170,10 @@ def variant_type_converter(a):
     return VariantType.from_name(a)
 
 
-RoleQuery = functools.partial(QueryTransformer, token_converter=roles_converter)
+role_query = QueryTransformer(token_converter=roles_converter)
 
-SexQuery = functools.partial(QueryTransformer, token_converter=sex_converter)
+sex_query = QueryTransformer(token_converter=sex_converter)
 
-InheritanceQuery = functools.partial(
-    QueryTransformer, token_converter=inheritance_converter)
+inheritance_query = QueryTransformer(token_converter=inheritance_converter)
 
-VariantTypeQuery = functools.partial(
-    QueryTransformer, token_converter=variant_type_converter)
+variant_type_query = QueryTransformer(token_converter=variant_type_converter)

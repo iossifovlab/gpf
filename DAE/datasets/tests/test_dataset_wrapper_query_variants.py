@@ -41,12 +41,12 @@ def test_query_family_variants(families, count, quads2_wrapper):
     assert len(variants) == count
 
 
-@pytest.mark.parametrize("sex,count", [
-    ("M", 15),
-    ("F", 15),
+@pytest.mark.parametrize("sexes,count", [
+    (["M"], 15),
+    (["F"], 15),
 ])
-def test_query_sexes_variants(sex, count, quads2_wrapper):
-    variants = list(quads2_wrapper.get_variants(sexes=sex))
+def test_query_sexes_variants(sexes, count, quads2_wrapper):
+    variants = list(quads2_wrapper.get_variants(sexes=sexes))
 
     assert len(variants) == count
 

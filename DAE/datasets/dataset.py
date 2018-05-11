@@ -3,9 +3,11 @@ import itertools
 import logging
 
 from RegionOperations import Region
-from variants.attributes import Role, AQuery, RoleQuery, SexQuery, Sex, \
-    VariantTypeQuery, VariantType
+from variants.attributes import Role
 from helpers import EFFECT_TYPES_MAPPING
+from variants.attributes_query_builder import token, and_node, not_node, or_node
+from variants.attributes_query import role_query, variant_type_converter, \
+    sex_converter
 
 logger = logging.getLogger(__name__)
 
@@ -81,15 +83,13 @@ class DatasetWrapper(Dataset):
 
         if 'sexes' in kwargs:
             sexes = kwargs['sexes']
-            # FIXME: this should be handled by SexQuery..
-            sexes = [Sex.from_name(sex) for sex in sexes]
-            kwargs['sexes'] = SexQuery.any_of(*sexes)
+            sexes = [token(sex) for sex in sexes]
+            kwargs['sexes'] = or_node(sexes)
 
         if 'variant_type' in kwargs:
             variant_types = kwargs['variant_type']
-            variant_types = [VariantType.from_name(t) for t in variant_types]
-            variant_types = VariantTypeQuery.any_of(*variant_types)
-            kwargs['variant_type'] = variant_types
+            variant_types = [token(t) for t in variant_types]
+            kwargs['variant_type'] = or_node(variant_types)
 
         if 'effect_types' in kwargs:
             effect_types = kwargs['effect_types']
@@ -130,75 +130,97 @@ class DatasetWrapper(Dataset):
         kwargs['real_attr_filter'][value].append(value_range)
 
     def _transform_present_in_child(self, kwargs):
-        roles_query = None
+        roles_query = []
 
         for filter_option in kwargs['presentInChild']:
             new_roles = None
 
             if filter_option == 'affected only':
-                new_roles = AQuery.any_of(Role.prb) \
-                    .and_not_(AQuery.any_of(Role.sib))
+                new_roles = and_node([
+                    token(Role.prb.name),
+                    not_node(token(Role.sib.name))
+                ])
 
             if filter_option == 'unaffected only':
-                new_roles = AQuery.any_of(Role.sib) \
-                    .and_not_(AQuery.any_of(Role.prb))
+                new_roles = and_node([
+                    not_node(token(Role.prb.name)),
+                    token(Role.sib.name)
+                ])
 
             if filter_option == 'affected and unaffected':
-                new_roles = AQuery.all_of(Role.prb, Role.sib)
+                new_roles = and_node([
+                    token(Role.prb.name),
+                    token(Role.sib.name)
+                ])
 
             if filter_option == 'neither':
-                new_roles = AQuery.any_of(Role.prb).not_() \
-                    .and_not_(AQuery.any_of(Role.sib))
+                new_roles = and_node([
+                    not_node(token(Role.prb.name)),
+                    not_node(token(Role.sib.name))
+                ])
 
             if new_roles:
-                if not roles_query:
-                    roles_query = new_roles
-                else:
-                    roles_query.or_(new_roles)
-
-        if roles_query:
-            original_roles = kwargs.get('roles', None)
-            if original_roles is not None:
-                original_roles_query = RoleQuery.parse(original_roles)
-                kwargs['roles'] = original_roles_query.and_(roles_query)
-            else:
-                kwargs['roles'] = roles_query
+                roles_query.append(new_roles)
 
         kwargs.pop('presentInChild')
 
+        if not roles_query:
+            return
+
+        roles_query = or_node(roles_query)
+
+        original_roles = kwargs.get('roles', None)
+        if original_roles is not None:
+            if isinstance(original_roles, str):
+                original_roles = role_query.parse(original_roles)
+            kwargs['roles'] = and_node([original_roles] + roles_query)
+        else:
+            kwargs['roles'] = roles_query
+
     def _transform_present_in_parent(self, kwargs):
-        roles_query = None
+        roles_query = []
 
         for filter_option in kwargs['presentInParent']:
             new_roles = None
 
             if filter_option == 'mother only':
-                new_roles = AQuery.any_of(Role.mom) \
-                    .and_not_(AQuery.any_of(Role.dad))
+                new_roles = and_node([
+                    not_node(token(Role.dad.name)),
+                    token(Role.mom.name)
+                ])
 
             if filter_option == 'father only':
-                new_roles = AQuery.any_of(Role.dad) \
-                    .and_not_(AQuery.any_of(Role.mom))
+                new_roles = and_node([
+                    token(Role.dad.name),
+                    not_node(token(Role.mom.name))
+                ])
 
             if filter_option == 'mother and father':
-                new_roles = AQuery.all_of(Role.dad, Role.mom)
+                new_roles = and_node([
+                    token(Role.dad.name),
+                    token(Role.mom.name)
+                ])
 
             if filter_option == 'neither':
-                new_roles = AQuery.any_of(Role.dad).not_() \
-                    .and_not_(AQuery.any_of(Role.mom))
+                new_roles = and_node([
+                    not_node(token(Role.dad.name)),
+                    not_node(token(Role.mom.name))
+                ])
 
             if new_roles:
-                if not roles_query:
-                    roles_query = new_roles
-                else:
-                    roles_query.or_(new_roles)
-
-        if roles_query:
-            original_roles = kwargs.get('roles', None)
-            if original_roles is not None:
-                original_roles_query = RoleQuery.parse(original_roles)
-                kwargs['roles'] = original_roles_query.and_(roles_query)
-            else:
-                kwargs['roles'] = roles_query
+                roles_query.append(new_roles)
 
         kwargs.pop('presentInParent')
+
+        if not roles_query:
+            return
+
+        roles_query = or_node(roles_query)
+
+        original_roles = kwargs.get('roles', None)
+        if original_roles is not None:
+            if isinstance(original_roles, str):
+                original_roles = role_query.parse(original_roles)
+            kwargs['roles'] = and_node([original_roles] + roles_query)
+        else:
+            kwargs['roles'] = roles_query

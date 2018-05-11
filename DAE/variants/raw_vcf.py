@@ -11,8 +11,8 @@ import pandas as pd
 from variants.loader import RawVariantsLoader
 from variants.family import FamiliesBase
 from variants.configure import Configure
-from variants.attributes_query import RoleQuery, SexQuery, InheritanceQuery,\
-    VariantTypeQuery, parser
+from variants.attributes_query import role_query, sex_query, inheritance_query,\
+    variant_type_query, parser
 from variants.family import VcfFamily
 # from variants.variant import VariantFactorySingle
 from variants.variant import VariantFactory
@@ -221,26 +221,33 @@ class RawFamilyVariants(FamiliesBase):
         annot_df = self.annot_df
         vs = self.wrap_variants(annot_df)
 
-        if 'roles' in kwargs and isinstance(kwargs['roles'], str):
-            tree = parser.parse(kwargs['roles'])
-            matcher = RoleQuery(parser).transform(tree)
-            kwargs['roles'] = matcher
+        if 'roles' in kwargs:
+            parsed = kwargs['roles']
+            if isinstance(parsed, str):
+                parsed = role_query.parse(parsed)
 
-        if 'sexes' in kwargs and isinstance(kwargs['sexes'], str):
-            tree = parser.parse(kwargs['sexes'])
-            matcher = SexQuery(parser).transform(tree)
-            kwargs['sexes'] = matcher
+            kwargs['roles'] = role_query.transform(parsed)
 
-        if 'inheritance' in kwargs and isinstance(kwargs['inheritance'], str):
-            tree = parser.parse(kwargs['inheritance'])
-            matcher = InheritanceQuery(parser).transform(tree)
-            kwargs['inheritance'] = matcher
+        if 'sexes' in kwargs:
+            parsed = kwargs['sexes']
+            if isinstance(parsed, str):
+                parsed = sex_query.parse(parsed)
 
-        if 'variant_type' in kwargs and \
-                isinstance(kwargs['variant_type'], str):
-            tree = parser.parse(kwargs['variant_type'])
-            matcher = VariantTypeQuery(parser).transform(tree)
-            kwargs['variant_type'] = matcher
+            kwargs['sexes'] = sex_query.transform(parsed)
+
+        if 'inheritance' in kwargs:
+            parsed = kwargs['inheritance']
+            if isinstance(parsed, str):
+                parsed = inheritance_query.parse(parsed)
+
+            kwargs['inheritance'] = inheritance_query.transform(parsed)
+
+        if 'variant_type' in kwargs:
+            parsed = kwargs['variant_type']
+            if isinstance(kwargs['variant_type'], str):
+                parsed = variant_type_query.parse(parsed)
+
+            kwargs['variant_type'] = variant_type_query.transform(parsed)
 
         for v in vs:
             if not self.filter_variant(v, **kwargs):
