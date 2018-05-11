@@ -1,7 +1,7 @@
 import pytest
 
 from variants.attributes_query_builder import is_token, and_node, or_node, \
-    is_tree, not_node, token, is_and, is_not
+    is_tree, not_node, token, is_and, is_not, eq_node, any_node, all_node
 
 
 def test_can_match_simple_query(parser):
@@ -163,8 +163,8 @@ def test_ambiguity_is_resolved_through_priority_correctly(
     assert tree_.data != "_ambig"
 
     expected_tree = and_node([
-        not_node([token("some")]),
-        not_node([token("other")]),
+        not_node(token("some")),
+        not_node(token("other")),
     ])
     print(tree_.children[0].pretty())
     print(ambiguous_tree.children[0].pretty())
@@ -396,3 +396,68 @@ def test_can_reconstruct_single_token(parser, transformer):
 
     assert matcher.query_str() == query
 
+
+@pytest.mark.parametrize("node_constructor", [
+    or_node, and_node, eq_node, any_node, all_node
+])
+def test_start_node_is_removed_when_constructing_node(parser, node_constructor):
+    query = "some"
+    subtree = parser.parse(query)
+
+    assert subtree.data == 'start'
+
+    tree = node_constructor([subtree, token("other")])
+    print(tree)
+
+    assert tree.data != 'start'
+    operation_children = tree.children
+
+    assert len(operation_children) > 0
+    for child in operation_children:
+        assert is_token(child) or (is_tree(child) and child.data != 'start')
+
+
+def test_start_node_is_removed_when_constructing_not(parser):
+    query = "some"
+    subtree = parser.parse(query)
+    assert subtree.data == 'start'
+
+    tree = not_node(subtree)
+
+    assert is_not(tree)
+    assert len(tree.children) == 1
+    assert is_token(tree.children[0])
+
+
+def test_transformer_works_without_start_element(parser, transformer):
+    tree = not_node(token("some"))
+
+    matcher = transformer(parser).transform(tree)
+    assert matcher is not None
+
+    assert matcher.match(["other"])
+    assert not matcher.match(["some"])
+    assert not matcher.match(["some", "other"])
+    assert matcher.match([])
+
+
+@pytest.mark.parametrize("input,output", [
+    [["some"], True],
+    [["some", "other"], True],
+    [["other"], True],
+    [["third"], False],
+    [["third", "fourth"], False],
+    [[], False],
+])
+def test_can_create_subtree_from_parsed(parser, transformer, input, output):
+    query = "some"
+    subtree = parser.parse(query)
+
+    tree = or_node([subtree, token("other")])
+
+    assert tree is not None
+
+    matcher = transformer(parser).transform(tree)
+    assert matcher is not None
+
+    assert matcher.match(input) == output

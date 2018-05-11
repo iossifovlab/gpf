@@ -91,12 +91,15 @@ def not_node(child):
 
 
 def all_node(children):
+    children = substitute_beginning(children)
     return tree(ALL_NODE, children)
 
 
 def any_node(children):
+    children = substitute_beginning(children)
     return tree(ANY_NODE, children)
 
 
 def eq_node(children):
+    children = substitute_beginning(children)
     return tree(EQ_NODE, children)
