@@ -616,7 +616,7 @@ def transform_variants_to_lists(variants, attrs, sep='\t'):
         yield row_variant
 
 
-def join_line(l, sep=','):
+def join_line(l, sep='\t'):
     tl = map(lambda v: '' if v is None or v == 'None' else v, l)
     return sep.join(tl) + '\n'
 

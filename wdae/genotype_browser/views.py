@@ -172,9 +172,9 @@ class QueryDownloadView(QueryBaseView):
 
             response = StreamingHttpResponse(
                 itertools.imap(join_line, variants_data),
-                content_type='text/csv')
+                content_type='text/tsv')
 
-            response['Content-Disposition'] = 'attachment; filename=unruly.csv'
+            response['Content-Disposition'] = 'attachment; filename=variants.tsv'
             response['Expires'] = '0'
             return response
         except NotAuthenticated:
