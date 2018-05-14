@@ -3,6 +3,7 @@
 # Nov 27th 2013
 # by Ewa
 
+from __future__ import print_function
 import tarfile
 import numpy as np
 import os, sys
@@ -1129,17 +1130,17 @@ def load_genomic_scores(file, format=None):
     raise Exception("Unrecognizable format! The program needs a .npz format or .hdf5 format!")    
         
 if __name__ == "__main__":
-    print 'hi'
+    print('hi')
     gsR = load_regions_genomic_score_file("region_gs_test.txt")
     gsP = load_position_genomic_score_file("position_gs_test.txt")
 
     def testEq(gsR,gsP):
-        print "location", gsR.location == gsP.location
-        print "Indexing", gsR.Indexing == gsP.Indexing
-        print "_Keys", gsR._Keys == gsP._Keys
-        print "Scores", repr(gsR.Scores) == repr(gsP.Scores)
-        print "chr_format", gsR.chr_format == gsP.chr_format
-        print "_score_names", gsR._score_names == gsP._score_names
+        print("location", gsR.location == gsP.location)
+        print("Indexing", gsR.Indexing == gsP.Indexing)
+        print("_Keys", gsR._Keys == gsP._Keys)
+        print("Scores", repr(gsR.Scores) == repr(gsP.Scores))
+        print("chr_format", gsR.chr_format == gsP.chr_format)
+        print("_score_names", gsR._score_names == gsP._score_names)
 
     # testEq(gsR,gsP)
     gsR.save_exome_scores('aaa')

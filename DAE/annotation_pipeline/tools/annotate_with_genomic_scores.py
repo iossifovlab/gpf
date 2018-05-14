@@ -3,8 +3,9 @@
 # Dec 12th 2013
 # by Ewa
 
+from __future__ import absolute_import
 from GenomicScores import load_genomic_scores
-from utilities import *
+from .utilities import *
 import argparse
 
 def get_argument_parser():

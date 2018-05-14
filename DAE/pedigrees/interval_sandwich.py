@@ -1,3 +1,4 @@
+from __future__ import print_function
 import networkx as nx
 import itertools
 from collections import deque
@@ -55,7 +56,7 @@ class Realization(object):
         self._cached_vertex_degree = _cached_vertex_degree
 
         if _graph_neighbors_cache is None:
-            print "_graph_neighbors_cache recomputed"
+            print("_graph_neighbors_cache recomputed")
             _graph_neighbors_cache = {
                 v: set(self.graph.neighbors(v))
                 for v in self.graph.nodes()
@@ -310,7 +311,7 @@ class SandwichSolver(object):
                 # if count == 2:
                 #     return
 
-                print("removing", edges_to_remove)
+                print(("removing", edges_to_remove))
 
                 current_forbidden_graph = copy_graph(forbidden_graph)
                 current_forbidden_graph.remove_edges_from(edges_to_remove)
@@ -323,7 +324,7 @@ class SandwichSolver(object):
                 result = SandwichSolver.try_solve(current_instance)
 
                 if result:
-                    print("removed:", count)  # , edges_to_remove)
+                    print(("removed:", count))  # , edges_to_remove)
                     return result
 
     @staticmethod
@@ -375,7 +376,7 @@ class SandwichSolver(object):
                 cloned_realization.force_extend(vertex)
 
                 if len(cloned_realization.domain) == vertices_length:
-                    print("iterations count", current_iteration)
+                    print(("iterations count", current_iteration))
                     return cloned_realization.intervals
                 else:
                     domain_string = repr(cloned_realization)

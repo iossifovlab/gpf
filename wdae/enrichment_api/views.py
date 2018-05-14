@@ -67,7 +67,7 @@ class EnrichmentModelsMixin(object):
         background_name = query.get('enrichmentBackgroundModel', None)
         if background_name is None:
             background_name = self.get_default_background_name()
-        if precompute.register.has_key(background_name):  # @IgnorePep8
+        if background_name in precompute.register:  # @IgnorePep8
             background = precompute.register.get(background_name)
         else:
             background_name = self.get_default_background_name()

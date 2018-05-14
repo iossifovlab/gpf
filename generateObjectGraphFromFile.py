@@ -1,5 +1,6 @@
 #!/data/software/local/bin/python
 
+from __future__ import print_function
 import string
 import sys
 import copy
@@ -30,14 +31,14 @@ class objectgraph:
 
     def printH(self, h):
         for nn in h.keys():
-            print nn+"="+h[nn]
+            print(nn+"="+h[nn])
 
         
     def addObject(self, ob):
         key = ob.type+":"+ob.name
 
         if key in self.objectsByKey:
-                   print "The object " + key + " is already added\n";
+                   print("The object " + key + " is already added\n");
                    raise
         self.objectsByKey[key] = ob;
         if ob.type in self.objectsByType:
@@ -84,7 +85,7 @@ class objectgraph:
 
         done = 0
         if hf.readline().rstrip() != 'OBJECT_GRAPH':
-            print "Not an OBJECT_GRAPH"
+            print("Not an OBJECT_GRAPH")
             raise
         for line in  hf:
             line = line.rstrip()
@@ -130,7 +131,7 @@ class objectgraph:
                 done = 1
                 continue
             elif line == "END":
-                print "END\n"
+                print("END\n")
             elif not done :
                 self.fillHash(line, req);
             else:

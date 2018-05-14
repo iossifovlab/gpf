@@ -3,6 +3,7 @@ Created on Feb 28, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
 from DAE import get_gene_sets_symNS
 from DAE import vDB
 from VariantAnnotation import get_effect_types_set

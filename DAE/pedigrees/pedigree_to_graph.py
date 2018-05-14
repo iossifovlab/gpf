@@ -1,4 +1,6 @@
 #!/usr/bin/env python2.7
+from __future__ import print_function
+from __future__ import absolute_import
 import abc
 from collections import defaultdict
 import argparse
@@ -6,9 +8,9 @@ import csv
 from functools import reduce
 import collections
 
-from interval_sandwich import SandwichInstance, SandwichSolver
-from layout import Layout
-from drawing import PDFLayoutDrawer, OffsetLayoutDrawer
+from .interval_sandwich import SandwichInstance, SandwichSolver
+from .layout import Layout
+from .drawing import PDFLayoutDrawer, OffsetLayoutDrawer
 
 
 class CsvPedigreeReader(object):

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from DAE import *
 import sys
 from itertools import groupby
@@ -27,7 +28,7 @@ prbLGDs =  list(vDB.get_denovo_variants(studies,inChild='prb', effectTypes="LGDs
 
 
 
-print "There are ", len(prbLGDs), "variants in probands"
+print("There are ", len(prbLGDs), "variants in probands")
 
 gfiF = lambda x: x.familyId
 fmSorted = sorted(prbLGDs,key=gfiF);
@@ -36,17 +37,17 @@ byFams = {k: list(g) for k, g in groupby(fmSorted, key=gfiF)}
 for fmId, vs in byFams.items():
     if len(vs)==1:
        continue
-    print "The proband of family ", fmId, "has", len(vs), "LGD variants"
+    print("The proband of family ", fmId, "has", len(vs), "LGD variants")
     for v in vs:
-        print "\t" + "\t".join((v.study.name, v.location, v.variant, v.atts['inChild'],  
+        print("\t" + "\t".join((v.study.name, v.location, v.variant, v.atts['inChild'],  
                     "|".join([x['sym']+":"+x['eff'] for x in v.requestedGeneEffects]),
-                            ))
+                            )))
 
 # test for recurrence in the same probant
 ccs = Counter([str(v.familyId)+":"+ge['sym']  for v in prbLGDs for ge in v.requestedGeneEffects ])
 for fgs in ccs:
     if ccs[fgs]>1:
-        print "WARNING: ", fgs, "is seen", ccs[fgs], "times"
+        print("WARNING: ", fgs, "is seen", ccs[fgs], "times")
 
 gnSorted = sorted([[ge['sym'], v.familyId, v.location, v] for v in prbLGDs for ge in v.requestedGeneEffects ])
 sym2Vars = { sym: [ t[3] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
@@ -59,7 +60,7 @@ for g, FN in sorted(sym2FN.items(), key=lambda x: (x[1],x[0])):
         desc = giDB.genes[gnId].desc
 
     # print g + "\t" + str(FN) + "\t" + desc + "\t",
-    print g + "\t" + str(FN),
+    print(g + "\t" + str(FN), end=' ')
     
     outSet = dict()
     for v in sym2Vars[g]:
@@ -74,13 +75,13 @@ for g, FN in sorted(sym2FN.items(), key=lambda x: (x[1],x[0])):
     outSetKeys = sorted(outSet.keys())
     for fid in outSetKeys:
         o = outSet[fid]
-        print str(fid)+":"+o,
+        print(str(fid)+":"+o, end=' ')
         
-    print
+    print()
 
 recCnt = Counter(sym2FN.values())
 fs = set([f for s in studies for f in s.families])
-print "The recurrence in", len(fs), "probands"
-print "hits\tgeneNumber" 
+print("The recurrence in", len(fs), "probands")
+print("hits\tgeneNumber") 
 for hn,cnt in sorted(recCnt.items(), key=lambda x: x[1]):
-    print hn,"\t",cnt
+    print(hn,"\t",cnt)

@@ -3,6 +3,7 @@ Created on Oct 15, 2015
 
 @author: lubo
 '''
+from __future__ import print_function
 from DAE import vDB
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy

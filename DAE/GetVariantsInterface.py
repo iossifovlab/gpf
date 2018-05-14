@@ -3,6 +3,7 @@ Created on Jun 21, 2013
 
 @author: leotta
 '''
+from __future__ import print_function
 import itertools
 import sys
 

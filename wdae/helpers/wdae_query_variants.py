@@ -15,7 +15,7 @@ def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
 
     gene_term = None
     if gene_set_label != 'denovo':
-        if register.has_key(gene_set_label):  # @IgnorePep8
+        if gene_set_label in register:  # @IgnorePep8
             return register.get(gene_set_label)
 
         gene_term = None  # get_gene_sets_symNS(gene_set_label)

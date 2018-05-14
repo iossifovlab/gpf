@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import os, sys, optparse, pickle, gzip
 from re import search
 from subprocess import call, Popen, PIPE
@@ -372,7 +373,7 @@ def reverse(nts):
         elif nt == "N":
             reversed += "N"
         else:
-            print("Invalid nucleotide: ", nt)
+            print(("Invalid nucleotide: ", nt))
             sys.exit(-23)
     return(reversed)
 
@@ -397,7 +398,7 @@ def reverseReport(string):
         elif s == ")":
             reversed += "("
         else:
-            print("upps, error has occured!", string)
+            print(("upps, error has occured!", string))
             sys.exit(-10)
     return(reversed)
 
@@ -561,7 +562,7 @@ def checkIfIntron(chrom, pos, length, type):
                                 c[2] = cdsLine[lineWseq][0]
                                 
                             else:
-                                print("Bad howFar: ", howFar)
+                                print(("Bad howFar: ", howFar))
                                 sys.exit(-17)
                         
                         elif pos + minL - frame + 2 > down:
@@ -573,7 +574,7 @@ def checkIfIntron(chrom, pos, length, type):
                                 needNextLine = 2
                                 c[0] = cdsLine[lineWseq][-1]
                             else:
-                                print("Bad howFarUp: ", pos + minL -frame + 2 - down)
+                                print(("Bad howFarUp: ", pos + minL -frame + 2 - down))
                                 sys.exit(-18)
                         else:
                             if frame == 0:
@@ -611,7 +612,7 @@ def checkIfIntron(chrom, pos, length, type):
                                 needNextLine = 2
                                 c[2] = cdsLine[lineWseq][-1]
                             else:
-                                print("Bad howFar: ", howFar - frame)
+                                print(("Bad howFar: ", howFar - frame))
                                 sys.exit(-19)
 
                         elif pos + minL - 2 + frame < up:
@@ -624,7 +625,7 @@ def checkIfIntron(chrom, pos, length, type):
                                 c[1] = prevCdsSeq[-1]
                                 c[0] = cdsLine[lineWseq][0]
                             else:
-                                print("Bad howFarDown: ", pos + minL - 2 + frame - up)
+                                print(("Bad howFarDown: ", pos + minL - 2 + frame - up))
                                 sys.exit(-19)
                         else:
                             if frame == 0:
@@ -978,18 +979,18 @@ def findSplicePos(spliceOutput, mutPos, length):
         if dist <= 3:
             splicePos = (mutPos-dist+1, mutPos-dist+2)
         else:
-            print("Wrong splice position: ", spliceOutput)
+            print(("Wrong splice position: ", spliceOutput))
             sys.exit(-3)
             
     elif (strand == "+" and ss == "3'") or (strand == "-" and ss == "5'"):
         if dist <= 3:
             splicePos = (mutPos+length+dist-3, mutPos+length+dist-2)
         else:
-            print("Wrong splice position: ", spliceOutput)
+            print(("Wrong splice position: ", spliceOutput))
             sys.exit(-3)
 
     else:
-        print("Something is wrong with a splice output: ", spliceOutput)
+        print(("Something is wrong with a splice output: ", spliceOutput))
         sys.exit(-3)
     #print splicePos
     return(splicePos)
@@ -1571,7 +1572,7 @@ while True:
 
       
     else:
-        print("Error in mutation type!: ", type)
+        print(("Error in mutation type!: ", type))
         sys.exit(0)
         
    

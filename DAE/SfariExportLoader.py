@@ -3,6 +3,7 @@ Created on Jan 31, 2013
 
 @author: Tony
 '''
+from __future__ import print_function
 import csv
 import locale
 import os
@@ -87,7 +88,7 @@ class SfariH5File():
         if not self.fileOpen:
 
             if not os.path.exists(self.filename):
-                print >> sys.stderr, "File %s not found" % (self.filename)
+                print("File %s not found" % (self.filename), file=sys.stderr)
                 return
 
             self.handle = tables.openFile(self.filename, mode="r")
@@ -330,7 +331,7 @@ class SfariExportLoader:
         f = open(filename, 'rb')
         reader = csv.reader(f)
 
-        reader.next()
+        next(reader)
 
         index = 0
         for data in reader:
@@ -748,8 +749,8 @@ class SfariExportLoader:
             try:
                 earray.append(data)
             except ValueError:
-                print "ValueError error with ", variableName, ", ", \
-                    sys.exc_info()[0]
+                print("ValueError error with ", variableName, ", ", \
+                    sys.exc_info()[0])
 
         h5File.flush()
         h5File.close()
@@ -862,28 +863,25 @@ class SfariExportLoader:
                             try:
                                 variableValue = int(variableValue)
                             except ValueError:
-                                print >> sys.stderr, \
-                                    "ValueError error int ", \
+                                print("ValueError error int ", \
                                     variableName, ", ", variableValue, ",", \
-                                    sys.exc_info()[0]
+                                    sys.exc_info()[0], file=sys.stderr)
                                 variableValue = None
                         elif dataType == 'long':
                             try:
                                 variableValue = int(variableValue)
                             except ValueError:
-                                print >> sys.stderr, \
-                                    "ValueError error float ", \
+                                print("ValueError error float ", \
                                     variableName, ", ", variableValue, ",", \
-                                    sys.exc_info()[0]
+                                    sys.exc_info()[0], file=sys.stderr)
                                 variableValue = None
                         elif dataType == 'float' or dataType == 'numeric':
                             try:
                                 variableValue = float(variableValue)
                             except ValueError:
-                                print >> sys.stderr, \
-                                    "ValueError error float ", \
+                                print("ValueError error float ", \
                                     variableName, ", ", variableValue, ",", \
-                                    sys.exc_info()[0]
+                                    sys.exc_info()[0], file=sys.stderr)
                                 variableValue = None
                         elif dataType == 'date':
                             pass
@@ -909,9 +907,8 @@ class SfariExportLoader:
                 try:
                     earray.append(data)
                 except ValueError:
-                    print >> sys.stderr, \
-                        "ValueError error with ", variableName, ", ", \
-                        sys.exc_info()[0]
+                    print("ValueError error with ", variableName, ", ", \
+                        sys.exc_info()[0], file=sys.stderr)
 
         h5File.flush()
         h5File.close()

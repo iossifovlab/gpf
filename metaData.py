@@ -1,4 +1,5 @@
 #!/bin/env python
+from __future__ import print_function
 from collections import defaultdict
 import sys
 
@@ -68,7 +69,7 @@ class MetaData:
             ln.seqrun = self.SQbyFc[fc]
         else:
             ln.seqrun = None
-            print >>sys.stderr, "The fc ", fc, "has not sequencing run"
+            print("The fc ", fc, "has not sequencing run", file=sys.stderr)
         ln.capture = self.CP[captureId]
         ln.capture.lanes.append(ln)
         ln.atts = atts
@@ -179,7 +180,7 @@ class MetaData:
         self.SM[sm.sampleId] = sm
 
 if __name__ == "__main__":
-    print 'hi'
+    print('hi')
 
     md = MetaData('/home/iossifov/work/T115/filesReport/metaData_STATE')
     '''

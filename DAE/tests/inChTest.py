@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from DAE import *
 
 
@@ -9,11 +10,11 @@ for stN in vDB.get_study_names():
         continue
     try:
         vs = [v for v in vDB.get_study(st.name).get_denovo_variants() if v.inChS!=v.atts['inChild'] ]
-    except Exception,e:
-        print st.name, "FAIL", e
+    except Exception as e:
+        print(st.name, "FAIL", e)
         continue
          
     if vs:
-        print st.name, len(vs)
+        print(st.name, len(vs))
         for v in vs:
-            print "\t", v.familyId,v.inChS,v.atts['inChild'] 
+            print("\t", v.familyId,v.inChS,v.atts['inChild']) 

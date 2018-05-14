@@ -3,7 +3,9 @@ Created on Jun 15, 2015
 
 @author: lubo
 '''
-from cache import PrecomputeStore
+from __future__ import print_function
+from __future__ import absolute_import
+from .cache import PrecomputeStore
 from django.conf import settings
 
 
@@ -108,7 +110,7 @@ def has_key(key):
     value = False
 
     try:
-        value = _REGISTER.has_key(key)  # @IgnorePep8
+        value = key in _REGISTER  # @IgnorePep8
     finally:
         pass
 

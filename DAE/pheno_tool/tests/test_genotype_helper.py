@@ -3,6 +3,7 @@ Created on Nov 16, 2016
 
 @author: lubo
 '''
+from __future__ import print_function
 from pheno_tool.genotype_helper import VariantsType as VT
 
 
@@ -43,7 +44,7 @@ def test_get_variants_father_ultra_rare(
             dcount += 1
         else:
             tcount += 1
-    print(dcount, tcount)
+    print((dcount, tcount))
     assert 176 == len(variants)
 
 
@@ -82,7 +83,7 @@ def test_get_variants_father_rarity(
             tcount += 1
             assert 'dad' in v.fromParentS or v.fromParentS == ''
             assert v.altFreqPrcnt <= 1.0
-    print(dcount, tcount)
+    print((dcount, tcount))
 
     assert 250 == len(variants)
 
@@ -120,7 +121,7 @@ def test_get_variants_father_interval(
             assert v.altFreqPrcnt >= 1.0 and v.altFreqPrcnt <= 50.0
         else:
             dcount += 1
-    print(dcount, tcount)
+    print((dcount, tcount))
     assert 593 == len(variants)
 
 

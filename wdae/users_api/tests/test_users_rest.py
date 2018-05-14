@@ -1,3 +1,4 @@
+from __future__ import print_function
 from rest_framework import status
 from django.contrib.auth.models import Group
 from users_api.models import WdaeUser

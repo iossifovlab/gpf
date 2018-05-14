@@ -48,8 +48,8 @@ def test_effect_type_vs_worst_effect_counterexample():
 
 def variant_response_dict(v, atts):
     g = generate_response([v], atts)
-    names = g.next()
-    vr = g.next()
+    names = next(g)
+    vr = next(g)
     d = dict(zip(names, vr))
     return d
 

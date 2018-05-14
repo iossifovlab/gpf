@@ -4,6 +4,7 @@
 pheno2browser -- prepares a DAE pheno browser data
 
 '''
+from __future__ import print_function
 import sys
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -170,7 +171,7 @@ USAGE
         return 0
     except KeyboardInterrupt:
         return 0
-    except Exception, e:
+    except Exception as e:
         traceback.print_exc()
         print()
         indent = len(program_name) * " "

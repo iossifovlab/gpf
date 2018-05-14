@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 from DAE import *
 from GeneTerms import loadGeneTerm
 from VariantsDB import *
@@ -164,7 +165,7 @@ class HomozygousTest:
             for gs,vs in gss.items(): 
                 counts.add(fid, gs, "HomozygousGene", "TotalWithErr")
                 if len(vs)>5:
-                    print >>sys.stderr, "TOO MANY VARIANTS:", fid, gs, len(vs)
+                    print("TOO MANY VARIANTS:", fid, gs, len(vs), file=sys.stderr)
                 if len(vs):
                     counts.add(fid, gs, "HomozygousGene", "Multi")
                     phsType = self._phsType(vs)
@@ -226,7 +227,7 @@ class DistTest:
         rPhs = rSimple 
         if rSimple != rPhs:
             for v in vs:
-                print v.bestSt
+                print(v.bestSt)
             raise Exception('AAAAAAAA: ' + rSimple + ", " + rPhs)
         return rSimple
                 
@@ -282,7 +283,7 @@ if __name__ == "__main__":
     parser.add_argument('--geneSets', default="main", type=str, help='gene sets (i.e. denovo, main, miRNA, ...)')
     args = parser.parse_args()
 
-    print >>sys.stderr, args
+    print(args, file=sys.stderr)
 
 
     '''
@@ -348,7 +349,7 @@ if __name__ == "__main__":
         homozT.addV(v)
         n+=1
 
-    print >>sys.stderr, "number of variants:", n
+    print("number of variants:", n, file=sys.stderr)
     distT.done(cnts)
     homozT.done(cnts)
     cnts.dump()

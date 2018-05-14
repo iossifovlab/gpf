@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import optparse, sys, os
 import pysam, numpy
 from collections import namedtuple, defaultdict
@@ -24,8 +25,8 @@ def percentageGentype( data ):
 def getGT( sample, data ):
    try:
    	dx = data.samples[sample]
-   except KeyError, e:
-	print sample, 'not found on ', sorted(data.samples.keys())
+   except KeyError as e:
+	print(sample, 'not found on ', sorted(data.samples.keys()))
 	exit(1)
 
    #GQ  = getGQ( dx )
@@ -182,7 +183,7 @@ def printSome( output, pos=None, wsize=1000 ):
    if pos == None:
 	for k in sorted(output.keys()):
 	        v = output[k]
-	        print >> v[0], v[1]
+	        print(v[1], file=v[0])
 
 	output.clear()
 	return
@@ -193,7 +194,7 @@ def printSome( output, pos=None, wsize=1000 ):
 
 	dk.append( k )
 	v = output[k]
-	print >> v[0], v[1]
+	print(v[1], file=v[0])
 
    for k in dk:
 	del output[k]
@@ -211,7 +212,7 @@ def famInVCF( fInfo, vcfs ):
 	   mm.append( sm )
 
 	if flag:
-	   print >> sys.stderr, '\t'.join( ['family',  fid, 'notComplete', 'missing', ','.join( mm )] )
+	   print('\t'.join( ['family',  fid, 'notComplete', 'missing', ','.join( mm )] ), file=sys.stderr)
 	   continue
 
         fam.append(fid)
@@ -261,7 +262,7 @@ def main():
    makeFamInfoConv( fInfo, pInfo )
 
    if os.path.isfile( ox.outputPrefix +'.txt' ):
-	print >> sys.stderr, ox.outputPrefix +'.txt: already exist'
+	print(ox.outputPrefix +'.txt: already exist', file=sys.stderr)
 	exit(1)
 
    #setup to print transmission files
@@ -270,8 +271,8 @@ def main():
    out = open( OUT, 'w' )
    outTOOMANY = open( TOOMANY, 'w' )
 
-   print >> out, '\t'.join( 'chr,position,variant,familyData,all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq'.split(','))
-   print >> outTOOMANY, '\t'.join( 'chr,position,variant,familyData'.split(',') )
+   print('\t'.join( 'chr,position,variant,familyData,all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq'.split(',')), file=out)
+   print('\t'.join( 'chr,position,variant,familyData'.split(',') ), file=outTOOMANY)
 
    #fam = [x for x in sorted(fInfo.keys())]
    #vf = pysam.VariantFile( dfile )
@@ -374,7 +375,7 @@ def main():
 	   #while (p,pix) in output: pix += 1
 
 	   if v.startswith( 'complex' ) or (p,v) in output:
-	        print >> sys.stdout, '\t'.join( [chrom, str(p), v, strx, str(nPC), digitP(nPcntC), str(cAlt),digitP(freqAlt)])
+	        print('\t'.join( [chrom, str(p), v, strx, str(nPC), digitP(nPcntC), str(cAlt),digitP(freqAlt)]), file=sys.stdout)
 	        continue
 
 	   if fC >= ox.tooManyThresholdFamilies:

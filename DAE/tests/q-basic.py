@@ -1,4 +1,5 @@
 #!/bin/env python
+from __future__ import print_function
 from DAE import *
 import sys
 
@@ -10,7 +11,7 @@ vIQ  = dict(zip(phDB.families,phDB.get_variable('pcdv.ssc_diagnosis_verbal_iq'))
 nvIQ = dict(zip(phDB.families,phDB.get_variable('pcdv.ssc_diagnosis_nonverbal_iq')))
 # ALSO CONSIDER pcdv.ssc_diagnosis_full_scale_iq
 
-print "\t".join("study fid vIQ nvIQ LGD".split()) 
+print("\t".join("study fid vIQ nvIQ LGD".split())) 
 
 for studyName in studyNamesS.split(","): 
     study = vDB.get_study(studyName)
@@ -19,7 +20,7 @@ for studyName in studyNamesS.split(","):
     LGDFams = set([v.familyId for v in LGDVars])
 
     for fid in allFams:
-        print "\t".join((studyName, fid,
+        print("\t".join((studyName, fid,
                     vIQ[fid] if fid in vIQ else "NA",
                     nvIQ[fid] if fid in nvIQ else "NA",
-                    str(fid in LGDFams) ))
+                    str(fid in LGDFams) )))

@@ -429,8 +429,8 @@ class VariantsFullTest(unittest.TestCase):
             minParentsCalled=600,
             familyIds=['13983'],
             geneSyms=['POGZ'])
-        v = vs.next()
-        r = res.next()
+        v = next(vs)
+        r = next(res)
         self.assertIsNotNone(v)
         self.assertIsNotNone(r)
         self.assertEquals(v.location, r.location)

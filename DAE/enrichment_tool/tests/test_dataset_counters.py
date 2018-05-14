@@ -3,6 +3,7 @@ Created on Apr 24, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
 from enrichment_tool.event_counters import EventsCounter,\
     overlap_enrichment_result_dict, GeneEventsCounter
@@ -52,10 +53,10 @@ def test_variants_unaffected_with_effect_type_lgd(sd, unaffected_studies):
                 found = True
                 break
         if not found:
-            print(
+            print((
                 "Not Found:",
                 ov.familyId, ov.location, ov.study.name,
-                ov.inChS, ov.variant, ov.geneEffect)
+                ov.inChS, ov.variant, ov.geneEffect))
         assert found
 
     for ov in variants:
@@ -67,10 +68,10 @@ def test_variants_unaffected_with_effect_type_lgd(sd, unaffected_studies):
                 found = True
                 break
         if not found:
-            print(
+            print((
                 "Not Found:",
                 ov.familyId, ov.location, ov.study.name,
-                ov.inChS, ov.variant, ov.geneEffect)
+                ov.inChS, ov.variant, ov.geneEffect))
         assert found
 
     assert 232 == len(other_variants)

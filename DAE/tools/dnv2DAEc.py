@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import optparse, sys, os
 import pysam, numpy
 from collections import namedtuple, defaultdict
@@ -106,7 +107,7 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
 	   break 
 
 	if not flag:
-		print >> sys.stderr, '\t'.join( [pid, 'asChildNotFound'] ), rx
+		print('\t'.join( [pid, 'asChildNotFound'] ), rx, file=sys.stderr)
 		#exit(1)
    #
    #handle based on family
@@ -162,12 +163,12 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
         #print ped
 	#print terms['SP_id'] #'\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], bSts, ','.join( cS )] )     
 	if vx[0].startswith( 'complex' ):
-		print >> sys.stdout, '\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], bSts, ','.join( cS )] + [terms[h] for h in header] )
+		print('\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], bSts, ','.join( cS )] + [terms[h] for h in header] ), file=sys.stdout)
 		continue
 
-        print >> out, '\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], \
+        print('\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], \
 			  #cnts, \
-		          bSts, ','.join( cS )] + [terms[h] for h in header] )     
+		          bSts, ','.join( cS )] + [terms[h] for h in header] ), file=out)     
 
 def main():
    #svip.ped
@@ -227,8 +228,8 @@ def main():
 	idx = ','.join( ['%4s' %(chrom), '%12s' %(pos), rx[colI.ref], rx[colI.alt]] )
 	denovo[idx].append( rx )
 
-   print >> out, '\t'.join( 'familyId,location,variant,bestState,inChild'.split(',') \
-			+ hdr )
+   print('\t'.join( 'familyId,location,variant,bestState,inChild'.split(',') \
+			+ hdr ), file=out)
    #colI = columnInfo( *(ox.columnNames.split(',')) )
    for k in sorted(denovo.keys()):
 	v = denovo[k]

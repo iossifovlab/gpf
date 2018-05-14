@@ -1,10 +1,11 @@
+from __future__ import absolute_import
 import optparse
 import sys
 import gzip
 import pysam
 
 import GenomeAccess
-from utilities import *
+from .utilities import *
 
 class IterativeAccess:
 

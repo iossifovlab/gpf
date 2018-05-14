@@ -3,11 +3,12 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
+from __future__ import absolute_import
 from django.conf import settings
 from preloaded.register import Preload
 from datasets.datasets_factory import DatasetsFactory
 from datasets.config import DatasetsConfig
-from models import Dataset
+from .models import Dataset
 from django.db.utils import OperationalError, ProgrammingError
 from precompute.register import Precompute
 import logging

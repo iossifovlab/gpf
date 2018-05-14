@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import optparse, sys, os
 import pysam, numpy
 from collections import namedtuple, defaultdict
@@ -103,9 +104,9 @@ def printNucFamInfo( fInfo, pInfo, aux_head=[], out=sys.stdout ):
                 break
 
    if flag:
-        print >> out, '\t'.join( 'familyId,personId,dadId,momId,gender,status,sampleId'.split(',') + aux_head )
+        print('\t'.join( 'familyId,personId,dadId,momId,gender,status,sampleId'.split(',') + aux_head ), file=out)
    else:
-        print >> out, '\t'.join( 'familyId,personId,dadId,momId,gender,status'.split(',') + aux_head )
+        print('\t'.join( 'familyId,personId,dadId,momId,gender,status'.split(',') + aux_head ), file=out)
 
    for k, v in sorted(fInfo.items()):
         nf = v['newFid']        #new family id
@@ -119,10 +120,10 @@ def printNucFamInfo( fInfo, pInfo, aux_head=[], out=sys.stdout ):
                 if nm[0] != om[0]: s = om[0]
 
                 #print >> out, '\t'.join( [nf, nm[0], xp.fa, xp.ma, sex, xp.phenotype, s] )
-                print >> out, '\t'.join( [nf, nm[0], '0', '0', sex, xp.phenotype, s] + xp.aux )
+                print('\t'.join( [nf, nm[0], '0', '0', sex, xp.phenotype, s] + xp.aux ), file=out)
 	else:
                 #print >> out, '\t'.join( [nf, nm[0], xp.fa, xp.ma, sex, xp.phenotype] )
-                print >> out, '\t'.join( [nf, nm[0], '0', '0', sex, xp.phenotype] + xp.aux )
+                print('\t'.join( [nf, nm[0], '0', '0', sex, xp.phenotype] + xp.aux ), file=out)
 
 	xp = pInfo[om[1]]
 	sex, role = pedState( xp )
@@ -131,10 +132,10 @@ def printNucFamInfo( fInfo, pInfo, aux_head=[], out=sys.stdout ):
                 if nm[1] != om[1]: s = om[1]
 
                 #print >> out, '\t'.join( [nf, nm[1], xp.fa, xp.ma, sex, xp.phenotype, s] )
-                print >> out, '\t'.join( [nf, nm[1], '0', '0', sex, xp.phenotype, s] + xp.aux )
+                print('\t'.join( [nf, nm[1], '0', '0', sex, xp.phenotype, s] + xp.aux ), file=out)
 	else:
                 #print >> out, '\t'.join( [nf, nm[1], xp.fa, xp.ma, sex, xp.phenotype] )
-                print >> out, '\t'.join( [nf, nm[1], '0', '0', sex, xp.phenotype] + xp.aux )
+                print('\t'.join( [nf, nm[1], '0', '0', sex, xp.phenotype] + xp.aux ), file=out)
 
 	for o, n in izip(om[2:],nm[2:]):
 	   xp = pInfo[o]
@@ -145,16 +146,16 @@ def printNucFamInfo( fInfo, pInfo, aux_head=[], out=sys.stdout ):
 
 	   if flag:
 	        #print >> out, '\t'.join( [nf, n, xp.fa, xp.ma, sex, xp.phenotype, s] )
-                print >> out, '\t'.join( [nf, n, nm[1], nm[0], sex, xp.phenotype, s] + xp.aux )
+                print('\t'.join( [nf, n, nm[1], nm[0], sex, xp.phenotype, s] + xp.aux ), file=out)
 	   else:
                 #print >> out, '\t'.join( [nf, n, xp.fa, xp.ma, sex, xp.phenotype] )
-                print >> out, '\t'.join( [nf, n, nm[1], nm[0], sex, xp.phenotype] + xp.aux )
+                print('\t'.join( [nf, n, nm[1], nm[0], sex, xp.phenotype] + xp.aux ), file=out)
 
 # familyId,personId,momId,dadId,gender,status,[sampleId]
 def checkHeader( hd ):
   for tx in 'familyId,personId,momId,dadId,gender'.split(','):
 	if tx not in hd:
-                print >> sys.stderr, tx, 'not found on header'
+                print(tx, 'not found on header', file=sys.stderr)
                 exit(1)
 
 def famInfo2PID( ped ):
@@ -273,9 +274,9 @@ def printFamData( fInfo, pInfo, proj='VIP', lab='SF', listFam=[], out=sys.stdout
 		flag = True
 		break
    if flag:
-	print >> out, '\t'.join( 'familyId,personId,Project,Lab,role,gender,sampleId'.split(',') )
+	print('\t'.join( 'familyId,personId,Project,Lab,role,gender,sampleId'.split(',') ), file=out)
    else:
-	print >> out, '\t'.join( 'familyId,personId,Project,Lab,role,gender'.split(',') )
+	print('\t'.join( 'familyId,personId,Project,Lab,role,gender'.split(',') ), file=out)
 
    for k, v in sorted(fInfo.items()):
 	if (len(listFam) > 0) and (k not in listFam): continue
@@ -289,9 +290,9 @@ def printFamData( fInfo, pInfo, proj='VIP', lab='SF', listFam=[], out=sys.stdout
 	if flag:
                s = ''
                if nm[0] != om[0]: s = om[0]
-               print >> out, '\t'.join( [nf, nm[0], proj, lab, 'mom', sex, s] )
+               print('\t'.join( [nf, nm[0], proj, lab, 'mom', sex, s] ), file=out)
 	else:
-               print >> out, '\t'.join( [nf, nm[0], proj, lab, 'mom', sex] )
+               print('\t'.join( [nf, nm[0], proj, lab, 'mom', sex] ), file=out)
 
 	xp = pInfo[nm[1]]
 	sex, role = pedState2( xp )
@@ -299,9 +300,9 @@ def printFamData( fInfo, pInfo, proj='VIP', lab='SF', listFam=[], out=sys.stdout
                 s = ''
                 if nm[1] != om[1]: s = om[1]
 
-                print >> out, '\t'.join( [nf, nm[1], proj, lab, 'dad', sex, s] )
+                print('\t'.join( [nf, nm[1], proj, lab, 'dad', sex, s] ), file=out)
 	else:
-                print >> out, '\t'.join( [nf, nm[1], proj, lab, 'dad', sex] )
+                print('\t'.join( [nf, nm[1], proj, lab, 'dad', sex] ), file=out)
 
 	for o, n in izip(om[2:],nm[2:]):
 	   xp = pInfo[n]
@@ -312,9 +313,9 @@ def printFamData( fInfo, pInfo, proj='VIP', lab='SF', listFam=[], out=sys.stdout
 
 	   sex, role = pedState2( pInfo[n] )
 	   if flag:
-	        print >> out, '\t'.join( [nf, n, proj, lab, role, sex, s] ) 
+	        print('\t'.join( [nf, n, proj, lab, role, sex, s] ), file=out) 
 	   else:
-                print >> out, '\t'.join( [nf, n, proj, lab, role, sex] )
+                print('\t'.join( [nf, n, proj, lab, role, sex] ), file=out)
 
 if __name__ == "__main__":
    usage = "usage: %prog [options] <INPUT:ped file> <OUTPUT:nuclear ped file>"

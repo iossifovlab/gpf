@@ -4,6 +4,7 @@ Created on Nov 6, 2015
 @author: lubo
 
 '''
+from __future__ import print_function
 import requests
 import StringIO
 import csv
@@ -16,7 +17,7 @@ def run_request(url, params):
 
     fin = StringIO.StringIO(req.text)
     csvin = csv.reader(fin)
-    header = csvin.next()
+    header = next(csvin)
 
     return (req.status_code, header, csvin)
 
@@ -53,7 +54,7 @@ class TestRequest(object):
 
         fin = StringIO.StringIO(res.text)
         csvin = csv.reader(fin)
-        self.header = csvin.next()
+        self.header = next(csvin)
         result = []
         for line in csvin:
             result.append(line)
@@ -67,7 +68,7 @@ class TestRequest(object):
 
     def test_request(self):
         result = self._request()
-        lines = map(lambda (x, y): x == y, zip(self.result, result))
+        lines = map(lambda x_y: x_y[0] == x_y[1], zip(self.result, result))
         return all(lines)
 
 

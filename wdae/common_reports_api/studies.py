@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from DAE import vDB
 from collections import Counter, defaultdict
 from helpers.logger import LOGGER
@@ -6,7 +7,7 @@ import preloaded
 import cPickle
 import zlib
 
-from permissions import belongs_to_dataset
+from .permissions import belongs_to_dataset
 
 def family_buffer(studies):
     fam_buff = defaultdict(dict)

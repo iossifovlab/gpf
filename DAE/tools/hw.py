@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import optparse, os, sys, math, gzip
 
 #from pylab import *
@@ -187,7 +188,7 @@ def main():
 			#print 'right', ref.cID, mny.cID
 			mny.readLine()
 		   else:
-			print 'wrong', ref.cID, mny.cID
+			print('wrong', ref.cID, mny.cID)
 			exit(1)
 
 		cnt, pcnt = ref.getStat()

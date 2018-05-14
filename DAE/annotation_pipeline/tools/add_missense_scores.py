@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 import csv
 import sys
 from variant_annotation.missense_scores_tabix import MissenseScoresDB
 from variant_annotation.variant import Variant
-from utilities import *
+from .utilities import *
 import argparse
 
 def get_argument_parser():

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from .gene_codes import NuclearCode
 from .effect_checkers.coding import CodingEffectChecker
 from .effect_checkers.promoter import PromoterEffectChecker
@@ -8,7 +9,7 @@ from .effect_checkers.start_loss import StartLossEffectChecker
 from .effect_checkers.stop_loss import StopLossEffectChecker
 from .effect_checkers.splice_site import SpliceSiteEffectChecker
 from .effect_checkers.intron import IntronicEffectChecker
-from effect import EffectFactory
+from .effect import EffectFactory
 from .variant import Variant
 from .annotation_request import AnnotationRequestFactory
 import logging

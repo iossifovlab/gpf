@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
 import sys
 import argparse
-from utilities import *
+from .utilities import *
 
 def get_argument_parser():
     desc = """Program to relabel chromosome with or without 'chr' prefix"""

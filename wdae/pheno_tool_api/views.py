@@ -1,3 +1,4 @@
+from __future__ import print_function
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -13,6 +14,7 @@ import json
 from pheno.common import Role, Gender
 import logging
 from gene_sets.expand_gene_set_decorator import expand_gene_set
+from functools import reduce
 
 logger = logging.getLogger(__name__)
 

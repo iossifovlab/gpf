@@ -2,6 +2,7 @@ import heapq
 import itertools
 
 from datasets.dataset import Dataset
+from functools import reduce
 
 class MetaDataset(Dataset):
 

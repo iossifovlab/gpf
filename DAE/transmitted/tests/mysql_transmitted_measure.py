@@ -3,8 +3,10 @@ Created on Oct 15, 2015
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import absolute_import
 import timeit
-from mysql_transmitted_std_queries import *  # @UnusedWildImport
+from .mysql_transmitted_std_queries import *  # @UnusedWildImport
 
 
 def measure_function(fun, count):

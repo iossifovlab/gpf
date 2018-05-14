@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 import os
 import sys
 from collections import defaultdict
@@ -64,7 +65,7 @@ class SfariCollection:
         for sn, pids in sN2Pid.items():
             if len(pids) != 1:
                 raise Exception("SSSSSSSSS")
-            self.sampleNumber2PersonId[sn] = iter(pids).next()
+            self.sampleNumber2PersonId[sn] = next(iter(pids))
 
     def _loadTwins(self):
         f = open(os.path.join(self.sfariDir, 'SSC_and_STC_Twins.csv'))
@@ -125,7 +126,7 @@ class SfariCollection:
 
             for p in tg.twins:
                 if not hasattr(p, 'birth'):
-                    p.birth = iter(births).next()
+                    p.birth = next(iter(births))
             self.twinGroups.add(tg)
 
     def _loadCollectionCenter(self):
@@ -187,8 +188,8 @@ class SfariCollection:
 
         for fid, css in fmCl.items():
             if len(css) != 1:
-                print >>sys.stderr, "The family ", fid, \
-                    "is in more than one collection"
+                print("The family ", fid, \
+                    "is in more than one collection", file=sys.stderr)
                 _allOK = False
 
         # test that samples are from known individual
@@ -196,9 +197,8 @@ class SfariCollection:
         for s in self.sample.values():
             if s.personId not in self.individual:
                 sui += 1
-                print >>sys.stderr, \
-                    str(sui) + ". the person for sample", \
-                    s.sampleId, "is not in the collection"
+                print(str(sui) + ". the person for sample", \
+                    s.sampleId, "is not in the collection", file=sys.stderr)
                 _allOk = False
 
 if __name__ == "__main__":

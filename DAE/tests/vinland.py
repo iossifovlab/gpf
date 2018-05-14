@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 from DAE import *
 from pheno_tool.tool import *
 
@@ -18,7 +19,7 @@ for msrId in phdb.get_instrument_measures('vineland_ii'):
         tool = PhenoTool(phdb, stds, roles=[rl], measure_id=msrId)
         # for effT in ['LGDs','missense','synonymous']:
         for effT in ['LGDs']:
-            print "working on", msrId, rl, effT, "..."
+            print("working on", msrId, rl, effT, "...")
             res = tool.calc(
                 VT(effect_types=[effT],
                    present_in_parent=['neither'],

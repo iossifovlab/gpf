@@ -89,7 +89,7 @@ def combine_denovo_gene_sets(gene_set_phenotype):
 
 def prepare_summary(vs):
     rows = []
-    cols = vs.next()
+    cols = next(vs)
     count = 0
     for r in vs:
         count += 1

@@ -3,6 +3,7 @@
 # October 25th 2013
 # written by Ewa
 
+from __future__ import print_function
 import os, sys, optparse
 from subprocess import call
 import re
@@ -180,7 +181,7 @@ def add_effects(l):
         elif ef.effect == "no-mutation":
             pass
         else:
-            print "Unrecognizable effect: " + ef.effect
+            print("Unrecognizable effect: " + ef.effect)
             sys.exit(-6789)
 
         effect_list.append(ef)
@@ -228,8 +229,8 @@ class Variant:
                 ef.effect = "unk_chr"
 
             if display == True:
-                print("EffectType: " + effect_type),
-                print("\tEffectGene: " + effect_gene),
+                print(("EffectType: " + effect_type), end=' ')
+                print(("\tEffectGene: " + effect_gene), end=' ')
                 print("\tEffectDetails: " + effect_details)
 
             return([ef])
@@ -524,8 +525,8 @@ class Variant:
                             ef.effect = "no-mutation"
 
                             if display == True:
-                                print("EffectType: no-mutation"),
-                                print("\tEffectGene: no-mutation"),
+                                print(("EffectType: no-mutation"), end=' ')
+                                print(("\tEffectGene: no-mutation"), end=' ')
                                 print("\tEffectDetails: no-mutation")
 
 
@@ -621,8 +622,8 @@ class Variant:
 
         if display == True:
             effect_type, effect_gene, effect_details = effect_description(ef_list)
-            print("EffectType: " + effect_type),
-            print("\tEffectGene: " + effect_gene),
+            print(("EffectType: " + effect_type), end=' ')
+            print(("\tEffectGene: " + effect_gene), end=' ')
             print("\tEffectDetails: " + effect_details)
 
         return(ef_list)
@@ -991,7 +992,7 @@ def load_variant(chr=None, position=None, loc=None, var=None, ref=None, alt=None
 
     # OLD FORMAT
     if v.seq != None and ("^" in v.seq or "$" in v.seq):
-        print >>sys.stderr, "Old format detected: " + v.seq
+        print("Old format detected: " + v.seq, file=sys.stderr)
         v.seq = None
 
 
@@ -1111,7 +1112,7 @@ def whatCodonChange_Snp(tm, pos, alt_nt, refGenome):
                         orig_codon[1] = getSeq(refGenome, tm.chr, tm.exons[i-1].stop)
 
                 else:
-                    print("Incorrect value of frame: " , frame)
+                    print(("Incorrect value of frame: " , frame))
                     sys.exit(-23)
 
             else:
@@ -1154,7 +1155,7 @@ def whatCodonChange_Snp(tm, pos, alt_nt, refGenome):
                         orig_codon[0] = getSeq(refGenome, tm.chr, tm.exons[i+1].start+1)
 
                 else:
-                    print("Incorrect value of frame: " , frame)
+                    print(("Incorrect value of frame: " , frame))
                     sys.exit(-24)
 
     if tm.strand == "-":
@@ -1318,7 +1319,7 @@ def distanceFromCoding(pos, tm):
             return(dist)
 
     else:
-        print(tm.cds[0], tm.cds[1], pos)
+        print((tm.cds[0], tm.cds[1], pos))
         print("The position must be either < cds.start or > cds.end!")
         sys.exit(-39)
 
@@ -1388,7 +1389,7 @@ def reverseReport(string):
         elif s == ")":
             reversed += "("
         else:
-            print("upps, error has occured!", string)
+            print(("upps, error has occured!", string))
             sys.exit(-10)
     return(reversed)
 
@@ -2145,7 +2146,7 @@ def checkIfSplice(chrom, pos, seq, length, splicePos, side, type, refGenome):
                     worstEffect = "splice-site"
             else:
                 print("Something's wrong in checkIfSplice")
-                print(pos, splicePos)
+                print((pos, splicePos))
                 sys.exit(-81)
 
 
@@ -2181,7 +2182,7 @@ def checkIfSplice(chrom, pos, seq, length, splicePos, side, type, refGenome):
                     worstEffect = "splice-site"
             else:
                 print("Something's wrong in checkIfSplice")
-                print(pos, splicePos)
+                print((pos, splicePos))
                 sys.exit(-82)
 
 
@@ -2204,7 +2205,7 @@ def checkIfSplice(chrom, pos, seq, length, splicePos, side, type, refGenome):
                     worstEffect = "splice-site"
             else:
                 print("Something's wrong in checkIfSplice")
-                print(pos, splicePos)
+                print((pos, splicePos))
                 sys.exit(-92)
 
         elif side == "3'":
@@ -2217,7 +2218,7 @@ def checkIfSplice(chrom, pos, seq, length, splicePos, side, type, refGenome):
                     worstEffect = "splice-site"
             else:
                 print("Something's wrong in checkIfSplice")
-                print(pos, splicePos)
+                print((pos, splicePos))
                 sys.exit(-93)
 
 

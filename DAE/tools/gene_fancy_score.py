@@ -3,6 +3,7 @@
 # Jan 17h 2014
 # Ewa
 
+from __future__ import print_function
 from DAE import *
 import numpy as np
 import pylab as pl
@@ -36,7 +37,7 @@ scores = Genomic_scores.keys()
 #outfile = 'scores_per_gene.txt'
 
 
-print >>sys.stderr, "Loading scores..."
+print("Loading scores...", file=sys.stderr)
 
 A_dict = {}
 all_arrays = []
@@ -50,7 +51,7 @@ Main_array = create_one_array(*all_arrays)
 A = Main_array.array
 chrInds = Main_array.index
 
-print >>sys.stderr, "Creating training arrays ..."
+print("Creating training arrays ...", file=sys.stderr)
 #----- Creating arrays: denovo (D), random (R) --------
 
 stds = vDB.get_studies('allWE')   ## DE NOVO STUDIES - A POSSIBLE PARAMETER
@@ -110,7 +111,7 @@ R = AA[rand_inds]
 
 
 #------------ Logistic Regression Classifier ---------
-print >>sys.stderr, "Running the logistic regression..."
+print("Running the logistic regression...", file=sys.stderr)
 
 lrc = linear_model.LogisticRegression()
 
@@ -124,12 +125,12 @@ S = np.core.records.fromarrays([A['chr'], A['pos'], pp[:,0],pp[:,1]], names='chr
 
 
 #------------- Gene Regions -------------------------
-print >>sys.stderr, "Calculation the gene regions..."
+print("Calculation the gene regions...", file=sys.stderr)
 
 GMs = genomesDB.get_gene_models()
 GeneRgns = get_gene_regions(GMs, autosomes=True)
 
-print >>sys.stderr, "Joining the gene regions with the calculated per-base score..."
+print("Joining the gene regions with the calculated per-base score...", file=sys.stderr)
 
 #------------ Joining gene regions + classifier scores -----------------
 
@@ -140,7 +141,7 @@ DD = integrate(S, chrInds, GeneRgns, 'pp_1')
 
 #res = open(outfile, 'w')
 
-print >>sys.stderr, "Writing the output..."
+print("Writing the output...", file=sys.stderr)
 
 print("\t".join("gene score coveredLen totalLen".split()))
 for k, v in sorted(DD.items(), key = lambda x: x[1]['score'], reverse=True):

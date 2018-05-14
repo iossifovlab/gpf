@@ -3,6 +3,7 @@
 # June 6th 2013
 # by Ewa
 
+from __future__ import print_function
 import sys, os
 
 class GenomicSequence_Dan:
@@ -65,7 +66,7 @@ class GenomicSequence_Dan:
                     continue
 
                 full = ""
-                infile.next()
+                next(infile)
                 for line in infile:
                     full += line.strip().upper()
                 print(key + " ..done!")
@@ -80,7 +81,7 @@ class GenomicSequence_Dan:
 
         
         for key in SeqDic:
-            print key, len(SeqDic[key])
+            print(key, len(SeqDic[key]))
 
 
         seq_pickle = outputDir + "seqDic_upper.dump"

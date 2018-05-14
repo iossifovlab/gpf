@@ -1,12 +1,13 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 import sys, glob
 import argparse
 from collections import OrderedDict
 from box import Box
 from jproperties import Properties
 
-from utilities import *
-from annotate_score_base import ScoreAnnotator
+from .utilities import *
+from .annotate_score_base import ScoreAnnotator
 
 
 def get_argument_parser():

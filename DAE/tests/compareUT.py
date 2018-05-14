@@ -5,6 +5,7 @@ Created on Jun 25, 2013
 
 @author: leotta
 '''
+from __future__ import print_function
 import sys, getopt
 import os
 import re
@@ -134,14 +135,14 @@ def compare(folderA,folderB):
         
         else:
             row.append('Err')
-            print [comparisonAB[i],exitCodesA[i],exitCodesB[i]]
+            print([comparisonAB[i],exitCodesA[i],exitCodesB[i]])
             #row.append(":".join([comparisonAB[i],exitCodesA[i],exitCodesB[i]]))
             
             
             
         row.append(commandsA[i])
         
-        print "\t".join(row)
+        print("\t".join(row))
         
     #Output
     # 
@@ -156,7 +157,7 @@ def compare(folderA,folderB):
 
     
 def usage(exitCode=0):
-    print 'compareUT.py <folderA> <folderB>'
+    print('compareUT.py <folderA> <folderB>')
     sys.exit(exitCode)
     
 def main(argv):

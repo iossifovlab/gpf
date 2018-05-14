@@ -4,6 +4,7 @@
 # by Ewa
 
 
+from __future__ import print_function
 class Grantham:
 
 
@@ -66,6 +67,6 @@ if __name__ == "__main__":
     gr = Grantham()
 
 
-    print gr.black_box_grantham(annotate_variant(gmDB,ra,loc="1:57489303", var="sub(T->G)")[0])    
-    print gr.black_box_grantham(annotate_variant(gmDB,ra,loc="7:100684786", var="sub(T->G)")[0])    
+    print(gr.black_box_grantham(annotate_variant(gmDB,ra,loc="1:57489303", var="sub(T->G)")[0]))    
+    print(gr.black_box_grantham(annotate_variant(gmDB,ra,loc="7:100684786", var="sub(T->G)")[0]))    
     

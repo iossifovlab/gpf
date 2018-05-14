@@ -1,3 +1,4 @@
+from __future__ import print_function
 import tables
 import types
 import csv
@@ -439,7 +440,7 @@ def loadFromRawTable(files, rowsToLoad=-1):
     sfariLoader = SfariExportLoader.SfariExportLoader()
 
     loadFiles = []
-    if type(files) == types.ListType:  # @IgnorePep8
+    if type(files) == list:  # @IgnorePep8
         loadFiles = files
     else:
         loadFiles.append(files)
@@ -547,7 +548,7 @@ def loadFamilyList(filename):
     inputfile = open(filename, "rUb")
     csvReader = csv.reader(inputfile, delimiter=',')
 
-    _column = csvReader.next()
+    _column = next(csvReader)
     for row in csvReader:
         familyList.append(row[0])
 
@@ -639,12 +640,12 @@ def createWordBagH5(dt, md, testSet):
     # self.families = []
 
     for familyId in dt.families:
-        print familyId
+        print(familyId)
         # familyDictionary = dt[familyId]
 
         for variableName in dt.variables:
 
-            print "\t", variableName
+            print("\t", variableName)
 
 #            if variableName in md:
 #

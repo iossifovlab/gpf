@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import random
 import sys
 
@@ -8,7 +9,7 @@ def write_random_records(fqa, fqb, N=100000):
 	whole thing into memory"""
 	records = sum(1 for _ in open(fqa)) / 4
 
-	print "there are %d records" % (records)
+	print("there are %d records" % (records))
 
 	rand_records = sorted([random.randint(0, records - 1) for _ in xrange(N)])
 
@@ -26,7 +27,7 @@ def write_random_records(fqa, fqb, N=100000):
 			subb.write(fhb.readline())
 		rec_no += 1 # (thanks @anderwo)
 
-	print >>sys.stderr, "wrote to %s, %s" % (suba.name, subb.name)
+	print("wrote to %s, %s" % (suba.name, subb.name), file=sys.stderr)
 
 if __name__ == "__main__":
 	write_random_records(sys.argv[1], sys.argv[2], int(sys.argv[3]))

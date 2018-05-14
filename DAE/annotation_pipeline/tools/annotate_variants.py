@@ -3,12 +3,13 @@
 # Oct 9th 2013
 # written by Ewa
 
+from __future__ import absolute_import
 import argparse
 import re, os.path, sys
 import GenomeAccess
 from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import VariantAnnotator as VariantAnnotation
-from utilities import *
+from .utilities import *
 
 class ColumnOrderAction(argparse.Action):
 

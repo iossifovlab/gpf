@@ -1,8 +1,10 @@
+from __future__ import print_function
+from __future__ import absolute_import
 from ..simple_effect import SimpleEffect
 import subprocess
 import csv
 import re
-from base import BaseAdapter
+from .base import BaseAdapter
 
 
 class AnnovarVariantAnnotation(BaseAdapter):
@@ -87,7 +89,7 @@ class AnnovarVariantAnnotation(BaseAdapter):
 
     @classmethod
     def parse_extrons(cls, extron_row):
-        print("BB", extron_row)
+        print(("BB", extron_row))
         effects_details = [x for x in extron_row[2].split(",") if x]
         effect_type = cls.effect_type_convert(extron_row[1])
 

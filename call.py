@@ -1,5 +1,6 @@
 #!/data/software/local/bin/python
 
+from __future__ import print_function
 import gzip, pysam, sys, optparse, os
 import numpy as np
 # from DAE import *
@@ -13,7 +14,7 @@ class family:
 		self.role   = dict()
 		self.gender = dict()
 		with open( fname, 'r' ) as infile:
-			for line in infile.xreadlines():
+			for line in infile:
 				line = line.rstrip()
 				x = line.split('=')
 				#print x[0]
@@ -32,15 +33,15 @@ class family:
 				   elif y[0] == 'quad':
 					#print 'quad-line\t', line, x[0], x[1]
 					self.familyID = x[1]
-	   except IOError, e:
-		print e
+	   except IOError as e:
+		print(e)
 		exit(0)
 	def Print( self ):
-		print self.familyID
-		print self.member
-		print self.order
-		print self.role
-		print self.gender
+		print(self.familyID)
+		print(self.member)
+		print(self.order)
+		print(self.role)
+		print(self.gender)
 	def Sample( self, idx ):
 		if  (sample < self.member) & (sample >= 0):
 			return self.member
@@ -94,13 +95,13 @@ class alpha:
 			line = infile.readline()
 			self.value = [float(n) for n in line.split()[1::2]]
 			#self.CNVState = CNVState( self.value )
-	   except IOError, e:
-		print e
+	   except IOError as e:
+		print(e)
 		exit(0)
 	def getValue( self ):
 		return self.value
 	def Print( self ):
-		print self.value
+		print(self.value)
 
 class ommission:
    def __init__( self, alph, male ):
@@ -311,7 +312,7 @@ try:
 
 	ln+=1
 	if ln%100000==0:
-		print >>sys.stderr, ln
+		print(ln, file=sys.stderr)
 
 	'''
 	allCnts  = np.array([[100, 1, 0, 0],
@@ -323,8 +324,8 @@ try:
 	    continue
 	#print '%s\t%s'%( line, xstr )
 	outfile.write( line+"\t" + xstr +"\n" )
-except IOError, e:
-	print e
+except IOError as e:
+	print(e)
 	exit(1)
 
 

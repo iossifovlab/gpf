@@ -10,6 +10,7 @@ transmitted studies into MySQL MYISAM tables.
 
 @contact:    lubomir.chorbadjiev@gmail.com
 '''
+from __future__ import print_function
 
 import sys
 import os
@@ -707,7 +708,7 @@ USAGE
         study, summary_filename, tm_filename = \
             VariantsBase.build_study_filenames(study_name, args)
 
-        print(study.name, summary_filename, tm_filename)
+        print((study.name, summary_filename, tm_filename))
         if summary:
             summary_variants = SummaryVariants()
             summary_variants.handle(study_name, summary_filename, outdir)
@@ -723,7 +724,7 @@ USAGE
     except KeyboardInterrupt:
         # handle keyboard interrupt
         return 0
-    except Exception, e:
+    except Exception as e:
         import traceback
         traceback.print_exc()
 

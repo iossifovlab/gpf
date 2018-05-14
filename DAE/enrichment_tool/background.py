@@ -212,7 +212,7 @@ class CodingLenBackground(BackgroundCommon):
         back = []
         with open(filename, 'r') as f:
             reader = csv.reader(f)
-            reader.next()
+            next(reader)
             for row in reader:
                 back.append((str(row[1]), int(row[2])))
         return back

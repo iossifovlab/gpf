@@ -1,3 +1,4 @@
+from __future__ import print_function
 from collections import defaultdict
 from functools import reduce
 
@@ -127,7 +128,7 @@ class Layout:
             # print(moved_individuals, "moved overlapping individuals")
 
             counter += 1
-        print("done", counter)
+        print(("done", counter))
         self._align_left()
 
     def _create_positioned_individuals(self):

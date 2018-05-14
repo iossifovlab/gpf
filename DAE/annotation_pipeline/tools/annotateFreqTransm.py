@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 import argparse
 
-from utilities import main
-from annotate_score_base import ScoreAnnotator
+from .utilities import main
+from .annotate_score_base import ScoreAnnotator
 
 
 def get_argument_parser():

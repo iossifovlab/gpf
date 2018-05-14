@@ -3,6 +3,7 @@ Created on Nov 7, 2012
 
 @author: Tony
 '''
+from __future__ import print_function
 import csv
 import re
 
@@ -21,7 +22,7 @@ def setBoolean(value):
     elif value == "FALSE":
         return False
     else:
-        print "Error: setBoolean (%s) is invalid" % (value)
+        print("Error: setBoolean (%s) is invalid" % (value))
         return False
 
 
@@ -71,7 +72,7 @@ class CSV:
         except:
             raise
 
-        columnNames = csvReader.next()
+        columnNames = next(csvReader)
 
         validColumns = True
         if len(self.columnNames) == 0:
@@ -104,7 +105,7 @@ class CSV:
 
         inFile.close()
 
-        print "Loaded %d rows" % (rowNum)
+        print("Loaded %d rows" % (rowNum))
 
 
 def findWords(value):

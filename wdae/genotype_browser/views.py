@@ -3,6 +3,7 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
 import itertools
 
 from rest_framework import views, status

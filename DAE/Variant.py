@@ -10,6 +10,7 @@ import operator
 import logging
 
 from Family import Person
+from functools import reduce
 
 LOGGER = logging.getLogger(__name__)
 

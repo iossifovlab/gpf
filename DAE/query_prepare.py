@@ -1,3 +1,4 @@
+from __future__ import print_function
 import itertools
 import logging
 from DAE import vDB
@@ -6,6 +7,7 @@ import operator
 
 from __builtin__ import str
 from VariantsDB import Study
+from functools import reduce
 
 LOGGER = logging.getLogger(__name__)
 

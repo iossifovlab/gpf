@@ -1,4 +1,5 @@
 #!/bin/env python
+from __future__ import print_function
 from DAE import *
 
 filteredValidationRows={}
@@ -46,9 +47,9 @@ for v in vDB.get_validation_variants():
             errMsg="error: status contradiction for variant "+key
             raise Exception(errMsg)
 
-print "\t".join("familyId,location,variant,val.batchId,val.status,val.resultNote,val.counts,val.parent".split(","))
+print("\t".join("familyId,location,variant,val.batchId,val.status,val.resultNote,val.counts,val.parent".split(",")))
 
 for key,row in filteredValidationRows.items():
-    print "\t".join(map(str,(row["familyId"],row["location"],row["variant"],row["val.batchId"],
-                             row["val.valStatus"],row["val.resultNote"],row["val.counts"],row["val.parent"])))
+    print("\t".join(map(str,(row["familyId"],row["location"],row["variant"],row["val.batchId"],
+                             row["val.valStatus"],row["val.resultNote"],row["val.counts"],row["val.parent"]))))
     

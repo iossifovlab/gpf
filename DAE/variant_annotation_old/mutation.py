@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 
 
@@ -11,10 +12,10 @@ class Mutation:
         self.alt = alt
 
     def get_mutated_sequence(self, pos, pos_end):
-        print("GET", pos, pos_end, self.start_position, self.end_alt_position)
+        print(("GET", pos, pos_end, self.start_position, self.end_alt_position))
         start_position = max(0, pos - self.start_position)
         end_position = pos_end - self.end_alt_position
-        print("MUT", start_position, end_position)
+        print(("MUT", start_position, end_position))
         if end_position < 0:
             return self.alt[start_position:end_position]
         else:
@@ -26,7 +27,7 @@ class GenomicSequence(object):
         self.genome_seq = genome_seq
 
     def get_sequence(self, chromosome, pos_start, pos_end):
-        print("GETS", pos_start, pos_end)
+        print(("GETS", pos_start, pos_end))
         if pos_start > pos_end:
             return ""
         return self.genome_seq.getSequence(chromosome, pos_start,
@@ -99,7 +100,7 @@ class TranscriptModelWrapper:
 
     def get_codon_for_pos(self, chromosome, pos):
         start_pos = self.get_codon_start_pos(pos)
-        print("start_pos", start_pos)
+        print(("start_pos", start_pos))
         if self.transcript_model.strand == "+":
             end_pos = start_pos + 2
             return self.genome_seq.get_sequence(chromosome,
@@ -109,7 +110,7 @@ class TranscriptModelWrapper:
             start_pos = end_pos - 2
             codon = self.genome_seq.get_sequence(chromosome,
                                                  start_pos, end_pos)
-            print("reverse", start_pos, end_pos, codon)
+            print(("reverse", start_pos, end_pos, codon))
             return self.complement(codon[::-1])
 
     def get_first_codon(self):
@@ -124,7 +125,7 @@ class TranscriptModelWrapper:
             pos = self.transcript_model.cds[1]
         else:
             pos = self.transcript_model.cds[0]
-        print("LAST CODON", pos)
+        print(("LAST CODON", pos))
         return self.get_codon_for_pos(self.transcript_model.chr, pos)
 
     def complement(self, nts):

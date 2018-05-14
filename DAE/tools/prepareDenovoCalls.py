@@ -1,6 +1,7 @@
 #!/bin/env python
 
 
+from __future__ import print_function
 from DAE import *
 from subprocess import Popen
 from subprocess import PIPE 
@@ -20,7 +21,7 @@ subFN = '/data/safe/autism/pilot2/denovoCalls/objLinks/denovoSnvs/1019/snv-CSHL-
 quadReportFN = '/home/iossifov/work/T115/data-dev/study/wig1019/report_quad_20131006.txt'
 
 if len(sys.argv) != 4:
-    print >>sys.stderr , "need 3 arguments <quad report> <indel file> <sub file>"
+    print("need 3 arguments <quad report> <indel file> <sub file>", file=sys.stderr)
     sys.exit(1)
 
 quadReportFN = sys.argv[1]
@@ -156,7 +157,7 @@ def procDenovoFile(iFn,vtype):
             if grps:
                 rprIns = "ins(" + grps.group(2) + ")"
                 if rprIns != rec['variant']:
-                    print >>sys.stderr, "REPAIRING", rec['variant'], rprIns
+                    print("REPAIRING", rec['variant'], rprIns, file=sys.stderr)
                     rec['variant'] = "ins(" + grps.group(2) + ")"
                     cs[hdr.index('variant')] = rec['variant']
             if not indelRE.match(rec['variant']):
@@ -217,10 +218,10 @@ procDenovoFile(subFN,"sub")
 [f.close() for dd in fls.values() for f in dd.values()]
 
 for vtype,vtStats in stats.items():
-    print "#############", vtype, "#############"
-    print "\t".join("            ,N,valAtt,valid,invalid,failed,incon.,toValidate".split(','))
+    print("#############", vtype, "#############")
+    print("\t".join("            ,N,valAtt,valid,invalid,failed,incon.,toValidate".split(',')))
     for strn in "strong,weak,supper weak".split(","):
-        print "\t".join(['%12s' % strn] + [str(vtStats[strn+x]) for x in ",-valAtt,-valStat-valid,-valStat-invalid,-valStat-failed,-valStat-inconclusiv,-toValidate".split(",")])
+        print("\t".join(['%12s' % strn] + [str(vtStats[strn+x]) for x in ",-valAtt,-valStat-valid,-valStat-invalid,-valStat-failed,-valStat-inconclusiv,-toValidate".split(",")]))
 
 ## load the ok families from the quad report
 familyIdRE = re.compile('^auSSC(\d\d\d\d\d)') 
@@ -271,14 +272,14 @@ for vKey,vv in vData.items():
 
     addAtts = ['counts', 'denovoScore', 'chi2APval']
     if vv.bestSt.shape[1] == 3 and len(vv.memberInOrder) == 4:
-        print "EXTENDING the best state for ", vv.familyId, vv.location, vv.variant
+        print("EXTENDING the best state for ", vv.familyId, vv.location, vv.variant)
         vv.bestSt = np.append(vv.bestSt,[[2],[0]],axis=1)
     otherValidatedF.write("\t".join(map(str,[vv.familyId,vv.location,vv.variant,"other",vv.batchId, mat2Str(vv.bestSt),vv.valStatus,vv.valCountsS, vv.valParent, vv.resultNote, vv.inChS,vv.who,vv.why]) + 
                     [str(vv.atts[aa]) if aa in vv.atts else "" for aa in addAtts] + list(desc)) + "\n")
 otherValidatedF.close()
 
-print "############# other #############"
-print "\t".join(",LGD,nonLGD".split(","))
+print("############# other #############")
+print("\t".join(",LGD,nonLGD".split(",")))
 for vtype in "indel sub".split():
-    print "\t".join([vtype,str(otherStats[vtype]["LGD"]),str(otherStats[vtype]['nonLGD'])])
+    print("\t".join([vtype,str(otherStats[vtype]["LGD"]),str(otherStats[vtype]['nonLGD'])]))
 

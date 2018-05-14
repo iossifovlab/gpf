@@ -3,6 +3,7 @@
 # Jan 8th 2014
 # by Ewa
 
+from __future__ import print_function
 import optparse
 from Polyphen import *
 import os
@@ -118,7 +119,7 @@ k = 0
 for l in variantFile:
     if l[0] == "#":
         if outfile == None:
-            print l,
+            print(l, end=' ')
         else:
             out.write(l)
         continue

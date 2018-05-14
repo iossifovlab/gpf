@@ -6,6 +6,7 @@ Created on May 4, 2017
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from enrichment_tool.event_counters import EnrichmentResult
 from common.query_base import EffectTypesMixin, ChildGenderMixin
+from functools import reduce
 
 
 class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):

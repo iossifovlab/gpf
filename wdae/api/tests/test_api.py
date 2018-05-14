@@ -24,7 +24,7 @@ class ApiTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.streaming_content
 
-        data.next()
+        next(data)
         for row in data:
             self.assertIn('del', row)
             self.assertIn('frame-shift', row)

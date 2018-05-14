@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import argparse
 import sys
 
@@ -109,7 +110,7 @@ LGDs by default. none for all variants''')
 
     args = parser.parse_args(argv)
 
-    print >>sys.stderr, args
+    print(args, file=sys.stderr)
 
     args_dict = {a: getattr(args, a) for a in dir(args) if a[0] != '_'}
 
@@ -122,7 +123,7 @@ LGDs by default. none for all variants''')
             raise ValueError("wrong gene set: {}:{}".format(gene_set,
                                                             gene_term))
 
-    print >>sys.stderr, args_dict
+    print(args_dict, file=sys.stderr)
     return args_dict
 
 
@@ -159,7 +160,7 @@ def combine_gene_syms(data):
 
 if __name__ == "__main__":
 
-    print >>sys.stderr, sys.argv
+    print(sys.argv, file=sys.stderr)
     try:
         args_dict = parse_cli_arguments(sys.argv[1:])
         generator = get_variants(args_dict)
@@ -167,6 +168,6 @@ if __name__ == "__main__":
 
         for l in generator:
             sys.stdout.write(join_line(l, '\t'))
-    except ValueError, ex:
-        print >> sys.stderr, "ERROR:", ex
+    except ValueError as ex:
+        print("ERROR:", ex, file=sys.stderr)
         sys.exit(1)

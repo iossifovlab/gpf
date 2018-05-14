@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 from VariantsDB import VariantsDB 
 from VariantsDB import mat2Str 
@@ -52,4 +53,4 @@ pheno = PhenoFactory()
 
 
 if __name__ == "__main__":
-    print "hi"
+    print("hi")

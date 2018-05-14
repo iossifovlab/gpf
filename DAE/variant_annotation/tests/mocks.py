@@ -1,3 +1,4 @@
+from __future__ import print_function
 class ExonMock:
     def __init__(self, start, stop, frame):
         self.start = start
@@ -32,7 +33,7 @@ class TranscriptModelMock:
 
 class ReferenceGenomeMock:
     def getSequence(self, chromosome, pos, pos_last):
-        print("get", chromosome, pos, pos_last)
+        print(("get", chromosome, pos, pos_last))
         return "".join([chr(i) for i in range(pos, pos_last + 1)])
 
 

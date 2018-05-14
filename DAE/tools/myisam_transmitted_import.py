@@ -9,6 +9,7 @@ tables into MySQL.
 @author:     lubo
 @contact:    lchorbadjiev@setelis.com
 '''
+from __future__ import print_function
 
 import sys
 import os
@@ -272,7 +273,7 @@ USAGE
     except KeyboardInterrupt:
         # handle keyboard interrupt
         return 0
-    except Exception, e:
+    except Exception as e:
         import traceback
         traceback.print_exc()
 

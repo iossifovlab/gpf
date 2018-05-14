@@ -11,6 +11,7 @@ from transmitted.base_query import TransmissionConfig
 import logging
 from common.query_base import QueryBase
 import traceback
+from functools import reduce
 
 
 LOGGER = logging.getLogger(__name__)

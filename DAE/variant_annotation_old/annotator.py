@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 import VariantAnnotation
 from .mutation import Mutation, MutatedGenomicSequence, TranscriptModelWrapper
@@ -45,7 +46,7 @@ class VariantAnnotator:
         codon = self.ref_model.get_last_codon()
         mutated_codon = self.alt_model.get_last_codon()
 
-        print("LAST_DEL", codon, mutated_codon, pos)
+        print(("LAST_DEL", codon, mutated_codon, pos))
         if (self._in_stop_codons(codon) and
                 not self._in_stop_codons(mutated_codon)):
             worstEffect = "noEnd"
@@ -82,7 +83,7 @@ class VariantAnnotator:
         codon = self.ref_model.get_first_codon()
         mutated_codon = self.alt_model.get_first_codon()
 
-        print("FIRST_DEL", codon, mutated_codon, pos)
+        print(("FIRST_DEL", codon, mutated_codon, pos))
 
         if (self._in_start_codons(codon) and
                 not self._in_start_codons(mutated_codon)):
@@ -121,7 +122,7 @@ class VariantAnnotator:
                              self.transcript_model.trID]]
 
                     break
-            print("A", pos, pos_last, j.start, prev)
+            print(("A", pos, pos_last, j.start, prev))
             if (pos < j.start and pos > prev) or \
                     (pos_last < j.start and pos_last > prev):
                 print("SPLICE SITE CHECK")
@@ -203,7 +204,7 @@ class VariantAnnotator:
 
         worstEffect = None
         worstForEachTranscript = []
-        print("START", codingRegions, pos, pos_last)
+        print(("START", codingRegions, pos, pos_last))
 
         splice_check = self.splice_check(seq, self.transcript_model.chr,
                                          pos, pos_last, length, codingRegions)
@@ -212,7 +213,7 @@ class VariantAnnotator:
 
         if self.transcript_model.strand == "+":
             tm = self.transcript_model
-            print("TX", pos, tm.cds[1], tm.tx[1])
+            print(("TX", pos, tm.cds[1], tm.tx[1]))
             if pos >= tm.cds[0] and pos <= tm.cds[0] + 2:
                 if tm.cds[0] == tm.tx[0]:
                     return [["5'UTR", [tm.gene, "5'UTR", "1"],
@@ -245,7 +246,7 @@ class VariantAnnotator:
                     return worstForEachTranscript
         else:
             tm = self.transcript_model
-            print("TX REV", pos, tm.cds[1], tm.tx[1])
+            print(("TX REV", pos, tm.cds[1], tm.tx[1]))
             if pos >= tm.cds[0] and pos <= tm.cds[0] + 2:
                 if tm.cds[0] == tm.tx[0]:
                     return [["3'UTR", [tm.gene, "3'UTR", "1"],
@@ -337,7 +338,7 @@ class VariantAnnotator:
                 self.transcript_model.chr, pos
             )
 
-            print("checkForNewStop", pos, codon, mutated_codon)
+            print(("checkForNewStop", pos, codon, mutated_codon))
 
             if self._in_stop_codons(mutated_codon) and \
                     not self._in_stop_codons(codon):
@@ -389,8 +390,8 @@ class VariantAnnotator:
     def checkIfSplice(self, chrom, pos, seq, length, splicePos, side):
         splice_seq = self.reference_genome.getSequence(chrom, splicePos[0],
                                                        splicePos[1])
-        print("checkIfSplice_new", chrom, pos, seq, length, splicePos, side,
-              splice_seq)
+        print(("checkIfSplice_new", chrom, pos, seq, length, splicePos, side,
+              splice_seq))
         if side == "5'":
             # prev
             if pos < splicePos[0]:
@@ -425,7 +426,7 @@ class VariantAnnotator:
                     worstEffect = "splice-site"
             else:
                 print("Something's wrong in checkIfSplice")
-                print(pos, splicePos)
+                print((pos, splicePos))
                 sys.exit(-81)
         else:
             # side "3'"
@@ -462,7 +463,7 @@ class VariantAnnotator:
                     worstEffect = "splice-site"
             else:
                 print("Something's wrong in checkIfSplice")
-                print(pos, splicePos)
+                print((pos, splicePos))
                 sys.exit(-82)
 
         return(worstEffect)

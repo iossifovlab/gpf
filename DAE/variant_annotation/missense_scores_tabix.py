@@ -15,7 +15,7 @@ class MissenseScoresDB:
 
         with gzip.open(self.path.format(self.chromosomes[0]), 'rb') as f:
             reader = csv.reader(f, delimiter='\t')
-            for i, column in enumerate(reader.next()):
+            for i, column in enumerate(next(reader)):
                 self.columns[i] = column
 
         self.tbxs = {chromosome: pysam.Tabixfile(self.path.format(chromosome))

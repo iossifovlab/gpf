@@ -12,6 +12,7 @@ from datasets.family_pheno_base import FamilyPhenoQueryMixin
 from pheno.pheno_regression import PhenoRegression
 from collections import defaultdict
 import logging
+from functools import reduce
 
 
 logger = logging.getLogger(__name__)

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import sys, commands, optparse
 
 def main():
@@ -51,27 +52,27 @@ def main():
 			'-c', '"{:s}"'.format(columnNames), ' > '+ox.outputPrefix+'-complex.txt'] )
 			#'-c', '"{:s}"'.format(ox.columnNames), ' > '+ox.outputPrefix+'-complex.txt'] )
    status, out = commands.getstatusoutput( cmd )
-   print status, out
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #tmp families info to target info
    cmd = ' '.join( ['\\mv', ox.outputPrefix+tExt(0)+'-families.txt', ox.outputPrefix+'-families.txt'] )
    status, out = commands.getstatusoutput( cmd )
-   print status, out
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #annotate variant
    cmd = ' '.join( ['annotate_variants.py -x location -v variant ', ox.outputPrefix+tExt(0)+'.txt', ox.outputPrefix+tExt(1)+'.txt'] )
    status, out = commands.getstatusoutput( cmd )
-   print status, out
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #annotate freqency
    cmd = ' '.join( ['annotateFreqTransm.py', ox.outputPrefix+tExt(1)+'.txt', 'direct > ', ox.outputPrefix+'.txt'] )
    status, out = commands.getstatusoutput( cmd )
-   print status, out 
+   print(status, out) 
    if status: raise Exception("FAILURE AT: " + cmd)
    #remove tmp files
    cmd = ' '.join( ['\\rm', ox.outputPrefix+tExt('*')+'.txt*'] )
    status, out = commands.getstatusoutput( cmd )
-   print status, out
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
 
 if __name__ == "__main__":

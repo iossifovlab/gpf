@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from DAE import *
 import sys
 from itertools import groupby
@@ -39,7 +40,7 @@ for i, eftSet in enumerate(effTypesA):
 for studyNamesS in studyNamesSA:
     studies = vDB.get_studies(studyNamesS)
 
-    print "STUDIES:", studyNamesS
+    print("STUDIES:", studyNamesS)
 
     chldNHist = Counter()
     fmTpCnt = Counter()
@@ -55,7 +56,7 @@ for studyNamesS in studyNamesSA:
                     pp = famBuff[f.familyId][p.personId]
                     if pp.role != p.role or pp.gender != p.gender:
                         # raise Exception("dddd")
-                        print >>sys.stderr, "dddd:" + f.familyId
+                        print("dddd:" + f.familyId, file=sys.stderr)
                 else:
                     famBuff[f.familyId][p.personId] = p
                 
@@ -69,12 +70,12 @@ for studyNamesS in studyNamesSA:
             chldTpCnt[p.role + p.gender]+=1
             chldTpCnt[p.role]+=1
 
-    print "FAMILIES:", len(famBuff) 
-    print "\tBy number of children: " + ", ".join([str(nc) + ": " + str(chldNHist[nc]) for nc in sorted(chldNHist.keys())])
-    print "\t" + str(chldTpCnt['prbM']), "male and", str(chldTpCnt['prbF']), "female probands."
-    print "\t" + str(chldTpCnt['sibM']), "male and", str(chldTpCnt['sibF']), "female siblings."
-    print "\t" +  ", ".join([x[0] + ": " + str(x[1]) for x in sorted(fmTpCnt.items(),key=lambda x: -x[1])])
-    print "+++++++++++++++++++++++++++++++++++++++++++"
+    print("FAMILIES:", len(famBuff)) 
+    print("\tBy number of children: " + ", ".join([str(nc) + ": " + str(chldNHist[nc]) for nc in sorted(chldNHist.keys())]))
+    print("\t" + str(chldTpCnt['prbM']), "male and", str(chldTpCnt['prbF']), "female probands.")
+    print("\t" + str(chldTpCnt['sibM']), "male and", str(chldTpCnt['sibF']), "female siblings.")
+    print("\t" +  ", ".join([x[0] + ": " + str(x[1]) for x in sorted(fmTpCnt.items(),key=lambda x: -x[1])]))
+    print("+++++++++++++++++++++++++++++++++++++++++++")
 
     cnts = defaultdict(lambda : defaultdict(int))
 
@@ -109,34 +110,34 @@ for studyNamesS in studyNamesSA:
                 ret.append(v) 
         return ret
 
-    print "effect      \t" + "\t".join([x.center(20) for x in children]) 
-    print "------------------------------------------"
+    print("effect      \t" + "\t".join([x.center(20) for x in children])) 
+    print("------------------------------------------")
 
     for effT in effTypesSA: 
-        print effT.ljust(12),
+        print(effT.ljust(12), end=' ')
         for rl in children:
             vs  = list(vDB.get_denovo_variants(studies,inChild=rl, effectTypes=effT))
             vs = filterVs(vs)
             vCnt = len(vs)
             chCnt = len(set(v.familyId for v in vs))
-            print "\t%3d,%s (%3d,%s)" %  (vCnt, ratioStr(vCnt, chldTpCnt[rl]), chCnt, prcntStr(chCnt, chldTpCnt[rl])),
+            print("\t%3d,%s (%3d,%s)" %  (vCnt, ratioStr(vCnt, chldTpCnt[rl]), chCnt, prcntStr(chCnt, chldTpCnt[rl])), end=' ')
             cnts[rl][effT] = vCnt 
-        print
-    print "------------------------------------------"
+        print()
+    print("------------------------------------------")
 
 
     for rtEffT in ['LGDs', 'missense', 'CNVs']:
-        print rtEffT, "RATES:"
-        print "\tProbands: all: %s, M: %s, F: %s (MvsF p-val: %s)" % ( ratioStr(cnts['prb'][rtEffT], chldTpCnt['prb']), 
+        print(rtEffT, "RATES:")
+        print("\tProbands: all: %s, M: %s, F: %s (MvsF p-val: %s)" % ( ratioStr(cnts['prb'][rtEffT], chldTpCnt['prb']), 
                 ratioStr(cnts['prbM'][rtEffT], chldTpCnt['prbM']), 
                 ratioStr(cnts['prbF'][rtEffT], chldTpCnt['prbF']),
-                bnmTst(cnts['prbM'][rtEffT], cnts['prbF'][rtEffT], chldTpCnt['prbM'], chldTpCnt['prbF']))
-        print "\tSiblings: all: %s, M: %s, F: %s (MvsF p-val: %s)" % (ratioStr(cnts['sib'][rtEffT], chldTpCnt['sib']), 
+                bnmTst(cnts['prbM'][rtEffT], cnts['prbF'][rtEffT], chldTpCnt['prbM'], chldTpCnt['prbF'])))
+        print("\tSiblings: all: %s, M: %s, F: %s (MvsF p-val: %s)" % (ratioStr(cnts['sib'][rtEffT], chldTpCnt['sib']), 
                 ratioStr(cnts['sibM'][rtEffT] , chldTpCnt['sibM']), 
                 ratioStr(cnts['sibF'][rtEffT] , chldTpCnt['sibF']),
-                bnmTst(cnts['sibM'][rtEffT], cnts['sibF'][rtEffT], chldTpCnt['sibM'], chldTpCnt['sibF']))
-    print "\n"
-    print "\n"
+                bnmTst(cnts['sibM'][rtEffT], cnts['sibF'][rtEffT], chldTpCnt['sibM'], chldTpCnt['sibF'])))
+    print("\n")
+    print("\n")
 
 
     

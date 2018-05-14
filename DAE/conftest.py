@@ -23,7 +23,7 @@ def pytest_addoption(parser):
 
 
 def pytest_collection_modifyitems(config, items):
-    if not config.getoption("--runveryslow"):
+    if not config.getoption("--runveryslow", False):
         # --runveryslow given in cli: do not skip slow tests
         skip_veryslow = pytest.mark.skip(
             reason="need --runveryslow option to run")
@@ -31,8 +31,8 @@ def pytest_collection_modifyitems(config, items):
             if "veryslow" in item.keywords:
                 item.add_marker(skip_veryslow)
 
-    if not config.getoption("--runslow") and \
-            not config.getoption("--runveryslow"):
+    if not config.getoption("--runslow", False) and \
+            not config.getoption("--runveryslow", False):
         # --runslow given in cli: do not skip slow tests
         skip_slow = pytest.mark.skip(
             reason="need --runslow option to run")
@@ -40,7 +40,7 @@ def pytest_collection_modifyitems(config, items):
             if "slow" in item.keywords:
                 item.add_marker(skip_slow)
 
-    if config.getoption("--nomysql"):
+    if config.getoption("--nomysql", False):
         skip_mysql = pytest.mark.skip(reason="need mysql data")
         for item in items:
             if "mysql" in item.keywords:

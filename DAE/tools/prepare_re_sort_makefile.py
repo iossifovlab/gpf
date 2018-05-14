@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 import os
 import sys 
 import gzip
@@ -23,11 +24,11 @@ def isSorted(fn,fmt,zipped=False):
     return r 
 
 
-print "SHELL=/bin/bash -o pipefail"
-print ".DELETE_ON_ERROR:"
-print
-print "all:"
-print
+print("SHELL=/bin/bash -o pipefail")
+print(".DELETE_ON_ERROR:")
+print()
+print("all:")
+print()
 
 allFiles = []
 
@@ -76,7 +77,7 @@ for r, sf, fls in os.walk(fDir):
         elif ffn.endswith('.tbi'):
             op = 'ignore'
      
-        print >>sys.stderr, "%10s (%d): %s" % (op, isf, ffn)
+        print("%10s (%d): %s" % (op, isf, ffn), file=sys.stderr)
 
         if op=='ignore':
            continue
@@ -94,10 +95,10 @@ for r, sf, fls in os.walk(fDir):
         elif op=="copy bgz":
             cmd = "cp $^ $@ && tabix -s 1 -b 2 -e 2 $@ 2> %s-tabix.txt" % (tfnLog)
 
-        print '%s: %s\n\t(time %s) 2> %s-time.txt\n' % (tfn, ffn, cmd, tfnLog)
+        print('%s: %s\n\t(time %s) 2> %s-time.txt\n' % (tfn, ffn, cmd, tfnLog))
 
  
         # print "\t", f, op
          
-print "all:", " ".join(allFiles)
+print("all:", " ".join(allFiles))
 

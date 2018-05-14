@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 from GeneModelFiles import *
 import sys
 import optparse

@@ -1,4 +1,5 @@
 #!/bin/env python
+from __future__ import print_function
 from DAE import *
 import getpass
 import sys
@@ -41,7 +42,7 @@ for v in stdy.get_denovo_variants(effectTypes="LGDs"):
 
 nRequested = defaultdict(int)
 reqVs = []
-print "\t".join("familyId location variant bestSt".split() + optionalAtts)
+print("\t".join("familyId location variant bestSt".split() + optionalAtts))
 for v in stdy.get_denovo_variants(effectTypes="LGDs",callSet="dirty"):
     if keyF(v) in maskedVariants:
         continue
@@ -64,11 +65,11 @@ for v in stdy.get_denovo_variants(effectTypes="LGDs",callSet="dirty"):
         continue
     v.atts['who'] = getpass.getuser()
     v.atts['why'] = "Test Weak SNV LGDs"
-    print "\t".join([v.familyId,v.location,v.variant,mat2Str(v.bestSt)] + \
-            [str(v.atts[a]) for a in optionalAtts])
+    print("\t".join([v.familyId,v.location,v.variant,mat2Str(v.bestSt)] + \
+            [str(v.atts[a]) for a in optionalAtts]))
     nRequested[v.inChS] += 1
     reqVs.append(v)
-print >>sys.stderr, "nRequested:", nRequested, sum(nRequested.values())
+print("nRequested:", nRequested, sum(nRequested.values()), file=sys.stderr)
 
 '''
 import tempfile

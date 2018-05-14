@@ -3,7 +3,8 @@ Created on Oct 23, 2015
 
 @author: lubo
 '''
-from variants_compare_base import VariantsCompareBase
+from __future__ import absolute_import
+from .variants_compare_base import VariantsCompareBase
 from DAE import vDB
 from transmitted.legacy_query import TransmissionLegacy
 from transmitted.mysql_query import MysqlTransmittedQuery

@@ -99,7 +99,7 @@ class ClassifierReport(object):
         for val in self.string_values:
             counts[val] += 1
         distribution = [(val, count) for (val, count) in counts.items()]
-        distribution = sorted(distribution, key=lambda (_val, count): -count)
+        distribution = sorted(distribution, key=lambda _val_count: -_val_count[1])
         distribution = distribution[:self.DISTRIBUTION_CUTOFF]
         distribution = [
             (val[:self.MAX_CHARS], count)

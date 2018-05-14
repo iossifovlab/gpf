@@ -22,7 +22,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_race(self):
         vs = wdae_query_wrapper(self.TEST_DATA_1)
-        vs.next()
+        next(vs)
         count = 0
         fail = False
         for v in vs:
@@ -44,7 +44,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_race_1(self):
         vs = wdae_query_wrapper(self.TEST_DATA_1_1)
-        vs.next()
+        next(vs)
 
         count = 0
         fail = False
@@ -67,7 +67,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_quad(self):
         vs = wdae_query_wrapper(self.TEST_DATA_2)
-        vs.next()
+        next(vs)
 
         count = 0
         fail = False
@@ -89,7 +89,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_trio(self):
         vs = wdae_query_wrapper(self.TEST_DATA_3)
-        vs.next()
+        next(vs)
 
         count = 0
         for v in vs:
@@ -109,7 +109,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_sibling_gender_female(self):
         vs = wdae_query_wrapper(self.TEST_DATA_4)
-        vs.next()
+        next(vs)
 
         count = 0
         for _v in vs:
@@ -129,7 +129,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_sibling_gender_male(self):
         vs = wdae_query_wrapper(self.TEST_DATA_5)
-        vs.next()
+        next(vs)
 
         count = 0
         for _v in vs:
@@ -149,7 +149,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_proband_gender_female(self):
         vs = wdae_query_wrapper(self.TEST_DATA_6)
-        _cols = vs.next()
+        _cols = next(vs)
 
         count = 0
         for _v in vs:
@@ -170,7 +170,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_proband_gender_male(self):
         vs = wdae_query_wrapper(self.TEST_DATA_7)
-        _cols = vs.next()
+        _cols = next(vs)
         count = 0
         for _v in vs:
             count += 1
@@ -190,7 +190,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_family_wrong_race(self):
         vs = wdae_query_wrapper(self.TEST_DATA_8)
-        vs.next()
+        next(vs)
         count = 0
         for _v in vs:
             count += 1
@@ -217,7 +217,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def family_verbal_iq_count(self, data):
         vs = wdae_query_wrapper(data)
-        vs.next()
+        next(vs)
         count = 0
         for _v in vs:
             count += 1
@@ -267,7 +267,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_in_child(self):
         vs = wdae_query_wrapper(self.TEST_DATA_10)
-        _cols = vs.next()
+        _cols = next(vs)
         count = 0
         for v in vs:
             count += 1
@@ -286,7 +286,7 @@ class AdvancedFamilyFilterTests(unittest.TestCase):
 
     def test_variant_types(self):
         vs = wdae_query_wrapper(self.TEST_DATA_11)
-        _cols = vs.next()
+        _cols = next(vs)
         count = 0
         for v in vs:
             count += 1

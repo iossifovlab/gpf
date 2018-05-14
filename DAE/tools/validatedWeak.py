@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 from DAE import *
 import sys
 
@@ -13,7 +14,7 @@ for v in stdy.get_denovo_variants(callSet="noweak"):
         raise Exception('lele')
     solidV[k] = v
 
-print "\t".join(("familyId location variant batchId bestState val.status val.counts val.note inChild who why counts denovoScr chi2Pval".split()))
+print("\t".join(("familyId location variant batchId bestState val.status val.counts val.note inChild who why counts denovoScr chi2Pval".split())))
 
 for vv in vDB.get_validation_variants():
     if vv.location.startswith('M:'):
@@ -30,7 +31,7 @@ for vv in vDB.get_validation_variants():
         continue
 
     addAtts = ['counts', 'denovoScore', 'chi2APval']
-    print "\t".join(map(str,[vv.familyId,vv.location,vv.variant,vv.batchId, vv.bestStS,vv.valStatus,vv.valCountsS, vv.resultNote, vv.inChS,vv.who,vv.why]) + 
-                    [str(vv.atts[aa]) if aa in vv.atts else "" for aa in addAtts])
+    print("\t".join(map(str,[vv.familyId,vv.location,vv.variant,vv.batchId, vv.bestStS,vv.valStatus,vv.valCountsS, vv.resultNote, vv.inChS,vv.who,vv.why]) + 
+                    [str(vv.atts[aa]) if aa in vv.atts else "" for aa in addAtts]))
 
-print >>sys.stderr, "Can be annotated with: 'annotateVariants.sh -f aaa.txt -o aaa-ann.txt -x 2 -m 3'"
+print("Can be annotated with: 'annotateVariants.sh -f aaa.txt -o aaa-ann.txt -x 2 -m 3'", file=sys.stderr)

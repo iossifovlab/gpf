@@ -14,14 +14,14 @@ def test_get_denovo_variants_ssc_11563(ssc):
     query['familyIds'] = ['11563']
 
     vs = ssc.get_variants_preview(**query)
-    v = vs.next()
+    v = next(vs)
     assert len(v) == 26
     assert 'Proband IQs NvIQ' in v
     assert 'Proband IQs vIQ' in v
     assert 'Races Mom' in v
     assert 'Races Dad' in v
 
-    v = vs.next()
+    v = next(vs)
     assert len(v) == 26
     assert '11563' == v[0]
 
@@ -31,7 +31,7 @@ def test_get_denovo_variants_ssc_11825(ssc):
     query['familyIds'] = ['11825']
 
     vs = ssc.get_variants_preview(**query)
-    v = vs.next()
+    v = next(vs)
 
     assert len(v) == 26
     assert 'Proband IQs NvIQ' in v
@@ -39,7 +39,7 @@ def test_get_denovo_variants_ssc_11825(ssc):
     assert 'Races Mom' in v
     assert 'Races Dad' in v
 
-    v = vs.next()
+    v = next(vs)
     assert len(v) == 26
 
     assert '11825' == v[0]
@@ -56,7 +56,7 @@ def test_get_denovo_variants_vip(vip):
     }
 
     vs = vip.get_variants_preview(**query)
-    v = vs.next()
+    v = next(vs)
     assert len(v) == 26
     assert 'Proband IQs NvIQ' in v
     assert 'Proband IQs vIQ' in v

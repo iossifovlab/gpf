@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import sys, commands, optparse
 
 def main():
@@ -38,17 +39,17 @@ def main():
    if ox.missingInfoAsNone: cmd +=  ' '.join( [' --missingInfoAsNone',' > '+ox.outputPrefix+'-complex.txt'] )
    else: cmd += ' > '+ox.outputPrefix+'-complex.txt'
    status, out = commands.getstatusoutput( cmd )
-   print status, out
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #family file 
    cmd = ' '.join( ['\\mv', ox.outputPrefix+tExt(0)+'-families.txt', ox.outputPrefix+'-families.txt'] )
    status, out = commands.getstatusoutput( cmd )
-   print status, out
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #HW
    cmd = ' '.join( ['hw.py -c', ox.outputPrefix+tExt(0)+'.txt', ox.outputPrefix+tExt(1)+'.txt'] )
    status, out = commands.getstatusoutput( cmd )
-   print status, out
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #TOOMANY bgzip
    cmd = ' '.join( ['\\mv', ox.outputPrefix+tExt(0)+'-TOOMANY.txt', ox.outputPrefix+'-TOOMANY.txt;', \
@@ -56,25 +57,25 @@ def main():
                     '\\mv', ox.outputPrefix+'-TOOMANY.txt.gz', ox.outputPrefix+'-TOOMANY.txt.bgz;', \
                     'tabix -S 1 -s 1 -b 2 -e 2', ox.outputPrefix+'-TOOMANY.txt.bgz'] )
    status, out = commands.getstatusoutput( cmd )
-   print status, out
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #annotate
    cmd = ' '.join( ['annotate_variants.py -c chr -p position -v variant ', ox.outputPrefix+tExt(1)+'.txt', \
                     '| bgzip -c > ', ox.outputPrefix+tExt(2)+'.txt.bgz'] )
    status, out = commands.getstatusoutput( cmd )
-   print status, out
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #annotate freq
    cmd = ' '.join( ['annotateFreqTransm.py', ox.outputPrefix+tExt(2)+'.txt.bgz', 'iterative ', \
                   '| bgzip -c > ', ox.outputPrefix+'.txt.bgz;', \
                     'tabix -S 1 -s 1 -b 2 -e 2', ox.outputPrefix+'.txt.bgz'] )
    status, out = commands.getstatusoutput( cmd )
-   print status, out
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #remove tmp files
    cmd = ' '.join( ['\\rm', ox.outputPrefix+tExt('*')+'.txt*'] )
    status, out = commands.getstatusoutput( cmd )
-   print status, out
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
 
 if __name__ == "__main__":

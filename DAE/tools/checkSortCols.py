@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 import sys
 
 
@@ -39,7 +40,7 @@ def isSorted(F,fmt,faiFN="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b
 
             if key < prevKey:
                 if printError:
-                    print prevKey, key
+                    print(prevKey, key)
                 return 1
             prevKey = key
 
@@ -66,12 +67,12 @@ def isSorted(F,fmt,faiFN="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b
 
             if key < prevKey:
                 if printError:
-                    print prevKey, key
+                    print(prevKey, key)
                 return 1
             prevKey = key
 
     else:
-        print >>sys.stderr, "Unknown format", fmt
+        print("Unknown format", fmt, file=sys.stderr)
         assert False
         return 3
 

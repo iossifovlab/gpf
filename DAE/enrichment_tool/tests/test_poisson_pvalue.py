@@ -3,6 +3,7 @@ Created on Nov 8, 2016
 
 @author: lubo
 '''
+from __future__ import print_function
 from enrichment_tool.background import poisson_test
 import pytest
 from scipy import stats

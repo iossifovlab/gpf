@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 import numpy as np
 import sys
 
@@ -79,15 +80,15 @@ def phase(inp):
                     for l in xrange(L):
                         m[l, mh[l]] += 1
                     posChSts.add(str(m))
-            print chSts
-            print posChSts
+            print(chSts)
+            print(posChSts)
             if all([x in posChSts for x in chSts]):
                 posFamilyPhs.append((mph, dph))
 
     return posFamilyPhs
 
 if __name__ == "__main__":
-    print "hi"
+    print("hi")
 
     inpR = [
         [[1,2,2,1],
@@ -97,30 +98,30 @@ if __name__ == "__main__":
 
     ]
     inp = [np.array(x) for x in inpR]
-    print "inp", inp
+    print("inp", inp)
     L,P,nCpies = getDims(inp)
-    print "L:", L
-    print "P:", P
-    print "nCpies:", nCpies
+    print("L:", L)
+    print("P:", P)
+    print("nCpies:", nCpies)
 
     posFamilyPhs = phase(inp)
     for pfphs in posFamilyPhs:
-        print "-----------------" 
-        print "mom"
-        print pfphs[0] 
-        print "dad"
-        print pfphs[1] 
+        print("-----------------") 
+        print("mom")
+        print(pfphs[0]) 
+        print("dad")
+        print(pfphs[1]) 
 
-    for ph in possiblePersonPhasing(inp,L,P,nCpies,0): print "oo", ph
+    for ph in possiblePersonPhasing(inp,L,P,nCpies,0): print("oo", ph)
 
     
-    print posFamilyPhs
+    print(posFamilyPhs)
 
     L,P,nCpies = getDims(inp)
-    print L, P, nCpies
+    print(L, P, nCpies)
 
     checkConsistency(inp)
-    print "hurrey"
+    print("hurrey")
 
-    for ph in possiblePersonPhasing(inp,L,P,nCpies,1): print ph
+    for ph in possiblePersonPhasing(inp,L,P,nCpies,1): print(ph)
     

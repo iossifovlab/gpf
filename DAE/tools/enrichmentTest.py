@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 from DAE import *
 from GeneTerms import *  
 from scipy import stats
@@ -65,13 +66,13 @@ def computeQVals(pVals):
 
 def printSummaryTable(testVarGenesDict, geneTerms,allRes,totals):
     tTests = [tn for tn,vs in testVarGenesDict if tn != "BACKGROUND"]
-    print "\t\t\tBACKGROUND (UR syn.)\t\t" + "\t\t\t\t\t".join(tTests)
+    print("\t\t\tBACKGROUND (UR syn.)\t\t" + "\t\t\t\t\t".join(tTests))
     bcgTotal = totals['BACKGROUND'];
     hcols = []
     hcols.extend(("setId", "setDesc", "GeneNumber", "Overlap (" + str(bcgTotal) + ")", "proportion"));
     for tTname in tTests:
         hcols.extend(("Overlap (" + str(totals[tTname]) + ")", "Expected", "pVal", "qVal", "lessOrMore"));
-    print "\t".join(hcols)
+    print("\t".join(hcols))
     for s in geneTerms.t2G:
         cols = []
         bcgCnt = allRes[s]['BACKGROUND'].cnt
@@ -99,7 +100,7 @@ def printSummaryTable(testVarGenesDict, geneTerms,allRes,totals):
             else:
                 lessmore = "equal"
             cols.extend((str(res.cnt), expected, pVal, qVal, lessmore))
-        print "\t".join(cols)
+        print("\t".join(cols))
 
 def fltDnv(vs):
     seen = set()
@@ -179,11 +180,11 @@ if __name__ == "__main__":
         ['BACKGROUND',                     fltInh(transmStdy.get_transmitted_summary_variants(ultraRareOnly=True, effectTypes="synonymous"))]
     ]
 
-    print >> sys.stderr, "Running the test..."
+    print("Running the test...", file=sys.stderr)
     allRes, totals = enrichmentTest(testVarGenesDict, geneTerms)
 
-    print >> sys.stderr, "Preparing the summary table..."
+    print("Preparing the summary table...", file=sys.stderr)
     printSummaryTable(testVarGenesDict,geneTerms,allRes,totals)
 
-    print >> sys.stderr, "Done!"
+    print("Done!", file=sys.stderr)
     

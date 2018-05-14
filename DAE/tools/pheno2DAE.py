@@ -251,7 +251,7 @@ USAGE
         return 0
     except KeyboardInterrupt:
         return 0
-    except Exception, e:
+    except Exception as e:
         traceback.print_exc()
 
         indent = len(program_name) * " "

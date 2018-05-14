@@ -1,3 +1,4 @@
+from __future__ import print_function
 #/usr/bin/env python
 
 import sys, gzip
@@ -44,9 +45,9 @@ def RefAltsIndex( ra ):
 def getGQ( dx ):
    try:
         return list(dx['GQ'])
-   except TypeError, e:
+   except TypeError as e:
         return [dx['GQ']]
-   except KeyError, e:
+   except KeyError as e:
         if ('QR' in dx) and ('QA' in dx):
                 return [dx['QR']] + list(dx['QA'])
         else:
@@ -106,7 +107,7 @@ def universalRefAlt( RX, sI, missingInfoAsRef=True ):
         for s,i in sI.items():
            try:
                 samples[s] = dict(RX[i].samples[s])
-           except AttributeError, e:
+           except AttributeError as e:
              if missingInfoAsRef:
                 samples[s] = {'GT':(0,0)}
              else:
@@ -125,7 +126,7 @@ def universalRefAlt( RX, sI, missingInfoAsRef=True ):
                 #sx['GT'] = tuple( iAlt[idx][ list(sx['GT']) ] )
                 # Done by modifyData
                 samples[s] = modifyData( iAlt[idx], sx, alts )
-           except AttributeError, e:
+           except AttributeError as e:
              if missingInfoAsRef:
                 samples[s] = {'GT':(0,0)}
              else:
@@ -200,7 +201,7 @@ class vcfFiles:
         fl = cls.__fetch[nx]
  
         try:
-           rx = fl.next()
+           rx = next(fl)
         except StopIteration:
                 continue
 
@@ -243,7 +244,7 @@ class Reader:
                 self.file = gzip.open( fname, 'rb' )
            else:
                 self.file = open( fname, 'r' )
-        except IOError, e:
+        except IOError as e:
                 pass
 
    def exists(self):
@@ -257,7 +258,7 @@ class Reader:
         try:
                 self.file
         except AttributeError:
-                print self.fname +'\tnot exist'
+                print(self.fname +'\tnot exist')
                 exit(1)
 
    def readline( self ):
@@ -341,8 +342,8 @@ class Writer:
         try:
                 fname =  self.filename
                 os.system( 'bgzip '+ fname +'; mv '+ fname +'.gz '+ fname +'.bgz' )#, self.filename+'.bgz' )
-        except IOError, e:
-                print e
+        except IOError as e:
+                print(e)
 
    def write( self, xstr ):
         self.file.write( xstr )

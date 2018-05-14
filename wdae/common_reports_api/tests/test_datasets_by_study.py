@@ -3,6 +3,7 @@ Created on Jan 16, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
 from common_reports_api.permissions import get_datasets_by_study
 
 

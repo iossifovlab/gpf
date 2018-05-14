@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 from DAE import *
 from WeightedSample import WeightedSample
 from tfidf import GetTFIDFMatrix 
@@ -211,7 +212,7 @@ def getRandNets(ppn,n):
         prevS = PPINetwork(ppn=prevS)
         prevS.shuffle()
         rr.append(prevS)
-        print "built ", len(rr), "rand networks"
+        print("built ", len(rr), "rand networks")
     return rr[0:n]
             
         
@@ -227,7 +228,7 @@ def run_a_PPI_shuffle_test(scrF,ppn):
     # for Iter in [100,1000,10000]:
     for Iter in randIterss: 
     # for Iter in [100]:
-        print "Runniter with Iter:", Iter
+        print("Runniter with Iter:", Iter)
         ts = TestResult()
         ts.nBigger = 0
         ts.randScrs = []
@@ -274,7 +275,7 @@ def run_ppn_sc_shuffle_test(genes, ppn):
     gns = [x for x in genes if x in ppn.nodes]
 
     if len(gns)==0:
-        print 'hahaha'
+        print('hahaha')
         return
 
     def scrF(ppn):
@@ -399,17 +400,17 @@ class FunctionalProfiler:
         fpRes = defaultdict(dict)
         for gsN,gsGs in gSets.t2G.items(): 
 
-            print >>sys.stderr, gsN,'sc ...'
+            print(gsN,'sc ...', file=sys.stderr)
             fpRes[gsN]['sc'] = run_wn_sc_test(gsGs, gWghts, wn)
 
-            print >>sys.stderr, gsN,'degree ...'
+            print(gsN,'degree ...', file=sys.stderr)
             fpRes[gsN]['degree'] = run_number_test(gsGs, gWghts, nodeDegrees)
 
-            print >>sys.stderr, gsN,'inNet ...'
+            print(gsN,'inNet ...', file=sys.stderr)
             fpRes[gsN]['inNet'] = run_in_set_test(gsGs, gWghts, wn.geneIdToIndex)
 
             for fixedGenes in self.toGeneSets:
-                print >>sys.stderr, gsN,fixedGenes,'...'
+                print(gsN,fixedGenes,'...', file=sys.stderr)
                 fpRes[gsN][fixedGenes] = run_wn_link_test(gSets.t2G[fixedGenes], gsGs, gWghts, wn)
 
         return fpRes
@@ -436,20 +437,20 @@ class FunctionalProfiler:
         fpRes = defaultdict(dict)
         for gsN,gsGs in gSets.t2G.items(): 
 
-            print >>sys.stderr, gsN,'sc ...'
+            print(gsN,'sc ...', file=sys.stderr)
             fpRes[gsN]['sc'] = run_wn_sc_test(gsGs, gWghts, wn)
 
-            print >>sys.stderr, gsN,'termNumber...'
+            print(gsN,'termNumber...', file=sys.stderr)
             fpRes[gsN]['termNumber'] = run_number_test(gsGs, gWghts, termNumbers)
 
-            print >>sys.stderr, gsN,'degree ...'
+            print(gsN,'degree ...', file=sys.stderr)
             fpRes[gsN]['degree'] = run_number_test(gsGs, gWghts, nodeDegrees)
 
-            print >>sys.stderr, gsN,'withTerms ...'
+            print(gsN,'withTerms ...', file=sys.stderr)
             fpRes[gsN]['withTerms'] = run_in_set_test(gsGs, gWghts, wn.geneIdToIndex)
 
             for fixedGenes in self.toGeneSets:
-                print >>sys.stderr, gsN,fixedGenes,'...'
+                print(gsN,fixedGenes,'...', file=sys.stderr)
                 fpRes[gsN][fixedGenes] = run_wn_link_test(gSets.t2G[fixedGenes], gsGs, gWghts, wn)
 
         return fpRes
@@ -460,26 +461,26 @@ class FunctionalProfiler:
         fpRes = defaultdict(dict)
         for gsN,gsGs in gSets.t2G.items(): 
 
-            print >>sys.stderr, gsN,'inNetwork...'
+            print(gsN,'inNetwork...', file=sys.stderr)
             fpRes[gsN]['inNetwork'] = run_in_set_test(gsGs, gWghts, ppn.nodes )
 
-            print >>sys.stderr, gsN,'degree ...'
+            print(gsN,'degree ...', file=sys.stderr)
             fpRes[gsN]['degree'] = run_number_test(gsGs, gWghts, {ni.nId:ni.degree for ni in ppn.nodes.values()} )
 
-            print >>sys.stderr, gsN,'betweennes ...'
+            print(gsN,'betweennes ...', file=sys.stderr)
             fpRes[gsN]['betweennes'] = run_number_test(gsGs, gWghts, {ni.nId:ni.betweennes for ni in ppn.nodes.values()} )
 
-            print >>sys.stderr, gsN,'clustCoef...'
+            print(gsN,'clustCoef...', file=sys.stderr)
             fpRes[gsN]['clustCoef'] = run_number_test(gsGs, gWghts, {ni.nId:ni.clustCoef for ni in ppn.nodes.values()} )
 
-            print >>sys.stderr, gsN,'sc ...'
+            print(gsN,'sc ...', file=sys.stderr)
             if shuffle:
                 fpRes[gsN]['sc'] = run_ppn_sc_shuffle_test(gsGs, ppn)
             else:
                 fpRes[gsN]['sc'] = run_ppn_sc_test(gsGs, gWghts, ppn)
 
             for fixedGenes in self.toGeneSets:
-                print >>sys.stderr, gsN,fixedGenes,'...'
+                print(gsN,fixedGenes,'...', file=sys.stderr)
                 if shuffle:
                     fpRes[gsN][fixedGenes] = run_ppn_link_shuffle_test(gSets.t2G[fixedGenes], gsGs, ppn)
                 else:
@@ -492,10 +493,10 @@ class FunctionalProfiler:
         fpRes = defaultdict(dict)
         for gsN,gsGs in gSets.t2G.items(): 
 
-            print >>sys.stderr, gsN,'inScalar...'
+            print(gsN,'inScalar...', file=sys.stderr)
             fpRes[gsN]['inScalar'] = run_in_set_test(gsGs, gWghts, scalar )
 
-            print >>sys.stderr, gsN,'scalar...'
+            print(gsN,'scalar...', file=sys.stderr)
             fpRes[gsN]['scalar'] = run_number_test(gsGs, gWghts, scalar)
         return fpRes
 
@@ -565,7 +566,7 @@ def prepareGeneTerms(name):
     return gts
 
 def prepareWeightedNetwork(netF): 
-    print >>sys.stderr, "Loading", netF,"..."
+    print("Loading", netF,"...", file=sys.stderr)
     class WNT:
         pass
 
@@ -641,7 +642,7 @@ def runPpnScTest(testGroup, testName, vls, geneWeights, ppn):
     gns = [x for x in vls.genes if x in sbWghts]
 
     if len(gns)==0:
-        print testGroup, testName, vls.name, "Empty gene set"
+        print(testGroup, testName, vls.name, "Empty gene set")
         return
 
     def scrF(gis):
@@ -658,7 +659,7 @@ def runWnScTest(testGroup, testName, vls, geneWeights, wn):
     gns = [x for x in vls.genes if x in sbWghts]
 
     if len(gns)==0:
-        print testGroup, testName, vls.name, "Empty gene set"
+        print(testGroup, testName, vls.name, "Empty gene set")
         return
 
     def scrF(gis):
@@ -677,7 +678,7 @@ def runNumberTest(testGroup, testName, vls, geneWeights, numbers, defaultVal=Non
     gns = {g:n for g,n in vls.genes.items() if g in testGenes}
 
     if len(gns)==0:
-        print testGroup, testName, vls.name, "Empty gene set"
+        print(testGroup, testName, vls.name, "Empty gene set")
         return
 
     def scrF(gs):
@@ -716,7 +717,7 @@ def saveTestR(testGroup,testName,variantListName, tsr):
     rscrs = np.array(tsr.randScrs)
     key = "-".join((testGroup, testName, variantListName))
     testResults[key] = tsr
-    print tsr.pVal, testGroup, testName, variantListName, tsr.Iter, tsr.realScr, rscrs.mean(), rscrs.std() 
+    print(tsr.pVal, testGroup, testName, variantListName, tsr.Iter, tsr.realScr, rscrs.mean(), rscrs.std()) 
 
 def procPPN(ppn,vls,geneWeights):
     runNumberTest("PPN." + ppn.name, "degree",  vls, geneWeights, {ni.nId:ni.degree for ni in ppn.nodes.values()} ) 
@@ -820,7 +821,7 @@ def drawTwoSets(s1,s2,gts,ppn):
     gs3 = sorted(gs2S&gs1S,key=gSym) 
     gs3Ind = {g:i for i,g in enumerate(gs2)}
 
-    print [gSym(g) for g in gs3]
+    print([gSym(g) for g in gs3])
     ddd = {'s1U'   : [gs1, gs1Ind, -10, len(gs1)/2, 'right','s2U'],
            's2U'   : [gs2, gs2Ind,  10, len(gs2)/2, 'left', 's1U'] }
            # 'common': [gs3, gs3Ind,  20, len(gs3)/2, 'left']}
@@ -859,7 +860,7 @@ def drawTwoSets(s1,s2,gts,ppn):
                 txt = txt + " " + gSym(g) 
             text(1.1*x,y,txt,horizontalalignment=ha,va="center")
             y-=1
-        print sId, totalInt2Other
+        print(sId, totalInt2Other)
     xlim([-20,30]) 
     My = 1.2*max(len(gs1),len(gs2))/2
     ylim([-My,My]) 
@@ -902,15 +903,15 @@ if __name__ == "__draw_two_main__":
     s2 = 'prb.Missense'
     figure()
     drawTwoSets(s1,s2,gSets,ppn)
-    print testCount(gSets.t2G[s1],gSets.t2G[s2],ppn)
-    print testCount(gSets.t2G[s2],gSets.t2G[s1],ppn)
+    print(testCount(gSets.t2G[s1],gSets.t2G[s2],ppn))
+    print(testCount(gSets.t2G[s2],gSets.t2G[s1],ppn))
 
     rnts = getRandNets(ppn,2)
     for rPpn in rnts:
         # raw_input("Press Enter to continue...")
         figure()
         drawTwoSets(s1,s2,gSets,rPpn)
-        print testCount(gSets.t2G[s1],gSets.t2G[s2],rPpn)
+        print(testCount(gSets.t2G[s1],gSets.t2G[s2],rPpn))
 if __name__ == "__main__":
     fp = FunctionalProfiler()
     cmd = sys.argv[1]

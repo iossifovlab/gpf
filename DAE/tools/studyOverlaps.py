@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import print_function
 from DAE import *
 from collections import defaultdict
 
@@ -17,8 +18,8 @@ for stdy in studies:
             pBuff[p.personId].add(stdy.name)
 
 allCollections = sscCollections + [s.name for s in studies]
-print "\t".join(['pId','N'] + allCollections)
+print("\t".join(['pId','N'] + allCollections))
 for pId in sorted(pBuff):
     ss = pBuff[pId]
-    print "\t".join([pId,str(len(ss))] + ["1" if (c in ss) else "" for c in allCollections]) 
+    print("\t".join([pId,str(len(ss))] + ["1" if (c in ss) else "" for c in allCollections])) 
     

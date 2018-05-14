@@ -3,11 +3,13 @@ Created on Nov 22, 2016
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import absolute_import
 from DAE import vDB
 import pytest
 from transmitted.mysql_query import MysqlTransmittedQuery
 import time
-from mysql_transmitted_std_queries import get_gene_set_syms
+from .mysql_transmitted_std_queries import get_gene_set_syms
 
 slow = pytest.mark.skipif(
     not pytest.config.getoption("--runslow"),  # @UndefinedVariable
@@ -33,7 +35,7 @@ def wg_study(request):
 
 
 def report_time(start, res):
-    print ": {:.3}s (count={})".format(time.time() - start, len(res))
+    print(": {:.3}s (count={})".format(time.time() - start, len(res)))
 
 
 @ssc_wg

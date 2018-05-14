@@ -3,6 +3,7 @@ Created on Mar 3, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
 import numpy as np
 
 import copy

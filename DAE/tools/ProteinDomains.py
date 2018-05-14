@@ -3,6 +3,7 @@
 # Nov 27th 2013
 # written by Ewa
 
+from __future__ import print_function
 from pylab import *
 from collections import defaultdict
 import re
@@ -29,8 +30,8 @@ class Domain:
         return(self.start == other.start and self.stop == other.stop and self.domain == other.domain and self.desc == other.desc)
 
     def _onclick(self, event):
-        print 'button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(event.button, event.x, event.y, event.xdata, event.ydata)
-        print self.domain
+        print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f'%(event.button, event.x, event.y, event.xdata, event.ydata))
+        print(self.domain)
 
     def onclick(self, event):
         self.txt = text(event.xdata, event.ydata, self.domain, fontsize=10)
@@ -135,7 +136,7 @@ class ProteinDomains:
         
         gene_info = self._D[gene_name]
         if gene_info == []:
-            print >>sys.stderr, "No such gene..!"
+            print("No such gene..!", file=sys.stderr)
             return(None)
         
         self.gene = gene_name

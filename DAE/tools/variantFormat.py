@@ -1,3 +1,4 @@
+from __future__ import print_function
 
 import sys
 from itertools import izip
@@ -36,7 +37,7 @@ def trimStr( pos, ref, alt ):
 def cshlFormat( pos, ref, alt ):
    p, r, a = trimStr( pos, ref, alt )
    if len(r) == len(a) and len(r) == 0:
-        print >> sys.stderr, 'ref {:s} is the same as alt {:s}'.format( ref, alt )
+        print('ref {:s} is the same as alt {:s}'.format( ref, alt ), file=sys.stderr)
         return p, 'complex('+ r +'->'+ a +')'
 
    if len(r) == len(a) and len(r) == 1:
@@ -65,12 +66,12 @@ def vcf2cshlFormat2( pos, ref, alts ):
    return pxx, vrt	
 
 def main():
-   print "IN: vcf2cshlFormat2( 1, 'A', ['AA','AC','G','GA','AC','ACAAC'] )"
-   print vcf2cshlFormat2( 1, 'A', ['AA','AC','G','GA','AC','ACAAC'] )
-   print "IN: vcf2cshlFormat2( 1, 'AA', ['AA','AC','AAA','A','AC','CA','ACAAC','CAAAAA'] )"
-   print vcf2cshlFormat2( 1, 'AA', ['AA','AC','AAA','A','AC','CA','ACAAC','CAAAAA'] )
-   print "IN: vcf2cshlFormat2( 1, 'AAAAAA', ['AAAAAC','AAA','A','ACAAAA','CAAAAAA','AACAAC','CAAAAA'] )"
-   print vcf2cshlFormat2( 1, 'AAAAAA', ['AAAAAC','AAA','A','ACAAAA','CAAAAAA','AACAAC','CAAAAA'] )
+   print("IN: vcf2cshlFormat2( 1, 'A', ['AA','AC','G','GA','AC','ACAAC'] )")
+   print(vcf2cshlFormat2( 1, 'A', ['AA','AC','G','GA','AC','ACAAC'] ))
+   print("IN: vcf2cshlFormat2( 1, 'AA', ['AA','AC','AAA','A','AC','CA','ACAAC','CAAAAA'] )")
+   print(vcf2cshlFormat2( 1, 'AA', ['AA','AC','AAA','A','AC','CA','ACAAC','CAAAAA'] ))
+   print("IN: vcf2cshlFormat2( 1, 'AAAAAA', ['AAAAAC','AAA','A','ACAAAA','CAAAAAA','AACAAC','CAAAAA'] )")
+   print(vcf2cshlFormat2( 1, 'AAAAAA', ['AAAAAC','AAA','A','ACAAAA','CAAAAAA','AACAAC','CAAAAA'] ))
 
 if __name__ == "__main__":
    main()
