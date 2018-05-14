@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import absolute_import
+from builtins import str
 import sys
 import argparse
 from pyliftover import LiftOver
@@ -51,7 +52,7 @@ class LiftOverAnnotator(AnnotatorBase):
         if len(args) == 1:
             args = args[0].split(':')
         chromosome, position = args
-        positions = map(lambda p: int(p) - 1, position.split('-'))
+        positions = [int(p) - 1 for p in position.split('-')]
 
         convert_result = [self.lift_over.convert_coordinate(chromosome, p)
                           for p in positions]

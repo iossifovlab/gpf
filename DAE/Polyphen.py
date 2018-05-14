@@ -2,11 +2,13 @@
 # Jan 17th 2014
 # by Ewa
 
+from builtins import str
+from builtins import object
 import sqlite3
 import sys
 from collections import namedtuple
 
-class Polyphen:
+class Polyphen(object):
     
     def connect_to_db(self, db_file):
         self.conn = sqlite3.connect(db_file)

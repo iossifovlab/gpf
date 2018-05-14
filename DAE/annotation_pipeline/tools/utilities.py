@@ -1,10 +1,11 @@
+from builtins import str
+from builtins import object
 import sys, os
 import time, datetime
 from abc import ABCMeta, abstractmethod
+from future.utils import with_metaclass
 
-class AnnotatorBase():
-
-    __metaclass__ = ABCMeta
+class AnnotatorBase(with_metaclass(ABCMeta, object)):
 
     def __init__(self, opts, header=None):
         self.opts = opts

@@ -1,4 +1,5 @@
 
+from builtins import object
 from DAE import *
 
 from configparser import ConfigParser
@@ -25,7 +26,7 @@ gmDB = GeneModels("/home/ivan/ccdsGene.txt.gz",geneMappingFile="")
 gmDB.....
 '''
 
-class GenomesDB:
+class GenomesDB(object):
     def __init__(self, daeDir, confFile=None, data_dir=None):
         
         self.daeDir = daeDir

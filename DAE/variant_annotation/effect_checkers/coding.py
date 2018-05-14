@@ -1,8 +1,9 @@
+from builtins import object
 from ..effect import EffectFactory
 import logging
 
 
-class CodingEffectChecker:
+class CodingEffectChecker(object):
     def get_effect(self, request):
         logger = logging.getLogger(__name__)
         logger.debug("is coding=%s", request.transcript_model.is_coding())

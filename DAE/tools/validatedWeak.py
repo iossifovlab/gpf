@@ -1,6 +1,8 @@
 #!/bin/env python
 
 from __future__ import print_function
+from builtins import map
+from builtins import str
 from DAE import *
 import sys
 
@@ -31,7 +33,7 @@ for vv in vDB.get_validation_variants():
         continue
 
     addAtts = ['counts', 'denovoScore', 'chi2APval']
-    print("\t".join(map(str,[vv.familyId,vv.location,vv.variant,vv.batchId, vv.bestStS,vv.valStatus,vv.valCountsS, vv.resultNote, vv.inChS,vv.who,vv.why]) + 
+    print("\t".join(list(map(str,[vv.familyId,vv.location,vv.variant,vv.batchId, vv.bestStS,vv.valStatus,vv.valCountsS, vv.resultNote, vv.inChS,vv.who,vv.why])) + 
                     [str(vv.atts[aa]) if aa in vv.atts else "" for aa in addAtts]))
 
 print("Can be annotated with: 'annotateVariants.sh -f aaa.txt -o aaa-ann.txt -x 2 -m 3'", file=sys.stderr)

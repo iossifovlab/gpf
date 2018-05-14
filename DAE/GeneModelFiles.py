@@ -4,20 +4,25 @@
 # written by Ewa
 
 from __future__ import print_function
+from builtins import zip
+from builtins import map
+from builtins import str
+from builtins import range
+from builtins import object
 import gzip, pickle, os.path, os, sys, re
 from subprocess import call
 import shutil
 from collections import defaultdict 
 from RegionOperations import *
                              
-class AbstractClassDoNotInstantiate:
+class AbstractClassDoNotInstantiate(object):
     
     name = None
     location = None
     _shift = None 
     _Alternative_names = None
     
-class TranscriptModel:
+class TranscriptModel(object):
 
     attr = {}
     gene = None
@@ -270,7 +275,7 @@ class TranscriptModel:
         return("intronic")
 
 
-class Exon:
+class Exon(object):
    
     start = None
     stop = None
@@ -313,7 +318,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
                 trName = line[1]  + "_1"
                
                     
-            Frame = map(int, line[-1].split(',')[:-1])
+            Frame = list(map(int, line[-1].split(',')[:-1]))
                 
            
         else:
@@ -351,7 +356,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
             
         if self.name != "knowngene":
                
-            for i in xrange(0, l):
+            for i in range(0, l):
                 ex = Exon()
                 ex.start = int(exon_starts[i])+1
                 ex.stop = int(exon_ends[i])
@@ -363,7 +368,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
             
             Frame = []
             if int(cds_start) >= int(cds_end):
-                for e in xrange(0, l):
+                for e in range(0, l):
                     Frame.append(-1)
             
             elif strand == "+":
@@ -408,7 +413,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
                     Frame = Frame[::-1]
 
   
-            for i in xrange(0, l):
+            for i in range(0, l):
                 ex = Exon()
                 ex.start = int(exon_starts[i])+1
                 ex.stop = int(exon_ends[i])
@@ -522,7 +527,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
             eEnds = ",".join([str(e.stop) for e in tm.exons])
             eFrames = ",".join([str(e.frame) for e in tm.exons])
 
-            add_atts = ";".join([ k+":"+str(v) for k, v in tm.attr.items() ])
+            add_atts = ";".join([ k+":"+str(v) for k, v in list(tm.attr.items()) ])
             
             cs = [tm.chr, 
                   tm.trID,
@@ -537,7 +542,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
                   eFrames,
                   add_atts
                  ]
-            f.write("\t".join(map(lambda x: str(x) if x!=None else "", cs)) + "\n")
+            f.write("\t".join([str(x) if x!=None else "" for x in cs]) + "\n")
         f.close()
 
     def load(self, inFile):
@@ -550,7 +555,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
             chr, trID, gene, strand, txB, txE, cdsB, cdsE, eStarts, eEnds, eFrames, add_attrs = cs
             
             exons = [] 
-            for frm,sr,sp in zip(*map(lambda x: x.split(","), [eFrames, eStarts, eEnds])):
+            for frm,sr,sp in zip(*[x.split(",") for x in [eFrames, eStarts, eEnds]]):
                 e = Exon()
                 e.frame = int(frm)
                 e.start = int(sr)
@@ -576,7 +581,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
     def _updateIndexes(self):
         self._geneModels = defaultdict(list)
         self._utrModels = defaultdict(lambda : defaultdict(list))
-        for tm in self.transcriptModels.values():
+        for tm in list(self.transcriptModels.values()):
             self._geneModels[tm.gene].append(tm)
             self._utrModels[tm.chr][tm.tx].append(tm) 
             
@@ -588,7 +593,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
             print("Gene Models haven't been created/uploaded yet! Use either loadGeneModels function or self.createGeneModelDict function")
             return(None)
         
-        return self._geneModels.keys()
+        return list(self._geneModels.keys())
 
 
     def transcript_IDs(self):
@@ -597,7 +602,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
             print("Gene Models haven't been created/uploaded yet! Use either loadGeneModels function or self.createGeneModelDict function")
             return(None)
 
-        return(self.transcriptModels.keys()) 
+        return(list(self.transcriptModels.keys())) 
 
 
     def gene_models_by_gene_name(self, name):
@@ -639,7 +644,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
         Relabel = dict([(line.split()[0], line.split()[1]) for line in f])
         f.close()
         
-        for chrom in self._utrModels.keys():
+        for chrom in list(self._utrModels.keys()):
 
             try:
                 self._utrModels[Relabel[chrom]] = self._utrModels[chrom]
@@ -809,13 +814,13 @@ def join_gene_models(*gene_models):
 def get_gene_regions(GMs, autosomes=False, basic23=False):
 
     if autosomes == True or basic23== True:
-        goodChr = [str(i) for i in xrange(1,23)]
+        goodChr = [str(i) for i in range(1,23)]
         if basic23== True:
             goodChr.append("X")
             goodChr.append("Y")
     
     genes = defaultdict(lambda : defaultdict(list)) 
-    for gm in GMs.transcriptModels.values():
+    for gm in list(GMs.transcriptModels.values()):
         if autosomes == True or basic23== True:
             if gm.chr in goodChr: 
                 genes[gm.gene][gm.chr] += gm.CDS_regions()
@@ -824,8 +829,8 @@ def get_gene_regions(GMs, autosomes=False, basic23=False):
 
     rgnTpls = []
 
-    for gnm,chrsD in genes.items():
-        for chr,rgns in chrsD.items():
+    for gnm,chrsD in list(genes.items()):
+        for chr,rgns in list(chrsD.items()):
         
             clpsRgns = collapse_noChr(rgns)
             for rgn in sorted(clpsRgns,key=lambda x: x.start):

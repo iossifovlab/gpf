@@ -5,6 +5,7 @@ Created on Dec 8, 2016
 '''
 from __future__ import absolute_import
 
+from builtins import object
 from pheno.utils.configuration import PhenoConfig
 import logging
 

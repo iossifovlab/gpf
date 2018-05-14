@@ -12,7 +12,7 @@ from VariantAnnotation import get_effect_types_set
 def test_gene_sets_sym_main():
     main_sets = get_gene_sets_symNS('main')
     assert main_sets is not None
-    print(main_sets.t2G.keys())
+    print(list(main_sets.t2G.keys()))
     assert "autism candidates from Iossifov PNAS 2015" in main_sets.t2G
 
 
@@ -23,8 +23,8 @@ def test_gene_sets_sym_denovo():
 
     denovo_sets = get_gene_sets_symNS('denovo', studies)
     assert denovo_sets is not None
-    print(denovo_sets.t2G.keys())
-    assert len(denovo_sets.t2G.keys()) == 13
+    print(list(denovo_sets.t2G.keys()))
+    assert len(list(denovo_sets.t2G.keys())) == 13
 
 
 def test_get_effect_types_set():

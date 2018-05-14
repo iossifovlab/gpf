@@ -3,6 +3,7 @@ Created on Oct 23, 2015
 
 @author: lubo
 '''
+from builtins import object
 from configparser import NoOptionError
 
 

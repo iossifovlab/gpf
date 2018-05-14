@@ -1,25 +1,29 @@
 #!/bin/env python
 
 from __future__ import print_function
+from builtins import zip
+from builtins import next
+from builtins import str
+from builtins import object
 import os
 import sys
 from collections import defaultdict
 # import ConfigParser
 
 
-class Person:
+class Person(object):
     pass
 
 
-class Sample:
+class Sample(object):
     pass
 
 
-class TwinGroup:
+class TwinGroup(object):
     pass
 
 
-class SfariCollection:
+class SfariCollection(object):
 
     def __init__(self, sfariDir):
 
@@ -62,7 +66,7 @@ class SfariCollection:
             self.sample[s.sampleId] = s
             sN2Pid[s.sampleNumber].add(s.personId)
         self.sampleNumber2PersonId = {}
-        for sn, pids in sN2Pid.items():
+        for sn, pids in list(sN2Pid.items()):
             if len(pids) != 1:
                 raise Exception("SSSSSSSSS")
             self.sampleNumber2PersonId[sn] = next(iter(pids))
@@ -183,10 +187,10 @@ class SfariCollection:
 
         # test that each
         fmCl = defaultdict(set)
-        for p in sc.individual.values():
+        for p in list(sc.individual.values()):
             fmCl[p.familyId].add(p.collection)
 
-        for fid, css in fmCl.items():
+        for fid, css in list(fmCl.items()):
             if len(css) != 1:
                 print("The family ", fid, \
                     "is in more than one collection", file=sys.stderr)
@@ -194,7 +198,7 @@ class SfariCollection:
 
         # test that samples are from known individual
         sui = 0
-        for s in self.sample.values():
+        for s in list(self.sample.values()):
             if s.personId not in self.individual:
                 sui += 1
                 print(str(sui) + ". the person for sample", \

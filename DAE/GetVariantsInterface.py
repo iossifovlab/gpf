@@ -4,14 +4,15 @@ Created on Jun 21, 2013
 @author: leotta
 '''
 from __future__ import print_function
+from builtins import zip
 import itertools
 import sys
 
 from DAE import *
 from VariantsDB import _safeVs
 
-fatherRace = dict(zip(phDB.families,phDB.get_variable('focuv.race_parents')))
-motherRace = dict(zip(phDB.families,phDB.get_variable('mocuv.race_parents')))
+fatherRace = dict(list(zip(phDB.families,phDB.get_variable('focuv.race_parents'))))
+motherRace = dict(list(zip(phDB.families,phDB.get_variable('mocuv.race_parents'))))
 
 def augmentAVar(v):
     fmId = v.familyId
@@ -85,7 +86,7 @@ def getVariantsInterface(args, response=None):
                     'popFrequencyMin':"-1",
                     'regionS':None}
 
-    for key,value in requiredKeys.items():
+    for key,value in list(requiredKeys.items()):
         if key not in args:
             args[key]=value
 
@@ -183,7 +184,7 @@ def getVariantsInterface(args, response=None):
     additionalAtts = ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_', 'valstatus']
 
     if response==None:
-        safeVs(itertools.imap(augmentAVar,itertools.chain(dvs,ivs)),'-', additionalAtts)
+        safeVs(map(augmentAVar,itertools.chain(dvs,ivs)),'-', additionalAtts)
     else:
-        _safeVs(response,itertools.imap(augmentAVar,itertools.chain(dvs,ivs)), additionalAtts)
+        _safeVs(response,map(augmentAVar,itertools.chain(dvs,ivs)), additionalAtts)
 

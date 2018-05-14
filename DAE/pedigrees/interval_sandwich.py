@@ -1,4 +1,8 @@
 from __future__ import print_function
+from builtins import next
+from builtins import map
+from builtins import range
+from builtins import object
 import networkx as nx
 import itertools
 from collections import deque
@@ -67,7 +71,7 @@ class Realization(object):
     def copy(self):
         return Realization(
             self.graph, self.forbidden_graph,
-            map(copy.copy, self.intervals),
+            list(map(copy.copy, self.intervals)),
             copy.copy(self.domain),
             self.max_width,
             self._cached_active_vertices,

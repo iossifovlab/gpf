@@ -1,4 +1,6 @@
-class Effect:
+from builtins import str
+from builtins import object
+class Effect(object):
     gene = None
     transcript_id = None
     strand = None
@@ -57,7 +59,7 @@ class Effect:
                         if self.effect in cond])
 
 
-class EffectFactory:
+class EffectFactory(object):
     @classmethod
     def create_effect(cls, effect_name):
         return Effect(effect_name)

@@ -1,6 +1,7 @@
 #!/bin/env python
 
 from __future__ import print_function
+from builtins import str
 from DAE import *
 from collections import defaultdict
 
@@ -8,12 +9,12 @@ from collections import defaultdict
 studies = [vDB.get_study(x) for x in vDB.get_study_names()]
 
 pBuff = defaultdict(set)
-sscCollections = sorted(set([pS.collection for pS in sfariDB.individual.values()]))
-for pId,pS in sfariDB.individual.items():
+sscCollections = sorted(set([pS.collection for pS in list(sfariDB.individual.values())]))
+for pId,pS in list(sfariDB.individual.items()):
     pBuff[pId].add(pS.collection)
 
 for stdy in studies:
-    for f in stdy.families.values():
+    for f in list(stdy.families.values()):
         for p in f.memberInOrder:
             pBuff[p.personId].add(stdy.name)
 

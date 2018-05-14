@@ -1,8 +1,10 @@
+from builtins import zip
+from builtins import object
 from ..effect import EffectFactory
 import logging
 
 
-class ProteinChangeEffectChecker:
+class ProteinChangeEffectChecker(object):
     def mutation_type(self, aaref, aaalt):
         assert(len(aaref) == len(aaalt))
 

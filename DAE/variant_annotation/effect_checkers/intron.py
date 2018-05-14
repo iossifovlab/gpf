@@ -1,8 +1,9 @@
+from builtins import object
 from ..effect import EffectFactory
 import logging
 
 
-class IntronicEffectChecker:
+class IntronicEffectChecker(object):
     def __init__(self, splice_site_length=2):
         self.splice_site_length = splice_site_length
 

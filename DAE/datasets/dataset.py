@@ -3,6 +3,7 @@ Created on Feb 9, 2017
 
 @author: lubo
 '''
+from builtins import filter
 from DAE import pheno, vDB
 import itertools
 from query_variants import generate_response
@@ -165,17 +166,12 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
     def _filter_studies(self, studies, safe, **kwargs):
         study_types = self.get_study_types(safe=safe, **kwargs)
         if study_types is not None:
-            studies = filter(
-                lambda st: st.get_attr('study.type').lower() in study_types,
-                studies)
+            studies = [st for st in studies if st.get_attr('study.type').lower() in study_types]
         selected_phenotypes = self._selected_phenotypes(safe, **kwargs)
         if selected_phenotypes is not None and \
                 'unaffected' not in selected_phenotypes:
-            studies = filter(
-                lambda st: not st.has_attr('study.phenotype') or
-                bool(set(st.phenotypes) & selected_phenotypes),
-                studies
-            )
+            studies = [st for st in studies if not st.has_attr('study.phenotype') or
+                bool(set(st.phenotypes) & selected_phenotypes)]
         return studies
 
     def get_transmitted_studies(self, safe=True, **kwargs):
@@ -255,7 +251,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
             families.update(st.families)
         self.families = families
         self.persons = {}
-        for fam in self.families.values():
+        for fam in list(self.families.values()):
             for p in fam.memberInOrder:
                 p.familyId = fam.familyId
                 self.persons[p.personId] = p
@@ -378,8 +374,8 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
         measure_values = self.pheno_db.get_measure_values(
             measure_id,
-            person_ids=self.persons.keys())
-        for p in self.persons.values():
+            person_ids=list(self.persons.keys()))
+        for p in list(self.persons.values()):
             value = measure_values.get(p.personId, default_value)
             p.atts[pedigree_id] = value
 
@@ -422,7 +418,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if pedigree_checked_values is None:
             return None
         family_ids = set([])
-        for fid, fam in self.families.items():
+        for fid, fam in list(self.families.items()):
             for p in fam.memberInOrder[2:]:
                 if p.atts[pedigree_id] in pedigree_checked_values:
                     family_ids.add(fid)
@@ -538,7 +534,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         denovo = self.get_denovo_variants(safe=safe, **kwargs)
         transmitted = self.get_transmitted_variants(safe=safe, **kwargs)
         augment_vars = self._get_var_augmenter(safe=safe, **kwargs)
-        variants = itertools.imap(
+        variants = map(
             augment_vars,
             itertools.chain.from_iterable([denovo, transmitted]))
         return self._phenotype_filter(variants, **kwargs)
@@ -592,7 +588,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if not pheno_columns:
             return []
         if matches:
-            pheno_columns = filter(matches, pheno_columns)
+            pheno_columns = list(filter(matches, pheno_columns))
         columns = []
         for pheno_column in pheno_columns:
             name = pheno_column['name']
@@ -612,7 +608,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         if not geno_columns:
             return []
         if matches:
-            geno_columns = filter(matches, geno_columns)
+            geno_columns = list(filter(matches, geno_columns))
         columns = []
         for geno_column in geno_columns:
             slots = geno_column['slots']
@@ -639,7 +635,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
         gene_weights = {key: value.to_dict()
                         for key, value
-                        in self.get_gene_weights_loader().weights.items()
+                        in list(self.get_gene_weights_loader().weights.items())
                         if key in genotype_column_keys}
 
         def augment_vars(v):
@@ -650,7 +646,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
                 for (_, _, key, _) in pheno_columns:
                     v.atts[key] = fatts.get(key, '')
 
-            for key, value in gene_weights.items():
+            for key, value in list(gene_weights.items()):
                 genes = {effect['sym'] for effect in v.geneEffect}
                 values = [value[gene] for gene in genes if gene in value]
                 if len(values) > 0:

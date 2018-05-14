@@ -3,6 +3,7 @@ Created on Sep 24, 2015
 
 @author: lubo
 '''
+from builtins import str
 import copy
 import operator
 import re
@@ -154,7 +155,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         assert self['familyIds']
         assert isinstance(self['familyIds'], list)
 
-        where = map(lambda fid: " '{}' ".format(fid), self['familyIds'])
+        where = [" '{}' ".format(fid) for fid in self['familyIds']]
         where = ' tfv.family_id in ( {} ) '.format(','.join(where))
         return where
 
@@ -162,11 +163,10 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         assert self['variantTypes']
         assert isinstance(self['variantTypes'], list)
         assert reduce(operator.and_,
-                      map(lambda et: et in self.VARIANT_TYPES,
-                          self['variantTypes']))
+                      [et in self.VARIANT_TYPES for et in self['variantTypes']])
         if len(set(self['variantTypes'])) == 4:
             return None
-        where = map(lambda ef: " '{}' ".format(ef), self['variantTypes'])
+        where = [" '{}' ".format(ef) for ef in self['variantTypes']]
         where = ' tsv.variant_type in ( {} ) '.format(','.join(where))
         return where
 
@@ -175,7 +175,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         assert isinstance(self['geneSyms'], list) or \
             isinstance(self['geneSyms'], set)
         self.query['geneSymsUpper'] = [sym.upper() for sym in self['geneSyms']]
-        where = map(lambda sym: ' "{}" '.format(sym), self['geneSymsUpper'])
+        where = [' "{}" '.format(sym) for sym in self['geneSymsUpper']]
         where = ' tge.symbol in ( {} ) '.format(','.join(where))
         return where
 
@@ -183,9 +183,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         assert self['effectTypes']
         assert isinstance(self['effectTypes'], list)
         assert reduce(operator.and_,
-                      map(lambda et: et in self.EFFECT_TYPES,
-                          self['effectTypes']))
-        where = map(lambda ef: ' "{}" '.format(ef), self['effectTypes'])
+                      [et in self.EFFECT_TYPES for et in self['effectTypes']])
+        where = [' "{}" '.format(ef) for ef in self['effectTypes']]
         where = ' tge.effect_type in ( {} ) '.format(','.join(where))
         return where
 
@@ -238,8 +237,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         assert self['presentInParent']
         assert isinstance(self['presentInParent'], list)
         assert reduce(operator.and_,
-                      map(lambda p: p in self.PRESENT_IN_PARENT_TYPES,
-                          self['presentInParent']))
+                      [p in self.PRESENT_IN_PARENT_TYPES for p in self['presentInParent']])
         w = [self.PRESENT_IN_PARENT_MAPPING[pip]
              for pip in self['presentInParent']]
         if len(set(w)) == 4:
@@ -300,8 +298,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
         assert self['presentInChild']
         assert isinstance(self['presentInChild'], list)
         assert reduce(operator.and_,
-                      map(lambda p: p in self.PRESENT_IN_CHILD_TYPES,
-                          self['presentInChild']))
+                      [p in self.PRESENT_IN_CHILD_TYPES for p in self['presentInChild']])
         if not self['gender'] or set(self['gender']) == set(['M', 'F']):
             w = [self.PRESENT_IN_CHILD_MAPPING[pic]
                  for pic in self['presentInChild']]

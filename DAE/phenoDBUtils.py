@@ -4,6 +4,8 @@ Created on Nov 7, 2012
 @author: Tony
 '''
 from __future__ import print_function
+from builtins import next
+from builtins import object
 import csv
 import re
 
@@ -43,7 +45,7 @@ def saveCSV(filename, columns, data):
     f.close()
 
 
-class CSV:
+class CSV(object):
 
     def __init__(self):
         self.data = []
@@ -125,7 +127,7 @@ def findWords(value):
     value = value.strip()
     value = value.lower()
     if len(value) == 0:
-        return words.keys()
+        return list(words.keys())
 
     # uncomment to filter values
     # if is_garbage(value):
@@ -167,7 +169,7 @@ def findWords(value):
         #    else:
         #        words[word]=0
 
-    return words.keys()
+    return list(words.keys())
 
 
 def is_boolean(s):

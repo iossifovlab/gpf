@@ -3,6 +3,7 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
+from builtins import object
 import itertools
 from gene.weights import Weights
 import re
@@ -124,7 +125,7 @@ class EffectTypesMixin(object):
 
     def build_effect_types(self, effect_types, safe=True):
         if isinstance(effect_types, str) or \
-                isinstance(effect_types, unicode):
+                isinstance(effect_types, str):
             effect_types = effect_types.replace(',', ' ')
             effect_types = effect_types.split()
         etl = [et.strip() for et in effect_types]
@@ -138,14 +139,14 @@ class EffectTypesMixin(object):
 
     def build_effect_types_naming(self, effect_types, safe=True):
         if isinstance(effect_types, str) or \
-                isinstance(effect_types, unicode):
+                isinstance(effect_types, str):
             effect_types = effect_types.replace(',', ' ')
             effect_types = effect_types.split()
         assert isinstance(effect_types, list)
         if safe:
             assert all([
                 et in self.EFFECT_TYPES or
-                et in self.EFFECT_TYPES_MAPPING.keys() for et in effect_types])
+                et in list(self.EFFECT_TYPES_MAPPING.keys()) for et in effect_types])
         return [
             self.EFFECT_TYPES_UI_NAMING.get(et, et) for et in effect_types
         ]
@@ -354,7 +355,7 @@ class GeneSymsMixin(object):
             return set([])
 
         if isinstance(gene_symbols, str) or \
-                isinstance(gene_symbols, unicode):
+                isinstance(gene_symbols, str):
             gene_symbols = gene_symbols.replace(',', ' ')
             gene_symbols = gene_symbols.split()
 
@@ -401,7 +402,7 @@ class RegionsMixin(object):
             return None
         regions = kwargs['regions']
         if isinstance(regions, str) or \
-                isinstance(regions, unicode):
+                isinstance(regions, str):
             regions = regions.split()
         result = []
         for region in regions:

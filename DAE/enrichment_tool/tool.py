@@ -5,6 +5,7 @@ Created on Nov 8, 2016
 '''
 
 
+from builtins import object
 class EnrichmentTool(object):
 
     def __init__(self, background, event_counter):

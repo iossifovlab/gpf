@@ -4,7 +4,7 @@ from __future__ import print_function
 import optparse, sys, os
 import pysam, numpy
 from collections import namedtuple, defaultdict
-from itertools import izip
+
 import itertools
 
 pedInfo = namedtuple( 'PED', 'fid,pid,fa,ma,sex,phenotype,aux'.split(',') )
@@ -35,7 +35,7 @@ def procPED2Nuc( fname ):
 
     for line in fin:
 	terms = line.strip('\n').split('\t')
-	tx = { h:v for h,v in izip(hd,terms) }
+	tx = { h:v for h,v in zip(hd,terms) }
 
 	ped = pedInfo( *[tx['familyId'],tx['personId'],tx['dadId'],tx['momId'],tx['gender'],tx['status'], terms[6:] ] )  #*terms )
 	pid = pidInfo( *[tx['familyId'],tx['dadId'],tx['momId'],tx['gender'],tx['status'], terms[6:] ] )  #*([terms[0]] + terms[2:]) )
@@ -56,7 +56,7 @@ def procPED2Nuc( fname ):
   mlist = { x:0 for x in clist & plist }
   #print mlist
   mInfo = dict() #
-  for k, v in fInfo.items():
+  for k, v in list(fInfo.items()):
         newIds = []
         for pid in v:
            if pid in mlist:
@@ -98,8 +98,8 @@ def pedState( ped ):
 # familyId,personId,momId,dadId,gender,status,[sampleId]
 def printNucFamInfo( fInfo, pInfo, aux_head=[], out=sys.stdout ):
    flag = False
-   for k, v in fInfo.items():
-        if len([n for n,o in izip(v['ids'],v['newIds']) if n != o]) > 0:
+   for k, v in list(fInfo.items()):
+        if len([n for n,o in zip(v['ids'],v['newIds']) if n != o]) > 0:
                 flag = True
                 break
 
@@ -137,7 +137,7 @@ def printNucFamInfo( fInfo, pInfo, aux_head=[], out=sys.stdout ):
                 #print >> out, '\t'.join( [nf, nm[1], xp.fa, xp.ma, sex, xp.phenotype] )
                 print('\t'.join( [nf, nm[1], '0', '0', sex, xp.phenotype] + xp.aux ), file=out)
 
-	for o, n in izip(om[2:],nm[2:]):
+	for o, n in zip(om[2:],nm[2:]):
 	   xp = pInfo[o]
 	   sex, role = pedState( xp )
 	   
@@ -191,7 +191,7 @@ def procFamInfo( fname ):
       checkHeader( hd )
 	
       for line in fin:
-	fx = {h:v for h,v in izip(hd,line.strip('\n').split('\t'))}
+	fx = {h:v for h,v in zip(hd,line.strip('\n').split('\t'))}
 
 	nPid, ped = famInfo2PED( fx ) #
 	pid = famInfo2PID( ped ) #pidInfo( *([terms[0]] + terms[2:]) )
@@ -215,7 +215,7 @@ def procFamInfo( fname ):
 	fInfo[fid]['ids'].append( ped.pid )
 	fInfo[fid]['newIds'].append( nPid )
 
-  for k, v in fInfo.items():
+  for k, v in list(fInfo.items()):
 	for n, p in enumerate(v['ids']):
                 if p in p2np: continue
                 
@@ -225,7 +225,7 @@ def procFamInfo( fname ):
   #print p2np, np2p
   #make dict for who are mother and father in the family even on large families
   fama = namedtuple( 'fama', ['fa','ma'] )
-  for fid in fInfo.keys():
+  for fid in list(fInfo.keys()):
      fm = {}
      im = {}
      ids = fInfo[fid]['newIds'] #['ids']
@@ -269,8 +269,8 @@ def pedState2( ped ):
 
 def printFamData( fInfo, pInfo, proj='VIP', lab='SF', listFam=[], out=sys.stdout ):
    flag = False
-   for k, v in fInfo.items():
-	if len([n for n,o in izip(v['ids'],v['newIds']) if n != o]) > 0:
+   for k, v in list(fInfo.items()):
+	if len([n for n,o in zip(v['ids'],v['newIds']) if n != o]) > 0:
 		flag = True
 		break
    if flag:
@@ -304,7 +304,7 @@ def printFamData( fInfo, pInfo, proj='VIP', lab='SF', listFam=[], out=sys.stdout
 	else:
                 print('\t'.join( [nf, nm[1], proj, lab, 'dad', sex] ), file=out)
 
-	for o, n in izip(om[2:],nm[2:]):
+	for o, n in zip(om[2:],nm[2:]):
 	   xp = pInfo[n]
 	   sex, role = pedState2( xp )
 	   

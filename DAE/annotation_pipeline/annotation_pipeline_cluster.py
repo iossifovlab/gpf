@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+from builtins import str
+from builtins import range
 from subprocess import call
 
 QUEUES='all.q@wigclust1.cshl.edu,all.q@wigclust10.cshl.edu,all.q@wigclust11.cshl.edu,all.q@wigclust12.cshl.edu,all.q@wigclust13.cshl.edu,all.q@wigclust14.cshl.edu,all.q@wigclust15.cshl.edu,all.q@wigclust16.cshl.edu,all.q@wigclust17.cshl.edu,all.q@wigclust18.cshl.edu,all.q@wigclust19.cshl.edu,all.q@wigclust2.cshl.edu,all.q@wigclust20.cshl.edu,all.q@wigclust21.cshl.edu,all.q@wigclust22.cshl.edu,all.q@wigclust23.cshl.edu,all.q@wigclust24.cshl.edu,all.q@wigclust3.cshl.edu,all.q@wigclust4.cshl.edu,all.q@wigclust5.cshl.edu,all.q@wigclust6.cshl.edu,all.q@wigclust8.cshl.edu,all.q@wigclust9.cshl.edu'
 
-chromosomes = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
+chromosomes = [str(x) for x in range(1, 23)] + ['X', 'Y']
 
 chr_labels = {'X': '23', 'Y': '24'}
 

@@ -1,5 +1,7 @@
 #!/bin/env python
 from __future__ import print_function
+from builtins import str
+from builtins import range
 from DAE import *
 import getpass
 import sys
@@ -57,7 +59,7 @@ for v in stdy.get_denovo_variants(effectTypes="LGDs",callSet="dirty"):
         cnts = v.counts
         if cnts[1,0]>0 or cnts[1,1]>0:
             continue
-        if all([cnts[1,c]<3 for c in xrange(2,cnts.shape[1])]):
+        if all([cnts[1,c]<3 for c in range(2,cnts.shape[1])]):
             continue
         if v.location[0]=="X":
             continue

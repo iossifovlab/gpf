@@ -1,11 +1,16 @@
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import sys
 import VariantAnnotation
 from .mutation import Mutation, MutatedGenomicSequence, TranscriptModelWrapper
 from .mutation import GenomicSequence
 
 
-class VariantAnnotator:
+class VariantAnnotator(object):
     def __init__(self, transcript_model, pos, ref, seq,
                  reference_genome, code):
         self.transcript_model = transcript_model
@@ -30,7 +35,7 @@ class VariantAnnotator:
             )
             hit = [tm.gene, protPos]
         elif worstEffect == "noEnd" or worstEffect == "noStart":
-            protLength = tm.CDS_len()/3
+            protLength = old_div(tm.CDS_len(),3)
             hit = [tm.gene, str(protLength)]
         elif worstEffect == "3'UTR" or worstEffect == "5'UTR":
             d = VariantAnnotation.distanceFromCoding(pos, tm)

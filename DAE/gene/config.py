@@ -3,6 +3,7 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
+from builtins import object
 from Config import Config
 from configparser import ConfigParser
 from GeneInfoDB import GeneInfoDB

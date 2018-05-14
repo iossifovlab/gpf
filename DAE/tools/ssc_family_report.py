@@ -1,5 +1,7 @@
 #!/bin/env python
 
+from builtins import map
+from builtins import object
 import re
 from collections import defaultdict
 from DAE import *
@@ -18,7 +20,7 @@ def printDt(dt,idCol,fn='-'):
     else:
         f = open(fn,'w')
 
-    cols =  sorted({c for row in dt.values() for c in row})
+    cols =  sorted({c for row in list(dt.values()) for c in row})
     f.write(idCol + "\t" + "\t".join([c[(c.index('.')+1):] for c in cols])+"\n")
     for id, row in sorted(dt.items()):
         f.write(id + "\t" + "\t".join([";".join(map(str,row[c]))   for c in cols]) + "\n")
@@ -48,10 +50,10 @@ def procSfariSSC():
 
     fms = defaultdict(list) 
     fmColl  = defaultdict(set) 
-    for indS in sfariDB.individual.values():
+    for indS in list(sfariDB.individual.values()):
         # if indS.collection != 'ssc':
         #     continue
-        class Person:
+        class Person(object):
             pass
         p = Person()
         p.personId = indS.personId
@@ -63,7 +65,7 @@ def procSfariSSC():
     for fid in fms:
         fms[fid] = sorted(fms[fid],key=lambda x: (roleOrd[x.role], x.personId))
         fmColl[fid] = ",".join(fmColl[fid])
-    for fid,inds in fms.items():
+    for fid,inds in list(fms.items()):
         fam(fid,"0.sfri.chld",chldCode(inds))
         fam(fid,"0.sfri.collection",fmColl[fid])
         for p in inds:
@@ -73,7 +75,7 @@ def procSfariSSC():
 def procAssignment(stN):
     st = vDB.get_study(stN)
         
-    for fdsc in st.families.values() + st.badFamilies.values():
+    for fdsc in list(st.families.values()) + list(st.badFamilies.values()):
         fam(fdsc.familyId,"1.%s.chld" % stN,chldCode(fdsc.memberInOrder))
         fam(fdsc.familyId,"0.assigned",stN[0])
         for pi,p in enumerate(fdsc.memberInOrder):
@@ -91,7 +93,7 @@ def procWigStudy(stN, addSeqStatus=False, downloadHist=None):
     st = sts[0]
     familyIdRE = re.compile('^\d\d\d\d\d$') 
         
-    for fdsc in st.families.values() + st.badFamilies.values():
+    for fdsc in list(st.families.values()) + list(st.badFamilies.values()):
         if not familyIdRE.match(fdsc.familyId):
             continue
     

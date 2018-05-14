@@ -4,6 +4,7 @@
 # written by Ewa
 
 
+from builtins import zip
 from GeneModelFiles import *
 import os.path
 import optparse

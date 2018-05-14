@@ -1,6 +1,7 @@
 #!/bin/env python
 
 from __future__ import print_function
+from builtins import object
 from collections import defaultdict
 from functools import partial
 import glob
@@ -9,7 +10,7 @@ import os
 def dd():
     return defaultdict(int)
 
-class GeneTerms:
+class GeneTerms(object):
     def __init__(self):
         self.g2T = defaultdict(dd) 
         self.t2G = defaultdict(dd) 
@@ -17,11 +18,11 @@ class GeneTerms:
         self.geneNS = None
 
     def filterGenes(self, filterF):
-        keepGs = filterF(self.g2T.keys())
-        self.g2T = {g:ts for g,ts in self.g2T.items() if g in keepGs}
+        keepGs = filterF(list(self.g2T.keys()))
+        self.g2T = {g:ts for g,ts in list(self.g2T.items()) if g in keepGs}
         self.t2G = defaultdict(dd)
-        for g,ts in self.g2T.items():
-            for t, n in ts.items():
+        for g,ts in list(self.g2T.items()):
+            for t, n in list(ts.items()):
                 self.t2G[t][g] = n
         for t in set(self.tDesc)-set(self.t2G):
             del self.tDesc[t]
@@ -30,12 +31,12 @@ class GeneTerms:
         g2T = self.g2T
         self.g2T = defaultdict(dd)
         self.t2G = defaultdict(dd)
-        for g,ts in g2T.items():
+        for g,ts in list(g2T.items()):
             ng = renameF(g)
             if ng:
                 self.g2T[ng] = ts
-        for g,ts in self.g2T.items():
-            for t, n in ts.items():
+        for g,ts in list(self.g2T.items()):
+            for t, n in list(ts.items()):
                 self.t2G[t][g] = n
         for t in set(self.tDesc)-set(self.t2G):
             del self.tDesc[t]

@@ -4,6 +4,14 @@
 # by Ewa
 
 from __future__ import print_function
+from __future__ import division
+from builtins import next
+from builtins import zip
+from builtins import map
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import tarfile
 import numpy as np
 import os, sys
@@ -18,7 +26,7 @@ import glob
 import os.path
 
 
-class GenomicScore:
+class GenomicScore(object):
     location = None
     name = None
     Scores = None
@@ -29,10 +37,10 @@ class GenomicScore:
     def _create_index_gerp(self):
         self.Indexing =  defaultdict(dict)
         self._Keys = {}
-        for k, v in self.Scores['gerp'].items():
+        for k, v in list(self.Scores['gerp'].items()):
             self.Indexing[k][(1, len(v))] = (0, len(v)-1)
 
-            self._Keys[k] = sorted(self.Indexing[k].keys(), key=lambda x: int(x[0])) 
+            self._Keys[k] = sorted(list(self.Indexing[k].keys()), key=lambda x: int(x[0])) 
             
 
     def _create_array_gerp(self, file):
@@ -90,7 +98,7 @@ class GenomicScore:
                     continue
                 self.Indexing[chr][(start, start+k-1)] = (K, K+k-1)        
                 K += k
-                self._Keys[chr] = sorted(self.Indexing[chr].keys(), key=lambda x: int(x[0]))
+                self._Keys[chr] = sorted(list(self.Indexing[chr].keys()), key=lambda x: int(x[0]))
         f.close()
         
 
@@ -171,7 +179,7 @@ class GenomicScore:
                 self.Scores[scN][chr]=scoreList[:,scI]
     
 
-        self.Scores = {scN:scD for scN,scD in self.Scores.items()}
+        self.Scores = {scN:scD for scN,scD in list(self.Scores.items())}
         self._create_index_allele_count(positions)
 
     def _create_array_regions_genomic_score_file(self,filePattern):
@@ -209,17 +217,17 @@ class GenomicScore:
                     rgL = regEnd-regBegin+1
                     bgI = 0
                     if len(self.Scores):
-                        bgI = len(self.Scores.values()[0][chr])
+                        bgI = len(list(self.Scores.values())[0][chr])
                     enI = bgI + rgL - 1
                     self.Indexing[chr][(regBegin,regEnd)]=(bgI,enI)
                     regionScores=[]
                     for scN,scoresS in zip(self._score_names,row[3:]):
-                        scores=map(float,scoresS.split(','))
+                        scores=list(map(float,scoresS.split(',')))
                         if len(scores) != rgL:
                             raise Exception('Wrong number of scores for ' + scN + " in file " + fileName)
                         self.Scores[scN][chr] += scores
 
-        self.Scores = {scN:{chr:np.array(scrs) for chr,scrs in scD.items()} for scN,scD in self.Scores.items()}
+        self.Scores = {scN:{chr:np.array(scrs) for chr,scrs in list(scD.items())} for scN,scD in list(self.Scores.items())}
 
     def _create_array_allele_count(self,dir):
         self.location=dir
@@ -249,14 +257,14 @@ class GenomicScore:
     def _create_index_allele_count(self,positions):
         self.Indexing =  defaultdict(dict) 
         self._Keys = defaultdict(list)
-        for chr in positions.keys():            
+        for chr in list(positions.keys()):            
             chromStart=positions[chr][0]
             indexStart=0
             blockLength=0
             sys.stderr.write("creating index for chrom "+chr+"\n")
 
             length=len(positions[chr])
-            for i in xrange(0,length):
+            for i in range(0,length):
                 if i+1 == length:
                     self.Indexing[chr][(chromStart,chromStart+blockLength)]=(indexStart,indexStart+blockLength)
                     self._Keys[chr].append((chromStart,chromStart+blockLength))
@@ -282,17 +290,17 @@ class GenomicScore:
         file.close()
 
         if is_sorted == False:
-            for v in self._Keys.values():
+            for v in list(self._Keys.values()):
                 v.sort()
 
-        for chr, vls in self._Keys.items():
+        for chr, vls in list(self._Keys.items()):
             k = 0
             for v in vls:
                 k2 = v[1] - v[0]
                 self.Indexing[chr][v] = (k, k+k2)
                 k += k2 + 1
 
-        if self.Indexing.keys()[0].startswith("chr"):
+        if list(self.Indexing.keys())[0].startswith("chr"):
             self.chr_format = "hg19"
         else:
             self.chr_format = "GATK"
@@ -301,9 +309,9 @@ class GenomicScore:
         
     def __join_intervals(self, D):
 
-        for chr in D.keys():
+        for chr in list(D.keys()):
             prev = (-2,-2)
-            for key in sorted(D[chr].keys(), key=lambda tup: tup[0]):
+            for key in sorted(list(D[chr].keys()), key=lambda tup: tup[0]):
                 if key[0] == prev[1] + 1:
                     D[chr][(prev[0], key[1])] = (D[chr][prev][0], D[chr][key][1])
                     del D[chr][prev]
@@ -324,8 +332,8 @@ class GenomicScore:
             D[chrb][(posb, pose)] = (k, k+length-1)
         
         else:
-            self.__create_index_binary(Ar[:length/2], D, k)
-            self.__create_index_binary(Ar[length/2:], D, k+length/2)
+            self.__create_index_binary(Ar[:old_div(length,2)], D, k)
+            self.__create_index_binary(Ar[old_div(length,2):], D, k+old_div(length,2))
 
                 
     def _create_mut_prob_array_index(self, Ar):
@@ -343,15 +351,15 @@ class GenomicScore:
             file = file + ".hdf5"
         
         h5py_file = h5py.File(file, 'w')
-        for subscore in self.Scores.keys():
+        for subscore in list(self.Scores.keys()):
             grp = h5py_file.create_group(subscore)
-            for k, v in self.Scores[subscore].items():
+            for k, v in list(self.Scores[subscore].items()):
                 grp.create_dataset(k, data=v)
         
         grp = h5py_file.create_group("Index")
-        for key in self.Indexing.keys():
+        for key in list(self.Indexing.keys()):
             L = []
-            for k, v in self.Indexing[key].items():
+            for k, v in list(self.Indexing[key].items()):
                 L.append((k[0], k[1], v[0], v[1]))
             grp.create_dataset(key, data=np.array(L))
         
@@ -376,25 +384,25 @@ class GenomicScore:
         f = h5py.File(file, 'r')
         
         
-        if f['Index'].keys()[0].startswith("chr"):
+        if list(f['Index'].keys())[0].startswith("chr"):
             self.chr_format = "hg19"
         else:
             self.chr_format = "GATK"
             
-        for chrom, vals in f['Index'].items():
+        for chrom, vals in list(f['Index'].items()):
             for i in vals:
                 self.Indexing[str(chrom)][(i[0], i[1])] = (i[2], i[3])
-            self._Keys[str(chrom)] = sorted(self.Indexing[str(chrom)].keys(), key=lambda x: int(x[0]))
+            self._Keys[str(chrom)] = sorted(list(self.Indexing[str(chrom)].keys()), key=lambda x: int(x[0]))
         
             
-        alignments = [str(align) for align in f.keys() if align != "Index"]
+        alignments = [str(align) for align in list(f.keys()) if align != "Index"]
         if len(alignments) == 3 and all(i in alignments for i in ['Placental', 'Primates', 'Vertebrates']):
             self._score_names = ['Primates', 'Placental','Vertebrates']
         else:
             self._score_names = alignments
             
         for i in alignments:
-            for k, v in f[i].items():
+            for k, v in list(f[i].items()):
                 try:
                     self.Scores[i][str(k)] = np.array(v)
                 except:
@@ -411,15 +419,15 @@ class GenomicScore:
 
         args = []
         kwds = []
-        for subscore in self.Scores.keys():
-            for k,v in self.Scores[subscore].items():
+        for subscore in list(self.Scores.keys()):
+            for k,v in list(self.Scores[subscore].items()):
                 args.append(v)
                 kwds.append(subscore + ":" + k)
 
 
-        for key in self.Indexing.keys():
+        for key in list(self.Indexing.keys()):
             L = []
-            for k, v in self.Indexing[key].items():
+            for k, v in list(self.Indexing[key].items()):
                 L.append((k[0], k[1], v[0], v[1]))
             kwds.append("Index:" + key)
             args.append(np.array(L))
@@ -451,13 +459,13 @@ class GenomicScore:
             else:
                 self.Scores[s1][s2] = ar
 
-        for chr in self.Indexing.keys():
-            self._Keys[chr] = sorted(self.Indexing[chr].keys(), key=lambda x: int(x[0]))
-        self.Scores = {scN:scD for scN,scD in self.Scores.items()}
+        for chr in list(self.Indexing.keys()):
+            self._Keys[chr] = sorted(list(self.Indexing[chr].keys()), key=lambda x: int(x[0]))
+        self.Scores = {scN:scD for scN,scD in list(self.Scores.items())}
 
 
     def __reindex(self):
-        for chr in self.Indexing.keys():
+        for chr in list(self.Indexing.keys()):
             diff = self.Indexing[chr][self._Keys[chr][0]][0]
             new_Ind = {}
             for k, v in sorted(self.Indexing[chr].items()):
@@ -486,16 +494,16 @@ class GenomicScore:
         
         self.Indexing = self._create_mut_prob_array_index(A)
         
-        for chr in self.Indexing.keys():
+        for chr in list(self.Indexing.keys()):
             if self.chr_format == None:
                 if chr.startswith("chr"):
                     self.chr_format = 'hg19'
                 else:
                     self.chr_format = 'GATK'
-            self._Keys[chr] = sorted(self.Indexing[chr].keys(), key=lambda x: int(x[0]))
+            self._Keys[chr] = sorted(list(self.Indexing[chr].keys()), key=lambda x: int(x[0]))
         
         
-        for k in self.Indexing.keys():
+        for k in list(self.Indexing.keys()):
             minIndex = self.Indexing[k][self._Keys[k][0]][0]
             maxIndex = self.Indexing[k][self._Keys[k][-1]][1]
             for col in columns:
@@ -543,9 +551,9 @@ class GenomicScore:
 
        
 
-        for chr, vls in TS_dict.items():
+        for chr, vls in list(TS_dict.items()):
     
-            for sp in xrange(0, number_of_alignments):
+            for sp in range(0, number_of_alignments):
                 try:
                     gs.Scores[gs._score_names[sp]][chr] = np.concatenate([y[sp] for y in vls])
                 except:
@@ -555,7 +563,7 @@ class GenomicScore:
                 for m in v[cols]:
                     gs.Indexing[chr][(m.start, m.stop)] = (ind_k, ind_k + m.stop - m.start)
                     ind_k += m.stop - m.start + 1
-            gs._Keys[chr] = sorted(gs.Indexing[chr].keys(), key=lambda x: int(x[0]))
+            gs._Keys[chr] = sorted(list(gs.Indexing[chr].keys()), key=lambda x: int(x[0]))
         
         return gs
     
@@ -585,8 +593,8 @@ class GenomicScore:
         self.Indexing = pickle.load(pkl_file)
         pkl_file.close()
         
-        for chr in self.Indexing.keys():
-            self._Keys[chr] = sorted(self.Indexing[chr].keys(), key=lambda x: int(x[0]))
+        for chr in list(self.Indexing.keys()):
+            self._Keys[chr] = sorted(list(self.Indexing[chr].keys()), key=lambda x: int(x[0]))
   
     
     def get_lengths(self):
@@ -594,14 +602,14 @@ class GenomicScore:
         if self.Scores:
             
             Lengths = {}
-            for key in self.Scores.keys():
-                for k, v in self.Scores[key].items():
+            for key in list(self.Scores.keys()):
+                for k, v in list(self.Scores[key].items()):
                     Lengths[k] = len(v)
                 break
 
         else:
             Lengths = defaultdict(int)
-            for key, vls in self._Keys.items():
+            for key, vls in list(self._Keys.items()):
                 for v in vls:
                    Lengths[key] += v[1] - v[0] + 1 
         return(Lengths)
@@ -625,21 +633,21 @@ class GenomicScore:
 
             for key in self.Scores:
                 sys.stderr.write("Relabeling for: " + key + "\n")
-                for k, v in self.Scores[key].items():
+                for k, v in list(self.Scores[key].items()):
                     try:
                         self.Scores[key][Relabel[k]] = v
                         del self.Scores[key][k]
                     except:
                         sys.stderr.write("Unknown chromosome: " + k + " -  has not been changed\n")
 
-            for k,v in self.Indexing.items():
+            for k,v in list(self.Indexing.items()):
                 try:
                     self.Indexing[Relabel[k]] = v
                     del self.Indexing[k]
                 except:
                     pass
 
-            for k, v in self._Keys.items():
+            for k, v in list(self._Keys.items()):
                 try:
                     self._Keys[Relabel[k]] = v
                     del self._Keys[k]
@@ -661,13 +669,13 @@ class GenomicScore:
 
             for key in self.Scores:
                 sys.stderr.write("Relabeling for: " + key + "\n")
-                for k, v in self.Scores[key].items():
+                for k, v in list(self.Scores[key].items()):
                     gs.Scores[key][Relabel[k]] = v
 
-            for k,v in self.Indexing.items():
+            for k,v in list(self.Indexing.items()):
                 gs.Indexing[Relabel[k]] = v
 
-            for k, v in self._Keys.items():
+            for k, v in list(self._Keys.items()):
                 gs._Keys[Relabel[k]] = v
             
             if chr_format == "GATK":
@@ -692,7 +700,7 @@ class GenomicScore:
         #    return((False,b))
 
         while True:
-            x = (b+e)/2
+            x = old_div((b+e),2)
 
             # print >>sys.stderr, "_bin_search: b:",b,"e:",e,"x:",x
 
@@ -720,7 +728,7 @@ class GenomicScore:
                     sys.exit(-454)
 
         chr, pos = loc.split(":")
-        posB, posE = map(int, pos.split("-"))
+        posB, posE = list(map(int, pos.split("-")))
         ind = self._bin_search1(chr, int(posB))
         
         K = []
@@ -765,12 +773,12 @@ class GenomicScore:
         locs2 = [self.__mapping(re.split(":|-", x)) for x in locs]
         
         if if_sorted == False:
-            order, locs2 = zip(*sorted([(i,v) for i,v in enumerate(locs2)], key=itemgetter(1)))
+            order, locs2 = list(zip(*sorted([(i,v) for i,v in enumerate(locs2)], key=itemgetter(1))))
             
         k_prev = 0
         chr = None
         for i in locs2:
-            if i[0] not in self._Keys.keys():
+            if i[0] not in list(self._Keys.keys()):
                 #if fill_with_NA == True:
                 #    scrs = [["NA"]*(i[2]-i[1]+1) for s in scores]
                 #    scrs.append([Region(i[0], i[1], i[2])])
@@ -887,7 +895,7 @@ class GenomicScore:
         #locs2 = np.array([(x.split(":")[0], int(x.split(":")[1])) for x in locs], [('chr', '<S20'), ('pos', int)])
         locs2 = [(x.split(":")[0], int(x.split(":")[1])) for x in locs]
         if if_sorted == False:
-            order, locs2 = zip(*sorted([(i,v) for i,v in enumerate(locs2)], key=itemgetter(1)))
+            order, locs2 = list(zip(*sorted([(i,v) for i,v in enumerate(locs2)], key=itemgetter(1))))
             #order, locs2 = zip(*np.argsort([(i,v) for i,v in enumerate(locs2)], key=itemgetter(1)))
         
         R = []
@@ -896,7 +904,7 @@ class GenomicScore:
         k=0
         length = len(self._Keys[prev_chr])
         for l in locs2:
-            if l[0] not in self._Keys.keys():
+            if l[0] not in list(self._Keys.keys()):
                 R.append([])
                 continue
             if l[0] != prev_chr:
@@ -931,14 +939,14 @@ class GenomicScore:
 
     def get_regions(self):
         Region_list = []
-        for chrom, rgns in self._Keys.items():
+        for chrom, rgns in list(self._Keys.items()):
             for r in rgns:
                 Region_list.append(Region(chrom, r[0], r[1]))
         return(Region_list)
 
  
 
-class OneArray:
+class OneArray(object):
     array = None
     index = None
     

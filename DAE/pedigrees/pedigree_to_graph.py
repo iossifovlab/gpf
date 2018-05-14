@@ -1,6 +1,9 @@
 #!/usr/bin/env python2.7
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import str
+from builtins import map
+from builtins import object
 import abc
 from collections import defaultdict
 import argparse
@@ -11,6 +14,7 @@ import collections
 from .interval_sandwich import SandwichInstance, SandwichSolver
 from .layout import Layout
 from .drawing import PDFLayoutDrawer, OffsetLayoutDrawer
+from future.utils import with_metaclass
 
 
 class CsvPedigreeReader(object):
@@ -34,7 +38,7 @@ class CsvPedigreeReader(object):
 
             families[member.family_id].members.append(member)
 
-        return families.values()
+        return list(families.values())
 
 
 class PedigreeMember(object):
@@ -86,7 +90,7 @@ class Pedigree(object):
 
         individuals = set(id_to_individual.values())
         mating_units = set(id_to_mating_unit.values())
-        sibship_units = set([mu.children for mu in id_to_mating_unit.values()])
+        sibship_units = set([mu.children for mu in list(id_to_mating_unit.values())])
 
         all_vertices = individuals | mating_units | sibship_units
 
@@ -167,9 +171,7 @@ class Pedigree(object):
             individual.rank = -individual.rank
 
 
-class IndividualGroup(object):
-    __metaclass__ = abc.ABCMeta
-
+class IndividualGroup(with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def individual_set(self):
         return {}
@@ -291,7 +293,7 @@ class LayoutSaver(object):
         return "{};{}".format(family_id, individual_id)
 
     def writerow(self, family, layout):
-        for individual_id, position in layout.id_to_position.items():
+        for individual_id, position in list(layout.id_to_position.items()):
             row = {
                 self.fieldname: "{},{}".format(position.x, position.y)
             }
@@ -359,10 +361,7 @@ def main():
             print(family.family_id)
             print("No intervals")
         if intervals:
-            individuals_intervals = filter(
-                lambda interval: isinstance(interval.vertex, Individual),
-                intervals
-            )
+            individuals_intervals = [interval for interval in intervals if isinstance(interval.vertex, Individual)]
             mating_units = {mu for i in individuals_intervals
                             for mu in i.vertex.mating_units}
             if len(mating_units) > 1:

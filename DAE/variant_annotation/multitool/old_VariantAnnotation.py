@@ -4,6 +4,11 @@
 # written by Ewa
 
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import os, sys, optparse
 from subprocess import call
 import re
@@ -19,7 +24,7 @@ LOF = ['splice-site','frame-shift','nonsense','no-frame-shift-newStop']
 nonsyn = ['splice-site','frame-shift','nonsense','no-frame-shift-newStop','missense','noStart', 'noEnd', 'no-frame-shift']
 
 
-class NuclearCode:
+class NuclearCode(object):
 
     stopCodons = ['TAG', 'TAA', 'TGA']
     startCodons = ['ATG']
@@ -48,10 +53,10 @@ class NuclearCode:
 
 
 
-    CodonsAaKeys = CodonsAa.keys()
+    CodonsAaKeys = list(CodonsAa.keys())
 
 
-class MitochondrialCode:
+class MitochondrialCode(object):
 
     stopCodons = ['TAA', 'TAG']
     startCodons = ['ATG', 'ATA']
@@ -79,11 +84,11 @@ class MitochondrialCode:
         'His' : ['CAT', 'CAC'],
         'Pro' : ['CCG', 'CCA', 'CCT', 'CCC']}
 
-    CodonsAaKeys = CodonsAa.keys()
+    CodonsAaKeys = list(CodonsAa.keys())
 
 
 
-class Effect:
+class Effect(object):
 
     gene = None
     transcript_id = None
@@ -192,7 +197,7 @@ def add_effects(l):
 
 
 
-class Variant:
+class Variant(object):
 
     chr = None
     pos = None
@@ -212,7 +217,7 @@ class Variant:
         #global stopCodons, CodonsAa, CodonsAaKeys
 
 
-        if self.chr not in gm._utrModels.keys():
+        if self.chr not in list(gm._utrModels.keys()):
 
             ef =  Effect()
             if self.chr in refG.allChromosomes:
@@ -252,7 +257,7 @@ class Variant:
                 for i in gm._utrModels[self.chr][key]:
 
                     if self.seq == None and self.type != "deletion":
-                        worstForEachTranscript.append(["unknown", [i.gene, i.CDS_len()/3], i.strand, i.trID])
+                        worstForEachTranscript.append(["unknown", [i.gene, old_div(i.CDS_len(),3)], i.strand, i.trID])
                         continue
 
                     what_hit = i.what_region(self.chr, self.pos, self.pos_last, prom = promoter_len)
@@ -272,7 +277,7 @@ class Variant:
                     if what_hit == "all":
                         if i.is_coding() == True:
                             transcript_length =  i.CDS_len()
-                            protLength = transcript_length/3
+                            protLength = old_div(transcript_length,3)
                             worstForEachTranscript.append([what_hit, [i.gene, protLength], i.strand, i.trID])
                         else:
                             worstForEachTranscript.append(["non-coding", [i.gene, i.total_len()], i.strand, i.trID])
@@ -456,7 +461,7 @@ class Variant:
 
 
                         prev = codingRegions[0].stop
-                        for j in xrange(0, len(codingRegions)):
+                        for j in range(0, len(codingRegions)):
                             if self.pos < codingRegions[j].start and self.pos > prev:
                                 if self.pos - prev < 3:
                                     # splice
@@ -602,7 +607,7 @@ class Variant:
 
                         if what_hit == "CDS":
                             transcript_length =  i.CDS_len()
-                            protLength = transcript_length/3
+                            protLength = old_div(transcript_length,3)
                             worstForEachTranscript.append(["CDS",[i.gene, self.type, protLength],i.strand, i.trID])
                             continue
                         if what_hit == "intronic":
@@ -873,7 +878,7 @@ def major_effect_per_gene(E):
         else:
             D[i.gene] = {'max':Severity[i.effect], 'ef':i.effect}
 
-    for key in D.keys():
+    for key in list(D.keys()):
         max_effect += key + ":" + D[key]['ef'] + "|"
 
 
@@ -1069,7 +1074,7 @@ def whatCodonChange_Snp(tm, pos, alt_nt, refGenome):
     frame = findFrame(tm, pos)
     orig_codon = [-1, -1, -1]
 
-    for i in xrange(0, len(tm.exons)):
+    for i in range(0, len(tm.exons)):
         if pos >= tm.exons[i].start and pos <= tm.exons[i].stop:
             orig_codon[frame] = getSeq(refGenome, tm.chr, pos)
 
@@ -1174,7 +1179,7 @@ def checkProteinPosition(tm, pos, length, type, cds_reg):
 
     codingPos = []
     if type == "D":
-        for i in xrange(0, length):
+        for i in range(0, length):
             for j in tm.exons:
                 if pos + i >= j.start and pos + i <= j.stop and pos + i >= tm.cds[0] and pos + i <= tm.cds[1]:
                     codingPos.append(pos + i)
@@ -1186,7 +1191,7 @@ def checkProteinPosition(tm, pos, length, type, cds_reg):
 
     # protein length
     transcript_length = tm.CDS_len()
-    protLength = transcript_length/3 - 1
+    protLength = old_div(transcript_length,3) - 1
     if (transcript_length%3) != 0:
         protLength += 1
 
@@ -1209,7 +1214,7 @@ def checkProteinPosition(tm, pos, length, type, cds_reg):
                 break
 
             minAA += j.stop - j.start + 1
-    minAA = minAA/3 + 1
+    minAA = old_div(minAA,3) + 1
 
     return(str(minAA) + "/" + str(protLength))
 
@@ -1330,19 +1335,19 @@ def prepareIntronHit(tm, pos, length, cds_reg):
     protLength = 0
     for i in cds_reg:
         protLength += i.stop - i.start + 1
-    protLength = protLength/3
+    protLength = old_div(protLength,3)
 
     whichAA = -1
 
     howManyIntrons = len(cds_reg) - 1
 
-    for i in xrange(0, howManyIntrons):
+    for i in range(0, howManyIntrons):
 	## yoonha: all the inequaliies below do not have "=" in original version (ewa's)
         if (pos <= cds_reg[i+1].start and cds_reg[i].stop <= pos) or  (pos + length - 1 <= cds_reg[i+1].start and cds_reg[i].stop <= pos + length - 1):
             whichAA += cds_reg[i].stop - cds_reg[i].start + 1
             intronLength = cds_reg[i+1].start - cds_reg[i].stop - 1
             if tm.strand == "+":
-                whichAA = whichAA/3 + 1
+                whichAA = old_div(whichAA,3) + 1
                 whichIntron = i + 1
                 if cds_reg[i+1].start - pos - length + 1 < pos - cds_reg[i].stop:
                     indelside = "3'"
@@ -1351,7 +1356,7 @@ def prepareIntronHit(tm, pos, length, cds_reg):
                     indelside = "5'"
                     distance = pos - cds_reg[i].stop
             else:
-                whichAA = protLength - whichAA/3
+                whichAA = protLength - old_div(whichAA,3)
                 whichIntron = howManyIntrons - i
                 if cds_reg[i+1].start - pos - length + 1 < pos - cds_reg[i].stop:
                     indelside = "5'"
@@ -1396,7 +1401,7 @@ def reverseReport(string):
 def findSpliceBegin(pos, length, cds_reg):
 
 
-    for i in xrange(0, len(cds_reg)-1):
+    for i in range(0, len(cds_reg)-1):
 
         if (pos > cds_reg[i].stop and pos <= cds_reg[i+1].start) or (pos + length -1 > cds_reg[i].stop and pos + length - 1 <= cds_reg[i+1].start):
 
@@ -1518,13 +1523,13 @@ def checkEndChange_Snp(codon, pos, seq, strand, code):
 def firstOrLastCodonOutput_Snps(tm, pos, worstEffect):
 
     if worstEffect == "noEnd" or  worstEffect == "noStart":
-        protLength = tm.CDS_len()/3
+        protLength = old_div(tm.CDS_len(),3)
         hit =[tm.gene, str(protLength)]
     elif worstEffect == "synonymous":
-        p = tm.CDS_len()/3
+        p = old_div(tm.CDS_len(),3)
         hit = [tm.gene, 'End', 'End', str(p)+"/"+str(p)]
     elif worstEffect == "missense":
-        p = tm.CDS_len()/3
+        p = old_div(tm.CDS_len(),3)
         hit = [tm.gene, '?', '?', str(p)+"/"+str(p)]
     else:
         print("incorrect mut type: " + worstEffect)
@@ -1545,7 +1550,7 @@ def dealWithFirstCodon_Snps(tm, pos, altNt, refGenome, code):
             altAA = cod2aa(altCodon, code)
             worstEffect = mutationType(refAA, altAA)
             #worstEffect = "missense"
-            p = tm.CDS_len()/3
+            p = old_div(tm.CDS_len(),3)
             hit = [tm.gene, refAA, altAA, "1/"+str(p)]
             #hit = [gene, '?', '?', pos, pos, "1/"+str(p)]
             return([worstEffect, hit])
@@ -1565,7 +1570,7 @@ def dealWithLastCodon_Snps(tm, pos, altNt, refGenome, code):
     else:
         if not _in_start_codons(complement(getSeq(refGenome, tm.chr, tm.cds[1]-2, tm.cds[1]))[::-1], code):
             worstEffect = "missense"
-            p = tm.CDS_len()/3
+            p = old_div(tm.CDS_len(),3)
             hit = [tm.gene, '?', '?', "1/"+str(p)]
             return([worstEffect, hit])
         else:
@@ -1580,7 +1585,7 @@ def firstOrLastCodonOutput_Indel(tm, pos, worstEffect, type, cds_reg, length):
         protPos = checkProteinPosition(tm, pos, length, type, cds_reg)
         hit = [tm.gene, protPos]
     elif worstEffect == "noEnd" or worstEffect == "noStart":
-        protLength = tm.CDS_len()/3
+        protLength = old_div(tm.CDS_len(),3)
         hit =[tm.gene, str(protLength)]
     elif worstEffect == "3'UTR" or worstEffect == "5'UTR":
         d = distanceFromCoding(pos, tm)
@@ -2011,7 +2016,7 @@ def findCodingBase(tm, pos, dist, refGenome):
     if dist == 0:
         return(getSeq(refGenome, tm.chr, pos))
 
-    for e in xrange(0, len(tm.exons)):
+    for e in range(0, len(tm.exons)):
         if pos >= tm.exons[e].start and pos <= tm.exons[e].stop:
             if pos+dist >= tm.exons[e].start and pos+dist <= tm.exons[e].stop:
                 return(getSeq(refGenome, tm.chr, pos + dist))
@@ -2067,14 +2072,14 @@ def checkForNewStop_Ins(pos, seq, tm, length, refGenome, code):
             preCodon = findCodingBase(tm, pos, -1, refGenome  ) +  seq[:2]
             postCodon = seq[-1] + findCodingBase(tm, pos, 0 , refGenome ) + findCodingBase(tm, pos, 1, refGenome  )
             if length > 3:
-                for i in xrange(0, length/3-1):
+                for i in range(0, old_div(length,3)-1):
                     if _in_stop_codons(seq[i*3 + 2: i*3 + 5], code):
                         return(True)
         else:
             preCodon = findCodingBase(tm, pos, -2 , refGenome ) + findCodingBase(tm, pos, -1 , refGenome ) + seq[0]
             postCodon = seq[-2:] + findCodingBase(tm, pos, 0 , refGenome )
             if length > 3:
-                for i in xrange(0, length/3-1):
+                for i in range(0, old_div(length,3)-1):
                     if _in_stop_codons(seq[i*3 + 1: i*3 + 4], code):
                         return(True)
 
@@ -2087,14 +2092,14 @@ def checkForNewStop_Ins(pos, seq, tm, length, refGenome, code):
             postCodon = complement(seq[0] + findCodingBase(tm, pos, -1 , refGenome ) + findCodingBase(tm, pos, -2 , refGenome ))
 
             if length > 3:
-                for i in xrange(0, length/3-1):
+                for i in range(0, old_div(length,3)-1):
                     if _in_stop_codons(complement(seq[i*3+1:i*3+4])[::-1], code):
                         return(True)
         else:
             preCodon = complement(findCodingBase(tm, pos, 1 , refGenome ) + findCodingBase(tm, pos, 0 , refGenome ) + seq[-1])
             postCodon = complement(seq[1::-1] + findCodingBase(tm, pos, -1 , refGenome ))
             if length > 3:
-                for i in xrange(0, length/3-1):
+                for i in range(0, old_div(length,3)-1):
                     if _in_stop_codons(complement(seq[i*3+2:i*3+5])[::-1], code):
                         return(True)
 

@@ -4,6 +4,8 @@
 # Ewa
 
 from __future__ import print_function
+from builtins import str
+from builtins import range
 from DAE import *
 import numpy as np
 import pylab as pl
@@ -31,7 +33,7 @@ from GeneModelFiles import get_gene_regions
 Genomic_scores = {'nt':'nt', 'cov/':'cov', 'GC_5':'gc'} # very important line
 
 genomic_arrays = list(set(Genomic_scores.values()))
-scores = Genomic_scores.keys()
+scores = list(Genomic_scores.keys())
 
 
 #outfile = 'scores_per_gene.txt'
@@ -95,9 +97,9 @@ D = np.column_stack([D[s] for s in scores])
 nt2N = {'A':0, 'C':1, 'G':1, 'T':0, 'N':0}
 
 AA = np.zeros((len(A),len(scores)))
-for i in xrange(0, len(scores)):
+for i in range(0, len(scores)):
     if scores[i] == "nt":
-        for n,nn in nt2N.items():
+        for n,nn in list(nt2N.items()):
             AA[A['nt']==n,i] = nn
     else:
         AA[:,i] = A[scores[i]]
@@ -144,7 +146,7 @@ DD = integrate(S, chrInds, GeneRgns, 'pp_1')
 print("Writing the output...", file=sys.stderr)
 
 print("\t".join("gene score coveredLen totalLen".split()))
-for k, v in sorted(DD.items(), key = lambda x: x[1]['score'], reverse=True):
+for k, v in sorted(list(DD.items()), key = lambda x: x[1]['score'], reverse=True):
     print("\t".join([k, str(v['score']), str(v['length_cov']), str(v['length_total'])]))
     #res.write("\t".join([k, str(v['score']), str(v['length_cov']), str(v['length_total'])]) + "\n")
 

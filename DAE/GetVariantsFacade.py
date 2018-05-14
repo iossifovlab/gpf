@@ -1,11 +1,13 @@
+from builtins import zip
+from builtins import object
 import itertools
 import sys
 
 from DAE import *
 
 
-fatherRace = dict(zip(phDB.families,phDB.get_variable('focuv.race_parents')))
-motherRace = dict(zip(phDB.families,phDB.get_variable('mocuv.race_parents')))
+fatherRace = dict(list(zip(phDB.families,phDB.get_variable('focuv.race_parents'))))
+motherRace = dict(list(zip(phDB.families,phDB.get_variable('mocuv.race_parents'))))
 
 def augmentAVar(v):
     fmId = v.familyId
@@ -47,7 +49,7 @@ def mapToFacade(facadeMap, args):
         
     return mappedArgs
 
-class GetVariantsFacade:
+class GetVariantsFacade(object):
 
     def __init__(self, args=None):
 
@@ -314,12 +316,12 @@ class GetVariantsFacade:
 
 
         if output==None:
-            safeVs(itertools.imap(augmentAVar,itertools.chain(self.dvs, self.ivs)),'-',
+            safeVs(map(augmentAVar,itertools.chain(self.dvs, self.ivs)),'-',
                    ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
         else:
             
             #safeVs2(output,itertools.imap(augmentAVar, self.dvs),
             #        ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")
 
-            safeVs2(output,itertools.imap(augmentAVar,itertools.chain(self.dvs, self.ivs)),
+            safeVs2(output,map(augmentAVar,itertools.chain(self.dvs, self.ivs)),
                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")

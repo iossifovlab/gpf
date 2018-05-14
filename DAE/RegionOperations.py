@@ -4,6 +4,9 @@
 # January/16th/2014
 # written by Ewa
 
+from builtins import str
+from builtins import range
+from builtins import object
 from collections import namedtuple
 from collections import defaultdict
 import copy
@@ -29,7 +32,7 @@ def rgns2BedFile(rgns,bedFN):
     F.close()
 
 
-class Region:
+class Region(object):
 
     def __init__(self, chr, start, stop):
         self.chr = chr
@@ -82,10 +85,10 @@ def connected_component(R):
         D[r.chr].append(r) 
 
 
-    for chr,nds in D.items():
+    for chr,nds in list(D.items()):
         nds.sort(key=lambda x: x.stop)
-        for k in xrange(1, len(nds)):
-            for j in xrange(k-1,-1,-1):
+        for k in range(1, len(nds)):
+            for j in range(k-1,-1,-1):
                 if nds[k].start <= nds[j].stop:
                     G.add_edge(nds[k], nds[j])
                 else:
@@ -125,7 +128,7 @@ def collapse(r, is_sorted=False):
 
 
     L = []
-    for v in C.values():
+    for v in list(C.values()):
         L.extend(v)
         
 

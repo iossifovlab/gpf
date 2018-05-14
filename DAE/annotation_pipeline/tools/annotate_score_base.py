@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 import optparse
 import sys
 import gzip
@@ -7,7 +8,7 @@ import pysam
 import GenomeAccess
 from .utilities import *
 
-class IterativeAccess:
+class IterativeAccess(object):
 
     XY_INDEX = {'X': 23, 'Y': 24}
 
@@ -59,7 +60,7 @@ class IterativeAccess:
         return self.score_default_value
 
 
-class DirectAccess:
+class DirectAccess(object):
 
     def __init__(self, score_file_name, score_default_value, score_column,
             *search_columns):

@@ -12,7 +12,7 @@ def test_count_unaffected(denovo_studies):
     counter = Counter()
     studies = denovo_studies
     for st in studies:
-        for fid, fam in st.families.items():
+        for fid, fam in list(st.families.items()):
             for p in fam.memberInOrder[2:]:
                 iid = "{}:{}".format(fid, p.personId)
                 if iid in seen:

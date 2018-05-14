@@ -3,6 +3,8 @@ Created on Sep 27, 2016
 
 @author: lubo
 '''
+from builtins import next
+from builtins import zip
 import itertools
 
 from query_variants import dae_query_variants, generate_response
@@ -50,7 +52,7 @@ def variant_response_dict(v, atts):
     g = generate_response([v], atts)
     names = next(g)
     vr = next(g)
-    d = dict(zip(names, vr))
+    d = dict(list(zip(names, vr)))
     return d
 
 

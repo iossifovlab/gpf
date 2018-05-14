@@ -1,7 +1,8 @@
 from __future__ import print_function
 
+from builtins import str
 import sys
-from itertools import izip
+
 
 #is autosomal X for hg19
 def isPseudoAutosomalX( pos ):
@@ -12,7 +13,7 @@ def isPseudoAutosomalX( pos ):
         return flag
 
 def trimStr( pos, ref, alt ):
-   for n,s in enumerate(izip(ref[::-1],alt[::-1])):
+   for n,s in enumerate(zip(ref[::-1],alt[::-1])):
 	if s[0] != s[1]: break
    #not made simple
    if ref[-(n+1)] == alt[-(n+1)]:
@@ -26,7 +27,7 @@ def trimStr( pos, ref, alt ):
    if len(r) == 0 or len(a) == 0:
 	return pos, r, a
 
-   for n,s in enumerate(izip(r,a)):
+   for n,s in enumerate(zip(r,a)):
 	if s[0] != s[1]: break
 
    if r[n] == a[n]:

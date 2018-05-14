@@ -1,4 +1,5 @@
-class Effect:
+from builtins import object
+class Effect(object):
     gene = None
     transcript_id = None
     strand = None
@@ -31,7 +32,7 @@ class Effect:
                 self.prot_pos, self.prot_length, self.aa_change)
 
 
-class SimpleEffect:
+class SimpleEffect(object):
     def __init__(self, effect_type, effect_details):
         self.effect_type = effect_type
         self.effect_details = effect_details

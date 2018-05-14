@@ -1,8 +1,10 @@
 from __future__ import print_function
+from builtins import str
+from builtins import object
 import sys
 
 
-class Mutation:
+class Mutation(object):
     def __init__(self, pos, ref, alt):
         self.start_position = pos
         self.end_ref_position = pos + len(ref) - 1
@@ -61,7 +63,7 @@ class MutatedGenomicSequence(GenomicSequence):
         return result
 
 
-class TranscriptModelWrapper:
+class TranscriptModelWrapper(object):
     def __init__(self, transcript_model, genome_seq):
         self.transcript_model = transcript_model
         self.genome_seq = genome_seq

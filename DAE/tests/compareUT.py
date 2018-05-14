@@ -6,6 +6,8 @@ Created on Jun 25, 2013
 @author: leotta
 '''
 from __future__ import print_function
+from builtins import str
+from builtins import range
 import sys, getopt
 import os
 import re
@@ -14,7 +16,7 @@ import filecmp
 def getComparison(commandsA, folderA, folderB):
     comparison = {}
     
-    for i in commandsA.keys():
+    for i in list(commandsA.keys()):
         name = "%s-out.txt"%(i)
         filenameA = os.path.join(folderA, name)
         filenameB= os.path.join(folderB, name)

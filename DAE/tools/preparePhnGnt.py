@@ -1,5 +1,7 @@
 #!/bin/env python
 
+from builtins import zip
+from builtins import str
 from DAE import *
 from pylab import *
 from itertools import groupby
@@ -49,8 +51,8 @@ def fltVsOneVarPerGenePerChild(vs):
 def fltVsInRecurrentGenes(vs):
     gnSorted = sorted([[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects ]) 
     sym2Vars = { sym: [ t[1] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
-    sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() } 
-    recGenes = { sym for sym,FN in sym2FN.items() if FN>1 }
+    sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in list(sym2Vars.items()) } 
+    recGenes = { sym for sym,FN in list(sym2FN.items()) if FN>1 }
     return [v for v in vs if { ge['sym'] for ge in v.requestedGeneEffects } & recGenes ]
 
 def getRareInheritedDataSet(inLGDCandidates=True,maxAllelesInGene=20):
@@ -81,7 +83,7 @@ def getRareInheritedDataSet(inLGDCandidates=True,maxAllelesInGene=20):
 
     gnSorted = sorted([[ge['sym'], v] for v in dnvVars for ge in v.requestedGeneEffects ]) 
     sym2Vars = { sym: [ t[1] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
-    sym2Fms = { sym: set([v.familyId for v in vs]) for sym, vs in sym2Vars.items() } 
+    sym2Fms = { sym: set([v.familyId for v in vs]) for sym, vs in list(sym2Vars.items()) } 
 
     # genesOfInterest = set(giDB.getGeneTerms('main').t2G['FMR1-targets'].keys())
     # genesOfInterest = set(giDB.getGeneTerms('domain').t2G['CHROMO'].keys())
@@ -91,7 +93,7 @@ def getRareInheritedDataSet(inLGDCandidates=True,maxAllelesInGene=20):
 
 
 
-    allSeqFams = {f:prbGender(fms) for f,fms in std.families.items() }
+    allSeqFams = {f:prbGender(fms) for f,fms in list(std.families.items()) }
     famsWithHit = defaultdict(int)
     for v in allInhLGDs:
         # if v.familyId not in whiteFams:
@@ -128,12 +130,12 @@ def getDataSet(studyNames,effectTypes,recurrentOnly=False,geneSym=None,geneSetDe
     if recurrentOnly:
         vars = fltVsInRecurrentGenes(vars)
  
-    allSeqFams = {f:prbGender(fms) for st in stds for f,fms in st.families.items()}
+    allSeqFams = {f:prbGender(fms) for st in stds for f,fms in list(st.families.items())}
     famsWithHit = Counter([v.familyId for v in vars])
 
     return allSeqFams,famsWithHit
 
-sfri14Fams = {ind.familyId:ind.sex for ind in sfariDB.individual.values() if ind.role=='proband'}
+sfri14Fams = {ind.familyId:ind.sex for ind in list(sfariDB.individual.values()) if ind.role=='proband'}
 
 dataSets = [] 
 
@@ -206,18 +208,18 @@ def getCollectionCenter():
 
 
     ## assert
-    if len([x for x in famCenterS.values() if len(x)>1])>0:
+    if len([x for x in list(famCenterS.values()) if len(x)>1])>0:
         raise Exception('aaa')
 
-    famCenter = {f:s.pop() for f,s in famCenterS.items() }
+    famCenter = {f:s.pop() for f,s in list(famCenterS.items()) }
     return famCenter
 
 
 def getMeasure(mName):
-    strD = dict(zip(phDB.families,phDB.get_variable(mName)))
+    strD = dict(list(zip(phDB.families,phDB.get_variable(mName))))
     # fltD = {f:float(m) for f,m in strD.items() if m!=''}
     fltD = {}
-    for f,m in strD.items():
+    for f,m in list(strD.items()):
         try:
             mf = float(m)
             # if mf>70:
@@ -227,9 +229,9 @@ def getMeasure(mName):
     return fltD
 
 def getMeasure2(mName):
-    strD = dict(zip(phDB.families,phDB.get_variable(mName)))
+    strD = dict(list(zip(phDB.families,phDB.get_variable(mName))))
     fltD = {}
-    for f,m in strD.items():
+    for f,m in list(strD.items()):
         fltD[f] = m
     return fltD
 
@@ -251,7 +253,7 @@ whiteFams = {f for f,mr,fr in zip(phDB.families,
 mkF = open(oFN, "w")
 mkF.write("\t".join("familyId,colletionCenter,probandGender,whiteParents,vIQ,nvIQ,hdCrcm,evalAgeInMonths,seizures".split(",") + [x[0] for x in dataSets]) + "\n")
 
-for fmId,gender in sfri14Fams.items():
+for fmId,gender in list(sfri14Fams.items()):
     mkF.write("\t".join([fmId,sfariDB.familyCenter[fmId],gender,"1" if fmId in whiteFams else "0"] +
                       [str(msr[fmId]) if fmId in msr else "NA" for msr in [vIQ,nvIQ,HC,evlAge]] ))
     

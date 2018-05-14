@@ -3,6 +3,7 @@ Created on Jan 20, 2017
 
 @author: lubo
 '''
+from builtins import object
 from configparser import ConfigParser
 
 from Config import Config
@@ -381,7 +382,7 @@ class DatasetsConfig(object):
         if not params:
             return None
         result = []
-        for key, value in params.items():
+        for key, value in list(params.items()):
             pedigree = PedigreeSelector(key, **value)
             result.append(pedigree)
         return result

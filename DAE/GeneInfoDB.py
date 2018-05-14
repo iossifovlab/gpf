@@ -1,20 +1,21 @@
 #!/bin/env python
 
 from __future__ import print_function
+from builtins import object
 from configparser import ConfigParser
 import gzip
 import sys
 from collections import defaultdict
 from GeneTerms import *
 
-class GeneInfo:
+class GeneInfo(object):
     pass
 
-class Region:
+class Region(object):
     def len(self):
         return self.end-self.beg
 
-class GenesMap:
+class GenesMap(object):
     def __init__(self):
         self.chrs = defaultdict(list)
     def _addGeneRgn(self,g,rgn):
@@ -46,7 +47,7 @@ def mergeIntervals(intsP):
     r.append((beg,end))
     return r
 
-class GeneInfoDB:
+class GeneInfoDB(object):
     def __init__(self, confFile, wd, data_dir):
         self.config = ConfigParser({
             'wd':wd, 
@@ -165,7 +166,7 @@ class GeneInfoDB:
         self._geneRgnsMap = GenesMap()
   
         strChrN = 0
-        for gSymRaw, chrs in bf.items():
+        for gSymRaw, chrs in list(bf.items()):
 
             if not gSymRaw in rawIdNS:
                 # print >>sys.stderr, "AAAA:", gSymRaw

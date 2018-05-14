@@ -3,6 +3,7 @@ Created on Nov 29, 2016
 
 @author: lubo
 '''
+from builtins import object
 from collections import Counter
 
 import numpy as np

@@ -1,3 +1,4 @@
+from builtins import str
 import itertools
 import re
 import logging
@@ -43,7 +44,7 @@ def prepare_inchild(data):
 
     if inChild == 'All' or inChild == 'none' or inChild == 'None':
         return None
-    if isinstance(inChild, str) or isinstance(inChild, unicode):
+    if isinstance(inChild, str) or isinstance(inChild, str):
         inChild = str(inChild).split(',')
 
     res = [str(ic) for ic in inChild if str(ic) in get_child_types()]
@@ -153,7 +154,7 @@ def prepare_family_ids(data):
     else:
         return None
 
-    if isinstance(families, str) or isinstance(families, unicode):
+    if isinstance(families, str) or isinstance(families, str):
         families = str(families)
         if families.lower() == 'none' or families.lower() == 'all' or \
                 families.strip() == '':
@@ -270,7 +271,7 @@ def prepare_gene_region(data):
     else:
         return None
 
-    if isinstance(region, str) or isinstance(region, unicode):
+    if isinstance(region, str) or isinstance(region, str):
         region = str(region).replace(';', ' ').split()
     region = [r for r in region if validate_region(r)]
     region = [fix_region(r) for r in region]
@@ -351,7 +352,7 @@ def get_denovo_variants(studies, family_filters, **filters):
     seenVs = set()
     for (study, phenoFilter) in studies:
         if family_filters is not None:
-            families = family_filters(study).keys()
+            families = list(family_filters(study).keys())
             filters['familyIds'] = families if len(families) > 0 else [None]
 
         if phenoFilter:
@@ -451,7 +452,7 @@ def dae_query_variants(data):
         transmitted_filters = prepare_transmitted_filters(data, denovo_filters)
         for study in tstudies:
             if family_filters is not None:
-                families = family_filters(study).keys()
+                families = list(family_filters(study).keys())
                 transmitted_filters['familyIds'] = families \
                     if len(families) > 0 else [None]
 
@@ -486,7 +487,7 @@ def do_query_variants(data, atts=[]):
     vsl = dae_query_variants(data)
 
     res_variants = itertools.chain(*vsl)
-    return generate_response(itertools.imap(augment_vars, res_variants),
+    return generate_response(map(augment_vars, res_variants),
                              ['familyId',
                               'studyName',
                               '_phenotype_',
@@ -587,10 +588,10 @@ def generate_web_response(variants, attrs, sep='\t'):
         'rows': transform_variants_to_lists(variants, attrs, sep)
     }
 
-def generate_response(variants, attrs=DEFAULT_COLUMN_TITLES.keys(),
+def generate_response(variants, attrs=list(DEFAULT_COLUMN_TITLES.keys()),
         attr_labels=DEFAULT_COLUMN_TITLES, sep='\t'):
     variant_rows = transform_variants_to_lists(variants, attrs, sep)
-    return itertools.chain([map(lambda attr: attr_labels.get(attr, attr), attrs)],
+    return itertools.chain([[attr_labels.get(attr, attr) for attr in attrs]],
                            variant_rows)
 
 def transform_variants_to_lists(variants, attrs, sep='\t'):
@@ -617,12 +618,12 @@ def transform_variants_to_lists(variants, attrs, sep='\t'):
 
 
 def join_line(l, sep=','):
-    tl = map(lambda v: '' if v is None or v == 'None' else v, l)
+    tl = ['' if v is None or v == 'None' else v for v in l]
     return sep.join(tl) + '\n'
 
 
 def save_vs(tf, vs, atts=[]):
     response = generate_response(vs, atts)
     tf.write(response['cols'])
-    for line in itertools.imap(join_line, response['rows']):
+    for line in map(join_line, response['rows']):
         tf.write(line)

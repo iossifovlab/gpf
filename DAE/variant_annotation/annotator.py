@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from builtins import object
 from .gene_codes import NuclearCode
 from .effect_checkers.coding import CodingEffectChecker
 from .effect_checkers.promoter import PromoterEffectChecker
@@ -15,7 +16,7 @@ from .annotation_request import AnnotationRequestFactory
 import logging
 
 
-class VariantAnnotator:
+class VariantAnnotator(object):
     Severity = {
         'tRNA:ANTICODON': 30,
         'all': 24,

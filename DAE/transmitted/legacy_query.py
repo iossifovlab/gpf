@@ -3,6 +3,7 @@ Created on Oct 21, 2015
 
 @author: lubo
 '''
+from builtins import zip
 from Variant import parseGeneEffect, filter_gene_effect, Variant,\
     present_in_parent_filter, present_in_child_filter, chromosome_prefix
 import gzip
@@ -62,7 +63,7 @@ class TransmissionLegacy(TransmissionConfig):
                 LOGGER.error("colNms len: {}; variant col: {}".
                              format(len(colNms), len(vls)))
                 raise Exception("Incorrect transmitted variants file: ")
-            mainAtts = dict(zip(colNms, vls))
+            mainAtts = dict(list(zip(colNms, vls)))
 
             mainAtts["location"] = mainAtts["chr"] + ":" + mainAtts["position"]
 
@@ -277,7 +278,7 @@ class TransmissionLegacy(TransmissionConfig):
                 if familyIds and familyId not in familyIds:
                     continue
                 v = copy.copy(vs)
-                v.atts = {kk: vv for kk, vv in vs.atts.items()}
+                v.atts = {kk: vv for kk, vv in list(vs.atts.items())}
                 v.atts['familyId'] = familyId
                 v.atts['bestState'] = bestStateS
                 v.atts['counts'] = cntsS

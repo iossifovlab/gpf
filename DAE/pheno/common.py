@@ -4,6 +4,7 @@ Created on May 24, 2017
 @author: lubo
 '''
 from __future__ import print_function
+from builtins import object
 import enum
 from box import Box
 from pprint import pprint
@@ -94,7 +95,7 @@ class RoleMapping(object):
     }
 
     INTERNAL = {
-        key: value for key, value in Role.__members__.items()
+        key: value for key, value in list(Role.__members__.items())
     }
 
     VIP = {

@@ -5,6 +5,10 @@ Created on Oct 21, 2015
 '''
 from __future__ import print_function
 
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
 import numpy as np
 import operator
 import logging
@@ -137,7 +141,7 @@ def isVariant(bs, c, location=None, gender=None):
         normalRefCN = normalRefCopyNumber(location, gender)
 
     if bs[0, c] != normalRefCN or \
-            any([bs[o, c] != 0 for o in xrange(1, bs.shape[0])]):
+            any([bs[o, c] != 0 for o in range(1, bs.shape[0])]):
         return True
     return False
 
@@ -195,10 +199,10 @@ def str2Mat(matS, colSep=-1, rowSep="/", str2NumF=int):
 
 def mat2Str(mat, colSep=" ", rowSep="/"):
     return rowSep.join([colSep.join([str(n) for n in mat[i, :]])
-                        for i in xrange(mat.shape[0])])
+                        for i in range(mat.shape[0])])
 
 
-class Variant:
+class Variant(object):
 
     def __init__(self, atts, familyIdAtt="familyId", locationAtt="location",
                  variantAtt="variant", bestStAtt="bestState", bestStColSep=-1,
@@ -327,7 +331,11 @@ class Variant:
         for index, person in enumerate(self.memberInOrder):
             if person.is_child and \
                     isVariant(self.bestSt, index, self.location, person.gender):
-                childStr += (person.role + person.gender)
+                try:
+                    childStr += (person.role + person.gender)
+                except:
+                    print(self.studyName, self.familyId)
+                    raise
         return childStr
 
     @property
@@ -344,7 +352,7 @@ class Variant:
         parentStr = ''
         mbrs = self.memberInOrder
         bs = self.bestSt
-        for c in xrange(2):
+        for c in range(2):
             if isVariant(bs, c, self.location, mbrs[c].gender):
                 parentStr += mbrs[c].role
         return parentStr

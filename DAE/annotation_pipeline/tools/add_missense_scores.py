@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 from __future__ import absolute_import
+from builtins import range
+from builtins import object
 import csv
 import sys
 from variant_annotation.missense_scores_tabix import MissenseScoresDB
@@ -49,13 +51,13 @@ class MissenseScoresAnnotator(object):
         writer = csv.DictWriter(output, delimiter='\t', fieldnames=self.header)
         writer.writeheader()
         for row in reader:
-            values = self.line_annotations(row.values(), opts.columns)
+            values = self.line_annotations(list(row.values()), opts.columns)
             row.update({opts.columns[i]: values[i] for i in range(0, len(opts.columns))})
             writer.writerow(row)
 
     def line_annotations(self, line, new_cols_order):
         params = [line[i-1] if i!=None else None for i in self.argColumnNs]
-        if all(map(lambda param: param != '', params)):
+        if all([param != '' for param in params]):
             variant = Variant(*params)
             missense_scores = self.mDB.get_missense_score(variant)
             if missense_scores is not None:

@@ -28,7 +28,7 @@ for l in f:
         print(l, end=' ')
         continue
     cs = l.strip().split("\t")
-    for fc,tc in map.items():
+    for fc,tc in list(map.items()):
         cs[tc] = cs[fc]
     del cs[-3:]
     print("\t".join(cs))

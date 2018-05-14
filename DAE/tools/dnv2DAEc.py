@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from builtins import str
+from builtins import range
 import optparse, sys, os
 import pysam, numpy
 from collections import namedtuple, defaultdict
-from itertools import izip
+
 
 #from vcf2DAEutil import *
 import variantFormat as vrtF
@@ -98,7 +100,7 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
    for rx in vrt:
 	flag = False
 	pid = rx[cI.pid] #'SP_id']
-	for k1, v1 in famInfo.items():
+	for k1, v1 in list(famInfo.items()):
 	   if pid not in v1['ids']: continue
 	   if v1['ids'].index(pid) < 2: continue
 
@@ -111,7 +113,7 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
 		#exit(1)
    #
    #handle based on family
-   for k, v in fVrt.items():
+   for k, v in list(fVrt.items()):
 	terms = v[0]
 
 	chrom, pos = getLoc( rx, cI )
@@ -129,9 +131,9 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
 		tx = [pInfo[xx].sex for xx in fIx] #M:'1' F:'2'
 		tx = [xx if xx in ['1','2'] else '2' for xx in tx]
 		# correct if sex is not given and assume it as a girl
-		bSts = [tx, ['0' for n in xrange(fs)]]
+		bSts = [tx, ['0' for n in range(fs)]]
 	else:	
-		bSts = [['2' for n in xrange(fs)], ['0' for n in xrange(fs)]]
+		bSts = [['2' for n in range(fs)], ['0' for n in range(fs)]]
 
 	#cnts = [['0' for n in xrange(fs)], ['0' for n in xrange(fs)]]
         for rx in v:
@@ -220,7 +222,7 @@ def main():
  
       for line in ifile:
         terms = procLine( line, delimiter=ox.delimiter )
-        rx = {k:v for k, v in izip(hdr,terms)}
+        rx = {k:v for k, v in zip(hdr,terms)}
 	rx['terms'] = terms
 	#
 	#idx = ','.join( ['%4s' %(rx['CHROM']), '%12s' %(rx['POS']), rx['REF'], rx['ALT']] )

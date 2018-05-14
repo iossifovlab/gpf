@@ -3,6 +3,7 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
+from builtins import object
 from configparser import ConfigParser
 from collections import Counter
 from DAE import Config
@@ -41,7 +42,7 @@ def children_stats_counter(studies, role):
     seen = set()
     counter = Counter()
     for st in studies:
-        for fid, fam in st.families.items():
+        for fid, fam in list(st.families.items()):
             for p in fam.memberInOrder[2:]:
                 iid = "{}:{}".format(fid, p.personId)
                 if iid in seen:

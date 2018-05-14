@@ -11,6 +11,8 @@ tables into MySQL.
 '''
 from __future__ import print_function
 
+from builtins import str
+from builtins import object
 import sys
 import os
 
@@ -95,7 +97,7 @@ class Tools(object):
         res = self.get_study_conf()
 
         args_db_conf = get_db_args(self.args)
-        for k, v in args_db_conf.items():
+        for k, v in list(args_db_conf.items()):
             if v is not None:
                 res[k] = v
 

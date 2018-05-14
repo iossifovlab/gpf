@@ -5,15 +5,18 @@
 
 
 from __future__ import print_function
-class Grantham:
+from builtins import zip
+from builtins import range
+from builtins import object
+class Grantham(object):
 
 
     aa_long_format = ['Ala', 'Arg', 'Asn', 'Asp', 'Cys', 'Gln', 'Glu', 'Gly', 'His', 'Ile' ,'Leu' ,'Lys' ,'Met' ,'Phe', 'Pro', 'Ser', 'Thr' ,'Trp' ,'Tyr', 'Val']
     aa_short_format = ['A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V']
-    ind = [i for i in xrange(0,20)]
+    ind = [i for i in range(0,20)]
     
-    _Indexing = dict(zip(aa_long_format, ind))
-    _Indexing.update(dict(zip(aa_short_format, ind)))
+    _Indexing = dict(list(zip(aa_long_format, ind)))
+    _Indexing.update(dict(list(zip(aa_short_format, ind))))
 
     Grantham_Scores =[
         [0],   # Ala, A

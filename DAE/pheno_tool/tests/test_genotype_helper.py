@@ -204,7 +204,7 @@ def test_get_person_variants_father_all(
     )
     assert 934 == len(res)
     assert 3 == max(res.values())
-    ps3 = [p for (p, c) in res.items() if c == 3]
+    ps3 = [p for (p, c) in list(res.items()) if c == 3]
     assert 6 == len(ps3)
 
     assert '13528.p1' in ps3

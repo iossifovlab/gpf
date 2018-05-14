@@ -5,6 +5,8 @@ Created on Feb 16, 2017
 '''
 from __future__ import print_function
 
+from builtins import next
+from builtins import filter
 import os
 import traceback
 import sqlite3
@@ -61,9 +63,9 @@ class GeneSetsCollection(GeneInfoConfig):
             {
                 'name': key,
                 'desc': value,
-                'count': len(self.gene_sets_collections.t2G[key].keys())
+                'count': len(list(self.gene_sets_collections.t2G[key].keys()))
             }
-            for key, value in self.gene_sets_collections.tDesc.items()
+            for key, value in list(self.gene_sets_collections.tDesc.items())
         ]
         return self.gene_sets_collections
 
@@ -113,11 +115,9 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         self.standard_criterias = []
         for standard_criteria_id in self._get_att_list('standardCriterias'):
-            segments_arrs = map(
-                lambda segment_str: segment_str.split(':'),
-                self._get_att_list(
+            segments_arrs = [segment_str.split(':') for segment_str in self._get_att_list(
                     'standardCriterias.{}.segments'.format(
-                        standard_criteria_id)))
+                        standard_criteria_id))]
             self.standard_criterias.append(
                 [{
                     'property': standard_criteria_id,
@@ -170,7 +170,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def _get_dataset_descs(self, datasets=None):
         if datasets is None:
-            datasets = self.datasets_pedigree_selectors.keys()
+            datasets = list(self.datasets_pedigree_selectors.keys())
         return [self.datasets_config.get_dataset_desc(gid)
                 for gid in datasets]
 
@@ -205,7 +205,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     @staticmethod
     def _filter_gene_sets_types(gene_sets_types, permitted_datasets):
         return {k: v
-                for k, v in gene_sets_types.items()
+                for k, v in list(gene_sets_types.items())
                 if v and (permitted_datasets is None or
                           k in permitted_datasets)}
 
@@ -215,9 +215,9 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             full_description=True):
         if full_description:
             return ";".join(["{}:{}".format(d, ",".join(p))
-                             for d, p in gene_sets_types.items()])
+                             for d, p in list(gene_sets_types.items())])
 
-        pedigree_selectors = ', '.join(set(chain(*gene_sets_types.values())))
+        pedigree_selectors = ', '.join(set(chain(*list(gene_sets_types.values()))))
         if include_datasets_desc:
             return '{}::{}'.format(
                 ', '.join(set(gene_sets_types.keys())),
@@ -270,7 +270,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return gs['syms']
 
     def get_denovo_sets(self, gene_sets_types={'SD': ['autims']}):
-        for k, v in gene_sets_types.items():
+        for k, v in list(gene_sets_types.items()):
             if not v:
                 v = self.get_dataset_phenotypes(k)
                 gene_sets_types[k] = v
@@ -290,12 +290,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             recurrency_criteria = None
 
         genes_families = {}
-        for dataset_id, pedigree_selector_values in gene_sets_types.items():
+        for dataset_id, pedigree_selector_values in list(gene_sets_types.items()):
             for pedigree_selector_value in pedigree_selector_values:
                 ds_pedigree_genes_families = self._get_gene_families(
                     self.cache,
                     {dataset_id, pedigree_selector_value} | standard_criterias)
-                for gene, families in ds_pedigree_genes_families.items():
+                for gene, families in list(ds_pedigree_genes_families.items()):
                     genes_families.setdefault(gene, set()).update(families)
 
         if recurrency_criteria:
@@ -307,26 +307,25 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                     return len(item[1]) >= recurrency_criteria['from'] \
                         and len(item[1]) < recurrency_criteria['to']
 
-            matching_genes = map(lambda item: item[0],
-                                 filter(filter_lambda, genes_families.items()))
+            matching_genes = [item[0] for item in list(filter(filter_lambda, list(genes_families.items())))]
         else:
-            matching_genes = genes_families.keys()
+            matching_genes = list(genes_families.keys())
         return set(matching_genes)
 
     @classmethod
     def _get_gene_families(cls, cache, criterias):
         if len(cache) == 0:
             return {}
-        cache_keys = cache.keys()
+        cache_keys = list(cache.keys())
         next_keys = criterias.intersection(cache_keys)
         if len(next_keys) == 0:
             result = {}
             if type(cache[cache_keys[0]]) != set:
                 # still not the end of the tree
                 for key in cache_keys:
-                    for gene, families in cls._get_gene_families(
+                    for gene, families in list(cls._get_gene_families(
                             cache[key],
-                            criterias).items():
+                            criterias).items()):
                         result.setdefault(gene, set()).update(families)
             elif len(criterias) == 0:
                 # end of tree with satisfied criterias
@@ -339,9 +338,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _gene_sets_for(self, dataset):
         pedigree_selector = self.datasets_pedigree_selectors[
             dataset['id']]['source']
-        pedigree_selector_values = map(
-            lambda value: value['id'],
-            self._get_configured_dataset_legend(dataset))
+        pedigree_selector_values = [value['id'] for value in self._get_configured_dataset_legend(dataset)]
 
         dataset_cache = {value: {} for value in pedigree_selector_values}
         self.cache[dataset['id']] = dataset_cache

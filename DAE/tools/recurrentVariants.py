@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from builtins import str
 from DAE import *
 import sys
 from itertools import groupby
@@ -34,7 +35,7 @@ gfiF = lambda x: x.familyId
 fmSorted = sorted(prbLGDs,key=gfiF);
 byFams = {k: list(g) for k, g in groupby(fmSorted, key=gfiF)}
 
-for fmId, vs in byFams.items():
+for fmId, vs in list(byFams.items()):
     if len(vs)==1:
        continue
     print("The proband of family ", fmId, "has", len(vs), "LGD variants")
@@ -51,9 +52,9 @@ for fgs in ccs:
 
 gnSorted = sorted([[ge['sym'], v.familyId, v.location, v] for v in prbLGDs for ge in v.requestedGeneEffects ])
 sym2Vars = { sym: [ t[3] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
-sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() }
+sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in list(sym2Vars.items()) }
 
-for g, FN in sorted(sym2FN.items(), key=lambda x: (x[1],x[0])):
+for g, FN in sorted(list(sym2FN.items()), key=lambda x: (x[1],x[0])):
     gnId = giDB.getCleanGeneId("sym",g)
     desc = ""
     if gnId:
@@ -79,9 +80,9 @@ for g, FN in sorted(sym2FN.items(), key=lambda x: (x[1],x[0])):
         
     print()
 
-recCnt = Counter(sym2FN.values())
+recCnt = Counter(list(sym2FN.values()))
 fs = set([f for s in studies for f in s.families])
 print("The recurrence in", len(fs), "probands")
 print("hits\tgeneNumber") 
-for hn,cnt in sorted(recCnt.items(), key=lambda x: x[1]):
+for hn,cnt in sorted(list(recCnt.items()), key=lambda x: x[1]):
     print(hn,"\t",cnt)

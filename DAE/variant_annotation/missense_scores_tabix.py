@@ -1,11 +1,15 @@
+from builtins import str
+from builtins import next
+from builtins import range
+from builtins import object
 import csv
 import pysam
 import gzip
 import os
 
 
-class MissenseScoresDB:
-    chromosomes = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
+class MissenseScoresDB(object):
+    chromosomes = [str(x) for x in range(1, 23)] + ['X', 'Y']
     columns = {}
 
     def __init__(self, path=None):
@@ -22,7 +26,7 @@ class MissenseScoresDB:
                      for chromosome in self.chromosomes}
 
     def get_field_names(self):
-        return self.columns.values()
+        return list(self.columns.values())
 
     def get_missense_score(self, variant):
         if variant.chromosome in self.tbxs:

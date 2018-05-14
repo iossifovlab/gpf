@@ -76,7 +76,7 @@ def test_denovo_studies_persons_phenotype_ssc(ssc):
     studies = ssc.denovo_studies
     for st in studies:
         phenotype = st.get_attr('study.phenotype')
-        for fam in st.families.values():
+        for fam in list(st.families.values()):
             for p in fam.memberInOrder:
                 if p.role == 'prb':
                     assert p.phenotype == phenotype
@@ -87,7 +87,7 @@ def test_denovo_studies_persons_phenotype_ssc(ssc):
 def test_denovo_studies_persons_phenotype_sd(sd):
     for st in sd.denovo_studies:
         phenotype = st.get_attr('study.phenotype')
-        for fam in st.families.values():
+        for fam in list(st.families.values()):
             for p in fam.memberInOrder:
                 if p.role == 'prb':
                     assert p.phenotype == phenotype

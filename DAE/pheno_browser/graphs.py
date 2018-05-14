@@ -3,6 +3,12 @@ Created on Apr 10, 2017
 
 @author: lubo
 """
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import textwrap
 import matplotlib as mpl
 from pheno.common import Role, Status, Gender
@@ -211,7 +217,7 @@ def gender_palette():
 
 
 def set_figure_size(figure, x_count):
-    scale = 3.0 / 4.0
+    scale = old_div(3.0, 4.0)
     figure.set_size_inches((8 + x_count) * scale, 8 * scale)
 
 
@@ -281,7 +287,7 @@ def draw_measure_violinplot(
         linewidth=0.1)
 
     labels = role_labels(columns)
-    plt.xticks(range(0, len(labels)), labels)
+    plt.xticks(list(range(0, len(labels))), labels)
     ax.set_ylabel(measure_id)
     ax.set_xlabel("role")
     plt.tight_layout()
@@ -379,7 +385,7 @@ def draw_categorical_violin_distribution(
                 verticalalignment="top", rotation=90, rotation_mode="anchor")
 
     ax.set_yticks(y_locations)
-    ax.set_yticklabels(map(lambda x: textwrap.fill(x, 20), values_domain))
+    ax.set_yticklabels([textwrap.fill(x, 20) for x in values_domain])
     ax.set_xlim(2 * -binned_maximum, len(columns) * 2 * binned_maximum)
     ax.set_ylim(-1, np.max(y_locations) + 1)
 

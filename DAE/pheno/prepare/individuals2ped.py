@@ -1,4 +1,7 @@
 #!/usr/bin/env python2.7
+from builtins import map
+from builtins import str
+from builtins import object
 import sys
 import abc
 import itertools
@@ -9,6 +12,7 @@ from pheno.common import Role
 from pheno.common import RoleMapping
 from pheno.common import Status
 from pheno.common import Gender
+from future.utils import with_metaclass
 
 
 class Individual(object):
@@ -191,9 +195,7 @@ class MatingUnit(object):
         self.father.mating_units.append(self)
 
 
-class CsvIndividualsReader(object):
-    __metaclass__ = abc.ABCMeta
-
+class CsvIndividualsReader(with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def convert_individual_id(self, family_id, individual_id):
         raise NotImplementedError()
@@ -231,7 +233,7 @@ class CsvIndividualsReader(object):
             kwargs = {
                 field: row[column]
                 for (field, column)
-                in self.FIELDS_TO_COLUMNS.items()
+                in list(self.FIELDS_TO_COLUMNS.items())
             }
             kwargs["family_id"] = self.convert_family_id(kwargs["family_id"])
             kwargs["individual_id"] = self.convert_individual_id(
@@ -473,7 +475,7 @@ class FamilyToPedigree(object):
             individual_id_to_individual_unit[individual.individual_id] = \
                 individual_unit
 
-        return individual_id_to_individual_unit.values()
+        return list(individual_id_to_individual_unit.values())
 
 
 class PedigreeToCsv(object):
@@ -487,7 +489,7 @@ class PedigreeToCsv(object):
             writer.writerow([
                 "familyId", "personId", "dadId", "momId", "gender",
                 "status", "role"])
-            writer.writerows(map(self.get_row, pedigrees))
+            writer.writerows(list(map(self.get_row, pedigrees)))
 
     @staticmethod
     def get_row(individual):
@@ -520,7 +522,7 @@ def main():
 
     pedigrees = {}
 
-    for family_name, members in families.items():
+    for family_name, members in list(families.items()):
         try:
             pedigree = FamilyToPedigree().to_pedigree(members)
             pedigrees[family_name] = pedigree
@@ -528,7 +530,7 @@ def main():
             sys.stderr.write(
                 "skipping {}; reason: {}\n".format(family_name, str(e)))
 
-    pedigrees_list = list(itertools.chain(*pedigrees.values()))
+    pedigrees_list = list(itertools.chain(*list(pedigrees.values())))
 
     PedigreeToCsv(args.output).write_pedigrees(pedigrees_list)
 

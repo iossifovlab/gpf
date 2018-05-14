@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import zip
 import unittest
 import logging
 
@@ -17,7 +18,7 @@ class GetVariantsTests(unittest.TestCase):
         vs = vl.split('\t')
         ds = dl.split('\t')
         self.assertEquals(len(vs), len(ds))
-        pairs = zip(vs, ds)
+        pairs = list(zip(vs, ds))
         for (v, d) in pairs:
             v1 = v.strip()
             d1 = d.strip()

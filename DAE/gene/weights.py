@@ -4,6 +4,7 @@ Created on Nov 7, 2016
 @author: lubo
 '''
 
+from builtins import object
 from collections import OrderedDict
 
 import numpy as np

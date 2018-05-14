@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 from DAE import *
 import sys
 from itertools import groupby
@@ -49,8 +53,8 @@ for studyNamesS in studyNamesSA:
 
     famBuff = defaultdict(dict)
     for sd in studies:
-        for f in sd.families.values():
-            for p in [f.memberInOrder[c] for c in xrange(2,len(f.memberInOrder))]:
+        for f in list(sd.families.values()):
+            for p in [f.memberInOrder[c] for c in range(2,len(f.memberInOrder))]:
                 p._sTuDy = sd
                 if p.personId in famBuff[f.familyId]:
                     pp = famBuff[f.familyId][p.personId]
@@ -60,13 +64,13 @@ for studyNamesS in studyNamesSA:
                 else:
                     famBuff[f.familyId][p.personId] = p
                 
-    for fmd in famBuff.values():
+    for fmd in list(famBuff.values()):
         chldNHist[len(fmd)]+=1
    
-        fmConf = "".join([fmd[pid].role + fmd[pid].gender for pid in sorted(fmd.keys(),key=lambda x: (fmd[x].role,x))])   
+        fmConf = "".join([fmd[pid].role + fmd[pid].gender for pid in sorted(list(fmd.keys()),key=lambda x: (fmd[x].role,x))])   
         fmTpCnt[fmConf]+=1
 
-        for p in fmd.values():
+        for p in list(fmd.values()):
             chldTpCnt[p.role + p.gender]+=1
             chldTpCnt[p.role]+=1
 
@@ -74,7 +78,7 @@ for studyNamesS in studyNamesSA:
     print("\tBy number of children: " + ", ".join([str(nc) + ": " + str(chldNHist[nc]) for nc in sorted(chldNHist.keys())]))
     print("\t" + str(chldTpCnt['prbM']), "male and", str(chldTpCnt['prbF']), "female probands.")
     print("\t" + str(chldTpCnt['sibM']), "male and", str(chldTpCnt['sibF']), "female siblings.")
-    print("\t" +  ", ".join([x[0] + ": " + str(x[1]) for x in sorted(fmTpCnt.items(),key=lambda x: -x[1])]))
+    print("\t" +  ", ".join([x[0] + ": " + str(x[1]) for x in sorted(list(fmTpCnt.items()),key=lambda x: -x[1])]))
     print("+++++++++++++++++++++++++++++++++++++++++++")
 
     cnts = defaultdict(lambda : defaultdict(int))
@@ -83,7 +87,7 @@ for studyNamesS in studyNamesSA:
     def ratioStr(x,n):
         if n==0:
             return " NA  "
-        return "%.3f" % (float(x)/n)
+        return "%.3f" % (old_div(float(x),n))
 
     def prcntStr(x,n):
         if n==0:
@@ -93,7 +97,7 @@ for studyNamesS in studyNamesSA:
     def bnmTst(xM,xF,NM,NF):
         if NM+NF==0:
             return " NA  "
-        return "%.3f" % (stats.binom_test(xF, xF+xM, p=float(NF)/(NM+NF)))
+        return "%.3f" % (stats.binom_test(xF, xF+xM, p=old_div(float(NF),(NM+NF))))
 
     def filterVs(vs):
         ret = []

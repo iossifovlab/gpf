@@ -3,6 +3,7 @@ Created on Nov 21, 2016
 
 @author: lubo
 '''
+from builtins import object
 from query_variants import dae_query_variants, PRESENT_IN_CHILD_TYPES,\
     PRESENT_IN_PARENT_TYPES
 import itertools
@@ -161,7 +162,7 @@ class GenotypeHelper(object):
     def get_persons_variants_df(self, variants_type):
         vs = self.get_persons_variants(variants_type)
         df = pd.DataFrame(
-            data=[(k, v) for (k, v) in vs.items()],
+            data=[(k, v) for (k, v) in list(vs.items())],
             columns=['person_id', 'variants'])
         df.set_index('person_id', inplace=True, verify_integrity=True)
         return df

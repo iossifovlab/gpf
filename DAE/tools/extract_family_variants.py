@@ -11,6 +11,9 @@ Created on Jan 19, 2018
 '''
 from __future__ import print_function
 
+from builtins import str
+from builtins import zip
+from builtins import object
 import sys
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -77,7 +80,7 @@ class FilterFamilies(object):
                         continue
                     line = line.strip("\r\n")
                     data = line.split("\t")
-                    vals = dict(zip(column_names, data))
+                    vals = dict(list(zip(column_names, data)))
                     family_data = vals['familyData']
                     if family_data == 'TOOMANY':
                         tm_line = tmfh.readline()

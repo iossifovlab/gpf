@@ -1,3 +1,4 @@
+from builtins import object
 from variant_annotation.variant import Variant
 
 

@@ -1,6 +1,8 @@
 #!/bin/env python
 
 from __future__ import print_function
+from builtins import str
+from builtins import range
 import numpy as np
 import sys
 
@@ -61,7 +63,7 @@ def phase(inp):
 
     chSts = set()
 
-    for c in xrange(2, P):
+    for c in range(2, P):
         chSts.add(str(np.array([st[:, c] for st in inp])))
 
     posFamilyPhs = []
@@ -72,12 +74,12 @@ def phase(inp):
                 for dh in dph:
                     m = np.zeros((L, 2), dtype=int)
                     for h in (mh, dh):
-                        for l in xrange(L):
+                        for l in range(L):
                             m[l, h[l]] += 1
                     posChSts.add(str(m))
                 if nCpies[1] == 1:
                     m = np.matrix(np.zeros((L, 2)))
-                    for l in xrange(L):
+                    for l in range(L):
                         m[l, mh[l]] += 1
                     posChSts.add(str(m))
             print(chSts)

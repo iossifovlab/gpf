@@ -1,5 +1,6 @@
 
-class Family:
+from builtins import object
+class Family(object):
 
     def __init__(self, atts=None):
         if atts:
@@ -16,7 +17,7 @@ class Family:
         return [p for p in self.memberInOrder if p.is_child]
 
 
-class Person:
+class Person(object):
 
     def __init__(self, atts=None):
         if atts:

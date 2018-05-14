@@ -3,13 +3,14 @@ Created on Jul 4, 2013
 
 @author: leotta
 '''
+from builtins import object
 import os
 from configparser import ConfigParser
 
 # adds exceptions for error handling
 
 
-class Config:
+class Config(object):
 
     def __init__(self):
         self._dae_data_dir = os.environ.get('DAE_DATA_DIR', None)

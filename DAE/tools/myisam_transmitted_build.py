@@ -12,6 +12,9 @@ transmitted studies into MySQL MYISAM tables.
 '''
 from __future__ import print_function
 
+from builtins import str
+from builtins import zip
+from builtins import object
 import sys
 import os
 
@@ -253,7 +256,7 @@ UNLOCK TABLES;
                         print('skipping comment: {}'.format(line.strip()))
                         continue
                     data = line.strip("\r\n").split("\t")
-                    vals = dict(zip(column_names, data))
+                    vals = dict(list(zip(column_names, data)))
                     erow, evvals = \
                         self.create_effect_variant_dict(vals, nrow, erow)
                     svvals = self.create_summary_variant_dict(
@@ -367,7 +370,7 @@ UNLOCK TABLES;
                         print('skipping comment: {}'.format(line.strip()))
                         continue
                     data = line.strip("\r\n").split("\t")
-                    vals = dict(zip(column_names, data))
+                    vals = dict(list(zip(column_names, data)))
                     erow, evvals = \
                         self.create_effect_variant_dict(vals, vrow, erow)
                     ins_values = [self.VALUES % ev
@@ -470,7 +473,7 @@ UNLOCK TABLES;
 
     def create_family_variant(self, vs, family_data):
         v = copy.copy(vs)
-        v.atts = {kk: vv for kk, vv in vs.atts.items()}
+        v.atts = {kk: vv for kk, vv in list(vs.atts.items())}
         fid, bs, counts = family_data
         v.atts['familyId'] = fid
         v.atts['bestState'] = bs
@@ -583,7 +586,7 @@ UNLOCK TABLES;
                         print('skipping comment: {}'.format(line.strip()))
                         continue
                     data = line.strip("\r\n").split("\t")
-                    vals = dict(zip(column_names, data))
+                    vals = dict(list(zip(column_names, data)))
 
                     variant = self.create_summary_variant(vals)
 

@@ -1,4 +1,9 @@
 from __future__ import print_function
+from __future__ import division
+from builtins import next
+from builtins import str
+from past.utils import old_div
+from builtins import object
 import tables
 import types
 import csv
@@ -118,7 +123,7 @@ impute(dt)
 '''
 
 
-class TableInterface:
+class TableInterface(object):
 
     def __init__(self):
         # print 'TableInterface::__init__()'
@@ -217,7 +222,7 @@ class TableInterfaceH5(TableInterface):
         self.variables = sorted(self.h5file.variables.keys())
 
         self.md = {}
-        for variableName in self.h5file.variables.keys():
+        for variableName in list(self.h5file.variables.keys()):
             variable = self.h5file.variables[variableName]
             self.md[variableName] = {
                 'name': variable.name,
@@ -360,7 +365,7 @@ def imputeNew(dt):
 
     # print "There are %d variable keys"%(len(variables))
 
-    for variableName in variables.keys():
+    for variableName in list(variables.keys()):
 
         dataTypes = variables[variableName]['datatype']
         valueDict = variables[variableName]['values']
@@ -374,11 +379,11 @@ def imputeNew(dt):
             dataType = 'unknown'
 
         if dataTypes['numeric'] > 0 and dataTypes['string'] > 0:
-            if float(dataTypes['numeric']) / float(dataTypes['string']) > \
+            if old_div(float(dataTypes['numeric']), float(dataTypes['string'])) > \
                     datatypeProportionThreshold:
 
                 dataType = 'numeric'
-            elif float(dataTypes['string']) / float(dataTypes['numeric']) > \
+            elif old_div(float(dataTypes['string']), float(dataTypes['numeric'])) > \
                     datatypeProportionThreshold:
                 dataType = 'string'
             else:
@@ -502,7 +507,7 @@ def saveMetaData(md, filename):
 
         valuesStr = "|".join(
             [v + ";" + str(n) for v, n
-             in sorted(variable['values'].items(), key=lambda x: -x[1])])
+             in sorted(list(variable['values'].items()), key=lambda x: -x[1])])
 
         # valuesStr = '|'.join(sorted(variable['values'].keys()))
         uniqueValues = variable['uniqueValues']
@@ -560,7 +565,7 @@ def loadFamilyList(filename):
 def createWordBag(dt, md):
     wordBag = {}
 
-    for familyId in dt.keys():
+    for familyId in list(dt.keys()):
         familyDictionary = dt[familyId]
 
         for variableName in familyDictionary:
@@ -595,7 +600,7 @@ def createWordBag2(dt, md, testSet):
 
     # print("%d %d"%(totalDT,totalTest))
 
-    for familyId in dt.keys():
+    for familyId in list(dt.keys()):
 
         familyDictionary = dt[familyId]
 
@@ -801,4 +806,4 @@ def runHyperGeometricTest(dt, md, wordBag, setA, setB, outfilename):
 
 # returns the families in a dt
 def getFamilyList(dt):
-    return dt.keys()
+    return list(dt.keys())

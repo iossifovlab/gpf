@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
 from __future__ import absolute_import
+from builtins import str
+from builtins import range
+from builtins import object
 import sys
 from os.path import exists, dirname, basename
 import glob
@@ -14,7 +17,7 @@ from importlib import import_module
 
 from .tools import *
 from .tools.utilities import assign_values
-from . import preannotators.location
+from .preannotators import location
 from functools import reduce
 
 def str_to_class(val):
@@ -53,7 +56,7 @@ class MultiAnnotator(object):
             annotation_step_config = self.config[annotation_step]
             columns_labels.update(annotation_step_config.columns)
             if not reannotate and self.header is not None:
-                self.header.extend(annotation_step_config.columns.values())
+                self.header.extend(list(annotation_step_config.columns.values()))
             if annotation_step_config.virtuals is not None:
                 virtual_columns_indices.extend(
                     [assign_values(annotation_step_config.columns[column.strip()], self.header)
@@ -61,7 +64,7 @@ class MultiAnnotator(object):
             self.annotators.append({
                 'instance': str_to_class(annotation_step_config.annotator)(
                     annotation_step_config.options, list(self.header)),
-                'columns': annotation_step_config.columns.keys()
+                'columns': list(annotation_step_config.columns.keys())
             })
 
         self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
@@ -154,7 +157,7 @@ def get_argument_parser():
     parser.add_argument('outfile', nargs='?', action='store',
         default='-', help='path to output file; defaults to stdout')
     
-    for name, args in PreannotatorLoader.load_preannotators_arguments().items():
+    for name, args in list(PreannotatorLoader.load_preannotators_arguments().items()):
         parser.add_argument(name, **args)
 
     return parser

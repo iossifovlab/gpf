@@ -3,6 +3,13 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import zip
+from builtins import str
+from past.utils import old_div
 import pickle
 import io
 from collections import Counter
@@ -141,8 +148,8 @@ class SynonymousBackground(BackgroundCommon):
 
         base_counts = SynonymousBackground._count_gene_syms(base)
 
-        base_sorted = sorted(zip(base_counts.keys(),
-                                 base_counts.values()))
+        base_sorted = sorted(zip(list(base_counts.keys()),
+                                 list(base_counts.values())))
 
         background = np.array(base_sorted,
                               dtype=[('sym', '|S32'), ('raw', '>i4')])
@@ -385,9 +392,9 @@ class SamochaBackground(BackgroundBase):
         children_count = children_stats['M'] + children_stats['U'] \
             + children_stats['F']
         # p = (p_boys + p_girls) / 2.0
-        p = ((children_stats['M'] + children_stats['U']) * p_boys +
-             children_stats['F'] * p_girls) / \
-            (children_count)
+        p = old_div(((children_stats['M'] + children_stats['U']) * p_boys +
+             children_stats['F'] * p_girls), \
+            (children_count))
 #         result.rec_expected = \
 #             (children_stats['M'] + children_stats['F']) * p * p
         if len(rec_result.events) == 0 or len(all_result.events) == 0:

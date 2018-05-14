@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from builtins import map
+from builtins import str
+from builtins import range
 import optparse, sys, os
 import pysam, numpy
 from collections import namedtuple, defaultdict
-from itertools import izip
+
 import itertools
 
 #from vcf2DAEutil import *
@@ -15,7 +18,7 @@ import vrtIOutil as vIO
 def percentageGentype( data ):
    tlx = len(data.samples)
    clx = 0
-   for k, v in data.samples.items():
+   for k, v in list(data.samples.items()):
 	#print >> sys.stderr, v['GT'][0], v['GT']
 	if v['GT'][0] is None: continue
 	clx += 1
@@ -48,7 +51,7 @@ def getGT( sample, data ):
 
 #add more data on fam Info
 def makeFamInfoConv( fInfo, pInfo ):
-   for k, v in fInfo.items():
+   for k, v in list(fInfo.items()):
         lx = len(v['ids'])
         sx = numpy.zeros( (lx,), dtype=numpy.int )
         for n,mx in enumerate(v['newIds']):
@@ -58,7 +61,7 @@ def makeFamInfoConv( fInfo, pInfo ):
 
         cl = len(v['famaIndex'])
         idxMF = numpy.zeros( (cl,3,), dtype=numpy.int )
-	nC = range(lx)
+	nC = list(range(lx))
         for n,(a,b) in enumerate(v['famaIndex'].items()):
                 idxMF[n,:] = [a,b.fa,b.ma]
                 nC.remove( a )
@@ -91,9 +94,9 @@ def array2str( mx, ix, delim='' ):
    n0, n1, n2 = mx[:,0], mx[:,ix], mx.sum(1)
    n2 = n2 - n0 - n1
 
-   s0 = map( str, n0 )
-   s1 = map( str, n1 )
-   s2 = map( str, n2 )
+   s0 = list(map( str, n0 ))
+   s1 = list(map( str, n1 ))
+   s2 = list(map( str, n2 ))
    
    strx = delim.join( s0 ) +'/'+ delim.join( s1 )
    if sum(n2) > 0:
@@ -339,7 +342,7 @@ def main():
 
 	nPC = 2*len(dx)
 	nPcntC = (1.*nPC)/(2*len(fam))*100.
-	for n, (p,v) in enumerate(izip( px, vx )):
+	for n, (p,v) in enumerate(zip( px, vx )):
 	   ix = n+1
            # ref is index 0 and vx (variants) has only alternatives
 

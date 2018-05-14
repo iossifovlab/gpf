@@ -5,6 +5,7 @@ Created on Mar 23, 2017
 '''
 
 
+from builtins import next
 from datasets.tests.requests import EXAMPLE_QUERY_SSC, EXAMPLE_QUERY_VIP
 import copy
 

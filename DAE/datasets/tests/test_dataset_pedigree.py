@@ -4,6 +4,7 @@ Created on Feb 7, 2017
 @author: lubo
 '''
 from __future__ import print_function
+from builtins import zip
 from datasets.tests.requests import EXAMPLE_QUERY_SD, EXAMPLE_QUERY_SSC,\
     EXAMPLE_QUERY_VIP
 import copy

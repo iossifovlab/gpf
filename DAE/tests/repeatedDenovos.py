@@ -15,7 +15,7 @@ for v in allDnvVs:
 
 
 nb = 0
-for fgs, lst in bf.items():
+for fgs, lst in list(bf.items()):
     if len(lst)==1:
         continue
     nb+=1
@@ -28,12 +28,12 @@ vbf = defaultdict(lambda : defaultdict(list))
 for v in allDnvVs: 
     vbf[v.location + ":" + v.variant][v.familyId].append(v)
 
-for locVs, fams in vbf.items():
+for locVs, fams in list(vbf.items()):
     if len(fams)==1:
         continue
     print("AAAAAAAAAAAA",  locVs, ",".join(fams))
  
-    for fvs in fams.values(): 
+    for fvs in list(fams.values()): 
         for v in fvs:
             print("|", v.study.name, "|", v.familyId, "|", v.location, "|", v.variant, "|", v.atts['effectType'], "|", v.atts['effectGene'])
 

@@ -4,6 +4,11 @@
 # written by Ewa
 
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from pylab import *
 from collections import defaultdict
 import re
@@ -14,7 +19,7 @@ from DAE import *
 gm = genomesDB.get_gene_models()
 
 
-class Domain:
+class Domain(object):
 
     def __init__(self, start, stop, domain, desc):
         self.start = start
@@ -43,7 +48,7 @@ class Domain:
 
    
 
-class ProteinDomains:
+class ProteinDomains(object):
 
     gene = None
     Colors = {
@@ -74,7 +79,7 @@ class ProteinDomains:
         'DISULFID' : 'orange',
         'HELIX': "green",
         }
-    _interesting_domains = Colors.keys()
+    _interesting_domains = list(Colors.keys())
 
     def set(self, L):
         
@@ -101,7 +106,7 @@ class ProteinDomains:
         #uniprot_len = ???
 
         for i in gms:
-            prot_len = i.CDS_len()/3
+            prot_len = old_div(i.CDS_len(),3)
         
 
     def add_variant(self, prot_posB, prot_posE=None):
@@ -116,8 +121,8 @@ class ProteinDomains:
         keys = sorted(domains, key = lambda x: x.start)
         Height[0.5-h] = [keys[0]]
         
-        for i in xrange(1, len(keys)):
-            for j in sorted(Height.keys(), reverse=True):
+        for i in range(1, len(keys)):
+            for j in sorted(list(Height.keys()), reverse=True):
                 good_to_go = True 
                 for t in Height[j]:
                     if t.stop >= keys[i].start:
@@ -149,10 +154,10 @@ class ProteinDomains:
             fig, ax = subplots(nrows=number_of_structures)
             Axes = [ax]
             
-        for i in xrange(0, number_of_structures):
+        for i in range(0, number_of_structures):
 
             l = gene_info[i]['AAlength']
-            d = float(l)/10
+            d = old_div(float(l),10)
         # fig = figure()
         # ax = fig.add_subplot(1,1,1)
         
@@ -165,10 +170,10 @@ class ProteinDomains:
             else:
                 h=0.02
 
-            h_up =  h/5
-            h_down = -h/2
+            h_up =  old_div(h,5)
+            h_down = old_div(-h,2)
             distr = self.__distribute(self.set(gene_info[i]['domains']), h)
-            for y_height,domains in sorted(distr.items(), reverse=True):
+            for y_height,domains in sorted(list(distr.items()), reverse=True):
                 prev_estim_end = -1000
                 for dom in domains:
                     dom_len = dom.stop - dom.start + 1
@@ -177,13 +182,13 @@ class ProteinDomains:
                     if domain_desc == True:
                         if prev_estim_end < dom.start:
                             if dom_len > len(dom.domain)*7:
-                                Axes[i].text(dom.start + dom_len/2 - len(dom.domain)*4, y_height+h_up, dom.domain, fontsize=10, color='blue')
+                                Axes[i].text(dom.start + old_div(dom_len,2) - len(dom.domain)*4, y_height+h_up, dom.domain, fontsize=10, color='blue')
                                 prev_estim_end = dom.stop -1
                             else:
                                 Axes[i].text(dom.start, y_height+h_up, dom.domain, fontsize=10, color='blue')
                                 prev_estim_end = dom.start + len(dom.domain)*7
-                        elif dom_len > len(dom.domain)*8 and dom.start + dom_len/2 - len(dom.domain)*4 > prev_estim_end:
-                            Axes[i].text(dom.start + dom_len/2 - len(dom.domain)*4, y_height+h_up, dom.domain, fontsize=10, color='blue')
+                        elif dom_len > len(dom.domain)*8 and dom.start + old_div(dom_len,2) - len(dom.domain)*4 > prev_estim_end:
+                            Axes[i].text(dom.start + old_div(dom_len,2) - len(dom.domain)*4, y_height+h_up, dom.domain, fontsize=10, color='blue')
                             prev_estim_end = dom.stop - 1
                         else:
                             Axes[i].text(dom.start, y_height+h_down, dom.domain, fontsize=10, color='blue')

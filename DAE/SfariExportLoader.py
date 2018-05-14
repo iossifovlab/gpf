@@ -4,6 +4,12 @@ Created on Jan 31, 2013
 @author: Tony
 '''
 from __future__ import print_function
+from __future__ import division
+from builtins import next
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import csv
 import locale
 import os
@@ -61,7 +67,7 @@ methods:
 '''
 
 
-class SfariH5File():
+class SfariH5File(object):
 
     def __init__(self, filename):
         self.filename = filename
@@ -177,7 +183,7 @@ methods:
 '''
 
 
-class SfariExportLoader:
+class SfariExportLoader(object):
 
     def __init__(self):
         self.variableTracker = SfariVariableTracker.SfariVariableTracker()
@@ -362,7 +368,7 @@ class SfariExportLoader:
         datatypes = {}
 
         datatypeProportionThreshold = 0.95
-        for key in self.variableTracker.variables.keys():
+        for key in list(self.variableTracker.variables.keys()):
             variable = self.variableTracker.variables[key]
             variableName = variable.name
 
@@ -443,7 +449,7 @@ class SfariExportLoader:
 
         # print "There are %d variable keys"%(len(variables))
 
-        for variableName in variables.keys():
+        for variableName in list(variables.keys()):
 
             dataTypes = variables[variableName]['datatype']
             valueDict = variables[variableName]['values']
@@ -455,11 +461,11 @@ class SfariExportLoader:
                 dataType = 'unknown'
 
             if dataTypes['numeric'] > 0 and dataTypes['string'] > 0:
-                if float(dataTypes['numeric']) / float(dataTypes['string']) > \
+                if old_div(float(dataTypes['numeric']), float(dataTypes['string'])) > \
                         datatypeProportionThreshold:
                     dataType = 'numeric'
-                elif float(dataTypes['string']) / \
-                    float(dataTypes['numeric']) > \
+                elif old_div(float(dataTypes['string']), \
+                    float(dataTypes['numeric'])) > \
                         datatypeProportionThreshold:
                     dataType = 'string'
                 else:
@@ -546,7 +552,7 @@ class SfariExportLoader:
                 # rs = rolesS[variableName]
                 sortedValues = sorted(
                     valueDict, key=valueDict.get, reverse=True)
-                values = valueDict.values()
+                values = list(valueDict.values())
                 tokenCount = sum(np.array(values))
                 tokenInMostUsed = sum(
                     np.array([valueDict[x] for x in sortedValues[0:maxVars]]))

@@ -82,7 +82,7 @@ def test_example2_denovo_gene_sets():
         'SD': ['autism'],
         'denovo_db': ['autism']})
     assert denovo_sets
-    print(denovo_sets.keys())
+    print(list(denovo_sets.keys()))
 
     print(denovo_sets['LGDs.Recurrent'])
     print(denovo_sets['LGDs.Triple'])
@@ -105,7 +105,7 @@ def test_example3_meta_denovo_gene_sets():
 
     denovo_sets = meta_gsc.get_denovo_sets(['autism'])
     assert denovo_sets
-    print(denovo_sets.keys())
+    print(list(denovo_sets.keys()))
 
     print(denovo_sets['LGDs.Recurrent'])
     print(denovo_sets['LGDs.Triple'])

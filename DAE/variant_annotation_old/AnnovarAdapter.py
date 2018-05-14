@@ -1,11 +1,12 @@
 from __future__ import print_function
+from builtins import object
 from VariantAnnotation import Effect
 import subprocess
 import csv
 import re
 
 
-class VariantAnnotation:
+class VariantAnnotation(object):
     @staticmethod
     def amino_acids_decode(code):
         amino_acids_dict = {

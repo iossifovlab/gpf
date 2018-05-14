@@ -1,7 +1,9 @@
+from builtins import range
+from builtins import object
 import re
 
 
-class Variant:
+class Variant(object):
     def __init__(self, chr=None, position=None, loc=None, var=None, ref=None,
                  alt=None, length=None, seq=None, typ=None):
         self.set_position(chr, position, loc)

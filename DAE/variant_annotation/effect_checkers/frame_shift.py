@@ -1,8 +1,9 @@
+from builtins import object
 from ..effect import EffectFactory
 import logging
 
 
-class FrameShiftEffectChecker:
+class FrameShiftEffectChecker(object):
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 

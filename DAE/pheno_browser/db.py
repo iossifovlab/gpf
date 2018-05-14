@@ -3,6 +3,7 @@ Created on Aug 31, 2017
 
 @author: lubo
 '''
+from builtins import object
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, String, Float, Enum
 from sqlalchemy.sql import select

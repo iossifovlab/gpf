@@ -1,8 +1,9 @@
+from builtins import object
 from ..old_VariantAnnotation import annotate_variant, effect_description
 from ..simple_effect import SimpleEffect
 
 
-class OldVariantAnnotation:
+class OldVariantAnnotation(object):
     def __init__(self, reference_genome, gene_models, code, promoter_len):
         self.reference_genome = reference_genome
         self.gene_models = gene_models
