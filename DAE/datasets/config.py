@@ -3,7 +3,7 @@ Created on Jan 20, 2017
 
 @author: lubo
 '''
-import ConfigParser
+from configparser import ConfigParser
 
 from Config import Config
 import collections
@@ -72,13 +72,13 @@ class DatasetsConfig(object):
         config = kwargs.get('config', None)
 
         if config:
-            assert isinstance(config, ConfigParser.SafeConfigParser)
+            assert isinstance(config, ConfigParser)
             self.config = config
         else:
             dae_config = Config()
             wd = dae_config.daeDir
             data_dir = dae_config.data_dir
-            self.config = ConfigParser.SafeConfigParser({
+            self.config = ConfigParser({
                 'wd': wd,
                 'data': data_dir
             })

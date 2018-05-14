@@ -1,7 +1,7 @@
 #!/bin/env python
 
 from __future__ import print_function
-import ConfigParser
+from configparser import ConfigParser
 import gzip
 import sys
 from collections import defaultdict
@@ -48,7 +48,7 @@ def mergeIntervals(intsP):
 
 class GeneInfoDB:
     def __init__(self, confFile, wd, data_dir):
-        self.config = ConfigParser.SafeConfigParser({
+        self.config = ConfigParser({
             'wd':wd, 
             'data': data_dir
         });

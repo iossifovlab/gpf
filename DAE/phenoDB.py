@@ -415,7 +415,7 @@ def imputeNew(dt):
 def rawTableFactory(filename):
 
     # daeDir = os.environ['DAE_DB_DIR']
-    # _config = ConfigParser.SafeConfigParser({'wd':daeDir})
+    # _config = ConfigParser({'wd':daeDir})
     # _config.optionxform = lambda x: x
     # confFile = os.path.join(daeDir,"pheno.conf")
     # _config.read(confFile)

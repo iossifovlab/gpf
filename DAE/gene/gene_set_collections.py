@@ -10,7 +10,7 @@ import traceback
 import sqlite3
 from itertools import chain, product
 from collections import OrderedDict
-import cPickle
+import pickle
 import logging
 
 # from denovo_gene_sets import build_denovo_gene_sets
@@ -155,11 +155,11 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         cache_file_path = self.gene_info.getGeneTermAtt(self.gsc_id, 'file')
         if os.path.exists(cache_file_path):
             infile = open(cache_file_path, 'r')
-            self.cache = cPickle.load(infile)
+            self.cache = pickle.load(infile)
         else:
             self._generate_cache()
             infile = open(cache_file_path, 'w')
-            cPickle.dump(self.cache, infile)
+            pickle.dump(self.cache, infile)
 
     def build_cache(self, datasets=None):
         self._generate_cache(datasets)

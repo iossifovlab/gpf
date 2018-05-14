@@ -1,7 +1,7 @@
 #!/bin/env python
 from __future__ import print_function
 
-import ConfigParser
+from configparser import ConfigParser
 import os
 import sys
 from numpy.lib.npyio import genfromtxt
@@ -32,7 +32,7 @@ from Family import Family, Person
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
-from ConfigParser import NoOptionError
+from configparser import NoOptionError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -742,7 +742,7 @@ class VariantsDB:
         if not confFile:
             confFile = daeDir + "/variantDB.conf"
 
-        self._config = ConfigParser.SafeConfigParser({
+        self._config = ConfigParser({
             'wd': daeDir,
             'data': data_dir
         })

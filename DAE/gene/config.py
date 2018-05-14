@@ -4,7 +4,7 @@ Created on Feb 16, 2017
 @author: lubo
 '''
 from Config import Config
-import ConfigParser
+from configparser import ConfigParser
 from GeneInfoDB import GeneInfoDB
 
 
@@ -20,7 +20,7 @@ class GeneInfoConfig(object):
         wd = self.dae_config.daeDir
         data_dir = self.dae_config.data_dir
 
-        self.config = ConfigParser.SafeConfigParser({
+        self.config = ConfigParser({
             'wd': wd,
             'data': data_dir
         })
@@ -39,7 +39,7 @@ class GeneInfoConfig(object):
         wd = dae_config.daeDir
         data_dir = dae_config.data_dir
 
-        config = ConfigParser.SafeConfigParser({
+        config = ConfigParser({
             'wd': wd,
             'data': data_dir,
         })

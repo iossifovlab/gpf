@@ -405,9 +405,10 @@ class Variant:
         return self.key < other.key
 
     CHROMOSOMES_ORDER = dict(
-        {str(x): '0' + str(x) for x in range(1, 10)}.items() +
-        {str(x): str(x) for x in range(10, 23)}.items() +
-        {'X': '23', 'Y': '24'}.items())
+        [(str(x), '0' + str(x)) for x in range(1, 10)] +
+        [(str(x), str(x)) for x in range(10, 23)] +
+        [('X', '23'), ('Y', '24')]
+    )
 
     @property
     def key(self):

@@ -3,7 +3,7 @@ Created on Oct 23, 2015
 
 @author: lubo
 '''
-from ConfigParser import NoOptionError
+from configparser import NoOptionError
 
 
 class TransmissionConfig(object):

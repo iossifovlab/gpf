@@ -4,7 +4,7 @@ Created on Jul 4, 2013
 @author: leotta
 '''
 import os
-import ConfigParser
+from configparser import ConfigParser
 
 # adds exceptions for error handling
 
@@ -15,7 +15,7 @@ class Config:
         self._dae_data_dir = os.environ.get('DAE_DATA_DIR', None)
         self._daeDir = os.environ['DAE_DB_DIR']
 
-        self._daeConfig = ConfigParser.SafeConfigParser({
+        self._daeConfig = ConfigParser({
             'wd': self._daeDir,
             'data': self._dae_data_dir
         })

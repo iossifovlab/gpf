@@ -3,8 +3,8 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-import cPickle
-import cStringIO
+import pickle
+import io
 from collections import Counter
 import csv
 import os
@@ -50,14 +50,14 @@ class BackgroundBase(BackgroundConfig):
         assert self.name is not None
         with open(self.cache_filename, 'w') as output:
             data = self.serialize()
-            cPickle.dump(data, output)
+            pickle.dump(data, output)
 
     def cache_load(self):
         if not os.path.exists(self.cache_filename):
             return False
 
         with open(self.cache_filename, 'r') as infile:
-            data = cPickle.load(infile)
+            data = pickle.load(infile)
             self.deserialize(data)
 
         return True
@@ -163,17 +163,17 @@ class SynonymousBackground(BackgroundCommon):
         np.save(fout, self.background)
 
         b = zlib.compress(fout.getvalue())
-        f = zlib.compress(cPickle.dumps(self.foreground))
+        f = zlib.compress(pickle.dumps(self.foreground))
         return {'background': b,
                 'foreground': f}
 
     def deserialize(self, data):
         b = data['background']
-        fin = cStringIO.StringIO(zlib.decompress(b))
+        fin = io.StringIO(zlib.decompress(b))
         self.background = np.load(fin)
 
         f = data['foreground']
-        self.foreground = cPickle.loads(zlib.decompress(f))
+        self.foreground = pickle.loads(zlib.decompress(f))
 
     def _count_foreground_events(self, gene_syms):
         count = 0

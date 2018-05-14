@@ -6,7 +6,7 @@ from os.path import exists, dirname, basename
 import glob
 import time, datetime
 import argparse
-import ConfigParser
+from configparser import ConfigParser
 import common.config
 from box import Box
 import pysam
@@ -40,7 +40,7 @@ class MultiAnnotator(object):
                 [assign_values(column, self.header)
                  for column in preannotator.new_columns])
 
-        config_parser = ConfigParser.SafeConfigParser()
+        config_parser = ConfigParser()
         config_parser.optionxform = str
         config_parser.read(config_file)
         self.config = Box(common.config.to_dict(config_parser),

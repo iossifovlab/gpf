@@ -5,7 +5,7 @@ from DAE import vDB
 import operator
 
 
-from __builtin__ import str
+# from __builtin__ import str
 from VariantsDB import Study
 from functools import reduce
 

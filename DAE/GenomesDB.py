@@ -1,7 +1,7 @@
 
 from DAE import *
 
-import ConfigParser
+from configparser import ConfigParser
 
 from GenomeAccess import openRef
 from GeneModelFiles import load_gene_models
@@ -32,7 +32,7 @@ class GenomesDB:
         if not confFile:
             confFile = daeDir + "/genomesDB.conf"
 
-        self.config = ConfigParser.SafeConfigParser({
+        self.config = ConfigParser({
             'wd': daeDir,
             'data': data_dir
         })

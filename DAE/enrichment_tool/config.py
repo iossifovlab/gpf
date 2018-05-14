@@ -3,7 +3,7 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-import ConfigParser
+from configparser import ConfigParser
 from collections import Counter
 from DAE import Config
 
@@ -17,7 +17,7 @@ class BackgroundConfig(object):
         wd = self.dae_config.daeDir
         data_dir = self.dae_config.data_dir
 
-        self.config = ConfigParser.SafeConfigParser({
+        self.config = ConfigParser({
             'wd': wd,
             'data': data_dir
         })
