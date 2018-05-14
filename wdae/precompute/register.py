@@ -74,8 +74,8 @@ class PrecomputeRegister(object):
 
         return precompute
 
-    def has_key(self, key):
-        return key in self.reg
+    def __contains__(self, item):
+        return item in self.reg
 
     def keys(self):
         return self.reg.keys()
@@ -105,7 +105,7 @@ def get(key):
     return value
 
 
-def has_key(key):
+def has_data(key):
     global _REGISTER
     value = False
 

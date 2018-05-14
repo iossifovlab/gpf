@@ -60,7 +60,7 @@ def get(key):
     return None
 
 
-def has_key(key):
+def has_data(key):
     global _REGISTER
     value = False
 
