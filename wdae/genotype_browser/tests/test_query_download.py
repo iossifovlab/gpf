@@ -257,7 +257,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert header is not None
         assert res is not None
 
-        assert 93 == len(res)
+        assert 94 == len(res)
 
         for v in res:
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
