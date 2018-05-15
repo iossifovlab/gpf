@@ -27,13 +27,17 @@ class MultiAnnotator(object):
 
         self.annotators = []
         virtual_columns_indices = []
+        columns_labels = {}
 
         for preannotator in self.preannotators:
             self.annotators.append({
                 'instance': preannotator,
                 'columns': preannotator.new_columns
             })
-            self.header.extend(preannotator.new_columns)
+            columns_labels.update({column: column
+                                   for column in preannotator.new_columns})
+            if self.header:
+                self.header.extend(preannotator.new_columns)
             virtual_columns_indices.extend(
                 [assign_values(column, self.header)
                  for column in preannotator.new_columns])
@@ -44,14 +48,19 @@ class MultiAnnotator(object):
         self.config = Box(common.config.to_dict(config_parser),
             default_box=True, default_box_attr=None)
 
-        new_columns_labels = []
-        columns_labels = {}
         # config_parser.sections() this gives the sections in order which is important
         for annotation_step in config_parser.sections():
             annotation_step_config = self.config[annotation_step]
             columns_labels.update(annotation_step_config.columns)
-            if not reannotate and self.header is not None:
-                self.header.extend(annotation_step_config.columns.values())
+            if self.header is not None:
+                if reannotate:
+                    new_columns = [column
+                                   for column in annotation_step_config.columns.values()
+                                   if column not in self.header]
+                else:
+                    new_columns = annotation_step_config.columns.values()
+                self.header.extend(new_columns)
+
             if annotation_step_config.virtuals is not None:
                 virtual_columns_indices.extend(
                     [assign_values(annotation_step_config.columns[column.strip()], self.header)
@@ -62,18 +71,10 @@ class MultiAnnotator(object):
                 'columns': annotation_step_config.columns.keys()
             })
 
+        self.column_indices = {column: assign_values(label, self.header)
+                               for column, label in columns_labels.items()}
         self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
                                        if i not in virtual_columns_indices]
-
-        if reannotate:
-            reannotate_labels = {columns_labels[column] for column in reannotate}
-            if not reannotate_labels.issubset(self.header):
-                raise ValueError('All reannotate columns should be present in the input file header!')
-            self.reannotate_indices = {
-                column: self.header.index(columns_labels[column])
-                for column in reannotate
-            }
-
 
     def annotate_file(self, input, output):
         if self.header:
@@ -94,19 +95,13 @@ class MultiAnnotator(object):
                 sys.stderr.write(str(k) + " lines processed\n")
 
             line = l.rstrip('\n').split("\t")
-            if self.reannotate:
-                for annotator in annotators:
-                    columns_to_update = [column
-                        for column in annotator['columns']
-                        if column in self.reannotate]
-                    values = annotator['instance'].line_annotations(line, columns_to_update)
-                    for index in range(0, len(columns_to_update)):
-                        position = self.reannotate_indices[columns_to_update[index]]
-                        line[position] = values[index]
-            else:
-                for annotator in annotators:
-                    line.extend(annotator['instance'].line_annotations(line, annotator['columns']))
-                line = [line[i-1] for i in self.stored_columns_indices]
+            for annotator in annotators:
+                columns = annotator['columns']
+                values = annotator['instance'].line_annotations(line, columns)
+                for column, value in zip(columns, values):
+                    position = self.column_indices[column]
+                    line[position - 1:position] = [value]
+            line = [line[i-1] for i in self.stored_columns_indices]
 
             output.write("\t".join(line) + "\n")
 
@@ -145,7 +140,9 @@ def get_argument_parser():
     parser = argparse.ArgumentParser(description=desc, conflict_handler='resolve')
     parser.add_argument('-H', help='no header in the input file', default=False,  action='store_true', dest='no_header')
     parser.add_argument('-c', '--config', help='config file location', required=True, action='store')
-    parser.add_argument('--reannotate', help='columns in the input file to reannotate', action='store')
+    parser.add_argument('--always-add', help='always add columns; '
+                        'default behavior is to replace columns with the same label',
+                        default=False, action='store_true')
     parser.add_argument('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)', action='store')
     parser.add_argument('infile', nargs='?', action='store',
         default='-', help='path to input file; defaults to stdin')
@@ -198,12 +195,9 @@ def main():
     else:
         out = sys.stdout
 
-    if opts.reannotate:
-        opts.reannotate = {token.strip() for token in opts.reannotate.split(',')}
-
     preannotators = PreannotatorLoader.load_preannotators(opts, header)
 
-    annotator = MultiAnnotator(opts.config, header, opts.reannotate, preannotators)
+    annotator = MultiAnnotator(opts.config, header, not opts.always_add, preannotators)
 
     annotator.annotate_file(variantFile, out)
 

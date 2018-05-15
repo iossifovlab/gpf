@@ -45,8 +45,7 @@ class AnnotatorBase():
 
 def give_column_number(s, header):
     try:
-        c = header.index(s)
-        return(c+1)
+        return len(header) - header[::-1].index(s)
     except:
         sys.stderr.write("Used parameter: " + s + " does NOT exist in the input file header\n")
         sys.exit(-678)
