@@ -139,7 +139,7 @@ class TransmissionLegacy(TransmissionConfig):
             regionS = self.study.vdb.get_gene_regions(geneSyms)
 
         if regionS:
-            f = gzip.open(transmittedVariantsFile)
+            f = gzip.open(transmittedVariantsFile, mode="rt", encoding="utf-8")
             colNms = f.readline().strip().split("\t")
             f.close()
             tbf = pysam.Tabixfile(transmittedVariantsFile)
@@ -167,7 +167,8 @@ class TransmissionLegacy(TransmissionConfig):
                     LOGGER.warn("Bad region: {}".format(ex))
                     continue
         else:
-            f = gzip.open(transmittedVariantsFile)
+            f = gzip.open(transmittedVariantsFile, mode="rt", encoding="utf-8")
+
             colNms = f.readline().strip().split("\t")
             for v in self.filter_transmitted_variants(f, colNms,
                                                       minParentsCalled,

@@ -15,7 +15,7 @@ import os
 from pheno_browser_api.common import PhenoBrowserCommon
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.permissions import IsDatasetAllowed
-import cStringIO
+from io import cStringIO
 from django.http.response import HttpResponse
 from pheno_browser.db import DbManager
 
@@ -146,7 +146,7 @@ class PhenoMeasuresDownload(APIView):
             instrument = instruments[0]
 
         df = dataset.pheno_db.get_instrument_values_df(instrument)
-        output = cStringIO.StringIO()
+        output = io.StringIO()
         df.to_csv(output, index=False)
 
         response = HttpResponse(

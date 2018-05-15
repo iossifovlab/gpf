@@ -154,11 +154,11 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _pickle_cache(self):
         cache_file_path = self.gene_info.getGeneTermAtt(self.gsc_id, 'file')
         if os.path.exists(cache_file_path):
-            infile = open(cache_file_path, 'r')
+            infile = open(cache_file_path, 'rb')
             self.cache = pickle.load(infile)
         else:
             self._generate_cache()
-            infile = open(cache_file_path, 'w')
+            infile = open(cache_file_path, 'wb')
             pickle.dump(self.cache, infile)
 
     def build_cache(self, datasets=None):

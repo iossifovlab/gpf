@@ -15,7 +15,7 @@ from multiprocessing.pool import ThreadPool
 def run_request(url, params):
     req = requests.post(url, params, verify=False)
 
-    fin = StringIO.StringIO(req.text)
+    fin = Stringio.StringIO(req.text)
     csvin = csv.reader(fin)
     header = next(csvin)
 
@@ -52,7 +52,7 @@ class TestRequest(object):
         res = requests.post(self.url, self.params, verify=False)
         assert 200 == res.status_code
 
-        fin = StringIO.StringIO(res.text)
+        fin = Stringio.StringIO(res.text)
         csvin = csv.reader(fin)
         self.header = next(csvin)
         result = []

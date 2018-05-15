@@ -174,7 +174,7 @@ def convert_to_string(val):
 
     if type(val) in set([str, str]) or \
             isinstance(val, str) or isinstance(val, str):
-        return str(remove_annoying_characters(val).decode('utf-8'))
+        return str(remove_annoying_characters(val))
     else:
         return str(val)
 

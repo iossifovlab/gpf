@@ -192,9 +192,9 @@ class StudyTypesMixin(object):
             return None
         study_types = [st.lower() for st in study_types]
         if safe:
-            assert all([vt in self.STUDY_TYPES for vt in study_types])
+            assert all([st in self.STUDY_TYPES for st in study_types])
         study_types = [
-            st for st in study_types if vt in self.STUDY_TYPES
+            st for st in study_types if st in self.STUDY_TYPES
         ]
         if not study_types:
             return None

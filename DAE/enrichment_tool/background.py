@@ -55,7 +55,7 @@ class BackgroundBase(BackgroundConfig):
 
     def cache_save(self):
         assert self.name is not None
-        with open(self.cache_filename, 'w') as output:
+        with open(self.cache_filename, 'wb') as output:
             data = self.serialize()
             pickle.dump(data, output)
 
@@ -63,7 +63,7 @@ class BackgroundBase(BackgroundConfig):
         if not os.path.exists(self.cache_filename):
             return False
 
-        with open(self.cache_filename, 'r') as infile:
+        with open(self.cache_filename, 'rb') as infile:
             data = pickle.load(infile)
             self.deserialize(data)
 
@@ -166,7 +166,7 @@ class SynonymousBackground(BackgroundCommon):
         return self.background
 
     def serialize(self):
-        fout = cStringIO.StringIO()
+        fout = io.StringIO()
         np.save(fout, self.background)
 
         b = zlib.compress(fout.getvalue())
@@ -236,7 +236,7 @@ class CodingLenBackground(BackgroundCommon):
         return self.background
 
     def serialize(self):
-        fout = cStringIO.StringIO()
+        fout = io.BytesIO()
         np.save(fout, self.background)
 
         b = zlib.compress(fout.getvalue())
@@ -244,7 +244,7 @@ class CodingLenBackground(BackgroundCommon):
 
     def deserialize(self, data):
         b = data['background']
-        fin = cStringIO.StringIO(zlib.decompress(b))
+        fin = io.BytesIO(zlib.decompress(b))
         self.background = np.load(fin)
 
     def _count(self, gene_syms):
@@ -339,7 +339,7 @@ class SamochaBackground(BackgroundBase):
     def serialize(self):
         ndarray = self.background.as_matrix(
             ['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS'])
-        fout = cStringIO.StringIO()
+        fout = io.BytesIO()
         np.save(fout, ndarray)
 
         data = zlib.compress(fout.getvalue())
@@ -347,7 +347,7 @@ class SamochaBackground(BackgroundBase):
 
     def deserialize(self, data):
         b = data['background']
-        fin = cStringIO.StringIO(zlib.decompress(b))
+        fin = io.BytesIO(zlib.decompress(b))
         ndarray = np.load(fin)
 
         self.background = pd.DataFrame(

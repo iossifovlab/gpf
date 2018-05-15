@@ -244,6 +244,10 @@ class Variant(object):
     def studyName(self):
         return self.atts.get(self.studyNameAtt, self.study.name)
 
+    @studyName.setter
+    def studyName(self, new_value):
+        self.atts[self.studyNameAtt] = new_value
+
     @property
     def location(self):
         return self.atts[self.locationAtt]
@@ -331,11 +335,7 @@ class Variant(object):
         for index, person in enumerate(self.memberInOrder):
             if person.is_child and \
                     isVariant(self.bestSt, index, self.location, person.gender):
-                try:
-                    childStr += (person.role + person.gender)
-                except:
-                    print(self.studyName, self.familyId)
-                    raise
+                childStr += (person.role + person.gender)
         return childStr
 
     @property

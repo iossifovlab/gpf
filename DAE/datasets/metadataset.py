@@ -15,7 +15,7 @@ class MetaDataset(Dataset):
 
     @staticmethod
     def __distinct(variants, max_count=None):
-        count = 0;
+        count = 0
         previous_variant = next(variants)
         seen_keys = {previous_variant.key}
         for variant in variants:
@@ -58,8 +58,10 @@ class MetaDataset(Dataset):
                  for study in unique_studies])
 
         augment_vars = self._get_var_augmenter(safe=safe, **kwargs)
-        return map(augment_vars,
-            self.__distinct(self._phenotype_filter(all_variants, **kwargs)))
+        return map(
+            augment_vars,
+            self.__distinct(self._phenotype_filter(all_variants, **kwargs))
+        )
 
     def __get_variants_from_study(self, study, safe=True, **kwargs):
         variant_iterators = []
