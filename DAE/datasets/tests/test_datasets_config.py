@@ -56,6 +56,8 @@ class DatasetsConfigTest(unittest.TestCase):
         self.assertEquals('vip', ds['phenoDB'])
         self.assertEquals(2, len(ds['pedigreeSelectors']))
         pedigrees = ds['pedigreeSelectors']
+        for pedigree in pedigrees:
+            print(pedigree)
 
         p16p = pedigrees[0]
         self.assertIn('16pstatus', p16p['id'])

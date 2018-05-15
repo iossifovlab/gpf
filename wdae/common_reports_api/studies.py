@@ -4,7 +4,7 @@ from collections import Counter, defaultdict
 from helpers.logger import LOGGER
 from precompute.register import Precompute
 import preloaded
-import cPickle
+import pickle
 import zlib
 
 from .permissions import belongs_to_dataset
@@ -114,13 +114,13 @@ class StudiesSummaries(Precompute):
         self.summaries = None
 
     def serialize(self):
-        data = zlib.compress(cPickle.dumps(self.summaries))
+        data = zlib.compress(pickle.dumps(self.summaries))
         return {
             'data': data,
         }
 
     def deserialize(self, data):
-        self.summaries = cPickle.loads(zlib.decompress(data['data']))
+        self.summaries = pickle.loads(zlib.decompress(data['data']))
 
     def is_precomputed(self):
         return self.summaries is not None

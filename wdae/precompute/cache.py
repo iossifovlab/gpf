@@ -19,15 +19,18 @@ class PrecomputeStore(object):
         self.cache = caches['pre']
 
     def hash_key(self, key):
+        assert isinstance(key, str), type(key)
+        key = bytearray(key, 'utf-8')
         return hashlib.sha1(key).hexdigest()
 
     def store(self, key, data):
+        assert isinstance(key, str)
         for v in data.values():
-            assert isinstance(v, str)
+            assert isinstance(v, bytes), type(v)
             assert (len(v) < self.MAX_CHUNK_SIZE)
 
         description = {"name": key,
-                       "keys": data.keys(),
+                       "keys": list(data.keys()),
                        "timestamp": datetime.now()}
 
         LOGGER.info("storing cache value: for %s at %s" %
@@ -37,7 +40,12 @@ class PrecomputeStore(object):
         values = {"{}.{}".format(key, k): v for k, v in data.items()}
         values["{}.description".format(key)] = description
 
-        self.cache.set_many({self.hash_key(k): v for k, v in values.items()})
+        v = {
+            self.hash_key(k): v
+            for k, v in values.items()
+        }
+        print(v, type(v))
+        self.cache.set_many(v)
 
     def retrieve(self, key):
         dkey = self.hash_key("{}.description".format(key))

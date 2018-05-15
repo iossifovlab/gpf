@@ -166,7 +166,7 @@ class SynonymousBackground(BackgroundCommon):
         return self.background
 
     def serialize(self):
-        fout = io.StringIO()
+        fout = io.BytesIO()
         np.save(fout, self.background)
 
         b = zlib.compress(fout.getvalue())
@@ -176,7 +176,7 @@ class SynonymousBackground(BackgroundCommon):
 
     def deserialize(self, data):
         b = data['background']
-        fin = io.StringIO(zlib.decompress(b))
+        fin = io.BytesIO(zlib.decompress(b))
         self.background = np.load(fin)
 
         f = data['foreground']
