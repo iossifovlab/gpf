@@ -114,7 +114,7 @@ class StudiesSummaries(Precompute):
         self.summaries = None
 
     def serialize(self):
-        data = zlib.compress(pickle.dumps(self.summaries))
+        data = zlib.compress(pickle.dumps(self.summaries, protocol=2))
         return {
             'data': data,
         }

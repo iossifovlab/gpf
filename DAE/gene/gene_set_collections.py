@@ -159,7 +159,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         else:
             self._generate_cache()
             infile = open(cache_file_path, 'wb')
-            pickle.dump(self.cache, infile)
+            pickle.dump(self.cache, infile, protocol=2)
 
     def build_cache(self, datasets=None):
         self._generate_cache(datasets)

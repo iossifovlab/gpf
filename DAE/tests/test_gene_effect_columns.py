@@ -3,6 +3,7 @@ Created on Sep 27, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from builtins import next
 from builtins import zip
 import itertools

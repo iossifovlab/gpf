@@ -26,7 +26,7 @@ class Config(object):
         self._daeConfig.optionxform = lambda x: x
         self._daeConfig.read(
             os.path.join(self._daeDir, "DAE.conf"),
-            encoding="utf-8"
+            encoding="ascii"
         )
 
         # self._phenoDBFile = self._daeConfig.get('phenoDB', 'file')

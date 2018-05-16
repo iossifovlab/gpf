@@ -347,11 +347,13 @@ def build_effect_types(effects):
 def build_effect_type_filter(data):
     if "effectTypes" not in data:
         return
+
     effects_string = data['effectTypes']
     if effects_string is None:
         return
     if isinstance(effects_string, list):
         effects_string = ','.join(effects_string)
+
     if isinstance(effects_string, str) or isinstance(effects_string, str):
         effects = effects_string.split(',')
         result_effects = build_effect_types(effects)

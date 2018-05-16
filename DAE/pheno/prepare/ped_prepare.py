@@ -145,10 +145,10 @@ class PreparePersons(PrepareBase):
         df = pd.read_csv(
             pedfile, sep='\t',
             dtype={
-                'familyId': object,
-                'personId': object,
-                'dadId': object,
-                'momId': object,
+                'familyId': np.object,
+                'personId': np.object,
+                'dadId': np.object,
+                'momId': np.object,
                 'gender': np.int32,
                 'status': np.int32,
             }

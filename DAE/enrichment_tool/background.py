@@ -57,7 +57,7 @@ class BackgroundBase(BackgroundConfig):
         assert self.name is not None
         with open(self.cache_filename, 'wb') as output:
             data = self.serialize()
-            pickle.dump(data, output)
+            pickle.dump(data, output, protocol=2)
 
     def cache_load(self):
         if not os.path.exists(self.cache_filename):
@@ -170,7 +170,7 @@ class SynonymousBackground(BackgroundCommon):
         np.save(fout, self.background)
 
         b = zlib.compress(fout.getvalue())
-        f = zlib.compress(pickle.dumps(self.foreground))
+        f = zlib.compress(pickle.dumps(self.foreground, protocol=2))
         return {'background': b,
                 'foreground': f}
 

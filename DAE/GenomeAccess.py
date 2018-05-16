@@ -90,7 +90,7 @@ class GenomicSequence_Dan(object):
 
 
         seq_pickle = outputDir + "seqDic_upper.dump"
-        pickle.dump(SeqDic, open(seq_pickle, 'wb'))
+        pickle.dump(SeqDic, open(seq_pickle, 'wb'), protocol=2)
 
     def __loadPickleSeq(self, file="/data/unsafe/autism/genomes/hg19/seqDic_upper.dump"):
         import pickle

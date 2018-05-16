@@ -24,7 +24,7 @@ class PrecomputeDenovoGeneSets(precompute.register.Precompute):
     def serialize(self):
         result = {}
         for key, gs in list(self.denovo_gene_sets.items()):
-            data = zlib.compress(pickle.dumps(gs))
+            data = zlib.compress(pickle.dumps(gs, protocol=2))
             result[key] = data
 
         return result

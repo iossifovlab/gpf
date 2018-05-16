@@ -774,7 +774,7 @@ def save_pickled_dicts(gm, outputFile = "./geneModels"):
     
     import pickle
     
-    pickle.dump([gm._utrModels, gm.transcriptModels, gm._geneModels], open(outputFile + ".dump", 'wb'), 2)
+    pickle.dump([gm._utrModels, gm.transcriptModels, gm._geneModels], open(outputFile + ".dump", 'wb'), protocol=2)
     
 def load_pickled_dicts(inputFile):
     

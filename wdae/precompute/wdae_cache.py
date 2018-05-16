@@ -14,7 +14,7 @@ def hash_key(key):
 def store(key, value, chunksize=950000):
     hkey = hash_key(key)
     memcache = caches['pre']
-    serialized = pickle.dumps(value, 2)
+    serialized = pickle.dumps(value, protocol=2)
     values = {}
     for i in range(0, len(serialized), chunksize):
         values['%s.%s' % (hkey, i // chunksize)] = serialized[i: i + chunksize]
