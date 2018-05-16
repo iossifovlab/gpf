@@ -422,10 +422,10 @@ class Study(object):
         for families in result:
             for family in families.values():
                 for member in family.memberInOrder:
-                    if not isinstance(member.role, str) or \
-                            not isinstance(member.gender, str):
-                        member.role = str(member.role)
-                        member.gender = str(member.gender)
+                    if not isinstance(member.role, str):
+                        member.role = member.role.decode("UTF-8")
+                    if not isinstance(member.gender, str):
+                        member.gender = member.gender.decode("UTF-8")
 
         return result
 

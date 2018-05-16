@@ -173,9 +173,9 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
 
         assert 422 == len(res)
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
-            study_phenotype = variant['study phenotype']
+            study_phenotype = variant['phenotype']
             assert study_phenotype == 'autism'
 
     def test_query_download_vip(self):
@@ -193,9 +193,9 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert 64 == len(res)
 
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
-            study_phenotype = variant['study phenotype']
+            study_phenotype = variant['phenotype']
             assert study_phenotype == 'autism'
 
     def test_query_download_sd_autism(self):
@@ -214,9 +214,9 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert 622 == len(res)
 
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
-            study_phenotype = variant['study phenotype']
+            study_phenotype = variant['phenotype']
             assert study_phenotype == 'autism'
 
     def test_query_download_sd_unaffected(self):
@@ -235,9 +235,9 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert 233 == len(res)
 
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
-            study_phenotype = variant['study phenotype']
+            study_phenotype = variant['phenotype']
             assert study_phenotype in [
                 "autism", "unaffected", "congenital_heart_disease",
                 "epilepsy", "schizophrenia",
@@ -257,12 +257,12 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert header is not None
         assert res is not None
 
-        assert 93 == len(res)
+        assert 94 == len(res)
 
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
-            study_phenotype = variant['study phenotype']
+            study_phenotype = variant['phenotype']
             assert study_phenotype == 'autism'
 
     def test_query_download_denovo_db_unaffected(self):
@@ -281,9 +281,9 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert 20 == len(res)
 
         for v in res:
-            variant = {k: v for k, v in zip(header.split(','), v.split(','))}
+            variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
-            study_phenotype = variant['study phenotype']
+            study_phenotype = variant['phenotype']
             assert study_phenotype in [
                 "acromelic_frontonasal_dysostosis",
                 "amyotrophic_lateral_sclerosis",

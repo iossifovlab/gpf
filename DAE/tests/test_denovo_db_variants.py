@@ -21,7 +21,7 @@ def denovo_db_full():
 
     filename = os.path.join(
         dirname,
-        "denovo-db.variants.annotated.dedup.txt")
+        "denovo-db.variants-annotated.tsv")
     print("denovo db full:", filename)
 
     dst.vdb._config.set(dst._configSection, "denovoCalls.full.files", filename)
@@ -38,7 +38,7 @@ def test_denovo_db_reconfigure(denovo_db_full):
     assert vs
 
     print("variants found:", len(vs))
-    assert len(vs) == 5062
+    assert len(vs) == 5060
 
 
 def test_denovo_db_autism_on_X(denovo_db_full):
@@ -53,7 +53,7 @@ def test_denovo_db_autism_on_X(denovo_db_full):
         if v.atts['phenotype'] == 'autism':
             res.append(v)
     print("autism variants found:", len(res))
-    assert len(res) == 4591
+    assert len(res) == 4589
 
 
 def test_denovo_db_autism_coding_in_prb_on_X(denovo_db_full):

@@ -170,16 +170,26 @@ class FamiliesCounters(CounterBase):
             ]
             for i in range(0, len(family_configuration), 4)
         ]
+        mom_id = ''
+        dad_id = ''
+        for counter, [role, gender] in enumerate(pedigree):
+            pid = 'p{}'.format(counter + 1)
+            if role == 'mom':
+                mom_id = pid
+            elif role == 'dad':
+                dad_id = pid
+        result = []
+        def is_child(role):
+            return role in set(['prb', 'sib'])
         pedigree = [
             [
                 'f1', 'p{}'.format(counter + 1),
-                'p1' if counter > 1 else '',
-                'p2' if counter > 1 else '',
+                mom_id if is_child(role) else '',
+                dad_id if is_child(role) else '',
                 gender, self.get_color(role), 0, 0
             ]
             for counter, [role, gender] in enumerate(pedigree)
         ]
-
         return pedigree
 
 
