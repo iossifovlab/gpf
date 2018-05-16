@@ -16,13 +16,17 @@ def get_argument_parser():
     parser.add_argument('-p', help='position column number/name', action='store')
     parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
 
-    parser.add_argument('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
+    parser.add_argument('-H', help='no header in the input file', default=False,
+        action='store_true', dest='no_header')
 
     parser.add_argument('-D', '--scores-directory',
         help='directory containing the scores - each score should have its own subdirectory '
              '(defaults to $GFD_DIR)',
         action='store')
-
+    parser.add_argument('--direct',
+        help='read score files using tabix index '
+              '(default: read score files iteratively)',
+        default=False, action='store_true')
     parser.add_argument('--scores', help='comma separated list of scores to annotate with',
         action='store')
     parser.add_argument('--labels',
@@ -92,7 +96,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 'x': opts.x,
                 'score_column': score_column,
                 'default_value': score_default_value,
-                'direct': True,
+                'direct': opts.direct,
                 'scores_file': tabix_files[0].replace('.tbi', '')
             }
 
