@@ -22,7 +22,5 @@ class IsDatasetAllowed(permissions.BasePermission):
     @staticmethod
     def permitted_datasets(user):
         dataset_ids = register.get('datasets').get_config().get_dataset_ids()
-        return filter(
-            lambda dataset_id: IsDatasetAllowed.user_has_permission(
-                user, dataset_id),
-            dataset_ids)
+        return [dataset_id for dataset_id in dataset_ids if IsDatasetAllowed.user_has_permission(
+                user, dataset_id)]

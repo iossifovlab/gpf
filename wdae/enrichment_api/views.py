@@ -3,6 +3,7 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
+from builtins import object
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView

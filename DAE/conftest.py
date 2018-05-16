@@ -3,6 +3,7 @@ Created on Nov 23, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import pytest
 
 from datasets.config import DatasetsConfig

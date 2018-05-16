@@ -1,3 +1,4 @@
+from builtins import object
 from rest_framework import serializers
 from django.contrib.auth.models import Group
 from guardian import shortcuts
@@ -8,7 +9,7 @@ class GroupSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
     name = serializers.CharField(validators=[])
 
-    class Meta:
+    class Meta(object):
         model = Group
         fields = ('id', 'name',)
 
@@ -20,13 +21,13 @@ class GroupRetrieveSerializer(GroupSerializer):
 
     datasets = serializers.SerializerMethodField()
 
-    class Meta:
+    class Meta(object):
         model = Group
         fields = ('id', 'name', 'users', 'datasets')
 
     def get_datasets(self, group):
         datasets = shortcuts.get_objects_for_group(group, 'view', klass=Dataset)
-        return map(lambda d: d.dataset_id, datasets)
+        return [d.dataset_id for d in datasets]
 
 
 class PermissionChangeSerializer(serializers.Serializer):

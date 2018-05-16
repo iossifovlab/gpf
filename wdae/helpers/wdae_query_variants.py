@@ -5,6 +5,7 @@ Created on Oct 21, 2015
 '''
 
 # from DAE import get_gene_sets_symNS
+from builtins import str
 from helpers.dae_query import combine_denovo_gene_sets
 from preloaded import register
 from query_prepare import prepare_gene_syms, prepare_string_value

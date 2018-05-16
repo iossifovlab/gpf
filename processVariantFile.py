@@ -1,6 +1,11 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+from __future__ import division
+from builtins import input
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import os, sys, optparse, pickle, gzip
 from re import search
 from subprocess import call, Popen, PIPE
@@ -28,7 +33,7 @@ if opts.geneModel not in goodGeneModels:
 
 
 def wczytajZKonsoli(napis, dataType):
-    data = raw_input(napis + "\n")
+    data = eval(input(napis + "\n"))
     data = dataType(data)
     return(data)
 
@@ -57,7 +62,7 @@ def czySeq(x):
     
 
 chrOk = []
-for i in xrange(1,23):
+for i in range(1,23):
     chrOk.append(str(i))
 chrOk.append("X")
 chrOk.append("Y")
@@ -121,14 +126,14 @@ inddot = genemodel_file_path[ind+1:].find(".")
 
 if genemodel_file_path[ind+1:ind + inddot + 1].lower() in goodGeneModels:
     print("Are you sure that a choosen model: " +  model + " is compatibile with a given gene model file: " + genemodel_file_path + "? (y or n)")
-    answer = raw_input()
+    answer = eval(input())
     if answer == "n":
         print("Do you want to choose another gene mode? (y or n)")
-        answer2 = raw_input()
+        answer2 = eval(input())
         if answer2 == "n":
             sys.exit(0)
         else:
-            new_model = raw_input("Choose one of: " + goodGeneModels[0] + " or " +  goodGeneModels[1] + "\n")
+            new_model = eval(input("Choose one of: " + goodGeneModels[0] + " or " +  goodGeneModels[1] + "\n"))
             if new_model not in goodGeneModels:
                 print("Wrong model name")
                 sys.exit(-18)
@@ -167,7 +172,7 @@ CodonsAa = {'Gly' : ['GGG', 'GGA', 'GGT', 'GGC'],
         'His' : ['CAT', 'CAC'],
         'Pro' : ['CCG', 'CCA', 'CCT', 'CCC']}
 
-CodonsAaKeys = CodonsAa.keys()
+CodonsAaKeys = list(CodonsAa.keys())
 seq_pickle = "/mnt/wigclust2/data/safe/levy/windel/seqDic_upper.dump"
 seq_dic = pickle.load(open(seq_pickle))
 
@@ -283,7 +288,7 @@ def createCdsFiles(model, location):
                 continue
 
             # if an exon ends before cds starts - to remove
-            for i in xrange(0, len(exon_ends)):
+            for i in range(0, len(exon_ends)):
                 if int(cds_start) > int(exon_ends[0]):
                     exon_starts.remove(exon_starts[0])
                     exon_ends.remove(exon_ends[0])
@@ -297,7 +302,7 @@ def createCdsFiles(model, location):
                 exon_starts[0] = str(int(cds_start))
 
             # if an exon starts after cds ends - to remove
-            for i in xrange(len(exon_starts)-1,-1, -1):
+            for i in range(len(exon_starts)-1,-1, -1):
                 if int(exon_starts[-1]) > int(cds_end):
                     exon_starts.pop()
                     exon_ends.pop()
@@ -317,25 +322,25 @@ def createCdsFiles(model, location):
             result_file.write(">" + gene + "\t" + chrom + "\t" + strand + "\t" + str(transcription_start + 1) + "\t" + transcription_end + "\n")
 
             if model != "knowngene":
-                for i in xrange(0, l):
+                for i in range(0, l):
                     result_file.write(str(int(exon_starts[i])+1) + "\t" + exon_ends[i] + "\t" + frame[i] + "\t" + seq_dic[chrom][int(exon_starts[i]):int(exon_ends[i])]  + "\n" )       
 
             else:
                 Frame = [0]
                 if strand == "+":
-                    for e in xrange(0, l):
+                    for e in range(0, l):
                         fr = (Frame[e] + int(exon_ends[e]) - int(exon_starts[e]))%3
                         Frame.append(fr)
                     Frame = Frame[:-1]
                 else:
-                    for e in xrange(0, l):
+                    for e in range(0, l):
                         fr = (Frame[e] + int(exon_ends[l - 1 - e]) - int(exon_starts[l - 1 - e]))%3
                         Frame.append(fr)
                     Frame = Frame[:-1]
                     Frame.reverse()
                             
         
-                for i in xrange(0, l):
+                for i in range(0, l):
                     result_file.write(str(int(exon_starts[i])+1) + "\t" + exon_ends[i] + "\t" + str(Frame[i]) + "\t" + seq_dic[chrom][int(exon_starts[i]):int(exon_ends[i])] + "\n" )
 
             line = gmodel.readline()
@@ -529,7 +534,7 @@ def checkIfIntron(chrom, pos, length, type):
             
                 if (pos >= up and pos <= down) or (pos + length - 1 >= up and pos + length - 1 <= down):
                     foundCoding = True
-                    for l in xrange(0, length):
+                    for l in range(0, length):
                         if pos + l >= up and pos + l <= down:
                             codingVariants.append((pos+l, l))
                             
@@ -663,10 +668,10 @@ def checkIfIntron(chrom, pos, length, type):
                 if found == True:
                 
                     if strand == "+":
-                        posLength = str(((point)/3)+1) + "/" + str(sum/3)
+                        posLength = str((old_div((point),3))+1) + "/" + str(old_div(sum,3))
                         posIntron = str(whichIntron) + "/" + str(howManyIntrons)
                     else:
-                        posLength = str(((sum-point-1)/3)+1) + "/" + str(sum/3)
+                        posLength = str((old_div((sum-point-1),3))+1) + "/" + str(old_div(sum,3))
                         posIntron = str(howManyIntrons - whichIntron + 1) + "/" + str(howManyIntrons)
 
                     for each in [posIntron, str(distance), indelside, intronLength, posLength]:
@@ -711,16 +716,16 @@ def checkIfIntron(chrom, pos, length, type):
             
                     if strand == "+":
                         if frame != 2:
-                            minAA = str((minimalnyAaPos/3)+1) + "/" + str(sum/3)
+                            minAA = str((old_div(minimalnyAaPos,3))+1) + "/" + str(old_div(sum,3))
                         else:
-                            minAA = str(minimalnyAaPos/3) + "/" + str(sum/3)
-                        maxAA = str((maksymalnyAaPos/3)+1) + "/" + str(sum/3)
+                            minAA = str(old_div(minimalnyAaPos,3)) + "/" + str(old_div(sum,3))
+                        maxAA = str((old_div(maksymalnyAaPos,3))+1) + "/" + str(old_div(sum,3))
                     else:
                         if frame != 0:
-                            minAA = str(((sum - minimalnyAaPos - 1)/3)+1) + "/" + str(sum/3)
+                            minAA = str((old_div((sum - minimalnyAaPos - 1),3))+1) + "/" + str(old_div(sum,3))
                         else:
-                            minAA = str(((sum - minimalnyAaPos)/3)+1) + "/" + str(sum/3)
-                        maxAA = str(((sum - maksymalnyAaPos - 1)/3)+1) + "/" + str(sum/3)
+                            minAA = str((old_div((sum - minimalnyAaPos),3))+1) + "/" + str(old_div(sum,3))
+                        maxAA = str((old_div((sum - maksymalnyAaPos - 1),3))+1) + "/" + str(old_div(sum,3))
                     #print(newSet[0][0][1:], strand, minPosCod, maxPosCod, minAA, maxAA,codon, frame, deletionLength, str(downDiff), str(upDiff))
                     newRecord = [newSet[0][0][1:], strand, minPosCod, maxPosCod, minAA, maxAA, codon, frame, deletionLength, str(downDiff), str(upDiff)]
     
@@ -1199,7 +1204,7 @@ while True:
             coding_aa_pos_yes = []
             coding_aa_pos_noNew = []
             coding_aa_pos_no = []
-            for fs in xrange(0, len(frameShiftDeletion)):
+            for fs in range(0, len(frameShiftDeletion)):
                 if frameShiftDeletion[fs] == "yes":
                     if positionsCoding[fs][0] not in uniqYes:
                         uniqYes.append(positionsCoding[fs][0])
@@ -1257,7 +1262,7 @@ while True:
             for each in [coding_aa_pos_yes, coding_aa_pos_noNew, coding_aa_pos_no]:
                 for e in each:
                     if exonBoundries == True:
-                        for m in xrange(0, len(e), 3):
+                        for m in range(0, len(e), 3):
                             positionsAll += e[m] + "[" + e[m+1] + "," + e[m+2] + "];"
                     else:
                         for m in e:
@@ -1381,7 +1386,7 @@ while True:
              
             else:
                 uniq = []
-                for cc in xrange(0, len(chosenColumnsCod)):
+                for cc in range(0, len(chosenColumnsCod)):
                     if stops[cc] == "no":
                         napis = chosenColumnsCod[cc][3] + ":no-frame-shift|"
                         if napis not in uniq:

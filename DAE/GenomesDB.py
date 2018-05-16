@@ -1,7 +1,10 @@
+from __future__ import unicode_literals
 
 from builtins import object
 from DAE import *
 
+from future import standard_library
+standard_library.install_aliases()
 from configparser import ConfigParser
 
 from GenomeAccess import openRef

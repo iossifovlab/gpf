@@ -4,6 +4,7 @@
 # January/16th/2014
 # written by Ewa
 
+from __future__ import unicode_literals
 from builtins import str
 from builtins import range
 from builtins import object

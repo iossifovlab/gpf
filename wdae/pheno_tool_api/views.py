@@ -1,4 +1,5 @@
 from __future__ import print_function
+from builtins import str
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -79,7 +80,7 @@ class PhenoToolView(APIView):
                 dataset.pheno_reg)
             for normalize_by_elem in data['normalizeBy']
         ]
-        normalize_by = filter(lambda n: n is not None, normalize_by)
+        normalize_by = [n for n in normalize_by if n is not None]
 
         tool = PhenoTool(
             dataset.pheno_db, dataset.studies, roles=[Role.prb],
@@ -148,7 +149,7 @@ class PhenoToolView(APIView):
 
 class PhenoToolDownload(PhenoToolView):
     def _parse_query_params(self, data):
-        res = {str(k): str(v) for k, v in data.items()}
+        res = {str(k): str(v) for k, v in list(data.items())}
         assert 'queryData' in res
         query = json.loads(res['queryData'])
         return query

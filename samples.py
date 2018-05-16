@@ -5,14 +5,14 @@ from DAE import *
 
 sfariDB.individual
 print(",sample_id,person_id,sample_type,FamilyId,Gender,RelationToProband,Source,ENDC,,")
-for x in sfariDB.sample.values():
+for x in list(sfariDB.sample.values()):
     fid=x.sampleId.rsplit('.')[0]
     if (fid != 'id()'):
         sampleType = x.sampleType
         if (sampleType == "wb-dna"):
             sampleType = "whole blood"
 
-        if x.personId in sfariDB.individual.keys() and sfariDB.individual[x.personId].collection == "ssc":
+        if x.personId in list(sfariDB.individual.keys()) and sfariDB.individual[x.personId].collection == "ssc":
             p=sfariDB.individual[x.personId]
             familyId = p.familyId
             if (p.sex == "female"):

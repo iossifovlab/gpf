@@ -4,6 +4,8 @@ Created on Nov 7, 2016
 @author: lubo
 '''
 from builtins import object
+from future import standard_library
+standard_library.install_aliases()
 from configparser import ConfigParser
 from collections import Counter
 from DAE import Config

@@ -4,7 +4,12 @@ Created on Jul 27, 2015
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import division
 
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from collections import defaultdict, Counter
 import itertools
 import logging
@@ -40,7 +45,7 @@ class CommonBase(object):
     @staticmethod
     def family_configuration(family):
         return "".join([family[pid].role + family[pid].gender
-                        for pid in sorted(family.keys(),
+                        for pid in sorted(list(family.keys()),
                                           key=lambda x: (family[x].role, x))])
 
 
@@ -49,11 +54,9 @@ class CounterBase(CommonBase):
     def build_families_buffer(self, studies):
         families_buffer = defaultdict(dict)
         for st in studies:
-            families = st.families.values()
+            families = list(st.families.values())
             if len(st.phenotypes) > 1 and self.phenotype_id != 'unaffected':
-                families = filter(
-                    lambda f: f.atts['phenotype'] == self.phenotype_id,
-                    families)
+                families = [f for f in families if f.atts['phenotype'] == self.phenotype_id]
             for f in families:
                 for p in f.memberInOrder:
                     if p.personId in families_buffer[f.familyId]:
@@ -110,8 +113,8 @@ class ChildrenCounter(CounterBase):
         families_buffer = self.build_families_buffer(studies)
         children_counter = Counter()
 
-        for family in families_buffer.values():
-            for person in family.values():
+        for family in list(families_buffer.values()):
+            for person in list(family.values()):
                 if self.check_phenotype(person):
                     children_counter[person.gender] += 1
 
@@ -133,12 +136,12 @@ class FamiliesCounters(CounterBase):
         families_buffer = self.build_families_buffer(studies)
         family_type_counter = Counter()
 
-        for family in families_buffer.values():
+        for family in list(families_buffer.values()):
             family_configuration = self.family_configuration(family)
             family_type_counter[family_configuration] += 1
 
         self.data = {}
-        for (fconf, count) in family_type_counter.items():
+        for (fconf, count) in list(family_type_counter.items()):
             pedigree = self.family_configuration_to_pedigree_v3(fconf)
             self.data[fconf] = (pedigree, count)
             self.total += count
@@ -153,7 +156,7 @@ class FamiliesCounters(CounterBase):
 
     @property
     def counters(self):
-        res = self.data.values()[:]
+        res = list(self.data.values())[:]
         res = sorted(res, key=lambda v: (-v[1]))
         return res
 
@@ -367,12 +370,12 @@ class DenovoEventsCounter(CounterBase):
         if self.children_counter.children_total != 0:
 
             self.events_children_percent = \
-                round((1.0 * self.events_children_count) /
-                      self.children_counter.children_total, 3)
+                round(old_div((1.0 * self.events_children_count),
+                      self.children_counter.children_total), 3)
 
             self.events_rate_per_child = \
-                round((1.0 * self.events_count) /
-                      self.children_counter.children_total, 3)
+                round(old_div((1.0 * self.events_count),
+                      self.children_counter.children_total), 3)
 
 
 class DenovoEventsReportRow(object):

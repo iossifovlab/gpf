@@ -9,6 +9,8 @@ from os.path import exists, dirname, basename
 import glob
 import time, datetime
 import argparse
+from future import standard_library
+standard_library.install_aliases()
 from configparser import ConfigParser
 import common.config
 from box import Box

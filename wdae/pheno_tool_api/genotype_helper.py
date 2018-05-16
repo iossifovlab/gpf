@@ -3,6 +3,7 @@ Created on Nov 21, 2016
 
 @author: lubo
 '''
+from builtins import object
 import pandas as pd
 from collections import Counter
 from Variant import variantInMembers
@@ -31,7 +32,7 @@ class GenotypeHelper(object):
     def to_persons_variants_df(cls, vs):
         vs = cls.to_persons_variants(vs)
         df = pd.DataFrame(
-            data=[(k, v) for (k, v) in vs.items()],
+            data=[(k, v) for (k, v) in list(vs.items())],
             columns=['person_id', 'variants'])
         df.set_index('person_id', inplace=True, verify_integrity=True)
         return df

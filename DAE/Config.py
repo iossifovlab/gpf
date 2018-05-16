@@ -3,8 +3,11 @@ Created on Jul 4, 2013
 
 @author: leotta
 '''
+from __future__ import unicode_literals
 from builtins import object
 import os
+from future import standard_library
+standard_library.install_aliases()
 from configparser import ConfigParser
 
 # adds exceptions for error handling
@@ -21,7 +24,10 @@ class Config(object):
             'data': self._dae_data_dir
         })
         self._daeConfig.optionxform = lambda x: x
-        self._daeConfig.read(os.path.join(self._daeDir, "DAE.conf"))
+        self._daeConfig.read(
+            os.path.join(self._daeDir, "DAE.conf"),
+            encoding="utf-8"
+        )
 
         # self._phenoDBFile = self._daeConfig.get('phenoDB', 'file')
 

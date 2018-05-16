@@ -5,8 +5,15 @@ Created on Nov 6, 2015
 
 '''
 from __future__ import print_function
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import zip
+from past.utils import old_div
+from builtins import object
 import requests
-import StringIO
+import io
 import csv
 import copy
 from multiprocessing.pool import ThreadPool
@@ -68,7 +75,7 @@ class TestRequest(object):
 
     def test_request(self):
         result = self._request()
-        lines = map(lambda x_y: x_y[0] == x_y[1], zip(self.result, result))
+        lines = [x_y[0] == x_y[1] for x_y in zip(self.result, result)]
         return all(lines)
 
 
@@ -103,7 +110,7 @@ class AsyncSSCTest(object):
             req.initial_request()
 
     def async_requests(self, count=10, pool_size=2):
-        repeat = count / len(self.reqs) + 1
+        repeat = old_div(count, len(self.reqs)) + 1
         reqs = (self.reqs * repeat)[:count]
 
         pool = ThreadPool(processes=pool_size)

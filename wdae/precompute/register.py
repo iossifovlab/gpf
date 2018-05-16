@@ -5,6 +5,7 @@ Created on Jun 15, 2015
 '''
 from __future__ import print_function
 from __future__ import absolute_import
+from builtins import object
 from .cache import PrecomputeStore
 from django.conf import settings
 
@@ -34,7 +35,7 @@ class PrecomputeRegister(object):
             "PRELOAD_ACTIVE",
             False)
 
-        for key, precompute in register.items():
+        for key, precompute in list(register.items()):
             self.register(key, precompute)
 
     def register(self, key, precompute):
@@ -62,7 +63,7 @@ class PrecomputeRegister(object):
             self.store.store(key, data)
 
     def recompute(self):
-        for key, precompute in self.reg.items():
+        for key, precompute in list(self.reg.items()):
             precompute.precompute()
             data = precompute.serialize()
             self.store.store(key, data)
@@ -78,7 +79,7 @@ class PrecomputeRegister(object):
         return item in self.reg
 
     def keys(self):
-        return self.reg.keys()
+        return list(self.reg.keys())
 
 
 _REGISTER = PrecomputeRegister()

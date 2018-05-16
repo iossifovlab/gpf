@@ -5,6 +5,8 @@ Created on Feb 16, 2017
 '''
 from builtins import object
 from Config import Config
+from future import standard_library
+standard_library.install_aliases()
 from configparser import ConfigParser
 from GeneInfoDB import GeneInfoDB
 

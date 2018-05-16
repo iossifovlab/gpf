@@ -4,6 +4,8 @@ Created on Oct 23, 2015
 @author: lubo
 '''
 from builtins import object
+from future import standard_library
+standard_library.install_aliases()
 from configparser import NoOptionError
 
 

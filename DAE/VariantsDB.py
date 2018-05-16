@@ -1,10 +1,13 @@
 #!/bin/env python
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from builtins import zip
 from builtins import str
 from builtins import range
 from builtins import object
+from future import standard_library
+standard_library.install_aliases()
 from configparser import ConfigParser
 import os
 import sys
@@ -36,6 +39,8 @@ from Family import Family, Person
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
+from future import standard_library
+standard_library.install_aliases()
 from configparser import NoOptionError
 
 LOGGER = logging.getLogger(__name__)
@@ -420,7 +425,7 @@ class Study(object):
     def _load_family_data_from_pickle(fn):
         result = pickle.load(open(fn, "rb"))
         for families in result:
-            for family in families.values():
+            for family in list(families.values()):
                 for member in family.memberInOrder:
                     if not isinstance(member.role, str):
                         member.role = member.role.decode("UTF-8")

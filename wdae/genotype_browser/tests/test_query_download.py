@@ -3,10 +3,14 @@ Created on Jul 11, 2017
 
 @author: lubo
 '''
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import zip
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
 import copy
 from rest_framework import status
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import json
 EXAMPLE_REQUEST_VIP = {
     "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
@@ -136,7 +140,7 @@ class Test(BaseAuthenticatedUserTest):
 
     def test_query_download_urlencoded(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -161,7 +165,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
 
     def test_query_download_ssc(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SSC)
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -180,7 +184,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
 
     def test_query_download_vip(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -201,7 +205,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
     def test_query_download_sd_autism(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SD)
         data['pedigreeSelector']['checkedValues'] = ['autism']
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -222,7 +226,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
     def test_query_download_sd_unaffected(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SD)
         data['pedigreeSelector']['checkedValues'] = ['unaffected']
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -247,7 +251,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
     def test_query_download_denovo_db_autism(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_DENOVO_DB)
         data['pedigreeSelector']['checkedValues'] = ['autism']
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -268,7 +272,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
     def test_query_download_denovo_db_unaffected(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_DENOVO_DB)
         data['pedigreeSelector']['checkedValues'] = ['unaffected']
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')

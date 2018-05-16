@@ -1,12 +1,14 @@
 #!/data/software/local/bin/python
 
 from __future__ import print_function
+from builtins import str
+from builtins import object
 import string
 import sys
 import copy
 import re
 
-class objectgraph:
+class objectgraph(object):
 
     def __init__(self,fname):
         self.req = {}
@@ -19,7 +21,7 @@ class objectgraph:
         self._generateOLinks()
   
     def _generateOLinks(self):
-        for o in self.objectsByKey.values():
+        for o in list(self.objectsByKey.values()):
             o.depsO = [self.objectsByKey[x] for x in o.deps]
             o.parentsO= [self.objectsByKey[x] for x in o.parents]
         
@@ -30,7 +32,7 @@ class objectgraph:
             h[m.group()[:m.group().index("=")]] = m.group()[m.group().index("=")+1:]
 
     def printH(self, h):
-        for nn in h.keys():
+        for nn in list(h.keys()):
             print(nn+"="+h[nn])
 
         
@@ -64,7 +66,7 @@ class objectgraph:
             
         # ORIGINAL WRONG: for o in sorted(self.objectsByKey.values()):
         # variatn 1 (GOOD): for o in sorted(self.objectsByKey.values(),key=lambda x:x.name):
-        for oName,o in sorted([(x.name,x) for x in self.objectsByKey.values()]):
+        for oName,o in sorted([(x.name,x) for x in list(self.objectsByKey.values())]):
             f.write("OBJECT\n")
             f.write("id="+o.name+"\n")
             f.write("type="+o.type+"\n")
@@ -106,7 +108,7 @@ class objectgraph:
                 if req['deps'] != "":
                         deps = req["deps"].split(",")
 
-                class OGO:
+                class OGO(object):
                         pass
 
                 ob = OGO()

@@ -19,6 +19,8 @@ class PhenoConfig(ConfigBox):
             wd = dae_config.daeDir
             data_dir = dae_config.data_dir
             filename = dae_config.phenoDBconfFile
+        if not isinstance(filename, str):
+            filename = str(filename)
 
         conf = reusables.config_dict(
             filename,

@@ -3,6 +3,9 @@ Created on Dec 10, 2015
 
 @author: lubo
 '''
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import numpy as np
 from preloaded.register import Preload
 from gene.weights import WeightsLoader
@@ -25,7 +28,7 @@ class Weights(Preload):
             w = self.loader[weight_name]
             assert w.df is not None
 
-            step = (w.max() - w.min()) / (w.bins - 1)
+            step = old_div((w.max() - w.min()), (w.bins - 1))
             dec = - np.log10(step)
             dec = dec if dec >= 0 else 0
             dec = int(dec)
@@ -35,11 +38,11 @@ class Weights(Preload):
 
             if w.xscale == "log":
                 # Max numbers of items in first bin
-                max_count = w.values().size / w.bins
+                max_count = old_div(list(w.values()).size, w.bins)
 
                 # Find a bin small enough to fit max_count items
                 for bleft in range(-1, -200, -1):
-                    if (w.values() < 10 ** bleft).sum() < max_count:
+                    if (list(w.values()) < 10 ** bleft).sum() < max_count:
                         break
 
                 bins_in = [0] + list(np.logspace(bleft, np.log10(bright),
@@ -48,7 +51,7 @@ class Weights(Preload):
                 bins_in = w.bins
 
             bars, bins = np.histogram(
-                w.values(), bins_in,
+                list(w.values()), bins_in,
                 range=[bleft, bright])
             # bins = np.round(bins, -int(np.log(step)))
 

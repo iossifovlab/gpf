@@ -2,6 +2,7 @@
 # Jan 17th 2014
 # by Ewa
 
+from __future__ import unicode_literals
 from builtins import str
 from builtins import object
 import sqlite3

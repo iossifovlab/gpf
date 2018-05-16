@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import str
 import logging
 import helpers.GeneTerm
 from precompute import register
@@ -17,13 +19,13 @@ def prepare_query_dict(data):
     if isinstance(data, QueryDict):
         items = data.iterlists()
     else:
-        items = data.items()
+        items = list(data.items())
 
     for (key, val) in items:
         key = str(key)
         if isinstance(val, list):
             value = ','.join([str(s).strip() for s in val])
-        elif isinstance(val, str) or isinstance(val, unicode):
+        elif isinstance(val, str) or isinstance(val, str):
             value = str(val.replace(u'\xa0', u' ').encode('utf-8'))
             value = value.strip()
         else:

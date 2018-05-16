@@ -4,6 +4,8 @@ Created on Jun 21, 2013
 @author: leotta
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import map
 from builtins import zip
 import itertools
 import sys
@@ -184,7 +186,7 @@ def getVariantsInterface(args, response=None):
     additionalAtts = ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_', 'valstatus']
 
     if response==None:
-        safeVs(map(augmentAVar,itertools.chain(dvs,ivs)),'-', additionalAtts)
+        safeVs(list(map(augmentAVar,itertools.chain(dvs,ivs))),'-', additionalAtts)
     else:
-        _safeVs(response,map(augmentAVar,itertools.chain(dvs,ivs)), additionalAtts)
+        _safeVs(response,list(map(augmentAVar,itertools.chain(dvs,ivs))), additionalAtts)
 

@@ -3,6 +3,7 @@ Created on Jun 10, 2015
 
 @author: lubo
 '''
+from builtins import object
 import hashlib
 
 from django.core.cache import caches
@@ -25,7 +26,7 @@ class PrecomputeStore(object):
 
     def store(self, key, data):
         assert isinstance(key, str)
-        for v in data.values():
+        for v in list(data.values()):
             assert isinstance(v, bytes), type(v)
             assert (len(v) < self.MAX_CHUNK_SIZE)
 
@@ -37,12 +38,12 @@ class PrecomputeStore(object):
                     (description['name'],
                      description['timestamp'],))
 
-        values = {"{}.{}".format(key, k): v for k, v in data.items()}
+        values = {"{}.{}".format(key, k): v for k, v in list(data.items())}
         values["{}.description".format(key)] = description
 
         v = {
             self.hash_key(k): v
-            for k, v in values.items()
+            for k, v in list(values.items())
         }
         print(v, type(v))
         self.cache.set_many(v)
@@ -55,6 +56,6 @@ class PrecomputeStore(object):
 
         vkeys = {self.hash_key("{}.{}".format(key, k)): k
                  for k in description['keys']}
-        result = self.cache.get_many(vkeys.keys())
+        result = self.cache.get_many(list(vkeys.keys()))
 
-        return {vkeys[k]: v for k, v in result.items()}
+        return {vkeys[k]: v for k, v in list(result.items())}

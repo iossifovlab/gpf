@@ -1,5 +1,6 @@
 #!/bin/env python
 from __future__ import print_function
+from builtins import map
 from DAE import *
 
 filteredValidationRows={}
@@ -49,7 +50,7 @@ for v in vDB.get_validation_variants():
 
 print("\t".join("familyId,location,variant,val.batchId,val.status,val.resultNote,val.counts,val.parent".split(",")))
 
-for key,row in filteredValidationRows.items():
+for key,row in list(filteredValidationRows.items()):
     print("\t".join(map(str,(row["familyId"],row["location"],row["variant"],row["val.batchId"],
                              row["val.valStatus"],row["val.resultNote"],row["val.counts"],row["val.parent"]))))
     

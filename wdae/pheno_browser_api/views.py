@@ -87,7 +87,7 @@ class PhenoMeasuresView(APIView):
 
         instrument = request.query_params.get('instrument', None)
         if instrument is None:
-            instruments = dataset.pheno_db.instruments.keys()
+            instruments = list(dataset.pheno_db.instruments.keys())
             instrument = instruments[0]
 
         browser_dbfile = self.get_browser_dbfile(
@@ -142,7 +142,7 @@ class PhenoMeasuresDownload(APIView):
 
         instrument = request.query_params.get('instrument', None)
         if instrument is None:
-            instruments = dataset.pheno_db.instruments.keys()
+            instruments = list(dataset.pheno_db.instruments.keys())
             instrument = instruments[0]
 
         df = dataset.pheno_db.get_instrument_values_df(instrument)

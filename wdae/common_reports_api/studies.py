@@ -12,7 +12,7 @@ from .permissions import belongs_to_dataset
 def family_buffer(studies):
     fam_buff = defaultdict(dict)
     for study in studies:
-        for f in study.families.values():
+        for f in list(study.families.values()):
             for p in f.memberInOrder:
                 if p.personId in fam_buff[f.familyId]:
                     prev_p = fam_buff[f.familyId][p.personId]
@@ -36,14 +36,14 @@ def build_header_summary(studies):
     child_type_cnt = Counter()
 
     fam_buff = family_buffer(studies)
-    for fmd in fam_buff.values():
+    for fmd in list(fam_buff.values()):
         child_cnt_hist[len(fmd)] += 1
 
         fam_conf = "".join([fmd[pid].role + fmd[pid].gender
-                            for pid in sorted(fmd.keys(),
+                            for pid in sorted(list(fmd.keys()),
                                               key=lambda x: (fmd[x].role, x))])
         fam_type_cnt[fam_conf] += 1
-        for p in fmd.values():
+        for p in list(fmd.values()):
             child_type_cnt[p.role + p.gender] += 1
             child_type_cnt[p.role] += 1
 

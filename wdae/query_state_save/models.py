@@ -8,7 +8,7 @@ PAGE_TYPES = [
     ("phenotool", "Phenotype tool")
 ]
 
-PAGE_TYPE_OPTIONS = map(lambda x: x[0], PAGE_TYPES)
+PAGE_TYPE_OPTIONS = [x[0] for x in PAGE_TYPES]
 
 
 class QueryState(models.Model):

@@ -3,6 +3,7 @@ Created on Jan 31, 2013
 
 @author: Tony
 '''
+from __future__ import unicode_literals
 
 from builtins import object
 import SfariVariable

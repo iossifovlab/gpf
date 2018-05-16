@@ -5,6 +5,8 @@ Created on Aug 3, 2015
 '''
 
 
+from builtins import str
+from builtins import object
 class FamiliesDataCSV(object):
 
     def __init__(self, studies):
@@ -14,7 +16,7 @@ class FamiliesDataCSV(object):
         self.data = []
         self.data.append('study,familyId,personId,role,gender,orderInFamily\n')
         for st in self.studies:
-            families = st.families.values()
+            families = list(st.families.values())
             families.sort(key=lambda f: f.familyId)
             for f in families:
                 for (o, p) in enumerate(f.memberInOrder):

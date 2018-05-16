@@ -1,11 +1,16 @@
 #!/data/software/local/bin/python
 
 from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import gzip, pysam, sys, optparse, os
 import numpy as np
 # from DAE import *
 
-class family:
+class family(object):
 	def __init__(self, fname):
 	   try:
 		self.familyID = ''
@@ -88,7 +93,7 @@ class family:
 			return ''
 	def familyID( self ):
 		return self.familyID
-class alpha:
+class alpha(object):
 	def __init__(self, fname):
 	   try:
 		with open( fname, 'r' ) as infile:
@@ -103,7 +108,7 @@ class alpha:
 	def Print( self ):
 		print(self.value)
 
-class ommission:
+class ommission(object):
    def __init__( self, alph, male ):
 	self.alpha = alph
 	self.male  = male 
@@ -178,10 +183,10 @@ class ommission:
 	xstr = ''
 
 	issues = []
-	for c in xrange(2,len(gens)):
+	for c in range(2,len(gens)):
 	    if gens[c]==1:
         	continue
-	    for p in xrange(2):
+	    for p in range(2):
 	        if gens[p]!=1 and gens[p]!=gens[c]: # report which is lost
 	            issues.append(str(p)+str(c))
 	if not issues:
@@ -210,9 +215,9 @@ class ommission:
 	gens[ np.array(self.male) & (gens>1)] = 1
 	#print 'processX',gens
 	issues = []
-	for c in xrange(2,len(gens)):
+	for c in range(2,len(gens)):
 	   if self.male[c]:
-		if (gens[0] != 1 ) and (gens[0]/2 != gens[c]):
+		if (gens[0] != 1 ) and (old_div(gens[0],2) != gens[c]):
 			issues.append(str(0)+str(c))
 	   else:
 		if gens[c] == 1:

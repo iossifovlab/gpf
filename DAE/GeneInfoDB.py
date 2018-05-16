@@ -1,7 +1,10 @@
 #!/bin/env python
 
 from __future__ import print_function
+from __future__ import unicode_literals
 from builtins import object
+from future import standard_library
+standard_library.install_aliases()
 from configparser import ConfigParser
 import gzip
 import sys

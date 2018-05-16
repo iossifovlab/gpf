@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import map
 from builtins import zip
 from builtins import object
 import itertools
@@ -316,12 +318,12 @@ class GetVariantsFacade(object):
 
 
         if output==None:
-            safeVs(map(augmentAVar,itertools.chain(self.dvs, self.ivs)),'-',
+            safeVs(list(map(augmentAVar,itertools.chain(self.dvs, self.ivs))),'-',
                    ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'])
         else:
             
             #safeVs2(output,itertools.imap(augmentAVar, self.dvs),
             #        ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")
 
-            safeVs2(output,map(augmentAVar,itertools.chain(self.dvs, self.ivs)),
+            safeVs2(output,list(map(augmentAVar,itertools.chain(self.dvs, self.ivs))),
                     ['effectType', 'effectDetails', 'all.altFreq','all.nAltAlls','all.nParCalled', '_par_races_', '_ch_prof_'],sep=",")

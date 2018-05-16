@@ -62,7 +62,7 @@ Example:
 
             family_ids = dataset.get_family_ids(**data)
             if family_ids is None:
-                family_ids = dataset.families.keys()
+                family_ids = list(dataset.families.keys())
 
             pedigree_selector = dataset.get_pedigree_selector(**data)
             pedigree_selector_id = pedigree_selector['id']

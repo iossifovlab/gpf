@@ -3,6 +3,8 @@ Created on Jan 20, 2017
 
 @author: lubo
 '''
+from future import standard_library
+standard_library.install_aliases()
 from builtins import object
 from configparser import ConfigParser
 

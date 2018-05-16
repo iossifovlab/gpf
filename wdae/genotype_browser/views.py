@@ -4,6 +4,8 @@ Created on Feb 6, 2017
 @author: lubo
 '''
 from __future__ import print_function
+from builtins import map
+from builtins import str
 import itertools
 
 from rest_framework import views, status
@@ -119,7 +121,7 @@ class QueryDownloadView(QueryBaseView):
     def _parse_query_params(self, data):
         print(data)
 
-        res = {str(k): str(v) for k, v in data.items()}
+        res = {str(k): str(v) for k, v in list(data.items())}
         assert 'queryData' in res
         query = json.loads(res['queryData'])
         return query

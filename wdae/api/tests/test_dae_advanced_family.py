@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import str
 import unittest
 
 from helpers.wdae_query_variants import wdae_query_wrapper

@@ -3,6 +3,7 @@ Created on May 24, 2017
 
 @author: lubo
 '''
+from builtins import object
 import os
 
 from django.conf import settings

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from builtins import zip
 import optparse, sys, os
 import pysam, numpy
 from collections import namedtuple, defaultdict

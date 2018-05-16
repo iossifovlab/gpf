@@ -3,6 +3,7 @@ Created on May 27, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from builtins import zip
 from DAE import vDB
 from DAE import giDB

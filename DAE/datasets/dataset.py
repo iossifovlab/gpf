@@ -3,6 +3,7 @@ Created on Feb 9, 2017
 
 @author: lubo
 '''
+from builtins import map
 from builtins import filter
 from DAE import pheno, vDB
 import itertools
@@ -534,9 +535,9 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         denovo = self.get_denovo_variants(safe=safe, **kwargs)
         transmitted = self.get_transmitted_variants(safe=safe, **kwargs)
         augment_vars = self._get_var_augmenter(safe=safe, **kwargs)
-        variants = map(
+        variants = list(map(
             augment_vars,
-            itertools.chain.from_iterable([denovo, transmitted]))
+            itertools.chain.from_iterable([denovo, transmitted])))
         return self._phenotype_filter(variants, **kwargs)
 
     def get_legend(self, **kwargs):

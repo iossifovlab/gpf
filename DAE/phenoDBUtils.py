@@ -4,6 +4,7 @@ Created on Nov 7, 2012
 @author: Tony
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 from builtins import next
 from builtins import object
 import csv

@@ -1,5 +1,7 @@
 #!/bin/env python
 from __future__ import print_function
+from builtins import zip
+from builtins import object
 from collections import defaultdict
 import sys
 
@@ -12,10 +14,10 @@ def loadTable(fn):
         if not l.startswith("RR,"):
            continue
         cs = l.strip().split(",")
-        rows.append(dict(zip(hdr,cs[1:])))
+        rows.append(dict(list(zip(hdr,cs[1:]))))
     return rows
 
-class MetaData:
+class MetaData(object):
     def __init__(self,dir):
         self.SM = {}
         self.BC = {}
@@ -60,7 +62,7 @@ class MetaData:
         laneId = fc + "-" + number
         if laneId in self.LN:
             raise Exception("duplicated lane id " + laneId)
-        class LN:
+        class LN(object):
             pass
         ln = LN()
         ln.fc = fc
@@ -81,7 +83,7 @@ class MetaData:
             raise Exception("duplicated seqrunid " + seqrunId)
         if fc in self.SQbyFc:
             raise Exception("duplicated flowcell " + fc)
-        class SR:
+        class SR(object):
             pass
         sr = SR()
         sr.seqrunId = seqrunId
@@ -109,7 +111,7 @@ class MetaData:
     def addCp(self,captureId,chipId,atts=None):
         if captureId in self.CP:
             raise Exception("duplicated capture id" + captureId)
-        class CP:
+        class CP(object):
             pass
         cp = CP()
         cp.captureId = captureId
@@ -124,7 +126,7 @@ class MetaData:
         if libraryId in self.LB:
             raise Exception("duplicated library id" + libraryId)
 
-        class LB:
+        class LB(object):
             pass
         lb = LB()
         lb.libraryId = libraryId
@@ -148,7 +150,7 @@ class MetaData:
     def addBc(self,barcodeId,sequence,atts=None):
         if barcodeId in self.BC:
             raise Exception("duplicatd barcode id" + barcodeId)
-        class BC:
+        class BC(object):
             pass
         bc = BC()
         bc.barcodeId = barcodeId
@@ -160,7 +162,7 @@ class MetaData:
         if sampleId in self.SM:
             raise Exception("duplicated sample id " + sampleId)
 
-        class SM:
+        class SM(object):
             pass
         sm = SM()
         sm.sampleId = sampleId

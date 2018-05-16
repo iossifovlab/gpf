@@ -5,6 +5,7 @@ Created on Feb 16, 2017
 '''
 from __future__ import print_function
 
+from builtins import str
 import ast
 from copy import deepcopy
 from rest_framework import views, status
@@ -135,7 +136,7 @@ class GeneSetDownloadView(GeneSetsBaseView):
         if gene_set is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        gene_syms = map(lambda s: "{}\r\n".format(s), gene_set['syms'])
+        gene_syms = ["{}\r\n".format(s) for s in gene_set['syms']]
         title = '"{}: {}"\r\n'.format(gene_set['name'], gene_set['desc'])
         result = itertools.chain([title], gene_syms)
 
@@ -149,7 +150,7 @@ class GeneSetDownloadView(GeneSetsBaseView):
         return response
 
     def _parse_query_params(self, data):
-        res = {str(k): str(v) for k, v in data.items()}
+        res = {str(k): str(v) for k, v in list(data.items())}
         if 'geneSetsTypes' in res:
             res['geneSetsTypes'] = ast.literal_eval(res['geneSetsTypes'])
         return res

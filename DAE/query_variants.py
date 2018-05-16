@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import map
 from builtins import str
 import itertools
 import re
@@ -487,7 +489,7 @@ def do_query_variants(data, atts=[]):
     vsl = dae_query_variants(data)
 
     res_variants = itertools.chain(*vsl)
-    return generate_response(map(augment_vars, res_variants),
+    return generate_response(list(map(augment_vars, res_variants)),
                              ['familyId',
                               'studyName',
                               '_phenotype_',

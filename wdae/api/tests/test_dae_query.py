@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import str
 import unittest
 
 from query_variants import prepare_inchild, \

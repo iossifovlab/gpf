@@ -3,6 +3,7 @@ Created on Feb 23, 2016
 
 @author: lubo
 '''
+from builtins import str
 import numpy as np
 
 

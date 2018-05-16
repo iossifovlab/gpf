@@ -3,6 +3,8 @@ Created on Aug 10, 2016
 
 @author: lubo
 '''
+from builtins import str
+from builtins import object
 import uuid
 
 from django.db import models, transaction
@@ -189,7 +191,7 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
-    class Meta:
+    class Meta(object):
         db_table = 'users'
 
 
@@ -322,7 +324,7 @@ def group_pre_delete(sender, **kwargs):
         return
     group = kwargs['instance']
     if group.name == WdaeUser.SUPERUSER_GROUP:
-        group._user_ids = map(lambda u: u.pk, group.user_set.all())
+        group._user_ids = [u.pk for u in group.user_set.all()]
 
 
 m2m_changed.connect(staff_update, WdaeUser.groups.through, weak=False)
@@ -337,5 +339,5 @@ class VerificationPath(models.Model):
     def __str__(self):
         return str(self.path)
 
-    class Meta:
+    class Meta(object):
         db_table = 'verification_paths'
