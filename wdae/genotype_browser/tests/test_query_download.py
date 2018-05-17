@@ -128,9 +128,9 @@ def count_iterable(iterable):
 
 def collect(iterable):
     res = []
-    header = next(iterable)
+    header = next(iterable).decode("utf-8")
     for v in iterable:
-        res.append(v)
+        res.append(v.decode("utf-8"))
     return header, res
 
 

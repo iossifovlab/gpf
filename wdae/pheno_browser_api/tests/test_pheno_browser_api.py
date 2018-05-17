@@ -69,5 +69,5 @@ class Test(BaseAuthenticatedUserTest):
         response = self.client.get(url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        header = response.content.split()[0].split(',')
+        header = response.content.decode("utf-8").split()[0].split(',')
         self.assertEquals(header[0], 'person_id')

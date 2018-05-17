@@ -38,11 +38,11 @@ class Weights(Preload):
 
             if w.xscale == "log":
                 # Max numbers of items in first bin
-                max_count = old_div(list(w.values()).size, w.bins)
+                max_count = old_div(w.values().size, w.bins)
 
                 # Find a bin small enough to fit max_count items
                 for bleft in range(-1, -200, -1):
-                    if (list(w.values()) < 10 ** bleft).sum() < max_count:
+                    if (w.values() < 10 ** bleft).sum() < max_count:
                         break
 
                 bins_in = [0] + list(np.logspace(bleft, np.log10(bright),
