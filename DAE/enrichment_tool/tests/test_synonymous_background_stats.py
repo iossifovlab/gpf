@@ -39,10 +39,10 @@ def background(request):
 #     assert not background.cache_load()
 
 
-def test_synonymous_background_stats_default(background):
-    assert background is not None
-
-    assert 211645 == np.sum(background.background['raw'])
+# def test_synonymous_background_stats_default(background):
+#     assert background is not None
+#
+#     assert 211645 == np.sum(background.background['raw'])
 
 
 def test_stats_autism_lgd(background, autism_studies,
