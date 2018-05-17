@@ -221,7 +221,8 @@ class CodingLenBackground(BackgroundCommon):
             reader = csv.reader(f)
             next(reader)
             for row in reader:
-                back.append((str(row[1]), int(row[2])))
+                assert len([row[1]]) <= 32, row[1]
+                back.append((row[1], int(row[2])))
         return back
 
     def __init__(self, use_cache=False):
@@ -232,7 +233,7 @@ class CodingLenBackground(BackgroundCommon):
         back = self._load_and_prepare_build()
         self.background = np.array(
             back,
-            dtype=[('sym', '|S32'), ('raw', '>i4')])
+            dtype=[('sym', "|U32"), ('raw', '>i4')])
         return self.background
 
     def serialize(self):
@@ -250,6 +251,7 @@ class CodingLenBackground(BackgroundCommon):
     def _count(self, gene_syms):
         vpred = np.vectorize(lambda sym: sym in gene_syms)
         index = vpred(self.background['sym'])
+
         res = np.sum(self.background['raw'][index])
         return res
 
@@ -393,8 +395,8 @@ class SamochaBackground(BackgroundBase):
             + children_stats['F']
         # p = (p_boys + p_girls) / 2.0
         p = old_div(((children_stats['M'] + children_stats['U']) * p_boys +
-             children_stats['F'] * p_girls), \
-            (children_count))
+                     children_stats['F'] * p_girls),
+                    (children_count))
 #         result.rec_expected = \
 #             (children_stats['M'] + children_stats['F']) * p * p
         if len(rec_result.events) == 0 or len(all_result.events) == 0:
