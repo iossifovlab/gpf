@@ -12,10 +12,10 @@ from rest_framework import status
 import preloaded
 from django.conf import settings
 import os
+import io
 from pheno_browser_api.common import PhenoBrowserCommon
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.permissions import IsDatasetAllowed
-from io import cStringIO
 from django.http.response import HttpResponse
 from pheno_browser.db import DbManager
 
@@ -99,8 +99,10 @@ class PhenoMeasuresView(APIView):
         df = db.get_instrument_df(instrument)
 
         res = []
-        for row in df.itertuples():
-            m = dict(vars(row))
+        for row in df.to_dict('records'):
+            print(row, type(row))
+            m = row
+            print(m)
             if isnan(m['pvalue_correlation_nviq_male']):
                 m['pvalue_correlation_nviq_male'] = "NaN"
             if isnan(m['pvalue_correlation_age_male']):

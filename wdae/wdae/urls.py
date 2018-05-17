@@ -1,11 +1,12 @@
-from django.conf.urls import patterns, url, include
+from django.conf.urls import url, include
 from django.contrib import admin
 
+from gpfjs.views import index
+
 admin.autodiscover()
-urlpatterns = patterns(
-    '',
-    url(r'^$', 'gpfjs.views.index'),
-    url(r'^gpfjs/.*$', 'gpfjs.views.index'),
+urlpatterns = [
+    url(r'^$', index),
+    url(r'^gpfjs/.*$', index),
     url(r'^api/', include('api.urls')),
     #     url(r'^api/v2/pheno_reports', include('pheno_report.urls')),
     #     url(r'^api/v2/gene_weights', include('gene_weights.urls')),
@@ -29,4 +30,4 @@ urlpatterns = patterns(
     url(r'^api/v3/groups', include('groups_api.urls')),
     url(r'^api/v3/query_state', include('query_state_save.urls')),
     url(r'^admin/', include(admin.site.urls)),
-)
+]

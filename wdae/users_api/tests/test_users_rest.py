@@ -99,7 +99,10 @@ def test_new_user_is_not_active(admin_client, users_endpoint):
     new_users = admin_client.get(users_endpoint).data
     assert len(new_users) == len(old_users) + 1
 
-    new_user = filter(lambda u: u['email'] == data['email'], new_users)[0]
+    new_user = next(
+        filter(lambda u: u['email'] == data['email'], new_users),
+            None
+    )
     assert not new_user['hasPassword']
 
 
