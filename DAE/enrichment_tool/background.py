@@ -152,7 +152,7 @@ class SynonymousBackground(BackgroundCommon):
                                  list(base_counts.values())))
 
         background = np.array(base_sorted,
-                              dtype=[('sym', '|S32'), ('raw', '>i4')])
+                              dtype=[('sym', '|U32'), ('raw', '>i4')])
 
         return (background, foreground)
 
@@ -177,7 +177,14 @@ class SynonymousBackground(BackgroundCommon):
     def deserialize(self, data):
         b = data['background']
         fin = io.BytesIO(zlib.decompress(b))
+
         self.background = np.load(fin)
+        self.background['sym'] = np.char.decode(
+            self.background['sym'], 'UTF-8')
+
+        self.background = np.array(
+            self.background,
+            dtype=[('sym', '|U32'), ('raw', '>i4')])
 
         f = data['foreground']
         self.foreground = pickle.loads(zlib.decompress(f))
@@ -197,6 +204,8 @@ class SynonymousBackground(BackgroundCommon):
     def _count(self, gene_syms):
         vpred = np.vectorize(lambda sym: sym in gene_syms)
         index = vpred(self.background['sym'])
+        print(index)
+        print(np.sum(index))
         base = np.sum(self.background['raw'][index])
         foreground = self._count_foreground_events(gene_syms)
         res = base + foreground
