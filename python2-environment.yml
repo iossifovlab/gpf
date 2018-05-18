@@ -186,7 +186,7 @@ dependencies:
   - openpyxl=2.3.2=py27_0
   - openssl=1.0.2j=0
   - packaging=16.8=py27h5e07c7c_1
-  - pandas=0.20.3=py27h820b67f_2
+  - pandas=0.23.0=py27h637b7d7_0
   - pandoc=1.19.2.1=hea2e7c5_1
   - pandocfilters=1.4.2=py27h428e1e5_1
   - pango=1.42.0=h377f3fa_0
@@ -302,10 +302,10 @@ dependencies:
     - coverage==4.4.1
     - cyvcf2==0.8.3
     - distlib==0.2.7
-    - django==1.8.6
+    - django==1.10
     - django-cors-headers==2.0.1
     - django-guardian==1.4.8
-    - djangorestframework==3.1.2
+    - djangorestframework==3.8.2
     - docker==2.5.1
     - docker-compose==1.16.1
     - docker-pycreds==0.2.1
