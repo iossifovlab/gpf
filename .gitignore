@@ -17,3 +17,4 @@ junit.xml
 logs
 output
 /gpf-html.tar.gz
+.pytest_cache
