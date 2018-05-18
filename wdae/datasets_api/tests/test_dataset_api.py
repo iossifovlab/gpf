@@ -27,6 +27,7 @@ class DatasetApiTest(APITestCase):
         data = response.data
 
         self.assertIn('data', data)
+        print(data)
         self.assertEquals(5, len(data['data']))
 
     def test_get_dataset_ssc(self):
