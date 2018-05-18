@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from builtins import object
 from rest_framework import serializers
 from query_state_save.models import QueryState

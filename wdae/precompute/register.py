@@ -5,6 +5,7 @@ Created on Jun 15, 2015
 '''
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from builtins import object
 from .cache import PrecomputeStore
 from django.conf import settings

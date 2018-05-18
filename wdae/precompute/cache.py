@@ -3,7 +3,10 @@ Created on Jun 10, 2015
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
 from builtins import object
+from builtins import str
 import hashlib
 
 from django.core.cache import caches
@@ -45,7 +48,6 @@ class PrecomputeStore(object):
             self.hash_key(k): v
             for k, v in list(values.items())
         }
-        print(v, type(v))
         self.cache.set_many(v)
 
     def retrieve(self, key):

@@ -4,6 +4,7 @@ Created on Jul 25, 2017
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 from builtins import str
 from builtins import range
 from builtins import object

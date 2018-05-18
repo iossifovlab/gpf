@@ -4,6 +4,7 @@ Created on Apr 16, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 from gene.gene_set_collections import DenovoGeneSetsCollection,\
     MetaDenovoGeneSetsCollection
 # from datasets.datasets_factory import DatasetsFactory

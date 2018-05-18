@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from builtins import object
 from ..gene_codes import NuclearCode
 from .adapters.annovar import AnnovarVariantAnnotation

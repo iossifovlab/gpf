@@ -4,6 +4,7 @@ Created on Dec 8, 2016
 @author: lubo
 '''
 from __future__ import absolute_import
+from __future__ import unicode_literals
 
 from builtins import object
 from pheno.utils.configuration import PhenoConfig

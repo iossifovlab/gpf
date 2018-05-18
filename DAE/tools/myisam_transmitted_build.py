@@ -11,6 +11,7 @@ transmitted studies into MySQL MYISAM tables.
 @contact:    lubomir.chorbadjiev@gmail.com
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from builtins import str
 from builtins import zip

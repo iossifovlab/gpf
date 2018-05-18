@@ -3,6 +3,7 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from builtins import object
 from Config import Config
 from future import standard_library

@@ -6,6 +6,7 @@ Created on Jun 25, 2013
 @author: leotta
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 from builtins import str
 from builtins import range
 import sys, getopt

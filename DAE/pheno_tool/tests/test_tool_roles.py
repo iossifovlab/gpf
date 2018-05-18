@@ -3,6 +3,7 @@ Created on Nov 22, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from pheno_tool.tool import PhenoTool
 from pheno_tool.genotype_helper import VariantsType as VT
 from pheno.common import Role

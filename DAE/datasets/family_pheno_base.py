@@ -3,6 +3,7 @@ Created on Mar 2, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from builtins import map
 from builtins import object
 import numpy as np

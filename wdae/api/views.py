@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Create your views here.
 from builtins import map
 from builtins import str

@@ -4,6 +4,7 @@
 pheno2DAE -- prepares a DAE pheno DB cache
 
 '''
+from __future__ import unicode_literals
 
 import sys
 import os

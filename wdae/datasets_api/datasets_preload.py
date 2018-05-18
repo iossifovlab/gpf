@@ -4,6 +4,7 @@ Created on Feb 17, 2017
 @author: lubo
 '''
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from django.conf import settings
 from preloaded.register import Preload
 from datasets.datasets_factory import DatasetsFactory

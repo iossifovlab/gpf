@@ -3,6 +3,7 @@ Created on Aug 3, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from rest_framework import serializers
 
 

@@ -4,6 +4,7 @@ Created on Dec 10, 2015
 @author: lubo
 '''
 from __future__ import division
+from __future__ import unicode_literals
 from builtins import range
 from past.utils import old_div
 import numpy as np
@@ -42,7 +43,7 @@ class Weights(Preload):
 
                 # Find a bin small enough to fit max_count items
                 for bleft in range(-1, -200, -1):
-                    if (w.values() < 10 ** bleft).sum() < max_count:
+                    if ((w.values()) < 10 ** bleft).sum() < max_count:
                         break
 
                 bins_in = [0] + list(np.logspace(bleft, np.log10(bright),

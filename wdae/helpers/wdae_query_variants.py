@@ -3,6 +3,7 @@ Created on Oct 21, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 # from DAE import get_gene_sets_symNS
 from builtins import str

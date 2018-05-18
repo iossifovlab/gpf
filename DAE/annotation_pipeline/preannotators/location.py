@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import common.config
 from tools.utilities import *
 

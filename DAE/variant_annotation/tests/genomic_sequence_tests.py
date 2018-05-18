@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from builtins import range
 import unittest
 from variant_annotation.annotation_request import AnnotationRequestFactory

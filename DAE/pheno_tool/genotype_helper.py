@@ -3,6 +3,7 @@ Created on Nov 21, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from builtins import object
 from query_variants import dae_query_variants, PRESENT_IN_CHILD_TYPES,\
     PRESENT_IN_PARENT_TYPES

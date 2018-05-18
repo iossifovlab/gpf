@@ -3,6 +3,7 @@ Created on Mar 23, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 
 from builtins import next

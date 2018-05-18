@@ -4,6 +4,7 @@ Created on Apr 10, 2017
 @author: lubo
 """
 from __future__ import division
+from __future__ import unicode_literals
 from builtins import zip
 from builtins import str
 from builtins import range

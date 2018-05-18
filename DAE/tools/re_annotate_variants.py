@@ -1,6 +1,7 @@
 #!/bin/env python
 
 from __future__ import print_function
+from __future__ import unicode_literals
 from subprocess import Popen
 from subprocess import PIPE 
 import sys

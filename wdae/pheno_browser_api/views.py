@@ -3,6 +3,8 @@ Created on Apr 21, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
 import numpy as np
 
 from rest_framework.views import APIView
@@ -12,7 +14,6 @@ from rest_framework import status
 import preloaded
 from django.conf import settings
 import os
-import io
 from pheno_browser_api.common import PhenoBrowserCommon
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.permissions import IsDatasetAllowed
@@ -100,7 +101,7 @@ class PhenoMeasuresView(APIView):
 
         res = []
         for row in df.to_dict('records'):
-            print(row, type(row))
+            print((row, type(row)))
             m = row
             print(m)
             if isnan(m['pvalue_correlation_nviq_male']):
@@ -148,12 +149,9 @@ class PhenoMeasuresDownload(APIView):
             instrument = instruments[0]
 
         df = dataset.pheno_db.get_instrument_values_df(instrument)
-        output = io.StringIO()
-        df.to_csv(output, index=False)
+        df_csv = df.to_csv(index=False, encoding="utf-8")
 
-        response = HttpResponse(
-            output.getvalue(),
-            content_type='text/csv')
+        response = HttpResponse(df_csv, content_type='text/csv')
 
         response['Content-Disposition'] = 'attachment; filename=instrument.csv'
         response['Expires'] = '0'

@@ -4,6 +4,7 @@ Created on Apr 24, 2017
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
 from enrichment_tool.event_counters import EventsCounter,\
     overlap_enrichment_result_dict, GeneEventsCounter

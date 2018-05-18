@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import absolute_import
+from __future__ import unicode_literals
 import sys, glob
 import argparse
 from collections import OrderedDict

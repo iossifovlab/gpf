@@ -4,6 +4,7 @@ Created on Nov 16, 2016
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 from pheno_tool.genotype_helper import VariantsType as VT
 
 

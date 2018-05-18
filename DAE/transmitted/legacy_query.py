@@ -3,6 +3,7 @@ Created on Oct 21, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from builtins import zip
 from Variant import parseGeneEffect, filter_gene_effect, Variant,\
     present_in_parent_filter, present_in_child_filter, chromosome_prefix

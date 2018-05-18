@@ -5,6 +5,7 @@ Created on Jul 27, 2015
 '''
 from __future__ import print_function
 from __future__ import division
+from __future__ import unicode_literals
 
 from builtins import str
 from builtins import range
@@ -44,9 +45,11 @@ class CommonBase(object):
 
     @staticmethod
     def family_configuration(family):
-        return "".join([family[pid].role + family[pid].gender
-                        for pid in sorted(list(family.keys()),
-                                          key=lambda x: (family[x].role, x))])
+        return "".join([
+            family[pid].role + family[pid].gender
+            for pid in sorted(list(family.keys()),
+                              key=lambda x: (str(family[x].role), str(x)))
+        ])
 
 
 class CounterBase(CommonBase):
@@ -311,6 +314,7 @@ class DenovoEventsCounter(CounterBase):
 
     def __init__(self, phenotype_id, legend, children_counter, effect_type):
         super(DenovoEventsCounter, self).__init__(phenotype_id, legend)
+        print(effect_type, type(effect_type))
         assert isinstance(effect_type, str)
 
         self.effect_type = effect_type
@@ -404,6 +408,7 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
 
     def build_row(self, effect_type):
         row = []
+        effect_type = str(effect_type)
         for phenotype_id in self.phenotype_ids:
             cc = self.families_report.get_children_counters(phenotype_id)
             ec = DenovoEventsCounter(

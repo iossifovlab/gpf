@@ -4,6 +4,8 @@ Created on Nov 7, 2016
 @author: lubo
 '''
 from __future__ import division
+from __future__ import print_function
+# from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
 from builtins import next
@@ -64,6 +66,7 @@ class BackgroundBase(BackgroundConfig):
             return False
 
         with open(self.cache_filename, 'rb') as infile:
+            print(self.cache_filename)
             data = pickle.load(infile)
             self.deserialize(data)
 
@@ -179,8 +182,8 @@ class SynonymousBackground(BackgroundCommon):
         fin = io.BytesIO(zlib.decompress(b))
 
         self.background = np.load(fin)
-        self.background['sym'] = np.char.decode(
-            self.background['sym'], 'UTF-8')
+        # self.background['sym'] = np.char.decode(
+        #     self.background['sym'], 'UTF-8')
 
         self.background = np.array(
             self.background,

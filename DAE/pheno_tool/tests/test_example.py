@@ -3,6 +3,7 @@ Created on Nov 15, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from DAE import vDB, pheno
 from pheno_tool.tool import PhenoTool
 from pheno_tool.genotype_helper import VariantsType as VT

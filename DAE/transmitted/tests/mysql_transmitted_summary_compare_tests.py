@@ -4,6 +4,7 @@ Created on Oct 27, 2015
 @author: lubo
 '''
 from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 from DAE import vDB
 from transmitted.mysql_query import MysqlTransmittedQuery

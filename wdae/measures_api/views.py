@@ -4,6 +4,7 @@ Created on Mar 30, 2017
 @author: lubo
 '''
 from __future__ import division
+from __future__ import unicode_literals
 from past.utils import old_div
 from rest_framework import status
 from rest_framework.response import Response

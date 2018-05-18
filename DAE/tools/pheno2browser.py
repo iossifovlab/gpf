@@ -5,6 +5,7 @@ pheno2browser -- prepares a DAE pheno browser data
 
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
 import sys

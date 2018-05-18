@@ -4,6 +4,7 @@ Created on Oct 23, 2015
 @author: lubo
 '''
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from .variants_compare_base import VariantsCompareBase
 from DAE import vDB
 from transmitted.legacy_query import TransmissionLegacy

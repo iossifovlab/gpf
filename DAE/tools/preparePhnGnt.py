@@ -1,5 +1,6 @@
 #!/bin/env python
 
+from __future__ import unicode_literals
 from builtins import zip
 from builtins import str
 from DAE import *

@@ -6,6 +6,7 @@ Created on Oct 15, 2015
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import division
+from __future__ import unicode_literals
 from past.utils import old_div
 import timeit
 from .mysql_transmitted_std_queries import *  # @UnusedWildImport

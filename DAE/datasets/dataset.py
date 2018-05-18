@@ -3,6 +3,7 @@ Created on Feb 9, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from builtins import map
 from builtins import filter
 from DAE import pheno, vDB

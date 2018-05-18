@@ -3,6 +3,7 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 
 def test_phenotypes_ssc(ssc):

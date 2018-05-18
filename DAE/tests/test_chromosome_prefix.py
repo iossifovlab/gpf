@@ -3,6 +3,7 @@ Created on May 7, 2018
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from Variant import chromosome_prefix
 
 

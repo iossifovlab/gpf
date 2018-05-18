@@ -3,6 +3,7 @@ Created on Jun 16, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 from django.apps import AppConfig
 from django.conf import settings

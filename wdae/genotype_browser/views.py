@@ -4,6 +4,7 @@ Created on Feb 6, 2017
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 from builtins import map
 from builtins import str
 import itertools
@@ -170,7 +171,7 @@ class QueryDownloadView(QueryBaseView):
                                              self.DOWNLOAD_LIMIT)
 
             response = StreamingHttpResponse(
-                map(join_line, variants_data),
+                list(map(join_line, variants_data)),
                 content_type='text/tsv')
 
             response['Content-Disposition'] = 'attachment; filename=variants.tsv'

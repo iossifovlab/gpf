@@ -3,6 +3,7 @@ Created on Nov 21, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from builtins import object
 import pandas as pd
 from collections import Counter

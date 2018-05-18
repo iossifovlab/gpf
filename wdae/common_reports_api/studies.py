@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
+from builtins import str
 from DAE import vDB
 from collections import Counter, defaultdict
 from helpers.logger import LOGGER
@@ -39,9 +41,10 @@ def build_header_summary(studies):
     for fmd in list(fam_buff.values()):
         child_cnt_hist[len(fmd)] += 1
 
-        fam_conf = "".join([fmd[pid].role + fmd[pid].gender
-                            for pid in sorted(list(fmd.keys()),
-                                              key=lambda x: (fmd[x].role, x))])
+        fam_conf = "".join([
+            fmd[pid].role + fmd[pid].gender
+            for pid in sorted(list(fmd.keys()),
+                              key=lambda x: (str(fmd[x].role), str(x)))])
         fam_type_cnt[fam_conf] += 1
         for p in list(fmd.values()):
             child_type_cnt[p.role + p.gender] += 1

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from rest_framework.urlpatterns import format_suffix_patterns
 
 # from api.sd.views import SequencingDenovoPreview, SequencingDenovoDownload

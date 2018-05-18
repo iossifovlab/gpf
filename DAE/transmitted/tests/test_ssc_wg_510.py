@@ -5,6 +5,7 @@ Created on Nov 22, 2016
 '''
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from DAE import vDB
 import pytest
 from transmitted.mysql_query import MysqlTransmittedQuery

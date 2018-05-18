@@ -3,6 +3,7 @@ Created on Mar 3, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 
 def test_ssc_created(ssc):

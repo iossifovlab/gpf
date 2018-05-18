@@ -3,6 +3,7 @@ Created on Sep 24, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from builtins import next
 import unittest
 from transmitted.mysql_query import MysqlTransmittedQuery

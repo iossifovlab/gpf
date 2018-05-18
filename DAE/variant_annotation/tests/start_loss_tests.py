@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import unittest
 import pytest
 from variant_annotation.annotator import Variant

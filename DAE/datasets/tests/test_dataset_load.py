@@ -3,6 +3,7 @@ Created on Feb 9, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 
 def test_dataset_ssc_load(ssc):

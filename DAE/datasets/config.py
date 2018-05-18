@@ -3,6 +3,7 @@ Created on Jan 20, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
 from builtins import object

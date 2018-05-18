@@ -3,6 +3,7 @@ Created on Aug 23, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 from Config import Config
 import reusables
@@ -19,6 +20,9 @@ class PhenoConfig(ConfigBox):
             wd = dae_config.daeDir
             data_dir = dae_config.data_dir
             filename = dae_config.phenoDBconfFile
+
+        # not usint builtins.str since reusables throws when the filename is
+        # unicode in python2
         if not isinstance(filename, str):
             filename = str(filename)
 

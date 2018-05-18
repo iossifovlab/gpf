@@ -3,6 +3,7 @@ Created on Nov 8, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from collections import Counter
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
 
