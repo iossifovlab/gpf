@@ -1,0 +1,14 @@
+FROM continuumio/miniconda3
+
+COPY python3-environment.yml /
+
+RUN apt-get update --fix-missing && \ 
+	apt-get install -y default-libmysqlclient-dev gcc && \
+	apt-get clean
+
+RUN conda update -n base conda && conda clean --all -y
+
+RUN conda env update -f python3-environment.yml --verbose && \
+	conda clean --all -y && \
+	rm -r ~/.cache/pip
+

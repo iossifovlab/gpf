@@ -1,4 +1,4 @@
-name: python3
+name: base
 channels:
 - conda-forge
 - bioconda
@@ -266,5 +266,5 @@ dependencies:
   - reusables==0.9.2
   - ruamel-yaml==0.15.35
   - tables==3.4.2
-prefix: /home/sasho/anaconda3/envs/python3
+prefix: /home/sasho/anaconda3/
 
