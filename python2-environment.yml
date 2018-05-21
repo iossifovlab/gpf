@@ -11,9 +11,7 @@ dependencies:
   - pyvcf=0.6.8=py27_0
   - samtools=1.5=1
   - alembic=0.9.6=py_0
-  - _ipyw_jlab_nb_ext_conf=0.1.0=py27h08a7f0c_0
   - _license=1.1=py27_1
-  - _nb_ext_conf=0.3.0=py27_0
   - alabaster=0.7.9=py27_0
   - anaconda-clean=1.0.0=py27_0
   - anaconda-client=1.5.1=py27_0
@@ -56,7 +54,6 @@ dependencies:
   - conda-env=2.6.0=h36134e3_1
   - conda-verify=2.0.0=py27hf052a9d_0
   - configobj=5.0.6=py27_0
-  - configparser=3.5.0=py27_0
   - contextlib2=0.5.3=py27_0
   - cryptography=1.5=py27_0
   - curl=7.49.0=1
@@ -72,7 +69,6 @@ dependencies:
   - distributed=1.13.2=py27_0
   - docutils=0.12=py27_2
   - dynd-python=0.7.2=py27_0
-  - entrypoints=0.2.2=py27_0
   - enum34=1.1.6=py27_0
   - et_xmlfile=1.0.1=py27_0
   - expat=2.1.0=0
@@ -112,7 +108,6 @@ dependencies:
   - ipykernel=4.5.0=py27_0
   - ipython=5.4.1=py27h36c99b6_1
   - ipython_genutils=0.1.0=py27_0
-  - ipywidgets=5.2.2=py27_0
   - isort=4.2.5=py27_0
   - itsdangerous=0.24=py27_0
   - jbig=2.1=0
@@ -121,12 +116,9 @@ dependencies:
   - jinja2=2.8=py27_1
   - jpeg=9b=h024ee3a_2
   - jsonschema=2.5.1=py27_0
-  - jupyter=1.0.0=py27_3
   - jupyter_client=4.4.0=py27_0
   - jupyter_console=5.0.0=py27_0
   - jupyter_core=4.2.0=py27_0
-  - jupyterlab=0.27.0=py27h42ebfef_2
-  - jupyterlab_launcher=0.4.0=py27h0e16d15_0
   - kiwisolver=1.0.1=py27hc15e7b5_0
   - lazy-object-proxy=1.2.1=py27_0
   - libdynd=0.7.2=0
@@ -166,17 +158,11 @@ dependencies:
   - msgpack-python=0.4.8=py27hc2fa789_0
   - multipledispatch=0.4.8=py27_0
   - navigator-updater=0.1.0=py27h0f9cd39_0
-  - nb_anacondacloud=1.2.0=py27_0
-  - nb_conda=2.0.0=py27_0
-  - nb_conda_kernels=2.0.0=py27_0
-  - nbconvert=4.2.0=py27_0
   - nbformat=4.1.0=py27_0
-  - nbpresent=3.0.2=py27_0
   - ncurses=6.0=h06874d7_1
   - networkx=1.11=py27_0
   - nltk=3.2.1=py27_0
   - nose=1.3.7=py27heec2199_2
-  - notebook=5.0.0=py27h3661c2b_2
   - numba=0.37.0=np114py27h76b0b06_0
   - numexpr=2.6.5=py27h7bf3b9c_0
   - numpy=1.14.2=py27hdbf6ddf_1
@@ -261,7 +247,6 @@ dependencies:
   - sphinx=1.4.6=py27_0
   - sphinxcontrib=1.0=py27h1512b58_1
   - sphinxcontrib-websupport=1.0.1=py27hf906f22_1
-  - spyder=3.0.0=py27_0
   - sqlalchemy=1.1.13=py27hb0a01da_0
   - sqlite=3.23.1=he433501_0
   - ssl_match_hostname=3.4.0.2=py27_1
@@ -283,7 +268,6 @@ dependencies:
   - webencodings=0.5.1=py27hff10b21_1
   - werkzeug=0.11.11=py27_0
   - wheel=0.29.0=py27_0
-  - widgetsnbextension=1.2.6=py27_0
   - wrapt=1.10.6=py27_0
   - xlrd=1.0.0=py27_0
   - xlsxwriter=0.9.3=py27_0
@@ -299,6 +283,7 @@ dependencies:
     - bcrypt==3.1.4
     - cached-property==1.3.0
     - caniusepython3==6.0.0
+    - configparser==3.5.0
     - coverage==4.4.1
     - cyvcf2==0.8.3
     - distlib==0.2.7

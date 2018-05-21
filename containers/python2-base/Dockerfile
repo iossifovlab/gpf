@@ -13,3 +13,9 @@ RUN conda env update -f python2-environment.yml --verbose && \
 	conda clean --all -y && \
 	rm -r ~/.cache/pip
 
+# remove an old libstdc++ from conda
+RUN rm /opt/conda/lib/libstdc++.so.6.0.19
+
+COPY . /code
+
+WORKDIR /code
