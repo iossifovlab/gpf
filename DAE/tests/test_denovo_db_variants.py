@@ -37,7 +37,7 @@ def test_denovo_db_reconfigure(denovo_db_full):
     assert vs
 
     print("variants found:", len(vs))
-    assert len(vs) == 5060
+    assert len(vs) == 5062
 
 
 def test_denovo_db_autism_on_X(denovo_db_full):
@@ -52,7 +52,7 @@ def test_denovo_db_autism_on_X(denovo_db_full):
         if v.atts['phenotype'] == 'autism':
             res.append(v)
     print("autism variants found:", len(res))
-    assert len(res) == 4589
+    assert len(res) == 4591
 
 
 def test_denovo_db_autism_coding_in_prb_on_X(denovo_db_full):
