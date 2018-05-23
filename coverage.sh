@@ -2,7 +2,7 @@
 
 # ./wdae/manage.py recompute
 
-docker run --mount type=bind,source=$HOME/data/data-work,target=/data-work,readonly seqpipe/python2-dae-tests py.test -v --cov-config coveragerc \
+docker run --mount type=bind,source=$HOME/data/data-work,target=/data-work,readonly seqpipe/python2-base py.test -v --cov-config coveragerc \
     --junitxml=wdae/junit.xml \
     --cov common_reports_api \
     --cov datasets_api \
@@ -33,7 +33,7 @@ docker run --mount type=bind,source=$HOME/data/data-work,target=/data-work,reado
     wdae/
 
 
-docker run --mount type=bind,source=$HOME/data/data-work,target=/data-work,readonly seqpipe/python2-dae-tests py.test -vs --cov-config coveragerc \
+docker run --mount type=bind,source=$HOME/data/data-work,target=/data-work,readonly seqpipe/python2-base py.test -vs --cov-config coveragerc \
     --junitxml=DAE/junit.xml \
     --cov-append \
     --cov-report html \
