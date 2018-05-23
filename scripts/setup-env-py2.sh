@@ -14,7 +14,8 @@ conda install \
 	matplotlib \
 	seaborn \
 	mysql-python \
-	pytest-mock
+	pytest-mock \
+	pytest-cov
 
 pip install \
 	reusables \

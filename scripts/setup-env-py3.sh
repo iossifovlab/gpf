@@ -10,7 +10,8 @@ conda install \
 	statsmodels \
 	matplotlib \
 	seaborn \
-	pytest-mock
+	pytest-mock \
+	pytest-cov
 
 pip install \
 	pysam \

@@ -10,7 +10,9 @@ dependencies:
   - ca-certificates=2018.03.07=0
   - certifi=2018.4.16=py27_0
   - configparser=3.5.0=py27h5117587_0
+  - coverage=4.5.1=py27h14c3975_0
   - cycler=0.10.0=py27hc7354d3_0
+  - cython=0.28.2=py27h14c3975_0
   - dbus=1.13.2=h714fa37_1
   - enum34=1.1.6=py27h99a27e9_1
   - expat=2.2.5=he0dffb1_0
@@ -57,6 +59,7 @@ dependencies:
   - pyqt=5.9.2=py27h751905a_0
   - pysam=0.6=py27_0
   - pytest=3.5.1=py27_0
+  - pytest-cov=2.5.1=py27hc4181bb_0
   - pytest-mock=1.10.0=py27_0
   - python=2.7.15=h1571d57_0
   - python-dateutil=2.7.3=py27_0
