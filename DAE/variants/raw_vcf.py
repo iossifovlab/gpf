@@ -99,16 +99,16 @@ class RawFamilyVariants(FamiliesBase):
             records = []
             for index, v in enumerate(self.vcf_vars):
                 split = len(v.ALT) > 1
-                for alt_index, alt in enumerate(v.ALT):
+                for allele_index, alt in enumerate(v.ALT):
                     records.append(
                         (v.CHROM, v.start + 1,
                          v.REF, alt,
-                         index, split, alt_index))
+                         index, split, allele_index + 1))
             self.annot_df = pd.DataFrame.from_records(
                 data=records,
                 columns=[
                     'chrom', 'position', 'reference', 'alternative',
-                    'var_index', 'split_from_multi_allelic', 'alt_index'])
+                    'var_index', 'split_from_multi_allelic', 'allele_index'])
 
             annotator.setup(self)
             self.annot_df = annotator.annotate(self.annot_df, self.vcf_vars)
@@ -253,16 +253,13 @@ class RawFamilyVariants(FamiliesBase):
         variants = self.vcf_vars
         for var_index, group_df in annot_df.groupby(["var_index"]):
             vcf = variants[var_index]
-            summary_variants = []
-            for row in group_df.to_dict(orient='records'):
-                sv = self.VF.summary_variant_from_dict(row)
-                summary_variants.append(sv)
-            print(var_index, summary_variants)
+            summary_variants = self.VF.summary_variants_from_records(
+                group_df.to_dict(orient='records'))
+
             for fam in self.families.values():
                 vs = self.VF.family_variant_from_vcf(
                     summary_variants, fam, vcf=vcf)
                 for v in vs:
-                    print(v, v.frequencies)
                     yield v
 
 
