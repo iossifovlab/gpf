@@ -257,8 +257,7 @@ class SummaryVariant(VariantBase):
                  alternative,
                  allele_index=1,
                  effects=None,
-                 ref_frequency=None,
-                 alt_frequency=None,
+                 frequency=None,
                  attributes=None):
         """
         Expected parameters of the constructor are:
@@ -279,8 +278,7 @@ class SummaryVariant(VariantBase):
                 chromosome, position, reference, alternative)
 
         self.effects = effects
-        self.ref_frequency = ref_frequency
-        self.alt_frequency = alt_frequency
+        self.frequency = frequency
 
         if attributes is None:
             self.attributes = {}
@@ -440,9 +438,7 @@ class FamilyVariant(object):
         """
         0-base list of frequencies for variant.
         """
-        freqs = [self.summary[0].ref_frequency]
-        freqs.extend([sv.alt_frequency for sv in self.summary])
-        return freqs
+        return [sv.frequency for sv in self.summary]
 
     @property
     def best_st(self):
@@ -682,7 +678,8 @@ class VariantFactory(object):
                 row['position'],
                 row['reference'],
                 alternative=None,
-                allele_index=0
+                allele_index=0,
+                frequency=row['af_reference_allele_freq']
             )
         ]
         for row in records:
@@ -694,7 +691,6 @@ class VariantFactory(object):
                 row['reference'], row['alternative'],
                 row['allele_index'],
                 effects,
-                row['af_reference_allele_freq'],
                 row['af_alternative_allele_freq'],
                 attributes=row)
             summary_variants.append(sv)
