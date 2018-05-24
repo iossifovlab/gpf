@@ -684,13 +684,13 @@ class FamilyVariantSingle(FamilyVariant):
 
     def __init__(self, summary_variant, family, gt, alt_index):
         super(FamilyVariantSingle, self).__init__(
-            summary_variant, family, gt)
+            [summary_variant], family, gt)
 
         self.alt_index = alt_index
         assert len(self.falt_alleles) <= 1
 
     @classmethod
-    def from_summary_variant(cls, sv, family, gt=None, vcf=None):
+    def from_summary_variant(cls, summary_variants, family, gt=None, vcf=None):
         assert isinstance(family, VcfFamily)
 
         if gt is None:
@@ -702,7 +702,8 @@ class FamilyVariantSingle(FamilyVariant):
         alt_alleles = cls.calc_alt_alleles(gt)
 
         if alt_index is not None:
-            return [cls(sv, family, gt, alt_index)]
+            return [cls(summary_variants[alt_index - 1],
+                        family, gt, alt_index)]
         elif len(alt_alleles) > 1:
             res = []
             for alt in sorted(alt_alleles):
@@ -713,13 +714,16 @@ class FamilyVariantSingle(FamilyVariant):
                         a_gt == alt
                     ))
                 a_gt[mask] = -1
+                sv = summary_variants[alt - 1]
                 res.append(cls(sv, family, a_gt, alt - 1))
             return res
         else:
             res = []
-            for alt_index in range(len(sv.alternatives)):
-                res.append(cls(sv, family, gt, alt_index))
+            for alt_index, sv in enumerate(summary_variants):
+                res.append(cls(sv, family, gt, alt_index + 1))
             return res
+
+        assert False
 
     @property
     def best_st(self):
