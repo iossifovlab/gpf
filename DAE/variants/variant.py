@@ -428,8 +428,9 @@ class SummaryVariant(VariantBase):
 
     def update_attributes(self, atts):
         for key, values in atts.items():
-            for sv, val in zip(self.summary, itertools.cycle(values)):
-                sv.update_attributes({key: val})
+            assert len(values) == 1 or len(values) == len(self.alt_alleles)
+            for sa, val in zip(self.alt_alleles, itertools.cycle(values)):
+                sa.update_attributes({key: val})
 
 
 class FamilyVariant(SummaryVariant):

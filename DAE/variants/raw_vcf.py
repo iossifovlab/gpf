@@ -134,8 +134,8 @@ class RawFamilyVariants(FamiliesBase):
         attr = real_attr_filter[0]
         ranges = real_attr_filter[1:]
 
-        for sv in v.summary:
-            val = sv.get_attribute(attr)
+        for sa in v.alt_alleles:
+            val = sa.get_attribute(attr)
             if val is None:
                 continue
             result = [
