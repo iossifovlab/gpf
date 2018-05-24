@@ -132,13 +132,12 @@ class RawFamilyVariants(FamiliesBase):
     @staticmethod
     def filter_real_attr(v, real_attr_filter):
         attr = real_attr_filter[0]
-        value = v.get_attr(attr)
-        if value is None:
-            return False
         ranges = real_attr_filter[1:]
 
-        for aa in v.falt_alleles:
-            val = value[aa]
+        for sv in v.summary:
+            val = sv.get_attribute(attr)
+            if val is None:
+                continue
             result = [
                 (val >= rmin) and (val <= rmax) for (rmin, rmax) in ranges
             ]
@@ -258,11 +257,12 @@ class RawFamilyVariants(FamiliesBase):
             for row in group_df.to_dict(orient='records'):
                 sv = self.VF.summary_variant_from_dict(row)
                 summary_variants.append(sv)
-
+            print(var_index, summary_variants)
             for fam in self.families.values():
                 vs = self.VF.family_variant_from_vcf(
                     summary_variants, fam, vcf=vcf)
                 for v in vs:
+                    print(v, v.frequencies)
                     yield v
 
 

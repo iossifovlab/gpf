@@ -10,6 +10,7 @@ from variants.family import VcfFamily
 from variants.vcf_utils import vcf2cshl
 
 from variants.attributes import VariantType, Inheritance
+from timeit import itertools
 
 # from icecream import ic
 
@@ -334,7 +335,7 @@ class SummaryVariant(VariantBase):
         """
         checks if additional variant attributes contain values for key `item`.
         """
-        return item in self.atts
+        return item in self.attributes
 
     def __getitem__(self, item):
         """
@@ -499,17 +500,22 @@ class FamilyVariant(object):
         """
         return self.summary.atts
 
-    def get_attr(self, item, default=None):
-        return self.summary.get_attr(item, default)
+    def get_attribute(self, item, default=None):
+        return [sv.get_attribute(item, default) for sv in self.summary]
 
-    def has_attr(self, item):
-        return self.summary.has_attr(item)
+    def has_attribute(self, item):
+        return any([sv.has_attribute(item) for sv in self.summary])
 
     def __getitem__(self, item):
-        return self.get_attr(item)
+        return self.get_attribute(item)
 
     def __contains__(self, item):
-        return item in self.summary
+        return self.has_attribute(item)
+
+    def update_attributes(self, atts):
+        for key, values in atts.items():
+            for sv, val in zip(self.summary, itertools.cycle(values)):
+                sv.update_attributes({key: val})
 
     @staticmethod
     def calc_alt_alleles(gt):
