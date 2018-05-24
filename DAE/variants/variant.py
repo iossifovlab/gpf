@@ -475,12 +475,12 @@ class FamilyVariant(object):
     def genotype(self):
         return self.gt.T
 
-    @property
-    def atts(self):
-        """
-        Additional attributes describing this variant.
-        """
-        return self.summary.atts
+#     @property
+#     def atts(self):
+#         """
+#         Additional attributes describing this variant.
+#         """
+#         return self.summary.atts
 
     def get_attribute(self, item, default=None):
         return [sv.get_attribute(item, default) for sv in self.summary]
