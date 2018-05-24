@@ -77,7 +77,8 @@ def test_trios_multi_single_allele1_full(full_vcf):
     assert len(vs) == 1
     for v in vs:
         assert v.inheritance == Inheritance.mendelian
-        assert v.best_st.shape == (3, 3)
+        print(mat2str(v.best_st))
+        assert v.best_st.shape == (2, 3)
 
 
 def test_trios_multi_single_allele2_full(full_vcf):
@@ -87,7 +88,7 @@ def test_trios_multi_single_allele2_full(full_vcf):
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance)
         assert v.inheritance == Inheritance.mendelian
-        assert v.best_st.shape == (3, 3)
+        assert v.best_st.shape == (2, 3)
 
 
 def test_trios_multi_all_reference_full(full_vcf):
@@ -96,7 +97,8 @@ def test_trios_multi_all_reference_full(full_vcf):
     assert len(vs) == 1
     for v in vs:
         assert v.inheritance == Inheritance.reference
-        assert v.best_st.shape == (3, 3)
+        print(mat2str(v.best_st))
+        assert v.best_st.shape == (2, 3)
 
 
 def test_trios_multi_unknown_full(full_vcf):
@@ -105,7 +107,8 @@ def test_trios_multi_unknown_full(full_vcf):
     assert len(vs) == 1
     for v in vs:
         assert v.inheritance == Inheritance.unknown
-        assert v.best_st.shape == (3, 3)
+        print(mat2str(v.best_st))
+        assert v.best_st.shape == (2, 3)
 
 
 def test_trios_multi_multi_full(full_vcf):
@@ -114,6 +117,7 @@ def test_trios_multi_multi_full(full_vcf):
     assert len(vs) == 1
     for v in vs:
         assert v.inheritance == Inheritance.mendelian
+        print(mat2str(v.best_st))
         assert v.best_st.shape == (3, 3)
 
 
@@ -123,6 +127,7 @@ def test_trios_multi_multi3_full(full_vcf):
     assert len(vs) == 1
     for v in vs:
         assert v.inheritance == Inheritance.denovo
+        print(mat2str(v.best_st))
         assert v.best_st.shape == (4, 3)
 
     fvars = full_vcf("fixtures/trios_multi")
@@ -130,4 +135,5 @@ def test_trios_multi_multi3_full(full_vcf):
     assert len(vs) == 1
     for v in vs:
         assert v.inheritance == Inheritance.mendelian
-        assert v.best_st.shape == (4, 3)
+        print(mat2str(v.best_st))
+        assert v.best_st.shape == (3, 3)
