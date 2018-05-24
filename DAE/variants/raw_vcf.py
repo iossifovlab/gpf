@@ -149,8 +149,8 @@ class RawFamilyVariants(FamiliesBase):
     def filter_gene_effects(v, effect_types, genes):
         assert effect_types is not None or genes is not None
 
-        for aa in v.falt_alleles:
-            gene_effects = v.effects[aa].genes
+        for effect in v.effects:
+            gene_effects = effect.genes
 
             if effect_types is None:
                 result = [

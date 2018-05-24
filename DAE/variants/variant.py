@@ -424,14 +424,18 @@ class FamilyVariant(object):
         """
         1-based list of `VariantDetails`, that describes variant.
         """
-        return self.summary.details
+        if len(self.summary) <= 1:
+            return None
+        return AltAlleleItems([sv.details for sv in self.summary[1:]])
 
     @property
     def effects(self):
         """
         1-based list of `Effect`, that describes variant effects.
         """
-        return self.summary.effects
+        if len(self.summary) <= 1:
+            return None
+        return AltAlleleItems([sv.effects for sv in self.summary[1:]])
 
     @property
     def frequencies(self):

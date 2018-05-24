@@ -14,7 +14,8 @@ def test_study_load(ustudy_single):
     assert ustudy_single.annot_df is not None
     assert ustudy_single.vcf_vars is not None
 
-    assert len(ustudy_single.annot_df) == len(ustudy_single.vcf_vars)
+    assert len(ustudy_single.annot_df.groupby("var_index")) == \
+        len(ustudy_single.vcf_vars)
 
 
 def test_query_regions(ustudy_single):
