@@ -447,13 +447,18 @@ class FamilyVariant(object):
             unknown = np.any(self.gt == -1, axis=0)
 
             balt = []
-            for anum, _ in enumerate(self.summary):
+            if len(self.summary) == 1:
                 alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                alt_gt[self.gt == (anum + 1)] = 1
-
                 alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-                ref = ref - alt
                 balt.append(alt)
+            else:
+                for anum, _ in enumerate(self.summary[1:]):
+                    alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+                    alt_gt[self.gt == (anum + 1)] = 1
+
+                    alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                    ref = ref - alt
+                    balt.append(alt)
 
             best = [ref]
             best.extend(balt)
