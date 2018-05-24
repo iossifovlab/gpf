@@ -23,12 +23,12 @@ from variants.attributes import VariantType
 ])
 def test_variant_effect_annotation(variant, variant_type, position):
     print(variant)
-    [chrom, pos, ref, alts] = variant.split(":")
-    details = VariantDetail.from_vcf(chrom, int(pos), ref, alts.split(','))
-    print(details)
-    for detail in details:
-        assert detail.variant_type == variant_type
-        assert detail.cshl_position == position
+    [chrom, pos, ref, alt] = variant.split(":")
+    detail = VariantDetail.from_vcf(chrom, int(pos), ref, alt)
+    print(detail)
+
+    assert detail.variant_type == variant_type
+    assert detail.cshl_position == position
 
 
 @pytest.mark.slow
