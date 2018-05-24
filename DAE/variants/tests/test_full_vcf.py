@@ -18,8 +18,9 @@ def test_open_raw_vcf_with_region(vcf19r):
         inheritance='mendelian')
     for c, v in enumerate(vs):
         print(c, v, v.family_id, mat2str(v.best_st), v.inheritance,
-              v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'))
-        assert v.get_attr('all.nAltAlls') > 0
+              v.get_attribute('af_alternative_alleles_count'),
+              v.get_attribute('af_alternative_alleles_freq'))
+        assert v.get_attribute('af_alternative_alleles_count') > 0
 
 
 @pytest.mark.skip
@@ -29,9 +30,10 @@ def test_raw_vcf_bad_frequency(vcf19r):
         effect_types=['frame-shift', 'nonsense', 'splice-site'])
     for c, v in enumerate(vs):
         print(c, v, v.family_id, mat2str(v.best_st), v.inheritance,
-              v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'))
+              v.get_attribute('af_alternative_alleles_count'),
+              v.get_attribute('af_alternative_alleles_freq'))
         print(v.members_in_order)
         print(v.variant_in_roles)
         print(v.variant_in_members)
 
-        assert v.get_attr('all.nAltAlls') > 0
+        assert v.get_attribute('af_alternative_alleles_count') > 0

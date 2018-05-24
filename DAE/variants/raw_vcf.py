@@ -148,6 +148,8 @@ class RawFamilyVariants(FamiliesBase):
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
         assert effect_types is not None or genes is not None
+        if v.effects is None:
+            return False
 
         for effect in v.effects:
             gene_effects = effect.genes

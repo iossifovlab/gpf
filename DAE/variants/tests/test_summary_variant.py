@@ -16,5 +16,6 @@ def test_effect_gene_serialization():
 @pytest.mark.slow
 def test_summary_variants_full(nvcf19f):
     for _index, row in nvcf19f.annot_df.iterrows():
-        sv = AlleleSummary.from_dict(row)
-        assert sv is not None
+        sa = AlleleSummary.from_dict(row)
+        assert sa is not None
+        assert not sa.is_reference()

@@ -314,6 +314,20 @@ class AlleleSummary(VariantBase):
             self.attributes = {}
             self.update_attributes(attributes)
 
+    @staticmethod
+    def from_dict(row):
+        effects = Effect.from_effects(
+            row['effect_type'], row['effect_gene'], row['effect_details'])
+
+        return AlleleSummary(
+            row['chrom'], row['position'],
+            row['reference'], row['alternative'],
+            allele_index=row['allele_index'],
+            effect=effects,
+            frequency=row['af_alternative_allele_freq'],
+            attributes=row,
+            split_from_multi_allelic=row['split_from_multi_allelic'])
+
     def is_reference(self):
         return self.alternative is None
 

@@ -17,7 +17,8 @@ def test_query_effect_types(nvcf19f):
 
     for v in vs:
         print(v, v.family_id, mat2str(v.best_st), v.falt_alleles, sep='\t')
-        for aa in v.falt_alleles:
-            print("\t:>", v.effects[aa].worst,
-                  v.effects[aa].genes, v['all.nAltAlls'][aa],
-                  v['all.altFreq'][aa], sep='\t')
+        for sa in v.alt_alleles:
+            print("\t:>", sa.effect.worst,
+                  sa.effect.genes,
+                  sa['af_alternative_alleles_count'],
+                  sa['af_alternative_alleles_freq'], sep='\t')
