@@ -153,12 +153,12 @@ def nvcf19_config():
     return config
 
 
-# @pytest.fixture(scope='session')
-# def nvcf19s(nvcf19_config, composite_annotator):
-#     fvariants = RawFamilyVariants(
-#         nvcf19_config, annotator=composite_annotator,
-#         variant_factory=VariantFactorySingle)
-#     return fvariants
+@pytest.fixture(scope='session')
+def nvcf19s(nvcf19_config, composite_annotator):
+    fvariants = RawFamilyVariants(
+        nvcf19_config, annotator=composite_annotator,
+        variant_factory=VariantFactorySingle)
+    return fvariants
 
 
 @pytest.fixture(scope='session')
