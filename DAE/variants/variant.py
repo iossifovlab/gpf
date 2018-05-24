@@ -22,46 +22,46 @@ class VariantBase(object):
     Expected parameters of the constructor are:
 
     :param chromosome: chromosome label where variant is located
-    :param start: start position of the variant using *VCF* convention
+    :param position: position of the variant using *VCF* convention
     :param reference: reference DNA string
     :param alternatives: list of alternative DNA strings
 
     Each object of `VariantBase` has following fields:
 
     :ivar chromosome: chromosome lable where variant is located
-    :ivar start: start position of the variant using *VCF* convention
+    :ivar position: position of the variant using *VCF* convention
     :ivar reference: reference DNA string
-    :ivar alternatives: list of alternative DNA strings
+    :ivar alternative: alternative DNA string
     """
 
-    def __init__(self, chromosome, start, reference, alternatives):
+    def __init__(self, chromosome, position, reference, alternative):
 
         self.chromosome = chromosome
-        self.start = start
+        self.position = position
         self.reference = reference
-        self.alternatives = alternatives
+        self.alternative = alternative
 
     def __repr__(self):
         return '{}:{} {}->{}'.format(
-            self.chromosome, self.start,
-            self.reference, ",".join(self.alternatives))
+            self.chromosome, self.position,
+            self.reference, self.alternative)
 
     def __eq__(self, other):
         return self.chromosome == other.chromosome and \
-            self.start == other.start and \
+            self.position == other.position and \
             self.reference == other.reference and \
-            self.alternatives == other.alternatives
+            self.alternative == other.alternative
 
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __lt__(self, other):
         return int(self.chromosome) <= int(other.chromosome) and \
-            self.start < other.start
+            self.position < other.position
 
     def __gt__(self, other):
         return int(self.chromosome) >= int(other.chromosome) and \
-            self.start > other.start
+            self.position > other.position
 
 
 class AltAlleleItems(object):
@@ -155,13 +155,8 @@ class VariantDetail(object):
 
     @staticmethod
     def from_vcf(chrom, position, reference, alternative):
-        variant_details = vcf2cshl(position, reference, alternative)
-        variant_details = zip(*variant_details)
-        details = [
-            VariantDetail(chrom, p, v, l)
-            for (p, v, l) in variant_details
-        ]
-        return AltAlleleItems(details)
+        return VariantDetail(
+            chrom, *vcf2cshl(position, reference, alternative))
 
 
 class EffectGene(object):
@@ -230,12 +225,8 @@ class Effect(object):
             effect_transcripts)
 
     @classmethod
-    def from_effects(cls, effect_types, effect_genes, transcripts):
-        result = []
-        for et, eg, trans in zip(effect_types, effect_genes, transcripts):
-            eff = Effect(et, eg, trans)
-            result.append(eff)
-        return AltAlleleItems(result)
+    def from_effects(cls, effect_type, effect_genes, transcripts):
+        return Effect(effect_type, effect_genes, transcripts)
 
 
 class SummaryVariant(VariantBase):
@@ -255,44 +246,38 @@ class SummaryVariant(VariantBase):
     :effect: 1-based list of `Effect` for each alternative allele.
     """
 
-    def __init__(self, chromosome, start, reference, alternative, effects=None,
-                 frequencies=None, atts=None):
+    def __init__(self, chromosome, position, reference, alternative,
+                 effects=None,
+                 frequencies=None, attributes=None):
         """
         Expected parameters of the constructor are:
 
         :param chromosome: chromosome label where variant is located
-        :param start: start position of the variant using *VCF* convention
+        :param position: position of the variant using *VCF* convention
         :param reference: reference DNA string
-        :param alternatives: list of alternative DNA strings
+        :param alternative: alternative DNA string
         :param atts: additional variant attributes
         """
         super(SummaryVariant, self).__init__(
-            chromosome, start, reference, alternative)
-        if atts is None:
-            atts = {}
+            chromosome, position, reference, alternative)
 
-        self.alts = AltAlleleItems(alternative)
         self.details = VariantDetail.from_vcf(
-            chromosome, start, reference, alternative)
-        self.alt_alleles = range(1, len(alternative) + 1)
+            chromosome, position, reference, alternative)
         self.effects = effects
         self.frequencies = frequencies
 
-        self.atts = {}
-        self.update_atts(atts)
-
-    @property
-    def position(self):
-        """
-        returns VCF start of the variant.
-        """
-        return self.start
+        if attributes is None:
+            self.attributes = {}
+        else:
+            self.attributes = {}
+            self.update_attributes(attributes)
 
     @property
     def location(self):
         """
         Returns string representation of location of the variant constructed
-        from chromosome label and position "<chromsome>:<position>".
+        from chromosome label and position "<chromsome>:<position>" in
+        *VCF* convention.
         """
         return "{}:{}".format(self.chromosome, self.position)
 
@@ -323,27 +308,30 @@ class SummaryVariant(VariantBase):
         """
         row = row.copy()
         effects = Effect.from_effects(
-            row['effectType'], row['effectGene'], row['effectDetails'])
+            row['effect_type'], row['effect_gene'], row['effect_details'])
 
-        frequencies = [row['all.refFreq']]
-        frequencies.extend(row['all.altFreq'])
+        frequencies = [
+            row['af_reference_allele_freq'],
+            row['af_alternative_allele_freq']
+        ]
 
         sv = SummaryVariant(
-            row['chr'], row['position'], row['refA'], row['altA'], effects,
-            frequencies, atts=row)
+            row['chrom'], row['position'],
+            row['reference'], row['alternative'],
+            effects,
+            frequencies,
+            attributes=row)
         return sv
 
-    def get_attr(self, item, default=None):
+    def get_attribute(self, item, default=None):
         """
         looks up values matching key `item` in additional attributes passed
         on creation of the variant.
         """
-        val = self.atts.get(item)
-        if val is None:
-            return default
+        val = self.attributes.get(item, default)
         return val
 
-    def has_attr(self, item):
+    def has_attribute(self, item):
         """
         checks if additional variant attributes contain values for key `item`.
         """
@@ -355,20 +343,20 @@ class SummaryVariant(VariantBase):
         attributes. For example `sv['all.altFreq']` will return value matching
         key `all.altFreq` from addtional variant attributes.
         """
-        return self.get_attr(item)
+        return self.get_attribute(item)
 
     def __contains__(self, item):
         """
         checks if additional variant attributes contains value for key `item`.
         """
-        return item in self.atts
+        return item in self.attribute
 
-    def update_atts(self, atts):
+    def update_attributes(self, atts):
         """
         updates additional attributes of variant using dictionary `atts`.
         """
         for key, val in atts.items():
-            self.atts[key] = AltAlleleItems(val, self.alt_alleles)
+            self.attributes[key] = val
 
 
 class FamilyVariant(object):
@@ -430,7 +418,7 @@ class FamilyVariant(object):
         """
         1-based list of alternative DNA strings describing the variant
         """
-        return self.summary.alts
+        return [sv.alternative for sv in self.summary]
 
     @property
     def alt_alleles(self):
@@ -442,11 +430,11 @@ class FamilyVariant(object):
 
     @property
     def chromosome(self):
-        return self.summary.chromosome
+        return self.summary[0].chromosome
 
     @property
     def position(self):
-        return self.summary.position
+        return self.summary[0].position
 
     @property
     def location(self):
@@ -454,7 +442,7 @@ class FamilyVariant(object):
 
     @property
     def reference(self):
-        return self.summary.reference
+        return self.summary[0].reference
 
     @property
     def details(self):
@@ -475,7 +463,9 @@ class FamilyVariant(object):
         """
         0-base list of frequencies for variant.
         """
-        return self.summary.frequencies
+        freqs = [self.summary[0].frequencies[0]]
+        freqs.extend([sv.frequencies[1] for sv in self.summary])
+        return freqs
 
     @property
     def best_st(self):
@@ -484,9 +474,9 @@ class FamilyVariant(object):
             unknown = np.any(self.gt == -1, axis=0)
 
             balt = []
-            for anum in self.summary.alt_alleles:
+            for anum, _ in enumerate(self.summary):
                 alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                alt_gt[self.gt == anum] = 1
+                alt_gt[self.gt == (anum + 1)] = 1
 
                 alt = np.sum(alt_gt, axis=0, dtype=np.int8)
                 ref = ref - alt

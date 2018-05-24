@@ -92,22 +92,31 @@ class RawFamilyVariants(FamiliesBase):
 
         self.vcf_vars = self.vcf.vars
 
+        assert annotator is not None  # FIXME
         if annotator is None:
             self.annot_df = loader.load_annotation()
         else:
             records = []
-            for v in self.vcf_vars:
-                records.append((v.CHROM, v.start + 1, v.REF, np.array(v.ALT)))
+            for index, v in enumerate(self.vcf_vars):
+                split = len(v.ALT) > 1
+                for alt_index, alt in enumerate(v.ALT):
+                    records.append(
+                        (v.CHROM, v.start + 1,
+                         v.REF, alt,
+                         index, split, alt_index))
             self.annot_df = pd.DataFrame.from_records(
                 data=records,
-                columns=['chr', 'position', 'refA', 'altA'])
+                columns=[
+                    'chrom', 'position', 'reference', 'alternative',
+                    'var_index', 'split_from_multi_allelic', 'alt_index'])
 
             annotator.setup(self)
             self.annot_df = annotator.annotate(self.annot_df, self.vcf_vars)
 
-        assert len(self.annot_df) == len(self.vcf_vars)
-        assert np.all(self.annot_df.index.values ==
-                      np.arange(len(self.annot_df)))
+#  FIXME
+#         assert len(self.annot_df) == len(self.vcf_vars)
+#         assert np.all(self.annot_df.index.values ==
+#                       np.arange(len(self.annot_df)))
 
     def persons_samples(self, persons):
         return sorted([p.get_attr('sampleIndex') for p in persons])
@@ -243,14 +252,16 @@ class RawFamilyVariants(FamiliesBase):
             raise StopIteration()
 
         variants = self.vcf_vars
-        for index, row in enumerate(annot_df.to_dict(orient='records')):
-            vcf = variants[index]
-
-            summary_variant = self.VF.summary_variant_from_dict(row)
+        for var_index, group_df in annot_df.groupby(["var_index"]):
+            vcf = variants[var_index]
+            summary_variants = []
+            for row in group_df.to_dict(orient='records'):
+                sv = self.VF.summary_variant_from_dict(row)
+                summary_variants.append(sv)
 
             for fam in self.families.values():
                 vs = self.VF.family_variant_from_vcf(
-                    summary_variant, fam, vcf=vcf)
+                    summary_variants, fam, vcf=vcf)
                 for v in vs:
                     yield v
 

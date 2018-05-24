@@ -10,12 +10,18 @@ from variants.vcf_utils import samples_to_alleles_index
 
 class VcfAlleleFrequencyAnnotator(AnnotatorBase):
     COLUMNS = [
-        'all.nParCalled',
-        'all.prcntParCalled',
-        'all.nAltAlls',
-        'all.altFreq',
-        'all.nRefAlls',
-        'all.refFreq',
+        'af_parents_called_count',
+        'af_parents_called_percent',
+        'af_alternative_allele_count',
+        'af_alternative_allele_freq',
+        'af_reference_allele_count',
+        'af_reference_allele_freq',
+        #         'all.nParCalled',
+        #         'all.prcntParCalled',
+        #         'all.nAltAlls',
+        #         'all.altFreq',
+        #         'all.nRefAlls',
+        #         'all.refFreq',
     ]
 
     def __init__(self):
@@ -68,11 +74,13 @@ class VcfAlleleFrequencyAnnotator(AnnotatorBase):
             alleles_frequencies.append(alt_allele_freq)
 
         assert n_parents_called * 2 == sum(alleles_counts) + n_ref_alleles
-        return (n_parents_called, percent_parents_called,
+        size = len(vcf_variant.ALT)
+        return (n_parents_called * np.ones(size, np.int32),
+                percent_parents_called * np.ones(size, np.float32),
                 np.array(alleles_counts),
                 np.array(alleles_frequencies),
-                n_ref_alleles,
-                ref_freq)
+                n_ref_alleles * np.ones(size, np.int32),
+                ref_freq * np.ones(size, np.float32))
 
 #     def annotate(self, vars_df, vcf_vars):
 #         n_parents_called = pd.Series(index=vars_df.index, dtype=np.int16)

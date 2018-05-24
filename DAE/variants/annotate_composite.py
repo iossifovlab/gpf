@@ -24,10 +24,16 @@ class AnnotatorBase(object):
             for _ in self.columns()
         ]
 
-        for index, v in enumerate(vcf_vars):
+        index = 0
+        for vcf_index, v in enumerate(vcf_vars):
             res = self.annotate_variant(v)
-            for col, _ in enumerate(self.columns()):
-                columns[col][index] = res[col]
+            for alt_index, _ in enumerate(v.ALT):
+                assert vars_df['var_index'][index] == vcf_index
+                assert vars_df['alt_index'][index] == alt_index
+
+                for col, _ in enumerate(self.columns()):
+                    columns[col][index] = res[col][alt_index]
+                index += 1
 
         for col, name in enumerate(self.columns()):
             vars_df[name] = columns[col]
