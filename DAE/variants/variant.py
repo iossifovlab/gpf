@@ -248,7 +248,9 @@ class SummaryVariant(VariantBase):
 
     def __init__(self, chromosome, position, reference, alternative,
                  effects=None,
-                 frequencies=None, attributes=None):
+                 ref_frequency=None,
+                 alt_frequency=None,
+                 attributes=None):
         """
         Expected parameters of the constructor are:
 
@@ -264,7 +266,8 @@ class SummaryVariant(VariantBase):
         self.details = VariantDetail.from_vcf(
             chromosome, position, reference, alternative)
         self.effects = effects
-        self.frequencies = frequencies
+        self.ref_frequency = ref_frequency
+        self.alt_frequency = alt_frequency
 
         if attributes is None:
             self.attributes = {}
@@ -310,16 +313,12 @@ class SummaryVariant(VariantBase):
         effects = Effect.from_effects(
             row['effect_type'], row['effect_gene'], row['effect_details'])
 
-        frequencies = [
-            row['af_reference_allele_freq'],
-            row['af_alternative_allele_freq']
-        ]
-
         sv = SummaryVariant(
             row['chrom'], row['position'],
             row['reference'], row['alternative'],
             effects,
-            frequencies,
+            row['af_reference_allele_freq'],
+            row['af_alternative_allele_freq'],
             attributes=row)
         return sv
 
@@ -463,8 +462,8 @@ class FamilyVariant(object):
         """
         0-base list of frequencies for variant.
         """
-        freqs = [self.summary[0].frequencies[0]]
-        freqs.extend([sv.frequencies[1] for sv in self.summary])
+        freqs = [self.summary[0].ref_frequency]
+        freqs.extend([sv.alt_frequency for sv in self.summary])
         return freqs
 
     @property
