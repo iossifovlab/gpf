@@ -253,12 +253,12 @@ class RawFamilyVariants(FamiliesBase):
         variants = self.vcf_vars
         for var_index, group_df in annot_df.groupby(["var_index"]):
             vcf = variants[var_index]
-            summary_variants = self.VF.summary_variants_from_records(
+            summary_variant = self.VF.summary_variant_from_records(
                 group_df.to_dict(orient='records'))
 
             for fam in self.families.values():
                 vs = self.VF.family_variant_from_vcf(
-                    summary_variants, fam, vcf=vcf)
+                    summary_variant, fam, vcf=vcf)
                 for v in vs:
                     yield v
 

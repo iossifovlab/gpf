@@ -3,7 +3,7 @@ Created on Mar 23, 2018
 
 @author: lubo
 '''
-from variants.variant import EffectGene, SummaryVariant
+from variants.variant import EffectGene, AlleleSummary
 import pytest
 
 
@@ -16,5 +16,5 @@ def test_effect_gene_serialization():
 @pytest.mark.slow
 def test_summary_variants_full(nvcf19f):
     for _index, row in nvcf19f.annot_df.iterrows():
-        sv = SummaryVariant.from_dict(row)
+        sv = AlleleSummary.from_dict(row)
         assert sv is not None

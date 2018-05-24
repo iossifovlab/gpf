@@ -22,7 +22,7 @@ from variants.annotate_variant_effects import \
     VcfVariantEffectsAnnotator
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
-from variants.variant import VariantFactory, SummaryVariant,\
+from variants.variant import VariantFactory, AlleleSummary,\
     FamilyVariant, VariantFactorySingle
 from variants.attributes_query import parser as attributes_query_parser, \
     QueryTransformer
@@ -245,8 +245,8 @@ def fam1():
 
 @pytest.fixture(scope='session')
 def sv():
-    return [SummaryVariant("1", 11539, "T", "TA"),
-            SummaryVariant("1", 11539, "T", "TG")]
+    return [AlleleSummary("1", 11539, "T", "TA"),
+            AlleleSummary("1", 11539, "T", "TG")]
 
 
 @pytest.fixture(scope='session')
