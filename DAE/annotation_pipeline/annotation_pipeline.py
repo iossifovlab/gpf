@@ -10,6 +10,7 @@ import common.config
 from box import Box
 import pysam
 from importlib import import_module
+import gzip
 
 from tools import *
 from tools.utilities import assign_values
@@ -183,7 +184,8 @@ def main():
         if opts.region is None:
             header_str = variantFile.readline()[:-1]
         else:
-            header_str = list(tabix_file.header)[0]
+            with gzip.open(opts.infile) as file:
+                header_str = file.readline()[:-1]
         if header_str[0] == '#':
             header_str = header_str[1:]
         header = header_str.split('\t')
