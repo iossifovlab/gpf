@@ -264,36 +264,3 @@ class RawFamilyVariants(FamiliesBase):
                     summary_variant, fam, vcf=vcf)
                 for v in vs:
                     yield v
-
-
-if __name__ == "__main__":
-    import os
-    from variants.vcf_utils import mat2str
-    from variants.annotate_variant_effects import \
-        VcfVariantEffectsAnnotator
-    from variants.annotate_allele_frequencies import \
-        VcfAlleleFrequencyAnnotator
-    from variants.annotate_composite import AnnotatorComposite
-
-    prefix = os.path.join(
-        os.environ.get(
-            "DAE_DATA_DIR",
-            "/home/lubo/Work/seq-pipeline/data-raw-dev/"
-        ),
-        "spark/nspark"
-    )
-
-    annotator = AnnotatorComposite(annotators=[
-        VcfVariantEffectsAnnotator(),
-        VcfAlleleFrequencyAnnotator(),
-    ])
-
-    fvars = RawFamilyVariants(prefix=prefix, annotator=annotator)
-
-    vs = fvars.query_variants(
-        inheritance='unknown',
-    )
-    for c, v in enumerate(vs):
-        print(c, v, v.family_id, mat2str(v.best_st), mat2str(v.gt),
-              v.effect_type, v.effect_gene, v.inheritance,
-              v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'))
