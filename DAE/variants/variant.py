@@ -530,7 +530,7 @@ class FamilyInheritanceMixin(object):
             return Inheritance.unknown
 
 
-class FamilyVariant(SummaryVariant, FamilyInheritanceMixin):
+class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
     """
     Represent variant in a family. Description of the variant, it's effects,
     frequencies and other attributes come from instance of `AlleleSummary`
@@ -558,13 +558,12 @@ class FamilyVariant(SummaryVariant, FamilyInheritanceMixin):
         unknown = np.any(self.gt == -1, axis=0)
         self.gt[:, unknown] = -1
 
-        self.falt_alleles = self.calc_alt_alleles(self.gt)
         alleles = [sv.ref_allele]
 
-        for allele_index in self.falt_alleles:
+        for allele_index in self.calc_alt_alleles(self.gt):
             alleles.append(sv.alleles[allele_index])
 
-        super(FamilyVariant, self).__init__(alleles)
+        super(FamilyVariantBase, self).__init__(alleles)
 
         self._best_st = None
         self._inheritance = None
@@ -660,7 +659,44 @@ class FamilyVariant(SummaryVariant, FamilyInheritanceMixin):
         return self._variant_in_sexes
 
 
-class FamilyVariantMulti(FamilyVariant):
+class FamilyVariant(FamilyVariantBase):
+
+    def __init__(self, summary_variants, family, gt, alt_allele_index):
+        super(FamilyVariant, self).__init__(
+            summary_variants, family, gt)
+
+        if alt_allele_index <= 0:
+            self.alt_allele = None
+        else:
+            assert alt_allele_index < len(self.summary_variant.alleles)
+            self.alt_allele = self.summary_variant.alleles[alt_allele_index]
+
+    @property
+    def best_st(self):
+        if self._best_st is None:
+            ref = (2 * np.ones(len(self.family), dtype=np.int8))
+            unknown = np.any(self.gt == -1, axis=0)
+            alt_alleles = self.calc_alt_alleles(self.gt)
+            assert len(alt_alleles) <= 1
+
+            if not alt_alleles:
+                alt = np.zeros(len(self.family), dtype=np.int8)
+            else:
+                anum = next(iter(alt_alleles))
+                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+                alt_gt[self.gt == anum] = 1
+
+                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                ref = ref - alt
+
+            best = [ref, alt]
+            self._best_st = np.stack(best, axis=0)
+            self._best_st[:, unknown] = -1
+
+        return self._best_st
+
+
+class FamilyVariantMulti(FamilyVariantBase):
 
     def __init__(self, summary_variants, family, gt):
         super(FamilyVariantMulti, self).__init__(
@@ -774,40 +810,6 @@ class VariantFactoryMulti(object):
             summary_variant, family, gt=gt)
 
 
-class FamilyVariantSingle(FamilyVariant):
-
-    def __init__(self, summary_variants, family, gt, alt_index):
-        super(FamilyVariantSingle, self).__init__(
-            summary_variants, family, gt)
-
-        self.alt_index = alt_index
-        assert len(self.falt_alleles) <= 1
-
-    @property
-    def best_st(self):
-        if self._best_st is None:
-            ref = (2 * np.ones(len(self.family), dtype=np.int8))
-            unknown = np.any(self.gt == -1, axis=0)
-            alt_alleles = self.calc_alt_alleles(self.gt)
-            assert len(alt_alleles) <= 1
-
-            if not alt_alleles:
-                alt = np.zeros(len(self.family), dtype=np.int8)
-            else:
-                anum = next(iter(alt_alleles))
-                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                alt_gt[self.gt == anum] = 1
-
-                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-                ref = ref - alt
-
-            best = [ref, alt]
-            self._best_st = np.stack(best, axis=0)
-            self._best_st[:, unknown] = -1
-
-        return self._best_st
-
-
 class VariantFactorySingle(VariantFactoryMulti):
 
     @staticmethod
@@ -825,7 +827,7 @@ class VariantFactorySingle(VariantFactoryMulti):
 
         if alt_index is not None:
             return [
-                FamilyVariantSingle(
+                FamilyVariant(
                     summary_variant,
                     family, gt, alt_index)
             ]
@@ -841,14 +843,14 @@ class VariantFactorySingle(VariantFactoryMulti):
                     ))
                 a_gt[mask] = -1
                 res.append(
-                    FamilyVariantSingle(summary_variant, family, a_gt, alt))
+                    FamilyVariant(summary_variant, family, a_gt, alt))
             return res
         else:
             res = []
             for alt_index in range(len(summary_variant.alt_alleles)):
                 res.append(
-                    FamilyVariantSingle(summary_variant,
-                                        family, gt, alt_index + 1))
+                    FamilyVariant(summary_variant,
+                                  family, gt, alt_index + 1))
             return res
 
         assert False

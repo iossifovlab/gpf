@@ -58,8 +58,8 @@ def test_multi_alt_allele_effects_match_family(full_vcf, region, worst_effect):
 
     for v in vs:
         checked = False
-        for aa in v.falt_alleles:
+        for va in v.alt_alleles:
             checked = True
-            assert v.effects[aa].worst == worst_effect[0]
-            assert v.effects[aa].transcripts is not None
+            assert va.effect.worst == worst_effect[0]
+            assert va.effect.transcripts is not None
         assert checked
