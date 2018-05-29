@@ -7,10 +7,12 @@ from __future__ import print_function
 
 from rest_framework import status
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
+from tests.pytest_marks import slow
 
 
 class Test(BaseAuthenticatedUserTest):
 
+    @slow
     def test_gene_set_denovo_main_autism_candidates_denovo_db(self):
         data = {
             'datasetId': 'denovo_db',

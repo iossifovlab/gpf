@@ -13,18 +13,18 @@ import DAE
 
 
 def pytest_addoption(parser):
-    parser.addoption("--runslow", action="store_true",
+    parser.addoption("--runslow", action="store_true", default=False,
                      help="run slow tests")
-    parser.addoption("--runveryslow", action="store_true",
+    parser.addoption("--runveryslow", action="store_true", default=False,
                      help="run very slow tests")
-    parser.addoption("--ssc_wg", action="store_true",
+    parser.addoption("--ssc_wg", action="store_true", default=False,
                      help="run SSC WG tests")
-    parser.addoption("--nomysql", action="store_true",
+    parser.addoption("--nomysql", action="store_true", default=False,
                      help="skip tests that require mysql")
 
 
 def pytest_collection_modifyitems(config, items):
-    if not config.getoption("--runveryslow", False):
+    if not config.getoption("--runveryslow"):
         # --runveryslow given in cli: do not skip slow tests
         skip_veryslow = pytest.mark.skip(
             reason="need --runveryslow option to run")
@@ -32,8 +32,8 @@ def pytest_collection_modifyitems(config, items):
             if "veryslow" in item.keywords:
                 item.add_marker(skip_veryslow)
 
-    if not config.getoption("--runslow", False) and \
-            not config.getoption("--runveryslow", False):
+    if not config.getoption("--runslow") and \
+            not config.getoption("--runveryslow"):
         # --runslow given in cli: do not skip slow tests
         skip_slow = pytest.mark.skip(
             reason="need --runslow option to run")
@@ -41,7 +41,7 @@ def pytest_collection_modifyitems(config, items):
             if "slow" in item.keywords:
                 item.add_marker(skip_slow)
 
-    if config.getoption("--nomysql", False):
+    if config.getoption("--nomysql"):
         skip_mysql = pytest.mark.skip(reason="need mysql data")
         for item in items:
             if "mysql" in item.keywords:

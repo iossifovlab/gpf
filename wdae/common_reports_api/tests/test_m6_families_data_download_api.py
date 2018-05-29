@@ -6,6 +6,7 @@ Created on Aug 3, 2015
 import unittest
 from rest_framework import status
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
+from tests.pytest_marks import slow
 
 
 class Test(BaseAuthenticatedUserTest):
@@ -20,6 +21,7 @@ class Test(BaseAuthenticatedUserTest):
         response = self.client.get(url)
         self.assertEquals(status.HTTP_404_NOT_FOUND, response.status_code)
 
+    @slow
     def test_get_content(self):
         url = '/api/v3/common_reports/families_data/IossifovWE2014'
         response = self.client.get(url)

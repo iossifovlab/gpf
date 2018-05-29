@@ -5,8 +5,9 @@ Created on Jan 16, 2018
 '''
 from __future__ import print_function
 from common_reports_api.permissions import get_datasets_by_study
+from tests.pytest_marks import slow
 
-
+@slow
 def test_denovo_db():
     datasets_list = get_datasets_by_study("denovo_db")
     print(datasets_list)

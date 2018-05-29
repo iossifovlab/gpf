@@ -5,6 +5,7 @@ Created on Jul 31, 2015
 '''
 import unittest
 from common_reports_api.variants import VariantReports
+from tests.pytest_marks import slow
 
 
 class Test(unittest.TestCase):
@@ -26,6 +27,7 @@ class Test(unittest.TestCase):
     def test_serialize_deserialize_not_none(self):
         self.assertIsNotNone(self.data)
 
+    @slow
     def test_deserialize(self):
         self.assertIsNotNone(self.vr.data)
 
