@@ -15,7 +15,7 @@ from variants.attributes_query import RoleQuery, SexQuery, InheritanceQuery,\
     VariantTypeQuery, parser
 from variants.family import VcfFamily
 # from variants.variant import VariantFactorySingle
-from variants.variant import VariantFactory
+from variants.variant import VariantFactoryMulti
 
 
 def split_gene_effect(effects):
@@ -40,7 +40,7 @@ def parse_gene_effect(effect):
 class RawFamilyVariants(FamiliesBase):
 
     def __init__(self, config=None, prefix=None, annotator=None, region=None,
-                 variant_factory=VariantFactory):
+                 variant_factory=VariantFactoryMulti):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix(prefix)

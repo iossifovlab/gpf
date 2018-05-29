@@ -447,92 +447,8 @@ class SummaryVariant(VariantBase):
                 sa.update_attributes({key: val})
 
 
-class FamilyVariant(SummaryVariant):
-    """
-    Represent variant in a family. Description of the variant, it's effects,
-    frequencies and other attributes come from instance of `AlleleSummary`
-    class. `FamilyVariant` delegates all such requests to `AlleleSummary`
-    object it contains.
-
-    `FamilyVariant` combines `AlleleSummary` and family, represented by
-    instance of `Family` or `VcfFamily` class.
-
-    Additionaly, `FamilyVariant` contains genotype information for the
-    specified `AlleleSummary` and specified `Family`. The genotype information
-    is passed to `FamilyVariant` construction in the form of `gt` matrix.
-
-    Genotype matrix `gt` has 2 rows (one for each individual allele) and the
-    number of columns is equal to the number of individuals in the
-    corresponging family.
-    """
-
-    def __init__(self, sv, family, gt):
-        self.summary_variant = sv
-        self.family = family
-
-        self.gt = np.copy(gt)
-
-        unknown = np.any(self.gt == -1, axis=0)
-        self.gt[:, unknown] = -1
-
-        self.falt_alleles = self.calc_alt_alleles(self.gt)
-        alleles = [sv.ref_allele]
-
-        for allele_index in self.falt_alleles:
-            alleles.append(sv.alleles[allele_index])
-
-        super(FamilyVariant, self).__init__(alleles)
-
-        self._best_st = None
-        self._inheritance = None
-
-        self._variant_in_members = None
-        self._variant_in_roles = None
-        self._variant_in_sexes = None
-
-    def __repr__(self):
-        return '{}:{} {}->{} {}'.format(
-            self.chromosome, self.position,
-            self.reference, ",".join(self.alts),
-            self.family_id)
-
-    @property
-    def best_st(self):
-        if self._best_st is None:
-            ref = (2 * np.ones(len(self.family), dtype=np.int8))
-            unknown = np.any(self.gt == -1, axis=0)
-
-            balt = []
-            if len(self.alleles) == 1:
-                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-                balt.append(alt)
-            else:
-                for anum, _ in enumerate(self.alt_alleles):
-                    alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                    alt_gt[self.gt == (anum + 1)] = 1
-
-                    alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-                    ref = ref - alt
-                    balt.append(alt)
-
-            best = [ref]
-            best.extend(balt)
-            self._best_st = np.stack(best, axis=0)
-            self._best_st[:, unknown] = -1
-
-        return self._best_st
-
-    @property
-    def genotype(self):
-        return self.gt.T
-
-#     @property
-#     def atts(self):
-#         """
-#         Additional attributes describing this variant.
-#         """
-#         return self.summary.atts
+class FamilyInheritanceMixin(object):
+    __slots__ = []
 
     @staticmethod
     def calc_alt_alleles(gt):
@@ -586,18 +502,6 @@ class FamilyVariant(SummaryVariant):
             print("strange inheritance:", p1, p2, ch)
             return Inheritance.unknown
 
-    def is_reference(self):
-        return self.inheritance == Inheritance.reference
-
-    def is_mendelian(self):
-        return self.inheritance == Inheritance.mendelian
-
-    def is_denovo(self):
-        return self.inheritance == Inheritance.denovo
-
-    def is_omission(self):
-        return self.inheritance == Inheritance.omission
-
     @staticmethod
     def combine_inheritance(*inheritance):
         inherits = np.array([i.value for i in inheritance])
@@ -624,6 +528,76 @@ class FamilyVariant(SummaryVariant):
         else:
             print("strange inheritance:", inherits)
             return Inheritance.unknown
+
+
+class FamilyVariant(SummaryVariant, FamilyInheritanceMixin):
+    """
+    Represent variant in a family. Description of the variant, it's effects,
+    frequencies and other attributes come from instance of `AlleleSummary`
+    class. `FamilyVariant` delegates all such requests to `AlleleSummary`
+    object it contains.
+
+    `FamilyVariant` combines `AlleleSummary` and family, represented by
+    instance of `Family` or `VcfFamily` class.
+
+    Additionaly, `FamilyVariant` contains genotype information for the
+    specified `AlleleSummary` and specified `Family`. The genotype information
+    is passed to `FamilyVariant` construction in the form of `gt` matrix.
+
+    Genotype matrix `gt` has 2 rows (one for each individual allele) and the
+    number of columns is equal to the number of individuals in the
+    corresponging family.
+    """
+
+    def __init__(self, sv, family, gt):
+        self.summary_variant = sv
+        self.family = family
+
+        self.gt = np.copy(gt)
+
+        unknown = np.any(self.gt == -1, axis=0)
+        self.gt[:, unknown] = -1
+
+        self.falt_alleles = self.calc_alt_alleles(self.gt)
+        alleles = [sv.ref_allele]
+
+        for allele_index in self.falt_alleles:
+            alleles.append(sv.alleles[allele_index])
+
+        super(FamilyVariant, self).__init__(alleles)
+
+        self._best_st = None
+        self._inheritance = None
+
+        self._variant_in_members = None
+        self._variant_in_roles = None
+        self._variant_in_sexes = None
+
+    def __repr__(self):
+        return '{}:{} {}->{} {}'.format(
+            self.chromosome, self.position,
+            self.reference, ",".join(self.alts),
+            self.family_id)
+
+    @property
+    def genotype(self):
+        return self.gt.T
+
+    @property
+    def best_st(self):
+        raise NotImplementedError()
+
+    def is_reference(self):
+        return self.inheritance == Inheritance.reference
+
+    def is_mendelian(self):
+        return self.inheritance == Inheritance.mendelian
+
+    def is_denovo(self):
+        return self.inheritance == Inheritance.denovo
+
+    def is_omission(self):
+        return self.inheritance == Inheritance.omission
 
     @property
     def inheritance(self):
@@ -686,7 +660,41 @@ class FamilyVariant(SummaryVariant):
         return self._variant_in_sexes
 
 
-class VariantFactory(object):
+class FamilyVariantMulti(FamilyVariant):
+
+    def __init__(self, summary_variants, family, gt):
+        super(FamilyVariantMulti, self).__init__(
+            summary_variants, family, gt)
+
+    @property
+    def best_st(self):
+        if self._best_st is None:
+            ref = (2 * np.ones(len(self.family), dtype=np.int8))
+            unknown = np.any(self.gt == -1, axis=0)
+
+            balt = []
+            if len(self.alleles) == 1:
+                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                balt.append(alt)
+            else:
+                for anum, _ in enumerate(self.alt_alleles):
+                    alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+                    alt_gt[self.gt == (anum + 1)] = 1
+
+                    alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                    ref = ref - alt
+                    balt.append(alt)
+
+            best = [ref]
+            best.extend(balt)
+            self._best_st = np.stack(best, axis=0)
+            self._best_st[:, unknown] = -1
+
+        return self._best_st
+
+
+class VariantFactoryMulti(object):
 
     @staticmethod
     def from_summary_variant(sv, family, gt=None, vcf=None):
@@ -697,7 +705,7 @@ class VariantFactory(object):
             gt = vcf.gt_idxs[family.alleles]
             gt = gt.reshape([2, len(family)], order='F')
 
-        return [FamilyVariant(sv, family, gt)]
+        return [FamilyVariantMulti(sv, family, gt)]
 
     @staticmethod
     def summary_variant_from_records(records):
@@ -757,12 +765,12 @@ class VariantFactory(object):
     @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):
 
-        return VariantFactory.from_summary_variant(
+        return VariantFactoryMulti.from_summary_variant(
             summary_variant, family, vcf=vcf)
 
     @staticmethod
     def family_variant_from_gt(summary_variant, family, gt):
-        return VariantFactory.from_summary_variant(
+        return VariantFactoryMulti.from_summary_variant(
             summary_variant, family, gt=gt)
 
 
@@ -800,7 +808,7 @@ class FamilyVariantSingle(FamilyVariant):
         return self._best_st
 
 
-class VariantFactorySingle(VariantFactory):
+class VariantFactorySingle(VariantFactoryMulti):
 
     @staticmethod
     def from_summary_variant(

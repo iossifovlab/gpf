@@ -22,8 +22,8 @@ from variants.annotate_variant_effects import \
     VcfVariantEffectsAnnotator
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
-from variants.variant import VariantFactory, AlleleSummary,\
-    FamilyVariant, VariantFactorySingle, SummaryVariant
+from variants.variant import VariantFactoryMulti, AlleleSummary,\
+    FamilyVariantMulti, VariantFactorySingle, SummaryVariant
 from variants.attributes_query import parser as attributes_query_parser, \
     QueryTransformer
 
@@ -99,7 +99,7 @@ def ustudy_single(ustudy_config, composite_annotator):
 def ustudy_full(ustudy_config, composite_annotator):
     fvariants = RawFamilyVariants(
         ustudy_config, annotator=composite_annotator,
-        variant_factory=VariantFactory)
+        variant_factory=VariantFactoryMulti)
     return fvariants
 
 
@@ -165,7 +165,7 @@ def nvcf19s(nvcf19_config, composite_annotator):
 def nvcf19f(nvcf19_config, composite_annotator):
     fvariants = RawFamilyVariants(
         nvcf19_config, annotator=composite_annotator,
-        variant_factory=VariantFactory)
+        variant_factory=VariantFactoryMulti)
     return fvariants
 
 
@@ -206,7 +206,7 @@ def full_vcf(composite_annotator):
         a_conf = Configure.from_prefix(a_data)
         fvars = RawFamilyVariants(
             a_conf, annotator=composite_annotator,
-            variant_factory=VariantFactory)
+            variant_factory=VariantFactoryMulti)
         return fvars
     return builder
 
@@ -219,7 +219,7 @@ def data_vcf19(composite_annotator):
         a_conf = Configure.from_prefix(a_prefix)
         fvars = RawFamilyVariants(
             a_conf, annotator=composite_annotator,
-            variant_factory=VariantFactory)
+            variant_factory=VariantFactoryMulti)
         return fvars
     return builder
 
@@ -255,13 +255,13 @@ def sv():
 @pytest.fixture(scope='session')
 def fv1(fam1, sv):
     def rfun(gt):
-        return FamilyVariant(sv, fam1, gt)
+        return FamilyVariantMulti(sv, fam1, gt)
     return rfun
 
 
 @pytest.fixture(scope='session')
 def fv_one(fam1, sv):
-    return VariantFactory.family_variant_from_gt(
+    return VariantFactoryMulti.family_variant_from_gt(
         sv, fam1, np.array([[1, 1, 1], [0, 0, 0]]))[0]
 
 
@@ -288,7 +288,7 @@ def fam2():
 @pytest.fixture(scope='session')
 def fv2(sv, fam2):
     def rfun(gt):
-        return FamilyVariant(sv, fam2, gt)
+        return FamilyVariantMulti(sv, fam2, gt)
     return rfun
 
 
@@ -316,7 +316,7 @@ def fam3():
 @pytest.fixture(scope='session')
 def fv3(sv, fam3):
     def rfun(gt):
-        return FamilyVariant(sv, fam3, gt)
+        return FamilyVariantMulti(sv, fam3, gt)
     return rfun
 
 
