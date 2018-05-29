@@ -10,6 +10,7 @@ import common.config
 from box import Box
 import pysam
 from importlib import import_module
+import gzip
 
 from tools import *
 from tools.utilities import assign_values
@@ -20,7 +21,8 @@ def str_to_class(val):
 
 class MultiAnnotator(object):
 
-    def __init__(self, config_file, header=None, reannotate=False, preannotators=[]):
+    def __init__(self, config_file, header=None, reannotate=False,
+            preannotators=[], split_column=None, split_separator=','):
         self.header = header
         self.reannotate = reannotate
         self.preannotators = preannotators
@@ -76,6 +78,21 @@ class MultiAnnotator(object):
         self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
                                        if i not in virtual_columns_indices]
 
+        if split_column is None:
+            self._split_variant = lambda s, v: v
+            self._join_variant = lambda s, v: v
+        else:
+            self.split_index = assign_values(split_column, self.header)
+            self.split_separator = split_separator
+
+    def _split_variant(self, line):
+        return [line[:self.split_index-1] + [value] + line[self.split_index:]
+                for value in line[self.split_index-1].split(self.split_separator)]
+
+    def _join_variant(self, lines):
+        return [column[0] if len(set(column)) == 1 else self.split_separator.join(column)
+                for column in zip(*lines)]
+
     def annotate_file(self, input, output):
         if self.header:
             output.write("#")
@@ -86,6 +103,16 @@ class MultiAnnotator(object):
         sys.stderr.write("...processing....................\n")
         k = 0
         annotators = self.annotators
+
+        def annotate_line(line):
+            for annotator in annotators:
+                columns = annotator['columns']
+                values = annotator['instance'].line_annotations(line, columns)
+                for column, value in zip(columns, values):
+                    position = self.column_indices[column]
+                    line[position - 1:position] = [value]
+            return line
+
         for l in input:
             if l[0] == "#":
                 output.write(l)
@@ -94,13 +121,11 @@ class MultiAnnotator(object):
             if k%1000 == 0:
                 sys.stderr.write(str(k) + " lines processed\n")
 
-            line = l.rstrip('\n').split("\t")
-            for annotator in annotators:
-                columns = annotator['columns']
-                values = annotator['instance'].line_annotations(line, columns)
-                for column, value in zip(columns, values):
-                    position = self.column_indices[column]
-                    line[position - 1:position] = [value]
+            line = self._join_variant(
+                [annotate_line(line)
+                 for line in self._split_variant(l.rstrip('\n').split("\t"))])
+
+
             line = [line[i-1] for i in self.stored_columns_indices]
 
             output.write("\t".join(line) + "\n")
@@ -144,6 +169,9 @@ def get_argument_parser():
                         'default behavior is to replace columns with the same label',
                         default=False, action='store_true')
     parser.add_argument('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)', action='store')
+    parser.add_argument('--split', help='split variants based on given column', action='store')
+    parser.add_argument('--separator', help='separator used in the split column; defaults to ","',
+        default=',', action='store')
     parser.add_argument('infile', nargs='?', action='store',
         default='-', help='path to input file; defaults to stdin')
     parser.add_argument('outfile', nargs='?', action='store',
@@ -183,7 +211,8 @@ def main():
         if opts.region is None:
             header_str = variantFile.readline()[:-1]
         else:
-            header_str = list(tabix_file.header)[0]
+            with gzip.open(opts.infile) as file:
+                header_str = file.readline()[:-1]
         if header_str[0] == '#':
             header_str = header_str[1:]
         header = header_str.split('\t')
@@ -197,7 +226,8 @@ def main():
 
     preannotators = PreannotatorLoader.load_preannotators(opts, header)
 
-    annotator = MultiAnnotator(opts.config, header, not opts.always_add, preannotators)
+    annotator = MultiAnnotator(opts.config, header, not opts.always_add,
+        preannotators, opts.split, opts.separator)
 
     annotator.annotate_file(variantFile, out)
 
