@@ -496,17 +496,6 @@ class FamilyVariant(SummaryVariant):
             self.reference, ",".join(self.alts),
             self.family_id)
 
-    @classmethod
-    def from_summary_variant(cls, sv, family, gt=None, vcf=None):
-        if gt is None:
-            assert vcf is not None
-            assert isinstance(family, VcfFamily)
-
-            gt = vcf.gt_idxs[family.alleles]
-            gt = gt.reshape([2, len(family)], order='F')
-
-        return [FamilyVariant(sv, family, gt)]
-
     @property
     def best_st(self):
         if self._best_st is None:
@@ -700,6 +689,17 @@ class FamilyVariant(SummaryVariant):
 class VariantFactory(object):
 
     @staticmethod
+    def from_summary_variant(sv, family, gt=None, vcf=None):
+        if gt is None:
+            assert vcf is not None
+            assert isinstance(family, VcfFamily)
+
+            gt = vcf.gt_idxs[family.alleles]
+            gt = gt.reshape([2, len(family)], order='F')
+
+        return [FamilyVariant(sv, family, gt)]
+
+    @staticmethod
     def summary_variant_from_records(records):
         """
         Factory method for constructing `SummaryVariant` from dictionary.
@@ -757,12 +757,12 @@ class VariantFactory(object):
     @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):
 
-        return FamilyVariant.from_summary_variant(
+        return VariantFactory.from_summary_variant(
             summary_variant, family, vcf=vcf)
 
     @staticmethod
     def family_variant_from_gt(summary_variant, family, gt):
-        return FamilyVariant.from_summary_variant(
+        return VariantFactory.from_summary_variant(
             summary_variant, family, gt=gt)
 
 
@@ -774,45 +774,6 @@ class FamilyVariantSingle(FamilyVariant):
 
         self.alt_index = alt_index
         assert len(self.falt_alleles) <= 1
-
-    @classmethod
-    def from_summary_variant(
-            cls, summary_variant, family, gt=None, vcf=None):
-        assert isinstance(family, VcfFamily)
-
-        if gt is None:
-            assert vcf is not None
-            gt = vcf.gt_idxs[family.alleles]
-            gt = gt.reshape([2, len(family)], order='F')
-
-        alt_index = cls.calc_alt_allele_index(gt)
-        alt_alleles = cls.calc_alt_alleles(gt)
-
-        if alt_index is not None:
-            return [
-                cls(summary_variant,
-                    family, gt, alt_index)
-            ]
-        elif len(alt_alleles) > 1:
-            res = []
-
-            for alt in sorted(alt_alleles):
-                a_gt = np.copy(gt)
-                mask = np.logical_not(
-                    np.logical_or(
-                        a_gt == 0,
-                        a_gt == alt
-                    ))
-                a_gt[mask] = -1
-                res.append(cls(summary_variant, family, a_gt, alt))
-            return res
-        else:
-            res = []
-            for alt_index in range(len(summary_variant.alt_alleles)):
-                res.append(cls(summary_variant, family, gt, alt_index + 1))
-            return res
-
-        assert False
 
     @property
     def best_st(self):
@@ -842,11 +803,54 @@ class FamilyVariantSingle(FamilyVariant):
 class VariantFactorySingle(VariantFactory):
 
     @staticmethod
+    def from_summary_variant(
+            summary_variant, family, gt=None, vcf=None):
+        assert isinstance(family, VcfFamily)
+
+        if gt is None:
+            assert vcf is not None
+            gt = vcf.gt_idxs[family.alleles]
+            gt = gt.reshape([2, len(family)], order='F')
+
+        alt_index = FamilyVariant.calc_alt_allele_index(gt)
+        alt_alleles = FamilyVariant.calc_alt_alleles(gt)
+
+        if alt_index is not None:
+            return [
+                FamilyVariantSingle(
+                    summary_variant,
+                    family, gt, alt_index)
+            ]
+        elif len(alt_alleles) > 1:
+            res = []
+
+            for alt in sorted(alt_alleles):
+                a_gt = np.copy(gt)
+                mask = np.logical_not(
+                    np.logical_or(
+                        a_gt == 0,
+                        a_gt == alt
+                    ))
+                a_gt[mask] = -1
+                res.append(
+                    FamilyVariantSingle(summary_variant, family, a_gt, alt))
+            return res
+        else:
+            res = []
+            for alt_index in range(len(summary_variant.alt_alleles)):
+                res.append(
+                    FamilyVariantSingle(summary_variant,
+                                        family, gt, alt_index + 1))
+            return res
+
+        assert False
+
+    @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):
-        return FamilyVariantSingle.from_summary_variant(
+        return VariantFactorySingle.from_summary_variant(
             summary_variant, family, vcf=vcf)
 
     @staticmethod
     def family_variant_from_gt(summary_variant, family, gt):
-        return FamilyVariantSingle.from_summary_variant(
+        return VariantFactorySingle.from_summary_variant(
             summary_variant, family, gt=gt)
