@@ -454,6 +454,10 @@ class FamilyInheritanceMixin(object):
     def calc_alt_alleles(gt):
         return sorted(list(set(gt.flatten()).difference({-1, 0})))
 
+    @staticmethod
+    def calc_alleles(gt):
+        return sorted(list(set(gt.flatten()).difference({-1})))
+
     @classmethod
     def calc_alt_allele_index(cls, gt):
         alt_alleles = cls.calc_alt_alleles(gt)
@@ -662,6 +666,16 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
 class FamilyVariant(FamilyVariantBase):
 
     def __init__(self, summary_variants, family, gt, alt_allele_index):
+        assert alt_allele_index >= 0 and alt_allele_index <= np.max(gt)
+
+        gt = np.copy(gt)
+        mask = np.logical_not(
+            np.logical_or(
+                gt == 0,
+                gt == alt_allele_index
+            ))
+        gt[mask] = -1
+
         super(FamilyVariant, self).__init__(
             summary_variants, family, gt)
 
@@ -818,38 +832,46 @@ class VariantFactorySingle(SummaryVariantFactory):
             summary_variant, family, gt):
         assert isinstance(family, VcfFamily)
 
-        alt_index = FamilyVariantBase.calc_alt_allele_index(gt)
         alt_alleles = FamilyVariantBase.calc_alt_alleles(gt)
-
-        if alt_index is not None:
+        if not alt_alleles:
+            # reference only
             return [
-                FamilyVariant(
-                    summary_variant,
-                    family, gt, alt_index)
+                FamilyVariant(summary_variant, family, gt, 0)
             ]
-        elif len(alt_alleles) > 1:
-            res = []
-
-            for alt in sorted(alt_alleles):
-                a_gt = np.copy(gt)
-                mask = np.logical_not(
-                    np.logical_or(
-                        a_gt == 0,
-                        a_gt == alt
-                    ))
-                a_gt[mask] = -1
-                res.append(
-                    FamilyVariant(summary_variant, family, a_gt, alt))
-            return res
         else:
-            res = []
-            for alt_index in range(len(summary_variant.alt_alleles)):
-                res.append(
-                    FamilyVariant(summary_variant,
-                                  family, gt, alt_index + 1))
-            return res
-
-        assert False
+            return [
+                FamilyVariant(summary_variant, family, gt, alt_allele_index)
+                for alt_allele_index in alt_alleles
+            ]
+#         if alt_index is not None:
+#             return [
+#                 FamilyVariant(
+#                     summary_variant,
+#                     family, gt, alt_index)
+#             ]
+#         elif len(alt_alleles) > 1:
+#             res = []
+#
+#             for alt in sorted(alt_alleles):
+#                 a_gt = np.copy(gt)
+#                 mask = np.logical_not(
+#                     np.logical_or(
+#                         a_gt == 0,
+#                         a_gt == alt
+#                     ))
+#                 a_gt[mask] = -1
+#                 res.append(
+#                     FamilyVariant(summary_variant, family, a_gt, alt))
+#             return res
+#         else:
+#             res = []
+#             for alt_index in range(len(summary_variant.alt_alleles)):
+#                 res.append(
+#                     FamilyVariant(summary_variant,
+#                                   family, gt, alt_index + 1))
+#             return res
+#
+#         assert False
 
     @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):
