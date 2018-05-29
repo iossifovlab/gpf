@@ -52,7 +52,7 @@ def test_multi_alt_allele_genotype2(full_vcf, region, worst_effect):
     (Region('1', 11500, 11500), np.array([[0, 1], [0, 0], [0, 0]])),
     (Region('1', 11501, 11501), np.array([[0, 2], [0, 0], [0, 0]])),
     (Region('1', 11502, 11502), np.array([[0, 0], [0, 0], [0, 0]])),
-    (Region('1', 11503, 11503), np.array([[-1, -1], [0, 0], [0, 0]])),
+    (Region('1', 11503, 11503), np.array([[0, -1], [0, 0], [0, 0]])),
     (Region('1', 11504, 11504), np.array([[0, 1], [0, 2], [0, 0]])),
     (Region('1', 11505, 11505), np.array([[0, 1], [0, 2], [0, 3]])),
 ])

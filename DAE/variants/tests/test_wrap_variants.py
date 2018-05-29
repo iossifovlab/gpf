@@ -145,6 +145,9 @@ def test_trios_multi_iterator(full_vcf):
     assert len(vs) == 1
 
     for v in vs:
+        print("-----------------")
+        print(v, mat2str(v.best_st))
+        print("-----------------")
         count = 0
         for va in v:
             print(va, mat2str(va.best_st))

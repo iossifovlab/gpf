@@ -558,10 +558,6 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
         self.family = family
 
         self.gt = np.copy(gt)
-
-        unknown = np.any(self.gt == -1, axis=0)
-        self.gt[:, unknown] = -1
-
         alleles = [sv.ref_allele]
 
         for allele_index in self.calc_alt_alleles(self.gt):
@@ -692,7 +688,6 @@ class FamilyVariant(FamilyVariantBase):
     def best_st(self):
         if self._best_st is None:
             ref = (2 * np.ones(len(self.family), dtype=np.int8))
-            unknown = np.any(self.gt == -1, axis=0)
             alt_alleles = self.calc_alt_alleles(self.gt)
             assert len(alt_alleles) <= 1
 
@@ -706,9 +701,14 @@ class FamilyVariant(FamilyVariantBase):
                 alt = np.sum(alt_gt, axis=0, dtype=np.int8)
                 ref = ref - alt
 
+                unknown = np.sum(self.gt == -1, axis=0)
+                print(unknown)
+                ref = ref - unknown
+
             best = [ref, alt]
             self._best_st = np.stack(best, axis=0)
-            self._best_st[:, unknown] = -1
+            unknown = np.any(self.gt == -1, axis=0)
+            self._best_st[1, unknown] = -1
 
         return self._best_st
 
