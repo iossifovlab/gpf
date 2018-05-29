@@ -685,6 +685,9 @@ class FamilyVariant(FamilyVariantBase):
             assert alt_allele_index < len(self.summary_variant.alleles)
             self.alt_allele = self.summary_variant.alleles[alt_allele_index]
 
+    def __iter__(self):
+        yield self
+
     @property
     def best_st(self):
         if self._best_st is None:
@@ -715,6 +718,15 @@ class FamilyVariantMulti(FamilyVariantBase):
     def __init__(self, summary_variants, family, gt):
         super(FamilyVariantMulti, self).__init__(
             summary_variants, family, gt)
+
+    def __iter__(self):
+        if not self.alt_alleles:
+            yield FamilyVariant(self.summary_variant, self.family, self.gt, 0)
+        else:
+            for alt_allele in self.alt_alleles:
+                yield FamilyVariant(
+                    self.summary_variant, self.family,
+                    self.gt, alt_allele.allele_index)
 
     @property
     def best_st(self):

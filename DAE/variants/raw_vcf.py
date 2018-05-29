@@ -244,9 +244,10 @@ class RawFamilyVariants(FamiliesBase):
             kwargs['variant_type'] = matcher
 
         for v in vs:
-            if not self.filter_variant(v, **kwargs):
-                continue
-            yield v
+            for va in v:
+                if self.filter_variant(va, **kwargs):
+                    yield v
+                    break
 
     def wrap_variants(self, annot_df):
         if annot_df is None:
