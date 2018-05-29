@@ -8,6 +8,7 @@ from common_reports_api.variants import StudyVariantReports
 from tests.pytest_marks import slow
 
 
+@slow
 class Test(BaseAuthenticatedUserTest):
 
     @classmethod
@@ -23,7 +24,6 @@ class Test(BaseAuthenticatedUserTest):
         fr = vr.families_report
         self.fc = fr.get_families_counters('autism')
 
-    @slow
     def test_family_configuration(self):
         (_p, c) = self.fc.get_counter('prbUprbUprbU')
         self.assertEqual(3, c)

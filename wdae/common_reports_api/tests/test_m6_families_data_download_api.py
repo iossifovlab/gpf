@@ -9,6 +9,7 @@ from users_api.tests.base_tests import BaseAuthenticatedUserTest
 from tests.pytest_marks import slow
 
 
+@slow
 class Test(BaseAuthenticatedUserTest):
 
     def test_get_ok(self):
@@ -21,7 +22,6 @@ class Test(BaseAuthenticatedUserTest):
         response = self.client.get(url)
         self.assertEquals(status.HTTP_404_NOT_FOUND, response.status_code)
 
-    @slow
     def test_get_content(self):
         url = '/api/v3/common_reports/families_data/IossifovWE2014'
         response = self.client.get(url)
