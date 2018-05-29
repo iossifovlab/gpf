@@ -16,7 +16,7 @@ def test_query_effect_types(nvcf19f):
         effect_types=['frame-shift', 'nonsense', 'splice-site', 'missense'])
 
     for v in vs:
-        print(v, v.family_id, mat2str(v.best_st), v.falt_alleles, sep='\t')
+        print(v, v.family_id, mat2str(v.best_st), sep='\t')
         for sa in v.alt_alleles:
             print("\t:>", sa.effect.worst,
                   sa.effect.genes,
