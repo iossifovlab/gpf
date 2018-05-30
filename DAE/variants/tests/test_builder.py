@@ -10,8 +10,7 @@ from variants.configure import Configure
 from variants.tests.conftest import relative_to_this_test_folder
 import os
 from variants.builder import variants_builder as VB
-from variants.vcf_utils import mat2str
-import pytest
+import sys
 
 
 def test_variants_build_multi(temp_dirname):
@@ -43,26 +42,19 @@ def test_variants_builder(temp_dirname):
         os.environ.get("DAE_DB_DIR"),
         "genomes/GATK_ResourceBundle_5777_b37_phiX174",
         "chrAll.fa")
-    print(genome_file)
+    print(genome_file, file=sys.stderr)
 
     gene_models_file = os.path.join(
         os.environ.get("DAE_DB_DIR"),
         "genomes/GATK_ResourceBundle_5777_b37_phiX174",
         "refGene-201309.gz")
-    print(gene_models_file)
+    print(gene_models_file, file=sys.stderr)
 
     fvars = VB(prefix=prefix, genome_file=genome_file,
                gene_models_file=gene_models_file)
 
     vs = fvars.query_variants()
     assert vs is not None
-
-# FIXME:
-#     for c, v in enumerate(vs):
-#         print(c, v, v.family_id, mat2str(v.best_st), sep='\t')
-#         for aa in v.falt_alleles:
-#             print(v.effects[aa].worst, v.effects[aa].genes)
-#             print(v['all.nAltAlls'][aa], v['all.altFreq'][aa])
 
 
 def test_variants_build_twice(temp_dirname):
@@ -81,7 +73,7 @@ def test_variants_build_twice(temp_dirname):
 
     assert os.path.exists(conf.annotation)
 
-    # test that annotation is not called and is read from file
-    fvars = VB(prefix)
+    fvars = VB(prefix,
+               genome_file="ala_bala.txt", gene_models_file="ala_bala.txt")
 
     assert fvars is not None
