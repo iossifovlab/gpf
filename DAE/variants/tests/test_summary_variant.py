@@ -3,7 +3,7 @@ Created on Mar 23, 2018
 
 @author: lubo
 '''
-from variants.variant import EffectGene, AlleleSummary
+from variants.variant import EffectGene, SummaryVariantFactory
 import pytest
 
 
@@ -16,6 +16,6 @@ def test_effect_gene_serialization():
 @pytest.mark.slow
 def test_summary_variants_full(nvcf19f):
     for _index, row in nvcf19f.annot_df.iterrows():
-        sa = AlleleSummary.from_dict(row)
+        sa = SummaryVariantFactory.summary_allele_from_record(row)
         assert sa is not None
-        assert not sa.is_reference()
+        assert not sa.is_reference_allele()

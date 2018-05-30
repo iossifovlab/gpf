@@ -28,7 +28,7 @@ def test_variants_build_multi(temp_dirname):
     assert fvars is not None
     conf = Configure.from_prefix(prefix)
 
-    # FIXME: assert os.path.exists(conf.annotation)
+    assert os.path.exists(conf.annotation)
 
 
 def test_variants_builder(temp_dirname):
@@ -65,7 +65,6 @@ def test_variants_builder(temp_dirname):
 #             print(v['all.nAltAlls'][aa], v['all.altFreq'][aa])
 
 
-@pytest.mark.skip
 def test_variants_build_twice(temp_dirname):
 
     conf = Configure.from_prefix(

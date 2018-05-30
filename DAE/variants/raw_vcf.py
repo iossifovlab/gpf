@@ -92,7 +92,6 @@ class RawFamilyVariants(FamiliesBase):
 
         self.vcf_vars = self.vcf.vars
 
-        assert annotator is not None  # FIXME
         if annotator is None:
             self.annot_df = loader.load_annotation()
         else:
@@ -113,7 +112,7 @@ class RawFamilyVariants(FamiliesBase):
             annotator.setup(self)
             self.annot_df = annotator.annotate(self.annot_df, self.vcf_vars)
 
-#  FIXME
+#  FIXME:
 #         assert len(self.annot_df) == len(self.vcf_vars)
 #         assert np.all(self.annot_df.index.values ==
 #                       np.arange(len(self.annot_df)))

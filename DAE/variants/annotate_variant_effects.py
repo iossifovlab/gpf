@@ -20,8 +20,10 @@ gmDB = genomesDB.get_gene_models()  # @UndefinedVariable
 class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
     COLUMNS = [
         'effect_type',
-        'effect_gene',
-        'effect_details'
+        'effect_gene.genes',
+        'effect_gene.types',
+        'effect_details.transcript_ids',
+        'effect_details.details',
     ]
 
     def __init__(self, genome=GA, gene_models=gmDB):
@@ -33,8 +35,10 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
 
     def annotate_variant(self, vcf_variant):
         worst_effects = []
-        gene_effects = []
-        transcript_effects = []
+        gene_effects_genes = []
+        gene_effects_types = []
+        transcript_ids = []
+        transcript_details = []
 
         for alt in vcf_variant.ALT:
             variant = Variant(
@@ -48,12 +52,18 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
                 position=vcf_variant.start + 1,
                 ref=vcf_variant.REF,
                 alt=alt)
-            we, ge, et = self.wrap_effects(effects)
+            we, ge_genes, ge_types, et_ids, et_details = \
+                self.wrap_effects(effects)
             worst_effects.append(we)
-            gene_effects.append(ge)
-            transcript_effects.append(et)
+            gene_effects_genes.append(ge_genes),
+            gene_effects_types.append(ge_types),
+            transcript_ids.append(et_ids)
+            transcript_details.append(et_details)
         return np.array(worst_effects), \
-            np.array(gene_effects), np.array(transcript_effects)
+            np.array(gene_effects_genes), \
+            np.array(gene_effects_types), \
+            np.array(transcript_ids), \
+            np.array(transcript_details)
 
     def wrap_effects(self, effects):
         raise NotImplementedError()
@@ -98,9 +108,9 @@ class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
         sorted_effects = cls.sort_effects(effects)
         worst_effect = sorted_effects[0].effect
         if worst_effect == 'intergenic':
-            return [('intergenic', 'intergenic')]
+            return [np.array(['intergenic']), np.array(['intergenic'])]
         if worst_effect == 'no-mutation':
-            return [('no-mutation', 'no-mutation')]
+            return [np.array(['no-mutation']), np.array(['no-mutation'])]
 
         result = []
         for _severity, severity_effects in itertools.groupby(
@@ -108,28 +118,33 @@ class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
             for gene, gene_effects in itertools.groupby(
                     severity_effects, lambda e: e.gene):
                 result.append((gene, next(gene_effects).effect))
-        return result
+        result = np.array(result)
+        return [result[:, 0], result[:, 1]]
 
     @classmethod
     def transcript_effect(cls, effects):
         worst_effect = cls.worst_effect(effects)
         if worst_effect == 'intergenic':
-            return [('intergenic', 'intergenic')]
+            return (np.array(['intergenic']), np.array(['intergenic']))
         if worst_effect == 'no-mutation':
-            return [('no-mutation', 'no-mutation')]
+            return (np.array(['no-mutation']), np.array(['no-mutation']))
 
         result = {}
         for effect in effects:
             result[effect.transcript_id] = effect.create_effect_details()
-        return list(result.items())
+        return (np.array(result.keys()), np.array(result.values()))
 
     @classmethod
     def effect_simplify(cls, effects):
         if effects[0].effect == 'unk_chr':
-            return ('unk_chr', ('unk_chr', 'unk_chr'), ('unk_chr', 'unk_chr'))
+            return ('unk_chr',
+                    np.array(['unk_chr']), np.array(['unk_chr']),
+                    np.array(['unk_chr']), np.array(['unk_chr']))
 
+        gene_effect = cls.gene_effect(effects)
+        transcript_effect = cls.transcript_effect(effects)
         return (
             cls.worst_effect(effects),
-            cls.gene_effect(effects),
-            cls.transcript_effect(effects)
+            gene_effect[0], gene_effect[1],
+            transcript_effect[0], transcript_effect[1]
         )

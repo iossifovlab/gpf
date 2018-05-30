@@ -3,6 +3,8 @@ Created on Mar 7, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import pandas as pd
 import numpy as np
 

@@ -314,21 +314,7 @@ class AlleleSummary(VariantBase):
             self.attributes = {}
             self.update_attributes(attributes)
 
-    @staticmethod
-    def from_dict(row):
-        effects = Effect.from_effects(
-            row['effect_type'], row['effect_gene'], row['effect_details'])
-
-        return AlleleSummary(
-            row['chrom'], row['position'],
-            row['reference'], row['alternative'],
-            allele_index=row['allele_index'],
-            effect=effects,
-            frequency=row['af_alternative_allele_freq'],
-            attributes=row,
-            split_from_multi_allelic=row['split_from_multi_allelic'])
-
-    def is_reference(self):
+    def is_reference_allele(self):
         return self.alternative is None
 
     @property
@@ -381,7 +367,7 @@ class SummaryVariant(VariantBase):
     def __init__(self, alleles):
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
-        assert alleles[0].is_reference()
+        assert alleles[0].is_reference_allele()
 
         self.alleles = alleles
         self.ref_allele = alleles[0]
@@ -394,7 +380,7 @@ class SummaryVariant(VariantBase):
 
     @property
     def alts(self):
-        return [sa.alternative for sa in self.alt_alleles]
+        return AltAlleleItems([sa.alternative for sa in self.alt_alleles])
 
     @property
     def alternative(self):
@@ -759,6 +745,23 @@ class FamilyVariantMulti(FamilyVariantBase):
 class SummaryVariantFactory(object):
 
     @staticmethod
+    def summary_allele_from_record(row):
+        effects = Effect.from_effects(
+            row['effect_type'],
+            zip(row['effect_gene.genes'], row['effect_gene.types']),
+            zip(row['effect_details.transcript_ids'],
+                row['effect_details.details']))
+
+        return AlleleSummary(
+            row['chrom'], row['position'],
+            row['reference'], row['alternative'],
+            allele_index=row['allele_index'],
+            effect=effects,
+            frequency=row['af_alternative_allele_freq'],
+            attributes=row,
+            split_from_multi_allelic=row['split_from_multi_allelic'])
+
+    @staticmethod
     def summary_variant_from_records(records):
         """
         Factory method for constructing `SummaryVariant` from dictionary.
@@ -798,17 +801,7 @@ class SummaryVariantFactory(object):
             )
         ]
         for row in records:
-            effects = Effect.from_effects(
-                row['effect_type'], row['effect_gene'], row['effect_details'])
-
-            sa = AlleleSummary(
-                row['chrom'], row['position'],
-                row['reference'], row['alternative'],
-                allele_index=row['allele_index'],
-                effect=effects,
-                frequency=row['af_alternative_allele_freq'],
-                attributes=row,
-                split_from_multi_allelic=row['split_from_multi_allelic'])
+            sa = SummaryVariantFactory.summary_allele_from_record(row)
             alleles.append(sa)
 
         return SummaryVariant(alleles)
