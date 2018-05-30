@@ -112,6 +112,7 @@ class RawFamilyVariants(FamiliesBase):
             annotator.setup(self)
             self.annot_df = annotator.annotate(self.annot_df, self.vcf_vars)
 
+
 #  FIXME:
 #         assert len(self.annot_df) == len(self.vcf_vars)
 #         assert np.all(self.annot_df.index.values ==

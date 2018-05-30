@@ -6,7 +6,6 @@ Created on Mar 6, 2018
 from __future__ import print_function
 
 from DAE import genomesDB
-import numpy as np
 from variant_annotation.annotator import VariantAnnotator
 from variant_annotation.variant import Variant
 from variants.annotate_composite import AnnotatorBase
@@ -59,11 +58,11 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
             gene_effects_types.append(ge_types),
             transcript_ids.append(et_ids)
             transcript_details.append(et_details)
-        return np.array(worst_effects), \
-            np.array(gene_effects_genes), \
-            np.array(gene_effects_types), \
-            np.array(transcript_ids), \
-            np.array(transcript_details)
+        return worst_effects, \
+            gene_effects_genes, \
+            gene_effects_types, \
+            transcript_ids, \
+            transcript_details
 
     def wrap_effects(self, effects):
         raise NotImplementedError()
@@ -108,9 +107,9 @@ class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
         sorted_effects = cls.sort_effects(effects)
         worst_effect = sorted_effects[0].effect
         if worst_effect == 'intergenic':
-            return [np.array(['intergenic']), np.array(['intergenic'])]
+            return [['intergenic'], ['intergenic']]
         if worst_effect == 'no-mutation':
-            return [np.array(['no-mutation']), np.array(['no-mutation'])]
+            return [['no-mutation'], ['no-mutation']]
 
         result = []
         for _severity, severity_effects in itertools.groupby(
@@ -118,28 +117,31 @@ class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
             for gene, gene_effects in itertools.groupby(
                     severity_effects, lambda e: e.gene):
                 result.append((gene, next(gene_effects).effect))
-        result = np.array(result)
-        return [result[:, 0], result[:, 1]]
+
+        return [
+            [r[0] for r in result],
+            [r[1] for r in result]
+        ]
 
     @classmethod
     def transcript_effect(cls, effects):
         worst_effect = cls.worst_effect(effects)
         if worst_effect == 'intergenic':
-            return (np.array(['intergenic']), np.array(['intergenic']))
+            return (['intergenic'], ['intergenic'])
         if worst_effect == 'no-mutation':
-            return (np.array(['no-mutation']), np.array(['no-mutation']))
+            return (['no-mutation'], ['no-mutation'])
 
         result = {}
         for effect in effects:
             result[effect.transcript_id] = effect.create_effect_details()
-        return (np.array(result.keys()), np.array(result.values()))
+        return (list(result.keys()), list(result.values()))
 
     @classmethod
     def effect_simplify(cls, effects):
         if effects[0].effect == 'unk_chr':
             return ('unk_chr',
-                    np.array(['unk_chr']), np.array(['unk_chr']),
-                    np.array(['unk_chr']), np.array(['unk_chr']))
+                    ['unk_chr'], ['unk_chr'],
+                    ['unk_chr'], ['unk_chr'])
 
         gene_effect = cls.gene_effect(effects)
         transcript_effect = cls.transcript_effect(effects)

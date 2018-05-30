@@ -12,6 +12,30 @@ import numpy as np
 import pandas as pd
 
 from variants.attributes import Role, Sex
+from variants.parquet_io import save_annotation_to_parquet,\
+    read_annotation_from_parquet
+
+
+def save_annotation_to_csv(annot_df, filename, sep="\t"):
+    def convert_array_of_strings_to_string(a):
+        return RawVariantsLoader.SEP1.join(a)
+
+    vars_df = annot_df.copy()
+    vars_df['effect_gene.genes'] = vars_df['effect_gene.genes'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df['effect_gene.types'] = vars_df['effect_gene.types'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df['effect_details.transcript_ids'] = \
+        vars_df['effect_details.transcript_ids'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df['effect_details.details'] = \
+        vars_df['effect_details.details'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df.to_csv(
+        filename,
+        index=False,
+        sep=sep,
+    )
 
 
 class VCFWrapper(object):
@@ -111,36 +135,19 @@ class RawVariantsLoader(object):
                 print(annot_df.head())
             return annot_df
         elif storage == 'parquet':
-            annot_df = pd.read_parquet(filename)
+            annot_df = read_annotation_from_parquet(filename)
             return annot_df
         else:
             raise ValueError("unexpected input format: {}".format(storage))
 
     @classmethod
-    def save_annotation_file(cls, vars_df, filename, sep='\t', storage='csv'):
-        def convert_array_of_strings_to_string(a):
-            return RawVariantsLoader.SEP1.join(a)
+    def save_annotation_file(cls, annot_df, filename, sep='\t', storage='csv'):
 
         if storage == 'csv':
-            vars_df = vars_df.copy()
-            vars_df['effect_gene.genes'] = vars_df['effect_gene.genes'].\
-                apply(convert_array_of_strings_to_string)
-            vars_df['effect_gene.types'] = vars_df['effect_gene.types'].\
-                apply(convert_array_of_strings_to_string)
-            vars_df['effect_details.transcript_ids'] = \
-                vars_df['effect_details.transcript_ids'].\
-                apply(convert_array_of_strings_to_string)
-            vars_df['effect_details.details'] = \
-                vars_df['effect_details.details'].\
-                apply(convert_array_of_strings_to_string)
-            print("save:", vars_df.head())
-            vars_df.to_csv(
-                filename,
-                index=False,
-                sep=sep,
-            )
+            save_annotation_to_csv(annot_df, filename, sep)
         elif storage == 'parquet':
-            vars_df.to_parquet(filename, engine='pyarrow')
+            save_annotation_to_parquet(annot_df, filename)
+            # vars_df.to_parquet(filename, engine='pyarrow')
         else:
             raise ValueError("unexpected output format: {}".format(storage))
 
