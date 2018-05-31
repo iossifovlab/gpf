@@ -2,9 +2,10 @@
 
 # ./wdae/manage.py recompute
 
-docker run --network host -v $HOME/data/data-work:/data-work:ro -v "$(pwd)"/wdae/coverage:/coverage seqpipe/python3-base \
-    py.test -v --cov-config coveragerc \
-    --junitxml=/coverage/junit.xml \
+py.test -v --cov-config coveragerc \
+    --junitxml=coverage/wdae-junit.xml \
+    --cov-report html:coverage/coverage_html
+    --cov-report xml:coverage/coverage.xml
     --cov common_reports_api \
     --cov datasets_api \
     --cov enrichment_api \
@@ -33,10 +34,10 @@ docker run --network host -v $HOME/data/data-work:/data-work:ro -v "$(pwd)"/wdae
     --cov utils \
     wdae/
 
-
-docker run --network host -v $HOME/data/data-work:/data-work:ro -v "$(pwd)"/DAE/coverage:/coverage seqpipe/python3-base \
-    py.test -v --cov-config coveragerc \
-    --junitxml=/coverage/junit.xml \
+py.test -v --cov-config coveragerc \
+    --junitxml=coverage/dae-junit.xml \
+    --cov-report html:coverage/coverage_html
+    --cov-report xml:coverage/coverage.xml
     --cov-append \
     --cov-report html \
     --cov-report xml \
