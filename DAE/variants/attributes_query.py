@@ -155,19 +155,27 @@ class QueryTransformer(InlineTransformer):
 
 
 def roles_converter(a):
-    return Role.from_name(a)
+    if not isinstance(a, Role):
+        return Role.from_name(a)
+    return a
 
 
 def sex_converter(a):
-    return Sex.from_name(a)
+    if not isinstance(a, Sex):
+        return Sex.from_name(a)
+    return a
 
 
 def inheritance_converter(a):
-    return Inheritance.from_name(a)
+    if not isinstance(a, Inheritance):
+        return Inheritance.from_name(a)
+    return a
 
 
 def variant_type_converter(a):
-    return VariantType.from_name(a)
+    if not isinstance(a, VariantType):
+        return VariantType.from_name(a)
+    return a
 
 
 role_query = QueryTransformer(token_converter=roles_converter)

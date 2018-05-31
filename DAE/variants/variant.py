@@ -229,6 +229,12 @@ class Effect(object):
         self.transcripts = EffectTranscript.from_effect_transcripts(
             effect_transcripts)
 
+    def __repr__(self):
+        return '{}:{}'.format(self.worst, EffectGene.to_string(self.genes))
+
+    def __str__(self):
+        return repr(self)
+
     @classmethod
     def from_effects(cls, effect_types, effect_genes, transcripts):
         result = []

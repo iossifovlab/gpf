@@ -5,9 +5,6 @@ Created on Nov 23, 2016
 '''
 import pytest
 
-from datasets.config import DatasetsConfig
-from datasets.datasets_factory import DatasetsFactory
-
 import DAE
 
 
@@ -47,34 +44,34 @@ def pytest_collection_modifyitems(config, items):
                 item.add_marker(skip_mysql)
 
 
-@pytest.fixture(scope='session')
-def datasets_config(request):
-    return DatasetsConfig()
+# @pytest.fixture(scope='session')
+# def datasets_config(request):
+#     return DatasetsConfig()
 
 
-@pytest.fixture(scope='session')
-def datasets_factory(request, datasets_config):
-    return DatasetsFactory(datasets_config)
+# @pytest.fixture(scope='session')
+# def datasets_factory(request, datasets_config):
+#     return DatasetsFactory(datasets_config)
 
 
-@pytest.fixture(scope='session')
-def ssc(request, datasets_factory):
-    return datasets_factory.get_dataset('SSC')
-
-
-@pytest.fixture(scope='session')
-def vip(request,  datasets_factory):
-    return datasets_factory.get_dataset('VIP')
-
-
-@pytest.fixture(scope='session')
-def sd(request,  datasets_factory):
-    return datasets_factory.get_dataset('SD')
-
-
-@pytest.fixture(scope='session')
-def denovodb(request,  datasets_factory):
-    return datasets_factory.get_dataset('denovo_db')
+# @pytest.fixture(scope='session')
+# def ssc(request, datasets_factory):
+#     return datasets_factory.get_dataset('SSC')
+#
+#
+# @pytest.fixture(scope='session')
+# def vip(request,  datasets_factory):
+#     return datasets_factory.get_dataset('VIP')
+#
+#
+# @pytest.fixture(scope='session')
+# def sd(request,  datasets_factory):
+#     return datasets_factory.get_dataset('SD')
+#
+#
+# @pytest.fixture(scope='session')
+# def denovodb(request,  datasets_factory):
+#     return datasets_factory.get_dataset('denovo_db')
 
 
 @pytest.fixture(scope='session')
@@ -91,11 +88,11 @@ def vip_pheno():
     return db
 
 
-@pytest.fixture(scope='session')
-def spark(request,  datasets_factory):
-    return datasets_factory.get_dataset('SPARK')
-
-
-@pytest.fixture(scope='session')
-def agre(request,  datasets_factory):
-    return datasets_factory.get_dataset('AGRE_WG')
+# @pytest.fixture(scope='session')
+# def spark(request,  datasets_factory):
+#     return datasets_factory.get_dataset('SPARK')
+#
+#
+# @pytest.fixture(scope='session')
+# def agre(request,  datasets_factory):
+#     return datasets_factory.get_dataset('AGRE_WG')

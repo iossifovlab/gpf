@@ -6,7 +6,10 @@ Created on Feb 9, 2018
 from __future__ import print_function
 
 from RegionOperations import Region
-from variants.attributes import Role, RoleQuery
+from datasets.helpers import mat2str
+from variants.attributes import Role
+from variants.attributes_query_builder import any_node, token
+from variants.vcf_utils import mat2str
 
 
 def test_study_load(ustudy_single):
@@ -49,6 +52,8 @@ def test_query_effect_types(ustudy_single):
     vs = ustudy_single.query_variants(effect_types=effect_types)
     assert vs is not None
     vl = list(vs)
+    for v in vl:
+        print(v, mat2str(v.best_st), v.effects)
     assert len(vl) == 3
 
 
@@ -183,7 +188,7 @@ def test_query_variants_persons_all(ustudy_single):
 
 def test_query_variants_roles_dad(ustudy_single):
     genes = ['NOC2L']
-    role_query = RoleQuery.any_of(Role.dad)
+    role_query = any_node([token(Role.dad)])
 
     vs = ustudy_single.query_variants(
         genes=genes,
