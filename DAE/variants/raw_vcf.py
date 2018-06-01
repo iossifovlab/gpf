@@ -135,9 +135,9 @@ class RawFamilyVariants(FamiliesBase):
                 result = [
                     rmin <= val <= rmax for (rmin, rmax) in ranges
                 ]
-                if not any(result):
-                    return False
-        return True
+                if any(result):
+                    return True
+        return False
 
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):

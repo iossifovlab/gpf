@@ -99,9 +99,7 @@ def test_freq_single_family_simple(single_vcf):
     for v in vl:
         print(v, v.family_id, mat2str(v.best_st), v['all.altFreq'])
 
-    # FIXME: reference variants also have this attribute
-    assert len(vl) == 4
-    vl = [v for v in vl if v.is_mendelian()]
+    assert len(vl) == 2
 
     v0 = vl[0]
     v1 = vl[1]
