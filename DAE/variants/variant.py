@@ -389,7 +389,7 @@ class SummaryVariant(VariantBase):
     @property
     def alternative(self):
         if len(self.alt_alleles) != 1:
-            raise NotImplemented()
+            raise ValueError()
         return self.alt_alleles[0].alternative
 
     @property
@@ -682,6 +682,12 @@ class FamilyVariant(FamilyVariantBase):
 
     def __iter__(self):
         yield self
+
+    @property
+    def alternative(self):
+        if self.alt_allele:
+            return self.alt_allele.alternative
+        return None
 
     @property
     def best_st(self):

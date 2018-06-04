@@ -54,6 +54,10 @@ class VCFWrapper(object):
         return self._samples
 
     @property
+    def seqnames(self):
+        return self.vcf.seqnames
+
+    @property
     def vars(self):
         if self._vars is None:
             if self.region:

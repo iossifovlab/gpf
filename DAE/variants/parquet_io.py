@@ -66,7 +66,7 @@ def summary_parquet_schema_flat():
         pa.field("af_alternative_allele_freq", pa.float64()),
         pa.field("af_reference_allele_count", pa.int32()),
         pa.field("af_reference_allele_freq", pa.float64()),
-        pa.field("ultra_rare", pa.bool_()),
+        # pa.field("ultra_rare", pa.bool_()),
     ]
 
     return pa.schema(fields)
@@ -146,7 +146,6 @@ def family_variants_batch(variants):
     }
     for vs in variants:
         for v in vs:
-            print(v)
             data["chrom"].append(v.chromosome)
             data["position"].append(v.position)
             data["reference"].append(v.reference)
@@ -168,8 +167,6 @@ def family_variants_batch(variants):
         assert name in data
         column = data[name]
         field = schema.field_by_name(name)
-        print("creating data for column: ", name, "; data type: ", field.type)
-        print(column)
         batch_data.append(pa.array(column, type=field.type))
 
     batch = pa.RecordBatch.from_arrays(
