@@ -6,9 +6,9 @@ Created on May 30, 2018
 import pytest
 from variants.loader import RawVariantsLoader
 from variants.tests.common import assert_annotation_equals
-from variants.parquet_io import annotation_parquet_schema,\
-    annotation_parquet_schema_flat, annotation_table, save_annotation_to_parquet,\
-    read_annotation_from_parquet
+from variants.parquet_io import summary_parquet_schema,\
+    summary_parquet_schema_flat, summary_table, save_summary_to_parquet,\
+    read_summary_from_parquet
 
 
 @pytest.mark.parametrize("fixture_name", [
@@ -16,7 +16,7 @@ from variants.parquet_io import annotation_parquet_schema,\
     "fixtures/effects_trio",
 ])
 def test_annotation_parquet(full_vcf, fixture_name, temp_filename):
-    schema = annotation_parquet_schema_flat()
+    schema = summary_parquet_schema_flat()
     print(schema)
     print(dir(schema))
     print(schema.names)
@@ -26,16 +26,16 @@ def test_annotation_parquet(full_vcf, fixture_name, temp_filename):
 
     fvars = full_vcf(fixture_name)
     annot_df = fvars.annot_df
-    table = annotation_table(annot_df)
+    table = summary_table(annot_df)
     assert table is not None
     print(dir(table))
 
     df = table.to_pandas()
     print(df.head())
 
-    save_annotation_to_parquet(df, temp_filename)
+    save_summary_to_parquet(df, temp_filename)
 
-    df1 = read_annotation_from_parquet(temp_filename)
+    df1 = read_summary_from_parquet(temp_filename)
     assert df1 is not None
     print(df1.head())
 

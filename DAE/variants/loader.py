@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 
 from variants.attributes import Role, Sex
-from variants.parquet_io import save_annotation_to_parquet,\
-    read_annotation_from_parquet
+from variants.parquet_io import save_summary_to_parquet,\
+    read_summary_from_parquet
 
 
 def save_annotation_to_csv(annot_df, filename, sep="\t"):
@@ -135,7 +135,7 @@ class RawVariantsLoader(object):
                 print(annot_df.head())
             return annot_df
         elif storage == 'parquet':
-            annot_df = read_annotation_from_parquet(filename)
+            annot_df = read_summary_from_parquet(filename)
             return annot_df
         else:
             raise ValueError("unexpected input format: {}".format(storage))
@@ -146,7 +146,7 @@ class RawVariantsLoader(object):
         if storage == 'csv':
             save_annotation_to_csv(annot_df, filename, sep)
         elif storage == 'parquet':
-            save_annotation_to_parquet(annot_df, filename)
+            save_summary_to_parquet(annot_df, filename)
             # vars_df.to_parquet(filename, engine='pyarrow')
         else:
             raise ValueError("unexpected output format: {}".format(storage))

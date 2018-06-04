@@ -8,7 +8,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 
-def annotation_parquet_schema():
+def summary_parquet_schema():
     effect_gene = pa.struct([
         pa.field("gene", pa.string()),
         pa.field("type", pa.string())
@@ -44,7 +44,7 @@ def annotation_parquet_schema():
     return pa.schema(fields)
 
 
-def annotation_parquet_schema_flat():
+def summary_parquet_schema_flat():
     effect_gene = pa.struct([
         pa.field("gene", pa.string()),
         pa.field("type", pa.string())
@@ -82,17 +82,14 @@ def annotation_parquet_schema_flat():
     return pa.schema(fields)
 
 
-def annotation_table(annot_df):
-    schema = annotation_parquet_schema_flat()
-    print(dir(schema))
+def summary_table(sum_df):
+    schema = summary_parquet_schema_flat()
 
     batch_data = []
     for name in schema.names:
-        assert name in annot_df
-        data = annot_df[name].values
-        print(name, type(data), data)
+        assert name in sum_df
+        data = sum_df[name].values
         field = schema.field_by_name(name)
-        print(field.type)
         batch_data.append(pa.array(data, type=field.type))
 
     batch = pa.RecordBatch.from_arrays(
@@ -103,13 +100,13 @@ def annotation_table(annot_df):
     return table
 
 
-def save_annotation_to_parquet(annot_df, filename):
-    table = annotation_table(annot_df)
+def save_summary_to_parquet(annot_df, filename):
+    table = summary_table(annot_df)
     pq.write_table(table, filename)
 
 
-def read_annotation_from_parquet(filename):
-    schema = annotation_parquet_schema_flat()
+def read_summary_from_parquet(filename):
+    schema = summary_parquet_schema_flat()
     table = pq.read_table(filename, columns=schema.names)
     df = table.to_pandas()
     return df
