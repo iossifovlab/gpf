@@ -279,6 +279,7 @@ class AlleleSummary(VariantBase):
                  position,
                  reference,
                  alternative=None,
+                 var_index=None,
                  allele_index=1,
                  effect=None,
                  frequency=None,
@@ -296,6 +297,7 @@ class AlleleSummary(VariantBase):
         super(AlleleSummary, self).__init__(
             chromosome, position, reference, alternative)
 
+        self.var_index = var_index
         self.allele_index = allele_index
         self.split_from_multi_allelic = split_from_multi_allelic
 
@@ -371,6 +373,8 @@ class SummaryVariant(VariantBase):
 
         self.alleles = alleles
         self.ref_allele = alleles[0]
+        self.var_index = self.ref_allele.var_index
+
         super(SummaryVariant, self).__init__(
             self.ref_allele.chromosome,
             self.ref_allele.position,
@@ -541,6 +545,7 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
 
     def __init__(self, sv, family, gt):
         self.summary_variant = sv
+        self.var_index = sv.var_index
         self.family = family
 
         self.gt = np.copy(gt)
@@ -567,6 +572,9 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
     @property
     def genotype(self):
         return self.gt.T
+
+    def gt_flatten(self):
+        return self.gt.flatten(order='F')
 
     @property
     def best_st(self):
@@ -663,9 +671,14 @@ class FamilyVariant(FamilyVariantBase):
 
         if alt_allele_index <= 0:
             self.alt_allele = None
+            self.allele_index = 0
+            self.split_from_multi_allelic = False
         else:
             assert alt_allele_index < len(self.summary_variant.alleles)
             self.alt_allele = self.summary_variant.alleles[alt_allele_index]
+            self.allele_index = alt_allele_index
+            self.split_from_multi_allelic = \
+                self.alt_allele.split_from_multi_allelic
 
     def __iter__(self):
         yield self
@@ -755,6 +768,7 @@ class SummaryVariantFactory(object):
         return AlleleSummary(
             row['chrom'], row['position'],
             row['reference'], row['alternative'],
+            var_index=row['var_index'],
             allele_index=row['allele_index'],
             effect=effects,
             frequency=row['af_alternative_allele_freq'],
@@ -795,6 +809,7 @@ class SummaryVariantFactory(object):
                 row['position'],
                 row['reference'],
                 alternative=None,
+                var_index=row['var_index'],
                 allele_index=0,
                 effect=None,
                 frequency=row['af_reference_allele_freq']
