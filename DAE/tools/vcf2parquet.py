@@ -5,6 +5,8 @@ Created on Jun 4, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import os
 import sys
 
@@ -18,14 +20,16 @@ from variants.parquet_io import family_variants_table,\
     save_family_variants_df_to_parquet, summary_table, save_summary_to_parquet
 from variants.raw_vcf import RawFamilyVariants
 from cyvcf2 import VCF
+import multiprocessing
+import functools
 
 
-def contigs(vcf_filename):
+def get_contigs(vcf_filename):
     vcf = VCF(vcf_filename)
     return vcf.seqnames
 
 
-def build_contig(contig, config):
+def build_contig(config, contig):
     genome = get_genome(genome_file=None)
     gene_models = get_gene_models(gene_models_file=None)
 
@@ -63,16 +67,29 @@ def main(argv):
     vcf_filename = os.path.join(DATA_DIR, "spark/spark.vcf.gz")
     ped_filename = os.path.join(DATA_DIR, "spark/spark.ped")
 
-    # region = "1:0-100000000"
-    contig = "21"
-
     config = Configure.from_dict({
         "pedigree": ped_filename,
         "vcf": vcf_filename,
         "annotation": None,
     })
 
-    build_contig(contig, config)
+    # contigs = ['20', '21', '22']
+    contigs = get_contigs(vcf_filename)
+
+    genome = get_genome(genome_file=None)
+    print(genome.allChromosomes)
+
+    chromosomes = set(genome.allChromosomes)
+    for contig in contigs:
+        if contig not in chromosomes:
+            continue
+        assert contig in chromosomes, contig
+
+        print(contig, genome.get_chr_length(contig),
+              "groups=", 1 + genome.get_chr_length(contig) / 100000000)
+
+    pool = multiprocessing.Pool(processes=10)
+    pool.map(functools.partial(build_contig, config), contigs)
 
 
 if __name__ == "__main__":

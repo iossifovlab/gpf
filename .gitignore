@@ -20,3 +20,4 @@ output
 *.swp
 gpf-html.tar.gz
 .pytest_cache
+*.parquet
