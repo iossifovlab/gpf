@@ -23,6 +23,9 @@ from cyvcf2 import VCF
 import multiprocessing
 import functools
 
+import pyarrow.parquet as pq
+import pyarrow as pa
+
 
 def get_contigs(vcf_filename):
     vcf = VCF(vcf_filename)
@@ -44,6 +47,10 @@ def build_contig(config, contig):
     fvars = RawFamilyVariants(
         config=config, annotator=annotator, region=contig)
 
+    if fvars.is_empty():
+        print("empty contig {} done".format(contig), file=sys.stderr)
+        return
+
     summary_filename = "spark_summary_{}.parquet".format(contig)
     variants_filename = "spark_variants_{}.parquet".format(contig)
 
@@ -59,9 +66,38 @@ def build_contig(config, contig):
 
     df = variants_table.to_pandas()
     save_family_variants_df_to_parquet(df, variants_filename)
+    print("contig {} done".format(contig), file=sys.stderr)
 
 
-def main(argv):
+SPARK_CONTIGS = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+    '11',
+    '12',
+    '13',
+    '14',
+    '15',
+    '16',
+    '17',
+    '18',
+    '19',
+    '20',
+    '21',
+    '22',
+    'X',
+    'Y',
+]
+
+
+def build(argv):
     from variants.default_settings import DATA_DIR
 
     vcf_filename = os.path.join(DATA_DIR, "spark/spark.vcf.gz")
@@ -75,7 +111,7 @@ def main(argv):
 
     # contigs = ['20', '21', '22']
     contigs = get_contigs(vcf_filename)
-
+    print(contigs)
     genome = get_genome(genome_file=None)
     print(genome.allChromosomes)
 
@@ -88,9 +124,21 @@ def main(argv):
         print(contig, genome.get_chr_length(contig),
               "groups=", 1 + genome.get_chr_length(contig) / 100000000)
 
-    pool = multiprocessing.Pool(processes=10)
+    pool = multiprocessing.Pool(processes=20)
     pool.map(functools.partial(build_contig, config), contigs)
 
 
+def reindex(argv):
+    for contig in SPARK_CONTIGS:
+        filename = "spark_summary_{}.parquet".format(contig)
+        # filename = "spark_variants_{}.parquet".format(contig)
+        parquet_file = pq.ParquetFile(filename)
+        print(filename)
+        print(parquet_file.metadata)
+        print("row_groups:", parquet_file.num_row_groups)
+        print(parquet_file.schema)
+
+
 if __name__ == "__main__":
-    main(sys.argv)
+    # build(sys.argv)
+    reindex(sys.argv)

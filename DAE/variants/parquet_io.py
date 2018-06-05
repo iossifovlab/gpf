@@ -56,10 +56,10 @@ def summary_parquet_schema_flat():
         pa.field("allele_index", pa.int8()),
         pa.field("split_from_multi_allelic", pa.bool_()),
         pa.field("effect_type", pa.string()),
-        pa.field("effect_gene.genes", pa.list_(pa.binary())),
-        pa.field("effect_gene.types", pa.list_(pa.binary())),
-        pa.field("effect_details.transcript_ids", pa.list_(pa.binary())),
-        pa.field("effect_details.details", pa.list_(pa.binary())),
+        pa.field("effect_gene.genes", pa.list_(pa.string())),
+        pa.field("effect_gene.types", pa.list_(pa.string())),
+        pa.field("effect_details.transcript_ids", pa.list_(pa.string())),
+        pa.field("effect_details.details", pa.list_(pa.string())),
         pa.field("af_parents_called_count", pa.int32()),
         pa.field("af_parents_called_percent", pa.float64()),
         pa.field("af_alternative_allele_count", pa.int32()),
@@ -80,6 +80,7 @@ def summary_batch(sum_df):
         assert name in sum_df
         data = sum_df[name].values
         field = schema.field_by_name(name)
+        # print("storing field: ", name)
         batch_data.append(pa.array(data, type=field.type))
 
     batch = pa.RecordBatch.from_arrays(
@@ -119,7 +120,7 @@ def family_variant_parquet_schema():
         pa.field("family_id", pa.string()),
         pa.field("genotype", pa.list_(pa.int8())),
         pa.field("inheritance", pa.int32()),
-        pa.field("variant_in_members", pa.list_(pa.binary())),
+        pa.field("variant_in_members", pa.list_(pa.string())),
         pa.field("variant_in_roles", pa.list_(pa.int32())),
         pa.field("variant_in_sexes", pa.list_(pa.int8())),
     ]
@@ -156,7 +157,8 @@ def family_variants_batch(variants):
             data["family_id"].append(v.family_id)
             data["genotype"].append(v.gt_flatten())
             data["inheritance"].append(v.inheritance.value)
-            data["variant_in_members"].append(v.variant_in_members)
+            data["variant_in_members"].append(
+                [unicode(m, "utf-8") for m in v.variant_in_members])
             data["variant_in_roles"].append(
                 [r.value for r in v.variant_in_roles])
             data["variant_in_sexes"].append(
@@ -190,6 +192,7 @@ def family_variants_df_batch(vars_df):
         schema.names)
 
     return batch
+
 
 def family_variants_table(variants):
     batch = family_variants_batch(variants)

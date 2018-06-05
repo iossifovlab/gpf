@@ -107,9 +107,9 @@ class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
         sorted_effects = cls.sort_effects(effects)
         worst_effect = sorted_effects[0].effect
         if worst_effect == 'intergenic':
-            return [['intergenic'], ['intergenic']]
+            return [[u'intergenic'], [u'intergenic']]
         if worst_effect == 'no-mutation':
-            return [['no-mutation'], ['no-mutation']]
+            return [[u'no-mutation'], [u'no-mutation']]
 
         result = []
         for _severity, severity_effects in itertools.groupby(
@@ -119,29 +119,32 @@ class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
                 result.append((gene, next(gene_effects).effect))
 
         return [
-            [r[0] for r in result],
-            [r[1] for r in result]
+            [unicode(r[0], "utf-8") for r in result],
+            [unicode(r[1], "utf-8") for r in result]
         ]
 
     @classmethod
     def transcript_effect(cls, effects):
         worst_effect = cls.worst_effect(effects)
         if worst_effect == 'intergenic':
-            return (['intergenic'], ['intergenic'])
+            return ([u'intergenic'], [u'intergenic'])
         if worst_effect == 'no-mutation':
-            return (['no-mutation'], ['no-mutation'])
+            return ([u'no-mutation'], [u'no-mutation'])
 
         result = {}
         for effect in effects:
             result[effect.transcript_id] = effect.create_effect_details()
-        return (list(result.keys()), list(result.values()))
+        return (
+            [unicode(r, "utf-8") for r in result.keys()],
+            [unicode(r, "utf-8") for r in result.values()]
+        )
 
     @classmethod
     def effect_simplify(cls, effects):
         if effects[0].effect == 'unk_chr':
-            return ('unk_chr',
-                    ['unk_chr'], ['unk_chr'],
-                    ['unk_chr'], ['unk_chr'])
+            return (u'unk_chr',
+                    [u'unk_chr'], [u'unk_chr'],
+                    [u'unk_chr'], [u'unk_chr'])
 
         gene_effect = cls.gene_effect(effects)
         transcript_effect = cls.transcript_effect(effects)

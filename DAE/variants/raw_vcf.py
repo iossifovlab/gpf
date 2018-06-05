@@ -51,6 +51,9 @@ class RawFamilyVariants(FamiliesBase):
         self.VF = variant_factory
         self._load(annotator, region)
 
+    def is_empty(self):
+        return len(self.annot_df) == 0
+
     def _match_pedigree_to_samples(self, ped_df, samples):
         samples = list(samples)
         samples_needed = set(samples)
