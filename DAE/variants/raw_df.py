@@ -49,6 +49,8 @@ class DfFamilyVariants(FamiliesBase):
             return pd.concat(sdfs), pd.concat(vdfs)
 
     def filter_families(self, sdf, vdf, family_ids):
+        if family_ids is None:
+            return sdf, vdf
         vdf = vdf[vdf.family_id.isin(set(family_ids))]
         return sdf, vdf
 
@@ -64,9 +66,9 @@ class DfFamilyVariants(FamiliesBase):
         sdf = self.summary_df
         vdf = self.vars_df
 
-        if 'regions' in kwargs:
+        if 'regions' in kwargs and kwargs['regions'] is not None:
             sdf, vdf = self.filter_regions(sdf, vdf, kwargs["regions"])
-        if 'family_ids' in kwargs:
+        if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
             sdf, vdf = self.filter_families(sdf, vdf, kwargs['family_ids'])
 
         sdf = sdf.set_index(["var_index", "allele_index"])
