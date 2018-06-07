@@ -655,7 +655,7 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
 
 class FamilyVariant(FamilyVariantBase):
 
-    def __init__(self, summary_variants, family, gt, alt_allele_index):
+    def __init__(self, summary_variant, family, gt, alt_allele_index):
         assert alt_allele_index >= 0  # and alt_allele_index <= np.max(gt)
 
         gt = np.copy(gt)
@@ -667,7 +667,7 @@ class FamilyVariant(FamilyVariantBase):
         gt[mask] = -1
 
         super(FamilyVariant, self).__init__(
-            summary_variants, family, gt)
+            summary_variant, family, gt)
 
         if alt_allele_index <= 0:
             self.alt_allele = None

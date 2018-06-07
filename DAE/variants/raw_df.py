@@ -7,6 +7,14 @@ import numpy as np
 import pandas as pd
 
 from variants.family import FamiliesBase, Family
+from variants.variant import SummaryVariantFactory, FamilyVariant
+
+
+class FamilyVariantFactory(object):
+
+    @staticmethod
+    def family_variant_from_record(record):
+        pass
 
 
 class DfFamilyVariants(FamiliesBase):
@@ -44,6 +52,13 @@ class DfFamilyVariants(FamiliesBase):
         vdf = vdf[vdf.family_id.isin(set(family_ids))]
         return sdf, vdf
 
+    def wrap_family_variant(self, record):
+        sv = SummaryVariantFactory.summary_variant_from_records([record])
+        family = self.families[record['family_id']]
+        gt = record['genotype']
+        alt_allele_index = record['allele_index']
+        return FamilyVariant(sv, family, gt, alt_allele_index)
+
     def query_variants(self, **kwargs):
 
         sdf = self.summary_df
@@ -59,4 +74,4 @@ class DfFamilyVariants(FamiliesBase):
 
         records = jdf.to_dict(orient='records')
         for rec in records:
-            yield rec
+            yield self.wrap_family_variant(rec)
