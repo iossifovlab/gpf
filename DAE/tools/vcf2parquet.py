@@ -109,13 +109,14 @@ def build(argv):
         "annotation": None,
     })
 
-    # contigs = ['20', '21', '22']
     contigs = get_contigs(vcf_filename)
     print(contigs)
     genome = get_genome(genome_file=None)
     print(genome.allChromosomes)
 
     chromosomes = set(genome.allChromosomes)
+
+    contigs = ['2']
     for contig in contigs:
         if contig not in chromosomes:
             continue
@@ -140,5 +141,5 @@ def reindex(argv):
 
 
 if __name__ == "__main__":
-    # build(sys.argv)
-    reindex(sys.argv)
+    build(sys.argv)
+    # reindex(sys.argv)

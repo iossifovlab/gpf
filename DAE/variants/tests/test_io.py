@@ -3,12 +3,23 @@ Created on May 30, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
+# import os
+
 import pytest
+
+# import pyarrow.parquet as pq
+# import dask.dataframe as dd
+
 from variants.loader import RawVariantsLoader
 from variants.tests.common import assert_annotation_equals
-from variants.parquet_io import summary_parquet_schema,\
+
+
+from variants.parquet_io import \
     summary_parquet_schema_flat, summary_table, save_summary_to_parquet,\
     read_summary_from_parquet
+# from variants.attributes import Inheritance
 
 
 @pytest.mark.parametrize("fixture_name", [
@@ -87,3 +98,44 @@ def test_serialize_csv_vcf19(nvcf19f, storage, temp_filename):
     assert annot_df is not None
 
     assert_annotation_equals(annot_df, fvars.annot_df)
+
+
+# def test_parquet_dataset():
+#     from variants.default_settings import DATA_DIR
+#     prefix = os.path.join(DATA_DIR, "pspark")
+#     dataset = pq.ParquetDataset(os.path.join(prefix, "summary"))
+#     print("metadata:", dataset.metadata)
+#     print("schema:", dataset.schema)
+#     print("partitions:", dataset.partitions)
+#     print("pieces:", dataset.pieces)
+#     print("split_row_groups:", dataset.split_row_groups)
+#     print("common_metadata:", dataset.common_metadata)
+#     print("fs:", dataset.fs)
+#
+#     table = dataset.read()
+#     print(dir(table))
+#
+#     print("dir:", dir(dataset))
+#
+#     df = table.to_pandas()
+#     print("Len: ", len(df))
+
+
+# @pytest.mark.slow
+# def test_parquet_dask_dataframe():
+#     from variants.default_settings import DATA_DIR
+#     # dataset = os.path.join(DATA_DIR, "pspark/family/*.parquet")
+#     dataset = os.path.join(DATA_DIR, "pspark/summary01/*.parquet")
+#
+#     df = dd.read_parquet(dataset, engine='pyarrow')
+#     assert df is not None
+#
+#     print("npartitions:", df.npartitions)
+#     print("divisions:", df.divisions)
+#     print("meta:", df._meta)
+#     print("meta_noempty:", df._meta_nonempty)
+#     print(dir(df))
+#
+#     # df = df[df.inheritance != Inheritance.unknown.value]
+#     print("head:", df.head())
+#     # print("size:", df.size.compute())
