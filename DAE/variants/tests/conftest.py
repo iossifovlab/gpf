@@ -29,6 +29,8 @@ from variants.attributes_query import parser as attributes_query_parser, \
 
 from variants.attributes_query import \
     parser_with_ambiguity as attributes_query_parser_with_ambiguity
+from variants.parquet_io import family_variants_df_table, family_variants_df
+from variants.raw_df import DfFamilyVariants
 
 
 @pytest.fixture(scope='session')
@@ -208,6 +210,26 @@ def full_vcf(composite_annotator):
             a_conf, annotator=composite_annotator,
             variant_factory=VariantFactoryMulti)
         return fvars
+    return builder
+
+
+@pytest.fixture(scope='session')
+def fvars_df(full_vcf):
+    def builder(path):
+        fvars = full_vcf(path)
+        summary_df = fvars.annot_df
+        ped_df = fvars.ped_df
+        vars_df = family_variants_df(
+            fvars.query_variants(inheritanch="not reference"))
+        return ped_df, summary_df, vars_df
+    return builder
+
+
+@pytest.fixture(scope='session')
+def variants_df(fvars_df):
+    def builder(path):
+        ped_df, summary_df, vars_df = fvars_df(path)
+        return DfFamilyVariants(ped_df, summary_df, vars_df)
     return builder
 
 

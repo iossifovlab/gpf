@@ -200,6 +200,11 @@ def family_variants_table(variants):
     return table
 
 
+def family_variants_df(variants):
+    table = family_variants_table(variants)
+    return table.to_pandas()
+
+
 def family_variants_df_table(vars_df):
     batch = family_variants_df_batch(vars_df)
     table = pa.Table.from_batches([batch])
