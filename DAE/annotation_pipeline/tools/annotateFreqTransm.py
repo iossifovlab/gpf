@@ -30,8 +30,18 @@ class FrequencyAnnotator(ScoreAnnotator):
     def __init__(self, opts, header=None):
         if opts.v is None:
             opts.v = 'variant'
+
         if opts.score_column is None:
-            opts.score_column = 'all.altFreq'
+            opts.scores_columns = 'all.altFreq'
+        else:
+            opts.scores_columns = opts.score_column
+
+        if opts.default_value is None:
+            opts.default_values = ''
+        else:
+            opts.default_values = opts.default_value
+
+        opts.labels = opts.label
         super(FrequencyAnnotator, self).__init__(opts, header, [opts.v],
             None, ['chr', 'position', 'position', 'variant'])
 
