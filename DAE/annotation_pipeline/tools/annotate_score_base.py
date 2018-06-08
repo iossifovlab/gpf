@@ -6,7 +6,7 @@ import pysam
 import GenomeAccess
 from utilities import *
 
-class IterativeAccess:
+class IterativeAccess(object):
 
     XY_INDEX = {'X': 23, 'Y': 24}
 
@@ -25,43 +25,53 @@ class IterativeAccess:
         self.search_indices = [self.header.index(col)
                                for col in search_columns]
         self.score_index = self.header.index(score_column)
-        self.current = (-1, 0)
+        self.current_lines = []
 
-    def next_line(self):
+    def _fetch(self, chr, pos):
+        # TODO this implements closed interval because we want to support
+        # files with single position column
+        self.current_lines = [
+            line for line in self.current_lines
+            if line[self.chr_index] > chr or (line[self.chr_index] == chr and \
+                line[self.pos_end_index] >= pos)
+        ]
+
+        while len(self.current_lines) == 0 or \
+                self.current_lines[-1][self.pos_begin_index] <= pos or \
+                self.current_lines[-1][self.chr_index] > chr:
+            line = self._next_line()
+            if line is not None:
+                self.current_lines.append(line)
+            else:
+                break
+
+        return [
+            line for line in self.current_lines
+            if line[self.pos_end_index] >= pos and line[self.chr_index] == chr
+        ]
+
+    def _next_line(self):
         line = self.file.readline()
         if line is not None:
             line = line.rstrip('\n')
         if line != '':
             return line.split('\t')
-        else:
-            return None
+        return None
 
     def chr_to_int(self, chr):
         chr = chr.replace('chr', '')
         return self.XY_INDEX.get(chr) or int(chr)
 
-    def key_of(self, line):
-        return (self.chr_to_int(line[self.chr_index]),
-            int(line[self.pos_end_index]))
-
     def get_score(self, chr, pos, *args):
         chr = self.chr_to_int(chr)
-        while self.current < (chr, pos):
-            self.current_line = self.next_line()
-            if self.current_line is None:
-                break
-            self.current = self.key_of(self.current_line)
-
-        if self.current[1] < pos:
-            # file is over
-            self.current = (100000, 0)
-        elif int(self.current_line[self.pos_begin_index]) <= pos:
-            if [self.current_line[i] for i in self.search_indices] == list(args):
-                return self.current_line[self.score_index]
+        lines = self._fetch(chr, pos)
+        for line in lines:
+            if [line[i] for i in self.search_indices] == args:
+                return line[self.score_index]
         return self.score_default_value
 
 
-class DirectAccess:
+class DirectAccess(object):
 
     def __init__(self, score_file_name, score_file_header, score_default_value,
             score_column, *search_columns):
