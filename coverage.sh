@@ -64,6 +64,8 @@ py.test --runslow -v --cov-config coveragerc \
     --cov utils \
     --cov variant_db \
     --cov variants \
-    DAE/variants/tests
+    DAE/variants/tests/ \
+    DAE/datasets/tests/
+
 #     DAE/variant_db/tests/ \
 #     DAE/tools/tests
