@@ -120,13 +120,12 @@ class DatasetWrapper(Dataset):
         if value_range == (None, None):
             return
 
-        value = 'all.altFreq'
+        value = 'af_alternative_allele_freq'
         if 'real_attr_filter' not in kwargs:
             kwargs['real_attr_filter'] = {}
 
         if value not in kwargs['real_attr_filter']:
             kwargs['real_attr_filter'][value] = []
-
 
         kwargs['real_attr_filter'][value].append(value_range)
 

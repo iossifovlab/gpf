@@ -53,7 +53,7 @@ def test_query_sexes_variants(sexes, count, quads2_wrapper):
 
 @pytest.mark.parametrize("variant_type,count", [
     (["ins"], 2),
-    (["sub"], 22),
+    (["sub"], 12),
     (["del"], 2),
 ])
 def test_query_variant_type_variants(variant_type, count, quads2_wrapper):
@@ -63,7 +63,7 @@ def test_query_variant_type_variants(variant_type, count, quads2_wrapper):
 
 
 @pytest.mark.parametrize("effect_types,count", [
-    (["Intergenic"], 28),
+    (["Intergenic"], 18),
     (["CNV"], 0)
 ])
 def test_query_effect_types_variants(effect_types, count, quads2_wrapper):
@@ -85,12 +85,12 @@ def test_query_regions_variants(regions, count, quads2_wrapper):
 @pytest.mark.parametrize(
     "option,count",
     [
-        (["affected only"], 7),
-        (["unaffected only"], 0),
-        (["affected and unaffected"], 2),
+        (["affected only"], 8),
+        (["unaffected only"], 1),
+        (["affected and unaffected"], 1),
         (["neither"], 19),
         (["affected and unaffected", "affected only"], 9),
-        (["affected only", "neither"], 26),
+        (["affected only", "neither"], 27),
         ([
              "affected only", "unaffected only", "affected and unaffected",
              "neither"
@@ -128,18 +128,18 @@ def test_query_present_in_child_and_roles(quads2_wrapper):
     variants = list(quads2_wrapper.get_variants(
         presentInChild=["affected only"], roles="dad"))
 
-    assert len(variants) == 2
+    assert len(variants) == 3
 
 
 @pytest.mark.parametrize(
     "option,count",
     [
-        (["mother only"], 2),
-        (["father only"], 1),
-        (["mother and father"], 10),
+        (["mother only"], 4),
+        (["father only"], 3),
+        (["mother and father"], 8),
         (["neither"], 15),
         (["mother and father", "mother only"], 12),
-        (["mother only", "neither"], 17),
+        (["mother only", "neither"], 19),
         ([
              "mother only", "father only", "mother and father",
              "neither"
@@ -173,11 +173,11 @@ def test_quary_min_alt_frequency(option, count, quads2_wrapper):
 @pytest.mark.parametrize(
     "option,count",
     [
-        (None, 28),
-        (0, 14),
-        (12.5, 17),
-        (25, 24),
-        (100, 28),
+        (None, 0),
+        (0, 4),
+        (12.5, 7),
+        (25, 14),
+        (100, 18),
     ]
 )
 def test_quary_max_alt_frequency(option, count, quads2_wrapper):
@@ -199,7 +199,7 @@ def test_quary_max_alt_frequency(option, count, quads2_wrapper):
         (100, 100, 4),
     ]
 )
-def test_quary_max_alt_frequency(minFreq, maxFreq, count, quads2_wrapper):
+def test_quary_max_alt_frequency_2(minFreq, maxFreq, count, quads2_wrapper):
     variants = list(quads2_wrapper.get_variants(
         minAltFrequencyPercent=minFreq,
         maxAltFrequencyPercent=maxFreq))
