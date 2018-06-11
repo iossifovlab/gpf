@@ -12,37 +12,37 @@ def test_vcf2cshl_variant_format():
     #     res = vcf2cshl(1, 'A', ['AA', 'AC', 'G', 'GA', 'AC', 'ACAAC'])
     #     print(res)
 
-    ps, vs, ls = vcf2cshl(1, 'A', ['AA'])
+    ps, vs, ls = vcf2cshl(1, 'A', 'AA')
     print(ps, vs)
 
-    assert ps[0] == 2
-    assert vs[0] == 'ins(A)'
-    assert ls[0] == 1
+    assert ps == 2
+    assert vs == 'ins(A)'
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'A', ['AC'])
-    assert ps[0] == 2
-    assert vs[0] == 'ins(C)'
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'A', 'AC')
+    assert ps == 2
+    assert vs == 'ins(C)'
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'A', ['G'])
-    assert ps[0] == 1
-    assert vs[0] == 'sub(A->G)'
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'A', 'G')
+    assert ps == 1
+    assert vs == 'sub(A->G)'
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'A', ['GA'])
-    assert ps[0] == 1
-    assert vs[0] == 'ins(G)'
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'A', 'GA')
+    assert ps == 1
+    assert vs == 'ins(G)'
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'A', ['AC'])
-    assert ps[0] == 2
-    assert vs[0] == 'ins(C)'
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'A', 'AC')
+    assert ps == 2
+    assert vs == 'ins(C)'
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'A', ['ACAAC'])
-    assert ps[0] == 2
-    assert vs[0] == 'ins(CAAC)'
-    assert ls[0] == 4
+    ps, vs, ls = vcf2cshl(1, 'A', 'ACAAC')
+    assert ps == 2
+    assert vs == 'ins(CAAC)'
+    assert ls == 4
 
 
 def test_vcf2cshl_variant_format2():
@@ -50,40 +50,40 @@ def test_vcf2cshl_variant_format2():
     #         1, 'AA', ['AA', 'AC', 'AAA', 'A', 'AC', 'CA', 'ACAAC', 'CAAAAA'])
     #     print(res)
 
-    ps, vs, ls = vcf2cshl(1, 'AA', ['AA'])
-    assert ps[0] == 3
-    assert vs[0] == 'complex(->)'
-    assert ls[0] == 0
+    ps, vs, ls = vcf2cshl(1, 'AA', 'AA')
+    assert ps == 3
+    assert vs == 'complex(->)'
+    assert ls == 0
 
-    ps, vs, ls = vcf2cshl(1, 'AA', ['AC'])
-    assert ps[0] == 2
-    assert vs[0] == "sub(A->C)"
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'AA', 'AC')
+    assert ps == 2
+    assert vs == "sub(A->C)"
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'AA', ['AAA'])
-    assert ps[0] == 3
-    assert vs[0] == "ins(A)"
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'AA', 'AAA')
+    assert ps == 3
+    assert vs == "ins(A)"
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'AA', ['AC'])
-    assert ps[0] == 2
-    assert vs[0] == "sub(A->C)"
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'AA', 'AC')
+    assert ps == 2
+    assert vs == "sub(A->C)"
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'AA', ['CA'])
-    assert ps[0] == 1
-    assert vs[0] == "sub(A->C)"
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'AA', 'CA')
+    assert ps == 1
+    assert vs == "sub(A->C)"
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'AA', ['ACAAC'])
-    assert ps[0] == 2
-    assert vs[0] == "complex(A->CAAC)"
-    assert ls[0] == 4
+    ps, vs, ls = vcf2cshl(1, 'AA', 'ACAAC')
+    assert ps == 2
+    assert vs == "complex(A->CAAC)"
+    assert ls == 4
 
-    ps, vs, ls = vcf2cshl(1, 'AA', ['CAAAAA'])
-    assert ps[0] == 1
-    assert vs[0] == "ins(CAAA)"
-    assert ls[0] == 4
+    ps, vs, ls = vcf2cshl(1, 'AA', 'CAAAAA')
+    assert ps == 1
+    assert vs == "ins(CAAA)"
+    assert ls == 4
 
 
 def test_vcf2cshl_variant_format3():
@@ -92,53 +92,52 @@ def test_vcf2cshl_variant_format3():
     #         ['AAAAAC', 'AAA', 'A', 'ACAAAA', 'CAAAAAA', 'AACAAC', 'CAAAAA'])
     #     print(res)
 
-    ps, vs, ls = vcf2cshl(1, 'AAAAAA', ['AAAAAC'])
-    assert ps[0] == 6
-    assert vs[0] == "sub(A->C)"
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'AAAAAC')
+    assert ps == 6
+    assert vs == "sub(A->C)"
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'AAAAAA', ['AAA'])
-    assert ps[0] == 4
-    assert vs[0] == "del(3)"
-    assert ls[0] == 3
+    ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'AAA')
+    assert ps == 4
+    assert vs == "del(3)"
+    assert ls == 3
 
-    ps, vs, ls = vcf2cshl(1, 'AAAAAA', ['A'])
-    assert ps[0] == 2
-    assert vs[0] == "del(5)"
-    assert ls[0] == 5
+    ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'A')
+    assert ps == 2
+    assert vs == "del(5)"
+    assert ls == 5
 
-    ps, vs, ls = vcf2cshl(1, 'AAAAAA', ['ACAAAA'])
-    assert ps[0] == 2
-    assert vs[0] == "sub(A->C)"
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'ACAAAA')
+    assert ps == 2
+    assert vs == "sub(A->C)"
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'AAAAAA', ['CAAAAAA'])
-    assert ps[0] == 1
-    assert vs[0] == "ins(C)"
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'CAAAAAA')
+    assert ps == 1
+    assert vs == "ins(C)"
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'AAAAAA', ['AACAAC'])
-    assert ps[0] == 3
-    assert vs[0] == "complex(AAAA->CAAC)"
-    assert ls[0] == 4
+    ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'AACAAC')
+    assert ps == 3
+    assert vs == "complex(AAAA->CAAC)"
+    assert ls == 4
 
-    ps, vs, ls = vcf2cshl(1, 'AAAAAA', ['CAAAAA'])
-    assert ps[0] == 1
-    assert vs[0] == "sub(A->C)"
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'CAAAAA')
+    assert ps == 1
+    assert vs == "sub(A->C)"
+    assert ls == 1
 
-    ps, vs, ls = vcf2cshl(1, 'AAAAAA', ['AAAAAAC'])
-    assert ps[0] == 7
-    assert vs[0] == "ins(C)"
-    assert ls[0] == 1
+    ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'AAAAAAC')
+    assert ps == 7
+    assert vs == "ins(C)"
+    assert ls == 1
 
 
 def test_insert_long():
-    print("")
     ref = 'CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT'
     alt = 'CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT' \
         'CCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT'
-    ps, vs, ls = vcf2cshl(1, ref, [alt])
+    ps, vs, ls = vcf2cshl(1, ref, alt)
     print(ps, vs, ls)
 
-    assert ps[0] == 51  # FIXME
+    assert ps == 51  # FIXME

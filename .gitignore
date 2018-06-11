@@ -19,3 +19,5 @@ output
 *.tmp
 *.swp
 gpf-html.tar.gz
+.pytest_cache
+*.parquet

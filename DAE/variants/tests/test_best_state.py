@@ -21,7 +21,7 @@ def test_trios_multi_single_allele1(single_vcf):
 def test_trios_multi_all_reference(single_vcf):
     fvars = single_vcf("fixtures/trios_multi")
     vs = list(fvars.query_variants(regions=[Region('1', 11502, 11502)]))
-    assert len(vs) == 2
+    assert len(vs) == 1
     for v in vs:
         assert v.inheritance == Inheritance.reference
         assert v.best_st.shape == (2, 3)

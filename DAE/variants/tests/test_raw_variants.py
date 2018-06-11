@@ -6,7 +6,6 @@ Created on Feb 9, 2018
 from __future__ import print_function
 
 from RegionOperations import Region
-from datasets.helpers import mat2str
 from variants.attributes import Role
 from variants.attributes_query_builder import any_node, token
 from variants.vcf_utils import mat2str
@@ -17,7 +16,8 @@ def test_study_load(ustudy_single):
     assert ustudy_single.annot_df is not None
     assert ustudy_single.vcf_vars is not None
 
-    assert len(ustudy_single.annot_df) == len(ustudy_single.vcf_vars)
+    assert len(ustudy_single.annot_df.groupby("var_index")) == \
+        len(ustudy_single.vcf_vars)
 
 
 def test_query_regions(ustudy_single):
@@ -54,10 +54,12 @@ def test_query_effect_types(ustudy_single):
     vl = list(vs)
     for v in vl:
         print(v, mat2str(v.best_st), v.effects)
+    # FIXME: review and add more detailed tests for variant 1:877831
     # FIXME: got one bonus variant:
     # 1:877831 T->C,GC AU1921 0000?000?/2222?222?
     # [missense:[SAMD11:missense], frame-shift:[SAMD11:frame-shift]]
-    assert len(vl) == 4
+    # assert len(vl) == 4
+    assert len(vl) == 3
 
 
 def test_query_genes_and_effect_types(ustudy_single):

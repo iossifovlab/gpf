@@ -79,13 +79,7 @@ def cshl_format(pos, ref, alt):
     return p, 'complex(' + r + '->' + a + ')', max(len(r), len(a))
 
 
-def vcf2cshl(pos, ref, alts):
-    vrt, pxx, lens = list(), list(), list()
-    for alt in alts:
-        p, vt, vl = cshl_format(pos, ref, alt)
+def vcf2cshl(pos, ref, alt):
+    vp, vt, vl = cshl_format(pos, ref, alt)
 
-        pxx.append(p)
-        vrt.append(vt)
-        lens.append(vl)
-
-    return pxx, vrt, lens
+    return vp, vt, vl

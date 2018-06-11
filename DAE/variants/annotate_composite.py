@@ -3,6 +3,8 @@ Created on Mar 7, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import pandas as pd
 import numpy as np
 
@@ -18,21 +20,27 @@ class AnnotatorBase(object):
     def annotate_variant(self, vcf_variant):
         raise NotImplemented()
 
-    def annotate(self, vars_df, vcf_vars):
+    def annotate(self, annot_df, vcf_vars):
         columns = [
-            pd.Series(index=vars_df.index, dtype=np.object_)
+            pd.Series(index=annot_df.index, dtype=np.object_)
             for _ in self.columns()
         ]
 
-        for index, v in enumerate(vcf_vars):
+        index = 0
+        for vcf_index, v in enumerate(vcf_vars):
             res = self.annotate_variant(v)
-            for col, _ in enumerate(self.columns()):
-                columns[col][index] = res[col]
+            for allele_index, _ in enumerate(v.ALT):
+                assert annot_df['var_index'][index] == vcf_index
+                assert annot_df['allele_index'][index] == allele_index + 1
+
+                for col, _ in enumerate(self.columns()):
+                    columns[col][index] = res[col][allele_index]
+                index += 1
 
         for col, name in enumerate(self.columns()):
-            vars_df[name] = columns[col]
+            annot_df[name] = columns[col]
 
-        return vars_df
+        return annot_df
 
 
 class AnnotatorComposite(AnnotatorBase):

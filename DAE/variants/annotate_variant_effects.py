@@ -6,7 +6,6 @@ Created on Mar 6, 2018
 from __future__ import print_function
 
 from DAE import genomesDB
-import numpy as np
 from variant_annotation.annotator import VariantAnnotator
 from variant_annotation.variant import Variant
 from variants.annotate_composite import AnnotatorBase
@@ -18,7 +17,13 @@ gmDB = genomesDB.get_gene_models()  # @UndefinedVariable
 
 
 class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
-    COLUMNS = ['effectType', 'effectGene', 'effectDetails']
+    COLUMNS = [
+        'effect_type',
+        'effect_gene.genes',
+        'effect_gene.types',
+        'effect_details.transcript_ids',
+        'effect_details.details',
+    ]
 
     def __init__(self, genome=GA, gene_models=gmDB):
         self.variant_annotator = VariantAnnotator(
@@ -29,8 +34,10 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
 
     def annotate_variant(self, vcf_variant):
         worst_effects = []
-        gene_effects = []
-        transcript_effects = []
+        gene_effects_genes = []
+        gene_effects_types = []
+        transcript_ids = []
+        transcript_details = []
 
         for alt in vcf_variant.ALT:
             variant = Variant(
@@ -44,12 +51,18 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
                 position=vcf_variant.start + 1,
                 ref=vcf_variant.REF,
                 alt=alt)
-            we, ge, et = self.wrap_effects(effects)
+            we, ge_genes, ge_types, et_ids, et_details = \
+                self.wrap_effects(effects)
             worst_effects.append(we)
-            gene_effects.append(ge)
-            transcript_effects.append(et)
-        return np.array(worst_effects), \
-            np.array(gene_effects), np.array(transcript_effects)
+            gene_effects_genes.append(ge_genes),
+            gene_effects_types.append(ge_types),
+            transcript_ids.append(et_ids)
+            transcript_details.append(et_details)
+        return worst_effects, \
+            gene_effects_genes, \
+            gene_effects_types, \
+            transcript_ids, \
+            transcript_details
 
     def wrap_effects(self, effects):
         raise NotImplementedError()
@@ -65,7 +78,6 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
 
 
 class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
-    COLUMNS = ['effectType', 'effectGene', 'effectDetails']
 
     def __init__(self, genome=GA, gene_models=gmDB):
         super(VcfVariantEffectsAnnotator, self).__init__(
@@ -95,9 +107,9 @@ class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
         sorted_effects = cls.sort_effects(effects)
         worst_effect = sorted_effects[0].effect
         if worst_effect == 'intergenic':
-            return [('intergenic', 'intergenic')]
+            return [[u'intergenic'], [u'intergenic']]
         if worst_effect == 'no-mutation':
-            return [('no-mutation', 'no-mutation')]
+            return [[u'no-mutation'], [u'no-mutation']]
 
         result = []
         for _severity, severity_effects in itertools.groupby(
@@ -105,28 +117,39 @@ class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
             for gene, gene_effects in itertools.groupby(
                     severity_effects, lambda e: e.gene):
                 result.append((gene, next(gene_effects).effect))
-        return result
+
+        return [
+            [unicode(r[0], "utf-8") for r in result],
+            [unicode(r[1], "utf-8") for r in result]
+        ]
 
     @classmethod
     def transcript_effect(cls, effects):
         worst_effect = cls.worst_effect(effects)
         if worst_effect == 'intergenic':
-            return [('intergenic', 'intergenic')]
+            return ([u'intergenic'], [u'intergenic'])
         if worst_effect == 'no-mutation':
-            return [('no-mutation', 'no-mutation')]
+            return ([u'no-mutation'], [u'no-mutation'])
 
         result = {}
         for effect in effects:
             result[effect.transcript_id] = effect.create_effect_details()
-        return list(result.items())
+        return (
+            [unicode(r, "utf-8") for r in result.keys()],
+            [unicode(r, "utf-8") for r in result.values()]
+        )
 
     @classmethod
     def effect_simplify(cls, effects):
         if effects[0].effect == 'unk_chr':
-            return ('unk_chr', ('unk_chr', 'unk_chr'), ('unk_chr', 'unk_chr'))
+            return (u'unk_chr',
+                    [u'unk_chr'], [u'unk_chr'],
+                    [u'unk_chr'], [u'unk_chr'])
 
+        gene_effect = cls.gene_effect(effects)
+        transcript_effect = cls.transcript_effect(effects)
         return (
             cls.worst_effect(effects),
-            cls.gene_effect(effects),
-            cls.transcript_effect(effects)
+            gene_effect[0], gene_effect[1],
+            transcript_effect[0], transcript_effect[1]
         )
