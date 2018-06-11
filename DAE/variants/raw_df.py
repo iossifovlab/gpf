@@ -3,11 +3,14 @@ Created on Jun 7, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import numpy as np
 import pandas as pd
 
 from variants.family import FamiliesBase, Family
-from variants.variant import SummaryVariantFactory, FamilyVariant
+from variants.variant import SummaryVariantFactory, FamilyVariant,\
+    FamilyVariantMulti
 
 
 class FamilyVariantFactory(object):
@@ -61,6 +64,36 @@ class DfFamilyVariants(FamiliesBase):
         alt_allele_index = record['allele_index']
         return FamilyVariant(sv, family, gt, alt_allele_index)
 
+    @staticmethod
+    def merge_genotypes(genotypes):
+        if len(genotypes) == 1:
+            return genotypes[0]
+
+        genotypes = np.stack(genotypes, axis=0)
+        gt = genotypes[0, :]
+        unknown_col = np.any(genotypes == -1,  axis=0)
+
+        for index, col in enumerate(unknown_col):
+            if not col:
+                continue
+            gt[index] = genotypes[genotypes[:, index] != -1, index][0]
+        flen = int(len(gt) / 2)
+        assert 2 * flen == len(gt)
+
+        gt = gt.reshape([2, flen], order='F')
+        return gt
+
+    def wrap_family_variant_multi(self, records):
+        sv = SummaryVariantFactory.summary_variant_from_records(records)
+
+        family_id = records[0]['family_id']
+        assert all([r['family_id'] == family_id for r in records])
+
+        family = self.families[family_id]
+        gt = self.merge_genotypes([r['genotype'] for r in records])
+
+        return FamilyVariantMulti(sv, family, gt)
+
     def query_variants(self, **kwargs):
 
         sdf = self.summary_df
@@ -74,6 +107,6 @@ class DfFamilyVariants(FamiliesBase):
         sdf = sdf.set_index(["var_index", "allele_index"])
         jdf = vdf.join(sdf, on=("var_index", "allele_index"), rsuffix="_r")
 
-        records = jdf.to_dict(orient='records')
-        for rec in records:
-            yield self.wrap_family_variant(rec)
+        for name, group in jdf.groupby(by=["var_index", "family_id"]):
+            rec = group.to_dict(orient='records')
+            yield self.wrap_family_variant_multi(rec)

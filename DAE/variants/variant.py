@@ -707,7 +707,6 @@ class FamilyVariant(FamilyVariantBase):
                 ref = ref - alt
 
                 unknown = np.sum(self.gt == -1, axis=0)
-                print(unknown)
                 ref = ref - unknown
 
             best = [ref, alt]
