@@ -4,9 +4,12 @@ Created on Feb 17, 2017
 @author: lubo
 '''
 from django.conf import settings
+
+from datasets.dataset import DatasetWrapper
+from datasets.datasets_definition import DirectoryEnabledDatasetsDefinition
 from preloaded.register import Preload
-from datasets.datasets_factory import DatasetsFactory
-from datasets.config import DatasetsConfig
+from datasets.dataset_factory import DatasetFactory
+from datasets.dataset_config import DatasetConfig
 from models import Dataset
 from django.db.utils import OperationalError, ProgrammingError
 from precompute.register import Precompute
@@ -14,17 +17,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+logger.info("HELLO")
+
 
 class DatasetsPreload(Preload, Precompute):
 
     def __init__(self):
         super(DatasetsPreload, self).__init__()
-        self.dataset_config = DatasetsConfig()
-        self.factory = DatasetsFactory(self.dataset_config)
+        # self.dataset_config = DatasetConfig()
+        self.dataset_definition = DirectoryEnabledDatasetsDefinition()
+        self.factory = DatasetFactory(
+            self.dataset_definition, _class=DatasetWrapper)
 
     def precompute(self):
         try:
-            for ds in self.dataset_config.get_datasets():
+            for ds in self.dataset_definition.get_datasets():
                 Dataset.recreate_dataset_perm(ds['id'])
         except OperationalError:
             # Database migrations are probably not run yet, ignore exception
@@ -53,8 +60,9 @@ class DatasetsPreload(Preload, Precompute):
             False)
         logger.warn("PRELOAD_ACTIVE is {}".format(preload_active))
         if preload_active:
-            for dset in self.dataset_config.get_datasets():
-                dataset_id = dset['id']
+            for dset in self.dataset_definition.get_all_dataset_configs():
+                dataset_id = dset.dataset_id
+                logger.info(dataset_id)
                 self.factory.get_dataset(dataset_id)
 
     def get(self):
@@ -64,4 +72,4 @@ class DatasetsPreload(Preload, Precompute):
         return self.factory
 
     def get_config(self):
-        return self.dataset_config
+        return self.dataset_definition

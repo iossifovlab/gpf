@@ -17,6 +17,19 @@ class Configure(ConfigBox):
         # assert os.path.exists(self.annotation), self.annotation
 
     @staticmethod
+    def array_from_enabled_dir(enabled_dir):
+        assert os.path.exists(enabled_dir)
+
+        result = []
+
+        for filename in os.listdir(enabled_dir):
+            path = os.path.join(enabled_dir, filename)
+            if os.path.isfile(path):
+                result.append(Configure.from_config(enabled_dir, filename))
+
+        return result
+
+    @staticmethod
     def from_config(work_dir=None, filename=None):
         if work_dir is None:
             from default_settings import DATA_DIR

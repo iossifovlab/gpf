@@ -91,6 +91,9 @@ class Sex(enum.Enum):
     def __str__(self):
         return self.name
 
+    def short(self):
+        return self.name[0].upper()
+
 
 class Inheritance(enum.Enum):
     reference = 1
@@ -130,7 +133,7 @@ class VariantType(enum.Enum):
         elif name == 'complex':
             return VariantType.complex
         elif name == 'CNV':
-            return VariantType.cnv
+            return VariantType.CNV
         raise ValueError("unexpected variant type: {}".format(name))
 
     def __repr__(self):
@@ -162,7 +165,8 @@ class QLeaf(QNode):
     def __init__(self, vals):
         assert isinstance(vals, set)
         assert all([isinstance(v, enum.Enum) for v in vals]) or \
-            all([isinstance(v, str) for v in vals])
+            all([isinstance(v, str) for v in vals]) or \
+            all([isinstance(v, unicode) for v in vals])
         super(QLeaf, self).__init__(vals=vals)
 
 
@@ -302,6 +306,10 @@ class AQuery(object):
 
     def or_not_(self, rq):
         self.qnode = QOr([self.qnode, QNot([rq.qnode])])
+        return self
+
+    def not_(self):
+        self.qnode = QNot([self.qnode])
         return self
 
     @classmethod

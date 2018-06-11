@@ -11,11 +11,15 @@ import pandas as pd
 from variants.loader import RawVariantsLoader
 from variants.family import FamiliesBase
 from variants.configure import Configure
-from variants.attributes_query import RoleQuery, SexQuery, InheritanceQuery,\
-    VariantTypeQuery, parser
+from variants.attributes_query import role_query, sex_query, inheritance_query,\
+    variant_type_query, parser
 from variants.family import VcfFamily
 # from variants.variant import VariantFactorySingle
 from variants.variant import VariantFactory
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def split_gene_effect(effects):
@@ -115,33 +119,30 @@ class RawFamilyVariants(FamiliesBase):
     def filter_regions(self, v, regions):
         for reg in regions:
             if reg.chr == v.chromosome and \
-                    reg.start <= v.position and \
-                    reg.stop >= v.position:
+                    reg.start <= v.position <= reg.stop:
                 return True
         return False
 
     @staticmethod
     def filter_real_attr(v, real_attr_filter):
-        attr = real_attr_filter[0]
-        value = v.get_attr(attr)
-        if value is None:
-            return False
-        ranges = real_attr_filter[1:]
+        for key, ranges in real_attr_filter.items():
+            if not v.has_attr(key):
+                return False
 
-        for aa in v.falt_alleles:
-            val = value[aa]
-            result = [
-                (val >= rmin) and (val <= rmax) for (rmin, rmax) in ranges
-            ]
-            if any(result):
-                return True
-        return False
+            value = v.get_attr(key)
+            for aa in v.falt_alleles:
+                val = value[aa]
+                result = [
+                    rmin <= val <= rmax for (rmin, rmax) in ranges
+                ]
+                if not any(result):
+                    return False
+        return True
 
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
         assert effect_types is not None or genes is not None
-
-        for aa in v.falt_alleles:
+        for aa in v.alt_alleles:
             gene_effects = v.effects[aa].genes
 
             if effect_types is None:
@@ -164,21 +165,26 @@ class RawFamilyVariants(FamiliesBase):
 
     def filter_variant(self, v, **kwargs):
         if 'regions' in kwargs:
+            # logger.info("in regions")
             if not self.filter_regions(v, kwargs['regions']):
                 return False
         if 'genes' in kwargs or 'effect_types' in kwargs:
+            # logger.info("in genes")
             if not self.filter_gene_effects(
                     v, kwargs.get('effect_types'), kwargs.get('genes')):
                 return False
         if 'person_ids' in kwargs:
+            # logger.info("in person_ids")
             person_ids = kwargs['person_ids']
             if not v.variant_in_members & set(person_ids):
                 return False
         if 'family_ids' in kwargs:
+            # logger.info("in family_ids")
             family_ids = kwargs['family_ids']
             if v.family_id not in family_ids:
                 return False
         if 'roles' in kwargs:
+            # logger.info("in roles, variant_in_roles " + str(v.variant_in_roles))
             query = kwargs['roles']
             if not query.match(v.variant_in_roles):
                 return False
@@ -187,51 +193,61 @@ class RawFamilyVariants(FamiliesBase):
             if not query.match(v.variant_in_sexes):
                 return False
         if 'inheritance' in kwargs:
+            # logger.info("in inheritance")
             query = kwargs['inheritance']
+            # logger.info("query " + str(query))
             if not query.match([v.inheritance]):
                 return False
         if 'variant_type' in kwargs:
+            # logger.info("in variant_type")
             query = kwargs['variant_type']
             if not query.match([ad.variant_type for ad in v.details]):
                 return False
 
         if 'real_attr_filter' in kwargs:
+            # logger.info("in real_attr_filter")
             if not self.filter_real_attr(v, kwargs['real_attr_filter']):
                 return False
 
         if 'filter' in kwargs:
+            # logger.info("in filter")
             func = kwargs['filter']
             if not func(v):
-                print("F:", v.variant_in_roles)
                 return False
-            else:
-                print("T:", v.variant_in_roles)
+        # logger.info("returning true")
         return True
 
     def query_variants(self, **kwargs):
         annot_df = self.annot_df
         vs = self.wrap_variants(annot_df)
 
-        if 'roles' in kwargs and isinstance(kwargs['roles'], str):
-            tree = parser.parse(kwargs['roles'])
-            matcher = RoleQuery(parser).transform(tree)
-            kwargs['roles'] = matcher
+        if 'roles' in kwargs:
+            parsed = kwargs['roles']
+            if isinstance(parsed, str):
+                parsed = role_query.parse(parsed)
 
-        if 'sexes' in kwargs and isinstance(kwargs['sexes'], str):
-            tree = parser.parse(kwargs['sexes'])
-            matcher = SexQuery(parser).transform(tree)
-            kwargs['sexes'] = matcher
+            kwargs['roles'] = role_query.transform(parsed)
 
-        if 'inheritance' in kwargs and isinstance(kwargs['inheritance'], str):
-            tree = parser.parse(kwargs['inheritance'])
-            matcher = InheritanceQuery(parser).transform(tree)
-            kwargs['inheritance'] = matcher
+        if 'sexes' in kwargs:
+            parsed = kwargs['sexes']
+            if isinstance(parsed, str):
+                parsed = sex_query.parse(parsed)
 
-        if 'variant_type' in kwargs and \
-                isinstance(kwargs['variant_type'], str):
-            tree = parser.parse(kwargs['variant_type'])
-            matcher = VariantTypeQuery(parser).transform(tree)
-            kwargs['variant_type'] = matcher
+            kwargs['sexes'] = sex_query.transform(parsed)
+
+        if 'inheritance' in kwargs:
+            parsed = kwargs['inheritance']
+            if isinstance(parsed, str):
+                parsed = inheritance_query.parse(parsed)
+
+            kwargs['inheritance'] = inheritance_query.transform(parsed)
+
+        if 'variant_type' in kwargs:
+            parsed = kwargs['variant_type']
+            if isinstance(kwargs['variant_type'], str):
+                parsed = variant_type_query.parse(parsed)
+
+            kwargs['variant_type'] = variant_type_query.transform(parsed)
 
         for v in vs:
             if not self.filter_variant(v, **kwargs):

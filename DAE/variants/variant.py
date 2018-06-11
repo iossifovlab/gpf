@@ -147,7 +147,7 @@ class VariantDetail(object):
             return VariantType.CNV
         else:
             raise ValueError("unexpected variant type: {}".format(
-                self.variant))
+                self.cshl_variant))
 
     @property
     def cshl_location(self):
@@ -502,6 +502,10 @@ class FamilyVariant(object):
     @property
     def genotype(self):
         return self.gt.T
+
+    @property
+    def vcf(self):
+        return '{}:{}'.format(self.reference, ','.join(self.alts))
 
     @property
     def atts(self):
