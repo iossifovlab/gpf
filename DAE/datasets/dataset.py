@@ -108,16 +108,17 @@ class DatasetWrapper(Dataset):
         max_value = float('inf')
 
         if 'minAltFrequencyPercent' in kwargs:
-            if kwargs['minAltFrequencyPercent'] is not None:
-                min_value = kwargs['minAltFrequencyPercent']
+            min_value = kwargs['minAltFrequencyPercent']
             kwargs.pop('minAltFrequencyPercent')
 
         if 'maxAltFrequencyPercent' in kwargs:
-            if kwargs['maxAltFrequencyPercent'] is not None:
-                max_value = kwargs['maxAltFrequencyPercent']
+            max_value = kwargs['maxAltFrequencyPercent']
             kwargs.pop('maxAltFrequencyPercent')
 
         value_range = (min_value, max_value)
+
+        if value_range == (None, None):
+            return
 
         value = 'all.altFreq'
         if 'real_attr_filter' not in kwargs:
@@ -125,6 +126,7 @@ class DatasetWrapper(Dataset):
 
         if value not in kwargs['real_attr_filter']:
             kwargs['real_attr_filter'][value] = []
+
 
         kwargs['real_attr_filter'][value].append(value_range)
 

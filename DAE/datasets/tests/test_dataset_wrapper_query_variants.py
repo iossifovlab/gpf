@@ -157,10 +157,10 @@ def test_query_present_in_parent(option, count, quads2_wrapper):
 @pytest.mark.parametrize(
     "option,count",
     [
-        (None, 28),
-        (25, 21),
-        (50, 14),
-        (100, 14),
+        (None, 18),
+        (25, 11),
+        (50, 4),
+        (100, 4),
     ]
 )
 def test_quary_min_alt_frequency(option, count, quads2_wrapper):
@@ -192,11 +192,11 @@ def test_quary_max_alt_frequency(option, count, quads2_wrapper):
     "minFreq,maxFreq,count",
     [
         (None, None, 28),
-        (0, 0, 14),
-        (0, 12.5, 17),
-        (12.6, 25, 17),
-        (25.1, 100, 14),
-        (100, 100, 14),
+        (0, 0, 4),
+        (0, 12.5, 7),
+        (12.6, 25, 7),
+        (25.1, 100, 4),
+        (100, 100, 4),
     ]
 )
 def test_quary_max_alt_frequency(minFreq, maxFreq, count, quads2_wrapper):

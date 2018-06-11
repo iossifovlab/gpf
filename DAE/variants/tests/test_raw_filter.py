@@ -4,7 +4,10 @@ Created on Feb 20, 2018
 @author: lubo
 '''
 from __future__ import print_function
-from variants.attributes import RoleQuery, Role
+from variants.attributes import Role
+from variants.attributes_query import role_query
+from variants.attributes_query_builder import any_node, token
+
 # import pytest
 
 
@@ -12,9 +15,9 @@ from variants.attributes import RoleQuery, Role
 def test_query_by_filter(ustudy_single):
     genes = ['NOC2L']
 
-    rq1 = RoleQuery.any_of(Role.dad)
-    rq2 = RoleQuery.any_of(Role.maternal_cousin)
-    rq = RoleQuery.parse("dad and not maternal_cousin")
+    rq1 = role_query.transform(any_node([token(Role.dad)]))
+    rq2 = role_query.transform(any_node([token(Role.maternal_cousin)]))
+    rq = role_query.parse("dad and not maternal_cousin")
 
     vals = [
         Role.maternal_aunt,
