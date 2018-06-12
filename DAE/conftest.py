@@ -17,6 +17,8 @@ def pytest_addoption(parser):
                      help="run SSC WG tests")
     parser.addoption("--nomysql", action="store_true",
                      help="skip tests that require mysql")
+    parser.addoption("--withspark", action="store_true",
+                     help="run tests that require spark")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -42,6 +44,12 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "mysql" in item.keywords:
                 item.add_marker(skip_mysql)
+
+    if not config.getoption("--withspark", False):
+        skip_spark = pytest.mark.skip(reason="need spark home")
+        for item in items:
+            if "spark" in item.keywords:
+                item.add_marker(skip_spark)
 
 
 # @pytest.fixture(scope='session')

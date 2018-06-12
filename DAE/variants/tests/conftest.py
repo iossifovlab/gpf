@@ -29,8 +29,11 @@ from variants.attributes_query import parser as attributes_query_parser, \
 
 from variants.attributes_query import \
     parser_with_ambiguity as attributes_query_parser_with_ambiguity
-from variants.parquet_io import family_variants_df_table, family_variants_df
+from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
+    save_family_variants_df_to_parquet
 from variants.raw_df import DfFamilyVariants
+import time
+import path
 
 
 @pytest.fixture(scope='session')
@@ -50,6 +53,37 @@ def composite_annotator(effect_annotator, allele_freq_annotator):
         effect_annotator,
         allele_freq_annotator,
     ])
+
+
+@pytest.fixture(scope='session')
+def testing_thriftserver(request):
+    from impala.dbapi import connect
+
+    spark_home = os.environ.get("SPARK_HOME")
+    assert spark_home is not None
+
+    start_cmd = "{}/sbin/start-thriftserver.sh".format(spark_home)
+    stop_cmd = "{}/sbin/stop-thriftserver.sh".format(spark_home)
+
+    def fin():
+        os.system(stop_cmd)
+    request.addfinalizer(fin)
+
+    status = os.system(start_cmd)
+    assert status == 0
+
+    for count in range(10):
+        try:
+            time.sleep(2.0)
+            print("trying to connect to testing thrift server: try={}".format(
+                count))
+            conn = connect(host='127.0.0.1', port=10000,
+                           auth_mechanism='PLAIN')
+            return conn
+        except Exception as ex:
+            print("connect to thriftserver failed:", ex)
+
+    return None
 
 
 @pytest.fixture
@@ -230,6 +264,38 @@ def variants_df(fvars_df):
     def builder(path):
         ped_df, summary_df, vars_df = fvars_df(path)
         return DfFamilyVariants(ped_df, summary_df, vars_df)
+    return builder
+
+
+@pytest.fixture(scope='session')
+def parquet_variants(request, fvars_df):
+    dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
+
+    def fin():
+        shutil.rmtree(dirname)
+    request.addfinalizer(fin)
+
+    def builder(path):
+        print("path:", path, os.path.basename(path))
+        basename = os.path.basename(path)
+        fulldirname = os.path.join(dirname, basename)
+        summary_filename = os.path.join(
+            fulldirname, "summary.parquet")
+        family_filename = os.path.join(
+            fulldirname, "family.parquet")
+
+        if os.path.exists(fulldirname) and os.path.isdir(fulldirname):
+            return summary_filename, family_filename
+
+        os.mkdir(fulldirname)
+        assert os.path.exists(fulldirname)
+        assert os.path.isdir(fulldirname)
+
+        ped_df, summary_df, vars_df = fvars_df(path)
+        save_summary_to_parquet(summary_df, summary_filename)
+        save_family_variants_df_to_parquet(vars_df, family_filename)
+        return summary_filename, family_filename
+
     return builder
 
 

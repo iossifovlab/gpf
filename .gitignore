@@ -21,3 +21,4 @@ output
 gpf-html.tar.gz
 .pytest_cache
 *.parquet
+metastore_db
