@@ -57,6 +57,7 @@ def test_parquet_select(
     INNER JOIN parquet.`file://{}` AS B
     ON A.var_index = B.var_index
     """.format(family_filename, summary_filename)
+    print(q)
 
     cursor = testing_thriftserver.cursor()
     cursor.execute(q)
