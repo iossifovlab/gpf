@@ -66,9 +66,11 @@ def testing_thriftserver(request):
     stop_cmd = "{}/sbin/stop-thriftserver.sh".format(spark_home)
 
     def fin():
+        print("stoping  thrift command: ", stop_cmd)
         os.system(stop_cmd)
     request.addfinalizer(fin)
 
+    print("starting thrift command: ", start_cmd)
     status = os.system(start_cmd)
     assert status == 0
 
