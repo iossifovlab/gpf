@@ -37,7 +37,7 @@ class IterativeAccess(ScoreFile):
         self.file = gzip.open(score_file_name, 'rb')
         self.header = score_file_header
         if self.header is None:
-            self.header = self.file.readline().rstrip('\n').split('\t')
+            self.header = self.file.readline().rstrip('\n')[1:].split('\t')
         super(IterativeAccess, self).__init__(score_file_name, score_file_header,
             scores_default_values, scores_columns, *search_columns)
         self.chr_index = self.header.index(chr_column)
@@ -96,7 +96,7 @@ class DirectAccess(ScoreFile):
         self.header = score_file_header
         if self.header is None:
             with gzip.open(score_file_name, 'rb') as file:
-                self.header = file.readline().rstrip('\n').split('\t')
+                self.header = file.readline().rstrip('\n')[1:].split('\t')
         super(DirectAccess, self).__init__(score_file_name, score_file_header,
             scores_default_values, scores_columns, *search_columns)
         self.file = pysam.Tabixfile(score_file_name)
