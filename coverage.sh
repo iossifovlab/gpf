@@ -32,7 +32,7 @@
 
 
 
-py.test --runslow --withspark -vs --cov-config coveragerc \
+py.test --runslow --withspark -v --cov-config coveragerc \
     --junitxml=DAE/junit.xml \
     --cov-append \
     --cov-report html \
@@ -64,9 +64,8 @@ py.test --runslow --withspark -vs --cov-config coveragerc \
     --cov utils \
     --cov variant_db \
     --cov variants \
-    DAE/variants/tests/test_spark.py
-#     DAE/variants/tests/ \
-#     DAE/datasets/tests/
+    DAE/variants/tests/ \
+    DAE/datasets/tests/
 
 #     DAE/variant_db/tests/ \
 #     DAE/tools/tests
