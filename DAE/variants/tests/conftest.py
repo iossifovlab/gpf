@@ -56,10 +56,19 @@ def composite_annotator(effect_annotator, allele_freq_annotator):
 
 
 @pytest.fixture(scope='session')
+def testing_thriftserver_port():
+    thrift_port = os.environ.get("THRIFTSERVER_PORT")
+    if thrift_port is None:
+        return 10000
+    return int(thrift_port)
+
+
+@pytest.fixture(scope='session')
 def testing_thriftserver(request):
     from impala.dbapi import connect
 
     spark_home = os.environ.get("SPARK_HOME")
+    thrift_port = os.environ.get("THRIFTSERVER_PORT")
     assert spark_home is not None
 
     start_cmd = "{}/sbin/start-thriftserver.sh".format(spark_home)
@@ -70,6 +79,13 @@ def testing_thriftserver(request):
         os.system(stop_cmd)
     request.addfinalizer(fin)
 
+    if thrift_port is not None:
+        thrift_port = int(thrift_port)
+        start_cmd = "{} --hiveconf hive.server2.thrift.port={}".format(
+            start_cmd, thrift_port)
+    else:
+        thrift_port = 10000
+
     print("starting thrift command: ", start_cmd)
     status = os.system(start_cmd)
     assert status == 0
@@ -79,7 +95,7 @@ def testing_thriftserver(request):
             time.sleep(2.0)
             print("trying to connect to testing thrift server: try={}".format(
                 count))
-            conn = connect(host='127.0.0.1', port=10000,
+            conn = connect(host='127.0.0.1', port=thrift_port,
                            auth_mechanism='PLAIN')
             return conn
         except Exception as ex:
@@ -275,7 +291,7 @@ def parquet_variants(request, fvars_df):
 
     def fin():
         shutil.rmtree(dirname)
-    # request.addfinalizer(fin)
+    request.addfinalizer(fin)
 
     def builder(path):
         print("path:", path, os.path.basename(path))
