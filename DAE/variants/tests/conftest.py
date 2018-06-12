@@ -275,7 +275,7 @@ def parquet_variants(request, fvars_df):
 
     def fin():
         shutil.rmtree(dirname)
-    request.addfinalizer(fin)
+    # request.addfinalizer(fin)
 
     def builder(path):
         print("path:", path, os.path.basename(path))
@@ -286,10 +286,11 @@ def parquet_variants(request, fvars_df):
         family_filename = os.path.join(
             fulldirname, "family.parquet")
 
-        if os.path.exists(fulldirname) and os.path.isdir(fulldirname):
+        if os.path.exists(summary_filename) and os.path.isdir(family_filename):
             return summary_filename, family_filename
 
-        os.mkdir(fulldirname)
+        if not os.path.exists(fulldirname):
+            os.mkdir(fulldirname)
         assert os.path.exists(fulldirname)
         assert os.path.isdir(fulldirname)
 
