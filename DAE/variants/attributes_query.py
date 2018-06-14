@@ -29,12 +29,25 @@ QUERY_GRAMMAR = """
 
     eq: "eq"i "(" _arglist ")"
 
-    ?atom: "(" logical_or ")"
-        | NAME
+    ?atom: "(" logical_or ")" | less_than | more_than | eq_value
 
-    _arglist: (NAME "," )* NAME [","]
+    less_than: ">" SIGNED_NUMBER
 
-    %import common.CNAME -> NAME
+    more_than: "<" SIGNED_NUMBER
+
+    eq_value: arg // For easier transform (adds "column name =")
+
+    ?arg: simple_arg | "'" simple_arg "'" | "\\"" simple_arg "\\""
+
+    simple_arg: STRING
+    
+    STRING : ("_"|LETTER|DIGIT|"."|"-")+
+
+    _arglist: (arg "," )* arg [","]
+
+    %import common.SIGNED_NUMBER -> SIGNED_NUMBER
+    %import common.LETTER -> LETTER
+    %import common.DIGIT -> DIGIT
     %import common.WS_INLINE -> WS
 
     %ignore WS
