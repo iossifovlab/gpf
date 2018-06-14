@@ -15,7 +15,6 @@ def test_can_match_simple_query_with_whitespaces(parser):
 def test_can_match_simple_and(parser):
     assert parser.parse("some and other") is not None
 
-
 @pytest.mark.parametrize("input", [
     "someandother",
     "some and other",
@@ -28,19 +27,36 @@ def test_and_parses_whitespaces_correctly(parser, input):
     assert len(tree.children) == 1
 
 
-@pytest.mark.parametrize("input,expected_function", [
-    ["someandother", is_token],
-    ["someorother", is_token]
+@pytest.mark.parametrize("input,expected_missing_node", [
+    ["some and other", "logical_and"],
+    ["some or other", "logical_or"]
 ])
 def test_ambiguity_with_binary_operations_is_resolved_correctly(
-        parser, parser_with_ambiguity, input, expected_function):
+        parser, parser_with_ambiguity, input, expected_missing_node):
     tree_ambiguity = parser_with_ambiguity.parse(input)
     tree = parser.parse(input)
 
     assert len(tree_ambiguity.children) == 1
     assert len(tree.children) == 1
-    assert expected_function(tree.children[0])
-    assert expected_function(tree_ambiguity.children[0])
+    assert any(tree_ambiguity.find_pred(
+        lambda x: x.data == expected_missing_node))
+    assert any(tree.find_pred(lambda x: x.data == expected_missing_node))
+
+
+@pytest.mark.parametrize("input,expected_missing_node", [
+    ["someandother", "logical_and"],
+    ["someorother", "logical_or"]
+])
+def test_ambiguity_with_binary_operations_is_resolved_correctly_negative(
+        parser, parser_with_ambiguity, input, expected_missing_node):
+    tree_ambiguity = parser_with_ambiguity.parse(input)
+    tree = parser.parse(input)
+
+    assert len(tree_ambiguity.children) == 1
+    assert len(tree.children) == 1
+    assert not any(tree_ambiguity.find_pred(
+        lambda x: x.data == expected_missing_node))
+    assert not any(tree.find_pred(lambda x: x.data == expected_missing_node))
 
 
 def test_can_match_simple_parentheses(parser):
