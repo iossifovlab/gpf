@@ -63,7 +63,9 @@ def test_can_match_simple_parentheses(parser):
     tree = parser.parse("(some)")
     assert tree is not None
     assert len(tree.children) == 1
-    assert is_token(tree.children[0])
+    assert len(tree.children[0].children) == 1
+    assert len(tree.children[0].children[0].children) == 1
+    assert is_token(tree.children[0].children[0].children[0])
 
 
 @pytest.mark.parametrize("input,expected_tree", [
