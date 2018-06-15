@@ -14,8 +14,8 @@ from RegionOperations import Region
     (Region('1', 905956, 905956), ("frame-shift", "missense")),
 ])
 def test_serialize_deserialize_worst_effect(
-        full_vcf, region, worst_effect, effect_annotator):
-    fvars = full_vcf("fixtures/effects_trio_multi")
+        variants_vcf, region, worst_effect, effect_annotator):
+    fvars = variants_vcf("fixtures/effects_trio_multi")
     vs = fvars.query_variants(regions=[region])
     for v in vs:
         print(v, v.alts)
@@ -34,8 +34,8 @@ def test_serialize_deserialize_worst_effect(
     (Region('1', 905956, 905956), ("frame-shift", "missense")),
 ])
 def test_serialize_deserialize_gene_effect(
-        full_vcf, region, worst_effect, effect_annotator):
-    fvars = full_vcf("fixtures/effects_trio_multi")
+        variants_vcf, region, worst_effect, effect_annotator):
+    fvars = variants_vcf("fixtures/effects_trio_multi")
     vs = fvars.query_variants(regions=[region])
     for v in vs:
         print(v)
@@ -55,8 +55,8 @@ def test_serialize_deserialize_gene_effect(
     (Region('1', 905956, 905956), ("frame-shift", "missense")),
 ])
 def test_serialize_deserialize_transcript_effect(
-        full_vcf, region, worst_effect, effect_annotator):
-    fvars = full_vcf("fixtures/effects_trio_multi")
+        variants_vcf, region, worst_effect, effect_annotator):
+    fvars = variants_vcf("fixtures/effects_trio_multi")
     vs = fvars.query_variants(regions=[region])
     for v in vs:
         effects1 = effect_annotator.do_annotate_variant(

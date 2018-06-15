@@ -38,38 +38,3 @@ def test_filter_real_attr(fv_one):
 
     assert RawFamilyVariants.filter_real_attr(
         v, {'b': [[1, 2], [3, 4]]})
-
-
-# @pytest.mark.slow
-# def test_rare_transmitted_variants_full(nvcf19f):
-# 
-#     vs = nvcf19f.query_variants(
-#         inheritance='mendelian',
-#         real_attr_filter=['af_alternative_allele_freq', (1e-8, 1)]
-#     )
-# 
-#     for c, v in enumerate(vs):
-#         print(c, v, v.family_id,
-#               v.inheritance, mat2str(v.best_st),
-#               v['effect_type'],
-#               v['af_alternative_allele_freq'])
-# 
-# 
-# def test_freq_single_family_full(full_vcf):
-#     fvars = full_vcf("fixtures/trios2")
-#     vs = fvars.query_variants(
-#         real_attr_filter=['af_alternative_allele_freq', (0.0001, 12.5)],
-#         regions=[Region("1", 11541, 11542)]
-#     )
-#     vl = list(vs)
-#     for v in vl:
-#         print(v, mat2str(v.best_st),
-#               v['af_alternative_allele_freq'])
-# 
-#     assert len(vl) == 2
-# 
-#     v0 = vl[0]
-#     v1 = vl[1]
-# 
-#     assert v0.family_id == 'f2'
-#     assert v1.family_id == 'f1'

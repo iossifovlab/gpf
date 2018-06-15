@@ -69,24 +69,24 @@ def test_freq_trios_2(single_vcf):
     assert 'dad1' in v2.variant_in_members
 
 
-def test_members_in_order1_genotype_full(full_vcf):
-    fvars = full_vcf("fixtures/members_in_order1")
+def test_members_in_order1_genotype_full(variants_vcf):
+    fvars = variants_vcf("fixtures/members_in_order1")
     for v in fvars.query_variants():
         print(v, mat2str(v.best_st), mat2str(v.gt), v.inheritance)
         assert 'gpa' in v.variant_in_members
         assert Role.paternal_grandfather in v.variant_in_roles
 
 
-def test_members_in_order2_genotype_full(full_vcf):
-    fvars = full_vcf("fixtures/members_in_order2")
+def test_members_in_order2_genotype_full(variants_vcf):
+    fvars = variants_vcf("fixtures/members_in_order2")
     for v in fvars.query_variants():
         print(v, mat2str(v.best_st), mat2str(v.gt), v.inheritance)
         assert 'gpa' in v.variant_in_members
         assert Role.paternal_grandfather in v.variant_in_roles
 
 
-def test_freq_trios_2_full(full_vcf):
-    fvars = full_vcf("fixtures/trios2")
+def test_freq_trios_2_full(variants_vcf):
+    fvars = variants_vcf("fixtures/trios2")
     vs = list(fvars.query_variants(
         family_ids=['f1'], regions=[Region("1", 11539, 11540)]))
     assert len(vs) == 2

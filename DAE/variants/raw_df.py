@@ -107,6 +107,6 @@ class DfFamilyVariants(FamiliesBase):
         sdf = sdf.set_index(["var_index", "allele_index"])
         jdf = vdf.join(sdf, on=("var_index", "allele_index"), rsuffix="_r")
 
-        for name, group in jdf.groupby(by=["var_index", "family_id"]):
+        for _name, group in jdf.groupby(by=["var_index", "family_id"]):
             rec = group.to_dict(orient='records')
             yield self.wrap_family_variant_multi(rec)

@@ -16,8 +16,8 @@ from variants.vcf_utils import mat2str
     (Region('1', 11502, 11502), 1, set(['ch1'])),
     (Region('1', 11503, 11503), 1, set(['mom1', 'dad1', 'ch1'])),
 ])
-def test_variant_in_members(full_vcf, region, count, members):
-    fvars = full_vcf("fixtures/unknown_trio")
+def test_variant_in_members(variants_vcf, region, count, members):
+    fvars = variants_vcf("fixtures/unknown_trio")
     vs = list(fvars.query_variants(regions=[region]))
     assert len(vs) == count
     for v in vs:

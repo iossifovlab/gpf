@@ -26,7 +26,7 @@ from variants.parquet_io import \
     "fixtures/effects_trio_multi",
     "fixtures/effects_trio",
 ])
-def test_annotation_parquet(full_vcf, fixture_name, temp_filename):
+def test_annotation_parquet(variants_vcf, fixture_name, temp_filename):
     schema = summary_parquet_schema_flat()
     print(schema)
     print(dir(schema))
@@ -35,7 +35,7 @@ def test_annotation_parquet(full_vcf, fixture_name, temp_filename):
         print(schema.field_by_name(name))
         print(schema.get_field_index(name))
 
-    fvars = full_vcf(fixture_name)
+    fvars = variants_vcf(fixture_name)
     annot_df = fvars.annot_df
     table = summary_table(annot_df)
     assert table is not None
@@ -60,9 +60,9 @@ def test_annotation_parquet(full_vcf, fixture_name, temp_filename):
     ("fixtures/effects_trio", "parquet"),
 ])
 def test_serialize_deserialize(
-        fixture_name, full_vcf, storage, temp_filename):
+        fixture_name, variants_vcf, storage, temp_filename):
 
-    fvars = full_vcf(fixture_name)
+    fvars = variants_vcf(fixture_name)
 
     assert fvars.annot_df is not None
 

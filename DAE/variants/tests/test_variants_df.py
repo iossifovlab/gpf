@@ -6,37 +6,8 @@ Created on Jun 7, 2018
 
 
 import pytest
-import numpy as np
 from RegionOperations import Region
 from variants.vcf_utils import mat2str
-
-
-@pytest.mark.parametrize("fixture_name", [
-    # "fixtures/effects_trio_multi",
-    # "fixtures/effects_trio",
-    # "fixtures/inheritance_multi",
-    "fixtures/trios2",
-])
-def test_dataframe_variants(fvars_df, fixture_name):
-    ped_df, summary_df, vars_df = fvars_df(fixture_name)
-    assert ped_df is not None
-    assert summary_df is not None
-    assert vars_df is not None
-
-    print(summary_df.head())
-    print(vars_df.head())
-
-    # vars_df.set_index(["var_index", "allele_index"])
-    sdf = summary_df.set_index(["var_index", "allele_index"])
-
-    jdf = vars_df.join(sdf, on=("var_index", "allele_index"), rsuffix="_r")
-    print(jdf.head())
-
-    df = jdf[np.logical_and(
-        jdf.chrom == "1",
-        jdf.position == 11539)]
-
-    print(df.head())
 
 
 @pytest.mark.parametrize("fixture_name", [

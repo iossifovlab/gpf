@@ -19,8 +19,8 @@ from variants.vcf_utils import mat2str
     (Region('1', 11504, 11504), 1, Inheritance.unknown),
     (Region('1', 11505, 11505), 1, Inheritance.unknown),
 ])
-def test_inheritance_nontrio(full_vcf, region, count, inheritance):
-    fvars = full_vcf("fixtures/inheritance_nontrio")
+def test_inheritance_nontrio(variants_vcf, region, count, inheritance):
+    fvars = variants_vcf("fixtures/inheritance_nontrio")
     vs = list(fvars.query_variants(
         regions=[region],
         family_ids=['f1']))

@@ -33,7 +33,6 @@ from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
     save_family_variants_df_to_parquet
 from variants.raw_df import DfFamilyVariants
 import time
-import path
 
 
 @pytest.fixture(scope='session')
@@ -254,7 +253,7 @@ def single_vcf(composite_annotator):
 
 
 @pytest.fixture(scope='session')
-def full_vcf(composite_annotator):
+def variants_vcf(composite_annotator):
     def builder(path):
         a_data = relative_to_this_test_folder(path)
         a_conf = Configure.from_prefix(a_data)
@@ -266,27 +265,20 @@ def full_vcf(composite_annotator):
 
 
 @pytest.fixture(scope='session')
-def fvars_df(full_vcf):
+def variants_df(variants_vcf):
     def builder(path):
-        fvars = full_vcf(path)
+        fvars = variants_vcf(path)
         summary_df = fvars.annot_df
         ped_df = fvars.ped_df
         vars_df = family_variants_df(
             fvars.query_variants(inheritanch="not reference"))
-        return ped_df, summary_df, vars_df
-    return builder
 
-
-@pytest.fixture(scope='session')
-def variants_df(fvars_df):
-    def builder(path):
-        ped_df, summary_df, vars_df = fvars_df(path)
         return DfFamilyVariants(ped_df, summary_df, vars_df)
     return builder
 
 
 @pytest.fixture(scope='session')
-def parquet_variants(request, fvars_df):
+def parquet_variants(request, variants_df):
     dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
 
     def fin():
@@ -310,9 +302,9 @@ def parquet_variants(request, fvars_df):
         assert os.path.exists(fulldirname)
         assert os.path.isdir(fulldirname)
 
-        ped_df, summary_df, vars_df = fvars_df(path)
-        save_summary_to_parquet(summary_df, summary_filename)
-        save_family_variants_df_to_parquet(vars_df, family_filename)
+        fvars = variants_df(path)
+        save_summary_to_parquet(fvars.summary_df, summary_filename)
+        save_family_variants_df_to_parquet(fvars.vars_df, family_filename)
         return summary_filename, family_filename
 
     return builder

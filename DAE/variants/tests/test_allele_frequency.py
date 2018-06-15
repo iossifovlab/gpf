@@ -19,8 +19,8 @@ from variants.vcf_utils import mat2str
     (Region('1', 11551, 11551), 2, 0.0, 100.0),
     (Region('1', 11552, 11552), 2, 0.0, 100.0),
 ])
-def test_variant_frequency(full_vcf, region, count, freq0, freq1):
-    fvars = full_vcf("fixtures/trios2")
+def test_variant_frequency(variants_vcf, region, count, freq0, freq1):
+    fvars = variants_vcf("fixtures/trios2")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == count
@@ -68,9 +68,9 @@ def test_variant_frequency_single(single_vcf, region, count, freq0, freq1):
     (Region('1', 11603, 11603), 2, 75.0, 0.0, 25.0),
 ])
 def test_variant_frequency_multi_alleles(
-        full_vcf, region, count, freq0, freq1, freq2):
+        variants_vcf, region, count, freq0, freq1, freq2):
 
-    fvars = full_vcf("fixtures/trios2")
+    fvars = variants_vcf("fixtures/trios2")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == count

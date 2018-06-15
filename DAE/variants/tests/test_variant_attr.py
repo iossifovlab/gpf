@@ -11,8 +11,8 @@ from RegionOperations import Region
     (Region('1', 11539, 11539), 2, 75.0, 25.0),
     (Region('1', 11540, 11540), 2, 75.0, 25.0),
 ])
-def test_variant_attr(full_vcf, region, count, freq0, freq1):
-    fvars = full_vcf("fixtures/trios2")
+def test_variant_attr(variants_vcf, region, count, freq0, freq1):
+    fvars = variants_vcf("fixtures/trios2")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == count
@@ -29,9 +29,9 @@ def test_variant_attr(full_vcf, region, count, freq0, freq1):
     (Region('1', 11601, 11601), 2, 75.0, 25.0, 0.0),
 ])
 def test_variant_attr_multi_alleles(
-        full_vcf, region, count, freq0, freq1, freq2):
+        variants_vcf, region, count, freq0, freq1, freq2):
 
-    fvars = full_vcf("fixtures/trios2")
+    fvars = variants_vcf("fixtures/trios2")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == count
