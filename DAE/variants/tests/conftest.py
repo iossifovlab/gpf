@@ -310,6 +310,20 @@ def parquet_variants(request, variants_df):
     return builder
 
 
+@pytest.fixture
+def variants_implementations(variants_vcf, variants_df):
+    impls = {
+        "variants_df": variants_df,
+        "variants_vcf": variants_vcf,
+    }
+    return impls
+
+
+@pytest.fixture
+def variants_impl(variants_implementations):
+    return lambda impl_name: variants_implementations[impl_name]
+
+
 @pytest.fixture(scope='session')
 def data_vcf19(composite_annotator):
     def builder(path):
