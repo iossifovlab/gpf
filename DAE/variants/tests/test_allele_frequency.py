@@ -34,7 +34,7 @@ def test_variant_frequency_single(single_vcf, region, count, freq0, freq1):
 
 
 @pytest.mark.parametrize("variants", [
-    #     "variants_df",
+    # "variants_df",
     "variants_vcf",
 ])
 @pytest.mark.parametrize("region,count,freq0,freq1", [

@@ -38,3 +38,25 @@ def test_df_query_multiallelic3_families(
     assert "mom1" in v.variant_in_members
     assert "dad1" in v.variant_in_members
     assert "ch1" not in v.variant_in_members
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_df",
+    "variants_vcf",
+])
+@pytest.mark.parametrize("fixture_name", [
+    "fixtures/trios2_11541",
+])
+def test_reference_variant(
+        variants_impl, variants, fixture_name):
+
+    dfvars = variants_impl(variants)(fixture_name)
+    assert dfvars is not None
+
+    vs = dfvars.query_variants()
+    vs = list(vs)
+    assert len(vs) == 2
+    print(vs)
+
+    for v in vs:
+        print(mat2str(v.best_st))

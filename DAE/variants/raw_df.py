@@ -67,16 +67,17 @@ class DfFamilyVariants(FamiliesBase):
     @staticmethod
     def merge_genotypes(genotypes):
         if len(genotypes) == 1:
-            return genotypes[0]
+            gt = genotypes[0]
+        else:
+            genotypes = np.stack(genotypes, axis=0)
+            gt = genotypes[0, :]
+            unknown_col = np.any(genotypes == -1,  axis=0)
 
-        genotypes = np.stack(genotypes, axis=0)
-        gt = genotypes[0, :]
-        unknown_col = np.any(genotypes == -1,  axis=0)
+            for index, col in enumerate(unknown_col):
+                if not col:
+                    continue
+                gt[index] = genotypes[genotypes[:, index] != -1, index][0]
 
-        for index, col in enumerate(unknown_col):
-            if not col:
-                continue
-            gt[index] = genotypes[genotypes[:, index] != -1, index][0]
         flen = int(len(gt) / 2)
         assert 2 * flen == len(gt)
 

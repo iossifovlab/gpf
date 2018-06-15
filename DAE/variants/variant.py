@@ -11,7 +11,6 @@ from variants.vcf_utils import vcf2cshl
 
 from variants.attributes import VariantType, Inheritance
 from timeit import itertools
-from pprint import pprint
 
 
 class VariantBase(object):
