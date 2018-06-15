@@ -1,25 +1,109 @@
 #!/usr/bin/env python
-from subprocess import call
 
-QUEUES='all.q@wigclust1.cshl.edu,all.q@wigclust10.cshl.edu,all.q@wigclust11.cshl.edu,all.q@wigclust12.cshl.edu,all.q@wigclust13.cshl.edu,all.q@wigclust14.cshl.edu,all.q@wigclust15.cshl.edu,all.q@wigclust16.cshl.edu,all.q@wigclust17.cshl.edu,all.q@wigclust18.cshl.edu,all.q@wigclust19.cshl.edu,all.q@wigclust2.cshl.edu,all.q@wigclust20.cshl.edu,all.q@wigclust21.cshl.edu,all.q@wigclust22.cshl.edu,all.q@wigclust23.cshl.edu,all.q@wigclust24.cshl.edu,all.q@wigclust3.cshl.edu,all.q@wigclust4.cshl.edu,all.q@wigclust5.cshl.edu,all.q@wigclust6.cshl.edu,all.q@wigclust8.cshl.edu,all.q@wigclust9.cshl.edu'
+import os, sys
+import time
+import ConfigParser
 
-chromosomes = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
+class VariantDBConf(object):
 
-chr_labels = {'X': '23', 'Y': '24'}
+    def __init__(self, data_dir):
+        variant_db_conf = ConfigParser.SafeConfigParser({
+            'wd': data_dir,
+            'data': data_dir
+        })
+        variant_db_conf.read(data_dir + '/variantDB.conf')
+        self.denovo_files = []
+        self.transm_files = []
+        for section in variant_db_conf.sections():
+            if section.startswith('study.'):
+                if variant_db_conf.has_option(section, 'denovoCalls.files'):
+                    self.denovo_files.extend(
+                        variant_db_conf.get(section, 'denovoCalls.files').split('\n'))
+                if variant_db_conf.has_option(section,
+                        'transmittedVariants.indexFile'):
+                    self.transm_files.extend([
+                        index_file + '.txt.bgz'
+                        for index_file in variant_db_conf.get(section,
+                            'transmittedVariants.indexFile').split('\n')
+                    ])
+
+    @property
+    def all_variant_files(self):
+        return self.denovo_files + self.transm_files
 
 
-base_dir='/mnt/wigclust22/data/unsafe/gotsev'
-output_dir='{}/output'.format(base_dir)
-input_file='{}/test-annotation-data/transmissionIndex-HW-DNRM.txt.gz'.format(base_dir)
-config_file='{}/sample_annotation_pipeline.conf'.format(base_dir)
-for chromosome in chromosomes:
-    for position in range(0, 25, 5):
-        execute_str = ('qsub -l virtual_free=10G -q {queues} -N "ANNOT-{chr}-{pos}" '
-            '-o "{output_dir}/{chr_label:0>2}_{pos:0>2}_o.txt" -e "{output_dir}/{chr_label:0>2}_{pos:0>2}_e.txt" '
-            '-v PATH -v DAE_DB_DIR -v DAE_SOURCE_DIR -v dbNSFP_PATH -v PYTHONPATH -b yes '
-            'annotation_pipeline.py {input_file} --config {config_file} '
-            '--region={chr}:{begin_pos}-{end_pos}').format(
-                queues=QUEUES, output_dir=output_dir, input_file=input_file,
-                config_file=config_file, chr=chromosome, chr_label=chr_labels.get(chromosome, chromosome),
-                pos=position, begin_pos=position * 10000000, end_pos=(position + 5) * 10000000 - 1)
-        call(execute_str, shell=True)
+def main(config, data_dir, output_dir):
+    def to_destination(path):
+        return path.replace(data_dir, output_dir)
+
+    print('SHELL=/bin/bash -o pipefail')
+    print('.DELETE_ON_ERROR:\n')
+    print('all:\n')
+
+    if output_dir[-1] == '/':
+        output_dir = output_dir[0:-1]
+    if data_dir[-1] == '/':
+        data_dir = data_dir[0:-1]
+
+    dirs = []
+    all_cmds = []
+
+    variant_db_conf = VariantDBConf(data_dir)
+    all_input_files = variant_db_conf.all_variant_files
+    copy_files = []
+    for dirpath, dirnames, filenames in os.walk(data_dir):
+        dirs.append(to_destination(dirpath))
+        copy_files.extend([dirpath + '/' + file
+            for file in filenames
+            if dirpath + '/' + file not in all_input_files])
+
+    log_dir = output_dir + '/log'
+    dirs.append(log_dir)
+    print('dirs:\n\tmkdir {}\n'.format(' '.join(dirs)))
+
+    cmd_format = ('{output_file}{job_sufix}: dirs\n\t(time'
+        ' annotation_pipeline.py {args}'
+        ' {input_file} {output_file}{job_sufix}'
+        ' 2> {log_prefix}-err{job_sufix}.txt) 2> {log_prefix}-time{job_sufix}.txt\n')
+
+    denovo_args = '--config {}'.format(config)
+
+    for file in variant_db_conf.denovo_files:
+        output_file = to_destination(file)
+        print(cmd_format.format(input_file=file,
+            output_file=output_file,
+            args=denovo_args, job_sufix='',
+            log_prefix=log_dir + '/' + os.path.basename(file)))
+        all_cmds.append(output_file)
+
+    transm_args_format = denovo_args + \
+        ' -c chr -p position --region={chr}:{begin_pos}-{end_pos}'
+
+    chromosomes = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
+    chr_labels = {'X': '23', 'Y': '24'}
+    for file in variant_db_conf.transm_files:
+        for chromosome in chromosomes:
+            for i in range(0, 5):
+                job_sufix = '-{chr:0>2}-{pos}'.format(chr=chromosome, pos=i)
+                output_file=to_destination(file)
+                print(cmd_format.format(input_file=file,
+                    output_file=output_file,
+                    args=transm_args_format.format(
+                        chr=chr_labels.get(chromosome, chromosome),
+                        begin_pos=i*50000000, end_pos=(i+1)*50000000-1),
+                    log_prefix=log_dir + '/' + os.path.basename(file),
+                    job_sufix=job_sufix))
+                all_cmds.append(output_file + job_sufix)
+
+    copy_cmd_format = '{dest}: dirs\n\tcp {file} {dest} 2>> {log_prefix}-err.txt\n'
+    for file in copy_files:
+        dest = to_destination(file)
+        print(copy_cmd_format.format(file=file, dest=dest,
+            log_prefix=log_dir + '/' + os.path.basename(file)))
+        all_cmds.append(dest)
+
+    print(" ".join(["all:"] + all_cmds))
+
+
+if __name__ == '__main__':
+    main(sys.argv[1], sys.argv[2], sys.argv[3])
