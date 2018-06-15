@@ -96,7 +96,6 @@ class DfFamilyVariants(FamiliesBase):
         return FamilyVariantMulti(sv, family, gt)
 
     def query_variants(self, **kwargs):
-
         sdf = self.summary_df
         vdf = self.vars_df
 
@@ -105,8 +104,16 @@ class DfFamilyVariants(FamiliesBase):
         if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
             sdf, vdf = self.filter_families(sdf, vdf, kwargs['family_ids'])
 
-        sdf = sdf.set_index(["var_index", "allele_index"])
-        jdf = vdf.join(sdf, on=("var_index", "allele_index"), rsuffix="_r")
+        # sdf = sdf.set_index(["var_index", "allele_index"])
+        jdf = vdf.join(sdf, on="var_index", rsuffix="_fv")
+
+        print(jdf.columns)
+        print("_________________________________________________________")
+        print(sdf[["alternative"]])
+        print(vdf[["alternative"]])
+        print(jdf[["reference", "reference_fv",
+                   "alternative", "alternative_fv"]])
+        print("_________________________________________________________")
 
         for _name, group in jdf.groupby(by=["var_index", "family_id"]):
             rec = group.to_dict(orient='records')

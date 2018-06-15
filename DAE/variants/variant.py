@@ -11,6 +11,7 @@ from variants.vcf_utils import vcf2cshl
 
 from variants.attributes import VariantType, Inheritance
 from timeit import itertools
+from pprint import pprint
 
 
 class VariantBase(object):
@@ -570,10 +571,15 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
         self._variant_in_sexes = None
 
     def __repr__(self):
-        return '{}:{} {}->{} {}'.format(
-            self.chromosome, self.position,
-            self.reference, ",".join(self.alts),
-            self.family_id)
+        if not self.alts:
+            return '{}:{} {}(ref) {}'.format(
+                self.chromosome, self.position,
+                self.reference, self.family_id)
+        else:
+            return '{}:{} {}->{} {}'.format(
+                self.chromosome, self.position,
+                self.reference, ",".join(self.alts),
+                self.family_id)
 
     @property
     def genotype(self):
@@ -770,9 +776,11 @@ class SummaryVariantFactory(object):
 
     @staticmethod
     def summary_allele_from_record(row):
-        if row['alternative'] is None:
+        print(type(row['effect_type']))
+        if not isinstance(row['effect_type'], str):
             effects = None
         else:
+            pprint(row)
             effects = Effect.from_effects(
                 row['effect_type'],
                 zip(row['effect_gene.genes'], row['effect_gene.types']),
