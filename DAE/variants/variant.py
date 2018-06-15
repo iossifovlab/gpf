@@ -11,6 +11,7 @@ from variants.vcf_utils import vcf2cshl
 
 from variants.attributes import VariantType, Inheritance
 from timeit import itertools
+from pprint import pprint
 
 
 class VariantBase(object):
@@ -770,11 +771,14 @@ class SummaryVariantFactory(object):
 
     @staticmethod
     def summary_allele_from_record(row):
-        effects = Effect.from_effects(
-            row['effect_type'],
-            zip(row['effect_gene.genes'], row['effect_gene.types']),
-            zip(row['effect_details.transcript_ids'],
-                row['effect_details.details']))
+        if row['alternative'] is None:
+            effects = None
+        else:
+            effects = Effect.from_effects(
+                row['effect_type'],
+                zip(row['effect_gene.genes'], row['effect_gene.types']),
+                zip(row['effect_details.transcript_ids'],
+                    row['effect_details.details']))
 
         return AlleleSummary(
             row['chrom'], row['position'],
