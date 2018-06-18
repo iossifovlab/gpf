@@ -7,12 +7,14 @@ NOT_NODE = "negation"
 ALL_NODE = "all"
 ANY_NODE = "any"
 EQ_NODE = "eq"
+ARG_NODE = "arg"
+SIMPLE_ARG_NODE = "simple_arg"
 
 ALL_NODES = (AND_NODE, OR_NODE, NOT_NODE, ALL_NODE, ANY_NODE, EQ_NODE)
 
 
 def token(value):
-    return Token("NAME", value)
+    return Token("STRING", value)
 
 
 def tree(operation, children):
@@ -73,3 +75,11 @@ def any_node(children):
 
 def eq_node(children):
     return tree(EQ_NODE, children)
+
+
+def arg_node(children):
+    return tree(ARG_NODE, children)
+
+
+def simple_arg_node(children):
+    return tree(SIMPLE_ARG_NODE, children)

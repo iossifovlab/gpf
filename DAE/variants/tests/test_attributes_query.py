@@ -1,7 +1,7 @@
 import pytest
 
 from variants.attributes_query_builder import is_token, and_node, or_node, \
-    is_tree, not_node, token, is_and, is_not
+    is_tree, not_node, token, is_and, is_not, arg_node, simple_arg_node
 
 
 def test_can_match_simple_query(parser):
@@ -73,19 +73,20 @@ def test_can_match_simple_parentheses(parser):
         "(some or other) and third",
         and_node([
             or_node([
-                token("some"),
-                token("other")
+                arg_node([simple_arg_node([token("some")])]),
+                arg_node([simple_arg_node([token("other")])]),
             ]),
-            token("third")
+
+            arg_node([simple_arg_node([token("third")])])
         ])
     ],
     [
         "some or (other and third)",
         or_node([
-            token("some"),
+            arg_node([simple_arg_node([token("some")])]),
             and_node([
-                token("other"),
-                token("third")
+                arg_node([simple_arg_node([token("other")])]),
+                arg_node([simple_arg_node([token("third")])])
             ]),
         ])
     ]
@@ -181,8 +182,8 @@ def test_ambiguity_is_resolved_through_priority_correctly(
     assert tree_.data != "_ambig"
 
     expected_tree = and_node([
-        not_node([token("some")]),
-        not_node([token("other")]),
+        not_node([arg_node([simple_arg_node([token("some")])])]),
+        not_node([arg_node([simple_arg_node([token("other")])])]),
     ])
     print(tree_.children[0].pretty())
     print(ambiguous_tree.children[0].pretty())
