@@ -27,23 +27,23 @@ QUERY_GRAMMAR = """
 
     all: "all"i "(" _arglist ")"
 
-    eq: "eq"i "(" _arglist ")"
+    eq: "eq"i "(" _simplearglist ")"
 
-    ?atom: "(" logical_or ")" | less_than | more_than | eq_value
+    ?atom: "(" logical_or ")" | less_than | more_than | arg
 
     less_than: ">" SIGNED_NUMBER
 
     more_than: "<" SIGNED_NUMBER
 
-    eq_value: arg // For easier transform (adds "column name =")
+    arg: simple_arg
 
-    ?arg: simple_arg | "'" simple_arg "'" | "\\"" simple_arg "\\""
-
-    simple_arg: STRING
+    simple_arg: STRING | "'" STRING "'" | "\\"" STRING "\\""
     
     STRING : ("_"|LETTER|DIGIT|"."|"-")+
 
     _arglist: (arg "," )* arg [","]
+
+    _simplearglist: (simple_arg "," )* simple_arg [","]
 
     %import common.SIGNED_NUMBER -> SIGNED_NUMBER
     %import common.LETTER -> LETTER
@@ -98,49 +98,41 @@ class QueryTransformer(InlineTransformer):
         self.tree = tree
         return super(QueryTransformer, self).transform(tree)
 
-    # def _get_func(self, name):
-    #     print("_get_func " + name)
-    #     return super(QueryTransformer, self)._get_func(name)
+    def less_than(self, *args):
+        return lambda l: l > args[0]
 
-    def _transform_all_tokens(self, arguments):
-        return [self._transform_token(arg) for arg in arguments]
+    def more_than(self, *args):
+        return lambda l: l < args[0]
 
-    def _transform_token(self, argument):
-        if is_token(argument):
-            return lambda l: self.token_transformer(argument.value) in l
-        assert callable(argument)
-        return argument
+    def arg(self, *args):
+        return lambda l: args[0] in l
+
+    def simple_arg(self, *args):
+        return self.token_transformer(args[0])
 
     def negation(self, *args):
-        args = self._transform_all_tokens(args)
         assert len(args) == 1
         arg = args[0]
         return lambda l: not arg(l)
 
     def logical_and(self, *args):
-        args = self._transform_all_tokens(args)
         return lambda l: all(f(l) for f in args)
 
     def logical_or(self, *args):
-        args = self._transform_all_tokens(args)
         return lambda l: any(f(l) for f in args)
 
     def start(self, *args):
         assert len(args) == 1
-        args = self._transform_all_tokens(args)
         return Matcher(self.tree, self.parser, args[0])
 
     def eq(self, *args):
-        for arg in args:
-            assert is_token(arg), "eq expects only elements, not an expression"
-        to_match = {self.token_transformer(arg.value) for arg in args}
-        return lambda x: x == to_match
+        return lambda x: x == set(args)
 
     def any(self, *args):
-        return self.logical_or(*args)
+        return lambda l: any(f(l) for f in args)
 
     def all(self, *args):
-        return self.logical_and(*args)
+        return lambda l: all(f(l) for f in args)
 
 
 def roles_converter(a):
