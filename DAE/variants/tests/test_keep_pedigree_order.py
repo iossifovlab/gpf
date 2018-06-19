@@ -34,7 +34,8 @@ def test_denovo_order_experiment(nvcf19s):
     for v in vs:
         print(v, v.family_id, mat2str(v.best_st), mat2str(v.gt),
               v.inheritance,
-              v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'))
+              v.get_attribute('af_alternative_alleles_count'),
+              v.get_attribute('af_alternative_alleles_freq'))
         print(v.members_in_order)
         print(v.members_ids)
         assert v.members_in_order[-1].role == Role.prb

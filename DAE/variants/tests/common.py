@@ -17,16 +17,24 @@ def assert_annotation_equals(vars_df, vars1_df):
         for k in v1.keys():
             res = v1[k] == v2[k]
             if isinstance(res, np.ndarray):
-                # print(k, v1[k], v2[k], type(v1[k]), type(v2[k]),
-                #       v1[k].dtype.type, v2[k].dtype.type,
-                #       v1[k].dtype, v2[k].dtype)
+                print(k, v1[k], v2[k], type(v1[k]), type(v2[k]))
 
-                if v1[k].dtype.type is np.string_ or \
+                if isinstance(v1[k], str) or \
+                        v1[k].dtype.type is np.string_ or \
                         v1[k].dtype.type is np.unicode_:
                     assert np.all(res)
+                elif v1[k].dtype.type == np.object_:
+                    print("objects: {}: {} == {} ({}, {})".format(
+                        k, v1[k], v2[k], type(v1[k]), type(v2[k])))
+                    assert all(v1[k] == v2[k])
                 else:
-                    assert np.allclose(v1[k], v2[k], rtol=1e-5)
+                    print("{}: {} == {} ({}, {})".format(
+                        k, v1[k], v2[k], type(v1[k]), type(v2[k])))
+                    assert np.allclose(v1[k], v2[k], rtol=1e-3)
             elif isinstance(v1[k], float):
-                assert v1[k] == pytest.approx(v2[k], 1e-6)
+                assert v1[k] == pytest.approx(v2[k], rel=1e-5), \
+                    "{}: {} == {} ({}, {})".format(
+                    k, v1[k], v2[k], type(v1[k]), type(v2[k]))
             else:
-                assert v1[k] == v2[k]
+                assert v1[k] == v2[k], "{}: {} == {} ({}, {})".format(
+                    k, v1[k], v2[k], type(v1[k]), type(v2[k]))

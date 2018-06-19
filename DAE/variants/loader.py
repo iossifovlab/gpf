@@ -12,6 +12,30 @@ import numpy as np
 import pandas as pd
 
 from variants.attributes import Role, Sex
+from variants.parquet_io import save_summary_to_parquet,\
+    read_summary_from_parquet
+
+
+def save_annotation_to_csv(annot_df, filename, sep="\t"):
+    def convert_array_of_strings_to_string(a):
+        return RawVariantsLoader.SEP1.join(a)
+
+    vars_df = annot_df.copy()
+    vars_df['effect_gene.genes'] = vars_df['effect_gene.genes'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df['effect_gene.types'] = vars_df['effect_gene.types'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df['effect_details.transcript_ids'] = \
+        vars_df['effect_details.transcript_ids'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df['effect_details.details'] = \
+        vars_df['effect_details.details'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df.to_csv(
+        filename,
+        index=False,
+        sep=sep,
+    )
 
 
 class VCFWrapper(object):
@@ -28,6 +52,10 @@ class VCFWrapper(object):
         if self._samples is None:
             self._samples = np.array(self.vcf.samples)
         return self._samples
+
+    @property
+    def seqnames(self):
+        return self.vcf.seqnames
 
     @property
     def vars(self):
@@ -94,65 +122,36 @@ class RawVariantsLoader(object):
                 annot_df = pd.read_csv(
                     infile, sep=sep, index_col=False,
                     dtype={
-                        'chr': str,
+                        'chrom': str,
                         'position': np.int32,
                     },
                     converters={
-                        'altA':
+                        'effect_gene.genes':
                         cls.convert_array_of_strings,
-                        'all.nAltAlls':
-                        cls.convert_array_of_ints,
-                        'all.altFreq':
-                        cls.convert_array_of_floats,
-                        'effectType':
+                        'effect_gene.types':
                         cls.convert_array_of_strings,
-                        'effectGene':
-                        cls.gene_effects_deserialize,
-                        'effectDetails':
-                        cls.gene_effects_deserialize,
-                    })
+                        'effect_details.transcript_ids':
+                        cls.convert_array_of_strings,
+                        'effect_details.details':
+                        cls.convert_array_of_strings,
+                    }
+                )
+                print(annot_df.head())
             return annot_df
         elif storage == 'parquet':
-            annot_df = pd.read_parquet(filename)
+            annot_df = read_summary_from_parquet(filename)
             return annot_df
         else:
             raise ValueError("unexpected input format: {}".format(storage))
 
     @classmethod
-    def save_annotation_file(cls, vars_df, filename, sep='\t', storage='csv'):
-        def convert_array_of_strings(a):
-            return RawVariantsLoader.SEP1.join(a)
+    def save_annotation_file(cls, annot_df, filename, sep='\t', storage='csv'):
 
-        def convert_array_of_lists(a):
-            return RawVariantsLoader.SEP1.join(
-                [RawVariantsLoader.SEP2.join(str(e)) for e in a]
-            )
-
-        def convert_array_of_numbers(a):
-            return RawVariantsLoader.SEP1.join([
-                str(v) for v in a
-            ])
         if storage == 'csv':
-            vars_df = vars_df.copy()
-            vars_df['altA'] = vars_df['altA'].\
-                apply(convert_array_of_strings)
-            vars_df['effectType'] = vars_df['effectType'].\
-                apply(convert_array_of_strings)
-            vars_df['effectGene'] = vars_df['effectGene'].\
-                apply(cls.gene_effects_serialize)
-            vars_df['effectDetails'] = vars_df['effectDetails'].\
-                apply(cls.gene_effects_serialize)
-            vars_df['all.nAltAlls'] = vars_df['all.nAltAlls'].\
-                apply(convert_array_of_numbers)
-            vars_df['all.altFreq'] = vars_df['all.altFreq'].\
-                apply(convert_array_of_numbers)
-            vars_df.to_csv(
-                filename,
-                index=False,
-                sep=sep,
-            )
+            save_annotation_to_csv(annot_df, filename, sep)
         elif storage == 'parquet':
-            vars_df.to_parquet(filename, engine='pyarrow')
+            save_summary_to_parquet(annot_df, filename)
+            # vars_df.to_parquet(filename, engine='pyarrow')
         else:
             raise ValueError("unexpected output format: {}".format(storage))
 

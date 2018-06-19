@@ -23,22 +23,23 @@ from variants.attributes import VariantType
 ])
 def test_variant_effect_annotation(variant, variant_type, position):
     print(variant)
-    [chrom, pos, ref, alts] = variant.split(":")
-    details = VariantDetail.from_vcf(chrom, int(pos), ref, alts.split(','))
-    print(details)
-    for detail in details:
-        assert detail.variant_type == variant_type
-        assert detail.cshl_position == position
+    [chrom, pos, ref, alt] = variant.split(":")
+    detail = VariantDetail.from_vcf(chrom, int(pos), ref, alt)
+    print(detail)
+
+    assert detail.variant_type == variant_type
+    assert detail.cshl_position == position
 
 
 @pytest.mark.slow
 @pytest.mark.parametrize("variant_types,query", [
     (set([VariantType.substitution]), "sub"),
     (set([VariantType.deletion, VariantType.insertion]), "del or ins"),
-    (set([VariantType.complex]), "complex"),
+    (set([VariantType.complex, VariantType.substitution]), "complex or sub"),
 ])
 def test_query_by_variant_type(nvcf19f, variant_types, query):
     vs = nvcf19f.query_variants(
+        inheritance="not reference and not unknown",
         variant_type=query)
     vs = list(vs)
 

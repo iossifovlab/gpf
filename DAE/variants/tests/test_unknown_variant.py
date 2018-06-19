@@ -12,12 +12,12 @@ from variants.vcf_utils import mat2str
 
 @pytest.mark.parametrize("region,count,members", [
     (Region('1', 11500, 11500), 1, set(['mom1'])),
-    (Region('1', 11501, 11501), 1, set(['mom1'])),
-    (Region('1', 11502, 11502), 1, set([])),
+    (Region('1', 11501, 11501), 1, set(['mom1', 'ch1'])),
+    (Region('1', 11502, 11502), 1, set(['ch1'])),
     (Region('1', 11503, 11503), 1, set(['mom1', 'dad1', 'ch1'])),
 ])
-def test_variant_in_members(full_vcf, region, count, members):
-    fvars = full_vcf("fixtures/unknown_trio")
+def test_variant_in_members(variants_vcf, region, count, members):
+    fvars = variants_vcf("fixtures/unknown_trio")
     vs = list(fvars.query_variants(regions=[region]))
     assert len(vs) == count
     for v in vs:
@@ -25,5 +25,5 @@ def test_variant_in_members(full_vcf, region, count, members):
         print(v.variant_in_members)
         print(v.variant_in_roles)
         print(v.variant_in_sexes)
-
+        print(v.gt)
         assert v.variant_in_members == members

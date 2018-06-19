@@ -22,13 +22,17 @@ from variants.annotate_variant_effects import \
     VcfVariantEffectsAnnotator
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
-from variants.variant import VariantFactory, SummaryVariant,\
-    VariantFactorySingle, FamilyVariant
+from variants.variant import VariantFactoryMulti, AlleleSummary,\
+    FamilyVariantMulti, VariantFactorySingle, SummaryVariant
 from variants.attributes_query import parser as attributes_query_parser, \
     QueryTransformer
 
 from variants.attributes_query import \
     parser_with_ambiguity as attributes_query_parser_with_ambiguity
+from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
+    save_family_variants_df_to_parquet
+from variants.raw_df import DfFamilyVariants
+import time
 
 
 @pytest.fixture(scope='session')
@@ -48,6 +52,55 @@ def composite_annotator(effect_annotator, allele_freq_annotator):
         effect_annotator,
         allele_freq_annotator,
     ])
+
+
+@pytest.fixture(scope='session')
+def testing_thriftserver_port():
+    thrift_port = os.environ.get("THRIFTSERVER_PORT")
+    if thrift_port is None:
+        return 10000
+    return int(thrift_port)
+
+
+@pytest.fixture(scope='session')
+def testing_thriftserver(request):
+    from impala.dbapi import connect
+
+    spark_home = os.environ.get("SPARK_HOME")
+    thrift_port = os.environ.get("THRIFTSERVER_PORT")
+    assert spark_home is not None
+
+    start_cmd = "{}/sbin/start-thriftserver.sh".format(spark_home)
+    stop_cmd = "{}/sbin/stop-thriftserver.sh".format(spark_home)
+
+    def fin():
+        print("stoping  thrift command: ", stop_cmd)
+        os.system(stop_cmd)
+    request.addfinalizer(fin)
+
+    if thrift_port is not None:
+        thrift_port = int(thrift_port)
+        start_cmd = "{} --hiveconf hive.server2.thrift.port={}".format(
+            start_cmd, thrift_port)
+    else:
+        thrift_port = 10000
+
+    print("starting thrift command: ", start_cmd)
+    status = os.system(start_cmd)
+    assert status == 0
+
+    for count in range(10):
+        try:
+            time.sleep(2.0)
+            print("trying to connect to testing thrift server: try={}".format(
+                count))
+            conn = connect(host='127.0.0.1', port=thrift_port,
+                           auth_mechanism='PLAIN')
+            return conn
+        except Exception as ex:
+            print("connect to thriftserver failed:", ex)
+
+    return None
 
 
 @pytest.fixture
@@ -92,6 +145,14 @@ def ustudy_single(ustudy_config, composite_annotator):
     fvariants = RawFamilyVariants(
         ustudy_config, annotator=composite_annotator,
         variant_factory=VariantFactorySingle)
+    return fvariants
+
+
+@pytest.fixture(scope='session')
+def ustudy_full(ustudy_config, composite_annotator):
+    fvariants = RawFamilyVariants(
+        ustudy_config, annotator=composite_annotator,
+        variant_factory=VariantFactoryMulti)
     return fvariants
 
 
@@ -157,7 +218,7 @@ def nvcf19s(nvcf19_config, composite_annotator):
 def nvcf19f(nvcf19_config, composite_annotator):
     fvariants = RawFamilyVariants(
         nvcf19_config, annotator=composite_annotator,
-        variant_factory=VariantFactory)
+        variant_factory=VariantFactoryMulti)
     return fvariants
 
 
@@ -192,15 +253,75 @@ def single_vcf(composite_annotator):
 
 
 @pytest.fixture(scope='session')
-def full_vcf(composite_annotator):
+def variants_vcf(composite_annotator):
     def builder(path):
         a_data = relative_to_this_test_folder(path)
         a_conf = Configure.from_prefix(a_data)
         fvars = RawFamilyVariants(
             a_conf, annotator=composite_annotator,
-            variant_factory=VariantFactory)
+            variant_factory=VariantFactoryMulti)
         return fvars
     return builder
+
+
+@pytest.fixture(scope='session')
+def variants_df(variants_vcf):
+    def builder(path):
+        fvars = variants_vcf(path)
+        summary_df = fvars.annot_df
+        ped_df = fvars.ped_df
+        vars_df = family_variants_df(
+            fvars.query_variants(inheritanch="not reference"))
+
+        return DfFamilyVariants(ped_df, summary_df, vars_df)
+    return builder
+
+
+@pytest.fixture(scope='session')
+def parquet_variants(request, variants_df):
+    dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
+
+    def fin():
+        shutil.rmtree(dirname)
+    request.addfinalizer(fin)
+
+    def builder(path):
+        print("path:", path, os.path.basename(path))
+        basename = os.path.basename(path)
+        fulldirname = os.path.join(dirname, basename)
+        summary_filename = os.path.join(
+            fulldirname, "summary.parquet")
+        family_filename = os.path.join(
+            fulldirname, "family.parquet")
+
+        if os.path.exists(summary_filename) and os.path.isdir(family_filename):
+            return summary_filename, family_filename
+
+        if not os.path.exists(fulldirname):
+            os.mkdir(fulldirname)
+        assert os.path.exists(fulldirname)
+        assert os.path.isdir(fulldirname)
+
+        fvars = variants_df(path)
+        save_summary_to_parquet(fvars.summary_df, summary_filename)
+        save_family_variants_df_to_parquet(fvars.vars_df, family_filename)
+        return summary_filename, family_filename
+
+    return builder
+
+
+@pytest.fixture
+def variants_implementations(variants_vcf, variants_df):
+    impls = {
+        "variants_df": variants_df,
+        "variants_vcf": variants_vcf,
+    }
+    return impls
+
+
+@pytest.fixture
+def variants_impl(variants_implementations):
+    return lambda impl_name: variants_implementations[impl_name]
 
 
 @pytest.fixture(scope='session')
@@ -211,7 +332,7 @@ def data_vcf19(composite_annotator):
         a_conf = Configure.from_prefix(a_prefix)
         fvars = RawFamilyVariants(
             a_conf, annotator=composite_annotator,
-            variant_factory=VariantFactory)
+            variant_factory=VariantFactoryMulti)
         return fvars
     return builder
 
@@ -237,19 +358,23 @@ def fam1():
 
 @pytest.fixture(scope='session')
 def sv():
-    return SummaryVariant("1", 11539, "T", ["TA", "TG"])
+    return SummaryVariant([
+        AlleleSummary("1", 11539, "T"),
+        AlleleSummary("1", 11539, "T", "TA"),
+        AlleleSummary("1", 11539, "T", "TG")
+    ])
 
 
 @pytest.fixture(scope='session')
 def fv1(fam1, sv):
     def rfun(gt):
-        return FamilyVariant(sv, fam1, gt)
+        return FamilyVariantMulti(sv, fam1, gt)
     return rfun
 
 
 @pytest.fixture(scope='session')
 def fv_one(fam1, sv):
-    return VariantFactory.family_variant_from_gt(
+    return VariantFactoryMulti.family_variant_from_gt(
         sv, fam1, np.array([[1, 1, 1], [0, 0, 0]]))[0]
 
 
@@ -276,7 +401,7 @@ def fam2():
 @pytest.fixture(scope='session')
 def fv2(sv, fam2):
     def rfun(gt):
-        return FamilyVariant(sv, fam2, gt)
+        return FamilyVariantMulti(sv, fam2, gt)
     return rfun
 
 
@@ -304,7 +429,7 @@ def fam3():
 @pytest.fixture(scope='session')
 def fv3(sv, fam3):
     def rfun(gt):
-        return FamilyVariant(sv, fam3, gt)
+        return FamilyVariantMulti(sv, fam3, gt)
     return rfun
 
 

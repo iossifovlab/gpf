@@ -11,11 +11,16 @@ import pandas as pd
 from variants.loader import RawVariantsLoader
 from variants.family import FamiliesBase
 from variants.configure import Configure
-from variants.attributes_query import RoleQuery, SexQuery, InheritanceQuery,\
-    VariantTypeQuery, parser
+from variants.attributes_query import role_query, sex_query, inheritance_query,\
+    variant_type_query, parser
 from variants.family import VcfFamily
 # from variants.variant import VariantFactorySingle
-from variants.variant import VariantFactory
+from variants.variant import VariantFactorySingle
+import logging
+
+
+logger = logging.getLogger(__name__)
+from variants.variant import VariantFactoryMulti
 
 
 def split_gene_effect(effects):
@@ -40,7 +45,7 @@ def parse_gene_effect(effect):
 class RawFamilyVariants(FamiliesBase):
 
     def __init__(self, config=None, prefix=None, annotator=None, region=None,
-                 variant_factory=VariantFactory):
+                 variant_factory=VariantFactoryMulti):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix(prefix)
@@ -50,6 +55,9 @@ class RawFamilyVariants(FamiliesBase):
 
         self.VF = variant_factory
         self._load(annotator, region)
+
+    def is_empty(self):
+        return len(self.annot_df) == 0
 
     def _match_pedigree_to_samples(self, ped_df, samples):
         samples = list(samples)
@@ -96,18 +104,27 @@ class RawFamilyVariants(FamiliesBase):
             self.annot_df = loader.load_annotation()
         else:
             records = []
-            for v in self.vcf_vars:
-                records.append((v.CHROM, v.start + 1, v.REF, np.array(v.ALT)))
+            for index, v in enumerate(self.vcf_vars):
+                split = len(v.ALT) > 1
+                for allele_index, alt in enumerate(v.ALT):
+                    records.append(
+                        (v.CHROM, v.start + 1,
+                         v.REF, alt,
+                         index, split, allele_index + 1))
             self.annot_df = pd.DataFrame.from_records(
                 data=records,
-                columns=['chr', 'position', 'refA', 'altA'])
+                columns=[
+                    'chrom', 'position', 'reference', 'alternative',
+                    'var_index', 'split_from_multi_allelic', 'allele_index'])
 
             annotator.setup(self)
             self.annot_df = annotator.annotate(self.annot_df, self.vcf_vars)
 
-        assert len(self.annot_df) == len(self.vcf_vars)
-        assert np.all(self.annot_df.index.values ==
-                      np.arange(len(self.annot_df)))
+
+#  FIXME:
+#         assert len(self.annot_df) == len(self.vcf_vars)
+#         assert np.all(self.annot_df.index.values ==
+#                       np.arange(len(self.annot_df)))
 
     def persons_samples(self, persons):
         return sorted([p.get_attr('sampleIndex') for p in persons])
@@ -115,34 +132,36 @@ class RawFamilyVariants(FamiliesBase):
     def filter_regions(self, v, regions):
         for reg in regions:
             if reg.chr == v.chromosome and \
-                    reg.start <= v.position and \
-                    reg.stop >= v.position:
+                    reg.start <= v.position <= reg.stop:
                 return True
         return False
 
     @staticmethod
     def filter_real_attr(v, real_attr_filter):
-        attr = real_attr_filter[0]
-        value = v.get_attr(attr)
-        if value is None:
-            return False
-        ranges = real_attr_filter[1:]
+        for key, ranges in real_attr_filter.items():
+            if not v.has_attribute(key):
+                return False
 
-        for aa in v.falt_alleles:
-            val = value[aa]
-            result = [
-                (val >= rmin) and (val <= rmax) for (rmin, rmax) in ranges
-            ]
-            if any(result):
-                return True
+            for sa in v.alt_alleles:
+                val = sa.get_attribute(key)
+                if val is None:
+                    continue
+                result = [
+                    (val >= rmin) and (val <= rmax) for (rmin, rmax) in ranges
+                ]
+                if any(result):
+                    return True
+
         return False
 
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
         assert effect_types is not None or genes is not None
+        if v.effects is None:
+            return False
 
-        for aa in v.falt_alleles:
-            gene_effects = v.effects[aa].genes
+        for effect in v.effects:
+            gene_effects = effect.genes
 
             if effect_types is None:
                 result = [
@@ -174,7 +193,7 @@ class RawFamilyVariants(FamiliesBase):
             person_ids = kwargs['person_ids']
             if not v.variant_in_members & set(person_ids):
                 return False
-        if 'family_ids' in kwargs:
+        if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
             family_ids = kwargs['family_ids']
             if v.family_id not in family_ids:
                 return False
@@ -192,7 +211,10 @@ class RawFamilyVariants(FamiliesBase):
                 return False
         if 'variant_type' in kwargs:
             query = kwargs['variant_type']
-            if not query.match([ad.variant_type for ad in v.details]):
+            if v.details is None:
+                return False
+            if not query.match(
+                    [ad.variant_type for ad in v.details]):
                 return False
 
         if 'real_attr_filter' in kwargs:
@@ -202,87 +224,59 @@ class RawFamilyVariants(FamiliesBase):
         if 'filter' in kwargs:
             func = kwargs['filter']
             if not func(v):
-                print("F:", v.variant_in_roles)
                 return False
-            else:
-                print("T:", v.variant_in_roles)
         return True
 
     def query_variants(self, **kwargs):
         annot_df = self.annot_df
         vs = self.wrap_variants(annot_df)
 
-        if 'roles' in kwargs and isinstance(kwargs['roles'], str):
-            tree = parser.parse(kwargs['roles'])
-            matcher = RoleQuery(parser).transform(tree)
-            kwargs['roles'] = matcher
+        if 'roles' in kwargs:
+            parsed = kwargs['roles']
+            if isinstance(parsed, str):
+                parsed = role_query.parse(parsed)
 
-        if 'sexes' in kwargs and isinstance(kwargs['sexes'], str):
-            tree = parser.parse(kwargs['sexes'])
-            matcher = SexQuery(parser).transform(tree)
-            kwargs['sexes'] = matcher
+            kwargs['roles'] = role_query.transform(parsed)
 
-        if 'inheritance' in kwargs and isinstance(kwargs['inheritance'], str):
-            tree = parser.parse(kwargs['inheritance'])
-            matcher = InheritanceQuery(parser).transform(tree)
-            kwargs['inheritance'] = matcher
+        if 'sexes' in kwargs:
+            parsed = kwargs['sexes']
+            if isinstance(parsed, str):
+                parsed = sex_query.parse(parsed)
 
-        if 'variant_type' in kwargs and \
-                isinstance(kwargs['variant_type'], str):
-            tree = parser.parse(kwargs['variant_type'])
-            matcher = VariantTypeQuery(parser).transform(tree)
-            kwargs['variant_type'] = matcher
+            kwargs['sexes'] = sex_query.transform(parsed)
+
+        if 'inheritance' in kwargs:
+            parsed = kwargs['inheritance']
+            if isinstance(parsed, str):
+                parsed = inheritance_query.parse(parsed)
+
+            kwargs['inheritance'] = inheritance_query.transform(parsed)
+
+        if 'variant_type' in kwargs:
+            parsed = kwargs['variant_type']
+            if isinstance(kwargs['variant_type'], str):
+                parsed = variant_type_query.parse(parsed)
+
+            kwargs['variant_type'] = variant_type_query.transform(parsed)
 
         for v in vs:
-            if not self.filter_variant(v, **kwargs):
-                continue
-            yield v
+            for va in v:
+                if self.filter_variant(va, **kwargs):
+                    yield v
+                    break
 
     def wrap_variants(self, annot_df):
         if annot_df is None:
             raise StopIteration()
 
         variants = self.vcf_vars
-        for index, row in enumerate(annot_df.to_dict(orient='records')):
-            vcf = variants[index]
-
-            summary_variant = self.VF.summary_variant_from_dict(row)
+        for var_index, group_df in annot_df.groupby(["var_index"]):
+            vcf = variants[var_index]
+            summary_variant = self.VF.summary_variant_from_records(
+                group_df.to_dict(orient='records'))
 
             for fam in self.families.values():
                 vs = self.VF.family_variant_from_vcf(
                     summary_variant, fam, vcf=vcf)
                 for v in vs:
                     yield v
-
-
-if __name__ == "__main__":
-    import os
-    from variants.vcf_utils import mat2str
-    from variants.annotate_variant_effects import \
-        VcfVariantEffectsAnnotator
-    from variants.annotate_allele_frequencies import \
-        VcfAlleleFrequencyAnnotator
-    from variants.annotate_composite import AnnotatorComposite
-
-    prefix = os.path.join(
-        os.environ.get(
-            "DAE_DATA_DIR",
-            "/home/lubo/Work/seq-pipeline/data-raw-dev/"
-        ),
-        "spark/nspark"
-    )
-
-    annotator = AnnotatorComposite(annotators=[
-        VcfVariantEffectsAnnotator(),
-        VcfAlleleFrequencyAnnotator(),
-    ])
-
-    fvars = RawFamilyVariants(prefix=prefix, annotator=annotator)
-
-    vs = fvars.query_variants(
-        inheritance='unknown',
-    )
-    for c, v in enumerate(vs):
-        print(c, v, v.family_id, mat2str(v.best_st), mat2str(v.gt),
-              v.effect_type, v.effect_gene, v.inheritance,
-              v.get_attr('all.nAltAlls'), v.get_attr('all.altFreq'))

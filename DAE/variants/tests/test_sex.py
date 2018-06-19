@@ -58,7 +58,7 @@ def test_query_sexes_male_only(ustudy_single):
     vs = ustudy_single.query_variants(sexes='male and not female')
     vl = list(vs)
 
-    assert len(vl) == 43
+    assert len(vl) == 42
     for v in vl:
         assert set(v.variant_in_sexes) == set([Sex.male])
 
@@ -67,7 +67,7 @@ def test_query_sexes_male_only_eq(ustudy_single):
     vs = ustudy_single.query_variants(sexes='eq(male)')
     vl = list(vs)
 
-    assert len(vl) == 43
+    assert len(vl) == 42
     for v in vl:
         assert set(v.variant_in_sexes) == set([Sex.male])
 
@@ -99,7 +99,7 @@ def test_query_sexes_single_sex_only(ustudy_single):
 
     for v in vl:
         assert len(v.variant_in_sexes) == 1
-    assert len(vl) == 79
+    assert len(vl) == 78
 
 
 def test_query_sexes_single_sex_only_eq(ustudy_single):
@@ -111,4 +111,4 @@ def test_query_sexes_single_sex_only_eq(ustudy_single):
 
     for v in vl:
         assert len(v.variant_in_sexes) == 1
-    assert len(vl) == 79
+    assert len(vl) == 78

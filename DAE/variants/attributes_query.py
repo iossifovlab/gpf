@@ -1,10 +1,12 @@
 import functools
 
-from lark import Lark, InlineTransformer
+from lark import Lark, InlineTransformer, Tree
 from lark.reconstruct import Reconstructor
+from lark.tree import Discard
 
 from variants.attributes import Role, Inheritance, VariantType, Sex
-from variants.attributes_query_builder import is_token
+from variants.attributes_query_builder import is_token, tree as create_tree,\
+    is_tree
 
 QUERY_GRAMMAR = """
     start: expression
@@ -84,7 +86,7 @@ class Matcher(object):
 
 class QueryTransformer(InlineTransformer):
     
-    def __init__(self, parser, token_converter=None):
+    def __init__(self, parser=parser, token_converter=None):
         super(QueryTransformer, self).__init__()
 
         if token_converter is None:
@@ -92,10 +94,17 @@ class QueryTransformer(InlineTransformer):
 
         self.parser = parser
         self.tree = None
-        self.token_transformer = token_converter
+        self.token_converter = token_converter
+
+    def parse(self, expression):
+        return self.parser.parse(expression)
+
+    def parse_and_transform(self, expression):
+        return self.transform(self.parse(expression))
 
     def transform(self, tree):
         self.tree = tree
+        print(tree)
         return super(QueryTransformer, self).transform(tree)
 
     def less_than(self, *args):
@@ -108,7 +117,7 @@ class QueryTransformer(InlineTransformer):
         return lambda l: args[0] in l
 
     def simple_arg(self, *args):
-        return self.token_transformer(args[0])
+        return self.token_converter(args[0])
 
     def negation(self, *args):
         assert len(args) == 1
@@ -136,27 +145,33 @@ class QueryTransformer(InlineTransformer):
 
 
 def roles_converter(a):
-    return Role.from_name(a)
+    if not isinstance(a, Role):
+        return Role.from_name(a)
+    return a
 
 
 def sex_converter(a):
-    return Sex.from_name(a)
+    if not isinstance(a, Sex):
+        return Sex.from_name(a)
+    return a
 
 
 def inheritance_converter(a):
-    return Inheritance.from_name(a)
+    if not isinstance(a, Inheritance):
+        return Inheritance.from_name(a)
+    return a
 
 
 def variant_type_converter(a):
-    return VariantType.from_name(a)
+    if not isinstance(a, VariantType):
+        return VariantType.from_name(a)
+    return a
 
 
-RoleQuery = functools.partial(QueryTransformer, token_converter=roles_converter)
+role_query = QueryTransformer(token_converter=roles_converter)
 
-SexQuery = functools.partial(QueryTransformer, token_converter=sex_converter)
+sex_query = QueryTransformer(token_converter=sex_converter)
 
-InheritanceQuery = functools.partial(
-    QueryTransformer, token_converter=inheritance_converter)
+inheritance_query = QueryTransformer(token_converter=inheritance_converter)
 
-VariantTypeQuery = functools.partial(
-    QueryTransformer, token_converter=variant_type_converter)
+variant_type_query = QueryTransformer(token_converter=variant_type_converter)

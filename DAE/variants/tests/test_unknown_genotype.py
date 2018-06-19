@@ -7,7 +7,6 @@ from __future__ import print_function
 
 from RegionOperations import Region
 from variants.attributes import Inheritance
-import numpy as np
 
 
 def test_query_regions(ustudy_single):
@@ -26,5 +25,7 @@ def test_query_regions(ustudy_single):
     assert v.inheritance == Inheritance.unknown
 
     assert v.best_st.shape == (2, 9)
-    assert np.all(v.best_st[:, 0] == -1)
-    assert np.all(v.best_st[:, 6] == -1)
+    assert v.best_st[0, 0] == 0
+    assert v.best_st[1, 0] == -1
+    assert v.best_st[0, 6] == 1
+    assert v.best_st[1, 6] == -1

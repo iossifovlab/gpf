@@ -13,8 +13,8 @@ import numpy as np
     (Region('1', 901921, 901921), ("synonymous", "missense")),
     (Region('1', 905956, 905956), ("frame-shift", "missense")),
 ])
-def test_multi_alt_allele_genotype(full_vcf, region, worst_effect):
-    fvars = full_vcf("fixtures/effects_trio")
+def test_multi_alt_allele_genotype(variants_vcf, region, worst_effect):
+    fvars = variants_vcf("fixtures/effects_trio")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == 1
@@ -35,8 +35,8 @@ def test_multi_alt_allele_genotype(full_vcf, region, worst_effect):
     (Region('1', 901921, 901921), ("synonymous", "missense")),
     (Region('1', 905956, 905956), ("frame-shift", "missense")),
 ])
-def test_multi_alt_allele_genotype2(full_vcf, region, worst_effect):
-    fvars = full_vcf("fixtures/effects_trio_multi")
+def test_multi_alt_allele_genotype2(variants_vcf, region, worst_effect):
+    fvars = variants_vcf("fixtures/effects_trio_multi")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == 1
@@ -52,12 +52,12 @@ def test_multi_alt_allele_genotype2(full_vcf, region, worst_effect):
     (Region('1', 11500, 11500), np.array([[0, 1], [0, 0], [0, 0]])),
     (Region('1', 11501, 11501), np.array([[0, 2], [0, 0], [0, 0]])),
     (Region('1', 11502, 11502), np.array([[0, 0], [0, 0], [0, 0]])),
-    (Region('1', 11503, 11503), np.array([[-1, -1], [0, 0], [0, 0]])),
+    (Region('1', 11503, 11503), np.array([[0, -1], [0, 0], [0, 0]])),
     (Region('1', 11504, 11504), np.array([[0, 1], [0, 2], [0, 0]])),
     (Region('1', 11505, 11505), np.array([[0, 1], [0, 2], [0, 3]])),
 ])
-def test_trios_multi_alt_allele_genotype2(full_vcf, region, gt):
-    fvars = full_vcf("fixtures/trios_multi")
+def test_trios_multi_alt_allele_genotype2(variants_vcf, region, gt):
+    fvars = variants_vcf("fixtures/trios_multi")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == 1
