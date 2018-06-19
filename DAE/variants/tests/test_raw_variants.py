@@ -193,7 +193,7 @@ def test_query_variants_persons_all(ustudy_single):
 
 def test_query_variants_roles_dad(ustudy_single):
     genes = ['NOC2L']
-    role_query = any_node([token(Role.dad)])
+    role_query = "dad"
 
     vs = ustudy_single.query_variants(
         genes=genes,

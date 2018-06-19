@@ -15,9 +15,9 @@ from variants.attributes_query_builder import any_node, token
 def test_query_by_filter(ustudy_single):
     genes = ['NOC2L']
 
-    rq1 = role_query.transform(any_node([token(Role.dad)]))
-    rq2 = role_query.transform(any_node([token(Role.maternal_cousin)]))
-    rq = role_query.parse("dad and not maternal_cousin")
+    rq1 = role_query.parse_and_transform("dad")
+    rq2 = role_query.parse_and_transform("maternal_cousin")
+    rq = "dad and not maternal_cousin"
 
     vals = [
         Role.maternal_aunt,
