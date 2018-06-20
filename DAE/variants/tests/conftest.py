@@ -25,7 +25,7 @@ from variants.annotate_composite import AnnotatorComposite
 from variants.variant import VariantFactoryMulti, AlleleSummary,\
     FamilyVariantMulti, VariantFactorySingle, SummaryVariant
 from variants.attributes_query import parser as attributes_query_parser, \
-    QueryTransformer
+    QueryTransformer, QueryTransformerMatcher
 
 from variants.attributes_query import \
     parser_with_ambiguity as attributes_query_parser_with_ambiguity
@@ -453,3 +453,13 @@ def parser_with_ambiguity():
 @pytest.fixture()
 def transformer():
     return QueryTransformer
+
+
+@pytest.fixture()
+def transformer_matcher():
+    return QueryTransformerMatcher()
+
+
+@pytest.fixture()
+def transformer_matcher_class():
+    return QueryTransformerMatcher
