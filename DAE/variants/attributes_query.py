@@ -9,7 +9,7 @@ from variants.attributes_query_builder import is_token, tree as create_tree,\
     is_tree
 
 QUERY_GRAMMAR = """
-    start: expression
+    ?start: expression
 
     ?expression: logical_or
 
@@ -61,7 +61,6 @@ parser = Lark(QUERY_GRAMMAR)
 
 
 class Matcher(object):
-
     def __init__(self, tree, parser, matcher):
         assert matcher is not None
         assert tree is not None
@@ -84,6 +83,22 @@ class Matcher(object):
         self._reconstructor.reconstruct(self.tree)
 
 
+class QueryTransformerMatcher(object):
+    def __init__(self, parser=parser, token_converter=None):
+        self.parser = parser
+        self.transformer = QueryTransformer(parser, token_converter)
+
+    def parse(self, expression):
+        return self.parser.parse(expression)
+
+    def transform(self, tree):
+        matcher = self.transformer.transform(tree)
+        return Matcher(tree, parser, matcher)
+
+    def parse_and_transform(self, expression):
+        return self.transform(self.parse(expression))
+
+
 class QueryTransformer(InlineTransformer):
     
     def __init__(self, parser=parser, token_converter=None):
@@ -92,20 +107,7 @@ class QueryTransformer(InlineTransformer):
         if token_converter is None:
             token_converter = lambda x: x
 
-        self.parser = parser
-        self.tree = None
         self.token_converter = token_converter
-
-    def parse(self, expression):
-        return self.parser.parse(expression)
-
-    def parse_and_transform(self, expression):
-        return self.transform(self.parse(expression))
-
-    def transform(self, tree):
-        self.tree = tree
-        print(tree)
-        return super(QueryTransformer, self).transform(tree)
 
     def less_than(self, *args):
         return lambda l: l > args[0]
@@ -132,7 +134,7 @@ class QueryTransformer(InlineTransformer):
 
     def start(self, *args):
         assert len(args) == 1
-        return Matcher(self.tree, self.parser, args[0])
+        return args[0]
 
     def eq(self, *args):
         return lambda x: x == set(args)
@@ -168,10 +170,12 @@ def variant_type_converter(a):
     return a
 
 
-role_query = QueryTransformer(token_converter=roles_converter)
+role_query = QueryTransformerMatcher(token_converter=roles_converter)
 
-sex_query = QueryTransformer(token_converter=sex_converter)
+sex_query = QueryTransformerMatcher(token_converter=sex_converter)
 
-inheritance_query = QueryTransformer(token_converter=inheritance_converter)
+inheritance_query = QueryTransformerMatcher(
+    token_converter=inheritance_converter)
 
-variant_type_query = QueryTransformer(token_converter=variant_type_converter)
+variant_type_query = QueryTransformerMatcher(
+    token_converter=variant_type_converter)
