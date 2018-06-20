@@ -77,10 +77,12 @@ class VariantBase(object):
         return self.position + len(self.reference)
 
     def __eq__(self, other):
+        print(zip(self.alts, other.alts))
         return self.chromosome == other.chromosome and \
             self.position == other.position and \
             self.reference == other.reference and \
-            all([a1 == a2 for a1, a2 in zip(self.alts, other.alts)])
+            len(self.alts) == len(other.alts) and \
+            all([a1 == a2 for (a1, a2) in zip(self.alts, other.alts)])
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -740,7 +742,8 @@ class FamilyVariantMulti(FamilyVariantBase):
 
     def __iter__(self):
         if not self.alt_alleles:
-            yield FamilyVariant(self.summary_variant, self.family, self.gt, 0)
+            yield FamilyVariant(
+                self.summary_variant, self.family, self.gt, 0)
         else:
             for alt_allele in self.alt_alleles:
                 yield FamilyVariant(
@@ -789,8 +792,8 @@ class SummaryVariantFactory(object):
                 zip(row['effect_details.transcript_ids'],
                     row['effect_details.details']))
         alternative = row['alternative']
-        if alternative is None and 'alternative_sv' in row:
-            alternative = row['alternative_sv']
+        if alternative is None and 'alternative_fv' in row:
+            alternative = row['alternative_fv']
         return AlleleSummary(
             row['chrom'], row['position'],
             row['reference'],

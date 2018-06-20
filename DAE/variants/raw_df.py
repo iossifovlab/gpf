@@ -11,6 +11,7 @@ import pandas as pd
 from variants.family import FamiliesBase, Family
 from variants.variant import SummaryVariantFactory, FamilyVariant,\
     FamilyVariantMulti
+from variants.attributes import Inheritance
 
 
 class FamilyVariantFactory(object):
@@ -105,18 +106,33 @@ class DfFamilyVariants(FamiliesBase):
             sdf, vdf = self.filter_families(sdf, vdf, kwargs['family_ids'])
 
         # sdf = sdf.set_index(["var_index", "allele_index"])
+        print("_________________________________________________________")
         print(vdf[["var_index", "allele_index", "alternative", "family_id"]])
-        jdf = vdf.join(sdf, on="var_index", rsuffix="_sv", how="left")
+        jdf = vdf.join(
+            sdf.set_index('var_index'), on="var_index",
+            rsuffix="_fv")
 
         # print(jdf.columns)
-        print("_________________________________________________________")
         print(sdf[["var_index", "allele_index", "alternative"]])
-        print(vdf[["var_index", "allele_index", "alternative"]])
-        print(jdf[["var_index", "allele_index", "reference", "reference_sv",
-                   "alternative", "alternative_sv", "family_id"]])
+        print(jdf[["var_index", "allele_index", "allele_index_fv",
+                   "reference",
+                   "alternative", "alternative_fv",
+                   "family_id"]])
         print("_________________________________________________________")
 
         for _name, group in jdf.groupby(by=["var_index", "family_id"]):
-            print(group)
+
+            if group.inheritance.unique()[0] != Inheritance.reference.value:
+
+                print(group[["var_index", "allele_index", "allele_index_fv",
+                             "reference",
+                             "alternative", "alternative_fv",
+                             "family_id", "genotype", "inheritance"]])
+                group = group.drop_duplicates(
+                    subset=["var_index", "allele_index"])
+                print(group[["var_index", "allele_index", "allele_index_fv",
+                             "reference",
+                             "alternative", "alternative_fv",
+                             "family_id", "genotype", "inheritance"]])
             rec = group.to_dict(orient='records')
             yield self.wrap_family_variant_multi(rec)
