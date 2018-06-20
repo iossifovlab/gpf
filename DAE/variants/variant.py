@@ -44,13 +44,14 @@ class VariantBase(object):
 
     @property
     def alternative(self):
-        if self._alternative is None:
-            # raise NotImplemented()
-            pass
         return self._alternative
 
+    @property
+    def alts(self):
+        return [self.alternative] if self.alternative is not None else []
+
     def __repr__(self):
-        if self.alternative is None:
+        if not self.alts:
             return '{}:{} {} (ref)'.format(
                 self.chromosome, self.position,
                 self.reference)
@@ -58,7 +59,7 @@ class VariantBase(object):
             return '{}:{} {}->{}'.format(
                 self.chromosome, self.position,
                 self.reference,
-                self.alternative)
+                ",".join(self.alts))
 
     def start(self):
         """
@@ -76,10 +77,12 @@ class VariantBase(object):
         return self.position + len(self.reference)
 
     def __eq__(self, other):
+        print(zip(self.alts, other.alts))
         return self.chromosome == other.chromosome and \
             self.position == other.position and \
             self.reference == other.reference and \
-            self.alternative == other.alternative
+            len(self.alts) == len(other.alts) and \
+            all([a1 == a2 for (a1, a2) in zip(self.alts, other.alts)])
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -391,7 +394,9 @@ class SummaryVariant(VariantBase):
 
     @property
     def alts(self):
-        return AltAlleleItems([sa.alternative for sa in self.alt_alleles])
+        return AltAlleleItems([
+            sa.alternative for sa in self.alt_alleles
+            if sa.alternative is not None])
 
     @property
     def alternative(self):
@@ -737,7 +742,8 @@ class FamilyVariantMulti(FamilyVariantBase):
 
     def __iter__(self):
         if not self.alt_alleles:
-            yield FamilyVariant(self.summary_variant, self.family, self.gt, 0)
+            yield FamilyVariant(
+                self.summary_variant, self.family, self.gt, 0)
         else:
             for alt_allele in self.alt_alleles:
                 yield FamilyVariant(
@@ -776,20 +782,22 @@ class SummaryVariantFactory(object):
 
     @staticmethod
     def summary_allele_from_record(row):
-        print(type(row['effect_type']))
         if not isinstance(row['effect_type'], str):
             effects = None
         else:
-            pprint(row)
+            # pprint(row)
             effects = Effect.from_effects(
                 row['effect_type'],
                 zip(row['effect_gene.genes'], row['effect_gene.types']),
                 zip(row['effect_details.transcript_ids'],
                     row['effect_details.details']))
-
+        alternative = row['alternative']
+        if alternative is None and 'alternative_fv' in row:
+            alternative = row['alternative_fv']
         return AlleleSummary(
             row['chrom'], row['position'],
-            row['reference'], row['alternative'],
+            row['reference'],
+            alternative=alternative,
             var_index=row['var_index'],
             allele_index=row['allele_index'],
             effect=effects,

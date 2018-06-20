@@ -3,6 +3,8 @@ Created on Jun 15, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import pytest
 from RegionOperations import Region
 from datasets.helpers import mat2str
@@ -50,13 +52,45 @@ def test_df_query_multiallelic3_families(
 def test_reference_variant(
         variants_impl, variants, fixture_name):
 
-    dfvars = variants_impl(variants)(fixture_name)
-    assert dfvars is not None
+    fvars = variants_impl(variants)(fixture_name)
+    assert fvars is not None
 
-    vs = dfvars.query_variants()
+    vs = fvars.query_variants(
+        # family_ids=['f1']
+    )
     vs = list(vs)
     assert len(vs) == 2
     print(vs)
 
     for v in vs:
         print(mat2str(v.best_st))
+        print("summary:", v.summary_variant)
+
+    assert vs[0].summary_variant == vs[1].summary_variant
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_df",
+    # "variants_vcf",
+])
+@pytest.mark.parametrize("fixture_name", [
+    "fixtures/trios2_11600",
+])
+def test_reference_multiallelic_variant(
+        variants_impl, variants, fixture_name):
+
+    fvars = variants_impl(variants)(fixture_name)
+    assert fvars is not None
+
+    vs = fvars.query_variants(
+        # family_ids=['f1']
+    )
+    vs = list(vs)
+    print(vs)
+    assert len(vs) == 2
+
+    for v in vs:
+        print(mat2str(v.best_st))
+        print("summary:", v.summary_variant)
+
+    assert vs[0].summary_variant == vs[1].summary_variant

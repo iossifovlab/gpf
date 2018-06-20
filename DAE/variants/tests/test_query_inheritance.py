@@ -44,3 +44,19 @@ def test_query_inheritance_other(ustudy_single):
     vl = list(vs)
 
     assert len(vl) == 0
+
+
+def test_query_inheritance_reference(ustudy_single):
+    vs = ustudy_single.query_variants(inheritance='reference')
+    assert vs is not None
+    vl = list(vs)
+
+    assert len(vl) == 0
+
+
+def test_query_inheritance_not_reference(ustudy_single):
+    vs = ustudy_single.query_variants(inheritance='not reference')
+    assert vs is not None
+    vl = list(vs)
+
+    assert len(vl) == 513
