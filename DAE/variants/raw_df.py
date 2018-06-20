@@ -105,16 +105,18 @@ class DfFamilyVariants(FamiliesBase):
             sdf, vdf = self.filter_families(sdf, vdf, kwargs['family_ids'])
 
         # sdf = sdf.set_index(["var_index", "allele_index"])
-        jdf = vdf.join(sdf, on="var_index", rsuffix="_fv")
+        print(vdf[["var_index", "allele_index", "alternative", "family_id"]])
+        jdf = vdf.join(sdf, on="var_index", rsuffix="_sv", how="left")
 
-        print(jdf.columns)
+        # print(jdf.columns)
         print("_________________________________________________________")
-        print(sdf[["alternative"]])
-        print(vdf[["alternative"]])
-        print(jdf[["reference", "reference_fv",
-                   "alternative", "alternative_fv"]])
+        print(sdf[["var_index", "allele_index", "alternative"]])
+        print(vdf[["var_index", "allele_index", "alternative"]])
+        print(jdf[["var_index", "allele_index", "reference", "reference_sv",
+                   "alternative", "alternative_sv", "family_id"]])
         print("_________________________________________________________")
 
         for _name, group in jdf.groupby(by=["var_index", "family_id"]):
+            print(group)
             rec = group.to_dict(orient='records')
             yield self.wrap_family_variant_multi(rec)

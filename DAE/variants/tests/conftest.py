@@ -271,8 +271,9 @@ def variants_df(variants_vcf):
         summary_df = fvars.annot_df
         ped_df = fvars.ped_df
         vars_df = family_variants_df(
-            fvars.query_variants(inheritanch="not reference"))
-
+            fvars.query_variants(
+                # inheritance="not reference"
+            ))
         return DfFamilyVariants(ped_df, summary_df, vars_df)
     return builder
 

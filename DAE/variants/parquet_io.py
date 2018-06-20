@@ -7,6 +7,7 @@ from __future__ import print_function
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
+from variants.attributes import Inheritance
 
 
 def summary_parquet_schema():
@@ -146,6 +147,7 @@ def family_variants_batch(variants):
         "variant_in_sexes": [],
     }
     for vs in variants:
+        # assert vs.inheritance != Inheritance.reference
         for v in vs:
             data["chrom"].append(v.chromosome)
             data["position"].append(v.position)
