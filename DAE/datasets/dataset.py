@@ -5,7 +5,7 @@ import logging
 from RegionOperations import Region
 from variants.attributes import Role
 from helpers import EFFECT_TYPES_MAPPING
-from variants.attributes_query_builder import token, and_node, not_node, or_node
+from variants.attributes_query_builder import and_node, not_node, or_node, arg
 from variants.attributes_query import role_query, variant_type_converter, \
     sex_converter
 
@@ -83,12 +83,12 @@ class DatasetWrapper(Dataset):
 
         if 'sexes' in kwargs:
             sexes = kwargs['sexes']
-            sexes = [token(sex) for sex in sexes]
+            sexes = [arg(sex) for sex in sexes]
             kwargs['sexes'] = or_node(sexes)
 
         if 'variant_type' in kwargs:
             variant_types = kwargs['variant_type']
-            variant_types = [token(t) for t in variant_types]
+            variant_types = [arg(t) for t in variant_types]
             kwargs['variant_type'] = or_node(variant_types)
 
         if 'effect_types' in kwargs:
@@ -137,26 +137,26 @@ class DatasetWrapper(Dataset):
 
             if filter_option == 'affected only':
                 new_roles = and_node([
-                    token(Role.prb.name),
-                    not_node(token(Role.sib.name))
+                    arg(Role.prb.name),
+                    not_node([arg(Role.sib.name)])
                 ])
 
             if filter_option == 'unaffected only':
                 new_roles = and_node([
-                    not_node(token(Role.prb.name)),
-                    token(Role.sib.name)
+                    not_node([arg(Role.prb.name)]),
+                    arg(Role.sib.name)
                 ])
 
             if filter_option == 'affected and unaffected':
                 new_roles = and_node([
-                    token(Role.prb.name),
-                    token(Role.sib.name)
+                    arg(Role.prb.name),
+                    arg(Role.sib.name)
                 ])
 
             if filter_option == 'neither':
                 new_roles = and_node([
-                    not_node(token(Role.prb.name)),
-                    not_node(token(Role.sib.name))
+                    not_node([arg(Role.prb.name)]),
+                    not_node([arg(Role.sib.name)])
                 ])
 
             if new_roles:
@@ -185,26 +185,26 @@ class DatasetWrapper(Dataset):
 
             if filter_option == 'mother only':
                 new_roles = and_node([
-                    not_node(token(Role.dad.name)),
-                    token(Role.mom.name)
+                    not_node([arg(Role.dad.name)]),
+                    arg(Role.mom.name)
                 ])
 
             if filter_option == 'father only':
                 new_roles = and_node([
-                    token(Role.dad.name),
-                    not_node(token(Role.mom.name))
+                    arg(Role.dad.name),
+                    not_node([arg(Role.mom.name)])
                 ])
 
             if filter_option == 'mother and father':
                 new_roles = and_node([
-                    token(Role.dad.name),
-                    token(Role.mom.name)
+                    arg(Role.dad.name),
+                    arg(Role.mom.name)
                 ])
 
             if filter_option == 'neither':
                 new_roles = and_node([
-                    not_node(token(Role.dad.name)),
-                    not_node(token(Role.mom.name))
+                    not_node([arg(Role.dad.name)]),
+                    not_node([arg(Role.mom.name)])
                 ])
 
             if new_roles:

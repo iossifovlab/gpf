@@ -17,6 +17,10 @@ def token(value):
     return Token("STRING", value)
 
 
+def arg(value):
+    return arg_node([simple_arg_node([token(value)])])
+
+
 def tree(operation, children):
     return Tree(operation, children)
 
