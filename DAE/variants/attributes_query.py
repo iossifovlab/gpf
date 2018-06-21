@@ -92,8 +92,6 @@ class QueryTransformerMatcher(object):
         return self.parser.parse(expression)
 
     def transform(self, tree):
-        print("DA MU EBESEH MAIKATA")
-        print(tree)
         matcher = self.transformer.transform(tree)
         return Matcher(tree, parser, matcher)
 
