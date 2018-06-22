@@ -15,22 +15,19 @@ q = """
     WHERE
 """
 
+
 transformers = {
     'effect_type': QuerySQLListTransformerMatcher("`effect_gene.types`"),
     'genes': QuerySQLListTransformerMatcher("`effect_gene.genes`"),
     'personId': QuerySQLListTransformerMatcher("variant_in_members"),
-    'role': QuerySQLListTransformerMatcher(
-        "variant_in_roles",
-        token_converter=lambda x: str(Role.from_name(x).value)),
-    'sex': QuerySQLListTransformerMatcher(
-        "variant_in_sexes",
-        token_converter=lambda x: str(Sex.from_name(x).value)),
+    'role': QuerySQLListTransformerMatcher("variant_in_roles",
+                                           token_converter=roles_converter),
+    'sex': QuerySQLListTransformerMatcher("variant_in_sexes",
+                                          token_converter=sex_converter),
     'inheritance': QuerySQLTransformerMatcher(
-        "inheritance",
-        token_converter=lambda x: str(Inheritance.from_name(x).value)),
+        "inheritance", token_converter=inheritance_converter),
     'variant_type': QuerySQLTransformerMatcher(
-        "variant_type",
-        token_converter=lambda x: str(VariantType.from_name(x).value)),
+        "variant_type", token_converter=variant_type_converter),
     'position': QuerySQLTransformerMatcher("A.position"),
     'chrom': QuerySQLTransformerMatcher("A.chrom"),
     'alternative': QuerySQLTransformerMatcher("A.alternative"),

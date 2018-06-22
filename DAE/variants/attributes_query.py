@@ -1,4 +1,5 @@
 import functools
+import enum
 
 from lark import Lark, InlineTransformer, Tree
 from lark.reconstruct import Reconstructor
@@ -286,17 +287,23 @@ class QueryTreeToSQLTransformer(BaseTreeTransformer):
         self.column_name = column_name
         super(QueryTreeToSQLTransformer, self).__init__()
 
+    def token_converter(self, arg):
+        if isinstance(arg, enum.Enum):
+            return "'" + str(arg.value) + "'"
+        else:
+            return "'" + str(arg) + "'"
+
     def LessThanNode(self, arg):
-        return self.column_name + " > " + arg
+        return self.column_name + " > " + self.token_converter(arg)
 
     def MoreThanNode(self, arg):
-        return self.column_name + " < " + arg
+        return self.column_name + " < " + self.token_converter(arg)
 
     def ContainsNode(self, arg):
-        return self.column_name + " = " + arg
+        return self.column_name + " = " + self.token_converter(arg)
 
     def EqualsNode(self, arg):
-        return self.column_name + " = " + arg
+        return self.column_name + " = " + self.token_converter(arg)
 
     def NotNode(self, children):
         assert len(children) == 1
@@ -311,25 +318,25 @@ class QueryTreeToSQLTransformer(BaseTreeTransformer):
 
 class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
     def ContainsNode(self, arg):
-        return "array_contains(" + self.column_name + ", " + str(arg) + ")"
+        return "array_contains(" + self.column_name + ", " + \
+            self.token_converter(arg) + ")"
 
     def EqualsNode(self, arg):
+        arg = [self.token_converter(a) for a in arg]
         return "concat_ws('|'," + self.column_name + ")" + \
             " = concat_ws('|', array(" + \
             reduce((lambda x, y: x + ", " + y), arg) + "))"
 
 
 class QuerySQLTransformerMatcher(BaseQueryTransformerMatcher):
-    def __init__(self, column_name, parser=parser,
-                 token_converter=lambda x: "'" + str(x) + "'"):
+    def __init__(self, column_name, parser=parser, token_converter=None):
         super(QuerySQLTransformerMatcher, self).__init__(parser,
                                                          token_converter)
         self.transformer2 = QueryTreeToSQLTransformer(column_name)
 
 
 class QuerySQLListTransformerMatcher(BaseQueryTransformerMatcher):
-    def __init__(self, column_name, parser=parser, 
-                 token_converter=lambda x: "'" + str(x) + "'"):
+    def __init__(self, column_name, parser=parser, token_converter=None):
         super(QuerySQLListTransformerMatcher, self).__init__(parser,
                                                              token_converter)
         self.transformer2 = QueryTreeToSQLListTransformer(column_name)
