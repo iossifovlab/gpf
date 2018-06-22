@@ -5,9 +5,8 @@ import logging
 from RegionOperations import Region
 from variants.attributes import Role
 from helpers import EFFECT_TYPES_MAPPING
-from variants.attributes_query_builder import and_node, not_node, or_node, arg
 from variants.attributes_query import role_query, variant_type_converter, \
-    sex_converter
+    sex_converter, AndNode, NotNode, OrNode, EqualsNode, ContainsNode
 
 logger = logging.getLogger(__name__)
 
@@ -83,13 +82,14 @@ class DatasetWrapper(Dataset):
 
         if 'sexes' in kwargs:
             sexes = kwargs['sexes']
-            sexes = [arg(sex) for sex in sexes]
-            kwargs['sexes'] = or_node(sexes)
+            sexes = [ContainsNode(sex_converter(sex)) for sex in sexes]
+            kwargs['sexes'] = OrNode(sexes)
 
         if 'variant_type' in kwargs:
             variant_types = kwargs['variant_type']
-            variant_types = [arg(t) for t in variant_types]
-            kwargs['variant_type'] = or_node(variant_types)
+            variant_types = [ContainsNode(variant_type_converter(t))
+                             for t in variant_types]
+            kwargs['variant_type'] = OrNode(variant_types)
 
         if 'effect_types' in kwargs:
             effect_types = kwargs['effect_types']
@@ -136,27 +136,27 @@ class DatasetWrapper(Dataset):
             new_roles = None
 
             if filter_option == 'affected only':
-                new_roles = and_node([
-                    arg(Role.prb.name),
-                    not_node([arg(Role.sib.name)])
+                new_roles = AndNode([
+                    ContainsNode(Role.prb),
+                    NotNode(ContainsNode(Role.sib))
                 ])
 
             if filter_option == 'unaffected only':
-                new_roles = and_node([
-                    not_node([arg(Role.prb.name)]),
-                    arg(Role.sib.name)
+                new_roles = AndNode([
+                    NotNode(ContainsNode(Role.prb)),
+                    ContainsNode(Role.sib)
                 ])
 
             if filter_option == 'affected and unaffected':
-                new_roles = and_node([
-                    arg(Role.prb.name),
-                    arg(Role.sib.name)
+                new_roles = AndNode([
+                    ContainsNode(Role.prb),
+                    ContainsNode(Role.sib)
                 ])
 
             if filter_option == 'neither':
-                new_roles = and_node([
-                    not_node([arg(Role.prb.name)]),
-                    not_node([arg(Role.sib.name)])
+                new_roles = AndNode([
+                    NotNode(ContainsNode(Role.prb)),
+                    NotNode(ContainsNode(Role.sib))
                 ])
 
             if new_roles:
@@ -167,13 +167,13 @@ class DatasetWrapper(Dataset):
         if not roles_query:
             return
 
-        roles_query = or_node(roles_query)
+        roles_query = OrNode(roles_query)
 
         original_roles = kwargs.get('roles', None)
         if original_roles is not None:
             if isinstance(original_roles, str):
-                original_roles = role_query.parse(original_roles)
-            kwargs['roles'] = and_node([original_roles, roles_query])
+                original_roles = role_query.parse_to_stage2(original_roles)
+            kwargs['roles'] = AndNode([original_roles, roles_query])
         else:
             kwargs['roles'] = roles_query
 
@@ -184,27 +184,27 @@ class DatasetWrapper(Dataset):
             new_roles = None
 
             if filter_option == 'mother only':
-                new_roles = and_node([
-                    not_node([arg(Role.dad.name)]),
-                    arg(Role.mom.name)
+                new_roles = AndNode([
+                    NotNode(ContainsNode(Role.dad)),
+                    ContainsNode(Role.mom)
                 ])
 
             if filter_option == 'father only':
-                new_roles = and_node([
-                    arg(Role.dad.name),
-                    not_node([arg(Role.mom.name)])
+                new_roles = AndNode([
+                    ContainsNode(Role.dad),
+                    NotNode(ContainsNode(Role.mom))
                 ])
 
             if filter_option == 'mother and father':
-                new_roles = and_node([
-                    arg(Role.dad.name),
-                    arg(Role.mom.name)
+                new_roles = AndNode([
+                    ContainsNode(Role.dad),
+                    ContainsNode(Role.mom)
                 ])
 
             if filter_option == 'neither':
-                new_roles = and_node([
-                    not_node([arg(Role.dad.name)]),
-                    not_node([arg(Role.mom.name)])
+                new_roles = AndNode([
+                    NotNode(ContainsNode(Role.dad)),
+                    NotNode(ContainsNode(Role.mom))
                 ])
 
             if new_roles:
@@ -215,12 +215,12 @@ class DatasetWrapper(Dataset):
         if not roles_query:
             return
 
-        roles_query = or_node(roles_query)
+        roles_query = OrNode(roles_query)
 
         original_roles = kwargs.get('roles', None)
         if original_roles is not None:
             if isinstance(original_roles, str):
-                original_roles = role_query.parse(original_roles)
-            kwargs['roles'] = and_node([original_roles, roles_query])
+                original_roles = role_query.parse_to_stage2(original_roles)
+            kwargs['roles'] = AndNode([original_roles, roles_query])
         else:
             kwargs['roles'] = roles_query

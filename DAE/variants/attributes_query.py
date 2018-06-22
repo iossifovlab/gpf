@@ -87,12 +87,22 @@ class QueryTransformerMatcher(object):
     def __init__(self, parser=parser, token_converter=None):
         self.parser = parser
         self.transformer = QueryTransformer(parser, token_converter)
+        self.transformer2 = QueryTransformerStageTwo()
 
     def parse(self, expression):
         return self.parser.parse(expression)
 
+    def parse_to_stage2(self, expression):
+        parsed = self.parser.parse(expression)
+        return self.transformer.transform(parsed)
+
     def transform(self, tree):
         matcher = self.transformer.transform(tree)
+        matcher = self.transformer2.transform(matcher)
+        return Matcher(tree, parser, matcher)
+
+    def transform_from_stage2(self, tree):
+        matcher = self.transformer2.transform(tree)
         return Matcher(tree, parser, matcher)
 
     def parse_and_transform(self, expression):
@@ -110,40 +120,114 @@ class QueryTransformer(InlineTransformer):
         self.token_converter = token_converter
 
     def less_than(self, *args):
-        return lambda l: l > args[0]
+        return LessThanNode(args[0])
 
     def more_than(self, *args):
-        return lambda l: l < args[0]
+        return MoreThanNode(args[0])
 
     def arg(self, *args):
-        return lambda l: args[0] in l
+        return ContainsNode(args[0])
 
     def simple_arg(self, *args):
         return self.token_converter(args[0])
 
     def negation(self, *args):
-        assert len(args) == 1
-        arg = args[0]
-        return lambda l: not arg(l)
+        return NotNode(args[0])
 
     def logical_and(self, *args):
-        return lambda l: all(f(l) for f in args)
+        return AndNode(args)
 
     def logical_or(self, *args):
-        return lambda l: any(f(l) for f in args)
+        return OrNode(args)
 
     def start(self, *args):
         assert len(args) == 1
         return args[0]
 
     def eq(self, *args):
-        return lambda x: x == set(args)
+        return EqualsNode(args)
 
     def any(self, *args):
-        return lambda l: any(f(l) for f in args)
+        return OrNode(args)
 
     def all(self, *args):
-        return lambda l: all(f(l) for f in args)
+        return AndNode(args)
+
+
+class Leaf(object):
+    def __init__(self, op, value):
+        self.value = value
+        self.op = op
+
+
+class Node(object):
+    def __init__(self, children):
+        self.children = children
+
+
+class AndNode(Node):
+    def __init__(self, children):
+        super(AndNode, self).__init__(children)
+
+
+class OrNode(Node):
+    def __init__(self, children):
+        super(OrNode, self).__init__(children)
+
+
+class NotNode(Node):
+    def __init__(self, children):
+        super(NotNode, self).__init__([children])
+
+
+class EqualsNode(Node):
+    def __init__(self, children):
+        super(EqualsNode, self).__init__(children)
+
+
+class ContainsNode(Node):
+    def __init__(self, children):
+        super(ContainsNode, self).__init__(children)
+
+
+class LessThanNode(Node):
+    def __init__(self, children):
+        super(LessThanNode, self).__init__(children)
+
+
+class MoreThanNode(Node):
+    def __init__(self, children):
+        super(MoreThanNode, self).__init__(children)
+
+
+class QueryTransformerStageTwo(object):
+    
+    def transform(self, node):
+        print(node)
+        return getattr(self, type(node).__name__)(node)
+
+    def LessThanNode(self, node):
+        return lambda l: l > node.children
+
+    def MoreThanNode(self, node):
+        return lambda l: l < node.children
+
+    def ContainsNode(self, node):
+        return lambda l: node.children in l
+
+    def EqualsNode(self, node):
+        return lambda x: x == set(node.children)
+
+    def NotNode(self, node):
+        assert len(node.children) == 1
+        child = node.children[0]
+        return lambda l: not self.transform(child)(l)
+
+    def AndNode(self, node):
+        return lambda l: all(self.transform(f)(l) for f in node.children)
+
+    def OrNode(self, node):
+        return lambda l: any(self.transform(f)(l) for f in node.children)
 
 
 def roles_converter(a):

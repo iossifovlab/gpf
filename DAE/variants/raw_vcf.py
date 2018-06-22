@@ -234,30 +234,30 @@ class RawFamilyVariants(FamiliesBase):
         if 'roles' in kwargs:
             parsed = kwargs['roles']
             if isinstance(parsed, str):
-                parsed = role_query.parse(parsed)
+                parsed = role_query.parse_to_stage2(parsed)
 
-            kwargs['roles'] = role_query.transform(parsed)
+            kwargs['roles'] = role_query.transform_from_stage2(parsed)
 
         if 'sexes' in kwargs:
             parsed = kwargs['sexes']
             if isinstance(parsed, str):
-                parsed = sex_query.parse(parsed)
+                parsed = sex_query.parse_to_stage2(parsed)
 
-            kwargs['sexes'] = sex_query.transform(parsed)
+            kwargs['sexes'] = sex_query.transform_from_stage2(parsed)
 
         if 'inheritance' in kwargs:
             parsed = kwargs['inheritance']
             if isinstance(parsed, str):
-                parsed = inheritance_query.parse(parsed)
+                parsed = inheritance_query.parse_to_stage2(parsed)
 
-            kwargs['inheritance'] = inheritance_query.transform(parsed)
+            kwargs['inheritance'] = inheritance_query.transform_from_stage2(parsed)
 
         if 'variant_type' in kwargs:
             parsed = kwargs['variant_type']
             if isinstance(kwargs['variant_type'], str):
-                parsed = variant_type_query.parse(parsed)
+                parsed = variant_type_query.parse_to_stage2(parsed)
 
-            kwargs['variant_type'] = variant_type_query.transform(parsed)
+            kwargs['variant_type'] = variant_type_query.transform_from_stage2(parsed)
 
         for v in vs:
             for va in v:
