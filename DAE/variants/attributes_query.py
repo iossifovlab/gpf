@@ -83,12 +83,11 @@ class Matcher(object):
         self._reconstructor.reconstruct(self.tree)
 
 
-class QueryTransformerMatcher(object):
+class BaseQueryTransformerMatcher(object):
     def __init__(self, parser=parser, token_converter=None):
         self.parser = parser
         self.transformer = StringQueryToTreeTransformer(parser,
                                                         token_converter)
-        self.transformer2 = QueryTreeToLambdaTransformer()
 
     def parse(self, expression):
         return self.parser.parse(expression)
@@ -101,11 +100,20 @@ class QueryTransformerMatcher(object):
         return self.transform_tree_to_matcher(self.transformer.transform(tree))
 
     def transform_tree_to_matcher(self, tree):
-        matcher = self.transformer2.transform(tree)
-        return Matcher(tree, parser, matcher)
+        return self.transformer2.transform(tree)
 
     def parse_and_transform(self, expression):
         return self.transform(self.parse(expression))
+
+
+class QueryTransformerMatcher(BaseQueryTransformerMatcher):
+    def __init__(self, parser=parser, token_converter=None):
+        super(QueryTransformerMatcher, self).__init__(parser, token_converter)
+        self.transformer2 = QueryTreeToLambdaTransformer()
+
+    def transform_tree_to_matcher(self, tree):
+        matcher = self.transformer2.transform(tree)
+        return Matcher(tree, parser, matcher)
 
 
 class StringQueryToTreeTransformer(InlineTransformer):
@@ -271,3 +279,57 @@ inheritance_query = QueryTransformerMatcher(
 
 variant_type_query = QueryTransformerMatcher(
     token_converter=variant_type_converter)
+
+
+class QueryTreeToSQLTransformer(BaseTreeTransformer):
+    def __init__(self, column_name):
+        self.column_name = column_name
+        super(QueryTreeToSQLTransformer, self).__init__()
+
+    def LessThanNode(self, arg):
+        return self.column_name + " > " + arg
+
+    def MoreThanNode(self, arg):
+        return self.column_name + " < " + arg
+
+    def ContainsNode(self, arg):
+        return self.column_name + " = " + arg
+
+    def EqualsNode(self, arg):
+        return self.column_name + " = " + arg
+
+    def NotNode(self, children):
+        assert len(children) == 1
+        return "NOT " + children[0]
+
+    def AndNode(self, children):
+        return "(" + reduce((lambda x, y: x + " AND " + y), children) + ")"
+
+    def OrNode(self, children):
+        return "(" + reduce((lambda x, y: x + " OR " + y), children) + ")"
+
+
+class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
+    def ContainsNode(self, arg):
+        return "array_contains(" + self.column_name + ", " + str(arg) + ")"
+
+    def EqualsNode(self, arg):
+        return "concat_ws('|'," + self.column_name + ")" + \
+            " = concat_ws('|', array(" + \
+            reduce((lambda x, y: x + ", " + y), arg) + "))"
+
+
+class QuerySQLTransformerMatcher(BaseQueryTransformerMatcher):
+    def __init__(self, column_name, parser=parser,
+                 token_converter=lambda x: "'" + str(x) + "'"):
+        super(QuerySQLTransformerMatcher, self).__init__(parser,
+                                                         token_converter)
+        self.transformer2 = QueryTreeToSQLTransformer(column_name)
+
+
+class QuerySQLListTransformerMatcher(BaseQueryTransformerMatcher):
+    def __init__(self, column_name, parser=parser, 
+                 token_converter=lambda x: "'" + str(x) + "'"):
+        super(QuerySQLListTransformerMatcher, self).__init__(parser,
+                                                             token_converter)
+        self.transformer2 = QueryTreeToSQLListTransformer(column_name)
