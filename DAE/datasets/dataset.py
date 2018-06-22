@@ -172,7 +172,8 @@ class DatasetWrapper(Dataset):
         original_roles = kwargs.get('roles', None)
         if original_roles is not None:
             if isinstance(original_roles, str):
-                original_roles = role_query.parse_to_stage2(original_roles)
+                original_roles = role_query.transform_query_string_to_tree(
+                    original_roles)
             kwargs['roles'] = AndNode([original_roles, roles_query])
         else:
             kwargs['roles'] = roles_query
@@ -220,7 +221,8 @@ class DatasetWrapper(Dataset):
         original_roles = kwargs.get('roles', None)
         if original_roles is not None:
             if isinstance(original_roles, str):
-                original_roles = role_query.parse_to_stage2(original_roles)
+                original_roles = role_query.transform_query_string_to_tree(
+                    original_roles)
             kwargs['roles'] = AndNode([original_roles, roles_query])
         else:
             kwargs['roles'] = roles_query

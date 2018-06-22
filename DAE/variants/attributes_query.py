@@ -86,22 +86,21 @@ class Matcher(object):
 class QueryTransformerMatcher(object):
     def __init__(self, parser=parser, token_converter=None):
         self.parser = parser
-        self.transformer = QueryTransformer(parser, token_converter)
-        self.transformer2 = QueryTransformerStageTwo()
+        self.transformer = StringQueryToTreeTransformer(parser,
+                                                        token_converter)
+        self.transformer2 = QueryTreeToLambdaTransformer()
 
     def parse(self, expression):
         return self.parser.parse(expression)
 
-    def parse_to_stage2(self, expression):
+    def transform_query_string_to_tree(self, expression):
         parsed = self.parser.parse(expression)
         return self.transformer.transform(parsed)
 
     def transform(self, tree):
-        matcher = self.transformer.transform(tree)
-        matcher = self.transformer2.transform(matcher)
-        return Matcher(tree, parser, matcher)
+        return self.transform_tree_to_matcher(self.transformer.transform(tree))
 
-    def transform_from_stage2(self, tree):
+    def transform_tree_to_matcher(self, tree):
         matcher = self.transformer2.transform(tree)
         return Matcher(tree, parser, matcher)
 
@@ -109,10 +108,10 @@ class QueryTransformerMatcher(object):
         return self.transform(self.parse(expression))
 
 
-class QueryTransformer(InlineTransformer):
+class StringQueryToTreeTransformer(InlineTransformer):
     
     def __init__(self, parser=parser, token_converter=None):
-        super(QueryTransformer, self).__init__()
+        super(StringQueryToTreeTransformer, self).__init__()
 
         if token_converter is None:
             token_converter = lambda x: x
@@ -200,8 +199,7 @@ class MoreThanNode(Node):
         super(MoreThanNode, self).__init__(children)
 
 
-class QueryTransformerStageTwo(object):
-    
+class QueryTreeToLambdaTransformer(object):
     def transform(self, node):
         print(node)
         return getattr(self, type(node).__name__)(node)
