@@ -159,72 +159,83 @@ class Leaf(object):
         self.op = op
 
 
-class Node(object):
+class LeafNode(object):
+    def __init__(self, arg):
+        self.arg = arg
+
+
+class TreeNode(object):
     def __init__(self, children):
         self.children = children
 
 
-class AndNode(Node):
+class AndNode(TreeNode):
     def __init__(self, children):
         super(AndNode, self).__init__(children)
 
 
-class OrNode(Node):
+class OrNode(TreeNode):
     def __init__(self, children):
         super(OrNode, self).__init__(children)
 
 
-class NotNode(Node):
+class NotNode(TreeNode):
     def __init__(self, children):
         super(NotNode, self).__init__([children])
 
 
-class EqualsNode(Node):
-    def __init__(self, children):
-        super(EqualsNode, self).__init__(children)
+class EqualsNode(LeafNode):
+    def __init__(self, arg):
+        super(EqualsNode, self).__init__(arg)
 
 
-class ContainsNode(Node):
-    def __init__(self, children):
-        super(ContainsNode, self).__init__(children)
+class ContainsNode(LeafNode):
+    def __init__(self, arg):
+        super(ContainsNode, self).__init__(arg)
 
 
-class LessThanNode(Node):
-    def __init__(self, children):
-        super(LessThanNode, self).__init__(children)
+class LessThanNode(LeafNode):
+    def __init__(self, arg):
+        super(LessThanNode, self).__init__(arg)
 
 
-class MoreThanNode(Node):
-    def __init__(self, children):
-        super(MoreThanNode, self).__init__(children)
+class MoreThanNode(LeafNode):
+    def __init__(self, arg):
+        super(MoreThanNode, self).__init__(arg)
 
 
-class QueryTreeToLambdaTransformer(object):
+class BaseTreeTransformer(object):
     def transform(self, node):
-        return getattr(self, type(node).__name__)(node)
+        if isinstance(node, TreeNode):
+            children = [self.transform(c) for c in node.children]
+            return getattr(self, type(node).__name__)(children)
+        else:
+            return getattr(self, type(node).__name__)(node.arg)
 
-    def LessThanNode(self, node):
-        return lambda l: l > node.children
 
-    def MoreThanNode(self, node):
-        return lambda l: l < node.children
+class QueryTreeToLambdaTransformer(BaseTreeTransformer):
+    def LessThanNode(self, arg):
+        return lambda l: l > arg
 
-    def ContainsNode(self, node):
-        return lambda l: node.children in l
+    def MoreThanNode(self, arg):
+        return lambda l: l < arg
 
-    def EqualsNode(self, node):
-        return lambda x: x == set(node.children)
+    def ContainsNode(self, arg):
+        return lambda l: arg in l
 
-    def NotNode(self, node):
-        assert len(node.children) == 1
-        child = node.children[0]
-        return lambda l: not self.transform(child)(l)
+    def EqualsNode(self, arg):
+        return lambda x: x == set(arg)
 
-    def AndNode(self, node):
-        return lambda l: all(self.transform(f)(l) for f in node.children)
+    def NotNode(self, children):
+        assert len(children) == 1
+        child = children[0]
+        return lambda l: not child(l)
 
-    def OrNode(self, node):
-        return lambda l: any(self.transform(f)(l) for f in node.children)
+    def AndNode(self, children):
+        return lambda l: all(f(l) for f in children)
+
+    def OrNode(self, children):
+        return lambda l: any(f(l) for f in children)
 
 
 def roles_converter(a):
