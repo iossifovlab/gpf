@@ -328,15 +328,17 @@ class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
             reduce((lambda x, y: x + ", " + y), arg) + "))"
 
 
-class QuerySQLTransformerMatcher(BaseQueryTransformerMatcher):
-    def __init__(self, column_name, parser=parser, token_converter=None):
-        super(QuerySQLTransformerMatcher, self).__init__(parser,
-                                                         token_converter)
-        self.transformer2 = QueryTreeToSQLTransformer(column_name)
+class StringQueryToTreeTransformerWrapper(object):
+    def __init__(self, parser=parser, token_converter=None):
+        self.parser = parser
+        self.transformer = StringQueryToTreeTransformer(parser,
+                                                        token_converter)
 
+    def parse(self, expression):
+        return self.parser.parse(expression)
 
-class QuerySQLListTransformerMatcher(BaseQueryTransformerMatcher):
-    def __init__(self, column_name, parser=parser, token_converter=None):
-        super(QuerySQLListTransformerMatcher, self).__init__(parser,
-                                                             token_converter)
-        self.transformer2 = QueryTreeToSQLListTransformer(column_name)
+    def transform(self, tree):
+        return self.transformer.transform(tree)
+
+    def parse_and_transform(self, expression):
+        return self.transform(self.parse(expression))

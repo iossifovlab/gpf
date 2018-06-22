@@ -1,10 +1,9 @@
 from impala.util import as_pandas
 from impala.dbapi import connect
-from variants.attributes_query import QuerySQLTransformerMatcher, \
-    QuerySQLListTransformerMatcher, roles_converter, sex_converter, \
+from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
+    QueryTreeToSQLTransformer, QueryTreeToSQLListTransformer, \
+    roles_converter, sex_converter, \
     inheritance_converter, variant_type_converter
-from variants.attributes import Role, Sex, Inheritance, VariantType
-
 q = """
     SELECT * FROM parquet.`/data-raw-dev/pspark/family01` AS A
     INNER JOIN parquet.`/data-raw-dev/pspark/summary01` AS B
@@ -16,21 +15,27 @@ q = """
 """
 
 
-transformers = {
-    'effect_type': QuerySQLListTransformerMatcher("`effect_gene.types`"),
-    'genes': QuerySQLListTransformerMatcher("`effect_gene.genes`"),
-    'personId': QuerySQLListTransformerMatcher("variant_in_members"),
-    'role': QuerySQLListTransformerMatcher("variant_in_roles",
-                                           token_converter=roles_converter),
-    'sex': QuerySQLListTransformerMatcher("variant_in_sexes",
-                                          token_converter=sex_converter),
-    'inheritance': QuerySQLTransformerMatcher(
-        "inheritance", token_converter=inheritance_converter),
-    'variant_type': QuerySQLTransformerMatcher(
-        "variant_type", token_converter=variant_type_converter),
-    'position': QuerySQLTransformerMatcher("A.position"),
-    'chrom': QuerySQLTransformerMatcher("A.chrom"),
-    'alternative': QuerySQLTransformerMatcher("A.alternative"),
+stage_one_transformers = {
+    'role': StringQueryToTreeTransformerWrapper(
+        token_converter=roles_converter),
+    'sex': StringQueryToTreeTransformerWrapper(
+        token_converter=sex_converter),
+    'inheritance': StringQueryToTreeTransformerWrapper(
+        token_converter=inheritance_converter),
+    'variant_type': StringQueryToTreeTransformerWrapper(
+        token_converter=variant_type_converter),
+}
+
+
+stage_two_transformers = {
+    'effect_type': QueryTreeToSQLListTransformer("`effect_gene.types`"),
+    'genes': QueryTreeToSQLListTransformer("`effect_gene.genes`"),
+    'personId': QueryTreeToSQLListTransformer("variant_in_members"),
+    'role': QueryTreeToSQLListTransformer("variant_in_roles"),
+    'sex': QueryTreeToSQLListTransformer("variant_in_sexes"),
+    'position': QueryTreeToSQLTransformer("A.position"),
+    'chrom': QueryTreeToSQLTransformer("A.chrom"),
+    'alternative': QueryTreeToSQLTransformer("A.alternative"),
 }
 
 
@@ -40,13 +45,20 @@ def query(**kwargs):
                    auth_mechanism='PLAIN')
     final_query = q
     for k in kwargs:
-        if k in transformers:
-            transformer = transformers[k]
+        if k in stage_one_transformers:
+            stage_one_transformer = stage_one_transformers[k]
         else:
-            transformer = QuerySQLTransformerMatcher(k)
+            stage_one_transformer = StringQueryToTreeTransformerWrapper()
+
+        if k in stage_two_transformers:
+            stage_two_transformer = stage_two_transformers[k]
+        else:
+            stage_two_transformer = QueryTreeToSQLTransformer(k)
+
         if not first:
             final_query += " AND\n"
-        final_query += transformer.parse_and_transform(kwargs[k])
+        stage_one_result = stage_one_transformer.parse_and_transform(kwargs[k])
+        final_query += stage_two_transformer.transform(stage_one_result)
         first = False
         
     final_query += "\nLIMIT 1000"
