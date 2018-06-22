@@ -201,7 +201,6 @@ class MoreThanNode(Node):
 
 class QueryTreeToLambdaTransformer(object):
     def transform(self, node):
-        print(node)
         return getattr(self, type(node).__name__)(node)
 
     def LessThanNode(self, node):
