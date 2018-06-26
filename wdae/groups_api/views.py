@@ -10,6 +10,7 @@ from rest_framework import status
 from groups_api.serializers import GroupSerializer
 from groups_api.serializers import GroupRetrieveSerializer
 from groups_api.serializers import PermissionChangeSerializer
+from groups_api.serializers import PermissionRevokeSerializer
 from datasets_api.models import Dataset
 from django.contrib.auth.models import Group
 from guardian.shortcuts import assign_perm
@@ -44,10 +45,11 @@ class GrantPermissionToGroupView(views.APIView):
     def post(self, request):
         serializer = PermissionChangeSerializer(data=request.data)
         if not serializer.is_valid():
+            print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         dataset = Dataset.objects.get(dataset_id=serializer.data['datasetId'])
-        group = Group.objects.get(pk=serializer.data['groupId'])
+        group = Group.objects.get(name=serializer.data['groupName'])
 
         assign_perm('view', group, dataset)
 
@@ -58,7 +60,7 @@ class RevokePermissionToGroupView(views.APIView):
     permission_classes = (permissions.IsAdminUser,)
 
     def post(self, request):
-        serializer = PermissionChangeSerializer(data=request.data)
+        serializer = PermissionRevokeSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
