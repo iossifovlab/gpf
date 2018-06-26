@@ -336,10 +336,11 @@ def parquet_variants(request, variants_df):
 
 
 @pytest.fixture
-def variants_implementations(variants_vcf, variants_df):
+def variants_implementations(variants_vcf, variants_df, variants_thrift):
     impls = {
         "variants_df": variants_df,
         "variants_vcf": variants_vcf,
+        "variants_thrift": variants_thrift,
     }
     return impls
 

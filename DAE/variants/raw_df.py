@@ -66,8 +66,12 @@ class DfFamilyVariantsBase(object):
 
     @staticmethod
     def wrap_variants(families, join_df):
-        print(join_df.columns)
         print(join_df.head())
+
+        print(join_df.columns)
+
+        join_df = join_df.sort_values(
+            by=["var_index", "allele_index", "allele_index_fv"])
 
         for _name, group in join_df.groupby(by=["var_index", "family_id"]):
 

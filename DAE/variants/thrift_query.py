@@ -39,13 +39,27 @@ stage_two_transformers = {
 
 q = """
     SELECT
-        S.chrom,
-        S.position,
-        S.reference,
-        S.alternative,
-        S.var_index,
-        S.allele_index,
-        S.split_from_multi_allelic,
+        F.chrom,
+        F.position,
+        F.reference,
+        F.alternative,
+        F.var_index,
+        F.allele_index,
+        F.split_from_multi_allelic,
+        F.family_id,
+        F.genotype,
+        F.inheritance,
+        F.variant_in_members,
+        F.variant_in_roles,
+        F.variant_in_sexes,
+
+        S.chrom as chrom_fv,
+        S.position as position_fv,
+        S.reference as reference_fv,
+        S.alternative as alternative_fv,
+        S.var_index as var_index_fv,
+        S.allele_index as allele_index_fv,
+        S.split_from_multi_allelic as split_from_multi_allelic_fv,
         S.effect_type,
         S.effect_gene_genes,
         S.effect_gene_types,
@@ -56,21 +70,9 @@ q = """
         S.af_alternative_allele_count,
         S.af_alternative_allele_freq,
         S.af_reference_allele_count,
-        S.af_reference_allele_freq,
-        F.chrom as chrom_fv,
-        F.position as position_fv,
-        F.reference as reference_fv,
-        F.alternative as alternative_fv,
-        F.var_index as var_index_fv,
-        F.allele_index as allele_index_fv,
-        F.split_from_multi_allelic as split_from_multi_allelic_fv,
-        F.family_id,
-        F.genotype,
-        F.inheritance,
-        F.variant_in_members,
-        F.variant_in_roles,
-        F.variant_in_sexes
-    FROM parquet.`{summary}` AS S JOIN parquet.`{family}` AS F
+        S.af_reference_allele_freq
+
+    FROM parquet.`{family}` AS F JOIN parquet.`{summary}` AS S
     ON S.var_index = F.var_index
 """
 

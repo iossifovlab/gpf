@@ -23,3 +23,22 @@ def test_variants_spark_create(variants_thrift, fixture_name, count):
     vs = list(vs)
     print(vs)
     assert len(vs) == count
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_df",
+    "variants_thrift",
+])
+@pytest.mark.parametrize("fixture_name,count", [
+    ("fixtures/effects_trio_multi", 3),
+])
+def test_variants_effects_trio_multi(
+        variants_impl, variants, fixture_name, count):
+
+    svars = variants_impl(variants)(fixture_name)
+    assert svars is not None
+
+    vs = svars.query_variants()
+    vs = list(vs)
+    print(vs)
+    assert len(vs) == count

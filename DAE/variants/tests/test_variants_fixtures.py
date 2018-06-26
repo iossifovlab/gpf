@@ -10,15 +10,35 @@ from RegionOperations import Region
 from datasets.helpers import mat2str
 
 
+@pytest.mark.parametrize("variants", [
+    "variants_df",
+    "variants_vcf",
+    "variants_thrift",
+])
+@pytest.mark.parametrize("fixture_name,count", [
+    ("fixtures/effects_trio_multi", 3),
+    ("fixtures/effects_trio", 10),
+    ("fixtures/inheritance_multi", 6),
+    # ("fixtures/trios2", 30),
+])
+def test_variants_all_count(variants_impl, variants, fixture_name, count):
+
+    vvars = variants_impl(variants)(fixture_name)
+    assert vvars is not None
+
+    vs = vvars.query_variants()
+    vs = list(vs)
+    print(vs)
+    assert len(vs) == count
+
+
 @pytest.mark.parametrize("fixture_name", [
-    # "fixtures/effects_trio_multi",
-    # "fixtures/effects_trio",
-    # "fixtures/inheritance_multi",
     "fixtures/trios2",
 ])
 @pytest.mark.parametrize("variants", [
     "variants_df",
     "variants_vcf",
+    # "variants_thrift",
 ])
 def test_df_query_multiallelic3_families(
         variants_impl, variants, fixture_name):
@@ -45,6 +65,7 @@ def test_df_query_multiallelic3_families(
 @pytest.mark.parametrize("variants", [
     "variants_df",
     "variants_vcf",
+    "variants_thrift",
 ])
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/trios2_11541",
@@ -72,6 +93,7 @@ def test_reference_variant(
 @pytest.mark.parametrize("variants", [
     "variants_df",
     "variants_vcf",
+    "variants_thrift",
 ])
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/trios2_11600",

@@ -56,4 +56,8 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         df.genotype = df.genotype.apply(
             lambda v: np.fromstring(v.strip("[]"), dtype=np.int8, sep=','))
         print(df.genotype, type(df.genotype.values))
+        print(df[["var_index", "allele_index", "allele_index_fv",
+                  "reference",
+                  "alternative", "alternative_fv",
+                  "family_id"]])
         return self.wrap_variants(self.families, df)
