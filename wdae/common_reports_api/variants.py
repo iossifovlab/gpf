@@ -314,7 +314,6 @@ class DenovoEventsCounter(CounterBase):
 
     def __init__(self, phenotype_id, legend, children_counter, effect_type):
         super(DenovoEventsCounter, self).__init__(phenotype_id, legend)
-        print(effect_type, type(effect_type))
         assert isinstance(effect_type, str)
 
         self.effect_type = effect_type
