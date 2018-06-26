@@ -33,6 +33,7 @@ from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
     save_family_variants_df_to_parquet, save_ped_df_to_parquet
 from variants.raw_df import DfFamilyVariants
 import time
+from variants.raw_spark import SparkFamilyVariants
 
 
 @pytest.fixture(scope='session')
@@ -275,6 +276,22 @@ def variants_df(variants_vcf):
                 # inheritance="not reference"
             ))
         return DfFamilyVariants(ped_df, summary_df, vars_df)
+    return builder
+
+
+@pytest.fixture(scope='session')
+def variants_spark(parquet_variants, testing_thriftserver):
+    def builder(path):
+        pedigree, summary, family = parquet_variants(path)
+        config = Configure.from_dict({
+            'parquet': {
+                'pedigree': pedigree,
+                'summary': summary,
+                'family': family,
+            }
+        })
+        return SparkFamilyVariants(config=config,
+                                   thrift_connection=testing_thriftserver)
     return builder
 
 
