@@ -11,7 +11,6 @@ from variants.vcf_utils import vcf2cshl
 
 from variants.attributes import VariantType, Inheritance
 from timeit import itertools
-from pprint import pprint
 
 
 class VariantBase(object):
@@ -788,9 +787,9 @@ class SummaryVariantFactory(object):
             # pprint(row)
             effects = Effect.from_effects(
                 row['effect_type'],
-                zip(row['effect_gene.genes'], row['effect_gene.types']),
-                zip(row['effect_details.transcript_ids'],
-                    row['effect_details.details']))
+                zip(row['effect_gene_genes'], row['effect_gene_types']),
+                zip(row['effect_details_transcript_ids'],
+                    row['effect_details_details']))
         alternative = row['alternative']
         if alternative is None and 'alternative_fv' in row:
             alternative = row['alternative_fv']

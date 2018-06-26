@@ -1,5 +1,4 @@
 from impala.util import as_pandas
-from impala.dbapi import connect
 from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
     QueryTreeToSQLTransformer, QueryTreeToSQLListTransformer, \
     roles_converter, sex_converter, \
@@ -38,12 +37,51 @@ stage_two_transformers = {
     'alternative': QueryTreeToSQLTransformer("A.alternative"),
 }
 
+q = """
+    SELECT
+        S.chrom,
+        S.position,
+        S.reference,
+        S.alternative,
+        S.var_index,
+        S.allele_index,
+        S.split_from_multi_allelic,
+        S.effect_type,
+        S.effect_gene_genes,
+        S.effect_gene_types,
+        S.effect_details_transcript_ids,
+        S.effect_details_details,
+        S.af_parents_called_count,
+        S.af_parents_called_percent,
+        S.af_alternative_allele_count,
+        S.af_alternative_allele_freq,
+        S.af_reference_allele_count,
+        S.af_reference_allele_freq,
+        F.chrom as chrom_fv,
+        F.position as position_fv,
+        F.reference as reference_fv,
+        F.alternative as alternative_fv,
+        F.var_index as var_index_fv,
+        F.allele_index as allele_index_fv,
+        F.split_from_multi_allelic as split_from_multi_allelic_fv,
+        F.family_id,
+        F.genotype,
+        F.inheritance,
+        F.variant_in_members,
+        F.variant_in_roles,
+        F.variant_in_sexes
+    FROM parquet.`{summary}` AS S JOIN parquet.`{family}` AS F
+    ON S.var_index = F.var_index
+"""
 
-def query(**kwargs):
+
+def thrift_query(thrift_connection, summary, family, limit=2000, **kwargs):
     first = True
-    conn = connect(host='wigclust24.cshl.edu', port=10000,
-                   auth_mechanism='PLAIN')
-    final_query = q
+    final_query = q.format(
+        summary=summary,
+        family=family,
+    )
+
     for k in kwargs:
         if k in stage_one_transformers:
             stage_one_transformer = stage_one_transformers[k]
@@ -55,15 +93,18 @@ def query(**kwargs):
         else:
             stage_two_transformer = QueryTreeToSQLTransformer(k)
 
+        if first:
+            final_query += "\nWHERE"
         if not first:
             final_query += " AND\n"
         stage_one_result = stage_one_transformer.parse_and_transform(kwargs[k])
         final_query += stage_two_transformer.transform(stage_one_result)
         first = False
-        
-    final_query += "\nLIMIT 1000"
+
+    if limit is not None:
+        final_query += "\nLIMIT {}".format(limit)
     print(final_query)
 
-    cursor = conn.cursor()
+    cursor = thrift_connection.cursor()
     cursor.execute(final_query)
     return as_pandas(cursor)

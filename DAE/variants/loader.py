@@ -21,15 +21,15 @@ def save_annotation_to_csv(annot_df, filename, sep="\t"):
         return RawVariantsLoader.SEP1.join(a)
 
     vars_df = annot_df.copy()
-    vars_df['effect_gene.genes'] = vars_df['effect_gene.genes'].\
+    vars_df['effect_gene_genes'] = vars_df['effect_gene_genes'].\
         apply(convert_array_of_strings_to_string)
-    vars_df['effect_gene.types'] = vars_df['effect_gene.types'].\
+    vars_df['effect_gene_types'] = vars_df['effect_gene_types'].\
         apply(convert_array_of_strings_to_string)
-    vars_df['effect_details.transcript_ids'] = \
-        vars_df['effect_details.transcript_ids'].\
+    vars_df['effect_details_transcript_ids'] = \
+        vars_df['effect_details_transcript_ids'].\
         apply(convert_array_of_strings_to_string)
-    vars_df['effect_details.details'] = \
-        vars_df['effect_details.details'].\
+    vars_df['effect_details_details'] = \
+        vars_df['effect_details_details'].\
         apply(convert_array_of_strings_to_string)
     vars_df.to_csv(
         filename,
@@ -126,13 +126,13 @@ class RawVariantsLoader(object):
                         'position': np.int32,
                     },
                     converters={
-                        'effect_gene.genes':
+                        'effect_gene_genes':
                         cls.convert_array_of_strings,
-                        'effect_gene.types':
+                        'effect_gene_types':
                         cls.convert_array_of_strings,
-                        'effect_details.transcript_ids':
+                        'effect_details_transcript_ids':
                         cls.convert_array_of_strings,
-                        'effect_details.details':
+                        'effect_details_details':
                         cls.convert_array_of_strings,
                     }
                 )

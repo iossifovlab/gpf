@@ -10,6 +10,22 @@ from RegionOperations import Region
 from variants.vcf_utils import mat2str
 
 
+@pytest.mark.parametrize("fixture_name,count", [
+    # "fixtures/effects_trio_multi",
+    # "fixtures/effects_trio",
+    ("fixtures/inheritance_multi", 6)
+    # "fixtures/trios2",
+])
+def test_df_all_variants(variants_df, fixture_name, count):
+
+    dfvars = variants_df(fixture_name)
+    assert dfvars is not None
+
+    vs = dfvars.query_variants()
+    vs = list(vs)
+    assert len(vs) == count
+
+
 @pytest.mark.parametrize("fixture_name", [
     # "fixtures/effects_trio_multi",
     # "fixtures/effects_trio",

@@ -19,10 +19,10 @@ gmDB = genomesDB.get_gene_models()  # @UndefinedVariable
 class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
     COLUMNS = [
         'effect_type',
-        'effect_gene.genes',
-        'effect_gene.types',
-        'effect_details.transcript_ids',
-        'effect_details.details',
+        'effect_gene_genes',
+        'effect_gene_types',
+        'effect_details_transcript_ids',
+        'effect_details_details',
     ]
 
     def __init__(self, genome=GA, gene_models=gmDB):

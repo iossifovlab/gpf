@@ -21,7 +21,73 @@ class FamilyVariantFactory(object):
         pass
 
 
-class DfFamilyVariants(FamiliesBase):
+class DfFamilyVariantsBase(object):
+
+    @staticmethod
+    def wrap_family_variant(families, record):
+        sv = SummaryVariantFactory.summary_variant_from_records([record])
+        family = families[record['family_id']]
+        gt = record['genotype']
+        alt_allele_index = record['allele_index']
+        return FamilyVariant(sv, family, gt, alt_allele_index)
+
+    @staticmethod
+    def merge_genotypes(genotypes):
+        if len(genotypes) == 1:
+            gt = genotypes[0]
+        else:
+            genotypes = np.stack(genotypes, axis=0)
+            gt = genotypes[0, :]
+            unknown_col = np.any(genotypes == -1,  axis=0)
+
+            for index, col in enumerate(unknown_col):
+                if not col:
+                    continue
+                gt[index] = genotypes[genotypes[:, index] != -1, index][0]
+
+        flen = int(len(gt) / 2)
+        assert 2 * flen == len(gt)
+
+        gt = gt.reshape([2, flen], order='F')
+        return gt
+
+    @staticmethod
+    def wrap_family_variant_multi(families, records):
+        sv = SummaryVariantFactory.summary_variant_from_records(records)
+
+        family_id = records[0]['family_id']
+        assert all([r['family_id'] == family_id for r in records])
+
+        family = families[family_id]
+        gt = DfFamilyVariantsBase.merge_genotypes(
+            [r['genotype'] for r in records])
+
+        return FamilyVariantMulti(sv, family, gt)
+
+    @staticmethod
+    def wrap_variants(families, join_df):
+        print(join_df.columns)
+        print(join_df.head())
+
+        for _name, group in join_df.groupby(by=["var_index", "family_id"]):
+
+            if group.inheritance.unique()[0] != Inheritance.reference.value:
+
+                print(group[["var_index", "allele_index", "allele_index_fv",
+                             "reference",
+                             "alternative", "alternative_fv",
+                             "family_id", "genotype", "inheritance"]])
+                group = group.drop_duplicates(
+                    subset=["var_index", "allele_index"])
+                print(group[["var_index", "allele_index", "allele_index_fv",
+                             "reference",
+                             "alternative", "alternative_fv",
+                             "family_id", "genotype", "inheritance"]])
+            rec = group.to_dict(orient='records')
+            yield DfFamilyVariantsBase.wrap_family_variant_multi(families, rec)
+
+
+class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
     def __init__(self, ped_df, summary_df, vars_df):
         super(DfFamilyVariants, self).__init__()
@@ -58,44 +124,6 @@ class DfFamilyVariants(FamiliesBase):
         vdf = vdf[vdf.family_id.isin(set(family_ids))]
         return sdf, vdf
 
-    def wrap_family_variant(self, record):
-        sv = SummaryVariantFactory.summary_variant_from_records([record])
-        family = self.families[record['family_id']]
-        gt = record['genotype']
-        alt_allele_index = record['allele_index']
-        return FamilyVariant(sv, family, gt, alt_allele_index)
-
-    @staticmethod
-    def merge_genotypes(genotypes):
-        if len(genotypes) == 1:
-            gt = genotypes[0]
-        else:
-            genotypes = np.stack(genotypes, axis=0)
-            gt = genotypes[0, :]
-            unknown_col = np.any(genotypes == -1,  axis=0)
-
-            for index, col in enumerate(unknown_col):
-                if not col:
-                    continue
-                gt[index] = genotypes[genotypes[:, index] != -1, index][0]
-
-        flen = int(len(gt) / 2)
-        assert 2 * flen == len(gt)
-
-        gt = gt.reshape([2, flen], order='F')
-        return gt
-
-    def wrap_family_variant_multi(self, records):
-        sv = SummaryVariantFactory.summary_variant_from_records(records)
-
-        family_id = records[0]['family_id']
-        assert all([r['family_id'] == family_id for r in records])
-
-        family = self.families[family_id]
-        gt = self.merge_genotypes([r['genotype'] for r in records])
-
-        return FamilyVariantMulti(sv, family, gt)
-
     def query_variants(self, **kwargs):
         sdf = self.summary_df
         vdf = self.vars_df
@@ -120,19 +148,4 @@ class DfFamilyVariants(FamiliesBase):
                    "family_id"]])
         print("_________________________________________________________")
 
-        for _name, group in jdf.groupby(by=["var_index", "family_id"]):
-
-            if group.inheritance.unique()[0] != Inheritance.reference.value:
-
-                print(group[["var_index", "allele_index", "allele_index_fv",
-                             "reference",
-                             "alternative", "alternative_fv",
-                             "family_id", "genotype", "inheritance"]])
-                group = group.drop_duplicates(
-                    subset=["var_index", "allele_index"])
-                print(group[["var_index", "allele_index", "allele_index_fv",
-                             "reference",
-                             "alternative", "alternative_fv",
-                             "family_id", "genotype", "inheritance"]])
-            rec = group.to_dict(orient='records')
-            yield self.wrap_family_variant_multi(rec)
+        return self.wrap_variants(self.families, jdf)
