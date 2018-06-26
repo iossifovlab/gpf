@@ -4,10 +4,9 @@ Created on May 30, 2018
 @author: lubo
 '''
 from __future__ import print_function
-import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-from variants.attributes import Inheritance
+from variants.attributes import Role, Sex
 
 
 def summary_parquet_schema():
@@ -223,3 +222,36 @@ def read_family_variants_df_from_parquet(filename):
     table = pq.read_table(filename, columns=schema.names)
     df = table.to_pandas()
     return df
+
+
+def pedigree_parquet_schema():
+    fields = [
+        pa.field("familyId", pa.string()),
+        pa.field("personId", pa.string()),
+        pa.field("dadId", pa.string()),
+        pa.field("momId", pa.string()),
+        pa.field("sex", pa.int8()),
+        pa.field("status", pa.int8()),
+        pa.field("role", pa.int32()),
+        pa.field("sampleId", pa.string()),
+    ]
+
+    return pa.schema(fields)
+
+
+def save_ped_df_to_parquet(ped_df, filename):
+    ped_df = ped_df.copy()
+    ped_df.role = ped_df.role.apply(lambda r: r.value)
+    ped_df.sex = ped_df.sex.apply(lambda s: s.value)
+
+    table = pa.Table.from_pandas(ped_df)
+    pq.write_table(table, filename)
+
+
+def read_ped_df_from_parquet(filename):
+    table = pq.read_table(filename)
+    ped_df = table.to_pandas()
+    ped_df.role = ped_df.role.apply(lambda v: Role(v))
+    ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
+
+    return ped_df

@@ -30,7 +30,7 @@ from variants.attributes_query import parser as attributes_query_parser, \
 from variants.attributes_query import \
     parser_with_ambiguity as attributes_query_parser_with_ambiguity
 from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
-    save_family_variants_df_to_parquet
+    save_family_variants_df_to_parquet, save_ped_df_to_parquet
 from variants.raw_df import DfFamilyVariants
 import time
 
@@ -294,19 +294,25 @@ def parquet_variants(request, variants_df):
             fulldirname, "summary.parquet")
         family_filename = os.path.join(
             fulldirname, "family.parquet")
+        pedigree_filename = os.path.join(
+            fulldirname, "pedigree.parquet")
 
-        if os.path.exists(summary_filename) and os.path.isdir(family_filename):
-            return summary_filename, family_filename
+        if os.path.exists(summary_filename) and \
+                os.path.exists(family_filename) and \
+                os.path.exists(pedigree_filename):
+            return pedigree_filename, summary_filename, family_filename
 
         if not os.path.exists(fulldirname):
             os.mkdir(fulldirname)
+
         assert os.path.exists(fulldirname)
         assert os.path.isdir(fulldirname)
 
         fvars = variants_df(path)
         save_summary_to_parquet(fvars.summary_df, summary_filename)
         save_family_variants_df_to_parquet(fvars.vars_df, family_filename)
-        return summary_filename, family_filename
+        save_ped_df_to_parquet(fvars.ped_df, pedigree_filename)
+        return pedigree_filename, summary_filename, family_filename
 
     return builder
 

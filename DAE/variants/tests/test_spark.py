@@ -31,9 +31,11 @@ def test_start_stop_thriftserver2(testing_thriftserver):
 def test_parquet_variants(
         parquet_variants, fixture_name):
 
-    summary_filename, family_filename = parquet_variants(fixture_name)
-    print(summary_filename, family_filename)
+    pedigree_filename, summary_filename, family_filename = \
+        parquet_variants(fixture_name)
+    print(pedigree_filename, summary_filename, family_filename)
 
+    assert os.path.exists(pedigree_filename)
     assert os.path.exists(summary_filename)
     assert os.path.exists(family_filename)
 
@@ -49,8 +51,9 @@ def test_parquet_select(
         testing_thriftserver, parquet_variants, fixture_name, count):
     assert testing_thriftserver is not None
 
-    summary_filename, family_filename = parquet_variants(fixture_name)
-    print(summary_filename, family_filename)
+    pedigree_filename, summary_filename, family_filename = \
+        parquet_variants(fixture_name)
+    print(pedigree_filename, summary_filename, family_filename)
 
     q = """
     SELECT * FROM parquet.`file://{}` AS A
