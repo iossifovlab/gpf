@@ -36,7 +36,9 @@ export class DatasetsComponent implements OnInit {
         this.datasetsService.setSelectedDatasetById(params['dataset']);
       });
 
-    this.datasets$ = this.datasetsService.getDatasetsObservable();
+    this.datasets$ = this.filterHiddenGroups(
+      this.datasetsService.getDatasetsObservable());
+      
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
 
     this.datasets$
@@ -62,6 +64,13 @@ export class DatasetsComponent implements OnInit {
           this.selectedDatasetChange.emit(selectedDataset);
         }
       });
+  }
+
+  filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
+    // return datasets;
+    return datasets.map(datasets => 
+      datasets.filter(dataset => 
+        dataset.groups.find(g => g.name == 'hidden') == null || dataset.accessRights));
   }
 
   selectDataset(dataset: Dataset) {
