@@ -11,15 +11,15 @@ from rest_framework.routers import SimpleRouter
 from users_api import views
 
 router = SimpleRouter(trailing_slash=False)
-router.register(r'', views.UserViewSet, base_name='users')
+router.register(r'users', views.UserViewSet, base_name='users')
 
 urlpatterns = [
-    url(r'register$', views.register),
-    url(r'login$', views.login),
-    url(r'logout$', views.logout),
-    url(r'get_user_info$', views.get_user_info),
-    url(r'reset_password$', views.reset_password),
-    url(r'change_password', views.change_password),
-    url(r'check_verif_path', views.check_verif_path),
-    url(r'', include(router.urls)),
-]
+    url(r'users/register$', views.register),
+    url(r'users/login$', views.login),
+    url(r'users/logout$', views.logout),
+    url(r'users/get_user_info$', views.get_user_info),
+    url(r'users/reset_password$', views.reset_password),
+    url(r'users/change_password', views.change_password),
+    url(r'users/check_verif_path', views.check_verif_path),
+] + router.urls
+
