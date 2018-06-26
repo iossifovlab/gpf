@@ -12,8 +12,8 @@ class Configure(ConfigBox):
 
     def __init__(self, data, **kwargs):
         super(Configure, self).__init__(data, **kwargs)
-        assert os.path.exists(self.pedigree), self.pedigree
-        assert os.path.exists(self.vcf), self.vcf
+        # assert os.path.exists(self.pedigree), self.pedigree
+        # assert os.path.exists(self.vcf), self.vcf
         # assert os.path.exists(self.annotation), self.annotation
 
     @staticmethod
@@ -52,7 +52,7 @@ class Configure(ConfigBox):
                 'wd': work_dir,
             })
 
-        return Configure(conf['dataset'])
+        return Configure(conf)
 
     @staticmethod
     def from_dict(conf):
@@ -65,8 +65,32 @@ class Configure(ConfigBox):
             vcf_filename = '{}.vcf.gz'.format(prefix)
 
         conf = {
-            'pedigree': '{}.ped'.format(prefix),
-            'vcf': vcf_filename,
-            'annotation': '{}-eff.txt'.format(prefix),
+            'vcf': {
+                'pedigree': '{}.ped'.format(prefix),
+                'vcf': vcf_filename,
+                'annotation': '{}-eff.txt'.format(prefix),
+            }
         }
+        return Configure(conf)
+
+    @staticmethod
+    def from_prefix_parquet(prefix):
+        assert os.path.exists(prefix)
+        assert os.path.isdir(prefix)
+
+        summary_filename = os.path.join(
+            prefix, "summary.parquet")
+        family_filename = os.path.join(
+            prefix, "family.parquet")
+        pedigree_filename = os.path.join(
+            prefix, "pedigree.parquet")
+
+        conf = {
+            'parquet': {
+                'summary': summary_filename,
+                'family': family_filename,
+                'pedigree': pedigree_filename
+            }
+        }
+
         return Configure(conf)

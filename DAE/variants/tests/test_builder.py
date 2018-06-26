@@ -17,6 +17,7 @@ def test_variants_build_multi(temp_dirname):
 
     conf = Configure.from_prefix_vcf(
         relative_to_this_test_folder("fixtures/trios_multi"))
+    conf = conf.vcf
 
     shutil.copy(conf.pedigree, temp_dirname)
     shutil.copy(conf.vcf, temp_dirname)
@@ -26,6 +27,7 @@ def test_variants_build_multi(temp_dirname):
     fvars = VB(prefix)
     assert fvars is not None
     conf = Configure.from_prefix_vcf(prefix)
+    conf = conf.vcf
 
     assert os.path.exists(conf.annotation)
 
@@ -33,6 +35,8 @@ def test_variants_build_multi(temp_dirname):
 def test_variants_builder(temp_dirname):
     conf = Configure.from_prefix_vcf(
         relative_to_this_test_folder("fixtures/effects_trio"))
+    conf = conf.vcf
+
     shutil.copy(conf.pedigree, temp_dirname)
     shutil.copy(conf.vcf, temp_dirname)
 
@@ -61,6 +65,7 @@ def test_variants_build_twice(temp_dirname):
 
     conf = Configure.from_prefix_vcf(
         relative_to_this_test_folder("fixtures/trios_multi"))
+    conf = conf.vcf
 
     shutil.copy(conf.pedigree, temp_dirname)
     shutil.copy(conf.vcf, temp_dirname)
@@ -70,6 +75,7 @@ def test_variants_build_twice(temp_dirname):
     fvars = VB(prefix)
     assert fvars is not None
     conf = Configure.from_prefix_vcf(prefix)
+    conf = conf.vcf
 
     assert os.path.exists(conf.annotation)
 

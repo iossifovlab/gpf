@@ -137,7 +137,7 @@ def ustudy_config():
 
 @pytest.fixture(scope='session')
 def ustudy_loader(ustudy_config):
-    return RawVariantsLoader(ustudy_config)
+    return RawVariantsLoader(ustudy_config.vcf)
 
 
 @pytest.fixture(scope='session')

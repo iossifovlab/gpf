@@ -44,9 +44,11 @@ class RawFamilyVariants(FamiliesBase):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix_vcf(prefix)
-        self.config = config
+
+        assert isinstance(config, Configure)
+
+        self.config = config.vcf
         assert self.config is not None
-        assert isinstance(self.config, Configure)
 
         self.VF = variant_factory
         self._load(annotator, region)
