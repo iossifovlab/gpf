@@ -29,11 +29,11 @@ export class UsersGroupsService {
       .map(response => UserGroup.fromJson(response.json()));
   }
 
-  grantPermission(group: UserGroup, dataset: Dataset) {
+  grantPermission(groupName: string, dataset: Dataset) {
     let options = new RequestOptions({ withCredentials: true });
 
     return this.http.post(this.groupGrantPermissionUrl, {
-      groupId: group.id,
+      groupName: groupName,
       datasetId: dataset.id
     }, options);
   }

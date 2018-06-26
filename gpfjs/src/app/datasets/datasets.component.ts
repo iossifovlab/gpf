@@ -67,7 +67,6 @@ export class DatasetsComponent implements OnInit {
   }
 
   filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
-    // return datasets;
     return datasets.map(datasets => 
       datasets.filter(dataset => 
         dataset.groups.find(g => g.name == 'hidden') == null || dataset.accessRights));
