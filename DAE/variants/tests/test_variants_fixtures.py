@@ -71,7 +71,7 @@ def test_reference_variant(
 
 @pytest.mark.parametrize("variants", [
     "variants_df",
-    # "variants_vcf",
+    "variants_vcf",
 ])
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/trios2_11600",
