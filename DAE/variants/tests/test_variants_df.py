@@ -12,9 +12,9 @@ from variants.vcf_utils import mat2str
 
 @pytest.mark.parametrize("fixture_name,count", [
     # "fixtures/effects_trio_multi",
-    # "fixtures/effects_trio",
-    ("fixtures/inheritance_multi", 6)
-    # "fixtures/trios2",
+    ("fixtures/effects_trio", 10),
+    ("fixtures/inheritance_multi", 6),
+    # ("fixtures/trios2", 30),
 ])
 def test_df_all_variants(variants_df, fixture_name, count):
 

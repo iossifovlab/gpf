@@ -10,7 +10,7 @@ import pytest
 
 @pytest.mark.parametrize("fixture_name,count", [
     # "fixtures/effects_trio_multi",
-    # "fixtures/effects_trio",
+    ("fixtures/effects_trio", 10),
     ("fixtures/inheritance_multi", 6),
     # "fixtures/trios2",
 ])
