@@ -22,7 +22,7 @@ class DatasetFactory(object):
         composite_annotator = AnnotatorComposite(
             annotators=[effect_annotator, allele_frequency_annotator])
 
-        variants_config = Configure.from_prefix(
+        variants_config = Configure.from_prefix_vcf(
             dataset_config.variants_prefix)
 
         variants = RawFamilyVariants(
