@@ -23,12 +23,13 @@ class DatasetApiTest(APITestCase):
         Dataset.recreate_dataset_perm('denovo_db', [])
 
     def test_get_datasets(self):
-        url = '/api/v3/datasets/'
+        url = '/api/v3/datasets'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
 
         self.assertIn('data', data)
+        print(data)
         self.assertEquals(5, len(data['data']))
 
     def test_get_dataset_ssc(self):
@@ -98,7 +99,7 @@ class DatasetApiTest(APITestCase):
         self.assertIn('phenoColumns', gbdata)
 
     def test_datasets_have_default_groups(self):
-        url = '/api/v3/datasets/'
+        url = '/api/v3/datasets'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
@@ -110,7 +111,7 @@ class DatasetApiTest(APITestCase):
                          if group['name'] == dataset_id), None)
 
     def test_datasets_have_all_their_groups(self):
-        url = '/api/v3/datasets/'
+        url = '/api/v3/datasets'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
