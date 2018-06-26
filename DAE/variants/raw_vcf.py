@@ -11,15 +11,10 @@ import pandas as pd
 from variants.loader import RawVariantsLoader
 from variants.family import FamiliesBase
 from variants.configure import Configure
-from variants.attributes_query import role_query, sex_query, inheritance_query,\
-    variant_type_query, parser
+from variants.attributes_query import role_query, sex_query, \
+    inheritance_query,\
+    variant_type_query
 from variants.family import VcfFamily
-# from variants.variant import VariantFactorySingle
-from variants.variant import VariantFactorySingle
-import logging
-
-
-logger = logging.getLogger(__name__)
 from variants.variant import VariantFactoryMulti
 
 
@@ -48,7 +43,7 @@ class RawFamilyVariants(FamiliesBase):
                  variant_factory=VariantFactoryMulti):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
-            config = Configure.from_prefix(prefix)
+            config = Configure.from_prefix_vcf(prefix)
         self.config = config
         assert self.config is not None
         assert isinstance(self.config, Configure)

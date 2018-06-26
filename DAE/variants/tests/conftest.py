@@ -160,7 +160,7 @@ def ustudy_full(ustudy_config, composite_annotator):
 def nvcf_config():
     from variants.default_settings import DATA_DIR
     prefix = os.path.join(DATA_DIR, "ssc_nygc/nssc")
-    config = Configure.from_prefix(prefix)
+    config = Configure.from_prefix_vcf(prefix)
     return config
 
 
@@ -174,7 +174,7 @@ def nvcf(nvcf_config, composite_annotator):
 def uvcf_config():
     from variants.default_settings import DATA_DIR
     prefix = os.path.join(DATA_DIR, "ssc_nygc/ussc")
-    config = Configure.from_prefix(prefix)
+    config = Configure.from_prefix_vcf(prefix)
     return config
 
 
@@ -188,7 +188,7 @@ def uvcf(uvcf_config, composite_annotator):
 def fvcf_config():
     from variants.default_settings import DATA_DIR
     prefix = os.path.join(DATA_DIR, "ssc_nygc/ssc")
-    config = Configure.from_prefix(prefix)
+    config = Configure.from_prefix_vcf(prefix)
     return config
 
 
@@ -202,7 +202,7 @@ def fvcf(fvcf_config, composite_annotator):
 def nvcf19_config():
     from variants.default_settings import DATA_DIR
     prefix = os.path.join(DATA_DIR, "spark/nspark")
-    config = Configure.from_prefix(prefix)
+    config = Configure.from_prefix_vcf(prefix)
     return config
 
 
@@ -226,7 +226,7 @@ def nvcf19f(nvcf19_config, composite_annotator):
 def vcf19_config():
     from variants.default_settings import DATA_DIR
     prefix = os.path.join(DATA_DIR, "spark/spark")
-    config = Configure.from_prefix(prefix)
+    config = Configure.from_prefix_vcf(prefix)
     return config
 
 
@@ -244,7 +244,7 @@ def vcf19r(vcf19_config, composite_annotator):
 def single_vcf(composite_annotator):
     def builder(path):
         a_data = relative_to_this_test_folder(path)
-        a_conf = Configure.from_prefix(a_data)
+        a_conf = Configure.from_prefix_vcf(a_data)
         fvars = RawFamilyVariants(
             a_conf, annotator=composite_annotator,
             variant_factory=VariantFactorySingle)
@@ -256,7 +256,7 @@ def single_vcf(composite_annotator):
 def variants_vcf(composite_annotator):
     def builder(path):
         a_data = relative_to_this_test_folder(path)
-        a_conf = Configure.from_prefix(a_data)
+        a_conf = Configure.from_prefix_vcf(a_data)
         fvars = RawFamilyVariants(
             a_conf, annotator=composite_annotator,
             variant_factory=VariantFactoryMulti)
@@ -330,7 +330,7 @@ def data_vcf19(composite_annotator):
     def builder(path):
         from variants.default_settings import DATA_DIR
         a_prefix = os.path.join(DATA_DIR, path)
-        a_conf = Configure.from_prefix(a_prefix)
+        a_conf = Configure.from_prefix_vcf(a_prefix)
         fvars = RawFamilyVariants(
             a_conf, annotator=composite_annotator,
             variant_factory=VariantFactoryMulti)

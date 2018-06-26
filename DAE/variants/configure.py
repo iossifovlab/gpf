@@ -59,7 +59,7 @@ class Configure(ConfigBox):
         return Configure(conf)
 
     @staticmethod
-    def from_prefix(prefix):
+    def from_prefix_vcf(prefix):
         vcf_filename = '{}.vcf'.format(prefix)
         if not os.path.exists(vcf_filename):
             vcf_filename = '{}.vcf.gz'.format(prefix)
