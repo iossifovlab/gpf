@@ -85,6 +85,8 @@ def main(argument_parser, annotator_factory):
 
     if opts.no_header == False:
         header_str = variantFile.readline()[:-1]
+        if header_str[0] == '#':
+            header_str = header_str[1:]
         header = header_str.split('\t')
     else:
         header = None

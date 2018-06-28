@@ -79,8 +79,8 @@ class MultiAnnotator(object):
                                        if i not in virtual_columns_indices]
 
         if split_column is None:
-            self._split_variant = lambda s, v: v
-            self._join_variant = lambda s, v: v
+            self._split_variant = lambda v: [v]
+            self._join_variant = lambda v: v[0]
         else:
             self.split_index = assign_values(split_column, self.header)
             self.split_separator = split_separator
@@ -101,9 +101,8 @@ class MultiAnnotator(object):
             output.write("\n")
 
         sys.stderr.write("...processing....................\n")
-        k = 0
-        annotators = self.annotators
 
+        annotators = self.annotators
         def annotate_line(line):
             for annotator in annotators:
                 columns = annotator['columns']
@@ -113,6 +112,7 @@ class MultiAnnotator(object):
                     line[position - 1:position] = [value]
             return line
 
+        k = 0
         for l in input:
             if l[0] == "#":
                 output.write(l)

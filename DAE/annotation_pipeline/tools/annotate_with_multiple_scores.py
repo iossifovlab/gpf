@@ -94,8 +94,8 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 'c': opts.c,
                 'p': opts.p,
                 'x': opts.x,
-                'score_column': score_column,
-                'default_value': score_default_value,
+                'scores_columns': score_column,
+                'default_values': score_default_value,
                 'direct': opts.direct,
                 'scores_file': tabix_files[0].replace('.tbi', '')
             }
