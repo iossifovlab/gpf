@@ -82,18 +82,27 @@ def main(config, data_dir, output_dir):
     chromosomes = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
     chr_labels = {'X': '23', 'Y': '24'}
     for file in variant_db_conf.transm_files:
+        output_file=to_destination(file).replace('.bgz', '')
+        file_cmds = []
         for chromosome in chromosomes:
             for i in range(0, 5):
-                job_sufix = '-{chr:0>2}-{pos}'.format(chr=chromosome, pos=i)
-                output_file=to_destination(file)
+                job_sufix = '-part-{chr:0>2}-{pos}'.format(chr=chr_labels.get(chromosome, chromosome), pos=i)
                 print(cmd_format.format(input_file=file,
                     output_file=output_file,
                     args=transm_args_format.format(
-                        chr=chr_labels.get(chromosome, chromosome),
+                        chr=chromosome,
                         begin_pos=i*50000000, end_pos=(i+1)*50000000-1),
                     log_prefix=log_dir + '/' + os.path.basename(file),
                     job_sufix=job_sufix))
-                all_cmds.append(output_file + job_sufix)
+                file_cmds.append(output_file + job_sufix)
+
+        print('{output_file}: {parts}\n\tmerge.sh {output_file}\n'.format(
+            output_file=output_file,
+            parts=' '.join(file_cmds)))
+
+        all_cmds.append(output_file + '.bgz')
+        print('{bgz_file}: {txt_file}\n\tbgzip $^ && mv $^.gz $^.bgz\n'.format(
+            bgz_file=all_cmds[-1], txt_file=output_file))
 
     copy_cmd_format = '{dest}: dirs\n\tcp {file} {dest} 2>> {log_prefix}-err.txt\n'
     for file in copy_files:
