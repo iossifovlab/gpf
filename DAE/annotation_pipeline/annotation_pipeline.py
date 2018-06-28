@@ -203,7 +203,10 @@ def main():
         variantFile = sys.stdin
     elif opts.region:
         tabix_file = pysam.TabixFile(opts.infile)
-        variantFile = tabix_file.fetch(region=opts.region)
+        try:
+            variantFile = tabix_file.fetch(region=opts.region)
+        except ValueError:
+            variantFile = iter([])
     else:
         variantFile = open(opts.infile)
 
