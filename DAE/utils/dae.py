@@ -5,8 +5,8 @@ Created on Mar 5, 2018
 '''
 import re
 
-SUB_COMPLEX_RE = re.compile('^(sub|complex)\(([ACGT]+)->([ACGT]+)\)$')
-INS_RE = re.compile('^ins\(([ACGT]+)\)$')
+SUB_COMPLEX_RE = re.compile('^(sub|complex)\(([NACGT]+)->([NACGT]+)\)$')
+INS_RE = re.compile('^ins\(([NACGT]+)\)$')
 DEL_RE = re.compile('^del\((\d+)\)$')
 
 def dae2vcf_variant(chrom, position, var, GA=None):
