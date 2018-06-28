@@ -54,6 +54,7 @@ class DfFamilyVariantsBase(object):
     @staticmethod
     def wrap_family_variant_multi(families, records):
         sv = SummaryVariantFactory.summary_variant_from_records(records)
+        print(sv)
 
         family_id = records[0]['family_id']
         assert all([r['family_id'] == family_id for r in records])
@@ -69,24 +70,39 @@ class DfFamilyVariantsBase(object):
         print(join_df.head())
 
         print(join_df.columns)
-
-        join_df = join_df.sort_values(
-            by=["var_index", "allele_index", "allele_index_fv"])
+        print("----------------------------------------------------------")
+        print("join_df before sort")
+        print(join_df[["var_index", "allele_index", 
+                       "reference",
+                       "alternative", "alternative_fv",
+                       "family_id", "genotype", "inheritance"]])
+#         join_df = join_df.sort_values(
+#             by=["var_index", "allele_index", "allele_index_fv"])
+#         print("----------------------------------------------------------")
+#         print("join_df after sort")
+#         print(join_df[["var_index", "allele_index", "allele_index_fv",
+#                        "reference",
+#                        "alternative", "alternative_fv",
+#                        "family_id", "genotype", "inheritance"]])
+#         print("----------------------------------------------------------")
 
         for _name, group in join_df.groupby(by=["var_index", "family_id"]):
 
             if group.inheritance.unique()[0] != Inheritance.reference.value:
 
-                print(group[["var_index", "allele_index", "allele_index_fv",
+                print(group[["var_index", "allele_index",
                              "reference",
                              "alternative", "alternative_fv",
                              "family_id", "genotype", "inheritance"]])
-                group = group.drop_duplicates(
-                    subset=["var_index", "allele_index"])
-                print(group[["var_index", "allele_index", "allele_index_fv",
-                             "reference",
-                             "alternative", "alternative_fv",
-                             "family_id", "genotype", "inheritance"]])
+                # group = group.drop_duplicates(
+                #     subset=["var_index", "allele_index"])
+#                 subset = group.allele_index.max()
+#                 group = group.head(subset)
+# 
+#                 print(group[["var_index", "allele_index", "allele_index_fv",
+#                              "reference",
+#                              "alternative", "alternative_fv",
+#                              "family_id", "genotype", "inheritance"]])
             rec = group.to_dict(orient='records')
             yield DfFamilyVariantsBase.wrap_family_variant_multi(families, rec)
 
@@ -139,17 +155,18 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
         # sdf = sdf.set_index(["var_index", "allele_index"])
         print("_________________________________________________________")
-        print(vdf[["var_index", "allele_index", "alternative", "family_id"]])
-        jdf = vdf.join(
-            sdf.set_index('var_index'), on="var_index",
-            rsuffix="_fv")
-
-        # print(jdf.columns)
         print(sdf[["var_index", "allele_index", "alternative"]])
-        print(jdf[["var_index", "allele_index", "allele_index_fv",
-                   "reference",
-                   "alternative", "alternative_fv",
-                   "family_id"]])
+        print(vdf[["var_index", "allele_index", "alternative", "family_id"]])
         print("_________________________________________________________")
 
-        return self.wrap_variants(self.families, jdf)
+        join_df = sdf.join(
+            vdf.set_index(['var_index', 'allele_index']),
+            on=['var_index', 'allele_index'],
+            rsuffix="_fv")
+        print(join_df[["var_index", "allele_index",
+                       "reference",
+                       "alternative", "alternative_fv",
+                       "family_id"]])
+        print("_________________________________________________________")
+
+        return self.wrap_variants(self.families, join_df)
