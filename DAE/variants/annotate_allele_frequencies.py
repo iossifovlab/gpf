@@ -12,16 +12,8 @@ class VcfAlleleFrequencyAnnotator(AnnotatorBase):
     COLUMNS = [
         'af_parents_called_count',
         'af_parents_called_percent',
-        'af_alternative_allele_count',
-        'af_alternative_allele_freq',
-        'af_reference_allele_count',
-        'af_reference_allele_freq',
-        #         'all.nParCalled',
-        #         'all.prcntParCalled',
-        #         'all.nAltAlls',
-        #         'all.altFreq',
-        #         'all.nRefAlls',
-        #         'all.refFreq',
+        'af_allele_count',
+        'af_allele_freq',
     ]
 
     def __init__(self):
@@ -56,13 +48,13 @@ class VcfAlleleFrequencyAnnotator(AnnotatorBase):
         percent_parents_called = (
             100.0 * n_parents_called) / n_independent_parents
 
-        alleles_frequencies = []
-        alleles_counts = []
-
         n_ref_alleles = np.sum(gt == 0)
         ref_freq = 0.0
         if n_parents_called > 0:
             ref_freq = (100.0 * n_ref_alleles) / (2.0 * n_parents_called)
+        alleles_frequencies = [ref_freq]
+        alleles_counts = [n_ref_alleles]
+
         for alt_allele in range(len(vcf_variant.ALT)):
             n_alt_allele = np.sum(gt == alt_allele + 1)
             if n_parents_called == 0:
@@ -73,14 +65,12 @@ class VcfAlleleFrequencyAnnotator(AnnotatorBase):
             alleles_counts.append(n_alt_allele)
             alleles_frequencies.append(alt_allele_freq)
 
-        assert n_parents_called * 2 == sum(alleles_counts) + n_ref_alleles
-        size = len(vcf_variant.ALT)
+        assert n_parents_called * 2 == sum(alleles_counts)
+        size = len(vcf_variant.ALT) + 1
         return (n_parents_called * np.ones(size, np.int32),
                 percent_parents_called * np.ones(size, np.float64),
                 np.array(alleles_counts),
-                np.array(alleles_frequencies, dtype=np.float64),
-                n_ref_alleles * np.ones(size, np.int32),
-                ref_freq * np.ones(size, np.float64))
+                np.array(alleles_frequencies, dtype=np.float64))
 
 #     def annotate(self, vars_df, vcf_vars):
 #         n_parents_called = pd.Series(index=vars_df.index, dtype=np.int16)

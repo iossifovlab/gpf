@@ -36,10 +36,8 @@ def summary_parquet_schema():
         pa.field("effect_details", pa.list_(effect_details)),
         pa.field("af_parents_called_count", pa.int32()),
         pa.field("af_parents_called_percent", pa.float32()),
-        pa.field("af_alternative_allele_count", pa.int32()),
-        pa.field("af_alternative_allele_freq", pa.float32()),
-        pa.field("af_reference_allele_count", pa.int32()),
-        pa.field("af_reference_allele_freq", pa.float32())
+        pa.field("af_allele_count", pa.int32()),
+        pa.field("af_allele_freq", pa.float32()),
     ]
 
     return pa.schema(fields)
@@ -62,10 +60,8 @@ def summary_parquet_schema_flat():
         pa.field("effect_details_details", pa.list_(pa.string())),
         pa.field("af_parents_called_count", pa.int32()),
         pa.field("af_parents_called_percent", pa.float64()),
-        pa.field("af_alternative_allele_count", pa.int32()),
-        pa.field("af_alternative_allele_freq", pa.float64()),
-        pa.field("af_reference_allele_count", pa.int32()),
-        pa.field("af_reference_allele_freq", pa.float64()),
+        pa.field("af_allele_count", pa.int32()),
+        pa.field("af_allele_freq", pa.float64()),
         # pa.field("ultra_rare", pa.bool_()),
     ]
 
@@ -80,7 +76,8 @@ def summary_batch(sum_df):
         assert name in sum_df
         data = sum_df[name].values
         field = schema.field_by_name(name)
-        # print("storing field: ", name)
+        print("storing field: ", name)
+        print(data)
         batch_data.append(pa.array(data, type=field.type))
 
     batch = pa.RecordBatch.from_arrays(
@@ -91,6 +88,8 @@ def summary_batch(sum_df):
 
 
 def summary_table(sum_df):
+    print(sum_df)
+
     batch = summary_batch(sum_df)
     table = pa.Table.from_batches([batch])
     return table

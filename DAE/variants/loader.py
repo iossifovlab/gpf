@@ -18,6 +18,8 @@ from variants.parquet_io import save_summary_to_parquet,\
 
 def save_annotation_to_csv(annot_df, filename, sep="\t"):
     def convert_array_of_strings_to_string(a):
+        if not a:
+            return None
         return RawVariantsLoader.SEP1.join(a)
 
     vars_df = annot_df.copy()
@@ -95,9 +97,11 @@ class RawVariantsLoader(object):
 
     @staticmethod
     def convert_array_of_strings(token):
+        if not token:
+            return None
         token = token.strip()
         words = [w.strip() for w in token.split(RawVariantsLoader.SEP1)]
-        return np.array(words)
+        return words
 
     @classmethod
     def gene_effects_serialize(cls, all_gene_effects):
@@ -136,7 +140,9 @@ class RawVariantsLoader(object):
                         cls.convert_array_of_strings,
                     }
                 )
-                print(annot_df.head())
+            for col in ['alternative', 'effect_type']:
+                annot_df[col] = annot_df[col].astype(object). \
+                    where(pd.notnull(annot_df[col]), None)
             return annot_df
         elif storage == 'parquet':
             annot_df = read_summary_from_parquet(filename)

@@ -800,7 +800,7 @@ class SummaryVariantFactory(object):
             var_index=row['var_index'],
             allele_index=row['allele_index'],
             effect=effects,
-            frequency=row['af_alternative_allele_freq'],
+            frequency=row['af_allele_freq'],
             attributes=row,
             split_from_multi_allelic=row['split_from_multi_allelic'])
 
@@ -831,19 +831,20 @@ class SummaryVariantFactory(object):
         """
         assert len(records) > 0
 
-        row = records[0]
-        alleles = [
-            AlleleSummary(
-                row['chrom'],
-                row['position'],
-                row['reference'],
-                alternative=None,
-                var_index=row['var_index'],
-                allele_index=0,
-                effect=None,
-                frequency=row['af_reference_allele_freq']
-            )
-        ]
+#         row = records[0]
+#         alleles = [
+#             AlleleSummary(
+#                 row['chrom'],
+#                 row['position'],
+#                 row['reference'],
+#                 alternative=None,
+#                 var_index=row['var_index'],
+#                 allele_index=0,
+#                 effect=None,
+#                 frequency=row['af_allele_freq']
+#             )
+#         ]
+        alleles = []
         for row in records:
             sa = SummaryVariantFactory.summary_allele_from_record(row)
             alleles.append(sa)

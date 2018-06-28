@@ -16,9 +16,14 @@ def assert_annotation_equals(vars_df, vars1_df):
                       vars1_df.to_dict(orient='record')):
         for k in v1.keys():
             res = v1[k] == v2[k]
-            if isinstance(res, np.ndarray):
-                print(k, v1[k], v2[k], type(v1[k]), type(v2[k]))
+            print(k,
+                  "|{}|".format(v1[k]),
+                  "|{}|".format(v2[k]),
+                  type(v1[k]), type(v2[k]))
+            print(vars_df[k].values)
+            print(vars1_df[k].values)
 
+            if isinstance(res, np.ndarray):
                 if isinstance(v1[k], str) or \
                         v1[k].dtype.type is np.string_ or \
                         v1[k].dtype.type is np.unicode_:

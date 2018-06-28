@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import pandas as pd
 import numpy as np
+import itertools
 
 
 class AnnotatorBase(object):
@@ -29,9 +30,9 @@ class AnnotatorBase(object):
         index = 0
         for vcf_index, v in enumerate(vcf_vars):
             res = self.annotate_variant(v)
-            for allele_index, _ in enumerate(v.ALT):
+            for allele_index, _ in enumerate(itertools.chain([v.REF], v.ALT)):
                 assert annot_df['var_index'][index] == vcf_index
-                assert annot_df['allele_index'][index] == allele_index + 1
+                assert annot_df['allele_index'][index] == allele_index
 
                 for col, _ in enumerate(self.columns()):
                     columns[col][index] = res[col][allele_index]

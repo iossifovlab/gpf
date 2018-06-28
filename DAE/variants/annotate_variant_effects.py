@@ -33,11 +33,11 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
         assert self.variant_annotator is not None
 
     def annotate_variant(self, vcf_variant):
-        worst_effects = []
-        gene_effects_genes = []
-        gene_effects_types = []
-        transcript_ids = []
-        transcript_details = []
+        worst_effects = [None]
+        gene_effects_genes = [None]
+        gene_effects_types = [None]
+        transcript_ids = [None]
+        transcript_details = [None]
 
         for alt in vcf_variant.ALT:
             variant = Variant(

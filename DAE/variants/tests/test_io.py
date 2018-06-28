@@ -55,9 +55,9 @@ def test_annotation_parquet(variants_vcf, fixture_name, temp_filename):
 
 @pytest.mark.parametrize("fixture_name,storage", [
     ("fixtures/effects_trio_multi", "csv"),
-    ("fixtures/effects_trio_multi", "parquet"),
+    # ("fixtures/effects_trio_multi", "parquet"),
     ("fixtures/effects_trio", "csv"),
-    ("fixtures/effects_trio", "parquet"),
+    # ("fixtures/effects_trio", "parquet"),
 ])
 def test_serialize_deserialize(
         fixture_name, variants_vcf, storage, temp_filename):
