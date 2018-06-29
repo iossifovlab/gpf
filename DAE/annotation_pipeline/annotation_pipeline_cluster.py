@@ -31,6 +31,8 @@ class VariantDBConf(object):
     def all_variant_files(self):
         return self.denovo_files + self.transm_files
 
+def escape_target(target):
+    return target.replace(' ', '__')
 
 def main(config, data_dir, output_dir):
     def to_destination(path):
@@ -61,20 +63,21 @@ def main(config, data_dir, output_dir):
     dirs.append(log_dir)
     print('dirs:\n\tmkdir {}\n'.format(' '.join(dirs)))
 
-    cmd_format = ('{output_file}{job_sufix}: dirs\n\t(time'
+    cmd_format = ('{target}: dirs\n\t(time'
         ' annotation_pipeline.py {args}'
-        ' {input_file} {output_file}{job_sufix}'
-        ' 2> {log_prefix}-err{job_sufix}.txt) 2> {log_prefix}-time{job_sufix}.txt\n')
+        ' "{input_file}" "{output_file}{job_sufix}"'
+        ' 2> "{log_prefix}-err{job_sufix}.txt") 2> "{log_prefix}-time{job_sufix}.txt"\n')
 
     denovo_args = '--config {}'.format(config)
 
     for file in variant_db_conf.denovo_files:
         output_file = to_destination(file)
-        print(cmd_format.format(input_file=file,
+        all_cmds.append(escape_target(output_file))
+        print(cmd_format.format(target=all_cmds[-1],
+            input_file=file,
             output_file=output_file,
             args=denovo_args, job_sufix='',
             log_prefix=log_dir + '/' + os.path.basename(file)))
-        all_cmds.append(output_file)
 
     transm_args_format = denovo_args + \
         ' -c chr -p position --region={chr}:{begin_pos}-{end_pos}'
@@ -87,29 +90,36 @@ def main(config, data_dir, output_dir):
         for chromosome in chromosomes:
             for i in range(0, 5):
                 job_sufix = '-part-{chr:0>2}-{pos}'.format(chr=chr_labels.get(chromosome, chromosome), pos=i)
-                print(cmd_format.format(input_file=file,
+                file_cmds.append(escape_target(output_file + job_sufix))
+                print(cmd_format.format(target=file_cmds[-1],
+                    input_file=file,
                     output_file=output_file,
                     args=transm_args_format.format(
                         chr=chromosome,
                         begin_pos=i*50000000, end_pos=(i+1)*50000000-1),
                     log_prefix=log_dir + '/' + os.path.basename(file),
                     job_sufix=job_sufix))
-                file_cmds.append(output_file + job_sufix)
 
-        print('{output_file}: {parts}\n\tmerge.sh {output_file}\n'.format(
-            output_file=output_file,
+        escaped_output_file = escape_target(output_file)
+        print('{target}: {parts}\n\tmerge.sh "{merged}"\n'.format(
+            target=escaped_output_file,
+            merged=output_file,
             parts=' '.join(file_cmds)))
 
-        all_cmds.append(output_file + '.bgz')
-        print('{bgz_file}: {txt_file}\n\tbgzip $^ && mv $^.gz $^.bgz\n'.format(
-            bgz_file=all_cmds[-1], txt_file=output_file))
+        all_cmds.append(escaped_output_file + '.bgz')
+        print('{bgz_target}: {merge_target}\n\t'
+            'bgzip "{output_file}" && '
+            'mv "{output_file}.gz" "{output_file}.bgz"\n'.format(
+                bgz_target=all_cmds[-1], merge_target=escaped_output_file,
+                output_file=output_file))
 
-    copy_cmd_format = '{dest}: dirs\n\tcp {file} {dest} 2>> {log_prefix}-err.txt\n'
+    copy_cmd_format = '{target}: dirs\n\tcp "{file}" "{dest}"\n'
     for file in copy_files:
         dest = to_destination(file)
-        print(copy_cmd_format.format(file=file, dest=dest,
+        all_cmds.append(escape_target(dest))
+        print(copy_cmd_format.format(target=all_cmds[-1],
+            file=file, dest=dest,
             log_prefix=log_dir + '/' + os.path.basename(file)))
-        all_cmds.append(dest)
 
     print(" ".join(["all:"] + all_cmds))
 
