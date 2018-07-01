@@ -120,7 +120,7 @@ class DatasetWrapper(Dataset):
         if value_range == (None, None):
             return
 
-        value = 'af_alternative_allele_freq'
+        value = 'af_allele_freq'
         if 'real_attr_filter' not in kwargs:
             kwargs['real_attr_filter'] = {}
 

@@ -325,6 +325,7 @@ class AlleleSummary(VariantBase):
             self.update_attributes(attributes)
 
     def is_reference_allele(self):
+        print(self.alternative)
         return self.alternative is None
 
     @property
@@ -800,8 +801,7 @@ class SummaryVariantFactory(object):
                 zip(row['effect_details_transcript_ids'],
                     row['effect_details_details']))
         alternative = row['alternative']
-#         if alternative is None and 'alternative_fv' in row:
-#             alternative = row['alternative_fv']
+
         return AlleleSummary(
             row['chrom'], row['position'],
             row['reference'],

@@ -42,10 +42,10 @@ def test_parquet_variants(
 
 @pytest.mark.spark
 @pytest.mark.parametrize("fixture_name, count", [
-    ("fixtures/effects_trio_multi", 12),
-    ("fixtures/effects_trio", 13),
-    ("fixtures/inheritance_multi", 6),
-    ("fixtures/trios2", 56),
+    ("fixtures/effects_trio_multi", 9),
+    ("fixtures/effects_trio", 23),
+    ("fixtures/inheritance_multi", 12),
+    ("fixtures/trios2", 76),
 ])
 def test_parquet_select(
         testing_thriftserver, parquet_variants, fixture_name, count):
@@ -58,7 +58,7 @@ def test_parquet_select(
     q = """
     SELECT * FROM parquet.`file://{}` AS A
     INNER JOIN parquet.`file://{}` AS B
-    ON A.summary_index = B.summary_index
+    ON A.summary_index = B.summary_index AND A.allele_index = B.allele_index
     """.format(family_filename, summary_filename)
     print(q)
 
