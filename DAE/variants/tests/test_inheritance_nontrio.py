@@ -24,6 +24,9 @@ def test_inheritance_nontrio(variants_vcf, region, count, inheritance):
     vs = list(fvars.query_variants(
         regions=[region],
         family_ids=['f1']))
+    for v in vs:
+        print(v, v.inheritance)
+
     assert len(vs) == count
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance)

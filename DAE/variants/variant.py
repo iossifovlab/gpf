@@ -48,7 +48,7 @@ class VariantBase(object):
 
     @property
     def alts(self):
-        return [self.alternative] if self.alternative is not None else []
+        return self.alternative if self.alternative is not None else ""
 
     def __repr__(self):
         if not self.alts:
@@ -311,6 +311,8 @@ class SummaryVariant(VariantBase):
 
         self.alleles = alleles
         self.ref_allele = alleles[0]
+        self.alt_allels = alleles[1:]
+
         self.summary_index = self.ref_allele.summary_index
 
         super(SummaryVariant, self).__init__(
@@ -322,9 +324,7 @@ class SummaryVariant(VariantBase):
 
     @property
     def alts(self):
-        return AltAlleleItems([
-            sa.alternative for sa in self.alt_alleles
-            if sa.alternative is not None])
+        return ','.join([aa.alternative for aa in self.alt_alleles])
 
     @property
     def alternative(self):
@@ -529,13 +529,29 @@ class FamilyVariant(SummaryVariantDelegate, FamilyInheritanceMixin):
                 summary_variant.alleles[allele_index], family, self.gt)
             alleles.append(fa)
         self.alleles = alleles
-        self.alt_alleles = alleles[1:]
+        self.alt_alleles = AltAlleleItems(alleles[1:])
+
+    @property
+    def alts(self):
+        if len(self.alt_alleles) == 0:
+            return ""
+        else:
+            return ",".join([aa.alternative for aa in self.alt_alleles])
+
+    def __repr__(self):
+        if not self.alts:
+            return '{}:{} {}(ref) {}'.format(
+                self.chromosome, self.position,
+                self.reference, self.family_id)
+        else:
+            return '{}:{} {}->{} {}'.format(
+                self.chromosome, self.position,
+                self.reference, self.alts,
+                self.family_id)
 
     def __iter__(self):
         for allele in self.alleles:
-            yield FamilyAllele(
-                allele, self.family,
-                self.gt)
+            yield allele
 
     def alleles_iter(self):
         for allele in self.summary_variant.alleles:

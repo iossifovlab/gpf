@@ -23,18 +23,18 @@ import pytest
 #         assert 'af_parents_called_percent' in v
 
 
-def test_filter_real_attr(fv_one):
-    v = fv_one
-    v.update_attributes({"a": [1], "b": np.array([2])})
-
-    assert RawFamilyVariants.filter_real_attr(
-        v, {'a': [(1, 2), (3, 4)]})
-
-    assert RawFamilyVariants.filter_real_attr(
-        v, {'a': [[1, 2], [3, 4]]})
-
-    assert not RawFamilyVariants.filter_real_attr(
-        v, {'a': [[1.1, 2], [3, 4]]})
-
-    assert RawFamilyVariants.filter_real_attr(
-        v, {'b': [[1, 2], [3, 4]]})
+# def test_filter_real_attr(fv_one):
+#     v = fv_one
+#     v.update_attributes({"a": [1], "b": np.array([2])})
+#
+#     assert RawFamilyVariants.filter_real_attr(
+#         v, {'a': [(1, 2), (3, 4)]})
+#
+#     assert RawFamilyVariants.filter_real_attr(
+#         v, {'a': [[1, 2], [3, 4]]})
+#
+#     assert not RawFamilyVariants.filter_real_attr(
+#         v, {'a': [[1.1, 2], [3, 4]]})
+#
+#     assert RawFamilyVariants.filter_real_attr(
+#         v, {'b': [[1, 2], [3, 4]]})

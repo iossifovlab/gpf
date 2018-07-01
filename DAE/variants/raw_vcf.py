@@ -187,20 +187,19 @@ class RawFamilyVariants(FamiliesBase):
         return False
 
     @staticmethod
-    def filter_real_attr(v, real_attr_filter):
+    def filter_real_attr(va, real_attr_filter):
         for key, ranges in real_attr_filter.items():
-            if not v.has_attribute(key):
+            if not va.has_attribute(key):
                 return False
 
-            for sa in v.alt_alleles:
-                val = sa.get_attribute(key)
-                if val is None:
-                    continue
-                result = [
-                    (val >= rmin) and (val <= rmax) for (rmin, rmax) in ranges
-                ]
-                if any(result):
-                    return True
+            val = va.get_attribute(key)
+            if val is None:
+                continue
+            result = [
+                (val >= rmin) and (val <= rmax) for (rmin, rmax) in ranges
+            ]
+            if any(result):
+                return True
 
         return False
 
@@ -232,9 +231,6 @@ class RawFamilyVariants(FamiliesBase):
         return False
 
     def filter_allele(self, v, **kwargs):
-        if 'regions' in kwargs:
-            if not self.filter_regions(v, kwargs['regions']):
-                return False
         if 'genes' in kwargs or 'effect_types' in kwargs:
             if not self.filter_gene_effects(
                     v, kwargs.get('effect_types'), kwargs.get('genes')):
@@ -242,10 +238,6 @@ class RawFamilyVariants(FamiliesBase):
         if 'person_ids' in kwargs:
             person_ids = kwargs['person_ids']
             if not v.variant_in_members & set(person_ids):
-                return False
-        if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
-            family_ids = kwargs['family_ids']
-            if v.family_id not in family_ids:
                 return False
         if 'roles' in kwargs:
             query = kwargs['roles']
@@ -262,7 +254,6 @@ class RawFamilyVariants(FamiliesBase):
             if not query.match(
                     [v.details.variant_type]):
                 return False
-
         if 'real_attr_filter' in kwargs:
             if not self.filter_real_attr(v, kwargs['real_attr_filter']):
                 return False
@@ -272,6 +263,11 @@ class RawFamilyVariants(FamiliesBase):
         if 'regions' in kwargs:
             if not self.filter_regions(v, kwargs['regions']):
                 return False
+        if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
+            family_ids = kwargs['family_ids']
+            if v.family_id not in family_ids:
+                return False
+
         if 'inheritance' in kwargs:
             query = kwargs['inheritance']
             if not query.match([v.inheritance]):
@@ -321,10 +317,13 @@ class RawFamilyVariants(FamiliesBase):
         for v in vs:
             if not self.filter_variant(v, **kwargs):
                 continue
-            for va in v:
+            matched = False
+            for va in v.alleles:
                 if self.filter_allele(va, **kwargs):
-                    yield v
+                    matched = True
                     break
+            if matched:
+                yield v
 
     def wrap_variants(self, annot_df):
         if annot_df is None:

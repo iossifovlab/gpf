@@ -70,6 +70,8 @@ def testing_thriftserver(request):
 
     spark_home = os.environ.get("SPARK_HOME")
     thrift_port = os.environ.get("THRIFTSERVER_PORT")
+    thrift_port = thrift_port.strip()
+
     assert spark_home is not None
 
     start_cmd = "{}/sbin/start-thriftserver.sh".format(spark_home)
@@ -80,12 +82,15 @@ def testing_thriftserver(request):
         os.system(stop_cmd)
     request.addfinalizer(fin)
 
+    print("thrift port passed: {}".format(thrift_port))
+
     if thrift_port is not None:
         thrift_port = int(thrift_port)
         start_cmd = "{} --hiveconf hive.server2.thrift.port={}".format(
             start_cmd, thrift_port)
     else:
         thrift_port = 10000
+    print("thrift port got: {}".format(thrift_port))
 
     print("starting thrift command: ", start_cmd)
     status = os.system(start_cmd)

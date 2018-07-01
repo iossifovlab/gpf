@@ -4,8 +4,13 @@ Created on Feb 13, 2018
 @author: lubo
 '''
 from __future__ import print_function
-from variants.attributes import Role, RoleQuery
-from variants.attributes_query_builder import any_node, token
+
+
+def test_query_role_dad(variants_vcf):
+    fvars = variants_vcf('fixtures/trios2_11541')
+    vs = fvars.query_variants(roles='dad')
+    vs = list(vs)
+    print(vs)
 
 
 def test_query_roles_dad(ustudy_vcf):
