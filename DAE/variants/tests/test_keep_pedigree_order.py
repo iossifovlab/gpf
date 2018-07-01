@@ -5,13 +5,10 @@ Created on Mar 12, 2018
 '''
 from __future__ import print_function
 
-from RegionOperations import Region
-from variants.vcf_utils import mat2str
 from variants.family import FamiliesBase, Family
 from variants.loader import RawVariantsLoader
 import StringIO
 from variants.attributes import Role
-import pytest
 
 
 '''
@@ -20,31 +17,6 @@ import pytest
 2237 1:908193(908193) sub(T->G) SF0014912 122/100 000/100 denovo 0 0.0
 2238 1:908193(908193) sub(T->G) SF0042658 212/010 000/010 denovo 0 0.0
 '''
-
-
-@pytest.mark.slow
-def test_denovo_order_experiment(nvcf19s):
-    regions = [
-        Region("1", 908193, 908193),
-    ]
-
-    vs = nvcf19s.query_variants(
-        regions=regions,
-        inheritance='denovo')
-    for v in vs:
-        print(v, v.family_id, mat2str(v.best_st), mat2str(v.gt),
-              v.inheritance,
-              v.get_attribute('af_alternative_alleles_count'),
-              v.get_attribute('af_alternative_alleles_freq'))
-        print(v.members_in_order)
-        print(v.members_ids)
-        assert v.members_in_order[-1].role == Role.prb
-
-
-# def test_pedigree_sorted(nvcf19_config):
-#     ped_df = RawVariantsLoader.load_pedigree_file(nvcf19_config.pedigree)
-#     ped_df = RawVariantsLoader.sort_pedigree(ped_df)
-#     RawVariantsLoader.save_pedigree_file(ped_df, "ped.ped")
 
 
 PED_FILE1 = """
@@ -74,23 +46,5 @@ def test_pedigree_keep_family_order_local():
     print(f.members_in_order)
     assert f.members_in_order[-1].role == Role.prb
     f = families.families['SF0014912']
-    print(f.members_in_order)
-    assert f.members_in_order[-1].role == Role.prb
-
-
-@pytest.mark.slow
-def test_pedigree_keep_family_order(nvcf19s):
-    families = nvcf19s
-
-    f = families.families['SF0043014']
-    print(f.members_in_order)
-    assert f.members_in_order[-1].role == Role.prb
-    f = families.families['SF0033119']
-    print(f.members_in_order)
-    assert f.members_in_order[-1].role == Role.prb
-    f = families.families['SF0014912']
-    print(f.members_in_order)
-    assert f.members_in_order[-1].role == Role.prb
-    f = families.families['SF0042658']
     print(f.members_in_order)
     assert f.members_in_order[-1].role == Role.prb

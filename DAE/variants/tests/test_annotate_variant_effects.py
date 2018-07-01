@@ -13,6 +13,7 @@ import pytest
 # from variants.tests.common import assert_annotation_equals
 
 
+# FIXME:
 # @pytest.mark.slow
 # def test_annotate_variant_effects_ustudy(
 #         ustudy, temp_filename, effect_annotator):

@@ -289,7 +289,7 @@ class RawFamilyVariants(FamiliesBase):
             if v.details is None:
                 return False
             if not query.match(
-                    [ad.variant_type for ad in v.details]):
+                    [v.details.variant_type]):
                 return False
 
         if 'real_attr_filter' in kwargs:

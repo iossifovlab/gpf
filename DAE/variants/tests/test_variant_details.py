@@ -31,15 +31,14 @@ def test_variant_effect_annotation(variant, variant_type, position):
     assert detail.cshl_position == position
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize("variant_types,query", [
     (set([VariantType.substitution]), "sub"),
     (set([VariantType.deletion, VariantType.insertion]), "del or ins"),
     (set([VariantType.complex, VariantType.substitution]), "complex or sub"),
 ])
-def test_query_by_variant_type(nvcf19f, variant_types, query):
-    vs = nvcf19f.query_variants(
-        inheritance="not reference and not unknown",
+def test_query_by_variant_type(ustudy_vcf, variant_types, query):
+    vs = ustudy_vcf.query_variants(
+        # inheritance="not reference and not unknown",
         variant_type=query)
     vs = list(vs)
 
