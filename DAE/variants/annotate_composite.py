@@ -31,7 +31,7 @@ class AnnotatorBase(object):
         for vcf_index, v in enumerate(vcf_vars):
             res = self.annotate_variant(v)
             for allele_index, _ in enumerate(itertools.chain([v.REF], v.ALT)):
-                assert annot_df['var_index'][index] == vcf_index
+                assert annot_df['summary_index'][index] == vcf_index
                 assert annot_df['allele_index'][index] == allele_index
 
                 for col, _ in enumerate(self.columns()):

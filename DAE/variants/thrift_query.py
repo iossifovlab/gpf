@@ -43,7 +43,7 @@ q = """
         F.position,
         F.reference,
         F.alternative,
-        F.var_index,
+        F.summary_index,
         F.allele_index,
         F.split_from_multi_allelic,
         F.family_id,
@@ -57,7 +57,7 @@ q = """
         S.position as position_fv,
         S.reference as reference_fv,
         S.alternative as alternative_fv,
-        S.var_index as var_index_fv,
+        S.summary_index as summary_index_fv,
         S.allele_index as allele_index_fv,
         S.split_from_multi_allelic as split_from_multi_allelic_fv,
         S.effect_type,
@@ -71,7 +71,7 @@ q = """
         S.af_allele_freq
 
     FROM parquet.`{family}` AS F FULL OUTER JOIN parquet.`{summary}` AS S
-    ON S.var_index = F.var_index AND S.allele_index = F.allele_index
+    ON S.summary_index = F.summary_index AND S.allele_index = F.allele_index
 """
 
 

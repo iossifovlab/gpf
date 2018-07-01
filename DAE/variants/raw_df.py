@@ -69,34 +69,34 @@ class DfFamilyVariantsBase(object):
     def wrap_variants(families, join_df):
         print("----------------------------------------------------------")
         print("join_df before sort")
-        print(join_df[["var_index", "allele_index",  # "allele_index_fv",
+        print(join_df[["summary_index", "allele_index",  # "allele_index_fv",
                        "reference",
                        "alternative", "alternative_fv",
                        "family_id", "genotype", "inheritance"]])
         join_df = join_df.sort_values(
-            by=["var_index", "family_id", "allele_index"])
+            by=["summary_index", "family_id", "allele_index"])
         print("----------------------------------------------------------")
         print("join_df after sort")
-        print(join_df[["var_index", "allele_index",  # "allele_index_fv",
+        print(join_df[["summary_index", "allele_index",  # "allele_index_fv",
                        "reference",
                        "alternative", "alternative_fv",
                        "family_id", "genotype", "inheritance"]])
         print("----------------------------------------------------------")
 
-        for _name, group in join_df.groupby(by=["var_index", "family_id"]):
+        for _name, group in join_df.groupby(by=["summary_index", "family_id"]):
 
             if group.inheritance.unique()[0] != Inheritance.reference.value:
 
-                print(group[["var_index", "allele_index",  # "allele_index_fv",
+                print(group[["summary_index", "allele_index",  # "allele_index_fv",
                              "reference",
                              "alternative", "alternative_fv",
                              "family_id", "genotype", "inheritance"]])
 #                 # group = group.drop_duplicates(
-#                 #     subset=["var_index", "allele_index"])
+#                 #     subset=["summary_index", "allele_index"])
 #                 subset = group.allele_index.max() + 1
 #                 group = group.head(subset)
 #
-#                 print(group[["var_index", "allele_index", "allele_index_fv",
+#                 print(group[["summary_index", "allele_index", "allele_index_fv",
 #                              "reference",
 #                              "alternative", "alternative_fv",
 #                              "family_id", "genotype", "inheritance"]])
@@ -150,21 +150,21 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
             sdf, vdf = self.filter_families(sdf, vdf, kwargs['family_ids'])
 
-        # sdf = sdf.set_index(["var_index", "allele_index"])
+        # sdf = sdf.set_index(["summary_index", "allele_index"])
         print("_________________________________________________________")
-        print(sdf[["var_index", "allele_index", "alternative"]])
-        print(vdf[["var_index", "allele_index",
+        print(sdf[["summary_index", "allele_index", "alternative"]])
+        print(vdf[["summary_index", "allele_index",
                    "alternative", "family_id", "genotype"]])
         print("_________________________________________________________")
 
         join_df = pd.merge(sdf, vdf,
-                           on=['var_index', 'allele_index'],
+                           on=['summary_index', 'allele_index'],
                            how='outer',
                            suffixes=('', '_fv'),
                            sort=True)
         print(join_df.head())
         print(join_df.columns)
-#         print(join_df[["var_index", "allele_index",  # "allele_index_fv",
+#         print(join_df[["summary_index", "allele_index",  # "allele_index_fv",
 #                        "reference",
 #                        "alternative",
 #                        "family_id", "genotype"]])

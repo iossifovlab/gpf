@@ -287,7 +287,7 @@ class AlleleSummary(VariantBase):
                  position,
                  reference,
                  alternative=None,
-                 var_index=None,
+                 summary_index=None,
                  allele_index=1,
                  effect=None,
                  frequency=None,
@@ -305,7 +305,7 @@ class AlleleSummary(VariantBase):
         super(AlleleSummary, self).__init__(
             chromosome, position, reference, alternative)
 
-        self.var_index = var_index
+        self.summary_index = summary_index
         self.allele_index = allele_index
         self.split_from_multi_allelic = split_from_multi_allelic
 
@@ -382,7 +382,7 @@ class SummaryVariant(VariantBase):
 
         self.alleles = alleles
         self.ref_allele = alleles[0]
-        self.var_index = self.ref_allele.var_index
+        self.summary_index = self.ref_allele.summary_index
 
         super(SummaryVariant, self).__init__(
             self.ref_allele.chromosome,
@@ -556,7 +556,7 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
 
     def __init__(self, sv, family, gt):
         self.summary_variant = sv
-        self.var_index = sv.var_index
+        self.summary_index = sv.summary_index
         self.family = family
 
         self.gt = np.copy(gt)
@@ -806,7 +806,7 @@ class SummaryVariantFactory(object):
             row['chrom'], row['position'],
             row['reference'],
             alternative=alternative,
-            var_index=row['var_index'],
+            summary_index=row['summary_index'],
             allele_index=row['allele_index'],
             effect=effects,
             frequency=row['af_allele_freq'],

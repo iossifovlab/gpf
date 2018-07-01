@@ -28,7 +28,7 @@ def summary_parquet_schema():
         pa.field("position", pa.int64()),
         pa.field("reference", pa.string()),
         pa.field("alternative", pa.string()),
-        pa.field("var_index", pa.int64()),
+        pa.field("summary_index", pa.int64()),
         pa.field("split_from_multi_allelic", pa.bool_()),
         pa.field("allele_index", pa.int8()),
         pa.field("effect_type", pa.string()),
@@ -50,7 +50,7 @@ def summary_parquet_schema_flat():
         pa.field("position", pa.int64()),
         pa.field("reference", pa.string()),
         pa.field("alternative", pa.string()),
-        pa.field("var_index", pa.int64()),
+        pa.field("summary_index", pa.int64()),
         pa.field("allele_index", pa.int8()),
         pa.field("split_from_multi_allelic", pa.bool_()),
         pa.field("effect_type", pa.string()),
@@ -113,7 +113,7 @@ def family_variant_parquet_schema():
         pa.field("position", pa.int64()),
         pa.field("reference", pa.string()),
         pa.field("alternative", pa.string()),
-        pa.field("var_index", pa.int64()),
+        pa.field("summary_index", pa.int64()),
         pa.field("allele_index", pa.int8()),
         pa.field("split_from_multi_allelic", pa.bool_()),
         pa.field("family_id", pa.string()),
@@ -134,7 +134,7 @@ def family_variants_batch(variants):
         "position": [],
         "reference": [],
         "alternative": [],
-        "var_index": [],
+        "summary_index": [],
         "allele_index": [],
         "split_from_multi_allelic": [],
         "family_id": [],
@@ -151,7 +151,7 @@ def family_variants_batch(variants):
             data["position"].append(v.position)
             data["reference"].append(v.reference)
             data["alternative"].append(v.alternative)
-            data["var_index"].append(v.var_index)
+            data["summary_index"].append(v.summary_index)
             data["allele_index"].append(v.allele_index)
             data["split_from_multi_allelic"].append(v.split_from_multi_allelic)
             data["family_id"].append(v.family_id)
