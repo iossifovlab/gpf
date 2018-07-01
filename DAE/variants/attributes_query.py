@@ -32,11 +32,15 @@ QUERY_GRAMMAR = """
 
     eq: "eq"i "(" _simplearglist ")"
 
-    ?atom: "(" logical_or ")" | less_than | more_than | arg
+    ?atom: "(" logical_or ")" | less_than | more_than | less_than_eq | more_than_eq | arg
 
     less_than: ">" SIGNED_NUMBER
 
     more_than: "<" SIGNED_NUMBER
+
+    less_than_eq: ">=" SIGNED_NUMBER
+
+    more_than_eq: "<=" SIGNED_NUMBER
 
     arg: simple_arg
 
@@ -133,6 +137,12 @@ class StringQueryToTreeTransformer(InlineTransformer):
     def more_than(self, *args):
         return MoreThanNode(args[0])
 
+    def less_than_eq(self, *args):
+        return LessThanEqNode(args[0])
+
+    def more_than_eq(self, *args):
+        return MoreThanEqNode(args[0])
+
     def arg(self, *args):
         return ContainsNode(args[0])
 
@@ -213,6 +223,16 @@ class MoreThanNode(LeafNode):
         super(MoreThanNode, self).__init__(arg)
 
 
+class LessThanEqNode(LeafNode):
+    def __init__(self, arg):
+        super(LessThanEqNode, self).__init__(arg)
+
+
+class MoreThanEqNode(LeafNode):
+    def __init__(self, arg):
+        super(MoreThanEqNode, self).__init__(arg)
+
+
 class BaseTreeTransformer(object):
     def transform(self, node):
         if isinstance(node, TreeNode):
@@ -228,6 +248,12 @@ class QueryTreeToLambdaTransformer(BaseTreeTransformer):
 
     def MoreThanNode(self, arg):
         return lambda l: l < arg
+
+    def LessThanEqNode(self, arg):
+        return lambda l: l >= arg
+
+    def MoreThanEqNode(self, arg):
+        return lambda l: l <= arg
 
     def ContainsNode(self, arg):
         return lambda l: arg in l
@@ -298,6 +324,12 @@ class QueryTreeToSQLTransformer(BaseTreeTransformer):
 
     def MoreThanNode(self, arg):
         return self.column_name + " < " + self.token_converter(arg)
+
+    def LessThanEqNode(self, arg):
+        return self.column_name + " >= " + self.token_converter(arg)
+
+    def MoreThanEqNode(self, arg):
+        return self.column_name + " <= " + self.token_converter(arg)
 
     def ContainsNode(self, arg):
         return self.column_name + " = " + self.token_converter(arg)
