@@ -291,8 +291,11 @@ class SummaryAllele(VariantBase):
 
 class SummaryAlleleDelegate(SummaryAllele):
 
-    def __init__(self, delegate):
-        self.delegate = delegate
+    def __init__(self, summary_allele=None, **kwargs):
+        assert summary_allele is not None
+        assert isinstance(summary_allele, SummaryAllele)
+
+        self.delegate = summary_allele
 
     def __getattr__(self, name):
         return getattr(self.delegate, name)
@@ -436,16 +439,11 @@ class SummaryVariantFactory(object):
 
 class FamilyAllele(SummaryAlleleDelegate, FamilyInheritanceMixin):
 
-    def __init__(self, summary_allele, family, gt):
-        super(FamilyAllele, self).__init__(summary_allele)
-        self.family = family
-        self._best_st = None
-        self._inheritance = None
-        self._variant_in_members = None
-        self._variant_in_roles = None
-        self._variant_in_sexes = None
+    def __init__(self, summary_allele, family, genotype):
+        SummaryAlleleDelegate.__init__(self, summary_allele=summary_allele)
+        FamilyInheritanceMixin.__init__(self, family=family, genotype=genotype)
 
-        gt = np.copy(gt)
+        gt = np.copy(genotype)
         mask = np.logical_not(
             np.logical_or(
                 gt == 0,
@@ -460,73 +458,6 @@ class FamilyAllele(SummaryAlleleDelegate, FamilyInheritanceMixin):
         if self.is_reference_allele:
             return None
         return [self.effect]
-
-    @property
-    def members_in_order(self):
-        return self.family.members_in_order
-
-    @property
-    def members_ids(self):
-        return self.family.members_ids
-
-    @property
-    def family_id(self):
-        return self.family.family_id
-
-    @property
-    def genotype(self):
-        return self.gt.T
-
-    def gt_flatten(self):
-        return self.gt.flatten(order='F')
-
-    @property
-    def inheritance(self):
-        if self._inheritance is None:
-            inherits = []
-            if np.any(self.gt == -1):
-                self._inheritance = Inheritance.unknown
-            elif np.all(self.gt == 0):
-                self._inheritance = Inheritance.reference
-            else:
-                for _pid, trio in self.family.trios.items():
-                    index = self.family.members_index(trio)
-                    tgt = self.gt[:, index]
-                    ch = tgt[:, 0]
-                    p1 = tgt[:, 1]
-                    p2 = tgt[:, 2]
-
-                    inherits.append(self.calc_inheritance_trio(p1, p2, ch))
-                self._inheritance = self.combine_inheritance(*inherits)
-
-        return self._inheritance
-
-    @property
-    def variant_in_members(self):
-        if self._variant_in_members is None:
-            gt = np.copy(self.gt)
-            gt[gt == -1] = 0
-            index = np.nonzero(np.sum(gt, axis=0))
-            self._variant_in_members = set(self.members_ids[index])
-        return self._variant_in_members
-
-    @property
-    def variant_in_roles(self):
-        if self._variant_in_roles is None:
-            self._variant_in_roles = [
-                self.family.persons[pid]['role']
-                for pid in self.variant_in_members
-            ]
-        return self._variant_in_roles
-
-    @property
-    def variant_in_sexes(self):
-        if self._variant_in_sexes is None:
-            self._variant_in_sexes = set([
-                self.family.persons[pid]['sex']
-                for pid in self.variant_in_members
-            ])
-        return self._variant_in_sexes
 
     def __iter__(self):
         yield self
@@ -544,6 +475,8 @@ class FamilyAllele(SummaryAlleleDelegate, FamilyInheritanceMixin):
 
     @property
     def best_st(self):
+        assert self.gt is not None
+
         if self._best_st is None:
             ref = (2 * np.ones(len(self.family), dtype=np.int8))
             alt_alleles = self.calc_alt_alleles(self.gt)
