@@ -6,13 +6,9 @@ Created on Feb 20, 2018
 from __future__ import print_function
 from variants.attributes import Role
 from variants.attributes_query import role_query
-from variants.attributes_query_builder import any_node, token
-
-# import pytest
 
 
-# @pytest.mark.skip
-def test_query_by_filter(ustudy_single):
+def test_query_by_filter(ustudy_vcf):
     genes = ['NOC2L']
 
     rq1 = role_query.parse_and_transform("dad")
@@ -38,14 +34,14 @@ def test_query_by_filter(ustudy_single):
         return r1 and (not r2)
     assert ffun(vals)
 
-    vs = ustudy_single.query_variants(
+    vs = ustudy_vcf.query_variants(
         genes=genes,
         roles=rq
     )
     vl = list(vs)
     assert len(vl) == 13
 
-    vs = ustudy_single.query_variants(
+    vs = ustudy_vcf.query_variants(
         genes=genes,
         filter=lambda v: ffun(v.variant_in_roles)
     )
