@@ -14,8 +14,9 @@ from variants.configure import Configure
 from variants.attributes_query import role_query, sex_query, \
     inheritance_query,\
     variant_type_query
-from variants.family import VcfFamily
-from variants.variant import VariantFactoryMulti
+from variants.family import Family
+from variants.variant import SummaryVariantFactory,\
+    FamilyVariantBase, FamilyVariantMulti, FamilyVariant
 
 
 def split_gene_effect(effects):
@@ -35,6 +36,89 @@ def parse_gene_effect(effect):
         return [{'eff': effect, 'sym': ""}]
 
     return split_gene_effect(effect)
+
+
+def samples_to_alleles_index(samples):
+    return np.stack([2 * samples, 2 * samples + 1]). \
+        reshape([1, 2 * len(samples)], order='F')[0]
+
+
+class VcfFamily(Family):
+
+    def __init__(self, family_id, ped_df):
+        super(VcfFamily, self).__init__(family_id, ped_df)
+        assert 'sampleIndex' in ped_df.columns
+
+        self.samples = self.ped_df['sampleIndex'].values
+        self.alleles = samples_to_alleles_index(self.samples)
+
+    def vcf_samples_index(self, person_ids):
+        return self.ped_df[
+            self.ped_df['personId'].isin(set(person_ids))
+        ]['sampleIndex'].values
+
+    def vcf_alleles_index(self, person_ids):
+        p = self.vcf_samples_index(person_ids)
+        return samples_to_alleles_index(p)
+
+
+class VariantFactoryMulti(SummaryVariantFactory):
+
+    @staticmethod
+    def from_summary_variant(sv, family, gt):
+        return [FamilyVariantMulti(sv, family, gt)]
+
+    @staticmethod
+    def family_variant_from_vcf(summary_variant, family, vcf):
+        assert vcf is not None
+        # assert isinstance(family, VcfFamily)
+
+        gt = vcf.gt_idxs[family.alleles]
+        gt = gt.reshape([2, len(family)], order='F')
+
+        return VariantFactoryMulti.from_summary_variant(
+            summary_variant, family, gt)
+
+    @staticmethod
+    def family_variant_from_gt(summary_variant, family, gt):
+        return VariantFactoryMulti.from_summary_variant(
+            summary_variant, family, gt=gt)
+
+
+class VariantFactorySingle(SummaryVariantFactory):
+
+    @staticmethod
+    def from_summary_variant(
+            summary_variant, family, gt):
+        assert isinstance(family, VcfFamily)
+
+        alt_alleles = FamilyVariantBase.calc_alt_alleles(gt)
+        if not alt_alleles:
+            # reference only
+            return [
+                FamilyVariant(summary_variant, family, gt, 0)
+            ]
+        else:
+            return [
+                FamilyVariant(summary_variant, family, gt, alt_allele_index)
+                for alt_allele_index in alt_alleles
+            ]
+
+    @staticmethod
+    def family_variant_from_vcf(summary_variant, family, vcf):
+        # assert isinstance(family, VcfFamily)
+
+        assert vcf is not None
+        gt = vcf.gt_idxs[family.alleles]
+        gt = gt.reshape([2, len(family)], order='F')
+
+        return VariantFactorySingle.from_summary_variant(
+            summary_variant, family, gt)
+
+    @staticmethod
+    def family_variant_from_gt(summary_variant, family, gt):
+        return VariantFactorySingle.from_summary_variant(
+            summary_variant, family, gt=gt)
 
 
 class RawFamilyVariants(FamiliesBase):
@@ -116,7 +200,8 @@ class RawFamilyVariants(FamiliesBase):
                 data=records,
                 columns=[
                     'chrom', 'position', 'reference', 'alternative',
-                    'summary_index', 'split_from_multi_allelic', 'allele_index'])
+                    'summary_index', 'split_from_multi_allelic',
+                    'allele_index'])
 
             annotator.setup(self)
             self.annot_df = annotator.annotate(self.annot_df, self.vcf_vars)

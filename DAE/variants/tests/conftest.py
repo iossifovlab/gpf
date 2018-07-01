@@ -12,7 +12,8 @@ import pytest
 from variants.configure import Configure
 from variants.family import Family
 from variants.loader import RawVariantsLoader
-from variants.raw_vcf import RawFamilyVariants
+from variants.raw_vcf import RawFamilyVariants, VariantFactorySingle,\
+    VariantFactoryMulti
 import os
 import tempfile
 import shutil
@@ -22,8 +23,8 @@ from variants.annotate_variant_effects import \
     VcfVariantEffectsAnnotator
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
-from variants.variant import VariantFactoryMulti, AlleleSummary,\
-    FamilyVariantMulti, VariantFactorySingle, SummaryVariant
+from variants.variant import SummaryAllele,\
+    FamilyVariantMulti, SummaryVariant
 from variants.attributes_query import parser as attributes_query_parser, \
     QueryTransformerMatcher
 
@@ -385,9 +386,9 @@ def fam1():
 @pytest.fixture(scope='session')
 def sv():
     return SummaryVariant([
-        AlleleSummary("1", 11539, "T"),
-        AlleleSummary("1", 11539, "T", "TA"),
-        AlleleSummary("1", 11539, "T", "TG")
+        SummaryAllele("1", 11539, "T"),
+        SummaryAllele("1", 11539, "T", "TA"),
+        SummaryAllele("1", 11539, "T", "TG")
     ])
 
 

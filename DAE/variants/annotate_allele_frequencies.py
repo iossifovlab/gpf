@@ -5,7 +5,7 @@ Created on Mar 5, 2018
 '''
 import numpy as np
 from variants.annotate_composite import AnnotatorBase
-from variants.vcf_utils import samples_to_alleles_index
+from variants.raw_vcf import samples_to_alleles_index
 
 
 class VcfAlleleFrequencyAnnotator(AnnotatorBase):

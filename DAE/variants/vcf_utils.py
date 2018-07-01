@@ -5,13 +5,7 @@ Created on Mar 5, 2018
 '''
 from __future__ import print_function
 
-import numpy as np
 from itertools import izip
-
-
-def samples_to_alleles_index(samples):
-    return np.stack([2 * samples, 2 * samples + 1]). \
-        reshape([1, 2 * len(samples)], order='F')[0]
 
 
 def mat2str(mat, col_sep="", row_sep="/"):
