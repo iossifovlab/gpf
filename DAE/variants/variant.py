@@ -378,6 +378,8 @@ class SummaryVariant(VariantBase):
     def __init__(self, alleles):
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
+        print(alleles)
+
         assert alleles[0].is_reference_allele()
 
         self.alleles = alleles
@@ -555,6 +557,8 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
     """
 
     def __init__(self, sv, family, gt):
+        print(sv)
+
         self.summary_variant = sv
         self.var_index = sv.var_index
         self.family = family
@@ -563,6 +567,7 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
         alleles = [sv.ref_allele]
 
         for allele_index in self.calc_alt_alleles(self.gt):
+            print(allele_index)
             alleles.append(sv.alleles[allele_index])
 
         super(FamilyVariantBase, self).__init__(alleles)
@@ -697,7 +702,10 @@ class FamilyVariant(FamilyVariantBase):
                 self.alt_allele.split_from_multi_allelic
 
     def __iter__(self):
-        yield self
+        yield FamilyVariant(
+            self.summary_variant, self.family, self.gt, 0)
+        if not self.is_reference():
+            yield self
 
     @property
     def alternative(self):
@@ -744,6 +752,8 @@ class FamilyVariantMulti(FamilyVariantBase):
             yield FamilyVariant(
                 self.summary_variant, self.family, self.gt, 0)
         else:
+            yield FamilyVariant(
+                self.summary_variant, self.family, self.gt, 0)
             for alt_allele in self.alt_alleles:
                 yield FamilyVariant(
                     self.summary_variant, self.family,
@@ -791,8 +801,8 @@ class SummaryVariantFactory(object):
                 zip(row['effect_details_transcript_ids'],
                     row['effect_details_details']))
         alternative = row['alternative']
-        if alternative is None and 'alternative_fv' in row:
-            alternative = row['alternative_fv']
+#         if alternative is None and 'alternative_fv' in row:
+#             alternative = row['alternative_fv']
         return AlleleSummary(
             row['chrom'], row['position'],
             row['reference'],
@@ -831,19 +841,6 @@ class SummaryVariantFactory(object):
         """
         assert len(records) > 0
 
-#         row = records[0]
-#         alleles = [
-#             AlleleSummary(
-#                 row['chrom'],
-#                 row['position'],
-#                 row['reference'],
-#                 alternative=None,
-#                 var_index=row['var_index'],
-#                 allele_index=0,
-#                 effect=None,
-#                 frequency=row['af_allele_freq']
-#             )
-#         ]
         alleles = []
         for row in records:
             sa = SummaryVariantFactory.summary_allele_from_record(row)
@@ -893,35 +890,6 @@ class VariantFactorySingle(SummaryVariantFactory):
                 FamilyVariant(summary_variant, family, gt, alt_allele_index)
                 for alt_allele_index in alt_alleles
             ]
-#         if alt_index is not None:
-#             return [
-#                 FamilyVariant(
-#                     summary_variant,
-#                     family, gt, alt_index)
-#             ]
-#         elif len(alt_alleles) > 1:
-#             res = []
-#
-#             for alt in sorted(alt_alleles):
-#                 a_gt = np.copy(gt)
-#                 mask = np.logical_not(
-#                     np.logical_or(
-#                         a_gt == 0,
-#                         a_gt == alt
-#                     ))
-#                 a_gt[mask] = -1
-#                 res.append(
-#                     FamilyVariant(summary_variant, family, a_gt, alt))
-#             return res
-#         else:
-#             res = []
-#             for alt_index in range(len(summary_variant.alt_alleles)):
-#                 res.append(
-#                     FamilyVariant(summary_variant,
-#                                   family, gt, alt_index + 1))
-#             return res
-#
-#         assert False
 
     @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):
