@@ -190,6 +190,18 @@ class FamilyInheritanceMixin(object):
 
         return self._inheritance
 
+    def is_reference(self):
+        return self.inheritance == Inheritance.reference
+
+    def is_mendelian(self):
+        return self.inheritance == Inheritance.mendelian
+
+    def is_denovo(self):
+        return self.inheritance == Inheritance.denovo
+
+    def is_omission(self):
+        return self.inheritance == Inheritance.omission
+
     @property
     def variant_in_members(self):
         if self._variant_in_members is None:

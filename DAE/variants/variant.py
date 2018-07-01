@@ -503,138 +503,138 @@ class FamilyAllele(SummaryAlleleDelegate, FamilyInheritanceMixin):
         return self._best_st
 
 
-class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
-    """
-    Represent variant in a family. Description of the variant, it's effects,
-    frequencies and other attributes come from instance of `AlleleSummary`
-    class. `FamilyVariant` delegates all such requests to `AlleleSummary`
-    object it contains.
-
-    `FamilyVariant` combines `AlleleSummary` and family, represented by
-    instance of `Family` or `VcfFamily` class.
-
-    Additionaly, `FamilyVariant` contains genotype information for the
-    specified `AlleleSummary` and specified `Family`. The genotype information
-    is passed to `FamilyVariant` construction in the form of `gt` matrix.
-
-    Genotype matrix `gt` has 2 rows (one for each individual allele) and the
-    number of columns is equal to the number of individuals in the
-    corresponging family.
-    """
-
-    def __init__(self, sv, family, gt):
-        self.summary_variant = sv
-        self.summary_index = sv.summary_index
-        self.family = family
-
-        self.gt = np.copy(gt)
-        alleles = [sv.ref_allele]
-
-        for allele_index in self.calc_alt_alleles(self.gt):
-            alleles.append(sv.alleles[allele_index])
-
-        super(FamilyVariantBase, self).__init__(alleles)
-
-        self._best_st = None
-        self._inheritance = None
-
-        self._variant_in_members = None
-        self._variant_in_roles = None
-        self._variant_in_sexes = None
-
-    def __repr__(self):
-        if not self.alts:
-            return '{}:{} {}(ref) {}'.format(
-                self.chromosome, self.position,
-                self.reference, self.family_id)
-        else:
-            return '{}:{} {}->{} {}'.format(
-                self.chromosome, self.position,
-                self.reference, ",".join(self.alts),
-                self.family_id)
-
-    @property
-    def genotype(self):
-        return self.gt.T
-
-    def gt_flatten(self):
-        return self.gt.flatten(order='F')
-
-    @property
-    def best_st(self):
-        raise NotImplementedError()
-
-    def is_reference(self):
-        return self.inheritance == Inheritance.reference
-
-    def is_mendelian(self):
-        return self.inheritance == Inheritance.mendelian
-
-    def is_denovo(self):
-        return self.inheritance == Inheritance.denovo
-
-    def is_omission(self):
-        return self.inheritance == Inheritance.omission
-
-    @property
-    def inheritance(self):
-        if self._inheritance is None:
-            inherits = []
-            if np.any(self.gt == -1):
-                self._inheritance = Inheritance.unknown
-            elif np.all(self.gt == 0):
-                self._inheritance = Inheritance.reference
-            else:
-                for _pid, trio in self.family.trios.items():
-                    index = self.family.members_index(trio)
-                    tgt = self.gt[:, index]
-                    ch = tgt[:, 0]
-                    p1 = tgt[:, 1]
-                    p2 = tgt[:, 2]
-
-                    inherits.append(self.calc_inheritance_trio(p1, p2, ch))
-                self._inheritance = self.combine_inheritance(*inherits)
-
-        return self._inheritance
-
-    @property
-    def members_in_order(self):
-        return self.family.members_in_order
-
-    @property
-    def members_ids(self):
-        return self.family.members_ids
-
-    @property
-    def family_id(self):
-        return self.family.family_id
-
-    @property
-    def variant_in_members(self):
-        if self._variant_in_members is None:
-            gt = np.copy(self.gt)
-            gt[gt == -1] = 0
-            index = np.nonzero(np.sum(gt, axis=0))
-            self._variant_in_members = set(self.members_ids[index])
-        return self._variant_in_members
-
-    @property
-    def variant_in_roles(self):
-        if self._variant_in_roles is None:
-            self._variant_in_roles = [
-                self.family.persons[pid]['role']
-                for pid in self.variant_in_members
-            ]
-        return self._variant_in_roles
-
-    @property
-    def variant_in_sexes(self):
-        if self._variant_in_sexes is None:
-            self._variant_in_sexes = set([
-                self.family.persons[pid]['sex']
-                for pid in self.variant_in_members
-            ])
-        return self._variant_in_sexes
+# class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
+#     """
+#     Represent variant in a family. Description of the variant, it's effects,
+#     frequencies and other attributes come from instance of `AlleleSummary`
+#     class. `FamilyVariant` delegates all such requests to `AlleleSummary`
+#     object it contains.
+#
+#     `FamilyVariant` combines `AlleleSummary` and family, represented by
+#     instance of `Family` or `VcfFamily` class.
+#
+#     Additionaly, `FamilyVariant` contains genotype information for the
+#     specified `AlleleSummary` and specified `Family`. The genotype information
+#     is passed to `FamilyVariant` construction in the form of `gt` matrix.
+#
+#     Genotype matrix `gt` has 2 rows (one for each individual allele) and the
+#     number of columns is equal to the number of individuals in the
+#     corresponging family.
+#     """
+#
+#     def __init__(self, sv, family, gt):
+#         self.summary_variant = sv
+#         self.summary_index = sv.summary_index
+#         self.family = family
+#
+#         self.gt = np.copy(gt)
+#         alleles = [sv.ref_allele]
+#
+#         for allele_index in self.calc_alt_alleles(self.gt):
+#             alleles.append(sv.alleles[allele_index])
+#
+#         super(FamilyVariantBase, self).__init__(alleles)
+#
+#         self._best_st = None
+#         self._inheritance = None
+#
+#         self._variant_in_members = None
+#         self._variant_in_roles = None
+#         self._variant_in_sexes = None
+#
+#     def __repr__(self):
+#         if not self.alts:
+#             return '{}:{} {}(ref) {}'.format(
+#                 self.chromosome, self.position,
+#                 self.reference, self.family_id)
+#         else:
+#             return '{}:{} {}->{} {}'.format(
+#                 self.chromosome, self.position,
+#                 self.reference, ",".join(self.alts),
+#                 self.family_id)
+#
+#     @property
+#     def genotype(self):
+#         return self.gt.T
+#
+#     def gt_flatten(self):
+#         return self.gt.flatten(order='F')
+#
+#     @property
+#     def best_st(self):
+#         raise NotImplementedError()
+#
+#     def is_reference(self):
+#         return self.inheritance == Inheritance.reference
+#
+#     def is_mendelian(self):
+#         return self.inheritance == Inheritance.mendelian
+#
+#     def is_denovo(self):
+#         return self.inheritance == Inheritance.denovo
+#
+#     def is_omission(self):
+#         return self.inheritance == Inheritance.omission
+#
+#     @property
+#     def inheritance(self):
+#         if self._inheritance is None:
+#             inherits = []
+#             if np.any(self.gt == -1):
+#                 self._inheritance = Inheritance.unknown
+#             elif np.all(self.gt == 0):
+#                 self._inheritance = Inheritance.reference
+#             else:
+#                 for _pid, trio in self.family.trios.items():
+#                     index = self.family.members_index(trio)
+#                     tgt = self.gt[:, index]
+#                     ch = tgt[:, 0]
+#                     p1 = tgt[:, 1]
+#                     p2 = tgt[:, 2]
+#
+#                     inherits.append(self.calc_inheritance_trio(p1, p2, ch))
+#                 self._inheritance = self.combine_inheritance(*inherits)
+#
+#         return self._inheritance
+#
+#     @property
+#     def members_in_order(self):
+#         return self.family.members_in_order
+#
+#     @property
+#     def members_ids(self):
+#         return self.family.members_ids
+#
+#     @property
+#     def family_id(self):
+#         return self.family.family_id
+#
+#     @property
+#     def variant_in_members(self):
+#         if self._variant_in_members is None:
+#             gt = np.copy(self.gt)
+#             gt[gt == -1] = 0
+#             index = np.nonzero(np.sum(gt, axis=0))
+#             self._variant_in_members = set(self.members_ids[index])
+#         return self._variant_in_members
+#
+#     @property
+#     def variant_in_roles(self):
+#         if self._variant_in_roles is None:
+#             self._variant_in_roles = [
+#                 self.family.persons[pid]['role']
+#                 for pid in self.variant_in_members
+#             ]
+#         return self._variant_in_roles
+#
+#     @property
+#     def variant_in_sexes(self):
+#         if self._variant_in_sexes is None:
+#             self._variant_in_sexes = set([
+#                 self.family.persons[pid]['sex']
+#                 for pid in self.variant_in_members
+#             ])
+#         return self._variant_in_sexes
 
 
 # class FamilyVariant(FamilyVariantBase):
@@ -705,11 +705,24 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
 #         return self._best_st
 
 
-class FamilyVariantMulti(FamilyVariantBase):
+class SummaryVariantDelegate(SummaryVariant):
 
-    def __init__(self, summary_variants, family, gt):
-        super(FamilyVariantMulti, self).__init__(
-            summary_variants, family, gt)
+    def __init__(self, summary_variant=None, **kwargs):
+        assert summary_variant is not None
+        assert isinstance(summary_variant, SummaryVariant)
+
+        self.summary_variant = summary_variant
+
+    def __getattr__(self, name):
+        return getattr(self.summary_variant, name)
+
+
+class FamilyVariantMulti(SummaryVariantDelegate, FamilyInheritanceMixin):
+
+    def __init__(self, summary_variant, family, genotype):
+        SummaryVariantDelegate.__init__(self, summary_variant=summary_variant)
+        FamilyInheritanceMixin.__init__(self, family=family, genotype=genotype)
+        self.gt = np.copy(genotype)
 
     def __iter__(self):
         for allele in self.alleles:

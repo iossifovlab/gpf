@@ -16,7 +16,7 @@ from variants.attributes_query import role_query, sex_query, \
     variant_type_query
 from variants.family import Family
 from variants.variant import SummaryVariantFactory,\
-    FamilyVariantBase, FamilyVariantMulti, FamilyAllele
+    FamilyVariantMulti
 
 
 def split_gene_effect(effects):

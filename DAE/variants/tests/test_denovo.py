@@ -12,6 +12,8 @@ def test_denovo_trio_1(fv1):
     gt = np.array([[0, 0, 1],
                    [0, 0, 0]])
     v = fv1(gt)
+    print(v, type(v))
+
     assert not v.is_mendelian()
     assert v.is_denovo()
 
