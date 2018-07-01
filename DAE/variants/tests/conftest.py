@@ -24,7 +24,7 @@ from variants.annotate_variant_effects import \
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
 from variants.variant import SummaryAllele,\
-    FamilyVariantMulti, SummaryVariant
+    FamilyVariant, SummaryVariant
 from variants.attributes_query import parser as attributes_query_parser, \
     QueryTransformerMatcher
 
@@ -387,7 +387,7 @@ def sv():
 @pytest.fixture(scope='session')
 def fv1(fam1, sv):
     def rfun(gt):
-        return FamilyVariantMulti(sv, fam1, gt)
+        return FamilyVariant(sv, fam1, gt)
     return rfun
 
 
@@ -420,7 +420,7 @@ def fam2():
 @pytest.fixture(scope='session')
 def fv2(sv, fam2):
     def rfun(gt):
-        return FamilyVariantMulti(sv, fam2, gt)
+        return FamilyVariant(sv, fam2, gt)
     return rfun
 
 
@@ -448,7 +448,7 @@ def fam3():
 @pytest.fixture(scope='session')
 def fv3(sv, fam3):
     def rfun(gt):
-        return FamilyVariantMulti(sv, fam3, gt)
+        return FamilyVariant(sv, fam3, gt)
     return rfun
 
 

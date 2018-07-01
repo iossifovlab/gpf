@@ -10,7 +10,7 @@ import pandas as pd
 
 from variants.family import FamiliesBase, Family
 from variants.variant import SummaryVariantFactory,\
-    FamilyVariantMulti
+    FamilyVariant
 from variants.attributes import Inheritance
 
 
@@ -63,7 +63,7 @@ class DfFamilyVariantsBase(object):
         gt = DfFamilyVariantsBase.merge_genotypes(
             [r['genotype'] for r in records])
 
-        return FamilyVariantMulti(sv, family, gt)
+        return FamilyVariant(sv, family, gt)
 
     @staticmethod
     def wrap_variants(families, join_df):
@@ -87,19 +87,10 @@ class DfFamilyVariantsBase(object):
 
             if group.inheritance.unique()[0] != Inheritance.reference.value:
 
-                print(group[["summary_index", "allele_index",  # "allele_index_fv",
+                print(group[["summary_index", "allele_index",
                              "reference",
                              "alternative", "alternative_fv",
                              "family_id", "genotype", "inheritance"]])
-#                 # group = group.drop_duplicates(
-#                 #     subset=["summary_index", "allele_index"])
-#                 subset = group.allele_index.max() + 1
-#                 group = group.head(subset)
-#
-#                 print(group[["summary_index", "allele_index", "allele_index_fv",
-#                              "reference",
-#                              "alternative", "alternative_fv",
-#                              "family_id", "genotype", "inheritance"]])
             rec = group.to_dict(orient='records')
             yield DfFamilyVariantsBase.wrap_family_variant_multi(families, rec)
 

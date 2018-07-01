@@ -16,7 +16,7 @@ from variants.attributes_query import role_query, sex_query, \
     variant_type_query
 from variants.family import Family
 from variants.variant import SummaryVariantFactory,\
-    FamilyVariantMulti
+    FamilyVariant
 
 
 def split_gene_effect(effects):
@@ -66,7 +66,7 @@ class VariantFactoryMulti(SummaryVariantFactory):
 
     @staticmethod
     def from_summary_variant(sv, family, gt):
-        return [FamilyVariantMulti(sv, family, gt)]
+        return [FamilyVariant(sv, family, gt)]
 
     @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):
@@ -83,35 +83,6 @@ class VariantFactoryMulti(SummaryVariantFactory):
     def family_variant_from_gt(summary_variant, family, gt):
         return VariantFactoryMulti.from_summary_variant(
             summary_variant, family, gt=gt)
-
-
-# class VariantFactorySingle(SummaryVariantFactory):
-#
-#     @staticmethod
-#     def from_summary_variant(
-#             summary_variant, family, gt):
-#         assert isinstance(family, VcfFamily)
-#
-#         return [
-#             FamilyAllele(summary_allele, family, gt)
-#             for summary_allele in summary_variant.alleles
-#         ]
-#
-#     @staticmethod
-#     def family_variant_from_vcf(summary_variant, family, vcf):
-#         # assert isinstance(family, VcfFamily)
-#
-#         assert vcf is not None
-#         gt = vcf.gt_idxs[family.alleles]
-#         gt = gt.reshape([2, len(family)], order='F')
-#
-#         return VariantFactorySingle.from_summary_variant(
-#             summary_variant, family, gt)
-#
-#     @staticmethod
-#     def family_variant_from_gt(summary_variant, family, gt):
-#         return VariantFactorySingle.from_summary_variant(
-#             summary_variant, family, gt=gt)
 
 
 class RawFamilyVariants(FamiliesBase):

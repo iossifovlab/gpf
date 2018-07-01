@@ -516,7 +516,7 @@ class SummaryVariantDelegate(SummaryVariant):
         return getattr(self.summary_variant, name)
 
 
-class FamilyVariantMulti(SummaryVariantDelegate, FamilyInheritanceMixin):
+class FamilyVariant(SummaryVariantDelegate, FamilyInheritanceMixin):
 
     def __init__(self, summary_variant, family, genotype):
         SummaryVariantDelegate.__init__(self, summary_variant=summary_variant)
