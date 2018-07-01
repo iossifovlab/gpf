@@ -9,9 +9,9 @@ import numpy as np
 from variants.family import FamilyInheritanceMixin
 from variants.vcf_utils import vcf2cshl
 
-from variants.attributes import VariantType, Inheritance
-from timeit import itertools
+from variants.attributes import VariantType
 from variants.effects import Effect
+import itertools
 
 
 class VariantBase(object):
@@ -371,6 +371,7 @@ class SummaryVariant(VariantBase):
         return self.has_attribute(item)
 
     def update_attributes(self, atts):
+        # FIXME:
         for key, values in atts.items():
             assert len(values) == 1 or len(values) == len(self.alt_alleles)
             for sa, val in zip(self.alt_alleles, itertools.cycle(values)):
@@ -503,208 +504,6 @@ class FamilyAllele(SummaryAlleleDelegate, FamilyInheritanceMixin):
         return self._best_st
 
 
-# class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
-#     """
-#     Represent variant in a family. Description of the variant, it's effects,
-#     frequencies and other attributes come from instance of `AlleleSummary`
-#     class. `FamilyVariant` delegates all such requests to `AlleleSummary`
-#     object it contains.
-#
-#     `FamilyVariant` combines `AlleleSummary` and family, represented by
-#     instance of `Family` or `VcfFamily` class.
-#
-#     Additionaly, `FamilyVariant` contains genotype information for the
-#     specified `AlleleSummary` and specified `Family`. The genotype information
-#     is passed to `FamilyVariant` construction in the form of `gt` matrix.
-#
-#     Genotype matrix `gt` has 2 rows (one for each individual allele) and the
-#     number of columns is equal to the number of individuals in the
-#     corresponging family.
-#     """
-#
-#     def __init__(self, sv, family, gt):
-#         self.summary_variant = sv
-#         self.summary_index = sv.summary_index
-#         self.family = family
-#
-#         self.gt = np.copy(gt)
-#         alleles = [sv.ref_allele]
-#
-#         for allele_index in self.calc_alt_alleles(self.gt):
-#             alleles.append(sv.alleles[allele_index])
-#
-#         super(FamilyVariantBase, self).__init__(alleles)
-#
-#         self._best_st = None
-#         self._inheritance = None
-#
-#         self._variant_in_members = None
-#         self._variant_in_roles = None
-#         self._variant_in_sexes = None
-#
-#     def __repr__(self):
-#         if not self.alts:
-#             return '{}:{} {}(ref) {}'.format(
-#                 self.chromosome, self.position,
-#                 self.reference, self.family_id)
-#         else:
-#             return '{}:{} {}->{} {}'.format(
-#                 self.chromosome, self.position,
-#                 self.reference, ",".join(self.alts),
-#                 self.family_id)
-#
-#     @property
-#     def genotype(self):
-#         return self.gt.T
-#
-#     def gt_flatten(self):
-#         return self.gt.flatten(order='F')
-#
-#     @property
-#     def best_st(self):
-#         raise NotImplementedError()
-#
-#     def is_reference(self):
-#         return self.inheritance == Inheritance.reference
-#
-#     def is_mendelian(self):
-#         return self.inheritance == Inheritance.mendelian
-#
-#     def is_denovo(self):
-#         return self.inheritance == Inheritance.denovo
-#
-#     def is_omission(self):
-#         return self.inheritance == Inheritance.omission
-#
-#     @property
-#     def inheritance(self):
-#         if self._inheritance is None:
-#             inherits = []
-#             if np.any(self.gt == -1):
-#                 self._inheritance = Inheritance.unknown
-#             elif np.all(self.gt == 0):
-#                 self._inheritance = Inheritance.reference
-#             else:
-#                 for _pid, trio in self.family.trios.items():
-#                     index = self.family.members_index(trio)
-#                     tgt = self.gt[:, index]
-#                     ch = tgt[:, 0]
-#                     p1 = tgt[:, 1]
-#                     p2 = tgt[:, 2]
-#
-#                     inherits.append(self.calc_inheritance_trio(p1, p2, ch))
-#                 self._inheritance = self.combine_inheritance(*inherits)
-#
-#         return self._inheritance
-#
-#     @property
-#     def members_in_order(self):
-#         return self.family.members_in_order
-#
-#     @property
-#     def members_ids(self):
-#         return self.family.members_ids
-#
-#     @property
-#     def family_id(self):
-#         return self.family.family_id
-#
-#     @property
-#     def variant_in_members(self):
-#         if self._variant_in_members is None:
-#             gt = np.copy(self.gt)
-#             gt[gt == -1] = 0
-#             index = np.nonzero(np.sum(gt, axis=0))
-#             self._variant_in_members = set(self.members_ids[index])
-#         return self._variant_in_members
-#
-#     @property
-#     def variant_in_roles(self):
-#         if self._variant_in_roles is None:
-#             self._variant_in_roles = [
-#                 self.family.persons[pid]['role']
-#                 for pid in self.variant_in_members
-#             ]
-#         return self._variant_in_roles
-#
-#     @property
-#     def variant_in_sexes(self):
-#         if self._variant_in_sexes is None:
-#             self._variant_in_sexes = set([
-#                 self.family.persons[pid]['sex']
-#                 for pid in self.variant_in_members
-#             ])
-#         return self._variant_in_sexes
-
-
-# class FamilyVariant(FamilyVariantBase):
-#
-#     def __init__(self, summary_variant, family, gt, alt_allele_index):
-#         assert alt_allele_index >= 0  # and alt_allele_index <= np.max(gt)
-#
-#         gt = np.copy(gt)
-#         mask = np.logical_not(
-#             np.logical_or(
-#                 gt == 0,
-#                 gt == alt_allele_index
-#             ))
-#         gt[mask] = -1
-#
-#         super(FamilyVariant, self).__init__(
-#             summary_variant, family, gt)
-#
-#         if alt_allele_index <= 0:
-#             self.alt_allele = None
-#             self.allele_index = 0
-#             self.split_from_multi_allelic = False
-#         else:
-#             assert alt_allele_index < len(self.summary_variant.alleles)
-#             self.alt_allele = self.summary_variant.alleles[alt_allele_index]
-#             self.allele_index = alt_allele_index
-#             self.split_from_multi_allelic = \
-#                 self.alt_allele.split_from_multi_allelic
-#
-#     def __iter__(self):
-#         if self.allele_index > 0:
-#             yield FamilyVariant(
-#                 self.summary_variant, self.family, self.gt, 0)
-#         else:
-#             yield self
-#
-#     @property
-#     def alternative(self):
-#         if self.alt_allele:
-#             return self.alt_allele.alternative
-#         return None
-#
-#     @property
-#     def best_st(self):
-#         if self._best_st is None:
-#             ref = (2 * np.ones(len(self.family), dtype=np.int8))
-#             alt_alleles = self.calc_alt_alleles(self.gt)
-#             assert len(alt_alleles) <= 1
-#
-#             if not alt_alleles:
-#                 alt = np.zeros(len(self.family), dtype=np.int8)
-#             else:
-#                 anum = next(iter(alt_alleles))
-#                 alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-#                 alt_gt[self.gt == anum] = 1
-#
-#                 alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-#                 ref = ref - alt
-#
-#                 unknown = np.sum(self.gt == -1, axis=0)
-#                 ref = ref - unknown
-#
-#             best = [ref, alt]
-#             self._best_st = np.stack(best, axis=0)
-#             unknown = np.any(self.gt == -1, axis=0)
-#             self._best_st[1, unknown] = -1
-#
-#         return self._best_st
-
-
 class SummaryVariantDelegate(SummaryVariant):
 
     def __init__(self, summary_variant=None, **kwargs):
@@ -723,6 +522,14 @@ class FamilyVariantMulti(SummaryVariantDelegate, FamilyInheritanceMixin):
         SummaryVariantDelegate.__init__(self, summary_variant=summary_variant)
         FamilyInheritanceMixin.__init__(self, family=family, genotype=genotype)
         self.gt = np.copy(genotype)
+        alleles = [FamilyAllele(summary_variant.ref_allele, family, self.gt)]
+
+        for allele_index in self.calc_alt_alleles(self.gt):
+            fa = FamilyAllele(
+                summary_variant.alleles[allele_index], family, self.gt)
+            alleles.append(fa)
+        self.alleles = alleles
+        self.alt_alleles = alleles[1:]
 
     def __iter__(self):
         for allele in self.alleles:
