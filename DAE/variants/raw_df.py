@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from variants.family import FamiliesBase, Family
-from variants.variant import SummaryVariantFactory, FamilyVariant,\
+from variants.variant import SummaryVariantFactory,\
     FamilyVariantMulti
 from variants.attributes import Inheritance
 
@@ -23,13 +23,13 @@ class FamilyVariantFactory(object):
 
 class DfFamilyVariantsBase(object):
 
-    @staticmethod
-    def wrap_family_variant(families, record):
-        sv = SummaryVariantFactory.summary_variant_from_records([record])
-        family = families[record['family_id']]
-        gt = record['genotype']
-        alt_allele_index = record['allele_index']
-        return FamilyVariant(sv, family, gt, alt_allele_index)
+    #     @staticmethod
+    #     def wrap_family_variant(families, record):
+    #         sv = SummaryVariantFactory.summary_variant_from_records([record])
+    #         family = families[record['family_id']]
+    #         gt = record['genotype']
+    #         alt_allele_index = record['allele_index']
+    #         return FamilyVariant(sv, family, gt, alt_allele_index)
 
     @staticmethod
     def merge_genotypes(genotypes):

@@ -35,7 +35,9 @@ from variants.tests.common import assert_annotation_equals
 def test_parquet_variants(variants_vcf, fixture_name, temp_filename):
     fvars = variants_vcf(fixture_name)
     table = family_variants_table(
-        fvars.query_variants(inhteritance="not reference"))
+        fvars.query_variants(
+            inhteritance="not reference"
+        ))
     assert table is not None
 
     df = table.to_pandas()

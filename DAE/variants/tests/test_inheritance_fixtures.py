@@ -18,57 +18,6 @@ from variants.vcf_utils import mat2str
     (Region('1', 11521, 11530), 4, Inheritance.denovo),
     (Region('1', 11531, 11540), 1, Inheritance.unknown),
 ])
-def test_inheritance_trio(single_vcf, region, count, inheritance):
-    fvars = single_vcf("fixtures/inheritance_trio")
-    vs = list(fvars.query_variants(regions=[region]))
-    assert len(vs) == count
-    for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance)
-        assert v.inheritance == inheritance
-        assert len(mat2str(v.best_st)) == 7
-
-
-@pytest.mark.parametrize("region,count,inheritance", [
-    (Region('1', 11500, 11500), 1, Inheritance.reference),
-    (Region('1', 11501, 11510), 5, Inheritance.mendelian),
-    (Region('1', 11511, 11520), 3, Inheritance.omission),
-    (Region('1', 11521, 11530), 2, Inheritance.denovo),
-])
-def test_inheritance_quad(single_vcf, region, count, inheritance):
-    fvars = single_vcf("fixtures/inheritance_quad")
-    vs = list(fvars.query_variants(regions=[region]))
-    assert len(vs) == count
-    for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance)
-
-        assert v.inheritance == inheritance
-        assert len(mat2str(v.best_st)) == 9
-
-
-@pytest.mark.parametrize("region,count,inheritance", [
-    (Region('1', 11500, 11500), 1, Inheritance.reference),
-    (Region('1', 11501, 11510), 3, Inheritance.mendelian),
-    (Region('1', 11511, 11520), 1, Inheritance.omission),
-    (Region('1', 11521, 11530), 1, Inheritance.other),
-])
-def test_inheritance_multi(single_vcf, region, count, inheritance):
-    fvars = single_vcf("fixtures/inheritance_multi")
-    vs = list(fvars.query_variants(regions=[region]))
-    assert len(vs) == count
-    for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance)
-
-        assert v.inheritance == inheritance
-        assert len(mat2str(v.best_st)) == 15
-
-
-@pytest.mark.parametrize("region,count,inheritance", [
-    (Region('1', 11500, 11500), 1, Inheritance.reference),
-    (Region('1', 11501, 11510), 4, Inheritance.mendelian),
-    (Region('1', 11511, 11520), 5, Inheritance.omission),
-    (Region('1', 11521, 11530), 4, Inheritance.denovo),
-    (Region('1', 11531, 11540), 1, Inheritance.unknown),
-])
 def test_inheritance_trio_full(variants_vcf, region, count, inheritance):
     fvars = variants_vcf("fixtures/inheritance_trio")
     vs = list(fvars.query_variants(regions=[region]))

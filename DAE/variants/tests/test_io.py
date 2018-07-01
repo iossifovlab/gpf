@@ -78,28 +78,6 @@ def test_serialize_deserialize(
     assert_annotation_equals(annot_df, fvars.annot_df)
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize("storage", [
-    "csv",
-    "parquet"
-])
-def test_serialize_csv_vcf19(nvcf19f, storage, temp_filename):
-    fvars = nvcf19f
-
-    assert fvars.annot_df is not None
-
-    outfile = temp_filename
-    # outfile = "annot.tmp"
-
-    RawVariantsLoader.save_annotation_file(
-        fvars.annot_df, outfile, storage=storage)
-    annot_df = RawVariantsLoader.load_annotation_file(
-        outfile, storage=storage)
-    assert annot_df is not None
-
-    assert_annotation_equals(annot_df, fvars.annot_df)
-
-
 # def test_parquet_dataset():
 #     from variants.default_settings import DATA_DIR
 #     prefix = os.path.join(DATA_DIR, "pspark")

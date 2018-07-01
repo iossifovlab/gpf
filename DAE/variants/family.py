@@ -133,7 +133,9 @@ class FamiliesBase(object):
 
 
 class FamilyInheritanceMixin(object):
-    __slots__ = []
+
+    def __init__(self, **kwargs):
+        pass
 
     @staticmethod
     def calc_alt_alleles(gt):

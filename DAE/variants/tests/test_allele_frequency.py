@@ -19,8 +19,8 @@ from variants.vcf_utils import mat2str
     (Region('1', 11551, 11551), 2, 0.0, 100.0),
     (Region('1', 11552, 11552), 2, 0.0, 100.0),
 ])
-def test_variant_frequency_single(single_vcf, region, count, freq0, freq1):
-    fvars = single_vcf("fixtures/trios2")
+def test_variant_frequency_single(variants_vcf, region, count, freq0, freq1):
+    fvars = variants_vcf("fixtures/trios2")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == count

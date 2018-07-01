@@ -16,7 +16,7 @@ from variants.attributes_query import role_query, sex_query, \
     variant_type_query
 from variants.family import Family
 from variants.variant import SummaryVariantFactory,\
-    FamilyVariantBase, FamilyVariantMulti, FamilyVariant
+    FamilyVariantBase, FamilyVariantMulti, FamilyAllele
 
 
 def split_gene_effect(effects):
@@ -85,40 +85,33 @@ class VariantFactoryMulti(SummaryVariantFactory):
             summary_variant, family, gt=gt)
 
 
-class VariantFactorySingle(SummaryVariantFactory):
-
-    @staticmethod
-    def from_summary_variant(
-            summary_variant, family, gt):
-        assert isinstance(family, VcfFamily)
-
-        alt_alleles = FamilyVariantBase.calc_alt_alleles(gt)
-        if not alt_alleles:
-            # reference only
-            return [
-                FamilyVariant(summary_variant, family, gt, 0)
-            ]
-        else:
-            return [
-                FamilyVariant(summary_variant, family, gt, alt_allele_index)
-                for alt_allele_index in alt_alleles
-            ]
-
-    @staticmethod
-    def family_variant_from_vcf(summary_variant, family, vcf):
-        # assert isinstance(family, VcfFamily)
-
-        assert vcf is not None
-        gt = vcf.gt_idxs[family.alleles]
-        gt = gt.reshape([2, len(family)], order='F')
-
-        return VariantFactorySingle.from_summary_variant(
-            summary_variant, family, gt)
-
-    @staticmethod
-    def family_variant_from_gt(summary_variant, family, gt):
-        return VariantFactorySingle.from_summary_variant(
-            summary_variant, family, gt=gt)
+# class VariantFactorySingle(SummaryVariantFactory):
+#
+#     @staticmethod
+#     def from_summary_variant(
+#             summary_variant, family, gt):
+#         assert isinstance(family, VcfFamily)
+#
+#         return [
+#             FamilyAllele(summary_allele, family, gt)
+#             for summary_allele in summary_variant.alleles
+#         ]
+#
+#     @staticmethod
+#     def family_variant_from_vcf(summary_variant, family, vcf):
+#         # assert isinstance(family, VcfFamily)
+#
+#         assert vcf is not None
+#         gt = vcf.gt_idxs[family.alleles]
+#         gt = gt.reshape([2, len(family)], order='F')
+#
+#         return VariantFactorySingle.from_summary_variant(
+#             summary_variant, family, gt)
+#
+#     @staticmethod
+#     def family_variant_from_gt(summary_variant, family, gt):
+#         return VariantFactorySingle.from_summary_variant(
+#             summary_variant, family, gt=gt)
 
 
 class RawFamilyVariants(FamiliesBase):
@@ -267,7 +260,7 @@ class RawFamilyVariants(FamiliesBase):
                     return True
         return False
 
-    def filter_variant(self, v, **kwargs):
+    def filter_allele(self, v, **kwargs):
         if 'regions' in kwargs:
             if not self.filter_regions(v, kwargs['regions']):
                 return False
@@ -291,10 +284,6 @@ class RawFamilyVariants(FamiliesBase):
             query = kwargs['sexes']
             if not query.match(v.variant_in_sexes):
                 return False
-        if 'inheritance' in kwargs:
-            query = kwargs['inheritance']
-            if not query.match([v.inheritance]):
-                return False
         if 'variant_type' in kwargs:
             query = kwargs['variant_type']
             if v.details is None:
@@ -306,7 +295,16 @@ class RawFamilyVariants(FamiliesBase):
         if 'real_attr_filter' in kwargs:
             if not self.filter_real_attr(v, kwargs['real_attr_filter']):
                 return False
+        return True
 
+    def filter_variant(self, v, **kwargs):
+        if 'regions' in kwargs:
+            if not self.filter_regions(v, kwargs['regions']):
+                return False
+        if 'inheritance' in kwargs:
+            query = kwargs['inheritance']
+            if not query.match([v.inheritance]):
+                return False
         if 'filter' in kwargs:
             func = kwargs['filter']
             if not func(v):
@@ -350,8 +348,10 @@ class RawFamilyVariants(FamiliesBase):
                 transform_tree_to_matcher(parsed)
 
         for v in vs:
+            if not self.filter_variant(v, **kwargs):
+                continue
             for va in v:
-                if self.filter_variant(va, **kwargs):
+                if self.filter_allele(va, **kwargs):
                     yield v
                     break
 

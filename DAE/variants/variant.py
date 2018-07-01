@@ -249,17 +249,9 @@ class SummaryAllele(VariantBase):
             self.attributes = {}
             self.update_attributes(attributes)
 
+    @property
     def is_reference_allele(self):
         return self.alternative is None
-
-    @property
-    def location(self):
-        """
-        Returns string representation of location of the variant constructed
-        from chromosome label and position "<chromsome>:<position>" in
-        *VCF* convention.
-        """
-        return "{}:{}".format(self.chromosome, self.position)
 
     def get_attribute(self, item, default=None):
         """
@@ -275,6 +267,13 @@ class SummaryAllele(VariantBase):
         """
         return item in self.attributes
 
+    def update_attributes(self, atts):
+        """
+        updates additional attributes of variant using dictionary `atts`.
+        """
+        for key, val in atts.items():
+            self.attributes[key] = val
+
     def __getitem__(self, item):
         """
         allows using of standard dictionary access to additional variant
@@ -289,12 +288,14 @@ class SummaryAllele(VariantBase):
         """
         return item in self.attribute
 
-    def update_attributes(self, atts):
-        """
-        updates additional attributes of variant using dictionary `atts`.
-        """
-        for key, val in atts.items():
-            self.attributes[key] = val
+
+class SummaryAlleleDelegate(SummaryAllele):
+
+    def __init__(self, delegate):
+        self.delegate = delegate
+
+    def __getattr__(self, name):
+        return getattr(self.delegate, name)
 
 
 class SummaryVariant(VariantBase):
@@ -303,7 +304,7 @@ class SummaryVariant(VariantBase):
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
 
-        assert alleles[0].is_reference_allele()
+        assert alleles[0].is_reference_allele
 
         self.alleles = alleles
         self.ref_allele = alleles[0]
@@ -431,6 +432,142 @@ class SummaryVariantFactory(object):
             alleles.append(sa)
 
         return SummaryVariant(alleles)
+
+
+class FamilyAllele(SummaryAlleleDelegate, FamilyInheritanceMixin):
+
+    def __init__(self, summary_allele, family, gt):
+        super(FamilyAllele, self).__init__(summary_allele)
+        self.family = family
+        self._best_st = None
+        self._inheritance = None
+        self._variant_in_members = None
+        self._variant_in_roles = None
+        self._variant_in_sexes = None
+
+        gt = np.copy(gt)
+        mask = np.logical_not(
+            np.logical_or(
+                gt == 0,
+                gt == self.allele_index
+            ))
+        gt[mask] = -1
+
+        self.gt = gt
+
+    @property
+    def effects(self):
+        if self.is_reference_allele:
+            return None
+        return [self.effect]
+
+    @property
+    def members_in_order(self):
+        return self.family.members_in_order
+
+    @property
+    def members_ids(self):
+        return self.family.members_ids
+
+    @property
+    def family_id(self):
+        return self.family.family_id
+
+    @property
+    def genotype(self):
+        return self.gt.T
+
+    def gt_flatten(self):
+        return self.gt.flatten(order='F')
+
+    @property
+    def inheritance(self):
+        if self._inheritance is None:
+            inherits = []
+            if np.any(self.gt == -1):
+                self._inheritance = Inheritance.unknown
+            elif np.all(self.gt == 0):
+                self._inheritance = Inheritance.reference
+            else:
+                for _pid, trio in self.family.trios.items():
+                    index = self.family.members_index(trio)
+                    tgt = self.gt[:, index]
+                    ch = tgt[:, 0]
+                    p1 = tgt[:, 1]
+                    p2 = tgt[:, 2]
+
+                    inherits.append(self.calc_inheritance_trio(p1, p2, ch))
+                self._inheritance = self.combine_inheritance(*inherits)
+
+        return self._inheritance
+
+    @property
+    def variant_in_members(self):
+        if self._variant_in_members is None:
+            gt = np.copy(self.gt)
+            gt[gt == -1] = 0
+            index = np.nonzero(np.sum(gt, axis=0))
+            self._variant_in_members = set(self.members_ids[index])
+        return self._variant_in_members
+
+    @property
+    def variant_in_roles(self):
+        if self._variant_in_roles is None:
+            self._variant_in_roles = [
+                self.family.persons[pid]['role']
+                for pid in self.variant_in_members
+            ]
+        return self._variant_in_roles
+
+    @property
+    def variant_in_sexes(self):
+        if self._variant_in_sexes is None:
+            self._variant_in_sexes = set([
+                self.family.persons[pid]['sex']
+                for pid in self.variant_in_members
+            ])
+        return self._variant_in_sexes
+
+    def __iter__(self):
+        yield self
+
+    def __repr__(self):
+        if not self.alternative:
+            return '{}:{} {}(ref) {}'.format(
+                self.chromosome, self.position,
+                self.reference, self.family_id)
+        else:
+            return '{}:{} {}->{} {}'.format(
+                self.chromosome, self.position,
+                self.reference, self.alternative,
+                self.family_id)
+
+    @property
+    def best_st(self):
+        if self._best_st is None:
+            ref = (2 * np.ones(len(self.family), dtype=np.int8))
+            alt_alleles = self.calc_alt_alleles(self.gt)
+            assert len(alt_alleles) <= 1
+
+            if not alt_alleles:
+                alt = np.zeros(len(self.family), dtype=np.int8)
+            else:
+                anum = next(iter(alt_alleles))
+                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+                alt_gt[self.gt == anum] = 1
+
+                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                ref = ref - alt
+
+                unknown = np.sum(self.gt == -1, axis=0)
+                ref = ref - unknown
+
+            best = [ref, alt]
+            self._best_st = np.stack(best, axis=0)
+            unknown = np.any(self.gt == -1, axis=0)
+            self._best_st[1, unknown] = -1
+
+        return self._best_st
 
 
 class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
@@ -567,72 +704,72 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
         return self._variant_in_sexes
 
 
-class FamilyVariant(FamilyVariantBase):
-
-    def __init__(self, summary_variant, family, gt, alt_allele_index):
-        assert alt_allele_index >= 0  # and alt_allele_index <= np.max(gt)
-
-        gt = np.copy(gt)
-        mask = np.logical_not(
-            np.logical_or(
-                gt == 0,
-                gt == alt_allele_index
-            ))
-        gt[mask] = -1
-
-        super(FamilyVariant, self).__init__(
-            summary_variant, family, gt)
-
-        if alt_allele_index <= 0:
-            self.alt_allele = None
-            self.allele_index = 0
-            self.split_from_multi_allelic = False
-        else:
-            assert alt_allele_index < len(self.summary_variant.alleles)
-            self.alt_allele = self.summary_variant.alleles[alt_allele_index]
-            self.allele_index = alt_allele_index
-            self.split_from_multi_allelic = \
-                self.alt_allele.split_from_multi_allelic
-
-    def __iter__(self):
-        if self.is_reference():
-            yield FamilyVariant(
-                self.summary_variant, self.family, self.gt, 0)
-        else:
-            yield self
-
-    @property
-    def alternative(self):
-        if self.alt_allele:
-            return self.alt_allele.alternative
-        return None
-
-    @property
-    def best_st(self):
-        if self._best_st is None:
-            ref = (2 * np.ones(len(self.family), dtype=np.int8))
-            alt_alleles = self.calc_alt_alleles(self.gt)
-            assert len(alt_alleles) <= 1
-
-            if not alt_alleles:
-                alt = np.zeros(len(self.family), dtype=np.int8)
-            else:
-                anum = next(iter(alt_alleles))
-                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                alt_gt[self.gt == anum] = 1
-
-                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-                ref = ref - alt
-
-                unknown = np.sum(self.gt == -1, axis=0)
-                ref = ref - unknown
-
-            best = [ref, alt]
-            self._best_st = np.stack(best, axis=0)
-            unknown = np.any(self.gt == -1, axis=0)
-            self._best_st[1, unknown] = -1
-
-        return self._best_st
+# class FamilyVariant(FamilyVariantBase):
+#
+#     def __init__(self, summary_variant, family, gt, alt_allele_index):
+#         assert alt_allele_index >= 0  # and alt_allele_index <= np.max(gt)
+#
+#         gt = np.copy(gt)
+#         mask = np.logical_not(
+#             np.logical_or(
+#                 gt == 0,
+#                 gt == alt_allele_index
+#             ))
+#         gt[mask] = -1
+#
+#         super(FamilyVariant, self).__init__(
+#             summary_variant, family, gt)
+#
+#         if alt_allele_index <= 0:
+#             self.alt_allele = None
+#             self.allele_index = 0
+#             self.split_from_multi_allelic = False
+#         else:
+#             assert alt_allele_index < len(self.summary_variant.alleles)
+#             self.alt_allele = self.summary_variant.alleles[alt_allele_index]
+#             self.allele_index = alt_allele_index
+#             self.split_from_multi_allelic = \
+#                 self.alt_allele.split_from_multi_allelic
+#
+#     def __iter__(self):
+#         if self.allele_index > 0:
+#             yield FamilyVariant(
+#                 self.summary_variant, self.family, self.gt, 0)
+#         else:
+#             yield self
+#
+#     @property
+#     def alternative(self):
+#         if self.alt_allele:
+#             return self.alt_allele.alternative
+#         return None
+#
+#     @property
+#     def best_st(self):
+#         if self._best_st is None:
+#             ref = (2 * np.ones(len(self.family), dtype=np.int8))
+#             alt_alleles = self.calc_alt_alleles(self.gt)
+#             assert len(alt_alleles) <= 1
+#
+#             if not alt_alleles:
+#                 alt = np.zeros(len(self.family), dtype=np.int8)
+#             else:
+#                 anum = next(iter(alt_alleles))
+#                 alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+#                 alt_gt[self.gt == anum] = 1
+#
+#                 alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+#                 ref = ref - alt
+#
+#                 unknown = np.sum(self.gt == -1, axis=0)
+#                 ref = ref - unknown
+#
+#             best = [ref, alt]
+#             self._best_st = np.stack(best, axis=0)
+#             unknown = np.any(self.gt == -1, axis=0)
+#             self._best_st[1, unknown] = -1
+#
+#         return self._best_st
 
 
 class FamilyVariantMulti(FamilyVariantBase):
@@ -642,20 +779,16 @@ class FamilyVariantMulti(FamilyVariantBase):
             summary_variants, family, gt)
 
     def __iter__(self):
-        if not self.alt_alleles:
-            yield FamilyVariant(
-                self.summary_variant, self.family, self.gt, 0)
-        else:
-            for alt_allele in self.alt_alleles:
-                yield FamilyVariant(
-                    self.summary_variant, self.family,
-                    self.gt, alt_allele.allele_index)
+        for allele in self.alleles:
+            yield FamilyAllele(
+                allele, self.family,
+                self.gt)
 
     def alleles_iter(self):
         for allele in self.summary_variant.alleles:
-            yield FamilyVariant(
-                self.summary_variant, self.family,
-                self.gt, allele.allele_index)
+            yield FamilyAllele(
+                allele, self.family,
+                self.gt)
 
     @property
     def best_st(self):

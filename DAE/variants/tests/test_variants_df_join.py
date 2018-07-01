@@ -5,7 +5,6 @@ Created on Jul 1, 2018
 '''
 from __future__ import print_function
 
-from variants.variant import FamilyVariant
 from variants.vcf_utils import mat2str
 
 
@@ -68,9 +67,10 @@ def test_inspect_broken_trios2_11602_variants(variants_vcf):
     assert ",".join(v0.alts) == "A"
     assert ",".join(v1.alts) == ""
 
-    for ai in range(3):
-        fv = FamilyVariant(v0.summary_variant, v0.family, v0.gt, ai)
-        print(ai, ":", fv, mat2str(fv.gt), mat2str(fv.best_st))
+#  FIXME:
+#     for ai in range(3):
+#         fv = FamilyVariant(v0.summary_variant, v0.family, v0.gt, ai)
+#         print(ai, ":", fv, mat2str(fv.gt), mat2str(fv.best_st))
 
     for fa in v0:
         print(fa)

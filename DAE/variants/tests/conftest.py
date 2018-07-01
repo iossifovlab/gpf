@@ -12,7 +12,7 @@ import pytest
 from variants.configure import Configure
 from variants.family import Family
 from variants.loader import RawVariantsLoader
-from variants.raw_vcf import RawFamilyVariants, VariantFactorySingle,\
+from variants.raw_vcf import RawFamilyVariants, \
     VariantFactoryMulti
 import os
 import tempfile
@@ -143,115 +143,107 @@ def ustudy_loader(ustudy_config):
 
 
 @pytest.fixture(scope='session')
-def ustudy_single(ustudy_config, composite_annotator):
-    fvariants = RawFamilyVariants(
-        ustudy_config, annotator=composite_annotator,
-        variant_factory=VariantFactorySingle)
-    return fvariants
-
-
-@pytest.fixture(scope='session')
-def ustudy_full(ustudy_config, composite_annotator):
+def ustudy_vcf(ustudy_config, composite_annotator):
     fvariants = RawFamilyVariants(
         ustudy_config, annotator=composite_annotator,
         variant_factory=VariantFactoryMulti)
     return fvariants
 
 
-@pytest.fixture(scope='session')
-def nvcf_config():
-    from variants.default_settings import DATA_DIR
-    prefix = os.path.join(DATA_DIR, "ssc_nygc/nssc")
-    config = Configure.from_prefix_vcf(prefix)
-    return config
+# @pytest.fixture(scope='session')
+# def nvcf_config():
+#     from variants.default_settings import DATA_DIR
+#     prefix = os.path.join(DATA_DIR, "ssc_nygc/nssc")
+#     config = Configure.from_prefix_vcf(prefix)
+#     return config
+#
+#
+# @pytest.fixture(scope='session')
+# def nvcf(nvcf_config, composite_annotator):
+#     fvariants = RawFamilyVariants(nvcf_config, annotator=composite_annotator)
+#     return fvariants
+#
+#
+# @pytest.fixture(scope='session')
+# def uvcf_config():
+#     from variants.default_settings import DATA_DIR
+#     prefix = os.path.join(DATA_DIR, "ssc_nygc/ussc")
+#     config = Configure.from_prefix_vcf(prefix)
+#     return config
+#
+#
+# @pytest.fixture(scope='session')
+# def uvcf(uvcf_config, composite_annotator):
+#     fvariants = RawFamilyVariants(uvcf_config, annotator=composite_annotator)
+#     return fvariants
+#
+#
+# @pytest.fixture(scope='session')
+# def fvcf_config():
+#     from variants.default_settings import DATA_DIR
+#     prefix = os.path.join(DATA_DIR, "ssc_nygc/ssc")
+#     config = Configure.from_prefix_vcf(prefix)
+#     return config
+#
+#
+# @pytest.fixture(scope='session')
+# def fvcf(fvcf_config, composite_annotator):
+#     fvariants = RawFamilyVariants(fvcf_config, annotator=composite_annotator)
+#     return fvariants
+#
+#
+# @pytest.fixture(scope='session')
+# def nvcf19_config():
+#     from variants.default_settings import DATA_DIR
+#     prefix = os.path.join(DATA_DIR, "spark/nspark")
+#     config = Configure.from_prefix_vcf(prefix)
+#     return config
+#
+#
+# @pytest.fixture(scope='session')
+# def nvcf19s(nvcf19_config, composite_annotator):
+#     fvariants = RawFamilyVariants(
+#         nvcf19_config, annotator=composite_annotator,
+#         variant_factory=VariantFactorySingle)
+#     return fvariants
+#
+#
+# @pytest.fixture(scope='session')
+# def nvcf19f(nvcf19_config, composite_annotator):
+#     fvariants = RawFamilyVariants(
+#         nvcf19_config, annotator=composite_annotator,
+#         variant_factory=VariantFactoryMulti)
+#     return fvariants
+#
+#
+# @pytest.fixture(scope='session')
+# def vcf19_config():
+#     from variants.default_settings import DATA_DIR
+#     prefix = os.path.join(DATA_DIR, "spark/spark")
+#     config = Configure.from_prefix_vcf(prefix)
+#     return config
+#
+#
+# @pytest.fixture(scope='session')
+# def vcf19r(vcf19_config, composite_annotator):
+#
+#     def builder(region):
+#         return RawFamilyVariants(
+#             vcf19_config, region=region, annotator=composite_annotator)
+#
+#     return builder
 
 
-@pytest.fixture(scope='session')
-def nvcf(nvcf_config, composite_annotator):
-    fvariants = RawFamilyVariants(nvcf_config, annotator=composite_annotator)
-    return fvariants
-
-
-@pytest.fixture(scope='session')
-def uvcf_config():
-    from variants.default_settings import DATA_DIR
-    prefix = os.path.join(DATA_DIR, "ssc_nygc/ussc")
-    config = Configure.from_prefix_vcf(prefix)
-    return config
-
-
-@pytest.fixture(scope='session')
-def uvcf(uvcf_config, composite_annotator):
-    fvariants = RawFamilyVariants(uvcf_config, annotator=composite_annotator)
-    return fvariants
-
-
-@pytest.fixture(scope='session')
-def fvcf_config():
-    from variants.default_settings import DATA_DIR
-    prefix = os.path.join(DATA_DIR, "ssc_nygc/ssc")
-    config = Configure.from_prefix_vcf(prefix)
-    return config
-
-
-@pytest.fixture(scope='session')
-def fvcf(fvcf_config, composite_annotator):
-    fvariants = RawFamilyVariants(fvcf_config, annotator=composite_annotator)
-    return fvariants
-
-
-@pytest.fixture(scope='session')
-def nvcf19_config():
-    from variants.default_settings import DATA_DIR
-    prefix = os.path.join(DATA_DIR, "spark/nspark")
-    config = Configure.from_prefix_vcf(prefix)
-    return config
-
-
-@pytest.fixture(scope='session')
-def nvcf19s(nvcf19_config, composite_annotator):
-    fvariants = RawFamilyVariants(
-        nvcf19_config, annotator=composite_annotator,
-        variant_factory=VariantFactorySingle)
-    return fvariants
-
-
-@pytest.fixture(scope='session')
-def nvcf19f(nvcf19_config, composite_annotator):
-    fvariants = RawFamilyVariants(
-        nvcf19_config, annotator=composite_annotator,
-        variant_factory=VariantFactoryMulti)
-    return fvariants
-
-
-@pytest.fixture(scope='session')
-def vcf19_config():
-    from variants.default_settings import DATA_DIR
-    prefix = os.path.join(DATA_DIR, "spark/spark")
-    config = Configure.from_prefix_vcf(prefix)
-    return config
-
-
-@pytest.fixture(scope='session')
-def vcf19r(vcf19_config, composite_annotator):
-
-    def builder(region):
-        return RawFamilyVariants(
-            vcf19_config, region=region, annotator=composite_annotator)
-
-    return builder
-
-
-@pytest.fixture(scope='session')
-def single_vcf(composite_annotator):
-    def builder(path):
-        a_data = relative_to_this_test_folder(path)
-        a_conf = Configure.from_prefix_vcf(a_data)
-        fvars = RawFamilyVariants(
-            a_conf, annotator=composite_annotator,
-            variant_factory=VariantFactorySingle)
-        return fvars
-    return builder
+# @pytest.fixture(scope='session')
+# def single_vcf(composite_annotator):
+#     def builder(path):
+#         a_data = relative_to_this_test_folder(path)
+#         a_conf = Configure.from_prefix_vcf(a_data)
+#         fvars = RawFamilyVariants(
+#             a_conf, annotator=composite_annotator,
+#             variant_factory=VariantFactorySingle)
+#         return fvars
+#     return builder
 
 
 @pytest.fixture(scope='session')
