@@ -146,7 +146,7 @@ def family_variants_batch(variants):
     }
     for vs in variants:
         # assert vs.inheritance != Inheritance.reference
-        for v in vs:
+        for v in vs.alleles_iter():
             data["chrom"].append(v.chromosome)
             data["position"].append(v.position)
             data["reference"].append(v.reference)

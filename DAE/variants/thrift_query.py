@@ -67,13 +67,11 @@ q = """
         S.effect_details_details,
         S.af_parents_called_count,
         S.af_parents_called_percent,
-        S.af_alternative_allele_count,
-        S.af_alternative_allele_freq,
-        S.af_reference_allele_count,
-        S.af_reference_allele_freq
+        S.af_allele_count,
+        S.af_allele_freq
 
-    FROM parquet.`{family}` AS F JOIN parquet.`{summary}` AS S
-    ON S.var_index = F.var_index
+    FROM parquet.`{family}` AS F FULL OUTER JOIN parquet.`{summary}` AS S
+    ON S.var_index = F.var_index AND S.allele_index = F.allele_index
 """
 
 

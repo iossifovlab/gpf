@@ -157,16 +157,17 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
                    "alternative", "family_id", "genotype"]])
         print("_________________________________________________________")
 
-        join_df = sdf.join(
-            vdf.set_index(['var_index', 'allele_index']),
-            on=['var_index', 'allele_index'],
-            how='outer',
-            rsuffix="_fv",
-            sort=True)
-        print(join_df[["var_index", "allele_index",  # "allele_index_fv",
-                       "reference",
-                       "alternative", "alternative_fv",
-                       "family_id", "genotype"]])
+        join_df = pd.merge(sdf, vdf,
+                           on=['var_index', 'allele_index'],
+                           how='outer',
+                           suffixes=('', '_fv'),
+                           sort=True)
+        print(join_df.head())
+        print(join_df.columns)
+#         print(join_df[["var_index", "allele_index",  # "allele_index_fv",
+#                        "reference",
+#                        "alternative",
+#                        "family_id", "genotype"]])
         print("_________________________________________________________")
 
         return self.wrap_variants(self.families, join_df)

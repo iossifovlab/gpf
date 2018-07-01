@@ -76,7 +76,6 @@ class VariantBase(object):
         return self.position + len(self.reference)
 
     def __eq__(self, other):
-        print(zip(self.alts, other.alts))
         return self.chromosome == other.chromosome and \
             self.position == other.position and \
             self.reference == other.reference and \
@@ -378,7 +377,6 @@ class SummaryVariant(VariantBase):
     def __init__(self, alleles):
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
-        print(alleles)
 
         assert alleles[0].is_reference_allele()
 
@@ -557,8 +555,6 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
     """
 
     def __init__(self, sv, family, gt):
-        print(sv)
-
         self.summary_variant = sv
         self.var_index = sv.var_index
         self.family = family
@@ -567,7 +563,6 @@ class FamilyVariantBase(SummaryVariant, FamilyInheritanceMixin):
         alleles = [sv.ref_allele]
 
         for allele_index in self.calc_alt_alleles(self.gt):
-            print(allele_index)
             alleles.append(sv.alleles[allele_index])
 
         super(FamilyVariantBase, self).__init__(alleles)
@@ -702,9 +697,10 @@ class FamilyVariant(FamilyVariantBase):
                 self.alt_allele.split_from_multi_allelic
 
     def __iter__(self):
-        yield FamilyVariant(
-            self.summary_variant, self.family, self.gt, 0)
-        if not self.is_reference():
+        if self.is_reference():
+            yield FamilyVariant(
+                self.summary_variant, self.family, self.gt, 0)
+        else:
             yield self
 
     @property
@@ -752,12 +748,16 @@ class FamilyVariantMulti(FamilyVariantBase):
             yield FamilyVariant(
                 self.summary_variant, self.family, self.gt, 0)
         else:
-            yield FamilyVariant(
-                self.summary_variant, self.family, self.gt, 0)
             for alt_allele in self.alt_alleles:
                 yield FamilyVariant(
                     self.summary_variant, self.family,
                     self.gt, alt_allele.allele_index)
+
+    def alleles_iter(self):
+        for allele in self.summary_variant.alleles:
+            yield FamilyVariant(
+                self.summary_variant, self.family,
+                self.gt, allele.allele_index)
 
     @property
     def best_st(self):
@@ -794,7 +794,6 @@ class SummaryVariantFactory(object):
         if not isinstance(row['effect_type'], str):
             effects = None
         else:
-            # pprint(row)
             effects = Effect.from_effects(
                 row['effect_type'],
                 zip(row['effect_gene_genes'], row['effect_gene_types']),
