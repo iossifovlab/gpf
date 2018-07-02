@@ -17,7 +17,7 @@ q = """
 
 
 stage_one_transformers = {
-    'role': StringQueryToTreeTransformerWrapper(
+    'roles': StringQueryToTreeTransformerWrapper(
         token_converter=roles_converter),
     'sex': StringQueryToTreeTransformerWrapper(
         token_converter=sex_converter),
@@ -33,7 +33,7 @@ stage_two_transformers = {
     'effect_type': QueryTreeToSQLListTransformer("effect_gene_types"),
     'genes': QueryTreeToSQLListTransformer("effect_gene_genes"),
     'personId': QueryTreeToSQLListTransformer("variant_in_members"),
-    'role': QueryTreeToSQLListTransformer("variant_in_roles"),
+    'roles': QueryTreeToSQLListTransformer("variant_in_roles"),
     'sex': QueryTreeToSQLListTransformer("variant_in_sexes"),
     'position': QueryTreeToSQLTransformer("S.position"),
     'chrom': QueryTreeToSQLTransformer("S.chrom"),
@@ -41,7 +41,8 @@ stage_two_transformers = {
     'family_ids': QueryTreeToSQLListTransformer('F.family_id'),
 }
 
-q = """
+
+Q = """
     SELECT
         F.chrom as chrom_fv,
         F.position as position_fv,
@@ -79,6 +80,15 @@ q = """
 """
 
 
+AQ = """
+    S.summary_index IN (SELECT
+        S.summary_index
+    FROM parquet.`{family}` AS F FULL OUTER JOIN parquet.`{summary}` AS S
+    ON S.summary_index = F.summary_index AND S.allele_index = F.allele_index
+    WHERE {where})
+"""
+
+
 def region_transformer(r):
     assert isinstance(r, Region)
     return "(S.chrom = {} AND S.position >= {} AND S.position <= {})".format(
@@ -90,40 +100,64 @@ def regions_transformer(rs):
     return " OR ".join([region_transformer(r) for r in rs])
 
 
+def query_parts(queries, **kwargs):
+    result = []
+    for key, arg in kwargs.items():
+        if arg is None:
+            continue
+        if key not in queries:
+            continue
+
+        stage_one = stage_one_transformers.get(
+            key, StringQueryToTreeTransformerWrapper())
+        stage_two = stage_two_transformers.get(
+            key, QueryTreeToSQLTransformer(key))
+
+        result.append(
+            stage_two.transform(stage_one.parse_and_transform(arg))
+        )
+    return result
+
+
+VARIANT_QUERIES = [
+    'regions',
+    'family_ids',
+]
+
+ALLELE_QUERIES = [
+    'roles',
+]
+
+
 def thrift_query(thrift_connection, summary, family, limit=2000, **kwargs):
-    first = True
-    final_query = q.format(
+    final_query = Q.format(
         summary=summary,
         family=family,
     )
 
+    variant_queries = []
     if 'regions' in kwargs and kwargs['regions'] is not None:
         regions = kwargs['regions']
         del kwargs['regions']
-        final_query += "\nWHERE ({})".format(regions_transformer(regions))
-        first = False
+        variant_queries.append(regions_transformer(regions))
 
-    for k, arg in kwargs.items():
-        if arg is None:
-            continue
+    variant_queries.extend(
+        query_parts(VARIANT_QUERIES, **kwargs))
 
-        if k in stage_one_transformers:
-            stage_one_transformer = stage_one_transformers[k]
-        else:
-            stage_one_transformer = StringQueryToTreeTransformerWrapper()
+    allele_queries = query_parts(ALLELE_QUERIES, **kwargs)
+    if allele_queries:
+        where = ' AND '.join(["({})".format(q) for q in allele_queries])
+        aq = AQ.format(
+            summary=summary,
+            family=family,
+            where=where
+        )
+        variant_queries.append(aq)
 
-        if k in stage_two_transformers:
-            stage_two_transformer = stage_two_transformers[k]
-        else:
-            stage_two_transformer = QueryTreeToSQLTransformer(k)
-
-        if first:
-            final_query += "\nWHERE"
-        if not first:
-            final_query += " AND\n"
-        stage_one_result = stage_one_transformer.parse_and_transform(arg)
-        final_query += stage_two_transformer.transform(stage_one_result)
-        first = False
+    if variant_queries:
+        final_query += "\nWHERE\n{}".format(
+            ' AND '.join(["({})".format(q) for q in variant_queries])
+        )
 
     if limit is not None:
         final_query += "\nLIMIT {}".format(limit)

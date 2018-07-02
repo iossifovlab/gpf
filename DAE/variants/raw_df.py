@@ -11,7 +11,8 @@ import pandas as pd
 from variants.family import FamiliesBase, Family
 from variants.variant import SummaryVariantFactory,\
     FamilyVariant
-from variants.attributes import Inheritance
+from variants.attributes import Inheritance, Role
+from variants.attributes_query import role_query
 
 
 class FamilyVariantFactory(object):
@@ -105,7 +106,8 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
         self.families_build(self.ped_df, family_class=Family)
 
-    def filter_regions(self, sdf, vdf, regions):
+    @staticmethod
+    def filter_regions(sdf, vdf, regions):
         def f(df, region):
             return df[np.logical_and(
                 df.chrom == region.chr,
@@ -126,10 +128,20 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         else:
             return pd.concat(sdfs), pd.concat(vdfs)
 
-    def filter_families(self, sdf, vdf, family_ids):
+    @staticmethod
+    def filter_families(sdf, vdf, family_ids):
         if family_ids is None:
             return sdf, vdf
         vdf = vdf[vdf.family_id.isin(set(family_ids))]
+        return sdf, vdf
+
+    @staticmethod
+    def filter_roles(sdf, vdf, roles):
+        si = set(vdf[vdf.variant_in_roles
+                     .apply(lambda r: map(Role, r))
+                     .apply(roles)].summary_index.values)
+        vdf = vdf[vdf.summary_index.isin(si)]
+        sdf = sdf[sdf.summary_index.isin(si)]
         return sdf, vdf
 
     def query_variants(self, **kwargs):
@@ -140,6 +152,15 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
             sdf, vdf = self.filter_regions(sdf, vdf, kwargs["regions"])
         if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
             sdf, vdf = self.filter_families(sdf, vdf, kwargs['family_ids'])
+        if kwargs.get('roles') is not None:
+            roles = kwargs.get('roles')
+            assert isinstance(roles, str)
+
+            roles = role_query.transform_query_string_to_tree(roles)
+            roles = role_query.transform_tree_to_matcher(roles)
+            print(roles)
+            sdf, vdf = self.filter_roles(
+                sdf, vdf, lambda r: roles.match(r))
 
         # sdf = sdf.set_index(["summary_index", "allele_index"])
         print("_________________________________________________________")
