@@ -42,10 +42,8 @@ def main(config, data_dir, output_dir):
     print('.DELETE_ON_ERROR:\n')
     print('all:\n')
 
-    if output_dir[-1] == '/':
-        output_dir = output_dir[0:-1]
-    if data_dir[-1] == '/':
-        data_dir = data_dir[0:-1]
+    output_dir = os.path.abspath(output_dir)
+    data_dir = os.path.abspath(data_dir)
 
     dirs = []
     all_cmds = []
