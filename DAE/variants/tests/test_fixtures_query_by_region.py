@@ -13,11 +13,14 @@ from RegionOperations import Region
     "variants_thrift",
 ])
 @pytest.mark.parametrize("fixture_name,regions,count", [
+    ("fixtures/effects_trio_multi", None, 3),
+
     ("fixtures/effects_trio_multi", [Region("1", 878109, 878109)], 1),
     ("fixtures/effects_trio_multi", [Region("1", 878109, 901921)], 2),
     ("fixtures/effects_trio_multi", [Region("1", 878109, 905956)], 3),
     ("fixtures/effects_trio_multi",
      [Region("1", 878109, 878109), Region("1", 905956, 905956)], 2),
+
 
     ("fixtures/effects_trio", [Region("1", 865582, 865582)], 1),
     ("fixtures/effects_trio", [Region("1", 865582, 1222518)], 10),

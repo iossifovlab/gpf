@@ -212,6 +212,11 @@ class ContainsNode(LeafNode):
         super(ContainsNode, self).__init__(arg)
 
 
+class ElementOfNode(LeafNode):
+    def __init__(self, arg):
+        super(ElementOfNode, self).__init__(arg)
+
+
 class LessThanNode(LeafNode):
     def __init__(self, arg):
         super(LessThanNode, self).__init__(arg)
@@ -256,6 +261,9 @@ class QueryTreeToLambdaTransformer(BaseTreeTransformer):
 
     def ContainsNode(self, arg):
         return lambda x: arg in x
+
+    def ElementOfNode(self, arg):
+        return lambda x: x in arg
 
     def EqualsNode(self, arg):
         return lambda x: x == set(arg)
@@ -333,6 +341,9 @@ class QueryTreeToSQLTransformer(BaseTreeTransformer):
     def ContainsNode(self, arg):
         return self.column_name + " = " + self.token_converter(arg)
 
+    def ElementOfNode(self, arg):
+        return self.column_name + " IN " + self.token_converter(arg)
+
     def EqualsNode(self, arg):
         return self.column_name + " = " + self.token_converter(arg)
 
@@ -351,6 +362,12 @@ class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
     def ContainsNode(self, arg):
         return "array_contains(" + self.column_name + ", " + \
             self.token_converter(arg) + ")"
+
+    def ElementOfNode(self, arg):
+        if not arg:
+            return self.column_name + " IS NULL"
+        return self.column_name + " IN (" + \
+            ",".join([self.token_converter(a) for a in arg]) + ")"
 
     def EqualsNode(self, arg):
         arg = [self.token_converter(a) for a in arg]
@@ -394,3 +411,12 @@ class StringQueryToTreeTransformerWrapper(object):
 
     def parse_and_transform(self, expression):
         return self.transform(self.parse(expression))
+
+
+class StringListQueryToTreeTransformer(object):
+    def __init__(self):
+        pass
+
+    def parse_and_transform(self, expression):
+        assert isinstance(expression, list)
+        return ElementOfNode(expression)

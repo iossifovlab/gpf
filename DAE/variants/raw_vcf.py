@@ -260,7 +260,7 @@ class RawFamilyVariants(FamiliesBase):
         return True
 
     def filter_variant(self, v, **kwargs):
-        if 'regions' in kwargs:
+        if kwargs.get('regions') is not None:
             if not self.filter_regions(v, kwargs['regions']):
                 return False
         if 'family_ids' in kwargs and kwargs['family_ids'] is not None:

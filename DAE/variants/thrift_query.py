@@ -2,7 +2,8 @@ from impala.util import as_pandas
 from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
     QueryTreeToSQLTransformer, QueryTreeToSQLListTransformer, \
     roles_converter, sex_converter, \
-    inheritance_converter, variant_type_converter
+    inheritance_converter, variant_type_converter,\
+    StringListQueryToTreeTransformer
 from RegionOperations import Region
 q = """
     SELECT * FROM parquet.`/data-raw-dev/pspark/family01` AS A
@@ -24,19 +25,20 @@ stage_one_transformers = {
         token_converter=inheritance_converter),
     'variant_type': StringQueryToTreeTransformerWrapper(
         token_converter=variant_type_converter),
-    # 'regions': regions_converter,
+    'family_ids': StringListQueryToTreeTransformer(),
 }
 
 
 stage_two_transformers = {
-    'effect_type': QueryTreeToSQLListTransformer("`effect_gene_types`"),
-    'genes': QueryTreeToSQLListTransformer("`effect_gene_genes`"),
+    'effect_type': QueryTreeToSQLListTransformer("effect_gene_types"),
+    'genes': QueryTreeToSQLListTransformer("effect_gene_genes"),
     'personId': QueryTreeToSQLListTransformer("variant_in_members"),
     'role': QueryTreeToSQLListTransformer("variant_in_roles"),
     'sex': QueryTreeToSQLListTransformer("variant_in_sexes"),
-    'position': QueryTreeToSQLTransformer("A.position"),
-    'chrom': QueryTreeToSQLTransformer("A.chrom"),
-    'alternative': QueryTreeToSQLTransformer("A.alternative"),
+    'position': QueryTreeToSQLTransformer("S.position"),
+    'chrom': QueryTreeToSQLTransformer("S.chrom"),
+    'alternative': QueryTreeToSQLTransformer("S.alternative"),
+    'family_ids': QueryTreeToSQLListTransformer('F.family_id'),
 }
 
 q = """
@@ -95,13 +97,16 @@ def thrift_query(thrift_connection, summary, family, limit=2000, **kwargs):
         family=family,
     )
 
-    if 'regions' in kwargs:
+    if 'regions' in kwargs and kwargs['regions'] is not None:
         regions = kwargs['regions']
         del kwargs['regions']
         final_query += "\nWHERE ({})".format(regions_transformer(regions))
         first = False
 
-    for k in kwargs:
+    for k, arg in kwargs.items():
+        if arg is None:
+            continue
+
         if k in stage_one_transformers:
             stage_one_transformer = stage_one_transformers[k]
         else:
@@ -116,7 +121,7 @@ def thrift_query(thrift_connection, summary, family, limit=2000, **kwargs):
             final_query += "\nWHERE"
         if not first:
             final_query += " AND\n"
-        stage_one_result = stage_one_transformer.parse_and_transform(kwargs[k])
+        stage_one_result = stage_one_transformer.parse_and_transform(arg)
         final_query += stage_two_transformer.transform(stage_one_result)
         first = False
 
