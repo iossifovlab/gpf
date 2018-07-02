@@ -32,7 +32,7 @@ class VariantDBConf(object):
         return self.denovo_files + self.transm_files
 
 def escape_target(target):
-    return target.replace(' ', '__')
+    return target.replace(' ', '\\ ')
 
 def main(config, data_dir, output_dir):
     def to_destination(path):
@@ -65,18 +65,15 @@ def main(config, data_dir, output_dir):
 
     cmd_format = ('{target}: dirs\n\t(time'
         ' annotation_pipeline.py {args}'
-        ' "{input_file}" "{output_file}{job_sufix}"'
+        ' "{input_file}" "$@"'
         ' 2> "{log_prefix}-err{job_sufix}.txt") 2> "{log_prefix}-time{job_sufix}.txt"\n')
 
     denovo_args = '--config {}'.format(config)
 
     for file in variant_db_conf.denovo_files:
-        output_file = to_destination(file)
-        all_cmds.append(escape_target(output_file))
+        all_cmds.append(escape_target(to_destination(file)))
         print(cmd_format.format(target=all_cmds[-1],
-            input_file=file,
-            output_file=output_file,
-            args=denovo_args, job_sufix='',
+            input_file=file, args=denovo_args, job_sufix='',
             log_prefix=log_dir + '/' + os.path.basename(file)))
 
     transm_args_format = denovo_args + \
@@ -101,19 +98,16 @@ def main(config, data_dir, output_dir):
                     job_sufix=job_sufix))
 
         escaped_output_file = escape_target(output_file)
-        print('{target}: {parts}\n\tmerge.sh "{merged}"\n'.format(
+        print('{target}: {parts}\n\tmerge.sh "$@"\n'.format(
             target=escaped_output_file,
-            merged=output_file,
             parts=' '.join(file_cmds)))
 
         all_cmds.append(escaped_output_file + '.bgz')
         print('{bgz_target}: {merge_target}\n\t'
-            'bgzip "{output_file}" && '
-            'mv "{output_file}.gz" "{output_file}.bgz"\n'.format(
-                bgz_target=all_cmds[-1], merge_target=escaped_output_file,
-                output_file=output_file))
+            'bgzip "$<" && mv "$<.gz" "$@"\n'.format(
+                bgz_target=all_cmds[-1], merge_target=escaped_output_file))
 
-    copy_cmd_format = '{target}: dirs\n\tcp "{file}" "{dest}"\n'
+    copy_cmd_format = '{target}: dirs\n\tcp "{file}" "$@"\n'
     for file in copy_files:
         dest = to_destination(file)
         all_cmds.append(escape_target(dest))
