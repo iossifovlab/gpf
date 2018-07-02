@@ -7,6 +7,7 @@ import ConfigParser
 class VariantDBConf(object):
 
     def __init__(self, data_dir):
+        self.data_dir = data_dir
         variant_db_conf = ConfigParser.SafeConfigParser({
             'wd': data_dir,
             'data': data_dir
@@ -26,6 +27,18 @@ class VariantDBConf(object):
                         for index_file in variant_db_conf.get(section,
                             'transmittedVariants.indexFile').split('\n')
                     ])
+
+        self._validate()
+
+    def _validate(self):
+        outside_files = [file for file in self.all_variant_files
+                         if self.data_dir not in file]
+        if len(outside_files) != 0:
+            sys.stderr.write(
+                '[ERROR] Some configured variant files are '
+                'outside of the data directory:\n{}\n'.format(
+                    '\n'.join(outside_files)))
+            sys.exit(1)
 
     @property
     def all_variant_files(self):
