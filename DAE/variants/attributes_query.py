@@ -1,13 +1,10 @@
-import functools
 import enum
 
-from lark import Lark, InlineTransformer, Tree
+from lark import Lark, InlineTransformer
 from lark.reconstruct import Reconstructor
-from lark.tree import Discard
 
 from variants.attributes import Role, Inheritance, VariantType, Sex
-from variants.attributes_query_builder import is_token, tree as create_tree,\
-    is_tree
+
 
 QUERY_GRAMMAR = """
     ?start: expression
@@ -32,7 +29,8 @@ QUERY_GRAMMAR = """
 
     eq: "eq"i "(" _simplearglist ")"
 
-    ?atom: "(" logical_or ")" | less_than | more_than | less_than_eq | more_than_eq | arg
+    ?atom: "(" logical_or ")" | less_than | more_than | less_than_eq
+        | more_than_eq | arg
 
     less_than: ">" SIGNED_NUMBER
 
@@ -45,7 +43,7 @@ QUERY_GRAMMAR = """
     arg: simple_arg
 
     simple_arg: STRING | "'" STRING "'" | "\\"" STRING "\\""
-    
+
     STRING : ("_"|LETTER|DIGIT|"."|"-")+
 
     _arglist: (arg "," )* arg [","]
@@ -62,7 +60,7 @@ QUERY_GRAMMAR = """
 
 parser_with_ambiguity = Lark(QUERY_GRAMMAR, ambiguity='explicit')
 
-parser = Lark(QUERY_GRAMMAR)
+PARSER = Lark(QUERY_GRAMMAR)
 
 
 class Matcher(object):
@@ -89,7 +87,7 @@ class Matcher(object):
 
 
 class BaseQueryTransformerMatcher(object):
-    def __init__(self, parser=parser, token_converter=None):
+    def __init__(self, parser=PARSER, token_converter=None):
         self.parser = parser
         self.transformer = StringQueryToTreeTransformer(parser,
                                                         token_converter)
@@ -112,22 +110,23 @@ class BaseQueryTransformerMatcher(object):
 
 
 class QueryTransformerMatcher(BaseQueryTransformerMatcher):
-    def __init__(self, parser=parser, token_converter=None):
-        super(QueryTransformerMatcher, self).__init__(parser, token_converter)
+    def __init__(self, parser=PARSER, token_converter=None):
+        super(QueryTransformerMatcher, self).__init__(
+            parser, token_converter)
         self.transformer2 = QueryTreeToLambdaTransformer()
 
     def transform_tree_to_matcher(self, tree):
         matcher = self.transformer2.transform(tree)
-        return Matcher(tree, parser, matcher)
+        return Matcher(tree, self.parser, matcher)
 
 
 class StringQueryToTreeTransformer(InlineTransformer):
-    
-    def __init__(self, parser=parser, token_converter=None):
+
+    def __init__(self, parser=PARSER, token_converter=None):
         super(StringQueryToTreeTransformer, self).__init__()
 
         if token_converter is None:
-            token_converter = lambda x: x
+            def token_converter(x): return x
 
         self.token_converter = token_converter
 
@@ -135,13 +134,13 @@ class StringQueryToTreeTransformer(InlineTransformer):
         return LessThanNode(args[0])
 
     def more_than(self, *args):
-        return MoreThanNode(args[0])
+        return GreaterThanNode(args[0])
 
     def less_than_eq(self, *args):
         return LessThanEqNode(args[0])
 
     def more_than_eq(self, *args):
-        return MoreThanEqNode(args[0])
+        return GreaterThanEqNode(args[0])
 
     def arg(self, *args):
         return ContainsNode(args[0])
@@ -218,9 +217,9 @@ class LessThanNode(LeafNode):
         super(LessThanNode, self).__init__(arg)
 
 
-class MoreThanNode(LeafNode):
+class GreaterThanNode(LeafNode):
     def __init__(self, arg):
-        super(MoreThanNode, self).__init__(arg)
+        super(GreaterThanNode, self).__init__(arg)
 
 
 class LessThanEqNode(LeafNode):
@@ -228,9 +227,9 @@ class LessThanEqNode(LeafNode):
         super(LessThanEqNode, self).__init__(arg)
 
 
-class MoreThanEqNode(LeafNode):
+class GreaterThanEqNode(LeafNode):
     def __init__(self, arg):
-        super(MoreThanEqNode, self).__init__(arg)
+        super(GreaterThanEqNode, self).__init__(arg)
 
 
 class BaseTreeTransformer(object):
@@ -244,19 +243,19 @@ class BaseTreeTransformer(object):
 
 class QueryTreeToLambdaTransformer(BaseTreeTransformer):
     def LessThanNode(self, arg):
-        return lambda l: l > arg
+        return lambda x: x > arg
 
-    def MoreThanNode(self, arg):
-        return lambda l: l < arg
+    def GreaterThanNode(self, arg):
+        return lambda x: x < arg
 
     def LessThanEqNode(self, arg):
-        return lambda l: l >= arg
+        return lambda x: x >= arg
 
-    def MoreThanEqNode(self, arg):
-        return lambda l: l <= arg
+    def GreaterThanEqNode(self, arg):
+        return lambda x: x <= arg
 
     def ContainsNode(self, arg):
-        return lambda l: arg in l
+        return lambda x: arg in x
 
     def EqualsNode(self, arg):
         return lambda x: x == set(arg)
@@ -264,13 +263,13 @@ class QueryTreeToLambdaTransformer(BaseTreeTransformer):
     def NotNode(self, children):
         assert len(children) == 1
         child = children[0]
-        return lambda l: not child(l)
+        return lambda x: not child(x)
 
     def AndNode(self, children):
-        return lambda l: all(f(l) for f in children)
+        return lambda x: all(f(x) for f in children)
 
     def OrNode(self, children):
-        return lambda l: any(f(l) for f in children)
+        return lambda x: any(f(x) for f in children)
 
 
 def roles_converter(a):
@@ -322,13 +321,13 @@ class QueryTreeToSQLTransformer(BaseTreeTransformer):
     def LessThanNode(self, arg):
         return self.column_name + " > " + self.token_converter(arg)
 
-    def MoreThanNode(self, arg):
+    def GreaterThanNode(self, arg):
         return self.column_name + " < " + self.token_converter(arg)
 
     def LessThanEqNode(self, arg):
         return self.column_name + " >= " + self.token_converter(arg)
 
-    def MoreThanEqNode(self, arg):
+    def GreaterThanEqNode(self, arg):
         return self.column_name + " <= " + self.token_converter(arg)
 
     def ContainsNode(self, arg):
@@ -360,11 +359,32 @@ class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
             reduce((lambda x, y: x + ", " + y), arg) + "))"
 
 
+# class RegionsQueryToSQLTransformer(object):
+#
+#     def __init__(self):
+#         pass
+#
+#     def parse(self, regions):
+#         assert all([isinstance(r, Region) for r in regions])
+#         pass
+#
+#     def parse_region(self, region):
+#         assert isinstance(region, Region)
+#         return {
+#             'chrom': EqualsNode(region.chr),
+#             'position': AndNode([
+#                 GreaterThanEqNode(region.start),
+#                 LessThanEqNode(region.stop),
+#             ])
+#         }
+
+
 class StringQueryToTreeTransformerWrapper(object):
-    def __init__(self, parser=parser, token_converter=None):
+    def __init__(self, parser=PARSER, token_converter=None):
         self.parser = parser
-        self.transformer = StringQueryToTreeTransformer(parser,
-                                                        token_converter)
+        self.transformer = StringQueryToTreeTransformer(
+            parser,
+            token_converter)
 
     def parse(self, expression):
         return self.parser.parse(expression)

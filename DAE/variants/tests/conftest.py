@@ -25,7 +25,7 @@ from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
 from variants.variant import SummaryAllele,\
     FamilyVariant, SummaryVariant
-from variants.attributes_query import parser as attributes_query_parser, \
+from variants.attributes_query import PARSER as attributes_query_parser, \
     QueryTransformerMatcher
 
 from variants.attributes_query import \

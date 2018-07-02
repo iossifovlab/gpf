@@ -16,35 +16,36 @@ def test_can_match_simple_query_with_whitespaces(parser):
 def test_can_match_simple_and(parser):
     assert parser.parse("some and other") is not None
 
-@pytest.mark.parametrize("input", [
+
+@pytest.mark.parametrize("expr", [
     "someandother",
 ])
-def test_and_parses_no_whitespaces_correctly(parser, input):
-    tree = parser.parse(input)
+def test_and_parses_no_whitespaces_correctly(parser, expr):
+    tree = parser.parse(expr)
     print tree.pretty()
     print tree
     assert len(tree.children) == 1
 
 
-@pytest.mark.parametrize("input", [
+@pytest.mark.parametrize("expr", [
     "some and other",
     "some    and          other"
 ])
-def test_and_parses_whitespaces_correctly(parser, input):
-    tree = parser.parse(input)
+def test_and_parses_whitespaces_correctly(parser, expr):
+    tree = parser.parse(expr)
     print tree.pretty()
     print tree
     assert len(tree.children) == 2
 
 
-@pytest.mark.parametrize("input,expected_missing_node", [
+@pytest.mark.parametrize("expr,expected_missing_node", [
     ["some and other", "logical_and"],
     ["some or other", "logical_or"]
 ])
 def test_ambiguity_with_binary_operations_is_resolved_correctly(
-        parser, parser_with_ambiguity, input, expected_missing_node):
-    tree_ambiguity = parser_with_ambiguity.parse(input)
-    tree = parser.parse(input)
+        parser, parser_with_ambiguity, expr, expected_missing_node):
+    tree_ambiguity = parser_with_ambiguity.parse(expr)
+    tree = parser.parse(expr)
 
     assert len(tree_ambiguity.children) == 2
     assert len(tree.children) == 2
@@ -53,14 +54,14 @@ def test_ambiguity_with_binary_operations_is_resolved_correctly(
     assert any(tree.find_pred(lambda x: x.data == expected_missing_node))
 
 
-@pytest.mark.parametrize("input,expected_missing_node", [
+@pytest.mark.parametrize("expr,expected_missing_node", [
     ["someandother", "logical_and"],
     ["someorother", "logical_or"]
 ])
 def test_ambiguity_with_binary_operations_is_resolved_correctly_negative(
-        parser, parser_with_ambiguity, input, expected_missing_node):
-    tree_ambiguity = parser_with_ambiguity.parse(input)
-    tree = parser.parse(input)
+        parser, parser_with_ambiguity, expr, expected_missing_node):
+    tree_ambiguity = parser_with_ambiguity.parse(expr)
+    tree = parser.parse(expr)
 
     assert len(tree_ambiguity.children) == 1
     assert len(tree.children) == 1
@@ -77,7 +78,7 @@ def test_can_match_simple_parentheses(parser):
     assert is_token(tree.children[0].children[0])
 
 
-@pytest.mark.parametrize("input,expected_tree", [
+@pytest.mark.parametrize("expr,expected_tree", [
     [
         "(some or other) and third",
         and_node([
@@ -100,8 +101,8 @@ def test_can_match_simple_parentheses(parser):
         ])
     ]
 ])
-def test_can_match_complex_parentheses(parser, input, expected_tree):
-    tree = parser.parse(input)
+def test_can_match_complex_parentheses(parser, expr, expected_tree):
+    tree = parser.parse(expr)
     assert tree is not None
     assert is_tree(tree)
 
@@ -162,7 +163,8 @@ def test_can_match_complex_function_with_whitespaces(parser, function):
 
 
 @pytest.mark.parametrize("function", FUNCTIONS)
-def test_can_match_complex_function_with_multiple_whitespaces(parser, function):
+def test_can_match_complex_function_with_multiple_whitespaces(
+        parser, function):
     query = "{}(some,    other,   third)".format(function)
     assert parser.parse(query) is not None
 
@@ -222,82 +224,83 @@ def test_can_match_not_and_priority_expression(parser):
     assert is_not(tree)
 
 
-def parse_and_transform(transformer_matcher, query, input):
+def parse_and_transform(transformer_matcher, query, expr):
     tree = transformer_matcher.parse(query)
     print tree.pretty()
     assert tree is not None
     matcher = transformer_matcher.transform(tree)
     assert matcher is not None
 
-    if not input:
-        input = []
+    if not expr:
+        expr = []
 
-    if isinstance(input, str):
-        input = input.split(",")
+    if isinstance(expr, str):
+        expr = expr.split(",")
 
-    return matcher.match(input)
+    return matcher.match(expr)
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     ["one,two,three", False],
     ["some,two,three", True],
     ["some", True],
     ["", False],
 ])
-def test_can_filter_simple_tokens(transformer_matcher, input, output):
-    assert parse_and_transform(transformer_matcher, "some", input) == output
+def test_can_filter_simple_tokens(transformer_matcher, expr, output):
+    assert parse_and_transform(transformer_matcher, "some", expr) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     ["one,two,three", True],
     ["some,two,three", False],
     ["some", False],
     ["", True],
 ])
-def test_can_filter_not(transformer_matcher, input, output):
-    assert parse_and_transform(transformer_matcher, "not some", input) == output
+def test_can_filter_not(transformer_matcher, expr, output):
+    assert parse_and_transform(
+        transformer_matcher, "not some", expr) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     ["one,two,three", False],
     ["some,two,three", False],
     ["other,two,three", False],
     ["some,other,three", True],
     ["", False]
 ])
-def test_can_filter_and(transformer_matcher, input, output):
+def test_can_filter_and(transformer_matcher, expr, output):
     assert parse_and_transform(
-        transformer_matcher, "some and other", input
+        transformer_matcher, "some and other", expr
     ) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     ["one,two,three", False],
     ["some,two,three", True],
     ["other,two,three", True],
     ["some,other,three", True],
     ["", False]
 ])
-def test_can_filter_or(transformer_matcher, input, output):
+def test_can_filter_or(transformer_matcher, expr, output):
     assert parse_and_transform(
-        transformer_matcher, "some or other", input
+        transformer_matcher, "some or other", expr
     ) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     ["one,two,three", True],
     ["some,two,three", False],
     ["other,two,three", False],
     ["some,other,three", False],
     ["", True]
 ])
-def test_can_filter_complex_query(transformer_matcher, input, output):
+def test_can_filter_complex_query(transformer_matcher, expr, output):
     assert parse_and_transform(
-        transformer_matcher, "not some and not other", input
+        transformer_matcher, "not some and not other", expr
     ) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     ["one,two,three", False],
     ["some,two,three", True],
     ["other,two,third", True],
@@ -305,53 +308,53 @@ def test_can_filter_complex_query(transformer_matcher, input, output):
     ["some,other,three", True],
     ["", False]
 ])
-def test_can_filter_very_complex_query(transformer_matcher, input, output):
+def test_can_filter_very_complex_query(transformer_matcher, expr, output):
     assert parse_and_transform(
-        transformer_matcher, "some or (other and third)", input
+        transformer_matcher, "some or (other and third)", expr
     ) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     ["one,two,three", False],
     ["some,two,three", False],
     ["other,two,three", False],
     ["some,other,three", True],
     ["", False]
 ])
-def test_can_filter_simple_all(transformer_matcher, input, output):
+def test_can_filter_simple_all(transformer_matcher, expr, output):
     assert parse_and_transform(
-        transformer_matcher, "all(some, other)", input
+        transformer_matcher, "all(some, other)", expr
     ) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     ["one,two,three", False],
     ["some,two,three", False],
     ["other,two,three", True],
     ["some,other,three", True],
     ["", False]
 ])
-def test_can_filter_complex_all(transformer_matcher, input, output):
+def test_can_filter_complex_all(transformer_matcher, expr, output):
     assert parse_and_transform(
-        transformer_matcher, "all(some, other) or all(other, two)", input
+        transformer_matcher, "all(some, other) or all(other, two)", expr
     ) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     ["one,two,three", False],
     ["some,two,three", True],
     ["other,two,three", True],
     ["some,other,three", True],
     ["", False]
 ])
-def test_can_filter_simple_any(transformer_matcher, input, output):
+def test_can_filter_simple_any(transformer_matcher, expr, output):
     print transformer_matcher.parse("any(some, other)")
     assert parse_and_transform(
-        transformer_matcher, "any(some, other)", input
+        transformer_matcher, "any(some, other)", expr
     ) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     ["one,two", False],
     ["some,two", False],
     ["other,two", False],
@@ -359,31 +362,32 @@ def test_can_filter_simple_any(transformer_matcher, input, output):
     ["some,other,third", False],
     ["", False]
 ])
-def test_can_filter_simple_eq(transformer_matcher, input, output):
+def test_can_filter_simple_eq(transformer_matcher, expr, output):
     assert parse_and_transform(
-        transformer_matcher, "eq(some, other)", input
+        transformer_matcher, "eq(some, other)", expr
     ) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     [[1], True],
     [[1, 2, 3, 4], True],
     [[2, 3, 4], False],
     [[], False]
 ])
-def test_token_simple_transformer_works(transformer_matcher_class, input, output):
+def test_token_simple_transformer_works(
+        transformer_matcher_class, expr, output):
     matcher = transformer_matcher_class(token_converter=lambda _: 1)
     assert parse_and_transform(
-        matcher, "some", input) == output
+        matcher, "some", expr) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     [[1], False],
     [[1, 2, 3, 4], True],
     [[2, 3, 4], False],
     [[], False]
 ])
-def test_token_and_transformer(transformer_matcher_class, input, output):
+def test_token_and_transformer(transformer_matcher_class, expr, output):
     token_map = {
         "some": 1,
         "other": 2
@@ -392,18 +396,18 @@ def test_token_and_transformer(transformer_matcher_class, input, output):
     matcher = transformer_matcher_class(token_converter=lambda x: token_map[x])
 
     assert parse_and_transform(
-        matcher, "some and other", input,
+        matcher, "some and other", expr,
     ) == output
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     [[1], False],
     [[1, 2, 3, 4], False],
     [[2, 3, 4], False],
     [[1, 2], True],
     [[], False]
 ])
-def test_token_eq_transformer(transformer_matcher_class, input, output):
+def test_token_eq_transformer(transformer_matcher_class, expr, output):
     token_map = {
         "some": 1,
         "other": 2
@@ -412,7 +416,7 @@ def test_token_eq_transformer(transformer_matcher_class, input, output):
     matcher = transformer_matcher_class(token_converter=lambda x: token_map[x])
 
     assert parse_and_transform(
-        matcher, "eq(some, other)", input,
+        matcher, "eq(some, other)", expr,
     ) == output
 
 
@@ -429,7 +433,8 @@ def test_can_reconstruct_single_token(parser, transformer):
 @pytest.mark.parametrize("node_constructor", [
     or_node, and_node, eq_node, any_node, all_node
 ])
-def test_start_node_is_removed_when_constructing_node(parser, node_constructor):
+def test_start_node_is_removed_when_constructing_node(
+        parser, node_constructor):
     query = "some"
     subtree = parser.parse(query)
 
@@ -472,7 +477,7 @@ def test_transformer_works_without_start_element(transformer_matcher):
     assert matcher.match([])
 
 
-@pytest.mark.parametrize("input,output", [
+@pytest.mark.parametrize("expr,output", [
     [["some"], True],
     [["some", "other"], True],
     [["other"], True],
@@ -480,7 +485,7 @@ def test_transformer_works_without_start_element(transformer_matcher):
     [["third", "fourth"], False],
     [[], False],
 ])
-def test_can_create_subtree_from_parsed(transformer_matcher, input, output):
+def test_can_create_subtree_from_parsed(transformer_matcher, expr, output):
     query = "some"
     subtree = transformer_matcher.parse(query)
 
@@ -491,4 +496,4 @@ def test_can_create_subtree_from_parsed(transformer_matcher, input, output):
     matcher = transformer_matcher.transform(tree)
     assert matcher is not None
 
-    assert matcher.match(input) == output
+    assert matcher.match(expr) == output
