@@ -19,7 +19,7 @@ q = """
 stage_one_transformers = {
     'roles': StringQueryToTreeTransformerWrapper(
         token_converter=roles_converter),
-    'sex': StringQueryToTreeTransformerWrapper(
+    'sexes': StringQueryToTreeTransformerWrapper(
         token_converter=sex_converter),
     'inheritance': StringQueryToTreeTransformerWrapper(
         token_converter=inheritance_converter),
@@ -34,7 +34,7 @@ stage_two_transformers = {
     'genes': QueryTreeToSQLListTransformer("effect_gene_genes"),
     'personId': QueryTreeToSQLListTransformer("variant_in_members"),
     'roles': QueryTreeToSQLListTransformer("variant_in_roles"),
-    'sex': QueryTreeToSQLListTransformer("variant_in_sexes"),
+    'sexes': QueryTreeToSQLListTransformer("variant_in_sexes"),
     'position': QueryTreeToSQLTransformer("S.position"),
     'chrom': QueryTreeToSQLTransformer("S.chrom"),
     'alternative': QueryTreeToSQLTransformer("S.alternative"),
@@ -119,10 +119,11 @@ VARIANT_QUERIES = [
     'regions',
     'family_ids',
     'inheritance',
+    'roles',
+    'sexes',
 ]
 
-ALLELE_QUERIES = [
-    'roles',
+SUMMARY_SUBQUERIES = [
 ]
 
 
@@ -141,7 +142,7 @@ def thrift_query(thrift_connection, summary, family, limit=2000, **kwargs):
     variant_queries.extend(
         query_parts(VARIANT_QUERIES, **kwargs))
 
-    allele_queries = query_parts(ALLELE_QUERIES, **kwargs)
+    allele_queries = query_parts(SUMMARY_SUBQUERIES, **kwargs)
     if allele_queries:
         where = ' AND '.join(["({})".format(q) for q in allele_queries])
         aq = AQ.format(

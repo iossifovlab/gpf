@@ -11,8 +11,8 @@ import pandas as pd
 from variants.family import FamiliesBase, Family
 from variants.variant import SummaryVariantFactory,\
     FamilyVariant
-from variants.attributes import Inheritance, Role
-from variants.attributes_query import role_query, inheritance_query
+from variants.attributes import Inheritance, Role, Sex
+from variants.attributes_query import role_query, inheritance_query, sex_query
 
 
 class FamilyVariantFactory(object):
@@ -117,6 +117,15 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         return sdf, vdf
 
     @staticmethod
+    def filter_sexes(sdf, vdf, sexes):
+        si = set(vdf[vdf.variant_in_sexes
+                     .apply(lambda v: map(Sex, v))
+                     .apply(sexes)].summary_index.values)
+        vdf = vdf[vdf.summary_index.isin(si)]
+        sdf = sdf[sdf.summary_index.isin(si)]
+        return sdf, vdf
+
+    @staticmethod
     def filter_inheritance(sdf, vdf, inheritance):
         si = set(vdf[vdf.inheritance
                      .apply(lambda v: Inheritance(v))
@@ -134,42 +143,36 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
             sdf, vdf = self.filter_families(sdf, vdf, kwargs['family_ids'])
         if kwargs.get('roles') is not None:
-            roles = kwargs.get('roles')
-            assert isinstance(roles, str)
+            query = kwargs.get('roles')
+            assert isinstance(query, str)
 
-            roles = role_query.transform_query_string_to_tree(roles)
-            roles = role_query.transform_tree_to_matcher(roles)
+            query = role_query.transform_tree_to_matcher(
+                role_query.transform_query_string_to_tree(query))
             sdf, vdf = self.filter_roles(
-                sdf, vdf, lambda r: roles.match(r))
+                sdf, vdf, lambda v: query.match(v))
+
+        if kwargs.get('sexes') is not None:
+            query = kwargs.get('sexes')
+            assert isinstance(query, str)
+
+            query = sex_query.transform_tree_to_matcher(
+                sex_query.transform_query_string_to_tree(query))
+            sdf, vdf = self.filter_sexes(
+                sdf, vdf, lambda v: query.match(v))
 
         if kwargs.get('inheritance') is not None:
             query = kwargs.get('inheritance')
             assert isinstance(query, str)
 
-            query = inheritance_query.transform_query_string_to_tree(query)
-            query = inheritance_query.transform_tree_to_matcher(query)
+            query = inheritance_query.transform_tree_to_matcher(
+                inheritance_query.transform_query_string_to_tree(query))
             sdf, vdf = self.filter_inheritance(
                 sdf, vdf, lambda v: query.match([v]))
-
-        # sdf = sdf.set_index(["summary_index", "allele_index"])
-        print("_________________________________________________________")
-        print(sdf[["summary_index", "allele_index", "alternative"]])
-        print(vdf[["summary_index",  # "allele_index",
-                   # "alternative",
-                   "family_id", "genotype"]])
-        print("_________________________________________________________")
 
         join_df = pd.merge(sdf, vdf,
                            on=['summary_index'],
                            how='outer',
                            suffixes=('', '_fv'),
                            sort=True)
-        print(join_df.head())
-        print(join_df.columns)
-#         print(join_df[["summary_index", "allele_index",  # "allele_index_fv",
-#                        "reference",
-#                        "alternative",
-#                        "family_id", "genotype"]])
-        print("_________________________________________________________")
 
         return self.wrap_variants(self.families, join_df)
