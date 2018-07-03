@@ -30,3 +30,47 @@ def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
         print(v, mat2str(v.best_st), v.inheritance)
         assert v.inheritance == inheritance
         assert len(mat2str(v.best_st)) == 7
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_vcf",
+    "variants_df",
+    "variants_thrift",
+])
+@pytest.mark.parametrize("count,inheritance", [
+    (1, Inheritance.reference),
+    (5, Inheritance.mendelian),
+    (3, Inheritance.omission),
+    (2, Inheritance.denovo),
+])
+def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
+    fvars = variants_impl(variants)("fixtures/inheritance_quad")
+    vs = list(fvars.query_variants(inheritance=inheritance.name))
+    assert len(vs) == count
+    for v in vs:
+        print(v, mat2str(v.best_st), v.inheritance)
+
+        assert v.inheritance == inheritance
+        assert len(mat2str(v.best_st)) == 9
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_vcf",
+    "variants_df",
+    "variants_thrift",
+])
+@pytest.mark.parametrize("count,inheritance", [
+    (1, Inheritance.reference),
+    (3, Inheritance.mendelian),
+    (1, Inheritance.omission),
+    (1, Inheritance.other),
+])
+def test_inheritance_multi_full(variants_impl, variants, count, inheritance):
+    fvars = variants_impl(variants)("fixtures/inheritance_multi")
+    vs = list(fvars.query_variants(inheritance=inheritance.name))
+    assert len(vs) == count
+    for v in vs:
+        print(v, mat2str(v.best_st), v.inheritance)
+
+        assert v.inheritance == inheritance
+        assert len(mat2str(v.best_st)) == 15
