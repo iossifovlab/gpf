@@ -12,7 +12,7 @@ from variants.family import FamiliesBase, Family
 from variants.variant import SummaryVariantFactory,\
     FamilyVariant
 from variants.attributes import Inheritance, Role
-from variants.attributes_query import role_query
+from variants.attributes_query import role_query, inheritance_query
 
 
 class FamilyVariantFactory(object):
@@ -24,34 +24,6 @@ class FamilyVariantFactory(object):
 
 class DfFamilyVariantsBase(object):
 
-    #     @staticmethod
-    #     def wrap_family_variant(families, record):
-    #         sv = SummaryVariantFactory.summary_variant_from_records([record])
-    #         family = families[record['family_id']]
-    #         gt = record['genotype']
-    #         alt_allele_index = record['allele_index']
-    #         return FamilyVariant(sv, family, gt, alt_allele_index)
-
-    @staticmethod
-    def merge_genotypes(genotypes):
-        if len(genotypes) == 1:
-            gt = genotypes[0]
-        else:
-            genotypes = np.stack(genotypes, axis=0)
-            gt = genotypes[0, :]
-            unknown_col = np.any(genotypes == -1,  axis=0)
-
-            for index, col in enumerate(unknown_col):
-                if not col:
-                    continue
-                gt[index] = genotypes[genotypes[:, index] != -1, index][0]
-
-        flen = int(len(gt) / 2)
-        assert 2 * flen == len(gt)
-
-        gt = gt.reshape([2, flen], order='F')
-        return gt
-
     @staticmethod
     def wrap_family_variant_multi(families, records):
         sv = SummaryVariantFactory.summary_variant_from_records(records)
@@ -61,8 +33,8 @@ class DfFamilyVariantsBase(object):
         assert all([r['family_id'] == family_id for r in records])
 
         family = families[family_id]
-        gt = DfFamilyVariantsBase.merge_genotypes(
-            [r['genotype'] for r in records])
+        gt = records[0]['genotype']
+        gt = gt.reshape([2, len(family)], order='F')
 
         return FamilyVariant(sv, family, gt)
 
@@ -72,7 +44,7 @@ class DfFamilyVariantsBase(object):
         print("join_df before sort")
         print(join_df[["summary_index", "allele_index",  # "allele_index_fv",
                        "reference",
-                       "alternative", "alternative_fv",
+                       "alternative",  # "alternative_fv",
                        "family_id", "genotype", "inheritance"]])
         join_df = join_df.sort_values(
             by=["summary_index", "family_id", "allele_index"])
@@ -80,7 +52,7 @@ class DfFamilyVariantsBase(object):
         print("join_df after sort")
         print(join_df[["summary_index", "allele_index",  # "allele_index_fv",
                        "reference",
-                       "alternative", "alternative_fv",
+                       "alternative",  # "alternative_fv",
                        "family_id", "genotype", "inheritance"]])
         print("----------------------------------------------------------")
 
@@ -90,7 +62,7 @@ class DfFamilyVariantsBase(object):
 
                 print(group[["summary_index", "allele_index",
                              "reference",
-                             "alternative", "alternative_fv",
+                             "alternative",  # "alternative_fv",
                              "family_id", "genotype", "inheritance"]])
             rec = group.to_dict(orient='records')
             yield DfFamilyVariantsBase.wrap_family_variant_multi(families, rec)
@@ -144,6 +116,15 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         sdf = sdf[sdf.summary_index.isin(si)]
         return sdf, vdf
 
+    @staticmethod
+    def filter_inheritance(sdf, vdf, inheritance):
+        si = set(vdf[vdf.inheritance
+                     .apply(lambda v: Inheritance(v))
+                     .apply(inheritance)].summary_index.values)
+        vdf = vdf[vdf.summary_index.isin(si)]
+        sdf = sdf[sdf.summary_index.isin(si)]
+        return sdf, vdf
+
     def query_variants(self, **kwargs):
         sdf = self.summary_df
         vdf = self.vars_df
@@ -158,19 +139,28 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
             roles = role_query.transform_query_string_to_tree(roles)
             roles = role_query.transform_tree_to_matcher(roles)
-            print(roles)
             sdf, vdf = self.filter_roles(
                 sdf, vdf, lambda r: roles.match(r))
+
+        if kwargs.get('inheritance') is not None:
+            query = kwargs.get('inheritance')
+            assert isinstance(query, str)
+
+            query = inheritance_query.transform_query_string_to_tree(query)
+            query = inheritance_query.transform_tree_to_matcher(query)
+            sdf, vdf = self.filter_inheritance(
+                sdf, vdf, lambda v: query.match([v]))
 
         # sdf = sdf.set_index(["summary_index", "allele_index"])
         print("_________________________________________________________")
         print(sdf[["summary_index", "allele_index", "alternative"]])
-        print(vdf[["summary_index", "allele_index",
-                   "alternative", "family_id", "genotype"]])
+        print(vdf[["summary_index",  # "allele_index",
+                   # "alternative",
+                   "family_id", "genotype"]])
         print("_________________________________________________________")
 
         join_df = pd.merge(sdf, vdf,
-                           on=['summary_index', 'allele_index'],
+                           on=['summary_index'],
                            how='outer',
                            suffixes=('', '_fv'),
                            sort=True)

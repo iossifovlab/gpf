@@ -46,11 +46,7 @@ Q = """
     SELECT
         F.chrom as chrom_fv,
         F.position as position_fv,
-        F.reference as reference_fv,
-        F.alternative as alternative_fv,
         F.summary_index as summary_index_fv,
-        F.allele_index as allele_index_fv,
-        F.split_from_multi_allelic as split_from_multi_allelic_fv,
         F.family_id,
         F.genotype,
         F.inheritance,
@@ -76,7 +72,7 @@ Q = """
         S.af_allele_freq
 
     FROM parquet.`{family}` AS F FULL OUTER JOIN parquet.`{summary}` AS S
-    ON S.summary_index = F.summary_index AND S.allele_index = F.allele_index
+    ON S.summary_index = F.summary_index
 """
 
 
@@ -84,7 +80,7 @@ AQ = """
     S.summary_index IN (SELECT
         S.summary_index
     FROM parquet.`{family}` AS F FULL OUTER JOIN parquet.`{summary}` AS S
-    ON S.summary_index = F.summary_index AND S.allele_index = F.allele_index
+    ON S.summary_index = F.summary_index
     WHERE {where})
 """
 
@@ -122,6 +118,7 @@ def query_parts(queries, **kwargs):
 VARIANT_QUERIES = [
     'regions',
     'family_ids',
+    'inheritance',
 ]
 
 ALLELE_QUERIES = [

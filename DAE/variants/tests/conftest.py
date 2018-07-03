@@ -70,7 +70,6 @@ def testing_thriftserver(request):
 
     spark_home = os.environ.get("SPARK_HOME")
     thrift_port = os.environ.get("THRIFTSERVER_PORT")
-    thrift_port = thrift_port.strip()
 
     assert spark_home is not None
 

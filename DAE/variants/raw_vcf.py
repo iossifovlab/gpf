@@ -66,7 +66,7 @@ class VariantFactoryMulti(SummaryVariantFactory):
 
     @staticmethod
     def from_summary_variant(sv, family, gt):
-        return [FamilyVariant(sv, family, gt)]
+        return FamilyVariant(sv, family, gt)
 
     @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):
@@ -206,46 +206,33 @@ class RawFamilyVariants(FamiliesBase):
     @staticmethod
     def filter_gene_effects(v, effect_types, genes):
         assert effect_types is not None or genes is not None
-        if v.effects is None:
+        if v.effect is None:
             return False
 
-        for effect in v.effects:
-            gene_effects = effect.genes
+        gene_effects = v.effect.genes
 
-            if effect_types is None:
-                result = [
-                    ge for ge in gene_effects if ge.symbol in genes]
-                if result:
-                    return True
-            elif genes is None:
-                result = [
-                    ge for ge in gene_effects if ge.effect in effect_types]
-                if result:
-                    return True
-            else:
-                result = [
-                    ge for ge in gene_effects
-                    if ge.effect in effect_types and ge.symbol in genes]
-                if result:
-                    return True
+        if effect_types is None:
+            result = [
+                ge for ge in gene_effects if ge.symbol in genes]
+            if result:
+                return True
+        elif genes is None:
+            result = [
+                ge for ge in gene_effects if ge.effect in effect_types]
+            if result:
+                return True
+        else:
+            result = [
+                ge for ge in gene_effects
+                if ge.effect in effect_types and ge.symbol in genes]
+            if result:
+                return True
         return False
 
     def filter_allele(self, v, **kwargs):
         if 'genes' in kwargs or 'effect_types' in kwargs:
             if not self.filter_gene_effects(
                     v, kwargs.get('effect_types'), kwargs.get('genes')):
-                return False
-        if 'person_ids' in kwargs:
-            person_ids = kwargs['person_ids']
-            if not v.variant_in_members & set(person_ids):
-                return False
-        if 'roles' in kwargs:
-            query = kwargs['roles']
-            if not query.match(v.variant_in_roles):
-                return False
-        if 'sexes' in kwargs:
-            query = kwargs['sexes']
-            if not query.match(v.variant_in_sexes):
                 return False
         if 'variant_type' in kwargs:
             query = kwargs['variant_type']
@@ -267,7 +254,18 @@ class RawFamilyVariants(FamiliesBase):
             family_ids = kwargs['family_ids']
             if v.family_id not in family_ids:
                 return False
-
+        if 'person_ids' in kwargs:
+            person_ids = kwargs['person_ids']
+            if not v.variant_in_members & set(person_ids):
+                return False
+        if 'roles' in kwargs:
+            query = kwargs['roles']
+            if not query.match(v.variant_in_roles):
+                return False
+        if 'sexes' in kwargs:
+            query = kwargs['sexes']
+            if not query.match(v.variant_in_sexes):
+                return False
         if 'inheritance' in kwargs:
             query = kwargs['inheritance']
             if not query.match([v.inheritance]):
@@ -280,7 +278,6 @@ class RawFamilyVariants(FamiliesBase):
 
     def query_variants(self, **kwargs):
         annot_df = self.annot_df
-        vs = self.wrap_variants(annot_df)
 
         if 'roles' in kwargs:
             parsed = kwargs['roles']
@@ -314,6 +311,8 @@ class RawFamilyVariants(FamiliesBase):
             kwargs['variant_type'] = variant_type_query.\
                 transform_tree_to_matcher(parsed)
 
+        vs = self.wrap_variants(annot_df)
+
         for v in vs:
             if not self.filter_variant(v, **kwargs):
                 continue
@@ -330,13 +329,13 @@ class RawFamilyVariants(FamiliesBase):
             raise StopIteration()
 
         variants = self.vcf_vars
-        for summary_index, group_df in annot_df.groupby(["summary_index"]):
+        for summary_index, group_df in annot_df.groupby("summary_index"):
             vcf = variants[summary_index]
             summary_variant = self.VF.summary_variant_from_records(
                 group_df.to_dict(orient='records'))
 
             for fam in self.families.values():
-                vs = self.VF.family_variant_from_vcf(
+                v = self.VF.family_variant_from_vcf(
                     summary_variant, fam, vcf=vcf)
-                for v in vs:
-                    yield v
+                yield v
+        raise StopIteration()

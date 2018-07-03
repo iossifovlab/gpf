@@ -111,11 +111,11 @@ def family_variant_parquet_schema():
     fields = [
         pa.field("chrom", pa.string()),
         pa.field("position", pa.int64()),
-        pa.field("reference", pa.string()),
-        pa.field("alternative", pa.string()),
+#         pa.field("reference", pa.string()),
+#         pa.field("alternative", pa.string()),
         pa.field("summary_index", pa.int64()),
-        pa.field("allele_index", pa.int8()),
-        pa.field("split_from_multi_allelic", pa.bool_()),
+#         pa.field("allele_index", pa.int8()),
+#         pa.field("split_from_multi_allelic", pa.bool_()),
         pa.field("family_id", pa.string()),
         pa.field("genotype", pa.list_(pa.int8())),
         pa.field("inheritance", pa.int32()),
@@ -132,11 +132,11 @@ def family_variants_batch(variants):
     data = {
         "chrom": [],
         "position": [],
-        "reference": [],
-        "alternative": [],
+#         "reference": [],
+#         "alternative": [],
         "summary_index": [],
-        "allele_index": [],
-        "split_from_multi_allelic": [],
+#         "allele_index": [],
+#         "split_from_multi_allelic": [],
         "family_id": [],
         "genotype": [],
         "inheritance": [],
@@ -146,23 +146,26 @@ def family_variants_batch(variants):
     }
     for vs in variants:
         # assert vs.inheritance != Inheritance.reference
-        for v in vs.alleles_iter():
-            data["chrom"].append(v.chromosome)
-            data["position"].append(v.position)
-            data["reference"].append(v.reference)
-            data["alternative"].append(v.alternative)
-            data["summary_index"].append(v.summary_index)
-            data["allele_index"].append(v.allele_index)
-            data["split_from_multi_allelic"].append(v.split_from_multi_allelic)
-            data["family_id"].append(v.family_id)
-            data["genotype"].append(v.gt_flatten())
-            data["inheritance"].append(v.inheritance.value)
-            data["variant_in_members"].append(
-                [unicode(m, "utf-8") for m in v.variant_in_members])
-            data["variant_in_roles"].append(
-                [r.value for r in v.variant_in_roles])
-            data["variant_in_sexes"].append(
-                [s.value for s in v.variant_in_sexes])
+#         for v in vs.alleles_iter():
+#             data["chrom"].append(v.chromosome)
+#             data["position"].append(v.position)
+#             data["reference"].append(v.reference)
+#             data["alternative"].append(v.alternative)
+#             data["summary_index"].append(vs.summary_index)
+#             data["allele_index"].append(v.allele_index)
+#             data["split_from_multi_allelic"].append(v.split_from_multi_allelic)
+        data["chrom"].append(vs.chromosome)
+        data["position"].append(vs.position)
+        data["summary_index"].append(vs.summary_index)
+        data["family_id"].append(vs.family_id)
+        data["genotype"].append(vs.gt_flatten())
+        data["inheritance"].append(vs.inheritance.value)
+        data["variant_in_members"].append(
+            [unicode(m, "utf-8") for m in vs.variant_in_members])
+        data["variant_in_roles"].append(
+            [r.value for r in vs.variant_in_roles])
+        data["variant_in_sexes"].append(
+            [s.value for s in vs.variant_in_sexes])
 
     batch_data = []
     for name in schema.names:

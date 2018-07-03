@@ -55,6 +55,7 @@ def test_inspect_broken_trios2_11602_variants(variants_vcf):
 
     vs = dfvars.query_variants()
     vs = list(vs)
+
     for v in vs:
         print(v)
     assert len(vs) == 2
@@ -72,8 +73,8 @@ def test_inspect_broken_trios2_11602_variants(variants_vcf):
 #         fv = FamilyVariant(v0.summary_variant, v0.family, v0.gt, ai)
 #         print(ai, ":", fv, mat2str(fv.gt), mat2str(fv.best_st))
 
-    for fa in v0:
-        print(fa)
-
-    for fa in v1:
-        print(fa)
+#     for fa in v0:
+#         print(fa)
+# 
+#     for fa in v1:
+#         print(fa)
