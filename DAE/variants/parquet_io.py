@@ -31,6 +31,10 @@ def summary_parquet_schema():
         pa.field("summary_index", pa.int64()),
         pa.field("split_from_multi_allelic", pa.bool_()),
         pa.field("allele_index", pa.int8()),
+        pa.field("variant_type", pa.int8()),
+        pa.field("cshl_variant", pa.string()),
+        pa.field("cshl_position", pa.int64()),
+        pa.field("cshl_length", pa.int32()),
         pa.field("effect_type", pa.string()),
         pa.field("effect_gene", pa.list_(effect_gene)),
         pa.field("effect_details", pa.list_(effect_details)),
@@ -51,8 +55,12 @@ def summary_parquet_schema_flat():
         pa.field("reference", pa.string()),
         pa.field("alternative", pa.string()),
         pa.field("summary_index", pa.int64()),
-        pa.field("allele_index", pa.int16()),
         pa.field("split_from_multi_allelic", pa.bool_()),
+        pa.field("allele_index", pa.int16()),
+        pa.field("variant_type", pa.int8()),
+        pa.field("cshl_variant", pa.string()),
+        pa.field("cshl_position", pa.int64()),
+        pa.field("cshl_length", pa.int32()),
         pa.field("effect_type", pa.string()),
         pa.field("effect_gene_genes", pa.list_(pa.string())),
         pa.field("effect_gene_types", pa.list_(pa.string())),
@@ -73,7 +81,7 @@ def summary_batch(sum_df):
 
     batch_data = []
     for name in schema.names:
-        assert name in sum_df
+        assert name in sum_df, name
         data = sum_df[name].values
         field = schema.field_by_name(name)
         batch_data.append(pa.array(data, type=field.type))

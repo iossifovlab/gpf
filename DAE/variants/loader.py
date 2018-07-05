@@ -83,19 +83,6 @@ class RawVariantsLoader(object):
             self.config.annotation, storage=storage)
 
     @staticmethod
-    def convert_array_of(token, dtype):
-        token = token.strip()
-        return np.fromstring(token, dtype=dtype, sep=RawVariantsLoader.SEP1)
-
-    @staticmethod
-    def convert_array_of_ints(token):
-        return RawVariantsLoader.convert_array_of(token, int)
-
-    @staticmethod
-    def convert_array_of_floats(token):
-        return RawVariantsLoader.convert_array_of(token, float)
-
-    @staticmethod
     def convert_array_of_strings(token):
         if not token:
             return None
@@ -103,20 +90,11 @@ class RawVariantsLoader(object):
         words = [w.strip() for w in token.split(RawVariantsLoader.SEP1)]
         return words
 
-    @classmethod
-    def gene_effects_serialize(cls, all_gene_effects):
-        return cls.SEP1.join(
-            [cls.SEP2.join(
-                [cls.SEP3.join(ge) for ge in gene_effects])
-             for gene_effects in all_gene_effects])
-
-    @classmethod
-    def gene_effects_deserialize(cls, all_gene_effects):
-        return np.array([
-            [tuple(ge.split(cls.SEP3))
-             for ge in gene_effects.split(cls.SEP2)]
-            for gene_effects in all_gene_effects.split(cls.SEP1)
-        ])
+    @staticmethod
+    def convert_string(token):
+        if not token:
+            return None
+        return token
 
     @classmethod
     def load_annotation_file(cls, filename, sep='\t', storage='csv'):
@@ -130,6 +108,7 @@ class RawVariantsLoader(object):
                         'position': np.int32,
                     },
                     converters={
+                        'cshl_variant': cls.convert_string,
                         'effect_gene_genes':
                         cls.convert_array_of_strings,
                         'effect_gene_types':

@@ -116,6 +116,7 @@ class Inheritance(enum.Enum):
 
 
 class VariantType(enum.Enum):
+    invalid = 0
     substitution = 1
     insertion = 1 << 1
     deletion = 1 << 2
@@ -135,6 +136,25 @@ class VariantType(enum.Enum):
         elif name == 'CNV':
             return VariantType.CNV
         raise ValueError("unexpected variant type: {}".format(name))
+
+    @staticmethod
+    def from_cshl_variant(variant):
+        if variant is None:
+            return VariantType.none
+
+        vt = variant[0]
+        if vt == 's':
+            return VariantType.substitution
+        elif vt == 'i':
+            return VariantType.insertion
+        elif vt == 'd':
+            return VariantType.deletion
+        elif vt == 'c':
+            return VariantType.complex
+        elif vt == 'C':
+            return VariantType.CNV
+        else:
+            raise ValueError("unexpected variant type: {}".format(variant))
 
     def __repr__(self):
         return self.name[:3]

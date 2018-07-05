@@ -159,17 +159,19 @@ class RawFamilyVariants(FamiliesBase):
                     records.append(
                         (v.CHROM, v.start + 1,
                          v.REF, alt,
-                         index, split, allele_index + 1))
+                         index, split,
+                         allele_index + 1,
+                         ))
             self.annot_df = pd.DataFrame.from_records(
                 data=records,
                 columns=[
                     'chrom', 'position', 'reference', 'alternative',
                     'summary_index', 'split_from_multi_allelic',
-                    'allele_index'])
+                    'allele_index',
+                ])
 
             annotator.setup(self)
             self.annot_df = annotator.annotate(self.annot_df, self.vcf_vars)
-
 
 #  FIXME:
 #         assert len(self.annot_df) == len(self.vcf_vars)
@@ -235,7 +237,7 @@ class RawFamilyVariants(FamiliesBase):
             if not self.filter_gene_effects(
                     v, kwargs.get('effect_types'), kwargs.get('genes')):
                 return False
-        if 'variant_type' in kwargs:
+        if kwargs.get('variant_type') is not None:
             query = kwargs['variant_type']
             if v.details is None:
                 return False
@@ -303,7 +305,7 @@ class RawFamilyVariants(FamiliesBase):
             kwargs['inheritance'] = inheritance_query.\
                 transform_tree_to_matcher(parsed)
 
-        if 'variant_type' in kwargs:
+        if kwargs.get('variant_type') is not None:
             parsed = kwargs['variant_type']
             if isinstance(kwargs['variant_type'], str):
                 parsed = variant_type_query.transform_query_string_to_tree(

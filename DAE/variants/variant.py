@@ -157,28 +157,12 @@ class VariantDetail(object):
         self.chrom = chrom
         self.cshl_position = position
         self.cshl_variant = variant
+        self.variant_type = VariantType.from_cshl_variant(self.cshl_variant)
 
     def __repr__(self):
         return "{} {}".format(
             self.cshl_location,
             self.cshl_variant)
-
-    @property
-    def variant_type(self):
-        vt = self.cshl_variant[0]
-        if vt == 's':
-            return VariantType.substitution
-        elif vt == 'i':
-            return VariantType.insertion
-        elif vt == 'd':
-            return VariantType.deletion
-        elif vt == 'c':
-            return VariantType.complex
-        elif vt == 'C':
-            return VariantType.CNV
-        else:
-            raise ValueError("unexpected variant type: {}".format(
-                self.cshl_variant))
 
     @property
     def cshl_location(self):
@@ -438,72 +422,6 @@ class SummaryVariantFactory(object):
         return SummaryVariant(alleles)
 
 
-# class FamilyAllele(SummaryAlleleDelegate, FamilyInheritanceMixin):
-#
-#     def __init__(self, summary_allele, family, genotype):
-#         SummaryAlleleDelegate.__init__(self, summary_allele=summary_allele)
-#         FamilyInheritanceMixin.__init__(self, family=family, genotype=genotype)
-#
-#         gt = np.copy(genotype)
-#         mask = np.logical_not(
-#             np.logical_or(
-#                 gt == 0,
-#                 gt == self.allele_index
-#             ))
-#         gt[mask] = -1
-#
-#         self.gt = gt
-#
-#     @property
-#     def effects(self):
-#         if self.is_reference_allele:
-#             return None
-#         return [self.effect]
-#
-#     def __iter__(self):
-#         yield self
-#
-#     def __repr__(self):
-#         if not self.alternative:
-#             return '{}:{} {}(ref) {}'.format(
-#                 self.chromosome, self.position,
-#                 self.reference, self.family_id)
-#         else:
-#             return '{}:{} {}->{} {}'.format(
-#                 self.chromosome, self.position,
-#                 self.reference, self.alternative,
-#                 self.family_id)
-#
-#     @property
-#     def best_st(self):
-#         assert self.gt is not None
-#
-#         if self._best_st is None:
-#             ref = (2 * np.ones(len(self.family), dtype=np.int8))
-#             alt_alleles = self.calc_alt_alleles(self.gt)
-#             assert len(alt_alleles) <= 1
-#
-#             if not alt_alleles:
-#                 alt = np.zeros(len(self.family), dtype=np.int8)
-#             else:
-#                 anum = next(iter(alt_alleles))
-#                 alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-#                 alt_gt[self.gt == anum] = 1
-#
-#                 alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-#                 ref = ref - alt
-#
-#                 unknown = np.sum(self.gt == -1, axis=0)
-#                 ref = ref - unknown
-#
-#             best = [ref, alt]
-#             self._best_st = np.stack(best, axis=0)
-#             unknown = np.any(self.gt == -1, axis=0)
-#             self._best_st[1, unknown] = -1
-#
-#         return self._best_st
-
-
 class SummaryVariantDelegate(SummaryVariant):
 
     def __init__(self, summary_variant=None, **kwargs):
@@ -576,3 +494,7 @@ class FamilyVariant(SummaryVariantDelegate, FamilyInheritanceMixin):
             self._best_st[:, unknown] = -1
 
         return self._best_st
+
+    @property
+    def variant_types(self):
+        return set([aa.details.variant_type for aa in self.alt_alleles])

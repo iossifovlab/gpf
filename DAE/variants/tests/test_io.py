@@ -55,9 +55,9 @@ def test_annotation_parquet(variants_vcf, fixture_name, temp_filename):
 
 @pytest.mark.parametrize("fixture_name,storage", [
     ("fixtures/effects_trio_multi", "csv"),
-    # ("fixtures/effects_trio_multi", "parquet"),
+    ("fixtures/effects_trio_multi", "parquet"),
     ("fixtures/effects_trio", "csv"),
-    # ("fixtures/effects_trio", "parquet"),
+    ("fixtures/effects_trio", "parquet"),
 ])
 def test_serialize_deserialize(
         fixture_name, variants_vcf, storage, temp_filename):
@@ -76,44 +76,3 @@ def test_serialize_deserialize(
     assert annot_df is not None
 
     assert_annotation_equals(annot_df, fvars.annot_df)
-
-
-# def test_parquet_dataset():
-#     from variants.default_settings import DATA_DIR
-#     prefix = os.path.join(DATA_DIR, "pspark")
-#     dataset = pq.ParquetDataset(os.path.join(prefix, "summary"))
-#     print("metadata:", dataset.metadata)
-#     print("schema:", dataset.schema)
-#     print("partitions:", dataset.partitions)
-#     print("pieces:", dataset.pieces)
-#     print("split_row_groups:", dataset.split_row_groups)
-#     print("common_metadata:", dataset.common_metadata)
-#     print("fs:", dataset.fs)
-#
-#     table = dataset.read()
-#     print(dir(table))
-#
-#     print("dir:", dir(dataset))
-#
-#     df = table.to_pandas()
-#     print("Len: ", len(df))
-
-
-# @pytest.mark.slow
-# def test_parquet_dask_dataframe():
-#     from variants.default_settings import DATA_DIR
-#     # dataset = os.path.join(DATA_DIR, "pspark/family/*.parquet")
-#     dataset = os.path.join(DATA_DIR, "pspark/summary01/*.parquet")
-#
-#     df = dd.read_parquet(dataset, engine='pyarrow')
-#     assert df is not None
-#
-#     print("npartitions:", df.npartitions)
-#     print("divisions:", df.divisions)
-#     print("meta:", df._meta)
-#     print("meta_noempty:", df._meta_nonempty)
-#     print(dir(df))
-#
-#     # df = df[df.inheritance != Inheritance.unknown.value]
-#     print("head:", df.head())
-#     # print("size:", df.size.compute())

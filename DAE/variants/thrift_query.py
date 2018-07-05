@@ -35,6 +35,7 @@ stage_two_transformers = {
     'personId': QueryTreeToSQLListTransformer("variant_in_members"),
     'roles': QueryTreeToSQLListTransformer("variant_in_roles"),
     'sexes': QueryTreeToSQLListTransformer("variant_in_sexes"),
+    'variant_type': QueryTreeToSQLTransformer("variant_type"),
     'position': QueryTreeToSQLTransformer("S.position"),
     'chrom': QueryTreeToSQLTransformer("S.chrom"),
     'alternative': QueryTreeToSQLTransformer("S.alternative"),
@@ -59,6 +60,10 @@ Q = """
         S.summary_index,
         S.allele_index,
         S.split_from_multi_allelic,
+        S.variant_type,
+        S.cshl_variant,
+        S.cshl_position,
+        S.cshl_length,
         S.effect_type,
         S.effect_gene_genes,
         S.effect_gene_types,
@@ -131,6 +136,7 @@ VARIANT_QUERIES = [
 SUMMARY_SUBQUERIES = [
     'effect_types',
     'genes',
+    'variant_type',
 ]
 
 

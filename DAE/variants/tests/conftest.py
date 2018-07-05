@@ -36,6 +36,7 @@ from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
 from variants.raw_df import DfFamilyVariants
 import time
 from variants.raw_thrift import ThriftFamilyVariants
+from variants.annotate_variant_details import VcfVariantDetailsAnnotator
 
 
 @pytest.fixture(scope='session')
@@ -49,9 +50,16 @@ def allele_freq_annotator():
 
 
 @pytest.fixture(scope='session')
-def composite_annotator(effect_annotator, allele_freq_annotator):
+def variant_details_annotator():
+    return VcfVariantDetailsAnnotator()
+
+
+@pytest.fixture(scope='session')
+def composite_annotator(
+        variant_details_annotator, effect_annotator, allele_freq_annotator):
 
     return AnnotatorComposite(annotators=[
+        variant_details_annotator,
         effect_annotator,
         allele_freq_annotator,
     ])
