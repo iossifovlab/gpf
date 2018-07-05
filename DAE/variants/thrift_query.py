@@ -30,7 +30,7 @@ stage_one_transformers = {
 
 
 stage_two_transformers = {
-    'effect_type': QueryTreeToSQLListTransformer("effect_gene_types"),
+    'effect_types': QueryTreeToSQLListTransformer("effect_gene_types"),
     'genes': QueryTreeToSQLListTransformer("effect_gene_genes"),
     'personId': QueryTreeToSQLListTransformer("variant_in_members"),
     'roles': QueryTreeToSQLListTransformer("variant_in_roles"),
@@ -44,9 +44,7 @@ stage_two_transformers = {
 
 Q = """
     SELECT
-        F.chrom as chrom_fv,
-        F.position as position_fv,
-        F.summary_index as summary_index_fv,
+        F.family_index,
         F.family_id,
         F.genotype,
         F.inheritance,
@@ -77,11 +75,17 @@ Q = """
 
 
 AQ = """
-    S.summary_index IN (SELECT
-        S.summary_index
-    FROM parquet.`{family}` AS F FULL OUTER JOIN parquet.`{summary}` AS S
-    ON S.summary_index = F.summary_index
+    F.family_index IN (SELECT
+        F2S.family_index
+    FROM parquet.`{f2s}` AS F2S JOIN parquet.`{summary}` AS S
+    ON F2S.summary_index = S.summary_index 
+        AND F2S.allele_index = S.allele_index
     WHERE {where})
+"""
+
+F2S_Q = """
+
+
 """
 
 
@@ -121,16 +125,20 @@ VARIANT_QUERIES = [
     'inheritance',
     'roles',
     'sexes',
+    # 'effect_types',
 ]
 
 SUMMARY_SUBQUERIES = [
+    'effect_types',
 ]
 
 
-def thrift_query(thrift_connection, summary, family, limit=2000, **kwargs):
+def thrift_query(
+        thrift_connection, summary, family, f2s, limit=2000, **kwargs):
     final_query = Q.format(
         summary=summary,
         family=family,
+        f2s=f2s,
     )
 
     variant_queries = []
@@ -148,6 +156,7 @@ def thrift_query(thrift_connection, summary, family, limit=2000, **kwargs):
         aq = AQ.format(
             summary=summary,
             family=family,
+            f2s=f2s,
             where=where
         )
         variant_queries.append(aq)

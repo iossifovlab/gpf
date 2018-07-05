@@ -33,6 +33,7 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         assert os.path.exists(self.config.pedigree)
         assert os.path.exists(self.config.summary)
         assert os.path.exists(self.config.family)
+        assert os.path.exists(self.config.f2s)
 
         if not thrift_connection:
             thrift_connection = connect(
@@ -46,18 +47,32 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         self.families_build(self.ped_df, family_class=Family)
 
     def query_variants(self, **kwargs):
+        if kwargs.get("effect_types") is not None:
+            effect_types = kwargs.get("effect_types")
+            if isinstance(effect_types, list):
+                effect_types = " or ".join(effect_types)
+                kwargs["effect_types"] = effect_types
+
         df = thrift_query(
             thrift_connection=self.connection,
             summary=self.config.summary,
             family=self.config.family,
+            f2s=self.config.f2s,
             **kwargs
         )
-        print(df.genotype, type(df.genotype.values))
+        print(df[['effect_gene_types', 'effect_gene_genes']])
+        # print(df.effect_gene_types, type(df.effect_gene_types.values))
         df.genotype = df.genotype.apply(
             lambda v: np.fromstring(v.strip("[]"), dtype=np.int8, sep=','))
-        print(df.genotype, type(df.genotype.values))
-        print(df[["summary_index", "allele_index",  # "allele_index_fv",
-                  "reference",
-                  "alternative",  # "alternative_fv",
-                  "family_id"]])
+
+        def s2a(v):
+            if v is None:
+                return []
+            else:
+                return v.strip("[]").split(",")
+        df.effect_gene_types = df.effect_gene_types.apply(s2a)
+        df.effect_gene_genes = df.effect_gene_genes.apply(s2a)
+
+        print(df[['effect_gene_types', 'effect_gene_genes']])
+
         return self.wrap_variants(self.families, df)

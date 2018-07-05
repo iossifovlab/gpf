@@ -31,7 +31,8 @@ from variants.attributes_query import PARSER as attributes_query_parser, \
 from variants.attributes_query import \
     parser_with_ambiguity as attributes_query_parser_with_ambiguity
 from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
-    save_family_variants_df_to_parquet, save_ped_df_to_parquet
+    save_family_variants_df_to_parquet, save_ped_df_to_parquet,\
+    save_f2s_df_to_parquet
 from variants.raw_df import DfFamilyVariants
 import time
 from variants.raw_thrift import ThriftFamilyVariants
@@ -69,11 +70,34 @@ def testing_thriftserver(request):
     from impala.dbapi import connect
 
     spark_home = os.environ.get("SPARK_HOME")
-    thrift_port = os.environ.get("THRIFTSERVER_PORT")
-
     assert spark_home is not None
 
-    start_cmd = "{}/sbin/start-thriftserver.sh".format(spark_home)
+    thrift_port = os.environ.get("THRIFTSERVER_PORT")
+    if thrift_port is not None:
+        thrift_port = int(thrift_port)
+    else:
+        thrift_port = 10000
+
+    def thrift_connect():
+        for count in range(10):
+            try:
+                time.sleep(2.0)
+                print("trying to connect to thrift server: try={}".format(
+                    count))
+                conn = connect(host='127.0.0.1', port=thrift_port,
+                               auth_mechanism='PLAIN')
+                return conn
+            except Exception as ex:
+                print("connect to thriftserver failed:", ex)
+        return None
+
+    conn = thrift_connect()
+    if conn is not None:
+        return conn
+
+    start_cmd = "{}/sbin/start-thriftserver.sh " \
+        "--hiveconf hive.server2.thrift.port={}".format(
+            spark_home, thrift_port)
     stop_cmd = "{}/sbin/stop-thriftserver.sh".format(spark_home)
 
     def fin():
@@ -81,32 +105,11 @@ def testing_thriftserver(request):
         os.system(stop_cmd)
     request.addfinalizer(fin)
 
-    print("thrift port passed: {}".format(thrift_port))
-
-    if thrift_port is not None:
-        thrift_port = int(thrift_port)
-        start_cmd = "{} --hiveconf hive.server2.thrift.port={}".format(
-            start_cmd, thrift_port)
-    else:
-        thrift_port = 10000
-    print("thrift port got: {}".format(thrift_port))
-
     print("starting thrift command: ", start_cmd)
     status = os.system(start_cmd)
     assert status == 0
 
-    for count in range(10):
-        try:
-            time.sleep(2.0)
-            print("trying to connect to testing thrift server: try={}".format(
-                count))
-            conn = connect(host='127.0.0.1', port=thrift_port,
-                           auth_mechanism='PLAIN')
-            return conn
-        except Exception as ex:
-            print("connect to thriftserver failed:", ex)
-
-    return None
+    return thrift_connect()
 
 
 @pytest.fixture
@@ -172,23 +175,23 @@ def variants_df(variants_vcf):
         fvars = variants_vcf(path)
         summary_df = fvars.annot_df
         ped_df = fvars.ped_df
-        vars_df = family_variants_df(
+        vars_df, f2s_df = family_variants_df(
             fvars.query_variants(
-                # inheritance="not reference"
             ))
-        return DfFamilyVariants(ped_df, summary_df, vars_df)
+        return DfFamilyVariants(ped_df, summary_df, vars_df, f2s_df)
     return builder
 
 
 @pytest.fixture(scope='session')
 def variants_thrift(parquet_variants, testing_thriftserver):
     def builder(path):
-        pedigree, summary, family = parquet_variants(path)
+        pedigree, summary, family, f2s = parquet_variants(path)
         config = Configure.from_dict({
             'parquet': {
                 'pedigree': pedigree,
                 'summary': summary,
                 'family': family,
+                'f2s': f2s,
             }
         })
         return ThriftFamilyVariants(
@@ -203,7 +206,7 @@ def parquet_variants(request, variants_df):
 
     def fin():
         shutil.rmtree(dirname)
-    request.addfinalizer(fin)
+    # request.addfinalizer(fin)
 
     def builder(path):
         print("path:", path, os.path.basename(path))
@@ -213,13 +216,17 @@ def parquet_variants(request, variants_df):
             fulldirname, "summary.parquet")
         family_filename = os.path.join(
             fulldirname, "family.parquet")
+        f2s_filename = os.path.join(
+            fulldirname, "f2s.parquet")
         pedigree_filename = os.path.join(
             fulldirname, "pedigree.parquet")
 
         if os.path.exists(summary_filename) and \
                 os.path.exists(family_filename) and \
+                os.path.exists(f2s_filename) and \
                 os.path.exists(pedigree_filename):
-            return pedigree_filename, summary_filename, family_filename
+            return pedigree_filename, summary_filename, \
+                family_filename, f2s_filename
 
         if not os.path.exists(fulldirname):
             os.mkdir(fulldirname)
@@ -230,8 +237,10 @@ def parquet_variants(request, variants_df):
         fvars = variants_df(path)
         save_summary_to_parquet(fvars.summary_df, summary_filename)
         save_family_variants_df_to_parquet(fvars.vars_df, family_filename)
+        save_f2s_df_to_parquet(fvars.f2s_df, f2s_filename)
         save_ped_df_to_parquet(fvars.ped_df, pedigree_filename)
-        return pedigree_filename, summary_filename, family_filename
+        return pedigree_filename, summary_filename, \
+            family_filename, f2s_filename
 
     return builder
 

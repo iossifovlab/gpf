@@ -40,21 +40,8 @@ class DfFamilyVariantsBase(object):
 
     @staticmethod
     def wrap_variants(families, join_df):
-        print("----------------------------------------------------------")
-        print("join_df before sort")
-        print(join_df[["summary_index", "allele_index",  # "allele_index_fv",
-                       "reference",
-                       "alternative",  # "alternative_fv",
-                       "family_id", "genotype", "inheritance"]])
         join_df = join_df.sort_values(
             by=["summary_index", "family_id", "allele_index"])
-        print("----------------------------------------------------------")
-        print("join_df after sort")
-        print(join_df[["summary_index", "allele_index",  # "allele_index_fv",
-                       "reference",
-                       "alternative",  # "alternative_fv",
-                       "family_id", "genotype", "inheritance"]])
-        print("----------------------------------------------------------")
 
         for _name, group in join_df.groupby(by=["summary_index", "family_id"]):
 
@@ -62,7 +49,8 @@ class DfFamilyVariantsBase(object):
 
                 print(group[["summary_index", "allele_index",
                              "reference",
-                             "alternative",  # "alternative_fv",
+                             "alternative",
+                             "effect_gene_types", "effect_gene_genes",
                              "family_id", "genotype", "inheritance"]])
             rec = group.to_dict(orient='records')
             yield DfFamilyVariantsBase.wrap_family_variant_multi(families, rec)
@@ -70,10 +58,11 @@ class DfFamilyVariantsBase(object):
 
 class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
-    def __init__(self, ped_df, summary_df, vars_df):
+    def __init__(self, ped_df, summary_df, vars_df, f2s_df):
         super(DfFamilyVariants, self).__init__()
         self.summary_df = summary_df
         self.vars_df = vars_df
+        self.f2s_df = f2s_df
         self.ped_df = ped_df
 
         self.families_build(self.ped_df, family_class=Family)
