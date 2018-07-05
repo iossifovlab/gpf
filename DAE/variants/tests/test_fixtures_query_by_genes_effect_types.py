@@ -8,7 +8,7 @@ from RegionOperations import Region
 
 
 @pytest.mark.parametrize("variants", [
-    # "variants_vcf",
+    "variants_vcf",
     # "variants_df",
     "variants_thrift",
 ])
@@ -44,7 +44,7 @@ def test_no_missense_effects(variants_impl, variants):
 
 
 @pytest.mark.parametrize("variants", [
-    # "variants_vcf",
+    "variants_vcf",
     # "variants_df",
     "variants_thrift",
 ])
