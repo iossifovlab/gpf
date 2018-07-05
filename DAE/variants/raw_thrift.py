@@ -50,8 +50,13 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         if kwargs.get("effect_types") is not None:
             effect_types = kwargs.get("effect_types")
             if isinstance(effect_types, list):
-                effect_types = " or ".join(effect_types)
+                effect_types = "any({})".format(",".join(effect_types))
                 kwargs["effect_types"] = effect_types
+        if kwargs.get("genes") is not None:
+            genes = kwargs.get("genes")
+            if isinstance(genes, list):
+                genes = "any({})".format(",".join(genes))
+                kwargs["genes"] = genes
 
         df = thrift_query(
             thrift_connection=self.connection,

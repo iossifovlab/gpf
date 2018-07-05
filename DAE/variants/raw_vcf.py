@@ -230,7 +230,8 @@ class RawFamilyVariants(FamiliesBase):
         return False
 
     def filter_allele(self, v, **kwargs):
-        if 'genes' in kwargs or 'effect_types' in kwargs:
+        if kwargs.get('genes') is not None or \
+                kwargs.get('effect_types') is not None:
             if not self.filter_gene_effects(
                     v, kwargs.get('effect_types'), kwargs.get('genes')):
                 return False

@@ -61,3 +61,33 @@ def test_multi_alt_allele_effects(variants_impl, variants, effect, count):
     for v in vs:
         print(v.effects)
     assert len(vs) == count
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_vcf",
+    # "variants_df",
+    "variants_thrift",
+])
+@pytest.mark.parametrize("regions,effects,genes,count", [
+    (None, None, None, 10),
+    (None, None, ["SAMD11"], 7),
+    (None, None, ["PLEKHN1"], 2),
+    (None, None, ["SCNN1D"], 1),
+    (None, ['synonymous'], ["SAMD11"], 3),
+    (None, ['missense'], ["SAMD11"], 4),
+    (None, ['frame-shift'], ["SAMD11"], 0),
+    (None, ['synonymous'], ["PLEKHN1"], 1),
+    (None, ['missense', 'frame-shift'], ["PLEKHN1"], 1),
+    (None, ['synonymous', 'frame-shift'], ["PLEKHN1"], 2),
+])
+def test_single_alt_allele_genes(
+        variants_impl, variants, regions, effects, genes, count):
+    fvars = variants_impl(variants)("fixtures/effects_trio")
+    vs = list(fvars.query_variants(
+        regions=regions,
+        effect_types=effects,
+        genes=genes,
+    ))
+    for v in vs:
+        print(v.effects)
+    assert len(vs) == count

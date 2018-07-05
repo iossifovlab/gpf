@@ -130,6 +130,7 @@ VARIANT_QUERIES = [
 
 SUMMARY_SUBQUERIES = [
     'effect_types',
+    'genes',
 ]
 
 

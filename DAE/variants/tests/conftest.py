@@ -206,7 +206,7 @@ def parquet_variants(request, variants_df):
 
     def fin():
         shutil.rmtree(dirname)
-    # request.addfinalizer(fin)
+    request.addfinalizer(fin)
 
     def builder(path):
         print("path:", path, os.path.basename(path))
