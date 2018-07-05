@@ -10,13 +10,11 @@ import os
 from impala.util import as_pandas
 
 
-@pytest.mark.spark
 def test_start_stop_thriftserver(testing_thriftserver):
     print("testing_thriftserver:", testing_thriftserver)
     assert testing_thriftserver is not None
 
 
-@pytest.mark.spark
 def test_start_stop_thriftserver2(testing_thriftserver):
     print("testing_thriftserver:", testing_thriftserver)
     assert testing_thriftserver is not None
@@ -31,16 +29,16 @@ def test_start_stop_thriftserver2(testing_thriftserver):
 def test_parquet_variants(
         parquet_variants, fixture_name):
 
-    pedigree_filename, summary_filename, family_filename = \
+    pedigree_filename, summary_filename, family_filename, f2s_filename = \
         parquet_variants(fixture_name)
-    print(pedigree_filename, summary_filename, family_filename)
+    print(pedigree_filename, summary_filename, family_filename, f2s_filename)
 
     assert os.path.exists(pedigree_filename)
     assert os.path.exists(summary_filename)
     assert os.path.exists(family_filename)
+    assert os.path.exists(f2s_filename)
 
 
-@pytest.mark.spark
 @pytest.mark.parametrize("fixture_name, count", [
     ("fixtures/effects_trio_multi", 9),
     ("fixtures/effects_trio", 23),
@@ -51,9 +49,9 @@ def test_parquet_select(
         testing_thriftserver, parquet_variants, fixture_name, count):
     assert testing_thriftserver is not None
 
-    pedigree_filename, summary_filename, family_filename = \
+    pedigree_filename, summary_filename, family_filename, f2s_filename = \
         parquet_variants(fixture_name)
-    print(pedigree_filename, summary_filename, family_filename)
+    print(pedigree_filename, summary_filename, family_filename, f2s_filename)
 
     q = """
     SELECT * FROM parquet.`file://{}` AS A

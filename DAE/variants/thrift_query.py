@@ -78,7 +78,7 @@ AQ = """
     F.family_index IN (SELECT
         F2S.family_index
     FROM parquet.`{f2s}` AS F2S JOIN parquet.`{summary}` AS S
-    ON F2S.summary_index = S.summary_index 
+    ON F2S.summary_index = S.summary_index
         AND F2S.allele_index = S.allele_index
     WHERE {where})
 """
