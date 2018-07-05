@@ -257,7 +257,7 @@ class RawFamilyVariants(FamiliesBase):
             family_ids = kwargs['family_ids']
             if v.family_id not in family_ids:
                 return False
-        if 'person_ids' in kwargs:
+        if kwargs.get('person_ids') is not None:
             person_ids = kwargs['person_ids']
             if not v.variant_in_members & set(person_ids):
                 return False

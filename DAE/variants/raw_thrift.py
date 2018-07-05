@@ -58,6 +58,12 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
                 genes = "any({})".format(",".join(genes))
                 kwargs["genes"] = genes
 
+        if kwargs.get("person_ids") is not None:
+            query = kwargs.get("person_ids")
+            if isinstance(query, list):
+                query = "any({})".format(",".join(query))
+                kwargs["person_ids"] = query
+
         df = thrift_query(
             thrift_connection=self.connection,
             summary=self.config.summary,

@@ -26,13 +26,14 @@ stage_one_transformers = {
     'variant_type': StringQueryToTreeTransformerWrapper(
         token_converter=variant_type_converter),
     'family_ids': StringListQueryToTreeTransformer(),
+    'person_ids': StringQueryToTreeTransformerWrapper(),
 }
 
 
 stage_two_transformers = {
     'effect_types': QueryTreeToSQLListTransformer("effect_gene_types"),
     'genes': QueryTreeToSQLListTransformer("effect_gene_genes"),
-    'personId': QueryTreeToSQLListTransformer("variant_in_members"),
+    'person_ids': QueryTreeToSQLListTransformer("variant_in_members"),
     'roles': QueryTreeToSQLListTransformer("variant_in_roles"),
     'sexes': QueryTreeToSQLListTransformer("variant_in_sexes"),
     'variant_type': QueryTreeToSQLTransformer("variant_type"),
@@ -127,6 +128,7 @@ def query_parts(queries, **kwargs):
 VARIANT_QUERIES = [
     'regions',
     'family_ids',
+    'person_ids',
     'inheritance',
     'roles',
     'sexes',
