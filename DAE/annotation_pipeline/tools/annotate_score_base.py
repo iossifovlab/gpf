@@ -50,12 +50,6 @@ class IterativeAccess(ScoreFile):
         # files with single position column
         chr = self._chr_to_int(chr)
 
-        self.current_lines = [
-            line for line in self.current_lines
-            if line[self.chr_index] > chr or (line[self.chr_index] == chr and \
-                line[self.pos_end_index] >= pos)
-        ]
-
         while len(self.current_lines) == 0 or \
                 self.current_lines[-1][self.pos_begin_index] <= pos or \
                 self.current_lines[-1][self.chr_index] > chr:
@@ -65,10 +59,17 @@ class IterativeAccess(ScoreFile):
             else:
                 break
 
-        return [
-            line for line in self.current_lines
-            if line[self.pos_end_index] >= pos and line[self.chr_index] == chr
-        ]
+        if len(self.current_lines) > 0:
+            del_index = -1
+            for i in range(0, len(self.current_lines)):
+                if self.current_lines[i][self.chr_index] > chr or (self.current_lines[i][self.chr_index] == chr and \
+                        self.current_lines[i][self.pos_end_index] >= pos):
+                    del_index = i-1
+                    break
+            if del_index != -1:
+                del self.current_lines[0:del_index]
+
+        return self.current_lines[:-1]
 
     def _next_line(self):
         line = self.file.readline()
@@ -81,12 +82,6 @@ class IterativeAccess(ScoreFile):
     def _chr_to_int(self, chr):
         chr = chr.replace('chr', '')
         return self.XY_INDEX.get(chr) or int(chr)
-
-    def get_scores(self, chr, pos, *args):
-        for line in self._fetch(chr, pos):
-            if [line[i] for i in self.search_indices] == args:
-                return [line[i] for i in self.scores_indices]
-        return self.scores_default_values
 
 
 class DirectAccess(ScoreFile):
