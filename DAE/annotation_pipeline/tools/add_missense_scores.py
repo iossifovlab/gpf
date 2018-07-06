@@ -68,7 +68,7 @@ class MissenseScoresAnnotator(AnnotatorBase):
                 'p': self.opts.p,
                 'x': self.opts.x,
                 'scores_columns': ','.join(scores),
-                'default_values': '',
+                'default_values': None,
                 'direct': self.opts.direct,
                 'scores_file': self.path.format(chr)
             }

@@ -137,8 +137,8 @@ class ScoreAnnotator(AnnotatorBase):
             sys.stderr.write("You should provide a score file location.\n")
             sys.exit(-78)
         else:
-            if self.opts.default_value is None:
-                self.opts.default_value = ''
+            if self.opts.default_values is None:
+                self.opts.default_values = ','*len(self.scores_columns)
             if self.opts.direct:
                 self.file = DirectAccess(self.opts.scores_file,
                     self.score_file_header,
@@ -154,14 +154,14 @@ class ScoreAnnotator(AnnotatorBase):
     def new_columns(self):
         return self.scores_columns
 
-    def _get_scores(self, chr=None, pos=None, loc=None, *args):
+    def _get_scores(self, new_columns, chr=None, pos=None, loc=None, *args):
         if loc != None:
             chr, pos = loc.split(':')
         if chr != '':
             return self.file.get_scores(chr, int(pos), *args)
         else:
-            return ''
+            return ['' for col in new_columns]
 
     def line_annotations(self, line, new_columns):
         params = [line[i-1] if i!=None else None for i in self.arg_columns]
-        return self._get_scores(*params)
+        return self._get_scores(new_columns, *params)
