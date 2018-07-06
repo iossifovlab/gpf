@@ -32,6 +32,8 @@ def get_argument_parser():
 
 class MissenseScoresAnnotator(AnnotatorBase):
 
+    CHROMOSOMES = [str(i) for i in range(1, 23)] + ['X', 'Y']
+
     def __init__(self, opts, header=None):
         self.opts = opts
         self.header = header
@@ -63,6 +65,8 @@ class MissenseScoresAnnotator(AnnotatorBase):
 
     def _annotator_for(self, chr, scores):
         if chr not in self.annotators:
+            if chr not in self.CHROMOSOMES:
+                return None
             config = {
                 'c': self.opts.c,
                 'p': self.opts.p,
@@ -82,17 +86,21 @@ class MissenseScoresAnnotator(AnnotatorBase):
 
     def _get_chr(self, line):
         if self.loc_idx is not None:
-            return line[self.loc_idx-1].split(':')[0]
+            chr = line[self.loc_idx-1].split(':')[0]
         elif self.chr_idx is not None:
-            return line[self.chr_idx-1]
+            chr = line[self.chr_idx-1]
+        return chr.replace('chr', '')
 
     @property
     def new_columns(self):
         return self.opts.columns
 
     def line_annotations(self, line, new_cols_order):
-        return self._annotator_for(self._get_chr(line), new_cols_order)\
-            .line_annotations(line, new_cols_order)
+        annotator = self._annotator_for(self._get_chr(line), new_cols_order)
+        if annotator is not None:
+            return annotator.line_annotations(line, new_cols_order)
+        else:
+            return ['' for value in new_cols_order]
 
 
 if __name__ == "__main__":
