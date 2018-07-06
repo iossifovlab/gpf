@@ -25,6 +25,7 @@ def get_argument_parser():
         help='read score files using tabix index '
               '(default: read score files iteratively)',
         default=False, action='store_true')
+    parser.add_argument('--reference-genome', choices=['hg19', 'hg38'])
 
     return parser
 
@@ -39,6 +40,13 @@ class MissenseScoresAnnotator(AnnotatorBase):
         if opts.dbnsfp is None:
             opts.dbnsfp = os.path.join(os.environ['dbNSFP_PATH'])
         self.path = opts.dbnsfp
+        if opts.reference_genome is None or \
+                opts.reference_genome == 'hg19':
+            self.score_file_index_columns = ['hg19_chr', 'hg19_pos(1-based)',
+                'ref', 'alt']
+        else:
+            self.score_file_index_columns = ['chr', 'pos(1-based)', 'ref',
+                'alt']
         self.annotators = {}
         self._init_cols()
 
@@ -69,7 +77,7 @@ class MissenseScoresAnnotator(AnnotatorBase):
             self.annotators[chr] = ScoreAnnotator(score_annotator_opts,
                 header=list(self.header), search_columns=[self.opts.r, self.opts.a],
                 score_file_header=None,
-                score_file_index_columns=['chr', 'pos(1-based)', 'ref', 'alt'])
+                score_file_index_columns=self.score_file_index_columns)
         return self.annotators[chr]
 
     def _get_chr(self, line):
