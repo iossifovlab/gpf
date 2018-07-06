@@ -6,10 +6,10 @@ Created on Feb 13, 2018
 from __future__ import print_function
 
 import numpy as np
-from variants.family import FamilyInheritanceMixin
+from variants.family import Family
 from variants.vcf_utils import vcf2cshl
 
-from variants.attributes import VariantType
+from variants.attributes import VariantType, Inheritance
 from variants.effects import Effect
 import itertools
 
@@ -37,21 +37,25 @@ class VariantBase(object):
     def __init__(self, chromosome, position, reference,
                  alternative=None):
 
+        #: chromosome on which the variant is located
         self.chromosome = chromosome
+        #: 1-based start postion of this variant on the reference
         self.position = position
+        #: reference DNA string
         self.reference = reference
+
         self._alternative = alternative
 
     @property
     def alternative(self):
+        """
+        alternative DNA string; comman separated string when multiple
+        alternative DNA strings should be represented.
+        """
         return self._alternative
 
-    @property
-    def alts(self):
-        return self.alternative if self.alternative is not None else ""
-
     def __repr__(self):
-        if not self.alts:
+        if not self._alternative:
             return '{}:{} {} (ref)'.format(
                 self.chromosome, self.position,
                 self.reference)
@@ -59,29 +63,13 @@ class VariantBase(object):
             return '{}:{} {}->{}'.format(
                 self.chromosome, self.position,
                 self.reference,
-                ",".join(self.alts))
-
-    def start(self):
-        """
-        The 1-based start position of this variant on the reference contig.
-        VCF column 2 "POS" converted to 1-based coordinate system,
-        closed-open intervals
-        """
-        return self.position
-
-    def end(self):
-        """
-        The 1-based, exclusive end position of this variant on the reference
-        contig. Calculated by start + length of reference allele.
-        """
-        return self.position + len(self.reference)
+                self._alternative)
 
     def __eq__(self, other):
         return self.chromosome == other.chromosome and \
             self.position == other.position and \
             self.reference == other.reference and \
-            len(self.alts) == len(other.alts) and \
-            all([a1 == a2 for (a1, a2) in zip(self.alts, other.alts)])
+            self.alternative == other.alternative
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -96,6 +84,10 @@ class VariantBase(object):
 
 
 class AltAlleleItems(object):
+    """
+    1-based list for representing list of items relevant to the list
+    of alternative alleles.
+    """
 
     def __init__(self, items, alt_alleles=None):
         if not hasattr(items, '__iter__'):
@@ -176,19 +168,7 @@ class VariantDetail(object):
 
 class SummaryAllele(VariantBase):
     """
-    `AlleleSummary` represents summary variants for given position.
-
-    :ivar alts: 1-based list of alternative DNA strings describing the variant
-    :ivar effect: 1-based list of :class:`variants.variant.Effect`, that
-          describes variant effects.
-
-    :ivar frequency: 0-base list of frequencies for variant.
-    :ivar alt_alleles: list of alternative alleles indexes
-    :ivar atts: Additional attributes describing this variant.
-    :ivar details: 1-based list of `VariantDetails`, that describes variant.
-    :ivar effect: 1-based list of `Effect` for each alternative allele.
-
-    :effect: 1-based list of `Effect` for each alternative allele.
+    `SummaryAllele` represents a single allele for given position.
     """
 
     def __init__(self,
@@ -197,37 +177,30 @@ class SummaryAllele(VariantBase):
                  reference,
                  alternative=None,
                  summary_index=None,
-                 allele_index=1,
+                 allele_index=0,
                  effect=None,
                  frequency=None,
-                 attributes=None,
-                 split_from_multi_allelic=False):
-        """
-        Expected parameters of the constructor are:
-
-        :param chromosome: chromosome label where variant is located
-        :param position: position of the variant using *VCF* convention
-        :param reference: reference DNA string
-        :param alternative: alternative DNA string
-        :param atts: additional variant attributes
-        """
+                 attributes=None):
         super(SummaryAllele, self).__init__(
             chromosome, position, reference, alternative)
 
+        #: index of the summary variant this allele belongs to
         self.summary_index = summary_index
+        #: index of the allele of summary variant
         self.allele_index = allele_index
-        self.split_from_multi_allelic = split_from_multi_allelic
 
         if alternative is None:
             self.details = None
         else:
             self.details = VariantDetail.from_vcf(
                 chromosome, position, reference, alternative)
-
+        #: variant effect of the allele; None for the reference allele.
         self.effect = effect
+        #: frequency of the allele
         self.frequency = frequency
 
         if attributes is None:
+            #: allele additional attributes
             self.attributes = {}
         else:
             self.attributes = {}
@@ -261,28 +234,16 @@ class SummaryAllele(VariantBase):
     def __getitem__(self, item):
         """
         allows using of standard dictionary access to additional variant
-        attributes. For example `sv['all.altFreq']` will return value matching
-        key `all.altFreq` from addtional variant attributes.
+        attributes. For example `sv['af_parents_called']` will return value
+        matching key `af_parents_called` from addtional variant attributes.
         """
         return self.get_attribute(item)
 
     def __contains__(self, item):
         """
-        checks if additional variant attributes contains value for key `item`.
+        checks if additional variant attributes contain value for key `item`.
         """
         return item in self.attribute
-
-
-class SummaryAlleleDelegate(SummaryAllele):
-
-    def __init__(self, summary_allele=None, **kwargs):
-        assert summary_allele is not None
-        assert isinstance(summary_allele, SummaryAllele)
-
-        self.delegate = summary_allele
-
-    def __getattr__(self, name):
-        return getattr(self.delegate, name)
 
 
 class SummaryVariant(VariantBase):
@@ -295,26 +256,18 @@ class SummaryVariant(VariantBase):
 
         self.alleles = alleles
         self.ref_allele = alleles[0]
-        self.alt_allels = alleles[1:]
-
-        self.summary_index = self.ref_allele.summary_index
+        self.alt_alleles = alleles[1:]
 
         super(SummaryVariant, self).__init__(
             self.ref_allele.chromosome,
             self.ref_allele.position,
             self.ref_allele.reference)
 
-        self.alt_alleles = alleles[1:]
-
-    @property
-    def alts(self):
-        return ','.join([aa.alternative for aa in self.alt_alleles])
+        self.summary_index = self.ref_allele.summary_index
 
     @property
     def alternative(self):
-        if len(self.alt_alleles) != 1:
-            raise ValueError()
-        return self.alt_alleles[0].alternative
+        return ','.join([aa.alternative for aa in self.alt_alleles])
 
     @property
     def details(self):
@@ -322,7 +275,7 @@ class SummaryVariant(VariantBase):
         1-based list of `VariantDetails`, that describes each
         alternative allele.
         """
-        if len(self.alt_alleles) == 0:
+        if not self.alt_alleles:
             return None
         return AltAlleleItems([sa.details for sa in self.alt_alleles])
 
@@ -331,7 +284,7 @@ class SummaryVariant(VariantBase):
         """
         1-based list of `Effect`, that describes variant effects.
         """
-        if len(self.alt_alleles) == 0:
+        if not self.alt_alleles:
             return None
         return AltAlleleItems([sa.effect for sa in self.alt_alleles])
 
@@ -341,6 +294,13 @@ class SummaryVariant(VariantBase):
         0-base list of frequencies for variant.
         """
         return [sa.frequency for sa in self.alleles]
+
+    @property
+    def variant_types(self):
+        """
+        returns set of variant types.
+        """
+        return set([aa.details.variant_type for aa in self.alt_alleles])
 
     def get_attribute(self, item, default=None):
         return [sa.get_attribute(item, default) for sa in self.alt_alleles]
@@ -362,83 +322,25 @@ class SummaryVariant(VariantBase):
                 sa.update_attributes({key: val})
 
 
-class SummaryVariantFactory(object):
+class FamilyVariant(SummaryVariant):
 
-    @staticmethod
-    def summary_allele_from_record(row):
-        if not isinstance(row['effect_type'], str):
-            effects = None
-        else:
-            effects = Effect.from_effects(
-                row['effect_type'],
-                zip(row['effect_gene_genes'], row['effect_gene_types']),
-                zip(row['effect_details_transcript_ids'],
-                    row['effect_details_details']))
-        alternative = row['alternative']
-
-        return SummaryAllele(
-            row['chrom'], row['position'],
-            row['reference'],
-            alternative=alternative,
-            summary_index=row['summary_index'],
-            allele_index=row['allele_index'],
-            effect=effects,
-            frequency=row['af_allele_freq'],
-            attributes=row,
-            split_from_multi_allelic=row['split_from_multi_allelic'])
-
-    @staticmethod
-    def summary_variant_from_records(records):
-        """
-        Factory method for constructing `SummaryVariant` from dictionary.
-
-        The dictionary should contain following elements:
-
-        * `chr` - chromosome label
-        * `position` - a VCF style start positon of the variant
-        * `refA` - reference allele for variant
-        * `altA` - list of alternative alleles
-        * `effectType` - list of worst effects matching each alternative
-           allele.
-        * `effectGene` - list of effect type and gene symbol for each
-           alternative alleles.
-        * `effectDetails` - list of transcript effects matching eash
-           alternative alleles.
-        * `all.refFreq` - frequency of the reference allele
-        * `all.altFreq` - list of frequencies for each the alternative alleles.
-
-        All elements of the dictionary `row` are stored as additional
-        attributes of the variant. These attributes are accessible through
-        `get_attr`, `has_attr`, `__getitem__` and `__contains__` methods of
-        summary variant.
-        """
-        assert len(records) > 0
-
-        alleles = []
-        for row in records:
-            sa = SummaryVariantFactory.summary_allele_from_record(row)
-            alleles.append(sa)
-
-        return SummaryVariant(alleles)
-
-
-class SummaryVariantDelegate(SummaryVariant):
-
-    def __init__(self, summary_variant=None, **kwargs):
+    def __init__(self, summary_variant, family, genotype):
         assert summary_variant is not None
         assert isinstance(summary_variant, SummaryVariant)
 
         self.summary_variant = summary_variant
 
-    def __getattr__(self, name):
-        return getattr(self.summary_variant, name)
+        assert family is not None
+        assert genotype is not None
+        assert isinstance(family, Family)
 
+        self.family = family
+        self._best_st = None
+        self._inheritance = None
+        self._variant_in_members = None
+        self._variant_in_roles = None
+        self._variant_in_sexes = None
 
-class FamilyVariant(SummaryVariantDelegate, FamilyInheritanceMixin):
-
-    def __init__(self, summary_variant, family, genotype):
-        SummaryVariantDelegate.__init__(self, summary_variant=summary_variant)
-        FamilyInheritanceMixin.__init__(self, family=family, genotype=genotype)
         self.gt = np.copy(genotype)
         alleles = [summary_variant.ref_allele]
 
@@ -448,23 +350,38 @@ class FamilyVariant(SummaryVariantDelegate, FamilyInheritanceMixin):
         self.alleles = alleles
         self.alt_alleles = AltAlleleItems(alleles[1:])
 
-    @property
-    def alts(self):
-        if len(self.alt_alleles) == 0:
-            return ""
-        else:
-            return ",".join([aa.alternative for aa in self.alt_alleles])
+    def __getattr__(self, name):
+        return getattr(self.summary_variant, name)
 
     def __repr__(self):
-        if not self.alts:
+        if not self.alternative:
             return '{}:{} {}(ref) {}'.format(
                 self.chromosome, self.position,
                 self.reference, self.family_id)
         else:
             return '{}:{} {}->{} {}'.format(
                 self.chromosome, self.position,
-                self.reference, self.alts,
+                self.reference, self.alternative,
                 self.family_id)
+
+    @property
+    def members_in_order(self):
+        return self.family.members_in_order
+
+    @property
+    def members_ids(self):
+        return self.family.members_ids
+
+    @property
+    def family_id(self):
+        return self.family.family_id
+
+    @property
+    def genotype(self):
+        return self.gt.T
+
+    def gt_flatten(self):
+        return self.gt.flatten(order='F')
 
     @property
     def best_st(self):
@@ -488,7 +405,6 @@ class FamilyVariant(SummaryVariantDelegate, FamilyInheritanceMixin):
 
             best = [ref]
             best.extend(balt)
-            print(best)
 
             self._best_st = np.stack(best, axis=0)
             self._best_st[:, unknown] = -1
@@ -496,5 +412,181 @@ class FamilyVariant(SummaryVariantDelegate, FamilyInheritanceMixin):
         return self._best_st
 
     @property
-    def variant_types(self):
-        return set([aa.details.variant_type for aa in self.alt_alleles])
+    def inheritance(self):
+        if self._inheritance is None:
+            inherits = []
+            if np.any(self.gt == -1):
+                self._inheritance = Inheritance.unknown
+            elif np.all(self.gt == 0):
+                self._inheritance = Inheritance.reference
+            else:
+                for _pid, trio in self.family.trios.items():
+                    index = self.family.members_index(trio)
+                    tgt = self.gt[:, index]
+                    ch = tgt[:, 0]
+                    p1 = tgt[:, 1]
+                    p2 = tgt[:, 2]
+
+                    inherits.append(self.calc_inheritance_trio(p1, p2, ch))
+                self._inheritance = self.combine_inheritance(*inherits)
+
+        return self._inheritance
+
+    def is_reference(self):
+        return self.inheritance == Inheritance.reference
+
+    def is_mendelian(self):
+        return self.inheritance == Inheritance.mendelian
+
+    def is_denovo(self):
+        return self.inheritance == Inheritance.denovo
+
+    def is_omission(self):
+        return self.inheritance == Inheritance.omission
+
+    @property
+    def variant_in_members(self):
+        if self._variant_in_members is None:
+            gt = np.copy(self.gt)
+            gt[gt == -1] = 0
+            index = np.nonzero(np.sum(gt, axis=0))
+            self._variant_in_members = set(self.members_ids[index])
+        return self._variant_in_members
+
+    @property
+    def variant_in_roles(self):
+        if self._variant_in_roles is None:
+            self._variant_in_roles = [
+                self.family.persons[pid]['role']
+                for pid in self.variant_in_members
+            ]
+        return self._variant_in_roles
+
+    @property
+    def variant_in_sexes(self):
+        if self._variant_in_sexes is None:
+            self._variant_in_sexes = set([
+                self.family.persons[pid]['sex']
+                for pid in self.variant_in_members
+            ])
+        return self._variant_in_sexes
+
+    @staticmethod
+    def calc_alt_alleles(gt):
+        return sorted(list(set(gt.flatten()).difference({-1, 0})))
+
+    @staticmethod
+    def calc_alleles(gt):
+        return sorted(list(set(gt.flatten()).difference({-1})))
+
+    @classmethod
+    def calc_alt_allele_index(cls, gt):
+        alt_alleles = cls.calc_alt_alleles(gt)
+        alt_count = len(alt_alleles)
+        if alt_count > 1 or alt_count == 0:
+            return None
+        else:
+            alt_index, = tuple(alt_alleles)
+            return alt_index - 1
+
+    @staticmethod
+    def check_mendelian_trio(p1, p2, ch):
+        m1 = (ch[0] == p1[0] or ch[0] == p1[1]) and \
+            (ch[1] == p2[0] or ch[1] == p2[1])
+        m2 = (ch[0] == p2[0] or ch[0] == p2[1]) and \
+            (ch[1] == p1[0] or ch[1] == p1[1])
+        return m1 or m2
+
+    @staticmethod
+    def check_denovo_trio(p1, p2, ch):
+        new_alleles = set(ch).difference(set(p1) | set(p2))
+        return bool(new_alleles)
+
+    @staticmethod
+    def check_omission_trio(p1, p2, ch):
+        child_alleles = set(ch)
+        p1res = False
+        p2res = False
+
+        if p1[0] == p1[1]:
+            p1res = not bool(p1[0] in child_alleles)
+        if p2[0] == p2[1]:
+            p2res = not bool(p2[0] in child_alleles)
+
+        return p1res or p2res
+
+    @classmethod
+    def calc_inheritance_trio(cls, p1, p2, ch):
+        if cls.check_mendelian_trio(p1, p2, ch):
+            return Inheritance.mendelian
+        elif cls.check_denovo_trio(p1, p2, ch):
+            return Inheritance.denovo
+        elif cls.check_omission_trio(p1, p2, ch):
+            return Inheritance.omission
+        else:
+            print("strange inheritance:", p1, p2, ch)
+            return Inheritance.unknown
+
+    @staticmethod
+    def combine_inheritance(*inheritance):
+        inherits = np.array([i.value for i in inheritance])
+        inherits = np.array(inherits)
+        if len(inherits) == 0 or np.any(inherits == Inheritance.unknown.value):
+            return Inheritance.unknown
+        elif np.all(inherits == Inheritance.mendelian.value):
+            return Inheritance.mendelian
+        elif np.all(np.logical_or(
+                inherits == Inheritance.mendelian.value,
+                inherits == Inheritance.denovo.value)):
+            return Inheritance.denovo
+        elif np.all(np.logical_or(
+                inherits == Inheritance.mendelian.value,
+                inherits == Inheritance.omission.value)):
+            return Inheritance.omission
+        elif np.all(np.logical_or(
+                inherits == Inheritance.mendelian.value,
+                np.logical_or(
+                    inherits == Inheritance.omission.value,
+                    inherits == Inheritance.denovo.value
+                ))):
+            return Inheritance.other
+        else:
+            print("strange inheritance:", inherits)
+            return Inheritance.unknown
+
+
+class SummaryVariantFactory(object):
+
+    @staticmethod
+    def summary_allele_from_record(record):
+        if not isinstance(record['effect_type'], str):
+            effects = None
+        else:
+            effects = Effect.from_effects(
+                record['effect_type'],
+                zip(record['effect_gene_genes'],
+                    record['effect_gene_types']),
+                zip(record['effect_details_transcript_ids'],
+                    record['effect_details_details']))
+        alternative = record['alternative']
+
+        return SummaryAllele(
+            record['chrom'], record['position'],
+            record['reference'],
+            alternative=alternative,
+            summary_index=record['summary_index'],
+            allele_index=record['allele_index'],
+            effect=effects,
+            frequency=record['af_allele_freq'],
+            attributes=record)
+
+    @staticmethod
+    def summary_variant_from_records(records):
+        assert len(records) > 0
+
+        alleles = []
+        for record in records:
+            sa = SummaryVariantFactory.summary_allele_from_record(record)
+            alleles.append(sa)
+
+        return SummaryVariant(alleles)

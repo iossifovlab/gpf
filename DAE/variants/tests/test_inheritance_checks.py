@@ -5,7 +5,7 @@ Created on Feb 27, 2018
 '''
 import numpy as np
 from variants.attributes import Inheritance
-from variants.family import FamilyInheritanceMixin as FV
+from variants.variant import FamilyVariant as FV
 
 
 def test_denovo_check():

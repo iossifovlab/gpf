@@ -41,9 +41,9 @@ def test_fix_broken_trios2_11602_variants(variants_df):
 
     assert v0.summary_variant == v1.summary_variant
     sv = v0.summary_variant
-    assert sv.alts == "G,A"
-    assert v0.alts == "A"
-    assert v1.alts == ""
+    assert sv.alternative == "G,A"
+    assert v0.alternative == "A"
+    assert v1.alternative == ""
 
 
 def test_fix_broken_trios2_11605_variants(variants_df):
@@ -61,9 +61,9 @@ def test_fix_broken_trios2_11605_variants(variants_df):
 
     assert v0.summary_variant == v1.summary_variant
     sv = v0.summary_variant
-    assert sv.alts == "G,A"
-    assert v0.alts == "G,A"
-    assert v1.alts == "G,A"
+    assert sv.alternative == "G,A"
+    assert v0.alternative == "G,A"
+    assert v1.alternative == "G,A"
 
 
 @pytest.mark.parametrize("fixture_name", [

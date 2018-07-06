@@ -53,33 +53,24 @@ Example usage of `variants` package::
     :show-inheritance:
 
     
-Family - representation of a family
------------------------
-    
-.. autoclass:: variants.family.Family
-    :members:
-    :undoc-members:
-    :special-members: __init__, __len__
-
-
-VcfFamily - representation of a family with some specialization for VCF variants
------------------------
-    
-.. autoclass:: variants.family.VcfFamily
-    :members:
-    :undoc-members:
-    :special-members: __init__, __len__
-    :inherited-members:
-
-
 
 VariantBase - a base class for variants
------------------------
+---------------------------------------
     
 .. autoclass:: variants.variant.VariantBase
-    :members: chromosome, start, reference, alternatives
+    :members:
     :undoc-members:
-    :special-members: __eq__, __ne__, __lt__, __gt__
+    :special-members: __init__, __eq__, __ne__, __lt__, __gt__
+
+
+SummaryAllele - a base class for representing alleles
+-----------------------------------------------------
+    
+.. autoclass:: variants.variant.SummaryAllele
+    :members:
+    :undoc-members:
+    :special-members: __init__
+    :inherited-members:
 
 
 SummaryVariant - representation of summary variants
@@ -92,12 +83,13 @@ SummaryVariant - representation of summary variants
     :inherited-members:
 
 FamilyVariant - representation of family variants
----------------------------------------------------
+-------------------------------------------------
 
 .. autoclass:: variants.variant.FamilyVariant
     :members:
-    :special-members: __init__, __getitem__, __contains__ 
+    :special-members: __init__, __getattr__
     :undoc-members:
+    :inherited-members:
 
 
 
@@ -108,3 +100,32 @@ variants.family module
     :members:
     :undoc-members:
     :show-inheritance:
+
+Family - representation of a family
+-----------------------------------
+    
+.. autoclass:: variants.family.Family
+    :members:
+    :undoc-members:
+    :special-members: __init__, __len__
+
+
+VcfFamily - family specialization for VCF variants
+--------------------------------------------------
+    
+.. autoclass:: variants.raw_vcf.VcfFamily
+    :members:
+    :undoc-members:
+    :special-members: __init__
+    :inherited-members:
+
+    
+RawFamilyVariants - query interface for VCF variants
+----------------------------------------------------
+
+.. autoclass:: variants.raw_vcf.RawFamilyVariants
+    :members:
+    :undoc-members:
+    :inherited-members:
+    
+

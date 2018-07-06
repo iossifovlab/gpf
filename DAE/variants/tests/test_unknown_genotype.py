@@ -18,7 +18,7 @@ def test_query_regions(ustudy_vcf):
 
     v = vl[0]
 
-    print(v, v.alts)
+    print(v, v.alternative)
     print(v.gt)
     print(v.best_st)
 

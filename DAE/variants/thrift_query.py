@@ -60,7 +60,6 @@ Q = """
         S.alternative,
         S.summary_index,
         S.allele_index,
-        S.split_from_multi_allelic,
         S.variant_type,
         S.cshl_variant,
         S.cshl_position,

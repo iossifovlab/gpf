@@ -4,7 +4,7 @@ Created on Feb 27, 2018
 @author: lubo
 '''
 from variants.attributes import Inheritance
-from variants.family import FamilyInheritanceMixin as FV
+from variants.variant import FamilyVariant as FV
 
 
 def test_combine_inherits_unknown():

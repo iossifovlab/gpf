@@ -5,8 +5,6 @@ Created on Jul 1, 2018
 '''
 from __future__ import print_function
 
-from variants.vcf_utils import mat2str
-
 
 def test_fix_broken_trios2_11602_variants(variants_df):
 
@@ -23,9 +21,9 @@ def test_fix_broken_trios2_11602_variants(variants_df):
 
     assert v0.summary_variant == v1.summary_variant
     sv = v0.summary_variant
-    assert sv.alts == "G,A"
-    assert v0.alts == "A"
-    assert v1.alts == ""
+    assert sv.alternative == "G,A"
+    assert v0.alternative == "A"
+    assert v1.alternative == ""
 
 
 def test_fix_broken_trios2_11605_variants(variants_df):
@@ -43,9 +41,9 @@ def test_fix_broken_trios2_11605_variants(variants_df):
 
     assert v0.summary_variant == v1.summary_variant
     sv = v0.summary_variant
-    assert sv.alts == "G,A"
-    assert v0.alts == "G,A"
-    assert v1.alts == "G,A"
+    assert sv.alternative == "G,A"
+    assert v0.alternative == "G,A"
+    assert v1.alternative == "G,A"
 
 
 def test_inspect_broken_trios2_11602_variants(variants_vcf):
@@ -64,9 +62,9 @@ def test_inspect_broken_trios2_11602_variants(variants_vcf):
 
     assert v0.summary_variant == v1.summary_variant
     sv = v0.summary_variant
-    assert sv.alts == "G,A"
-    assert v0.alts == "A"
-    assert v1.alts == ""
+    assert sv.alternative == "G,A"
+    assert v0.alternative == "A"
+    assert v1.alternative == ""
 
 #  FIXME:
 #     for ai in range(3):
@@ -75,6 +73,6 @@ def test_inspect_broken_trios2_11602_variants(variants_vcf):
 
 #     for fa in v0:
 #         print(fa)
-# 
+#
 #     for fa in v1:
 #         print(fa)

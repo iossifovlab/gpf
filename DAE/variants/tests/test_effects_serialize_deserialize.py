@@ -18,7 +18,7 @@ def test_serialize_deserialize_worst_effect(
     fvars = variants_vcf("fixtures/effects_trio_multi")
     vs = fvars.query_variants(regions=[region])
     for v in vs:
-        print(v, v.alts)
+        print(v, v.alternative)
         effects1 = effect_annotator.do_annotate_variant(
             v.chromosome, v.position,
             v.reference, v.alt_alleles[1].alternative)
