@@ -49,8 +49,9 @@ class VariantBase(object):
     @property
     def alternative(self):
         """
-        alternative DNA string; comman separated string when multiple
-        alternative DNA strings should be represented.
+        alternative DNA string; comma separated string when multiple
+        alternative DNA strings should be represented; alternative is None
+        when the variant is a reference variant.
         """
         return self._alternative
 
@@ -267,6 +268,8 @@ class SummaryVariant(VariantBase):
 
     @property
     def alternative(self):
+        if not self.alt_alleles:
+            return None
         return ','.join([aa.alternative for aa in self.alt_alleles])
 
     @property

@@ -43,7 +43,7 @@ def test_fix_broken_trios2_11602_variants(variants_df):
     sv = v0.summary_variant
     assert sv.alternative == "G,A"
     assert v0.alternative == "A"
-    assert v1.alternative == ""
+    assert v1.alternative is None
 
 
 def test_fix_broken_trios2_11605_variants(variants_df):

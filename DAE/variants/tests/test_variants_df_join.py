@@ -23,7 +23,7 @@ def test_fix_broken_trios2_11602_variants(variants_df):
     sv = v0.summary_variant
     assert sv.alternative == "G,A"
     assert v0.alternative == "A"
-    assert v1.alternative == ""
+    assert v1.alternative is None
 
 
 def test_fix_broken_trios2_11605_variants(variants_df):
@@ -64,15 +64,4 @@ def test_inspect_broken_trios2_11602_variants(variants_vcf):
     sv = v0.summary_variant
     assert sv.alternative == "G,A"
     assert v0.alternative == "A"
-    assert v1.alternative == ""
-
-#  FIXME:
-#     for ai in range(3):
-#         fv = FamilyVariant(v0.summary_variant, v0.family, v0.gt, ai)
-#         print(ai, ":", fv, mat2str(fv.gt), mat2str(fv.best_st))
-
-#     for fa in v0:
-#         print(fa)
-#
-#     for fa in v1:
-#         print(fa)
+    assert v1.alternative is None

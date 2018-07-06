@@ -9,43 +9,6 @@ import pyarrow.parquet as pq
 from variants.attributes import Role, Sex
 
 
-def summary_parquet_schema():
-    effect_gene = pa.struct([
-        pa.field("gene", pa.string()),
-        pa.field("type", pa.string())
-    ])
-
-    assert effect_gene is not None
-
-    effect_details = pa.struct([
-        pa.field("transcript_id", pa.string()),
-        pa.field("detail", pa.string())
-    ])
-    assert effect_details is not None
-
-    fields = [
-        pa.field("chrom", pa.string()),
-        pa.field("position", pa.int64()),
-        pa.field("reference", pa.string()),
-        pa.field("alternative", pa.string()),
-        pa.field("summary_index", pa.int64()),
-        pa.field("allele_index", pa.int8()),
-        pa.field("variant_type", pa.int8()),
-        pa.field("cshl_variant", pa.string()),
-        pa.field("cshl_position", pa.int64()),
-        pa.field("cshl_length", pa.int32()),
-        pa.field("effect_type", pa.string()),
-        pa.field("effect_gene", pa.list_(effect_gene)),
-        pa.field("effect_details", pa.list_(effect_details)),
-        pa.field("af_parents_called_count", pa.int32()),
-        pa.field("af_parents_called_percent", pa.float32()),
-        pa.field("af_allele_count", pa.int32()),
-        pa.field("af_allele_freq", pa.float32()),
-    ]
-
-    return pa.schema(fields)
-
-
 def summary_parquet_schema_flat():
 
     fields = [

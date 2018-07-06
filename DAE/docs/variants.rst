@@ -42,9 +42,9 @@ Example usage of `variants` package::
     
     for c, v in enumerate(vs):
         print(c, v, v.family_id, mat2str(v.best_st), sep='\t')
-        for aa in v.falt_alleles:
-            print(v.effect[aa].worst, v.effect[aa].gene)
-            print(v['all.nAltAlls'][aa], v['all.altFreq'][aa])
+        for aa in v.alt_alleles:
+            print(aa.effect.worst, aa.effect.gene)
+            print(aa['af_allele_count'], aa['af_allele_freq'])
 
 
 .. automodule:: variants
@@ -129,3 +129,87 @@ RawFamilyVariants - query interface for VCF variants
     :inherited-members:
     
 
+Apache Parquet variants schema
+------------------------------
+
+Summary Variants/Alleles flat schema
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+* **chrom** (`string`) - chromosome where variant is located
+* **position** (`int64`) - 1-based position of the start of the variant
+* **reference** (`string`) - reference DNA string 
+* **alternative** (`string`) - alternative DNA string (None for reference allele)
+* **summary_index** (`int64`) - index of the summary variant
+* **allele_index** (`int16`) - index of the allele inside given summary variant
+* **variant_type** (`int8`) - variant type in CSHL nottation
+* **cshl_variant** (`string`) - variant description in CSHL notation
+* **cshl_position** (` int64`) - variant position in CSHL notation
+* **cshl_length** (`int32`) - variant length in CSHL notation
+* **effect_type** (`string`) - worst effect of the variant (None for reference allele)
+* **effect_gene_genes** (`list_(string)`) - list of all genes affected by 
+    the variant allele (None for reference allele)
+* **effect_gene_types** (`list_(string)`) - list of all effect types 
+    corresponding to the `effect_gene_genes` (None for reference allele)
+* **effect_details_transcript_ids** (`list_(string)`) - list of all transcript ids
+    affected by the variant allele (None for reference allele)
+* **effect_details_details** (`list_(string)`) - list of all effected details
+    corresponding to the `effect_details_transcript_ids` (None for reference allele)
+* **af_parents_called_count** (`int32`) - count of independent parents that has
+    well specified genotype for this allele
+* **af_parents_called_percent** (`float64`) - parcent of independent parents
+    corresponding to `af_parents_called_count`
+* **af_allele_count** (`int32`) - count of this allele in the independent parents
+* **af_allele_freq** (`float64`) - allele frequency
+
+
+Family Variants schema
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+* **chrom** (`string`)
+* **position** (`int64`)
+* **family_index** (`int64`) - index of the family variant
+* **summary_index** (`int64`) - index of the summary variant
+* **family_id** (`string`) - family ID
+* **genotype** (`list_(int8)`) - genotype of the variant for the specified family
+* **inheritance** (`int32`) - inheritance type of the variant
+* **variant_in_members** (`list_(string)`) - list of members of the family that
+    have this variant
+* **variant_in_roles** (`list_(int32)`) - list of family members' roles that
+    have this variant
+* **variant_in_sexes** (`list_(int8)`) - list of family members' sexes that
+    have this variant
+
+
+Family-to-Summary mapping
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+* **family_index** (`int64`)
+* **summary_index** (`int64`)
+* **allele_index** (`int16`)
+
+Pedigree file schema
+^^^^^^^^^^^^^^^^^^^^
+
+* **familyId** (`string`)
+* **personId** (`string`)
+* **dadId** (`string`)
+* **momId** (`string`)
+* **sex** (`int8`)
+* **status** (`int8`)
+* **role** (`int32`)
+* **sampleId** (`string`)
+
+
+Functions from `parquet_io` module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+.. automodule:: variants.parquet_io
+    :members:
+    :undoc-members:
+
+    
+    

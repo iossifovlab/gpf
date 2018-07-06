@@ -318,12 +318,12 @@ class RawFamilyVariants(FamiliesBase):
         for v in vs:
             if not self.filter_variant(v, **kwargs):
                 continue
-            matched = False
+            allele_matched = False
             for va in v.alleles:
                 if self.filter_allele(va, **kwargs):
-                    matched = True
+                    allele_matched = True
                     break
-            if matched:
+            if allele_matched:
                 yield v
 
     def wrap_variants(self, annot_df):
