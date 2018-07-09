@@ -13,7 +13,7 @@ import pytest
 # import dask.dataframe as dd
 
 from variants.loader import RawVariantsLoader
-from variants.tests.common import assert_annotation_equals
+from variants.tests.common_tests_helpers import assert_annotation_equals
 
 
 from variants.parquet_io import \

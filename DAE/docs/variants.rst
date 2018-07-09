@@ -75,10 +75,29 @@ SummaryVariant - representation of summary variants
     :undoc-members:
     :inherited-members:
 
+FamilyInheritanceMixture - common inheritance methods
+-----------------------------------------------------
+
+.. autoclass:: variants.family_variant.FamilyInheritanceMixture
+    :members:
+    :undoc-members:
+    :inherited-members:
+
+
+
+FamilyAllele - representation of family allele
+----------------------------------------------
+
+.. autoclass:: variants.family_variant.FamilyAllele
+    :members:
+    :special-members: __getattr__
+    :undoc-members:
+    :inherited-members:
+
 FamilyVariant - representation of family variants
 -------------------------------------------------
 
-.. autoclass:: variants.variant.FamilyVariant
+.. autoclass:: variants.family_variant.FamilyVariant
     :members:
     :special-members: __getattr__
     :undoc-members:
@@ -126,7 +145,7 @@ Apache Parquet variants schema
 ------------------------------
 
 Summary Variants/Alleles flat schema
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * **chrom** (string) - 

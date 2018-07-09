@@ -8,7 +8,7 @@ from variants.parquet_io import family_variants_table,\
     save_family_variants_df_to_parquet, read_family_variants_df_from_parquet,\
     save_ped_df_to_parquet, read_ped_df_from_parquet, save_f2s_df_to_parquet,\
     read_f2s_df_from_parquet
-from variants.tests.common import assert_annotation_equals
+from variants.tests.common_tests_helpers import assert_annotation_equals
 
 
 @pytest.mark.parametrize("fixture_name", [

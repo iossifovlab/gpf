@@ -127,24 +127,33 @@ class FamilyInheritanceMixture(object):
 
     @staticmethod
     def calc_alt_alleles(gt):
+        """
+        Returns alternative allele indexes that are relevant for the
+        given genotype.
+        :param gt: genotype as `np.array`.
+        :return: list of all alternative allele indexes present into
+        genotype passed.
+        """
         return sorted(list(set(gt.flatten()).difference({-1, 0})))
 
     @staticmethod
     def calc_alleles(gt):
+        """
+        Returns allele indexes that are relevant for the given genotype.
+        :param gt: genotype as `np.array`.
+        :return: list of all allele indexes present into genotype passed.
+        """
         return sorted(list(set(gt.flatten()).difference({-1})))
-
-    @classmethod
-    def calc_alt_allele_index(cls, gt):
-        alt_alleles = cls.calc_alt_alleles(gt)
-        alt_count = len(alt_alleles)
-        if alt_count > 1 or alt_count == 0:
-            return None
-        else:
-            alt_index, = tuple(alt_alleles)
-            return alt_index - 1
 
     @staticmethod
     def check_mendelian_trio(p1, p2, ch):
+        """
+        Checks if the inheritance type for a trio family is `mendelian`.
+        :param p1: genotype of the first parent
+        :param p2: genotype of the second parent.
+        :param ch: genotype of the child.
+        :return: True, when the inheritance is mendelian.
+        """
         m1 = (ch[0] == p1[0] or ch[0] == p1[1]) and \
             (ch[1] == p2[0] or ch[1] == p2[1])
         m2 = (ch[0] == p2[0] or ch[0] == p2[1]) and \
