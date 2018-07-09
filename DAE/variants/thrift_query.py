@@ -50,9 +50,6 @@ Q = """
         F.family_id,
         F.genotype,
         F.inheritance,
-        F.variant_in_members,
-        F.variant_in_roles,
-        F.variant_in_sexes,
 
         S.chrom,
         S.position,
@@ -127,17 +124,17 @@ def query_parts(queries, **kwargs):
 VARIANT_QUERIES = [
     'regions',
     'family_ids',
-    'person_ids',
     'inheritance',
-    'roles',
-    'sexes',
     # 'effect_types',
 ]
 
-SUMMARY_SUBQUERIES = [
+ALLELE_SUBQUERIES = [
     'effect_types',
     'genes',
     'variant_type',
+    'person_ids',
+    'roles',
+    'sexes',
 ]
 
 
@@ -158,7 +155,7 @@ def thrift_query(
     variant_queries.extend(
         query_parts(VARIANT_QUERIES, **kwargs))
 
-    allele_queries = query_parts(SUMMARY_SUBQUERIES, **kwargs)
+    allele_queries = query_parts(ALLELE_SUBQUERIES, **kwargs)
     if allele_queries:
         where = ' AND '.join(["({})".format(q) for q in allele_queries])
         aq = AQ.format(

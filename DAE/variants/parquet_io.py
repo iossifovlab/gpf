@@ -81,9 +81,6 @@ def family_variant_parquet_schema():
         pa.field("family_id", pa.string()),
         pa.field("genotype", pa.list_(pa.int8())),
         pa.field("inheritance", pa.int32()),
-        pa.field("variant_in_members", pa.list_(pa.string())),
-        pa.field("variant_in_roles", pa.list_(pa.int32())),
-        pa.field("variant_in_sexes", pa.list_(pa.int8())),
     ]
 
     return pa.schema(fields)
@@ -94,6 +91,9 @@ def f2s_parquet_schema():
         pa.field("family_index", pa.int64()),
         pa.field("summary_index", pa.int64()),
         pa.field("allele_index", pa.int16()),
+        pa.field("variant_in_members", pa.list_(pa.string())),
+        pa.field("variant_in_roles", pa.list_(pa.int32())),
+        pa.field("variant_in_sexes", pa.list_(pa.int8())),
     ]
     return pa.schema(fields)
 
@@ -110,20 +110,31 @@ def family_variants_batch(variants):
         "family_id": [],
         "genotype": [],
         "inheritance": [],
-        "variant_in_members": [],
-        "variant_in_roles": [],
-        "variant_in_sexes": [],
     }
     f2s_data = {
         "family_index": [],
         "summary_index": [],
         "allele_index": [],
+        "variant_in_members": [],
+        "variant_in_roles": [],
+        "variant_in_sexes": [],
     }
     for family_index, vs in enumerate(variants):
         for allele in vs.alleles:
             f2s_data["family_index"].append(family_index)
             f2s_data["summary_index"].append(vs.summary_index)
             f2s_data["allele_index"].append(allele.allele_index)
+            if allele.is_reference_allele:
+                f2s_data["variant_in_members"].append(None)
+                f2s_data["variant_in_roles"].append(None)
+                f2s_data["variant_in_sexes"].append(None)
+            else:
+                f2s_data["variant_in_members"].append(
+                    [unicode(m, "utf-8") for m in allele.variant_in_members])
+                f2s_data["variant_in_roles"].append(
+                    [r.value for r in allele.variant_in_roles])
+                f2s_data["variant_in_sexes"].append(
+                    [s.value for s in allele.variant_in_sexes])
 
         family_data["chrom"].append(vs.chromosome)
         family_data["position"].append(vs.position)
@@ -132,15 +143,9 @@ def family_variants_batch(variants):
         family_data["family_id"].append(vs.family_id)
         family_data["genotype"].append(vs.gt_flatten())
         family_data["inheritance"].append(vs.inheritance.value)
-        family_data["variant_in_members"].append(
-            [unicode(m, "utf-8") for m in vs.variant_in_members])
-        family_data["variant_in_roles"].append(
-            [r.value for r in vs.variant_in_roles])
-        family_data["variant_in_sexes"].append(
-            [s.value for s in vs.variant_in_sexes])
 
     f2s_batch_data = []
-    for name in ["family_index", "summary_index", "allele_index"]:
+    for name in f2s_schema.names:
         assert name in f2s_data
         column = f2s_data[name]
         field = f2s_schema.field_by_name(name)

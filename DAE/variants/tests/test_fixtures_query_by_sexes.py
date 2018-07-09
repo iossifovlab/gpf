@@ -9,7 +9,7 @@ import pytest
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     # "variants_df",
-    # "variants_thrift",
+    "variants_thrift",
 ])
 @pytest.mark.parametrize("fixture_name,sexes,count", [
     ("fixtures/effects_trio_dad", 'male', 1),
@@ -30,7 +30,7 @@ def test_fixture_query_by_sex(
     assert len(vs) == count
 
 
-@pytest.mark.skip("needs fixing")
+@pytest.mark.skip("raw_df needs fixing")
 @pytest.mark.parametrize("fixture_name,sexes,count", [
     ("fixtures/effects_trio_dad", 'male', 1),
     ("fixtures/effects_trio_dad", 'female', 1),
