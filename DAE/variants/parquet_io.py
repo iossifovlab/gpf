@@ -103,8 +103,6 @@ def family_variants_batch(variants):
     f2s_schema = f2s_parquet_schema()
 
     family_data = {
-        "chrom": [],
-        "position": [],
         "family_index": [],
         "summary_index": [],
         "family_id": [],

@@ -47,13 +47,6 @@ Example usage of `variants` package::
             print(aa['af_allele_count'], aa['af_allele_freq'])
 
 
-.. automodule:: variants
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-    
-
 VariantBase - a base class for variants
 ---------------------------------------
     
@@ -87,7 +80,7 @@ FamilyVariant - representation of family variants
 
 .. autoclass:: variants.variant.FamilyVariant
     :members:
-    :special-members: __init__, __getattr__
+    :special-members: __getattr__
     :undoc-members:
     :inherited-members:
 
