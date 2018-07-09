@@ -7,6 +7,7 @@ from __future__ import print_function
 import numpy as np
 from variants.family_variant import FamilyVariant
 from variants.vcf_utils import mat2str
+import pytest
 
 
 def test_family_allele_genotype(fv1):
@@ -24,83 +25,47 @@ def test_family_allele_genotype(fv1):
                   FamilyVariant.get_allele_genotype(gt, 2))
 
 
-def test_family_variant_best_st(fv1):
-    v = fv1(
-        np.array([[0, 0, 1],
-                  [0, 0, 2]])
-    )
+@pytest.mark.parametrize("gt,bs", [
+    (np.array([[0, 0, 1], [0, 0, 2]]), "220/001/001"),
+    (np.array([[0, 0, 1], [0, 0, 0]]), "221/001/000"),
+    (np.array([[0, 0, 0], [0, 0, 2]]), "221/000/001"),
+    (np.array([[0, 0, 0], [0, 0, 0]]), "222/000/000"),
+])
+def test_family_variant_best_st(fv1, gt, bs):
+    v = fv1(gt)
     print(v)
     print(mat2str(v.best_st))
-    assert mat2str(v.best_st) == "220/001/001"
+    assert mat2str(v.best_st) == bs
 
-    v = fv1(
-        np.array([[0, 0, 1],
-                  [0, 0, 0]])
-    )
+
+@pytest.mark.parametrize("gt,bs", [
+    (np.array([[-1, 0, 1], [0, 0, 2]]), "?20/?01/?01"),
+    (np.array([[-1, 0, 1], [0, 0, 0]]), "?21/?01/?00"),
+    (np.array([[-1, 0, 0], [0, 0, 2]]), "?21/?00/?01"),
+    (np.array([[-1, 0, 0], [0, 0, 0]]), "?22/?00/?00"),
+])
+def test_family_variant_unknown_best_st(fv1, gt, bs):
+    v = fv1(gt)
     print(v)
     print(mat2str(v.best_st))
-    assert mat2str(v.best_st) == "221/001/000"
-
-    v = fv1(
-        np.array([[0, 0, 0],
-                  [0, 0, 2]])
-    )
-    print(v)
-    print(mat2str(v.best_st))
-    assert mat2str(v.best_st) == "221/000/001"
-
-    v = fv1(
-        np.array([[0, 0, 0],
-                  [0, 0, 0]])
-    )
-    print(v)
-    print(mat2str(v.best_st))
-    assert mat2str(v.best_st) == "222/000/000"
+    assert mat2str(v.best_st) == bs
 
 
-def test_family_variant_unknown_best_st(fv1):
-    v = fv1(
-        np.array([[-1, 0, 1],
-                  [0, 0, 2]])
-    )
-    print(v)
-    print(mat2str(v.best_st))
-    assert mat2str(v.best_st) == "?20/?01/?01"
+@pytest.mark.parametrize("gt,bs0,bs1", [
+    (np.array([[0, 0, 1], [0, 0, 2]]), "22?/00?", "22?/00?"),
+    (np.array([[0, 0, 1], [0, 0, 0]]), "221/001", None),
+    (np.array([[0, 0, 2], [0, 0, 0]]), "221/001", None),
+    (np.array([[0, 0, 0], [0, 0, 0]]), None, None)
+])
+def test_family_multi_allele_best_st(fv1, gt, bs0, bs1):
+    v = fv1(gt)
 
-    v = fv1(
-        np.array([[-1, 0, 1],
-                  [0, 0, 0]])
-    )
-    print(v)
-    print(mat2str(v.best_st))
-    assert mat2str(v.best_st) == "?21/?01/?00"
+    if bs0:
+        fa0 = v.alt_alleles[0]
+        print(fa0, mat2str(fa0.best_st))
+        assert mat2str(fa0.best_st) == bs0
 
-    v = fv1(
-        np.array([[-1, 0, 0],
-                  [0, 0, 2]])
-    )
-    print(v)
-    print(mat2str(v.best_st))
-    assert mat2str(v.best_st) == "?21/?00/?01"
-
-    v = fv1(
-        np.array([[-1, 0, 0],
-                  [0, 0, 0]])
-    )
-    print(v)
-    print(mat2str(v.best_st))
-    assert mat2str(v.best_st) == "?22/?00/?00"
-
-
-def test_family_allele_best_st(fv1):
-    v = fv1(
-        np.array([[0, 0, 1],
-                  [0, 0, 2]])
-    )
-    print(v)
-    print(mat2str(v.best_st))
-    assert mat2str(v.best_st) == "220/001/001"
-
-    fa0 = v.alt_alleles[0]
-    fa1 = v.alt_alleles[1]
-
+    if bs1:
+        fa1 = v.alt_alleles[1]
+        print(fa1, mat2str(fa1.best_st))
+        assert mat2str(fa1.best_st) == bs1

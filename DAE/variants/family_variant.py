@@ -28,6 +28,25 @@ class FamilyInheritanceMixture(object):
         self._variant_in_sexes = None
 
     @property
+    def best_st(self):
+        if self._best_st is None:
+            ref = (2 * np.ones(len(self.family), dtype=np.int8))
+            unknown = np.any(self.gt == -1, axis=0)
+
+            alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+            alt_gt[self.gt == self.allele_index] = 1
+
+            alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+            ref = ref - alt
+
+            best = [ref, alt]
+
+            self._best_st = np.stack(best, axis=0)
+            self._best_st[:, unknown] = -1
+
+        return self._best_st
+
+    @property
     def members_in_order(self):
         return self.family.members_in_order
 
@@ -230,7 +249,7 @@ class FamilyVariant(SummaryVariant, FamilyInheritanceMixture):
 
             alleles.append(fa)
         self.alleles = alleles
-        self.alt_alleles = AltAlleleItems(alleles[1:])
+        self.alt_alleles = alleles[1:]
 
     def __getattr__(self, name):
         return getattr(self.summary_variant, name)
@@ -253,18 +272,13 @@ class FamilyVariant(SummaryVariant, FamilyInheritanceMixture):
             unknown = np.any(self.gt == -1, axis=0)
 
             balt = []
-            if len(self.alleles) == 1:
+            for aa in self.summary_variant.alt_alleles:
                 alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-                balt.append(alt)
-            else:
-                for anum, _ in enumerate(self.alt_alleles):
-                    alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                    alt_gt[self.gt == (anum + 1)] = 1
+                alt_gt[self.gt == aa.allele_index] = 1
 
-                    alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-                    ref = ref - alt
-                    balt.append(alt)
+                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                ref = ref - alt
+                balt.append(alt)
 
             best = [ref]
             best.extend(balt)
