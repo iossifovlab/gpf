@@ -23,8 +23,7 @@ from variants.annotate_variant_effects import \
     VcfVariantEffectsAnnotator
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
-from variants.variant import SummaryAllele,\
-    FamilyVariant, SummaryVariant
+from variants.variant import SummaryAllele, SummaryVariant
 from variants.attributes_query import PARSER as attributes_query_parser, \
     QueryTransformerMatcher
 
@@ -37,6 +36,7 @@ from variants.raw_df import DfFamilyVariants
 import time
 from variants.raw_thrift import ThriftFamilyVariants
 from variants.annotate_variant_details import VcfVariantDetailsAnnotator
+from variants.family_variants import FamilyVariant
 
 
 @pytest.fixture(scope='session')

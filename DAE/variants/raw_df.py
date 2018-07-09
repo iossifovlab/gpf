@@ -9,10 +9,10 @@ import numpy as np
 import pandas as pd
 
 from variants.family import FamiliesBase, Family
-from variants.variant import SummaryVariantFactory,\
-    FamilyVariant
+from variants.variant import SummaryVariantFactory
 from variants.attributes import Inheritance, Role, Sex
 from variants.attributes_query import role_query, inheritance_query, sex_query
+from variants.family_variants import FamilyVariant
 
 
 class FamilyVariantFactory(object):
