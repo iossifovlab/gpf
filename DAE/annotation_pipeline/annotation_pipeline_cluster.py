@@ -27,7 +27,6 @@ class VariantDBConf(object):
                         for index_file in variant_db_conf.get(section,
                             'transmittedVariants.indexFile').split('\n')
                     ])
-
         self._validate()
 
     def _validate(self):
@@ -47,7 +46,7 @@ class VariantDBConf(object):
 def escape_target(target):
     return target.replace(' ', '\\ ')
 
-def main(config, data_dir, output_dir):
+def main(config, data_dir, output_dir, sge_rreq):
     def to_destination(path):
         return path.replace(data_dir, output_dir)
 
@@ -72,9 +71,10 @@ def main(config, data_dir, output_dir):
 
     log_dir = output_dir + '/log'
     dirs.append(log_dir)
-    print('dirs:\n\tmkdir {}\n'.format(' '.join(dirs)))
+    print('{output_dir}:\n\tmkdir {subdir_list}\n'.format(
+        output_dir=output_dir, subdir_list=' '.join(dirs)))
 
-    cmd_format = ('{target}: dirs\n\t(time'
+    cmd_format = ('{target}: {output_dir}\n\t(SGE_RREQ="{sge_rreq}" time'
         ' annotation_pipeline.py {args}'
         ' "{input_file}" "$@"'
         ' 2> "{log_prefix}-err{job_sufix}.txt") 2> "{log_prefix}-time{job_sufix}.txt"\n')
@@ -83,8 +83,9 @@ def main(config, data_dir, output_dir):
 
     for file in variant_db_conf.denovo_files:
         all_cmds.append(escape_target(to_destination(file)))
-        print(cmd_format.format(target=all_cmds[-1],
-            input_file=file, args=denovo_args, job_sufix='',
+        print(cmd_format.format(target=all_cmds[-1], sge_rreq=sge_rreq,
+            input_file=file, output_dir=output_dir,
+            args=denovo_args, job_sufix='',
             log_prefix=log_dir + '/' + os.path.basename(file)))
 
     transm_args_format = denovo_args + \
@@ -100,8 +101,9 @@ def main(config, data_dir, output_dir):
                 job_sufix = '-part-{chr:0>2}-{pos}'.format(chr=chr_labels.get(chromosome, chromosome), pos=i)
                 file_cmds.append(escape_target(output_file + job_sufix))
                 print(cmd_format.format(target=file_cmds[-1],
+                    sge_rreq=sge_rreq,
                     input_file=file,
-                    output_file=output_file,
+                    output_dir=output_dir,
                     args=transm_args_format.format(
                         chr=chromosome,
                         begin_pos=i*50000000, end_pos=(i+1)*50000000-1),
@@ -109,25 +111,26 @@ def main(config, data_dir, output_dir):
                     job_sufix=job_sufix))
 
         escaped_output_file = escape_target(output_file)
-        print('{target}: {parts}\n\tmerge.sh "$@"\n'.format(
-            target=escaped_output_file,
+        print('{target}: {parts}\n\tSGE_RREQ="{sge_rreq}" merge.sh "$@"\n'.format(
+            target=escaped_output_file, sge_rreq=sge_rreq,
             parts=' '.join(file_cmds)))
 
         all_cmds.append(escaped_output_file + '.bgz')
         print('{bgz_target}: {merge_target}\n\t'
-            'bgzip "$<" && mv "$<.gz" "$@"\n'.format(
-                bgz_target=all_cmds[-1], merge_target=escaped_output_file))
+            'SGE_RREQ="{sge_rreq}" bgzip "$<" && mv "$<.gz" "$@"\n'.format(
+                bgz_target=all_cmds[-1], merge_target=escaped_output_file,
+                sge_rreq=sge_rreq))
 
-    copy_cmd_format = '{target}: dirs\n\tcp "{file}" "$@"\n'
+    copy_cmd_format = '{target}: {output_dir}\n\tSGE_RREQ="{sge_rreq}" cp "{file}" "$@"\n'
     for file in copy_files:
         dest = to_destination(file)
         all_cmds.append(escape_target(dest))
         print(copy_cmd_format.format(target=all_cmds[-1],
-            file=file, dest=dest,
+            output_dir=output_dir, file=file, dest=dest, sge_rreq=sge_rreq,
             log_prefix=log_dir + '/' + os.path.basename(file)))
 
     print(" ".join(["all:"] + all_cmds))
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2], sys.argv[3])
+    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
