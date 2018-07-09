@@ -301,9 +301,9 @@ def fam1():
 @pytest.fixture(scope='session')
 def sv():
     return SummaryVariant([
-        SummaryAllele("1", 11539, "T"),
-        SummaryAllele("1", 11539, "T", "TA"),
-        SummaryAllele("1", 11539, "T", "TG")
+        SummaryAllele("1", 11539, "T", None, 0, 0),
+        SummaryAllele("1", 11539, "T", "TA", 0, 1),
+        SummaryAllele("1", 11539, "T", "TG", 0, 2)
     ])
 
 

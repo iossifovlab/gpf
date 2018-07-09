@@ -21,10 +21,10 @@ def test_serialize_deserialize_worst_effect(
         print(v, v.alternative)
         effects1 = effect_annotator.do_annotate_variant(
             v.chromosome, v.position,
-            v.reference, v.alt_alleles[1].alternative)
+            v.reference, v.alt_alleles[0].alternative)
         effects2 = effect_annotator.do_annotate_variant(
             v.chromosome, v.position,
-            v.reference, v.alt_alleles[2].alternative)
+            v.reference, v.alt_alleles[1].alternative)
         print(effects1, effects2)
         assert worst_effect[0] == effect_annotator.worst_effect(effects1)
         assert worst_effect[1] == effect_annotator.worst_effect(effects2)
@@ -43,10 +43,10 @@ def test_serialize_deserialize_gene_effect(
         print(v)
         effects1 = effect_annotator.do_annotate_variant(
             v.chromosome, v.position,
-            v.reference, v.alt_alleles[1].alternative)
+            v.reference, v.alt_alleles[0].alternative)
         effects2 = effect_annotator.do_annotate_variant(
             v.chromosome, v.position,
-            v.reference, v.alt_alleles[2].alternative)
+            v.reference, v.alt_alleles[1].alternative)
         print(effect_annotator.gene_effect(effects1))
         print(effect_annotator.gene_effect(effects2))
         assert worst_effect[0] == effect_annotator.worst_effect(effects1)
@@ -65,10 +65,10 @@ def test_serialize_deserialize_transcript_effect(
     for v in vs:
         effects1 = effect_annotator.do_annotate_variant(
             v.chromosome, v.position,
-            v.reference, v.alt_alleles[1].alternative)
+            v.reference, v.alt_alleles[0].alternative)
         effects2 = effect_annotator.do_annotate_variant(
             v.chromosome, v.position,
-            v.reference, v.alt_alleles[2].alternative)
+            v.reference, v.alt_alleles[1].alternative)
         print(effect_annotator.transcript_effect(effects1))
         print(effect_annotator.transcript_effect(effects2))
         assert worst_effect[0] == effect_annotator.worst_effect(effects1)

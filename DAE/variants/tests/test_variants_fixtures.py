@@ -7,7 +7,7 @@ from __future__ import print_function
 
 import pytest
 from RegionOperations import Region
-from datasets.helpers import mat2str
+from variants.vcf_utils import mat2str
 
 
 @pytest.mark.parametrize("variants", [
@@ -56,7 +56,7 @@ def test_df_query_multiallelic3_families(
 
     print(mat2str(v.best_st))
 
-    assert mat2str(v.best_st) == "1 1 2/1 0 0/0 1 0"
+    assert mat2str(v.best_st) == "112/100/010/000"
     assert "mom1" in v.variant_in_members
     assert "dad1" in v.variant_in_members
     assert "ch1" not in v.variant_in_members
