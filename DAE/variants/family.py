@@ -6,7 +6,6 @@ Created on Feb 13, 2018
 from __future__ import print_function
 
 import numpy as np
-from variants.attributes import Inheritance
 
 
 class Person(object):

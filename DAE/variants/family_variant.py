@@ -7,52 +7,24 @@ from __future__ import print_function
 
 import numpy as np
 
-from variants.variant import SummaryVariant, AltAlleleItems
+from variants.variant import SummaryVariant, AltAlleleItems, SummaryAllele
 from variants.family import Family
 from variants.attributes import Inheritance
 
 
-class FamilyVariant(SummaryVariant):
+class FamilyInheritanceMixture(object):
 
-    def __init__(self, summary_variant, family, genotype):
-        assert summary_variant is not None
-        assert isinstance(summary_variant, SummaryVariant)
-
-        self.summary_variant = summary_variant
-
+    def __init__(self, family, genotype):
         assert family is not None
         assert genotype is not None
-        assert isinstance(family, Family)
 
         self.family = family
+        self.gt = np.copy(genotype)
         self._best_st = None
         self._inheritance = None
         self._variant_in_members = None
         self._variant_in_roles = None
         self._variant_in_sexes = None
-
-        self.gt = np.copy(genotype)
-        alleles = [summary_variant.ref_allele]
-
-        for allele_index in self.calc_alt_alleles(self.gt):
-            fa = summary_variant.alleles[allele_index]
-            alleles.append(fa)
-        self.alleles = alleles
-        self.alt_alleles = AltAlleleItems(alleles[1:])
-
-    def __getattr__(self, name):
-        return getattr(self.summary_variant, name)
-
-    def __repr__(self):
-        if not self.alternative:
-            return '{}:{} {}(ref) {}'.format(
-                self.chromosome, self.position,
-                self.reference, self.family_id)
-        else:
-            return '{}:{} {}->{} {}'.format(
-                self.chromosome, self.position,
-                self.reference, self.alternative,
-                self.family_id)
 
     @property
     def members_in_order(self):
@@ -72,34 +44,6 @@ class FamilyVariant(SummaryVariant):
 
     def gt_flatten(self):
         return self.gt.flatten(order='F')
-
-    @property
-    def best_st(self):
-        if self._best_st is None:
-            ref = (2 * np.ones(len(self.family), dtype=np.int8))
-            unknown = np.any(self.gt == -1, axis=0)
-
-            balt = []
-            if len(self.alleles) == 1:
-                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-                balt.append(alt)
-            else:
-                for anum, _ in enumerate(self.alt_alleles):
-                    alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                    alt_gt[self.gt == (anum + 1)] = 1
-
-                    alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-                    ref = ref - alt
-                    balt.append(alt)
-
-            best = [ref]
-            best.extend(balt)
-
-            self._best_st = np.stack(best, axis=0)
-            self._best_st[:, unknown] = -1
-
-        return self._best_st
 
     @property
     def inheritance(self):
@@ -243,3 +187,74 @@ class FamilyVariant(SummaryVariant):
         else:
             print("strange inheritance:", inherits)
             return Inheritance.unknown
+
+
+class FamilyAllele(SummaryAllele):
+
+    def __init__(self, summary_allele, family, genotype):
+        pass
+
+
+class FamilyVariant(SummaryVariant, FamilyInheritanceMixture):
+
+    def __init__(self, summary_variant, family, genotype):
+        assert summary_variant is not None
+        assert isinstance(summary_variant, SummaryVariant)
+
+        self.summary_variant = summary_variant
+
+        assert family is not None
+        assert genotype is not None
+        assert isinstance(family, Family)
+
+        FamilyInheritanceMixture.__init__(self, family, genotype)
+
+        alleles = [summary_variant.ref_allele]
+
+        for allele_index in self.calc_alt_alleles(self.gt):
+            fa = summary_variant.alleles[allele_index]
+            alleles.append(fa)
+        self.alleles = alleles
+        self.alt_alleles = AltAlleleItems(alleles[1:])
+
+    def __getattr__(self, name):
+        return getattr(self.summary_variant, name)
+
+    def __repr__(self):
+        if not self.alternative:
+            return '{}:{} {}(ref) {}'.format(
+                self.chromosome, self.position,
+                self.reference, self.family_id)
+        else:
+            return '{}:{} {}->{} {}'.format(
+                self.chromosome, self.position,
+                self.reference, self.alternative,
+                self.family_id)
+
+    @property
+    def best_st(self):
+        if self._best_st is None:
+            ref = (2 * np.ones(len(self.family), dtype=np.int8))
+            unknown = np.any(self.gt == -1, axis=0)
+
+            balt = []
+            if len(self.alleles) == 1:
+                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                balt.append(alt)
+            else:
+                for anum, _ in enumerate(self.alt_alleles):
+                    alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+                    alt_gt[self.gt == (anum + 1)] = 1
+
+                    alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                    ref = ref - alt
+                    balt.append(alt)
+
+            best = [ref]
+            best.extend(balt)
+
+            self._best_st = np.stack(best, axis=0)
+            self._best_st[:, unknown] = -1
+
+        return self._best_st

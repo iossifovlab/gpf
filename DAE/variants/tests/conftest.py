@@ -6,37 +6,35 @@ Created on Feb 7, 2018
 from __future__ import print_function
 
 import StringIO
+import os
+import shutil
+import tempfile
+import time
 
 import pytest
 
-from variants.configure import Configure
-from variants.family import Family
-from variants.loader import RawVariantsLoader
-from variants.raw_vcf import RawFamilyVariants, \
-    VariantFactoryMulti
-import os
-import tempfile
-import shutil
 import numpy as np
-
-from variants.annotate_variant_effects import \
-    VcfVariantEffectsAnnotator
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
-from variants.variant import SummaryAllele, SummaryVariant
+from variants.annotate_variant_details import VcfVariantDetailsAnnotator
+from variants.annotate_variant_effects import \
+    VcfVariantEffectsAnnotator
 from variants.attributes_query import PARSER as attributes_query_parser, \
     QueryTransformerMatcher
-
 from variants.attributes_query import \
     parser_with_ambiguity as attributes_query_parser_with_ambiguity
+from variants.configure import Configure
+from variants.family import Family
+from variants.family_variant import FamilyVariant
+from variants.loader import RawVariantsLoader
 from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
     save_family_variants_df_to_parquet, save_ped_df_to_parquet,\
     save_f2s_df_to_parquet
 from variants.raw_df import DfFamilyVariants
-import time
 from variants.raw_thrift import ThriftFamilyVariants
-from variants.annotate_variant_details import VcfVariantDetailsAnnotator
-from variants.family_variants import FamilyVariant
+from variants.raw_vcf import RawFamilyVariants, \
+    VariantFactoryMulti
+from variants.variant import SummaryAllele, SummaryVariant
 
 
 @pytest.fixture(scope='session')
