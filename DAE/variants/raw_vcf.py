@@ -73,7 +73,7 @@ class VariantFactoryMulti(SummaryVariantFactory):
         assert vcf is not None
         # assert isinstance(family, VcfFamily)
 
-        gt = vcf.gt_idxs[family.alleles]
+        gt = np.copy(vcf.gt_idxs[family.alleles])
         gt = gt.reshape([2, len(family)], order='F')
 
         return VariantFactoryMulti.from_summary_variant(
@@ -231,6 +231,9 @@ class RawFamilyVariants(FamiliesBase):
         return False
 
     def filter_allele(self, v, **kwargs):
+        if kwargs.get('real_attr_filter') is not None:
+            if not self.filter_real_attr(v, kwargs['real_attr_filter']):
+                return False
         if kwargs.get('genes') is not None or \
                 kwargs.get('effect_types') is not None:
             if not self.filter_gene_effects(
@@ -243,8 +246,23 @@ class RawFamilyVariants(FamiliesBase):
             if not query.match(
                     [v.details.variant_type]):
                 return False
-        if 'real_attr_filter' in kwargs:
-            if not self.filter_real_attr(v, kwargs['real_attr_filter']):
+        if kwargs.get('person_ids') is not None:
+            if v.is_reference_allele:
+                return False
+            person_ids = kwargs['person_ids']
+            if not v.variant_in_members & set(person_ids):
+                return False
+        if kwargs.get('roles') is not None:
+            if v.is_reference_allele:
+                return False
+            query = kwargs['roles']
+            if not query.match(v.variant_in_roles):
+                return False
+        if kwargs.get('sexes') is not None:
+            if v.is_reference_allele:
+                return False
+            query = kwargs['sexes']
+            if not query.match(v.variant_in_sexes):
                 return False
         return True
 
@@ -255,18 +273,6 @@ class RawFamilyVariants(FamiliesBase):
         if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
             family_ids = kwargs['family_ids']
             if v.family_id not in family_ids:
-                return False
-        if kwargs.get('person_ids') is not None:
-            person_ids = kwargs['person_ids']
-            if not v.variant_in_members & set(person_ids):
-                return False
-        if 'roles' in kwargs:
-            query = kwargs['roles']
-            if not query.match(v.variant_in_roles):
-                return False
-        if 'sexes' in kwargs:
-            query = kwargs['sexes']
-            if not query.match(v.variant_in_sexes):
                 return False
         if 'inheritance' in kwargs:
             query = kwargs['inheritance']

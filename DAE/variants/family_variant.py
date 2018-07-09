@@ -7,7 +7,7 @@ from __future__ import print_function
 
 import numpy as np
 
-from variants.variant import SummaryVariant, AltAlleleItems, SummaryAllele
+from variants.variant import SummaryVariant, SummaryAllele
 from variants.family import Family
 from variants.attributes import Inheritance
 
@@ -222,9 +222,11 @@ class FamilyInheritanceMixture(object):
 class FamilyAllele(SummaryAllele, FamilyInheritanceMixture):
 
     def __init__(self, summary_allele, family, genotype):
-        self.summary_allele = summary_allele
+        assert isinstance(family, Family)
+        assert isinstance(summary_allele, SummaryAllele)
 
         FamilyInheritanceMixture.__init__(self, family, genotype)
+        self.summary_allele = summary_allele
 
     def __getattr__(self, name):
         return getattr(self.summary_allele, name)
@@ -240,7 +242,9 @@ class FamilyVariant(SummaryVariant, FamilyInheritanceMixture):
 
         FamilyInheritanceMixture.__init__(self, family, genotype)
 
-        alleles = [summary_variant.ref_allele]
+        alleles = [
+            summary_variant.ref_allele,
+        ]
 
         for allele_index in self.calc_alt_alleles(self.gt):
             allele_genotype = self.get_allele_genotype(genotype, allele_index)
