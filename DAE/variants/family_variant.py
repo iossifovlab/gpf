@@ -17,6 +17,7 @@ class FamilyInheritanceMixture(object):
     def __init__(self, family, genotype):
         assert family is not None
         assert genotype is not None
+        assert isinstance(family, Family)
 
         self.family = family
         self.gt = np.copy(genotype)
@@ -188,11 +189,26 @@ class FamilyInheritanceMixture(object):
             print("strange inheritance:", inherits)
             return Inheritance.unknown
 
+    @staticmethod
+    def get_allele_genotype(genotype, allele_index):
+        gt = np.copy(genotype)
+        mask = np.logical_not(np.logical_or(
+            gt == 0,
+            gt == allele_index,
+        ))
+        gt[mask] = -1
+        return gt
 
-class FamilyAllele(SummaryAllele):
+
+class FamilyAllele(SummaryAllele, FamilyInheritanceMixture):
 
     def __init__(self, summary_allele, family, genotype):
-        pass
+        self.summary_allele = summary_allele
+
+        FamilyInheritanceMixture.__init__(self, family, genotype)
+
+    def __getattr__(self, name):
+        return getattr(self.summary_allele, name)
 
 
 class FamilyVariant(SummaryVariant, FamilyInheritanceMixture):
@@ -203,16 +219,15 @@ class FamilyVariant(SummaryVariant, FamilyInheritanceMixture):
 
         self.summary_variant = summary_variant
 
-        assert family is not None
-        assert genotype is not None
-        assert isinstance(family, Family)
-
         FamilyInheritanceMixture.__init__(self, family, genotype)
 
         alleles = [summary_variant.ref_allele]
 
         for allele_index in self.calc_alt_alleles(self.gt):
-            fa = summary_variant.alleles[allele_index]
+            allele_genotype = self.get_allele_genotype(genotype, allele_index)
+            summary_allele = summary_variant.alleles[allele_index]
+            fa = FamilyAllele(summary_allele, family, allele_genotype)
+
             alleles.append(fa)
         self.alleles = alleles
         self.alt_alleles = AltAlleleItems(alleles[1:])

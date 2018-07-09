@@ -129,6 +129,3 @@ class FamiliesBase(object):
 
     def persons_index(self, persons):
         return sorted([p.index for p in persons])
-
-
-
