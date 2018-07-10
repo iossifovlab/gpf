@@ -215,8 +215,8 @@ Family Variants schema
     inheritance type of the variant
 
 
-Family-to-Summary mapping
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Family Alleles schema
+^^^^^^^^^^^^^^^^^^^^
 
 
 * **family_index** (`int64`)
@@ -232,6 +232,15 @@ Family-to-Summary mapping
 * **variant_in_sexes** (`list_(int8)`) - 
     list of family members' sexes that
     have this variant
+
+
+Variant Scores schema
+^^^^^^^^^^^^^^^^^^^^^
+
+* **summary_index** (`int64`)
+* **allele_index** (`int16`)
+* **score_id** (`string` or `int64`)
+* **score_value** (`float64`)
 
 
 Pedigree file schema

@@ -15,6 +15,7 @@ various attributes of the family variants:
     - query by sexes
     - query by family roles
     - query by variant types
+    - query by real value variant attributes (scores).
     - query using general purpose filter function
 
 In the following examples we will assume that `fvars` is an instance of
