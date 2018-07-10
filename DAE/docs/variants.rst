@@ -5,7 +5,6 @@ Variants in families
 --------------------
 
 
-
 Example usage of :ref:`variants`
 --------------------------------
 
@@ -45,6 +44,10 @@ Example usage of `variants` package::
         for aa in v.alt_alleles:
             print(aa.effect.worst, aa.effect.gene)
             print(aa['af_allele_count'], aa['af_allele_freq'])
+
+
+
+.. include:: variants_query.rst
 
 
 VariantBase - a base class for variants
@@ -210,6 +213,16 @@ Family Variants schema
     genotype of the variant for the specified family
 * **inheritance** (`int32`) - 
     inheritance type of the variant
+
+
+Family-to-Summary mapping
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+* **family_index** (`int64`)
+* **summary_index** (`int64`)
+* **allele_index** (`int16`)
+
 * **variant_in_members** (`list_(string)`) - 
     list of members of the family that
     have this variant
@@ -220,14 +233,6 @@ Family Variants schema
     list of family members' sexes that
     have this variant
 
-
-Family-to-Summary mapping
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-* **family_index** (`int64`)
-* **summary_index** (`int64`)
-* **allele_index** (`int16`)
 
 Pedigree file schema
 ^^^^^^^^^^^^^^^^^^^^
@@ -240,6 +245,7 @@ Pedigree file schema
 * **status** (`int8`)
 * **role** (`int32`)
 * **sampleId** (`string`)
+* **order** (`int32`)
 
 
 Functions from `parquet_io` module
