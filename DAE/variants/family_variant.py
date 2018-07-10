@@ -29,44 +29,53 @@ class FamilyInheritanceMixture(object):
 
     @property
     def best_st(self):
-        if self._best_st is None:
-            ref = (2 * np.ones(len(self.family), dtype=np.int8))
-            unknown = np.any(self.gt == -1, axis=0)
-
-            alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-            alt_gt[self.gt == self.allele_index] = 1
-
-            alt = np.sum(alt_gt, axis=0, dtype=np.int8)
-            ref = ref - alt
-
-            best = [ref, alt]
-
-            self._best_st = np.stack(best, axis=0)
-            self._best_st[:, unknown] = -1
-
-        return self._best_st
+        raise NotImplementedError("should be implemented into subclasses")
 
     @property
     def members_in_order(self):
+        """
+        Returns list of the members of the family in the order specified from
+        the pedigree file. Each element of the returned list is an object of
+        type :class:`variants.family.Person`.
+        """
         return self.family.members_in_order
 
     @property
     def members_ids(self):
+        """
+        Returns list of family members IDs.
+        """
         return self.family.members_ids
 
     @property
     def family_id(self):
+        """
+        Returns the family ID.
+        """
         return self.family.family_id
 
     @property
     def genotype(self):
+        """
+        Returns genotype of the family.
+        """
         return self.gt.T
 
     def gt_flatten(self):
+        """
+        Return genotype of the family variant flattened to 1-dimensional
+        array.
+        """
         return self.gt.flatten(order='F')
 
     @property
     def inheritance(self):
+        """
+        Returns the inheritance type of a variant in family. The method
+        splits the family into trios, calculates the inheritance type for
+        each trio and returns the combined inheritance type as
+        :class:`variants.attributes.Inheritance`.
+        """
         if self._inheritance is None:
             inherits = []
             if np.any(self.gt == -1):
@@ -87,19 +96,39 @@ class FamilyInheritanceMixture(object):
         return self._inheritance
 
     def is_reference(self):
+        """
+        Return True if the inheritance type of the family variant is
+        `reference`.
+        """
         return self.inheritance == Inheritance.reference
 
     def is_mendelian(self):
+        """
+        Return True if the inheritance type of the family variant is
+        `medelian`.
+        """
         return self.inheritance == Inheritance.mendelian
 
     def is_denovo(self):
+        """
+        Return True if the inheritance type of the family variant is
+        `denovo`.
+        """
         return self.inheritance == Inheritance.denovo
 
     def is_omission(self):
+        """
+        Return True if the inheritance type of the family variant is
+        `omission`.
+        """
         return self.inheritance == Inheritance.omission
 
     @property
     def variant_in_members(self):
+        """
+        Returns set of members IDs of the family that are affected by
+        this family variant.
+        """
         if self._variant_in_members is None:
             gt = np.copy(self.gt)
             gt[gt == -1] = 0
@@ -109,6 +138,10 @@ class FamilyInheritanceMixture(object):
 
     @property
     def variant_in_roles(self):
+        """
+        Returns set of sexes of the members of the family that are affected by
+        this family variant.
+        """
         if self._variant_in_roles is None:
             self._variant_in_roles = [
                 self.family.persons[pid]['role']
@@ -118,6 +151,10 @@ class FamilyInheritanceMixture(object):
 
     @property
     def variant_in_sexes(self):
+        """
+        Returns set of roles of the members of the family that are affected by
+        this family variant.
+        """
         if self._variant_in_sexes is None:
             self._variant_in_sexes = set([
                 self.family.persons[pid]['sex']
@@ -130,6 +167,7 @@ class FamilyInheritanceMixture(object):
         """
         Returns alternative allele indexes that are relevant for the
         given genotype.
+
         :param gt: genotype as `np.array`.
         :return: list of all alternative allele indexes present into
         genotype passed.
@@ -140,6 +178,7 @@ class FamilyInheritanceMixture(object):
     def calc_alleles(gt):
         """
         Returns allele indexes that are relevant for the given genotype.
+
         :param gt: genotype as `np.array`.
         :return: list of all allele indexes present into genotype passed.
         """
@@ -149,7 +188,8 @@ class FamilyInheritanceMixture(object):
     def check_mendelian_trio(p1, p2, ch):
         """
         Checks if the inheritance type for a trio family is `mendelian`.
-        :param p1: genotype of the first parent
+
+        :param p1: genotype of the first parent (pair of allele indexes).
         :param p2: genotype of the second parent.
         :param ch: genotype of the child.
         :return: True, when the inheritance is mendelian.
@@ -162,11 +202,27 @@ class FamilyInheritanceMixture(object):
 
     @staticmethod
     def check_denovo_trio(p1, p2, ch):
+        """
+        Checks if the inheritance type for a trio family is `denovo`.
+
+        :param p1: genotype of the first parent (pair of allele indexes).
+        :param p2: genotype of the second parent.
+        :param ch: genotype of the child.
+        :return: True, when the inheritance is mendelian.
+        """
         new_alleles = set(ch).difference(set(p1) | set(p2))
         return bool(new_alleles)
 
     @staticmethod
     def check_omission_trio(p1, p2, ch):
+        """
+        Checks if the inheritance type for a trio family is `omission`.
+
+        :param p1: genotype of the first parent (pair of allele indexes).
+        :param p2: genotype of the second parent.
+        :param ch: genotype of the child.
+        :return: True, when the inheritance is mendelian.
+        """
         child_alleles = set(ch)
         p1res = False
         p2res = False
@@ -180,6 +236,15 @@ class FamilyInheritanceMixture(object):
 
     @classmethod
     def calc_inheritance_trio(cls, p1, p2, ch):
+        """
+        Calculates the inheritance type of a trio family.
+
+        :param p1: genotype of the first parent (pair of allele indexes).
+        :param p2: genotype of the second parent.
+        :param ch: genotype of the child.
+        :return: inheritance type as :class:`variants.attributes.Inheritance`
+            of the trio family.
+        """
         if cls.check_mendelian_trio(p1, p2, ch):
             return Inheritance.mendelian
         elif cls.check_denovo_trio(p1, p2, ch):
@@ -192,6 +257,18 @@ class FamilyInheritanceMixture(object):
 
     @staticmethod
     def combine_inheritance(*inheritance):
+        """
+        Combines iheritance types and returns inheritance type as
+        :class:`variants.attributes.Inheritance`.
+
+        To calculate the inheritance of a non-trio family, it is split into
+        trios, iheritance type of each trio is calculated using
+        :func:`calc_inheritance_trio`, and the iheritance types of all trio
+        families are combined into single inheritacne type.
+
+        :return: combined inheritance type as
+            :class:`variants.attributes.Inheritance`
+        """
         inherits = np.array([i.value for i in inheritance])
         inherits = np.array(inherits)
         if len(inherits) == 0 or np.any(inherits == Inheritance.unknown.value):
@@ -219,6 +296,30 @@ class FamilyInheritanceMixture(object):
 
     @staticmethod
     def get_allele_genotype(genotype, allele_index):
+        """
+        Given a family full genotype and an allele index returns the
+        genotype that corresponds to the specified allele index.
+
+        :Example: if we have a trio family with genotype
+
+
+        .. code-block:: python
+
+            np.array([[0,0,1],[0,0,2]])
+
+
+        the genotype that corresponds to allele index 1 should be:
+
+        .. code-block:: python
+
+            np.array([[0,0,1],[0,0,-1]])
+
+        Similarily the genotype, that corresponds to allele index 2 is:
+
+        .. code-block:: python
+
+            np.array([[0,0,-1],[0,0,2]])
+        """
         gt = np.copy(genotype)
         mask = np.logical_not(np.logical_or(
             gt == 0,
@@ -239,6 +340,25 @@ class FamilyAllele(SummaryAllele, FamilyInheritanceMixture):
 
     def __getattr__(self, name):
         return getattr(self.summary_allele, name)
+
+    @property
+    def best_st(self):
+        if self._best_st is None:
+            ref = (2 * np.ones(len(self.family), dtype=np.int8))
+            unknown = np.any(self.gt == -1, axis=0)
+
+            alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+            alt_gt[self.gt == self.allele_index] = 1
+
+            alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+            ref = ref - alt
+
+            best = [ref, alt]
+
+            self._best_st = np.stack(best, axis=0)
+            self._best_st[:, unknown] = -1
+
+        return self._best_st
 
 
 class FamilyVariant(SummaryVariant, FamilyInheritanceMixture):
