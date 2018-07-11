@@ -44,7 +44,7 @@ class VariantDBConf(object):
         return self.denovo_files + self.transm_files
 
 def escape_target(target):
-    return target.replace(' ', '\\ ')
+    return target.replace(' ', '__')
 
 def main(config, data_dir, output_dir, sge_rreq):
     def to_destination(path):
