@@ -225,13 +225,13 @@ Family Alleles schema
 
 * **variant_in_members** (`list_(string)`) - 
     list of members of the family that
-    have this variant
+    have this allele
 * **variant_in_roles** (`list_(int32)`) - 
     list of family members' roles that
-    have this variant
+    have this allele
 * **variant_in_sexes** (`list_(int8)`) - 
     list of family members' sexes that
-    have this variant
+    have this allele
 
 
 Variant Scores schema
