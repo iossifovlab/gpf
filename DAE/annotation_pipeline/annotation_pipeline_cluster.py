@@ -57,13 +57,14 @@ def main(config, data_dir, output_dir, sge_rreq):
     output_dir = os.path.abspath(output_dir)
     data_dir = os.path.abspath(data_dir)
 
-    dirs = []
     all_cmds = []
 
     variant_db_conf = VariantDBConf(data_dir)
     all_input_files = variant_db_conf.all_variant_files
+
+    dirs = [to_destination(data_dir)]
     copy_files = []
-    for dirpath, dirnames, filenames in os.walk(data_dir):
+    for dirpath, dirnames, filenames in os.walk(data_dir + "/cccc"):
         dirs.append(to_destination(dirpath))
         copy_files.extend([dirpath + '/' + file
             for file in filenames
@@ -117,17 +118,17 @@ def main(config, data_dir, output_dir, sge_rreq):
 
         all_cmds.append(escaped_output_file + '.bgz')
         print('{bgz_target}: {merge_target}\n\t'
-            'SGE_RREQ="{sge_rreq}" bgzip "$<" && mv "$<.gz" "$@"\n'.format(
+            'SGE_RREQ="{sge_rreq}" bgzip "$<" && mv "$<.gz" "$@" && tabix -b 2 -e 2 -S 1 "$@"\n'.format(
                 bgz_target=all_cmds[-1], merge_target=escaped_output_file,
                 sge_rreq=sge_rreq))
 
-    copy_cmd_format = '{target}: {output_dir}\n\tSGE_RREQ="{sge_rreq}" cp "{file}" "$@"\n'
-    for file in copy_files:
-        dest = to_destination(file)
-        all_cmds.append(escape_target(dest))
-        print(copy_cmd_format.format(target=all_cmds[-1],
-            output_dir=output_dir, file=file, dest=dest, sge_rreq=sge_rreq,
-            log_prefix=log_dir + '/' + os.path.basename(file)))
+    # copy_cmd_format = '{target}: {output_dir}\n\tSGE_RREQ="{sge_rreq}" cp "{file}" "$@"\n'
+    # for file in copy_files:
+    #     dest = to_destination(file)
+    #     all_cmds.append(escape_target(dest))
+    #     print(copy_cmd_format.format(target=all_cmds[-1],
+    #         output_dir=output_dir, file=file, dest=dest, sge_rreq=sge_rreq,
+    #         log_prefix=log_dir + '/' + os.path.basename(file)))
 
     print(" ".join(["all:"] + all_cmds))
 
