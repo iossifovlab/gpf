@@ -10,21 +10,6 @@ from variants.vcf_utils import mat2str
 import pytest
 
 
-def test_family_allele_genotype(fv1):
-    gt = np.array([[0, 0, 1],
-                   [0, 0, 2]])
-    v = fv1(gt)
-    print(v)
-
-    print(FamilyVariant.get_allele_genotype(gt, 1))
-    print(FamilyVariant.get_allele_genotype(gt, 2))
-
-    assert np.all(np.array([[0, 0, 1], [0, 0, -1]]) ==
-                  FamilyVariant.get_allele_genotype(gt, 1))
-    assert np.all(np.array([[0, 0, -1], [0, 0, 2]]) ==
-                  FamilyVariant.get_allele_genotype(gt, 2))
-
-
 @pytest.mark.parametrize("gt,bs", [
     (np.array([[0, 0, 1], [0, 0, 2]]), "220/001/001"),
     (np.array([[0, 0, 1], [0, 0, 0]]), "221/001/000"),
@@ -52,7 +37,7 @@ def test_family_variant_unknown_best_st(fv1, gt, bs):
 
 
 @pytest.mark.parametrize("gt,bs0,bs1", [
-    (np.array([[0, 0, 1], [0, 0, 2]]), "22?/00?", "22?/00?"),
+    (np.array([[0, 0, 1], [0, 0, 2]]), "221/001", "221/001"),
     (np.array([[0, 0, 1], [0, 0, 0]]), "221/001", None),
     (np.array([[0, 0, 2], [0, 0, 0]]), "221/001", None),
     (np.array([[0, 0, 0], [0, 0, 0]]), None, None)

@@ -264,6 +264,12 @@ class RawFamilyVariants(FamiliesBase):
             query = kwargs['sexes']
             if not query.match(v.variant_in_sexes):
                 return False
+        if kwargs.get('inheritance') is not None:
+            # if v.is_reference_allele:
+            #     return False
+            query = kwargs['inheritance']
+            if not query.match(v.inheritance_in_members):
+                return False
         return True
 
     def filter_variant(self, v, **kwargs):
@@ -274,10 +280,6 @@ class RawFamilyVariants(FamiliesBase):
             family_ids = kwargs['family_ids']
             if v.family_id not in family_ids:
                 return False
-        if 'inheritance' in kwargs:
-            query = kwargs['inheritance']
-            if not query.match([v.inheritance]):
-                return False
         if 'filter' in kwargs:
             func = kwargs['filter']
             if not func(v):
@@ -287,21 +289,21 @@ class RawFamilyVariants(FamiliesBase):
     def query_variants(self, **kwargs):
         annot_df = self.annot_df
 
-        if 'roles' in kwargs:
+        if kwargs.get("roles") is not None:
             parsed = kwargs['roles']
             if isinstance(parsed, str):
                 parsed = role_query.transform_query_string_to_tree(parsed)
 
             kwargs['roles'] = role_query.transform_tree_to_matcher(parsed)
 
-        if 'sexes' in kwargs:
+        if kwargs.get('sexes') is not None:
             parsed = kwargs['sexes']
             if isinstance(parsed, str):
                 parsed = sex_query.transform_query_string_to_tree(parsed)
 
             kwargs['sexes'] = sex_query.transform_tree_to_matcher(parsed)
 
-        if 'inheritance' in kwargs:
+        if kwargs.get('inheritance') is not None:
             parsed = kwargs['inheritance']
             if isinstance(parsed, str):
                 parsed = inheritance_query.transform_query_string_to_tree(

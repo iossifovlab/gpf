@@ -97,11 +97,12 @@ class Sex(enum.Enum):
 
 class Inheritance(enum.Enum):
     reference = 1
-    mendelian = 1 << 1
-    denovo = 1 << 2
-    omission = 1 << 3
-    other = 1 << 4
-    unknown = 1 << 15
+    mendelian = 2
+    denovo = 3
+    omission = 4
+    other = 5
+    missing = 6
+    unknown = 100
 
     @staticmethod
     def from_name(name):

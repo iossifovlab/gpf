@@ -23,6 +23,7 @@ class FamilyInheritanceMixture(object):
         self.gt = np.copy(genotype)
         self._best_st = None
         self._inheritance = None
+        self._inheritance_in_members = None
         self._variant_in_members = None
         self._variant_in_roles = None
         self._variant_in_sexes = None
@@ -95,12 +96,34 @@ class FamilyInheritanceMixture(object):
 
         return self._inheritance
 
+    @property
+    def inheritance_in_members(self):
+        if self._inheritance_in_members is None:
+            allele_index = getattr(self, "allele_index", None)
+            result = {pid: Inheritance.unknown for pid in self.members_ids}
+            for ch_id, trio in self.family.trios.items():
+                index = self.family.members_index(trio)
+                tgt = self.gt[:, index]
+                if np.any(tgt == -1):
+                    result[ch_id] = Inheritance.unknown
+                else:
+                    ch = tgt[:, 0]
+                    if allele_index is not None and \
+                            not np.any(ch == allele_index):
+                        result[ch_id] = Inheritance.missing
+                    else:
+                        p1 = tgt[:, 1]
+                        p2 = tgt[:, 2]
+                        result[ch_id] = self.calc_inheritance_trio(p1, p2, ch)
+            self._inheritance_in_members = set(result.values())
+        return self._inheritance_in_members
+
     def is_reference(self):
         """
-        Return True if the inheritance type of the family variant is
+        Returns True if all alleles in the family variant are
         `reference`.
         """
-        return self.inheritance == Inheritance.reference
+        return np.all(self.gt == 0)
 
     def is_mendelian(self):
         """
@@ -129,9 +152,13 @@ class FamilyInheritanceMixture(object):
         Returns set of members IDs of the family that are affected by
         this family variant.
         """
+        allele_index = getattr(self, "allele_index", None)
         if self._variant_in_members is None:
             gt = np.copy(self.gt)
-            gt[gt == -1] = 0
+            if allele_index is not None:
+                gt[gt != allele_index] = 0
+            else:
+                gt[gt == -1] = 0
             index = np.nonzero(np.sum(gt, axis=0))
             self._variant_in_members = set(self.members_ids[index])
         return self._variant_in_members
@@ -294,39 +321,39 @@ class FamilyInheritanceMixture(object):
             print("strange inheritance:", inherits)
             return Inheritance.unknown
 
-    @staticmethod
-    def get_allele_genotype(genotype, allele_index):
-        """
-        Given a family full genotype and an allele index returns the
-        genotype that corresponds to the specified allele index.
-
-        :Example: if we have a trio family with genotype
-
-
-        .. code-block:: python
-
-            np.array([[0,0,1],[0,0,2]])
-
-
-        the genotype that corresponds to allele index 1 should be:
-
-        .. code-block:: python
-
-            np.array([[0,0,1],[0,0,-1]])
-
-        Similarily the genotype, that corresponds to allele index 2 is:
-
-        .. code-block:: python
-
-            np.array([[0,0,-1],[0,0,2]])
-        """
-        gt = np.copy(genotype)
-        mask = np.logical_not(np.logical_or(
-            gt == 0,
-            gt == allele_index,
-        ))
-        gt[mask] = -1
-        return gt
+#     @staticmethod
+#     def get_allele_genotype(genotype, allele_index):
+#         """
+#         Given a family full genotype and an allele index returns the
+#         genotype that corresponds to the specified allele index.
+#
+#         :Example: if we have a trio family with genotype
+#
+#
+#         .. code-block:: python
+#
+#             np.array([[0,0,1],[0,0,2]])
+#
+#
+#         the genotype that corresponds to allele index 1 should be:
+#
+#         .. code-block:: python
+#
+#             np.array([[0,0,1],[0,0,-1]])
+#
+#         Similarily the genotype, that corresponds to allele index 2 is:
+#
+#         .. code-block:: python
+#
+#             np.array([[0,0,-1],[0,0,2]])
+#         """
+#         gt = np.copy(genotype)
+#         mask = np.logical_not(np.logical_or(
+#             gt == 0,
+#             gt == allele_index,
+#         ))
+#         gt[mask] = -2
+#         return gt
 
 
 class FamilyAllele(SummaryAllele, FamilyInheritanceMixture):
@@ -372,13 +399,12 @@ class FamilyVariant(SummaryVariant, FamilyInheritanceMixture):
         FamilyInheritanceMixture.__init__(self, family, genotype)
 
         alleles = [
-            summary_variant.ref_allele,
+            FamilyAllele(summary_variant.ref_allele, family, genotype)
         ]
 
         for allele_index in self.calc_alt_alleles(self.gt):
-            allele_genotype = self.get_allele_genotype(genotype, allele_index)
             summary_allele = summary_variant.alleles[allele_index]
-            fa = FamilyAllele(summary_allele, family, allele_genotype)
+            fa = FamilyAllele(summary_allele, family, genotype)
 
             alleles.append(fa)
         self.alleles = alleles
