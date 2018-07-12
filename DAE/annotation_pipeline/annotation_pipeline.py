@@ -11,6 +11,7 @@ from box import Box
 import pysam
 from importlib import import_module
 import gzip
+from collections import OrderedDict
 
 from tools import *
 from tools.utilities import assign_values
@@ -29,15 +30,14 @@ class MultiAnnotator(object):
 
         self.annotators = []
         virtual_columns_indices = []
-        columns_labels = {}
+        all_columns_labels = set()
 
         for preannotator in self.preannotators:
             self.annotators.append({
                 'instance': preannotator,
-                'columns': preannotator.new_columns
+                'columns': OrderedDict([(c, c) for c in preannotator.new_columns])
             })
-            columns_labels.update({column: column
-                                   for column in preannotator.new_columns})
+            all_columns_labels.update(preannotator.new_columns)
             if self.header:
                 self.header.extend(preannotator.new_columns)
             virtual_columns_indices.extend(
@@ -53,14 +53,14 @@ class MultiAnnotator(object):
         # config_parser.sections() this gives the sections in order which is important
         for annotation_step in config_parser.sections():
             annotation_step_config = self.config[annotation_step]
-            columns_labels.update(annotation_step_config.columns)
+            step_columns_labels = annotation_step_config.columns.values()
+            all_columns_labels.update(step_columns_labels)
             if self.header is not None:
                 if reannotate:
-                    new_columns = [column
-                                   for column in annotation_step_config.columns.values()
+                    new_columns = [column for column in step_columns_labels
                                    if column not in self.header]
                 else:
-                    new_columns = annotation_step_config.columns.values()
+                    new_columns = step_columns_labels
                 self.header.extend(new_columns)
 
             if annotation_step_config.virtuals is not None:
@@ -70,11 +70,11 @@ class MultiAnnotator(object):
             self.annotators.append({
                 'instance': str_to_class(annotation_step_config.annotator)(
                     annotation_step_config.options, list(self.header)),
-                'columns': annotation_step_config.columns.keys()
+                'columns': annotation_step_config.columns
             })
 
-        self.column_indices = {column: assign_values(label, self.header)
-                               for column, label in columns_labels.items()}
+        self.column_indices = {label: assign_values(label, self.header)
+                               for label in all_columns_labels}
         self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
                                        if i not in virtual_columns_indices]
 
@@ -105,10 +105,11 @@ class MultiAnnotator(object):
         annotators = self.annotators
         def annotate_line(line):
             for annotator in annotators:
-                columns = annotator['columns']
+                columns = annotator['columns'].keys()
+                columns_labels = annotator['columns'].values()
                 values = annotator['instance'].line_annotations(line, columns)
-                for column, value in zip(columns, values):
-                    position = self.column_indices[column]
+                for label, value in zip(columns_labels, values):
+                    position = self.column_indices[label]
                     line[position - 1:position] = [value]
             return line
 
