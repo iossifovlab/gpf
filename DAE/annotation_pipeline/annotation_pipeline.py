@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-from os.path import exists, dirname, basename
+from os.path import exists, dirname, basename, realpath
 import glob
 import time, datetime
 import argparse
@@ -138,7 +138,7 @@ class PreannotatorLoader(object):
     @classmethod
     def get_preannotator_modules(cls):
         if cls.PREANNOTATOR_MODULES is None:
-            abs_files = glob.glob(dirname(__file__) + '/preannotators/*.py')
+            abs_files = glob.glob(dirname(realpath(__file__)) + '/preannotators/*.py')
             files = [basename(f) for f in abs_files]
             files.remove('__init__.py')
             module_names = ['preannotators.' + f[:-3] for f in files]
