@@ -102,6 +102,8 @@ class FamilyInheritanceMixture(object):
             allele_index = getattr(self, "allele_index", None)
             result = {pid: Inheritance.unknown for pid in self.members_ids}
             for ch_id, trio in self.family.trios.items():
+                print(allele_index, ch_id, trio)
+
                 index = self.family.members_index(trio)
                 tgt = self.gt[:, index]
                 if np.any(tgt == -1):
@@ -118,7 +120,7 @@ class FamilyInheritanceMixture(object):
                             np.all(ch != allele_index):
                         inh = Inheritance.missing
                     result[ch_id] = inh
-            print(result)
+            print(allele_index, result)
             self._inheritance_in_members = set(result.values())
         return self._inheritance_in_members
 

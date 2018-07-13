@@ -84,6 +84,8 @@ def test_f1_simple(variants_vcf, regions, inheritance, effect_types, count):
     ([Region("1", 901923, 901923)], None, None, 1),
     ([Region("1", 901923, 901923)], "unknown", None, 1),
     ([Region("1", 901923, 901923)], "mendelian", None, 0),
+    ([Region("1", 901923, 901923)], "not unknown", None, 0),
+    ([Region("1", 901923, 901923)], None, ["synonymous", "missense"], 0),
 ])
 def test_f1_all_unknown(
         variants_vcf, regions, inheritance, effect_types, count):
@@ -136,6 +138,7 @@ def test_f1_cannonical_denovo(
     ([Region("1", 905966, 905966)], None, ['missense'], 0),
     ([Region("1", 905966, 905966)], "omission", ['missense'], 0),
     ([Region("1", 905966, 905966)], "omission", ['synonymous'], 1),
+    ([Region("1", 905966, 905966)], "mendelian", None, 1),
 ])
 def test_f1_cannonical_omission(
         variants_vcf, regions, inheritance, effect_types, count):
@@ -165,6 +168,20 @@ def count_variants(variants, regions, inheritance, effect_types):
     ([Region("1", 906092, 906092)], "not omission", None, 1),
 ])
 def test_f1_non_cannonical_omission(
+        variants_vcf, regions, inheritance, effect_types, count):
+
+    c = count_variants(variants_vcf, regions, inheritance, effect_types)
+    assert c == count
+
+
+@pytest.mark.parametrize("regions,inheritance,effect_types,count", [
+    ([Region("1", 906086, 906086)], None, None, 1),
+    ([Region("1", 906086, 906086)], "denovo", None, 1),
+    ([Region("1", 906086, 906086)], "denovo", ["synonymous"], 0),
+    ([Region("1", 906086, 906086)], "denovo", ["missense"], 1),
+    ([Region("1", 906086, 906086)], "mendelian", None, 1),
+])
+def test_f1_partially_known_denovo(
         variants_vcf, regions, inheritance, effect_types, count):
 
     c = count_variants(variants_vcf, regions, inheritance, effect_types)
