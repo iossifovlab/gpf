@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+
+import argparse
+from utilities import *
+
+
+def get_argument_parser():
+    desc = """Program to duplicate list of columns"""
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('-H', help='no header in the input file',
+                        default=False, action='store_true',
+                        dest='no_header')
+    parser.add_argument('-c', '--columns',
+                        help='comma separated list of columns to duplicate',
+                        required=True, action='store')
+    parser.add_argument('-l', '--labels',
+                        help='comma separated list of labels for the new columns',
+                        required=True, action='store')
+    return parser
+
+
+class DuplicateColumnsAnnotator(AnnotatorBase):
+
+    def __init__(self, opts, header=None):
+        super(DuplicateColumnsAnnotator, self).__init__(opts, header)
+
+        self.columns_idx = [assign_values(col, header)
+                            for col in opts.columns.split(',')]
+
+        if opts.labels is None:
+            opts.labels = opts.columns
+
+        self._new_columns = opts.labels.split(',')
+
+        self.header = self.header + self._new_columns
+
+    @property
+    def new_columns(self):
+        return self._new_columns
+
+    def line_annotations(self, line, new_columns):
+        return [line[i - 1] for i in self.columns_idx]
+
+
+if __name__ == '__main__':
+    main(get_argument_parser(), DuplicateColumnsAnnotator)
