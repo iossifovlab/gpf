@@ -106,15 +106,19 @@ class FamilyInheritanceMixture(object):
                 tgt = self.gt[:, index]
                 if np.any(tgt == -1):
                     result[ch_id] = Inheritance.unknown
+                elif np.all(tgt != allele_index):
+                    result[ch_id] = Inheritance.missing
                 else:
                     ch = tgt[:, 0]
-                    if allele_index is not None and \
-                            not np.any(ch == allele_index):
-                        result[ch_id] = Inheritance.missing
-                    else:
-                        p1 = tgt[:, 1]
-                        p2 = tgt[:, 2]
-                        result[ch_id] = self.calc_inheritance_trio(p1, p2, ch)
+                    p1 = tgt[:, 1]
+                    p2 = tgt[:, 2]
+                    inh = self.calc_inheritance_trio(p1, p2, ch)
+                    print(ch_id, inh)
+                    if inh != Inheritance.omission and \
+                            np.all(ch != allele_index):
+                        inh = Inheritance.missing
+                    result[ch_id] = inh
+            print(result)
             self._inheritance_in_members = set(result.values())
         return self._inheritance_in_members
 

@@ -12,6 +12,54 @@ import pytest
 from RegionOperations import Region
 
 
+@pytest.mark.parametrize("query,positive,negative", [
+    ("denovo",
+     [Inheritance.denovo],
+     [Inheritance.omission]),
+    ("denovo",
+     [Inheritance.denovo, Inheritance.omission],
+     [Inheritance.omission, Inheritance.mendelian]),
+    ("denovo or omission",
+     [Inheritance.denovo],
+     [Inheritance.mendelian]),
+    ("denovo or omission",
+     [Inheritance.denovo, Inheritance.unknown],
+     [Inheritance.mendelian, Inheritance.unknown]),
+    ("not denovo and not omission",
+     [Inheritance.mendelian, Inheritance.unknown],
+     [Inheritance.denovo, Inheritance.unknown]),
+    ("not omission",
+     [Inheritance.denovo, Inheritance.unknown],
+     [Inheritance.omission, Inheritance.unknown]),
+])
+def test_f1_inheritance_query(query, positive, negative):
+    query = inheritance_query.\
+        transform_tree_to_matcher(
+            inheritance_query.transform_query_string_to_tree(query))
+    assert query.match(positive)
+    assert not query.match(negative)
+
+
+def test_f1_check_all_variants_effects(variants_vcf):
+    vvars = variants_vcf("fixtures/f1_test")
+    assert vvars is not None
+
+    vs = vvars.query_variants()
+    vs = list(vs)
+    for v in vs:
+        print(
+            v, v.inheritance,
+            v.effects, mat2str(v.best_st))
+        summary_alleles = v.summary_variant.alleles
+        sa1 = summary_alleles[1]
+        sa2 = summary_alleles[2]
+
+        assert sa1.effect.worst == 'synonymous'
+        assert sa2.effect.worst == 'missense'
+
+    assert len(vs) == 7
+
+
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 878152, 878152)], None, None, 1),
     ([Region("1", 878152, 878152)], "denovo", ["synonymous"], 0),
@@ -29,43 +77,7 @@ def test_f1_simple(variants_vcf, regions, inheritance, effect_types, count):
         inheritance=inheritance,
         effect_types=effect_types)
     vs = list(vs)
-    for v in vs:
-        print(
-            v, v.inheritance,
-            v.effects, mat2str(v.best_st))
-        for aa in v.alt_alleles:
-            print(
-                aa, aa.effect,
-                aa.inheritance_in_members,
-                mat2str(aa.gt),
-                mat2str(aa.best_st))
-        break
     assert len(vs) == count
-
-
-@pytest.mark.parametrize("query,positive,negative", [
-    ("denovo",
-     [Inheritance.denovo],
-     [Inheritance.omission]),
-    ("denovo",
-     [Inheritance.denovo, Inheritance.omission],
-     [Inheritance.omission, Inheritance.mendelian]),
-    ("denovo or omission",
-     [Inheritance.denovo],
-     [Inheritance.mendelian]),
-    ("denovo or omission",
-     [Inheritance.denovo, Inheritance.unknown],
-     [Inheritance.mendelian, Inheritance.unknown]),
-    ("not denovo and not omission",
-     [Inheritance.mendelian, Inheritance.unknown],
-     [Inheritance.denovo, Inheritance.unknown]),
-])
-def test_f1_inheritance_query(query, positive, negative):
-    query = inheritance_query.\
-        transform_tree_to_matcher(
-            inheritance_query.transform_query_string_to_tree(query))
-    assert query.match(positive)
-    assert not query.match(negative)
 
 
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
@@ -76,58 +88,25 @@ def test_f1_inheritance_query(query, positive, negative):
 def test_f1_all_unknown(
         variants_vcf, regions, inheritance, effect_types, count):
 
-    # vvars = variants_vcf("fixtures/effects_trio_multi")
-    vvars = variants_vcf("fixtures/f1_test")
-    assert vvars is not None
-
-    vs = vvars.query_variants(
-        regions=regions,
-        inheritance=inheritance,
-        effect_types=effect_types)
-    vs = list(vs)
-    for v in vs:
-        print(
-            v, v.inheritance,
-            v.effects, mat2str(v.best_st))
-        for aa in v.alleles:
-            print(
-                aa, aa.effect,
-                aa.inheritance_in_members,
-                mat2str(aa.gt),
-                mat2str(aa.best_st))
-        break
-    assert len(vs) == count
+    c = count_variants(variants_vcf, regions, inheritance, effect_types)
+    assert c == count
 
 
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 905951, 905951)], None, None, 1),
     ([Region("1", 905951, 905951)], "unknown", None, 1),
     ([Region("1", 905951, 905951)], "mendelian", None, 1),
+    ([Region("1", 905951, 905951)], "mendelian", ["synonymous"], 0),
+    ([Region("1", 905951, 905951)], "mendelian", ["missense"], 0),
+    ([Region("1", 905951, 905951)], "not denovo", None, 1),
+    ([Region("1", 905951, 905951)], "not omission", None, 1),
+    ([Region("1", 905951, 905951)], "not denovo and not omission", None, 1),
 ])
 def test_f1_unknown_and_reference(
         variants_vcf, regions, inheritance, effect_types, count):
 
-    # vvars = variants_vcf("fixtures/effects_trio_multi")
-    vvars = variants_vcf("fixtures/f1_test")
-    assert vvars is not None
-
-    vs = vvars.query_variants(
-        regions=regions,
-        inheritance=inheritance,
-        effect_types=effect_types)
-    vs = list(vs)
-    for v in vs:
-        print(
-            v, v.inheritance,
-            v.effects, mat2str(v.best_st))
-        for aa in v.alleles:
-            print(
-                aa, aa.effect,
-                aa.inheritance_in_members,
-                mat2str(aa.gt),
-                mat2str(aa.best_st))
-        break
-    assert len(vs) == count
+    c = count_variants(variants_vcf, regions, inheritance, effect_types)
+    assert c == count
 
 
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
@@ -136,30 +115,57 @@ def test_f1_unknown_and_reference(
     ([Region("1", 905957, 905957)], "mendelian", None, 1),
     ([Region("1", 905957, 905957)], "mendelian", ["synonymous"], 0),
     ([Region("1", 905957, 905957)], "mendelian", ["missense"], 0),
-    ([Region("1", 905957, 905957)], "denovo", ["synonymous"], 1),
-    ([Region("1", 905957, 905957)], "denovo", ["missense"], 0),
+    ([Region("1", 905957, 905957)], None, ["synonymous"], 1),
+    ([Region("1", 905957, 905957)], None, ["missense"], 0),
+    ([Region("1", 905957, 905957)], None, ["synonymous"], 1),
+    ([Region("1", 905957, 905957)], "not denovo ", None, 0),
+
 ])
 def test_f1_cannonical_denovo(
         variants_vcf, regions, inheritance, effect_types, count):
 
-    # vvars = variants_vcf("fixtures/effects_trio_multi")
-    vvars = variants_vcf("fixtures/f1_test")
+    c = count_variants(variants_vcf, regions, inheritance, effect_types)
+    assert c == count
+
+
+@pytest.mark.parametrize("regions,inheritance,effect_types,count", [
+    ([Region("1", 905966, 905966)], None, None, 1),
+    ([Region("1", 905966, 905966)], "omission", None, 1),
+    ([Region("1", 905966, 905966)], "denovo", None, 0),
+    ([Region("1", 905966, 905966)], None, ['synonymous'], 1),
+    ([Region("1", 905966, 905966)], None, ['missense'], 0),
+    ([Region("1", 905966, 905966)], "omission", ['missense'], 0),
+    ([Region("1", 905966, 905966)], "omission", ['synonymous'], 1),
+])
+def test_f1_cannonical_omission(
+        variants_vcf, regions, inheritance, effect_types, count):
+
+    c = count_variants(variants_vcf, regions, inheritance, effect_types)
+    assert c == count
+
+
+def count_variants(variants, regions, inheritance, effect_types):
+    vvars = variants("fixtures/f1_test")
     assert vvars is not None
 
-    vs = vvars.query_variants(
-        regions=regions,
-        inheritance=inheritance,
-        effect_types=effect_types)
+    vs = vvars.query_variants(regions=regions,
+                              inheritance=inheritance,
+                              effect_types=effect_types)
     vs = list(vs)
-    for v in vs:
-        print(
-            v, v.inheritance,
-            v.effects, mat2str(v.best_st))
-        for aa in v.alleles:
-            print(
-                aa, aa.effect,
-                aa.inheritance_in_members,
-                mat2str(aa.gt),
-                mat2str(aa.best_st))
-        break
-    assert len(vs) == count
+    return len(vs)
+
+
+@pytest.mark.parametrize("regions,inheritance,effect_types,count", [
+    ([Region("1", 906092, 906092)], None, None, 1),
+    ([Region("1", 906092, 906092)], "omission", None, 1),
+    ([Region("1", 906092, 906092)], "denovo", None, 0),
+    ([Region("1", 906092, 906092)], "omission", ["synonymous"], 1),
+    ([Region("1", 906092, 906092)], "omission", ["missense"], 1),
+    ([Region("1", 906092, 906092)], "not omission", ["missense"], 0),
+    ([Region("1", 906092, 906092)], "not omission", None, 1),
+])
+def test_f1_non_cannonical_omission(
+        variants_vcf, regions, inheritance, effect_types, count):
+
+    c = count_variants(variants_vcf, regions, inheritance, effect_types)
+    assert c == count
