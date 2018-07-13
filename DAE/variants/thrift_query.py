@@ -49,7 +49,6 @@ Q = """
         F.family_index,
         F.family_id,
         F.genotype,
-        F.inheritance,
 
         S.chrom,
         S.position,
@@ -124,7 +123,7 @@ def query_parts(queries, **kwargs):
 VARIANT_QUERIES = [
     'regions',
     'family_ids',
-    'inheritance',
+    # 'inheritance',
     # 'effect_types',
 ]
 

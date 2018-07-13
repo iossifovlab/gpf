@@ -44,14 +44,6 @@ class DfFamilyVariantsBase(object):
             by=["summary_index", "family_id", "allele_index"])
 
         for _name, group in join_df.groupby(by=["summary_index", "family_id"]):
-
-            if group.inheritance.unique()[0] != Inheritance.reference.value:
-
-                print(group[["summary_index", "allele_index",
-                             "reference",
-                             "alternative",
-                             "effect_gene_types", "effect_gene_genes",
-                             "family_id", "genotype", "inheritance"]])
             rec = group.to_dict(orient='records')
             yield DfFamilyVariantsBase.wrap_family_variant_multi(families, rec)
 

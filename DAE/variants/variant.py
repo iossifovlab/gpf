@@ -54,7 +54,7 @@ class VariantBase(object):
         return self._alternative
 
     def __repr__(self):
-        if not self._alternative:
+        if not self.alternative:
             return '{}:{} {} (ref)'.format(
                 self.chromosome, self.position,
                 self.reference)
@@ -62,7 +62,7 @@ class VariantBase(object):
             return '{}:{} {}->{}'.format(
                 self.chromosome, self.position,
                 self.reference,
-                self._alternative)
+                self.alternative)
 
     def __eq__(self, other):
         return self.chromosome == other.chromosome and \

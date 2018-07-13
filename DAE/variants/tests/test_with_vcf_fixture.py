@@ -5,15 +5,20 @@ Created on Mar 19, 2018
 '''
 from __future__ import print_function
 
-from variants.vcf_utils import mat2str
-from variants.attributes import Role
+import pytest
+
 from RegionOperations import Region
+from variants.attributes import Role
+from variants.vcf_utils import mat2str
+
+
+pytestmark = pytest.mark.xfail()
 
 
 def test_members_in_order1_genotype_full(variants_vcf):
     fvars = variants_vcf("fixtures/members_in_order1")
     for v in fvars.query_variants():
-        print(v, mat2str(v.best_st), mat2str(v.gt), v.inheritance)
+        print(v, mat2str(v.best_st), mat2str(v.gt))
         assert 'gpa' in v.variant_in_members
         assert Role.paternal_grandfather in v.variant_in_roles
 

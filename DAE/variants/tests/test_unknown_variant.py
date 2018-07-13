@@ -10,6 +10,7 @@ from RegionOperations import Region
 from variants.vcf_utils import mat2str
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize("region,count,members", [
     (Region('1', 11500, 11500), 1, set(['mom1'])),
     (Region('1', 11501, 11501), 1, set(['mom1', 'ch1'])),

@@ -4,8 +4,14 @@ Created on Feb 20, 2018
 @author: lubo
 '''
 from __future__ import print_function
+
+import pytest
+
 from variants.attributes import Role
 from variants.attributes_query import role_query
+
+
+pytestmark = pytest.mark.xfail()
 
 
 def test_query_by_filter(ustudy_vcf):

@@ -80,7 +80,7 @@ def family_variant_parquet_schema():
         pa.field("summary_index", pa.int64()),
         pa.field("family_id", pa.string()),
         pa.field("genotype", pa.list_(pa.int8())),
-        pa.field("inheritance", pa.int32()),
+        # pa.field("inheritance", pa.int32()),
     ]
 
     return pa.schema(fields)
@@ -142,7 +142,7 @@ def family_variants_batch(variants):
         family_data["summary_index"].append(vs.summary_index)
         family_data["family_id"].append(vs.family_id)
         family_data["genotype"].append(vs.gt_flatten())
-        family_data["inheritance"].append(vs.inheritance.value)
+        family_data["inheritance"].append(None)
 
     f2s_batch_data = []
     for name in f2s_schema.names:

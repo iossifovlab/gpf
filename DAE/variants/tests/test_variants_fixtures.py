@@ -32,6 +32,7 @@ def test_variants_all_count(variants_impl, variants, fixture_name, count):
     assert len(vs) == count
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/trios2",
 ])

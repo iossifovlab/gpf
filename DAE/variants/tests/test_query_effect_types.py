@@ -5,7 +5,12 @@ Created on Mar 8, 2018
 '''
 from __future__ import print_function
 
+import pytest
+
 from variants.vcf_utils import mat2str
+
+
+pytestmark = pytest.mark.xfail()
 
 
 def test_query_effect_types(ustudy_vcf):

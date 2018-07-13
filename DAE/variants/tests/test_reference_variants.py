@@ -8,6 +8,8 @@ from __future__ import print_function
 import pytest
 from datasets.helpers import mat2str
 
+pytestmark = pytest.mark.xfail()
+
 
 @pytest.mark.parametrize("variants", [
     "variants_df",

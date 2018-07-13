@@ -3,9 +3,14 @@ Created on Feb 27, 2018
 
 @author: lubo
 '''
+import pytest
+
 import numpy as np
 from variants.attributes import Inheritance
 from variants.family_variant import FamilyVariant as FV
+
+
+pytestmark = pytest.mark.xfail()
 
 
 def test_denovo_check():

@@ -5,8 +5,13 @@ Created on Feb 27, 2018
 '''
 from __future__ import print_function
 
+import pytest
+
 from RegionOperations import Region
 from variants.attributes import Inheritance
+
+
+pytestmark = pytest.mark.xfail()
 
 
 def test_query_regions(ustudy_vcf):

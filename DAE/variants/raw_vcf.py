@@ -16,7 +16,7 @@ from variants.attributes_query import role_query, sex_query, \
     variant_type_query
 from variants.family import Family
 from variants.variant import SummaryVariantFactory
-from variants.family_variant import FamilyVariant
+from variants.family_variant import FamilyVariant, FamilyAllele
 
 
 def split_gene_effect(effects):
@@ -231,6 +231,8 @@ class RawFamilyVariants(FamiliesBase):
         return False
 
     def filter_allele(self, v, **kwargs):
+        assert isinstance(v, FamilyAllele)
+
         if kwargs.get('real_attr_filter') is not None:
             if not self.filter_real_attr(v, kwargs['real_attr_filter']):
                 return False
@@ -268,6 +270,8 @@ class RawFamilyVariants(FamiliesBase):
             # if v.is_reference_allele:
             #     return False
             query = kwargs['inheritance']
+            assert isinstance(v, FamilyAllele)
+
             if not query.match(v.inheritance_in_members):
                 return False
         return True

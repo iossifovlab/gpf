@@ -25,7 +25,7 @@ def test_variant_frequency_single(variants_vcf, region, count, freq0, freq1):
         regions=[region]))
     assert len(vs) == count
     for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance)
+        print(v, mat2str(v.best_st))
         print(v.frequencies)
 
         assert freq0 == pytest.approx(v.frequencies[0], 1e-2)
@@ -49,7 +49,7 @@ def test_variant_frequency_multi_alleles(
         regions=[region]))
     assert len(vs) == count
     for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance)
+        print(v, mat2str(v.best_st))
         print(v.frequencies)
         # assert len(v.frequencies) == 3
 

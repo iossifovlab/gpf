@@ -9,6 +9,9 @@ from variants.attributes import Sex, SexQuery
 import pytest
 
 
+pytestmark = pytest.mark.xfail()
+
+
 def test_sex_attribute():
 
     assert Sex.from_value(1) == Sex.male

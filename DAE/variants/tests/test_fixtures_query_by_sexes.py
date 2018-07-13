@@ -26,7 +26,6 @@ def test_fixture_query_by_sex(
     vs = vvars.query_variants(
         sexes=sexes)
     vs = list(vs)
-    print([(v, v.variant_in_members, v.variant_in_sexes) for v in vs])
     assert len(vs) == count
 
 
@@ -45,5 +44,4 @@ def test_fixture_raw_df_query_by_sex_needs_fixing(
     vs = vvars.query_variants(
         sexes=sexes)
     vs = list(vs)
-    print([(v, v.variant_in_members, v.variant_in_sexes) for v in vs])
     assert len(vs) == count

@@ -7,6 +7,7 @@ from __future__ import print_function
 
 # from RegionOperations import Region
 import numpy as np
+import pytest
 # from variants.vcf_utils import mat2str
 
 
@@ -18,6 +19,9 @@ import numpy as np
 #         print(v, v.is_mendelian())
 #         print(mat2str(v.best_st))
 #         print(mat2str(v.gt))
+
+
+pytestmark = pytest.mark.xfail()
 
 
 def test_mendelian_trio_1(fv1):
