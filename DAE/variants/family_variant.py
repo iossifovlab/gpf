@@ -376,6 +376,21 @@ class FamilyVariant(SummaryVariant):
         """
         return self.gt.flatten(order='F')
 
+    def is_reference(self):
+        """
+        Returns True if all known alleles in the family variant are
+        `reference`.
+        """
+        return np.any(self.gt == 0) and \
+            np.all(np.logical_or(self.gt == 0, self.gt == -1))
+
+    def is_unknown(self):
+        """
+        Returns True if all known alleles in the family variant are
+        `reference`.
+        """
+        return np.all(self.gt == -1)
+
     def __repr__(self):
         if not self.alternative:
             return '{}:{} {}(ref) {}'.format(
