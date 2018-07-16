@@ -26,7 +26,9 @@ def test_variants_all_count(variants_impl, variants, fixture_name, count):
     vvars = variants_impl(variants)(fixture_name)
     assert vvars is not None
 
-    vs = vvars.query_variants()
+    vs = vvars.query_variants(
+        return_reference=True,
+        return_unknown=True)
     vs = list(vs)
     print(vs)
     assert len(vs) == count
@@ -49,7 +51,11 @@ def test_df_query_multiallelic3_families(
 
     regions = [Region('1', 11606, 11606)]
     family_ids = ['f1']
-    vs = dfvars.query_variants(regions=regions, family_ids=family_ids)
+    vs = dfvars.query_variants(
+        regions=regions,
+        family_ids=family_ids,
+        return_reference=True,
+        return_unknown=True)
     vs = list(vs)
     assert len(vs) == 1
     print(vs)
@@ -78,7 +84,9 @@ def test_reference_variant(
     assert fvars is not None
 
     vs = fvars.query_variants(
-        # family_ids=['f1']
+        # family_ids=['f1'],
+        return_reference=True,
+        return_unknown=True
     )
     vs = list(vs)
     assert len(vs) == 2
@@ -106,7 +114,9 @@ def test_reference_multiallelic_variant(
     assert fvars is not None
 
     vs = fvars.query_variants(
-        # family_ids=['f1']
+        # family_ids=['f1'],
+        return_reference=True,
+        return_unknown=True
     )
     vs = list(vs)
     print(vs)

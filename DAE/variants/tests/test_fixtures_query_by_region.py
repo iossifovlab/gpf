@@ -46,7 +46,10 @@ def test_fixture_query_by_regions(
     vvars = variants_impl(variants)(fixture_name)
     assert vvars is not None
 
-    vs = vvars.query_variants(regions=regions)
+    vs = vvars.query_variants(
+        regions=regions,
+        return_reference=True,
+        return_unknown=True)
     vs = list(vs)
     print(vs)
     assert len(vs) == count

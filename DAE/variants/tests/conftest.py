@@ -183,6 +183,8 @@ def variants_df(variants_vcf):
         ped_df = fvars.ped_df
         vars_df, f2s_df = family_variants_df(
             fvars.query_variants(
+                return_reference=True,
+                return_unknown=True
             ))
         return DfFamilyVariants(ped_df, summary_df, vars_df, f2s_df)
     return builder

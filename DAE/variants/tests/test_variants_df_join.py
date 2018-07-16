@@ -51,7 +51,9 @@ def test_inspect_broken_trios2_11602_variants(variants_vcf):
     dfvars = variants_vcf("fixtures/trios2_11602")
     assert dfvars is not None
 
-    vs = dfvars.query_variants()
+    vs = dfvars.query_variants(
+        return_reference=True,
+        return_unknown=True)
     vs = list(vs)
 
     for v in vs:

@@ -9,7 +9,7 @@ import pytest
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     #     "variants_df",
-    "variants_thrift",
+    "variants_thrift",  # FIXME:
 ])
 @pytest.mark.parametrize("fixture_name,person_ids,count", [
 
@@ -32,7 +32,9 @@ def test_fixture_query_by_family_ids(
     assert vvars is not None
 
     vs = vvars.query_variants(
-        person_ids=person_ids
+        person_ids=person_ids,
+        return_reference=True,
+        return_unknown=True
     )
     vs = list(vs)
     print(vs)

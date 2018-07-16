@@ -44,7 +44,9 @@ def test_f1_check_all_variants_effects(variants_vcf):
     vvars = variants_vcf("fixtures/f1_test")
     assert vvars is not None
 
-    vs = vvars.query_variants()
+    vs = vvars.query_variants(
+        return_reference=True,
+        return_unknown=True)
     vs = list(vs)
     for v in vs:
         print(
@@ -74,7 +76,9 @@ def test_f1_simple(variants_vcf, regions, inheritance, effect_types, count):
     vs = vvars.query_variants(
         regions=regions,
         inheritance=inheritance,
-        effect_types=effect_types)
+        effect_types=effect_types,
+        return_reference=True,
+        return_unknown=True)
     vs = list(vs)
     assert len(vs) == count
 
@@ -150,9 +154,12 @@ def count_variants(variants, regions, inheritance, effect_types):
     vvars = variants("fixtures/f1_test")
     assert vvars is not None
 
-    vs = vvars.query_variants(regions=regions,
-                              inheritance=inheritance,
-                              effect_types=effect_types)
+    vs = vvars.query_variants(
+        regions=regions,
+        inheritance=inheritance,
+        effect_types=effect_types,
+        return_reference=True,
+        return_unknown=True)
     vs = list(vs)
     return len(vs)
 
@@ -173,7 +180,6 @@ def test_f1_non_cannonical_omission(
     assert c == count
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 906086, 906086)], None, None, 1),
     ([Region("1", 906086, 906086)], "denovo", None, 1),

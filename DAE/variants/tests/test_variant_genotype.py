@@ -59,7 +59,9 @@ def test_multi_alt_allele_genotype2(variants_vcf, region, worst_effect):
 def test_trios_multi_alt_allele_genotype2(variants_vcf, region, gt):
     fvars = variants_vcf("fixtures/trios_multi")
     vs = list(fvars.query_variants(
-        regions=[region]))
+        regions=[region],
+        return_reference=True,
+        return_unknown=True))
     assert len(vs) == 1
 
     for v in vs:
