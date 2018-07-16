@@ -12,6 +12,7 @@ import pysam
 from importlib import import_module
 import gzip
 from collections import OrderedDict
+import re
 
 from tools import *
 from tools.utilities import assign_values
@@ -19,6 +20,15 @@ import preannotators.location
 
 def str_to_class(val):
     return reduce(getattr, val.split("."), sys.modules[__name__])
+
+class MyConfigParser(ConfigParser.SafeConfigParser):
+    """Modified ConfigParser.SafeConfigParser that allow ':' in keys and only '=' as separator.
+    """
+    OPTCRE = re.compile(
+        r'(?P<option>[^=\s][^=]*)'          # allow only = 
+        r'\s*(?P<vi>[=])\s*'                # for option separator           
+        r'(?P<value>.*)$'                   
+        )
 
 class MultiAnnotator(object):
 
@@ -44,7 +54,7 @@ class MultiAnnotator(object):
                 [assign_values(column, self.header)
                  for column in preannotator.new_columns])
 
-        config_parser = ConfigParser.SafeConfigParser()
+        config_parser = MyConfigParser()
         config_parser.optionxform = str
         config_parser.read(config_file)
         self.config = Box(common.config.to_dict(config_parser),

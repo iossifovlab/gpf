@@ -141,7 +141,7 @@ def default_config():
             'non_numeric_cutoff': 0.06,
             'value_max_len': 32,
             'continuous': {
-                'min_rank': 15
+                'min_rank': 10,
             },
             'ordinal': {
                 'min_rank': 1
