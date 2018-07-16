@@ -119,7 +119,7 @@ def test_f1_unknown_and_reference(
     ([Region("1", 905957, 905957)], None, ["synonymous"], 1),
     ([Region("1", 905957, 905957)], None, ["missense"], 0),
     ([Region("1", 905957, 905957)], None, ["synonymous"], 1),
-    ([Region("1", 905957, 905957)], "not denovo ", None, 0),
+    ([Region("1", 905957, 905957)], "not denovo ", None, 1),
 
 ])
 def test_f1_cannonical_denovo(
