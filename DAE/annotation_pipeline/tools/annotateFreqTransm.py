@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import gzip
 
 from utilities import main
 from annotate_score_base import ScoreAnnotator
@@ -42,8 +43,12 @@ class FrequencyAnnotator(ScoreAnnotator):
             opts.default_values = opts.default_value
 
         opts.labels = opts.label
+
+        with gzip.open(opts.scores_file, 'rb') as file:
+            score_file_header = file.readline().rstrip('\n').split('\t')
+
         super(FrequencyAnnotator, self).__init__(opts, header, [opts.v],
-            None, ['chr', 'position', 'position', 'variant'])
+            score_file_header, ['chr', 'position', 'position', 'variant'])
 
 if __name__ == "__main__":
     main(get_argument_parser(), FrequencyAnnotator)

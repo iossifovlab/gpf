@@ -25,11 +25,14 @@ def get_argument_parser():
         help='read score files using tabix index '
               '(default: read score files iteratively)',
         default=False, action='store_true')
+    parser.add_argument('--reference-genome', choices=['hg19', 'hg38'])
 
     return parser
 
 
 class MissenseScoresAnnotator(AnnotatorBase):
+
+    CHROMOSOMES = [str(i) for i in range(1, 23)] + ['X', 'Y']
 
     def __init__(self, opts, header=None):
         self.opts = opts
@@ -39,6 +42,13 @@ class MissenseScoresAnnotator(AnnotatorBase):
         if opts.dbnsfp is None:
             opts.dbnsfp = os.path.join(os.environ['dbNSFP_PATH'])
         self.path = opts.dbnsfp
+        if opts.reference_genome is None or \
+                opts.reference_genome == 'hg19':
+            self.score_file_index_columns = ['hg19_chr', 'hg19_pos(1-based)',
+                'ref', 'alt']
+        else:
+            self.score_file_index_columns = ['chr', 'pos(1-based)', 'ref',
+                'alt']
         self.annotators = {}
         self._init_cols()
 
@@ -55,12 +65,14 @@ class MissenseScoresAnnotator(AnnotatorBase):
 
     def _annotator_for(self, chr, scores):
         if chr not in self.annotators:
+            if chr not in self.CHROMOSOMES:
+                return None
             config = {
                 'c': self.opts.c,
                 'p': self.opts.p,
                 'x': self.opts.x,
                 'scores_columns': ','.join(scores),
-                'default_values': '',
+                'default_values': None,
                 'direct': self.opts.direct,
                 'scores_file': self.path.format(chr)
             }
@@ -69,22 +81,26 @@ class MissenseScoresAnnotator(AnnotatorBase):
             self.annotators[chr] = ScoreAnnotator(score_annotator_opts,
                 header=list(self.header), search_columns=[self.opts.r, self.opts.a],
                 score_file_header=None,
-                score_file_index_columns=['chr', 'pos(1-based)', 'ref', 'alt'])
+                score_file_index_columns=self.score_file_index_columns)
         return self.annotators[chr]
 
     def _get_chr(self, line):
         if self.loc_idx is not None:
-            return line[self.loc_idx-1].split(':')[0]
+            chr = line[self.loc_idx-1].split(':')[0]
         elif self.chr_idx is not None:
-            return line[self.chr_idx-1]
+            chr = line[self.chr_idx-1]
+        return chr.replace('chr', '')
 
     @property
     def new_columns(self):
         return self.opts.columns
 
     def line_annotations(self, line, new_cols_order):
-        return self._annotator_for(self._get_chr(line), new_cols_order)\
-            .line_annotations(line, new_cols_order)
+        annotator = self._annotator_for(self._get_chr(line), new_cols_order)
+        if annotator is not None:
+            return annotator.line_annotations(line, new_cols_order)
+        else:
+            return ['' for value in new_cols_order]
 
 
 if __name__ == "__main__":
