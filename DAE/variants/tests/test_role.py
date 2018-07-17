@@ -7,14 +7,14 @@ from variants.attributes import Role, RoleQuery
 from variants.attributes import RoleQuery as RQ
 
 
-def test_role_all_simple():
-    assert Role.all.value & Role.prb.value
-
-
-def test_role_all():
-    for role in Role:
-        print(role.name)
-        assert role.value & Role.all.value
+# def test_role_all_simple():
+#     assert Role.all.value & Role.prb.value
+#
+#
+# def test_role_all():
+#     for role in Role:
+#         print(role.name)
+#         assert role.value & Role.all.value
 
 
 def test_role_query():

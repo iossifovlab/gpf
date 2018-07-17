@@ -80,7 +80,6 @@ def family_variant_parquet_schema():
         pa.field("summary_index", pa.int64()),
         pa.field("family_id", pa.string()),
         pa.field("genotype", pa.list_(pa.int8())),
-        # pa.field("inheritance", pa.int32()),
     ]
 
     return pa.schema(fields)
@@ -90,9 +89,10 @@ def family_allele_parquet_schema():
     fields = [
         pa.field("family_index", pa.int64()),
         pa.field("summary_index", pa.int64()),
-        pa.field("allele_index", pa.int16()),
+        pa.field("allele_index", pa.int8()),
+        pa.field("inheritance_in_members", pa.list_(pa.int8())),
         pa.field("variant_in_members", pa.list_(pa.string())),
-        pa.field("variant_in_roles", pa.list_(pa.int32())),
+        pa.field("variant_in_roles", pa.list_(pa.int8())),
         pa.field("variant_in_sexes", pa.list_(pa.int8())),
     ]
     return pa.schema(fields)
@@ -109,12 +109,12 @@ def family_variants_batch(variants):
         "summary_index": [],
         "family_id": [],
         "genotype": [],
-        "inheritance": [],
     }
     allele_data = {
         "family_index": [],
         "summary_index": [],
         "allele_index": [],
+        "inheritance_in_members": [],
         "variant_in_members": [],
         "variant_in_roles": [],
         "variant_in_sexes": [],
@@ -124,6 +124,8 @@ def family_variants_batch(variants):
             allele_data["family_index"].append(family_index)
             allele_data["summary_index"].append(vs.summary_index)
             allele_data["allele_index"].append(allele.allele_index)
+            allele_data["inheritance_in_members"].\
+                append([i.value for i in allele.inheritance_in_members])
             if allele.is_reference_allele:
                 allele_data["variant_in_members"].append(None)
                 allele_data["variant_in_roles"].append(None)
@@ -142,7 +144,6 @@ def family_variants_batch(variants):
         family_data["summary_index"].append(vs.summary_index)
         family_data["family_id"].append(vs.family_id)
         family_data["genotype"].append(vs.gt_flatten())
-        family_data["inheritance"].append(None)
 
     allele_batch_data = []
     for name in family_allele_schema.names:

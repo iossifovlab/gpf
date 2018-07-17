@@ -11,45 +11,34 @@ import ast
 class Role(enum.Enum):
 
     maternal_grandmother = 1
-    maternal_grandfather = 1 << 1
-    paternal_grandmother = 1 << 2
-    paternal_grandfather = 1 << 3
+    maternal_grandfather = 2
+    paternal_grandmother = 3
+    paternal_grandfather = 4
 
-    mom = 1 << 4
-    dad = 1 << 5
-    parent = 1 << 6
+    mom = 10
+    dad = 11
+    parent = 12
 
-    maternal_aunt = 1 << 7
-    maternal_uncle = 1 << 8
-    paternal_aunt = 1 << 9
-    paternal_uncle = 1 << 10
+    prb = 20
+    sib = 21
+    child = 22
 
-    step_mom = 1 << 11
-    step_dad = 1 << 12
+    maternal_half_sibling = 30
+    paternal_half_sibling = 31
 
-    prb = 1 << 13
-    sib = 1 << 14
-    child = 1 << 15
+    maternal_aunt = 50
+    maternal_uncle = 51
+    paternal_aunt = 52
+    paternal_uncle = 53
 
-    maternal_half_sibling = 1 << 16
-    paternal_half_sibling = 1 << 17
+    maternal_cousin = 60
+    paternal_cousin = 61
 
-    maternal_cousin = 1 << 18
-    paternal_cousin = 1 << 29
-    spouse = 1 << 20
+    step_mom = 70
+    step_dad = 71
+    spouse = 72
 
-    unknown = 1 << 31
-
-    all = prb | sib | child | \
-        maternal_half_sibling | paternal_half_sibling | \
-        parent | \
-        mom | dad | \
-        step_mom | step_dad | spouse | \
-        maternal_cousin | paternal_cousin | \
-        maternal_uncle | maternal_aunt | paternal_uncle | paternal_aunt | \
-        maternal_grandfather | maternal_grandmother | \
-        paternal_grandfather | paternal_grandmother | \
-        unknown
+    unknown = 100
 
     def __repr__(self):
         return self.name
@@ -119,10 +108,10 @@ class Inheritance(enum.Enum):
 class VariantType(enum.Enum):
     invalid = 0
     substitution = 1
-    insertion = 1 << 1
-    deletion = 1 << 2
-    complex = 1 << 3
-    CNV = 1 << 4
+    insertion = 2
+    deletion = 3
+    complex = 4
+    CNV = 5
 
     @staticmethod
     def from_name(name):

@@ -20,7 +20,8 @@ def test_parquet_variants(variants_vcf, fixture_name, temp_filename):
     fvars = variants_vcf(fixture_name)
     family_table, f2s_table = family_variants_table(
         fvars.query_variants(
-            inhteritance="not reference"
+            return_reference=True,
+            return_unknown=True
         ))
     assert family_table is not None
 
