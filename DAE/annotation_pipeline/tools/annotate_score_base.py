@@ -10,6 +10,7 @@ class ScoreFile(object):
 
     def __init__(self, score_file_name, score_file_header, scores_default_values,
             scores_columns, *search_columns):
+        self.header = score_file_header
         self.scores_default_values = scores_default_values
         self.search_indices = [self.header.index(col)
                                for col in search_columns]
@@ -35,49 +36,52 @@ class IterativeAccess(ScoreFile):
             scores_columns, chr_column, pos_begin_column, pos_end_column,
             *search_columns):
         self.file = gzip.open(score_file_name, 'rb')
-        self.header = score_file_header
-        if self.header is None:
-            self.header = self.file.readline().rstrip('\n')[1:].split('\t')
+        if score_file_header is None:
+            header_str = self.file.readline().rstrip('\n')
+            if header_str[0] == '#':
+                header_str = header_str[1:]
+            score_file_header = header_str.split('\t')
         super(IterativeAccess, self).__init__(score_file_name, score_file_header,
             scores_default_values, scores_columns, *search_columns)
         self.chr_index = self.header.index(chr_column)
         self.pos_begin_index = self.header.index(pos_begin_column)
         self.pos_end_index = self.header.index(pos_end_column)
-        self.current_lines = []
+        self.current_lines = [self._next_line()]
 
     def _fetch(self, chr, pos):
         # TODO this implements closed interval because we want to support
         # files with single position column
         chr = self._chr_to_int(chr)
-
-        while len(self.current_lines) == 0 or \
-                self.current_lines[-1][self.pos_begin_index] <= pos or \
-                self.current_lines[-1][self.chr_index] > chr:
-            line = self._next_line()
-            if line is not None:
-                self.current_lines.append(line)
-            else:
+        for i in range(len(self.current_lines) - 1, -1, -1):
+            if self._chr_to_int(self.current_lines[i][self.chr_index]) < chr or \
+                    int(self.current_lines[i][self.pos_end_index]) < pos:
+                del self.current_lines[0:i+1]
                 break
 
-        if len(self.current_lines) > 0:
-            del_index = -1
-            for i in range(0, len(self.current_lines)):
-                if self.current_lines[i][self.chr_index] > chr or (self.current_lines[i][self.chr_index] == chr and \
-                        self.current_lines[i][self.pos_end_index] >= pos):
-                    del_index = i-1
-                    break
-            if del_index != -1:
-                del self.current_lines[0:del_index]
+        if len(self.current_lines) == 0 or \
+                (int(self.current_lines[-1][self.pos_begin_index]) <= pos and \
+                self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chr):
+            line = self._next_line()
+            while self._chr_to_int(line[self.chr_index]) <= chr and \
+                    (int(line[self.pos_end_index]) < pos or \
+                    self._chr_to_int(line[self.chr_index]) != chr):
+                line = self._next_line()
+            self.current_lines.append(line)
+
+            while int(self.current_lines[-1][self.pos_begin_index]) <= pos and \
+                    self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chr:
+                self.current_lines.append(self._next_line())
 
         return self.current_lines[:-1]
 
     def _next_line(self):
         line = self.file.readline()
-        if line is not None:
-            line = line.rstrip('\n')
-        if line != '':
-            return line.split('\t')
-        return None
+        if line is None or line == '':
+            line = self.header[:]
+            line[self.chr_index] = '25'
+        else:
+            line = line.rstrip('\n').split('\t')
+        return line
 
     def _chr_to_int(self, chr):
         chr = chr.replace('chr', '')
@@ -88,10 +92,12 @@ class DirectAccess(ScoreFile):
 
     def __init__(self, score_file_name, score_file_header, scores_default_values,
             scores_columns, *search_columns):
-        self.header = score_file_header
-        if self.header is None:
+        if score_file_header is None:
             with gzip.open(score_file_name, 'rb') as file:
-                self.header = file.readline().rstrip('\n')[1:].split('\t')
+                header_str = file.readline().rstrip('\n')
+                if header_str[0] == '#':
+                    header_str = header_str[1:]
+                score_file_header = header_str.split('\t')
         super(DirectAccess, self).__init__(score_file_name, score_file_header,
             scores_default_values, scores_columns, *search_columns)
         self.file = pysam.Tabixfile(score_file_name)

@@ -44,11 +44,11 @@ class MissenseScoresAnnotator(AnnotatorBase):
         self.path = opts.dbnsfp
         if opts.reference_genome is None or \
                 opts.reference_genome == 'hg19':
-            self.score_file_index_columns = ['hg19_chr', 'hg19_pos(1-based)',
-                'ref', 'alt']
+            self.score_file_index_columns = ['chr', 'pos(1-coor)',
+                'pos(1-coor)', 'ref', 'alt']
         else:
-            self.score_file_index_columns = ['chr', 'pos(1-based)', 'ref',
-                'alt']
+            self.score_file_index_columns = ['chr', 'pos(1-based)',
+                'pos(1-based)',  'ref', 'alt']
         self.annotators = {}
         self._init_cols()
 
