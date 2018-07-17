@@ -13,7 +13,7 @@ from variants.vcf_utils import mat2str
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     # "variants_df",  # FIXME:
-    "variants_thrift",  # FIXME:
+    "variants_thrift",
 ])
 @pytest.mark.parametrize("inheritance,count", [
     (Inheritance.mendelian, 14),
@@ -36,7 +36,7 @@ def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     # "variants_df",  # FIXME:
-    "variants_thrift",  # FIXME:
+    "variants_thrift",
 ])
 @pytest.mark.parametrize("count,inheritance", [
     (11, Inheritance.mendelian),
@@ -57,7 +57,7 @@ def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     # "variants_df",  # FIXME:
-    "variants_thrift",  # FIXME:
+    "variants_thrift",
 ])
 @pytest.mark.parametrize("count,inheritance", [
     (6, None),
