@@ -331,7 +331,6 @@ class RawFamilyVariants(FamiliesBase):
         return_unknown = kwargs.get("return_unknown", False)
 
         for v in vs:
-            print(v, v.is_reference(), v.is_unknown())
             if v.is_reference() and not return_reference:
                 continue
             if v.is_unknown() and not return_unknown:

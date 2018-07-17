@@ -71,8 +71,6 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
             f2s=self.config.f2s,
             **kwargs
         )
-        print(df[['effect_gene_types', 'effect_gene_genes']])
-        # print(df.effect_gene_types, type(df.effect_gene_types.values))
         df.genotype = df.genotype.apply(
             lambda v: np.fromstring(v.strip("[]"), dtype=np.int8, sep=','))
 
@@ -83,7 +81,5 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
                 return v.strip("[]").split(",")
         df.effect_gene_types = df.effect_gene_types.apply(s2a)
         df.effect_gene_genes = df.effect_gene_genes.apply(s2a)
-
-        print(df[['effect_gene_types', 'effect_gene_genes']])
 
         return self.wrap_variants(self.families, df)

@@ -13,17 +13,19 @@ from variants.vcf_utils import mat2str
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     # "variants_df",  # FIXME:
-    # "variants_thrift",  # FIXME:
+    "variants_thrift",  # FIXME:
 ])
 @pytest.mark.parametrize("inheritance,count", [
-    (Inheritance.mendelian, 13),
+    (Inheritance.mendelian, 14),
     (Inheritance.omission, 5),
     (Inheritance.denovo, 4),
-    (Inheritance.unknown, 14),
+    (Inheritance.unknown, 15),
 ])
 def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
     fvars = variants_impl(variants)("fixtures/inheritance_trio")
-    vs = list(fvars.query_variants(inheritance=inheritance.name))
+    vs = list(fvars.query_variants(
+        inheritance=inheritance.name,
+        return_reference=True))
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance_in_members)
         assert inheritance in v.inheritance_in_members
@@ -34,16 +36,18 @@ def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     # "variants_df",  # FIXME:
-    # "variants_thrift",  # FIXME:
+    "variants_thrift",  # FIXME:
 ])
 @pytest.mark.parametrize("count,inheritance", [
-    (10, Inheritance.mendelian),
+    (11, Inheritance.mendelian),
     (3, Inheritance.omission),
     (2, Inheritance.denovo),
 ])
 def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
     fvars = variants_impl(variants)("fixtures/inheritance_quad")
-    vs = list(fvars.query_variants(inheritance=inheritance.name))
+    vs = list(fvars.query_variants(
+        inheritance=inheritance.name,
+        return_reference=True))
     assert len(vs) == count
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance_in_members)
@@ -53,7 +57,7 @@ def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     # "variants_df",  # FIXME:
-    # "variants_thrift",  # FIXME:
+    "variants_thrift",  # FIXME:
 ])
 @pytest.mark.parametrize("count,inheritance", [
     (6, None),

@@ -27,7 +27,6 @@ class DfFamilyVariantsBase(object):
     @staticmethod
     def wrap_family_variant_multi(families, records):
         sv = SummaryVariantFactory.summary_variant_from_records(records)
-        print(sv)
 
         family_id = records[0]['family_id']
         assert all([r['family_id'] == family_id for r in records])
