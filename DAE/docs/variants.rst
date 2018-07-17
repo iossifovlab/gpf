@@ -42,7 +42,7 @@ Example usage of `variants` package::
     for c, v in enumerate(vs):
         print(c, v, v.family_id, mat2str(v.best_st), sep='\t')
         for aa in v.alt_alleles:
-            print(aa.effect.worst, aa.effect.gene)
+            print(aa.effect.worst, aa.effect.genes)
             print(aa['af_allele_count'], aa['af_allele_freq'])
 
 
