@@ -24,22 +24,23 @@ class DuplicateColumnsAnnotator(AnnotatorBase):
     def __init__(self, opts, header=None):
         super(DuplicateColumnsAnnotator, self).__init__(opts, header)
 
-        self.columns_idx = [assign_values(col, header)
-                            for col in opts.columns.split(',')]
+        self.columns_idx = {col: assign_values(col, header)
+                            for col in opts.columns.split(',')}
 
         if opts.labels is None:
             opts.labels = opts.columns
 
-        self._new_columns = opts.labels.split(',')
+        self._new_columns = opts.columns.split(',')
 
-        self.header = self.header + self._new_columns
+        if self.header:
+            self.header = self.header + opts.labels.split(',')
 
     @property
     def new_columns(self):
         return self._new_columns
 
     def line_annotations(self, line, new_columns):
-        return [line[i - 1] for i in self.columns_idx]
+        return [line[self.columns_idx[col] - 1] for col in new_columns]
 
 
 if __name__ == '__main__':
