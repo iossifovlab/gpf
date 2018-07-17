@@ -12,45 +12,10 @@ from variants.family import Family
 from variants.attributes import Inheritance
 
 
-class FamilyAllele(SummaryAllele):
+class FamilyDelegate(object):
 
-    def __init__(self, summary_allele, family, genotype):
-        assert isinstance(family, Family)
-        assert isinstance(summary_allele, SummaryAllele)
-
-        self.summary_allele = summary_allele
+    def __init__(self, family):
         self.family = family
-        self.gt = np.copy(genotype)
-
-        self._inheritance = None
-        self._inheritance_in_members = None
-        self._variant_in_members = None
-        self._variant_in_roles = None
-        self._variant_in_sexes = None
-
-#     @property
-#     def chromosome(self):
-#         return self.summary_allele.chromosome
-#
-#     @property
-#     def position(self):
-#         return self.summary_allele.position
-#
-#     @property
-#     def alternative(self):
-#         return self.summary_allele.alternative
-#
-#     @property
-#     def reference(self):
-#         return self.summary_allele.reference
-#
-#     @property
-#     def effect(self):
-#         return self.summary_allele.effect
-#
-#     @property
-#     def details(self):
-#         return self.summary_allele.details
 
     @property
     def members_in_order(self):
@@ -74,6 +39,24 @@ class FamilyAllele(SummaryAllele):
         Returns the family ID.
         """
         return self.family.family_id
+
+
+class FamilyAllele(SummaryAllele, FamilyDelegate):
+
+    def __init__(self, summary_allele, family, genotype):
+        assert isinstance(family, Family)
+        assert isinstance(summary_allele, SummaryAllele)
+
+        self.summary_allele = summary_allele
+        self.gt = genotype
+
+        FamilyDelegate.__init__(self, family)
+
+        self._inheritance = None
+        self._inheritance_in_members = None
+        self._variant_in_members = None
+        self._variant_in_roles = None
+        self._variant_in_sexes = None
 
     @property
     def genotype(self):
@@ -112,35 +95,6 @@ class FamilyAllele(SummaryAllele):
                     result[ch_id] = inh
             self._inheritance_in_members = set(result.values())
         return self._inheritance_in_members
-
-    def is_reference(self):
-        """
-        Returns True if all known alleles in the family variant are
-        `reference`.
-        """
-        return np.any(self.gt == 0) and \
-            np.all(np.logical_or(self.gt == 0, self.gt == -1))
-
-    def is_mendelian(self):
-        """
-        Return True if the inheritance type of the family variant is
-        `medelian`.
-        """
-        return self.inheritance == Inheritance.mendelian
-
-    def is_denovo(self):
-        """
-        Return True if the inheritance type of the family variant is
-        `denovo`.
-        """
-        return self.inheritance == Inheritance.denovo
-
-    def is_omission(self):
-        """
-        Return True if the inheritance type of the family variant is
-        `omission`.
-        """
-        return self.inheritance == Inheritance.omission
 
     @property
     def variant_in_members(self):
@@ -269,12 +223,8 @@ class FamilyAllele(SummaryAllele):
     def __getattr__(self, name):
         return getattr(self.summary_allele, name)
 
-    @property
-    def allele_index(self):
-        return self.summary_allele.allele_index
 
-
-class FamilyVariant(SummaryVariant):
+class FamilyVariant(SummaryVariant, FamilyDelegate):
 
     def __init__(self, summary_variant, family, genotype):
         assert summary_variant is not None
@@ -283,14 +233,12 @@ class FamilyVariant(SummaryVariant):
         assert genotype is not None
         assert isinstance(family, Family)
 
-        self.family = family
+        FamilyDelegate.__init__(self, family)
+        self.summary_variant = summary_variant
         self.gt = np.copy(genotype)
 
-        self.summary_variant = summary_variant
-        self.gt = genotype
-
         alleles = [
-            FamilyAllele(summary_variant.ref_allele, family, genotype)
+            FamilyAllele(summary_variant.ref_allele, family, self.gt)
         ]
 
         for allele_index in self.calc_alt_alleles(self.gt):
@@ -298,35 +246,13 @@ class FamilyVariant(SummaryVariant):
             fa = FamilyAllele(summary_allele, family, genotype)
 
             alleles.append(fa)
+
         self.alleles = alleles
         self.alt_alleles = alleles[1:]
 
         self._best_st = None
         self._inheritance_in_members = None
         self._variant_in_members = None
-
-    @property
-    def members_in_order(self):
-        """
-        Returns list of the members of the family in the order specified from
-        the pedigree file. Each element of the returned list is an object of
-        type :class:`variants.family.Person`.
-        """
-        return self.family.members_in_order
-
-    @property
-    def members_ids(self):
-        """
-        Returns list of family members IDs.
-        """
-        return self.family.members_ids
-
-    @property
-    def family_id(self):
-        """
-        Returns the family ID.
-        """
-        return self.family.family_id
 
     @property
     def genotype(self):

@@ -62,7 +62,7 @@ class VcfFamily(Family):
         return samples_to_alleles_index(p)
 
 
-class VariantFactoryMulti(SummaryVariantFactory):
+class VariantFactory(SummaryVariantFactory):
 
     @staticmethod
     def from_summary_variant(sv, family, gt):
@@ -76,19 +76,19 @@ class VariantFactoryMulti(SummaryVariantFactory):
         gt = np.copy(vcf.gt_idxs[family.alleles])
         gt = gt.reshape([2, len(family)], order='F')
 
-        return VariantFactoryMulti.from_summary_variant(
+        return VariantFactory.from_summary_variant(
             summary_variant, family, gt)
 
     @staticmethod
     def family_variant_from_gt(summary_variant, family, gt):
-        return VariantFactoryMulti.from_summary_variant(
+        return VariantFactory.from_summary_variant(
             summary_variant, family, gt=gt)
 
 
 class RawFamilyVariants(FamiliesBase):
 
     def __init__(self, config=None, prefix=None, annotator=None, region=None,
-                 variant_factory=VariantFactoryMulti):
+                 variant_factory=VariantFactory):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix_vcf(prefix)

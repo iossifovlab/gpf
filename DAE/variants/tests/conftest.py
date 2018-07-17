@@ -13,7 +13,6 @@ import time
 
 import pytest
 
-import numpy as np
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from variants.annotate_composite import AnnotatorComposite
 from variants.annotate_variant_details import VcfVariantDetailsAnnotator
@@ -33,7 +32,7 @@ from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
 from variants.raw_df import DfFamilyVariants
 from variants.raw_thrift import ThriftFamilyVariants
 from variants.raw_vcf import RawFamilyVariants, \
-    VariantFactoryMulti
+    VariantFactory
 from variants.variant import SummaryAllele, SummaryVariant
 
 
@@ -159,7 +158,7 @@ def ustudy_loader(ustudy_config):
 def ustudy_vcf(ustudy_config, composite_annotator):
     fvariants = RawFamilyVariants(
         ustudy_config, annotator=composite_annotator,
-        variant_factory=VariantFactoryMulti)
+        variant_factory=VariantFactory)
     return fvariants
 
 
@@ -170,7 +169,7 @@ def variants_vcf(composite_annotator):
         a_conf = Configure.from_prefix_vcf(a_data)
         fvars = RawFamilyVariants(
             a_conf, annotator=composite_annotator,
-            variant_factory=VariantFactoryMulti)
+            variant_factory=VariantFactory)
         return fvars
     return builder
 
@@ -276,7 +275,7 @@ def data_vcf19(composite_annotator):
         a_conf = Configure.from_prefix_vcf(a_prefix)
         fvars = RawFamilyVariants(
             a_conf, annotator=composite_annotator,
-            variant_factory=VariantFactoryMulti)
+            variant_factory=VariantFactory)
         return fvars
     return builder
 
@@ -313,67 +312,6 @@ def sv():
 def fv1(fam1, sv):
     def rfun(gt):
         return FamilyVariant(sv, fam1, gt)
-    return rfun
-
-
-@pytest.fixture(scope='session')
-def fv_one(fam1, sv):
-    return VariantFactoryMulti.family_variant_from_gt(
-        sv, fam1, np.array([[1, 1, 1], [0, 0, 0]]))[0]
-
-
-PED2 = """
-# SIMPLE QUAD
-familyId,    personId,    dadId,    momId,    sex,    status,    role
-f1,          d1,          0,        0,        1,      1,         dad
-f1,          m1,          0,        0,        2,      1,         mom
-f1,          p1,          d1,       m1,       1,      2,         prb
-f1,          s1,          d1,       m1,       1,      1,         sib
-"""
-
-
-@pytest.fixture(scope='session')
-def fam2():
-    ped_df = RawVariantsLoader.load_pedigree_file(
-        StringIO.StringIO(PED2), sep=',')
-
-    family = Family("f1", ped_df)
-    assert len(family.trios) == 2
-    return family
-
-
-@pytest.fixture(scope='session')
-def fv2(sv, fam2):
-    def rfun(gt):
-        return FamilyVariant(sv, fam2, gt)
-    return rfun
-
-
-PED3 = """
-# TWO GENERATION PEDIGREE
-familyId, personId, dadId, momId, sex,   status, role
-f1,       gd1,      0,     0,     1,     1,      pathernal_grandfather
-f1,       gm1,      0,     0,     2,     1,      pathernal_grandmother
-f1,       d1,       gd1,   gm1,   1,     1,      dad
-f1,       m1,       0,     0,     2,     1,      mom
-f1,       p1,       d1,    m1,    1,     2,      prb
-"""
-
-
-@pytest.fixture(scope='session')
-def fam3():
-    ped_df = RawVariantsLoader.load_pedigree_file(
-        StringIO.StringIO(PED3), sep=',')
-
-    family = Family("f1", ped_df)
-    assert len(family.trios) == 2
-    return family
-
-
-@pytest.fixture(scope='session')
-def fv3(sv, fam3):
-    def rfun(gt):
-        return FamilyVariant(sv, fam3, gt)
     return rfun
 
 
