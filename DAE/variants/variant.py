@@ -253,8 +253,11 @@ class SummaryVariant(VariantBase):
 
         assert alleles[0].is_reference_allele
 
+        #: list of all alleles in the variant
         self.alleles = alleles
+        #: the reference allele
         self.ref_allele = alleles[0]
+        #: list of all alternative alleles
         self.alt_alleles = alleles[1:]
 
         super(SummaryVariant, self).__init__(

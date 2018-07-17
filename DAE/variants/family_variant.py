@@ -47,6 +47,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         assert isinstance(family, Family)
         assert isinstance(summary_allele, SummaryAllele)
 
+        #: summary allele that corresponds to this allele in family variant
         self.summary_allele = summary_allele
         self.gt = genotype
 
@@ -247,7 +248,11 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
             alleles.append(fa)
 
+        #: list of all family alleles that affect the family variant
         self.alleles = alleles
+        #: reference family allele fot the give family variant
+        self.ref_allele = alleles[0]
+        #: list of all alternative family alleles that affect family variant
         self.alt_alleles = alleles[1:]
 
         self._best_st = None
