@@ -28,33 +28,29 @@ class FamilyAllele(SummaryAllele):
         self._variant_in_roles = None
         self._variant_in_sexes = None
 
-    @property
-    def chromosome(self):
-        return self.summary_allele.chromosome
-
-    @property
-    def position(self):
-        return self.summary_allele.position
-
-    @property
-    def alternative(self):
-        return self.summary_allele.alternative
-
-    @property
-    def reference(self):
-        return self.summary_allele.reference
-
-    @property
-    def effect(self):
-        return self.summary_allele.effect
-
-    @property
-    def details(self):
-        return self.summary_allele.details
-
-    @property
-    def get_attribute(self, item, default=None):
-        return self.summary_allele.get_attribute(item, default)
+#     @property
+#     def chromosome(self):
+#         return self.summary_allele.chromosome
+#
+#     @property
+#     def position(self):
+#         return self.summary_allele.position
+#
+#     @property
+#     def alternative(self):
+#         return self.summary_allele.alternative
+#
+#     @property
+#     def reference(self):
+#         return self.summary_allele.reference
+#
+#     @property
+#     def effect(self):
+#         return self.summary_allele.effect
+#
+#     @property
+#     def details(self):
+#         return self.summary_allele.details
 
     @property
     def members_in_order(self):
@@ -268,50 +264,10 @@ class FamilyAllele(SummaryAllele):
         elif cls.check_omission_trio(p1, p2, ch, allele_index):
             return Inheritance.omission
         else:
-            print("strange inheritance:", p1, p2, ch, allele_index)
             return Inheritance.other
 
-    @staticmethod
-    def combine_inheritance(*inheritance):
-        """
-        Combines iheritance types and returns inheritance type as
-        :class:`variants.attributes.Inheritance`.
-
-        To calculate the inheritance of a non-trio family, it is split into
-        trios, iheritance type of each trio is calculated using
-        :func:`calc_inheritance_trio`, and the iheritance types of all trio
-        families are combined into single inheritacne type.
-
-        :return: combined inheritance type as
-            :class:`variants.attributes.Inheritance`
-        """
-        inherits = np.array([i.value for i in inheritance])
-        inherits = np.array(inherits)
-        if len(inherits) == 0 or np.any(inherits == Inheritance.unknown.value):
-            return Inheritance.unknown
-        elif np.all(inherits == Inheritance.mendelian.value):
-            return Inheritance.mendelian
-        elif np.all(np.logical_or(
-                inherits == Inheritance.mendelian.value,
-                inherits == Inheritance.denovo.value)):
-            return Inheritance.denovo
-        elif np.all(np.logical_or(
-                inherits == Inheritance.mendelian.value,
-                inherits == Inheritance.omission.value)):
-            return Inheritance.omission
-        elif np.all(np.logical_or(
-                inherits == Inheritance.mendelian.value,
-                np.logical_or(
-                    inherits == Inheritance.omission.value,
-                    inherits == Inheritance.denovo.value
-                ))):
-            return Inheritance.other
-        else:
-            print("strange inheritance:", inherits)
-            return Inheritance.unknown
-
-#     def __getattr__(self, name):
-#         return getattr(self.summary_allele, name)
+    def __getattr__(self, name):
+        return getattr(self.summary_allele, name)
 
     @property
     def allele_index(self):
@@ -347,6 +303,7 @@ class FamilyVariant(SummaryVariant):
 
         self._best_st = None
         self._inheritance_in_members = None
+        self._variant_in_members = None
 
     @property
     def members_in_order(self):
@@ -408,6 +365,15 @@ class FamilyVariant(SummaryVariant):
                 self._inheritance_in_members = self._inheritance_in_members | \
                     allele.inheritance_in_members
         return self._inheritance_in_members
+
+    @property
+    def variant_in_members(self):
+        if self._variant_in_members is None:
+            self._variant_in_members = set()
+            for allele in self.alt_alleles:
+                self._variant_in_members = self._variant_in_members | \
+                    allele.variant_in_members
+        return self._variant_in_members
 
     def __repr__(self):
         if not self.alternative:

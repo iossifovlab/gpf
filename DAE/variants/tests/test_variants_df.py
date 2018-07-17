@@ -9,8 +9,6 @@ import pytest
 from RegionOperations import Region
 from variants.vcf_utils import mat2str
 
-pytestmark = pytest.mark.xfail()
-
 
 @pytest.mark.parametrize("fixture_name,count", [
     # "fixtures/effects_trio_multi",
@@ -123,14 +121,20 @@ def test_df_query_multiallelic_families(variants_df, fixture_name):
     vs = dfvars.query_variants(regions=regions, family_ids=family_ids)
     vs = list(vs)
     assert len(vs) == 1
-    print(vs)
     v = vs[0]
 
-    print(mat2str(v.best_st))
+    print(v, mat2str(v.best_st))
+    fa1 = v.alt_alleles[0]
+    fa2 = v.alt_alleles[1]
 
-    assert "mom1" in v.variant_in_members
-    assert "dad1" in v.variant_in_members
-    assert "ch1" not in v.variant_in_members
+    assert 'mom1' in fa1.variant_in_members
+    assert 'dad1' in fa2.variant_in_members
+
+    assert 'mom1' not in fa2.variant_in_members
+    assert 'dad1' not in fa1.variant_in_members
+
+    assert 'ch1' not in fa1.variant_in_members
+    assert 'ch1' not in fa2.variant_in_members
 
 
 @pytest.mark.parametrize("fixture_name", [
@@ -149,11 +153,14 @@ def test_df_query_multiallelic3_families(variants_df, fixture_name):
     vs = dfvars.query_variants(regions=regions, family_ids=family_ids)
     vs = list(vs)
     assert len(vs) == 1
-    print(vs)
     v = vs[0]
 
-    print(mat2str(v.best_st))
+    print(v, mat2str(v.best_st))
+    fa1 = v.alt_alleles[0]
+    fa2 = v.alt_alleles[1]
+    assert len(v.alt_alleles) == 2
 
-    assert "mom1" in v.variant_in_members
-    assert "dad1" in v.variant_in_members
-    assert "ch1" not in v.variant_in_members
+    assert "mom1" in fa1.variant_in_members
+    assert "dad1" in fa2.variant_in_members
+    assert "ch1" not in fa1.variant_in_members
+    assert "ch1" not in fa2.variant_in_members

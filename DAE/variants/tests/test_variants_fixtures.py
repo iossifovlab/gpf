@@ -34,14 +34,13 @@ def test_variants_all_count(variants_impl, variants, fixture_name, count):
     assert len(vs) == count
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/trios2",
 ])
 @pytest.mark.parametrize("variants", [
     "variants_df",
     "variants_vcf",
-    # "variants_thrift",
+    "variants_thrift",
 ])
 def test_df_query_multiallelic3_families(
         variants_impl, variants, fixture_name):
@@ -58,15 +57,17 @@ def test_df_query_multiallelic3_families(
         return_unknown=True)
     vs = list(vs)
     assert len(vs) == 1
-    print(vs)
     v = vs[0]
 
-    print(mat2str(v.best_st))
+    print(v, mat2str(v.best_st))
+    fa1 = v.alt_alleles[0]
+    fa2 = v.alt_alleles[1]
+    assert len(v.alt_alleles) == 2
 
-    assert mat2str(v.best_st) == "112/100/010/000"
-    assert "mom1" in v.variant_in_members
-    assert "dad1" in v.variant_in_members
-    assert "ch1" not in v.variant_in_members
+    assert "mom1" in fa1.variant_in_members
+    assert "dad1" in fa2.variant_in_members
+    assert "ch1" not in fa1.variant_in_members
+    assert "ch1" not in fa2.variant_in_members
 
 
 @pytest.mark.parametrize("variants", [

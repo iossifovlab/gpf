@@ -9,9 +9,6 @@ from variants.attributes import Sex, SexQuery
 import pytest
 
 
-pytestmark = pytest.mark.xfail()
-
-
 def test_sex_attribute():
 
     assert Sex.from_value(1) == Sex.male
@@ -55,63 +52,3 @@ def test_seq_query_complex():
     assert not q.match([Sex.female])
     assert not q.match([Sex.male, Sex.female])
     assert not q.match([Sex.unspecified])
-
-
-def test_query_sexes_male_only(ustudy_vcf):
-    vs = ustudy_vcf.query_variants(sexes='male and not female')
-    vl = list(vs)
-
-    assert len(vl) == 42
-    for v in vl:
-        assert set(v.variant_in_sexes) == set([Sex.male])
-
-
-def test_query_sexes_male_only_eq(ustudy_vcf):
-    vs = ustudy_vcf.query_variants(sexes='eq(male)')
-    vl = list(vs)
-
-    assert len(vl) == 42
-    for v in vl:
-        assert set(v.variant_in_sexes) == set([Sex.male])
-
-
-def test_query_sexes_female_only(ustudy_vcf):
-    vs = ustudy_vcf.query_variants(sexes='female and not male')
-    vl = list(vs)
-
-    assert len(vl) == 36
-    for v in vl:
-        assert set(v.variant_in_sexes) == set([Sex.female])
-
-
-def test_query_sexes_female_only_eq(ustudy_vcf):
-    vs = ustudy_vcf.query_variants(sexes='eq(female)')
-    vl = list(vs)
-
-    assert len(vl) == 36
-    for v in vl:
-        assert set(v.variant_in_sexes) == set([Sex.female])
-
-
-def test_query_sexes_single_sex_only(ustudy_vcf):
-    vs = ustudy_vcf.query_variants(
-        sexes="(male and not female) or (female and not male)")
-    assert vs is not None
-
-    vl = list(vs)
-
-    for v in vl:
-        assert len(v.variant_in_sexes) == 1
-    assert len(vl) == 78
-
-
-def test_query_sexes_single_sex_only_eq(ustudy_vcf):
-    vs = ustudy_vcf.query_variants(
-        sexes="eq(male) or eq(female)")
-    assert vs is not None
-
-    vl = list(vs)
-
-    for v in vl:
-        assert len(v.variant_in_sexes) == 1
-    assert len(vl) == 78

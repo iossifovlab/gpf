@@ -11,9 +11,6 @@ from variants.attributes import Inheritance
 from variants.vcf_utils import mat2str
 
 
-pytestmark = pytest.mark.xfail()
-
-
 @pytest.mark.parametrize("region,count,inheritance", [
     (Region('1', 11500, 11500), 1, Inheritance.unknown),
     (Region('1', 11501, 11501), 1, Inheritance.unknown),
@@ -26,11 +23,13 @@ def test_inheritance_nontrio(variants_vcf, region, count, inheritance):
     fvars = variants_vcf("fixtures/inheritance_nontrio")
     vs = list(fvars.query_variants(
         regions=[region],
-        family_ids=['f1']))
+        family_ids=['f1'],
+        return_reference=True,
+        return_unknown=True))
     for v in vs:
-        print(v, v.inheritance)
+        print(v, v.inheritance_in_members)
 
     assert len(vs) == count
     for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance)
-        assert v.inheritance == inheritance
+        print(v, mat2str(v.best_st), v.inheritance_in_members)
+        assert inheritance in v.inheritance_in_members

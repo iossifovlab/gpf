@@ -5,18 +5,14 @@ Created on Feb 27, 2018
 '''
 from __future__ import print_function
 
-import pytest
-
 from RegionOperations import Region
 from variants.attributes import Inheritance
 
 
-pytestmark = pytest.mark.xfail()
-
-
 def test_query_regions(ustudy_vcf):
     regions = [Region("1", 900719, 900719)]
-    vs = ustudy_vcf.query_variants(regions=regions)
+    vs = ustudy_vcf.query_variants(
+        regions=regions)
     assert vs is not None
     vl = list(vs)
     assert len(vl) == 1
@@ -27,7 +23,7 @@ def test_query_regions(ustudy_vcf):
     print(v.gt)
     print(v.best_st)
 
-    assert v.inheritance == Inheritance.unknown
+    assert Inheritance.unknown in v.inheritance_in_members
 
     assert v.best_st.shape == (2, 9)
     assert v.best_st[0, 0] == -1

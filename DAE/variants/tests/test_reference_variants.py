@@ -8,8 +8,6 @@ from __future__ import print_function
 import pytest
 from datasets.helpers import mat2str
 
-pytestmark = pytest.mark.xfail()
-
 
 @pytest.mark.parametrize("variants", [
     "variants_df",
@@ -24,7 +22,10 @@ def test_reference_variant_single_allele(
     dfvars = variants_impl(variants)(fixture_name)
     assert dfvars is not None
 
-    vs = dfvars.query_variants(family_ids=['f1'])
+    vs = dfvars.query_variants(
+        family_ids=['f1'],
+        return_reference=True,
+        return_unknown=True)
     vs = list(vs)
     assert len(vs) == 1
 
@@ -32,7 +33,7 @@ def test_reference_variant_single_allele(
     print(v)
 
     print("best_st:", mat2str(v.best_st))
-    print("inherit:", v.inheritance)
+    print("inherit:", v.inheritance_in_members)
     print("freq:   ", v.frequencies)
     print("effects:", v.effects)
     print("alleles:", v.alleles)

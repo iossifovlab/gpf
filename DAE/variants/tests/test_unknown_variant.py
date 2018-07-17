@@ -10,7 +10,6 @@ from RegionOperations import Region
 from variants.vcf_utils import mat2str
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("region,count,members", [
     (Region('1', 11500, 11500), 1, set(['mom1'])),
     (Region('1', 11501, 11501), 1, set(['mom1', 'ch1'])),
@@ -22,9 +21,10 @@ def test_variant_in_members(variants_vcf, region, count, members):
     vs = list(fvars.query_variants(regions=[region]))
     assert len(vs) == count
     for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance)
+        print(v, mat2str(v.best_st), v.inheritance_in_members)
+        print(mat2str(v.gt))
+
         print(v.variant_in_members)
-        print(v.variant_in_roles)
-        print(v.variant_in_sexes)
-        print(v.gt)
+        # print(v.variant_in_roles)
+        # print(v.variant_in_sexes)
         assert v.variant_in_members == members

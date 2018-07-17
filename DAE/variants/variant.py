@@ -236,7 +236,7 @@ class SummaryAllele(VariantBase):
         attributes. For example `sv['af_parents_called']` will return value
         matching key `af_parents_called` from addtional variant attributes.
         """
-        return self.get_attribute(item)
+        return self.attributes.get(item)
 
     def __contains__(self, item):
         """
@@ -304,10 +304,10 @@ class SummaryVariant(VariantBase):
         return set([aa.details.variant_type for aa in self.alt_alleles])
 
     def get_attribute(self, item, default=None):
-        return [sa.get_attribute(item, default) for sa in self.alt_alleles]
+        return [sa.get_attribute(item, default) for sa in self.alleles]
 
     def has_attribute(self, item):
-        return any([sa.has_attribute(item) for sa in self.alt_alleles])
+        return any([sa.has_attribute(item) for sa in self.alleles])
 
     def __getitem__(self, item):
         return self.get_attribute(item)
