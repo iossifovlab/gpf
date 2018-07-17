@@ -29,6 +29,22 @@ class FamilyAllele(SummaryAllele):
         self._variant_in_sexes = None
 
     @property
+    def chromosome(self):
+        return self.summary_allele.chromosome
+
+    @property
+    def position(self):
+        return self.summary_allele.position
+
+    @property
+    def alternative(self):
+        return self.summary_allele.alternative
+
+    @property
+    def reference(self):
+        return self.summary_allele.reference
+
+    @property
     def effect(self):
         return self.summary_allele.effect
 
@@ -39,10 +55,6 @@ class FamilyAllele(SummaryAllele):
     @property
     def get_attribute(self, item, default=None):
         return self.summary_allele.get_attribute(item, default)
-
-    @property
-    def alternative(self):
-        return self.summary_allele.alternative
 
     @property
     def members_in_order(self):
@@ -334,6 +346,7 @@ class FamilyVariant(SummaryVariant):
         self.alt_alleles = alleles[1:]
 
         self._best_st = None
+        self._inheritance_in_members = None
 
     @property
     def members_in_order(self):
@@ -386,6 +399,15 @@ class FamilyVariant(SummaryVariant):
         `reference`.
         """
         return np.all(self.gt == -1)
+
+    @property
+    def inheritance_in_members(self):
+        if self._inheritance_in_members is None:
+            self._inheritance_in_members = set()
+            for allele in self.alleles:
+                self._inheritance_in_members = self._inheritance_in_members | \
+                    allele.inheritance_in_members
+        return self._inheritance_in_members
 
     def __repr__(self):
         if not self.alternative:
