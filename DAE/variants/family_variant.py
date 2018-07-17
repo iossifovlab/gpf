@@ -87,8 +87,6 @@ class FamilyAllele(SummaryAllele):
             allele_index = self.allele_index
             result = {pid: Inheritance.unknown for pid in self.members_ids}
             for ch_id, trio in self.family.trios.items():
-                print(allele_index, ch_id, trio)
-
                 index = self.family.members_index(trio)
                 tgt = self.gt[:, index]
                 if np.any(tgt == -1):
@@ -100,12 +98,10 @@ class FamilyAllele(SummaryAllele):
                     p1 = tgt[:, 1]
                     p2 = tgt[:, 2]
                     inh = self.calc_inheritance_trio(p1, p2, ch, allele_index)
-                    print(ch_id, inh)
                     if inh != Inheritance.omission and \
                             np.all(ch != allele_index):
                         inh = Inheritance.missing
                     result[ch_id] = inh
-            print(allele_index, result)
             self._inheritance_in_members = set(result.values())
         return self._inheritance_in_members
 

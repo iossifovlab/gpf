@@ -29,7 +29,7 @@ from variants.family_variant import FamilyVariant
 from variants.loader import RawVariantsLoader
 from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
     save_family_variants_df_to_parquet, save_ped_df_to_parquet,\
-    save_f2s_df_to_parquet
+    save_family_allele_df_to_parquet
 from variants.raw_df import DfFamilyVariants
 from variants.raw_thrift import ThriftFamilyVariants
 from variants.raw_vcf import RawFamilyVariants, \
@@ -245,7 +245,7 @@ def parquet_variants(request, variants_df):
         fvars = variants_df(path)
         save_summary_to_parquet(fvars.summary_df, summary_filename)
         save_family_variants_df_to_parquet(fvars.vars_df, family_filename)
-        save_f2s_df_to_parquet(fvars.f2s_df, f2s_filename)
+        save_family_allele_df_to_parquet(fvars.f2s_df, f2s_filename)
         save_ped_df_to_parquet(fvars.ped_df, pedigree_filename)
         return pedigree_filename, summary_filename, \
             family_filename, f2s_filename

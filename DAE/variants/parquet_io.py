@@ -86,7 +86,7 @@ def family_variant_parquet_schema():
     return pa.schema(fields)
 
 
-def f2s_parquet_schema():
+def family_allele_parquet_schema():
     fields = [
         pa.field("family_index", pa.int64()),
         pa.field("summary_index", pa.int64()),
@@ -100,7 +100,7 @@ def f2s_parquet_schema():
 
 def family_variants_batch(variants):
     family_schema = family_variant_parquet_schema()
-    f2s_schema = f2s_parquet_schema()
+    family_allele_schema = family_allele_parquet_schema()
 
     family_data = {
         "chrom": [],
@@ -111,7 +111,7 @@ def family_variants_batch(variants):
         "genotype": [],
         "inheritance": [],
     }
-    f2s_data = {
+    allele_data = {
         "family_index": [],
         "summary_index": [],
         "allele_index": [],
@@ -121,19 +121,19 @@ def family_variants_batch(variants):
     }
     for family_index, vs in enumerate(variants):
         for allele in vs.alleles:
-            f2s_data["family_index"].append(family_index)
-            f2s_data["summary_index"].append(vs.summary_index)
-            f2s_data["allele_index"].append(allele.allele_index)
+            allele_data["family_index"].append(family_index)
+            allele_data["summary_index"].append(vs.summary_index)
+            allele_data["allele_index"].append(allele.allele_index)
             if allele.is_reference_allele:
-                f2s_data["variant_in_members"].append(None)
-                f2s_data["variant_in_roles"].append(None)
-                f2s_data["variant_in_sexes"].append(None)
+                allele_data["variant_in_members"].append(None)
+                allele_data["variant_in_roles"].append(None)
+                allele_data["variant_in_sexes"].append(None)
             else:
-                f2s_data["variant_in_members"].append(
+                allele_data["variant_in_members"].append(
                     [unicode(m, "utf-8") for m in allele.variant_in_members])
-                f2s_data["variant_in_roles"].append(
+                allele_data["variant_in_roles"].append(
                     [r.value for r in allele.variant_in_roles])
-                f2s_data["variant_in_sexes"].append(
+                allele_data["variant_in_sexes"].append(
                     [s.value for s in allele.variant_in_sexes])
 
         family_data["chrom"].append(vs.chromosome)
@@ -144,15 +144,15 @@ def family_variants_batch(variants):
         family_data["genotype"].append(vs.gt_flatten())
         family_data["inheritance"].append(None)
 
-    f2s_batch_data = []
-    for name in f2s_schema.names:
-        assert name in f2s_data
-        column = f2s_data[name]
-        field = f2s_schema.field_by_name(name)
-        f2s_batch_data.append(pa.array(column, type=field.type))
-    f2s_batch = pa.RecordBatch.from_arrays(
-        f2s_batch_data,
-        f2s_schema.names)
+    allele_batch_data = []
+    for name in family_allele_schema.names:
+        assert name in allele_data
+        column = allele_data[name]
+        field = family_allele_schema.field_by_name(name)
+        allele_batch_data.append(pa.array(column, type=field.type))
+    allele_batch = pa.RecordBatch.from_arrays(
+        allele_batch_data,
+        family_allele_schema.names)
 
     family_batch_data = []
     for name in family_schema.names:
@@ -164,7 +164,7 @@ def family_variants_batch(variants):
     family_batch = pa.RecordBatch.from_arrays(
         family_batch_data,
         family_schema.names)
-    return family_batch, f2s_batch
+    return family_batch, allele_batch
 
 
 def family_variants_df_to_batch(vars_df):
@@ -184,8 +184,8 @@ def family_variants_df_to_batch(vars_df):
     return batch
 
 
-def f2s_df_to_batch(f2s_df):
-    schema = f2s_parquet_schema()
+def family_allele_df_to_batch(f2s_df):
+    schema = family_allele_parquet_schema()
 
     batch_data = []
     for name in schema.names:
@@ -226,14 +226,14 @@ def read_family_variants_df_from_parquet(filename):
     return df
 
 
-def save_f2s_df_to_parquet(f2s_df, filename):
-    batch = f2s_df_to_batch(f2s_df)
+def save_family_allele_df_to_parquet(f2s_df, filename):
+    batch = family_allele_df_to_batch(f2s_df)
     table = pa.Table.from_batches([batch])
     pq.write_table(table, filename)
 
 
-def read_f2s_df_from_parquet(filename):
-    schema = f2s_parquet_schema()
+def read_family_allele_df_from_parquet(filename):
+    schema = family_allele_parquet_schema()
     table = pq.read_table(filename, columns=schema.names)
     df = table.to_pandas()
     return df

@@ -6,8 +6,9 @@ Created on Mar 7, 2018
 import pytest
 from variants.parquet_io import family_variants_table,\
     save_family_variants_df_to_parquet, read_family_variants_df_from_parquet,\
-    save_ped_df_to_parquet, read_ped_df_from_parquet, save_f2s_df_to_parquet,\
-    read_f2s_df_from_parquet
+    save_ped_df_to_parquet, read_ped_df_from_parquet, \
+    save_family_allele_df_to_parquet,\
+    read_family_allele_df_from_parquet
 from variants.tests.common_tests_helpers import assert_annotation_equals
 
 
@@ -31,9 +32,9 @@ def test_parquet_variants(variants_vcf, fixture_name, temp_filename):
     assert_annotation_equals(df, df1)
 
     df = f2s_table.to_pandas()
-    save_f2s_df_to_parquet(df, temp_filename)
+    save_family_allele_df_to_parquet(df, temp_filename)
 
-    df1 = read_f2s_df_from_parquet(temp_filename)
+    df1 = read_family_allele_df_from_parquet(temp_filename)
     assert df1 is not None
     assert_annotation_equals(df, df1)
 
