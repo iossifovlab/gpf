@@ -344,6 +344,7 @@ class RawFamilyVariants(FamiliesBase):
                 if self.filter_allele(allele, **kwargs):
                     alleles_matched.append(allele.allele_index)
             if alleles_matched:
+                v.set_matched_alleles(alleles_matched)
                 yield v
 
     def wrap_variants(self, annot_df):

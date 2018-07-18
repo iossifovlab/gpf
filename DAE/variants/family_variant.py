@@ -258,6 +258,18 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         self._best_st = None
         self._inheritance_in_members = None
         self._variant_in_members = None
+        self._matched_alleles = []
+
+    def set_matched_alleles(self, alleles_indexes):
+        self._matched_alleles = alleles_indexes
+
+    @property
+    def matched_alleles(self):
+        return [self.alleles[ai] for ai in self._matched_alleles]
+
+    @property
+    def matched_alleles_indexes(self):
+        return self._matched_alleles
 
     @property
     def genotype(self):
