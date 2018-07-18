@@ -68,7 +68,7 @@ def test_f2_reference_and_unknown(
     ([Region("1", 905957, 905957)],
      "denovo", False, False, 1),  # find denovo
     ([Region("1", 905957, 905957)],
-     "not denovo and not omission", False, False, 1),  # FIXME:
+     "not denovo and not omission", False, False, 0),
     ([Region("1", 905957, 905957)],
      None, True, True, 1),  # find all
     ([Region("1", 905957, 905957)],
@@ -89,7 +89,7 @@ def test_f2_canonical_denovo(
     ([Region("1", 905966, 905966)],
      "denovo", False, False, 0),  # find denovo
     ([Region("1", 905966, 905966)],
-     "not denovo and not omission", False, False, 1),
+     "not denovo and not omission", False, False, 0),
     ([Region("1", 905966, 905966)],
      None, True, True, 1),  # find all
     ([Region("1", 905966, 905966)],
@@ -109,7 +109,7 @@ def test_f2_canonical_omission(
     ([Region("1", 906092, 906092)],
      "denovo", False, False, 0),  # find denovo
     ([Region("1", 906092, 906092)],
-     "not denovo and not omission", False, False, 1),  # FIXME:
+     "not denovo and not omission", False, False, 0),
     ([Region("1", 906092, 906092)],
      None, True, True, 1),  # find all
     ([Region("1", 906092, 906092)],

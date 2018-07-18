@@ -19,7 +19,7 @@ def test_variants_spark_create(variants_thrift, fixture_name, count):
     svars = variants_thrift(fixture_name)
     assert svars is not None
 
-    vs = svars.query_variants()
+    vs = svars.query_variants(return_reference=True)
     vs = list(vs)
     print(vs)
     assert len(vs) == count

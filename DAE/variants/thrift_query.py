@@ -157,6 +157,11 @@ def thrift_query(
         query_parts(VARIANT_QUERIES, **kwargs))
 
     allele_queries = query_parts(ALLELE_SUBQUERIES, **kwargs)
+    return_reference = kwargs.get("return_reference", False)
+    if not return_reference:
+        aq = "F2S.allele_index > 0"
+        allele_queries.append(aq)
+
     if allele_queries:
         where = ' AND '.join(["({})".format(q) for q in allele_queries])
         aq = AQ.format(
