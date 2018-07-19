@@ -71,23 +71,20 @@ Q = """
         S.af_allele_count,
         S.af_allele_freq
 
-    FROM parquet.`{family}` AS F FULL OUTER JOIN parquet.`{summary}` AS S
+    FROM parquet.`{family_variants}` AS F
+    FULL OUTER JOIN parquet.`{summary_variants}` AS S
     ON S.summary_index = F.summary_index
 """
 
 
 AQ = """
     F.family_index IN (SELECT
-        F2S.family_index
-    FROM parquet.`{f2s}` AS F2S JOIN parquet.`{summary}` AS S
-    ON F2S.summary_index = S.summary_index
-        AND F2S.allele_index = S.allele_index
+        FA.family_index
+    FROM parquet.`{family_alleles}` AS FA
+    JOIN parquet.`{summary_variants}` AS S
+    ON FA.summary_index = S.summary_index
+        AND FA.allele_index = S.allele_index
     WHERE {where})
-"""
-
-F2S_Q = """
-
-
 """
 
 
@@ -140,11 +137,13 @@ ALLELE_SUBQUERIES = [
 
 
 def thrift_query(
-        thrift_connection, summary, family, f2s, limit=2000, **kwargs):
+        thrift_connection,
+        summary_variants, family_variants, family_alleles,
+        limit=2000, **kwargs):
     final_query = Q.format(
-        summary=summary,
-        family=family,
-        f2s=f2s,
+        summary_variants=summary_variants,
+        family_variants=family_variants,
+        family_alleles=family_alleles,
     )
 
     variant_queries = []
@@ -159,15 +158,15 @@ def thrift_query(
     allele_queries = query_parts(ALLELE_SUBQUERIES, **kwargs)
     return_reference = kwargs.get("return_reference", False)
     if not return_reference:
-        aq = "F2S.allele_index > 0"
+        aq = "FA.allele_index > 0"
         allele_queries.append(aq)
 
     if allele_queries:
         where = ' AND '.join(["({})".format(q) for q in allele_queries])
         aq = AQ.format(
-            summary=summary,
-            family=family,
-            f2s=f2s,
+            summary_variants=summary_variants,
+            family_variants=family_variants,
+            family_alleles=family_alleles,
             where=where
         )
         variant_queries.append(aq)

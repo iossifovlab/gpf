@@ -82,13 +82,16 @@ class Configure(ConfigBox):
             prefix, "summary.parquet")
         family_filename = os.path.join(
             prefix, "family.parquet")
+        allele_filename = os.path.join(
+            prefix, "allele.parquet")
         pedigree_filename = os.path.join(
             prefix, "pedigree.parquet")
 
         conf = {
             'parquet': {
-                'summary': summary_filename,
-                'family': family_filename,
+                'summary_variants': summary_filename,
+                'family_variants': family_filename,
+                'family_alleles': allele_filename,
                 'pedigree': pedigree_filename
             }
         }

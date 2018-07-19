@@ -31,9 +31,9 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
         self.config = config.parquet
         assert os.path.exists(self.config.pedigree)
-        assert os.path.exists(self.config.summary)
-        assert os.path.exists(self.config.family)
-        assert os.path.exists(self.config.f2s)
+        assert os.path.exists(self.config.summary_variants)
+        assert os.path.exists(self.config.family_variants)
+        assert os.path.exists(self.config.family_alleles)
 
         if not thrift_connection:
             thrift_connection = connect(
@@ -64,11 +64,13 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
                 query = "any({})".format(",".join(query))
                 kwargs["person_ids"] = query
 
+        print(self.config)
+
         df = thrift_query(
             thrift_connection=self.connection,
-            summary=self.config.summary,
-            family=self.config.family,
-            f2s=self.config.f2s,
+            summary_variants=self.config.summary_variants,
+            family_variants=self.config.family_variants,
+            family_alleles=self.config.family_alleles,
             **kwargs
         )
         df.genotype = df.genotype.apply(

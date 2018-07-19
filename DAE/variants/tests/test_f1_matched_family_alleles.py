@@ -8,6 +8,11 @@ import pytest
 from RegionOperations import Region
 
 
+@pytest.mark.parametrize("variants", [
+    "variants_vcf",
+    # "variants_df",
+    # "variants_thrift",
+])
 @pytest.mark.parametrize(
     "regions,inheritance,effect_types,return_reference,count,matched_alleles",
     [
@@ -29,11 +34,11 @@ from RegionOperations import Region
          1, [1]),
     ])
 def test_f1_simple(
-        variants_vcf,
+        variants_impl, variants,
         regions, inheritance, effect_types, return_reference,
         count, matched_alleles):
 
-    vvars = variants_vcf("fixtures/f1_test")
+    vvars = variants_impl(variants)("fixtures/f1_test")
     assert vvars is not None
 
     vs = vvars.query_variants(

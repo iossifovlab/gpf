@@ -196,9 +196,9 @@ def variants_thrift(parquet_variants, testing_thriftserver):
         config = Configure.from_dict({
             'parquet': {
                 'pedigree': pedigree,
-                'summary': summary,
-                'family': family,
-                'f2s': f2s,
+                'summary_variants': summary,
+                'family_variants': family,
+                'family_alleles': f2s,
             }
         })
         return ThriftFamilyVariants(
