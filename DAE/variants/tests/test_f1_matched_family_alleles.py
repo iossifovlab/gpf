@@ -23,6 +23,10 @@ from RegionOperations import Region
          1, [1]),
         ([Region("1", 878152, 878152)], "mendelian", ["missense"], True,
          0, None),
+        ([Region("1", 878152, 878152)], "mendelian", None, True,
+         1, [0, 1]),
+        ([Region("1", 878152, 878152)], "mendelian", None, False,
+         1, [1]),
     ])
 def test_f1_simple(
         variants_vcf,
