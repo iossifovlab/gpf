@@ -216,17 +216,20 @@ class RawFamilyVariants(FamiliesBase):
             result = [
                 ge for ge in gene_effects if ge.symbol in genes]
             if result:
+                v.matched_gene_effects = result
                 return True
         elif genes is None:
             result = [
                 ge for ge in gene_effects if ge.effect in effect_types]
             if result:
+                v.matched_gene_effects = result
                 return True
         else:
             result = [
                 ge for ge in gene_effects
                 if ge.effect in effect_types and ge.symbol in genes]
             if result:
+                v.matched_gene_effects = result
                 return True
         return False
 

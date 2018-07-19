@@ -16,6 +16,12 @@ class EffectGene(object):
     def __str__(self):
         return self.__repr__()
 
+    def __eq__(self, other):
+        assert isinstance(other, EffectGene)
+
+        return self.symbol == other.symbol and \
+            self.effect == other.effect
+
     @classmethod
     def from_gene_effects(cls, gene_effects):
         result = []

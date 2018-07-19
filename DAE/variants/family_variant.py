@@ -10,6 +10,7 @@ import numpy as np
 from variants.variant import SummaryVariant, SummaryAllele
 from variants.family import Family
 from variants.attributes import Inheritance
+import itertools
 
 
 class FamilyDelegate(object):
@@ -58,6 +59,8 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self._variant_in_members = None
         self._variant_in_roles = None
         self._variant_in_sexes = None
+
+        self.matched_gene_effects = []
 
     @property
     def genotype(self):
@@ -270,6 +273,12 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     @property
     def matched_alleles_indexes(self):
         return self._matched_alleles
+
+    @property
+    def matched_gene_effects(self):
+        return set(itertools.chain.from_iterable([
+                ma.matched_gene_effects for ma in self.matched_alleles
+            ]))
 
     @property
     def genotype(self):
