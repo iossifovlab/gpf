@@ -4,6 +4,7 @@ Created on May 30, 2018
 @author: lubo
 '''
 from __future__ import print_function
+import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 from variants.attributes import Role, Sex
@@ -77,6 +78,7 @@ def family_variant_parquet_schema():
         pa.field("chrom", pa.string()),
         pa.field("position", pa.int64()),
         pa.field("family_id", pa.string()),
+        pa.field("family_index", pa.int32()),
         pa.field("family_variant_index", pa.int64()),
         pa.field("summary_variant_index", pa.int64()),
         pa.field("genotype", pa.list_(pa.int8())),
@@ -90,13 +92,14 @@ def family_allele_parquet_schema():
         pa.field("chrom", pa.string()),
         pa.field("position", pa.int64()),
         pa.field("family_id", pa.string()),
+        pa.field("family_index", pa.int32()),
         pa.field("family_variant_index", pa.int64()),
         pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int8()),
-        pa.field("inheritance_in_members", pa.list_(pa.int8())),
+        pa.field("inheritance_in_members", pa.list_(pa.int64())),
         pa.field("variant_in_members", pa.list_(pa.string())),
-        pa.field("variant_in_roles", pa.list_(pa.int8())),
-        pa.field("variant_in_sexes", pa.list_(pa.int8())),
+        pa.field("variant_in_roles", pa.list_(pa.int64())),
+        pa.field("variant_in_sexes", pa.list_(pa.int64())),
     ]
     return pa.schema(fields)
 
@@ -109,6 +112,7 @@ def family_variants_batch(variants):
         "chrom": [],
         "position": [],
         "family_id": [],
+        "family_index": [],
         "family_variant_index": [],
         "summary_variant_index": [],
         "genotype": [],
@@ -117,6 +121,7 @@ def family_variants_batch(variants):
         "chrom": [],
         "position": [],
         "family_id": [],
+        "family_index": [],
         "family_variant_index": [],
         "summary_variant_index": [],
         "allele_index": [],
@@ -125,16 +130,20 @@ def family_variants_batch(variants):
         "variant_in_roles": [],
         "variant_in_sexes": [],
     }
-    for family_index, vs in enumerate(variants):
+    for family_variant_index, vs in enumerate(variants):
         for allele in vs.alleles:
             allele_data["chrom"].append(vs.chromosome)
             allele_data["position"].append(vs.position)
             allele_data["family_id"].append(vs.family_id)
-            allele_data["family_variant_index"].append(family_index)
+            allele_data["family_index"].append(vs.family_index)
+            allele_data["family_variant_index"].append(family_variant_index)
             allele_data["summary_variant_index"].append(vs.summary_index)
             allele_data["allele_index"].append(allele.allele_index)
             allele_data["inheritance_in_members"].\
-                append([i.value for i in allele.inheritance_in_members])
+                append(
+                    np.asarray([
+                        i.value for i in allele.inheritance_in_members
+                    ], dtype=np.int8))
             if allele.is_reference_allele:
                 allele_data["variant_in_members"].append(None)
                 allele_data["variant_in_roles"].append(None)
@@ -150,7 +159,8 @@ def family_variants_batch(variants):
         family_data["chrom"].append(vs.chromosome)
         family_data["position"].append(vs.position)
         family_data["family_id"].append(vs.family_id)
-        family_data["family_variant_index"].append(family_index)
+        family_data["family_index"].append(vs.family_index)
+        family_data["family_variant_index"].append(family_variant_index)
         family_data["summary_variant_index"].append(vs.summary_index)
         family_data["genotype"].append(vs.gt_flatten())
 
@@ -212,10 +222,10 @@ def family_allele_df_to_batch(f2s_df):
 
 
 def family_variants_table(variants):
-    family_batch, f2s_batch = family_variants_batch(variants)
-    family_table = pa.Table.from_batches([family_batch])
-    f2s_table = pa.Table.from_batches([f2s_batch])
-    return family_table, f2s_table
+    variants_batch, alleles_batch = family_variants_batch(variants)
+    variants_table = pa.Table.from_batches([variants_batch])
+    alleles_table = pa.Table.from_batches([alleles_batch])
+    return variants_table, alleles_table
 
 
 def family_variants_df(variants):
@@ -259,6 +269,8 @@ def pedigree_parquet_schema():
         pa.field("status", pa.int8()),
         pa.field("role", pa.int32()),
         pa.field("sampleId", pa.string()),
+        pa.field("familyIndex", pa.int32()),
+        pa.field("personIndex", pa.int32()),
     ]
 
     return pa.schema(fields)

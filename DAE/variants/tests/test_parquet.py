@@ -64,8 +64,8 @@ def test_parquet_pedigree(variants_vcf, fixture_name, temp_filename):
 
 
 @pytest.mark.parametrize("fixture_name", [
-    "fixtures/effects_trio_multi",
-    "fixtures/effects_trio",
+    "fixtures/parquet_trios",
+    # "fixtures/effects_trio",
 ])
 def test_parquet_partitioned_datasets(
         variants_vcf, fixture_name, temp_dirname):
@@ -86,16 +86,17 @@ def test_parquet_partitioned_datasets(
         summary_variants_table,
         root_path=summary_dataset_filename,
         partition_cols=["chrom"])
+
 #     family_dataset_filename = os.path.join(temp_dirname, "family.dataset")
 #     print("family:>>", family_dataset_filename)
 #     pq.write_to_dataset(
 #         family_table,
 #         root_path=family_dataset_filename,
-#         partition_cols=["chrom", "family_id"])
-#
-#     allele_dataset_filename = os.path.join(temp_dirname, "allele.dataset")
-#     print("allele:>>", allele_dataset_filename)
-#     pq.write_to_dataset(
-#         allele_table,
-#         root_path=allele_dataset_filename,
-#         partition_cols=["chrom", "family_id"])
+#         partition_cols=["chrom"])  # , "family_index"])
+
+    allele_dataset_filename = os.path.join(temp_dirname, "allele.dataset")
+    print("allele:>>", allele_dataset_filename)
+    pq.write_to_dataset(
+        allele_table,
+        root_path=allele_dataset_filename,
+        partition_cols=["chrom", "family_index"])

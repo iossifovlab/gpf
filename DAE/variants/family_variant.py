@@ -41,6 +41,13 @@ class FamilyDelegate(object):
         """
         return self.family.family_id
 
+    @property
+    def family_index(self):
+        """
+        Returns the family index.
+        """
+        return self.family.family_index
+
 
 class FamilyAllele(SummaryAllele, FamilyDelegate):
 
