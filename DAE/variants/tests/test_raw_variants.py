@@ -6,9 +6,6 @@ Created on Feb 9, 2018
 from __future__ import print_function
 
 from RegionOperations import Region
-from variants.attributes import Role
-from variants.attributes_query_builder import any_node, token
-from variants.vcf_utils import mat2str
 
 
 def test_study_load(ustudy_vcf):
@@ -16,7 +13,7 @@ def test_study_load(ustudy_vcf):
     assert ustudy_vcf.annot_df is not None
     assert ustudy_vcf.vcf_vars is not None
 
-    assert len(ustudy_vcf.annot_df.groupby("summary_index")) == \
+    assert len(ustudy_vcf.annot_df.groupby("summary_variant_index")) == \
         len(ustudy_vcf.vcf_vars)
 
 

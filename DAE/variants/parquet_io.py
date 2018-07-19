@@ -16,7 +16,7 @@ def summary_parquet_schema_flat():
         pa.field("position", pa.int64()),
         pa.field("reference", pa.string()),
         pa.field("alternative", pa.string()),
-        pa.field("summary_index", pa.int64()),
+        pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int16()),
         pa.field("variant_type", pa.int8()),
         pa.field("cshl_variant", pa.string()),
@@ -76,9 +76,9 @@ def family_variant_parquet_schema():
     fields = [
         pa.field("chrom", pa.string()),
         pa.field("position", pa.int64()),
-        pa.field("family_index", pa.int64()),
-        pa.field("summary_index", pa.int64()),
         pa.field("family_id", pa.string()),
+        pa.field("family_variant_index", pa.int64()),
+        pa.field("summary_variant_index", pa.int64()),
         pa.field("genotype", pa.list_(pa.int8())),
     ]
 
@@ -87,8 +87,11 @@ def family_variant_parquet_schema():
 
 def family_allele_parquet_schema():
     fields = [
-        pa.field("family_index", pa.int64()),
-        pa.field("summary_index", pa.int64()),
+        pa.field("chrom", pa.string()),
+        pa.field("position", pa.int64()),
+        pa.field("family_id", pa.string()),
+        pa.field("family_variant_index", pa.int64()),
+        pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int8()),
         pa.field("inheritance_in_members", pa.list_(pa.int8())),
         pa.field("variant_in_members", pa.list_(pa.string())),
@@ -105,14 +108,17 @@ def family_variants_batch(variants):
     family_data = {
         "chrom": [],
         "position": [],
-        "family_index": [],
-        "summary_index": [],
         "family_id": [],
+        "family_variant_index": [],
+        "summary_variant_index": [],
         "genotype": [],
     }
     allele_data = {
-        "family_index": [],
-        "summary_index": [],
+        "chrom": [],
+        "position": [],
+        "family_id": [],
+        "family_variant_index": [],
+        "summary_variant_index": [],
         "allele_index": [],
         "inheritance_in_members": [],
         "variant_in_members": [],
@@ -121,8 +127,11 @@ def family_variants_batch(variants):
     }
     for family_index, vs in enumerate(variants):
         for allele in vs.alleles:
-            allele_data["family_index"].append(family_index)
-            allele_data["summary_index"].append(vs.summary_index)
+            allele_data["chrom"].append(vs.chromosome)
+            allele_data["position"].append(vs.position)
+            allele_data["family_id"].append(vs.family_id)
+            allele_data["family_variant_index"].append(family_index)
+            allele_data["summary_variant_index"].append(vs.summary_index)
             allele_data["allele_index"].append(allele.allele_index)
             allele_data["inheritance_in_members"].\
                 append([i.value for i in allele.inheritance_in_members])
@@ -140,9 +149,9 @@ def family_variants_batch(variants):
 
         family_data["chrom"].append(vs.chromosome)
         family_data["position"].append(vs.position)
-        family_data["family_index"].append(family_index)
-        family_data["summary_index"].append(vs.summary_index)
         family_data["family_id"].append(vs.family_id)
+        family_data["family_variant_index"].append(family_index)
+        family_data["summary_variant_index"].append(vs.summary_index)
         family_data["genotype"].append(vs.gt_flatten())
 
     allele_batch_data = []

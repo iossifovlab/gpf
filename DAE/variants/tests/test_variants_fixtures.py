@@ -10,6 +10,9 @@ from RegionOperations import Region
 from variants.vcf_utils import mat2str
 
 
+pytestmark = pytest.mark.xfail
+
+
 @pytest.mark.parametrize("variants", [
     "variants_df",
     "variants_vcf",

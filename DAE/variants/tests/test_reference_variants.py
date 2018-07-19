@@ -10,7 +10,7 @@ from datasets.helpers import mat2str
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_df",
+    # "variants_df",
     "variants_vcf",
 ])
 @pytest.mark.parametrize("fixture_name", [

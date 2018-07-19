@@ -56,7 +56,7 @@ def test_parquet_select(
     q = """
     SELECT * FROM parquet.`file://{}` AS A
     INNER JOIN parquet.`file://{}` AS B
-    ON A.summary_index = B.summary_index
+    ON A.summary_variant_index = B.summary_variant_index
     """.format(family_filename, summary_filename)
     print(q)
 

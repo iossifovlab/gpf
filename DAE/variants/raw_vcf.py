@@ -165,7 +165,7 @@ class RawFamilyVariants(FamiliesBase):
                 data=records,
                 columns=[
                     'chrom', 'position', 'reference', 'alternative',
-                    'summary_index',
+                    'summary_variant_index',
                     'allele_index',
                 ])
 
@@ -355,7 +355,8 @@ class RawFamilyVariants(FamiliesBase):
             raise StopIteration()
 
         variants = self.vcf_vars
-        for summary_index, group_df in annot_df.groupby("summary_index"):
+        for summary_index, group_df in \
+                annot_df.groupby("summary_variant_index"):
             vcf = variants[summary_index]
             summary_variant = self.VF.summary_variant_from_records(
                 group_df.to_dict(orient='records'))

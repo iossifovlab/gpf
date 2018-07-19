@@ -345,7 +345,7 @@ class SummaryVariantFactory(object):
             record['chrom'], record['position'],
             record['reference'],
             alternative=alternative,
-            summary_index=record['summary_index'],
+            summary_index=record['summary_variant_index'],
             allele_index=record['allele_index'],
             effect=effects,
             frequency=record['af_allele_freq'],

@@ -26,7 +26,7 @@ def test_variants_spark_create(variants_thrift, fixture_name, count):
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_df",
+    # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("fixture_name,count", [

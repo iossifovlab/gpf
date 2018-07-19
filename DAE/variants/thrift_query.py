@@ -47,7 +47,7 @@ stage_two_transformers = {
 
 Q = """
     SELECT
-        F.family_index,
+        F.family_variant_index,
         F.family_id,
         F.genotype,
 
@@ -55,7 +55,7 @@ Q = """
         S.position,
         S.reference,
         S.alternative,
-        S.summary_index,
+        S.summary_variant_index,
         S.allele_index,
         S.variant_type,
         S.cshl_variant,
@@ -73,16 +73,16 @@ Q = """
 
     FROM parquet.`{family_variants}` AS F
     FULL OUTER JOIN parquet.`{summary_variants}` AS S
-    ON S.summary_index = F.summary_index
+    ON S.summary_variant_index = F.summary_variant_index
 """
 
 
 AQ = """
-    F.family_index IN (SELECT
-        FA.family_index
+    F.family_variant_index IN (SELECT
+        FA.family_variant_index
     FROM parquet.`{family_alleles}` AS FA
     JOIN parquet.`{summary_variants}` AS S
-    ON FA.summary_index = S.summary_index
+    ON FA.summary_variant_index = S.summary_variant_index
         AND FA.allele_index = S.allele_index
     WHERE {where})
 """

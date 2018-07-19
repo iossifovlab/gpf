@@ -124,7 +124,7 @@ def temp_dirname(request):
     def fin():
         shutil.rmtree(dirname)
 
-    request.addfinalizer(fin)
+    # request.addfinalizer(fin)
     return dirname
 
 
