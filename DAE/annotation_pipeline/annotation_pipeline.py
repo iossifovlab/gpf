@@ -11,6 +11,7 @@ from box import Box
 import pysam
 from importlib import import_module
 import gzip
+from ast import literal_eval
 from collections import OrderedDict
 import re
 
@@ -33,7 +34,8 @@ class MyConfigParser(ConfigParser.SafeConfigParser):
 class MultiAnnotator(object):
 
     def __init__(self, config_file, header=None, reannotate=False,
-            preannotators=[], split_column=None, split_separator=','):
+            preannotators=[], split_column=None, split_separator=',',
+            default_arguments={}):
         self.header = header
         self.reannotate = reannotate
         self.preannotators = preannotators
@@ -63,8 +65,14 @@ class MultiAnnotator(object):
         # config_parser.sections() this gives the sections in order which is important
         for annotation_step in config_parser.sections():
             annotation_step_config = self.config[annotation_step]
+
+            for default_argument, value in default_arguments.items():
+                if annotation_step_config.options[default_argument] is None:
+                    annotation_step_config.options[default_argument] = value
+
             step_columns_labels = annotation_step_config.columns.values()
             all_columns_labels.update(step_columns_labels)
+
             if self.header is not None:
                 if reannotate:
                     new_columns = [column for column in step_columns_labels
@@ -183,6 +191,7 @@ def get_argument_parser():
     parser.add_argument('--split', help='split variants based on given column', action='store')
     parser.add_argument('--separator', help='separator used in the split column; defaults to ","',
         default=',', action='store')
+    parser.add_argument('--options', help='add default arguments', action='append', metavar=('=OPTION:VALUE'))
     parser.add_argument('infile', nargs='?', action='store',
         default='-', help='path to input file; defaults to stdin')
     parser.add_argument('outfile', nargs='?', action='store',
@@ -238,10 +247,22 @@ def main():
     else:
         out = sys.stdout
 
+    options = []
+    if opts.options is not None:
+        for option in opts.options:
+            split_options = option.split(':')
+
+            try:
+                split_options[1] = literal_eval(split_options[1])
+            except ValueError:
+                pass
+
+            options.append(split_options)
+
     preannotators = PreannotatorLoader.load_preannotators(opts, header)
 
     annotator = MultiAnnotator(opts.config, header, not opts.always_add,
-        preannotators, opts.split, opts.separator)
+        preannotators, opts.split, opts.separator, dict(options))
 
     annotator.annotate_file(variantFile, out)
 
