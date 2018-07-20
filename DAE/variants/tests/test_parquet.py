@@ -14,6 +14,7 @@ import os
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
+import pandas as pd
 
 
 @pytest.mark.parametrize("fixture_name", [
@@ -67,12 +68,12 @@ def test_parquet_pedigree(variants_vcf, fixture_name, temp_filename):
     "fixtures/parquet_trios",
     # "fixtures/effects_trio",
 ])
-def test_parquet_partitioned_datasets(
+def test_experiment_with_parquet_partitioned_datasets(
         variants_vcf, fixture_name, temp_dirname):
 
     fvars = variants_vcf(fixture_name)
     summary_variants_table = summary_table(fvars.annot_df)
-    ped_df = fvars.ped_df
+    # ped_df = fvars.ped_df
     family_table, allele_table = family_variants_table(
         fvars.query_variants(
             return_reference=True,
@@ -102,3 +103,21 @@ def test_parquet_partitioned_datasets(
         root_path=allele_dataset_filename,
         partition_cols=["chrom", "family_index"],
         preserve_index=False)
+
+    allele_table2 = pq.read_table(allele_dataset_filename)
+    assert allele_table2 is not None
+    print(allele_table2)
+    allele_df2 = allele_table2.to_pandas()
+    allele_df2 = allele_df2.sort_values(
+        by=["family_variant_index", "summary_variant_index",
+            "allele_index", "family_index"])
+    print(allele_df2)
+
+    allele_df = allele_table.to_pandas()
+    print(allele_df)
+
+    allele_df2.chrom = pd.Series(allele_df2.chrom.astype(str))
+    print(allele_df2.chrom)
+    print(allele_df.chrom)
+
+    assert_annotation_equals(allele_df, allele_df2)
