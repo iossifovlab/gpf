@@ -81,7 +81,7 @@ def family_variant_parquet_schema():
         pa.field("family_index", pa.int32()),
         pa.field("family_variant_index", pa.int64()),
         pa.field("summary_variant_index", pa.int64()),
-        pa.field("genotype", pa.list_(pa.int8())),
+        pa.field("genotype", pa.list_(pa.int64())),
     ]
 
     return pa.schema(fields)

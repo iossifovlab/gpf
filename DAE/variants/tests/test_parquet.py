@@ -92,11 +92,13 @@ def test_parquet_partitioned_datasets(
     pq.write_to_dataset(
         family_table,
         root_path=family_dataset_filename,
-        partition_cols=["chrom"])  # , "family_index"])
+        partition_cols=["chrom", "family_index"],
+        preserve_index=False)
 
     allele_dataset_filename = os.path.join(temp_dirname, "allele.dataset")
     print("allele:>>", allele_dataset_filename)
     pq.write_to_dataset(
         allele_table,
         root_path=allele_dataset_filename,
-        partition_cols=["chrom", "family_index"])
+        partition_cols=["chrom", "family_index"],
+        preserve_index=False)
