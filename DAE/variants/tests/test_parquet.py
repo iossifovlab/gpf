@@ -87,12 +87,12 @@ def test_parquet_partitioned_datasets(
         root_path=summary_dataset_filename,
         partition_cols=["chrom"])
 
-#     family_dataset_filename = os.path.join(temp_dirname, "family.dataset")
-#     print("family:>>", family_dataset_filename)
-#     pq.write_to_dataset(
-#         family_table,
-#         root_path=family_dataset_filename,
-#         partition_cols=["chrom"])  # , "family_index"])
+    family_dataset_filename = os.path.join(temp_dirname, "family.dataset")
+    print("family:>>", family_dataset_filename)
+    pq.write_to_dataset(
+        family_table,
+        root_path=family_dataset_filename,
+        partition_cols=["chrom"])  # , "family_index"])
 
     allele_dataset_filename = os.path.join(temp_dirname, "allele.dataset")
     print("allele:>>", allele_dataset_filename)

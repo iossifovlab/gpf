@@ -168,8 +168,11 @@ class RawVariantsLoader(object):
             sample_ids = pd.Series(data=ped_df['personId'].values)
             ped_df['sampleId'] = sample_ids
         ped_df['personIndex'] = ped_df.index
-        family_index = ped_df['familyId'].apply(
-            lambda fid: pd.Index(ped_df['familyId']).get_loc(fid).start)
+
+        def get_family_index(fid):
+            return (ped_df['familyId'] == fid).idxmin()
+
+        family_index = ped_df['familyId'].apply(get_family_index)
         ped_df['familyIndex'] = family_index
         return ped_df
 
