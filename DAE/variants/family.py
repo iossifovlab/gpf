@@ -91,17 +91,6 @@ class Family(object):
     def members_ids(self):
         return self.ped_df['personId'].values
 
-    def members_in_roles(self, role_query):
-        roles_df = self.ped_df[
-            np.bitwise_and(
-                self.ped_df.role.values,
-                role_query.value
-            ).astype(bool)
-        ]
-        if len(roles_df) == 0:
-            return []
-        return roles_df['personId'].values
-
 
 class FamiliesBase(object):
 
@@ -140,6 +129,23 @@ class FamiliesBase(object):
         return sorted([p.index for p in persons])
 
     @staticmethod
+    def augment_family_index(ped_df):
+        ped_df['personIndex'] = ped_df.index
+
+        def get_family_index(fid):
+            return (ped_df['familyId'] == fid).idxmax()
+
+        family_index = ped_df['familyId'].apply(get_family_index)
+        ped_df['familyIndex'] = family_index
+
+        unique_family_index = ped_df['familyIndex'].unique()
+        for findex in unique_family_index:
+            fids = ped_df[ped_df['familyIndex'] == findex]['familyId'].unique()
+            assert len(fids) == 1
+
+        return ped_df
+
+    @staticmethod
     def load_pedigree_file(infile, sep="\t"):
         ped_df = pd.read_csv(
             infile, sep=sep, index_col=False,
@@ -160,14 +166,8 @@ class FamiliesBase(object):
         if 'sampleId' not in ped_df.columns:
             sample_ids = pd.Series(data=ped_df['personId'].values)
             ped_df['sampleId'] = sample_ids
-        ped_df['personIndex'] = ped_df.index
 
-        def get_family_index(fid):
-            return (ped_df['familyId'] == fid).idxmin()
-
-        family_index = ped_df['familyId'].apply(get_family_index)
-        ped_df['familyIndex'] = family_index
-        return ped_df
+        return FamiliesBase.augment_family_index(ped_df)
 
     @staticmethod
     def load_simple_family_file(infile, sep="\t"):
@@ -184,15 +184,32 @@ class FamiliesBase(object):
             },
             comment="#",
         )
-        fam_df['personIndex'] = fam_df.index
+        fam_df = fam_df.rename(columns={"gender": "sex"})
 
-        def get_family_index(fid):
-            return (fam_df['familyId'] == fid).idxmin()
+        fam_df['status'] = pd.Series(
+            index=fam_df.index, data=1)
+        fam_df.loc[fam_df.role == Role.prb, 'status'] = 2
 
-        family_index = fam_df['familyId'].apply(get_family_index)
-        fam_df['familyIndex'] = family_index
+        fam_df['momId'] = pd.Series(
+            index=fam_df.index, data='0')
+        fam_df['dadId'] = pd.Series(
+            index=fam_df.index, data='0')
+        for fid, fam in fam_df.groupby(by='familyId'):
+            mom_id = fam[fam.role == Role.mom]['personId'].iloc[0]
+            dad_id = fam[fam.role == Role.dad]['personId'].iloc[0]
+            children_mask = np.logical_and(
+                fam_df['familyId'] == fid,
+                np.logical_or(
+                    fam_df.role == Role.prb,
+                    fam_df.role == Role.sib))
+            fam_df.loc[children_mask, 'momId'] = mom_id
+            fam_df.loc[children_mask, 'dadId'] = dad_id
 
-        return fam_df
+        if 'sampleId' not in fam_df.columns:
+            sample_ids = pd.Series(data=fam_df['personId'].values)
+            fam_df['sampleId'] = sample_ids
+
+        return FamiliesBase.augment_family_index(fam_df)
 
     @staticmethod
     def sort_pedigree(ped_df):
