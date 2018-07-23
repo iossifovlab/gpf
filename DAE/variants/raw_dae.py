@@ -14,6 +14,7 @@ import numpy as np
 from variants.configure import Configure
 from variants.family import FamiliesBase, Family
 import re
+from pprint import pprint
 
 
 class RawDAE(object):
@@ -108,19 +109,65 @@ class RawDAE(object):
 
         return df
 
+    @staticmethod
+    def split_gene_effects(data):
+        print(data)
+        if data == 'intergenic':
+            return ['intergenic'], ['intergenic']
+
+        res = [ge.split(':') for ge in data.split(';')]
+        genes = [ge[0] for ge in res]
+        effects = [ge[1] for ge in res]
+        return genes, effects
+
     def augment_variant_annotation(self, df):
-        assert self.annotator is not None
+        assert self.annotator is None
 
         records = []
-        for index, row in df.iterrows():
-            records.append(
-                (row['chrom'], row['position'],
-                 row['reference'], None,
-                 index, 0))
-            records.append(
-                (row['chrom'], row['position'],
-                 row['reference'], row['alternative'],
-                 index, 1))
+        for index, rec in enumerate(df.to_dict(orient='records')):
+            parents_called = rec['all.nParCalled']
+            ref_allele_count = 2 * rec['all.nParCalled'] - rec['all.nAltAlls']
+            ref_allele_prcnt = 0.0
+            if parents_called > 0:
+                ref_allele_prcnt = ref_allele_count / 2.0 / parents_called
+            ref = {
+                'chrom': rec['chrom'],
+                'position': rec['position'],
+                'reference': rec['reference'],
+                'alternative': None,
+                'summary_variant_index': index,
+                'allele_index': 0,
+                'effect_type': None,
+                'effect_gene_genes': None,
+                'effect_gene_types': None,
+                'effect_details_transcript_ids': None,
+                'effect_details_details': None,
+                'af_parents_called_count': parents_called,
+                'af_parents_called_percent': rec['all.prcntParCalled'],
+                'af_allele_count': ref_allele_count,
+                'af_allele_freq': ref_allele_prcnt,
+            }
+            records.append(ref)
+            pprint(rec)
+            genes, effects = self.split_gene_effects(rec['effectGene'])
+            alt = {
+                'chrom': rec['chrom'],
+                'position': rec['position'],
+                'reference': rec['reference'],
+                'alternative': rec['alternative'],
+                'summary_variant_index': index,
+                'allele_index': 1,
+                'effect_type': rec['effectType'],
+                'effect_gene_genes': genes,
+                'effect_gene_types': effects,
+                'effect_details_transcript_ids': rec['effectDetails'],
+                'effect_details_details': rec['effectDetails'],
+                'af_parents_called_count': rec['all.nParCalled'],
+                'af_parents_called_percent': rec['all.prcntParCalled'],
+                'af_allele_count': rec['all.nAltAlls'],
+                'af_allele_freq': rec['all.altFreq'],
+            }
+            records.append(alt)
 
         annot_df = pd.DataFrame.from_records(
             data=records,
@@ -128,6 +175,15 @@ class RawDAE(object):
                 'chrom', 'position', 'reference', 'alternative',
                 'summary_variant_index',
                 'allele_index',
+                'effect_type',
+                'effect_gene_genes',
+                'effect_gene_types',
+                'effect_details_transcript_ids',
+                'effect_details_details',
+                'af_parents_called_count',
+                'af_parents_called_percent',
+                'af_allele_count',
+                'af_allele_freq',
             ])
 
         # self.annotator.setup(self)

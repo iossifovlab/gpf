@@ -23,7 +23,7 @@ import engarde.checks as ec
 #     print("---------------------------------")
 
 
-def test_load_dae_summary(default_genome, effect_annotator):
+def test_load_dae_summary(default_genome):
     summary_filename = relative_to_this_test_folder(
         "fixtures/transmission.txt.gz")
     assert os.path.exists(summary_filename)
@@ -37,7 +37,7 @@ def test_load_dae_summary(default_genome, effect_annotator):
     dae = RawDAE(summary_filename, toomany_filename, family_filename,
                  region=None,
                  genome=default_genome,
-                 annotator=effect_annotator)
+                 annotator=None)
 
     assert dae is not None
 
