@@ -23,7 +23,6 @@ pip install thrift==0.9.3
 ```
 
 
-
 ## Script to setup development environment
 
 Use `setenv-template.sh` to create your `setenv.sh`:
