@@ -6,6 +6,10 @@
 conda env create -n gpf -f conda-environment.yml
 ```
 
+Activate the environment:
+```
+source activate gpf
+```
 
 Install seqpipe version of `cyvcf2`:
 ```
@@ -18,10 +22,6 @@ Overwrite installed version of `thrift`:
 pip install thrift==0.9.3
 ```
 
-Activate the environment:
-```
-source activate gpf
-```
 
 
 ## Script to setup development environment
