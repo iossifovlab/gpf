@@ -7,7 +7,6 @@ from __future__ import print_function
 
 import pandas as pd
 import numpy as np
-import itertools
 
 
 class AnnotatorBase(object):
@@ -19,24 +18,21 @@ class AnnotatorBase(object):
         return self.COLUMNS
 
     def annotate_variant(self, vcf_variant):
-        raise NotImplemented()
+        raise NotImplementedError()
 
-    def annotate(self, annot_df, vcf_vars):
+    def annotate_variant_allele(self, allele):
+        raise NotImplementedError()
+
+    def annotate(self, annot_df):
         columns = [
             pd.Series(index=annot_df.index, dtype=np.object_)
             for _ in self.columns()
         ]
 
-        index = 0
-        for vcf_index, v in enumerate(vcf_vars):
-            res = self.annotate_variant(v)
-            for allele_index, _ in enumerate(itertools.chain([v.REF], v.ALT)):
-                assert annot_df['summary_variant_index'][index] == vcf_index
-                assert annot_df['allele_index'][index] == allele_index
-
-                for col, _ in enumerate(self.columns()):
-                    columns[col][index] = res[col][allele_index]
-                index += 1
+        for index, allele in enumerate(annot_df.to_dict(orient='records')):
+            res = self.annotate_variant_allele(allele)
+            for col, _ in enumerate(self.columns()):
+                columns[col].iloc[index] = res[col]
 
         for col, name in enumerate(self.columns()):
             annot_df[name] = columns[col]
@@ -63,8 +59,8 @@ class AnnotatorComposite(AnnotatorBase):
                 self._columns.extend(annot.columns())
         return self._columns
 
-    def annotate_variant(self, vcf_variant):
+    def annotate_variant_allele(self, allele):
         res = []
         for annot in self.annotators:
-            res.extend(annot.annotate_variant(vcf_variant))
+            res.extend(annot.annotate_variant_allele(allele))
         return res

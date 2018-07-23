@@ -32,32 +32,26 @@ class VcfVariantEffectsAnnotatorBase(AnnotatorBase):
         )
         assert self.variant_annotator is not None
 
-    def annotate_variant(self, vcf_variant):
-        worst_effects = [None]
-        gene_effects_genes = [None]
-        gene_effects_types = [None]
-        transcript_ids = [None]
-        transcript_details = [None]
-
-        for alt in vcf_variant.ALT:
-            variant = Variant(
-                chrom=vcf_variant.CHROM,
-                position=vcf_variant.start + 1,
-                ref=vcf_variant.REF,
-                alt=alt)
-            effects = self.variant_annotator.annotate(variant)
+    def annotate_variant_allele(self, allele):
+        if allele['alternative'] is None:
+            worst_effects = None
+            gene_effects_genes = None
+            gene_effects_types = None
+            transcript_ids = None
+            transcript_details = None
+        else:
             effects = self.do_annotate_variant(
-                chrom=vcf_variant.CHROM,
-                position=vcf_variant.start + 1,
-                ref=vcf_variant.REF,
-                alt=alt)
-            we, ge_genes, ge_types, et_ids, et_details = \
-                self.wrap_effects(effects)
-            worst_effects.append(we)
-            gene_effects_genes.append(ge_genes),
-            gene_effects_types.append(ge_types),
-            transcript_ids.append(et_ids)
-            transcript_details.append(et_details)
+                chrom=allele['chrom'],
+                position=allele['position'],
+                ref=allele['reference'],
+                alt=allele['alternative'])
+            r = self.wrap_effects(effects)
+            worst_effects = r[0]
+            gene_effects_genes = r[1]
+            gene_effects_types = r[2]
+            transcript_ids = r[3]
+            transcript_details = r[4]
+
         return worst_effects, \
             gene_effects_genes, \
             gene_effects_types, \
