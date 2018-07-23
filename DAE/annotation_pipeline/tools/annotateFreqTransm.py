@@ -44,11 +44,8 @@ class FrequencyAnnotator(ScoreAnnotator):
 
         opts.labels = opts.label
 
-        with gzip.open(opts.scores_file, 'rb') as file:
-            score_file_header = file.readline().rstrip('\n').split('\t')
-
         super(FrequencyAnnotator, self).__init__(opts, header, [opts.v],
-            score_file_header, ['chr', 'position', 'position', 'variant'])
+            None, ['chr', 'position', 'position', 'variant'])
 
 if __name__ == "__main__":
     main(get_argument_parser(), FrequencyAnnotator)
