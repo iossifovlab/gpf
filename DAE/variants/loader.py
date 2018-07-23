@@ -11,7 +11,6 @@ from cyvcf2 import VCF
 import numpy as np
 import pandas as pd
 
-from variants.attributes import Role, Sex
 from variants.parquet_io import save_summary_to_parquet,\
     read_summary_from_parquet
 
@@ -139,59 +138,6 @@ class RawVariantsLoader(object):
             # vars_df.to_parquet(filename, engine='pyarrow')
         else:
             raise ValueError("unexpected output format: {}".format(storage))
-
-    def load_pedigree(self):
-        assert self.config.pedigree
-        assert os.path.exists(self.config.pedigree)
-
-        return self.load_pedigree_file(self.config.pedigree)
-
-    @staticmethod
-    def load_pedigree_file(infile, sep="\t"):
-        ped_df = pd.read_csv(
-            infile, sep=sep, index_col=False,
-            skipinitialspace=True,
-            converters={
-                'role': lambda r: Role.from_name(r),
-                'sex': lambda s: Sex.from_value(s),
-            },
-            dtype={
-                'familyId': str,
-                'personId': str,
-                'sampleId': str,
-                'momId': str,
-                'dadId': str,
-            },
-            comment="#",
-        )
-        if 'sampleId' not in ped_df.columns:
-            sample_ids = pd.Series(data=ped_df['personId'].values)
-            ped_df['sampleId'] = sample_ids
-        ped_df['personIndex'] = ped_df.index
-
-        def get_family_index(fid):
-            return (ped_df['familyId'] == fid).idxmin()
-
-        family_index = ped_df['familyId'].apply(get_family_index)
-        ped_df['familyIndex'] = family_index
-        return ped_df
-
-    @staticmethod
-    def save_pedigree_file(ped_df, filename, storage='csv', sep='\t'):
-        assert storage == 'csv'
-        ped_df = RawVariantsLoader.sort_pedigree(ped_df.copy())
-        ped_df['sex'] = ped_df['sex'].apply(lambda s: s.value)
-        if np.all(ped_df['personId'].values == ped_df['sampleId'].values):
-            ped_df = ped_df.drop(axis=1, columns=['sampleId'])
-
-        ped_df.to_csv(filename, index=False, sep=sep)
-
-    @staticmethod
-    def sort_pedigree(ped_df):
-        ped_df['role_order'] = ped_df['role'].apply(lambda r: r.value)
-        ped_df = ped_df.sort_values(by=['familyId', 'role_order'])
-        ped_df = ped_df.drop(axis=1, columns=['role_order'])
-        return ped_df
 
     def load_vcf(self, region=None):
         assert self.config.vcf

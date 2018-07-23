@@ -23,7 +23,7 @@ from variants.attributes_query import PARSER as attributes_query_parser, \
 from variants.attributes_query import \
     parser_with_ambiguity as attributes_query_parser_with_ambiguity
 from variants.configure import Configure
-from variants.family import Family
+from variants.family import Family, FamiliesBase
 from variants.family_variant import FamilyVariant
 from variants.loader import RawVariantsLoader
 from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
@@ -34,6 +34,7 @@ from variants.raw_thrift import ThriftFamilyVariants
 from variants.raw_vcf import RawFamilyVariants, \
     VariantFactory
 from variants.variant import SummaryAllele, SummaryVariant
+from variants.tests.common_tests_helpers import relative_to_this_test_folder
 
 
 @pytest.fixture(scope='session')
@@ -124,7 +125,7 @@ def temp_dirname(request):
     def fin():
         shutil.rmtree(dirname)
 
-    # request.addfinalizer(fin)
+    request.addfinalizer(fin)
     return dirname
 
 
@@ -291,7 +292,7 @@ f1,          p1,          d1,       m1,       1,     2,         prb
 
 @pytest.fixture(scope='session')
 def fam1():
-    ped_df = RawVariantsLoader.load_pedigree_file(
+    ped_df = FamiliesBase.load_pedigree_file(
         StringIO.StringIO(PED1), sep=",")
 
     family = Family("f1", ped_df)
@@ -313,13 +314,6 @@ def fv1(fam1, sv):
     def rfun(gt):
         return FamilyVariant(sv, fam1, gt)
     return rfun
-
-
-def relative_to_this_test_folder(path):
-    return os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        path
-    )
 
 
 @pytest.fixture()

@@ -6,6 +6,8 @@ Created on Feb 13, 2018
 from __future__ import print_function
 
 import numpy as np
+import pandas as pd
+from variants.attributes import Role, Sex
 
 
 class Person(object):
@@ -106,15 +108,17 @@ class FamiliesBase(object):
     def __init__(self, ped_df=None):
         self.ped_df = ped_df
         self.families = {}
-        self.persons = {}
 
     def families_build(self, ped_df, family_class=Family):
         self.ped_df = ped_df
         for family_id, fam_df in self.ped_df.groupby(by='familyId'):
             family = family_class(family_id, fam_df)
             self.families[family_id] = family
-            for person_id in self.ped_df['personId'].values:
-                self.persons[person_id] = family
+
+    def families_build_from_simple(self, fam_df, family_class=Family):
+        for family_id, fam in fam_df.groupby(by='familyId'):
+            family = family_class(family_id, fam)
+            self.families[family_id] = family
 
     def families_query_by_person(self, person_ids):
         res = {}
@@ -134,3 +138,65 @@ class FamiliesBase(object):
 
     def persons_index(self, persons):
         return sorted([p.index for p in persons])
+
+    @staticmethod
+    def load_pedigree_file(infile, sep="\t"):
+        ped_df = pd.read_csv(
+            infile, sep=sep, index_col=False,
+            skipinitialspace=True,
+            converters={
+                'role': lambda r: Role.from_name(r),
+                'sex': lambda s: Sex.from_value(s),
+            },
+            dtype={
+                'familyId': str,
+                'personId': str,
+                'sampleId': str,
+                'momId': str,
+                'dadId': str,
+            },
+            comment="#",
+        )
+        if 'sampleId' not in ped_df.columns:
+            sample_ids = pd.Series(data=ped_df['personId'].values)
+            ped_df['sampleId'] = sample_ids
+        ped_df['personIndex'] = ped_df.index
+
+        def get_family_index(fid):
+            return (ped_df['familyId'] == fid).idxmin()
+
+        family_index = ped_df['familyId'].apply(get_family_index)
+        ped_df['familyIndex'] = family_index
+        return ped_df
+
+    @staticmethod
+    def load_simple_family_file(infile, sep="\t"):
+        fam_df = pd.read_csv(
+            infile, sep=sep, index_col=False,
+            skipinitialspace=True,
+            converters={
+                'role': lambda r: Role.from_name(r),
+                'gender': lambda s: Sex.from_name(s),
+            },
+            dtype={
+                'familyId': str,
+                'personId': str,
+            },
+            comment="#",
+        )
+        fam_df['personIndex'] = fam_df.index
+
+        def get_family_index(fid):
+            return (fam_df['familyId'] == fid).idxmin()
+
+        family_index = fam_df['familyId'].apply(get_family_index)
+        fam_df['familyIndex'] = family_index
+
+        return fam_df
+
+    @staticmethod
+    def sort_pedigree(ped_df):
+        ped_df['role_order'] = ped_df['role'].apply(lambda r: r.value)
+        ped_df = ped_df.sort_values(by=['familyId', 'role_order'])
+        ped_df = ped_df.drop(axis=1, columns=['role_order'])
+        return ped_df

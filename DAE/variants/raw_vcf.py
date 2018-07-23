@@ -17,6 +17,7 @@ from variants.attributes_query import role_query, sex_query, \
 from variants.family import Family
 from variants.variant import SummaryVariantFactory
 from variants.family_variant import FamilyVariant, FamilyAllele
+import os
 
 
 def split_gene_effect(effects):
@@ -132,9 +133,15 @@ class RawFamilyVariants(FamiliesBase):
         ped_df = pd.DataFrame(pedigree)
         return ped_df, ped_df['sampleId'].values
 
+    def _load_pedigree(self):
+        assert self.config.pedigree
+        assert os.path.exists(self.config.pedigree)
+
+        return FamiliesBase.load_pedigree_file(self.config.pedigree)
+
     def _load(self, annotator, region):
         loader = RawVariantsLoader(self.config)
-        self.ped_df = loader.load_pedigree()
+        self.ped_df = self._load_pedigree()
 
         self.vcf = loader.load_vcf(region)
 

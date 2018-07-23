@@ -5,18 +5,10 @@ Created on Mar 12, 2018
 '''
 from __future__ import print_function
 
-from variants.family import FamiliesBase, Family
-from variants.loader import RawVariantsLoader
 import StringIO
+
 from variants.attributes import Role
-
-
-'''
-2235 1:908193(908193) sub(T->G) SF0043014 212/010 000/010 denovo 0 0.0
-2236 1:908193(908193) sub(T->G) SF0033119 212/010 000/010 denovo 0 0.0
-2237 1:908193(908193) sub(T->G) SF0014912 122/100 000/100 denovo 0 0.0
-2238 1:908193(908193) sub(T->G) SF0042658 212/010 000/010 denovo 0 0.0
-'''
+from variants.family import FamiliesBase, Family
 
 
 PED_FILE1 = """
@@ -32,9 +24,16 @@ SF0014912,SP0024751,0,0,1,1,dad
 SF0014912,SP0014912,SP0024751,SP0015221,1,2,prb
 """
 
+'''
+2235 1:908193(908193) sub(T->G) SF0043014 212/010 000/010 denovo 0 0.0
+2236 1:908193(908193) sub(T->G) SF0033119 212/010 000/010 denovo 0 0.0
+2237 1:908193(908193) sub(T->G) SF0014912 122/100 000/100 denovo 0 0.0
+2238 1:908193(908193) sub(T->G) SF0042658 212/010 000/010 denovo 0 0.0
+'''
+
 
 def test_pedigree_keep_family_order_local():
-    ped_df = RawVariantsLoader.load_pedigree_file(
+    ped_df = FamiliesBase.load_pedigree_file(
         StringIO.StringIO(PED_FILE1), sep=",")
     families = FamiliesBase(ped_df)
     families.families_build(ped_df, family_class=Family)
