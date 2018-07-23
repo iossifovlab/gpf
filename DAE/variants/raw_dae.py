@@ -14,7 +14,6 @@ import numpy as np
 from variants.configure import Configure
 from variants.family import FamiliesBase, Family
 import re
-from dask.dataframe.io.tests.test_parquet import df
 
 
 class RawDAE(object):
