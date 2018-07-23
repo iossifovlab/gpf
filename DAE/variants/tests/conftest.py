@@ -38,6 +38,13 @@ from variants.tests.common_tests_helpers import relative_to_this_test_folder
 
 
 @pytest.fixture(scope='session')
+def default_genome():
+    from DAE import genomesDB
+    genome = genomesDB.get_genome()  # @UndefinedVariable
+    return genome
+
+
+@pytest.fixture(scope='session')
 def effect_annotator():
     return VcfVariantEffectsAnnotator()
 
