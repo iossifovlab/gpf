@@ -22,7 +22,7 @@ def summary_parquet_schema_flat():
         pa.field("variant_type", pa.int8()),
         pa.field("cshl_variant", pa.string()),
         pa.field("cshl_position", pa.int64()),
-        pa.field("cshl_length", pa.int32()),
+        # pa.field("cshl_length", pa.int32()),
         pa.field("effect_type", pa.string()),
         pa.field("effect_gene_genes", pa.list_(pa.string())),
         pa.field("effect_gene_types", pa.list_(pa.string())),
@@ -38,12 +38,47 @@ def summary_parquet_schema_flat():
     return pa.schema(fields)
 
 
+def summary_variants_batch(variants):
+    schema = summary_parquet_schema_flat()
+    data = {
+        name: [] for name in schema.names
+    }
+    for v in variants:
+        for a in v.alleles:
+            for name in schema.names:
+                data[name].append(a.get_attribute(name))
+    return batch_from_data_dict(data, schema)
+
+
+def summary_variants_table(variants):
+    batch = summary_variants_batch(variants)
+    table = pa.Table.from_batches([batch])
+    return table
+
+
+def batch_from_data_dict(data, schema):
+    batch_data = []
+    for name in schema.names:
+        assert name in data
+        column = data[name]
+        field = schema.field_by_name(name)
+        if field.type == pa.string():
+            column = [
+                unicode(v, 'utf-8') if v is not None else None
+                for v in column
+            ]
+        batch_data.append(pa.array(column, type=field.type))
+    batch = pa.RecordBatch.from_arrays(batch_data, schema.names)
+    return batch
+
+
 def summary_batch(sum_df):
     schema = summary_parquet_schema_flat()
 
     batch_data = []
     for name in schema.names:
         assert name in sum_df, name
+        print("summary batch: field=", name)
         data = sum_df[name].values
         field = schema.field_by_name(name)
         batch_data.append(pa.array(data, type=field.type))

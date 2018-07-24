@@ -9,6 +9,7 @@ import engarde.checks as ec
 import numpy as np
 from variants.raw_dae import RawDAE
 from variants.vcf_utils import str2mat, best2gt
+import pyarrow.parquet as pq
 
 
 # def test_load_dae_summary_file():
@@ -20,7 +21,7 @@ from variants.vcf_utils import str2mat, best2gt
 #     print("---------------------------------")
 #     print(df.head())
 #     print("---------------------------------")
-def test_load_dae_summary(raw_dae):
+def test_load_dae_summary(raw_dae, temp_filename):
     dae = raw_dae("fixtures/transmission")
     dae.load_families()
 
@@ -39,10 +40,16 @@ def test_load_dae_summary(raw_dae):
             'alternative': object,
         })
 
-    df = dae.load_family_variants()
+    df = dae.load_summary_variants()
     print(df.head())
     print(df.dtypes)
     print(df.columns)
+
+    for v in dae.wrap_summary_variants(df):
+        print(v)
+
+    table = dae.summary_table(df)
+    pq.write_table(table, temp_filename)
 
 
 def test_explode_family_genotype():

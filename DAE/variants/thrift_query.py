@@ -60,7 +60,6 @@ Q = """
         S.variant_type,
         S.cshl_variant,
         S.cshl_position,
-        S.cshl_length,
         S.effect_type,
         S.effect_gene_genes,
         S.effect_gene_types,

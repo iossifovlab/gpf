@@ -5,16 +5,23 @@ Created on Jul 23, 2018
 '''
 import gzip
 import os
+import re
 
+from astropy.wcs.docstrings import row
 import pysam
 
-import pandas as pd
 import numpy as np
-
+import pandas as pd
+from variants.attributes import VariantType
 from variants.configure import Configure
 from variants.family import FamiliesBase, Family
-import re
+from variants.variant import SummaryVariantFactory, SummaryVariant
 from variants.vcf_utils import best2gt, str2mat
+
+
+from variants.parquet_io import family_variant_parquet_schema, \
+    family_allele_parquet_schema, \
+    summary_variants_table
 
 
 class RawDAE(FamiliesBase):
@@ -121,86 +128,77 @@ class RawDAE(FamiliesBase):
     @staticmethod
     def split_gene_effects(data):
         if data == 'intergenic':
-            return ['intergenic'], ['intergenic']
+            return [u'intergenic'], [u'intergenic']
 
         res = [ge.split(':') for ge in data.split(';')]
-        genes = [ge[0] for ge in res]
-        effects = [ge[1] for ge in res]
+        genes = [unicode(ge[0], 'utf-8') for ge in res]
+        effects = [unicode(ge[1], 'utf-8') for ge in res]
         return genes, effects
 
-    def augment_variant_annotation(self, df):
-        assert self.annotator is None
+    def summary_variant_from_dae_record(self, rec):
+        parents_called = rec['all.nParCalled']
+        ref_allele_count = 2 * rec['all.nParCalled'] - rec['all.nAltAlls']
+        ref_allele_prcnt = 0.0
+        if parents_called > 0:
+            ref_allele_prcnt = ref_allele_count / 2.0 / parents_called
+        ref = {
+            'chrom': rec['chrom'],
+            'position': rec['position'],
+            'reference': rec['reference'],
+            'alternative': None,
+            'variant_type': 0,
+            'cshl_position': rec['cshl_position'],
+            'cshl_variant': rec['cshl_variant'],
+            'summary_variant_index': rec['summary_variant_index'],
+            'allele_index': 0,
+            'effect_type': None,
+            'effect_gene_genes': None,
+            'effect_gene_types': None,
+            'effect_details_transcript_ids': None,
+            'effect_details_details': None,
+            'af_parents_called_count': parents_called,
+            'af_parents_called_percent': rec['all.prcntParCalled'],
+            'af_allele_count': ref_allele_count,
+            'af_allele_freq': ref_allele_prcnt,
+        }
+        ref_allele = SummaryVariantFactory.summary_allele_from_record(ref)
 
-        records = []
-        for index, rec in enumerate(df.to_dict(orient='records')):
-            parents_called = rec['all.nParCalled']
-            ref_allele_count = 2 * rec['all.nParCalled'] - rec['all.nAltAlls']
-            ref_allele_prcnt = 0.0
-            if parents_called > 0:
-                ref_allele_prcnt = ref_allele_count / 2.0 / parents_called
-            ref = {
-                'chrom': rec['chrom'],
-                'position': rec['position'],
-                'reference': rec['reference'],
-                'alternative': None,
-                'cshl_position': rec['cshl_position'],
-                'cshl_variant': rec['cshl_variant'],
-                'summary_variant_index': index,
-                'allele_index': 0,
-                'effect_type': None,
-                'effect_gene_genes': None,
-                'effect_gene_types': None,
-                'effect_details_transcript_ids': None,
-                'effect_details_details': None,
-                'af_parents_called_count': parents_called,
-                'af_parents_called_percent': rec['all.prcntParCalled'],
-                'af_allele_count': ref_allele_count,
-                'af_allele_freq': ref_allele_prcnt,
-            }
-            records.append(ref)
-            genes, effects = self.split_gene_effects(rec['effectGene'])
-            alt = {
-                'chrom': rec['chrom'],
-                'position': rec['position'],
-                'reference': rec['reference'],
-                'alternative': rec['alternative'],
-                'cshl_position': rec['cshl_position'],
-                'cshl_variant': rec['cshl_variant'],
-                'summary_variant_index': index,
-                'allele_index': 1,
-                'effect_type': rec['effectType'],
-                'effect_gene_genes': genes,
-                'effect_gene_types': effects,
-                'effect_details_transcript_ids': rec['effectDetails'],
-                'effect_details_details': rec['effectDetails'],
-                'af_parents_called_count': rec['all.nParCalled'],
-                'af_parents_called_percent': rec['all.prcntParCalled'],
-                'af_allele_count': rec['all.nAltAlls'],
-                'af_allele_freq': rec['all.altFreq'],
-            }
-            records.append(alt)
+        genes, effects = self.split_gene_effects(rec['effectGene'])
+        effect_details = [unicode(rec['effectDetails'], 'utf-8')]
+        alt = {
+            'chrom': rec['chrom'],
+            'position': rec['position'],
+            'reference': rec['reference'],
+            'alternative': rec['alternative'],
+            'variant_type': VariantType.from_cshl_variant(
+                rec['cshl_variant']).value,
+            'cshl_position': rec['cshl_position'],
+            'cshl_variant': rec['cshl_variant'],
+            'summary_variant_index': rec['summary_variant_index'],
+            'allele_index': 1,
+            'effect_type': rec['effectType'],
+            'effect_gene_genes': genes,
+            'effect_gene_types': effects,
+            'effect_details_transcript_ids': effect_details,
+            'effect_details_details': effect_details,
+            'af_parents_called_count': rec['all.nParCalled'],
+            'af_parents_called_percent': rec['all.prcntParCalled'],
+            'af_allele_count': rec['all.nAltAlls'],
+            'af_allele_freq': rec['all.altFreq'],
+        }
+        alt_allele = SummaryVariantFactory.summary_allele_from_record(alt)
+        assert alt_allele is not None
 
-        annot_df = pd.DataFrame.from_records(
-            data=records,
-            columns=[
-                'chrom', 'position', 'reference', 'alternative',
-                'cshl_position',
-                'cshl_variant',
-                'summary_variant_index',
-                'allele_index',
-                'effect_type',
-                'effect_gene_genes',
-                'effect_gene_types',
-                'effect_details_transcript_ids',
-                'effect_details_details',
-                'af_parents_called_count',
-                'af_parents_called_percent',
-                'af_allele_count',
-                'af_allele_freq',
-                'familyData',
-            ])
+        return SummaryVariant([ref_allele, alt_allele])
 
-        return annot_df
+    def wrap_summary_variants(self, df):
+        for index, row in df.iterrows():
+            row['summary_variant_index'] = index
+            summary_variant = self.summary_variant_from_dae_record(row)
+            yield summary_variant
+
+    def wrap_family_variants_rec(self, summary_variant, family_data):
+        pass
 
     def load_variants(self, filename):
         if self.region:
@@ -219,8 +217,6 @@ class RawDAE(FamiliesBase):
         df = self.load_variants(self.summary_filename)
 
         df = self.augment_cshl_variant(df)
-        df = self.augment_variant_annotation(df)
-
         return df
 
     def merge_family_data(self, df):
@@ -289,10 +285,47 @@ class RawDAE(FamiliesBase):
             validate="one_to_one")
 
         vars_df = self.merge_family_data(vars_df)
-        fvars_df = self.expand_family_variants2(vars_df)
-        print(fvars_df)
+        # fvars_df = self.expand_family_variants2(vars_df)
+        # print(fvars_df)
 
         return vars_df
+
+    def summary_table(self, df):
+        table = summary_variants_table(self.wrap_summary_variants(df))
+        return table
+
+    def family_tables(self, df):
+        family_schema = family_variant_parquet_schema()
+        family_allele_schema = family_allele_parquet_schema()
+
+        family_data = {
+            "chrom": [],
+            "position": [],
+            "family_id": [],
+            "family_index": [],
+            "family_variant_index": [],
+            "summary_variant_index": [],
+            "genotype": [],
+        }
+        allele_data = {
+            "chrom": [],
+            "position": [],
+            "family_id": [],
+            "family_index": [],
+            "family_variant_index": [],
+            "summary_variant_index": [],
+            "allele_index": [],
+            "inheritance_in_members": [],
+            "variant_in_members": [],
+            "variant_in_roles": [],
+            "variant_in_sexes": [],
+        }
+
+        family_variant_index = 0
+        for rec in df.to_dict(orient='records'):
+            family_data = self.explode_family_genotypes(rec['family_data'])
+            for family_id in self.family_ids:
+                pass
 
 
 class RawDaeVariants(FamiliesBase):
