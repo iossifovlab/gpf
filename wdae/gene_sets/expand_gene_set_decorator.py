@@ -12,8 +12,8 @@ def expand_gene_set(request_function):
             gene_set = gene_sets_collections.get_gene_set(
                 gene_sets_collection_id, gene_set_id, gene_sets_types,
                 IsDatasetAllowed.permitted_datasets(request.user))
-            del request.data['geneSet']
+            # del request.data['geneSet']
             request.data['geneSymbols'] = gene_set['syms']
+            request.data['geneSet'] = gene_set['desc']
         return request_function(self, request)
     return decorated
-

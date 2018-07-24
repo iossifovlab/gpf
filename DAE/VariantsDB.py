@@ -27,7 +27,8 @@ import pickle
 import logging
 from Variant import Variant, mat2Str, filter_gene_effect, str2Mat,\
     present_in_child_filter,\
-    denovo_present_in_parent_filter, filter_by_status
+    denovo_present_in_parent_filter, \
+    filter_by_status, chromosome_prefix
 from Family import Family, Person
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
@@ -37,6 +38,8 @@ from variant_db.variant_query import VariantQuery
 from pheno.common import Role, Status, Gender
 
 LOGGER = logging.getLogger(__name__)
+
+CHROMOSOME_PREFIX = None
 
 
 def regions_matcher(regions):
@@ -50,6 +53,8 @@ def regions_matcher(regions):
         smcP = r.find(":")
         dsP = r.find("-")
         chrom = r[0:smcP]
+        if CHROMOSOME_PREFIX not in chrom:
+            chrom = CHROMOSOME_PREFIX + chrom
         beg = int(r[smcP + 1:dsP])
         end = int(r[dsP + 1:])
         reg_defs.append((chrom, beg, end))
@@ -838,6 +843,10 @@ class VariantsDB:
 
         # self.phDB = phDB
         self.genomesDB = genomesDB
+
+        global CHROMOSOME_PREFIX
+        if CHROMOSOME_PREFIX is None:
+            CHROMOSOME_PREFIX = chromosome_prefix(self.genomesDB)
 
         if not confFile:
             confFile = daeDir + "/variantDB.conf"

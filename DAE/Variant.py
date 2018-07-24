@@ -3,6 +3,8 @@ Created on Oct 21, 2015
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import numpy as np
 import operator
 from pprint import pprint
@@ -11,6 +13,25 @@ import logging
 from Family import Person
 
 LOGGER = logging.getLogger(__name__)
+
+
+def chromosome_prefix(genomes_db=None):
+    if genomes_db is None:
+        from DAE import genomesDB
+        genome = genomesDB.get_genome()  # @UndefinedVariable
+    else:
+        genome = genomes_db.get_genome()
+
+    assert genome is not None
+    with open(genome.genomicIndexFile) as genomic_index:
+        chr_names = [ln.split("\t")[0] for ln in genomic_index]
+        chr1 = chr_names[0]
+        assert chr1 == "1" or chr1 == "chr1"
+        if "chr" in chr1:
+            return "chr"
+        else:
+            return ""
+
 
 
 def normalRefCopyNumber(location, gender):
@@ -32,19 +53,19 @@ def normalRefCopyNumber(location, gender):
             if gender == 'M':
                 return 1
             elif gender == 'U':
-                LOGGER.warn(
+                LOGGER.debug(
                     'unspecified gender when calculating normal number of allels '
                     'in chr%s',
                     location
                 )
-                return 1
+                # return 1
             elif gender != 'F':
                 raise Exception('weird gender ' + gender)
     elif chrome in ['chrY', 'Y', '24', 'chr24']:
         if gender == 'M':
             return 1
         elif gender == 'U':
-            LOGGER.warn(
+            LOGGER.debug(
                 'unspecified gender when calculating normal number of allels '
                 'in chr%s',
                 location
@@ -210,7 +231,7 @@ class Variant:
         except AttributeError:
             pass
         self._familyId = self.atts.get(self.familyIdAtt,
-            self.atts.get(self.sampleIdAtt))
+                                       self.atts.get(self.sampleIdAtt))
         self._familyId = str(
             self._familyId) if self._familyId else self._familyId
         return self._familyId
@@ -381,7 +402,7 @@ class Variant:
         return self.key == other.key
 
     def __lt__(self, other):
-        return self.sort_key < other.sort_key
+        return self.key < other.key
 
     CHROMOSOMES_ORDER = dict(
         {str(x): '0' + str(x) for x in range(1, 10)}.items() +
@@ -389,15 +410,12 @@ class Variant:
         { 'X': '23', 'Y': '24' }.items())
 
     @property
-    def sort_key(self):
+    def key(self):
         chromosome, position = self.location.split(':')
         return (self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome),
-                int(position.split('-')[0]))
-
-    @property
-    def key(self):
-        return (self.familyId if self.familyId else '',
-            self.location, self.variant)
+                int(position.split('-')[0]),
+                self.variant,
+                self.familyId if self.familyId else '')
 
     def pedigree_v3(self, legend):
         def get_color(p):

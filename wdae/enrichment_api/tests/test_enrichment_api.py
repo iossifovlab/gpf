@@ -118,3 +118,23 @@ class Test(BaseAuthenticatedUserTest):
 
         self.assertEquals(386, data['result'][0]['LGDs']['all']['count'])
         self.assertEquals(28, data['result'][0]['LGDs']['rec']['count'])
+        self.assertEquals(
+            "Gene Set: LGDs.Recurrent (SD:autism) (45)", data['desc'])
+
+    def test_gene_syms_description(self):
+        data = {
+            'datasetId': 'SSC',
+            'enrichmentBackgroundModel': 'synonymousBackgroundModel',
+            'enrichmentCountingModel': 'enrichmentGeneCounting',
+            "geneSymbols": [
+                "POGZ"
+            ]
+        }
+        url = '/api/v3/enrichment/test'
+
+        response = self.client.post(url, data, format='json')
+        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        data = response.data
+
+        self.assertEquals(
+            "Gene Symbols: POGZ (1)", data['desc'])

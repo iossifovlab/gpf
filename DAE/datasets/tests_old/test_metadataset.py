@@ -102,3 +102,24 @@ def test_get_variants_skips_transmitted_when_not_needed(mocker, metadataset, stu
     assert 0 == len(variants)
 
     assert not studies[1].get_transmitted_variants.called
+
+def test_if_pedigree_selector_is_used(mocker, metadataset, studies):
+    ds1, ds2 = metadataset.datasets
+
+    mocker.patch.object(ds1, 'get_studies')
+    ds1.get_studies.return_value = [studies[0]]
+    mocker.patch.object(ds2, 'get_studies')
+    ds2.get_studies.return_value = [studies[1]]
+
+    fuck = mocker.patch.object(metadataset, 'filter_families_by_pedigree_selector',
+        wraps=lambda **kwargs: {'1', '2'})
+
+    phenotype_filter_mock = mocker.patch.object(metadataset, '_phenotype_filter',
+                                                wraps=metadataset._phenotype_filter)
+    variant_generator = metadataset.get_variants(safe=True,
+        dataset_ids = ['DS1', 'DS2'],
+        pedigreeSelector = {'id': 'phenotype', 'checkedValues':['autism']}
+    )
+    variants = list(variant_generator)
+    phenotype_filter_mock.assert_called_with(mocker.ANY, dataset_ids = ['DS1', 'DS2'],
+        pedigreeSelector = {'id': 'phenotype', 'checkedValues':['autism']})
