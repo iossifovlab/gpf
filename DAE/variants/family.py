@@ -97,12 +97,14 @@ class FamiliesBase(object):
     def __init__(self, ped_df=None):
         self.ped_df = ped_df
         self.families = {}
+        self.family_ids = []
 
     def families_build(self, ped_df, family_class=Family):
         self.ped_df = ped_df
         for family_id, fam_df in self.ped_df.groupby(by='familyId'):
             family = family_class(family_id, fam_df)
             self.families[family_id] = family
+            self.family_ids.append(family_id)
 
     def families_build_from_simple(self, fam_df, family_class=Family):
         for family_id, fam in fam_df.groupby(by='familyId'):

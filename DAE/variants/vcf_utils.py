@@ -5,6 +5,7 @@ Created on Mar 5, 2018
 '''
 from __future__ import print_function
 
+import numpy as np
 from itertools import izip
 
 
@@ -14,6 +15,30 @@ def mat2str(mat, col_sep="", row_sep="/"):
             [str(n) if n >= 0 else "?" for n in mat[i, :]]
         )
         for i in xrange(mat.shape[0])])
+
+
+def str2mat(mat, col_sep="", row_sep="/"):
+    if col_sep == "":
+        return np.array(
+            [[int(c) for c in r]
+             for r in mat.split(row_sep)], dtype=np.int8)
+    return np.array(
+        [[int(v) for v in r.split(col_sep)]
+         for r in mat.split(row_sep)], dtype=np.int8)
+
+
+def best2gt(mat):
+    rows, cols = mat.shape
+    res = np.zeros(shape=(2, cols), dtype=np.int8)
+    for allele_index in range(rows):
+        row = mat[allele_index, :]
+        for col in range(cols):
+            if row[col] == 2:
+                res[:, col] = allele_index
+            elif row[col] == 1:
+                res[0, col] = allele_index
+
+    return res
 
 
 def trim_str(pos, ref, alt):

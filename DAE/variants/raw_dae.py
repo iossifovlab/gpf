@@ -14,10 +14,10 @@ import numpy as np
 from variants.configure import Configure
 from variants.family import FamiliesBase, Family
 import re
-from pprint import pprint
+from variants.vcf_utils import best2gt, str2mat
 
 
-class RawDAE(object):
+class RawDAE(FamiliesBase):
 
     SUB_RE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
     INS_RE = re.compile('^ins\(([ACGT]+)\)$')
@@ -25,9 +25,13 @@ class RawDAE(object):
 
     def __init__(self, summary_filename, toomany_filename, family_filename,
                  region=None, genome=None, annotator=None):
+        super(RawDAE, self).__init__()
+
         os.path.exists(summary_filename)
         os.path.exists(toomany_filename)
         os.path.exists(family_filename)
+
+        assert genome is not None
 
         self.summary_filename = summary_filename
         self.toomany_filename = toomany_filename
@@ -36,6 +40,11 @@ class RawDAE(object):
 
         self.genome = genome
         self.annotator = annotator
+
+    def load_families(self):
+        self.ped_df = FamiliesBase.load_simple_family_file(
+            self.family_filename)
+        self.families_build(self.ped_df, Family)
 
     @staticmethod
     def load_column_names(filename):
@@ -57,7 +66,7 @@ class RawDAE(object):
         return df
 
     @staticmethod
-    def load(filename):
+    def load_all(filename):
         with gzip.open(filename) as infile:
             df = pd.read_csv(
                 infile,
@@ -111,7 +120,6 @@ class RawDAE(object):
 
     @staticmethod
     def split_gene_effects(data):
-        print(data)
         if data == 'intergenic':
             return ['intergenic'], ['intergenic']
 
@@ -135,6 +143,8 @@ class RawDAE(object):
                 'position': rec['position'],
                 'reference': rec['reference'],
                 'alternative': None,
+                'cshl_position': rec['cshl_position'],
+                'cshl_variant': rec['cshl_variant'],
                 'summary_variant_index': index,
                 'allele_index': 0,
                 'effect_type': None,
@@ -148,13 +158,14 @@ class RawDAE(object):
                 'af_allele_freq': ref_allele_prcnt,
             }
             records.append(ref)
-            pprint(rec)
             genes, effects = self.split_gene_effects(rec['effectGene'])
             alt = {
                 'chrom': rec['chrom'],
                 'position': rec['position'],
                 'reference': rec['reference'],
                 'alternative': rec['alternative'],
+                'cshl_position': rec['cshl_position'],
+                'cshl_variant': rec['cshl_variant'],
                 'summary_variant_index': index,
                 'allele_index': 1,
                 'effect_type': rec['effectType'],
@@ -173,6 +184,8 @@ class RawDAE(object):
             data=records,
             columns=[
                 'chrom', 'position', 'reference', 'alternative',
+                'cshl_position',
+                'cshl_variant',
                 'summary_variant_index',
                 'allele_index',
                 'effect_type',
@@ -184,30 +197,102 @@ class RawDAE(object):
                 'af_parents_called_percent',
                 'af_allele_count',
                 'af_allele_freq',
+                'familyData',
             ])
-
-        # self.annotator.setup(self)
-        # annot_df = self.annotator.annotate(df, df)
 
         return annot_df
 
-    def load_summary_variants(self):
+    def load_variants(self, filename):
         if self.region:
-            df = self.load_region(self.summary_filename, self.region)
+            df = self.load_region(filename, self.region)
         else:
-            df = self.load(self.summary_filename)
+            df = self.load_all(filename)
 
         df = df.rename(columns={
             "position": "cshl_position",
             "variant": "cshl_variant",
             "chr": "chrom",
         })
-        print(df.head())
+        return df
+
+    def load_summary_variants(self):
+        df = self.load_variants(self.summary_filename)
 
         df = self.augment_cshl_variant(df)
         df = self.augment_variant_annotation(df)
 
         return df
+
+    def merge_family_data(self, df):
+        def choose_family_data(row):
+            if row['familyData'] == "TOOMANY":
+                return row['familyDataToomany']
+            return row['familyData']
+        family_data = df.apply(choose_family_data, axis=1,
+                               result_type='reduce')
+        df['family_data'] = family_data
+        df = df.drop(columns=["familyData", "familyDataToomany"])
+        return df
+
+    def expand_family_variants(self, df):
+        family_df = pd.DataFrame(
+            index=df.index,
+            columns=self.ped_df['personId'].values,
+            dtype=object,
+            data=None
+        )
+        print(family_df.dtypes)
+        family_df = family_df.applymap(lambda _: np.zeros(2, dtype=np.int8))
+
+        return family_df
+
+    @staticmethod
+    def explode_family_genotypes(family_data):
+        res = {
+            fid: bs for [fid, bs] in [
+                fg.split(':')[:2] for fg in family_data.split(';')]
+        }
+        res = {
+            fid: best2gt(str2mat(bs)) for fid, bs in res.items()
+        }
+        return res
+
+    def get_reference_genotype(self, fid):
+        fam = self.families.get(fid)
+        assert fam is not None
+        return np.zeros(shape=(2, len(fam)), dtype=np.int8)
+
+    def expand_family_variants2(self, df):
+
+        def explode_genotypes(row):
+            family_data = row['family_data']
+            res = []
+            genotypes = self.explode_family_genotypes(family_data)
+            for fid in self.family_ids:
+                gt = genotypes.get(fid, None)
+                if gt is None:
+                    gt = self.get_reference_genotype(fid)
+                res.append((fid, gt))
+            return res
+
+        df = df.apply(explode_genotypes, axis=1)
+        return df
+
+    def load_family_variants(self):
+        summary_df = self.load_variants(self.summary_filename)
+        df = self.load_variants(self.toomany_filename)
+
+        vars_df = pd.merge(
+            summary_df, df, how="left",
+            on=["chrom", "cshl_position", "cshl_variant"],
+            suffixes=("", "Toomany"),
+            validate="one_to_one")
+
+        vars_df = self.merge_family_data(vars_df)
+        fvars_df = self.expand_family_variants2(vars_df)
+        print(fvars_df)
+
+        return vars_df
 
 
 class RawDaeVariants(FamiliesBase):

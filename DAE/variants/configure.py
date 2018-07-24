@@ -75,16 +75,15 @@ class Configure(ConfigBox):
 
     @staticmethod
     def from_prefix_dae(prefix):
-        summary_filename = '{}.txt.bgz'.format(prefix)
-        toomany_filename = '{}-TOOMANY.txt.bgz'.format(prefix)
-        basename = os.path.basename(prefix)
-        family_filename = os.path.join(basename, "familyInfo.txt")
+        summary_filename = '{}.txt.gz'.format(prefix)
+        toomany_filename = '{}-TOOMANY.txt.gz'.format(prefix)
+        family_filename = "{}.families.txt".format(prefix)
 
         conf = {
             'dae': {
-                'summary': summary_filename,
-                'toomany': toomany_filename,
-                'family': family_filename,
+                'summary_filename': summary_filename,
+                'toomany_filename': toomany_filename,
+                'family_filename': family_filename,
             }
         }
         return Configure(conf)

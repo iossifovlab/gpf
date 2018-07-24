@@ -35,6 +35,7 @@ from variants.raw_vcf import RawFamilyVariants, \
     VariantFactory
 from variants.variant import SummaryAllele, SummaryVariant
 from variants.tests.common_tests_helpers import relative_to_this_test_folder
+from variants.raw_dae import RawDAE
 
 
 @pytest.fixture(scope='session')
@@ -45,8 +46,16 @@ def default_genome():
 
 
 @pytest.fixture(scope='session')
-def effect_annotator():
-    return VcfVariantEffectsAnnotator()
+def default_gene_models():
+    from DAE import genomesDB
+    gene_models = genomesDB.get_gene_models()  # @UndefinedVariable
+    return gene_models
+
+
+@pytest.fixture(scope='session')
+def effect_annotator(default_genome, default_gene_models):
+    return VcfVariantEffectsAnnotator(
+        genome=default_genome, gene_models=default_gene_models)
 
 
 @pytest.fixture(scope='session')
@@ -168,6 +177,30 @@ def ustudy_vcf(ustudy_config, composite_annotator):
         ustudy_config, annotator=composite_annotator,
         variant_factory=VariantFactory)
     return fvariants
+
+
+@pytest.fixture(scope='session')
+def config_dae():
+    def builder(path):
+        fullpath = relative_to_this_test_folder(path)
+        config = Configure.from_prefix_dae(fullpath)
+        return config
+    return builder
+
+
+@pytest.fixture(scope='session')
+def raw_dae(config_dae, default_genome):
+    def builder(path, region=None):
+        config = config_dae(path)
+        dae = RawDAE(
+            config.dae.summary_filename,
+            config.dae.toomany_filename,
+            config.dae.family_filename,
+            region=region,
+            genome=default_genome,
+            annotator=None)
+        return dae
+    return builder
 
 
 @pytest.fixture(scope='session')
