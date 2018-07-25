@@ -72,11 +72,10 @@ def test_experiment_with_parquet_partitioned_datasets(
     fvars = variants_vcf(fixture_name)
     summary_variants_table = summary_table(fvars.annot_df)
     # ped_df = fvars.ped_df
-    family_table, allele_table = family_variants_table(
-        fvars.query_variants(
-            return_reference=True,
-            return_unknown=True
-        ))
+
+    variants = fvars.query_variants(
+        return_reference=True,
+        return_unknown=True)
 
     summary_dataset_filename = os.path.join(
         temp_dirname, "summary.dataset")
@@ -87,20 +86,23 @@ def test_experiment_with_parquet_partitioned_datasets(
         partition_cols=["chrom"])
 
     family_dataset_filename = os.path.join(temp_dirname, "family.dataset")
-    print("family:>>", family_dataset_filename)
-    pq.write_to_dataset(
-        family_table,
-        root_path=family_dataset_filename,
-        partition_cols=["chrom", "family_index"],
-        preserve_index=False)
-
     allele_dataset_filename = os.path.join(temp_dirname, "allele.dataset")
-    print("allele:>>", allele_dataset_filename)
-    pq.write_to_dataset(
-        allele_table,
-        root_path=allele_dataset_filename,
-        partition_cols=["chrom", "family_index"],
-        preserve_index=False)
+
+    for family_table, allele_table in family_variants_table(variants):
+
+        print("family:>>", family_dataset_filename)
+        pq.write_to_dataset(
+            family_table,
+            root_path=family_dataset_filename,
+            partition_cols=["chrom", "family_index"],
+            preserve_index=False)
+
+        print("allele:>>", allele_dataset_filename)
+        pq.write_to_dataset(
+            allele_table,
+            root_path=allele_dataset_filename,
+            partition_cols=["chrom", "family_index"],
+            preserve_index=False)
 
     allele_table2 = pq.read_table(allele_dataset_filename)
     assert allele_table2 is not None
