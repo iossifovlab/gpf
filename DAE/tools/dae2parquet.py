@@ -19,6 +19,7 @@ from variants.builder import get_genome
 from variants.configure import Configure
 from variants.raw_dae import RawDAE
 import traceback
+from variants.parquet_io import save_family_variants_to_parquet
 
 
 def get_contigs(tabixfilename):
@@ -61,10 +62,12 @@ def convert_contig(contig, outprefix=None, config=None,):
 
         summary_table = dae.summary_table(df)
         pq.write_table(summary_table, summary_filename)
+        summary_table = None
 
-        family_table, allele_table = dae.family_tables(df)
-        pq.write_table(family_table, variants_filename)
-        pq.write_table(allele_table, alleles_filename)
+        save_family_variants_to_parquet(
+            dae.wrap_family_variants(df),
+            variants_filename,
+            alleles_filename)
 
     except Exception as ex:
         print("unexpected error:", ex)

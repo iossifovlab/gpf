@@ -11,8 +11,6 @@ from variants.parquet_io import family_variants_table,\
     read_family_allele_df_from_parquet, summary_table
 from variants.tests.common_tests_helpers import assert_annotation_equals
 import os
-import numpy as np
-import pyarrow as pa
 import pyarrow.parquet as pq
 import pandas as pd
 
@@ -23,26 +21,26 @@ import pandas as pd
 ])
 def test_parquet_variants(variants_vcf, fixture_name, temp_filename):
     fvars = variants_vcf(fixture_name)
-    family_table, f2s_table = family_variants_table(
-        fvars.query_variants(
-            return_reference=True,
-            return_unknown=True
-        ))
-    assert family_table is not None
+    variants = fvars.query_variants(
+        return_reference=True,
+        return_unknown=True
+    )
+    for family_table, allele_table in family_variants_table(variants):
+        assert family_table is not None
 
-    df = family_table.to_pandas()
-    save_family_variants_df_to_parquet(df, temp_filename)
+        df = family_table.to_pandas()
+        save_family_variants_df_to_parquet(df, temp_filename)
 
-    df1 = read_family_variants_df_from_parquet(temp_filename)
-    assert df1 is not None
-    assert_annotation_equals(df, df1)
+        df1 = read_family_variants_df_from_parquet(temp_filename)
+        assert df1 is not None
+        assert_annotation_equals(df, df1)
 
-    df = f2s_table.to_pandas()
-    save_family_allele_df_to_parquet(df, temp_filename)
+        df = allele_table.to_pandas()
+        save_family_allele_df_to_parquet(df, temp_filename)
 
-    df1 = read_family_allele_df_from_parquet(temp_filename)
-    assert df1 is not None
-    assert_annotation_equals(df, df1)
+        df1 = read_family_allele_df_from_parquet(temp_filename)
+        assert df1 is not None
+        assert_annotation_equals(df, df1)
 
 
 @pytest.mark.parametrize("fixture_name", [

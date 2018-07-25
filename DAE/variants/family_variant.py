@@ -69,6 +69,17 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
         self.matched_gene_effects = []
 
+    def __repr__(self):
+        if not self.alternative:
+            return '{}:{} {}(ref) {}'.format(
+                self.chromosome, self.position,
+                self.reference, self.family_id)
+        else:
+            return '{}:{} {}->{} {}'.format(
+                self.chromosome, self.position,
+                self.reference, self.alternative,
+                self.family_id)
+
     @property
     def genotype(self):
         """

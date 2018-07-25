@@ -5,11 +5,14 @@ Created on Jul 23, 2018
 '''
 from __future__ import print_function
 
+import os
+
 import engarde.checks as ec
 import numpy as np
+import pyarrow.parquet as pq
 from variants.raw_dae import RawDAE
 from variants.vcf_utils import str2mat, best2gt
-import pyarrow.parquet as pq
+from variants.parquet_io import save_family_variants_to_parquet
 
 
 # def test_load_dae_summary_file():
@@ -52,7 +55,7 @@ def test_load_dae_summary(raw_dae, temp_filename):
     pq.write_table(table, temp_filename)
 
 
-def test_load_dae_family(raw_dae, temp_filename):
+def test_load_dae_family(raw_dae, temp_dirname):
     dae = raw_dae("fixtures/transmission", "1")
     dae.load_families()
 
@@ -64,21 +67,12 @@ def test_load_dae_family(raw_dae, temp_filename):
     df = dae.load_family_variants()
     assert df is not None
 
-    ec.has_dtypes(
-        df,
-        {
-            'chrom': object,
-            'position': int,
-            'reference': object,
-            'alternative': object,
-        })
+    fname = os.path.join(temp_dirname, "f.parquet")
+    aname = os.path.join(temp_dirname, "a.parquet")
 
-    for v in dae.wrap_family_variants(df):
-        print(v)
-
-    family_table, allele_table = dae.family_tables(df)
-    pq.write_table(family_table, temp_filename)
-    pq.write_table(allele_table, temp_filename)
+    save_family_variants_to_parquet(
+        dae.wrap_family_variants(df),
+        fname, aname, batch_size=5)
 
 
 def test_explode_family_genotype():

@@ -4,6 +4,10 @@ Created on May 30, 2018
 @author: lubo
 '''
 from __future__ import print_function
+
+import sys
+import traceback
+
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -70,6 +74,11 @@ def batch_from_data_dict(data, schema):
         batch_data.append(pa.array(column, type=field.type))
     batch = pa.RecordBatch.from_arrays(batch_data, schema.names)
     return batch
+
+
+def table_from_data_dict(data, schema):
+    batch = batch_from_data_dict(data, schema)
+    return pa.Table.from_batches([batch])
 
 
 def summary_batch(sum_df):
@@ -139,11 +148,8 @@ def family_allele_parquet_schema():
     return pa.schema(fields)
 
 
-def family_variants_batch(variants):
-    family_schema = family_variant_parquet_schema()
-    family_allele_schema = family_allele_parquet_schema()
-
-    family_data = {
+def setup_family_batch_data():
+    return {
         "chrom": [],
         "position": [],
         "family_id": [],
@@ -152,7 +158,10 @@ def family_variants_batch(variants):
         "summary_variant_index": [],
         "genotype": [],
     }
-    allele_data = {
+
+
+def setup_allele_batch_data():
+    return {
         "chrom": [],
         "position": [],
         "family_id": [],
@@ -165,6 +174,15 @@ def family_variants_batch(variants):
         "variant_in_roles": [],
         "variant_in_sexes": [],
     }
+
+
+def family_variants_table(variants, batch_size=1000000):
+    family_schema = family_variant_parquet_schema()
+    family_allele_schema = family_allele_parquet_schema()
+
+    allele_data = setup_allele_batch_data()
+    family_data = setup_family_batch_data()
+
     for family_variant_index, vs in enumerate(variants):
         for allele in vs.alleles:
             allele_data["chrom"].append(vs.chromosome)
@@ -199,27 +217,47 @@ def family_variants_batch(variants):
         family_data["summary_variant_index"].append(vs.summary_index)
         family_data["genotype"].append(vs.gt_flatten())
 
-    allele_batch_data = []
-    for name in family_allele_schema.names:
-        assert name in allele_data
-        column = allele_data[name]
-        field = family_allele_schema.field_by_name(name)
-        allele_batch_data.append(pa.array(column, type=field.type))
-    allele_batch = pa.RecordBatch.from_arrays(
-        allele_batch_data,
-        family_allele_schema.names)
+        if (family_variant_index + 1) % batch_size == 0:
+            allele_table = table_from_data_dict(
+                allele_data, family_allele_schema)
 
-    family_batch_data = []
-    for name in family_schema.names:
-        assert name in family_data
-        column = family_data[name]
-        field = family_schema.field_by_name(name)
-        family_batch_data.append(pa.array(column, type=field.type))
+            family_table = table_from_data_dict(
+                family_data, family_schema)
 
-    family_batch = pa.RecordBatch.from_arrays(
-        family_batch_data,
-        family_schema.names)
-    return family_batch, allele_batch
+            allele_data = setup_allele_batch_data()
+            family_data = setup_family_batch_data()
+
+            yield family_table, allele_table
+
+    if len(allele_data) > 0 and len(family_data) > 0:
+        allele_table = table_from_data_dict(allele_data, family_allele_schema)
+        family_table = table_from_data_dict(family_data, family_schema)
+
+        yield family_table, allele_table
+
+
+def save_family_variants_to_parquet(
+        variants, family_filename, allele_filename, batch_size=100000):
+    family_schema = family_variant_parquet_schema()
+    allele_schema = family_allele_parquet_schema()
+
+    family_writer = pq.ParquetWriter(family_filename, family_schema)
+    allele_writer = pq.ParquetWriter(allele_filename, allele_schema)
+    try:
+        for ftable, atable in family_variants_table(variants, batch_size):
+            assert ftable.schema == family_schema
+            assert atable.schema == allele_schema
+            print("ooopa....")
+            family_writer.write_table(ftable)
+            allele_writer.write_table(atable)
+
+    except Exception as ex:
+        print("unexpected error:", ex)
+        traceback.print_exc(file=sys.stdout)
+    finally:
+        # family_writer.close()
+        # allele_writer.close()
+        pass
 
 
 def family_variants_df_to_batch(vars_df):
@@ -254,13 +292,6 @@ def family_allele_df_to_batch(f2s_df):
         schema.names)
 
     return batch
-
-
-def family_variants_table(variants):
-    variants_batch, alleles_batch = family_variants_batch(variants)
-    variants_table = pa.Table.from_batches([variants_batch])
-    alleles_table = pa.Table.from_batches([alleles_batch])
-    return variants_table, alleles_table
 
 
 def family_variants_df(variants):
