@@ -26,12 +26,8 @@ from variants.vcf_utils import best2gt, str2mat
 from variants.parquet_io import \
     summary_variants_table, family_variants_table
 from variants.family_variant import FamilyVariant
-<<<<<<< HEAD
-from __builtin__ import int
 import sys
 import traceback
-=======
->>>>>>> 0ef39b95fb82e3c6e0dfe149b60af2b9b4a70a7b
 
 
 class RawDAE(FamiliesBase):
