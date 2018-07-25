@@ -50,11 +50,11 @@ class DfFamilyVariantsBase(object):
 
 class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
-    def __init__(self, ped_df, summary_df, vars_df, f2s_df):
+    def __init__(self, ped_df, summary_df, vars_df, allele_df):
         super(DfFamilyVariants, self).__init__()
         self.summary_df = summary_df
         self.vars_df = vars_df
-        self.f2s_df = f2s_df
+        self.allele_df = allele_df
         self.ped_df = ped_df
 
         self.families_build(self.ped_df, family_class=Family)

@@ -66,7 +66,7 @@ def batch_from_data_dict(data, schema):
         assert name in data
         column = data[name]
         field = schema.field_by_name(name)
-        if field.type == pa.string():
+        if field.type == pa.string() and not isinstance(column[0], unicode):
             column = [
                 unicode(v, 'utf-8') if v is not None else None
                 for v in column
@@ -295,8 +295,8 @@ def family_allele_df_to_batch(f2s_df):
 
 
 def family_variants_df(variants):
-    family_table, f2s_table = family_variants_table(variants)
-    return family_table.to_pandas(), f2s_table.to_pandas()
+    for ftable, atable in family_variants_table(variants):
+        return ftable.to_pandas(), atable.to_pandas()
 
 
 def save_family_variants_df_to_parquet(vars_df, filename):
