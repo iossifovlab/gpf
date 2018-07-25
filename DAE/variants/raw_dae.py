@@ -120,7 +120,7 @@ class RawDAE(FamiliesBase):
     def augment_cshl_variant(self, df):
         result = []
 
-        for _index, row in df.iterrows():
+        for index, row in df.iterrows():
             try:
                 chrom, position, reference, alternative = self.dae2vcf_variant(
                     row['chrom'], row['cshl_position'], row['cshl_variant'])
@@ -129,13 +129,21 @@ class RawDAE(FamiliesBase):
                     "position": position,
                     "reference": reference,
                     "alternative": alternative})
-            except NotImplementedError as ex:
-                print("weird variant: ", ex.message)
+            except Exception as ex:
+                print("unexpected error:", ex)
+                print("error in handling:", row, index)
+                traceback.print_exc(file=sys.stdout)
+                result.append({
+                    "chrom": chrom,
+                    "position": row['cshl_position'],
+                    "reference": None,
+                    "alternative": None})
 
         aug_df = pd.DataFrame.from_records(
             data=result,
             columns=["chrom", "position", "reference", "alternative"])
-        # assert len(aug_df.index) == len(df.index)  FIXME:
+
+        assert len(aug_df.index) == len(df.index)  # FIXME:
 
         df['position'] = aug_df['position'].astype(np.int64)
         df['reference'] = aug_df['reference']

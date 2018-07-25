@@ -6,6 +6,7 @@ Created on Mar 12, 2018
 from __future__ import print_function
 
 from variants.vcf_utils import vcf2cshl
+from variants.dae_utils import dae2vcf_variant
 
 
 def test_vcf2cshl_variant_format():
@@ -141,3 +142,23 @@ def test_insert_long():
     print(ps, vs, ls)
 
     assert ps == 51  # FIXME
+
+
+def test_cshl_to_vcf_problem():
+    chrom = "2"
+    position = 242815433
+    variant = "sub(G->A)"
+
+    chrom, position1, reference, alternative = \
+        dae2vcf_variant(chrom, position, variant)
+    print(chrom, position, reference, alternative)
+    assert chrom == "2"
+    assert position == position1
+    assert reference == "G"
+    assert alternative == "A"
+
+    position2, variant2, length = vcf2cshl(position, reference, alternative)
+
+    assert position2 == position
+    assert variant2 == variant
+    assert length == 1
