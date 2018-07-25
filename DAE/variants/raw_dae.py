@@ -3,6 +3,8 @@ Created on Jul 23, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import gzip
 import os
 import re
@@ -19,9 +21,9 @@ from variants.variant import SummaryVariantFactory, SummaryVariant
 from variants.vcf_utils import best2gt, str2mat
 
 
-from variants.parquet_io import family_variant_parquet_schema, \
-    family_allele_parquet_schema, \
-    summary_variants_table
+from variants.parquet_io import \
+    summary_variants_table, family_variants_table
+from variants.family_variant import FamilyVariant
 
 
 class RawDAE(FamiliesBase):
@@ -197,8 +199,25 @@ class RawDAE(FamiliesBase):
             summary_variant = self.summary_variant_from_dae_record(row)
             yield summary_variant
 
-    def wrap_family_variants_rec(self, summary_variant, family_data):
-        pass
+    def wrap_family_variants(self, df):
+        for index, row in df.iterrows():
+            row['summary_variant_index'] = index
+            summary_variant = self.summary_variant_from_dae_record(row)
+            family_genotypes = self.explode_family_genotypes(
+                row['family_data'])
+            for family_id in self.family_ids:
+                family = self.families.get(family_id)
+                assert family is not None
+
+                gt = family_genotypes.get(family_id, None)
+                if gt is None:
+                    gt = self.get_reference_genotype(family)
+
+                assert len(family) == gt.shape[1], family.family_id
+
+                family_variant = FamilyVariant(
+                    summary_variant, family, gt)
+                yield family_variant
 
     def load_variants(self, filename):
         if self.region:
@@ -230,18 +249,6 @@ class RawDAE(FamiliesBase):
         df = df.drop(columns=["familyData", "familyDataToomany"])
         return df
 
-    def expand_family_variants(self, df):
-        family_df = pd.DataFrame(
-            index=df.index,
-            columns=self.ped_df['personId'].values,
-            dtype=object,
-            data=None
-        )
-        print(family_df.dtypes)
-        family_df = family_df.applymap(lambda _: np.zeros(2, dtype=np.int8))
-
-        return family_df
-
     @staticmethod
     def explode_family_genotypes(family_data):
         res = {
@@ -253,26 +260,9 @@ class RawDAE(FamiliesBase):
         }
         return res
 
-    def get_reference_genotype(self, fid):
-        fam = self.families.get(fid)
-        assert fam is not None
-        return np.zeros(shape=(2, len(fam)), dtype=np.int8)
-
-    def expand_family_variants2(self, df):
-
-        def explode_genotypes(row):
-            family_data = row['family_data']
-            res = []
-            genotypes = self.explode_family_genotypes(family_data)
-            for fid in self.family_ids:
-                gt = genotypes.get(fid, None)
-                if gt is None:
-                    gt = self.get_reference_genotype(fid)
-                res.append((fid, gt))
-            return res
-
-        df = df.apply(explode_genotypes, axis=1)
-        return df
+    def get_reference_genotype(self, family):
+        assert family is not None
+        return np.zeros(shape=(2, len(family)), dtype=np.int8)
 
     def load_family_variants(self):
         summary_df = self.load_variants(self.summary_filename)
@@ -285,8 +275,7 @@ class RawDAE(FamiliesBase):
             validate="one_to_one")
 
         vars_df = self.merge_family_data(vars_df)
-        # fvars_df = self.expand_family_variants2(vars_df)
-        # print(fvars_df)
+        vars_df = self.augment_cshl_variant(vars_df)
 
         return vars_df
 
@@ -295,37 +284,8 @@ class RawDAE(FamiliesBase):
         return table
 
     def family_tables(self, df):
-        family_schema = family_variant_parquet_schema()
-        family_allele_schema = family_allele_parquet_schema()
-
-        family_data = {
-            "chrom": [],
-            "position": [],
-            "family_id": [],
-            "family_index": [],
-            "family_variant_index": [],
-            "summary_variant_index": [],
-            "genotype": [],
-        }
-        allele_data = {
-            "chrom": [],
-            "position": [],
-            "family_id": [],
-            "family_index": [],
-            "family_variant_index": [],
-            "summary_variant_index": [],
-            "allele_index": [],
-            "inheritance_in_members": [],
-            "variant_in_members": [],
-            "variant_in_roles": [],
-            "variant_in_sexes": [],
-        }
-
-        family_variant_index = 0
-        for rec in df.to_dict(orient='records'):
-            family_data = self.explode_family_genotypes(rec['family_data'])
-            for family_id in self.family_ids:
-                pass
+        variants = self.wrap_family_variants(df)
+        return family_variants_table(variants)
 
 
 class RawDaeVariants(FamiliesBase):

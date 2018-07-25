@@ -81,6 +81,9 @@ class Family(object):
     def __len__(self):
         return len(self.ped_df)
 
+    def __repr__(self):
+        return "Family({}; {})".format(self.family_id, self.members_in_order)
+
     def members_index(self, person_ids):
         index = []
         for pid in person_ids:
