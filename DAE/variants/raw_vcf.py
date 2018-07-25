@@ -342,13 +342,13 @@ class RawFamilyVariants(FamiliesBase):
             if v.is_unknown() and not return_unknown:
                 continue
 
+            if not return_reference and v.is_reference():
+                continue
+
             if not self.filter_variant(v, **kwargs):
                 continue
 
-            if return_reference:
-                alleles = v.alleles
-            else:
-                alleles = v.alt_alleles
+            alleles = v.alleles
             alleles_matched = []
             for allele in alleles:
                 if self.filter_allele(allele, **kwargs):
