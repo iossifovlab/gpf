@@ -100,12 +100,12 @@ def testing_thriftserver(request):
     else:
         thrift_port = 10000
 
-    def thrift_connect():
-        for count in range(10):
+    def thrift_connect(retries=10):
+        for count in range(retries + 1):
             try:
                 time.sleep(2.0)
                 print("trying to connect to thrift server: try={}".format(
-                    count))
+                    count + 1))
                 conn = connect(host='127.0.0.1', port=thrift_port,
                                auth_mechanism='PLAIN')
                 return conn
@@ -113,7 +113,7 @@ def testing_thriftserver(request):
                 print("connect to thriftserver failed:", ex)
         return None
 
-    conn = thrift_connect()
+    conn = thrift_connect(1)
     if conn is not None:
         return conn
 

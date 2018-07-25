@@ -10,6 +10,19 @@ def create_dataset_wrapper_factory(dataset_definition):
     return DatasetFactory(dataset_definition, _class=DatasetWrapper)
 
 
+def load_dataset(fixtures_folder, dataset_name):
+    definition = SingleFileDatasetsDefinition(
+        '{}.conf'.format(dataset_name), fixtures_folder)
+
+    dataset_factory = create_dataset_wrapper_factory(definition)
+    result = dataset_factory.get_dataset(dataset_name)
+
+    print(result)
+    assert result is not None
+
+    return result
+
+
 @pytest.fixture(scope='session')
 def fixtures_folder():
     return os.path.join(
@@ -20,20 +33,29 @@ def fixtures_folder():
 
 @pytest.fixture(scope='session')
 def inheritance_trio_wrapper(fixtures_folder):
-    definition = SingleFileDatasetsDefinition(
-        'inheritance_trio.conf', fixtures_folder)
-
-    dataset_factory = create_dataset_wrapper_factory(definition)
-
-    return dataset_factory.get_dataset('inheritance_trio')
+    return load_dataset(fixtures_folder, 'inheritance_trio')
 
 
 @pytest.fixture(scope='session')
-def quads2_wrapper(fixtures_folder):
-    definition = SingleFileDatasetsDefinition(
-        'quads2.conf', fixtures_folder)
+def quads_f1_wrapper(fixtures_folder):
+    return load_dataset(fixtures_folder, 'quads_f1')
 
-    dataset_factory = create_dataset_wrapper_factory(definition)
-    print(dataset_factory.get_dataset('quads2'))
 
-    return dataset_factory.get_dataset('quads2')
+@pytest.fixture(scope='session')
+def quads_variant_types_wrapper(fixtures_folder):
+    return load_dataset(fixtures_folder, 'quads_variant_types')
+
+
+@pytest.fixture(scope='session')
+def quads_two_families_wrapper(fixtures_folder):
+    return load_dataset(fixtures_folder, 'quads_two_families')
+
+
+@pytest.fixture(scope='session')
+def quads_in_child(fixtures_folder):
+    return load_dataset(fixtures_folder, 'quads_in_child')
+
+
+@pytest.fixture(scope='session')
+def quads_in_parent(fixtures_folder):
+    return load_dataset(fixtures_folder, 'quads_in_parent')
