@@ -52,6 +52,35 @@ def test_load_dae_summary(raw_dae, temp_filename):
     pq.write_table(table, temp_filename)
 
 
+def test_load_dae_family(raw_dae, temp_filename):
+    dae = raw_dae("fixtures/transmission", "1")
+    dae.load_families()
+
+    f2 = dae.families['f2']
+    assert len(f2) == 4
+
+    assert dae is not None
+
+    df = dae.load_family_variants()
+    assert df is not None
+
+    ec.has_dtypes(
+        df,
+        {
+            'chrom': object,
+            'position': int,
+            'reference': object,
+            'alternative': object,
+        })
+
+    for v in dae.wrap_family_variants(df):
+        print(v)
+
+    family_table, allele_table = dae.family_tables(df)
+    pq.write_table(family_table, temp_filename)
+    pq.write_table(allele_table, temp_filename)
+
+
 def test_explode_family_genotype():
     fgt = RawDAE.explode_family_genotypes(
         'f3:2121/0101:11 27 34 13/0 26 0 15/0 0 0 0')
