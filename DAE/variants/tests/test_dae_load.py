@@ -13,6 +13,7 @@ import pyarrow.parquet as pq
 from variants.raw_dae import RawDAE
 from variants.vcf_utils import str2mat, best2gt
 from variants.parquet_io import save_family_variants_to_parquet
+import pytest
 
 
 # def test_load_dae_summary_file():
@@ -55,6 +56,7 @@ def test_load_dae_summary(raw_dae, temp_filename):
     pq.write_table(table, temp_filename)
 
 
+@pytest.mark.skip
 def test_load_dae_family(raw_dae, temp_dirname):
     dae = raw_dae("fixtures/transmission", "1")
     dae.load_families()
@@ -71,8 +73,8 @@ def test_load_dae_family(raw_dae, temp_dirname):
     aname = os.path.join(temp_dirname, "a.parquet")
 
     save_family_variants_to_parquet(
-        dae.wrap_family_variants(df),
-        fname, aname, batch_size=5)
+        dae.wrap_family_variants(df, return_reference=True),
+        fname, aname, batch_size=1000)
 
 
 def test_explode_family_genotype():
