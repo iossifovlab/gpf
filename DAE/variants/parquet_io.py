@@ -247,7 +247,6 @@ def save_family_variants_to_parquet(
         for ftable, atable in family_variants_table(variants, batch_size):
             assert ftable.schema == family_schema
             assert atable.schema == allele_schema
-            print("ooopa....")
             family_writer.write_table(ftable)
             allele_writer.write_table(atable)
 

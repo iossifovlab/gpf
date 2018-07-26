@@ -111,7 +111,7 @@ def build(argv):
     converter = functools.partial(
         convert_contig,
         config=config,
-        outprefix="out/w1202s766e611")
+        outprefix="out_no_reference/w1202s766e611")
 
     pool = multiprocessing.Pool(processes=20)
     pool.map(converter, build_contigs)

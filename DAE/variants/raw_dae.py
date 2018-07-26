@@ -235,7 +235,7 @@ class RawDAE(FamiliesBase):
                     print("error in handling:", row, index)
                     traceback.print_exc(file=sys.stdout)
 
-    def wrap_family_variants(self, df):
+    def wrap_family_variants(self, df, return_reference=False):
         df['all.nParCalled'] = df['all.nParCalled'].apply(int)
         df['all.nAltAlls'] = df['all.nAltAlls'].apply(int)
         df['all.prcntParCalled'] = df['all.prcntParCalled'].apply(float)
@@ -256,7 +256,9 @@ class RawDAE(FamiliesBase):
                         assert family is not None
 
                         gt = family_genotypes.get(family_id, None)
-                        if gt is None:
+                        if gt is None and not return_reference:
+                            continue
+                        else:
                             gt = self.get_reference_genotype(family)
 
                         assert len(family) == gt.shape[1], family.family_id
