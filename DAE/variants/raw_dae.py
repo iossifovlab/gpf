@@ -20,7 +20,7 @@ from variants.attributes import VariantType
 from variants.configure import Configure
 from variants.family import FamiliesBase, Family
 from variants.variant import SummaryVariantFactory, SummaryVariant
-from variants.vcf_utils import best2gt, str2mat
+from variants.vcf_utils import best2gt, str2mat, mat2str, reference_genotype
 
 
 from variants.parquet_io import \
@@ -241,35 +241,33 @@ class RawDAE(FamiliesBase):
         df['all.prcntParCalled'] = df['all.prcntParCalled'].apply(float)
         df['all.altFreq'] = df['all.altFreq'].apply(float)
 
-        with tqdm(len(df)) as pbar:
+        for index, row in df.iterrows():
+            row['summary_variant_index'] = index
+            try:
+                summary_variant = self.summary_variant_from_dae_record(row)
+                family_genotypes = self.explode_family_genotypes(
+                    row['family_data'])
 
-            for index, row in df.iterrows():
-                row['summary_variant_index'] = index
-                try:
-                    summary_variant = self.summary_variant_from_dae_record(row)
-                    family_genotypes = self.explode_family_genotypes(
-                        row['family_data'])
-                    pbar.update(1)
+                for family_id in self.family_ids:
+                    family = self.families.get(family_id)
+                    assert family is not None
 
-                    for family_id in self.family_ids:
-                        family = self.families.get(family_id)
-                        assert family is not None
-
-                        gt = family_genotypes.get(family_id, None)
-                        if gt is None and not return_reference:
+                    gt = family_genotypes.get(family_id, None)
+                    if gt is None:
+                        if not return_reference:
                             continue
-                        else:
-                            gt = self.get_reference_genotype(family)
+                        gt = self.get_reference_genotype(family)
 
-                        assert len(family) == gt.shape[1], family.family_id
+                    assert len(family) == gt.shape[1], family.family_id
 
-                        family_variant = FamilyVariant(
-                            summary_variant, family, gt)
-                        yield family_variant
-                except Exception as ex:
-                    print("unexpected error:", ex)
-                    print("error in handling:", row, index)
-                    traceback.print_exc(file=sys.stdout)
+                    family_variant = FamilyVariant(
+                        summary_variant, family, gt)
+
+                    yield family_variant
+            except Exception as ex:
+                print("unexpected error:", ex)
+                print("error in handling:", row, index)
+                traceback.print_exc(file=sys.stdout)
 
     def load_variants(self, filename):
         if self.region:
@@ -314,7 +312,7 @@ class RawDAE(FamiliesBase):
 
     def get_reference_genotype(self, family):
         assert family is not None
-        return np.zeros(shape=(2, len(family)), dtype=np.int8)
+        return reference_genotype(len(family))
 
     def load_family_variants(self):
         summary_df = self.load_variants(self.summary_filename)

@@ -196,7 +196,7 @@ def family_variants_table(variants, batch_size=1000000):
                 append(
                     np.asarray([
                         i.value for i in allele.inheritance_in_members
-                    ], dtype=np.int8))
+                    ], dtype=np.int64))
             if allele.is_reference_allele:
                 allele_data["variant_in_members"].append(None)
                 allele_data["variant_in_roles"].append(None)
@@ -218,6 +218,7 @@ def family_variants_table(variants, batch_size=1000000):
         family_data["genotype"].append(vs.gt_flatten())
 
         if (family_variant_index + 1) % batch_size == 0:
+            print("#")
             allele_table = table_from_data_dict(
                 allele_data, family_allele_schema)
 
@@ -247,6 +248,8 @@ def save_family_variants_to_parquet(
         for ftable, atable in family_variants_table(variants, batch_size):
             assert ftable.schema == family_schema
             assert atable.schema == allele_schema
+            assert ftable.num_rows > 0
+            assert atable.num_rows > 0
             family_writer.write_table(ftable)
             allele_writer.write_table(atable)
 
@@ -254,9 +257,8 @@ def save_family_variants_to_parquet(
         print("unexpected error:", ex)
         traceback.print_exc(file=sys.stdout)
     finally:
-        # family_writer.close()
-        # allele_writer.close()
-        pass
+        family_writer.close()
+        allele_writer.close()
 
 
 def family_variants_df_to_batch(vars_df):

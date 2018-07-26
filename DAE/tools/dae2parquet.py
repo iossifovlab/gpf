@@ -73,6 +73,8 @@ def convert_contig(contig, outprefix=None, config=None,):
         print("unexpected error:", ex)
         traceback.print_exc(file=sys.stdout)
 
+    print("DONE converting contig {}".format(contig))
+
 
 def build(argv):
 

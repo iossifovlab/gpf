@@ -11,7 +11,7 @@ import engarde.checks as ec
 import numpy as np
 import pyarrow.parquet as pq
 from variants.raw_dae import RawDAE
-from variants.vcf_utils import str2mat, best2gt
+from variants.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE
 from variants.parquet_io import save_family_variants_to_parquet
 import pytest
 
@@ -56,7 +56,7 @@ def test_load_dae_summary(raw_dae, temp_filename):
     pq.write_table(table, temp_filename)
 
 
-@pytest.mark.skip
+# @pytest.mark.skip
 def test_load_dae_family(raw_dae, temp_dirname):
     dae = raw_dae("fixtures/transmission", "1")
     dae.load_families()
@@ -73,8 +73,8 @@ def test_load_dae_family(raw_dae, temp_dirname):
     aname = os.path.join(temp_dirname, "a.parquet")
 
     save_family_variants_to_parquet(
-        dae.wrap_family_variants(df, return_reference=True),
-        fname, aname, batch_size=1000)
+        dae.wrap_family_variants(df, return_reference=False),
+        fname, aname, batch_size=5)
 
 
 def test_explode_family_genotype():
@@ -85,7 +85,7 @@ def test_explode_family_genotype():
 
 def test_str2mat():
     res = str2mat("2121/0101")
-    assert res.dtype == np.int8
+    assert res.dtype == GENOTYPE_TYPE
     assert np.all(res == np.array([[2, 1, 2, 1], [0, 1, 0, 1]], dtype=np.int8))
 
 

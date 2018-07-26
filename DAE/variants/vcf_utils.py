@@ -9,6 +9,9 @@ import numpy as np
 from itertools import izip
 
 
+GENOTYPE_TYPE = np.int64
+
+
 def mat2str(mat, col_sep="", row_sep="/"):
     return row_sep.join([
         col_sep.join(
@@ -21,15 +24,15 @@ def str2mat(mat, col_sep="", row_sep="/"):
     if col_sep == "":
         return np.array(
             [[int(c) for c in r]
-             for r in mat.split(row_sep)], dtype=np.int8)
+             for r in mat.split(row_sep)], dtype=GENOTYPE_TYPE)
     return np.array(
         [[int(v) for v in r.split(col_sep)]
-         for r in mat.split(row_sep)], dtype=np.int8)
+         for r in mat.split(row_sep)], dtype=GENOTYPE_TYPE)
 
 
 def best2gt(mat):
     rows, cols = mat.shape
-    res = np.zeros(shape=(2, cols), dtype=np.int8)
+    res = np.zeros(shape=(2, cols), dtype=GENOTYPE_TYPE)
     for allele_index in range(rows):
         row = mat[allele_index, :]
         for col in range(cols):
@@ -39,6 +42,10 @@ def best2gt(mat):
                 res[0, col] = allele_index
 
     return res
+
+
+def reference_genotype(size):
+    return np.zeros(shape=(2, size), dtype=GENOTYPE_TYPE)
 
 
 def trim_str(pos, ref, alt):

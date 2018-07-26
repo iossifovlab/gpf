@@ -11,6 +11,7 @@ from variants.variant import SummaryVariant, SummaryAllele
 from variants.family import Family
 from variants.attributes import Inheritance
 import itertools
+from variants.vcf_utils import GENOTYPE_TYPE
 
 
 class FamilyDelegate(object):
@@ -359,15 +360,15 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     @property
     def best_st(self):
         if self._best_st is None:
-            ref = (2 * np.ones(len(self.family), dtype=np.int8))
+            ref = (2 * np.ones(len(self.family), dtype=GENOTYPE_TYPE))
             unknown = np.any(self.gt == -1, axis=0)
 
             balt = []
             for aa in self.summary_variant.alt_alleles:
-                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
+                alt_gt = np.zeros(self.gt.shape, dtype=GENOTYPE_TYPE)
                 alt_gt[self.gt == aa.allele_index] = 1
 
-                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+                alt = np.sum(alt_gt, axis=0, dtype=GENOTYPE_TYPE)
                 ref = ref - alt
                 balt.append(alt)
 
