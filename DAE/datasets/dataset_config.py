@@ -2,8 +2,6 @@ import os
 import reusables
 from box import ConfigBox
 
-from datasets.config_old import PedigreeSelector
-
 
 class DatasetConfig(ConfigBox):
 
