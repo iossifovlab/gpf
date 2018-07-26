@@ -3,15 +3,14 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-
+import numpy as np
 from collections import OrderedDict
 
-import numpy as np
-import pandas as pd
+from data import Data
 from gene.config import GeneInfoConfig
 
 
-class Weights(GeneInfoConfig):
+class Weights(Data, GeneInfoConfig):
     """
     Represents gene weights.
 
@@ -20,30 +19,18 @@ class Weights(GeneInfoConfig):
     """
 
     def __init__(self, weights_name, *args, **kwargs):
-        super(Weights, self).__init__(*args, **kwargs)
-        self.name = weights_name
+        GeneInfoConfig.__init__(self, *args, **kwargs)
+
         self.section_name = 'geneWeights.{}'.format(weights_name)
+        self.data_col = 'gene'
+
         self.desc = self.config.get(self.section_name, 'desc')
         self.bins = int(self.config.get(self.section_name, 'bins'))
         self.xscale = self.config.get(self.section_name, 'xscale')
         self.yscale = self.config.get(self.section_name, 'yscale')
+        self.filename = self.config.get(self.section_name, 'file')
 
-        self.df = None
-        self._dict = None
-        self._load_weights()
-
-    def _load_weights(self):
-        assert self.config.get(self.section_name, 'file') is not None
-
-        filename = self.config.get(self.section_name, 'file')
-        assert filename is not None
-        df = pd.read_csv(filename)
-        assert self.name in df.columns
-
-        self.df = df[['gene', self.name]].copy()
-        self.df.dropna(inplace=True)
-
-        return self.df
+        Data.__init__(self, *args, **kwargs)
 
     def min(self):
         """
@@ -94,9 +81,6 @@ class Weights(GeneInfoConfig):
         """
         return self.df
 
-    def values(self):
-        return self.df[self.name].values
-
     @staticmethod
     def load_gene_weights(name):
         """
@@ -127,14 +111,14 @@ class WeightsLoader(object):
             w = Weights(name)
             self.weights[name] = w
 
-    def __getitem__(self, weights_name):
-        if weights_name not in self.weights:
+    def __getitem__(self, weight_name):
+        if weight_name not in self.weights:
             raise KeyError()
 
-        res = self.weights[weights_name]
+        res = self.weights[weight_name]
         if res.df is None:
             res.load_weights()
         return res
 
-    def __contains__(self, weights_name):
-        return weights_name in self.weights
+    def __contains__(self, weight_name):
+        return weight_name in self.weights
