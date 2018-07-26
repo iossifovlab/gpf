@@ -10,13 +10,11 @@ from RegionOperations import Region
 from variants.vcf_utils import mat2str
 
 
-pytestmark = pytest.mark.xfail
-
-
 @pytest.mark.parametrize("variants", [
-    "variants_df",
+    # "variants_df",
     "variants_vcf",
     "variants_thrift",
+    "variants_parquet",
 ])
 @pytest.mark.parametrize("fixture_name,count", [
     ("fixtures/effects_trio_multi", 3),
@@ -41,9 +39,10 @@ def test_variants_all_count(variants_impl, variants, fixture_name, count):
     "fixtures/trios2",
 ])
 @pytest.mark.parametrize("variants", [
-    "variants_df",
+    #"variants_df",
     "variants_vcf",
     "variants_thrift",
+    "variants_parquet",
 ])
 def test_df_query_multiallelic3_families(
         variants_impl, variants, fixture_name):
@@ -74,9 +73,10 @@ def test_df_query_multiallelic3_families(
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_df",
+    #"variants_df",
     "variants_vcf",
     "variants_thrift",
+    "variants_parquet",
 ])
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/trios2_11541",
@@ -88,7 +88,6 @@ def test_reference_variant(
     assert fvars is not None
 
     vs = fvars.query_variants(
-        # family_ids=['f1'],
         return_reference=True,
         return_unknown=True
     )
@@ -104,9 +103,10 @@ def test_reference_variant(
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_df",
+    #"variants_df",
     "variants_vcf",
     "variants_thrift",
+    "variants_parquet",
 ])
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/trios2_11600",
@@ -118,7 +118,6 @@ def test_reference_multiallelic_variant(
     assert fvars is not None
 
     vs = fvars.query_variants(
-        # family_ids=['f1'],
         return_reference=True,
         return_unknown=True
     )
