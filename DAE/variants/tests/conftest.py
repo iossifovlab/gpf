@@ -30,6 +30,7 @@ from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
     save_family_variants_df_to_parquet, save_ped_df_to_parquet,\
     save_family_allele_df_to_parquet
 from variants.raw_df import DfFamilyVariants
+from variants.raw_parquet import ParquetFamilyVariants
 from variants.raw_thrift import ThriftFamilyVariants
 from variants.raw_vcf import RawFamilyVariants, \
     VariantFactory
@@ -229,7 +230,6 @@ def variants_df(variants_vcf):
         return DfFamilyVariants(ped_df, summary_df, vars_df, allele_df)
     return builder
 
-
 @pytest.fixture(scope='session')
 def variants_thrift(parquet_variants, testing_thriftserver):
     def builder(path):
@@ -247,6 +247,20 @@ def variants_thrift(parquet_variants, testing_thriftserver):
             thrift_connection=testing_thriftserver)
     return builder
 
+@pytest.fixture(scope='session')
+def variants_parquet(parquet_variants):
+    def builder(path):
+        pedigree, summary, family, allele = parquet_variants(path)
+        config = Configure.from_dict({
+            'parquet': {
+                'pedigree': pedigree,
+                'summary_variants': summary,
+                'family_variants': family,
+                'family_alleles': allele,
+            }
+        })
+        return ParquetFamilyVariants(config=config)
+    return builder
 
 @pytest.fixture(scope='session')
 def parquet_variants(request, variants_df):
@@ -294,11 +308,12 @@ def parquet_variants(request, variants_df):
 
 
 @pytest.fixture
-def variants_implementations(variants_vcf, variants_df, variants_thrift):
+def variants_implementations(variants_vcf, variants_df, variants_thrift, variants_parquet):
     impls = {
         "variants_df": variants_df,
         "variants_vcf": variants_vcf,
         "variants_thrift": variants_thrift,
+        "variants_parquet": variants_parquet,
     }
     return impls
 
