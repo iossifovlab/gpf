@@ -9,22 +9,12 @@ import os
 
 import engarde.checks as ec
 import numpy as np
-import pyarrow.parquet as pq
+from variants.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
+from variants.parquet_io import save_family_variants_to_parquet,\
+    save_summary_variants_to_parquet
 from variants.raw_dae import RawDAE
-from variants.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE
-from variants.parquet_io import save_family_variants_to_parquet
-import pytest
 
 
-# def test_load_dae_summary_file():
-#     filename = "/home/lubo/Work/seq-pipeline/data-hg19/cccc/w1202s766e611/transmissionIndex-HW-DNRM.txt.bgz"
-#     region = Region("1", 1, 802298)
-#
-#     df = RawDAE.load_region(filename, region)
-#     print("---------------------------------")
-#     print("---------------------------------")
-#     print(df.head())
-#     print("---------------------------------")
 def test_load_dae_summary(raw_dae, temp_filename):
     dae = raw_dae("fixtures/transmission")
     dae.load_families()
@@ -52,8 +42,9 @@ def test_load_dae_summary(raw_dae, temp_filename):
     for v in dae.wrap_summary_variants(df):
         print(v)
 
-    table = dae.summary_table(df)
-    pq.write_table(table, temp_filename)
+    save_summary_variants_to_parquet(
+        dae.wrap_summary_variants(df),
+        temp_filename)
 
 
 # @pytest.mark.skip
@@ -97,3 +88,26 @@ def test_best2gt():
     best = np.array([[0, 1, 0, 1], [2, 1, 2, 1]], dtype=np.int8)
     res = best2gt(best)
     assert np.all(res == np.array([[1, 1, 1, 1], [1, 0, 1, 0]], dtype=np.int8))
+
+
+def test_load_denovo(raw_denovo):
+    denovo = raw_denovo("fixtures/denovo")
+    denovo.load_families()
+
+    assert denovo is not None
+    assert denovo.families is not None
+
+    df = denovo.load_denovo_variants()
+    assert df is not None
+    print(df.head())
+
+    vs = denovo.wrap_family_variants(df)
+    for v in vs:
+        print(v, mat2str(v.best_st))
+
+
+def test_load_denovo_families(raw_denovo):
+    denovo = raw_denovo("fixtures/denovo")
+
+    denovo.load_families()
+    assert denovo.families is not None

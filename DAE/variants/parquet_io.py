@@ -9,10 +9,8 @@ import sys
 import traceback
 
 import numpy as np
-import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-import dask.dataframe as dd
 
 from variants.attributes import Role, Sex
 
@@ -61,6 +59,11 @@ def summary_variants_table(variants):
     batch = summary_variants_batch(variants)
     table = pa.Table.from_batches([batch])
     return table
+
+
+def save_summary_variants_to_parquet(variants, summary_filename):
+    summary_table = summary_variants_table(variants)
+    pq.write_table(summary_table, summary_filename)
 
 
 def batch_from_data_dict(data, schema):

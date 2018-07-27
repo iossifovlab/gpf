@@ -14,12 +14,12 @@ import sys
 
 import pysam
 
-import pyarrow.parquet as pq
 from variants.builder import get_genome
 from variants.configure import Configure
-from variants.raw_dae import RawDAE
+from variants.raw_dae import RawDAE, RawDenovo
 import traceback
-from variants.parquet_io import save_family_variants_to_parquet
+from variants.parquet_io import save_family_variants_to_parquet,\
+    save_ped_df_to_parquet, save_summary_variants_to_parquet
 
 
 def get_contigs(tabixfilename):
@@ -60,9 +60,9 @@ def convert_contig(contig, outprefix=None, config=None,):
         alleles_filename = "{prefix}_family_alleles_{contig}.parquet".format(
             **out)
 
-        summary_table = dae.summary_table(df)
-        pq.write_table(summary_table, summary_filename)
-        summary_table = None
+        save_summary_variants_to_parquet(
+            dae.wrap_summary_variants(df),
+            summary_filename)
 
         save_family_variants_to_parquet(
             dae.wrap_family_variants(df),
@@ -76,7 +76,7 @@ def convert_contig(contig, outprefix=None, config=None,):
     print("DONE converting contig {}".format(contig))
 
 
-def build(argv):
+def dae_build(argv):
 
     prefix = os.path.join(
         os.environ.get("DAE_DB_DIR"), 'cccc/w1202s766e611')
@@ -99,6 +99,19 @@ def build(argv):
 
     # contigs = ['21', '22']
 
+    dae = RawDAE(
+        config.dae.summary_filename,
+        config.dae.toomany_filename,
+        config.dae.family_filename,
+        region=None,
+        genome=genome,
+        annotator=None)
+
+    dae.load_families()
+    save_ped_df_to_parquet(
+        dae.ped_df,
+        "out/w1202s766e611/pedigree.parquet")
+
     build_contigs = []
     for contig in contigs:
         if contig not in chromosomes:
@@ -115,9 +128,46 @@ def build(argv):
         config=config,
         outprefix="out_no_reference/w1202s766e611")
 
-    pool = multiprocessing.Pool(processes=20)
+    pool = multiprocessing.Pool(processes=10)
     pool.map(converter, build_contigs)
 
 
+def denovo_build(argv):
+    prefix = os.path.join(
+        os.environ.get("DAE_DB_DIR"), 'cccc/IossifovWE2014/')
+    config = Configure.from_dict({
+        "denovo": {
+            'denovo_filename': os.path.join(
+                prefix, 'Supplement-T2-eventsTable-annot.txt'),
+            'family_filename': os.path.join(
+                prefix, 'familyInfo.txt'),
+        }})
+
+    genome = get_genome()
+
+    denovo = RawDenovo(
+        config.denovo.denovo_filename,
+        config.denovo.family_filename,
+        genome=genome,
+        annotator=None)
+
+    denovo.load_families()
+    df = denovo.load_denovo_variants()
+
+    parquet_config = Configure.from_prefix_parquet("out/IossifovWE2014/")
+    save_ped_df_to_parquet(
+        denovo.ped_df,
+        parquet_config.parquet.pedigree)
+
+    save_summary_variants_to_parquet(
+        denovo.wrap_summary_variants(df),
+        parquet_config.parquet.summary_variants)
+
+    save_family_variants_to_parquet(
+        denovo.wrap_family_variants(df),
+        parquet_config.parquet.family_variants,
+        parquet_config.parquet.family_alleles)
+
+
 if __name__ == "__main__":
-    build(sys.argv)
+    dae_build(sys.argv)

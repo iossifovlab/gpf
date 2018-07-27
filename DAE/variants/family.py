@@ -189,6 +189,7 @@ class FamiliesBase(object):
             },
             comment="#",
         )
+
         fam_df = fam_df.rename(columns={"gender": "sex"})
 
         fam_df['status'] = pd.Series(

@@ -36,7 +36,7 @@ from variants.raw_vcf import RawFamilyVariants, \
     VariantFactory
 from variants.variant import SummaryAllele, SummaryVariant
 from variants.tests.common_tests_helpers import relative_to_this_test_folder
-from variants.raw_dae import RawDAE
+from variants.raw_dae import RawDAE, RawDenovo
 
 
 @pytest.fixture(scope='session')
@@ -205,6 +205,28 @@ def raw_dae(config_dae, default_genome):
 
 
 @pytest.fixture(scope='session')
+def config_denovo():
+    def builder(path):
+        fullpath = relative_to_this_test_folder(path)
+        config = Configure.from_prefix_denovo(fullpath)
+        return config
+    return builder
+
+
+@pytest.fixture(scope='session')
+def raw_denovo(config_denovo, default_genome):
+    def builder(path):
+        config = config_denovo(path)
+        denovo = RawDenovo(
+            config.denovo.denovo_filename,
+            config.denovo.family_filename,
+            genome=default_genome,
+            annotator=None)
+        return denovo
+    return builder
+
+
+@pytest.fixture(scope='session')
 def variants_vcf(composite_annotator):
     def builder(path):
         a_data = relative_to_this_test_folder(path)
@@ -230,6 +252,7 @@ def variants_df(variants_vcf):
         return DfFamilyVariants(ped_df, summary_df, vars_df, allele_df)
     return builder
 
+
 @pytest.fixture(scope='session')
 def variants_thrift(parquet_variants, testing_thriftserver):
     def builder(path):
@@ -247,6 +270,7 @@ def variants_thrift(parquet_variants, testing_thriftserver):
             thrift_connection=testing_thriftserver)
     return builder
 
+
 @pytest.fixture(scope='session')
 def variants_parquet(parquet_variants):
     def builder(path):
@@ -261,6 +285,7 @@ def variants_parquet(parquet_variants):
         })
         return ParquetFamilyVariants(config=config)
     return builder
+
 
 @pytest.fixture(scope='session')
 def parquet_variants(request, variants_df):
@@ -308,7 +333,8 @@ def parquet_variants(request, variants_df):
 
 
 @pytest.fixture
-def variants_implementations(variants_vcf, variants_df, variants_thrift, variants_parquet):
+def variants_implementations(
+        variants_vcf, variants_df, variants_thrift, variants_parquet):
     impls = {
         "variants_df": variants_df,
         "variants_vcf": variants_vcf,
