@@ -12,7 +12,6 @@ import sys
 import traceback
 
 import pysam
-from tqdm import tqdm
 
 import numpy as np
 import pandas as pd
@@ -68,11 +67,11 @@ class BaseDAE(FamiliesBase):
             dae_variant, chrom, position))
 
     @staticmethod
-    def split_gene_effects(data):
+    def split_gene_effects(data, sep="|"):
         if data == 'intergenic':
             return [u'intergenic'], [u'intergenic']
 
-        res = [ge.split(':') for ge in data.split(';')]
+        res = [ge.split(':') for ge in data.split(sep)]
         genes = [unicode(ge[0], 'utf-8') for ge in res]
         effects = [unicode(ge[1], 'utf-8') for ge in res]
         return genes, effects
@@ -135,17 +134,15 @@ class BaseDAE(FamiliesBase):
         return SummaryVariant([ref_allele, alt_allele])
 
     def wrap_summary_variants(self, df):
-        with tqdm(len(df)) as pbar:
-            for index, row in df.iterrows():
-                row['summary_variant_index'] = index
-                try:
-                    summary_variant = self.summary_variant_from_dae_record(row)
-                    pbar.update(1)
-                    yield summary_variant
-                except Exception as ex:
-                    print("unexpected error:", ex)
-                    print("error in handling:", row, index)
-                    traceback.print_exc(file=sys.stdout)
+        for index, row in df.iterrows():
+            row['summary_variant_index'] = index
+            try:
+                summary_variant = self.summary_variant_from_dae_record(row)
+                yield summary_variant
+            except Exception as ex:
+                print("unexpected error:", ex)
+                print("error in handling:", row, index)
+                traceback.print_exc(file=sys.stdout)
 
     def get_reference_genotype(self, family):
         assert family is not None

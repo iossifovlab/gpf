@@ -12,6 +12,8 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from tqdm import tqdm
+
 from variants.attributes import Role, Sex
 
 
@@ -48,10 +50,14 @@ def summary_variants_batch(variants):
     data = {
         name: [] for name in schema.names
     }
-    for v in variants:
-        for a in v.alleles:
-            for name in schema.names:
-                data[name].append(a.get_attribute(name))
+    with tqdm() as pbar:
+
+        for v in variants:
+            for a in v.alleles:
+                pbar.update()
+                for name in schema.names:
+                    data[name].append(a.get_attribute(name))
+
     return batch_from_data_dict(data, schema)
 
 
@@ -189,58 +195,65 @@ def family_variants_table(variants, batch_size=1000000):
     allele_data = setup_allele_batch_data()
     family_data = setup_family_batch_data()
 
-    for family_variant_index, vs in enumerate(variants):
-        for allele in vs.alleles:
-            allele_data["chrom"].append(vs.chromosome)
-            allele_data["position"].append(vs.position)
-            allele_data["family_id"].append(vs.family_id)
-            allele_data["family_index"].append(vs.family_index)
-            allele_data["family_variant_index"].append(family_variant_index)
-            allele_data["summary_variant_index"].append(vs.summary_index)
-            allele_data["allele_index"].append(allele.allele_index)
-            allele_data["inheritance_in_members"].\
-                append(
-                    np.asarray([
-                        i.value for i in allele.inheritance_in_members
-                    ], dtype=np.int64))
-            if allele.is_reference_allele:
-                allele_data["variant_in_members"].append(None)
-                allele_data["variant_in_roles"].append(None)
-                allele_data["variant_in_sexes"].append(None)
-            else:
-                allele_data["variant_in_members"].append(
-                    [unicode(m, "utf-8") for m in allele.variant_in_members])
-                allele_data["variant_in_roles"].append(
-                    [r.value for r in allele.variant_in_roles])
-                allele_data["variant_in_sexes"].append(
-                    [s.value for s in allele.variant_in_sexes])
+    with tqdm() as pbar:
 
-        family_data["chrom"].append(vs.chromosome)
-        family_data["position"].append(vs.position)
-        family_data["family_id"].append(vs.family_id)
-        family_data["family_index"].append(vs.family_index)
-        family_data["family_variant_index"].append(family_variant_index)
-        family_data["summary_variant_index"].append(vs.summary_index)
-        family_data["genotype"].append(vs.gt_flatten())
+        for family_variant_index, vs in enumerate(variants):
+            pbar.update()
 
-        if (family_variant_index + 1) % batch_size == 0:
-            print("#")
+            for allele in vs.alleles:
+                allele_data["chrom"].append(vs.chromosome)
+                allele_data["position"].append(vs.position)
+                allele_data["family_id"].append(vs.family_id)
+                allele_data["family_index"].append(vs.family_index)
+                allele_data["family_variant_index"].append(
+                    family_variant_index)
+                allele_data["summary_variant_index"].append(vs.summary_index)
+                allele_data["allele_index"].append(allele.allele_index)
+                allele_data["inheritance_in_members"].\
+                    append(
+                        np.asarray([
+                            i.value for i in allele.inheritance_in_members
+                        ], dtype=np.int64))
+                if allele.is_reference_allele:
+                    allele_data["variant_in_members"].append(None)
+                    allele_data["variant_in_roles"].append(None)
+                    allele_data["variant_in_sexes"].append(None)
+                else:
+                    allele_data["variant_in_members"].append(
+                        [unicode(m, "utf-8")
+                         for m in allele.variant_in_members])
+                    allele_data["variant_in_roles"].append(
+                        [r.value for r in allele.variant_in_roles])
+                    allele_data["variant_in_sexes"].append(
+                        [s.value for s in allele.variant_in_sexes])
+
+            family_data["chrom"].append(vs.chromosome)
+            family_data["position"].append(vs.position)
+            family_data["family_id"].append(vs.family_id)
+            family_data["family_index"].append(vs.family_index)
+            family_data["family_variant_index"].append(family_variant_index)
+            family_data["summary_variant_index"].append(vs.summary_index)
+            family_data["genotype"].append(vs.gt_flatten())
+
+            if (family_variant_index + 1) % batch_size == 0:
+
+                allele_table = table_from_data_dict(
+                    allele_data, family_allele_schema)
+
+                family_table = table_from_data_dict(
+                    family_data, family_schema)
+
+                allele_data = setup_allele_batch_data()
+                family_data = setup_family_batch_data()
+
+                yield family_table, allele_table
+
+        if len(allele_data) > 0 and len(family_data) > 0:
             allele_table = table_from_data_dict(
                 allele_data, family_allele_schema)
-
-            family_table = table_from_data_dict(
-                family_data, family_schema)
-
-            allele_data = setup_allele_batch_data()
-            family_data = setup_family_batch_data()
+            family_table = table_from_data_dict(family_data, family_schema)
 
             yield family_table, allele_table
-
-    if len(allele_data) > 0 and len(family_data) > 0:
-        allele_table = table_from_data_dict(allele_data, family_allele_schema)
-        family_table = table_from_data_dict(family_data, family_schema)
-
-        yield family_table, allele_table
 
 
 def save_family_variants_to_parquet(

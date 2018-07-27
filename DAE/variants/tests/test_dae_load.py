@@ -12,7 +12,7 @@ import numpy as np
 from variants.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
 from variants.parquet_io import save_family_variants_to_parquet,\
     save_summary_variants_to_parquet
-from variants.raw_dae import RawDAE
+from variants.raw_dae import RawDAE, BaseDAE
 
 
 def test_load_dae_summary(raw_dae, temp_filename):
@@ -111,3 +111,12 @@ def test_load_denovo_families(raw_denovo):
 
     denovo.load_families()
     assert denovo.families is not None
+
+
+def test_gene_effects_split():
+    gene_effects = \
+        "MIB2:missense|MIB2:intron|MIB2:non-coding|MIB2:5'UTR-intron"
+    genes, effects = BaseDAE.split_gene_effects(gene_effects)
+    print(genes, effects)
+    assert genes == [u'MIB2', u'MIB2', u'MIB2', u'MIB2']
+    assert effects == [u'missense', u'intron', u'non-coding', u"5'UTR-intron"]

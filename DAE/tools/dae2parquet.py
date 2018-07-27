@@ -170,4 +170,4 @@ def denovo_build(argv):
 
 
 if __name__ == "__main__":
-    dae_build(sys.argv)
+    denovo_build(sys.argv)
