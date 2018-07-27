@@ -76,12 +76,12 @@ class ParquetFamilyVariants(DfFamilyVariantsBase, FamiliesBase):
         df_filter = DfFilter()
 
         if 'regions' in kwargs and kwargs['regions'] is not None:
-            df_filter.and_any(*[(lambda x: (x.chrom == region.chr) & \
+            df_filter.and_any(*[lambda x, region=region: ((x.chrom == region.chr) &
                                    (x.position >= region.start) & (x.position <= region.stop))
                                for region in kwargs['regions']])
 
         if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
-            df_filter.and_any(*[lambda x: x.family_id == family_id
-                               for family_id in kwargs['family_ids']])
+            family_ids = kwargs['family_ids']
+            df_filter.and_all(lambda x: x.family_id.isin(family_ids))
 
         return df_filter.to_single()
