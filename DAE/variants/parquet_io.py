@@ -45,6 +45,37 @@ def summary_parquet_schema_flat():
     return pa.schema(fields)
 
 
+def family_variant_parquet_schema():
+    fields = [
+        pa.field("chrom", pa.string()),
+        pa.field("position", pa.int64()),
+        pa.field("family_id", pa.string()),
+        pa.field("family_index", pa.int32()),
+        pa.field("family_variant_index", pa.int64()),
+        pa.field("summary_variant_index", pa.int64()),
+        pa.field("genotype", pa.list_(pa.int8())),
+    ]
+
+    return pa.schema(fields)
+
+
+def family_allele_parquet_schema():
+    fields = [
+        pa.field("chrom", pa.string()),
+        pa.field("position", pa.int64()),
+        pa.field("family_id", pa.string()),
+        pa.field("family_index", pa.int32()),
+        pa.field("family_variant_index", pa.int64()),
+        pa.field("summary_variant_index", pa.int64()),
+        pa.field("allele_index", pa.int16()),
+        pa.field("inheritance_in_members", pa.list_(pa.int8())),
+        pa.field("variant_in_members", pa.list_(pa.string())),
+        pa.field("variant_in_roles", pa.list_(pa.int8())),
+        pa.field("variant_in_sexes", pa.list_(pa.int8())),
+    ]
+    return pa.schema(fields)
+
+
 def summary_variants_batch(variants):
     schema = summary_parquet_schema_flat()
     data = {
@@ -127,37 +158,6 @@ def read_summary_from_parquet(filename):
     table = pq.read_table(filename, columns=schema.names)
     df = table.to_pandas()
     return df
-
-
-def family_variant_parquet_schema():
-    fields = [
-        pa.field("chrom", pa.string()),
-        pa.field("position", pa.int64()),
-        pa.field("family_id", pa.string()),
-        pa.field("family_index", pa.int32()),
-        pa.field("family_variant_index", pa.int64()),
-        pa.field("summary_variant_index", pa.int64()),
-        pa.field("genotype", pa.list_(pa.int64())),
-    ]
-
-    return pa.schema(fields)
-
-
-def family_allele_parquet_schema():
-    fields = [
-        pa.field("chrom", pa.string()),
-        pa.field("position", pa.int64()),
-        pa.field("family_id", pa.string()),
-        pa.field("family_index", pa.int32()),
-        pa.field("family_variant_index", pa.int64()),
-        pa.field("summary_variant_index", pa.int64()),
-        pa.field("allele_index", pa.int8()),
-        pa.field("inheritance_in_members", pa.list_(pa.int64())),
-        pa.field("variant_in_members", pa.list_(pa.string())),
-        pa.field("variant_in_roles", pa.list_(pa.int64())),
-        pa.field("variant_in_sexes", pa.list_(pa.int64())),
-    ]
-    return pa.schema(fields)
 
 
 def setup_family_batch_data():

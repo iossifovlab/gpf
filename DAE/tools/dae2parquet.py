@@ -126,7 +126,7 @@ def dae_build(argv):
     converter = functools.partial(
         convert_contig,
         config=config,
-        outprefix="out_no_reference/w1202s766e611")
+        outprefix="out/w1202s766e611")
 
     pool = multiprocessing.Pool(processes=10)
     pool.map(converter, build_contigs)
@@ -170,4 +170,4 @@ def denovo_build(argv):
 
 
 if __name__ == "__main__":
-    denovo_build(sys.argv)
+    dae_build(sys.argv)

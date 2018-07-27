@@ -77,9 +77,9 @@ class BaseDAE(FamiliesBase):
         return genes, effects
 
     def summary_variant_from_dae_record(self, rec):
-        parents_called = rec.get('all.nParCalled', 0)
-        ref_allele_count = 2 * rec.get('all.nParCalled', 0) - \
-            rec.get('all.nAltAlls', 0)
+        parents_called = int(rec.get('all.nParCalled', 0))
+        ref_allele_count = 2 * int(rec.get('all.nParCalled', 0)) - \
+            int(rec.get('all.nAltAlls', 0))
         ref_allele_prcnt = 0.0
         if parents_called > 0:
             ref_allele_prcnt = ref_allele_count / 2.0 / parents_called
@@ -99,7 +99,8 @@ class BaseDAE(FamiliesBase):
             'effect_details_transcript_ids': None,
             'effect_details_details': None,
             'af_parents_called_count': parents_called,
-            'af_parents_called_percent': rec.get('all.prcntParCalled', 0.0),
+            'af_parents_called_percent':
+                float(rec.get('all.prcntParCalled', 0.0)),
             'af_allele_count': ref_allele_count,
             'af_allele_freq': ref_allele_prcnt,
         }
@@ -123,10 +124,11 @@ class BaseDAE(FamiliesBase):
             'effect_gene_types': effects,
             'effect_details_transcript_ids': effect_details,
             'effect_details_details': effect_details,
-            'af_parents_called_count': rec.get('all.nParCalled', 0),
-            'af_parents_called_percent': rec.get('all.prcntParCalled', 0.0),
-            'af_allele_count': rec.get('all.nAltAlls', 0),
-            'af_allele_freq': rec.get('all.altFreq', 0.0),
+            'af_parents_called_count': int(rec.get('all.nParCalled', 0)),
+            'af_parents_called_percent':
+                float(rec.get('all.prcntParCalled', 0.0)),
+            'af_allele_count': int(rec.get('all.nAltAlls', 0)),
+            'af_allele_freq': float(rec.get('all.altFreq', 0.0)),
         }
         alt_allele = SummaryVariantFactory.summary_allele_from_record(alt)
         assert alt_allele is not None

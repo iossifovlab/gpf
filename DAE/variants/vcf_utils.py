@@ -9,7 +9,7 @@ import numpy as np
 from itertools import izip
 
 
-GENOTYPE_TYPE = np.int64
+GENOTYPE_TYPE = np.int8
 
 
 def mat2str(mat, col_sep="", row_sep="/"):
