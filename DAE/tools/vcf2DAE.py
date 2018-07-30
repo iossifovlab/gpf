@@ -58,16 +58,9 @@ def main():
    status, out = commands.getstatusoutput( cmd )
    print status, out
    if status: raise Exception("FAILURE AT: " + cmd)
-   #annotate
-   cmd = ' '.join( ['annotate_variants.py -c chr -p position -v variant ', ox.outputPrefix+tExt(1)+'.txt', \
-                    '| bgzip -c > ', ox.outputPrefix+tExt(2)+'.txt.bgz'] )
-   status, out = commands.getstatusoutput( cmd )
-   print status, out
-   if status: raise Exception("FAILURE AT: " + cmd)
-   #annotate freq
-   cmd = ' '.join( ['annotateFreqTransm.py', ox.outputPrefix+tExt(2)+'.txt.bgz', 'iterative ', \
-                  '| bgzip -c > ', ox.outputPrefix+'.txt.bgz;', \
-                    'tabix -S 1 -s 1 -b 2 -e 2', ox.outputPrefix+'.txt.bgz'] )
+   # bgzip and tabix
+   cmd = ' '.join( ['bgzip -f', ox.outputPrefix + tExt(1) + '.txt', ox.outputPrefix + '.txt.bgz;',
+                    'tabix -S 1 -s 1 -b 2 -e 2', ox.outputPrefix + '.txt.bgz'] )
    status, out = commands.getstatusoutput( cmd )
    print status, out
    if status: raise Exception("FAILURE AT: " + cmd)
