@@ -1,0 +1,25 @@
+<div class="form-block">
+  <div class="card">
+    <div class="card-header card-title">
+      Studies
+      <gpf-add-button
+        [addFilter]="addFilter.bind(this)">
+      </gpf-add-button>
+    </div>
+    <div class="card-block">
+      <div style="padding: 5px" *ngFor="let study of studyFiltersState.studyFiltersState; trackBy: trackById; let i = index">
+        <gpf-remove-button
+          [field]="study"
+          [removeFilter]="removeFilter.bind(this)">
+        </gpf-remove-button>
+        <span style="padding: 5px; display: block; overflow: hidden">
+          <gpf-study-filter
+            [studyFilterState]="study"
+            [errors]="errors && errors[i]"
+            [dataset]="dataset">
+          </gpf-study-filter>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

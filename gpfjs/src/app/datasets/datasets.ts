@@ -262,7 +262,7 @@ export class Dataset extends IdName {
     readonly description: string,
     readonly name: string,
     readonly accessRights: boolean,
-    readonly studies: string[],
+    readonly studies: string,
     readonly studyTypes: string[],
     readonly phenoDB: string,
     readonly phenotypeGenotypeTool: boolean,
