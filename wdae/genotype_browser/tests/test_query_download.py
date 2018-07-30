@@ -18,7 +18,7 @@ EXAMPLE_REQUEST_VIP = {
         "CNV", "del", "ins", "sub",
     ],
     "genes": "All",
-    "datasetId": "VIP",
+    "datasetId": "SVIP",
     "pedigreeSelector": {
         "id": "16pstatus",
         "checkedValues": [
@@ -261,8 +261,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
 
         for v in res:
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
-
-            study_phenotype = variant['phenotype']
+            study_phenotype = variant['Study Phenotype']
             assert study_phenotype == 'autism'
 
     def test_query_download_denovo_db_unaffected(self):
@@ -283,7 +282,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         for v in res:
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
-            study_phenotype = variant['phenotype']
+            study_phenotype = variant['Study Phenotype']
             assert study_phenotype in [
                 "acromelic_frontonasal_dysostosis",
                 "amyotrophic_lateral_sclerosis",

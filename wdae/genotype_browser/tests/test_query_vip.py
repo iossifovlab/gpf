@@ -18,7 +18,7 @@ EXAMPLE_REQUEST_VIP = {
         "CNV", "del", "ins", "sub",
     ],
     "genes": "All",
-    "datasetId": "VIP",
+    "datasetId": "SVIP",
     "pedigreeSelector": {
         "id": "16pstatus",
         "checkedValues": [
