@@ -135,7 +135,7 @@ class RawFamilyVariants(FamiliesBase):
 
     def _load_pedigree(self):
         assert self.config.pedigree
-        assert os.path.exists(self.config.pedigree)
+        assert os.path.exists(self.config.pedigree), self.config.pedigree
 
         return FamiliesBase.load_pedigree_file(self.config.pedigree)
 

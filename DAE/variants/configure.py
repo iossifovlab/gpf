@@ -69,6 +69,7 @@ class Configure(ConfigBox):
                 'pedigree': '{}.ped'.format(prefix),
                 'vcf': vcf_filename,
                 'annotation': '{}-eff.txt'.format(prefix),
+                'prefix': prefix
             }
         }
         return Configure(conf)
