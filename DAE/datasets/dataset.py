@@ -162,6 +162,12 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
         return selected_phenotypes
 
     def _filter_studies(self, studies, safe, **kwargs):
+        study_names = self.get_study_names(safe=safe, **kwargs)
+        if study_names is not None:
+            studies = filter(
+                lambda st: st.get_attr('__name__')
+                             .replace('study.', '', 1) in study_names,
+                studies)
         study_types = self.get_study_types(safe=safe, **kwargs)
         if study_types is not None:
             studies = filter(
