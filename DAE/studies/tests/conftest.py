@@ -3,6 +3,7 @@ import pytest
 
 from studies.study_config import StudyConfig
 from studies.study_definition import StudyDefinition
+from studies.study_factory import StudyFactory
 
 
 def fixtures_dir():
@@ -18,3 +19,8 @@ def study_configs():
 @pytest.fixture()
 def study_definition(study_configs):
     return StudyDefinition.from_config(study_configs)
+
+
+@pytest.fixture()
+def study_factory(study_definition):
+    return StudyFactory(study_definition)

@@ -1,28 +1,34 @@
 from studies.study import Study
-from studies.study_config import StudyConfig
+from variants.raw_thrift import ThriftFamilyVariants
+from variants.raw_vcf import RawFamilyVariants
 
 
 class StudyFactory(object):
+
+    STUDY_TYPES = {
+        "vcf": RawFamilyVariants,
+        "thrift": ThriftFamilyVariants
+    }
 
     def __init__(self, study_definition):
         self.dataset_definition = study_definition
 
     def _from_dataset_config(self, study_config):
+        from studies.study_config import StudyConfig
         assert isinstance(study_config, StudyConfig)
 
-        variants_config = Configure.from_prefix_vcf(
-            study_config.variants_prefix)
+        if study_config.type not in self.STUDY_TYPES:
+            raise ValueError(
+                "Unknown study type: {}\nKnown ones: {}"
+                .format(study_config.type, list(self.STUDY_TYPES.keys()))
+            )
 
-        variants = RawFamilyVariants(
-            variants_config, annotator=composite_annotator)
+        variants = self.STUDY_TYPES[study_config.type](prefix=study_config.prefix)
 
-        return Study(
-            study_config.dataset_name,
-            variants
-        )
+        return Study(variants)
 
     def get_dataset_names(self):
-        return self.dataset_definition.dataset_ids()
+        return self.dataset_definition.dataset_ids
 
     def get_dataset(self, dataset_id):
         config = self.dataset_definition.get_dataset_config(dataset_id)
@@ -37,17 +43,3 @@ class StudyFactory(object):
             self._from_dataset_config(config)
             for config in self.dataset_definition.get_all_dataset_configs()
         ]
-
-    def get_dataset_description(self, dataset_id):
-        config = self.dataset_definition.get_dataset_config(dataset_id)
-
-        if config:
-            return config.get_dataset_description()
-
-        return None
-
-    def get_dataset_descriptions(self):
-        return filter(lambda c: c is not None, [
-            config.get_dataset_description()
-            for config in self.dataset_definition.get_all_dataset_configs()
-        ])

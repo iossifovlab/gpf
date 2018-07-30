@@ -2,6 +2,8 @@ import os
 import reusables
 from box import ConfigBox
 
+from studies.study_factory import StudyFactory
+
 
 class StudyConfig(ConfigBox):
 
@@ -9,9 +11,13 @@ class StudyConfig(ConfigBox):
         super(StudyConfig, self).__init__(*args, **kwargs)
         assert self.prefix
         assert self.study_name
+        assert self.type
+        assert self.type in StudyFactory.STUDY_TYPES.keys()
+        assert self.work_dir
+        self.make_vcf_prefix_absolute_path()
 
-    @staticmethod
-    def list_from_config(path='studies.conf', work_dir=None):
+    @classmethod
+    def list_from_config(cls, path='studies.conf', work_dir=None):
         if work_dir is None:
             pass
             # FIXME: is this necessary?
@@ -26,15 +32,24 @@ class StudyConfig(ConfigBox):
             auto_find=False,
             verify=True,
             defaults={
-                'wd': work_dir,
+                'work_dir': work_dir,
             }
         )
 
         result = list()
         for section in config.keys():
-            if 'study_name' not in config[section]:
-                config[section]['study_name'] = section
+            cls.add_default_study_name_from_section(config, section)
 
             result.append(StudyConfig(config[section]))
 
         return result
+
+    @classmethod
+    def add_default_study_name_from_section(cls, config, section):
+        if 'study_name' not in config[section]:
+            config[section]['study_name'] = section
+
+    def make_vcf_prefix_absolute_path(self):
+        if not os.path.isabs(self.prefix):
+            self.prefix = os.path.abspath(
+                os.path.join(self.work_dir, self.study_name, self.prefix))
