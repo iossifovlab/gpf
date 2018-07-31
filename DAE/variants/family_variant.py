@@ -259,6 +259,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
         for allele_index in self.calc_alt_alleles(self.gt):
             summary_allele = summary_variant.get_allele(allele_index)
+            if summary_allele is None:
+                continue
             fa = FamilyAllele(summary_allele, family, genotype)
 
             alleles.append(fa)
