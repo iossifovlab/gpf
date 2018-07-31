@@ -78,7 +78,7 @@ class DatasetApiTest(APITestCase):
 
         self.assertIn('error', data)
 
-    def test_get_dataset_vip(self):
+    def test_get_dataset_svip(self):
         url = '/api/v3/datasets/SVIP'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

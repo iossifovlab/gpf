@@ -8,7 +8,7 @@ import copy
 from rest_framework import status
 import urllib
 import json
-EXAMPLE_REQUEST_VIP = {
+EXAMPLE_REQUEST_SVIP = {
     "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
     "gender": ["female", "male"],
     "presentInParent": [
@@ -135,7 +135,7 @@ class Test(BaseAuthenticatedUserTest):
     URL = "/api/v3/genotype_browser/download"
 
     def test_query_download_urlencoded(self):
-        data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
+        data = copy.deepcopy(EXAMPLE_REQUEST_SVIP)
         query = urllib.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
@@ -145,7 +145,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(64 + 1, count_iterable(response.streaming_content))
 
     def test_query_download_json(self):
-        data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
+        data = copy.deepcopy(EXAMPLE_REQUEST_SVIP)
         query = {"queryData": json.dumps(data)}
 
         response = self.client.post(
@@ -178,8 +178,8 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
             study_phenotype = variant['phenotype']
             assert study_phenotype == 'autism'
 
-    def test_query_download_vip(self):
-        data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
+    def test_query_download_svip(self):
+        data = copy.deepcopy(EXAMPLE_REQUEST_SVIP)
         query = urllib.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(

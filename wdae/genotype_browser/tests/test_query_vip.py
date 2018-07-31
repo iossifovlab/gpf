@@ -8,7 +8,7 @@ import copy
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
-EXAMPLE_REQUEST_VIP = {
+EXAMPLE_REQUEST_SVIP = {
     "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
     "gender": ["female", "male"],
     "presentInParent": [
@@ -35,7 +35,7 @@ class Test(BaseAuthenticatedUserTest):
     URL = "/api/v3/genotype_browser/preview"
 
     def test_query_preview(self):
-        data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
+        data = copy.deepcopy(EXAMPLE_REQUEST_SVIP)
 
         response = self.client.post(
             self.URL, data, format='json')
@@ -54,7 +54,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEquals('deletion', res['legend'][0]['id'])
 
     def test_query_preview_other_pedigree_selector(self):
-        data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
+        data = copy.deepcopy(EXAMPLE_REQUEST_SVIP)
         data['pedigreeSelector'] = {
             "id": "phenotype",
             "checkedValues": ["autism", "unaffected"]
