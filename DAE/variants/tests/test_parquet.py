@@ -5,7 +5,6 @@ Created on Mar 7, 2018
 '''
 import pytest
 from variants.parquet_io import family_variants_table,\
-    save_family_variants_df_to_parquet, read_family_variants_df_from_parquet,\
     save_ped_df_to_parquet, read_ped_df_from_parquet, \
     save_family_allele_df_to_parquet,\
     read_family_allele_df_from_parquet, summary_table
@@ -25,16 +24,7 @@ def test_parquet_variants(variants_vcf, fixture_name, temp_filename):
         return_reference=True,
         return_unknown=True
     )
-    for family_table, allele_table in family_variants_table(variants):
-        assert family_table is not None
-
-        df = family_table.to_pandas()
-        save_family_variants_df_to_parquet(df, temp_filename)
-
-        df1 = read_family_variants_df_from_parquet(temp_filename)
-        assert df1 is not None
-        assert_annotation_equals(df, df1)
-
+    for allele_table in family_variants_table(variants):
         df = allele_table.to_pandas()
         save_family_allele_df_to_parquet(df, temp_filename)
 
@@ -62,6 +52,7 @@ def test_parquet_pedigree(variants_vcf, fixture_name, temp_filename):
     assert_annotation_equals(ped_df, ped_df1)
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/parquet_trios",
     # "fixtures/effects_trio",

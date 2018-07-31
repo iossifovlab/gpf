@@ -41,7 +41,6 @@ class DfFamilyVariantsBase(object):
     def wrap_variants(families, join_df):
         join_df = join_df.sort_values(
             by=["summary_variant_index", "family_id", "allele_index"])
-
         for _name, group in join_df.groupby(
                 by=["summary_variant_index", "family_id"]):
             rec = group.to_dict(orient='records')
@@ -50,10 +49,9 @@ class DfFamilyVariantsBase(object):
 
 class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
-    def __init__(self, ped_df, summary_df, vars_df, allele_df):
+    def __init__(self, ped_df, summary_df, allele_df):
         super(DfFamilyVariants, self).__init__()
         self.summary_df = summary_df
-        self.vars_df = vars_df
         self.allele_df = allele_df
         self.ped_df = ped_df
 

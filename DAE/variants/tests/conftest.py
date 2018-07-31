@@ -27,7 +27,7 @@ from variants.family import Family, FamiliesBase
 from variants.family_variant import FamilyVariant
 from variants.loader import RawVariantsLoader
 from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
-    save_family_variants_df_to_parquet, save_ped_df_to_parquet,\
+    save_ped_df_to_parquet,\
     save_family_allele_df_to_parquet
 from variants.raw_df import DfFamilyVariants
 from variants.raw_parquet import ParquetFamilyVariants
@@ -244,24 +244,23 @@ def variants_df(variants_vcf):
         fvars = variants_vcf(path)
         summary_df = fvars.annot_df
         ped_df = fvars.ped_df
-        vars_df, allele_df = family_variants_df(
+        allele_df = family_variants_df(
             fvars.query_variants(
                 return_reference=True,
                 return_unknown=True
             ))
-        return DfFamilyVariants(ped_df, summary_df, vars_df, allele_df)
+        return DfFamilyVariants(ped_df, summary_df, allele_df)
     return builder
 
 
 @pytest.fixture(scope='session')
 def variants_thrift(parquet_variants, testing_thriftserver):
     def builder(path):
-        pedigree, summary, family, allele = parquet_variants(path)
+        pedigree, summary, allele = parquet_variants(path)
         config = Configure.from_dict({
             'parquet': {
                 'pedigree': pedigree,
                 'summary_variants': summary,
-                'family_variants': family,
                 'family_alleles': allele,
             }
         })
@@ -274,12 +273,11 @@ def variants_thrift(parquet_variants, testing_thriftserver):
 @pytest.fixture(scope='session')
 def variants_parquet(parquet_variants):
     def builder(path):
-        pedigree, summary, family, allele = parquet_variants(path)
+        pedigree, summary, allele = parquet_variants(path)
         config = Configure.from_dict({
             'parquet': {
                 'pedigree': pedigree,
                 'summary_variants': summary,
-                'family_variants': family,
                 'family_alleles': allele,
             }
         })
@@ -301,19 +299,15 @@ def parquet_variants(request, variants_df):
         fulldirname = os.path.join(dirname, basename)
         summary_filename = os.path.join(
             fulldirname, "summary.parquet")
-        family_filename = os.path.join(
-            fulldirname, "family.parquet")
         allele_filename = os.path.join(
             fulldirname, "allele.parquet")
         pedigree_filename = os.path.join(
             fulldirname, "pedigree.parquet")
 
         if os.path.exists(summary_filename) and \
-                os.path.exists(family_filename) and \
                 os.path.exists(allele_filename) and \
                 os.path.exists(pedigree_filename):
-            return pedigree_filename, summary_filename, \
-                family_filename, allele_filename
+            return pedigree_filename, summary_filename, allele_filename
 
         if not os.path.exists(fulldirname):
             os.mkdir(fulldirname)
@@ -323,11 +317,9 @@ def parquet_variants(request, variants_df):
 
         fvars = variants_df(path)
         save_summary_to_parquet(fvars.summary_df, summary_filename)
-        save_family_variants_df_to_parquet(fvars.vars_df, family_filename)
         save_family_allele_df_to_parquet(fvars.allele_df, allele_filename)
         save_ped_df_to_parquet(fvars.ped_df, pedigree_filename)
-        return pedigree_filename, summary_filename, \
-            family_filename, allele_filename
+        return pedigree_filename, summary_filename, allele_filename
 
     return builder
 

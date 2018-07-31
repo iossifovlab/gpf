@@ -4,8 +4,9 @@ from variants.configure import Configure
 from variants.family import FamiliesBase, Family
 from variants.raw_df import DfFamilyVariantsBase
 from variants.parquet_io import read_summary_from_parquet, \
-    read_family_variants_df_from_parquet, read_family_allele_df_from_parquet, \
+    read_family_allele_df_from_parquet, \
     read_ped_df_from_parquet
+
 
 class DfFilter(object):
 
@@ -23,6 +24,7 @@ class DfFilter(object):
             return None
         return reduce(lambda a, b: lambda x: a(x) & b(x), self.all_predicates)
 
+
 class ParquetFamilyVariants(DfFamilyVariantsBase, FamiliesBase):
 
     def __init__(self, config=None, prefix=None):
@@ -35,31 +37,26 @@ class ParquetFamilyVariants(DfFamilyVariantsBase, FamiliesBase):
         self.config = config.parquet
         assert self.config is not None
 
-        pedigree_df, summary_variants_df, family_variants_df, \
+        pedigree_df, summary_variants_df, \
             family_alleles_df = self._load()
 
         self.families_build(pedigree_df, Family)
         self.summary_variants_df = summary_variants_df
-        self.family_variants_df = family_variants_df
+        # self.family_variants_df = family_variants_df
         self.family_alleles_df = family_alleles_df
 
-        self.variants_df = (self.family_variants_df
+        self.variants_df = (
+            self.family_alleles_df
             .merge(
                 self.summary_variants_df,
-                how='outer',
-                suffixes=('', ''),
-                sort=True)
-            .merge(
-                self.family_alleles_df,
-                how='outer',
+                how='left',
                 suffixes=('', ''),
                 sort=True))
 
     def _load(self):
         return (read_ped_df_from_parquet(self.config.pedigree),
-            read_summary_from_parquet(self.config.summary_variants),
-            read_family_variants_df_from_parquet(self.config.family_variants),
-            read_family_allele_df_from_parquet(self.config.family_alleles))
+                read_summary_from_parquet(self.config.summary_variants),
+                read_family_allele_df_from_parquet(self.config.family_alleles))
 
     def query_variants(self, **kwargs):
         print(self.variants_df.columns)
@@ -77,8 +74,8 @@ class ParquetFamilyVariants(DfFamilyVariantsBase, FamiliesBase):
 
         if 'regions' in kwargs and kwargs['regions'] is not None:
             df_filter.and_any(*[lambda x, region=region: ((x.chrom == region.chr) &
-                                   (x.position >= region.start) & (x.position <= region.stop))
-                               for region in kwargs['regions']])
+                                                          (x.position >= region.start) & (x.position <= region.stop))
+                                for region in kwargs['regions']])
 
         if 'family_ids' in kwargs and kwargs['family_ids'] is not None:
             family_ids = kwargs['family_ids']

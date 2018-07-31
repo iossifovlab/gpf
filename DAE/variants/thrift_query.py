@@ -57,6 +57,7 @@ Q = """
         S.alternative,
         S.summary_variant_index,
         S.allele_index,
+        S.allele_count,
         S.variant_type,
         S.cshl_variant,
         S.cshl_position,
@@ -70,9 +71,11 @@ Q = """
         S.af_allele_count,
         S.af_allele_freq
 
-    FROM parquet.`{family_variants}` AS F
-    FULL OUTER JOIN parquet.`{summary_variants}` AS S
-    ON S.summary_variant_index = F.summary_variant_index
+    FROM parquet.`{family_alleles}` AS F
+    LEFT JOIN parquet.`{summary_variants}` AS S
+    ON
+        S.summary_variant_index = F.summary_variant_index AND
+        S.allele_index = F.allele_index
 """
 
 
@@ -137,11 +140,10 @@ ALLELE_SUBQUERIES = [
 
 def thrift_query(
         thrift_connection,
-        summary_variants, family_variants, family_alleles,
+        summary_variants, family_alleles,
         limit=2000, **kwargs):
     final_query = Q.format(
         summary_variants=summary_variants,
-        family_variants=family_variants,
         family_alleles=family_alleles,
     )
 
@@ -164,7 +166,6 @@ def thrift_query(
         where = ' AND '.join(["({})".format(q) for q in allele_queries])
         aq = AQ.format(
             summary_variants=summary_variants,
-            family_variants=family_variants,
             family_alleles=family_alleles,
             where=where
         )

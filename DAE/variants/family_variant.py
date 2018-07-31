@@ -42,13 +42,6 @@ class FamilyDelegate(object):
         """
         return self.family.family_id
 
-    @property
-    def family_index(self):
-        """
-        Returns the family index.
-        """
-        return self.family.family_index
-
 
 class FamilyAllele(SummaryAllele, FamilyDelegate):
 
@@ -265,7 +258,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         ]
 
         for allele_index in self.calc_alt_alleles(self.gt):
-            summary_allele = summary_variant.alleles[allele_index]
+            summary_allele = summary_variant.get_allele(allele_index)
             fa = FamilyAllele(summary_allele, family, genotype)
 
             alleles.append(fa)
@@ -296,8 +289,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     @property
     def matched_gene_effects(self):
         return set(itertools.chain.from_iterable([
-                ma.matched_gene_effects for ma in self.matched_alleles
-            ]))
+            ma.matched_gene_effects for ma in self.matched_alleles
+        ]))
 
     @property
     def genotype(self):
@@ -363,10 +356,12 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             ref = (2 * np.ones(len(self.family), dtype=GENOTYPE_TYPE))
             unknown = np.any(self.gt == -1, axis=0)
 
+            allele_count = self.summary_variant.allele_count()
+
             balt = []
-            for aa in self.summary_variant.alt_alleles:
+            for allele_index in range(1, allele_count):
                 alt_gt = np.zeros(self.gt.shape, dtype=GENOTYPE_TYPE)
-                alt_gt[self.gt == aa.allele_index] = 1
+                alt_gt[self.gt == allele_index] = 1
 
                 alt = np.sum(alt_gt, axis=0, dtype=GENOTYPE_TYPE)
                 ref = ref - alt

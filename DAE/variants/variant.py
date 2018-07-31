@@ -260,12 +260,26 @@ class SummaryVariant(VariantBase):
         #: list of all alternative alleles
         self.alt_alleles = alleles[1:]
 
+        self._allele_count = self.ref_allele.get_attribute("allele_count")
+
         super(SummaryVariant, self).__init__(
             self.ref_allele.chromosome,
             self.ref_allele.position,
             self.ref_allele.reference)
 
         self.summary_index = self.ref_allele.summary_index
+
+    def get_allele(self, allele_index):
+        for allele in self.alleles:
+            if allele.allele_index == allele_index:
+                return allele
+        return None
+
+    def allele_count(self):
+        if self._allele_count is None:
+            self._allele_count = len(self.alleles)
+
+        return self._allele_count
 
     @property
     def alternative(self):

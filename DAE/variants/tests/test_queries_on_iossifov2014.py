@@ -9,7 +9,7 @@ from variants.configure import Configure
 import pytest
 from variants.raw_thrift import ThriftFamilyVariants
 
-# pytestmark = pytest.mark.skip
+pytestmark = pytest.mark.skip
 
 
 @pytest.fixture(scope='session')
