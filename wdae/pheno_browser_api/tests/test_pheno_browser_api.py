@@ -34,16 +34,16 @@ class Test(BaseAuthenticatedUserTest):
         self.assertIn('base_image_url', response.data)
         self.assertIn('measures', response.data)
 
-    def test_instruments_vip(self):
-        url = "{}?dataset_id=VIP".format(self.URL)
+    def test_instruments_svip(self):
+        url = "{}?dataset_id=SVIP".format(self.URL)
         response = self.client.get(url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIn('default', response.data)
         self.assertIn('instruments', response.data)
         self.assertEquals(71, len(response.data['instruments']))
 
-    def test_measures_vip_diagnosis_summary(self):
-        url = "{}?dataset_id=VIP&instrument=diagnosis_summary".format(
+    def test_measures_svip_diagnosis_summary(self):
+        url = "{}?dataset_id=SVIP&instrument=diagnosis_summary".format(
             self.MEASURES_URL)
         response = self.client.get(url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -52,10 +52,10 @@ class Test(BaseAuthenticatedUserTest):
 
         self.assertEquals(169, len(response.data['measures']))
 
-    def test_measures_vip_bad_json(self):
+    def test_measures_svip_bad_json(self):
         problem_urls = [
-            "{}?dataset_id=VIP&instrument=svip_neuro_exam",
-            "{}?dataset_id=VIP&instrument=svip_subjects",
+            "{}?dataset_id=SVIP&instrument=svip_neuro_exam",
+            "{}?dataset_id=SVIP&instrument=svip_subjects",
         ]
         urls = [u.format(self.MEASURES_URL)for u in problem_urls]
 
@@ -63,8 +63,8 @@ class Test(BaseAuthenticatedUserTest):
             response = self.client.get(url)
             self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-    def test_download_vip_diagnosis_summary(self):
-        url = "{}?dataset_id=VIP&instrument=diagnosis_summary".format(
+    def test_download_svip_diagnosis_summary(self):
+        url = "{}?dataset_id=SVIP&instrument=diagnosis_summary".format(
             self.DOWNLOAD_URL)
         response = self.client.get(url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)

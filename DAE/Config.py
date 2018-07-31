@@ -32,6 +32,10 @@ class Config:
         self._geneInfoDBdir = self._daeConfig.get('geneInfoDB', 'dir')
         self._geneInfoDBconfFile = self._daeConfig.get(
             'geneInfoDB', 'confFile')
+        self._genomicScoresDBdir = self._daeConfig.get(
+            'genomicScoresDB', 'dir')
+        self._genomicScoresDBconfFile = self._daeConfig.get(
+            'genomicScoresDB', 'confFile')
         self._variantsDBdir = self._daeConfig.get('variantsDB', 'dir')
         self._variantsDBconfFile = self._daeConfig.get(
             'variantsDB', 'confFile')
@@ -71,6 +75,14 @@ class Config:
     @property
     def geneInfoDBconfFile(self):
         return self._geneInfoDBconfFile
+
+    @property
+    def genomicScoresDBdir(self):
+        return self._genomicScoresDBdir
+
+    @property
+    def genomicScoresDBconfFile(self):
+        return self._genomicScoresDBconfFile
 
     @property
     def variantsDBdir(self):
