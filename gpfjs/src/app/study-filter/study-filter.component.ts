@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 
 import { Dataset } from '../datasets/datasets';
 import { StudyFilterState } from './study-filter-store'
@@ -8,10 +8,10 @@ import { StudyFilterState } from './study-filter-store'
   templateUrl: './study-filter.component.html',
   styleUrls: ['./study-filter.component.css']
 })
-export class StudyFilterComponent {
+export class StudyFilterComponent implements OnChanges {
   @Input() studyFilterState: StudyFilterState;
   @Input() errors: string[];
-  @Input() dataset: Dataset;
+  @Input() studies: string[];
 
   constructor() { }
 
@@ -21,6 +21,10 @@ export class StudyFilterComponent {
 
   get selectedStudyNames() {
     return this.studyFilterState.studyName;
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    this.studies = changes.studies.currentValue;
   }
 
 }

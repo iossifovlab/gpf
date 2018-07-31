@@ -3,7 +3,7 @@
     <select class="form-control"
     [(ngModel)]="selectedStudyNames"
      required>
-      <option *ngFor="let study of this.dataset.studies.split(',')" [ngValue]="study">
+      <option *ngFor="let study of this.studies" [ngValue]="study">
         {{ study }}
       </option>
     </select>
