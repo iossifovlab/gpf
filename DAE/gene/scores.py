@@ -3,15 +3,17 @@ import common.config
 from box import Box
 from collections import OrderedDict
 
-from data import Data
+from genomic_values import GenomicValues
 from Config import Config
 
 
-class Scores(Data):
+class Scores(GenomicValues):
     def __init__(self, scores_name, config, *args, **kwargs):
+        super(Scores, self).__init__('genomicScores.{}'.format(scores_name),
+                                     *args, **kwargs)
+
         self.config = config
-        self.section_name = 'genomicScores.{}'.format(scores_name)
-        self.data_col = 'scores'
+        self.genomic_values_col = 'scores'
 
         self.desc = self.config[self.section_name].desc
         self.bins = int(self.config[self.section_name].bins)
@@ -19,7 +21,7 @@ class Scores(Data):
         self.yscale = self.config[self.section_name].yscale
         self.filename = self.config[self.section_name].file
 
-        super(Scores, self).__init__(*args, **kwargs)
+        self._load_data()
 
     def get_scores(self):
         return self.df['scores'].values

@@ -6,11 +6,13 @@ Created on Nov 7, 2016
 import numpy as np
 from collections import OrderedDict
 
-from data import Data
+from genomic_values import GenomicValues
 from gene.config import GeneInfoConfig
+from Config import Config
+import ConfigParser
 
 
-class Weights(Data, GeneInfoConfig):
+class Weights(GenomicValues):
     """
     Represents gene weights.
 
@@ -19,18 +21,20 @@ class Weights(Data, GeneInfoConfig):
     """
 
     def __init__(self, weights_name, *args, **kwargs):
-        GeneInfoConfig.__init__(self, *args, **kwargs)
+        super(Weights, self).__init__('geneWeights.{}'.format(weights_name),
+                                      *args, **kwargs)
 
-        self.section_name = 'geneWeights.{}'.format(weights_name)
-        self.data_col = 'gene'
+        self.config = GeneInfoConfig()
 
-        self.desc = self.config.get(self.section_name, 'desc')
-        self.bins = int(self.config.get(self.section_name, 'bins'))
-        self.xscale = self.config.get(self.section_name, 'xscale')
-        self.yscale = self.config.get(self.section_name, 'yscale')
-        self.filename = self.config.get(self.section_name, 'file')
+        self.genomic_values_col = 'gene'
 
-        Data.__init__(self, *args, **kwargs)
+        self.desc = self.config.config.get(self.section_name, 'desc')
+        self.bins = int(self.config.config.get(self.section_name, 'bins'))
+        self.xscale = self.config.config.get(self.section_name, 'xscale')
+        self.yscale = self.config.config.get(self.section_name, 'yscale')
+        self.filename = self.config.config.get(self.section_name, 'file')
+
+        self._load_data()
 
     def min(self):
         """
@@ -89,6 +93,25 @@ class Weights(Data, GeneInfoConfig):
         assert name in Weights.list_gene_weights()
         w = Weights(name)
         return w
+
+    @staticmethod
+    def list_gene_weights():
+        """
+        Lists all available gene weights configured in `geneInfo.conf`.
+        """
+        dae_config = Config()
+        wd = dae_config.daeDir
+        data_dir = dae_config.data_dir
+
+        config = ConfigParser.SafeConfigParser({
+            'wd': wd,
+            'data': data_dir,
+        })
+        config.read(dae_config.geneInfoDBconfFile)
+
+        weights = config.get('geneWeights', 'weights')
+        names = [n.strip() for n in weights.split(',')]
+        return names
 
 
 class WeightsLoader(object):
