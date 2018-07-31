@@ -24,3 +24,8 @@ def study_definition(study_configs):
 @pytest.fixture()
 def study_factory(study_definition):
     return StudyFactory(study_definition)
+
+
+@pytest.fixture()
+def test_study(study_factory):
+    return study_factory.get_dataset('test')
