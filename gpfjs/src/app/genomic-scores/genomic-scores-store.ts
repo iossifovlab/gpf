@@ -1,10 +1,12 @@
-import { GenomicScoresHistogramData } from './genomic-scores';
 import { IsNotEmpty, IsNumber, Min, Max, ValidateIf, ValidateNested } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
+import { GenomicScores } from '../genomic-scores-block/genomic-scores-block';
+
 export class GenomicScoreState {
-    histogramData: GenomicScoresHistogramData;
+    @IsNotEmpty()
+    score: GenomicScores;
 
     @ValidateIf(o => o.rangeStart !== null)
     @IsNumber()
@@ -21,13 +23,11 @@ export class GenomicScoreState {
     @IsLessThanOrEqual('domainMax')
     rangeEnd: number;
 
-    metric: any;
     domainMin: any;
     domainMax: any;
-    id: any;
 
     constructor() {
-        this.histogramData = null;
+        this.score = null;
         this.rangeStart = null;
         this.rangeEnd = null;
     }
