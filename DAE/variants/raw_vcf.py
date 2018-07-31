@@ -343,9 +343,6 @@ class RawFamilyVariants(FamiliesBase):
             if v.is_unknown() and not return_unknown:
                 continue
 
-            if not return_reference and v.is_reference():
-                continue
-
             if not self.filter_variant(v, **kwargs):
                 continue
 
@@ -355,6 +352,10 @@ class RawFamilyVariants(FamiliesBase):
                 if self.filter_allele(allele, **kwargs):
                     alleles_matched.append(allele.allele_index)
             if alleles_matched:
+                if len(alleles_matched) == 1 and \
+                        alleles_matched[0] == 0 and \
+                        not return_reference:
+                    continue
                 v.set_matched_alleles(alleles_matched)
                 yield v
 

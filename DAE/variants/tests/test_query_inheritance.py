@@ -37,7 +37,7 @@ def test_query_inheritance_omission(ustudy_vcf):
     for v in vl:
         assert Inheritance.omission in v.inheritance_in_members
 
-    assert len(vl) == 56
+    assert len(vl) == 44
 
 
 def test_query_inheritance_other(ustudy_vcf):
