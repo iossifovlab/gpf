@@ -11,6 +11,7 @@ from variants.variant import SummaryVariant, SummaryAllele
 from variants.family import Family
 from variants.attributes import Inheritance
 import itertools
+from variants.vcf_utils import GENOTYPE_TYPE
 
 
 class FamilyDelegate(object):
@@ -41,13 +42,6 @@ class FamilyDelegate(object):
         """
         return self.family.family_id
 
-    @property
-    def family_index(self):
-        """
-        Returns the family index.
-        """
-        return self.family.family_index
-
 
 class FamilyAllele(SummaryAllele, FamilyDelegate):
 
@@ -68,6 +62,17 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self._variant_in_sexes = None
 
         self.matched_gene_effects = []
+
+    def __repr__(self):
+        if not self.alternative:
+            return '{}:{} {}(ref) {}'.format(
+                self.chromosome, self.position,
+                self.reference, self.family_id)
+        else:
+            return '{}:{} {}->{} {}'.format(
+                self.chromosome, self.position,
+                self.reference, self.alternative,
+                self.family_id)
 
     @property
     def genotype(self):
@@ -253,7 +258,9 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         ]
 
         for allele_index in self.calc_alt_alleles(self.gt):
-            summary_allele = summary_variant.alleles[allele_index]
+            summary_allele = summary_variant.get_allele(allele_index)
+            if summary_allele is None:
+                continue
             fa = FamilyAllele(summary_allele, family, genotype)
 
             alleles.append(fa)
@@ -284,8 +291,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     @property
     def matched_gene_effects(self):
         return set(itertools.chain.from_iterable([
-                ma.matched_gene_effects for ma in self.matched_alleles
-            ]))
+            ma.matched_gene_effects for ma in self.matched_alleles
+        ]))
 
     @property
     def genotype(self):
@@ -348,15 +355,17 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     @property
     def best_st(self):
         if self._best_st is None:
-            ref = (2 * np.ones(len(self.family), dtype=np.int8))
+            ref = (2 * np.ones(len(self.family), dtype=GENOTYPE_TYPE))
             unknown = np.any(self.gt == -1, axis=0)
 
-            balt = []
-            for aa in self.summary_variant.alt_alleles:
-                alt_gt = np.zeros(self.gt.shape, dtype=np.int8)
-                alt_gt[self.gt == aa.allele_index] = 1
+            allele_count = self.summary_variant.allele_count()
 
-                alt = np.sum(alt_gt, axis=0, dtype=np.int8)
+            balt = []
+            for allele_index in range(1, allele_count):
+                alt_gt = np.zeros(self.gt.shape, dtype=GENOTYPE_TYPE)
+                alt_gt[self.gt == allele_index] = 1
+
+                alt = np.sum(alt_gt, axis=0, dtype=GENOTYPE_TYPE)
                 ref = ref - alt
                 balt.append(alt)
 

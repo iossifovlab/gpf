@@ -26,7 +26,7 @@ import pytest
     ("fixtures/trios2", ['mom2', 'ch2'], 8),
     ("fixtures/trios2", ['mom1', 'dad1'], 9),
 ])
-def test_fixture_query_by_family_ids(
+def test_fixture_query_by_person_ids(
         variants_impl, variants, fixture_name, person_ids, count):
     vvars = variants_impl(variants)(fixture_name)
     assert vvars is not None

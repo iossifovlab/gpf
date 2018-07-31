@@ -3,6 +3,8 @@ Created on Jul 18, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import pytest
 
 from RegionOperations import Region
@@ -13,11 +15,11 @@ from variants.effects import EffectGene
     "position,inheritance,effect_types,return_reference,matched_alleles",
     [
         (878152, None, None, True, [0, 1, 2]),
-        (878152, None, None, False, [1, 2]),
+        (878152, None, None, False, [0, 1, 2]),
         (878152, "denovo", ["missense"], True, [2]),
         (878152, "mendelian", ["synonymous"], True, [1]),
         (878152, "mendelian", None, True, [0, 1]),
-        (878152, "mendelian", None, False, [1]),
+        (878152, "mendelian", None, False, [0, 1]),
     ])
 def test_f1_matched_alleles(
         variants_vcf,
@@ -48,7 +50,7 @@ def test_f1_matched_alleles(
         (878152, None, None, True,
          [(0, []), (1, []), (2, [])]),
         (878152, None, None, False,
-         [(1, []), (2, [])]),
+         [(0, []), (1, []), (2, [])]),
         (878152, "denovo", ["missense"], True,
          [(2, [EffectGene('SAMD11', 'missense')])]),
         (878152, "mendelian", ["synonymous"], True,
@@ -56,7 +58,7 @@ def test_f1_matched_alleles(
         (878152, "mendelian", None, True,
          [(0, []), (1, [])]),
         (878152, "mendelian", None, False,
-         [(1, [])]),
+         [(0, []), (1, [])]),
         (878152, None, ["missense", "synonymous"], True,
          [(1, [EffectGene('SAMD11', 'synonymous')]),
           (2, [EffectGene('SAMD11', 'missense')])]),

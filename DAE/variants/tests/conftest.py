@@ -27,15 +27,16 @@ from variants.family import Family, FamiliesBase
 from variants.family_variant import FamilyVariant
 from variants.loader import RawVariantsLoader
 from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
-    save_family_variants_df_to_parquet, save_ped_df_to_parquet,\
+    save_ped_df_to_parquet,\
     save_family_allele_df_to_parquet
 from variants.raw_df import DfFamilyVariants
+from variants.raw_parquet import ParquetFamilyVariants
 from variants.raw_thrift import ThriftFamilyVariants
 from variants.raw_vcf import RawFamilyVariants, \
     VariantFactory
 from variants.variant import SummaryAllele, SummaryVariant
 from variants.tests.common_tests_helpers import relative_to_this_test_folder
-from variants.raw_dae import RawDAE
+from variants.raw_dae import RawDAE, RawDenovo
 
 
 @pytest.fixture(scope='session')
@@ -204,6 +205,28 @@ def raw_dae(config_dae, default_genome):
 
 
 @pytest.fixture(scope='session')
+def config_denovo():
+    def builder(path):
+        fullpath = relative_to_this_test_folder(path)
+        config = Configure.from_prefix_denovo(fullpath)
+        return config
+    return builder
+
+
+@pytest.fixture(scope='session')
+def raw_denovo(config_denovo, default_genome):
+    def builder(path):
+        config = config_denovo(path)
+        denovo = RawDenovo(
+            config.denovo.denovo_filename,
+            config.denovo.family_filename,
+            genome=default_genome,
+            annotator=None)
+        return denovo
+    return builder
+
+
+@pytest.fixture(scope='session')
 def variants_vcf(composite_annotator):
     def builder(path):
         a_data = relative_to_this_test_folder(path)
@@ -221,30 +244,44 @@ def variants_df(variants_vcf):
         fvars = variants_vcf(path)
         summary_df = fvars.annot_df
         ped_df = fvars.ped_df
-        vars_df, f2s_df = family_variants_df(
+        allele_df = family_variants_df(
             fvars.query_variants(
                 return_reference=True,
                 return_unknown=True
             ))
-        return DfFamilyVariants(ped_df, summary_df, vars_df, f2s_df)
+        return DfFamilyVariants(ped_df, summary_df, allele_df)
     return builder
 
 
 @pytest.fixture(scope='session')
 def variants_thrift(parquet_variants, testing_thriftserver):
     def builder(path):
-        pedigree, summary, family, f2s = parquet_variants(path)
+        pedigree, summary, allele = parquet_variants(path)
         config = Configure.from_dict({
             'parquet': {
                 'pedigree': pedigree,
                 'summary_variants': summary,
-                'family_variants': family,
-                'family_alleles': f2s,
+                'family_alleles': allele,
             }
         })
         return ThriftFamilyVariants(
             config=config,
             thrift_connection=testing_thriftserver)
+    return builder
+
+
+@pytest.fixture(scope='session')
+def variants_parquet(parquet_variants):
+    def builder(path):
+        pedigree, summary, allele = parquet_variants(path)
+        config = Configure.from_dict({
+            'parquet': {
+                'pedigree': pedigree,
+                'summary_variants': summary,
+                'family_alleles': allele,
+            }
+        })
+        return ParquetFamilyVariants(config=config)
     return builder
 
 
@@ -262,19 +299,15 @@ def parquet_variants(request, variants_df):
         fulldirname = os.path.join(dirname, basename)
         summary_filename = os.path.join(
             fulldirname, "summary.parquet")
-        family_filename = os.path.join(
-            fulldirname, "family.parquet")
-        f2s_filename = os.path.join(
-            fulldirname, "f2s.parquet")
+        allele_filename = os.path.join(
+            fulldirname, "allele.parquet")
         pedigree_filename = os.path.join(
             fulldirname, "pedigree.parquet")
 
         if os.path.exists(summary_filename) and \
-                os.path.exists(family_filename) and \
-                os.path.exists(f2s_filename) and \
+                os.path.exists(allele_filename) and \
                 os.path.exists(pedigree_filename):
-            return pedigree_filename, summary_filename, \
-                family_filename, f2s_filename
+            return pedigree_filename, summary_filename, allele_filename
 
         if not os.path.exists(fulldirname):
             os.mkdir(fulldirname)
@@ -284,21 +317,21 @@ def parquet_variants(request, variants_df):
 
         fvars = variants_df(path)
         save_summary_to_parquet(fvars.summary_df, summary_filename)
-        save_family_variants_df_to_parquet(fvars.vars_df, family_filename)
-        save_family_allele_df_to_parquet(fvars.f2s_df, f2s_filename)
+        save_family_allele_df_to_parquet(fvars.allele_df, allele_filename)
         save_ped_df_to_parquet(fvars.ped_df, pedigree_filename)
-        return pedigree_filename, summary_filename, \
-            family_filename, f2s_filename
+        return pedigree_filename, summary_filename, allele_filename
 
     return builder
 
 
 @pytest.fixture
-def variants_implementations(variants_vcf, variants_df, variants_thrift):
+def variants_implementations(
+        variants_vcf, variants_df, variants_thrift, variants_parquet):
     impls = {
         "variants_df": variants_df,
         "variants_vcf": variants_vcf,
         "variants_thrift": variants_thrift,
+        "variants_parquet": variants_parquet,
     }
     return impls
 

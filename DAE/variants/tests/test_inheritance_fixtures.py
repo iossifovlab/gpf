@@ -20,14 +20,18 @@ from variants.vcf_utils import mat2str
 def test_inheritance_trio_full(variants_vcf, region, count, inheritance):
     fvars = variants_vcf("fixtures/inheritance_trio")
     vs = list(fvars.query_variants(
+        inheritance=inheritance.name,
         regions=[region],
-        return_reference=True,
-        return_unknown=True))
-    assert len(vs) == count
+        return_reference=True))
+
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance_in_members)
         assert inheritance in v.inheritance_in_members
         assert len(mat2str(v.best_st)) == 7
+        for a in v.alleles:
+            print(">>>", a, a.inheritance_in_members)
+
+    assert len(vs) == count
 
 
 @pytest.mark.parametrize("region,count,inheritance", [
@@ -39,8 +43,8 @@ def test_inheritance_quad_full(variants_vcf, region, count, inheritance):
     fvars = variants_vcf("fixtures/inheritance_quad")
     vs = list(fvars.query_variants(
         regions=[region],
-        return_reference=True,
-        return_unknown=True))
+        return_reference=False,
+        return_unknown=False))
     assert len(vs) == count
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance_in_members)
@@ -57,8 +61,8 @@ def test_inheritance_multi_full(variants_vcf, region, count, inheritance):
     fvars = variants_vcf("fixtures/inheritance_multi")
     vs = list(fvars.query_variants(
         regions=[region],
-        return_reference=True,
-        return_unknown=True))
+        return_reference=False,
+        return_unknown=False))
     assert len(vs) == count
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance_in_members)

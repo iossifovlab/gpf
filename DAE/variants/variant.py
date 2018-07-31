@@ -205,6 +205,14 @@ class SummaryAllele(VariantBase):
             self.attributes = {}
             self.update_attributes(attributes)
 
+    @staticmethod
+    def create_reference_allele(allele):
+        return SummaryAllele(
+            allele.chromosome,
+            allele.position,
+            allele.reference,
+            attributes=allele.attributes)
+
     @property
     def is_reference_allele(self):
         return self.alternative is None
@@ -251,8 +259,11 @@ class SummaryVariant(VariantBase):
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
 
-        assert alleles[0].is_reference_allele
+        if not alleles[0].is_reference_allele:
+            ref_allele = SummaryAllele.create_reference_allele(alleles[0])
+            alleles = list(itertools.chain([ref_allele], alleles))
 
+        assert alleles[0].is_reference_allele
         #: list of all alleles in the variant
         self.alleles = alleles
         #: the reference allele
@@ -260,12 +271,26 @@ class SummaryVariant(VariantBase):
         #: list of all alternative alleles
         self.alt_alleles = alleles[1:]
 
+        self._allele_count = self.ref_allele.get_attribute("allele_count")
+
         super(SummaryVariant, self).__init__(
             self.ref_allele.chromosome,
             self.ref_allele.position,
             self.ref_allele.reference)
 
         self.summary_index = self.ref_allele.summary_index
+
+    def get_allele(self, allele_index):
+        for allele in self.alleles:
+            if allele.allele_index == allele_index:
+                return allele
+        return None
+
+    def allele_count(self):
+        if self._allele_count is None:
+            self._allele_count = len(self.alleles)
+
+        return self._allele_count
 
     @property
     def alternative(self):

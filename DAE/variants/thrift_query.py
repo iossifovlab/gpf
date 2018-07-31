@@ -57,6 +57,7 @@ Q = """
         S.alternative,
         S.summary_variant_index,
         S.allele_index,
+        S.allele_count,
         S.variant_type,
         S.cshl_variant,
         S.cshl_position,
@@ -70,20 +71,11 @@ Q = """
         S.af_allele_count,
         S.af_allele_freq
 
-    FROM parquet.`{family_variants}` AS F
-    FULL OUTER JOIN parquet.`{summary_variants}` AS S
-    ON S.summary_variant_index = F.summary_variant_index
-"""
-
-
-AQ = """
-    F.family_variant_index IN (SELECT
-        FA.family_variant_index
-    FROM parquet.`{family_alleles}` AS FA
-    JOIN parquet.`{summary_variants}` AS S
-    ON FA.summary_variant_index = S.summary_variant_index
-        AND FA.allele_index = S.allele_index
-    WHERE {where})
+    FROM parquet.`{family_alleles}` AS F
+    LEFT JOIN parquet.`{summary_variants}` AS S
+    ON
+        S.summary_variant_index = F.summary_variant_index AND
+        S.allele_index = F.allele_index
 """
 
 
@@ -120,11 +112,6 @@ def query_parts(queries, **kwargs):
 VARIANT_QUERIES = [
     'regions',
     'family_ids',
-    # 'inheritance',
-    # 'effect_types',
-]
-
-ALLELE_SUBQUERIES = [
     'effect_types',
     'genes',
     'variant_type',
@@ -137,11 +124,10 @@ ALLELE_SUBQUERIES = [
 
 def thrift_query(
         thrift_connection,
-        summary_variants, family_variants, family_alleles,
+        summary_variants, family_alleles,
         limit=2000, **kwargs):
     final_query = Q.format(
         summary_variants=summary_variants,
-        family_variants=family_variants,
         family_alleles=family_alleles,
     )
 
@@ -154,20 +140,9 @@ def thrift_query(
     variant_queries.extend(
         query_parts(VARIANT_QUERIES, **kwargs))
 
-    allele_queries = query_parts(ALLELE_SUBQUERIES, **kwargs)
     return_reference = kwargs.get("return_reference", False)
     if not return_reference:
-        aq = "FA.allele_index > 0"
-        allele_queries.append(aq)
-
-    if allele_queries:
-        where = ' AND '.join(["({})".format(q) for q in allele_queries])
-        aq = AQ.format(
-            summary_variants=summary_variants,
-            family_variants=family_variants,
-            family_alleles=family_alleles,
-            where=where
-        )
+        aq = "F.allele_index > 0"
         variant_queries.append(aq)
 
     if variant_queries:

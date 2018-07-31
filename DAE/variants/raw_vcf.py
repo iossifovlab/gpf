@@ -157,23 +157,24 @@ class RawFamilyVariants(FamiliesBase):
         else:
             records = []
             for index, v in enumerate(self.vcf_vars):
+                allele_count = len(v.ALT) + 1
                 records.append(
                     (v.CHROM, v.start + 1,
                      v.REF, None,
-                     index, 0))
+                     index, 0, allele_count))
                 for allele_index, alt in enumerate(v.ALT):
                     records.append(
                         (v.CHROM, v.start + 1,
                          v.REF, alt,
                          index,
-                         allele_index + 1,
+                         allele_index + 1, allele_count
                          ))
             self.annot_df = pd.DataFrame.from_records(
                 data=records,
                 columns=[
                     'chrom', 'position', 'reference', 'alternative',
                     'summary_variant_index',
-                    'allele_index',
+                    'allele_index', 'allele_count',
                 ])
 
             annotator.setup(self)
@@ -345,15 +346,16 @@ class RawFamilyVariants(FamiliesBase):
             if not self.filter_variant(v, **kwargs):
                 continue
 
-            if return_reference:
-                alleles = v.alleles
-            else:
-                alleles = v.alt_alleles
+            alleles = v.alleles
             alleles_matched = []
             for allele in alleles:
                 if self.filter_allele(allele, **kwargs):
                     alleles_matched.append(allele.allele_index)
             if alleles_matched:
+                if len(alleles_matched) == 1 and \
+                        alleles_matched[0] == 0 and \
+                        not return_reference:
+                    continue
                 v.set_matched_alleles(alleles_matched)
                 yield v
 

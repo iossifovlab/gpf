@@ -90,6 +90,19 @@ class Configure(ConfigBox):
         return Configure(conf)
 
     @staticmethod
+    def from_prefix_denovo(prefix):
+        denovo_filename = '{}.txt'.format(prefix)
+        family_filename = "{}.families.txt".format(prefix)
+
+        conf = {
+            'denovo': {
+                'denovo_filename': denovo_filename,
+                'family_filename': family_filename,
+            }
+        }
+        return Configure(conf)
+
+    @staticmethod
     def from_prefix_parquet(prefix):
         assert os.path.exists(prefix)
         assert os.path.isdir(prefix)
