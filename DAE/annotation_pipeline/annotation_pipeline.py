@@ -192,6 +192,7 @@ def get_argument_parser():
     parser.add_argument('--separator', help='separator used in the split column; defaults to ","',
         default=',', action='store')
     parser.add_argument('--options', help='add default arguments', action='append', metavar=('=OPTION:VALUE'))
+    parser.add_argument('--skip-preannotator', help='skips preannotators', action='store_true')
     parser.add_argument('infile', nargs='?', action='store',
         default='-', help='path to input file; defaults to stdin')
     parser.add_argument('outfile', nargs='?', action='store',
@@ -259,7 +260,10 @@ def main():
 
             options.append(split_options)
 
-    preannotators = PreannotatorLoader.load_preannotators(opts, header)
+    if(opts.skip_preannotator==False):
+        preannotators = PreannotatorLoader.load_preannotators(opts, header)
+    else:
+        preannotators = []
 
     annotator = MultiAnnotator(opts.config, header, not opts.always_add,
         preannotators, opts.split, opts.separator, dict(options))
