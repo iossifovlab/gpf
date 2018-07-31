@@ -3,14 +3,14 @@
     <div class="card-header card-title">
       Studies
       <gpf-add-button
-        [addFilter]="addFilter.bind(this)">
+        (addFilter)="addFilter($event)">
       </gpf-add-button>
     </div>
     <div class="card-block">
       <div style="padding: 5px" *ngFor="let study of studyFiltersState.studyFiltersState; trackBy: trackById; let i = index">
         <gpf-remove-button
           [field]="study"
-          [removeFilter]="removeFilter.bind(this)">
+          (removeFilter)="removeFilter($event)">
         </gpf-remove-button>
         <span style="padding: 5px; display: block; overflow: hidden">
           <gpf-study-filter

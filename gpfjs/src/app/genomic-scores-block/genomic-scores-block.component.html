@@ -3,14 +3,14 @@
       <div class="card-header card-title">
           Genomic scores
           <gpf-add-button
-            [addFilter]="addFilter.bind(this)">
+            (addFilter)="addFilter($event)">
           </gpf-add-button>
       </div>
       <div class="card-block">
         <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; trackBy: trackById; let i = index">
             <gpf-remove-button
               [field]="score"
-              [removeFilter]="removeFilter.bind(this)">
+              (removeFilter)="removeFilter($event)">
             </gpf-remove-button>
             <span style="padding: 5px; display: block; overflow: hidden">
                 <gpf-genomic-scores

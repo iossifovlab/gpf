@@ -1,4 +1,5 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Output } from '@angular/core';
+import { EventEmitter } from '@angular/core';
 
 import { environment } from '../../environments/environment';
 
@@ -7,16 +8,17 @@ import { environment } from '../../environments/environment';
   templateUrl: './add-button.component.html',
   styleUrls: ['./add-button.component.css']
 })
-export class AddButtonComponent implements OnInit {
-  @Input() addFilter: Function;
+export class AddButtonComponent {
+  @Output() addFilter: EventEmitter<any> = new EventEmitter();
 
   get imgPathPrefix() {
     return environment.imgPathPrefix;
   }
 
-  constructor() { }
-
-  ngOnInit() {
+  add() {
+    this.addFilter.emit(null);
   }
+
+  constructor() { }
 
 }
