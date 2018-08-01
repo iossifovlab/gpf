@@ -30,7 +30,8 @@ class Scores(Preload):
                 'bars': s.values(),
                 'bins': s.get_scores(),
                 'xscale': s.xscale,
-                'yscale': s.yscale
+                'yscale': s.yscale,
+                'range': s.range
             })
 
         return result
