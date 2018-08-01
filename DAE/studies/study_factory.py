@@ -11,9 +11,9 @@ class StudyFactory(object):
     }
 
     def __init__(self, study_definition):
-        self.dataset_definition = study_definition
+        self.study_definition = study_definition
 
-    def _from_dataset_config(self, study_config):
+    def _from_study_config(self, study_config):
         from studies.study_config import StudyConfig
         assert isinstance(study_config, StudyConfig)
 
@@ -27,19 +27,19 @@ class StudyFactory(object):
 
         return Study(variants)
 
-    def get_dataset_names(self):
-        return self.dataset_definition.dataset_ids
+    def get_study_names(self):
+        return self.study_definition.study_ids
 
-    def get_dataset(self, dataset_id):
-        config = self.dataset_definition.get_dataset_config(dataset_id)
+    def get_study(self, study_id):
+        config = self.study_definition.get_study_config(study_id)
 
         if config:
-            return self._from_dataset_config(config)
+            return self._from_study_config(config)
 
         return None
 
-    def get_all_datasets(self):
+    def get_all_studies(self):
         return [
-            self._from_dataset_config(config)
-            for config in self.dataset_definition.get_all_dataset_configs()
+            self._from_study_config(config)
+            for config in self.study_definition.get_all_study_configs()
         ]

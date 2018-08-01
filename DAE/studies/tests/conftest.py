@@ -28,4 +28,4 @@ def study_factory(study_definition):
 
 @pytest.fixture()
 def test_study(study_factory):
-    return study_factory.get_dataset('test')
+    return study_factory.get_study('test')

@@ -9,16 +9,16 @@ class StudyDefinition(object):
     configs = {}
 
     @property
-    def dataset_ids(self):
+    def study_ids(self):
         return list(self.configs.keys())
 
-    def get_dataset_config(self, dataset_id):
+    def get_study_config(self, dataset_id):
         if dataset_id not in self.configs:
             return None
 
         return self.configs[dataset_id]
 
-    def get_all_dataset_configs(self):
+    def get_all_study_configs(self):
         return list(self.configs.values())
 
     @classmethod
