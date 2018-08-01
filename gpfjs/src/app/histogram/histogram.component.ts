@@ -29,6 +29,8 @@ export class HistogramComponent implements OnInit, OnChanges {
 
   @Input() bins: Array<number>;
   @Input() bars: Array<number>;
+  @Input() domainMin: number;
+  @Input() domainMax: number;
 
   @Input() rangesCounts: Array<number>;
 
@@ -81,6 +83,17 @@ export class HistogramComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if ('bins' in changes || 'bars' in changes) {
+      let bins: Array<number> = [];
+      let bars: Array<number> = [];
+      for (let i  = 0; i < this.bins.length - 1; i++) {
+        if (this.bins[i] < this.domainMin || this.bins[i] > this.domainMax) {
+          continue
+        }
+        bins.push(this.bins[i]);
+        bars.push(this.bars[i]);
+      }
+      this.bins = bins;
+      this.bars = bars;
       d3.select(this.histogramContainer.nativeElement).selectAll('g').remove();
       d3.select(this.histogramContainer.nativeElement).selectAll('rect').remove();
       this.redrawHistogram();

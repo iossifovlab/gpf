@@ -34,9 +34,14 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
         if (!genomicScoreState) {
             genomicScoreState = new GenomicScoreState();
             genomicScoreState.score = this.genomicScoresArray[0];
-            genomicScoreState.domainMin = genomicScoreState.score.bins[0];
-            genomicScoreState.domainMax =
-              genomicScoreState.score.bins[genomicScoreState.score.bins.length - 1];
+            if (this.genomicScoresArray[0].domain != null) {
+              genomicScoreState.domainMin = genomicScoreState.score.domain[0];
+              genomicScoreState.domainMax = genomicScoreState.score.domain[1];
+            } else {
+              genomicScoreState.domainMin = genomicScoreState.score.bins[0];
+              genomicScoreState.domainMax =
+                genomicScoreState.score.bins[genomicScoreState.score.bins.length - 1];
+            }
         }
         this.genomicScoresState.genomicScoresState.push(genomicScoreState);
     }
