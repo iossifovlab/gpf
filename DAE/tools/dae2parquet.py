@@ -128,7 +128,7 @@ def dae_build(argv):
         config=config,
         outprefix="out/w1202s766e611")
 
-    pool = multiprocessing.Pool(processes=10)
+    pool = multiprocessing.Pool(processes=15)
     pool.map(converter, build_contigs)
 
 
