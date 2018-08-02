@@ -13,21 +13,23 @@ logger = logging.getLogger(__name__)
 
 class Dataset(object):
 
-    def __init__(self, name, variants, preview_columns=None, download_columns=None):
+    def __init__(
+            self, name, studies, preview_columns=None, download_columns=None):
         if preview_columns is None:
             preview_columns = []
 
         if download_columns is None:
             download_columns = []
 
-        self._variants = variants
+        self._studies = studies
 
         self.name = name
         self.preview_columns = preview_columns
         self.download_columns = download_columns
 
     def get_variants(self, **kwargs):
-        return self._variants.query_variants(**kwargs)
+        return itertools.chain(*[
+            study.query_variants(**kwargs) for study in self._studies])
 
     def get_column_labels(self):
         return ['']

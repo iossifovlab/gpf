@@ -1,35 +1,54 @@
+import logging
+
 from datasets.dataset import Dataset
 from datasets.dataset_config import DatasetConfig
-from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
-from variants.annotate_composite import AnnotatorComposite
-from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
-from variants.configure import Configure
-from variants.raw_vcf import RawFamilyVariants
+from studies.study_definition import StudyDefinition
+from studies.study_factory import StudyFactory
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class DatasetFactory(object):
 
-    def __init__(self, _class=Dataset):
+    def __init__(self, _class=Dataset, studies_definition=None):
+        if studies_definition is None:
+            studies_definition = StudyDefinition.from_environment()
+
         self._class = _class
+        self.studies_factory = StudyFactory()
+        self.studies_definition = studies_definition
 
     def get_dataset(self, dataset_config):
         assert isinstance(dataset_config, DatasetConfig)
 
-        # TODO: only create these if they are in the config
-        effect_annotator = VcfVariantEffectsAnnotator()
-        allele_frequency_annotator = VcfAlleleFrequencyAnnotator()
-        composite_annotator = AnnotatorComposite(
-            annotators=[effect_annotator, allele_frequency_annotator])
+        studies = []
+        for study_name in dataset_config.studies:
+            study_config = self.studies_definition.get_study_config(study_name)
+            if study_config:
+                studies.append(self.studies_factory.make_study(study_config))
+            else:
+                LOGGER.warning(
+                    "Unknown study: %s, known studies: %s",
+                    ",".join(study_name),
+                    ",".join(self.studies_definition.get_all_study_names()))
 
-        variants_config = Configure.from_prefix_vcf(
-            dataset_config.variants_prefix)
-
-        variants = RawFamilyVariants(
-            variants_config, annotator=composite_annotator)
+        if not studies:
+            raise ValueError(
+                "No known studies: [{}]"
+                    .format(",".join(dataset_config.studies))
+            )
 
         return self._class(
             dataset_config.dataset_name,
-            variants,
+            studies,
             dataset_config.list('preview_columns'),
             dataset_config.list('download_columns')
         )
+
+    @staticmethod
+    def with_studies_config(config_file=None, work_dir=None):
+        studies_definition = StudyDefinition \
+            .from_config_file(config_file, work_dir)
+
+        return DatasetFactory(studies_definition=studies_definition)

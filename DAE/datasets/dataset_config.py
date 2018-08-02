@@ -8,7 +8,7 @@ class DatasetConfig(ConfigBox):
     def __init__(self, *args, **kwargs):
         super(DatasetConfig, self).__init__(*args, **kwargs)
         assert self.dataset_name
-        assert self.variants_prefix
+        assert self.studies
         assert self.preview_columns
         assert self.download_columns
         assert self.data_dir
@@ -34,12 +34,10 @@ class DatasetConfig(ConfigBox):
             }
         )
 
-        result = DatasetConfig(config['dataset'])
-        if not os.path.isabs(result.variants_prefix):
-            result.variants_prefix = os.path.join(
-                result.data_dir, result.variants_prefix)
+        dataset_config = config['dataset']
+        dataset_config['studies'] = dataset_config['studies'].split(',')
 
-        return result
+        return DatasetConfig(config['dataset'])
 
     def get_dataset_description(self):
         return {
