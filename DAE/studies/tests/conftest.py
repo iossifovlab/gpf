@@ -22,10 +22,10 @@ def study_definition(study_configs):
 
 
 @pytest.fixture()
-def study_factory(study_definition):
-    return StudyFactory(study_definition)
+def study_factory():
+    return StudyFactory()
 
 
 @pytest.fixture()
-def test_study(study_factory):
-    return study_factory.get_study('test')
+def test_study(study_factory, study_definition):
+    return study_factory.make_study(study_definition.get_study_config('test'))
