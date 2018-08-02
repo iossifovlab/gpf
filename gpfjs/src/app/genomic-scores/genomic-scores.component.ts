@@ -35,6 +35,14 @@ export class GenomicScoresComponent {
     return this.genomicScoreState.rangeEnd;
   }
 
+  get domainMin() {
+    return this.genomicScoreState.domainMin;
+  }
+
+  get domainMax() {
+    return this.genomicScoreState.domainMax;
+  }
+
   private updateLabels() {
     this.rangeChanges.next([
       this.genomicScoreState.score.score,
@@ -47,9 +55,7 @@ export class GenomicScoresComponent {
     this.genomicScoreState.score = selectedGenomicScores;
     this.genomicScoreState.rangeStart = null;
     this.genomicScoreState.rangeEnd = null;
-    this.genomicScoreState.domainMin = selectedGenomicScores.bins[0];
-    this.genomicScoreState.domainMax =
-      selectedGenomicScores.bins[selectedGenomicScores.bins.length - 1];
+    this.genomicScoreState.changeDomain(selectedGenomicScores);
     this.updateLabels();
   }
 

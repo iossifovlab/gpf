@@ -32,11 +32,7 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
 
     addFilter(genomicScoreState: GenomicScoreState = null) {
         if (!genomicScoreState) {
-            genomicScoreState = new GenomicScoreState();
-            genomicScoreState.score = this.genomicScoresArray[0];
-            genomicScoreState.domainMin = genomicScoreState.score.bins[0];
-            genomicScoreState.domainMax =
-              genomicScoreState.score.bins[genomicScoreState.score.bins.length - 1];
+            genomicScoreState = new GenomicScoreState(this.genomicScoresArray[0]);
         }
         this.genomicScoresState.genomicScoresState.push(genomicScoreState);
     }
