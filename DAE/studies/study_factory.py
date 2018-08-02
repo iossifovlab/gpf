@@ -17,6 +17,7 @@ class StudyFactory(object):
                 .format(study_config.type, list(self.STUDY_TYPES.keys()))
             )
 
-        variants = self.STUDY_TYPES[study_config.type](prefix=study_config.prefix)
+        variants = self.STUDY_TYPES[study_config.type](
+            prefix=study_config.prefix)
 
         return Study(variants)

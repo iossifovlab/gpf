@@ -17,18 +17,18 @@ class StudyConfig(ConfigBox):
         self.make_vcf_prefix_absolute_path()
 
     @classmethod
-    def list_from_config(cls, path='studies.conf', work_dir=None):
+    def list_from_config(cls, config_file='studies.conf', work_dir=None):
         if work_dir is None:
             pass
             # FIXME: is this necessary?
             # from default_settings import DATA_DIR
             # work_dir = DATA_DIR
-        if not os.path.exists(path):
-            path = os.path.join(work_dir, path)
-        assert os.path.exists(path), path
+        if not os.path.exists(config_file):
+            config_file = os.path.join(work_dir, config_file)
+        assert os.path.exists(config_file), config_file
 
         config = reusables.config_dict(
-            path,
+            config_file,
             auto_find=False,
             verify=True,
             defaults={

@@ -11,21 +11,21 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def study_configs():
     return StudyConfig.list_from_config(work_dir=fixtures_dir())
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def study_definition(study_configs):
     return StudyDefinition.from_config(study_configs)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def study_factory():
     return StudyFactory()
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def test_study(study_factory, study_definition):
     return study_factory.make_study(study_definition.get_study_config('test'))
