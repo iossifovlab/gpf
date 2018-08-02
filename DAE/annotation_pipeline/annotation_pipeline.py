@@ -17,7 +17,7 @@ import re
 
 from tools import *
 from tools.utilities import assign_values
-import preannotators.location
+#import preannotators.location
 
 def str_to_class(val):
     return reduce(getattr, val.split("."), sys.modules[__name__])
@@ -33,32 +33,31 @@ class MyConfigParser(ConfigParser.SafeConfigParser):
 
 class MultiAnnotator(object):
 
-    def __init__(self, config_file, header=None, reannotate=False,
-            preannotators=[], split_column=None, split_separator=',',
-            default_arguments={}):
-        self.header = header
-        self.reannotate = reannotate
-        self.preannotators = preannotators
+    def __init__(self, opts):
+        self.header = opts['header']
+        self.reannotate = opts['reannotate']
+        self.preannotators = opts['preannotators']
 
         self.annotators = []
         virtual_columns_indices = []
         all_columns_labels = set()
 
-        for preannotator in self.preannotators:
-            self.annotators.append({
-                'instance': preannotator,
-                'columns': OrderedDict([(c, c) for c in preannotator.new_columns])
-            })
-            all_columns_labels.update(preannotator.new_columns)
-            if self.header:
-                self.header.extend(preannotator.new_columns)
-            virtual_columns_indices.extend(
-                [assign_values(column, self.header)
-                 for column in preannotator.new_columns])
+        if(opts['skip_preannotators']==False):
+            for preannotator in self.preannotators:
+                self.annotators.append({
+                    'instance': preannotator,
+                    'columns': OrderedDict([(c, c) for c in preannotator.new_columns])
+                })
+                all_columns_labels.update(preannotator.new_columns)
+                if self.header:
+                    self.header.extend(preannotator.new_columns)
+                virtual_columns_indices.extend(
+                    [assign_values(column, self.header)
+                     for column in preannotator.new_columns])
 
         config_parser = MyConfigParser()
         config_parser.optionxform = str
-        config_parser.read(config_file)
+        config_parser.read(opts['config_file'])
         self.config = Box(common.config.to_dict(config_parser),
             default_box=True, default_box_attr=None)
 
@@ -66,7 +65,7 @@ class MultiAnnotator(object):
         for annotation_step in config_parser.sections():
             annotation_step_config = self.config[annotation_step]
 
-            for default_argument, value in default_arguments.items():
+            for default_argument, value in opts['default_arguments'].items():
                 if annotation_step_config.options[default_argument] is None:
                     annotation_step_config.options[default_argument] = value
 
@@ -74,7 +73,7 @@ class MultiAnnotator(object):
             all_columns_labels.update(step_columns_labels)
 
             if self.header is not None:
-                if reannotate:
+                if opts['reannotate']:
                     new_columns = [column for column in step_columns_labels
                                    if column not in self.header]
                 else:
@@ -96,12 +95,12 @@ class MultiAnnotator(object):
         self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
                                        if i not in virtual_columns_indices]
 
-        if split_column is None:
+        if opts['split_column'] is None:
             self._split_variant = lambda v: [v]
             self._join_variant = lambda v: v[0]
         else:
-            self.split_index = assign_values(split_column, self.header)
-            self.split_separator = split_separator
+            self.split_index = assign_values(opts['split_column'], self.header)
+            self.split_separator = opts['split_separator']
 
     def _split_variant(self, line):
         return [line[:self.split_index-1] + [value] + line[self.split_index:]
@@ -192,7 +191,7 @@ def get_argument_parser():
     parser.add_argument('--separator', help='separator used in the split column; defaults to ","',
         default=',', action='store')
     parser.add_argument('--options', help='add default arguments', action='append', metavar=('=OPTION:VALUE'))
-    parser.add_argument('--skip-preannotator', help='skips preannotators', action='store_true')
+    parser.add_argument('--skip-preannotators', help='skips preannotators', action='store_true')
     parser.add_argument('infile', nargs='?', action='store',
         default='-', help='path to input file; defaults to stdin')
     parser.add_argument('outfile', nargs='?', action='store',
@@ -260,14 +259,19 @@ def main():
 
             options.append(split_options)
 
-    if(opts.skip_preannotator==False):
-        preannotators = PreannotatorLoader.load_preannotators(opts, header)
-    else:
-        preannotators = []
+    multiAnnotator_opts = {
+            'config_file':opts.config,
+            'header':header,
+            'reannotate':(not opts.always_add),
+            'preannotators':PreannotatorLoader.load_preannotators(opts,header),
+            'split_column':opts.split,
+            'split_separator':opts.separator,
+            'default_arguments':dict(options),
+            'skip_preannotators':opts.skip_preannotators
+    }
 
-    annotator = MultiAnnotator(opts.config, header, not opts.always_add,
-        preannotators, opts.split, opts.separator, dict(options))
-
+    annotator = MultiAnnotator(multiAnnotator_opts)
+    
     annotator.annotate_file(variantFile, out)
 
     if opts.infile != '-' and not opts.region:
