@@ -6,16 +6,17 @@ from datasets.dataset_factory import DatasetFactory
 from datasets.datasets_definition import SingleFileDatasetsDefinition
 
 
-def create_dataset_wrapper_factory(dataset_definition):
-    return DatasetFactory(dataset_definition, _class=DatasetWrapper)
+def create_dataset_wrapper_factory():
+    return DatasetFactory(_class=DatasetWrapper)
 
 
 def load_dataset(fixtures_folder, dataset_name):
     definition = SingleFileDatasetsDefinition(
         '{}.conf'.format(dataset_name), fixtures_folder)
 
-    dataset_factory = create_dataset_wrapper_factory(definition)
-    result = dataset_factory.get_dataset(dataset_name)
+    dataset_factory = create_dataset_wrapper_factory()
+    result = dataset_factory.get_dataset(
+        definition.get_dataset_config(dataset_name))
 
     print(result)
     assert result is not None

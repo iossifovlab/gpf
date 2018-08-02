@@ -9,11 +9,10 @@ from variants.raw_vcf import RawFamilyVariants
 
 class DatasetFactory(object):
 
-    def __init__(self, dataset_definition, _class=Dataset):
-        self.dataset_definition = dataset_definition
+    def __init__(self, _class=Dataset):
         self._class = _class
 
-    def _from_dataset_config(self, dataset_config):
+    def get_dataset(self, dataset_config):
         assert isinstance(dataset_config, DatasetConfig)
 
         # TODO: only create these if they are in the config
@@ -34,34 +33,3 @@ class DatasetFactory(object):
             dataset_config.list('preview_columns'),
             dataset_config.list('download_columns')
         )
-
-    def get_dataset_names(self):
-        return self.dataset_definition.dataset_ids()
-
-    def get_dataset(self, dataset_id):
-        config = self.dataset_definition.get_dataset_config(dataset_id)
-
-        if config:
-            return self._from_dataset_config(config)
-
-        return None
-
-    def get_all_datasets(self):
-        return [
-            self._from_dataset_config(config)
-            for config in self.dataset_definition.get_all_dataset_configs()
-        ]
-
-    def get_dataset_description(self, dataset_id):
-        config = self.dataset_definition.get_dataset_config(dataset_id)
-
-        if config:
-            return config.get_dataset_description()
-
-        return None
-
-    def get_dataset_descriptions(self):
-        return filter(lambda c: c is not None, [
-            config.get_dataset_description()
-            for config in self.dataset_definition.get_all_dataset_configs()
-        ])
