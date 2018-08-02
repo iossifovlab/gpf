@@ -6,7 +6,6 @@ Created on Nov 7, 2016
 import numpy as np
 from collections import OrderedDict
 import ConfigParser
-from ast import literal_eval
 
 from genomic_values import GenomicValues
 from gene.config import GeneInfoConfig
@@ -36,8 +35,8 @@ class Weights(GenomicValues):
         self.filename = self.config.config.get(self.section_name, 'file')
 
         if self.config.config.has_option(self.section_name, 'range'):
-            self.range = tuple(map(float, literal_eval(self.config.config.get(
-                self.section_name, 'range'))))
+            self.range = tuple(map(float, self.config.config.get(
+                self.section_name, 'range').split(',')))
         else:
             self.range = None
 

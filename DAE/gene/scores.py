@@ -1,7 +1,6 @@
 import ConfigParser
 from box import Box
 from collections import OrderedDict
-from ast import literal_eval
 
 from genomic_values import GenomicValues
 from Config import Config
@@ -22,8 +21,8 @@ class Scores(GenomicValues):
         self.yscale = self.config[self.section_name].yscale
         self.filename = self.config[self.section_name].file
         if self.config[self.section_name].range:
-            self.range = tuple(map(float, literal_eval(
-                self.config[self.section_name].range)))
+            self.range = tuple(map(
+                float, self.config[self.section_name].range.split(',')))
         else:
             self.range = None
 
