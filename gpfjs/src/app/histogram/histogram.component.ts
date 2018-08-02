@@ -85,7 +85,7 @@ export class HistogramComponent implements OnInit, OnChanges {
     if ('bins' in changes || 'bars' in changes) {
       let bins: Array<number> = [];
       let bars: Array<number> = [];
-      for (let i  = 0; i < this.bins.length - 1; i++) {
+      for (let i  = 0; i < this.bins.length; i++) {
         if (this.bins[i] < this.domainMin || this.bins[i] > this.domainMax) {
           continue
         }

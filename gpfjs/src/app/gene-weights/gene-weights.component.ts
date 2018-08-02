@@ -74,14 +74,7 @@ export class GeneWeightsComponent extends QueryStateWithErrorsProvider implement
     this.geneWeightsState.weight = selectedGeneWeights;
     this.geneWeightsState.rangeStart = null;
     this.geneWeightsState.rangeEnd = null;
-    if (selectedGeneWeights.domain != null) {
-      this.geneWeightsState.domainMin = selectedGeneWeights.domain[0];
-      this.geneWeightsState.domainMax = selectedGeneWeights.domain[1];
-    } else {
-      this.geneWeightsState.domainMin = selectedGeneWeights.bins[0];
-      this.geneWeightsState.domainMax =
-        selectedGeneWeights.bins[selectedGeneWeights.bins.length - 1];
-    }
+    this.geneWeightsState.changeDomain(selectedGeneWeights)
     this.updateLabels();
   }
 
