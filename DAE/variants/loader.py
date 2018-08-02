@@ -83,8 +83,11 @@ class RawVariantsLoader(object):
             return self.load_annotation_file(
                 self.config.annotation, storage=storage)
         else:
+            # TODO: add test for this
             from variants.builder import variants_builder
-            return variants_builder(self.config.prefix)
+            variants_builder(self.config.prefix)
+            return self.load_annotation_file(
+                self.config.annotation, storage=storage)
 
     @staticmethod
     def convert_array_of_strings(token):
