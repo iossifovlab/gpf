@@ -1,10 +1,10 @@
 import ConfigParser
-import common.config
 from box import Box
 from collections import OrderedDict
 
 from genomic_values import GenomicValues
 from Config import Config
+import common.config
 
 
 class Scores(GenomicValues):
@@ -20,6 +20,11 @@ class Scores(GenomicValues):
         self.xscale = self.config[self.section_name].xscale
         self.yscale = self.config[self.section_name].yscale
         self.filename = self.config[self.section_name].file
+        if self.config[self.section_name].range:
+            self.range = tuple(map(
+                float, self.config[self.section_name].range.split(',')))
+        else:
+            self.range = None
 
         self._load_data()
 
