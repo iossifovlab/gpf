@@ -17,7 +17,6 @@ import re
 
 from tools import *
 from tools.utilities import assign_values
-import preannotators.location
 
 def str_to_class(val):
     return reduce(getattr, val.split("."), sys.modules[__name__])
