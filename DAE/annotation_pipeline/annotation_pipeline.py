@@ -71,7 +71,7 @@ class MultiAnnotator(object):
         options=dict(extracted_options)
        
         if(not hasattr(opts,'config')):
-            opts.conifg=None
+            opts.config=None
         if opts.config is None:
             sys.stderr.write("You should provide a config file location.\n")
             sys.exit(-78)
@@ -97,9 +97,9 @@ class MultiAnnotator(object):
             all_columns_labels.update(step_columns_labels)
 
             if self.header is not None:
-                if(not hasattr(opts,'always_add')):
+                if(not hasattr(opts,'reannotate')):
                     opts.always_add=False
-                if not opts.always_add:
+                if opts.reannotate:
                     new_columns = [column for column in step_columns_labels
                                    if column not in self.header]
                 else:
