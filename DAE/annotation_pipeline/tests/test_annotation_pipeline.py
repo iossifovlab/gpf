@@ -13,6 +13,7 @@ from annotation_pipeline.tests import input_output
 class Annotator(object):
 
     def __init__(self, options, header):
+        print(options)
         self.default = options['default']
 
     def line_annotations(self, line, new_columns):
@@ -69,15 +70,16 @@ def virtuals_config():
     return StringIO(deepcopy(configs.VIRTUALS_CONFIG))
 
 @pytest.fixture
-def get_opts(config, reannotate=False, split=None, split_separator=']', skip_preannotators=True):
+def get_opts(config, reannotate=False, split=None, split_separator=']', skip_preannotators=True, default_args='default:False'):
     class AnnotatorOpts:
-        def __init__(self, opt_conf, opt_reannotate, opt_split, opt_splitsep, opt_skip_pre):
+        def __init__(self, opt_conf, opt_reannotate, opt_split, opt_splitsep, opt_skip_pre, opt_def_arg):
             self.config=opt_conf
             self.reannotate=opt_reannotate
             self.split=opt_split
             self.separator=opt_splitsep
             self.skip_preannotators=opt_skip_pre
-    return AnnotatorOpts(config, reannotate, split, split_separator, skip_preannotators)
+            self.default_arguments=[opt_def_arg]
+    return AnnotatorOpts(config, reannotate, split, split_separator, skip_preannotators, default_args)
 
 @pytest.fixture
 def base_multi_annotator(base_config, mocker):
@@ -98,9 +100,11 @@ def preannotator_multi_annotator(base_config, mocker):
 
 
 @pytest.fixture
-def defaults_arguments_multi_annotator(defaults_arguments_config, mocker):
-    defaults_arguments_opts = get_opts(defaults_arguments_config)
-    return MultiAnnotator(defaults_arguments_opts, header=['id', 'location', 'variant'])
+def defaults_arguments_multi_annotator(defaults_arguments_config, reannotate_config, mocker):
+    defaults_arguments_opts      = get_opts(defaults_arguments_config)
+    defaults_arguments_opts_alt  = get_opts(reannotate_config, default_args='default:True')
+    return (MultiAnnotator(defaults_arguments_opts, header=['id', 'location', 'variant']),
+           MultiAnnotator(defaults_arguments_opts_alt, header=['id','location','variant']))
 
 
 @pytest.fixture
@@ -190,9 +194,12 @@ def test_preannotator(preannotator_multi_annotator, base_input,
 
 def test_default_arguments(defaults_arguments_multi_annotator, base_input,
                            default_arguments_output, mocker):
-    annotation_output = StringIO()
-    defaults_arguments_multi_annotator.annotate_file(base_input, annotation_output)
+    annotation_output       = StringIO()
+    annotation_output_alt   = StringIO()
+    defaults_arguments_multi_annotator[0].annotate_file(base_input, annotation_output)
     assert str(annotation_output.getvalue()) == str(default_arguments_output)
+    defaults_arguments_multi_annotator[1].annotate_file(base_input, annotation_output_alt)
+    assert str(annotation_output_alt.getvalue()) == str(default_arguments_output)
 
     annotation_output.close()
 

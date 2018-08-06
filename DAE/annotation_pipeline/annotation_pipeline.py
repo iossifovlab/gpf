@@ -41,8 +41,6 @@ class MultiAnnotator(object):
         virtual_columns_indices = []
         all_columns_labels = set()
         
-        if(not hasattr(opts,'skip_preannotators')):
-            opts.skip_preannotators=False
         if(opts.skip_preannotators==False):
             for preannotator in self.preannotators:
                 self.annotators.append({
@@ -57,20 +55,16 @@ class MultiAnnotator(object):
                      for column in preannotator.new_columns])
 
         extracted_options = []
-        if(not hasattr(opts,'options')):
-            opts.options=None
-        if opts.options is not None:
-            for option in opts.options:
+        if opts.default_arguments is not None:
+            for option in opts.default_arguments:
                 split_options = option.split(':')
                 try:
                     split_options[1] = literal_eval(split_options[1])
                 except ValueError:
                     pass
-                exctracted_options.append(split_options)
-        options=dict(extracted_options)
+                extracted_options.append(split_options)
+        default_arguments=dict(extracted_options)
        
-        if(not hasattr(opts,'config')):
-            opts.config=None
         if opts.config is None:
             sys.stderr.write("You should provide a config file location.\n")
             sys.exit(-78)
@@ -88,7 +82,7 @@ class MultiAnnotator(object):
         for annotation_step in config_parser.sections():
             annotation_step_config = self.config[annotation_step]
 
-            for default_argument, value in options.items():
+            for default_argument, value in default_arguments.items():
                 if annotation_step_config.options[default_argument] is None:
                     annotation_step_config.options[default_argument] = value
 
@@ -96,8 +90,6 @@ class MultiAnnotator(object):
             all_columns_labels.update(step_columns_labels)
 
             if self.header is not None:
-                if(not hasattr(opts,'reannotate')):
-                    opts.always_add=False
                 if opts.reannotate:
                     new_columns = [column for column in step_columns_labels
                                    if column not in self.header]
@@ -120,15 +112,11 @@ class MultiAnnotator(object):
         self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
                                        if i not in virtual_columns_indices]
 
-        if(not hasattr(opts,'split')):
-            opts.split=None
         if opts.split is None:
             self._split_variant = lambda v: [v]
             self._join_variant = lambda v: v[0]
         else:
             self.split_index = assign_values(opts.split, self.header)
-            if(not hasattr(opts,'separator')):
-                opts.separator=','
             self.split_separator = opts.separator
 
     def _split_variant(self, line):
