@@ -33,14 +33,16 @@ class MyConfigParser(ConfigParser.SafeConfigParser):
 
 class MultiAnnotator(object):
 
-    def __init__(self, opts, header):
+    def __init__(self, opts, header=None):
         self.header = header
         self.preannotators = PreannotatorLoader.load_preannotators(opts,header)
 
         self.annotators = []
         virtual_columns_indices = []
         all_columns_labels = set()
-
+        
+        if(not hasattr(opts,'skip_preannotators')):
+            opts.skip_preannotators=False
         if(opts.skip_preannotators==False):
             for preannotator in self.preannotators:
                 self.annotators.append({
@@ -56,6 +58,8 @@ class MultiAnnotator(object):
 
         #moving specific argument handling from main in annotation_pipeline to here  
         extracted_options = []
+        if(not hasattr(opts,'options')):
+            opts.options=None
         if opts.options is not None:
             for option in opts.options:
                 split_options = option.split(':')
@@ -65,7 +69,9 @@ class MultiAnnotator(object):
                     pass
                 exctracted_options.append(split_options)
         options=dict(extracted_options)
-        
+       
+        if(not hasattr(opts,'config')):
+            opts.conifg=None
         if opts.config is None:
             sys.stderr.write("You should provide a config file location.\n")
             sys.exit(-78)
@@ -91,6 +97,8 @@ class MultiAnnotator(object):
             all_columns_labels.update(step_columns_labels)
 
             if self.header is not None:
+                if(not hasattr(opts,'always_add')):
+                    opts.always_add=False
                 if not opts.always_add:
                     new_columns = [column for column in step_columns_labels
                                    if column not in self.header]
@@ -113,11 +121,15 @@ class MultiAnnotator(object):
         self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
                                        if i not in virtual_columns_indices]
 
+        if(not hasattr(opts,'split')):
+            opts.split=None
         if opts.split is None:
             self._split_variant = lambda v: [v]
             self._join_variant = lambda v: v[0]
         else:
             self.split_index = assign_values(opts.split, self.header)
+            if(not hasattr(opts,'separator')):
+                opts.separator=','
             self.split_separator = opts.separator
 
     def _split_variant(self, line):
