@@ -25,12 +25,30 @@ class MyConfigParser(ConfigParser.SafeConfigParser):
     """Modified ConfigParser.SafeConfigParser that allow ':' in keys and only '=' as separator.
     """
     OPTCRE = re.compile(
-        r'(?P<option>[^=\s][^=]*)'          # allow only = 
-        r'\s*(?P<vi>[=])\s*'                # for option separator           
-        r'(?P<value>.*)$'                   
+        r'(?P<option>[^=\s][^=]*)'          # allow only =
+        r'\s*(?P<vi>[=])\s*'                # for option separator
+        r'(?P<value>.*)$'
         )
 
 class MultiAnnotator(object):
+    """
+    `MultiAnnotator` class processes user passed options and annotates variant data.
+    After processing of user options this class passes line by line the data
+    to `Annotators` and `Preannotators`.
+
+    Arguments of the constructor are:
+
+    * `reannotate` - True/False. True - reannotate column and don't add new columns.
+                     False - add new column and don't reannotate old columns.
+
+    * `preannotators` - list of `Preannotators`
+
+    * `split_column` - Column to split before annotation and generate values for
+                       all parts of split column and after that to join new values
+                       in one column.
+
+    * `split_separator` - Separator for split column, default value is `,`
+    """
 
     def __init__(self, config_file, header=None, reannotate=False,
             preannotators=[], split_column=None, split_separator=',',
@@ -150,6 +168,12 @@ class MultiAnnotator(object):
 
 
 class PreannotatorLoader(object):
+    """
+    Class for finding and loading `Preannotators`. It imports preannotator classes
+    from `annotation_pipeline/preannotators` and stores them in list.
+
+    It is used by `MultiAnnotator`.
+    """
 
     PREANNOTATOR_MODULES = None
 

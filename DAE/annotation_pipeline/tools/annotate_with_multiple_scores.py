@@ -10,6 +10,35 @@ from annotate_score_base import ScoreAnnotator
 
 
 def get_argument_parser():
+    """
+    MultipleScoresAnnotator options::
+
+        usage: annotate_with_multiple_scores.py [-h] [-c C] [-p P] [-x X] [-H]
+                                        [-D SCORES_DIRECTORY] [--direct]
+                                        [--scores SCORES] [--labels LABELS]
+                                        [infile] [outfile]
+
+        Program to annotate variants with multiple score files
+
+        positional arguments:
+          infile                path to input file; defaults to stdin
+          outfile               path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -c C                  chromosome column number/name
+          -p P                  position column number/name
+          -x X                  location (chr:pos) column number/name
+          -H                    no header in the input file
+          -D SCORES_DIRECTORY, --scores-directory SCORES_DIRECTORY
+                                directory containing the scores - each score should
+                                have its own subdirectory (defaults to $GFD_DIR)
+          --direct              read score files using tabix index (default: read
+                                score files iteratively)
+          --scores SCORES       comma separated list of scores to annotate with
+          --labels LABELS       comma separated list of labels for the new columns in
+                                the output file (defaults to score names)
+    """
     desc = """Program to annotate variants with multiple score files"""
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-c', help='chromosome column number/name', action='store')

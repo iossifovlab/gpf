@@ -35,7 +35,28 @@ def get_arguments():
     }
 
 class VariantFormatPreannotator(AnnotatorBase):
+    """
+    `VariantFormatPreannotator` is a `Preannotator` for creating
+    columns who are used for annotation of data.
 
+    Generated virtual columns are:
+
+    * `CSHL:location` - location in CSHL format
+
+    * `CSHL:chr` - chromosome in CSHL format
+
+    * `CSHL:position` - position in CSHL format
+
+    * `CSHL:variant` - variant in CSHL format
+
+    * `VCF:chr` - chromosome in VCF format
+
+    * `VCF:position` - position in VCF format
+
+    * `VCF:ref` - reference in VCF format
+
+    * `VCF:alt` - alternative in VCF format
+    """
     def __init__(self, opts, header=None):
         self._new_columns = [
             'CSHL:location', 'CSHL:chr', 'CSHL:position', 'CSHL:variant',
