@@ -56,7 +56,6 @@ class MultiAnnotator(object):
                     [assign_values(column, self.header)
                      for column in preannotator.new_columns])
 
-        #moving specific argument handling from main in annotation_pipeline to here  
         extracted_options = []
         if(not hasattr(opts,'options')):
             opts.options=None
@@ -78,7 +77,7 @@ class MultiAnnotator(object):
         elif not exists(opts.config):
             sys.stderr.write("The provided config file does not exist!\n")
             sys.exit(-78)
-        #end moving block
+
         config_parser = MyConfigParser()
         config_parser.optionxform = str
         config_parser.read(opts.config)

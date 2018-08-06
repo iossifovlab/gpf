@@ -212,10 +212,6 @@ def test_split_columns(split_column_multi_annotator, split_column_input,
     split_column_multi_annotator\
         .annotate_file(split_column_input, annotation_output)
     
-    print('1')
-    print(annotation_output.getvalue())
-    print('2')
-    print(str(split_column_output))
     assert str(annotation_output.getvalue()) == str(split_column_output)
 
     annotation_output.close()
