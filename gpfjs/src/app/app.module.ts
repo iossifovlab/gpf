@@ -140,6 +140,10 @@ import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
 import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
 import { SaveQueryButtonComponent } from './save-query-button/save-query-button.component';
 import { LoadQueryComponent } from './load-query/load-query.component';
+import { StudyFiltersBlockComponent } from './study-filters-block/study-filters-block.component';
+import { StudyFilterComponent } from './study-filter/study-filter.component';
+import { AddButtonComponent } from './add-button/add-button.component';
+import { RemoveButtonComponent } from './remove-button/remove-button.component';
 
 const appRoutes: Routes = [
   {
@@ -332,6 +336,10 @@ const appRoutes: Routes = [
     SaveQueryButtonComponent,
     LoadQueryComponent,
     SmallRemoveButtonComponent,
+    StudyFiltersBlockComponent,
+    StudyFilterComponent,
+    AddButtonComponent,
+    RemoveButtonComponent,
   ],
   imports: [
     BrowserModule,

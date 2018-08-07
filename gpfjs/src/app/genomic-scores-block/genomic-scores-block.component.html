@@ -2,16 +2,16 @@
   <div class="card">
       <div class="card-header card-title">
           Genomic scores
-          <span class="clickable" style="padding: 5px" (click)="addFilter()">
-              <span style="line-height:30px; padding: 5px">
-                  Add filter
-              </span>
-              <img style="height: 30px;" src="{{imgPathPrefix}}add_filter.svg">
-          </span>
+          <gpf-add-button
+            (addFilter)="addFilter($event)">
+          </gpf-add-button>
       </div>
       <div class="card-block">
         <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; trackBy: trackById; let i = index">
-            <img class="clickable" style="float: left; display: block; height: 30px;" src="{{imgPathPrefix}}remove_filter.svg" (click)="removeFilter(score)">
+            <gpf-remove-button
+              [field]="score"
+              (removeFilter)="removeFilter($event)">
+            </gpf-remove-button>
             <span style="padding: 5px; display: block; overflow: hidden">
                 <gpf-genomic-scores
                   [genomicScoreState]="score"

@@ -1,0 +1,11 @@
+span {
+    padding: 5px;
+}
+
+span,span {
+    line-height:30px;
+}
+
+span,img {
+    height: 30px;
+}
