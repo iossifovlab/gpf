@@ -10,7 +10,7 @@ import { environment } from '../../environments/environment';
 })
 export class RemoveButtonComponent {
   @Input() field: any;
-  @Output() removeFilter: EventEmitter<any> = new EventEmitter();
+  @Output() removeFilter: EventEmitter<any> = new EventEmitter(true);
 
   get imgPathPrefix() {
     return environment.imgPathPrefix;
