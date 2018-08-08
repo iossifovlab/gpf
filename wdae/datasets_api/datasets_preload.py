@@ -15,6 +15,8 @@ from django.db.utils import OperationalError, ProgrammingError
 from precompute.register import Precompute
 import logging
 
+from studies.study_definition import StudyDefinition
+
 logger = logging.getLogger(__name__)
 
 logger.info("HELLO")
@@ -24,15 +26,15 @@ class DatasetsPreload(Preload, Precompute):
 
     def __init__(self):
         super(DatasetsPreload, self).__init__()
-        # self.dataset_config = DatasetConfig()
         self.dataset_definition = DirectoryEnabledDatasetsDefinition()
+        self.studies_definition = StudyDefinition.from_environment()
         self.factory = DatasetFactory(
-            self.dataset_definition, _class=DatasetWrapper)
+            _class=DatasetWrapper, studies_definition=self.studies_definition)
 
     def precompute(self):
         try:
-            for ds in self.dataset_definition.get_datasets():
-                Dataset.recreate_dataset_perm(ds['id'])
+            for ds in self.dataset_definition.get_all_dataset_configs():
+                Dataset.recreate_dataset_perm(ds.dataset_id)
         except OperationalError:
             # Database migrations are probably not run yet, ignore exception
             pass
@@ -68,8 +70,7 @@ class DatasetsPreload(Preload, Precompute):
     def get(self):
         return self
 
-    def get_factory(self):
-        return self.factory
-
-    def get_config(self):
+    def get_definitions(self):
         return self.dataset_definition
+
+

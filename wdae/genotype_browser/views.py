@@ -10,6 +10,7 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
 
+from datasets.dataset_factory import DatasetFactory
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 from helpers.logger import log_filter
@@ -33,13 +34,22 @@ class QueryBaseView(views.APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
     permission_classes = (IsDatasetAllowed,)
 
+    datasets_cache = {}
+
+    def get_dataset(self, dataset_id):
+        if dataset_id not in self.datasets_cache:
+            config = self.dataset_definitions.get_dataset_config(dataset_id)
+            self.datasets_cache[dataset_id] = self.dataset_factory.get_dataset(config)
+
+        return self.datasets_cache[dataset_id]
+
     def __init__(self):
         register = preloaded.register
         self.datasets = register.get('datasets')
         assert self.datasets is not None
 
-        self.datasets_config = self.datasets.get_config()
-        self.datasets_factory = self.datasets.get_factory()
+        self.dataset_definitions = self.datasets.get_definitions()
+        self.dataset_factory = DatasetFactory()
 
 
 class QueryPreviewView(QueryBaseView):
@@ -83,14 +93,14 @@ class QueryPreviewView(QueryBaseView):
             self.check_object_permissions(request, dataset_id)
 
             if dataset_id == MetaDataset.ID:
-                dataset_ids = self.datasets_config.get_dataset_ids()
+                dataset_ids = self.dataset_definitions.get_dataset_ids()
                 dataset_ids.remove(MetaDataset.ID)
                 data['dataset_ids'] = filter(
                     lambda dataset_id: IsDatasetAllowed.user_has_permission(
                         request.user, dataset_id),
                     dataset_ids)
 
-            dataset = self.datasets_factory.get_dataset(dataset_id)
+            dataset = self.get_dataset(dataset_id)
             # LOGGER.info("dataset " + str(dataset))
 
             response = get_variants_web_preview(
@@ -151,7 +161,7 @@ class QueryDownloadView(QueryBaseView):
             self.check_object_permissions(request, data['datasetId'])
 
             if data['datasetId'] == MetaDataset.ID:
-                dataset_ids = self.datasets_config.get_dataset_ids()
+                dataset_ids = self.dataset_definitions.get_dataset_ids()
                 dataset_ids.remove(MetaDataset.ID)
                 data['dataset_ids'] = filter(
                     lambda dataset_id: IsDatasetAllowed.user_has_permission(

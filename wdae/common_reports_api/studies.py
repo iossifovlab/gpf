@@ -96,9 +96,9 @@ def get_denovo_studies_names():
     return r
 
 def get_sorted_datasets():
-    datasets = preloaded.register.get('datasets').get_factory().get_datasets()
+    datasets = preloaded.register.get('datasets').get_definitions().get_all_dataset_configs()
     return sorted(datasets,
-        key=lambda ds: ds.descriptor.get('wdae.production.order', '0'))
+        key=lambda ds: ds.get('wdae.production.order', '0'))
 
 def get_datasets_names():
     return [(dataset.descriptor['name'], '')
@@ -157,7 +157,7 @@ class StudiesSummaries(Precompute):
     @classmethod
     def __build_studies_summaries(cls):
         result = [
-            cls.__build_single_studies_summary(dataset.descriptor['name'], '',
+            cls.__build_single_studies_summary(dataset.dataset_name, '',
                 dataset.studies)
             for dataset in get_sorted_datasets()
         ]

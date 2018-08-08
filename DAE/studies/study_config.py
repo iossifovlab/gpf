@@ -53,3 +53,4 @@ class StudyConfig(ConfigBox):
         if not os.path.isabs(self.prefix):
             self.prefix = os.path.abspath(
                 os.path.join(self.work_dir, self.study_name, self.prefix))
+

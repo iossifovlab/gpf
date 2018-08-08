@@ -57,13 +57,13 @@ def mat2str(mat, col_sep=" ", row_sep="/"):
 
 
 def gene_effect_get_worst_effect(gs):
-    if len(gs) == 0:
+    if gs is None or len(gs) == 0:
         return ''
     return ','.join([e.worst for e in gs])
 
 
 def gene_effect_get_genes(gs):
-    if len(gs) == 0:
+    if gs is None or len(gs) == 0:
         return ''
     genes_set = set([x.symbol for g in gs for x in g.genes])
     genes = list(genes_set)
@@ -144,29 +144,29 @@ def variant_count_v3(bs, c, location=None, gender=None, denovo_parent=None):
 STANDARD_ATTRS = {
     "family": "family_id",
     "location": "location",
-    "variant": "vcf",
+    "variant": "variant",
 }
 
 
-def get_standard_attr(key, v):
-    return getattr(v, STANDARD_ATTRS[key])
+def get_standard_attr(property, v):
+    return getattr(v.alt_alleles[0], property)
 
 
 STANDARD_ATTRS_LAMBDAS = {
-    key: functools.partial(get_standard_attr, key)
+    key: functools.partial(get_standard_attr, val)
     for key, val in STANDARD_ATTRS.items()
 }
 
 SPECIAL_ATTRS_FORMAT = {
-    "bestSt": lambda v: mat2str(getattr(v, "bestSt")),
-    "counts": lambda v: mat2str(getattr(v, "counts")),
-    "genotype": lambda v: mat2str(getattr(v, "genotype")),
-    "pedigree": lambda v: generate_pedigree(v,),
-    "effects": lambda v: ge2str(getattr(v, "effects")),
+    "bestSt": lambda v: mat2str(v.bestSt),
+    "counts": lambda v: mat2str(v.alt_alleles[0]["counts"]),
+    "genotype": lambda v: mat2str(v.alt_alleles[0]["genotype"]),
+    "pedigree": lambda v: generate_pedigree(v),
+    "effects": lambda v: ge2str(v.alt_alleles[0]["effects"]),
     "requestedGeneEffects": lambda v:
-        ge2str(getattr(v, "requestedGeneEffects")),
-    "genes": lambda v: gene_effect_get_genes(getattr(v, "effects")),
-    "worstEffect": lambda v: gene_effect_get_worst_effect(getattr(v, "effects"))
+        ge2str(v.alt_alleles[0]["requestedGeneEffects"]),
+    "genes": lambda v: gene_effect_get_genes(v.alt_alleles[0]["effects"]),
+    "worstEffect": lambda v: gene_effect_get_worst_effect(v.alt_alleles[0]["effects"])
 }
 
 

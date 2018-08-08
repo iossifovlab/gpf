@@ -100,6 +100,7 @@ class RawFamilyVariants(FamiliesBase):
         assert self.config is not None
 
         self.VF = variant_factory
+        self.prefix = prefix
         self._load(annotator, region)
 
     def is_empty(self):
@@ -140,6 +141,7 @@ class RawFamilyVariants(FamiliesBase):
         return FamiliesBase.load_pedigree_file(self.config.pedigree)
 
     def _load(self, annotator, region):
+        print("prefix", self.prefix)
         loader = RawVariantsLoader(self.config)
         self.ped_df = self._load_pedigree()
 
