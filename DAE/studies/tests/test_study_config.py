@@ -6,7 +6,7 @@ def test_configs_is_read_properly(study_configs):
 
 
 def test_fixture_configs_have_correct_studies(study_configs):
-    expected = {'test'}
+    expected = {'test', 'test_enabled_true'}
     studies = list(study.study_name for study in study_configs)
     assert set(studies) == expected
 
@@ -18,4 +18,3 @@ def test_prefix_gets_default_location_as_config(study_configs):
     assert test_study_config is not None
 
     assert os.path.isabs(test_study_config.prefix)
-
