@@ -38,6 +38,9 @@ class StudyConfig(ConfigBox):
 
         result = list()
         for section in config.keys():
+            if 'enabled' in config[section]:
+                if config[section]['enabled'] == 'false':
+                    continue
             cls.add_default_study_name_from_section(config, section)
 
             result.append(StudyConfig(config[section]))
