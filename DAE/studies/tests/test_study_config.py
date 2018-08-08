@@ -18,3 +18,10 @@ def test_prefix_gets_default_location_as_config(study_configs):
     assert test_study_config is not None
 
     assert os.path.isabs(test_study_config.prefix)
+
+
+def test_enabled_option(study_configs):
+    studies = set([study.study_name for study in study_configs])
+
+    assert studies == {'test', 'test_enabled_true'}
+    assert 'test_enabled_false' not in studies
