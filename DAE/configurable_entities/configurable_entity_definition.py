@@ -24,19 +24,19 @@ class ConfigurableEntityDefinition(object):
         return list(self.configs.keys())
 
     def directory_enabled_configurable_entity_definition(
-            self, configurable_entities_dir):
+            self, configurable_entities_dir, configurable_entity_config,
+            config_key):
         assert isinstance(configurable_entities_dir, str),\
             type(configurable_entities_dir)
         assert os.path.exists(configurable_entities_dir),\
             configurable_entities_dir
-
-        self.configurable_entities_dir = configurable_entities_dir
 
         enabled_dir = os.path.join(configurable_entities_dir, self.ENABLED_DIR)
         assert os.path.exists(enabled_dir), enabled_dir
         assert os.path.isdir(enabled_dir), enabled_dir
 
         config_paths = []
+        configs = []
 
         for path in os.listdir(enabled_dir):
             if not os.path.isdir(path) and path.endswith('.conf'):
@@ -44,13 +44,21 @@ class ConfigurableEntityDefinition(object):
 
         print(config_paths)
 
-        self.append_to_config(config_paths)
+        for config_path in config_paths:
+            configs.append(configurable_entity_config.from_config(config_path))
+
+        self.configs = {conf[config_key]: conf for conf in configs}
 
     def single_file_configurable_entity_definition(
-            self, config_path, work_dir):
+            self, config_path, work_dir, configurable_entity_config,
+            config_key):
         self.config_path = config_path
 
-        self.append_to_config(config_path, work_dir)
+        config = configurable_entity_config.from_config(config_path, work_dir)
+
+        self.configs = {
+            config[config_key]: config
+        }
 
         print(self.configs)
 

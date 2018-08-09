@@ -29,26 +29,13 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
             from default_settings import DATA_DATASETS_DIR
             datasets_dir = DATA_DATASETS_DIR
 
-        self.directory_enabled_configurable_entity_definition(datasets_dir)
-
-    def append_to_config(self, config_paths):
-        configs = []
-
-        for config_path in config_paths:
-            configs.append(DatasetConfig.from_config(config_path))
-
-        self.configs = {conf.dataset_id: conf for conf in configs}
+        self.directory_enabled_configurable_entity_definition(
+            datasets_dir, DatasetConfig, 'dataset_id')
 
 
 class SingleFileDatasetsDefinition(DatasetsDefinition):
 
     def __init__(self, config_path, work_dir=None):
         super(SingleFileDatasetsDefinition, self).__init__()
-        self.single_file_configurable_entity_definition(config_path, work_dir)
-
-    def append_to_config(self, config_path, work_dir):
-        config = DatasetConfig.from_config(config_path, work_dir)
-
-        self.configs = {
-            config.dataset_id: config
-        }
+        self.single_file_configurable_entity_definition(
+            config_path, work_dir, DatasetConfig, 'dataset_id')
