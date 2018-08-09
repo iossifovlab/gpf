@@ -1,47 +1,47 @@
 #!/usr/bin/env python
 
 import sys
-from os.path import exists, dirname, basename, realpath
 import glob
-import time, datetime
 import argparse
 import ConfigParser
 import common.config
+import re
+from os.path import exists, dirname, basename, realpath
 from box import Box
-import pysam
 from importlib import import_module
-import gzip
 from ast import literal_eval
 from collections import OrderedDict
-import re
-
-from tools import *
 from tools.utilities import assign_values
 from tools.utilities import main as main
+from tools import duplicate_columns
+
 
 def str_to_class(val):
     return reduce(getattr, val.split("."), sys.modules[__name__])
 
+
 class MyConfigParser(ConfigParser.SafeConfigParser):
-    """Modified ConfigParser.SafeConfigParser that allow ':' in keys and only '=' as separator.
+    """Modified ConfigParser.SafeConfigParser that
+    allows ':' in keys and only '=' as separator.
     """
     OPTCRE = re.compile(
-        r'(?P<option>[^=\s][^=]*)'          # allow only = 
-        r'\s*(?P<vi>[=])\s*'                # for option separator           
-        r'(?P<value>.*)$'                   
+        r'(?P<option>[^=\s][^=]*)'          # allow only =
+        r'\s*(?P<vi>[=])\s*'                # for option separator
+        r'(?P<value>.*)$'
         )
+
 
 class MultiAnnotator(object):
 
     def __init__(self, opts, header=None):
         self.header = header
-        self.preannotators = PreannotatorLoader.load_preannotators(opts,header)
+        self.preannotators = PreannotatorLoader.load_preannotators(opts, header)
 
         self.annotators = []
         virtual_columns_indices = []
         all_columns_labels = set()
-        
-        if(opts.skip_preannotators==False):
+
+        if not opts.skip_preannotators:
             for preannotator in self.preannotators:
                 self.annotators.append({
                     'instance': preannotator,
@@ -63,8 +63,8 @@ class MultiAnnotator(object):
                 except ValueError:
                     pass
                 extracted_options.append(split_options)
-        default_arguments=dict(extracted_options)
-       
+        default_arguments = dict(extracted_options)
+
         if opts.config is None:
             sys.stderr.write("You should provide a config file location.\n")
             sys.exit(-78)
@@ -76,7 +76,7 @@ class MultiAnnotator(object):
         config_parser.optionxform = str
         config_parser.read(opts.config)
         self.config = Box(common.config.to_dict(config_parser),
-            default_box=True, default_box_attr=None)
+                          default_box=True, default_box_attr=None)
 
         # config_parser.sections() this gives the sections in order which is important
         for annotation_step in config_parser.sections():
@@ -137,6 +137,7 @@ class MultiAnnotator(object):
         sys.stderr.write("...processing....................\n")
 
         annotators = self.annotators
+
         def annotate_line(line):
             for annotator in annotators:
                 columns = annotator['columns'].keys()
@@ -153,13 +154,12 @@ class MultiAnnotator(object):
                 output.write(l)
                 continue
             k += 1
-            if k%1000 == 0:
+            if k % 1000 == 0:
                 sys.stderr.write(str(k) + " lines processed\n")
 
             line = self._join_variant(
                 [annotate_line(line)
                  for line in self._split_variant(l.rstrip('\n').split("\t"))])
-
 
             line = [line[i-1] for i in self.stored_columns_indices]
 
@@ -198,22 +198,29 @@ class PreannotatorLoader(object):
 def get_argument_parser():
     desc = """Program to annotate variants combining multiple annotating tools"""
     parser = argparse.ArgumentParser(description=desc, conflict_handler='resolve')
-    parser.add_argument('-H', help='no header in the input file', default=False,  action='store_true', dest='no_header')
-    parser.add_argument('-c', '--config', help='config file location', required=True, action='store')
+    parser.add_argument('-H', help='no header in the input file',
+                        default=False,  action='store_true', dest='no_header')
+    parser.add_argument('-c', '--config', help='config file location',
+                        required=True, action='store')
     parser.add_argument('--always-add', help='always add columns; '
                         'default behavior is to replace columns with the same label',
                         default=False, action='store_true')
-    parser.add_argument('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)', action='store')
-    parser.add_argument('--split', help='split variants based on given column', action='store')
+    parser.add_argument('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)',
+                        action='store')
+    parser.add_argument('--split', help='split variants based on given column',
+                        action='store')
     parser.add_argument('--separator', help='separator used in the split column; defaults to ","',
-        default=',', action='store')
-    parser.add_argument('--options', help='add default arguments', action='append', metavar=('=OPTION:VALUE'))
-    parser.add_argument('--skip-preannotators', help='skips preannotators', action='store_true')
-        
+                        default=',', action='store')
+    parser.add_argument('--options', help='add default arguments',
+                        dest='default_arguments', action='append', metavar=('=OPTION:VALUE'))
+    parser.add_argument('--skip-preannotators', help='skips preannotators',
+                        action='store_true')
+
     for name, args in PreannotatorLoader.load_preannotators_arguments().items():
         parser.add_argument(name, **args)
 
     return parser
+
 
 if __name__ == '__main__':
     main(get_argument_parser(), MultiAnnotator)

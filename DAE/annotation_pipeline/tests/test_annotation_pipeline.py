@@ -13,7 +13,6 @@ from annotation_pipeline.tests import input_output
 class Annotator(object):
 
     def __init__(self, options, header):
-        print(options)
         self.default = options['default']
 
     def line_annotations(self, line, new_columns):
@@ -47,8 +46,11 @@ def mocker(mocker):
     mocker.patch.object(MyConfigParser, 'read', MyConfigParser.readfp)
     mocker.patch('annotation_pipeline.annotation_pipeline.str_to_class',
                  return_value=Annotator)
-    mocker.patch('annotation_pipeline.annotation_pipeline.PreannotatorLoader.load_preannotators', return_value=[Preannotator()])
-    mocker.patch('annotation_pipeline.annotation_pipeline.exists', return_value=True)
+    mocker.patch('annotation_pipeline.annotation_pipeline.PreannotatorLoader.load_preannotators',
+                 return_value=[Preannotator()])
+    mocker.patch('annotation_pipeline.annotation_pipeline.exists',
+                 return_value=True)
+
 
 @pytest.fixture
 def base_config():
@@ -69,17 +71,22 @@ def defaults_arguments_config():
 def virtuals_config():
     return StringIO(deepcopy(configs.VIRTUALS_CONFIG))
 
+
 @pytest.fixture
-def get_opts(config, reannotate=False, split=None, split_separator=']', skip_preannotators=True, default_args='default:False'):
+def get_opts(config, reannotate=False, split=None, split_separator=']',
+             skip_preannotators=True, default_args='default:False'):
     class AnnotatorOpts:
-        def __init__(self, opt_conf, opt_reannotate, opt_split, opt_splitsep, opt_skip_pre, opt_def_arg):
-            self.config=opt_conf
-            self.reannotate=opt_reannotate
-            self.split=opt_split
-            self.separator=opt_splitsep
-            self.skip_preannotators=opt_skip_pre
-            self.default_arguments=[opt_def_arg]
-    return AnnotatorOpts(config, reannotate, split, split_separator, skip_preannotators, default_args)
+        def __init__(self, opt_conf, opt_reannotate, opt_split,
+                     opt_splitsep, opt_skip_pre, opt_def_arg):
+            self.config = opt_conf
+            self.reannotate = opt_reannotate
+            self.split = opt_split
+            self.separator = opt_splitsep
+            self.skip_preannotators = opt_skip_pre
+            self.default_arguments = [opt_def_arg]
+    return AnnotatorOpts(config, reannotate, split, split_separator,
+                         skip_preannotators, default_args)
+
 
 @pytest.fixture
 def base_multi_annotator(base_config, mocker):
@@ -90,7 +97,7 @@ def base_multi_annotator(base_config, mocker):
 @pytest.fixture
 def reannotate_multi_annotator(reannotate_config, mocker):
     reannotate_opts = get_opts(reannotate_config, reannotate=True)
-    return MultiAnnotator(reannotate_opts, header=['id', 'location', 'variant']) 
+    return MultiAnnotator(reannotate_opts, header=['id', 'location', 'variant'])
 
 
 @pytest.fixture
@@ -101,10 +108,10 @@ def preannotator_multi_annotator(base_config, mocker):
 
 @pytest.fixture
 def defaults_arguments_multi_annotator(defaults_arguments_config, reannotate_config, mocker):
-    defaults_arguments_opts      = get_opts(defaults_arguments_config)
-    defaults_arguments_opts_alt  = get_opts(reannotate_config, default_args='default:True')
+    defaults_arguments_opts = get_opts(defaults_arguments_config)
+    defaults_arguments_opts_alt = get_opts(reannotate_config, default_args='default:True')
     return (MultiAnnotator(defaults_arguments_opts, header=['id', 'location', 'variant']),
-           MultiAnnotator(defaults_arguments_opts_alt, header=['id','location','variant']))
+            MultiAnnotator(defaults_arguments_opts_alt, header=['id', 'location', 'variant']))
 
 
 @pytest.fixture
@@ -194,8 +201,8 @@ def test_preannotator(preannotator_multi_annotator, base_input,
 
 def test_default_arguments(defaults_arguments_multi_annotator, base_input,
                            default_arguments_output, mocker):
-    annotation_output       = StringIO()
-    annotation_output_alt   = StringIO()
+    annotation_output = StringIO()
+    annotation_output_alt = StringIO()
     defaults_arguments_multi_annotator[0].annotate_file(base_input, annotation_output)
     assert str(annotation_output.getvalue()) == str(default_arguments_output)
     defaults_arguments_multi_annotator[1].annotate_file(base_input, annotation_output_alt)
@@ -218,7 +225,7 @@ def test_split_columns(split_column_multi_annotator, split_column_input,
     annotation_output = StringIO()
     split_column_multi_annotator\
         .annotate_file(split_column_input, annotation_output)
-    
+
     assert str(annotation_output.getvalue()) == str(split_column_output)
 
     annotation_output.close()
