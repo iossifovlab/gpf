@@ -41,12 +41,11 @@ class ScoreFile(object):
                 conf_parser.readfp(config_file)
 
                 conf_settings = dict(conf_parser.items('general'))
-                conf_settings_cols = dict(conf_parser.items('columns'))
+                conf_settings_cols = {'columns': dict(conf_parser.items('columns'))}
                 conf_settings.update(conf_settings_cols)
                 self.config = Box(conf_settings, default_box=True, default_box_attr=None)
         else:
-            sys.stderr.write("You must provide a configuration \
-                              file for the score file.\n")
+            sys.stderr.write("You must provide a configuration file for the score file.\n")
             sys.exit(-78)
 
         self.file = gzip.open(self.name, 'rb')
@@ -58,12 +57,15 @@ class ScoreFile(object):
         else:
             self.config.header = self.config.header.split(',')
 
-        if self.config.columns.search is not None:
-            self.config.columns.search = self.config.columns.search.split(',')
-            self.search_indices = [self.config.header.index(col)
-                                   for col in self.config.columns.search]
-        else:
-            self.search_indices = []
+        if self.config.columns.pos_end is None:
+            self.config.columns.pos_end = self.config.columns.pos_begin
+
+        self.search_indices = []
+        if hasattr(self.config.columns, 'search'):
+            if self.config.columns.search is not None:
+                self.config.columns.search = self.config.columns.search.split(',')
+                self.search_indices = [self.config.header.index(col)
+                                       for col in self.config.columns.search]
 
         self.config.columns.score = self.config.columns.score.split(',')
         self.scores_indices = [self.config.header.index(col)
