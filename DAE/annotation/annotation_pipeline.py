@@ -13,7 +13,7 @@ from ast import literal_eval
 from collections import OrderedDict
 from tools.utilities import assign_values
 from tools.utilities import main as main
-from tools import duplicate_columns
+from tools import *
 
 
 def str_to_class(val):
@@ -187,7 +187,7 @@ class MultiAnnotator(object):
 class PreannotatorLoader(object):
     """
     Class for finding and loading `Preannotators`. It imports preannotator classes
-    from `annotation_pipeline/preannotators` and stores them in list.
+    from `annotation/preannotators` and stores them in list.
 
     It is used by `MultiAnnotator`.
     """
@@ -226,7 +226,7 @@ def get_argument_parser():
                         default=False,  action='store_true', dest='no_header')
     parser.add_argument('-c', '--config', help='config file location',
                         required=True, action='store')
-    parser.add_argument('--always-add', help='always add columns; '
+    parser.add_argument('--reannotate', help='always add columns; '
                         'default behavior is to replace columns with the same label',
                         default=False, action='store_true')
     parser.add_argument('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)',

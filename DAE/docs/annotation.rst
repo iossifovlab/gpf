@@ -91,10 +91,10 @@ Example annotation pipeline configuration file::
     # Section name
     [Step-Effects]
 
-    # Annotator class. Complete list of annotators can be seen below in annotation_pipeline.tools module
+    # Annotator class. Complete list of annotators can be seen below in annotation.tools module
     annotator=annotate_variants.EffectAnnotator
 
-    # Annotator options. Complete list of option for annotators can be seen below in annotation_pipeline.tools module
+    # Annotator options. Complete list of option for annotators can be seen below in annotation.tools module
     options.c=CSHL:chr
     options.p=CSHL:position
     options.v=CSHL:variant
@@ -126,127 +126,127 @@ Example annotation pipeline configuration file::
 Add Annotator or Preannotator
 -----------------------------
 
-To create `Annotator` or `Preannotator` you need to create a class who inherits `annotation_pipeline.utilities.AnnotatorBase`. That class must implements methods `new_columns()` and `line_annotations(line, new_columns)`. `new_columns` must be a @property method who returns names of new columns, `line_annotations` must be a method who takes `line` and `new_columns` and returns a list of values for new_columns.
+To create `Annotator` or `Preannotator` you need to create a class who inherits `annotation.utilities.AnnotatorBase`. That class must implements methods `new_columns()` and `line_annotations(line, new_columns)`. `new_columns` must be a @property method who returns names of new columns, `line_annotations` must be a method who takes `line` and `new_columns` and returns a list of values for new_columns.
 
-`Annotator` directory is `annotation_pipeline/tools`. Except annotator you need to add `get_argument_parser()` function and you must call `main` function from `utilities` in annotator file. `get_argument_parser()` function must return an argument parser with annotator options. `utilities.main()` function takes two params first is argument parser and second is `Annotator`.
-`Preannotator` directory is `annotation_pipeline/preannotators`. Except preannotator you need to add `get_arguments()` function in preannotator file. This function must return dictionary with preannotator options. When you add preannotator in this directory it is found by `MultiAnnotator` class.
+`Annotator` directory is `annotation/tools`. Except annotator you need to add `get_argument_parser()` function and you must call `main` function from `utilities` in annotator file. `get_argument_parser()` function must return an argument parser with annotator options. `utilities.main()` function takes two params first is argument parser and second is `Annotator`.
+`Preannotator` directory is `annotation/preannotators`. Except preannotator you need to add `get_arguments()` function in preannotator file. This function must return dictionary with preannotator options. When you add preannotator in this directory it is found by `MultiAnnotator` class.
 
-annotation_pipeline.annotation_pipeline module
+annotation.annotation_pipeline module
 ----------------------------------------------
 
-.. automodule:: annotation_pipeline.annotation_pipeline
+.. automodule:: annotation.annotation_pipeline
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.preannotators module
+annotation.preannotators module
 ----------------------------------------
 
-annotation_pipeline.preannotators.variant_format module
+annotation.preannotators.variant_format module
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.preannotators.variant_format
+.. automodule:: annotation.preannotators.variant_format
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.tools module
+annotation.tools module
 --------------------------------
 
-annotation_pipeline.tools.utilities module
+annotation.tools.utilities module
 ++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.utilities
+.. automodule:: annotation.tools.utilities
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.tools.add_missense_scores module
+annotation.tools.add_missense_scores module
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.add_missense_scores
+.. automodule:: annotation.tools.add_missense_scores
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.tools.annotate_variants module
+annotation.tools.annotate_variants module
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.annotate_variants
+.. automodule:: annotation.tools.annotate_variants
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.tools.change_coordinate_base module
+annotation.tools.change_coordinate_base module
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.change_coordinate_base
+.. automodule:: annotation.tools.change_coordinate_base
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.tools.annotate_score_base module
+annotation.tools.annotate_score_base module
 ++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.annotate_score_base
+.. automodule:: annotation.tools.annotate_score_base
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.tools.annotate_with_multiple_scores module
+annotation.tools.annotate_with_multiple_scores module
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.annotate_with_multiple_scores
+.. automodule:: annotation.tools.annotate_with_multiple_scores
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.tools.duplicate_columns module
+annotation.tools.duplicate_columns module
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.duplicate_columns
+.. automodule:: annotation.tools.duplicate_columns
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-annotation_pipeline.tools.annotateFreqTransm module
+annotation.tools.annotateFreqTransm module
 +++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.annotateFreqTransm
+.. automodule:: annotation.tools.annotateFreqTransm
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.tools.annotate_with_genomic_scores module
+annotation.tools.annotate_with_genomic_scores module
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.annotate_with_genomic_scores
+.. automodule:: annotation.tools.annotate_with_genomic_scores
 
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.tools.concat_columns module
+annotation.tools.concat_columns module
 +++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.concat_columns
+.. automodule:: annotation.tools.concat_columns
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.tools.lift_over_variants module
+annotation.tools.lift_over_variants module
 +++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.lift_over_variants
+.. automodule:: annotation.tools.lift_over_variants
     :members:
     :undoc-members:
     :show-inheritance:
 
-annotation_pipeline.tools.relabel_chromosome module
+annotation.tools.relabel_chromosome module
 +++++++++++++++++++++++++++++++++++++++++++++++++++
 
-.. automodule:: annotation_pipeline.tools.relabel_chromosome
+.. automodule:: annotation.tools.relabel_chromosome
     :members:
     :undoc-members:
     :show-inheritance:

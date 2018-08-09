@@ -13,5 +13,5 @@ Welcome to DAE's documentation!
    pheno_tool
    enrichment_tool
    gene
-   annotation_pipeline
+   annotation
 

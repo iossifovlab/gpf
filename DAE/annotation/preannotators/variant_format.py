@@ -1,6 +1,6 @@
 import GenomeAccess
 import common.config
-from tools.utilities import *
+from annotation.tools.utilities import *
 from utils.vcf import cshl_format
 from utils.dae import dae2vcf_variant
 

@@ -1,7 +1,7 @@
 import pytest
 from box import Box
 from collections import OrderedDict
-from annotation_pipeline.tools.change_coordinate_base import CoordinateBaseAnnotator
+from annotation.tools.change_coordinate_base import CoordinateBaseAnnotator
 
 @pytest.fixture
 def change_coord_base():

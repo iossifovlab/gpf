@@ -2,12 +2,12 @@ import pytest
 from copy import deepcopy
 from StringIO import StringIO
 
-from annotation_pipeline.annotation_pipeline import MultiAnnotator,\
+from annotation.annotation_pipeline import MultiAnnotator,\
     MyConfigParser, str_to_class
-from annotation_pipeline.tools.duplicate_columns import\
+from annotation.tools.duplicate_columns import\
     DuplicateColumnsAnnotator
-from annotation_pipeline.tests import configs
-from annotation_pipeline.tests import input_output
+from annotation.tests import configs
+from annotation.tests import input_output
 
 
 class Annotator(object):
@@ -44,11 +44,11 @@ class Preannotator(object):
 @pytest.fixture
 def mocker(mocker):
     mocker.patch.object(MyConfigParser, 'read', MyConfigParser.readfp)
-    mocker.patch('annotation_pipeline.annotation_pipeline.str_to_class',
+    mocker.patch('annotation.annotation_pipeline.str_to_class',
                  return_value=Annotator)
-    mocker.patch('annotation_pipeline.annotation_pipeline.PreannotatorLoader.load_preannotators',
+    mocker.patch('annotation.annotation_pipeline.PreannotatorLoader.load_preannotators',
                  return_value=[Preannotator()])
-    mocker.patch('annotation_pipeline.annotation_pipeline.exists',
+    mocker.patch('annotation.annotation_pipeline.exists',
                  return_value=True)
 
 
