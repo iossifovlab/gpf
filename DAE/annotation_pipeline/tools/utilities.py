@@ -1,5 +1,6 @@
 import sys, os
 import time, datetime
+import pysam, gzip
 from abc import ABCMeta, abstractmethod
 
 class AnnotatorBase():
@@ -86,11 +87,24 @@ def main(argument_parser, annotator_factory):
 
     if opts.infile=='-':
         variantFile = sys.stdin
+    elif hasattr(opts,'region'): #case for MultiAnnotator
+        if(opts.region is not None):
+            tabix_file = pysam.TabixFile(opts.infile)
+            try:
+                variantFile = tabix_file.fetch(region=opts.region)
+            except ValueError:
+                variantFile = iter([])
+        else:
+            variantFile = open(opts.infile)
     else:
         variantFile = open(opts.infile)
 
     if opts.no_header == False:
         header_str = variantFile.readline()[:-1]
+        if hasattr(opts,'region'): #case for MultiAnnotator
+            if(opts.region is not None):
+                with gzip.open(opts.infile) as file:
+                    header_str=file.readline()[:-1]
         if header_str[0] == '#':
             header_str = header_str[1:]
         header = header_str.split('\t')
@@ -105,9 +119,9 @@ def main(argument_parser, annotator_factory):
     annotator = annotator_factory(opts=opts, header=header)
     annotator.annotate_file(variantFile, out)
 
-    out.write("# PROCESSING DETAILS:\n")
-    out.write("# " + time.asctime() + "\n")
-    out.write("# " + " ".join(sys.argv[1:]) + "\n")
+    sys.stderr.write("# PROCESSING DETAILS:\n")
+    sys.stderr.write("# " + time.asctime() + "\n")
+    sys.stderr.write("# " + " ".join(sys.argv[1:]) + "\n")
 
     if opts.infile != '-':
         variantFile.close()
