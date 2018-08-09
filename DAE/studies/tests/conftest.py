@@ -18,7 +18,7 @@ def study_configs():
 
 @pytest.fixture(scope='session')
 def study_definition(study_configs):
-    return StudyDefinition.from_config(study_configs)
+    return StudyDefinition.from_single_file(work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='session')

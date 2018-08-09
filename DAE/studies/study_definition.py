@@ -22,37 +22,6 @@ class StudyDefinition(ConfigurableEntityDefinition):
         return self.get_all_configurable_entity_names()
 
     @classmethod
-    def from_environment(cls):
-        work_dir = StudyDefinition._work_dir_from_environment()
-        config_file = StudyDefinition._config_file_from_environment()
-
-        return cls.multiple_files_configurable_entity_definition(
-            config_file, work_dir)
-
-    @classmethod
-    def from_config_file(cls, config_file=None, work_dir=None):
-        print("from_config_file", work_dir, config_file)
-
-        return cls.multiple_files_configurable_entity_definition(
-            StudyConfig.list_from_config(config_file, work_dir))
-
-    @staticmethod
-    def from_config(configs):
-        definition = StudyDefinition()
-
-        definition.configs = {
-            config.study_name: config
-            for config in configs
-        }
-
-        return definition
-
-    @staticmethod
-    def _work_dir_from_environment():
-        from studies.default_settings import DATA_DIR
-        return DATA_DIR
-
-    @staticmethod
-    def _config_file_from_environment():
-        from studies.default_settings import CONFIG_FILE
-        return CONFIG_FILE
+    def from_single_file(cls, config_file=None, work_dir=None):
+        return cls.return_single_file_configurable_entity_definition(
+            config_file, work_dir, StudyConfig, StudyDefinition, 'study_name')

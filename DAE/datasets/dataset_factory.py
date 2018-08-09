@@ -13,7 +13,7 @@ class DatasetFactory(object):
 
     def __init__(self, _class=Dataset, studies_definition=None):
         if studies_definition is None:
-            studies_definition = StudyDefinition.from_environment()
+            studies_definition = StudyDefinition.from_single_file()
 
         self._class = _class
         self.studies_factory = StudyFactory()
@@ -49,6 +49,6 @@ class DatasetFactory(object):
     @staticmethod
     def with_studies_config(config_file=None, work_dir=None):
         studies_definition = StudyDefinition \
-            .from_config_file(config_file, work_dir)
+            .from_single_file(config_file, work_dir)
 
         return DatasetFactory(studies_definition=studies_definition)

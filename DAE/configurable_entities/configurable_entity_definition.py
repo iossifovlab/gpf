@@ -63,6 +63,21 @@ class ConfigurableEntityDefinition(object):
         print(self.configs)
 
     @classmethod
-    def multiple_files_configurable_entity_definition(
-            cls, configs):
+    def return_single_file_configurable_entity_definition(
+            cls, config_file, work_dir, configurable_entity_config,
+            configurable_entity_definition, config_key):
+        print("from_config_file", work_dir, config_file)
+
+        configs = configurable_entity_config.list_from_config(
+            config_file, work_dir)
+
+        definition = configurable_entity_definition()
+
+        definition.configs = {
+            config[config_key]: config
+            for config in configs
+        }
+
+        return definition
+
         return cls.from_config(configs)

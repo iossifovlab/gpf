@@ -27,7 +27,7 @@ def load_dataset(fixtures_folder, dataset_factory, dataset_name):
 
 @pytest.fixture(scope='session')
 def study_definition():
-    return StudyDefinition.from_config_file('studies.conf', fixtures_dir())
+    return StudyDefinition.from_single_file('studies.conf', fixtures_dir())
 
 
 @pytest.fixture(scope='session')
