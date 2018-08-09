@@ -85,9 +85,9 @@ TRANSMITTED_OUTPUT_FILES = map(lambda tf: OUTPUT_DIR + tf, TRANSMITTED_FILES)
 SGE_RREQ = 'sge_rreq'
 
 DENOVO_ARGS = '--config {}'.format(CONFIG)
-TRANSMITTED_ARGS = DENOVO_ARGS + ' --options=False -c chr -p position '\
+TRANSMITTED_ARGS = DENOVO_ARGS + ' --options=direct:False -c chr -p position '\
                                  '--region={chr}:{begin_pos}-{end_pos}'
-DENOVO_ARGS += ' --options=True'
+DENOVO_ARGS += ' --options=direct:True'
 
 CHROMOSOMES = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
 CHROMOSOMES_LABELS = {'X': '23', 'Y': '24'}
