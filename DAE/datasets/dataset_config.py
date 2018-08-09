@@ -1,9 +1,8 @@
-import os
-import reusables
-from box import ConfigBox
+from configurable_entities.configurable_entity_config import\
+    ConfigurableEntityConfig
 
 
-class DatasetConfig(ConfigBox):
+class DatasetConfig(ConfigurableEntityConfig):
 
     def __init__(self, *args, **kwargs):
         super(DatasetConfig, self).__init__(*args, **kwargs)
@@ -16,28 +15,20 @@ class DatasetConfig(ConfigBox):
         print("download_columns", self.list('preview_columns'))
         print("download_columns", self.list('download_columns'))
 
-    @staticmethod
-    def from_config(path, work_dir=None):
-        if work_dir is None:
-            from default_settings import DATA_DIR
-            work_dir = DATA_DIR
-        if not os.path.exists(path):
-            path = os.path.join(work_dir, path)
-        assert os.path.exists(path), path
-
-        config = reusables.config_dict(
-            path,
-            auto_find=False,
-            verify=True,
-            defaults={
-                'wd': work_dir,
-            }
-        )
+    @classmethod
+    def from_config(cls, path, work_dir=None):
+        config = cls.get_config(
+            path, work_dir, cls._default_settings_from_environment(), 'wd')
 
         dataset_config = config['dataset']
         dataset_config['studies'] = dataset_config['studies'].split(',')
 
         return DatasetConfig(config['dataset'])
+
+    @staticmethod
+    def _default_settings_from_environment():
+        from datasets import default_settings
+        return default_settings
 
     def get_dataset_description(self):
         return {
