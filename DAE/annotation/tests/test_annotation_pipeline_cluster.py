@@ -3,9 +3,9 @@ from copy import deepcopy
 from StringIO import StringIO
 from ConfigParser import SafeConfigParser
 
-from annotation_pipeline.annotation_pipeline_cluster import main
-from annotation_pipeline.tests import configs
-from annotation_pipeline.tests import input_output
+from annotation.annotation_pipeline_cluster import main
+from annotation.tests import configs
+from annotation.tests import input_output
 
 
 class MyStringIO(StringIO):
@@ -75,7 +75,7 @@ def test_annotation_pipeline_cluster(config, data_dir, output_dir, sge_rreq,
     mocker.patch('ConfigParser.SafeConfigParser', side_effect=MyConfigParser)
     mocker.patch('os.path.abspath', side_effect=return_input)
     mocker.patch('os.walk', side_effect=lambda path: os_walk)
-    mocker.patch('annotation_pipeline.annotation_pipeline_cluster.'
+    mocker.patch('annotation.annotation_pipeline_cluster.'
                  'VariantDBConf._validate', return_value=None)
     main(config, data_dir, output_dir, sge_rreq)
 

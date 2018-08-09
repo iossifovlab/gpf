@@ -4,6 +4,9 @@ import pysam, gzip
 from abc import ABCMeta, abstractmethod
 
 class AnnotatorBase():
+    """
+    `AnnotatorBase` is base class of all `Annotators` and `Preannotators`.
+    """
 
     __metaclass__ = ABCMeta
 
@@ -12,6 +15,9 @@ class AnnotatorBase():
         self.header = header
 
     def annotate_file(self, input, output):
+        """
+            Method for annotating file from `Annotator`.
+        """
         if self.opts.no_header == False:
             output.write("\t".join(self.header) + "\n")
 

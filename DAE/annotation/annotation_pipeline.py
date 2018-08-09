@@ -13,7 +13,7 @@ from ast import literal_eval
 from collections import OrderedDict
 from tools.utilities import assign_values
 from tools.utilities import main as main
-from tools import duplicate_columns
+from tools import *
 
 
 def str_to_class(val):
@@ -32,6 +32,24 @@ class MyConfigParser(ConfigParser.SafeConfigParser):
 
 
 class MultiAnnotator(object):
+    """
+    `MultiAnnotator` class processes user passed options and annotates variant data.
+    After processing of user options this class passes line by line the data
+    to `Annotators` and `Preannotators`.
+
+    Arguments of the constructor are:
+
+    * `reannotate` - True/False. True - reannotate column and don't add new columns.
+                     False - add new column and don't reannotate old columns.
+
+    * `preannotators` - list of `Preannotators`
+
+    * `split_column` - Column to split before annotation and generate values for
+                       all parts of split column and after that to join new values
+                       in one column.
+
+    * `split_separator` - Separator for split column, default value is `,`
+    """
 
     def __init__(self, opts, header=None):
         self.header = header
@@ -167,6 +185,12 @@ class MultiAnnotator(object):
 
 
 class PreannotatorLoader(object):
+    """
+    Class for finding and loading `Preannotators`. It imports preannotator classes
+    from `annotation/preannotators` and stores them in list.
+
+    It is used by `MultiAnnotator`.
+    """
 
     PREANNOTATOR_MODULES = None
 
@@ -202,7 +226,7 @@ def get_argument_parser():
                         default=False,  action='store_true', dest='no_header')
     parser.add_argument('-c', '--config', help='config file location',
                         required=True, action='store')
-    parser.add_argument('--always-add', help='always add columns; '
+    parser.add_argument('--reannotate', help='always add columns; '
                         'default behavior is to replace columns with the same label',
                         default=False, action='store_true')
     parser.add_argument('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)',

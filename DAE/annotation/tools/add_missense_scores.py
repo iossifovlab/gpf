@@ -10,6 +10,35 @@ from utilities import *
 from annotate_score_base import ScoreAnnotator
 
 def get_argument_parser():
+    """
+    `MissenseScoresAnnotator` options::
+
+        usage: add_missense_scores.py [-h] [-c C] [-p P] [-x X] [-r R] [-a A] [-H]
+                              [--dbnsfp DBNSFP] [--columns COLUMNS] [--direct]
+                              [--reference-genome {hg19,hg38}]
+                              [infile] [outfile]
+
+        Add missense scores from dbSNFP
+
+        positional arguments:
+          infile                path to input file; defaults to stdin
+          outfile               path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -c C                  chromosome column number/name
+          -p P                  position column number/name
+          -x X                  location (chr:pos) column number/name
+          -r R                  reference column number/name
+          -a A                  alternative column number/name
+          -H                    no header in the input file
+          --dbnsfp DBNSFP       path to dbNSFP
+          --columns COLUMNS
+          --direct              read score files using tabix index (default: read
+                                score files iteratively)
+          --reference-genome {hg19,hg38}
+
+    """
     parser = argparse.ArgumentParser(
         description='Add missense scores from dbSNFP')
     parser.add_argument('-c', help='chromosome column number/name', action='store')
