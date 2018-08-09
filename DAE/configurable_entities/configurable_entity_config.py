@@ -21,7 +21,7 @@ class ConfigurableEntityConfig(ConfigBox):
             auto_find=False,
             verify=True,
             defaults={
-                work_dir_key: work_dir,
+                'work_dir': work_dir,
             }
         )
 
