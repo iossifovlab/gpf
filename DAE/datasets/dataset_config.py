@@ -17,8 +17,10 @@ class DatasetConfig(ConfigurableEntityConfig):
 
     @classmethod
     def from_config(cls, path, work_dir=None):
-        config = cls.get_config(
-            path, work_dir, cls._default_settings_from_environment(), 'wd')
+        if work_dir is None:
+            work_dir = cls._work_dir_from_environment()
+
+        config = cls.get_config(path, work_dir)
 
         dataset_config = config['dataset']
         dataset_config['studies'] = dataset_config['studies'].split(',')
@@ -26,9 +28,9 @@ class DatasetConfig(ConfigurableEntityConfig):
         return DatasetConfig(config['dataset'])
 
     @staticmethod
-    def _default_settings_from_environment():
-        from datasets import default_settings
-        return default_settings
+    def _work_dir_from_environment():
+        from datasets.default_settings import DATA_DIR
+        return DATA_DIR
 
     def get_dataset_description(self):
         return {

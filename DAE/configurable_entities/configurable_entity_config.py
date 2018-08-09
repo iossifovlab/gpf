@@ -9,9 +9,7 @@ class ConfigurableEntityConfig(ConfigBox):
         super(ConfigurableEntityConfig, self).__init__(*args, **kwargs)
 
     @staticmethod
-    def get_config(config_file, work_dir, default_settings, work_dir_key):
-        if work_dir is None:
-            work_dir = default_settings.DATA_DIR
+    def get_config(config_file, work_dir):
         if not os.path.exists(config_file):
             config_file = os.path.join(work_dir, config_file)
         assert os.path.exists(config_file), config_file

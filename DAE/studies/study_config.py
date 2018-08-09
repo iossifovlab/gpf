@@ -1,5 +1,4 @@
 import os
-import reusables
 
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
@@ -19,12 +18,12 @@ class StudyConfig(ConfigurableEntityConfig):
 
     @classmethod
     def list_from_config(cls, config_file=None, work_dir=None):
+        if work_dir is None:
+            work_dir = cls._work_dir_from_environment()
         if config_file is None:
             config_file = cls._config_file_from_environment()
 
-        config = cls.get_config(
-            config_file, work_dir, cls._default_settings_from_environment(),
-            'work_dir')
+        config = cls.get_config(config_file, work_dir)
 
         result = list()
         for section in config.keys():
@@ -48,9 +47,9 @@ class StudyConfig(ConfigurableEntityConfig):
                 os.path.join(self.work_dir, self.study_name, self.prefix))
 
     @staticmethod
-    def _default_settings_from_environment():
-        from studies import default_settings
-        return default_settings
+    def _work_dir_from_environment():
+        from studies.default_settings import DATA_DIR
+        return DATA_DIR
 
     @staticmethod
     def _config_file_from_environment():
