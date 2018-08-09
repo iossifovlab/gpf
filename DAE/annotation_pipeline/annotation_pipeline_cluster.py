@@ -83,9 +83,9 @@ def main(config, data_dir, output_dir, sge_rreq):
     denovo_args = '--config {}'.format(config)
 
     transm_args_format = denovo_args +\
-        ' --options=False -c chr -p position --region={chr}:{begin_pos}-{end_pos}'
+        ' --options=direct:False -c chr -p position --region={chr}:{begin_pos}-{end_pos}'
 
-    denovo_args += ' --options=True'
+    denovo_args += ' --options=direct:True'
 
     for file in variant_db_conf.denovo_files:
         all_cmds.append(escape_target(to_destination(file)))
