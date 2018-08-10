@@ -20,7 +20,6 @@ def mocker(mocker):
     mocker.patch.object(gzip, 'open', new=fake_gzip_open)
 
 
-@pytest.fixture
 def get_opts(c_inp=None, p_inp=None, x_inp=None,
              file_inp=None, conf_inp=None, direct_inp=False):
     class MockOpts:
@@ -47,9 +46,12 @@ def conf_to_dict(config_file):
     return opts
 
 
-def to_file(content):
-    temp = tempfile.NamedTemporaryFile(dir=os.path.dirname('.'), delete=False)
+def to_file(content, where=None):
+    if where is None:
+        where = os.path.dirname('.')
+    temp = tempfile.NamedTemporaryFile(dir=where, delete=False)
     temp.write(content.read())
+    temp.seek(0)
     return temp
 
 

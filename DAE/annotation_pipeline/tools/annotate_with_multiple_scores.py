@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-import sys, glob
+import sys
+import glob
 import argparse
-from collections import OrderedDict
+import os.path
 from box import Box
-from jproperties import Properties
 
-from utilities import *
+from utilities import AnnotatorBase, main
 from annotate_score_base import ScoreAnnotator
 
 
@@ -16,23 +16,31 @@ def get_argument_parser():
     parser.add_argument('-p', help='position column number/name', action='store')
     parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
 
-    parser.add_argument('-H', help='no header in the input file', default=False,
-        action='store_true', dest='no_header')
-
+    parser.add_argument('-H',
+                        help='no header in the input file', default=False,
+                        action='store_true', dest='no_header')
     parser.add_argument('-D', '--scores-directory',
-        help='directory containing the scores - each score should have its own subdirectory '
-             '(defaults to $GFD_DIR)',
-        action='store')
+                        help='directory containing the scores - each score should have its own subdirectory '
+                        '(defaults to $GFD_DIR)',
+                        action='store')
     parser.add_argument('--direct',
-        help='read score files using tabix index '
-              '(default: read score files iteratively)',
-        default=False, action='store_true')
-    parser.add_argument('--scores', help='comma separated list of scores to annotate with',
-        action='store')
+                        help='read score files using tabix index '
+                        '(default: read score files iteratively)',
+                        default=False, action='store_true')
+    parser.add_argument('--scores',
+                        help='comma separated list of scores to annotate with',
+                        action='store')
+    parser.add_argument('--scores-configs',
+                        help='ordered, comma separated list of score config files '
+                        '(defaults to score names with a .conf suffix)',
+                        action='store')
     parser.add_argument('--labels',
-        help='comma separated list of labels for the new columns in the output file '
-             '(defaults to score names)',
-        action='store')
+                        help='comma separated list of labels for the new columns in the output file '
+                        '(defaults to score names)',
+                        action='store')
+    parser.add_argument('--explicit',
+                        help='when passed, interprets the --scores option as a list of real paths',
+                        action='store_true')
     return parser
 
 
@@ -56,53 +64,40 @@ class MultipleScoresAnnotator(AnnotatorBase):
         self.annotators = {}
         if self.opts.scores is not None:
             self.scores = self.opts.scores.split(',')
-            for score in self.scores:
-                self._annotator_for(score)
+            self.scores_configs = self.opts.scores_configs.split(',')
         else:
             self.scores = None
 
-    def _annotator_for(self, score):
+    def _annotator_for(self, score, score_config):
         if score not in self.annotators:
             opts = self.opts
-            score_directory = self.scores_directory + '/' + score
+            score_directory = self.scores_directory
+            if not opts.explicit:
+                score_directory += '/' + score
 
             if not os.path.isdir(score_directory):
                 sys.stderr.write('directory for "{}" not found, please provide only valid scores'.format(score))
                 sys.exit(-78)
 
-            tabix_files = glob.glob(score_directory + '/*.tbi')
-            if len(tabix_files) == 0:
-                sys.stderr.write('could not find .tbi file for score {}'.format(score))
-                sys.exit(-64)
-
-            params_file = score_directory + '/params.txt'
-            if not os.path.exists(params_file):
-                sys.stderr.write('could not find params.txt file for score {}'.format(score))
-                sys.exit(-50)
-
-            params = Properties({'format': score, 'noScoreValue': ''})
-            with open(params_file, 'r') as file:
-                params.load(file)
-            score_column = params['format'].data
-            score_default_value = params['noScoreValue'].data
-
-            score_header_file = score_directory + '/' + params['scoreDescFile'].data[1:-1]
-            with open(score_header_file, 'r') as file:
-                score_header = file.readline().strip('\n\r').split('\t')
+            if opts.direct:
+                tabix_files = glob.glob(score_directory + '/*.tbi')
+                if len(tabix_files) == 0:
+                    sys.stderr.write('could not find .tbi file for score {}'.format(score))
+                    sys.exit(-64)
 
             config = {
                 'c': opts.c,
                 'p': opts.p,
                 'x': opts.x,
-                'scores_columns': score_column,
-                'default_values': score_default_value,
+                'scores_file': score,
+                'scores_config_file': score_config,
                 'direct': opts.direct,
-                'scores_file': tabix_files[0].replace('.tbi', '')
+                'labels': opts.labels
             }
 
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
             self.annotators[score] = ScoreAnnotator(score_annotator_opts,
-                list(self.header), [], score_header, score_header[:3])
+                                                    list(self.header), [])
 
         return self.annotators[score]
 
@@ -115,8 +110,12 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
     def line_annotations(self, line, new_cols_order):
         result = []
-        for col in new_cols_order:
-            result.extend(self._annotator_for(col).line_annotations(line, [col]))
+        for score in self.scores:
+            if self.scores.index(score) < len(self.scores_configs):
+                score_config = self.scores_configs[self.scores.index(score)]
+            else:
+                score_config = None
+            result.extend(self._annotator_for(score, score_config).line_annotations(line, [score]))
         return result
 
 

@@ -53,3 +53,40 @@ SEARCH_INPUT_SCORE = [
 SEARCH_OUTPUT = """1\t4\t4372372973\t4372372973\tsub(A->C)\t2\t0.56789
 3\tX\t4372\t4374\tins(AAA)\t2\t2.4567
 """
+
+MULTI_INPUT_SCORE = [
+    '1\t4\t4372372973\t0.214561\n',
+    '5\t10\t4372372973\t1.410786\n',
+    '3\tX\t4372\t2.593045\n',
+    '6\tY\t4372372973\t3.922039\n'
+]
+
+MULTI_INPUT_SCORE_ALT = [
+    '1\t4\t4372372973\t0.561\n',
+    '5\t10\t4372372973\t1.786\n',
+    '3\tX\t4372\t2.045\n',
+    '6\tY\t4372372973\t3.039\n'
+]
+
+MULTI_OUTPUT = """1\t4\t4372372973\tsub(A->C)\t0.214561\t0.561
+5\t10\t4372372973\tsub(G->A)\t1.410786\t1.786
+3\tX\t4372\tins(AAA)\t2.593045\t2.045
+6\tY\t4372372973\tdel(2)\t3.922039\t3.039
+"""
+
+MISSENSE_INPUT_FILE = [
+    '1\t1\t4372372973\tsub(A->C)\t2\t3\n',
+    '3\t1\t4372493499\tins(AAA)\t2\t3\n',
+]
+
+MISSENSE_INPUT_SCORE = [
+    '#id\tchr\tpos(1-coor)\tref\talt\tmissense\n',
+    '1\t1\t4372372973\t2\t3\t0.56789\n',
+    '5\t1\t4372372975\t1\t4\t1.5678\n',
+    '3\t1\t4372493499\t2\t3\t2.4567\n',
+    '6\t1\t4372372974\t1\t4\t3.7890\n'
+]
+
+MISSENSE_OUTPUT = """1\t1\t4372372973\tsub(A->C)\t2\t3\t0.56789
+3\t1\t4372493499\tins(AAA)\t2\t3\t2.4567
+"""

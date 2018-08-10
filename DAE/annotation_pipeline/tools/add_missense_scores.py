@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
+import os
 from box import Box
 
-from variant_annotation.missense_scores_tabix import MissenseScoresDB
-from variant_annotation.variant import Variant
-from utilities import *
+from utilities import AnnotatorBase, assign_values, main
 from annotate_score_base import ScoreAnnotator
+
 
 def get_argument_parser():
     parser = argparse.ArgumentParser(
@@ -18,15 +17,14 @@ def get_argument_parser():
     parser.add_argument('-r', help='reference column number/name', action='store')
     parser.add_argument('-a', help='alternative column number/name', action='store')
     parser.add_argument('-H', help='no header in the input file',
-        default=False,  action='store_true', dest='no_header')
+                        default=False,  action='store_true', dest='no_header')
     parser.add_argument('--dbnsfp', help='path to dbNSFP', action='store')
-    parser.add_argument('--columns', action='append', default=[], dest="columns")
+    parser.add_argument('--columns', action='append', default=[])
     parser.add_argument('--direct',
-        help='read score files using tabix index '
-              '(default: read score files iteratively)',
-        default=False, action='store_true')
+                        help='read score files using tabix index '
+                        '(default: read score files iteratively)',
+                        default=False, action='store_true')
     parser.add_argument('--reference-genome', choices=['hg19', 'hg38'])
-
     return parser
 
 
@@ -39,16 +37,20 @@ class MissenseScoresAnnotator(AnnotatorBase):
         self.header = header
         if self.opts.columns is not None:
             self.header.extend(self.opts.columns)
+
         if opts.dbnsfp is None:
             opts.dbnsfp = os.path.join(os.environ['dbNSFP_PATH'])
         self.path = opts.dbnsfp
+
+        self.dbnsfp_config = {'header': None, 'noScoreValue': None,
+                              'columns': {'chr': 'chr', 'search': 'ref,alt'}}
         if opts.reference_genome is None or \
-                opts.reference_genome == 'hg19':
-            self.score_file_index_columns = ['chr', 'pos(1-coor)',
-                'pos(1-coor)', 'ref', 'alt']
+           opts.reference_genome == 'hg19':
+            self.dbnsfp_config['columns']['pos_begin'] = 'pos(1-coor)'
+            self.dbnsfp_config['columns']['pos_end'] = 'pos(1-coor)'
         else:
-            self.score_file_index_columns = ['chr', 'pos(1-based)',
-                'pos(1-based)',  'ref', 'alt']
+            self.dbnsfp_config['columns']['pos_begin'] = 'pos(1-based)'
+            self.dbnsfp_config['columns']['pos_end'] = 'pos(1-based)'
         self.annotators = {}
         self._init_cols()
 
@@ -67,21 +69,22 @@ class MissenseScoresAnnotator(AnnotatorBase):
         if chr not in self.annotators:
             if chr not in self.CHROMOSOMES:
                 return None
+
+            self.dbnsfp_config['columns']['score'] = ','.join(scores)
             config = {
                 'c': self.opts.c,
                 'p': self.opts.p,
                 'x': self.opts.x,
-                'scores_columns': ','.join(scores),
-                'default_values': None,
                 'direct': self.opts.direct,
-                'scores_file': self.path.format(chr)
+                'scores_file': self.path.format(chr),
+                'scores_config_file': self.dbnsfp_config
             }
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
 
-            self.annotators[chr] = ScoreAnnotator(score_annotator_opts,
-                header=list(self.header), search_columns=[self.opts.r, self.opts.a],
-                score_file_header=None,
-                score_file_index_columns=self.score_file_index_columns)
+            self.annotators[chr] = ScoreAnnotator(
+                    score_annotator_opts,
+                    header=list(self.header),
+                    search_columns=[self.opts.r, self.opts.a])
         return self.annotators[chr]
 
     def _get_chr(self, line):
