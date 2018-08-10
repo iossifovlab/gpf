@@ -19,12 +19,12 @@ def get_argument_parser():
     parser.add_argument('-H', help='no header in the input file',
                         default=False,  action='store_true', dest='no_header')
     parser.add_argument('--dbnsfp', help='path to dbNSFP', action='store')
+    parser.add_argument('--config', help='path to config', action='store')
     parser.add_argument('--columns', action='append', default=[])
     parser.add_argument('--direct',
                         help='read score files using tabix index '
                         '(default: read score files iteratively)',
                         default=False, action='store_true')
-    parser.add_argument('--reference-genome', choices=['hg19', 'hg38'])
     return parser
 
 
@@ -35,22 +35,11 @@ class MissenseScoresAnnotator(AnnotatorBase):
     def __init__(self, opts, header=None):
         self.opts = opts
         self.header = header
-        if self.opts.columns is not None:
-            self.header.extend(self.opts.columns)
 
         if opts.dbnsfp is None:
             opts.dbnsfp = os.path.join(os.environ['dbNSFP_PATH'])
         self.path = opts.dbnsfp
 
-        self.dbnsfp_config = {'header': None, 'noScoreValue': None,
-                              'columns': {'chr': 'chr', 'search': 'ref,alt'}}
-        if opts.reference_genome is None or \
-           opts.reference_genome == 'hg19':
-            self.dbnsfp_config['columns']['pos_begin'] = 'pos(1-coor)'
-            self.dbnsfp_config['columns']['pos_end'] = 'pos(1-coor)'
-        else:
-            self.dbnsfp_config['columns']['pos_begin'] = 'pos(1-based)'
-            self.dbnsfp_config['columns']['pos_end'] = 'pos(1-based)'
         self.annotators = {}
         self._init_cols()
 
@@ -70,14 +59,13 @@ class MissenseScoresAnnotator(AnnotatorBase):
             if chr not in self.CHROMOSOMES:
                 return None
 
-            self.dbnsfp_config['columns']['score'] = ','.join(scores)
             config = {
                 'c': self.opts.c,
                 'p': self.opts.p,
                 'x': self.opts.x,
                 'direct': self.opts.direct,
                 'scores_file': self.path.format(chr),
-                'scores_config_file': self.dbnsfp_config
+                'scores_config_file': self.opts.config
             }
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
 

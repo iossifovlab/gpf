@@ -40,3 +40,14 @@ chr=chrom
 pos_begin=starting_pos
 score=scoreValue
 '''
+
+DBNSFP_SCORE_CONFIG = '''
+[general]
+reference_genome=hg19
+[columns]
+chr=chr
+pos_begin=pos(1-coor)
+pos_end=pos(1-coor)
+score=missense
+search=ref,alt
+'''

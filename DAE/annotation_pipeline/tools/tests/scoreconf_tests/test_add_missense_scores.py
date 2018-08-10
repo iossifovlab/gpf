@@ -1,10 +1,12 @@
 import pytest
 import input_output
+import config
 import gzip
 import tempfile
 import os
 from annotation_pipeline.tools.add_missense_scores \
         import MissenseScoresAnnotator
+from annotation_pipeline.annotation_pipeline import MyConfigParser
 from copy import deepcopy
 from StringIO import StringIO
 
@@ -24,10 +26,9 @@ def setup_scoredir():
 
 
 def get_opts(c_inp=None, p_inp=None, x_inp=None,
-             dir_inp=None, scores_inp=None, confs_inp=None,
-             direct_inp=False):
+             dir_inp=None, direct_inp=False, config=None):
     class MockOpts:
-        def __init__(self, chrom, pos, loc, scoredir, tabix):
+        def __init__(self, chrom, pos, loc, scoredir, tabix, config):
             self.c = chrom
             self.p = pos
             self.x = loc
@@ -35,12 +36,13 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None,
             self.r = 'ref'
             self.a = 'alt'
             self.dbnsfp = scoredir
+            self.config = config
             self.columns = ['missense']
             self.direct = tabix
             self.labels = None
             self.reference_genome = 'hg19'
 
-    return MockOpts(c_inp, p_inp, x_inp, dir_inp, direct_inp)
+    return MockOpts(c_inp, p_inp, x_inp, dir_inp, direct_inp, config)
 
 
 def fake_gzip_open(filename, *args):
@@ -52,6 +54,17 @@ def cleanup(dirs, files):
         os.remove(tmpfile)
     for tmpdir in dirs[::-1]:
         os.rmdir(tmpdir)
+
+
+def conf_to_dict(config_file):
+    conf_parser = MyConfigParser()
+    conf_parser.optionxform = str
+    conf_parser.readfp(config_file)
+
+    opts = dict(conf_parser.items('general'))
+    opts_columns = {'columns': dict(conf_parser.items('columns'))}
+    opts.update(opts_columns)
+    return opts
 
 
 @pytest.fixture
@@ -74,18 +87,24 @@ def missense_scores():
     return StringIO(''.join(deepcopy(input_output.MISSENSE_INPUT_SCORE)))
 
 
-def missense_annotator(dbnsfp):
+@pytest.fixture
+def dbnsfp_config():
+    return StringIO(deepcopy(config.DBNSFP_SCORE_CONFIG))
+
+
+def missense_annotator(dbnsfp, conf_inp):
     missense_opts = get_opts(c_inp='chrom', p_inp='pos',
-                             dir_inp=dbnsfp)
+                             dir_inp=dbnsfp, config=conf_inp)
     return MissenseScoresAnnotator(missense_opts,
                                    header=['id', 'chrom', 'pos', 'variation', 'ref', 'alt'])
 
 
-def test_missense_score(missense_input, missense_scores, missense_output, mocker):
+def test_missense_score(missense_input, missense_scores, missense_output, 
+                        dbnsfp_config, mocker):
     tmp_dir = setup_scoredir()
     dbnsfp_score = to_file(missense_scores.getvalue(), where=tmp_dir)
 
-    annotator = missense_annotator(dbnsfp_score.name)
+    annotator = missense_annotator(dbnsfp_score.name, conf_to_dict(dbnsfp_config))
     output = ""
     for line in missense_input.readlines():
         line = line.rstrip()
