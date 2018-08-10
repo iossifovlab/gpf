@@ -6,9 +6,9 @@ Created on Feb 17, 2017
 
 from rest_framework.test import APITestCase
 from enrichment_api.views import EnrichmentModelsMixin
-from datasets.config import DatasetsConfig
+from datasets.dataset_config import DatasetConfig
 from enrichment_api.enrichment_builder import EnrichmentBuilder
-from datasets.datasets_factory import DatasetsFactory
+from datasets.dataset_factory import DatasetFactory
 from gene.gene_set_collections import GeneSetsCollections
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
@@ -19,9 +19,9 @@ class Test(APITestCase):
     def setUpClass(cls):
         super(Test, cls).setUpClass()
         model = EnrichmentModelsMixin().get_enrichment_model({})
-        config = DatasetsConfig()
-        factory = DatasetsFactory(config)
-        dataset = factory.get_dataset('SD')
+        config = DatasetConfig()
+        factory = DatasetFactory()
+        dataset = factory.get_dataset(config)
         gscs = GeneSetsCollections()
         gsc = gscs.get_gene_sets_collection('main')
 

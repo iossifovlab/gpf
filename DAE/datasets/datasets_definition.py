@@ -50,8 +50,6 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
             if not os.path.isdir(path) and path.endswith('.conf'):
                 config_paths.append(os.path.join(enabled_dir, path))
 
-        print(config_paths)
-
         for config_path in config_paths:
             configs.append(DatasetConfig.from_config(config_path))
 

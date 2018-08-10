@@ -83,17 +83,17 @@ _REGISTER = PrecomputeRegister()
 
 
 def get_register():
-    global _REGISTER
+    # global _REGISTER
     return _REGISTER
 
 
 def register(key, precompute):
-    global _REGISTER
+    # global _REGISTER
     _REGISTER.register(key, precompute)
 
 
 def get(key):
-    global _REGISTER
+    # global _REGISTER
 
     try:
         value = _REGISTER.get(key)
@@ -104,7 +104,7 @@ def get(key):
 
 
 def has_key(key):
-    global _REGISTER
+    # global _REGISTER
     value = False
 
     try:

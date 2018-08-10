@@ -21,7 +21,7 @@ class Dataset(object):
         if download_columns is None:
             download_columns = []
 
-        self._studies = studies
+        self.studies = studies
 
         self.name = name
         self.preview_columns = preview_columns
@@ -29,13 +29,23 @@ class Dataset(object):
 
     def get_variants(self, **kwargs):
         return itertools.chain(*[
-            study.query_variants(**kwargs) for study in self._studies])
+            study.query_variants(**kwargs) for study in self.studies])
+
+    @property
+    def study_names(self):
+        return ",".join(study.name for study in self.studies)
+
+    # FIXME: fill these with real values
 
     def get_column_labels(self):
         return ['']
 
     def get_legend(self, *args, **kwargs):
-        return []
+        return ['autism']
+
+    @property
+    def order(self):
+        return 0
 
 
 class DatasetWrapper(Dataset):

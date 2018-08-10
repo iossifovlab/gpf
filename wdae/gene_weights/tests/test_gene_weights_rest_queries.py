@@ -7,7 +7,7 @@ from rest_framework import status
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
 from datasets_api.models import Dataset
 import copy
-from datasets.tests.requests import EXAMPLE_QUERY_SD, EXAMPLE_QUERY_SSC
+from datasets.tests_old.requests import EXAMPLE_QUERY_SD, EXAMPLE_QUERY_SSC
 
 
 class Test(BaseAuthenticatedUserTest):

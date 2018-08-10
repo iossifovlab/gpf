@@ -20,4 +20,4 @@ class StudyFactory(object):
         variants = self.STUDY_TYPES[study_config.type](
             prefix=study_config.prefix)
 
-        return Study(variants)
+        return Study(study_config.study_name, variants)

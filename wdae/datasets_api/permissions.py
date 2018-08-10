@@ -8,6 +8,7 @@ from datasets_api.models import Dataset
 from guardian.utils import get_anonymous_user
 from preloaded import register
 
+
 class IsDatasetAllowed(permissions.BasePermission):
 
     def has_object_permission(self, request, view, dataset_id):
@@ -21,7 +22,8 @@ class IsDatasetAllowed(permissions.BasePermission):
 
     @staticmethod
     def permitted_datasets(user):
-        dataset_ids = register.get('datasets').get_config().get_dataset_ids()
+        dataset_ids = register.get('datasets').get_facade() \
+            .get_all_dataset_ids()
         return filter(
             lambda dataset_id: IsDatasetAllowed.user_has_permission(
                 user, dataset_id),

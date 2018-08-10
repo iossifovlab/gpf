@@ -8,15 +8,15 @@ import itertools
 _datasets = preloaded.register.get('datasets')
 assert _datasets is not None
 
-_datasets_definitions = _datasets.get_definitions()
+dataset_facade = _datasets.get_facade()
 
 
 def get_datasets_by_study(study_group_name):
     study_name_to_dataset_id = defaultdict(list)
-    for ds in _datasets_definitions.get_datasets():
+    for ds in dataset_facade.get_all_datasets():
         studies = [
             vDB.get_studies(study)
-            for study in ds['studies'].split(',')
+            for study in ds.study_names.split(',')
         ]
         studies = itertools.chain(*studies)
         studies = [study.name for study in studies]

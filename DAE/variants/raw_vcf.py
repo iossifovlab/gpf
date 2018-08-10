@@ -141,7 +141,6 @@ class RawFamilyVariants(FamiliesBase):
         return FamiliesBase.load_pedigree_file(self.config.pedigree)
 
     def _load(self, annotator, region):
-        print("prefix", self.prefix)
         loader = RawVariantsLoader(self.config)
         self.ped_df = self._load_pedigree()
 

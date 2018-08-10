@@ -20,8 +20,7 @@ class DatasetView(APIView):
         self.datasets = register.get('datasets')
         assert self.datasets is not None
 
-        self.datasets_config = self.datasets.get_config()
-        self.datasets_factory = self.datasets.get_factory()
+        self.datasets_definitions = self.datasets.get_definitions()
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset['id'])
@@ -44,14 +43,16 @@ class DatasetView(APIView):
     def get(self, request, dataset_id=None):
         user = request.user
         if dataset_id is None:
-            res = self.datasets_factory.get_dataset_descriptions()
+            configs = self.datasets_definitions.get_all_dataset_configs()
+            res = list(config.get_dataset_description() for config in configs)
 
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
             res = [self.augment_status_filter(ds) for ds in res]
             return Response({'data': res})
         else:
-            res = self.datasets_factory.get_dataset_description(dataset_id)
+            res = self.datasets_definitions.get_dataset_config(dataset_id)\
+                .get_dataset_description()
             if res:
                 res = self.augment_accessibility(res, user)
                 res = self.augment_with_groups(res)

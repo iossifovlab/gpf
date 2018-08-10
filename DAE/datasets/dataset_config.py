@@ -13,8 +13,7 @@ class DatasetConfig(ConfigBox):
         assert self.download_columns
         assert self.data_dir
 
-        print("download_columns", self.list('preview_columns'))
-        print("download_columns", self.list('download_columns'))
+        print("studies", self.studies)
 
     @staticmethod
     def from_config(path, work_dir=None):
