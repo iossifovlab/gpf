@@ -8,24 +8,25 @@ import zlib
 
 from permissions import belongs_to_dataset
 
+
 def family_buffer(studies):
     fam_buff = defaultdict(dict)
     for study in studies:
         for f in study.families.values():
-            for p in f.memberInOrder:
-                if p.personId in fam_buff[f.familyId]:
-                    prev_p = fam_buff[f.familyId][p.personId]
-                    if prev_p.role != p.role or prev_p.gender != p.gender:
+            for p in f.members_in_order:
+                if p.person_id in fam_buff[f.family_id]:
+                    prev_p = fam_buff[f.family_id][p.person_id]
+                    if prev_p.role != p.role or prev_p.sex != p.sex:
                         LOGGER.error(
                             "study: (%s), familyId: (%s), personId: (%s),"
                             " role: (%s), prev: (%s)",
                             study.name,
-                            f.familyId,
-                            p.personId,
-                            "%s:%s" % (p.role, p.gender),
-                            "%s:%s" % (prev_p.role, prev_p.gender))
+                            f.family_id,
+                            p.person_id,
+                            "%s:%s" % (p.role, p.sex),
+                            "%s:%s" % (prev_p.role, prev_p.sex))
                 else:
-                    fam_buff[f.familyId][p.personId] = p
+                    fam_buff[f.family_id][p.person_id] = p
     return fam_buff
 
 
@@ -38,13 +39,13 @@ def build_header_summary(studies):
     for fmd in fam_buff.values():
         child_cnt_hist[len(fmd)] += 1
 
-        fam_conf = "".join([fmd[pid].role + fmd[pid].gender
+        fam_conf = "".join([fmd[pid].role.name + fmd[pid].sex.name
                             for pid in sorted(fmd.keys(),
-                                              key=lambda x: (fmd[x].role, x))])
+                                              key=lambda x: (fmd[x].role.name, x))])
         fam_type_cnt[fam_conf] += 1
         for p in fmd.values():
-            child_type_cnt[p.role + p.gender] += 1
-            child_type_cnt[p.role] += 1
+            child_type_cnt[p.role.name + p.sex.name] += 1
+            child_type_cnt[p.role.name] += 1
 
     fam_total = len(fam_buff)
 
@@ -95,18 +96,24 @@ def get_denovo_studies_names():
     r = [(stN, dsc) for _o, stN, dsc in sorted(r)]
     return r
 
+
 def get_sorted_datasets():
-    datasets = preloaded.register.get('datasets').get_factory().get_datasets()
+    datasets = preloaded.register.get('datasets').get_facade() \
+        .get_all_datasets()
+    print("DATASETS", datasets)
     return sorted(datasets,
-        key=lambda ds: ds.descriptor.get('wdae.production.order', '0'))
+        key=lambda ds: ds.order)
+
 
 def get_datasets_names():
-    return [(dataset.descriptor['name'], '')
+    return [(dataset.name, '')
             for dataset in get_sorted_datasets()]
+
 
 def get_all_studies_names():
     return get_datasets_names() + get_denovo_studies_names() + \
         get_transmitted_studies_names()
+
 
 class StudiesSummaries(Precompute):
     def __init__(self):
@@ -157,13 +164,14 @@ class StudiesSummaries(Precompute):
     @classmethod
     def __build_studies_summaries(cls):
         result = [
-            cls.__build_single_studies_summary(dataset.descriptor['name'], '',
+            cls.__build_single_studies_summary(dataset.name, '',
                 dataset.studies)
             for dataset in get_sorted_datasets()
         ]
-        result += [cls.__build_single_studies_summary(name, description,
-                        vDB.get_studies(name))
-                   for name, description in get_all_studies_names()]
+        # FIXME: fix when connecting to vdb
+        # result += [cls.__build_single_studies_summary(name, description,
+        #                 vDB.get_studies(name))
+        #            for name, description in get_all_studies_names()]
         return result 
 
     @classmethod
@@ -175,12 +183,14 @@ class StudiesSummaries(Precompute):
         has_denovo = False
         has_transmitted = False
 
+        print("STUDIES", studies)
+
         for study in studies:
             phenotype.update(study.phenotypes)
-            if study.get_attr('study.type'):
-                study_type.add(study.get_attr('study.type'))
-            if study.get_attr('study.year'):
-                study_year.add(study.get_attr('study.year'))
+            if study.type:
+                study_type.add(study.type)
+            if study.year:
+                study_year.add(study.year)
 
             # fams = fams.union(study.families.keys())
             has_denovo = has_denovo or study.has_denovo
@@ -196,8 +206,8 @@ class StudiesSummaries(Precompute):
         pub_med = ""
         if len(studies) == 1:
             study = studies[0]
-            if study.get_attr('study.pmid'):
-                pub_med = study.get_attr('study.pmid')
+            if study.pub_med:
+                pub_med = study.pub_med
 
         fams_stat = build_header_summary(studies)
 

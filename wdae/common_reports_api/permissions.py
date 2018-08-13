@@ -5,13 +5,18 @@ from DAE import vDB
 from collections import defaultdict
 import itertools
 
+_datasets = preloaded.register.get('datasets')
+assert _datasets is not None
+
+dataset_facade = _datasets.get_facade()
+
 
 def get_datasets_by_study(study_group_name):
     study_name_to_dataset_id = defaultdict(list)
-    for ds in user_has_study_permission.datasets_factory.get_datasets():
+    for ds in dataset_facade.get_all_datasets():
         studies = [
             vDB.get_studies(study)
-            for study in ds.descriptor['studies'].split(',')
+            for study in ds.study_names.split(',')
         ]
         studies = itertools.chain(*studies)
         studies = [study.name for study in studies]
@@ -33,8 +38,10 @@ def get_datasets_by_study(study_group_name):
     ds_to_check = map(frozenset, ds_to_check)
     return ds_to_check
 
+
 def belongs_to_dataset(study_name):
     return len(list(itertools.chain(*get_datasets_by_study(study_name)))) != 0
+
 
 def user_has_study_permission(user, study_group_name):
     ds_to_check = set(get_datasets_by_study(study_group_name))
@@ -50,9 +57,3 @@ def user_has_study_permission(user, study_group_name):
 
     return has_permission
 
-
-user_has_study_permission.datasets = preloaded.register.get('datasets')
-assert user_has_study_permission.datasets is not None
-
-user_has_study_permission.datasets_factory = \
-    user_has_study_permission.datasets.get_factory()

@@ -12,8 +12,7 @@ class DatasetConfig(ConfigurableEntityConfig):
         assert self.download_columns
         assert self.data_dir
 
-        print("download_columns", self.list('preview_columns'))
-        print("download_columns", self.list('download_columns'))
+        print("studies", self.studies)
 
     @classmethod
     def from_config(cls, config_section, section=None):

@@ -199,8 +199,8 @@ class ReportBase(CommonBase):
         super(ReportBase, self).__init__()
         self.study_name = study_name
 
-        dataset = preloaded.register.get('datasets').get_factory() \
-            .get_dataset_by_name(study_name)
+        dataset = preloaded.register.get('datasets').get_facade() \
+            .get_dataset(study_name)
 
         if dataset is not None:
             self.study_description = ''

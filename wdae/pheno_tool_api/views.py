@@ -26,8 +26,7 @@ class PhenoToolView(APIView):
         self.datasets = register.get('datasets')
         assert self.datasets is not None
 
-        self.datasets_config = self.datasets.get_config()
-        self.datasets_factory = self.datasets.get_factory()
+        self.dataset_facade = self.datasets.get_facade()
 
     @classmethod
     def get_result_by_gender(cls, result, gender):
@@ -69,7 +68,7 @@ class PhenoToolView(APIView):
     def prepare_pheno_tool(self, data):
         dataset_id = data['datasetId']
         measure_id = data['measureId']
-        dataset = self.datasets_factory.get_dataset(dataset_id)
+        dataset = self.dataset_facade.get_dataset(dataset_id)
         normalize_by = [
             self.get_normalize_measure_id(
                 measure_id,

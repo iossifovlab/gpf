@@ -100,6 +100,7 @@ class RawFamilyVariants(FamiliesBase):
         assert self.config is not None
 
         self.VF = variant_factory
+        self.prefix = prefix
         self._load(annotator, region)
 
     def is_empty(self):
