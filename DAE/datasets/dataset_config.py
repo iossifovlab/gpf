@@ -16,21 +16,11 @@ class DatasetConfig(ConfigurableEntityConfig):
         print("download_columns", self.list('download_columns'))
 
     @classmethod
-    def from_config(cls, path, work_dir=None):
-        if work_dir is None:
-            work_dir = cls._work_dir_from_environment()
-
-        config = cls.get_config(path, work_dir)
-
-        dataset_config = config['dataset']
+    def from_config(cls, config_section):
+        dataset_config = config_section
         dataset_config['studies'] = dataset_config['studies'].split(',')
 
-        return DatasetConfig(config['dataset'])
-
-    @staticmethod
-    def _work_dir_from_environment():
-        from datasets.default_settings import DATA_DIR
-        return DATA_DIR
+        return dataset_config
 
     def get_dataset_description(self):
         return {

@@ -1,5 +1,6 @@
 import os
 import abc
+from itertools import chain
 
 
 class ConfigurableEntityDefinition(object):
@@ -25,7 +26,7 @@ class ConfigurableEntityDefinition(object):
 
     def directory_enabled_configurable_entity_definition(
             self, configurable_entities_dir, configurable_entity_config,
-            config_key):
+            work_dir, config_key):
         assert isinstance(configurable_entities_dir, str),\
             type(configurable_entities_dir)
         assert os.path.exists(configurable_entities_dir),\
@@ -45,7 +46,10 @@ class ConfigurableEntityDefinition(object):
         print(config_paths)
 
         for config_path in config_paths:
-            configs.append(configurable_entity_config.from_config(config_path))
+            configs.append(ConfigurableEntityDefinition.list_from_config(
+                config_path, work_dir, configurable_entity_config, config_key))
+
+        configs = list(chain.from_iterable(configs))
 
         self.configs = {conf[config_key]: conf for conf in configs}
 
@@ -54,10 +58,12 @@ class ConfigurableEntityDefinition(object):
             config_key):
         self.config_path = config_path
 
-        config = configurable_entity_config.from_config(config_path, work_dir)
+        configs = ConfigurableEntityDefinition.list_from_config(
+            config_path, work_dir, configurable_entity_config, config_key)
 
         self.configs = {
             config[config_key]: config
+            for config in configs
         }
 
         print(self.configs)
