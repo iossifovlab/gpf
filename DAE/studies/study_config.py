@@ -1,11 +1,11 @@
 import os
-import reusables
-from box import ConfigBox
 
+from configurable_entities.configurable_entity_config import\
+    ConfigurableEntityConfig
 from studies.study_factory import StudyFactory
 
 
-class StudyConfig(ConfigBox):
+class StudyConfig(ConfigurableEntityConfig):
 
     def __init__(self, *args, **kwargs):
         super(StudyConfig, self).__init__(*args, **kwargs)
@@ -17,40 +17,15 @@ class StudyConfig(ConfigBox):
         self.make_vcf_prefix_absolute_path()
 
     @classmethod
-    def list_from_config(cls, config_file='studies.conf', work_dir=None):
-        if work_dir is None:
-            pass
-            # FIXME: is this necessary?
-            # from default_settings import DATA_DIR
-            # work_dir = DATA_DIR
-        if not os.path.exists(config_file):
-            config_file = os.path.join(work_dir, config_file)
-        assert os.path.exists(config_file), config_file
+    def from_config(cls, config_section, section):
+        if 'enabled' in config_section:
+            if config_section['enabled'] == 'false':
+                return None
 
-        config = reusables.config_dict(
-            config_file,
-            auto_find=False,
-            verify=True,
-            defaults={
-                'work_dir': work_dir,
-            }
-        )
+        cls.add_default_config_key_from_section(config_section, section,
+                                                'study_name')
 
-        result = list()
-        for section in config.keys():
-            if 'enabled' in config[section]:
-                if config[section]['enabled'] == 'false':
-                    continue
-            cls.add_default_study_name_from_section(config, section)
-
-            result.append(StudyConfig(config[section]))
-
-        return result
-
-    @classmethod
-    def add_default_study_name_from_section(cls, config, section):
-        if 'study_name' not in config[section]:
-            config[section]['study_name'] = section
+        return StudyConfig(config_section)
 
     def make_vcf_prefix_absolute_path(self):
         if not os.path.isabs(self.prefix):

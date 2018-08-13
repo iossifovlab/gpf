@@ -1,9 +1,8 @@
-import os
-import reusables
-from box import ConfigBox
+from configurable_entities.configurable_entity_config import\
+    ConfigurableEntityConfig
 
 
-class DatasetConfig(ConfigBox):
+class DatasetConfig(ConfigurableEntityConfig):
 
     def __init__(self, *args, **kwargs):
         super(DatasetConfig, self).__init__(*args, **kwargs)
@@ -15,28 +14,12 @@ class DatasetConfig(ConfigBox):
 
         print("studies", self.studies)
 
-    @staticmethod
-    def from_config(path, work_dir=None):
-        if work_dir is None:
-            from default_settings import DATA_DIR
-            work_dir = DATA_DIR
-        if not os.path.exists(path):
-            path = os.path.join(work_dir, path)
-        assert os.path.exists(path), path
-
-        config = reusables.config_dict(
-            path,
-            auto_find=False,
-            verify=True,
-            defaults={
-                'wd': work_dir,
-            }
-        )
-
-        dataset_config = config['dataset']
+    @classmethod
+    def from_config(cls, config_section, section=None):
+        dataset_config = config_section
         dataset_config['studies'] = dataset_config['studies'].split(',')
 
-        return DatasetConfig(config['dataset'])
+        return DatasetConfig(dataset_config)
 
     def get_dataset_description(self):
         return {

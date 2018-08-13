@@ -2,7 +2,8 @@ import os
 import pytest
 
 from studies.study_config import StudyConfig
-from studies.study_definition import StudyDefinition
+from studies.study_definition import StudyDefinition,\
+    SingleFileStudiesDefinition
 from studies.study_factory import StudyFactory
 
 
@@ -11,14 +12,20 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
+def fixtures_config():
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), 'fixtures/studies.conf'))
+
+
 @pytest.fixture(scope='session')
 def study_configs():
-    return StudyConfig.list_from_config(work_dir=fixtures_dir())
+    return StudyDefinition.list_from_config(
+        fixtures_config(), fixtures_dir(), StudyConfig)
 
 
 @pytest.fixture(scope='session')
 def study_definition(study_configs):
-    return StudyDefinition.from_config(study_configs)
+    return SingleFileStudiesDefinition(work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='session')
