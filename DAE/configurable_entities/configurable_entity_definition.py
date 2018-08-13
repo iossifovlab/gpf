@@ -47,7 +47,7 @@ class ConfigurableEntityDefinition(object):
 
         for config_path in config_paths:
             configs.append(ConfigurableEntityDefinition.list_from_config(
-                config_path, work_dir, configurable_entity_config, config_key))
+                config_path, work_dir, configurable_entity_config))
 
         configs = list(chain.from_iterable(configs))
 
@@ -59,7 +59,7 @@ class ConfigurableEntityDefinition(object):
         self.config_path = config_path
 
         configs = ConfigurableEntityDefinition.list_from_config(
-            config_path, work_dir, configurable_entity_config, config_key)
+            config_path, work_dir, configurable_entity_config)
 
         self.configs = {
             config[config_key]: config
@@ -70,18 +70,15 @@ class ConfigurableEntityDefinition(object):
 
     @classmethod
     def list_from_config(cls, config_file, work_dir,
-                         configurable_entity_config, config_key):
+                         configurable_entity_config):
         config = configurable_entity_config.get_config(config_file, work_dir)
 
         result = list()
         for section in config.keys():
-            config_section =\
-                configurable_entity_config.from_config(config[section])
-
-            cls.add_default_config_key_from_section(config_section, section,
-                                                    config_key)
-
-            result.append(configurable_entity_config(config[section]))
+            entity_config = configurable_entity_config.from_config(
+                config[section], section)
+            if entity_config is not None:
+                result.append(entity_config)
 
         return result
 

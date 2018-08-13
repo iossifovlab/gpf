@@ -17,11 +17,15 @@ class StudyConfig(ConfigurableEntityConfig):
         self.make_vcf_prefix_absolute_path()
 
     @classmethod
-    def from_config(cls, config_section):
+    def from_config(cls, config_section, section):
         if 'enabled' in config_section:
             if config_section['enabled'] == 'false':
                 return None
-        return config_section
+
+        cls.add_default_config_key_from_section(config_section, section,
+                                                'study_name')
+
+        return StudyConfig(config_section)
 
     def make_vcf_prefix_absolute_path(self):
         if not os.path.isabs(self.prefix):

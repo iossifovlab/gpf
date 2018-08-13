@@ -24,3 +24,9 @@ class ConfigurableEntityConfig(ConfigBox):
         )
 
         return config
+
+    @classmethod
+    def add_default_config_key_from_section(cls, config_section, section,
+                                            config_key):
+        if config_key not in config_section:
+            config_section[config_key] = section

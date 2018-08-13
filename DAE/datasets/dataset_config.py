@@ -16,11 +16,11 @@ class DatasetConfig(ConfigurableEntityConfig):
         print("download_columns", self.list('download_columns'))
 
     @classmethod
-    def from_config(cls, config_section):
+    def from_config(cls, config_section, section=None):
         dataset_config = config_section
         dataset_config['studies'] = dataset_config['studies'].split(',')
 
-        return dataset_config
+        return DatasetConfig(dataset_config)
 
     def get_dataset_description(self):
         return {
