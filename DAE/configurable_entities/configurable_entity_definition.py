@@ -81,28 +81,3 @@ class ConfigurableEntityDefinition(object):
                 result.append(entity_config)
 
         return result
-
-    @classmethod
-    def add_default_config_key_from_section(cls, config_section, section,
-                                            config_key):
-        if config_key not in config_section:
-            config_section[config_key] = section
-
-    @classmethod
-    def get_definition_from_config(
-            cls, config_file, work_dir, configurable_entity_config,
-            configurable_entity_definition, config_key):
-        print("from_config_file", work_dir, config_file)
-
-        configs = cls.list_from_config(
-            config_file, work_dir, configurable_entity_config,
-            config_key)
-
-        definition = configurable_entity_definition()
-
-        definition.configs = {
-            config[config_key]: config
-            for config in configs
-        }
-
-        return definition
