@@ -25,14 +25,6 @@ class GeneSetsBaseView(views.APIView):
     def __init__(self):
         self.gscs = register.get('gene_sets_collections')
 
-    @classmethod
-    def permitted_datasets(cls, user):
-        dataset_ids = register.get('datasets').get_config().get_dataset_ids()
-        return filter(
-            lambda dataset_id: IsDatasetAllowed.user_has_permission(
-                user, dataset_id),
-            dataset_ids)
-
 class GeneSetsCollectionsView(GeneSetsBaseView):
 
     def __init__(self):
@@ -40,7 +32,7 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
 
     def get(self, request):
         gene_sets_collections = deepcopy(self.gscs.get_gene_sets_collections(
-            self.permitted_datasets(request.user)))
+            IsDatasetAllowed.permitted_datasets(request.user)))
         return Response(gene_sets_collections, status=status.HTTP_200_OK)
 
 
@@ -76,7 +68,7 @@ class GeneSetsView(GeneSetsBaseView):
 
         gene_sets_types = data.get('geneSetsTypes', [])
         gene_sets = self.gscs.get_gene_sets(gene_sets_collection_id,
-            gene_sets_types, self.permitted_datasets(request.user))
+            gene_sets_types, IsDatasetAllowed.permitted_datasets(request.user))
 
         response = gene_sets
         if 'filter' in data:
@@ -138,7 +130,7 @@ class GeneSetDownloadView(GeneSetsBaseView):
             gene_sets_collection_id,
             gene_set_id,
             gene_sets_types,
-            self.permitted_datasets(user)
+            IsDatasetAllowed.permitted_datasets(user)
         )
         if gene_set is None:
             return Response(status=status.HTTP_404_NOT_FOUND)

@@ -3,6 +3,8 @@ Created on Oct 21, 2015
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import numpy as np
 import operator
 import logging
@@ -11,6 +13,25 @@ from Family import Person
 from pheno.common import Role, Gender
 
 LOGGER = logging.getLogger(__name__)
+
+
+def chromosome_prefix(genomes_db=None):
+    if genomes_db is None:
+        from DAE import genomesDB
+        genome = genomesDB.get_genome()  # @UndefinedVariable
+    else:
+        genome = genomes_db.get_genome()
+
+    assert genome is not None
+    with open(genome.genomicIndexFile) as genomic_index:
+        chr_names = [ln.split("\t")[0] for ln in genomic_index]
+        chr1 = chr_names[0]
+        assert chr1 == "1" or chr1 == "chr1"
+        if "chr" in chr1:
+            return "chr"
+        else:
+            return ""
+
 
 
 def normalRefCopyNumber(location, gender):
@@ -383,7 +404,7 @@ class Variant:
         return self.key == other.key
 
     def __lt__(self, other):
-        return self.sort_key < other.sort_key
+        return self.key < other.key
 
     CHROMOSOMES_ORDER = dict(
         {str(x): '0' + str(x) for x in range(1, 10)}.items() +
@@ -391,19 +412,17 @@ class Variant:
         {'X': '23', 'Y': '24'}.items())
 
     @property
-    def sort_key(self):
+    def key(self):
         chromosome, position = self.location.split(':')
         return (self.CHROMOSOMES_ORDER.get(chromosome, '99' + chromosome),
-                int(position.split('-')[0]))
-
-    @property
-    def key(self):
-        return (self.familyId if self.familyId else '',
-            self.location, self.variant)
+                int(position.split('-')[0]),
+                self.variant,
+                self.familyId if self.familyId else '')
 
     def pedigree_v3(self, legend):
         def get_color(p):
-            return legend.get_color(p.atts[legend.id])
+            return legend.get_color(
+                p.atts[legend.id] if p.role == Role.prb else 'unaffected')
 
         denovo_parent = self.denovo_parent()
 

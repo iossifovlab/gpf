@@ -16,3 +16,7 @@ coverage.xml
 junit.xml
 logs
 output
+/gpf-html.tar.gz
+.pytest_cache
+metastore_db
+setenv.sh

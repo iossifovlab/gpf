@@ -19,7 +19,7 @@ class PhenoBrowserCommon(object):
             settings,
             "PHENO_BROWSER_CACHE",
             None)
-        dbdir = os.path.join(cache_dir, 'pheno_browser', dbname)
+        dbdir = os.path.join(cache_dir, dbname)
         return dbdir
 
     @staticmethod

@@ -20,7 +20,7 @@ class DatasetsConfigTest(unittest.TestCase):
         datasets = self.dataset_config.get_datasets()
 
         self.assertIsNotNone(datasets)
-        self.assertEquals(7, len(datasets))
+        self.assertEquals(6, len(datasets))
 
     def test_dataset_sd(self):
         ds = self.dataset_config.get_dataset_desc('SD')
@@ -50,7 +50,7 @@ class DatasetsConfigTest(unittest.TestCase):
         self.assertIsNone(ds)
 
     def test_dataset_vip(self):
-        ds = self.dataset_config.get_dataset_desc('VIP')
+        ds = self.dataset_config.get_dataset_desc('SVIP')
         self.assertIsNotNone(ds)
 
         self.assertEquals('vip', ds['phenoDB'])

@@ -15,14 +15,18 @@ class MetaDataset(Dataset):
     def __distinct(variants, max_count=None):
         count = 0;
         previous_variant = next(variants)
+        seen_keys = {previous_variant.key}
         for variant in variants:
             if previous_variant == variant:
-                previous_variant.studyName += "; " + variant.studyName
+                if previous_variant.studyName != variant.studyName:
+                    previous_variant.studyName += "; " + variant.studyName
             else:
-                yield previous_variant
-                previous_variant = variant
-                if max_count and ++count >= max_count:
-                    return
+                if variant.key not in seen_keys:
+                    yield previous_variant
+                    previous_variant = variant
+                    seen_keys.add(variant.key)
+                    if max_count and ++count >= max_count:
+                        return
         yield previous_variant
 
     def get_variants(self, safe=True, **kwargs):
@@ -53,7 +57,7 @@ class MetaDataset(Dataset):
 
         augment_vars = self._get_var_augmenter(safe=safe, **kwargs)
         return itertools.imap(augment_vars,
-            self.__distinct(self._phenotype_filter(all_variants)))
+            self.__distinct(self._phenotype_filter(all_variants, **kwargs)))
 
     def __get_variants_from_study(self, study, safe=True, **kwargs):
         variant_iterators = []

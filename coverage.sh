@@ -33,7 +33,7 @@ py.test -v --cov-config coveragerc \
     wdae/
 
 
-py.test -v --cov-config coveragerc \
+py.test -vs --cov-config coveragerc \
     --junitxml=DAE/junit.xml \
     --cov-append \
     --cov-report html \
