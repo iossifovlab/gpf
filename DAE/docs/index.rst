@@ -9,6 +9,7 @@ Welcome to DAE's documentation!
 .. toctree::
    :maxdepth: 4
 
+   variants
    pheno
    pheno_tool
    enrichment_tool

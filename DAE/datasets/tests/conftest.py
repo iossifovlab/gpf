@@ -1,65 +1,61 @@
-'''
-Created on Feb 6, 2017
-
-@author: lubo
-'''
 import pytest
-from datasets.config import DatasetsConfig
-from datasets.datasets_factory import DatasetsFactory
+import os
 
-import DAE
-
-
-@pytest.fixture(scope='session')
-def datasets_config(request):
-    return DatasetsConfig()
+from datasets.dataset import DatasetWrapper
+from datasets.dataset_factory import DatasetFactory
+from datasets.datasets_definition import SingleFileDatasetsDefinition
 
 
-@pytest.fixture(scope='session')
-def datasets_factory(request, datasets_config):
-    return DatasetsFactory(datasets_config)
+def create_dataset_wrapper_factory(dataset_definition):
+    return DatasetFactory(dataset_definition, _class=DatasetWrapper)
 
 
-@pytest.fixture(scope='session')
-def ssc(request, datasets_factory):
-    return datasets_factory.get_dataset('SSC')
+def load_dataset(fixtures_folder, dataset_name):
+    definition = SingleFileDatasetsDefinition(
+        '{}.conf'.format(dataset_name), fixtures_folder)
 
+    dataset_factory = create_dataset_wrapper_factory(definition)
+    result = dataset_factory.get_dataset(dataset_name)
 
-@pytest.fixture(scope='session')
-def vip(request,  datasets_factory):
-    return datasets_factory.get_dataset('VIP')
+    print(result)
+    assert result is not None
+
+    return result
 
 
 @pytest.fixture(scope='session')
-def sd(request,  datasets_factory):
-    return datasets_factory.get_dataset('SD')
+def fixtures_folder():
+    return os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'fixtures'
+    )
 
 
 @pytest.fixture(scope='session')
-def denovodb(request,  datasets_factory):
-    return datasets_factory.get_dataset('denovo_db')
+def inheritance_trio_wrapper(fixtures_folder):
+    return load_dataset(fixtures_folder, 'inheritance_trio')
 
 
 @pytest.fixture(scope='session')
-def ssc_pheno(request):
-    pf = DAE.pheno
-    db = pf.get_pheno_db('ssc')
-    return db
+def quads_f1_wrapper(fixtures_folder):
+    return load_dataset(fixtures_folder, 'quads_f1')
 
 
 @pytest.fixture(scope='session')
-def vip_pheno():
-    pf = DAE.pheno
-    db = pf.get_pheno_db('vip')
-    return db
+def quads_variant_types_wrapper(fixtures_folder):
+    return load_dataset(fixtures_folder, 'quads_variant_types')
 
 
 @pytest.fixture(scope='session')
-def spark(request,  datasets_factory):
-    return datasets_factory.get_dataset('SPARK')
+def quads_two_families_wrapper(fixtures_folder):
+    return load_dataset(fixtures_folder, 'quads_two_families')
 
 
 @pytest.fixture(scope='session')
-def agre(request,  datasets_factory):
-    return datasets_factory.get_dataset('AGRE_WG')
+def quads_in_child(fixtures_folder):
+    return load_dataset(fixtures_folder, 'quads_in_child')
 
+
+@pytest.fixture(scope='session')
+def quads_in_parent(fixtures_folder):
+    return load_dataset(fixtures_folder, 'quads_in_parent')

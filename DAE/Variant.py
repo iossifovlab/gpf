@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import numpy as np
 import operator
+from pprint import pprint
 import logging
 
 from Family import Person
@@ -171,7 +172,7 @@ def parseGeneEffect(effStr):
         geneEffect.append({'sym': "", 'symu': '', 'eff': effStr})
         return geneEffect
 
-    splitGeneEffect(effStr, geneEffect)
+    geneEffect = splitGeneEffect(effStr, geneEffect)
     return geneEffect
 
 
@@ -384,6 +385,7 @@ class Variant:
                     self.study.genetic_status.get(p.personId, 'unknown'),
                     '#ffffff')
                 for p in mbrs]
+
 
         denovo_parent = self.denovo_parent()
         res = [reduce(operator.add, [[m.role,

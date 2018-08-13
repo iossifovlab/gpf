@@ -52,12 +52,12 @@ def assert_members_with_role_have_variant(variant, role):
 
 
 def assert_members_with_role_and_variant_count(variant, role, count):
-    members_with_variant = 0
+    variant_in_members = 0
     for i, m in enumerate(variant.memberInOrder):
         if m.role == role and variant.bestSt[1][i] > 0:
-            members_with_variant += 1
+            variant_in_members += 1
 
-    assert members_with_variant == count
+    assert variant_in_members == count
 
 
 def test_denovo_simple_role_filter(ssc):

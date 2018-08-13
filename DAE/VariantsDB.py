@@ -29,12 +29,12 @@ from Variant import Variant, mat2Str, filter_gene_effect, str2Mat,\
     present_in_child_filter,\
     denovo_present_in_parent_filter, \
     filter_by_status, chromosome_prefix
-
 from Family import Family, Person
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
 from ConfigParser import NoOptionError
+from variant_db.variant_query import VariantQuery
 from pheno.common import Role, Status, Gender
 
 LOGGER = logging.getLogger(__name__)
@@ -159,6 +159,9 @@ class Study:
             elif impl_format == 'mysql':
                 self.transmission_impl[callSet] = \
                     MysqlTransmittedQuery(self, callSet)
+            elif impl_format == 'new_mysql':
+                self.transmission_impl[callSet] = \
+                    VariantQuery(self)
             else:
                 raise Exception("unexpected transmission format")
 
@@ -201,8 +204,8 @@ class Study:
                             presentInParent=None, genomicScores=[],
                             gender=None, roles=None, status=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
-                            familyIds=None, regionS=None, callSet=None):
-
+                            familyIds=None, regionS=None, callSet=None,
+                            limit=None):
         picFilter = present_in_child_filter(presentInChild, gender)
         pipFilter = denovo_present_in_parent_filter(presentInParent)
 
@@ -660,7 +663,6 @@ class Study:
             f = Family()
             f.familyId = fid
 
-            # print fid, pDct.keys()
             if len(pDct) == 3:
                 f.memberInOrder = \
                     [pDct[Role.mom.name], pDct[Role.dad.name], pDct[Role.prb.name]]

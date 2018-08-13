@@ -4,8 +4,8 @@ Created on Oct 21, 2015
 @author: lubo
 '''
 from Variant import parseGeneEffect, filter_gene_effect, Variant,\
-    present_in_parent_filter, present_in_child_filter, filter_by_status, \
-    chromosome_prefix
+    present_in_parent_filter, present_in_child_filter, \
+    filter_by_status, chromosome_prefix
 import gzip
 import pysam
 import copy
@@ -64,7 +64,6 @@ class TransmissionLegacy(TransmissionConfig):
                              format(len(colNms), len(vls)))
                 raise Exception("Incorrect transmitted variants file: ")
             mainAtts = dict(zip(colNms, vls))
-
             mainAtts["location"] = mainAtts["chr"] + ":" + mainAtts["position"]
 
             if minParentsCalled != -1:
