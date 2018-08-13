@@ -23,5 +23,20 @@ class StudyDefinition(ConfigurableEntityDefinition):
 
     @classmethod
     def from_single_file(cls, config_file=None, work_dir=None):
-        return cls.return_single_file_configurable_entity_definition(
+        if work_dir is None:
+            work_dir = cls._work_dir_from_environment()
+        if config_file is None:
+            config_file = cls._config_file_from_environment()
+
+        return cls.get_definition_from_config(
             config_file, work_dir, StudyConfig, StudyDefinition, 'study_name')
+
+    @staticmethod
+    def _work_dir_from_environment():
+        from studies.default_settings import DATA_DIR
+        return DATA_DIR
+
+    @staticmethod
+    def _config_file_from_environment():
+        from studies.default_settings import CONFIG_FILE
+        return CONFIG_FILE
