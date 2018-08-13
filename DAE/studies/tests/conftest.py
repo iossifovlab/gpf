@@ -11,9 +11,15 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
+def fixtures_config():
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), 'fixtures/studies.conf'))
+
+
 @pytest.fixture(scope='session')
 def study_configs():
-    return StudyConfig.list_from_config(work_dir=fixtures_dir())
+    return StudyDefinition.list_from_config(
+        fixtures_config(), fixtures_dir(), StudyConfig)
 
 
 @pytest.fixture(scope='session')
