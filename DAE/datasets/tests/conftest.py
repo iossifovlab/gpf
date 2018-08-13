@@ -27,7 +27,7 @@ def ssc(request, datasets_factory):
 
 @pytest.fixture(scope='session')
 def vip(request,  datasets_factory):
-    return datasets_factory.get_dataset('VIP')
+    return datasets_factory.get_dataset('SVIP')
 
 
 @pytest.fixture(scope='session')
@@ -57,9 +57,3 @@ def vip_pheno():
 @pytest.fixture(scope='session')
 def spark(request,  datasets_factory):
     return datasets_factory.get_dataset('SPARK')
-
-
-@pytest.fixture(scope='session')
-def agre(request,  datasets_factory):
-    return datasets_factory.get_dataset('AGRE_WG')
-
