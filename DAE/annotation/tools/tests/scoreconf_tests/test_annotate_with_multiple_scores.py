@@ -4,50 +4,62 @@ import input_output
 import os.path
 import tempfile
 import gzip
-from os import remove, rmdir
-from annotation_pipeline.tools.annotate_with_multiple_scores \
+from os import remove, rmdir, mkdir, umask
+from annotation.tools.annotate_with_multiple_scores \
         import MultipleScoresAnnotator
 from copy import deepcopy
 from StringIO import StringIO
 
 
-def to_file(content, where=None):
-    if where is None:
-        where = os.path.dirname('.')
-    temp = tempfile.NamedTemporaryFile(dir=where, delete=False, suffix='.tmp')
-    temp.write(content)
-    temp.seek(0)
-    return temp
-
-
 def get_opts(c_inp=None, p_inp=None, x_inp=None,
-             dir_inp=None, scores_inp=None, confs_inp=None,
+             dir_inp=None, 
              direct_inp=False):
     class MockOpts:
-        def __init__(self, chrom, pos, loc, scoredir, scores, confs, tabix):
+        def __init__(self, chrom, pos, loc, scoredir, tabix):
             self.c = chrom
             self.p = pos
             self.x = loc
             self.H = False
             self.scores_directory = scoredir
-            self.scores = scores
-            self.scores_configs = confs
             self.direct = tabix
             self.labels = None
             self.explicit = True
 
-    return MockOpts(c_inp, p_inp, x_inp, dir_inp, scores_inp, confs_inp, direct_inp)
+    return MockOpts(c_inp, p_inp, x_inp, dir_inp, direct_inp)
+
+
+def to_file(content, name, where=None):
+    if where is None:
+        where = os.path.dirname('.')
+    name = where + '/' + name
+    temp = open(name, 'w')
+    temp.write(content)
+    temp.seek(0)
+    temp.close()
+    return temp
 
 
 def setup_scoredirs():
-    master_dir = tempfile.mkdtemp(dir=os.path.dirname('.'))
-    score1_dir = tempfile.mkdtemp(dir=master_dir)
-    score2_dir = tempfile.mkdtemp(dir=master_dir)
-    return [master_dir, score1_dir, score2_dir]
+    pathlist = [os.path.abspath('.')+'/masterdir',
+                os.path.abspath('.')+'/masterdir/score1',
+                os.path.abspath('.')+'/masterdir/score2']
+    try:
+        print(pathlist)
+        #original_mask = umask(0)
+        os.mkdir(pathlist[0])
+        #os.chmod(pathlist[0], 0777)
+        os.mkdir(pathlist[1])
+        #os.chmod(pathlist[1], 0777)
+        os.mkdir(pathlist[2])
+        #os.chmod(pathlist[2], 0777)
+    finally:
+        pass
+        #os.umask(original_mask)
+    return pathlist
 
 
-def setup_score(score, conf, path):
-    return [to_file(score, path), to_file(conf, path)]
+def setup_score(score, conf, name, path):
+    return [to_file(score, name, path), to_file(conf, name+'.conf', path)]
 
 
 def cleanup(dirs, files):
@@ -88,11 +100,9 @@ def multi_scores():
             StringIO(''.join(deepcopy(input_output.MULTI_INPUT_SCORE_ALT)))]
 
 
-def multi_annotator(masterdir, scores, confs):
+def multi_annotator(masterdir):
     multi_opts = get_opts(c_inp='chrom', p_inp='pos',
-                          dir_inp=masterdir,
-                          scores_inp=scores,
-                          confs_inp=confs)
+                          dir_inp=masterdir)
     return MultipleScoresAnnotator(multi_opts,
                                    header=['id', 'chrom', 'pos', 'variation'])
 
@@ -100,12 +110,16 @@ def multi_annotator(masterdir, scores, confs):
 def test_multi_score(multi_input, multi_scores, multi_config, multi_output, mocker):
     tmp_dirs = setup_scoredirs()
 
-    score1 = setup_score(multi_scores[0].getvalue(), config.MULTI_SCORE_CONFIG.lstrip(), tmp_dirs[1])
-    score2 = setup_score(multi_scores[1].getvalue(), config.MULTI_SCORE_CONFIG.lstrip(), tmp_dirs[2])
+    score1 = setup_score(multi_scores[0].getvalue(), 
+                         config.MULTI_SCORE_CONFIG.lstrip(), 
+                         'score1', tmp_dirs[1])
+    score2 = setup_score(multi_scores[1].getvalue(), 
+                         config.MULTI_SCORE_CONFIG.lstrip(), 
+                         'score2', tmp_dirs[2])
     scores = ','.join([score1[0].name, score2[0].name])
     confs = ','.join([score1[1].name, score2[1].name])
 
-    annotator = multi_annotator(tmp_dirs[0], scores, confs)
+    annotator = multi_annotator(tmp_dirs[0])
     output = ""
     for line in multi_input.readlines():
         line = line.rstrip()

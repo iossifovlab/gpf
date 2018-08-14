@@ -5,8 +5,7 @@ import os
 from box import Box
 
 from utilities import AnnotatorBase, assign_values, main
-from annotate_score_base import ScoreAnnotator
-
+from annotate_score_base import ScoreAnnotator, MyConfigParser
 
 def get_argument_parser():
     parser = argparse.ArgumentParser(
@@ -20,12 +19,27 @@ def get_argument_parser():
                         default=False,  action='store_true', dest='no_header')
     parser.add_argument('--dbnsfp', help='path to dbNSFP', action='store')
     parser.add_argument('--config', help='path to config', action='store')
-    parser.add_argument('--columns', action='append', default=[])
+    parser.add_argument('--columns', help='which columns of the score file to use',
+                        action='append', default=[])
     parser.add_argument('--direct',
                         help='read score files using tabix index '
                         '(default: read score files iteratively)',
                         default=False, action='store_true')
+    parser.add_argument('--labels', help='comma separated list of the new labels '
+                        'of the added columns, defaults to column names', action='store')
     return parser
+
+
+def conf_to_dict(path, columns):
+    conf_parser = MyConfigParser()
+    conf_parser.optionxform = str
+    conf_parser.readfp(path)
+
+    conf_settings = dict(conf_parser.items('general'))
+    conf_settings_cols = {'columns': dict(conf_parser.items('columns'))}
+    conf_settings.update(conf_settings_cols)
+    conf_settings['columns']['score'] = ','.join(columns)
+    return conf_settings
 
 
 class MissenseScoresAnnotator(AnnotatorBase):
@@ -65,7 +79,8 @@ class MissenseScoresAnnotator(AnnotatorBase):
                 'x': self.opts.x,
                 'direct': self.opts.direct,
                 'scores_file': self.path.format(chr),
-                'scores_config_file': self.opts.config
+                'scores_config_file': conf_to_dict(self.opts.config, self.opts.columns),
+                'labels': self.opts.labels
             }
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
 

@@ -4,9 +4,9 @@ import config
 import gzip
 import tempfile
 import os
-from annotation_pipeline.tools.add_missense_scores \
+from annotation.tools.add_missense_scores \
         import MissenseScoresAnnotator
-from annotation_pipeline.annotation_pipeline import MyConfigParser
+from annotation.annotation_pipeline import MyConfigParser
 from copy import deepcopy
 from StringIO import StringIO
 
@@ -104,7 +104,7 @@ def test_missense_score(missense_input, missense_scores, missense_output,
     tmp_dir = setup_scoredir()
     dbnsfp_score = to_file(missense_scores.getvalue(), where=tmp_dir)
 
-    annotator = missense_annotator(dbnsfp_score.name, conf_to_dict(dbnsfp_config))
+    annotator = missense_annotator(dbnsfp_score.name, dbnsfp_config)
     output = ""
     for line in missense_input.readlines():
         line = line.rstrip()

@@ -30,6 +30,7 @@ class ScoreFile(object):
         # try default config path
         if config_input is None:
             config_input = self.name + '.conf'
+            print(config_input)
         # config is dict case
         if isinstance(config_input, dict):
             self.config = Box(config_input,
@@ -79,7 +80,7 @@ class ScoreFile(object):
                     return [line[i] for i in self.scores_indices]
         except ValueError:
             pass
-        return [self.config.noScoreValue]
+        return [self.config.noScoreValue] * len(self.config.columns.score)
 
 
 class IterativeAccess(ScoreFile):
@@ -95,15 +96,9 @@ class IterativeAccess(ScoreFile):
             self.config.header.index(self.config.columns.pos_begin)
         self.pos_end_index = \
             self.config.header.index(self.config.columns.pos_end)
-        if self._next_line():
-            self.current_lines = [self._next_line_buf]
-        else:
-            sys.stderr.write("The file provided is empty.\n")
-            sys.exit(-78)
+        self.current_lines = [self._next_line()]
 
     def _fetch(self, chr, pos):
-        # TODO this implements closed interval because we want to support
-        # files with single position column
         chr = self._chr_to_int(chr)
 
         for i in range(len(self.current_lines) - 1, -1, -1):
@@ -116,34 +111,29 @@ class IterativeAccess(ScoreFile):
                 (int(self.current_lines[-1][self.pos_begin_index]) <= pos and
                  self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chr):
 
-            if self._next_line():
-                line = self._next_line_buf
-                while self._chr_to_int(line[self.chr_index]) <= chr and \
-                        (int(line[self.pos_end_index]) < pos or
-                         self._chr_to_int(line[self.chr_index]) != chr):
-                    line = self._next_line_buf
-                    if not self._next_line():
-                        break
-                self.current_lines.append(line)
+            line = self._next_line()
+            while self._chr_to_int(line[self.chr_index]) <= chr and \
+                    (int(line[self.pos_end_index]) < pos or
+                     self._chr_to_int(line[self.chr_index]) != chr):
+                line = self._next_line()
+            self.current_lines.append(line)
 
             while int(self.current_lines[-1][self.pos_begin_index]) <= pos and \
                     self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chr:
-                if self._next_line():
-                    self.current_lines.append(self._next_line_buf)
-                else:
-                    break
+                self.current_lines.append(self._next_line())
 
-        return self.current_lines
+        return self.current_lines[:-1]
 
     def _next_line(self):
-        self._next_line_buf = self.file.readline()
-        if self._next_line_buf is None \
-                or self._next_line_buf == '':
-            return False
+        line = self.file.readline()
+        if line is None or line == '':
+            line = self.config.header[:]
+            line[self.chr_index] = '25'
+            line[self.pos_begin_index] = '-1'
+            line[self.pos_end_index] = '-1'
         else:
-            self._next_line_buf = \
-                    self._next_line_buf.rstrip('\n').split('\t')
-            return True
+            line = line.rstrip('\n').split('\t')
+        return line
 
     def _chr_to_int(self, chr):
         chr = chr.replace('chr', '')
@@ -193,8 +183,8 @@ class ScoreAnnotator(AnnotatorBase):
             else:
                 self.file = IterativeAccess(self.opts.scores_file,
                                             self.opts.scores_config_file)
-        self.header.append(self.labels if self.labels
-                           else self.file.config.scores_columns)
+        self.header.extend(self.labels.split(',') if self.labels
+                           else self.file.config.columns.score)
 
     @property
     def new_columns(self):

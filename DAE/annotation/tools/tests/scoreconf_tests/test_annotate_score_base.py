@@ -4,8 +4,8 @@ import input_output
 import tempfile
 import os.path
 from os import remove
-from annotation_pipeline.annotation_pipeline import MyConfigParser
-from annotation_pipeline.tools.annotate_score_base \
+from annotation.annotation_pipeline import MyConfigParser
+from annotation.tools.annotate_score_base \
         import ScoreAnnotator, gzip
 from copy import deepcopy
 from StringIO import StringIO
