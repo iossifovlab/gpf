@@ -1,7 +1,7 @@
 from datasets.dataset import DatasetWrapper
 from datasets.dataset_factory import DatasetFactory
 from datasets.datasets_definition import DirectoryEnabledDatasetsDefinition
-from studies.study_definition import StudyDefinition
+from studies.study_definition import SingleFileStudiesDefinition
 
 
 class DatasetFacade(object):
@@ -9,7 +9,7 @@ class DatasetFacade(object):
     _dataset_cache = {}
 
     def __init__(self):
-        study_definition = StudyDefinition.from_environment()
+        study_definition = SingleFileStudiesDefinition()
         self.dataset_definition = DirectoryEnabledDatasetsDefinition()
         self.dataset_factory = DatasetFactory(
             _class=DatasetWrapper, studies_definition=study_definition)
