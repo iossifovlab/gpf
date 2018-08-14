@@ -2,9 +2,29 @@
 
 import sys
 import argparse
-from utilities import *
+from annotation.tools.utilities import *
 
 def get_argument_parser():
+    """
+    ConcatColumnsAnnotator options::
+
+        usage: concat_columns.py [-h] [-H] -c COLUMNS [-s SEP] [--label LABEL]
+                         [infile] [outfile]
+
+        Program to concatenate list of columns
+
+        positional arguments:
+          infile                path to input file; defaults to stdin
+          outfile               path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -H                    no header in the input file
+          -c COLUMNS, --columns COLUMNS
+                                comma separated list of columns to concatenate
+          -s SEP, --sep SEP     separator
+          --label LABEL         label for the generated column
+    """
     desc = """Program to concatenate list of columns"""
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-H', help='no header in the input file',

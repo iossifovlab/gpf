@@ -13,7 +13,7 @@ class Test(BaseAuthenticatedUserTest):
 
     TOOL_URL = "/api/v3/pheno_tool"
     QUERY = {
-        "datasetId": "VIP",
+        "datasetId": "SVIP",
         "measureId": "treatment_history.age_ended",
         "normalizeBy": [
             "age"

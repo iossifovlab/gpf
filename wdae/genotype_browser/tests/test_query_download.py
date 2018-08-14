@@ -12,7 +12,8 @@ import copy
 from rest_framework import status
 import urllib.request, urllib.parse, urllib.error
 import json
-EXAMPLE_REQUEST_VIP = {
+
+EXAMPLE_REQUEST_SVIP = {
     "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
     "gender": ["female", "male"],
     "presentInParent": [
@@ -22,7 +23,7 @@ EXAMPLE_REQUEST_VIP = {
         "CNV", "del", "ins", "sub",
     ],
     "genes": "All",
-    "datasetId": "VIP",
+    "datasetId": "SVIP",
     "pedigreeSelector": {
         "id": "16pstatus",
         "checkedValues": [
@@ -139,7 +140,7 @@ class Test(BaseAuthenticatedUserTest):
     URL = "/api/v3/genotype_browser/download"
 
     def test_query_download_urlencoded(self):
-        data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
+        data = copy.deepcopy(EXAMPLE_REQUEST_SVIP)
         query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
@@ -149,7 +150,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(64 + 1, count_iterable(response.streaming_content))
 
     def test_query_download_json(self):
-        data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
+        data = copy.deepcopy(EXAMPLE_REQUEST_SVIP)
         query = {"queryData": json.dumps(data)}
 
         response = self.client.post(
@@ -182,8 +183,8 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
             study_phenotype = variant['phenotype']
             assert study_phenotype == 'autism'
 
-    def test_query_download_vip(self):
-        data = copy.deepcopy(EXAMPLE_REQUEST_VIP)
+    def test_query_download_svip(self):
+        data = copy.deepcopy(EXAMPLE_REQUEST_SVIP)
         query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
@@ -266,7 +267,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         for v in res:
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
-            study_phenotype = variant['phenotype']
+            study_phenotype = variant['Study Phenotype']
             assert study_phenotype == 'autism'
 
     def test_query_download_denovo_db_unaffected(self):
@@ -287,7 +288,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         for v in res:
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
-            study_phenotype = variant['phenotype']
+            study_phenotype = variant['Study Phenotype']
             assert study_phenotype in [
                 "acromelic_frontonasal_dysostosis",
                 "amyotrophic_lateral_sclerosis",

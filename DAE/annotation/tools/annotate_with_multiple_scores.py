@@ -1,17 +1,47 @@
 #!/usr/bin/env python
 from __future__ import absolute_import
 from __future__ import unicode_literals
-import sys, glob
+import glob
 import argparse
-from collections import OrderedDict
 from box import Box
-from jproperties import Properties
+from future import standard_library
+standard_library.install_aliases()
+from configparser import ConfigParser
 
 from .utilities import *
 from .annotate_score_base import ScoreAnnotator
 
 
 def get_argument_parser():
+    """
+    MultipleScoresAnnotator options::
+
+        usage: annotate_with_multiple_scores.py [-h] [-c C] [-p P] [-x X] [-H]
+                                        [-D SCORES_DIRECTORY] [--direct]
+                                        [--scores SCORES] [--labels LABELS]
+                                        [infile] [outfile]
+
+        Program to annotate variants with multiple score files
+
+        positional arguments:
+          infile                path to input file; defaults to stdin
+          outfile               path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -c C                  chromosome column number/name
+          -p P                  position column number/name
+          -x X                  location (chr:pos) column number/name
+          -H                    no header in the input file
+          -D SCORES_DIRECTORY, --scores-directory SCORES_DIRECTORY
+                                directory containing the scores - each score should
+                                have its own subdirectory (defaults to $GFD_DIR)
+          --direct              read score files using tabix index (default: read
+                                score files iteratively)
+          --scores SCORES       comma separated list of scores to annotate with
+          --labels LABELS       comma separated list of labels for the new columns in
+                                the output file (defaults to score names)
+    """
     desc = """Program to annotate variants with multiple score files"""
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-c', help='chromosome column number/name', action='store')
@@ -82,13 +112,24 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 sys.stderr.write('could not find params.txt file for score {}'.format(score))
                 sys.exit(-50)
 
-            params = Properties({'format': score, 'noScoreValue': ''})
+            # params = Properties({'format': score, 'noScoreValue': ''})
             with open(params_file, 'r') as file:
-                params.load(file)
-            score_column = params['format'].data
-            score_default_value = params['noScoreValue'].data
+                # FIXME: workaround for reading .properties file without
+                # FIXME: jproperties, should be removed when Iordan merges his
+                # FIXME: stuff
+                params = ConfigParser({
+                    'format': score,
+                    'noScoreValue': ''
+                })
+                def add_dummy_header(f):
+                    yield '[root]'
+                    for line in f:
+                        yield line
+                params.read_file(add_dummy_header(file))
+            score_column = params['format']
+            score_default_value = params['noScoreValue']
 
-            score_header_file = score_directory + '/' + params['scoreDescFile'].data[1:-1]
+            score_header_file = score_directory + '/' + params['scoreDescFile'][1:-1]
             with open(score_header_file, 'r') as file:
                 score_header = file.readline().strip('\n\r').split('\t')
 
@@ -96,8 +137,8 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 'c': opts.c,
                 'p': opts.p,
                 'x': opts.x,
-                'score_column': score_column,
-                'default_value': score_default_value,
+                'scores_columns': score_column,
+                'default_values': score_default_value,
                 'direct': opts.direct,
                 'scores_file': tabix_files[0].replace('.tbi', '')
             }

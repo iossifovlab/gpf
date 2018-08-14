@@ -12,8 +12,8 @@ import copy
 class Test(BaseAuthenticatedUserTest):
 
     TOOL_URL = "/api/v3/pheno_tool"
-    VIP_QUERY = {
-        "datasetId": "VIP",
+    SVIP_QUERY = {
+        "datasetId": "SVIP",
         "measureId": "treatment_history.age_ended",
         "normalizeBy": [
             "age",
@@ -30,7 +30,7 @@ class Test(BaseAuthenticatedUserTest):
     }
 
     def test_vip_treatment_history(self):
-        query = copy.deepcopy(self.VIP_QUERY)
+        query = copy.deepcopy(self.SVIP_QUERY)
 
         response = self.client.post(self.TOOL_URL, query, format="json")
         self.assertEquals(status.HTTP_200_OK, response.status_code)

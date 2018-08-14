@@ -51,7 +51,7 @@ class DatasetsConfigTest(unittest.TestCase):
         self.assertIsNone(ds)
 
     def test_dataset_vip(self):
-        ds = self.dataset_config.get_dataset_desc('VIP')
+        ds = self.dataset_config.get_dataset_desc('SVIP')
         self.assertIsNotNone(ds)
 
         self.assertEquals('vip', ds['phenoDB'])

@@ -3,16 +3,25 @@ from builtins import str
 from builtins import object
 import sys, os
 import time, datetime
+import pysam, gzip
 from abc import ABCMeta, abstractmethod
 from future.utils import with_metaclass
 
-class AnnotatorBase(with_metaclass(ABCMeta, object)):
+class AnnotatorBase():
+    """
+    `AnnotatorBase` is base class of all `Annotators` and `Preannotators`.
+    """
+
+    __metaclass__ = ABCMeta
 
     def __init__(self, opts, header=None):
         self.opts = opts
         self.header = header
 
     def annotate_file(self, input, output):
+        """
+            Method for annotating file from `Annotator`.
+        """
         if self.opts.no_header == False:
             output.write("\t".join(self.header) + "\n")
 
@@ -82,11 +91,26 @@ def main(argument_parser, annotator_factory):
 
     if opts.infile=='-':
         variantFile = sys.stdin
+    elif hasattr(opts,'region'): #case for MultiAnnotator
+        if(opts.region is not None):
+            tabix_file = pysam.TabixFile(opts.infile)
+            try:
+                variantFile = tabix_file.fetch(region=opts.region)
+            except ValueError:
+                variantFile = iter([])
+        else:
+            variantFile = open(opts.infile)
     else:
         variantFile = open(opts.infile)
 
     if opts.no_header == False:
         header_str = variantFile.readline()[:-1]
+        if hasattr(opts,'region'): #case for MultiAnnotator
+            if(opts.region is not None):
+                with gzip.open(opts.infile) as file:
+                    header_str=file.readline()[:-1]
+        if header_str[0] == '#':
+            header_str = header_str[1:]
         header = header_str.split('\t')
     else:
         header = None
@@ -99,9 +123,9 @@ def main(argument_parser, annotator_factory):
     annotator = annotator_factory(opts=opts, header=header)
     annotator.annotate_file(variantFile, out)
 
-    out.write("# PROCESSING DETAILS:\n")
-    out.write("# " + time.asctime() + "\n")
-    out.write("# " + " ".join(sys.argv[1:]) + "\n")
+    sys.stderr.write("# PROCESSING DETAILS:\n")
+    sys.stderr.write("# " + time.asctime() + "\n")
+    sys.stderr.write("# " + " ".join(sys.argv[1:]) + "\n")
 
     if opts.infile != '-':
         variantFile.close()

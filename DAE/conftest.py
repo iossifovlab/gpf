@@ -65,7 +65,7 @@ def ssc(request, datasets_factory):
 
 @pytest.fixture(scope='session')
 def vip(request,  datasets_factory):
-    return datasets_factory.get_dataset('VIP')
+    return datasets_factory.get_dataset('SVIP')
 
 
 @pytest.fixture(scope='session')

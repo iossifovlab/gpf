@@ -183,6 +183,20 @@ class VariantTypesMixin(object):
         return variant_types
 
 
+class StudyNamesMixin(object):
+
+    @classmethod
+    def get_study_names(self, safe=True, **kwargs):
+        study_names = kwargs.get('studyFilters', None)
+        if not study_names:
+            return None
+        study_names = map(lambda el: el.get('studyName', None), study_names)
+        study_names = filter(None, study_names)
+        if not study_names:
+            return None
+        return set(study_names)
+
+
 class StudyTypesMixin(object):
     STUDY_TYPES = [
         'we', 'wg', 'tg', 'cnv'
@@ -467,6 +481,7 @@ class GenomicScoresMixin(object):
 class QueryBase(
         EffectTypesMixin,
         VariantTypesMixin,
+        StudyNamesMixin,
         StudyTypesMixin,
         ChildGenderMixin,
         PresentInMixin,

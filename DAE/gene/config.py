@@ -33,22 +33,3 @@ class GeneInfoConfig(object):
             self.dae_config.geneInfoDBconfFile,
             self.dae_config.daeDir,
             self.dae_config.data_dir)
-
-    @staticmethod
-    def list_gene_weights():
-        """
-        Lists all available gene weights configured in `geneInfo.conf`.
-        """
-        dae_config = Config()
-        wd = dae_config.daeDir
-        data_dir = dae_config.data_dir
-
-        config = ConfigParser({
-            'wd': wd,
-            'data': data_dir,
-        })
-        config.read(dae_config.geneInfoDBconfFile)
-
-        weights = config.get('geneWeights', 'weights')
-        names = [n.strip() for n in weights.split(',')]
-        return names

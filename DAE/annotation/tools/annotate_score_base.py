@@ -1,0 +1,168 @@
+import optparse
+import sys
+import gzip
+import pysam
+
+import GenomeAccess
+from annotation.tools.utilities import *
+
+class ScoreFile(object):
+
+    def __init__(self, score_file_name, score_file_header, scores_default_values,
+            scores_columns, *search_columns):
+        self.header = score_file_header
+        self.scores_default_values = scores_default_values
+        self.search_indices = [self.header.index(col)
+                               for col in search_columns]
+        self.scores_indices = [self.header.index(col)
+                               for col in scores_columns]
+
+    def get_scores(self, chr, pos, *args):
+        args = list(args)
+        try:
+            for line in self._fetch(chr, pos):
+                if args == [line[i] for i in self.search_indices]:
+                    return [line[i] for i in self.scores_indices]
+        except ValueError:
+            pass
+        return self.scores_default_values
+
+
+class IterativeAccess(ScoreFile):
+
+    XY_INDEX = {'X': 23, 'Y': 24}
+
+    def __init__(self, score_file_name, score_file_header, scores_default_values,
+            scores_columns, chr_column, pos_begin_column, pos_end_column,
+            *search_columns):
+        self.file = gzip.open(score_file_name, 'rb')
+        if score_file_header is None:
+            header_str = self.file.readline().rstrip('\n')
+            if header_str[0] == '#':
+                header_str = header_str[1:]
+            score_file_header = header_str.split('\t')
+        super(IterativeAccess, self).__init__(score_file_name, score_file_header,
+            scores_default_values, scores_columns, *search_columns)
+        self.chr_index = self.header.index(chr_column)
+        self.pos_begin_index = self.header.index(pos_begin_column)
+        self.pos_end_index = self.header.index(pos_end_column)
+        self.current_lines = [self._next_line()]
+
+    def _fetch(self, chr, pos):
+        # TODO this implements closed interval because we want to support
+        # files with single position column
+        chr = self._chr_to_int(chr)
+        for i in range(len(self.current_lines) - 1, -1, -1):
+            if self._chr_to_int(self.current_lines[i][self.chr_index]) < chr or \
+                    int(self.current_lines[i][self.pos_end_index]) < pos:
+                del self.current_lines[0:i+1]
+                break
+
+        if len(self.current_lines) == 0 or \
+                (int(self.current_lines[-1][self.pos_begin_index]) <= pos and \
+                self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chr):
+            line = self._next_line()
+            while self._chr_to_int(line[self.chr_index]) <= chr and \
+                    (int(line[self.pos_end_index]) < pos or \
+                    self._chr_to_int(line[self.chr_index]) != chr):
+                line = self._next_line()
+            self.current_lines.append(line)
+
+            while int(self.current_lines[-1][self.pos_begin_index]) <= pos and \
+                    self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chr:
+                self.current_lines.append(self._next_line())
+
+        return self.current_lines[:-1]
+
+    def _next_line(self):
+        line = self.file.readline()
+        if line is None or line == '':
+            line = self.header[:]
+            line[self.chr_index] = '25'
+        else:
+            line = line.rstrip('\n').split('\t')
+        return line
+
+    def _chr_to_int(self, chr):
+        chr = chr.replace('chr', '')
+        return self.XY_INDEX.get(chr) or int(chr)
+
+
+class DirectAccess(ScoreFile):
+
+    def __init__(self, score_file_name, score_file_header, scores_default_values,
+            scores_columns, *search_columns):
+        if score_file_header is None:
+            with gzip.open(score_file_name, 'rb') as file:
+                header_str = file.readline().rstrip('\n')
+                if header_str[0] == '#':
+                    header_str = header_str[1:]
+                score_file_header = header_str.split('\t')
+        super(DirectAccess, self).__init__(score_file_name, score_file_header,
+            scores_default_values, scores_columns, *search_columns)
+        self.file = pysam.Tabixfile(score_file_name)
+
+    def _fetch(self, chr, pos):
+        return self.file.fetch(chr, pos-1, pos, parser=pysam.asTuple())
+
+
+class ScoreAnnotator(AnnotatorBase):
+
+    def __init__(self, opts, header=None, search_columns=[],
+            score_file_header=None,
+            score_file_index_columns=['chr', 'position', 'position']):
+        super(ScoreAnnotator, self).__init__(opts, header)
+        self.search_columns = search_columns
+        self.score_file_header = score_file_header
+        self.score_file_index_columns = score_file_index_columns
+        self.scores_columns = opts.scores_columns.split(',')
+        self._init_cols()
+        self._init_score_file()
+        self.header.append(opts.labels.split(',') if opts.labels else self.scores_columns)
+
+    def _init_cols(self):
+        opts = self.opts
+        header = self.header
+        if opts.x == None and opts.c == None:
+            opts.x = "location"
+
+        chr_col = assign_values(opts.c, header)
+        pos_col = assign_values(opts.p, header)
+        loc_col = assign_values(opts.x, header)
+
+        self.arg_columns = [chr_col, pos_col, loc_col] + \
+            [assign_values(col, header) for col in self.search_columns]
+
+    def _init_score_file(self):
+        if not self.opts.scores_file:
+            sys.stderr.write("You should provide a score file location.\n")
+            sys.exit(-78)
+        else:
+            if self.opts.default_values is None:
+                self.opts.default_values = ','*len(self.scores_columns)
+            if self.opts.direct:
+                self.file = DirectAccess(self.opts.scores_file,
+                    self.score_file_header,
+                    self.opts.default_values.split(','), self.scores_columns,
+                    *self.score_file_index_columns[3:])
+            else:
+                self.file = IterativeAccess(self.opts.scores_file,
+                    self.score_file_header,
+                    self.opts.default_values.split(','), self.scores_columns,
+                    *self.score_file_index_columns)
+
+    @property
+    def new_columns(self):
+        return self.scores_columns
+
+    def _get_scores(self, new_columns, chr=None, pos=None, loc=None, *args):
+        if loc != None:
+            chr, pos = loc.split(':')
+        if chr != '':
+            return self.file.get_scores(chr, int(pos), *args)
+        else:
+            return ['' for col in new_columns]
+
+    def line_annotations(self, line, new_columns):
+        params = [line[i-1] if i!=None else None for i in self.arg_columns]
+        return self._get_scores(new_columns, *params)

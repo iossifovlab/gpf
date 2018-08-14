@@ -16,7 +16,7 @@ class DatasetApiTest(APITestCase):
     def setUpTestData(cls):
         Dataset.recreate_dataset_perm('SD', [])
         Dataset.recreate_dataset_perm('SSC', [])
-        Dataset.recreate_dataset_perm('VIP', [])
+        Dataset.recreate_dataset_perm('SVIP', [])
         Dataset.recreate_dataset_perm('TEST', [])
         Dataset.recreate_dataset_perm('SPARK', [])
         Dataset.recreate_dataset_perm('AGRE_WG', [])
@@ -80,8 +80,8 @@ class DatasetApiTest(APITestCase):
 
         self.assertIn('error', data)
 
-    def test_get_dataset_vip(self):
-        url = '/api/v3/datasets/VIP'
+    def test_get_dataset_svip(self):
+        url = '/api/v3/datasets/SVIP'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data

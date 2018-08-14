@@ -9,16 +9,12 @@ from __future__ import unicode_literals
 from builtins import next
 from builtins import zip
 from builtins import map
-from builtins import str
-from builtins import range
-from builtins import object
 from past.utils import old_div
 import tarfile
 import numpy as np
 import os, sys
 import gzip
 import pickle
-from collections import defaultdict
 from operator import itemgetter
 import re
 from RegionOperations import *

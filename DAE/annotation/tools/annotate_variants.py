@@ -21,6 +21,54 @@ class ColumnOrderAction(argparse.Action):
         namespace.order.append(self.dest)
 
 def get_argument_parser():
+    """
+    EffectAnnotator options::
+
+        usage: annotate_variants.py [-h] [-c C] [-p P] [-x X] [-v V] [-a A] [-r R]
+                            [-t T] [-q Q] [-l L] [-P PROM_LEN] [-H] [-T T]
+                            [--Traw TRAW] [--TrawFormat TRAWFORMAT] [-G G]
+                            [--Graw GRAW] [-I I] [--effect-type EFFECT_TYPE]
+                            [--effect-gene EFFECT_GENE]
+                            [--effect-details EFFECT_DETAILS]
+                            [infile] [outfile]
+
+        Program to annotate variants (substitutions & indels & cnvs)
+
+        positional arguments:
+          infile                path to input file; defaults to stdin
+          outfile               path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -c C                  chromosome column number/name
+          -p P                  position column number/name
+          -x X                  location (chr:pos) column number/name
+          -v V                  variant column number/name
+          -a A                  alternative allele (FOR SUBSTITUTIONS ONLY) column
+                                number/name
+          -r R                  reference allele (FOR SUBSTITUTIONS ONLY) column
+                                number/name
+          -t T                  type of mutation column number/name
+          -q Q                  seq column number/name
+          -l L                  length column number/name
+          -P PROM_LEN           promoter length
+          -H                    no header in the input file
+          -T T                  gene models ID <RefSeq, CCDS, knownGene>
+          --Traw TRAW           outside gene models file path
+          --TrawFormat TRAWFORMAT
+                                outside gene models format (refseq, ccds, knowngene)
+          -G G                  genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19>
+          --Graw GRAW           outside genome file
+          -I I                  geneIDs mapping file; use None for no gene name
+                                mapping
+          --effect-type EFFECT_TYPE
+                                name to use for effect type column
+          --effect-gene EFFECT_GENE
+                                name to use for effect gene column
+          --effect-details EFFECT_DETAILS
+                                name to use for effect details column
+
+    """
     desc = """Program to annotate variants (substitutions & indels & cnvs)"""
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-c', help='chromosome column number/name', action='store')

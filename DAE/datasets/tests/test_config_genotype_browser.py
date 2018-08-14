@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 
 def test_vip_pheno_columns(datasets_config):
-    vip = datasets_config.get_dataset_desc('VIP')
+    vip = datasets_config.get_dataset_desc('SVIP')
     pheno_columns = vip['genotypeBrowser']['phenoColumns']
     assert pheno_columns is not None
 
@@ -27,7 +27,7 @@ def test_ssc_pheno_filters(datasets_config):
 
 
 def test_vip_pheno_filters(datasets_config):
-    ssc = datasets_config.get_dataset_desc('VIP')
+    ssc = datasets_config.get_dataset_desc('SVIP')
 
     pheno_filters = ssc['genotypeBrowser']['phenoFilters']
     assert pheno_filters is not None

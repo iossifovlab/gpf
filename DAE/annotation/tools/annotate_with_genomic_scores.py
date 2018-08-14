@@ -11,6 +11,32 @@ from .utilities import *
 import argparse
 
 def get_argument_parser():
+    """
+    GenomicScoresAnnotator options::
+
+        usage: annotate_with_genomic_scores.py [-h] [-c C] [--chr-format CHR_FORMAT]
+                                           [-p P] [-x X] [-F F] [-S S] [-H]
+                                           [infile] [outfile]
+
+        Program to annotate genomic positions with genomic scores (GERP, PhyloP,
+        phastCons, nt, GC, cov)
+
+        positional arguments:
+          infile                path to input file; defaults to stdin
+          outfile               path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -c C                  chromosome column number/name
+          --chr-format CHR_FORMAT
+                                chromosome format [hg19|GATK]
+          -p P                  position column number/name
+          -x X                  location (chr:pos) column number/name
+          -F F                  genomic score file
+          -S S                  scores subset [string - colon separated]
+          -H                    no header in the input file
+
+    """
     desc = """Program to annotate genomic positions with genomic scores (GERP, PhyloP, phastCons, nt, GC, cov)"""
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-c', help='chromosome column number/name', action='store')

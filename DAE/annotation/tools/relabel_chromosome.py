@@ -7,6 +7,25 @@ import argparse
 from .utilities import *
 
 def get_argument_parser():
+    """
+    RelabelChromosomeAnnotator options::
+
+        usage: relabel_chromosome.py [-h] [-c C] [-H] [--new-c NEW_C]
+                                 [infile] [outfile]
+
+        Program to relabel chromosome with or without 'chr' prefix
+
+        positional arguments:
+          infile         path to input file; defaults to stdin
+          outfile        path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help     show this help message and exit
+          -c C           chromosome column number/name
+          -H             no header in the input file
+          --new-c NEW_C  name for the generated chromosome column
+
+    """
     desc = """Program to relabel chromosome with or without 'chr' prefix"""
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-c', help='chromosome column number/name', action='store')
