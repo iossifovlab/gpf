@@ -2,9 +2,8 @@ import pytest
 import config
 import input_output
 import os.path
-import tempfile
 import gzip
-from os import remove, rmdir, mkdir, umask
+from os import remove, rmdir, mkdir
 from annotation.tools.annotate_with_multiple_scores \
         import MultipleScoresAnnotator
 from copy import deepcopy
@@ -12,7 +11,7 @@ from StringIO import StringIO
 
 
 def get_opts(c_inp=None, p_inp=None, x_inp=None,
-             dir_inp=None, 
+             dir_inp=None,
              direct_inp=False):
     class MockOpts:
         def __init__(self, chrom, pos, loc, scoredir, tabix):
@@ -43,18 +42,9 @@ def setup_scoredirs():
     pathlist = [os.path.abspath('.')+'/masterdir',
                 os.path.abspath('.')+'/masterdir/score1',
                 os.path.abspath('.')+'/masterdir/score2']
-    try:
-        print(pathlist)
-        #original_mask = umask(0)
-        os.mkdir(pathlist[0])
-        #os.chmod(pathlist[0], 0777)
-        os.mkdir(pathlist[1])
-        #os.chmod(pathlist[1], 0777)
-        os.mkdir(pathlist[2])
-        #os.chmod(pathlist[2], 0777)
-    finally:
-        pass
-        #os.umask(original_mask)
+    os.mkdir(pathlist[0])
+    os.mkdir(pathlist[1])
+    os.mkdir(pathlist[2])
     return pathlist
 
 
@@ -110,14 +100,12 @@ def multi_annotator(masterdir):
 def test_multi_score(multi_input, multi_scores, multi_config, multi_output, mocker):
     tmp_dirs = setup_scoredirs()
 
-    score1 = setup_score(multi_scores[0].getvalue(), 
-                         config.MULTI_SCORE_CONFIG.lstrip(), 
+    score1 = setup_score(multi_scores[0].getvalue(),
+                         config.MULTI_SCORE_CONFIG.lstrip(),
                          'score1', tmp_dirs[1])
-    score2 = setup_score(multi_scores[1].getvalue(), 
-                         config.MULTI_SCORE_CONFIG.lstrip(), 
+    score2 = setup_score(multi_scores[1].getvalue(),
+                         config.MULTI_SCORE_CONFIG.lstrip(),
                          'score2', tmp_dirs[2])
-    scores = ','.join([score1[0].name, score2[0].name])
-    confs = ','.join([score1[1].name, score2[1].name])
 
     annotator = multi_annotator(tmp_dirs[0])
     output = ""

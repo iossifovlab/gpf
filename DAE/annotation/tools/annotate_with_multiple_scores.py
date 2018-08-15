@@ -37,7 +37,7 @@ def get_argument_parser():
 
 def get_dirs(path):
     path = os.path.abspath(path)
-    return [dir_ for dir_ in listdir(path) if len(dir_.split('.')) == 1]
+    return [path + '/' + dir_ for dir_ in listdir(path) if len(dir_.split('.')) == 1]
 
 
 def get_files(path):
@@ -58,11 +58,12 @@ def get_score(path):
 
 def has_tabix(score):
     score_path = os.path.dirname(score)
-    tabix_files = glob.glob(score_directory + '/*.tbi')
+    tabix_files = glob.glob(score_path + '/*.tbi')
     if len(tabix_files) == 0:
         sys.stderr.write('could not find .tbi file for score {}'.format(score))
         sys.exit(-64)
     return True
+
 
 class MultipleScoresAnnotator(AnnotatorBase):
 
@@ -71,10 +72,10 @@ class MultipleScoresAnnotator(AnnotatorBase):
         self.annotators = {}
         self._init_score_directory()
         self._init_scores()
-        #if self.opts.labels is not None:
-            #self.header.extend(self.opts.labels.split(','))
-        #elif self.scores is not None:
-        #    self.header.extend(self.scores)
+        if self.opts.labels is not None:
+            self.header.extend(self.opts.labels.split(','))
+        elif self.scores is not None:
+            self.header.extend(self.scores)
 
     def _init_score_directory(self):
         self.scores_directory = self.opts.scores_directory
@@ -84,7 +85,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
     def _init_scores(self):
         self.scores = []
         for subdir in get_dirs(self.scores_directory):
-            self.scores.append(get_score(self.scores_directory + '/' + subdir))
+            self.scores.append(get_score(subdir))
 
     def _annotator_for(self, score):
         if score not in self.annotators:

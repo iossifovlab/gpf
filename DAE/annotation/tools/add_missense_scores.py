@@ -7,6 +7,7 @@ from box import Box
 from utilities import AnnotatorBase, assign_values, main
 from annotate_score_base import ScoreAnnotator, MyConfigParser
 
+
 def get_argument_parser():
     parser = argparse.ArgumentParser(
         description='Add missense scores from dbSNFP')
@@ -49,6 +50,8 @@ class MissenseScoresAnnotator(AnnotatorBase):
     def __init__(self, opts, header=None):
         self.opts = opts
         self.header = header
+        if self.opts.columns is not None:
+            self.header.extend(self.opts.columns)
 
         if opts.dbnsfp is None:
             opts.dbnsfp = os.path.join(os.environ['dbNSFP_PATH'])

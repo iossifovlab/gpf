@@ -99,7 +99,7 @@ def missense_annotator(dbnsfp, conf_inp):
                                    header=['id', 'chrom', 'pos', 'variation', 'ref', 'alt'])
 
 
-def test_missense_score(missense_input, missense_scores, missense_output, 
+def test_missense_score(missense_input, missense_scores, missense_output,
                         dbnsfp_config, mocker):
     tmp_dir = setup_scoredir()
     dbnsfp_score = to_file(missense_scores.getvalue(), where=tmp_dir)

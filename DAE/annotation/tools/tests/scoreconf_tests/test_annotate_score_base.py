@@ -76,12 +76,12 @@ def base_input():
 
 
 @pytest.fixture
-def full_input(): 
+def full_input():
     return StringIO(''.join(deepcopy(input_output.FULL_INPUT_FILE)))
 
 
 @pytest.fixture
-def search_input(): 
+def search_input():
     return StringIO(''.join(deepcopy(input_output.SEARCH_INPUT_FILE)))
 
 
@@ -148,8 +148,8 @@ def full_annotator(full_config, full_scores, mocker):
 @pytest.fixture
 def search_annotator(search_config, search_scores, mocker):
     search_opts = get_opts(c_inp='chrom', p_inp='starting_pos',
-                         file_inp=search_scores,
-                         conf_inp=conf_to_dict(search_config))
+                           file_inp=search_scores,
+                           conf_inp=conf_to_dict(search_config))
     return ScoreAnnotator(search_opts,
                           header=['id', 'chrom', 'starting_pos', 'ending_pos', 'variation', 'marker'],
                           search_columns=['marker'])
