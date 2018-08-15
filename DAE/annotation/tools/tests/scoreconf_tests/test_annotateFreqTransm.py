@@ -16,7 +16,7 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None,
             self.c = chrom
             self.p = pos
             self.x = loc
-            self.v = 'variation'
+            self.v = 'variant'
             self.H = False
             self.scores_file = score
             self.scores_config_file = config
@@ -48,17 +48,17 @@ def mocker(mocker):
 
 @pytest.fixture
 def freq_input():
-    return StringIO(''.join(deepcopy(input_output.BASE_INPUT_FILE)))
+    return StringIO(''.join(deepcopy(input_output.FREQ_INPUT_FILE)))
 
 
 @pytest.fixture
 def freq_output():
-    return input_output.BASE_OUTPUT
+    return input_output.FREQ_OUTPUT
 
 
 @pytest.fixture
 def freq_scores():
-    return StringIO(''.join(deepcopy(input_output.BASE_INPUT_SCORE)))
+    return StringIO(''.join(deepcopy(input_output.FREQ_INPUT_SCORE)))
 
 
 @pytest.fixture
@@ -69,10 +69,10 @@ def freq_config():
 @pytest.fixture
 def freq_annotator(freq_scores, freq_config, mocker):
     print(freq_config)
-    freq_opts = get_opts(c_inp='chrom', p_inp='pos',
+    freq_opts = get_opts(c_inp='chr', p_inp='position',
                          file_inp=freq_scores, config=freq_config)
     return FrequencyAnnotator(freq_opts,
-                              header=['id', 'chrom', 'pos', 'variation'])
+                              header=['chr', 'position', 'variant'])
 
 
 def test_freq_score(freq_input, freq_output, freq_annotator, mocker):

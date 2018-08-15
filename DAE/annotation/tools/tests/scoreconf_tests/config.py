@@ -1,6 +1,6 @@
 BASE_SCORE_CONFIG = '''
 [general]
-header=id,chrom,starting_pos,scoreValue
+header=id,chrom,starting_pos,variant,scoreValue
 noScoreValue=-100
 [columns]
 chr=chrom
@@ -55,10 +55,11 @@ search=ref,alt
 
 FREQ_SCORE_CONFIG = '''
 [general]
-header=id,chrom,starting_pos,all.altFreq
+header=chr,position,variant,familyData,all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq,effectType,effectGene,effectDetails,segDups,HW,SSC-freq,EVS-freq,E65-freq
 noScoreValue=-105
 [columns]
-chr=chrom
-pos_begin=starting_pos
+chr=chr
+pos_begin=position
 score=all.altFreq
+search=variant
 '''
