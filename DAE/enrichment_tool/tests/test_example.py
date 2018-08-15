@@ -10,6 +10,7 @@ from enrichment_tool.tool import EnrichmentTool
 from enrichment_tool.event_counters import GeneEventsCounter
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
 from gene.gene_set_collections import GeneSetsCollection
+from pheno.common import Role
 
 
 def test_simple_example():
@@ -33,14 +34,14 @@ def test_simple_example():
     # create enrichment tool
     tool = EnrichmentTool(background, GeneEventsCounter())
 
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_studies(autism_studies, Role.prb)
     enrichment_results = tool.calc(
         'LGDs',
         gene_set,
         gh.get_variants('LGDs'),
         gh.get_children_stats())
 
-    gh = GH.from_studies(autism_studies, 'sib')
+    gh = GH.from_studies(autism_studies, Role.sib)
     enrichment_results = tool.calc(
         'LGDs',
         gene_set,

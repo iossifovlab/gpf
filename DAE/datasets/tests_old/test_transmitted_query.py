@@ -193,6 +193,8 @@ Q_DENOVO_ONLY = {
         'geneSetsCollection': None
     }
 }
+Q_TRANSMITTED = copy.deepcopy(Q_LEGACY)
+Q_TRANSMITTED['roles'] = ['step_dad']
 
 
 def test_denovo_query_vip(vip):
@@ -203,3 +205,5 @@ def test_denovo_query_vip(vip):
     vs = vip.get_variants(**Q_DENOVO_ONLY)
     assert vs is not None
     assert 1 == count(vs)
+
+

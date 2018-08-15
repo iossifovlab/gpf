@@ -521,6 +521,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             "where {}".format(where)
 
         LOGGER.debug("select: %s", select)
+        print(select)
+
         connection = None
         cursor = None
         try:

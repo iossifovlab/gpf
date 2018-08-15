@@ -46,7 +46,7 @@ def test_tool_calc(phdb, all_ssc_studies, default_request):
 
 
 def male_female_result(r):
-    return r[Gender.M], r[Gender.F]
+    return r[Gender.M.name], r[Gender.F.name]
 
 
 def test_tool_present_in_parent_ultra_rare(
@@ -92,11 +92,11 @@ def test_genotypes(phdb, all_ssc_studies, default_request):
         gender_split=True,
     )
 
-    genotypes = r[Gender.M].genotypes
+    genotypes = r[Gender.M.name].genotypes
     assert 2363 == len(genotypes)
     assert 3 == max(genotypes.values())
 
-    genotypes = r[Gender.F].genotypes
+    genotypes = r[Gender.F.name].genotypes
     assert 373 == len(genotypes)
     assert 3 == max(genotypes.values())
 
@@ -113,10 +113,10 @@ def test_phenotypes(phdb, all_ssc_studies, default_request):
         gender_split=True,
     )
 
-    phenotypes = r[Gender.M].phenotypes
+    phenotypes = r[Gender.M.name].phenotypes
     assert 2363 == len(phenotypes)
 
-    phenotypes = r[Gender.F].phenotypes
+    phenotypes = r[Gender.F.name].phenotypes
     assert 373 == len(phenotypes)
 
 

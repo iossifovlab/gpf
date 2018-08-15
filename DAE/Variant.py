@@ -10,12 +10,14 @@ from builtins import zip
 from builtins import str
 from builtins import range
 from builtins import object
+from functools import reduce
 import numpy as np
 import operator
+from pprint import pprint
 import logging
 
 from Family import Person
-from functools import reduce
+from pheno.common import Role, Gender
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,28 +57,28 @@ def normalRefCopyNumber(location, gender):
         if pos < 60001 or (pos > 2699520 and pos < 154931044) \
                 or pos > 155260560:
 
-            if gender == 'M':
+            if gender == Gender.M.name:
                 return 1
-            elif gender == 'U':
-                LOGGER.debug(
+            elif gender == Gender.U.name:
+                LOGGER.warn(
                     'unspecified gender when calculating normal number of allels '
                     'in chr%s',
                     location
                 )
-                # return 1
-            elif gender != 'F':
+                return 1
+            elif gender != Gender.F.name:
                 raise Exception('weird gender ' + gender)
     elif chrome in ['chrY', 'Y', '24', 'chr24']:
-        if gender == 'M':
+        if gender == Gender.M.name:
             return 1
-        elif gender == 'U':
-            LOGGER.debug(
+        elif gender == Gender.U.name:
+            LOGGER.warn(
                 'unspecified gender when calculating normal number of allels '
                 'in chr%s',
                 location
             )
             return 1
-        elif gender == 'F':
+        elif gender == Gender.F.name:
             return 0
         else:
             raise Exception('gender needed')
@@ -150,7 +152,7 @@ def isVariant(bs, c, location=None, gender=None):
 def variantInMembers(v):
     result = []
     for index, member in enumerate(v.memberInOrder):
-        if isVariant(v.bestSt, index, v.location, member.gender):
+        if isVariant(v.bestSt, index, v.location, member.gender.name):
             result.append(member.personId)
     return result
 
@@ -176,7 +178,7 @@ def parseGeneEffect(effStr):
         geneEffect.append({'sym': "", 'symu': '', 'eff': effStr})
         return geneEffect
 
-    splitGeneEffect(effStr, geneEffect)
+    geneEffect = splitGeneEffect(effStr, geneEffect)
     return geneEffect
 
 
@@ -236,7 +238,7 @@ class Variant(object):
         except AttributeError:
             pass
         self._familyId = self.atts.get(self.familyIdAtt,
-                                       self.atts.get(self.sampleIdAtt))
+            self.atts.get(self.sampleIdAtt))
         self._familyId = str(
             self._familyId) if self._familyId else self._familyId
         return self._familyId
@@ -321,8 +323,9 @@ class Variant(object):
             else:
                 person = Person(self.atts)
                 person.personId = None
-                person.gender = self.atts.get(self.genderAtt, 'U')
-                person.role = 'sib' if self.phenotype == 'unaffected' else 'prb'
+                person.gender = self.atts.get(self.genderAtt, Gender.U)
+                person.role = Role.sib if self.phenotype == 'unaffected' \
+                    else Role.prb
                 self._memberInOrder = [person]
         return self._memberInOrder
 
@@ -335,8 +338,9 @@ class Variant(object):
         childStr = ''
         for index, person in enumerate(self.memberInOrder):
             if person.is_child and \
-                    isVariant(self.bestSt, index, self.location, person.gender):
-                childStr += (person.role + person.gender)
+                    isVariant(
+                        self.bestSt, index, self.location, person.gender.name):
+                childStr += (person.role.name + person.gender.name)
         return childStr
 
     @property
@@ -354,8 +358,8 @@ class Variant(object):
         mbrs = self.memberInOrder
         bs = self.bestSt
         for c in range(2):
-            if isVariant(bs, c, self.location, mbrs[c].gender):
-                parentStr += mbrs[c].role
+            if isVariant(bs, c, self.location, mbrs[c].gender.name):
+                parentStr += mbrs[c].role.name
         return parentStr
 
     @property
@@ -430,30 +434,22 @@ class Variant(object):
     def pedigree_v3(self, legend):
         def get_color(p):
             return legend.get_color(
-                p.atts[legend.id] if p.role == 'prb' else 'unaffected')
+                p.atts[legend.id] if p.role == Role.prb else 'unaffected')
 
         denovo_parent = self.denovo_parent()
 
-        members = self.memberInOrder
         bs = self.bestSt
 
-        res = []
-        dad_id, mom_id = '', ''
-        for index, person in enumerate(members):
-            person_list = [self.familyId, person.personId,
-                           person.gender, get_color(person)]
-            if person.is_child:
-                person_list[2:2] += [dad_id, mom_id]
-            else:
-                person_list[2:2] += ['', '']
-                if person.role == "mom":
-                    mom_id = person.personId
-                elif person.role == "dad":
-                    dad_id = person.personId
-            res.append(person_list +
-                       variant_count_v3(bs, index, self.location,
-                                        person.gender, denovo_parent))
-        return res
+        return [
+            [
+                self.familyId, p.personId, getattr(p, 'dadId', ''),
+                getattr(p, 'momId', ''), p.gender.name, get_color(p),
+                p.layout_position
+            ] +
+            variant_count_v3(
+                bs, index, self.location, p.gender.name, denovo_parent)
+            for index, p in enumerate(self.memberInOrder)
+        ]
 
     def denovo_parent(self):
         denovo_parent = None
@@ -474,7 +470,7 @@ class Variant(object):
 
     def is_variant_in_person(self, c):
         return isVariant(self.bestSt, c, self.location,
-                         self.memberInOrder[c].gender)
+                         self.memberInOrder[c].gender.name)
 
 
 PRESENT_IN_CHILD_FILTER_MAPPING = {
@@ -611,3 +607,15 @@ def denovo_present_in_parent_filter(present_in_parent):
         return None
 
     return lambda fromParent: False
+
+
+def filter_by_status(variant, status):
+    statuses_in_order = [m.status for m in variant.memberInOrder]
+
+    for status_group in status:
+        for status in status_group:
+            if not any(member_status == status and variant.bestSt[1][i] > 0
+                       for i, member_status in enumerate(statuses_in_order)):
+                return True
+
+    return False

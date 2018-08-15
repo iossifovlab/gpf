@@ -6,6 +6,7 @@ Created on Nov 8, 2016
 from __future__ import unicode_literals
 from collections import Counter
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
+from pheno.common import Role, Gender
 
 
 def test_count_unaffected(denovo_studies):
@@ -18,30 +19,30 @@ def test_count_unaffected(denovo_studies):
                 iid = "{}:{}".format(fid, p.personId)
                 if iid in seen:
                     continue
-                if p.role != 'sib':
+                if p.role != Role.sib:
                     continue
 
-                counter[p.gender] += 1
+                counter[p.gender.name] += 1
                 seen.add(iid)
 
-    assert counter['M'] > 0
-    assert counter['F'] > 0
-    assert 2303 == counter['F'] + counter['M']
+    assert counter[Gender.M.name] > 0
+    assert counter[Gender.F.name] > 0
+    assert 2303 == counter[Gender.F.name] + counter[Gender.M.name]
 
 
 def test_children_stats_simple(autism_studies, unaffected_studies):
 
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_studies(autism_studies, Role.prb)
     children_stats = gh.get_children_stats()
 
-    assert 596 == children_stats['F']
-    assert 3367 == children_stats['M']
+    assert 596 == children_stats[Gender.F.name]
+    assert 3367 == children_stats[Gender.M.name]
 
-    gh = GH.from_studies(unaffected_studies, 'sib')
+    gh = GH.from_studies(unaffected_studies, Role.sib)
     children_stats = gh.get_children_stats()
 
-    assert 1111 == children_stats['M']
-    assert 1192 == children_stats['F']
+    assert 1111 == children_stats[Gender.M.name]
+    assert 1192 == children_stats[Gender.F.name]
 
 
 def test_children_stats_dataset(sd):

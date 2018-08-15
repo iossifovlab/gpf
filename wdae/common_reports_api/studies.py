@@ -46,9 +46,9 @@ def build_header_summary(studies):
             for pid in sorted(list(fmd.keys()),
                               key=lambda x: (str(fmd[x].role), str(x)))])
         fam_type_cnt[fam_conf] += 1
-        for p in list(fmd.values()):
-            child_type_cnt[p.role + p.gender] += 1
-            child_type_cnt[p.role] += 1
+        for p in fmd.values():
+            child_type_cnt[p.role.name + p.gender.name] += 1
+            child_type_cnt[p.role.name] += 1
 
     fam_total = len(fam_buff)
 

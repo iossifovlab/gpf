@@ -95,18 +95,19 @@ class VariantAnnotator(object):
             effects.append(EffectFactory.create_effect("intergenic"))
         return effects
 
-    def do_annotate_variant(self, chr=None, position=None, loc=None, var=None,
-                            ref=None, alt=None, length=None, seq=None,
-                            typ=None):
-        variant = Variant(chr, position, loc, var, ref, alt, length, seq, typ)
+    def do_annotate_variant(self, chrom=None, position=None, loc=None,
+                            var=None, ref=None, alt=None, length=None,
+                            seq=None, typ=None):
+        variant = Variant(
+            chrom, position, loc, var, ref, alt, length, seq, typ)
         return self.annotate(variant)
 
     @classmethod
-    def annotate_variant(cls, gm, refG, chr=None, position=None, loc=None,
+    def annotate_variant(cls, gm, refG, chrom=None, position=None, loc=None,
                          var=None, ref=None, alt=None, length=None, seq=None,
                          typ=None, promoter_len=0):
         annotator = VariantAnnotator(refG, gm, promoter_len=promoter_len)
-        effects = annotator.do_annotate_variant(chr, position, loc, var, ref,
+        effects = annotator.do_annotate_variant(chrom, position, loc, var, ref,
                                                 alt, length, seq, typ)
         desc = annotator.effect_description(effects)
 
@@ -116,7 +117,7 @@ class VariantAnnotator(object):
         return effects
 
     @classmethod
-    def effect_description(cls, E):
+    def effect_description1(cls, E):
         if E[0].effect == 'unk_chr':
             return('unk_chr', 'unk_chr', 'unk_chr')
 
@@ -149,5 +150,56 @@ class VariantAnnotator(object):
                 effect_gene += gene + ":" + G[gene][0].effect + "|"
 
             effect_details = effect_details[:-1] + "|"
-
         return(effect_type, effect_gene[:-1], effect_details[:-1])
+
+    @classmethod
+    def effect_description(cls, E):
+        effect_type, effect_gene, effect_details = cls.effect_simplify(E)
+        if isinstance(effect_gene, list):
+            effect_gene = "|".join([":".join(eg) for eg in effect_gene])
+        if isinstance(effect_details, list):
+            effect_details = "|".join([
+                ";".join([e for e in ed])
+                for ed in effect_details
+            ])
+        return(effect_type, effect_gene, effect_details)
+
+    @classmethod
+    def effect_simplify(cls, E):
+        if E[0].effect == 'unk_chr':
+            return('unk_chr', 'unk_chr', 'unk_chr')
+
+        effect_type = ""
+        effect_gene = []
+        effect_details = []
+
+        D = {}
+        [D.setdefault(cls.Severity[i.effect], []).append(i) for i in E]
+
+        set_worst_effect = False
+
+        for key in sorted(D, key=int, reverse=True):
+            if set_worst_effect is False:
+                effect_type = D[key][0].effect
+                set_worst_effect = True
+
+            if effect_type == "intergenic":
+                return ("intergenic",
+                        [("intergenic", "intergenic")],
+                        "intergenic")
+
+            if effect_type == "no-mutation":
+                return("no-mutation", "no-mutation", "no-mutation")
+
+            G = {}
+            [G.setdefault(i.gene, []).append(i) for i in D[key]]
+
+            effect_detail = []
+            for gene in G:
+                for v in G[gene]:
+                    effect_detail.append(v.create_effect_details())
+                effect_gene.append((gene, G[gene][0].effect))
+
+            effect_details.append(effect_detail)
+
+        return(effect_type, effect_gene, effect_details)

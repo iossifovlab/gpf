@@ -10,6 +10,7 @@ import pytest
 from enrichment_tool.background import SynonymousBackground
 from enrichment_tool.event_counters import GeneEventsCounter
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
+from pheno.common import Role
 
 
 @pytest.fixture(scope='module')
@@ -49,7 +50,7 @@ def background(request):
 def test_stats_autism_lgd(background, autism_studies,
                           gene_set):
     counter = GeneEventsCounter()
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_studies(autism_studies, Role.prb)
     variants = gh.get_variants('LGDs')
     children_stats = gh.get_children_stats()
 
@@ -80,7 +81,7 @@ def test_stats_autism_lgd(background, autism_studies,
 def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
                                       gene_set):
     counter = GeneEventsCounter()
-    gh = GH.from_studies(schizophrenia_studies, 'prb')
+    gh = GH.from_studies(schizophrenia_studies, Role.prb)
     variants = gh.get_variants('LGDs')
     children_stats = gh.get_children_stats()
 
@@ -111,7 +112,7 @@ def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
 def test_stats_unaffected_with_missense(background, unaffected_studies,
                                         gene_set):
     counter = GeneEventsCounter()
-    gh = GH.from_studies(unaffected_studies, 'sib')
+    gh = GH.from_studies(unaffected_studies, Role.sib)
     variants = gh.get_variants('missense')
     children_stats = gh.get_children_stats()
 

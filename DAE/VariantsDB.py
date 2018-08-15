@@ -34,14 +34,14 @@ import pickle
 import logging
 from Variant import Variant, mat2Str, filter_gene_effect, str2Mat,\
     present_in_child_filter,\
-    denovo_present_in_parent_filter, chromosome_prefix
+    denovo_present_in_parent_filter, \
+    filter_by_status, chromosome_prefix
 from Family import Family, Person
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
-from future import standard_library
-standard_library.install_aliases()
-from configparser import NoOptionError
+from variant_db.variant_query import VariantQuery
+from pheno.common import Role, Status, Gender
 
 LOGGER = logging.getLogger(__name__)
 
@@ -154,10 +154,7 @@ class Study(object):
     def _get_transmitted_impl(self, callSet):
         if callSet not in self.transmission_impl:
             conf = TransmissionConfig(self, callSet)
-            try:
-                impl_format = conf._get_params("format")
-            except NoOptionError:
-                impl_format = 'legacy'
+            impl_format = conf._get_params("format") or 'legacy'
 
             if impl_format is None or impl_format == 'legacy':
                 self.transmission_impl[callSet] = \
@@ -165,6 +162,9 @@ class Study(object):
             elif impl_format == 'mysql':
                 self.transmission_impl[callSet] = \
                     MysqlTransmittedQuery(self, callSet)
+            elif impl_format == 'new_mysql':
+                self.transmission_impl[callSet] = \
+                    VariantQuery(self)
             else:
                 raise Exception("unexpected transmission format")
 
@@ -205,7 +205,7 @@ class Study(object):
 
     def get_denovo_variants(self, inChild=None, presentInChild=None,
                             presentInParent=None, genomicScores=[],
-                            gender=None,
+                            gender=None, roles=None, status=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
                             familyIds=None, regionS=None, callSet=None,
                             limit=None):
@@ -261,6 +261,18 @@ class Study(object):
                 except ValueError:
                     continue
 
+            if roles:
+                roles_in_order = [m.role for m in v.memberInOrder]
+
+                if not any(role in roles and len(v.bestSt) > 1 and
+                           v.bestSt[1][i] > 0
+                           for i, role in enumerate(roles_in_order)):
+                    continue
+
+            if status:
+                if filter_by_status(v, status):
+                    continue
+
             if effectTypes is not None or geneSymsUpper is not None:
                 requestedGeneEffects = filter_gene_effect(
                     v.geneEffect, effectTypes, geneSymsUpper)
@@ -268,6 +280,7 @@ class Study(object):
                     continue
                 vc = copy.copy(v)
                 vc._requestedGeneEffect = requestedGeneEffects
+
                 yield vc
             else:
                 yield v
@@ -290,7 +303,7 @@ class Study(object):
             def float_conv(x):
                 try:
                     return float(x or np.nan)
-                except _:
+                except:
                     return np.nan
             print("Loading file {} for collection {}".format(fl, self.name),
                   file=sys.stderr)
@@ -341,6 +354,7 @@ class Study(object):
             "quadReportSSC": self._load_family_data_from_quad_report,
             "simple": self._load_family_data_from_simple,
             "pickle": self._load_family_data_from_pickle,
+            "pedigree": self._load_family_data_from_pedigree,
             "StateWE2012-data1-format": self._load_family_data_from_StateWE2012_data1,
             "EichlerWE2012-SupTab1-format": self._load_family_data_from_EichlerWE2012_SupTab1,
             "DalyWE2012-SD-Trios": self._load_family_data_from_DalyWE2012_SD_Trios,
@@ -367,10 +381,20 @@ class Study(object):
             fam.atts['phenotype'] = phenotype
 
             for p in fam.memberInOrder:
-                if p.role == 'prb':
-                    p.phenotype = phenotype
+                if hasattr(p, 'status'):
+                    if p.status == Status.affected:
+                        p.phenotype = phenotype
+                    else:
+                        p.phenotype = 'unaffected'
+                # FIXME: legacy affected/unaffected
                 else:
-                    p.phenotype = 'unaffected'
+                    if p.role == Role.prb:
+                        p.status = Status.affected
+                        p.phenotype = phenotype
+                    else:
+                        p.status = Status.unaffected
+                        p.phenotype = 'unaffected'
+
                 p.atts['phenotype'] = p.phenotype
 
     def _load_family_data_SSCFams(self, reportF):
@@ -379,9 +403,9 @@ class Study(object):
         for f in list(families.values()):
             f.memberInOrder = []
 
-        rlsMp = {"mother": "mom", "father": "dad", "proband": "prb",
-                 "designated-sibling": "sib", "other-sibling": "sib"}
-        genderMap = {"female": "F", "male": "M"}
+        rlsMp = {"mother": Role.mom, "father": Role.dad, "proband": Role.prb,
+                 "designated-sibling": Role.sib, "other-sibling": Role.sib}
+        genderMap = {"female": Gender.F, "male": Gender.M}
 
         for indS in list(self.vdb.sfariDB.individual.values()):
             if indS.familyId not in families:
@@ -401,11 +425,13 @@ class Study(object):
             buff[indS.familyId][indS.role] = indS
 
         rlsMp = list(zip(
-            "mother,father,proband".split(','), "mom,dad,prb".split(',')))
-        genderMap = {"female": "F", "male": "M"}
+            "mother,father,proband".split(','),
+            [Role.mom, Role.dad, Role.prb]
+        ))
+        genderMap = {"female": Gender.F, "male": Gender.M}
 
         families = {}
-        for fid, rls in list(buff.items()):
+        for fid, rls in buff.items():
             if "mother" not in rls or "father" not in rls or "proband" not in rls:
                 continue
             f = Family()
@@ -432,13 +458,33 @@ class Study(object):
                     if not isinstance(member.gender, str):
                         member.gender = member.gender.decode("UTF-8")
 
+        # FIXME: this should be done when the pickles are generated
+        for family_dict in result:
+            for family in family_dict.items():
+                for member in family[1].memberInOrder:
+                    member.role = Role[member.role] \
+                        if member.role in Role.__members__ \
+                        else member.role
+                    member.gender = Gender[member.gender] \
+                        if member.gender in Gender.__members__ \
+                        else member.gender
+                    if hasattr(member, 'status'):
+                        member.status = Status[member.status] \
+                            if member.role in Status.__members__ \
+                            else member.status
+        # print(result)
         return result
 
     @staticmethod
     def _load_family_data_from_simple(reportF):
         dt = genfromtxt(reportF, delimiter='\t', dtype=None,
                         names=True, case_sensitive=True,
-                        comments="asdgasdgasdga", encoding='utf-8')
+                        comments="asdgasdgasdga", encoding='utf-8', 
+			converters={
+				'role': Study.role_converter,
+				'status': Study.status_converter,
+				'gender': Study.gender_converter_by_name_or_value
+			})
         families = defaultdict(Family)
         for dtR in dt:
             fmId = str(dtR['familyId'])
@@ -456,6 +502,41 @@ class Study(object):
         return families, {}
 
     @staticmethod
+    def _load_family_data_from_pedigree(family_file):
+        id_converter = lambda x: x if x != '0' else ''
+
+        dt = genfromtxt(
+            family_file, delimiter='\t', dtype=None, names=True,
+            case_sensitive=True, comments="asdgasdgasdga",
+            converters={
+                'momId': id_converter,
+                'dadId': id_converter,
+                'role': Study.role_converter,
+                'status': Study.status_converter,
+                'gender': Study.gender_converter_by_name_or_value
+            })
+        families = defaultdict(Family)
+        for dtR in dt:
+            fmId = str(dtR['familyId'])
+            families[fmId].familyId = fmId
+            atts = {x: dtR[x] for x in dt.dtype.names}
+
+            assert 'personId' in atts
+            assert 'gender' in atts
+            assert 'role' in atts
+            assert 'momId' in atts
+            assert 'dadId' in atts
+            assert 'status' in atts
+
+            p = Person(atts)
+            for key, item in atts.items():
+                setattr(p, key, item)
+
+            families[fmId].memberInOrder.append(p)
+
+        return families, {}
+
+    @staticmethod
     def _load_family_data_from_DalyWE2012_SD_Trios(reportF):
         families = {}
 
@@ -464,26 +545,26 @@ class Study(object):
                         comments="asdgasdgasdga", encoding='utf-8'
         )
 
-        genderDecoding = {"female": "F", "male": "M"}
+        genderDecoding = {"female": Gender.F, "male": Gender.M}
 
         for dtR in dt:
             atts = {x: dtR[x] for x in dt.dtype.names}
             prb = Person(atts)
             prb.gender = genderDecoding[dtR["Gender"]]
-            prb.role = "prb"
+            prb.role = Role.prb
             prb.personId = dtR["Child_ID"]
 
             fid = prb.personId
 
             mom = Person()
             mom.personId = fid + ".mo"
-            mom.role = 'mom'
-            mom.gender = 'F'
+            mom.role = Role.mom
+            mom.gender = Gender.F
 
             dad = Person()
             dad.personId = fid + ".fa"
-            dad.role = 'dad'
-            dad.gender = 'M'
+            dad.role = Role.dad
+            dad.gender = Gender.M
 
             f = Family()
             f.familyId = fid
@@ -499,9 +580,9 @@ class Study(object):
                         comments="asdgasdgasdga", encoding='utf-8'
         )
 
-        genderDecoding = {"female": "F", "male": "M"}
-        roleDecoding = {"SSC189": "prb", "SSC189_Sib": "sib",
-                        "Pilot_Pro": "prb", "Pilot_Sib": "sib"}
+        genderDecoding = {"female": Gender.F, "male": Gender.M}
+        roleDecoding = {"SSC189": Role.prb, "SSC189_Sib": Role.sib,
+                        "Pilot_Pro": Role.prb, "Pilot_Sib": Role.sib}
 
         for dtR in dt:
             atts = {x: dtR[x] for x in dt.dtype.names}
@@ -513,27 +594,28 @@ class Study(object):
             pid = p.personId
             fid = pid[0:pid.find('.')]
 
-            famBuff[fid][p.role] = p
+            famBuff[fid][p.role.name] = p
 
         families = {}
-        for fid, pDct in list(famBuff.items()):
+        for fid, pDct in famBuff.items():
             f = Family()
             f.familyId = fid
 
             mom = Person()
             mom.personId = fid + ".mo"
-            mom.role = 'mom'
-            mom.gender = 'F'
+            mom.role = Role.mom
+            mom.gender = Gender.F
 
             dad = Person()
             dad.personId = fid + ".fa"
-            dad.role = 'dad'
-            dad.gender = 'M'
+            dad.role = Role.dad
+            dad.gender = Gender.M
 
             if len(pDct) == 1:
-                f.memberInOrder = [mom, dad, pDct['prb']]
+                f.memberInOrder = [mom, dad, pDct[Role.prb.name]]
             elif len(pDct) == 2:
-                f.memberInOrder = [mom, dad, pDct['prb'], pDct['sib']]
+                f.memberInOrder = \
+                    [mom, dad, pDct[Role.prb.name], pDct[Role.sib.name]]
             else:
                 raise Exception(
                     "Weird family: " + fid + " with " + str(len(pDct)) + " memmbers")
@@ -550,9 +632,9 @@ class Study(object):
                         comments="asdgasdgasdga", encoding='utf-8'
         )
 
-        genderDecoding = {"Male": "M", "Female": "F"}
-        roleDecoding = {"Mother": "mom", "Father": "dad",
-                        "Affected_proband": "prb", "Unaffected_Sibling": "sib"}
+        genderDecoding = {"Male": Gender.M, "Female": Gender.F}
+        roleDecoding = {"Mother": Role.mom, "Father": Role.dad,
+                        "Affected_proband": Role.prb, "Unaffected_Sibling": Role.sib}
 
         for dtR in dt:
             atts = {x: dtR[x] for x in dt.dtype.names}
@@ -562,20 +644,23 @@ class Study(object):
             p.personId = dtR["Sample"]
 
             if dtR['Sample_PassFail'] == 'Fail' or dtR['Family_PassFail'] == 'Fail':
-                badFamBuff[str(dtR["Family"])][p.role] = p
+                badFamBuff[str(dtR["Family"])][p.role.name] = p
             else:
-                famBuff[str(dtR["Family"])][p.role] = p
+                famBuff[str(dtR["Family"])][p.role.name] = p
 
         families = {}
-        for fid, pDct in list(famBuff.items()):
+        for fid, pDct in famBuff.items():
             f = Family()
             f.familyId = fid
 
             if len(pDct) == 3:
-                f.memberInOrder = [pDct['mom'], pDct['dad'], pDct['prb']]
+                f.memberInOrder = \
+                    [pDct[Role.mom.name], pDct[Role.dad.name], pDct[Role.prb.name]]
             elif len(pDct) == 4:
                 f.memberInOrder = [
-                    pDct['mom'], pDct['dad'], pDct['prb'], pDct['sib']]
+                    pDct[Role.mom.name], pDct[Role.dad.name],
+                    pDct[Role.prb.name], pDct[Role.sib.name]
+                ]
             else:
                 raise Exception(
                     "Weird family: " + fid + " with " + str(len(pDct)) + " memmbers")
@@ -583,11 +668,11 @@ class Study(object):
             families[fid] = f
 
         badFamilies = {}
-        for fid, pDct in list(badFamBuff.items()):
+        for fid, pDct in badFamBuff.items():
             f = Family()
             f.familyId = fid
 
-            f.memberInOrder = list(pDct.values())
+            f.memberInOrder = pDct.values()
 
             badFamilies[fid] = f
 
@@ -624,27 +709,27 @@ class Study(object):
 
             mom = Person()
             mom.personId = f.familyId + ".mo"
-            mom.role = 'mom'
-            mom.gender = 'F'
+            mom.role = Role.mom
+            mom.gender = Gender.F
             mom.atts['race'] = qrpR['motherRace']
             mom.atts['centers'] = fmCntrS
 
             dad = Person()
             dad.personId = f.familyId + ".fa"
-            dad.role = 'dad'
-            dad.gender = 'M'
+            dad.role = Role.dad
+            dad.gender = Gender.M
             dad.atts['race'] = qrpR['fatherRace']
             dad.atts['centers'] = fmCntrS
 
             f.memberInOrder = [mom, dad]
 
-            sfxC2Role = {'p': 'prb', 's': 'sib'}
+            sfxC2Role = {'p': Role.prb, 's': Role.sib}
             sfxC2GenderAt = {'p': 'probandGender', 's': 'siblingGender'}
             for sfx, chCntrs in sorted(chldSfx.items()):
                 chl = Person()
                 chl.personId = f.familyId + "." + sfx
                 chl.role = sfxC2Role[sfx[0]]
-                chl.gender = qrpR[sfxC2GenderAt[sfx[0]]]
+                chl.gender = Gender[qrpR[sfxC2GenderAt[sfx[0]]]]
                 chl.atts['centers'] = ",".join(sorted(chCntrs))
                 f.memberInOrder.append(chl)
 
@@ -676,7 +761,7 @@ class Study(object):
 
     def _load_family_data_from_quad_report(self, reportF):
         familyIdRE = re.compile('^auSSC(\d\d\d\d\d)')
-        rlsMap = {"self": "prb", "sibling": "sib"}
+        rlsMap = {"self": Role.prb, "sibling": Role.sib}
         families = {}
         badFamilies = {}
         qrp = genfromtxt(
@@ -717,20 +802,20 @@ class Study(object):
 
             mom = Person()
             mom.personId = piF(qrpR['mothersample_id'])
-            mom.role = 'mom'
-            mom.gender = 'F'
+            mom.role = Role.mom
+            mom.gender = Gender.F
             transferPersonAtts(mom, "mother")
 
             dad = Person()
             dad.personId = piF(qrpR['fathersample_id'])
-            dad.role = 'dad'
-            dad.gender = 'M'
+            dad.role = Role.dad
+            dad.gender = Gender.M
             transferPersonAtts(dad, "father")
 
             ch1 = Person()
             ch1.personId = piF(qrpR['child1sample_id'])
             ch1.role = rlsMap[qrpR['child1role']]
-            ch1.gender = qrpR['child1gender']
+            ch1.gender = Gender[qrpR['child1gender']]
             transferPersonAtts(ch1, "child1")
 
             f.memberInOrder = [mom, dad, ch1]
@@ -739,7 +824,7 @@ class Study(object):
                 ch2 = Person()
                 ch2.personId = piF(qrpR['child2sample_id'])
                 ch2.role = rlsMap[qrpR['child2role']]
-                ch2.gender = qrpR['child2gender']
+                ch2.gender = Gender[qrpR['child2gender']]
                 transferPersonAtts(ch2, "child2")
                 f.memberInOrder.append(ch2)
             if qrpR['status'] == 'OK':

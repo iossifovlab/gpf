@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 from builtins import map
 from builtins import str
 import itertools
+import pprint
 
 from rest_framework import views, status
 from rest_framework.response import Response
@@ -25,6 +26,7 @@ import json
 from query_variants import join_line, generate_web_response, generate_response
 from datasets_api.permissions import IsDatasetAllowed
 from datasets.metadataset import MetaDataset
+from datasets.helpers import get_variants_web_preview
 import logging
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
@@ -91,12 +93,14 @@ class QueryPreviewView(QueryBaseView):
                         request.user, dataset_id)]
 
             dataset = self.datasets_factory.get_dataset(dataset_id)
+            # LOGGER.info("dataset " + str(dataset))
 
-            response = self.__prepare_variants_response(
-                **generate_web_response(
+            response = get_variants_web_preview(
                     dataset.get_variants(safe=True, **data),
-                    dataset.get_preview_columns()))
+                    dataset.preview_columns
+            )
 
+            # pprint.pprint(response)
             response['legend'] = dataset.get_legend(safe=True, **data)
 
             return Response(response, status=status.HTTP_200_OK)
@@ -156,7 +160,7 @@ class QueryDownloadView(QueryBaseView):
 
             dataset = self.datasets_factory.get_dataset(data['datasetId'])
 
-            columns = dataset.get_download_columns()
+            columns = dataset.download_columns
             try:
                 columns.remove('pedigree')
             except ValueError:

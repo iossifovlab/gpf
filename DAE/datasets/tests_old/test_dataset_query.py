@@ -8,6 +8,7 @@ import pytest
 import copy
 from DAE import vDB
 from datasets.tests.requests import EXAMPLE_QUERY_SSC, EXAMPLE_QUERY_VIP
+from pheno.common import Role
 
 
 def test_get_legend_ssc(ssc):
@@ -81,7 +82,7 @@ def test_denovo_studies_persons_phenotype_ssc(ssc):
         phenotype = st.get_attr('study.phenotype')
         for fam in list(st.families.values()):
             for p in fam.memberInOrder:
-                if p.role == 'prb':
+                if p.role == Role.prb:
                     assert p.phenotype == phenotype
                 else:
                     assert p.phenotype == 'unaffected'
@@ -92,7 +93,7 @@ def test_denovo_studies_persons_phenotype_sd(sd):
         phenotype = st.get_attr('study.phenotype')
         for fam in list(st.families.values()):
             for p in fam.memberInOrder:
-                if p.role == 'prb':
+                if p.role == Role.prb:
                     assert p.phenotype == phenotype
                 else:
                     assert p.phenotype == 'unaffected'

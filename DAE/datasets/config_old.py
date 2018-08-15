@@ -13,6 +13,9 @@ from Config import Config
 import collections
 import os
 
+from pheno.common import ROLES_FILTER_DEFAULT_ROLES, ROLES_GRAPHS_DEFINITION
+
+
 class PedigreeSelector(dict):
 
     def __init__(self, pedigree_id, **kwargs):
@@ -121,6 +124,25 @@ class DatasetsConfig(object):
             res = [r.strip() for r in res.split(',')]
         return res
 
+    def _get_roles_filter_options(self, section):
+        default_role_groups = ROLES_FILTER_DEFAULT_ROLES
+
+        additional_role_groups = self._get_string_list(
+            section, 'rolesFilter.additionalRoles', [])
+
+        additional_role_groups = filter(
+            lambda x: x not in default_role_groups, additional_role_groups)
+
+        role_groups = default_role_groups + additional_role_groups
+
+        roles = [
+            ROLES_GRAPHS_DEFINITION[role_group]
+            for role_group in role_groups
+        ]
+        roles = reduce(lambda a, b: a + b, roles)
+
+        return [role.name for role in roles]
+
     def _get_genotype_browser(self, section):
         if not self._get_boolean(section, 'genotypeBrowser'):
             return None
@@ -167,6 +189,8 @@ class DatasetsConfig(object):
         download_columns = \
             self._get_string_list(section, 'genotypeBrowser.downloadColumns', default_columns)
 
+        roles_filter = self._get_roles_filter_options(section)
+
         return {
             'mainForm': main_form,
             'hasDenovo': has_denovo,
@@ -186,6 +210,7 @@ class DatasetsConfig(object):
             'genomicMetrics': genomic_metrics,
             'previewColumns': preview_columns,
             'downloadColumns': download_columns,
+            'rolesFilterOptions': roles_filter
         }
 
     def _get_genotype_browser_family_study_filters(self, section):

@@ -5,9 +5,9 @@ import re
 
 
 class Variant(object):
-    def __init__(self, chr=None, position=None, loc=None, var=None, ref=None,
+    def __init__(self, chrom=None, position=None, loc=None, var=None, ref=None,
                  alt=None, length=None, seq=None, typ=None):
-        self.set_position(chr, position, loc)
+        self.set_position(chrom, position, loc)
         self.set_ref_alt(var, ref, alt, length, seq, typ)
 
         self.ref_position_last = self.position + len(self.reference)

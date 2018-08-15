@@ -8,6 +8,7 @@ import pytest
 from enrichment_tool.background import SamochaBackground
 from enrichment_tool.event_counters import GeneEventsCounter
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
+from pheno.common import Role
 
 
 @pytest.fixture(scope='module')
@@ -19,7 +20,7 @@ def background(request):
 def test_stats_autism_lgd(background, autism_studies,
                           gene_set):
     counter = GeneEventsCounter()
-    gh = GH.from_studies(autism_studies, 'prb')
+    gh = GH.from_studies(autism_studies, Role.prb)
     variants = gh.get_variants('LGDs')
     children_stats = gh.get_children_stats()
 

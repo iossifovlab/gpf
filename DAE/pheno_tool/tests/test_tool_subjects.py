@@ -17,7 +17,7 @@ def test_pheno_tool_studies_proband_subjects(phdb, all_ssc_studies):
     assert persons is not None
 
     assert 2870 == len(persons)
-    for p in list(persons.values()):
+    for p in persons.values():
         assert Role.prb.name == p.role
 
 
@@ -30,8 +30,8 @@ def test_pheno_tool_studies_siblings(phdb, all_ssc_studies):
     assert persons is not None
 
     assert 2696 == len(persons)
-    for p in list(persons.values()):
-        assert Role.sib.name == p.role
+    for p in persons.values():
+        assert Role.sib == p.role
 
 
 def test_studies_probands_and_siblings(phdb, all_ssc_studies):
@@ -44,20 +44,20 @@ def test_studies_probands_and_siblings(phdb, all_ssc_studies):
     tool = PhenoTool(phdb, all_ssc_studies, roles=[Role.prb, Role.sib],
                      measure_id='ssc_commonly_used.height')
     persons = PhenoTool._studies_persons(all_ssc_studies, [Role.prb, Role.sib])
-    for pid, person in list(persons.items()):
+    for pid, person in persons.items():
         if pid in probands:
             assert tool._assert_persons_equal(person, probands[pid])
-            assert person.role == Role.prb.name
+            assert person.role == Role.prb
         else:
             assert tool._assert_persons_equal(person, siblings[pid])
             assert pid in siblings
-            assert person.role == Role.sib.name
+            assert person.role == Role.sib
 
 
 def test_report_wrong_probands_roles(all_ssc_studies):
     wrong_probands = set(["11664.p2", "12310.p2", "11324.p2", "11370.p2"])
     for st in all_ssc_studies:
-        for fam in list(st.families.values()):
+        for fam in st.families.values():
             for person in fam.memberInOrder:
                 if person.personId not in wrong_probands:
                     continue
@@ -72,8 +72,8 @@ def test_studies_proband_and_siblings_subjects(phdb, all_ssc_studies):
     assert persons is not None
 
     assert 5566 == len(persons)
-    for p in list(persons.values()):
-        assert Role.prb.name == p.role or Role.sib.name == p.role
+    for p in persons.values():
+        assert Role.prb == p.role or Role.sib == p.role
 
 
 def test_list_of_subjects(phdb, all_ssc_studies):

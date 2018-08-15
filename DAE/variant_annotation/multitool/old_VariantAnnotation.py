@@ -505,6 +505,7 @@ class Variant(object):
 
                                 break
 
+                            codingRegions = i.CDS_regions()  # yoonha moved
                             if self.pos <= codingRegions[j].stop and self.pos > codingRegions[j].start:
                                 # coding
                                 protPos = checkProteinPosition(i, self.pos, 1, "I", codingRegions)
@@ -538,7 +539,6 @@ class Variant(object):
 
                             return([ef])
 
-			codingRegions = i.CDS_regions() #yoonha moved
                         if self.pos >= i.cds[0] and self.pos <= i.cds[0]+2 and self.pos <= codingRegions[0].stop: #yoonha added the last condition
                             h = dealWithFirstCodon_Snps(i, self.pos, self.seq, refG, code)
                             h.append(i.strand)

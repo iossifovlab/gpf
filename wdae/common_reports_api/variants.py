@@ -45,11 +45,9 @@ class CommonBase(object):
 
     @staticmethod
     def family_configuration(family):
-        return "".join([
-            family[pid].role + family[pid].gender
-            for pid in sorted(list(family.keys()),
-                              key=lambda x: (str(family[x].role), str(x)))
-        ])
+        return "".join([family[pid].role.name + family[pid].gender.name
+                        for pid in sorted(
+                        family.keys(), key=lambda x: (family[x].role.name, x))])
 
 
 class CounterBase(CommonBase):
@@ -57,9 +55,11 @@ class CounterBase(CommonBase):
     def build_families_buffer(self, studies):
         families_buffer = defaultdict(dict)
         for st in studies:
-            families = list(st.families.values())
+            families = st.families.values()
             if len(st.phenotypes) > 1 and self.phenotype_id != 'unaffected':
-                families = [f for f in families if f.atts['phenotype'] == self.phenotype_id]
+                families = filter(
+                    lambda f: f.atts['phenotype'] == self.phenotype_id,
+                    families)
             for f in families:
                 for p in f.memberInOrder:
                     if p.personId in families_buffer[f.familyId]:
@@ -116,8 +116,8 @@ class ChildrenCounter(CounterBase):
         families_buffer = self.build_families_buffer(studies)
         children_counter = Counter()
 
-        for family in list(families_buffer.values()):
-            for person in list(family.values()):
+        for family in families_buffer.values():
+            for person in family.values():
                 if self.check_phenotype(person):
                     children_counter[person.gender] += 1
 
@@ -139,12 +139,12 @@ class FamiliesCounters(CounterBase):
         families_buffer = self.build_families_buffer(studies)
         family_type_counter = Counter()
 
-        for family in list(families_buffer.values()):
+        for family in families_buffer.values():
             family_configuration = self.family_configuration(family)
             family_type_counter[family_configuration] += 1
 
         self.data = {}
-        for (fconf, count) in list(family_type_counter.items()):
+        for (fconf, count) in family_type_counter.items():
             pedigree = self.family_configuration_to_pedigree_v3(fconf)
             self.data[fconf] = (pedigree, count)
             self.total += count
@@ -351,8 +351,8 @@ class DenovoEventsCounter(CounterBase):
             has_phenotype = False
             for index, p in enumerate(v.memberInOrder):
                 if p.is_child and \
-                        isVariant(v.bestSt, index, v.location, p.gender) and \
-                        p.phenotype == self.phenotype_id:
+                        isVariant(v.bestSt, index, v.location, p.gender.name) \
+                        and p.phenotype == self.phenotype_id:
                     has_phenotype = True
                     break
             if hasNew and has_phenotype:

@@ -12,6 +12,7 @@ dependencies:
 - _license=1.1=py27_1
 - _nb_ext_conf=0.3.0=py27_0
 - alabaster=0.7.9=py27_0
+- alembic=0.9.6=py_0
 - anaconda-clean=1.0.0=py27_0
 - anaconda-client=1.5.1=py27_0
 - anaconda=custom=py27_0
@@ -204,7 +205,6 @@ dependencies:
 - sockjs-tornado=1.0.3=py27_0
 - sphinx=1.4.6=py27_0
 - spyder=3.0.0=py27_0
-- sqlalchemy=1.1.13=py27hb0a01da_0
 - sqlite=3.13.0=0
 - ssl_match_hostname=3.4.0.2=py27_1
 - statsmodels=0.8.0=np111py27_0
@@ -266,6 +266,7 @@ dependencies:
   - pytest-django==3.1.2
   - python-box==3.1.1
   - reusables==0.9.2
+  - sqlalchemy==1.2.0
   - tables==3.2.2
   - texttable==0.9.1
   - websocket-client==0.44.0

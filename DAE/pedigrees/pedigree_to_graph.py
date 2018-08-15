@@ -343,6 +343,9 @@ def main():
     parser.add_argument(
         "--save-layout", metavar="o",
         help="save the layout with pedigree info ")
+    parser.add_argument(
+        "--layout-column", metavar="l", default="layoutCoords",
+        help="layout column name to be used when saving the layout")
 
     args = parser.parse_args()
     with open(args.file, "r") as input_file:
@@ -352,7 +355,8 @@ def main():
     layout_saver = None
 
     if args.save_layout:
-        layout_saver = LayoutSaver(args.file, args.save_layout)
+        layout_saver = LayoutSaver(
+            args.file, args.save_layout, args.layout_column)
 
     for family in sorted(pedigrees, key=lambda x: x.family_id):
         sandwich_instance = family.create_sandwich_instance()

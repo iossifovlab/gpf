@@ -18,7 +18,7 @@ import logging
 
 # from denovo_gene_sets import build_denovo_gene_sets
 from gene.config import GeneInfoConfig
-from datasets.config import DatasetsConfig
+from datasets.config_old import DatasetsConfig
 from datasets.metadataset import MetaDataset
 from GeneTerms import loadGeneTerm
 # from DAE import vDB
@@ -82,6 +82,9 @@ class GeneSetsCollection(GeneInfoConfig):
         assert self.gene_sets_collections is not None
 
         if gene_set_id not in self.gene_sets_collections.t2G:
+            print("{} not found in {}".format(
+                gene_set_id,
+                self.gene_sets_collections.t2G.keys()))
             return None
         syms = set(self.gene_sets_collections.t2G[gene_set_id].keys())
         count = len(syms)

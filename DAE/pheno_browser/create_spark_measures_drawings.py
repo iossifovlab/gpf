@@ -3,10 +3,10 @@ from __future__ import unicode_literals
 import os
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
 from pheno_browser.db import DbManager
+
+
+from DAE import pheno
 from pheno.pheno_regression import PhenoRegression
-
-
-from DAE import pheno # @IgnorePep8
 
 
 def main():
@@ -20,10 +20,16 @@ def main():
     pheno_db = pheno.get_pheno_db(pheno_name)
     pheno_regression = PhenoRegression.build_from_config(pheno_name)
 
-    drawer = PreparePhenoBrowserBase(pheno_name, pheno_db, pheno_regression, output_folder)
+    drawer = PreparePhenoBrowserBase(
+        pheno_name, pheno_db, pheno_regression, output_folder)
 
-    db = DbManager(dbfile=os.path.join(output_folder, db_name))
-    db.build()
+    pheno_db = pheno.get_pheno_db(pheno_name)
+    pheno_regression = PhenoRegression.build_from_config(pheno_name)
+
+    drawer = PreparePhenoBrowserBase(
+        pheno_name, pheno_db, pheno_regression, output_folder)
+
+    # db.build()
 
     # instrument = drawer.pheno_db.instruments['individuals']
     # instrument2 = drawer.pheno_db.instruments['basic_medical_screening']

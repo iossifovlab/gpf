@@ -8,6 +8,7 @@ from builtins import object
 from builtins import str
 import itertools
 from gene.weights import Weights
+from pheno.common import Status, Role
 import re
 # from gene.gene_set_collections import GeneSetsCollections
 
@@ -431,7 +432,7 @@ class RegionsMixin(object):
         if not res:
             return None
         chrome, start, end = res
-        return "{}:{}-{}".format(chrome, start, end)
+        return "chr{}:{}-{}".format(chrome, start, end)
 
     @classmethod
     def parse(cls, region):
@@ -478,6 +479,42 @@ class GenomicScoresMixin(object):
         return genomic_scores_filter
 
 
+class RolesMixin(object):
+
+    @staticmethod
+    def get_roles_filter(safe=True, **kwargs):
+        roles = kwargs.get('roles', None)
+        assert roles is None or isinstance(roles, list)
+
+        if roles:
+            roles = {Role[role] for role in roles if role in Role.__members__}
+
+        return roles
+
+
+class StatusMixin(object):
+
+    AFFECTED_MAPPING = {
+        "affected": [Status.affected],
+        "unaffected": [Status.unaffected],
+        "affected and unaffected": [Status.affected, Status.unaffected],
+    }
+
+    @staticmethod
+    def get_status_filter(safe=True, **kwargs):
+        status = kwargs.get('status', None)
+
+        assert status is None or isinstance(status, list)
+
+        if status:
+            status = [
+                StatusMixin.AFFECTED_MAPPING[s]
+                for s in status if s in StatusMixin.AFFECTED_MAPPING
+            ]
+
+        return status
+
+
 class QueryBase(
         EffectTypesMixin,
         VariantTypesMixin,
@@ -489,7 +526,9 @@ class QueryBase(
         RegionsMixin,
         RarityMixin,
         FamiliesMixin,
-        GenomicScoresMixin):
+        GenomicScoresMixin,
+        RolesMixin,
+        StatusMixin):
 
     IN_CHILD_TYPES = [
         'prb',

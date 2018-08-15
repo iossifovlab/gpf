@@ -385,21 +385,21 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
     @staticmethod
     def complement(nts):
         nts = nts.upper()
-        reversed = ''
+        reverse = ''
         for nt in nts:
             if nt == "A":
-                reversed += "T"
+                reverse += "T"
             elif nt == "T":
-                reversed += "A"
+                reverse += "A"
             elif nt == "G":
-                reversed += "C"
+                reverse += "C"
             elif nt == "C":
-                reversed += "G"
+                reverse += "G"
             elif nt == "N":
-                reversed += "N"
+                reverse += "N"
             else:
                 print("Invalid nucleotide: " + str(nt) + " in " + str(nts))
-        return(reversed)
+        return reverse
 
     def cod2aa(self, codon):
         complement_codon = self.complement(codon[::-1])
