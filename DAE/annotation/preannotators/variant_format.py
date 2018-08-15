@@ -56,8 +56,7 @@ class VariantFormatPreannotator(AnnotatorBase):
     * `VCF:ref` - reference in VCF format
 
     * `VCF:alt` - alternative in VCF format
-    """
-    
+    """ 
     def __init__(self, opts, header=None):
         self._new_columns = [
             'CSHL:location', 'CSHL:chr', 'CSHL:position', 'CSHL:variant',

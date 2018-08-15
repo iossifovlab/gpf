@@ -82,7 +82,6 @@ def main(config, data_dir, output_dir, sge_rreq):
 
     denovo_args = '--config {}'.format(config)
 
-
     transm_args_format = denovo_args +\
         ' --options=direct:False -c chr -p position --region={chr}:{begin_pos}-{end_pos}'
 

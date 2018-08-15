@@ -118,7 +118,7 @@ def defaults_arguments_multi_annotator(defaults_arguments_config, reannotate_con
 def virtuals_multi_annotator(virtuals_config, mocker):
     virtuals_opts = get_opts(virtuals_config)
     return MultiAnnotator(virtuals_opts, header=['id', 'location', 'variant'])
-  
+
 
 @pytest.fixture
 def split_column_multi_annotator(base_config, mocker):
@@ -184,7 +184,6 @@ def test_reannotate(reannotate_multi_annotator, base_input,
                     reannotate_output, mocker):
     annotation_output = StringIO()
     reannotate_multi_annotator.annotate_file(base_input, annotation_output)
-
     assert str(annotation_output.getvalue()) == str(reannotate_output)
 
     annotation_output.close()

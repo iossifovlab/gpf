@@ -56,3 +56,4 @@ familyInfo.file = %(studyDir)s/TRANSMITTED_STUDY/famData.txt
 familyInfo.fileFormat = simple
 transmittedVariants.indexFile = %(studyDir)s/TRANSMITTED_STUDY/TRANSMITTED_STUDY.format-annot
 description=TRANSMITTED_STUDY
+"""

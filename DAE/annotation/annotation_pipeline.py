@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-
 import glob
 import argparse
 import ConfigParser
@@ -16,10 +15,11 @@ from tools.utilities import assign_values
 from tools.utilities import main as main
 from tools import *
 
+
 def str_to_class(val):
     return reduce(getattr, val.split("."), sys.modules[__name__])
 
- 
+
 class MyConfigParser(ConfigParser.SafeConfigParser):
     """Modified ConfigParser.SafeConfigParser that
     allows ':' in keys and only '=' as separator.
@@ -59,7 +59,6 @@ class MultiAnnotator(object):
         virtual_columns_indices = []
         all_columns_labels = set()
 
-
         if not opts.skip_preannotators:
             for preannotator in self.preannotators:
                 self.annotators.append({
@@ -97,7 +96,6 @@ class MultiAnnotator(object):
         self.config = Box(common.config.to_dict(config_parser),
                           default_box=True, default_box_attr=None)
 
-
         # config_parser.sections() this gives the sections in order which is important
         for annotation_step in config_parser.sections():
             annotation_step_config = self.config[annotation_step]
@@ -110,7 +108,6 @@ class MultiAnnotator(object):
             all_columns_labels.update(step_columns_labels)
 
             if self.header is not None:
-
                 if opts.reannotate:
                     new_columns = [column for column in step_columns_labels
                                    if column not in self.header]
@@ -251,3 +248,4 @@ def get_argument_parser():
 
 if __name__ == '__main__':
     main(get_argument_parser(), MultiAnnotator)
+
