@@ -6,6 +6,39 @@ from annotate_score_base import ScoreAnnotator
 
 
 def get_argument_parser():
+    """
+    FrequencyAnnotator options::
+
+        usage: annotateFreqTransm.py [-h] [-c C] [-p P] [-x X] [-v V] [-H]
+                                 [-F SCORES_FILE] [--direct]
+                                 [--score-column SCORE_COLUMN]
+                                 [--default-value DEFAULT_VALUE] [--label LABEL]
+                                 [infile] [outfile]
+
+        Program to annotate variants with frequencies
+
+        positional arguments:
+          infile                path to input file; defaults to stdin
+          outfile               path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -c C                  chromosome column number/name
+          -p P                  position column number/name
+          -x X                  location (chr:pos) column number/name
+          -v V                  variant column number/name
+          -H                    no header in the input file
+          -F SCORES_FILE, --scores-file SCORES_FILE
+                                file containing the scores
+          --direct              the score files is tabix indexed
+          --score-column SCORE_COLUMN
+                                column in score file that contains the score (default:
+                                all.altFreq)
+          --default-value DEFAULT_VALUE
+                                default value if score for variant is not found
+          --label LABEL         label of the new column; defaults to the name of the
+                                score column
+    """
     desc = """Program to annotate variants with frequencies"""
     parser = argparse.ArgumentParser(description=desc)
 
@@ -25,7 +58,6 @@ def get_argument_parser():
 
 
 class FrequencyAnnotator(ScoreAnnotator):
-
     def __init__(self, opts, header=None):
         super(FrequencyAnnotator, self).__init__(opts, header, [opts.v])
 

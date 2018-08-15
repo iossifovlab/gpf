@@ -72,6 +72,7 @@ class ScoreFile(object):
         self.scores_indices = [self.config.header.index(col)
                                for col in self.config.columns.score]
 
+
     def get_scores(self, chr, pos, *args):
         args = list(args)
         try:
@@ -141,7 +142,7 @@ class IterativeAccess(ScoreFile):
 
 
 class DirectAccess(ScoreFile):
-
+  
     def __init__(self, score_file_name, score_config=None):
         super(DirectAccess, self).__init__(score_file_name, score_config)
         self.file = pysam.Tabixfile(score_file_name)

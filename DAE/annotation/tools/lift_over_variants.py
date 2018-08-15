@@ -6,6 +6,31 @@ from pyliftover import LiftOver
 from utilities import *
 
 def get_argument_parser():
+    """
+    LiftOverAnnotator options::
+
+        usage: lift_over_variants.py [-h] [-v] [-c C] [-p P] [-x X] -F FILE [-H]
+                             [--new-c NEW_C] [--new-p NEW_P] [--new-x NEW_X]
+                             [infile] [outfile]
+
+        Program to annotate variants (substitutions & indels & cnvs)
+
+        positional arguments:
+          infile                path to input file; defaults to stdin
+          outfile               path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -v, --version         show program's version number and exit
+          -c C                  chromosome column number/name
+          -p P                  position column number/name
+          -x X                  location (chr:pos) column number/name
+          -F FILE, --file FILE  lift over description file path
+          -H                    no header in the input file
+          --new-c NEW_C         name for the generated chromosome column
+          --new-p NEW_P         name for the generated position column
+          --new-x NEW_X         name for the generated location (chr:pos) column
+    """
     desc = """Program to annotate variants (substitutions & indels & cnvs)"""
     parser = argparse.ArgumentParser(version='%prog version 2.2 10/October/2013', description=desc)
     parser.add_argument('-c', help='chromosome column number/name', action='store')

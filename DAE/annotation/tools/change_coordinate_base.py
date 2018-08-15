@@ -3,6 +3,27 @@ import argparse
 from utilities import *
 
 def get_argument_parser():
+    """
+    CoordinateBaseAnnotator options::
+
+        usage: change_coordinate_base.py [-h] [-H] -p POSITION [-o] [-l]
+                                     [infile] [outfile]
+
+        Program to change the variant coordinates from 0-based to 1-based and vice-
+        versa.
+
+        positional arguments:
+          infile                path to input file; defaults to stdin
+          outfile               path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -H                    no header in the input file
+          -p POSITION, --position POSITION
+                                label of the column containing the variant's position
+          -o, --to-one-base     convert to 1-based (default is 0-based)
+          -l, --label           label of the column that will contain the new position
+    """
     desc = """Program to change the variant coordinates from 0-based to 1-based and vice-versa."""
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument("-H", help="no header in the input file", default=False, dest="no_header", action="store_true")

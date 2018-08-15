@@ -82,15 +82,18 @@ def main(config, data_dir, output_dir, sge_rreq):
 
     denovo_args = '--config {}'.format(config)
 
+
+    transm_args_format = denovo_args +\
+        ' --options=direct:False -c chr -p position --region={chr}:{begin_pos}-{end_pos}'
+
+    denovo_args += ' --options=direct:True'
+
     for file in variant_db_conf.denovo_files:
         all_cmds.append(escape_target(to_destination(file)))
         print(cmd_format.format(target=all_cmds[-1], sge_rreq=sge_rreq,
             input_file=file, output_dir=output_dir,
             args=denovo_args, job_sufix='',
             log_prefix=log_dir + '/' + os.path.basename(file)))
-
-    transm_args_format = denovo_args + \
-        ' -c chr -p position --region={chr}:{begin_pos}-{end_pos}'
 
     chromosomes = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
     chr_labels = {'X': '23', 'Y': '24'}
