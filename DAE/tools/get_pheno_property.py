@@ -4,7 +4,7 @@ from __future__ import print_function
 import argparse
 import sys
 
-from display_variants import join_line
+from query_variants import join_line
 from query_pheno_data import query_data
 
 
