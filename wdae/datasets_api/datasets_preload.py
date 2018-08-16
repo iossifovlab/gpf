@@ -12,7 +12,7 @@ from datasets.datasets_definition import DirectoryEnabledDatasetsDefinition
 from preloaded.register import Preload
 from datasets.dataset_factory import DatasetFactory
 from datasets.dataset_config import DatasetConfig
-from models import Dataset
+from datasets_api.models import Dataset
 from django.db.utils import OperationalError, ProgrammingError
 from precompute.register import Precompute
 import logging

@@ -548,11 +548,10 @@ class GeneModels(AbstractClassDoNotInstantiate):
 
     def load(self, inFile):
         self.location = inFile
-        print(inFile)
         f = gzip.open(inFile, mode='rt')
         f.readline()
         for line in f:
-            line = line.decode('utf-8')
+            line = str(line)
             cs = line[:-1].split('\t')
             chr, trID, gene, strand, txB, txE, cdsB, cdsE, eStarts, eEnds, eFrames, add_attrs = cs
             

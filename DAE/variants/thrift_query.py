@@ -1,4 +1,6 @@
 from __future__ import print_function
+from __future__ import unicode_literals
+
 from impala.util import as_pandas
 from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
     QueryTreeToSQLTransformer, QueryTreeToSQLListTransformer, \

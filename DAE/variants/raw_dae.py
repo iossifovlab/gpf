@@ -11,6 +11,7 @@ import os
 import re
 import sys
 import traceback
+from contextlib import closing
 
 import pysam
 
@@ -162,7 +163,7 @@ class RawDAE(BaseDAE):
             annotator=annotator)
 
         if region is not None:
-            assert isinstance(region, str)
+            assert isinstance(region, str), type(region)
 
         os.path.exists(summary_filename)
         os.path.exists(toomany_filename)
@@ -181,8 +182,12 @@ class RawDAE(BaseDAE):
     @staticmethod
     def load_region(filename, region):
         column_names = RawDAE.load_column_names(filename)
+        print(filename, type(filename))
+        print(region, type(region))
 
-        with pysam.Tabixfile(filename) as tbf:  # @UndefinedVariable
+        # using a context manager because of
+        # https://stackoverflow.com/a/25968716/2316754
+        with closing(pysam.Tabixfile(filename)) as tbf:  # @UndefinedVariable
             infile = tbf.fetch(
                 region=region,
                 parser=pysam.asTuple())  # @UndefinedVariable
@@ -200,7 +205,7 @@ class RawDAE(BaseDAE):
             df = pd.read_csv(
                 infile,
                 dtype={
-                    'chr': str,
+                    'chr': np.str,
                     'position': int,
                 },
                 sep='\t')
@@ -402,8 +407,8 @@ class RawDenovo(BaseDAE):
         df = pd.read_csv(
             self.denovo_filename,
             dtype={
-                'familyId': str,
-                'chr': str,
+                'familyId': np.str,
+                'chr': np.str,
                 'position': int,
             },
             sep='\t')
