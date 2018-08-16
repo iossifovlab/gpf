@@ -146,4 +146,3 @@ all: {denovo_output} {transmitted_output}
            transmitted=TRANSMITTED,
            denovo_output=' '.join(DENOVO_OUTPUT_FILES),
            transmitted_output=' '.join(TRANSMITTED_OUTPUT_FILES))
-

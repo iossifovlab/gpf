@@ -1,51 +1,94 @@
+
+#!/usr/bin/env python
+
 import sys
 import gzip
 import pysam
-import re
-import ConfigParser
-from utilities import AnnotatorBase, assign_values
+import argparse
+from ConfigParser import SafeConfigParser
+from utilities import AnnotatorBase, assign_values, main
 from os.path import exists
 from box import Box
 
 
-class MyConfigParser(ConfigParser.SafeConfigParser):
+def get_argument_parser():
     """
-    Modified ConfigParser.SafeConfigParser
-    that allows ':' in keys and only '=' as separator.
+    ScoreAnnotator options::
+
+        usage: annotate_score_base.py [-h] [-c C] [-p P] [-x X] [-H]
+                                 [-F SCORES_FILE]
+                                 [--scores-config-file]
+                                 [--direct]
+                                 [--labels LABELS]
+                                 [infile] [outfile]
+
+        Program to annotate variants with frequencies
+
+        positional arguments:
+          infile                path to input file; defaults to stdin
+          outfile               path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -c C                  chromosome column number/name
+          -p P                  position column number/name
+          -x X                  location (chr:pos) column number/name
+          -H                    no header in the input file
+          -F SCORES_FILE, --scores-file SCORES_FILE
+                                file containing the scores
+          --scores-config-file  .conf file for the scores file; defaults to score file name
+          --direct              the score files is tabix indexed
+          --labels LABEL        label of the new column; defaults to the name of the
+                                score column
     """
-    OPTCRE = re.compile(
-        r'(?P<option>[^=\s][^=]*)'          # allow only =
-        r'\s*(?P<vi>[=])\s*'                # for option separator
-        r'(?P<value>.*)$'
-        )
+    desc = """Program to annotate variants with scores"""
+    parser = argparse.ArgumentParser(description=desc)
+
+    parser.add_argument('-c', help='chromosome column number/name', action='store')
+    parser.add_argument('-p', help='position column number/name', action='store')
+    parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_argument('-H', help='no header in the input file', action='store_true', dest='no_header')
+    parser.add_argument('-F', '--scores-file', help='file containing the scores',
+                        type=str, action='store')
+    parser.add_argument('--scores-config-file', help='file containing configurations for the score file',
+                        type=str, action='store')
+    parser.add_argument('--direct', help='the score files is tabix indexed', action='store_true')
+    parser.add_argument('--labels', help='labels of the new column; defaults to the name of the score column',
+                        type=str, action='store')
+    return parser
+
+
+def conf_to_dict(path):
+    conf_parser = SafeConfigParser()
+    conf_parser.optionxform = str
+    conf_parser.readfp(path)
+
+    conf_settings = dict(conf_parser.items('general'))
+    conf_settings_cols = {'columns': dict(conf_parser.items('columns'))}
+    conf_settings.update(conf_settings_cols)
+    return conf_settings
 
 
 class ScoreFile(object):
 
     def __init__(self, score_file_name, config_input):
         self.name = score_file_name
-        self.load_config(config_input)
+        self._load_config(config_input)
 
-    def load_config(self, config_input=None):
+    def _load_config(self, config_input=None):
         # try default config path
         if config_input is None:
             config_input = self.name + '.conf'
-            print(config_input)
         # config is dict case
         if isinstance(config_input, dict):
             self.config = Box(config_input,
                               default_box=True, default_box_attr=None)
         elif exists(config_input):
-            with open(config_input, 'r') as config_file:
-                conf_parser = MyConfigParser()
-                conf_parser.optionxform = str
-                conf_parser.readfp(config_file)
-
-                conf_settings = dict(conf_parser.items('general'))
-                conf_settings_cols = {'columns': dict(conf_parser.items('columns'))}
-                conf_settings.update(conf_settings_cols)
+            with open(config_input, 'r') as conf_file:
+                conf_settings = conf_to_dict(conf_file)
                 self.config = Box(conf_settings, default_box=True, default_box_attr=None)
         else:
+            print(config_input)
             sys.stderr.write("You must provide a configuration file for the score file.\n")
             sys.exit(-78)
 
@@ -71,7 +114,6 @@ class ScoreFile(object):
         self.config.columns.score = self.config.columns.score.split(',')
         self.scores_indices = [self.config.header.index(col)
                                for col in self.config.columns.score]
-
 
     def get_scores(self, chr, pos, *args):
         args = list(args)
@@ -142,7 +184,7 @@ class IterativeAccess(ScoreFile):
 
 
 class DirectAccess(ScoreFile):
-  
+
     def __init__(self, score_file_name, score_config=None):
         super(DirectAccess, self).__init__(score_file_name, score_config)
         self.file = pysam.Tabixfile(score_file_name)
@@ -202,3 +244,7 @@ class ScoreAnnotator(AnnotatorBase):
     def line_annotations(self, line, new_columns):
         params = [line[i-1] if i is not None else None for i in self.arg_columns]
         return self._get_scores(new_columns, *params)
+
+
+if __name__ == "__main__":
+    main(get_argument_parser(), ScoreAnnotator)

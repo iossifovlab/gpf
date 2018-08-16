@@ -4,12 +4,11 @@ import config
 import gzip
 from annotation.tools.annotateFreqTransm \
         import FrequencyAnnotator
-from annotation.annotation_pipeline import MyConfigParser
 from copy import deepcopy
 from StringIO import StringIO
 
 
-def get_opts(c_inp=None, p_inp=None, x_inp=None,
+def get_opts(c_inp='chr', p_inp='position', x_inp=None,
              file_inp=None, direct_inp=False, config=None):
     class MockOpts:
         def __init__(self, chrom, pos, loc, score, tabix, config):
@@ -28,17 +27,6 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None,
 
 def fake_gzip_open(filename, *args):
     return filename
-
-
-def conf_to_dict(config_file):
-    conf_parser = MyConfigParser()
-    conf_parser.optionxform = str
-    conf_parser.readfp(config_file)
-
-    opts = dict(conf_parser.items('general'))
-    opts_columns = {'columns': dict(conf_parser.items('columns'))}
-    opts.update(opts_columns)
-    return opts
 
 
 @pytest.fixture
@@ -62,15 +50,8 @@ def freq_scores():
 
 
 @pytest.fixture
-def freq_config():
-    return conf_to_dict(StringIO(deepcopy(config.FREQ_SCORE_CONFIG)))
-
-
-@pytest.fixture
-def freq_annotator(freq_scores, freq_config, mocker):
-    print(freq_config)
-    freq_opts = get_opts(c_inp='chr', p_inp='position',
-                         file_inp=freq_scores, config=freq_config)
+def freq_annotator(freq_scores, mocker):
+    freq_opts = get_opts(file_inp=freq_scores)
     return FrequencyAnnotator(freq_opts,
                               header=['chr', 'position', 'variant'])
 

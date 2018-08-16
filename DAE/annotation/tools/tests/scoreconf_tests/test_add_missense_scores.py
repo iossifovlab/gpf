@@ -6,7 +6,8 @@ import tempfile
 import os
 from annotation.tools.add_missense_scores \
         import MissenseScoresAnnotator
-from annotation.annotation_pipeline import MyConfigParser
+from annotation.tools.annotate_score_base \
+        import conf_to_dict
 from copy import deepcopy
 from StringIO import StringIO
 
@@ -37,7 +38,7 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None,
             self.a = 'alt'
             self.dbnsfp = scoredir
             self.config = config
-            self.columns = ['missense']
+            self.columns = 'missense'
             self.direct = tabix
             self.labels = None
             self.reference_genome = 'hg19'
@@ -54,17 +55,6 @@ def cleanup(dirs, files):
         os.remove(tmpfile)
     for tmpdir in dirs[::-1]:
         os.rmdir(tmpdir)
-
-
-def conf_to_dict(config_file):
-    conf_parser = MyConfigParser()
-    conf_parser.optionxform = str
-    conf_parser.readfp(config_file)
-
-    opts = dict(conf_parser.items('general'))
-    opts_columns = {'columns': dict(conf_parser.items('columns'))}
-    opts.update(opts_columns)
-    return opts
 
 
 @pytest.fixture

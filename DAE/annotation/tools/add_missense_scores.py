@@ -5,7 +5,7 @@ import os
 from box import Box
 
 from utilities import AnnotatorBase, assign_values, main
-from annotate_score_base import ScoreAnnotator, MyConfigParser
+from annotate_score_base import ScoreAnnotator, conf_to_dict
 
 def get_argument_parser():
     """
@@ -31,10 +31,11 @@ def get_argument_parser():
           -a A                  alternative column number/name
           -H                    no header in the input file
           --dbnsfp DBNSFP       path to dbNSFP
-          --columns COLUMNS
+          --config CONFIG       path to .conf file for score file, defaults to score name
+          --columns COLUMNS     score columns to include in the output file
           --direct              read score files using tabix index (default: read
                                 score files iteratively)
-          --reference-genome {hg19,hg38}
+          --labels              comma separated list of the new header entries, defaults to added columns' names  
     """
     
     parser = argparse.ArgumentParser(
@@ -48,8 +49,9 @@ def get_argument_parser():
                         default=False,  action='store_true', dest='no_header')
     parser.add_argument('--dbnsfp', help='path to dbNSFP', action='store')
     parser.add_argument('--config', help='path to config', action='store')
-    parser.add_argument('--columns', help='which columns of the score file to use',
-                        action='append', default=[])
+    parser.add_argument('--columns',
+                        help='comma separated list of score columns to annotate with',
+                        action='store')
     parser.add_argument('--direct',
                         help='read score files using tabix index '
                         '(default: read score files iteratively)',
@@ -57,18 +59,6 @@ def get_argument_parser():
     parser.add_argument('--labels', help='comma separated list of the new labels '
                         'of the added columns, defaults to column names', action='store')
     return parser
-
-
-def conf_to_dict(path, columns):
-    conf_parser = MyConfigParser()
-    conf_parser.optionxform = str
-    conf_parser.readfp(path)
-
-    conf_settings = dict(conf_parser.items('general'))
-    conf_settings_cols = {'columns': dict(conf_parser.items('columns'))}
-    conf_settings.update(conf_settings_cols)
-    conf_settings['columns']['score'] = ','.join(columns)
-    return conf_settings
 
 
 class MissenseScoresAnnotator(AnnotatorBase):
@@ -102,13 +92,16 @@ class MissenseScoresAnnotator(AnnotatorBase):
             if chr not in self.CHROMOSOMES:
                 return None
 
+            mod_opts = conf_to_dict(self.opts.config)
+            mod_opts['columns']['score'] = self.opts.columns
+
             config = {
                 'c': self.opts.c,
                 'p': self.opts.p,
                 'x': self.opts.x,
                 'direct': self.opts.direct,
                 'scores_file': self.path.format(chr),
-                'scores_config_file': conf_to_dict(self.opts.config, self.opts.columns),
+                'scores_config_file': mod_opts,
                 'labels': self.opts.labels
             }
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)

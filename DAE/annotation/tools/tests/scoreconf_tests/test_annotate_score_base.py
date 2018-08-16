@@ -4,9 +4,8 @@ import input_output
 import tempfile
 import os.path
 from os import remove
-from annotation.annotation_pipeline import MyConfigParser
 from annotation.tools.annotate_score_base \
-        import ScoreAnnotator, gzip
+        import ScoreAnnotator, gzip, conf_to_dict
 from copy import deepcopy
 from StringIO import StringIO
 
@@ -33,17 +32,6 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None,
             self.labels = None
 
     return MockOpts(c_inp, p_inp, x_inp, file_inp, conf_inp, direct_inp)
-
-
-def conf_to_dict(config_file):
-    conf_parser = MyConfigParser()
-    conf_parser.optionxform = str
-    conf_parser.readfp(config_file)
-
-    opts = dict(conf_parser.items('general'))
-    opts_columns = {'columns': dict(conf_parser.items('columns'))}
-    opts.update(opts_columns)
-    return opts
 
 
 def to_file(content, where=None):

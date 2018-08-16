@@ -23,6 +23,7 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None,
             self.direct = tabix
             self.labels = None
             self.explicit = True
+            self.columns = 'scoreValue'
 
     return MockOpts(c_inp, p_inp, x_inp, dir_inp, direct_inp)
 
