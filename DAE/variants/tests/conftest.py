@@ -5,6 +5,7 @@ Created on Feb 7, 2018
 '''
 from __future__ import print_function
 
+from builtins import range
 from io import StringIO
 import os
 import shutil

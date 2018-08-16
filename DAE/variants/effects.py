@@ -5,6 +5,8 @@ Created on Jul 1, 2018
 '''
 
 
+from builtins import str
+from builtins import object
 class EffectGene(object):
     def __init__(self, symbol=None, effect=None):
         self.symbol = symbol

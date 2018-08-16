@@ -32,11 +32,11 @@ class Configure(ConfigBox):
     @staticmethod
     def from_config(work_dir=None, filename=None):
         if work_dir is None:
-            from default_settings import DATA_DIR
+            from variants.default_settings import DATA_DIR
             work_dir = DATA_DIR
 
         if filename is None:
-            from default_settings import CONFIG_FILE
+            from variants.default_settings import CONFIG_FILE
             filename = CONFIG_FILE
 
         if not os.path.exists(filename):

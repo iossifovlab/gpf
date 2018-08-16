@@ -5,6 +5,7 @@ Created on Feb 13, 2018
 '''
 from __future__ import print_function
 
+from builtins import object
 import numpy as np
 import pandas as pd
 from variants.attributes import Role, Sex
@@ -51,7 +52,7 @@ class Family(object):
 
     def _build_trios(self, persons):
         trios = {}
-        for pid, p in persons.items():
+        for pid, p in list(persons.items()):
             if p['momId'] in persons and p['dadId'] in persons:
                 pp = [pid]
                 pp.append(p['momId'])
@@ -124,7 +125,7 @@ class FamiliesBase(object):
 
     def persons_without_parents(self):
         person = []
-        for fam in self.families.values():
+        for fam in list(self.families.values()):
             for p in fam.members_in_order:
                 if not p.has_parent():
                     person.append(p)

@@ -5,6 +5,7 @@ Created on Jul 23, 2018
 '''
 from __future__ import print_function
 
+from builtins import str
 import gzip
 import os
 import re
@@ -247,7 +248,7 @@ class RawDAE(BaseDAE):
         }
         res = {
             fid: best2gt(str2mat(bs, col_sep=col_sep, row_sep=row_sep))
-            for fid, bs in res.items()
+            for fid, bs in list(res.items())
         }
         return res
 

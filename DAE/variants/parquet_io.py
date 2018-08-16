@@ -5,6 +5,7 @@ Created on May 30, 2018
 '''
 from __future__ import print_function
 
+from builtins import str
 import sys
 import traceback
 
@@ -119,6 +120,10 @@ def summary_batch(sum_df):
         assert name in sum_df, name
         data = sum_df[name].values
         field = schema.field_by_name(name)
+        print("==========")
+        print(name)
+        print("DATA:", data, type(data[0]))
+        print("FIELD:", field)
         batch_data.append(pa.array(data, type=field.type))
 
     batch = pa.RecordBatch.from_arrays(

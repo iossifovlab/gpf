@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pytest
 
 from variants.attributes_query_builder import is_token, and_node, or_node, \
@@ -424,7 +425,7 @@ def test_token_eq_transformer(transformer_matcher_class, expr, output):
 def test_can_reconstruct_single_token(parser, transformer):
     query = "not some and not other"
     tree = parser.parse(query)
-    print(tree, tree.data, tree.children)
+    print((tree, tree.data, tree.children))
     matcher = transformer(parser).transform(tree)
 
     assert matcher.query_str() == query

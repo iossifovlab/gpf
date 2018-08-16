@@ -1,3 +1,4 @@
+from __future__ import print_function
 from impala.util import as_pandas
 from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
     QueryTreeToSQLTransformer, QueryTreeToSQLListTransformer, \
@@ -93,7 +94,7 @@ def regions_transformer(rs):
 
 def query_parts(queries, **kwargs):
     result = []
-    for key, arg in kwargs.items():
+    for key, arg in list(kwargs.items()):
         if arg is None:
             continue
         if key not in queries:
