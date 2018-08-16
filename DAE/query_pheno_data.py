@@ -1,6 +1,5 @@
 from DAE import pheno
 from itertools import combinations
-from prepare_filters import __load_text_column
 import pandas as pd
 import sys
 
@@ -81,6 +80,19 @@ def query_people(data, options):
                     and contained_in_options(row.status.name, options['status'])]
         data[0] += measure_columns
 
+
+def __load_text_column(files, sep=','):
+    for f_name in files.split(','):
+        f = open(f_name)
+        res = []
+        for l in f:
+            cs = l.split()
+            if sep in cs:
+                cs = [x.split() for x in cs]
+                cs = [x in l in cs for x in l]
+            res += cs
+        f.close()
+    return ','.join(res)
 
 def add_file_arg(arg, options):
     file_arg = arg + 'File'
