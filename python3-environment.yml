@@ -73,6 +73,7 @@ dependencies:
     - django-cors-headers==2.2.0
     - django-guardian==1.4.9
     - djangorestframework==3.8.2
+    - impyla==0.14.1
     - mysqlclient==1.3.12
     - pysam==0.14.1
     - pytest-django==3.2.1

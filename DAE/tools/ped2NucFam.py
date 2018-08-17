@@ -3,7 +3,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import zip
-mport optparse
+import optparse
 import sys
 import os
 import pysam
@@ -27,7 +27,7 @@ pidInfo = namedtuple('PID', 'fid,fa,ma,sex,phenotype,aux'.split(','))
 
 # split family to nuclear
 
-  clist, plist = set(), set()
+clist, plist = set(), set()
 
 def procPED2Nuc(fname):
     fInfo = defaultdict(list)
