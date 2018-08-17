@@ -187,6 +187,9 @@ def transform_files(args):
     variants = import_file(args['variantsFile'], args['skiprows'])
     families = import_file(args['pedFile']).astype(str)
 
+    assert all([c in variants.columns for c in [args[k] for
+                k in ['sampleId','chr','pos','ref','alt']]])
+
     families = families.astype({'status':int})
     variants = variants.rename(columns = {
                 args['sampleId']: 'sampleId',
@@ -238,7 +241,6 @@ def ref_alt_nan_correction(v):
     return v
 
 def perform_corrections(v):
-    # print('Number of NaN values per column:\n{}'.format(v.isnull().sum()), file=sys.stdout)
     if v.ref.isnull().any() or v.alt.isnull().any():
         print('Correcting incomplete ref and alt allele data...', file=sys.stdout)
         l,v = v.ref.isnull().sum()+v.alt.isnull().sum(), ref_alt_nan_correction(v)
@@ -250,6 +252,10 @@ def perform_corrections(v):
 
     return v
 
+def export(filename, prepared_data):
+    prepared_data.to_csv(filename, sep='\t', index=False)
+    print('Exported to filepath: {}'.format(filename), file=sys.stdout)
+
 def denovo2DAE(args):
     v,f = transform_files(args)
     v = perform_corrections(v)
@@ -258,17 +264,14 @@ def denovo2DAE(args):
         ['familyId', 'chr', 'pos', 'ref', 'alt', \
         'bestState', 'inChild', 'sampleIds'])
     prepared_data = prepared_data.sort_values(by=['chr', 'pos'])
-
-    prepared_data.to_csv(args['outputFile'], sep='\t', index=False)
-    print('Exported to filepath: {}'.format(args['outputFile']), file=sys.stdout)
     return prepared_data
 
-def prepare_args(args):
+def output_filename(args):
     if not args['outputFile']:
         args['outputFile'] = '.'.join(
             args['variantsFile'].split('.')[:-1]) + '_prepared.tsv'
+    return args['outputFile']
 
 if __name__ == '__main__':
     args_dict = parse_cli_arguments(sys.argv[1:])
-    prepare_args(args_dict)
-    denovo2DAE(args_dict)
+    export(output_filename(args_dict), denovo2DAE(args_dict))
