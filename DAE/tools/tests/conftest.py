@@ -1,4 +1,4 @@
-import pytest
+import pytest, os
 from test_get_pheno_property import measure_query, people_query, \
                                     column_name2property
 
@@ -115,18 +115,24 @@ def measures_partially_incorrect_input_cases(request):
 
 
 '''PEOPLE PARSER TEST CASES'''
+def path(s):
+    p = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(p, s)
+
 def get_people_file_input_cases():
     m = {'MeasureId' : ['individuals.age_at_registration_years']} #for speediness
+    p1, p2 = path('pheno/person-ids2.txt'), path('pheno/person-ids.txt')
+    f1, f2 = path('pheno/family-ids.txt'), path('pheno/family-ids2.txt')
     return [
-        (dict({'personIdsFile' : ['person-ids2.txt']}, **m),
+        (dict({'personIdsFile' : [p1]}, **m),
             dict({'person_id' : ['SP0043589']}, **m)),
-        ({'personIdsFile' : ['person-ids.txt','person-ids2.txt'],
-        'MeasureId' : ['individuals.age_at_registration_years,ADOSToddler1.INTON']},
-            {'person_id' : ['SP0043589']}),
-        (dict({'familyIdsFile' : ['family-ids.txt']}, **m),
+        ({'personIdsFile' : [p1, p2], 'MeasureId' :
+                ['individuals.age_at_registration_years,ADOSToddler1.INTON']},
+            {'person_id' : ['SP0043589', 'SP0026379']}),
+        (dict({'familyIdsFile' : [f1]}, **m),
             dict({'family_id' : ['SF0068842', 'SF0038472']}, **m)),
-        (dict({'familyIdsFile' : ['family-ids.txt','family-ids2.txt']}, **m),
-            dict({'family_id' : ['SF0068842']}, **m))
+        (dict({'familyIdsFile' : [f1, f2]}, **m),
+            dict({'family_id' : ['SF0068842', 'SF0038472']}, **m))
     ]
 @pytest.fixture(params=get_people_file_input_cases(),
                 ids=get_simple_ids(['PersonIdsFile', 'FamilyIdsFile']))

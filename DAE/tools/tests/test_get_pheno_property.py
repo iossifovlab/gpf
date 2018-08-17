@@ -168,7 +168,6 @@ def test_people_filter_until_empty(people_filter_until_empty_cases):
     assert set(HEADER_P).issubset(people_filter_until_empty_cases.columns)
     assert people_filter_until_empty_cases.empty
 
-@pytest.mark.skip(reason='unknown relative path to files')
 def test_people_file_input(people_file_input_cases):
     q, expected = people_file_input_cases[0], people_file_input_cases[1]
     perform_people_asserts(q, expected)

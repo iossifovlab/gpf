@@ -82,9 +82,9 @@ def query_people(data, options):
 
 
 def __load_text_column(files, sep=','):
+    res = []
     for f_name in files.split(','):
         f = open(f_name)
-        res = []
         for l in f:
             cs = l.split()
             if sep in cs:
