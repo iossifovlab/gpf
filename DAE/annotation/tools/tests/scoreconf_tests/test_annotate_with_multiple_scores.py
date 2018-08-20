@@ -23,7 +23,7 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None,
             self.direct = tabix
             self.labels = None
             self.explicit = True
-            self.columns = 'scoreValue'
+            self.scores = 'score1,score2'
 
     return MockOpts(c_inp, p_inp, x_inp, dir_inp, direct_inp)
 
@@ -72,7 +72,7 @@ def mocker(mocker):
 @pytest.fixture
 def multi_config():
     return [StringIO(deepcopy(config.MULTI_SCORE_CONFIG)),
-            StringIO(deepcopy(config.MULTI_SCORE_CONFIG))]
+            StringIO(deepcopy(config.MULTI_SCORE_ALT_CONFIG))]
 
 
 @pytest.fixture
@@ -105,7 +105,7 @@ def test_multi_score(multi_input, multi_scores, multi_config, multi_output, mock
                          config.MULTI_SCORE_CONFIG.lstrip(),
                          'score1', tmp_dirs[1])
     score2 = setup_score(multi_scores[1].getvalue(),
-                         config.MULTI_SCORE_CONFIG.lstrip(),
+                         config.MULTI_SCORE_ALT_CONFIG.lstrip(),
                          'score2', tmp_dirs[2])
 
     annotator = multi_annotator(tmp_dirs[0])
@@ -118,6 +118,5 @@ def test_multi_score(multi_input, multi_scores, multi_config, multi_output, mock
         for annotation in new_annotations:
             line += '\t' + annotation
         output += line + '\n'
-
     cleanup(tmp_dirs, [tmp.name for tmp in score1+score2])
     assert (output == multi_output)

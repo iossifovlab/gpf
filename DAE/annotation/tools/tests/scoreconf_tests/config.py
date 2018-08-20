@@ -33,6 +33,16 @@ search=marker
 
 MULTI_SCORE_CONFIG = '''
 [general]
+header=id,chrom,starting_pos,scoreValue,scoreValue2
+noScoreValue=-103
+[columns]
+chr=chrom
+pos_begin=starting_pos
+score=scoreValue,scoreValue2
+'''
+
+MULTI_SCORE_ALT_CONFIG = '''
+[general]
 header=id,chrom,starting_pos,scoreValue
 noScoreValue=-103
 [columns]

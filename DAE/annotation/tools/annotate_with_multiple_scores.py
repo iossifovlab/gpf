@@ -36,7 +36,7 @@ def get_argument_parser():
                                 have its own subdirectory (defaults to $GFD_DIR)
           --direct              read score files using tabix index (default: read
                                 score files iteratively)
-          --columns COLUMNS     comma separated list of scores to annotate with
+          --scores SCORES       comma separated list of scores to annotate with
           --labels LABELS       comma separated list of labels for the new columns in
                                 the output file (defaults to score names)
     """
@@ -56,8 +56,8 @@ def get_argument_parser():
                         help='read score files using tabix index '
                         '(default: read score files iteratively)',
                         default=False, action='store_true')
-    parser.add_argument('--columns',
-                        help='comma separated list of score columns to annotate with',
+    parser.add_argument('--scores',
+                        help='comma separated list of scores to annotate with',
                         action='store')
     parser.add_argument('--labels',
                         help='comma separated list of labels for the new columns in the output file '
@@ -94,8 +94,8 @@ def assert_tabix(score):
         sys.stderr.write('could not find .tbi file for score {}'.format(score))
         sys.exit(-64)
     return True
-  
-  
+
+
 class MultipleScoresAnnotator(AnnotatorBase):
 
     def __init__(self, opts, header=None):
@@ -116,7 +116,8 @@ class MultipleScoresAnnotator(AnnotatorBase):
     def _init_scores(self):
         self.scores = []
         for subdir in get_dirs(self.scores_directory):
-            self.scores.append(get_score(subdir))
+            if subdir.split('/')[-1] in self.opts.scores:
+                self.scores.append(get_score(subdir))
 
     def _annotator_for(self, score):
         if score not in self.annotators:
@@ -141,16 +142,19 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
     @property
     def new_columns(self):
-        if self.opts.columns is None or self.opts.columns == '':
-            sys.stderr.write('--columns option is mandatory!\n')
+        if self.opts.scores is None or self.opts.scores == '':
+            sys.stderr.write('--scores option is mandatory!\n')
             sys.exit(-12)
-        return self.opts.columns.split(',')
+        return self.scores
 
     def line_annotations(self, line, new_cols_order):
         result = []
-        for score in self.scores:
-            for col in new_cols_order:
-                result.extend(self._annotator_for(score).line_annotations(line, [col]))
+        for col in new_cols_order:
+            annotator = self._annotator_for(col)
+            annotations = annotator.line_annotations(line, annotator.new_columns)
+            if len(annotations) > 1:
+                annotations = ['|'.join(annotations)]
+            result.extend(annotations)
         return result
 
 

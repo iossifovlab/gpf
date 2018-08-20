@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 
 import sys
@@ -88,7 +87,6 @@ class ScoreFile(object):
                 conf_settings = conf_to_dict(conf_file)
                 self.config = Box(conf_settings, default_box=True, default_box_attr=None)
         else:
-            print(config_input)
             sys.stderr.write("You must provide a configuration file for the score file.\n")
             sys.exit(-78)
 

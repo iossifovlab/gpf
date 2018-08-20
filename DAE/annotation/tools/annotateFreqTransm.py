@@ -11,7 +11,8 @@ def get_argument_parser():
     FrequencyAnnotator options::
 
         usage: annotateFreqTransm.py [-h] [-c C] [-p P] [-x X] [-v V] [-H]
-                                 [-F SCORES_FILE] [--direct]
+                                 [-F SCORES_FILE]
+                                 [--frequency FREQUENCY] [--direct]
                                  [--label LABEL]
                                  [infile] [outfile]
 
@@ -30,6 +31,7 @@ def get_argument_parser():
           -H                    no header in the input file
           -F SCORES_FILE, --scores-file SCORES_FILE
                                 file containing the scores
+          --frequency FREQUENCY comma separated list of frequencies to annotate the output file with
           --direct              the score files is tabix indexed
           --labels LABEL        label of the new column; defaults to the name of the
                                 score column
@@ -44,6 +46,8 @@ def get_argument_parser():
     parser.add_argument('-H', help='no header in the input file', action='store_true', dest='no_header')
     parser.add_argument('-F', '--scores-file', help='file containing the scores',
                         type=str, action='store')
+    parser.add_argument('--frequency', help='comma separated list of frequencies to annotate with (defaults to all.altFreq)',
+                        action='store', default='all.altFreq')
     parser.add_argument('--direct', help='the score files is tabix indexed', action='store_true')
     parser.add_argument('--labels', help='labels of the new column; defaults to the name of the score column',
                         type=str, action='store')
@@ -57,13 +61,15 @@ noScoreValue=-105
 [columns]
 chr=chr
 pos_begin=position
-score=all.altFreq
+score=all.altFreq,SSC-freq,EVS-freq,E65-freq
 search=variant
 '''
+
 
 class FrequencyAnnotator(ScoreAnnotator):
     def __init__(self, opts, header=None):
         opts.scores_config_file = conf_to_dict(StringIO(FREQ_SCORE_CONFIG))
+        opts.scores_config_file['columns']['score'] = opts.frequency
         super(FrequencyAnnotator, self).__init__(opts, header, [opts.v])
 
 
