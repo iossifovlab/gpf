@@ -196,7 +196,8 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
             study_phenotype = variant['phenotype']
-            assert study_phenotype == 'autism'
+            assert study_phenotype == 'ASD and other neurodevelopmental'\
+                ' disorders'
 
     def test_query_download_sd_autism(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SD)
