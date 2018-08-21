@@ -24,6 +24,7 @@ from users_api.models import VerificationPath
 from users_api.serializers import UserSerializer
 from users_api.serializers import UserWithoutEmailSerializer
 from users_api.serializers import BulkGroupOperationSerializer
+from helpers.logger import log_filter, LOGGER
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -166,7 +167,11 @@ def login(request):
                                             password=password)
     if user is not None and user.is_active:
         django.contrib.auth.login(request, user)
+        LOGGER.info(log_filter(request, "login success: " +
+                               str(username)))
         return Response(status=status.HTTP_204_NO_CONTENT)
+    LOGGER.info(log_filter(request, "login failure: " +
+                           str(username)))
     return Response(status=status.HTTP_404_NOT_FOUND)
 
 
