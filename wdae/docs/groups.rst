@@ -36,6 +36,7 @@ in the dropdown menu on the dataset page for users without access permissions.
    :align: left
 
 |
+
 In this case, *Denovo DB Dataset* is an option for the registered user,
 as opposed to when an anonymous user is opening the menu in the previous example.
 
@@ -43,6 +44,7 @@ as opposed to when an anonymous user is opening the menu in the previous example
 |
 |
 |
+
 Any user
 ++++++++
 Certain datasets are visible to every registered user.

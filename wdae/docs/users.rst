@@ -11,10 +11,6 @@ The delete user, remove/reset password actions can be seen in the *Actions* colu
 .. image:: imgs/u-img1.png
    :align: right
 
-Delete user
-++++++++++++
-Clicking on the utmost right 'X' icon in the *Actions* column, deletes the user shown on the current row.
-
 .. _reset-password:
 
 Reset password
@@ -29,6 +25,9 @@ Clicking on the utmost left icon in the *Actions* column, removes the password o
 After completing this action, in order for the user in question to acquire a new password,
 clicking on the :ref:`reset-password` button will be necessary.
 
+Delete user
+++++++++++++
+Clicking on the utmost right 'X' icon in the *Actions* column, deletes the user shown on the current row.
 
 Create user
 +++++++++++++++
@@ -49,7 +48,7 @@ an admin should reset the user’s password. See :ref:`reset-password` for more.
    :align: right
 
 Whether a user has a password or not can be seen in the 'Has password' column,
-where a tick symbol indicates 'yes', while a cross is 'no'.
+where a tick symbol indicates 'yes' and empty cell 'no'.
 
 Edit user
 ++++++++++++
@@ -71,25 +70,26 @@ The search bar for groups is located on the upper left in the *Users* category i
 .. image:: imgs/u-img6.png
 
 
-Assigning group to a user
-+++++++++++++++++++++++++
-Only admins can assign groups.
+Add/Remove group from a user
+++++++++++++++++++++++++++++
+Only admins can assign or remove groups.
 Interacting with users is achieved via the *Users* category in the *Management* tab from the menu.
 
 .. image:: imgs/u-img7.png
 
 In order to assign a new group to a user, click on the blue link of the user’s email address.
 
-.. image:: imgs/u-img8.png
+.. image:: imgs/g-img1.png
 
 This will open a page, allowing for the selected user’s information to be edited.
-Groups can be added by using the *Other Groups* dropdown menu option.
+Groups can be added by using the *Other Groups* dropdown menu option 
+or removed by clicking the 'X' in the same menu option.
 
-.. image:: imgs/u-img5.png
+.. image:: imgs/add-remove-group.png
 
 
-Removing group from user
-+++++++++++++++++++++++++
+Remove group from user - shortcut
+++++++++++++++++++++++++++++++++++
 
 Next to every user's groups, an 'X' symbol can be found. By clicking it, the selected group will
 be removed from the user.

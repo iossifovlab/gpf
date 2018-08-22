@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 GPF User Management documentation
-================================
+=================================
 
 .. TIP::
    All options concerning Management can only be found by **admin** users
