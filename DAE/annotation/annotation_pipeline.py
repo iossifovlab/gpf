@@ -145,17 +145,7 @@ class MultiAnnotator(object):
         return [column[0] if len(set(column)) == 1 else self.split_separator.join(column)
                 for column in zip(*lines)]
 
-    def annotate_file(self, input, output):
-        if self.header:
-            output.write("#")
-            output.write("\t".join([self.header[i-1]
-                                    for i in self.stored_columns_indices]))
-            output.write("\n")
-
-        sys.stderr.write("...processing....................\n")
-
-        annotators = self.annotators
-
+    def annotate_file(self, file_io):
         def annotate_line(line):
             for annotator in annotators:
                 columns = annotator['columns'].keys()
@@ -166,22 +156,23 @@ class MultiAnnotator(object):
                     line[position - 1:position] = [value]
             return line
 
-        k = 0
-        for l in input:
-            if l[0] == "#":
-                output.write(l)
+        if self.header:
+            self.header = [self.header[i-1]
+                           for i in self.stored_columns_indices]
+            self.header[0] = '#' + self.header[0]
+            file_io.line_write(self.header)
+
+        annotators = self.annotators
+
+        for line in file_io.lines_read():
+            if '#' in line[0]:
+                file_io.line_write(line)
                 continue
-            k += 1
-            if k % 1000 == 0:
-                sys.stderr.write(str(k) + " lines processed\n")
 
-            line = self._join_variant(
-                [annotate_line(line)
-                 for line in self._split_variant(l.rstrip('\n').split("\t"))])
-
-            line = [line[i-1] for i in self.stored_columns_indices]
-
-            output.write("\t".join(line) + "\n")
+            annotated = [annotate_line(segment)
+                         for segment in self._split_variant(line)]
+            annotated = self._join_variant(annotated)
+            file_io.line_write([annotated[i-1] for i in self.stored_columns_indices])
 
 
 class PreannotatorLoader(object):

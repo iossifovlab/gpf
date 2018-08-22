@@ -8,6 +8,7 @@ from annotation.tools.duplicate_columns import\
     DuplicateColumnsAnnotator
 from annotation.tests import configs
 from annotation.tests import input_output
+from annotation.tools import file_io
 
 
 class Annotator(object):
@@ -41,6 +42,10 @@ class Preannotator(object):
         return [line[1][:-2]]
 
 
+def mocked_open(fileinp, mode):
+    return fileinp
+
+
 @pytest.fixture
 def mocker(mocker):
     mocker.patch.object(MyConfigParser, 'read', MyConfigParser.readfp)
@@ -50,6 +55,9 @@ def mocker(mocker):
                  return_value=[Preannotator()])
     mocker.patch('annotation.annotation_pipeline.exists',
                  return_value=True)
+    mocker.patch.object(file_io, 'open', mocked_open)
+    mocker.patch('annotation.tools.file_io.assert_file_exists', return_value=True)
+    mocker.patch('os.path.getsize', return_value=1)
 
 
 @pytest.fixture
@@ -73,72 +81,119 @@ def virtuals_config():
 
 
 @pytest.fixture
-def get_opts(config, reannotate=False, split=None, split_separator=']',
+def get_opts(infile, outfile, config, reannotate=False,
+             split=None, split_separator=']',
              skip_preannotators=True, default_args='default:False'):
     class AnnotatorOpts:
-        def __init__(self, opt_conf, opt_reannotate, opt_split,
+        def __init__(self, opt_infile, opt_outfile,
+                     opt_conf, opt_reannotate, opt_split,
                      opt_splitsep, opt_skip_pre, opt_def_arg):
+            self.infile = opt_infile
+            self.outfile = opt_outfile
             self.config = opt_conf
             self.reannotate = opt_reannotate
             self.split = opt_split
             self.separator = opt_splitsep
             self.skip_preannotators = opt_skip_pre
             self.default_arguments = [opt_def_arg]
-    return AnnotatorOpts(config, reannotate, split, split_separator,
+            self.no_header = True
+    return AnnotatorOpts(infile, outfile, config, reannotate,
+                         split, split_separator,
                          skip_preannotators, default_args)
 
 
 @pytest.fixture
-def base_multi_annotator(base_config, mocker):
-    base_opts = get_opts(base_config)
+def base_opts(base_input, base_config, mocker):
+    return get_opts(base_input, StringIO(), base_config)
+
+
+@pytest.fixture
+def reannotate_opts(base_input, reannotate_config, mocker):
+    return get_opts(base_input, StringIO(), reannotate_config, reannotate=True)
+
+
+@pytest.fixture
+def preannotator_opts(base_input, base_config, mocker):
+    return get_opts(base_input, StringIO(), base_config, skip_preannotators=False)
+
+
+@pytest.fixture
+def defaults_arguments_opts(base_input, defaults_arguments_config, mocker):
+    return get_opts(base_input, StringIO(), defaults_arguments_config)
+
+
+@pytest.fixture
+def defaults_arguments_opts_alt(base_input, reannotate_config, mocker):
+    return get_opts(base_input, StringIO(), reannotate_config, default_args='default:True')
+
+
+@pytest.fixture
+def virtuals_opts(base_input, virtuals_config, mocker):
+    return get_opts(base_input, StringIO(), virtuals_config)
+
+
+@pytest.fixture
+def split_column_opts(split_column_input, base_config, mocker):
+    return get_opts(split_column_input, StringIO(), base_config,
+                    split='location', split_separator='|')
+
+
+@pytest.fixture
+def multiple_headers_opts(multiple_headers_input, base_config, mocker):
+    return get_opts(multiple_headers_input, StringIO(), base_config,
+                    split='location', split_separator='|')
+
+
+@pytest.fixture
+def base_multi_annotator(base_opts, mocker):
     return MultiAnnotator(base_opts, header=['id', 'location', 'variant'])
 
 
 @pytest.fixture
-def reannotate_multi_annotator(reannotate_config, mocker):
-    reannotate_opts = get_opts(reannotate_config, reannotate=True)
+def reannotate_multi_annotator(reannotate_opts, mocker):
     return MultiAnnotator(reannotate_opts, header=['id', 'location', 'variant'])
 
 
 @pytest.fixture
-def preannotator_multi_annotator(base_config, mocker):
-    preannotator_opts = get_opts(base_config, skip_preannotators=False)
+def preannotator_multi_annotator(preannotator_opts, mocker):
     return MultiAnnotator(preannotator_opts, header=['id', 'location', 'variant'])
 
 
 @pytest.fixture
-def defaults_arguments_multi_annotator(defaults_arguments_config, reannotate_config, mocker):
-    defaults_arguments_opts = get_opts(defaults_arguments_config)
-    defaults_arguments_opts_alt = get_opts(reannotate_config, default_args='default:True')
+def defaults_arguments_multi_annotator(defaults_arguments_opts,
+                                       defaults_arguments_opts_alt, mocker):
     return (MultiAnnotator(defaults_arguments_opts, header=['id', 'location', 'variant']),
             MultiAnnotator(defaults_arguments_opts_alt, header=['id', 'location', 'variant']))
 
 
 @pytest.fixture
-def virtuals_multi_annotator(virtuals_config, mocker):
-    virtuals_opts = get_opts(virtuals_config)
+def virtuals_multi_annotator(virtuals_opts, mocker):
     return MultiAnnotator(virtuals_opts, header=['id', 'location', 'variant'])
 
 
 @pytest.fixture
-def split_column_multi_annotator(base_config, mocker):
-    split_column_opts = get_opts(base_config, split='location', split_separator='|')
+def split_column_multi_annotator(split_column_opts, mocker):
     return MultiAnnotator(split_column_opts, header=['id', 'location', 'variant'])
 
 
 @pytest.fixture
+def multiple_headers_multi_annotator(multiple_headers_opts, mocker):
+    return MultiAnnotator(multiple_headers_opts, header=['id', 'location', 'variant'])
+
+
+@pytest.fixture
 def base_input(mocker):
-    return deepcopy(input_output.BASE_INPUT)
+    return StringIO(deepcopy(input_output.BASE_INPUT))
 
 
 @pytest.fixture
 def split_column_input(mocker):
-    return deepcopy(input_output.SPLIT_COLUMN_INPUT)
+    return StringIO(deepcopy(input_output.SPLIT_COLUMN_INPUT))
 
 
 @pytest.fixture
 def multiple_headers_input(mocker):
-    return deepcopy(input_output.MULTIPLE_HEADERS_INPUT)
+    return StringIO(deepcopy(input_output.MULTIPLE_HEADERS_INPUT))
 
 
 @pytest.fixture
@@ -171,72 +226,72 @@ def test_str_to_class(mocker):
         DuplicateColumnsAnnotator
 
 
-def test_base_config(base_multi_annotator, base_input, base_output, mocker):
-    annotation_output = StringIO()
-    base_multi_annotator.annotate_file(base_input, annotation_output)
+def test_base_config(base_opts, base_multi_annotator, base_output, mocker):
+    with file_io.IOManager(base_opts, file_io.IOType.TSV, file_io.IOType.TSV) as IO_manager:
+        base_multi_annotator.annotate_file(IO_manager)
 
-    assert str(annotation_output.getvalue()) == str(base_output)
-
-    annotation_output.close()
-
-
-def test_reannotate(reannotate_multi_annotator, base_input,
-                    reannotate_output, mocker):
-    annotation_output = StringIO()
-    reannotate_multi_annotator.annotate_file(base_input, annotation_output)
-    assert str(annotation_output.getvalue()) == str(reannotate_output)
-
-    annotation_output.close()
+        annotation_output = IO_manager.writer.outfile.getvalue()
+        assert str(annotation_output) == str(base_output)
 
 
-def test_preannotator(preannotator_multi_annotator, base_input,
-                      base_output, mocker):
-    annotation_output = StringIO()
-    preannotator_multi_annotator.annotate_file(base_input, annotation_output)
+def test_reannotate(reannotate_opts, reannotate_multi_annotator, reannotate_output, mocker):
+    with file_io.IOManager(reannotate_opts, file_io.IOType.TSV, file_io.IOType.TSV) as IO_manager:
+        reannotate_multi_annotator.annotate_file(IO_manager)
 
-    assert str(annotation_output.getvalue()) == str(base_output)
-
-    annotation_output.close()
+        annotation_output = IO_manager.writer.outfile.getvalue()
+        assert str(annotation_output) == str(reannotate_output)
 
 
-def test_default_arguments(defaults_arguments_multi_annotator, base_input,
+def test_preannotator(preannotator_multi_annotator,
+                      preannotator_opts, base_output, mocker):
+    with file_io.IOManager(preannotator_opts, file_io.IOType.TSV, file_io.IOType.TSV) as IO_manager:
+        preannotator_multi_annotator.annotate_file(IO_manager)
+
+        annotation_output = IO_manager.writer.outfile.getvalue()
+        assert str(annotation_output) == str(base_output)
+
+
+def test_default_arguments(defaults_arguments_multi_annotator,
+                           defaults_arguments_opts,
                            default_arguments_output, mocker):
-    annotation_output = StringIO()
-    annotation_output_alt = StringIO()
-    defaults_arguments_multi_annotator[0].annotate_file(base_input, annotation_output)
-    assert str(annotation_output.getvalue()) == str(default_arguments_output)
-    defaults_arguments_multi_annotator[1].annotate_file(base_input, annotation_output_alt)
-    assert str(annotation_output_alt.getvalue()) == str(default_arguments_output)
+    with file_io.IOManager(defaults_arguments_opts, file_io.IOType.TSV, file_io.IOType.TSV) as IO_manager:
+        defaults_arguments_multi_annotator[0].annotate_file(IO_manager)
 
-    annotation_output.close()
+        annotation_output = IO_manager.writer.outfile.getvalue()
+        assert str(annotation_output) == str(default_arguments_output)
 
 
-def test_virtuals(virtuals_multi_annotator, base_input, base_output, mocker):
-    annotation_output = StringIO()
-    virtuals_multi_annotator.annotate_file(base_input, annotation_output)
+def test_default_arguments_alt(defaults_arguments_multi_annotator,
+                               defaults_arguments_opts_alt,
+                               default_arguments_output, mocker):
+    with file_io.IOManager(defaults_arguments_opts_alt, file_io.IOType.TSV, file_io.IOType.TSV) as IO_manager:
+        defaults_arguments_multi_annotator[1].annotate_file(IO_manager)
 
-    assert str(annotation_output.getvalue()) == str(base_output)
+        annotation_output = IO_manager.writer.outfile.getvalue()
+        assert str(annotation_output) == str(default_arguments_output)
 
-    annotation_output.close()
+
+def test_virtuals(virtuals_multi_annotator, virtuals_opts, base_output, mocker):
+    with file_io.IOManager(virtuals_opts, file_io.IOType.TSV, file_io.IOType.TSV) as IO_manager:
+        virtuals_multi_annotator.annotate_file(IO_manager)
+
+        annotation_output = IO_manager.writer.outfile.getvalue()
+        assert str(annotation_output) == str(base_output)
 
 
-def test_split_columns(split_column_multi_annotator, split_column_input,
+def test_split_columns(split_column_multi_annotator, split_column_opts,
                        split_column_output, mocker):
-    annotation_output = StringIO()
-    split_column_multi_annotator\
-        .annotate_file(split_column_input, annotation_output)
+    with file_io.IOManager(split_column_opts, file_io.IOType.TSV, file_io.IOType.TSV) as IO_manager:
+        split_column_multi_annotator.annotate_file(IO_manager)
 
-    assert str(annotation_output.getvalue()) == str(split_column_output)
-
-    annotation_output.close()
+        annotation_output = IO_manager.writer.outfile.getvalue()
+        assert str(annotation_output) == str(split_column_output)
 
 
-def test_multiple_headers(split_column_multi_annotator, multiple_headers_input,
+def test_multiple_headers(multiple_headers_multi_annotator, multiple_headers_opts,
                           multiple_headers_output, mocker):
-    annotation_output = StringIO()
-    split_column_multi_annotator\
-        .annotate_file(multiple_headers_input, annotation_output)
+    with file_io.IOManager(multiple_headers_opts, file_io.IOType.TSV, file_io.IOType.TSV) as IO_manager:
+        multiple_headers_multi_annotator.annotate_file(IO_manager)
 
-    assert str(annotation_output.getvalue()) == str(multiple_headers_output)
-
-    annotation_output.close()
+        annotation_output = IO_manager.writer.outfile.getvalue()
+        assert str(annotation_output) == str(multiple_headers_output)
