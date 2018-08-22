@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import sys, argparse, random
+import sys
+import argparse
+import random
 import pandas as pd
 
 
@@ -11,12 +13,14 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 
     parser.add_argument(
         'variantsFile', type=str,
-        help='VCF format variant file. Available formats include .tsv, .csv, .xlsx'
+        help='VCF format variant file. Available formats include'
+             ' .tsv, .csv, .xlsx'
     )
     parser.add_argument(
         '--skiprows', type=int, default=0,
         metavar='NumberOfRows',
-        help='number of rows to be skipped from variants file. Applied only for xlsx files'
+        help='number of rows to be skipped from variants file.'
+             ' Applied only for xlsx files'
     )
     parser.add_argument(
         '-f', '--file', type=str, default=None,
@@ -45,6 +49,7 @@ def parse_cli_arguments(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
     return {a: getattr(args, a) for a in dir(args) if a[0] != '_'}
 
+
 def import_file(filepath, skiprows=0):
     extension = filepath.split('.').pop()
     try:
@@ -57,45 +62,56 @@ def import_file(filepath, skiprows=0):
         else:
             raise IOError
     except IOError:
-        print('ERROR: Incorrect filepath: {}'.format(filepath), file=sys.stderr)
+        print('ERROR: Incorrect filepath: {}'.format(filepath),
+              file=sys.stderr)
         sys.exit(1)
+
 
 def prepare_args(args):
     if not args['outputFile']:
         args['outputFile'] = '.'.join(
             args['variantsFile'].split('.')[:-1]) + '-families.tsv'
 
+
 def randomize_gender(l):
-    return [random.choice(['M','F']) for i in range(l)]
+    return [random.choice(['M', 'F']) for i in range(l)]
+
 
 def randomize_status(l):
-    return [random.choice([1,2]) for i in range(l)]
+    return [random.choice([1, 2]) for i in range(l)]
+
 
 def handle_column(col, variants, rand_func, arg):
-    if col.lower() == 'none': return rand_func(arg)
+    if col.lower() == 'none':
+        return rand_func(arg)
     try:
         return variants[col]
-    except:
-        print('ERROR: {} column does not exist. Assigning random values...'.format(col), file=sys.stderr)
+    except KeyError:
+        print('ERROR: {} column does not exist. Assigning random values...'
+              .format(col), file=sys.stderr)
         return rand_func(arg)
+
 
 def denovo2ped(args):
     variants = import_file(args['variantsFile'], args['skiprows'])
 
-    #familyId	personId	momId	dadId	gender	status	role
-    families = pd.DataFrame(variants, columns=[args['sampleId']])\
-                    .rename(columns={args['sampleId']: 'personId'})
+    families = pd.DataFrame(variants, columns=[args['sampleId']]) \
+        .rename(columns={args['sampleId']: 'personId'})
     families = families.drop_duplicates()
 
     families['familyId'] = families['personId']
     families['momId'] = '0'
     families['dadId'] = '0'
     families['role'] = 'prb'
-    families['gender'] = handle_column(args['gender'], variants, randomize_gender, len(families))
-    families['status'] = handle_column(args['status'], variants, randomize_status, len(families))
+    families['gender'] = handle_column(args['gender'], variants,
+                                       randomize_gender, len(families))
+    families['status'] = handle_column(args['status'], variants,
+                                       randomize_status, len(families))
 
     families.to_csv(args['outputFile'], sep='\t', index=False)
-    print('Exported to filepath: {}'.format(args['outputFile']), file=sys.stderr)
+    print('Exported to filepath: {}'.format(args['outputFile']),
+          file=sys.stderr)
+
 
 if __name__ == '__main__':
     args_dict = parse_cli_arguments(sys.argv[1:])
