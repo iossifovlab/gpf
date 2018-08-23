@@ -1,13 +1,13 @@
 import pytest
 import os
+import functools
 
 from datasets.dataset import DatasetWrapper
+from datasets.dataset_facade import DatasetFacade
 from datasets.dataset_factory import DatasetFactory
 from datasets.datasets_definition import SingleFileDatasetsDefinition
 from studies.study_definition import SingleFileStudiesDefinition
 from study_groups.study_group_definition import SingleFileStudiesGroupDefinition
-from study_groups.tests.conftest import in_fixtures_dir as \
-    study_group_in_fixtures_dir
 
 
 def fixtures_dir(path):
@@ -26,10 +26,19 @@ def load_dataset(fixtures_folder, dataset_factory, dataset_name):
     result = dataset_factory.get_dataset(
         definition.get_dataset_config(dataset_name))
 
-    print(result)
     assert result is not None
 
     return result
+
+
+@pytest.fixture(scope='session')
+def dataset_facade(dataset_factory):
+    return lambda dataset_id: \
+        DatasetFacade(
+            dataset_definition=SingleFileDatasetsDefinition(
+                dataset_id, fixtures_dir(None)),
+            dataset_factory=dataset_factory
+        )
 
 
 @pytest.fixture(scope='session')

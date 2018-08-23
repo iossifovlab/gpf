@@ -1,18 +1,21 @@
 from datasets.dataset import DatasetWrapper
 from datasets.dataset_factory import DatasetFactory
 from datasets.datasets_definition import DirectoryEnabledDatasetsDefinition
-from studies.study_definition import StudyDefinition
+from studies.study_definition import SingleFileStudiesDefinition
 
 
 class DatasetFacade(object):
 
     _dataset_cache = {}
 
-    def __init__(self):
-        study_definition = StudyDefinition.from_environment()
-        self.dataset_definition = DirectoryEnabledDatasetsDefinition()
-        self.dataset_factory = DatasetFactory(
-            _class=DatasetWrapper, study_definition=study_definition)
+    def __init__(self, dataset_definition=None, dataset_factory=None):
+        if dataset_definition is None:
+            dataset_definition = DirectoryEnabledDatasetsDefinition()
+        if dataset_factory is None:
+            dataset_factory = DatasetFactory(_class=DatasetWrapper)
+
+        self.dataset_definition = dataset_definition
+        self.dataset_factory = dataset_factory
 
     def get_dataset(self, dataset_id):
         self.load_cache({dataset_id})
