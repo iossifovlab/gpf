@@ -69,6 +69,7 @@ class MissenseScoresAnnotator(AnnotatorBase):
         self.opts = opts
         self.header = header
         if self.opts.columns is not None:
+            self.opts.columns = self.opts.columns.split(',')
             self.header.extend(self.opts.columns)
         if opts.dbnsfp is None:
             opts.dbnsfp = os.path.join(os.environ['dbNSFP_PATH'])
@@ -92,16 +93,13 @@ class MissenseScoresAnnotator(AnnotatorBase):
             if chr not in self.CHROMOSOMES:
                 return None
 
-            mod_opts = conf_to_dict(self.opts.config)
-            mod_opts['columns']['score'] = self.opts.columns
-
             config = {
                 'c': self.opts.c,
                 'p': self.opts.p,
                 'x': self.opts.x,
                 'direct': self.opts.direct,
                 'scores_file': self.path.format(chr),
-                'scores_config_file': mod_opts,
+                'scores_config_file': conf_to_dict(self.opts.config),
                 'labels': self.opts.labels
             }
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)

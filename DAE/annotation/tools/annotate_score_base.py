@@ -5,7 +5,7 @@ import gzip
 import pysam
 import argparse
 from ConfigParser import SafeConfigParser
-from utilities import AnnotatorBase, assign_values, main
+from utilities import AnnotatorBase, assign_values, main, give_column_number
 from os.path import exists
 from box import Box
 
@@ -113,15 +113,16 @@ class ScoreFile(object):
         self.scores_indices = [self.config.header.index(col)
                                for col in self.config.columns.score]
 
-    def get_scores(self, chr, pos, *args):
+    def get_scores(self, new_columns, chr, pos, *args):
         args = list(args)
+        new_col_indices = [give_column_number(col, self.config.header)-1 for col in new_columns]
         try:
             for line in self._fetch(chr, pos):
                 if args == [line[i] for i in self.search_indices]:
-                    return [line[i] for i in self.scores_indices]
+                    return [line[i] for i in new_col_indices]
         except ValueError:
             pass
-        return [self.config.noScoreValue] * len(self.config.columns.score)
+        return [self.config.noScoreValue] * len(new_col_indices)
 
 
 class IterativeAccess(ScoreFile):
@@ -235,7 +236,7 @@ class ScoreAnnotator(AnnotatorBase):
         if loc is not None:
             chr, pos = loc.split(':')
         if chr != '':
-            return self.file.get_scores(chr, int(pos), *args)
+            return self.file.get_scores(new_columns, chr, int(pos), *args)
         else:
             return ['' for col in new_columns]
 

@@ -51,6 +51,8 @@ def get_argument_parser():
     parser.add_argument('--direct', help='the score files is tabix indexed', action='store_true')
     parser.add_argument('--labels', help='labels of the new column; defaults to the name of the score column',
                         type=str, action='store')
+    parser.add_argument('--default-value', help='default value if score for variant is not found',
+                        default='', type=str, action='store')
     return parser
 
 
@@ -61,16 +63,23 @@ noScoreValue=-105
 [columns]
 chr=chr
 pos_begin=position
-score=all.altFreq,SSC-freq,EVS-freq,E65-freq
+score=all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq
 search=variant
 '''
 
 
 class FrequencyAnnotator(ScoreAnnotator):
+
     def __init__(self, opts, header=None):
         opts.scores_config_file = conf_to_dict(StringIO(FREQ_SCORE_CONFIG))
-        opts.scores_config_file['columns']['score'] = opts.frequency
+        if opts.default_value != '':
+            opts.scores_config_file['noScoreValue'] = opts.default_value
+        self.freqcols = opts.frequency.split(',')
         super(FrequencyAnnotator, self).__init__(opts, header, [opts.v])
+
+    @property
+    def new_columns(self):
+        return self.freqcols
 
 
 if __name__ == "__main__":

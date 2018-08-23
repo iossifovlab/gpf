@@ -105,8 +105,8 @@ FREQ_INPUT_SCORE = [
 	'1\t69511\tsub(A->G)\tTOOMANY\t300\t6.07\t588\t98.00\tmissense\tOR4F5:missense\t141/306(Thr->Ala)\t2\t0.0000\t98.00\t75.98\t94.02\n'
 ]
 
-FREQ_OUTPUT = """1\t69428\tsub(T->G)\t0.49\t2.47
-1\t69438\tsub(T->C)\t0.03\t0.00
-1\t69458\tsub(T->C)\t0.03\t
-1\t69511\tsub(A->G)\t98.00\t94.02
+FREQ_OUTPUT = """1\t69428\tsub(T->G)\t1336\t0.49
+1\t69438\tsub(T->C)\t1430\t0.03
+1\t69458\tsub(T->C)\t1460\t0.03
+1\t69511\tsub(A->G)\t300\t98.00
 """
