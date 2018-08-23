@@ -1,3 +1,4 @@
+from pheno.common import Role
 
 class Family:
 
@@ -29,9 +30,10 @@ class Person:
             self.personId, self.role, self.gender)
 
     @property
-    def is_child(self):
-        return self.role == 'prb' or self.role == 'sib'
+    def layout_position(self):
+        return self.atts.get("layoutCoords", None)
 
     @property
-    def is_parent(self):
-        return not self.is_parent
+    def is_child(self):
+        return self.role == Role.prb or self.role == Role.sib
+

@@ -169,7 +169,6 @@ class TransmissionLegacy(TransmissionConfig):
         else:
             f = gzip.open(transmittedVariantsFile)
             colNms = f.readline().strip().split("\t")
-            # print(colNms)
             for v in self.filter_transmitted_variants(
                     f, colNms,
                     minParentsCalled,

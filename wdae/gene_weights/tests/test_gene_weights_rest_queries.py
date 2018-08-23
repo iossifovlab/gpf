@@ -15,7 +15,7 @@ class Test(BaseAuthenticatedUserTest):
     def setUpTestData(cls):
         Dataset.recreate_dataset_perm('SD', [])
         Dataset.recreate_dataset_perm('SSC', [])
-        Dataset.recreate_dataset_perm('VIP', [])
+        Dataset.recreate_dataset_perm('SVIP', [])
         Dataset.recreate_dataset_perm('SPARK', [])
 
     def test_rvis_rank_in_autism_zero_genes(self):

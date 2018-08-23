@@ -2,7 +2,7 @@ import pytest
 from box import Box
 from collections import OrderedDict
 
-from annotation_pipeline.tools.duplicate_columns import\
+from annotation.tools.duplicate_columns import\
     DuplicateColumnsAnnotator
 
 

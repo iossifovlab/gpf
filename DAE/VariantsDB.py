@@ -209,7 +209,6 @@ class Study:
         picFilter = present_in_child_filter(presentInChild, gender)
         pipFilter = denovo_present_in_parent_filter(presentInParent)
 
-
         geneSymsUpper = None
         if geneSyms is not None:
             geneSymsUpper = [sym.upper() for sym in geneSyms]
@@ -302,7 +301,7 @@ class Study:
             def float_conv(x):
                 try:
                     return float(x or np.nan)
-                except _:
+                except:
                     return np.nan
             print("Loading file {} for collection {}".format(fl, self.name),
                   file=sys.stderr)
@@ -351,8 +350,8 @@ class Study:
         fmMethod = {
             "quadReportSSC": self._load_family_data_from_quad_report,
             "simple": self._load_family_data_from_simple,
-            "pedigree": self._load_family_data_from_pedigree,
             "pickle": self._load_family_data_from_pickle,
+            "pedigree": self._load_family_data_from_pedigree,
             "StateWE2012-data1-format": self._load_family_data_from_StateWE2012_data1,
             "EichlerWE2012-SupTab1-format": self._load_family_data_from_EichlerWE2012_SupTab1,
             "DalyWE2012-SD-Trios": self._load_family_data_from_DalyWE2012_SD_Trios,
@@ -379,10 +378,20 @@ class Study:
             fam.atts['phenotype'] = phenotype
 
             for p in fam.memberInOrder:
-                if hasattr(p, 'status') and p.status == Status.affected:
-                    p.phenotype = phenotype
+                if hasattr(p, 'status'):
+                    if p.status == Status.affected:
+                        p.phenotype = phenotype
+                    else:
+                        p.phenotype = 'unaffected'
+                # FIXME: legacy affected/unaffected
                 else:
-                    p.phenotype = 'unaffected'
+                    if p.role == Role.prb:
+                        p.status = Status.affected
+                        p.phenotype = phenotype
+                    else:
+                        p.status = Status.unaffected
+                        p.phenotype = 'unaffected'
+
                 p.atts['phenotype'] = p.phenotype
 
     def _load_family_data_SSCFams(self, reportF):
@@ -1090,7 +1099,6 @@ class VariantsDB:
         nCompleteIns = 0
         variants = []
         for fn in glob.glob(validationDir + '/*/reports/report*.txt'):
-
             variants += self._parse_validation_report(fn, knownFams)
         print("nIncompleteIns: {}".format(nIncompleteIns), file=sys.stderr)
         print("nCompleteIns: {}".format(nCompleteIns), file=sys.stderr)

@@ -2,7 +2,6 @@
 import os
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
 from pheno_browser.db import DbManager
-from pheno.pheno_regression import PhenoRegression
 
 
 from DAE import pheno

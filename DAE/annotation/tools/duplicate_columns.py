@@ -5,6 +5,25 @@ from utilities import *
 
 
 def get_argument_parser():
+    """
+    DuplicateColumnsAnnotator options::
+
+        usage: duplicate_columns.py [-h] [-H] -c COLUMNS -l LABELS [infile] [outfile]
+
+        Program to duplicate list of columns
+
+        positional arguments:
+          infile                path to input file; defaults to stdin
+          outfile               path to output file; defaults to stdout
+
+        optional arguments:
+          -h, --help            show this help message and exit
+          -H                    no header in the input file
+          -c COLUMNS, --columns COLUMNS
+                                comma separated list of columns to duplicate
+          -l LABELS, --labels LABELS
+                                comma separated list of labels for the new columns
+    """
     desc = """Program to duplicate list of columns"""
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-H', help='no header in the input file',
@@ -20,6 +39,9 @@ def get_argument_parser():
 
 
 class DuplicateColumnsAnnotator(AnnotatorBase):
+    """
+    With `DuplicateColumnsAnnotator` you can duplicate columns.
+    """
 
     def __init__(self, opts, header=None):
         super(DuplicateColumnsAnnotator, self).__init__(opts, header)

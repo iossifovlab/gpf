@@ -13,6 +13,7 @@ from copy import deepcopy
 class Gender(enum.Enum):
     M = 1
     F = 2
+    U = 3
 
 
 class Status(enum.Enum):
