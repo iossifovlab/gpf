@@ -18,18 +18,27 @@ class StudyGroupsDefinition(ConfigurableEntityDefinition):
     def get_all_study_group_configs(self):
         return self.get_all_configurable_entity_configs()
 
-    @staticmethod
-    def _work_dir_from_environment():
-        from studies.default_settings import DATA_DIR
-        return DATA_DIR
-
 
 class SingleFileStudiesGroupDefinition(StudyGroupsDefinition):
 
     def __init__(self, config_path, work_dir=None):
         super(SingleFileStudiesGroupDefinition, self).__init__()
         if work_dir is None:
-            work_dir = StudyGroupsDefinition._work_dir_from_environment()
+            work_dir = SingleFileStudiesGroupDefinition. \
+                _work_dir_from_environment()
+        if config_path is None:
+            config_path = SingleFileStudiesGroupDefinition. \
+                _config_file_from_environment()
 
         self.single_file_configurable_entity_definition(
             config_path, work_dir, StudyGroupConfig, 'name')
+
+    @staticmethod
+    def _config_file_from_environment():
+        from study_groups.default_settings import CONFIG_FILE
+        return CONFIG_FILE
+
+    @staticmethod
+    def _work_dir_from_environment():
+        from study_groups.default_settings import DATA_DIR
+        return DATA_DIR

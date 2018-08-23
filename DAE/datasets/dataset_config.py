@@ -1,4 +1,4 @@
-from configurable_entities.configurable_entity_config import\
+from configurable_entities.configurable_entity_config import \
     ConfigurableEntityConfig
 
 
@@ -7,17 +7,14 @@ class DatasetConfig(ConfigurableEntityConfig):
     def __init__(self, *args, **kwargs):
         super(DatasetConfig, self).__init__(*args, **kwargs)
         assert self.dataset_name
-        assert self.studies
+        assert self.study_group
         assert self.preview_columns
         assert self.download_columns
         assert self.data_dir
 
-        print("studies", self.studies)
-
     @classmethod
     def from_config(cls, config_section, section=None):
         dataset_config = config_section
-        dataset_config['studies'] = dataset_config['studies'].split(',')
 
         return DatasetConfig(dataset_config)
 

@@ -22,6 +22,7 @@ class StudyGroupFactory(object):
         assert isinstance(study_group_config, StudyGroupConfig)
 
         studies = []
+        print("Available studies: ", self.studies_definition.get_all_study_names())
         for study_name in study_group_config.studies:
             study_config = self.studies_definition.get_study_config(study_name)
             if study_config:

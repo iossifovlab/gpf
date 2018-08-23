@@ -28,12 +28,13 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
 
     ENABLED_DIR = 'datasets-enabled'
 
-    def __init__(self, datasets_dir=None):
+    def __init__(self, datasets_dir=None, work_dir=None):
         super(DirectoryEnabledDatasetsDefinition, self).__init__()
         if datasets_dir is None:
             from default_settings import DATA_DATASETS_DIR
             datasets_dir = DATA_DATASETS_DIR
-        work_dir = DatasetsDefinition._work_dir_from_environment()
+        if work_dir is None:
+            work_dir = DatasetsDefinition._work_dir_from_environment()
 
         self.directory_enabled_configurable_entity_definition(
             datasets_dir, DatasetConfig, work_dir, 'dataset_id')

@@ -12,7 +12,7 @@ class DatasetFacade(object):
         study_definition = StudyDefinition.from_environment()
         self.dataset_definition = DirectoryEnabledDatasetsDefinition()
         self.dataset_factory = DatasetFactory(
-            _class=DatasetWrapper, studies_definition=study_definition)
+            _class=DatasetWrapper, study_definition=study_definition)
 
     def get_dataset(self, dataset_id):
         self.load_cache({dataset_id})

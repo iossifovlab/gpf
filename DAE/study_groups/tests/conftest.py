@@ -7,11 +7,12 @@ from study_groups.study_group_factory import StudyGroupFactory
 
 
 def in_fixtures_dir(path):
-    return os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        'fixtures',
-        path
-    )
+    args = [os.path.dirname(os.path.abspath(__file__)), 'fixtures']
+
+    if path:
+        args.append(path)
+
+    return os.path.join(*args)
 
 
 @pytest.fixture(scope='session')
