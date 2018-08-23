@@ -35,6 +35,8 @@ def get_argument_parser():
           --direct              the score files is tabix indexed
           --labels LABEL        label of the new column; defaults to the name of the
                                 score column
+          --default-value DEFAULT_VALUE
+                                default value if score for variant is not found
     """
     desc = """Program to annotate variants with frequencies"""
     parser = argparse.ArgumentParser(description=desc)
