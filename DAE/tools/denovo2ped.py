@@ -3,7 +3,6 @@
 from __future__ import print_function
 import sys
 import argparse
-import random
 import pandas as pd
 
 
@@ -73,23 +72,13 @@ def prepare_args(args):
             args['variantsFile'].split('.')[:-1]) + '-families.tsv'
 
 
-def randomize_gender(l):
-    return [random.choice(['M', 'F']) for i in range(l)]
-
-
-def randomize_status(l):
-    return [random.choice([1, 2]) for i in range(l)]
-
-
-def handle_column(col, variants, rand_func, arg):
-    if col.lower() == 'none':
-        return rand_func(arg)
+def handle_column(column_name, variants, default=''):
     try:
-        return variants[col]
+        return variants[column_name]
     except KeyError:
-        print('ERROR: {} column does not exist. Assigning random values...'
-              .format(col), file=sys.stderr)
-        return rand_func(arg)
+        print('ERROR: \'{}\' column does not exist.\nAssigning {}...\n'
+              .format(column_name, default), file=sys.stderr)
+        return default
 
 
 def denovo2ped(args):
@@ -103,10 +92,8 @@ def denovo2ped(args):
     families['momId'] = '0'
     families['dadId'] = '0'
     families['role'] = 'prb'
-    families['gender'] = handle_column(args['gender'], variants,
-                                       randomize_gender, len(families))
-    families['status'] = handle_column(args['status'], variants,
-                                       randomize_status, len(families))
+    families['gender'] = handle_column(args['gender'], variants, 'U')
+    families['status'] = handle_column(args['status'], variants, 2)
 
     families.to_csv(args['outputFile'], sep='\t', index=False)
     print('Exported to filepath: {}'.format(args['outputFile']),

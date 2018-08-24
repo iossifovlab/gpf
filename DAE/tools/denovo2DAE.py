@@ -240,9 +240,8 @@ def consecutive_subs_correction(v):
         for index1, row1 in samples_df.iterrows():
             row1_end = row1.pos + len(row1.ref)
             for index2, row2 in samples_df.iterrows():
-                row2_end = row2.pos + len(row2.ref)
                 if row1_end == row2.pos:
-                    start = row1.pos, row2_end
+                    start = row1.pos
                     ref, alt = row1.ref + row2.ref, row1.alt + row2.alt
 
                     v.loc[index1, ['pos', 'ref', 'alt']] = [start, ref, alt]
