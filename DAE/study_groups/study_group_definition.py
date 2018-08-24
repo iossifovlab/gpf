@@ -21,7 +21,7 @@ class StudyGroupsDefinition(ConfigurableEntityDefinition):
 
 class SingleFileStudiesGroupDefinition(StudyGroupsDefinition):
 
-    def __init__(self, config_path, work_dir=None):
+    def __init__(self, config_path=None, work_dir=None):
         super(SingleFileStudiesGroupDefinition, self).__init__()
         if work_dir is None:
             work_dir = SingleFileStudiesGroupDefinition. \
