@@ -150,12 +150,12 @@ class TSVFormat(AbstractFormat):
 
         line = self.variantFile.readline()
         self.linecount += 1
-        if self.linecount % self.linecount_threshold == 0:
+        if (self.linecount % self.linecount_threshold) == 0:
             new_p = (self.variantFile.tell() * 100) / self.filesize
             if new_p > self.percent_read:
                 self.percent_read = new_p
                 sys.stderr.write(str(self.percent_read) + '%' + '\n')
-        return line.rstrip().split('\t')
+        return line.rstrip('\n').split('\t')
 
     def line_write(self, input_):
         if self.mode != 'w':
