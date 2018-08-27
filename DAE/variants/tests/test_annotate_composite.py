@@ -5,7 +5,10 @@ Created on Mar 7, 2018
 '''
 from variants.raw_vcf import RawFamilyVariants
 
+import pytest
 
+
+@pytest.mark.xfail
 def test_annotate_on_load_vcf19(ustudy_config, composite_annotator):
     annotator = composite_annotator
 

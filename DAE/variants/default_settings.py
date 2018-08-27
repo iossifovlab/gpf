@@ -7,7 +7,7 @@ import os
 
 DATA_DIR = os.environ.get(
     "DAE_DATA_DIR",
-    "/home/lubo/Work/seq-pipeline/data-raw-dev/"
+    None
 )
 
 CONFIG_FILE = os.environ.get(

@@ -32,7 +32,7 @@ class DatasetConfig(ConfigBox):
             auto_find=False,
             verify=True,
             defaults={
-                'wd': work_dir,
+                'work_dir': work_dir,
             }
         )
 
