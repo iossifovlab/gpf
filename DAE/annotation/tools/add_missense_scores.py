@@ -36,6 +36,7 @@ def get_argument_parser():
           --direct              read score files using tabix index (default: read
                                 score files iteratively)
           --labels              comma separated list of the new header entries, defaults to added columns' names  
+          --gzip                indicates the score files are in a compressed .gz format
     """
     
     parser = argparse.ArgumentParser(
@@ -58,6 +59,8 @@ def get_argument_parser():
                         default=False, action='store_true')
     parser.add_argument('--labels', help='comma separated list of the new labels '
                         'of the added columns, defaults to column names', action='store')
+    parser.add_argument('--gzip', help='indicates that the file is a compressed .gz file',
+                        action='store_true')
     return parser
 
 
@@ -93,21 +96,30 @@ class MissenseScoresAnnotator(AnnotatorBase):
             if chr not in self.CHROMOSOMES:
                 return None
 
+            if self.opts.config is None:
+                score_conf = self.path.format(chr) + '.conf'
+            else:
+                score_conf = conf_to_dict(self.opts.config)
             config = {
                 'c': self.opts.c,
                 'p': self.opts.p,
                 'x': self.opts.x,
                 'direct': self.opts.direct,
                 'scores_file': self.path.format(chr),
-                'scores_config_file': conf_to_dict(self.opts.config),
-                'labels': self.opts.labels
+                'scores_config_file': score_conf,
+                'labels': self.opts.labels,
+                'gzip': self.opts.gzip
             }
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
 
+            if self.opts.r in list(self.header) and self.opts.a in list(self.header):
+                search_cols = [self.opts.r, self.opts.a]
+            else:
+                search_cols = []
             self.annotators[chr] = ScoreAnnotator(
                     score_annotator_opts,
                     header=list(self.header),
-                    search_columns=[self.opts.r, self.opts.a])
+                    search_columns=search_cols)
         return self.annotators[chr]
 
     def _get_chr(self, line):

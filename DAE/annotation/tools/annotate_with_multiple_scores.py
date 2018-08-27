@@ -39,6 +39,7 @@ def get_argument_parser():
           --scores SCORES       comma separated list of scores to annotate with
           --labels LABELS       comma separated list of labels for the new columns in
                                 the output file (defaults to score names)
+          --gzip                indicates gzipped score files
     """
     desc = """Program to annotate variants with multiple score files"""
     parser = argparse.ArgumentParser(description=desc)
@@ -63,6 +64,9 @@ def get_argument_parser():
                         help='comma separated list of labels for the new columns in the output file '
                         '(defaults to score names)',
                         action='store')
+    parser.add_argument('--gzip',
+                        help='use gzip to decompress the score files',
+                        action='store_true')
     return parser
 
 
@@ -131,7 +135,8 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 'scores_file': score,
                 'scores_config_file': None,
                 'direct': self.opts.direct,
-                'labels': self.opts.labels
+                'labels': self.opts.labels,
+                'gzip': self.opts.gzip
             }
 
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
@@ -149,6 +154,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
     def line_annotations(self, line, new_cols_order):
         result = []
+        new_cols_order = self.new_columns
         for col in new_cols_order:
             annotator = self._annotator_for(col)
             annotations = annotator.line_annotations(line, annotator.new_columns)

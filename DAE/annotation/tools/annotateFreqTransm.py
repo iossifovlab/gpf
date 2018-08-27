@@ -60,12 +60,12 @@ def get_argument_parser():
 
 FREQ_SCORE_CONFIG = '''
 [general]
-header=chr,position,variant,familyData,all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq,effectType,effectGene,effectDetails,segDups,HW,SSC-freq,EVS-freq,E65-freq
+header=chr,position,variant,familyData,all_nParCalled,all_prcntParCalled,all_nAltAlls,all_altFreq,effectType,effectGene,effectDetails,segDups,HW,SSC-freq,EVS-freq,E65-freq
 noScoreValue=-105
 [columns]
 chr=chr
 pos_begin=position
-score=all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq
+score=all_nParCalled,all_prcntParCalled,all_nAltAlls,all_altFreq
 search=variant
 '''
 
@@ -74,7 +74,7 @@ class FrequencyAnnotator(ScoreAnnotator):
 
     def __init__(self, opts, header=None):
         opts.scores_config_file = conf_to_dict(StringIO(FREQ_SCORE_CONFIG))
-        if opts.default_value != '':
+        if opts.default_value != '' and opts.default_value is not None:
             opts.scores_config_file['noScoreValue'] = opts.default_value
         self.freqcols = opts.frequency.split(',')
         super(FrequencyAnnotator, self).__init__(opts, header, [opts.v])

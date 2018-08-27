@@ -24,6 +24,7 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None,
             self.labels = None
             self.explicit = True
             self.scores = 'score1,score2'
+            self.gzip = False
 
     return MockOpts(c_inp, p_inp, x_inp, dir_inp, direct_inp)
 

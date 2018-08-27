@@ -68,6 +68,7 @@ class MultiAnnotator(object):
                 all_columns_labels.update(preannotator.new_columns)
                 if self.header:
                     self.header.extend(preannotator.new_columns)
+
                 virtual_columns_indices.extend(
                     [assign_values(column, self.header)
                      for column in preannotator.new_columns])
@@ -178,7 +179,6 @@ class MultiAnnotator(object):
             line = self._join_variant(
                 [annotate_line(line)
                  for line in self._split_variant(l.rstrip('\n').split("\t"))])
-
             line = [line[i-1] for i in self.stored_columns_indices]
 
             output.write("\t".join(line) + "\n")

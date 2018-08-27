@@ -100,11 +100,13 @@ def main(argument_parser, annotator_factory):
         variantFile = open(opts.infile)
 
     if opts.no_header == False:
-        header_str = variantFile.readline()[:-1]
+        header_str = None
         if hasattr(opts,'region'): #case for MultiAnnotator
             if(opts.region is not None):
                 with gzip.open(opts.infile) as file:
                     header_str=file.readline()[:-1]
+        else:
+            header_str = variantFile.readline()[:-1]
         if header_str[0] == '#':
             header_str = header_str[1:]
         header = header_str.split('\t')

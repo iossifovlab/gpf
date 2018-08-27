@@ -19,9 +19,10 @@ def get_opts(c_inp='chr', p_inp='position', x_inp=None,
             self.scores_file = score
             self.scores_config_file = config
             self.direct = tabix
-            self.frequency = 'all.nParCalled,all.altFreq'
+            self.frequency = 'all_nParCalled,all_altFreq'
             self.labels = None
             self.default_value = ''
+            self.gzip = True
 
     return MockOpts(c_inp, p_inp, x_inp, file_inp, direct_inp, config)
 
