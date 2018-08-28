@@ -107,6 +107,8 @@ class DatasetConfig(ConfigurableEntityConfig):
                 'genotypeBrowser.familyStudyFilters',
             'genotypebrowser.phenofilters.filters':
                 'genotypeBrowser.phenoFilters.filters',
+            'genotypebrowser.genotype.basecolumns':
+                'genotypeBrowser.genotype.baseColumns',
             'genotypebrowser.genotype.columns':
                 'genotypeBrowser.genotype.columns',
             'genotypebrowser.basepreviewcolumns':
@@ -133,6 +135,7 @@ class DatasetConfig(ConfigurableEntityConfig):
         split_str_lists_keys = [
             'studies', 'authorizedGroups', 'phenoDB',
             'genotypeBrowser.phenoFilters',
+            'genotypeBrowser.baseColumns',
             'genotypeBrowser.basePreviewColumns',
             'genotypeBrowser.baseDownloadColumns',
             'genotypeBrowser.previewColumns', 'genotypeBrowser.downloadColumns'
@@ -175,6 +178,8 @@ class DatasetConfig(ConfigurableEntityConfig):
     @staticmethod
     def _concat_two_options(dataset_config):
         concat_options = {
+            'genotypeBrowser.baseColumns':
+                'genotypeBrowser.columns',
             'genotypeBrowser.basePreviewColumns':
                 'genotypeBrowser.previewColumns',
             'genotypeBrowser.baseDownloadColumns':
@@ -410,6 +415,9 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypeBrowser.familyFilters': None,
             'pedigree.phenotype.source': 'legacy',
             'pedigree.phenotype.default': 'unknown:unknown:#aaaaaa',
+            'genotypeBrowser.baseColumns':
+                'family,phenotype,variant,best,fromparent,inchild,genotype,'
+                'effect,count,geneeffect,effectdetails,weights,freq',
             'genotypeBrowser.basePreviewColumns':
                 'family,variant,genotype,effect,weights,freq',
             'genotypeBrowser.baseDownloadColumns':
