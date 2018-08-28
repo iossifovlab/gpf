@@ -1,13 +1,9 @@
 from box import ConfigBox
 import os
 import reusables
-from ConfigParser import ConfigParser
-from box import Box
-
-import common.config
 
 
-class ConfigurableEntityConfig(Box):
+class ConfigurableEntityConfig(ConfigBox):
 
     def __init__(self, *args, **kwargs):
         super(ConfigurableEntityConfig, self).__init__(*args, **kwargs)
