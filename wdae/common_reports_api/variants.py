@@ -179,6 +179,7 @@ class FamiliesCounters(CounterBase):
             elif role == 'dad':
                 dad_id = pid
         result = []
+
         def is_child(role):
             return role in set(['prb', 'sib'])
         pedigree = [
@@ -511,6 +512,7 @@ class StudyVariantReports(ReportBase, precompute.register.Precompute):
     def serialize(self):
         return {
             'study_name': self.study_name,
+            'study_description': self.study_description,
             'families_report': self.families_report.serialize(),
             'denovo_report': self.denovo_report.serialize()
             if self.denovo_report else None,

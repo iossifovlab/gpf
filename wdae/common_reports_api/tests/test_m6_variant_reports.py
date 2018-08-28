@@ -28,14 +28,15 @@ class Test(unittest.TestCase):
 
     def test_family_report_we_studies(self):
         fr = FamiliesReport('ALL WHOLE EXOME')
-        self.assertEqual(14, len(fr.studies))
+        self.assertEqual(16, len(fr.studies))
 
     def test_family_report_we_phenotypes(self):
         fr = FamiliesReport('ALL WHOLE EXOME')
         fr.build()
-        self.assertEqual(6, len(fr.phenotypes))
+        self.assertEqual(7, len(fr.phenotypes))
         self.assertEquals(['autism',
                            'congenital heart disease',
+                           'developmental disorder',
                            'epilepsy',
                            'intellectual disability',
                            'schizophrenia',
@@ -82,12 +83,13 @@ class Test(unittest.TestCase):
         self.assertTrue(fr)
 
     def test_families_counters_phenotype_test(self):
-        fc = FamiliesCounters('autism', {'autism': {'name' : 'autism'}})
+        fc = FamiliesCounters('autism', {'autism': {'name': 'autism'}})
         self.assertTrue(fc)
 
     def test_families_counters_phenotype_unaffected(self):
         with self.assertRaises(ValueError):
-            FamiliesCounters('unaffected', {'unaffected': {'name' : 'unaffected'}})
+            FamiliesCounters(
+                'unaffected', {'unaffected': {'name': 'unaffected'}})
 
     def test_families_counters_phenotype_wrong(self):
         with self.assertRaises(ValueError):
@@ -115,7 +117,8 @@ class Test(unittest.TestCase):
             ['f1', 'p4', 'p1', 'p2', 'M', '#ffffff', 0, 0],
             ['f1', 'p5', 'p1', 'p2', 'F', '#ffffff', 0, 0]
         ]
-        pedigree = fc.family_configuration_to_pedigree_v3('momFdadMprbMsibMsibF')
+        pedigree = fc.family_configuration_to_pedigree_v3(
+            'momFdadMprbMsibMsibF')
         self.assertEqual(prbMsibMsibF, pedigree)
 
     def test_family_reports_build(self):

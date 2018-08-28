@@ -41,6 +41,12 @@ class Test(unittest.TestCase):
         self.assertIsNotNone(sr.families_report)
         self.assertIsNotNone(sr.denovo_report)
 
+    def test_deserialize_lelieveld2016_study(self):
+        sr = self.vr['Lelieveld2016']
+        self.assertIsNotNone(sr)
+        self.assertIsNotNone(sr.families_report)
+        self.assertIsNotNone(sr.denovo_report)
+
 #     def test_recompute(self):
 #         cmd = recompute.Command()
 #         cmd.handle()

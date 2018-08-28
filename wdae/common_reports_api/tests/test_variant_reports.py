@@ -47,6 +47,7 @@ class Test(BaseAuthenticatedUserTest):
             [
                 'autism',
                 'congenital heart disease',
+                'developmental disorder',
                 'epilepsy',
                 'intellectual disability',
                 'schizophrenia',
