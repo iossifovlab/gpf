@@ -3,7 +3,10 @@
     <div class="container">
       <gpf-genes-block [showAllTab]="dataset?.genotypeBrowser?.genesBlockShowAll"></gpf-genes-block>
       <gpf-regions-block></gpf-regions-block>
-      <gpf-study-filters-block [dataset]="dataset"></gpf-study-filters-block>
+      <gpf-study-filters-block
+        *ngIf="dataset?.genotypeBrowser?.hasStudyFilters"
+        [dataset]="dataset">
+      </gpf-study-filters-block>
       <gpf-genotype-block></gpf-genotype-block>
       <gpf-genomic-scores-block>
       </gpf-genomic-scores-block>
