@@ -28,6 +28,7 @@ class DatasetConfig(ConfigurableEntityConfig):
         if genotypeBrowser:
             assert 'genesBlockShowAll' in genotypeBrowser
             assert 'hasFamilyFilters' in genotypeBrowser
+            assert 'hasStudyFilters' in genotypeBrowser
             assert 'phenoFilters' in genotypeBrowser
             assert 'hasPresentInChild' in genotypeBrowser
             assert 'hasPresentInParent' in genotypeBrowser
@@ -85,6 +86,8 @@ class DatasetConfig(ConfigurableEntityConfig):
                 'genotypeBrowser.genesBlockShowAll',
             'genotypebrowser.hasfamilyfilters':
                 'genotypeBrowser.hasFamilyFilters',
+            'genotypebrowser.hasstudyfilters':
+                'genotypeBrowser.hasStudyFilters',
             'genotypebrowser.phenofilters': 'genotypeBrowser.phenoFilters',
             'genotypebrowser.haspresentinchild':
                 'genotypeBrowser.hasPresentInChild',
@@ -159,6 +162,7 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypeBrowser.hasPresentInChild', 'genotypeBrowser.hasDenovo',
             'genotypeBrowser.hasPedigreeSelector', 'genotypeBrowser.hasCNV',
             'genotypeBrowser.hasFamilyFilters',
+            'genotypeBrowser.hasStudyFilters'
         ]
 
         for key in cast_to_bool_keys:
@@ -390,6 +394,7 @@ class DatasetConfig(ConfigurableEntityConfig):
             'phenoDB': None,
             'genotypeBrowser.genesBlockShowAll': 'yes',
             'genotypeBrowser.hasFamilyFilters': 'yes',
+            'genotypeBrowser.hasStudyFilters': 'yes',
             'genotypeBrowser.phenoFilters': '',
             'genotypeBrowser.hasPresentInChild': 'yes',
             'genotypeBrowser.hasPresentInParent': 'yes',
