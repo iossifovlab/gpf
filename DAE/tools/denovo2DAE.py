@@ -18,7 +18,7 @@ def parse_cli_arguments(argv=sys.argv[1:]):
     )
     parser.add_argument(
         'pedFile', type=str,
-        help='pedgree file with certain established format'
+        help='pedigree file with certain established format'
     )
     parser.add_argument(
         '-f', '--file', type=str, default=None,
@@ -167,9 +167,9 @@ def populate_global_data(variants, families):
     assign_family(families.groupby(['familyId']))
 
 
-def find_prob_family(probant_id):
+def find_prob_family(proband_id):
     try:
-        return person_family[probant_id]
+        return person_family[proband_id]
     except KeyError:
         return None
 
