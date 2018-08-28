@@ -23,7 +23,7 @@ def list_variants_by_families(prb_LGDs):
     for family_id, variants in get_families(prb_LGDs).items():
         if len(variants) == 1:
             continue
-        print('The probant of family {} has {} LGD variants'
+        print('The proband of family {} has {} LGD variants'
               .format(family_id, len(variants)))
         for v in variants:
             effects = '|'.join([x['sym'] + ':' + x['eff']
@@ -33,8 +33,8 @@ def list_variants_by_families(prb_LGDs):
             print('\t' + '\t'.join(line))
 
 
-# test for recurrence in the same probant
-def recurrence_in_probant(prb_LGDs):
+# test for recurrence in the same proband
+def recurrence_in_proband(prb_LGDs):
     ccs = Counter([str(v.familyId) + ':' + ge['sym'] for v in prb_LGDs
                    for ge in v.requestedGeneEffects])
     for fgs in ccs:
@@ -74,9 +74,9 @@ if __name__ == '__main__':
     prb_LGDs = list(vDB.get_denovo_variants(
                     studies, inChild='prb', effectTypes="LGDs"))
 
-    print('There are {} variants in probants'.format(len(prb_LGDs)))
+    print('There are {} variants in probands'.format(len(prb_LGDs)))
     list_variants_by_families(prb_LGDs)
-    recurrence_in_probant(prb_LGDs)
+    recurrence_in_proband(prb_LGDs)
 
     symbols2variants = get_symbols2variants(prb_LGDs)
     symbols2families_len = {sym: len(set([v.familyId for v in vs]))
@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
     recurrence_counter = Counter(symbols2families_len.values())
     families = set([f for s in studies for f in s.families])
-    print('The recurrence in {} probants'.format(len(families)))
+    print('The recurrence in {} probands'.format(len(families)))
     print('hits\tgeneNumber')
     for hn, cnt in sorted(recurrence_counter.items(), key=lambda x: x[1]):
         print(hn, '\t', cnt)
