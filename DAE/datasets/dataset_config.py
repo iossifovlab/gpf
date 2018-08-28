@@ -59,7 +59,8 @@ class DatasetConfig(ConfigurableEntityConfig):
 
     @staticmethod
     def _str_to_bool(val):
-        return True if val == 'yes' else False
+        true_values = ['yes', 'Yes', 'True', 'true']
+        return True if val in true_values else False
 
     @staticmethod
     def _split_section(section):
