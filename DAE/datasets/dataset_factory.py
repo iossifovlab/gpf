@@ -39,11 +39,19 @@ class DatasetFactory(object):
                     .format(",".join(dataset_config.studies))
             )
 
+        genotypeBrowser = dict(dataset_config)['genotypeBrowser']
+        if genotypeBrowser:
+            previewColumns = genotypeBrowser['previewColumns']
+            downloadColumns = genotypeBrowser['downloadColumns']
+        else:
+            previewColumns = []
+            downloadColumns = []
+
         return self._class(
             dataset_config.dataset_name,
             studies,
-            dataset_config.list('preview_columns'),
-            dataset_config.list('download_columns')
+            previewColumns,
+            downloadColumns
         )
 
     @staticmethod
