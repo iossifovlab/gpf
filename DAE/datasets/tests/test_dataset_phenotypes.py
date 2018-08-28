@@ -18,6 +18,7 @@ def test_phenotypes_sd(sd):
         'epilepsy',
         'intellectual_disability',
         'schizophrenia',
+        'developmental_disorder',
         'unaffected'
     ] == phenotypes
 

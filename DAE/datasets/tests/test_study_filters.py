@@ -10,10 +10,10 @@ from datasets.tests.requests import EXAMPLE_QUERY_SD
 def test_denovo_studies_study_types_sd(sd):
     query = copy.deepcopy(EXAMPLE_QUERY_SD)
 
-    assert 14 == len(sd.denovo_studies)
+    assert 17 == len(sd.denovo_studies)
 
     studies = sd.get_denovo_studies(**query)
-    assert 14 == len(studies)
+    assert 17 == len(studies)
 
     query['studyTypes'] = ['tg']
     studies = sd.get_denovo_studies(**query)
@@ -21,7 +21,7 @@ def test_denovo_studies_study_types_sd(sd):
 
     query['studyTypes'] = ['we']
     studies = sd.get_denovo_studies(**query)
-    assert 11 == len(studies)
+    assert 14 == len(studies)
 
 
 def test_variants_study_types_sd(sd):
@@ -38,7 +38,7 @@ def test_denovo_studies_by_phenotype_sd(sd):
     del query['pedigreeSelector']
 
     studies = sd.get_denovo_studies(**query)
-    assert 14 == len(studies)
+    assert 17 == len(studies)
 
     query = copy.deepcopy(EXAMPLE_QUERY_SD)
     query['pedigreeSelector'] = {
@@ -46,7 +46,7 @@ def test_denovo_studies_by_phenotype_sd(sd):
         'checkedValues': ['autism', ]
     }
     studies = sd.get_denovo_studies(**query)
-    assert 6 == len(studies)
+    assert 7 == len(studies)
 
     query = copy.deepcopy(EXAMPLE_QUERY_SD)
     query['pedigreeSelector'] = {
@@ -70,4 +70,4 @@ def test_denovo_studies_by_phenotype_sd(sd):
         'checkedValues': ['epilepsy', 'unaffected', ]
     }
     studies = sd.get_denovo_studies(**query)
-    assert 14 == len(studies)
+    assert 17 == len(studies)
