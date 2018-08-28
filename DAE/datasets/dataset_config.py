@@ -426,5 +426,17 @@ class DatasetConfig(ConfigurableEntityConfig):
             'phenoFilters': ''
         }
 
+    @staticmethod
+    def _get_dataset_description_keys():
+        return [
+            'id', 'name', 'description', 'studies', 'data_dir',
+            'phenotypeBrowser', 'phenotypeGenotypeTool', 'authorizedGroups',
+            'studyTypes', 'phenoDB', 'enrichmentTool', 'genotypeBrowser',
+            'pedigreeSelectors'
+        ]
+
     def get_dataset_description(self):
-        return self.to_dict()
+        keys = DatasetConfig._get_dataset_description_keys()
+        dataset_config = self.to_dict()
+
+        return {key: dataset_config[key] for key in keys}
