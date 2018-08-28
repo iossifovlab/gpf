@@ -138,6 +138,8 @@ class DatasetsConfig(object):
         family_filters = \
             self._get_boolean(
                 section, 'genotypeBrowser.hasFamilyFilters')
+        study_filters = \
+            self._get_boolean(section, 'genotypeBrowser.hasStudyFilters')
         pedigree_selector = \
             self._get_boolean(
                 section, 'genotypeBrowser.hasPedigreeSelector')
@@ -173,6 +175,7 @@ class DatasetsConfig(object):
             'hasComplex': has_complex,
             'hasStudyTypes': study_types,
             'hasFamilyFilters': family_filters,
+            'hasStudyFilters': study_filters,
             'hasPedigreeSelector': pedigree_selector,
             'genesBlockShowAll': genes_block_show_all,
             'phenoColumns': pheno_columns,
