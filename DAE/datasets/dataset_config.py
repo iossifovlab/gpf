@@ -188,8 +188,8 @@ class DatasetConfig(ConfigurableEntityConfig):
 
         for first, second in concat_options.items():
             dataset_config[second] =\
-                dataset_config.pop(first, '') + ',' +\
-                dataset_config.pop(second, '')
+                ','.join(filter(None, [dataset_config.pop(first, None),
+                                       dataset_config.pop(second, None)]))
 
         return dataset_config
 
