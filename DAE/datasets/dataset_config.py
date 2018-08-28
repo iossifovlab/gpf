@@ -21,6 +21,35 @@ class DatasetConfig(ConfigurableEntityConfig):
 
         return DatasetConfig(dataset_config)
 
+    @staticmethod
+    def get_default_values():
+        return {
+            'studyTypes': None,
+            'phenoDB': None,
+            'genotypeBrowser.genesBlockShowAll': 'yes',
+            'genotypeBrowser.hasFamilyFilters': 'yes',
+            'genotypeBrowser.phenoFilters': '',
+            'genotypeBrowser.hasPresentInChild': 'yes',
+            'genotypeBrowser.hasPresentInParent': 'yes',
+            'genotypeBrowser.hasStudyTypes': 'no',
+            'genotypeBrowser.hasPedigreeSelector': 'no',
+            'genotypeBrowser.hasComplex': 'no',
+            'genotypeBrowser.hasCNV': 'no',
+            'genotypeBrowser.hasDenovo': 'no',
+            'genotypeBrowser.hasTransmitted': 'no',
+            'genotypeBrowser.mainForm': 'default',
+            'genotypeBrowser.phenoColumns': '',
+            'genotypeBrowser.familyFilters': None,
+            'pedigree.phenotype.source': 'legacy',
+            'pedigree.phenotype.default': 'unknown:unknown:#aaaaaa',
+            'genotypeBrowser.basePreviewColumns':
+                'family,variant,genotype,effect,weights,freq',
+            'genotypeBrowser.baseDownloadColumns':
+                'family,phenotype,variant,best,fromparent,inchild,effect,'
+                'count,geneeffect,effectdetails,weights,freq',
+            'phenoFilters': ''
+        }
+
     def get_dataset_description(self):
         return {
             "phenotypeGenotypeTool": True,
