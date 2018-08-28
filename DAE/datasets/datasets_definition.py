@@ -37,7 +37,8 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
             work_dir = DatasetsDefinition._work_dir_from_environment()
 
         self.directory_enabled_configurable_entity_definition(
-            datasets_dir, DatasetConfig, work_dir, 'dataset_id')
+            datasets_dir, DatasetConfig, work_dir, 'dataset_id',
+            DatasetConfig.get_default_values())
 
 
 class SingleFileDatasetsDefinition(DatasetsDefinition):
@@ -48,4 +49,5 @@ class SingleFileDatasetsDefinition(DatasetsDefinition):
             work_dir = DatasetsDefinition._work_dir_from_environment()
 
         self.single_file_configurable_entity_definition(
-            config_path, work_dir, DatasetConfig, 'dataset_id')
+            config_path, work_dir, DatasetConfig, 'dataset_id',
+            DatasetConfig.get_default_values())

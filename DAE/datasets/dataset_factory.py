@@ -38,10 +38,17 @@ class DatasetFactory(object):
             )
 
         study_group = self.study_group_factory.get_dataset(study_group_config)
+        genotypeBrowser = dict(dataset_config)['genotypeBrowser']
+        if genotypeBrowser:
+            previewColumns = genotypeBrowser['previewColumns']
+            downloadColumns = genotypeBrowser['downloadColumns']
+        else:
+            previewColumns = []
+            downloadColumns = []
 
         return self._class(
             dataset_config.dataset_name,
             study_group,
-            dataset_config.list('preview_columns'),
-            dataset_config.list('download_columns')
+            previewColumns,
+            downloadColumns
         )
