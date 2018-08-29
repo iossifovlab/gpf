@@ -1,8 +1,9 @@
 class Study(object):
 
-    def __init__(self, name, backend):
+    def __init__(self, name, backend, phenotypes):
         self.name = name
         self.backend = backend
+        self.phenotypes = phenotypes
 
     def query_variants(self, **kwargs):
         return self.backend.query_variants(**kwargs)
@@ -20,10 +21,6 @@ class Study(object):
     @property
     def has_transmitted(self):
         return False
-
-    @property
-    def phenotypes(self):
-        return {'autism'}
 
     @property
     def type(self):

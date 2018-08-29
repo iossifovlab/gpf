@@ -1,5 +1,5 @@
 def test_fixture_study_definition_is_loaded(study_definition):
-    expected = {'test', 'test_enabled_true'}
+    expected = {'test', 'test_enabled_true', 'autism_and_epilepsy'}
 
     assert study_definition is not None
     studies = list(study_name for study_name in study_definition.configs)

@@ -1,12 +1,14 @@
 import itertools
+import functools
 
 
 class StudyGroup(object):
 
-    def __init__(self, name, studies, phenotype=None):
+    def __init__(self, name, studies):
         self.studies = studies
         self.name = name
-        self.phenotype = phenotype
+        self.phenotypes = functools.reduce(
+            lambda acc, study: acc | study.phenotypes, studies, set())
 
     def get_variants(self, **kwargs):
         return itertools.chain(*[

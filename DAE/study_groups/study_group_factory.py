@@ -18,11 +18,11 @@ class StudyGroupFactory(object):
         self.studies_factory = StudyFactory()
         self.studies_definition = studies_definition
 
-    def get_dataset(self, study_group_config):
+    def get_study_group(self, study_group_config):
         assert isinstance(study_group_config, StudyGroupConfig)
 
         studies = []
-        print("Available studies: ", self.studies_definition.get_all_study_names())
+
         for study_name in study_group_config.studies:
             study_config = self.studies_definition.get_study_config(study_name)
             if study_config:
@@ -41,6 +41,5 @@ class StudyGroupFactory(object):
 
         return StudyGroup(
             study_group_config.name,
-            studies,
-            study_group_config.phenotype
+            studies
         )
