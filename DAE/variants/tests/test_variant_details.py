@@ -31,6 +31,7 @@ def test_variant_effect_annotation(variant, variant_type, position):
     assert detail.cshl_position == position
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize("variant_types,query,count", [
     (set([VariantType.substitution]),
      "sub", 415),
