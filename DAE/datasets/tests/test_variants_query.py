@@ -44,7 +44,7 @@ def test_get_variants_with_gene_weights(sd):
 
     vs = sd.get_variants(**query)
     assert vs is not None
-    assert 13 == count(vs)
+    assert 9 == count(vs)
 
 
 def test_get_variants_with_null_gene_weights(sd):
@@ -71,7 +71,7 @@ def test_get_variants_with_null_gene_weights(sd):
     }
     vs = sd.get_variants(**query)
     assert vs is not None
-    assert 5 == count(vs)
+    assert 3 == count(vs)
 
 
 def test_get_variants_with_autism_and_unaffected(sd):
@@ -102,7 +102,7 @@ def test_get_variants_with_autism_and_unaffected(sd):
     vs = list(vs)
     for v in vs:
         print(v.familyId, v.studyName, v.location, v.variant)
-    assert 7 == count(vs)
+    assert 5 == count(vs)
 
 
 def test_get_variants_with_rarity(ssc):

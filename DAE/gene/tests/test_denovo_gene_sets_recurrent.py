@@ -71,7 +71,7 @@ def test_ssc_sd_recurrent_combined(ssc, sd, gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
     gs = denovo.get_gene_set(
         'LGDs.Recurrent', gene_sets_types={
-            'SD': ['autism'], 'SSC': ['autism']})
+            'SD_TEST': ['autism'], 'SSC': ['autism']})
 
     assert set(recurrent) == gs['syms']
 

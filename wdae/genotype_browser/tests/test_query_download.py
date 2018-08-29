@@ -52,7 +52,7 @@ EXAMPLE_REQUEST_SSC = {
 }
 
 EXAMPLE_REQUEST_SD = {
-    "datasetId": "SD",
+    "datasetId": "SD_TEST",
     "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
     "gender": ["female", "male"],
     "variantTypes": [

@@ -13,7 +13,7 @@ from datasets.tests.requests import EXAMPLE_QUERY_SD, EXAMPLE_QUERY_SSC
 class Test(BaseAuthenticatedUserTest):
     @classmethod
     def setUpTestData(cls):
-        Dataset.recreate_dataset_perm('SD', [])
+        Dataset.recreate_dataset_perm('SD_TEST', [])
         Dataset.recreate_dataset_perm('SSC', [])
         Dataset.recreate_dataset_perm('SVIP', [])
         Dataset.recreate_dataset_perm('SPARK', [])

@@ -17,14 +17,14 @@ def client():
 
 
 @pytest.fixture()
-def default_datasets(db):
-    Dataset.recreate_dataset_perm('SD', [])
+def default_datasets():
+    Dataset.recreate_dataset_perm('SD_TEST', [])
     Dataset.recreate_dataset_perm('SSC', [])
     Dataset.recreate_dataset_perm('SVIP', [])
 
 
 @pytest.fixture()
-def user(db, user_model):
+def user(user_model):
     u = user_model.objects.create_user('user@example.com', 'secret123')
     u.save()
 
@@ -32,7 +32,7 @@ def user(db, user_model):
 
 
 @pytest.fixture()
-def admin_user(db, user_model):
+def admin_user(user_model):
     u = user_model.objects.create_superuser('admin@example.com', 'secret')
     u.save()
     admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
@@ -48,6 +48,6 @@ def user_client(user, client):
 
 
 @pytest.fixture()
-def admin_client(db, admin_user, client):
+def admin_client(admin_user, client):
     client.login(email=admin_user.email, password='secret')
     return client
