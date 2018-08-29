@@ -5,6 +5,7 @@ import logging
 from RegionOperations import Region
 from variants.attributes import Role
 from helpers import EFFECT_TYPES_MAPPING
+from study_groups.study_group import StudyGroup
 from variants.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, EqualsNode, ContainsNode
 
@@ -13,27 +14,38 @@ logger = logging.getLogger(__name__)
 
 class Dataset(object):
 
-    def __init__(self, name, variants, preview_columns=None, download_columns=None):
+    def __init__(
+            self, name, study_group, preview_columns=None, download_columns=None):
+        super(Dataset, self).__init__()
         if preview_columns is None:
             preview_columns = []
 
         if download_columns is None:
             download_columns = []
 
-        self._variants = variants
-
         self.name = name
+        self.study_group = study_group
+
         self.preview_columns = preview_columns
         self.download_columns = download_columns
 
     def get_variants(self, **kwargs):
-        return self._variants.query_variants(**kwargs)
+        return self.study_group.get_variants(**kwargs)
 
+    @property
+    def study_names(self):
+        return self.study_group.study_names
+
+    # FIXME: fill these with real values
     def get_column_labels(self):
         return ['']
 
     def get_legend(self, *args, **kwargs):
-        return []
+        return ['autism']
+
+    @property
+    def order(self):
+        return 0
 
 
 class DatasetWrapper(Dataset):

@@ -78,8 +78,16 @@ class RawVariantsLoader(object):
 
     def load_annotation(self, storage='csv'):
         assert self.config.annotation
-        return self.load_annotation_file(
-            self.config.annotation, storage=storage)
+
+        if self.has_annotation_file(self.config.annotation):
+            return self.load_annotation_file(
+                self.config.annotation, storage=storage)
+        else:
+            # TODO: add test for this
+            from variants.builder import variants_builder
+            variants_builder(self.config.prefix)
+            return self.load_annotation_file(
+                self.config.annotation, storage=storage)
 
     @staticmethod
     def convert_array_of_strings(token):
@@ -94,6 +102,10 @@ class RawVariantsLoader(object):
         if not token:
             return None
         return token
+
+    @staticmethod
+    def has_annotation_file(annotation):
+        return os.path.exists(annotation)
 
     @classmethod
     def load_annotation_file(cls, filename, sep='\t', storage='csv'):

@@ -26,7 +26,7 @@ _REGISTER = {}
 
 
 def get_register():
-    global _REGISTER
+    # global _REGISTER
     return _REGISTER
 
 
@@ -42,12 +42,12 @@ def register(key, preload):
     if preload_active:
         preload.load()
 
-    global _REGISTER
+    # global _REGISTER
     _REGISTER[key] = preload
 
 
 def get(key):
-    global _REGISTER
+    # global _REGISTER
 
     try:
         preload = _REGISTER[key]
@@ -61,7 +61,7 @@ def get(key):
 
 
 def has_key(key):
-    global _REGISTER
+    # global _REGISTER
     value = False
 
     try:

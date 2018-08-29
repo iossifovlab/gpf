@@ -119,7 +119,7 @@ def test_query_present_in_child(option, count, quads_in_child):
 )
 def test_query_present_in_child_compared_to_raw(
         option, raw_query, quads_f1_wrapper):
-    vs = quads_f1_wrapper._variants.query_variants(roles=raw_query)
+    vs = quads_f1_wrapper.study_group.studies[0].query_variants(roles=raw_query)
     vs = list(vs)
 
     variants = list(quads_f1_wrapper.get_variants(presentInChild=option))

@@ -1,67 +1,54 @@
+import logging
+
 from datasets.dataset import Dataset
 from datasets.dataset_config import DatasetConfig
-from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
-from variants.annotate_composite import AnnotatorComposite
-from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
-from variants.configure import Configure
-from variants.raw_vcf import RawFamilyVariants
+from study_groups.study_group_definition import SingleFileStudiesGroupDefinition
+from study_groups.study_group_factory import StudyGroupFactory
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class DatasetFactory(object):
 
-    def __init__(self, dataset_definition, _class=Dataset):
-        self.dataset_definition = dataset_definition
-        self._class = _class
+    def __init__(
+            self, _class=Dataset, study_definition=None,
+            study_group_definition=None):
+        if study_group_definition is None:
+            study_group_definition = SingleFileStudiesGroupDefinition()
 
-    def _from_dataset_config(self, dataset_config):
+        studies_factory = StudyGroupFactory(
+            studies_definition=study_definition)
+
+        self._class = _class
+        self.study_group_factory = studies_factory
+        self.study_group_definition = study_group_definition
+
+    def get_dataset(self, dataset_config):
         assert isinstance(dataset_config, DatasetConfig)
 
-        # TODO: only create these if they are in the config
-        effect_annotator = VcfVariantEffectsAnnotator()
-        allele_frequency_annotator = VcfAlleleFrequencyAnnotator()
-        composite_annotator = AnnotatorComposite(
-            annotators=[effect_annotator, allele_frequency_annotator])
+        study_group_config = self.study_group_definition \
+            .get_study_group_config(dataset_config.study_group)
 
-        variants_config = Configure.from_prefix_vcf(
-            dataset_config.variants_prefix)
+        if not study_group_config:
+            raise ValueError(
+                "Unknown study group: {}, known study groups: [{}]".format(
+                    dataset_config.study_group,
+                    ",".join(self.study_group_definition.study_group_ids()))
+            )
 
-        variants = RawFamilyVariants(
-            variants_config, annotator=composite_annotator)
+        study_group = self.study_group_factory.get_dataset(study_group_config)
+        genotypeBrowser = dict(dataset_config)['genotypeBrowser']
+        if genotypeBrowser:
+            previewColumns = genotypeBrowser['previewColumns']
+            downloadColumns = genotypeBrowser['downloadColumns']
+        else:
+            previewColumns = []
+            downloadColumns = []
 
         return self._class(
             dataset_config.dataset_name,
-            variants,
-            dataset_config.list('preview_columns'),
-            dataset_config.list('download_columns')
+            study_group,
+            previewColumns,
+            downloadColumns
         )
-
-    def get_dataset_names(self):
-        return self.dataset_definition.dataset_ids()
-
-    def get_dataset(self, dataset_id):
-        config = self.dataset_definition.get_dataset_config(dataset_id)
-
-        if config:
-            return self._from_dataset_config(config)
-
-        return None
-
-    def get_all_datasets(self):
-        return [
-            self._from_dataset_config(config)
-            for config in self.dataset_definition.get_all_dataset_configs()
-        ]
-
-    def get_dataset_description(self, dataset_id):
-        config = self.dataset_definition.get_dataset_config(dataset_id)
-
-        if config:
-            return config.get_dataset_description()
-
-        return None
-
-    def get_dataset_descriptions(self):
-        return filter(lambda c: c is not None, [
-            config.get_dataset_description()
-            for config in self.dataset_definition.get_all_dataset_configs()
-        ])
