@@ -4,10 +4,12 @@ import { Equals, ValidateIf } from 'class-validator';
 export class StudyTypes {
   we = true;
 
-  @ValidateIf(o => !o.we)
+  tg = true;
+
+  @ValidateIf(o => !o.we && !o.tg)
   @Equals(true, {
     message: 'select at least one'
   })
-  tg = true;
+  wg = true;
 };
 

@@ -39,6 +39,9 @@ export class StudyTypesComponent extends QueryStateWithErrorsProvider implements
             if (studyType === 'tg') {
               this.studyTypes.tg = true;
             }
+            if (studyType === 'wg') {
+              this.studyTypes.wg = true;
+            }
           }
         }
       });
@@ -47,11 +50,13 @@ export class StudyTypesComponent extends QueryStateWithErrorsProvider implements
   selectAll(): void {
     this.studyTypes.tg = true;
     this.studyTypes.we = true;
+    this.studyTypes.wg = true;
   }
 
   selectNone(): void {
     this.studyTypes.tg = false;
     this.studyTypes.we = false;
+    this.studyTypes.wg = false;
   }
 
   studyTypesCheckValue(studyType: string, value: boolean): void {
@@ -59,6 +64,8 @@ export class StudyTypesComponent extends QueryStateWithErrorsProvider implements
       this.studyTypes.we = value;
     } else if (studyType === 'tg') {
       this.studyTypes.tg = value;
+    } else if (studyType === 'wg') {
+      this.studyTypes.wg = value;
     }
   }
 
