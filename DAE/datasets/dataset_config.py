@@ -66,7 +66,6 @@ class DatasetConfig(ConfigurableEntityConfig):
             'phenotypebrowser': 'phenotypeBrowser',
             'phenogenotool': 'phenotypeGenotypeTool',
             'authorizedgroups': 'authorizedGroups',
-            'studytypes': 'studyTypes',
             'phenodb': 'phenoDB',
             'enrichmenttool': 'enrichmentTool',
             'enrichmenttool.selector': 'enrichmentTool.selector',
@@ -85,10 +84,6 @@ class DatasetConfig(ConfigurableEntityConfig):
                 'genotypeBrowser.hasPresentInParent',
             'genotypebrowser.haspedigreeselector':
                 'genotypeBrowser.hasPedigreeSelector',
-            'genotypebrowser.hascomplex': 'genotypeBrowser.hasComplex',
-            'genotypebrowser.hascnv': 'genotypeBrowser.hasCNV',
-            'genotypebrowser.hasdenovo': 'genotypeBrowser.hasDenovo',
-            'genotypebrowser.hastransmitted': 'genotypeBrowser.hasTransmitted',
             'genotypebrowser.mainform': 'genotypeBrowser.mainForm',
             'genotypebrowser.phenocolumns': 'genotypeBrowser.phenoColumns',
             'genotypebrowser.familyfilters':
