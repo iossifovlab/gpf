@@ -31,7 +31,6 @@ class DatasetConfig(ConfigurableEntityConfig):
             assert 'phenoFilters' in genotypeBrowser
             assert 'hasPresentInChild' in genotypeBrowser
             assert 'hasPresentInParent' in genotypeBrowser
-            assert 'hasStudyTypes' in genotypeBrowser
             assert 'hasPedigreeSelector' in genotypeBrowser
             assert genotypeBrowser['mainForm']
             assert 'phenoColumns' in genotypeBrowser
@@ -84,7 +83,6 @@ class DatasetConfig(ConfigurableEntityConfig):
                 'genotypeBrowser.hasPresentInChild',
             'genotypebrowser.haspresentinparent':
                 'genotypeBrowser.hasPresentInParent',
-            'genotypebrowser.hasstudytypes': 'genotypeBrowser.hasStudyTypes',
             'genotypebrowser.haspedigreeselector':
                 'genotypeBrowser.hasPedigreeSelector',
             'genotypebrowser.hascomplex': 'genotypeBrowser.hasComplex',
@@ -131,11 +129,11 @@ class DatasetConfig(ConfigurableEntityConfig):
             'phenotypeBrowser', 'phenotypeGenotypeTool', 'enrichmentTool',
             'genotypeBrowser', 'genotypeBrowser.genesBlockShowAll',
             'genotypeBrowser.hasPresentInParent', 'genotypeBrowser.hasComplex',
-            'genotypeBrowser.hasStudyTypes', 'genotypeBrowser.hasTransmitted',
             'genotypeBrowser.hasPresentInChild', 'genotypeBrowser.hasDenovo',
             'genotypeBrowser.hasPedigreeSelector', 'genotypeBrowser.hasCNV',
             'genotypeBrowser.hasFamilyFilters',
             'genotypeBrowser.hasStudyFilters'
+            'genotypeBrowser.hasTransmitted',
         ]
 
     @staticmethod
@@ -369,7 +367,6 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypeBrowser.phenoFilters': '',
             'genotypeBrowser.hasPresentInChild': 'yes',
             'genotypeBrowser.hasPresentInParent': 'yes',
-            'genotypeBrowser.hasStudyTypes': 'no',
             'genotypeBrowser.hasPedigreeSelector': 'no',
             'genotypeBrowser.mainForm': 'default',
             'genotypeBrowser.phenoColumns': '',
