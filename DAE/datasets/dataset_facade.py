@@ -1,7 +1,6 @@
 from datasets.dataset import DatasetWrapper
 from datasets.dataset_factory import DatasetFactory
 from datasets.datasets_definition import DirectoryEnabledDatasetsDefinition
-from studies.study_definition import SingleFileStudiesDefinition
 
 
 class DatasetFacade(object):
