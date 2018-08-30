@@ -55,12 +55,7 @@ class DatasetConfig(ConfigurableEntityConfig):
             assert pedigree['source']
             assert pedigree['values']
 
-        print("studies", self.studies)
-
-    @staticmethod
-    def _str_to_bool(val):
-        true_values = ['yes', 'Yes', 'True', 'true']
-        return True if val in true_values else False
+        print("study_group", self.study_group)
 
     @staticmethod
     def _split_section(section):
@@ -72,8 +67,8 @@ class DatasetConfig(ConfigurableEntityConfig):
         return (section_type, section_name)
 
     @staticmethod
-    def _change_keys_names(dataset_config):
-        new_keys_names = {
+    def _new_keys_names():
+        return {
             'phenotypebrowser': 'phenotypeBrowser',
             'phenogenotool': 'phenotypeGenotypeTool',
             'authorizedgroups': 'authorizedGroups',
@@ -119,21 +114,11 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypebrowser.downloadcolumns':
                 'genotypeBrowser.downloadColumns'
         }
-        for old, new in new_keys_names.items():
-            if '.' in new and (
-                (new.split('.')[0] in dataset_config and
-                 dataset_config.get(new.split('.')[0], None) == 'no') or
-                    (dataset_config.get(old.split('.')[0], None) == 'no')):
-                continue
-            if old in dataset_config:
-                dataset_config[new] = dataset_config.pop(old)
-
-        return dataset_config
 
     @staticmethod
-    def _split_str_lists(dataset_config):
-        split_str_lists_keys = [
-            'studies', 'authorizedGroups', 'phenoDB',
+    def _split_str_lists_keys():
+        return [
+            'authorizedGroups', 'phenoDB',
             'genotypeBrowser.phenoFilters',
             'genotypeBrowser.baseColumns',
             'genotypeBrowser.basePreviewColumns',
@@ -145,20 +130,9 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypeBrowser.genotype.columns'
         ]
 
-        for key in split_str_lists_keys:
-            if key not in dataset_config:
-                continue
-            if dataset_config[key] is not None and dataset_config[key] != '':
-                dataset_config[key] =\
-                    [el.strip() for el in dataset_config[key].split(',')]
-            elif dataset_config[key] == '':
-                dataset_config[key] = []
-
-        return dataset_config
-
-    @classmethod
-    def _cast_to_bool(cls, dataset_config):
-        cast_to_bool_keys = [
+    @staticmethod
+    def _cast_to_bool_keys():
+        return [
             'phenotypeBrowser', 'phenotypeGenotypeTool', 'enrichmentTool',
             'genotypeBrowser', 'genotypeBrowser.genesBlockShowAll',
             'genotypeBrowser.hasPresentInParent', 'genotypeBrowser.hasComplex',
@@ -168,12 +142,6 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypeBrowser.hasFamilyFilters',
             'genotypeBrowser.hasStudyFilters'
         ]
-
-        for key in cast_to_bool_keys:
-            if key in dataset_config:
-                dataset_config[key] = cls._str_to_bool(dataset_config[key])
-
-        return dataset_config
 
     @staticmethod
     def _concat_two_options(dataset_config):
@@ -375,10 +343,13 @@ class DatasetConfig(ConfigurableEntityConfig):
     def from_config(cls, config_section, section=None):
         dataset_config = config_section
 
-        dataset_config = cls._change_keys_names(dataset_config)
+        dataset_config =\
+            cls._change_keys_names(cls._new_keys_names(), dataset_config)
         dataset_config = cls._concat_two_options(dataset_config)
-        dataset_config = cls._split_str_lists(dataset_config)
-        dataset_config = cls._cast_to_bool(dataset_config)
+        dataset_config =\
+            cls._split_str_lists(cls._split_str_lists_keys(), dataset_config)
+        dataset_config =\
+            cls._cast_to_bool(cls._cast_to_bool_keys(), dataset_config)
         dataset_config = cls._copy_elements(dataset_config)
         dataset_config['pedigreeSelectors'] =\
             cls._get_pedigree_selectors(dataset_config)
