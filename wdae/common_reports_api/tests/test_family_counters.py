@@ -41,5 +41,3 @@ def test_families_report_iossifov_2014():
     assert cc.children_male == 900
     assert cc.children_unspecified == 0
     assert cc.children_total == 1911
-
-    

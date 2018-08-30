@@ -7,7 +7,14 @@ from django.contrib.auth.models import Group
 
 
 class DatasetPermTest(APITestCase):
-    def get_dataset_permission(self, url='/api/v3/datasets/SD'):
+
+    @classmethod
+    def setUpClass(cls):
+        super(DatasetPermTest, cls).setUpClass()
+        Dataset.recreate_dataset_perm('META', [])
+        Dataset.recreate_dataset_perm('SD_TEST', [])
+
+    def get_dataset_permission(self, url='/api/v3/datasets/SD_TEST'):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data

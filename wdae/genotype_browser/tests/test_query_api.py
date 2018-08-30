@@ -43,8 +43,10 @@ EXAMPLE_REQUEST_SD = {
     },
     "pedigreeSelector": {
         "id": "phenotype",
-        "checkedValues": ["autism", "unaffected", "congenital_heart_disease",
-            "epilepsy", "schizophrenia", "intellectual_disability"]
+        "checkedValues": [
+            "autism", "unaffected", "congenital_heart_disease",
+            "epilepsy", "schizophrenia", "intellectual_disability"
+        ]
     }
 }
 

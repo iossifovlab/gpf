@@ -16,9 +16,9 @@ def test_gene_sets_sym_main():
 
 
 def test_gene_sets_sym_denovo():
-    group = vDB.get_study_group('ALL WHOLE EXOME')
+    group = vDB.get_study_group('TEST WHOLE EXOME')
     studies = vDB.get_studies(",".join(group.studyNames))
-    assert len(studies) == 17
+    assert len(studies) == 14
 
     denovo_sets = get_gene_sets_symNS('denovo', studies)
     assert denovo_sets is not None

@@ -172,13 +172,12 @@ class FamiliesCounters(CounterBase):
         ]
         mom_id = ''
         dad_id = ''
-        for counter, [role, gender] in enumerate(pedigree):
+        for counter, [role, _gender] in enumerate(pedigree):
             pid = 'p{}'.format(counter + 1)
             if role == 'mom':
                 mom_id = pid
             elif role == 'dad':
                 dad_id = pid
-        result = []
 
         def is_child(role):
             return role in set(['prb', 'sib'])
@@ -532,12 +531,19 @@ class StudyVariantReports(ReportBase, precompute.register.Precompute):
 
 class VariantReports(precompute.register.Precompute):
 
-    def __init__(self):
+    def __init__(self, studies=None):
         self.data = None
+        self._studies = studies
 
     @property
     def studies(self):
-        return get_all_studies_names()
+        if self._studies is not None:
+            return [
+                (n, d) for (n, d) in get_all_studies_names()
+                if n in self._studies
+            ]
+        else:
+            return get_all_studies_names()
 
     def is_precomputed(self):
         return self.data is not None
