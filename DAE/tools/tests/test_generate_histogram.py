@@ -37,7 +37,7 @@ def yscales():
 
 @pytest.fixture
 def bin_nums():
-    return [5, 4, 7]
+    return [6, 4, 7]
 
 
 @pytest.fixture
@@ -61,17 +61,18 @@ output = [MyStringIO(), MyStringIO(), MyStringIO()]
 
 
 @pytest.fixture
-def generate_histograms(mocker, score_files, scores):
+def generate_histograms(mocker, score_files, scores, xscales, yscales,
+                        bin_nums, ranges):
     mocker.patch('pandas.read_csv',
-                 side_effect=lambda _, usecols, sep: score_files.pop(0))
+                 side_effect=lambda _, usecols, sep, header:
+                 score_files.pop(0))
     mocker.patch('matplotlib.pyplot.savefig', side_effect=None)
-    return GenerateScoresHistograms(['1'], output, scores)
+    return GenerateScoresHistograms(['1'], output, scores, xscales, yscales,
+                                    bin_nums, ranges)
 
 
-def test_generate_histogram(mocker, generate_histograms, scores, xscales,
-                            yscales, bin_nums, ranges, expected_output):
-    generate_histograms.generate_scores_histograms(xscales, yscales,
-                                                   bin_nums, ranges)
+def test_generate_histogram(mocker, generate_histograms, expected_output):
+    generate_histograms.generate_scores_histograms()
 
     assert output[0].getvalue() == expected_output[0]
     assert output[1].getvalue() == expected_output[1]
