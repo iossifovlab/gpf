@@ -66,7 +66,7 @@ class Test(BaseAuthenticatedUserTest):
 #             "geneWeight": "RVIS_rank",
 #             "geneWeightMin": 0.0,
 #             "geneWeightMax": 1.0,
-#             "denovoStudies": "ALL WHOLE EXOME",
+#             "denovoStudies": "TEST WHOLE EXOME",
 #             "phenoType": "autism",
 #             "gender": "female,male",
 #         }

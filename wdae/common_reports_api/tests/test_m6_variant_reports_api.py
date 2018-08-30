@@ -83,14 +83,3 @@ class Test(BaseAuthenticatedUserTest):
         self.assertAlmostEqual(0.153, value, 3)
         value = autism['events_children_percent']
         self.assertAlmostEqual(0.142, value, 3)
-
-    def test_study_variant_report_lelieveld2016(self):
-        url = '/api/v3/common_reports/variant_reports/Lelieveld2016'
-        response = self.client.get(url, format='json')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
-        self.assertTrue(response.data)
-        data = response.data
-        self.assertIn('study_name', data)
-        self.assertIn('study_description', data)
-        self.assertIn('families_report', data)
-        self.assertIn('denovo_report', data)

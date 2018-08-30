@@ -22,9 +22,10 @@ def test_iosiffov_2014():
     assert len(datasets_list) == 1
     datasets = datasets_list[0]
 
-    assert len(datasets) == 2
+    assert len(datasets) == 3
     assert "SSC" in datasets
     assert "SD_TEST" in datasets
+    assert "SD" in datasets
 
 
 def test_iosiffov_2012():

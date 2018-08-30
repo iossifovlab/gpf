@@ -24,7 +24,7 @@ def default_datasets():
 
 
 @pytest.fixture()
-def user(user_model):
+def user(db, user_model):
     u = user_model.objects.create_user('user@example.com', 'secret123')
     u.save()
 
@@ -32,7 +32,7 @@ def user(user_model):
 
 
 @pytest.fixture()
-def admin_user(user_model):
+def admin_user(db, user_model):
     u = user_model.objects.create_superuser('admin@example.com', 'secret')
     u.save()
     admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
