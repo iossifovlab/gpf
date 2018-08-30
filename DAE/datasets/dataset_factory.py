@@ -37,7 +37,8 @@ class DatasetFactory(object):
                     ",".join(self.study_group_definition.study_group_ids()))
             )
 
-        study_group = self.study_group_factory.get_dataset(study_group_config)
+        study_group =\
+            self.study_group_factory.get_study_group(study_group_config)
         genotypeBrowser = dict(dataset_config)['genotypeBrowser']
         if genotypeBrowser:
             previewColumns = genotypeBrowser['previewColumns']
