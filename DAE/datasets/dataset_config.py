@@ -16,7 +16,6 @@ class DatasetConfig(ConfigurableEntityConfig):
         assert 'phenotypeBrowser' in self
         assert 'phenotypeGenotypeTool' in self
         assert self.authorizedGroups
-        assert 'studyTypes' in self
         assert 'phenoDB' in self
         assert 'enrichmentTool' in self
         enrichmentTool = dict(self)['enrichmentTool']
@@ -34,10 +33,6 @@ class DatasetConfig(ConfigurableEntityConfig):
             assert 'hasPresentInParent' in genotypeBrowser
             assert 'hasStudyTypes' in genotypeBrowser
             assert 'hasPedigreeSelector' in genotypeBrowser
-            assert 'hasComplex' in genotypeBrowser
-            assert 'hasCNV' in genotypeBrowser
-            assert 'hasDenovo' in genotypeBrowser
-            assert 'hasTransmitted' in genotypeBrowser
             assert genotypeBrowser['mainForm']
             assert 'phenoColumns' in genotypeBrowser
             assert 'familyStudyFilters' in genotypeBrowser
@@ -367,7 +362,6 @@ class DatasetConfig(ConfigurableEntityConfig):
     @staticmethod
     def get_default_values():
         return {
-            'studyTypes': None,
             'phenoDB': None,
             'genotypeBrowser.genesBlockShowAll': 'yes',
             'genotypeBrowser.hasFamilyFilters': 'yes',
@@ -377,10 +371,6 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypeBrowser.hasPresentInParent': 'yes',
             'genotypeBrowser.hasStudyTypes': 'no',
             'genotypeBrowser.hasPedigreeSelector': 'no',
-            'genotypeBrowser.hasComplex': 'no',
-            'genotypeBrowser.hasCNV': 'no',
-            'genotypeBrowser.hasDenovo': 'no',
-            'genotypeBrowser.hasTransmitted': 'no',
             'genotypeBrowser.mainForm': 'default',
             'genotypeBrowser.phenoColumns': '',
             'genotypeBrowser.familyFilters': None,
@@ -400,10 +390,9 @@ class DatasetConfig(ConfigurableEntityConfig):
     @staticmethod
     def _get_dataset_description_keys():
         return [
-            'id', 'name', 'description', 'studies', 'data_dir',
-            'phenotypeBrowser', 'phenotypeGenotypeTool', 'authorizedGroups',
-            'studyTypes', 'phenoDB', 'enrichmentTool', 'genotypeBrowser',
-            'pedigreeSelectors'
+            'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
+            'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
+            'enrichmentTool', 'genotypeBrowser', 'pedigreeSelectors'
         ]
 
     def get_dataset_description(self):
