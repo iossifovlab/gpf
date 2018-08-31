@@ -82,6 +82,36 @@ class GenerateScoresHistograms(object):
 
         return data
 
+    def get_bars_and_bins(self, xscale, range, bin_num):
+        if xscale == 'linear':
+            bins = np.linspace(range[0], range[1], bin_num)
+        elif xscale == 'log':
+            bins = []
+            if range[0] == 0:
+                bins = [0.0]
+                range[0] += 1
+                bin_num -= 1
+            bins = bins + list(np.logspace(np.log10(range[0]),
+                                           np.log10(range[1]),
+                                           bin_num))
+        bars = np.zeros(len(bins) - 1)
+
+        return bars, bins
+
+    def save_histogram(self, bars, bins, score, yscale, output_file):
+        scores = pd.Series(bins, name='scores')
+        data = pd.Series(bars, name=score)
+        histogram = pd.concat([data, scores], axis=1)
+        histogram.to_csv(output_file, index=False)
+
+        histogram.dropna(inplace=True)
+        bins = histogram['scores'].values
+        bars = map(int, histogram[score].values)
+        fig, ax = plt.subplots()
+        plt.yscale(yscale)
+        ax.bar(bins, bars, width=0.01)
+        plt.savefig(output_file + '.png')
+
     def generate_scores_histograms(
             self, score_columns=None, start=None, end=None):
         if score_columns is None:
@@ -105,20 +135,10 @@ class GenerateScoresHistograms(object):
                 if self.chunk_size is not None:
                     min_value, max_value = self.get_min_max(
                         genomic_score_file, head, score_column)
-                    range = [min_value, max_value]
-                    if xscale == 'linear':
-                        bins = np.linspace(range[0], range[1], bin_num + 1)
-                    elif yscale == 'log':
-                        bins = []
-                        if range[0] == 0:
-                            bins = [0.0]
-                            range[0] += 1
-                        else:
-                            bin_num += 1
-                        bins = bins + list(np.logspace(np.log10(range[0]),
-                                                       np.log10(range[1]),
-                                                       bin_num))
-                    bars = np.zeros(bin_num)
+                    step = (max_value - min_value) / (bin_num - 1)
+                    range = [min_value, max_value + step]
+
+                    bars, bins = self.get_bars_and_bins(xscale, range, bin_num)
 
                     for chunk in pd.read_csv(
                         genomic_score_file, usecols=use_columns, sep='\t',
@@ -143,7 +163,7 @@ class GenerateScoresHistograms(object):
                 if score in self.ranges:
                     range = self.ranges[score]
                 else:
-                    if self.round is not None:
+                    if self.round is None:
                         min_value = values[score].min()
                         max_value = values[score].max()
                     else:
@@ -151,49 +171,22 @@ class GenerateScoresHistograms(object):
                         max_value = np.around(values[score].max(), self.round)
                     range = [min_value, max_value]
 
-                if xscale == 'linear':
-                    if start is not None and end is not None:
-                        bins = np.linspace(range[0], range[1], bin_num + 1)
-                        bars = np.zeros(bin_num)
-                        for s, l in zip(values[score], values['length']):
-                            idx = (np.abs(bins - s)).argmin()
-                            if idx == bin_num:
-                                idx -= 1
-                            bars[idx] += l
-                    else:
-                        bars, bins = np.histogram(
-                            values[score].values, bins=bin_num, range=range)
-                elif xscale == 'log':
-                    bins = []
-                    if range[0] == 0:
-                        bins = [0.0]
-                        range[0] += 1
-                        bin_num -= 1
-                    bins = bins + list(np.logspace(np.log10(range[0]),
-                                                   np.log10(range[1]),
-                                                   bin_num))
-                    if start is not None and end is not None:
-                        bars = np.zeros(len(bins) - 1)
-                        for s, l in zip(values[score], values['length']):
-                            idx = (np.abs(bins - s)).argmin()
-                            if idx == bin_num:
-                                idx -= 1
-                            bars[idx] += l
-                    else:
-                        bars, bins = np.histogram(values[score].values, bins)
+                bars, bins = self.get_bars_and_bins(xscale, range, bin_num)
 
-            scores = pd.Series(bins, name='scores')
-            data = pd.Series(bars, name=score)
-            histogram = pd.concat([data, scores], axis=1)
-            histogram.to_csv(output_file, index=False)
+                if start is not None and end is not None:
+                    for s, l in zip(values[score], values['length']):
+                        idx = (np.abs(bins - s)).argmin()
+                        if idx == bin_num:
+                            idx -= 1
+                        bars[idx] += l
+                else:
+                    bars = None
 
-            histogram.dropna(inplace=True)
-            bins = histogram['scores'].values
-            bars = map(int, histogram[score].values)
-            fig, ax = plt.subplots()
-            plt.yscale(yscale)
-            ax.bar(bins, bars, width=0.01)
-            plt.savefig(output_file + '.png')
+            if bars is None:
+                bars, bins = np.histogram(
+                    values[score].values, bins=bins, range=range)
+
+            self.save_histogram(bars, bins, score, yscale, output_file)
 
             print('Generating {} finished'.format(score))
 
