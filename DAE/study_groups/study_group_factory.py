@@ -43,3 +43,12 @@ class StudyGroupFactory(object):
             study_group_config.name,
             studies
         )
+
+    def get_study_configs(self, study_group_config):
+        study_configs = []
+
+        for study_name in study_group_config.studies:
+            study_configs.append(
+                self.studies_definition.get_study_config(study_name))
+
+        return study_configs
