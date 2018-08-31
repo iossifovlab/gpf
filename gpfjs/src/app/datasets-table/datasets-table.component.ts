@@ -79,11 +79,7 @@ export class DatasetsTableComponent implements OnInit {
   }
 
   updatePermissions(dataset, groupName) {
-    let group = this.groups.find(g => g.name === groupName);
-    if (!group) {
-      return;
-    }
-    this.userGroupsService.grantPermission(group, dataset)
+    this.userGroupsService.grantPermission(groupName, dataset)
       .take(1)
       .subscribe(() => {
         this.datasetsRefresh$.next(true);
