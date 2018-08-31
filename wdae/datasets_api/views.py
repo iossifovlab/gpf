@@ -20,7 +20,8 @@ class DatasetView(APIView):
         self.datasets = register.get('datasets')
         assert self.datasets is not None
 
-        self.datasets_definitions = self.datasets.get_definitions()
+        self.datasets_definition = self.datasets.get_definition()
+        self.datasets_factory = self.datasets.get_factory()
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset['id'])

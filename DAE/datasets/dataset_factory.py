@@ -53,3 +53,9 @@ class DatasetFactory(object):
             previewColumns,
             downloadColumns
         )
+
+    def get_study_group_factory(self):
+        return self.study_group_factory
+
+    def get_study_group_definition(self):
+        return self.study_group_definition
