@@ -44,16 +44,21 @@ class DatasetView(APIView):
     def get(self, request, dataset_id=None):
         user = request.user
         if dataset_id is None:
-            configs = self.datasets_definitions.get_all_dataset_configs()
-            res = list(config.get_dataset_description() for config in configs)
+            configs = self.datasets_definition.get_all_dataset_configs()
+            res = list(config.get_dataset_description(
+                self.datasets_factory.get_study_group_factory(),
+                self.datasets_factory.get_study_group_definition())
+                for config in configs)
 
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
             res = [self.augment_status_filter(ds) for ds in res]
             return Response({'data': res})
         else:
-            res = self.datasets_definitions.get_dataset_config(dataset_id)\
-                .get_dataset_description()
+            res = self.datasets_definition.get_dataset_config(dataset_id)\
+                .get_dataset_description(
+                    self.datasets_factory.get_study_group_factory(),
+                    self.datasets_factory.get_study_group_definition())
             if res:
                 res = self.augment_accessibility(res, user)
                 res = self.augment_with_groups(res)
