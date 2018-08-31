@@ -104,9 +104,9 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
     def __init__(self, opts, header=None):
         super(MultipleScoresAnnotator, self).__init__(opts, header)
-        self.annotators = {}
         self._init_score_directory()
-        self._init_scores()
+        self.annotators = {}
+        self.scores = opts.scores.split(',')
         if self.opts.labels is not None:
             self.header.extend(self.opts.labels.split(','))
         elif self.scores is not None:
@@ -117,23 +117,17 @@ class MultipleScoresAnnotator(AnnotatorBase):
         if self.scores_directory is None:
             self.scores_directory = os.path.join(os.environ['GFD_DIR'])
 
-    def _init_scores(self):
-        self.scores = []
-        for subdir in get_dirs(self.scores_directory):
-            if subdir.split('/')[-1] in self.opts.scores:
-                self.scores.append(get_score(subdir))
-
     def _annotator_for(self, score):
         if score not in self.annotators:
+            score_file = '{dir}/{score}/{score}.gz'.format(dir=self.scores_directory, score=score) 
             if self.opts.direct:
-                assert_tabix(score)
+                assert_tabix(score_file)
 
             config = {
                 'c': self.opts.c,
                 'p': self.opts.p,
                 'x': self.opts.x,
-                'scores_file': score,
-                'scores_config_file': None,
+                'scores_file': score_file,
                 'direct': self.opts.direct,
                 'labels': self.opts.labels,
                 'gzip': self.opts.gzip
@@ -141,7 +135,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
             self.annotators[score] = ScoreAnnotator(score_annotator_opts,
-                                                    list(self.header), [])
+                                                    list(self.header))
 
         return self.annotators[score]
 

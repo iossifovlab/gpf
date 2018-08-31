@@ -19,20 +19,22 @@ def mocker(mocker):
     mocker.patch.object(gzip, 'open', new=fake_gzip_open)
 
 
-def get_opts(c_inp=None, p_inp=None, x_inp=None,
+def get_opts(c_inp=None, p_inp=None, x_inp=None, search_columns=[],
              file_inp=None, conf_inp=None, direct_inp=False):
     class MockOpts:
-        def __init__(self, chrom, pos, loc, score, conf, tabix):
+        def __init__(self, chrom, pos, loc, sc, score, conf, tabix):
             self.c = chrom
             self.p = pos
             self.x = loc
+            self.search_columns = ','.join(sc)
             self.scores_file = score
             self.scores_config_file = conf
             self.direct = tabix
             self.labels = None
             self.gzip = True
 
-    return MockOpts(c_inp, p_inp, x_inp, file_inp, conf_inp, direct_inp)
+    return MockOpts(c_inp, p_inp, x_inp, search_columns, file_inp, conf_inp,
+        direct_inp)
 
 
 def to_file(content, where=None):
@@ -110,8 +112,7 @@ def base_annotator(base_config, base_scores, mocker):
                          file_inp=base_scores,
                          conf_inp=conf_to_dict(base_config))
     return ScoreAnnotator(base_opts,
-                          header=['id', 'chrom', 'pos', 'variation'],
-                          search_columns=[])
+                          header=['id', 'chrom', 'pos', 'variation'])
 
 
 @pytest.fixture
@@ -120,8 +121,7 @@ def base_annotator_file(base_config, base_scores, mocker):
                          file_inp=base_scores,
                          conf_inp=to_file(base_config).name)
     return ScoreAnnotator(base_opts,
-                          header=['id', 'chrom', 'pos', 'variation'],
-                          search_columns=[])
+                          header=['id', 'chrom', 'pos', 'variation'])
 
 
 @pytest.fixture
@@ -130,18 +130,17 @@ def full_annotator(full_config, full_scores, mocker):
                          file_inp=full_scores,
                          conf_inp=conf_to_dict(full_config))
     return ScoreAnnotator(full_opts,
-                          header=['id', 'chrom', 'starting_pos', 'ending_pos', 'variation'],
-                          search_columns=[])
+                          header=['id', 'chrom', 'starting_pos', 'ending_pos', 'variation'])
 
 
 @pytest.fixture
 def search_annotator(search_config, search_scores, mocker):
     search_opts = get_opts(c_inp='chrom', p_inp='starting_pos',
+                           search_columns = ['marker'],
                            file_inp=search_scores,
                            conf_inp=conf_to_dict(search_config))
     return ScoreAnnotator(search_opts,
-                          header=['id', 'chrom', 'starting_pos', 'ending_pos', 'variation', 'marker'],
-                          search_columns=['marker'])
+                          header=['id', 'chrom', 'starting_pos', 'ending_pos', 'variation', 'marker'])
 
 
 def test_base_score(base_annotator, base_input, base_output, mocker):

@@ -32,6 +32,7 @@ def get_argument_parser():
           -c C                  chromosome column number/name
           -p P                  position column number/name
           -x X                  location (chr:pos) column number/name
+          --search-columns      additional columns in the file to use for matching scores
           -H                    no header in the input file
           -F SCORES_FILE, --scores-file SCORES_FILE
                                 file containing the scores
@@ -47,6 +48,7 @@ def get_argument_parser():
     parser.add_argument('-c', help='chromosome column number/name', action='store')
     parser.add_argument('-p', help='position column number/name', action='store')
     parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_argument('--search-columns', help='additional columns in file to use for matching scores')
     parser.add_argument('-H', help='no header in the input file', action='store_true', dest='no_header')
     parser.add_argument('-F', '--scores-file', help='file containing the scores',
                         type=str, action='store')
@@ -201,11 +203,14 @@ class DirectAccess(ScoreFile):
 
 class ScoreAnnotator(AnnotatorBase):
 
-    def __init__(self, opts, header=None, search_columns=[]):
+    def __init__(self, opts, header=None):
         super(ScoreAnnotator, self).__init__(opts, header)
         self.labels = opts.labels.split(',') if opts.labels else None
         self._init_score_file()
-        self.search_columns = search_columns
+        if opts.search_columns is not None and opts.search_columns != '':
+            self.search_columns = opts.search_columns.split(',')
+        else:
+            self.search_columns = []
         self._init_cols()
 
     def _init_cols(self):

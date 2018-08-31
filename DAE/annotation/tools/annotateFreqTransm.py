@@ -76,8 +76,9 @@ class FrequencyAnnotator(ScoreAnnotator):
         opts.scores_config_file = conf_to_dict(StringIO(FREQ_SCORE_CONFIG))
         if opts.default_value != '' and opts.default_value is not None:
             opts.scores_config_file['noScoreValue'] = opts.default_value
+        opts.search_columns = opts.v
         self.freqcols = opts.frequency.split(',')
-        super(FrequencyAnnotator, self).__init__(opts, header, [opts.v])
+        super(FrequencyAnnotator, self).__init__(opts, header)
 
     @property
     def new_columns(self):

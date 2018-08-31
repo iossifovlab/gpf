@@ -104,6 +104,7 @@ class MissenseScoresAnnotator(AnnotatorBase):
                 'c': self.opts.c,
                 'p': self.opts.p,
                 'x': self.opts.x,
+                'search_columns': ','.join([self.opts.r, self.opts.a]),
                 'direct': self.opts.direct,
                 'scores_file': self.path.format(chr),
                 'scores_config_file': score_conf,
@@ -112,14 +113,9 @@ class MissenseScoresAnnotator(AnnotatorBase):
             }
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
 
-            if self.opts.r in list(self.header) and self.opts.a in list(self.header):
-                search_cols = [self.opts.r, self.opts.a]
-            else:
-                search_cols = []
             self.annotators[chr] = ScoreAnnotator(
                     score_annotator_opts,
-                    header=list(self.header),
-                    search_columns=search_cols)
+                    header=list(self.header))
         return self.annotators[chr]
 
     def _get_chr(self, line):

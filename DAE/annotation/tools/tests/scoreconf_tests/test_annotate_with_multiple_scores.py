@@ -104,20 +104,18 @@ def test_multi_score(multi_input, multi_scores, multi_config, multi_output, mock
 
     score1 = setup_score(multi_scores[0].getvalue(),
                          config.MULTI_SCORE_CONFIG.lstrip(),
-                         'score1', tmp_dirs[1])
+                         'score1.gz', tmp_dirs[1])
     score2 = setup_score(multi_scores[1].getvalue(),
                          config.MULTI_SCORE_ALT_CONFIG.lstrip(),
-                         'score2', tmp_dirs[2])
+                         'score2.gz', tmp_dirs[2])
 
     annotator = multi_annotator(tmp_dirs[0])
     output = ""
     for line in multi_input.readlines():
         line = line.rstrip()
-        new_annotations = annotator.line_annotations(
-                          line.split('\t'),
-                          annotator.new_columns)
-        for annotation in new_annotations:
-            line += '\t' + annotation
-        output += line + '\n'
+        output += line + '\t' + '\t'.join(
+            annotator.line_annotations(
+                line.split('\t'),
+                annotator.new_columns)) + '\n'
     cleanup(tmp_dirs, [tmp.name for tmp in score1+score2])
     assert (output == multi_output)
