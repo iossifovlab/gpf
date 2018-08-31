@@ -25,6 +25,8 @@ def get_argument_parser():
                         help='start column')
     parser.add_argument('-e', required=False, action='store',
                         help='end column')
+    parser.add_argument('-r', required=False, action='store',
+                        help='Number of decimal places to round min and max')
     parser.add_argument('--chunk-size', required=False, action='store',
                         help='size of chunks to process')
     parser.add_argument('infile', nargs='?', action='store', default='-',
@@ -39,7 +41,7 @@ def get_argument_parser():
 class GenerateScoresHistograms(object):
 
     def __init__(self, input_files, output_files, scores, xscales, yscales,
-                 bins_num, ranges, chunk_size=None):
+                 bins_num, ranges, round=None, chunk_size=None):
         self.genomic_score_files = input_files
         self.output_files = output_files
         self.scores = scores
@@ -47,6 +49,7 @@ class GenerateScoresHistograms(object):
         self.yscales = yscales
         self.ranges = ranges
         self.bins_num = bins_num
+        self.round = round
         self.chunk_size = chunk_size
 
     def get_min_max(self, file, head, score_column):
@@ -62,6 +65,10 @@ class GenerateScoresHistograms(object):
                 min_value = min_chunk
             if max_chunk > max_value or max_value is None:
                 max_value = max_chunk
+
+        if self.round is not None:
+            min_value = np.around(min_value, self.round)
+            max_value = np.around(max_value, self.round)
 
         return min_value, max_value
 
@@ -136,7 +143,13 @@ class GenerateScoresHistograms(object):
                 if score in self.ranges:
                     range = self.ranges[score]
                 else:
-                    range = [values[score].min(), values[score].max()]
+                    if self.round is not None:
+                        min_value = values[score].min()
+                        max_value = values[score].max()
+                    else:
+                        min_value = np.around(values[score].min(), self.round)
+                        max_value = np.around(values[score].max(), self.round)
+                    range = [min_value, max_value]
 
                 if xscale == 'linear':
                     if start is not None and end is not None:
@@ -232,6 +245,10 @@ def main():
         if end.isdigit():
             end = int(opts.e)
 
+    round = opts.r
+    if round is not None:
+        round = int(round)
+
     chunk_size = opts.chunk_size
     if chunk_size:
         chunk_size = int(chunk_size)
@@ -243,7 +260,7 @@ def main():
 
     gsh = GenerateScoresHistograms(
         input_files, output_files, scores, xscale, yscale, bins_num, ranges,
-        chunk_size)
+        round, chunk_size)
     gsh.generate_scores_histograms(score_columns, start, end)
 
     sys.stderr.write(
