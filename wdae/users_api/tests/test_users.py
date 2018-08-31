@@ -15,7 +15,7 @@ class ResearcherRegistrationTest(APITestCase):
         cls.res.name = 'fname'
         cls.res.save()
 
-        cls.researcher_id = '11aa--bb'
+        cls.researcher_id = 'R_EXAMPLE_ID'
 
         group_name = WdaeUser.get_group_name_for_researcher_id(
             cls.researcher_id)
@@ -31,6 +31,16 @@ class ResearcherRegistrationTest(APITestCase):
         data = {
             'email': 'faulthymail@faulthy.com',
             'name': 'bad_name',
+        }
+
+        response = self.client.post('/api/v3/users/register', data,
+                                    format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_fail_register_case_changed_email(self):
+        data = {
+            'email': 'FaKe@fake.com',
+            'name': 'ok name',
         }
 
         response = self.client.post('/api/v3/users/register', data,
@@ -255,6 +265,17 @@ class UserAuthenticationTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
+    def test_successful_auth_case_insensitive(self):
+        data = {
+            'username': 'TeSt@ExAmPlE.cOm',
+            'password': 'pass',
+        }
+
+        response = self.client.post(
+            '/api/v3/users/login', data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
     def test_failed_auth(self):
         data = {
             'username': 'bad@example.com',
@@ -397,5 +418,3 @@ class UserWithPassword(APITestCase):
 
         self.user.refresh_from_db()
         assert not self.user.is_active
-
-

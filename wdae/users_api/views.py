@@ -140,7 +140,7 @@ def register(request):
         researcher_id = request.data['researcherId']
         group_name = user_model.get_group_name_for_researcher_id(researcher_id)
 
-        preexisting_user = user_model.objects.get(email=email,
+        preexisting_user = user_model.objects.get(email__iexact=email,
                                                   groups__name=group_name)
         if preexisting_user.is_active:
             return Response({'error_msg': 'User already exists'},
@@ -162,11 +162,17 @@ def register(request):
 def login(request):
     username = request.data['username']
     password = request.data['password']
-    user = django.contrib.auth.authenticate(username=username,
-                                            password=password)
-    if user is not None and user.is_active:
-        django.contrib.auth.login(request, user)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    user_model = get_user_model()
+    userfound = user_model.objects.filter(email__iexact=username)
+
+    if userfound:
+        assert len(userfound) == 1
+        user = django.contrib.auth.authenticate(username=userfound[0].email,
+                                                password=password)
+        if user is not None and user.is_active:
+            django.contrib.auth.login(request, user)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
     return Response(status=status.HTTP_404_NOT_FOUND)
 
 
