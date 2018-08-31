@@ -10,7 +10,7 @@ class DatasetConfig(ConfigurableEntityConfig):
         assert self.dataset_name
         assert self.id
         assert self.name
-        assert self.description
+        assert 'description' in self
         assert self.study_group
         assert self.data_dir
         assert 'phenotypeBrowser' in self
@@ -55,8 +55,6 @@ class DatasetConfig(ConfigurableEntityConfig):
             assert pedigree['source']
             assert pedigree['values']
 
-        print("studies", self.studies)
-
     @staticmethod
     def _str_to_bool(val):
         true_values = ['yes', 'Yes', 'True', 'true']
@@ -75,7 +73,7 @@ class DatasetConfig(ConfigurableEntityConfig):
     def _change_keys_names(dataset_config):
         new_keys_names = {
             'phenotypebrowser': 'phenotypeBrowser',
-            'phenogenotool': 'phenotypeGenotypeTool',
+            'phenotypetool': 'phenotypeGenotypeTool',
             'authorizedgroups': 'authorizedGroups',
             'studytypes': 'studyTypes',
             'phenodb': 'phenoDB',
@@ -196,7 +194,8 @@ class DatasetConfig(ConfigurableEntityConfig):
     @staticmethod
     def _copy_elements(dataset_config):
         elements_to_copy = {
-            'dataset_id': 'id', 'dataset_name': 'name'
+            'dataset_id': 'id',
+            'dataset_name': 'name'
         }
 
         for old, new in elements_to_copy.items():
@@ -398,6 +397,9 @@ class DatasetConfig(ConfigurableEntityConfig):
         return {
             'studyTypes': None,
             'phenoDB': None,
+            'description': None,
+            'phenotypeBrowser': 'no',
+            'phenotypetool': 'no',
             'genotypeBrowser.genesBlockShowAll': 'yes',
             'genotypeBrowser.hasFamilyFilters': 'yes',
             'genotypeBrowser.hasStudyFilters': 'yes',

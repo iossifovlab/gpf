@@ -29,6 +29,10 @@ class Dataset(object):
         self.preview_columns = preview_columns
         self.download_columns = download_columns
 
+    @property
+    def studies(self):
+        return self.study_group.studies
+
     def get_variants(self, **kwargs):
         return self.study_group.get_variants(**kwargs)
 
