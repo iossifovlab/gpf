@@ -3,6 +3,9 @@ Created on Apr 3, 2018
 
 @author: lubo
 '''
+import pytest
+
+pytestmark = pytest.mark.skip('depends on real data')
 
 
 def test_denovo_get_gene_set_sd_lgds_autism_and_epilepsy(gscs):

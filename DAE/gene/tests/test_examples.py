@@ -6,9 +6,10 @@ Created on Apr 16, 2018
 from __future__ import print_function
 from gene.gene_set_collections import DenovoGeneSetsCollection,\
     MetaDenovoGeneSetsCollection
-# from datasets.datasets_factory import DatasetsFactory
-from datasets.config import DatasetsConfig
 
+import pytest
+
+pytestmark = pytest.mark.skip('depends on real data')
 
 # def test_example1_denovo_gene_sets():
 #     gsc = DenovoGeneSetsCollection()
@@ -97,24 +98,16 @@ def test_example2_denovo_gene_sets():
         denovo_sets2['LGDs.Recurrent'])
 
 
-def test_example3_meta_denovo_gene_sets():
-    meta_gsc = MetaDenovoGeneSetsCollection()
-    meta_gsc.load()
+# def test_example3_meta_denovo_gene_sets():
+#     meta_gsc = MetaDenovoGeneSetsCollection()
+#     meta_gsc.load()
+#
+#     print(meta_gsc.get_dataset_phenotypes())
+#
+#     denovo_sets = meta_gsc.get_denovo_sets(['autism'])
+#     assert denovo_sets
+#     print(denovo_sets.keys())
+#
+#     print(denovo_sets['LGDs.Recurrent'])
+#     print(denovo_sets['LGDs.Triple'])
 
-    print(meta_gsc.get_dataset_phenotypes())
-
-    denovo_sets = meta_gsc.get_denovo_sets(['autism'])
-    assert denovo_sets
-    print(denovo_sets.keys())
-
-    print(denovo_sets['LGDs.Recurrent'])
-    print(denovo_sets['LGDs.Triple'])
-
-
-def test_example4_dataset_factory():
-    ds_config = DatasetsConfig()
-    print(ds_config.get_dataset_ids())
-
-#     ds_factory = DatasetsFactory()
-#     print(ds_factory.get_dataset("SD"))
-#     print(ds_factory.get_dataset("denovo_db"))

@@ -3,6 +3,9 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
+import pytest
+
+pytestmark = pytest.mark.skip('depends on real data')
 
 
 def test_denovo_gene_sets_exist(gscs):

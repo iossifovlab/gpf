@@ -25,87 +25,87 @@ def recSingleGenes(studies, inChild, effectTypes, phenotype):
         {g for g, nf in sym2FN.items() if nf == 1}
 
 
-def test_ssc_recurrent(ssc, gscs):
-    assert ssc is not None
-    studies = ssc.get_denovo_studies()
-
-    recurrent, single = recSingleGenes(studies, 'prb', 'LGDs', 'autism')
-    print(recurrent)
-    print(single)
-
-    denovo = gscs.get_gene_sets_collection('denovo')
-    gs = denovo.get_gene_set(
-        'LGDs.Recurrent', gene_sets_types={'SSC': ['autism']})
-
-    assert len(recurrent) == gs['count']
-    assert set(recurrent) == gs['syms']
-
-
-def test_denovo_db_recurrent(denovodb, gscs):
-    assert denovodb is not None
-    studies = denovodb.get_denovo_studies()
-
-    recurrent, single = recSingleGenes(studies, 'prb', 'LGDs', 'autism')
-    print(recurrent)
-    print(single)
-
-    denovo = gscs.get_gene_sets_collection('denovo')
-    gs = denovo.get_gene_set(
-        'LGDs.Recurrent', gene_sets_types={'denovo_db': ['autism']})
-
-    print(recurrent)
-    print(gs)
-
-    assert set(recurrent) == gs['syms']
-
-
-def test_ssc_sd_recurrent_combined(ssc, sd, gscs):
-    studies = sd.get_denovo_studies()
-    studies.extend(ssc.get_denovo_studies())
-
-    recurrent, single = recSingleGenes(studies, 'prb', 'LGDs', 'autism')
-
-    print(recurrent)
-    print(single)
-
-    denovo = gscs.get_gene_sets_collection('denovo')
-    gs = denovo.get_gene_set(
-        'LGDs.Recurrent', gene_sets_types={
-            'SD': ['autism'], 'SSC': ['autism']})
-
-    assert set(recurrent) == gs['syms']
-
-
-def test_spark_recurrent(spark, gscs):
-    assert spark is not None
-    studies = spark.get_denovo_studies()
-
-    recurrent, single = recSingleGenes(studies, 'prb', 'LGDs', 'autism')
-    print(recurrent)
-    print(single)
-
-    denovo = gscs.get_gene_sets_collection('denovo')
-    gs = denovo.get_gene_set(
-        'LGDs.Recurrent', gene_sets_types={'SPARK': ['autism']})
-
-    assert set(recurrent) == gs['syms']
-    assert len(recurrent) == gs['count']
-
-
-def test_ssc_spark_recurrent_combined(ssc, spark, gscs):
-    studies = ssc.get_denovo_studies()
-    studies.extend(spark.get_denovo_studies())
-
-    recurrent, single = recSingleGenes(studies, 'prb', 'LGDs', 'autism')
-
-    print(recurrent)
-    print(single)
-
-    denovo = gscs.get_gene_sets_collection('denovo')
-    gs = denovo.get_gene_set(
-        'LGDs.Recurrent', gene_sets_types={
-            'SSC': ['autism'],
-            'SPARK': ['autism']
-        })
-
-    assert set(recurrent) == gs['syms']
+# def test_ssc_recurrent(ssc, gscs):
+#     assert ssc is not None
+#     studies = ssc.get_denovo_studies()
+#
+#     recurrent, single = recSingleGenes(studies, 'prb', 'LGDs', 'autism')
+#     print(recurrent)
+#     print(single)
+#
+#     denovo = gscs.get_gene_sets_collection('denovo')
+#     gs = denovo.get_gene_set(
+#         'LGDs.Recurrent', gene_sets_types={'SSC': ['autism']})
+#
+#     assert len(recurrent) == gs['count']
+#     assert set(recurrent) == gs['syms']
+#
+#
+# def test_denovo_db_recurrent(denovodb, gscs):
+#     assert denovodb is not None
+#     studies = denovodb.get_denovo_studies()
+#
+#     recurrent, single = recSingleGenes(studies, 'prb', 'LGDs', 'autism')
+#     print(recurrent)
+#     print(single)
+#
+#     denovo = gscs.get_gene_sets_collection('denovo')
+#     gs = denovo.get_gene_set(
+#         'LGDs.Recurrent', gene_sets_types={'denovo_db': ['autism']})
+#
+#     print(recurrent)
+#     print(gs)
+#
+#     assert set(recurrent) == gs['syms']
+#
+#
+# def test_ssc_sd_recurrent_combined(ssc, sd, gscs):
+#     studies = sd.get_denovo_studies()
+#     studies.extend(ssc.get_denovo_studies())
+#
+#     recurrent, single = recSingleGenes(studies, 'prb', 'LGDs', 'autism')
+#
+#     print(recurrent)
+#     print(single)
+#
+#     denovo = gscs.get_gene_sets_collection('denovo')
+#     gs = denovo.get_gene_set(
+#         'LGDs.Recurrent', gene_sets_types={
+#             'SD': ['autism'], 'SSC': ['autism']})
+#
+#     assert set(recurrent) == gs['syms']
+#
+#
+# def test_spark_recurrent(spark, gscs):
+#     assert spark is not None
+#     studies = spark.get_denovo_studies()
+#
+#     recurrent, single = recSingleGenes(studies, 'prb', 'LGDs', 'autism')
+#     print(recurrent)
+#     print(single)
+#
+#     denovo = gscs.get_gene_sets_collection('denovo')
+#     gs = denovo.get_gene_set(
+#         'LGDs.Recurrent', gene_sets_types={'SPARK': ['autism']})
+#
+#     assert set(recurrent) == gs['syms']
+#     assert len(recurrent) == gs['count']
+#
+#
+# def test_ssc_spark_recurrent_combined(ssc, spark, gscs):
+#     studies = ssc.get_denovo_studies()
+#     studies.extend(spark.get_denovo_studies())
+#
+#     recurrent, single = recSingleGenes(studies, 'prb', 'LGDs', 'autism')
+#
+#     print(recurrent)
+#     print(single)
+#
+#     denovo = gscs.get_gene_sets_collection('denovo')
+#     gs = denovo.get_gene_set(
+#         'LGDs.Recurrent', gene_sets_types={
+#             'SSC': ['autism'],
+#             'SPARK': ['autism']
+#         })
+#
+#     assert set(recurrent) == gs['syms']

@@ -4,13 +4,8 @@ Created on Feb 27, 2017
 @author: lubo
 '''
 import pytest
-from gene.gene_set_collections import GeneSetsCollections
 
-
-@pytest.fixture(scope='session')
-def gscs(request):
-    res = GeneSetsCollections()
-    return res
+pytestmark = pytest.mark.skip('depends on real data')
 
 
 def test_load_cache(gscs):

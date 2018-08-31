@@ -20,6 +20,7 @@ from datasets.metadataset import MetaDataset
 from GeneTerms import loadGeneTerm
 # from DAE import vDB
 import DAE
+from study_groups.study_group_facade import StudyGroupFacade
 
 LOGGER = logging.getLogger(__name__)
 
@@ -100,16 +101,16 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def __init__(self, gsc_id='denovo'):
         super(DenovoGeneSetsCollection, self).__init__()
         self.gsc_id = gsc_id
-        self.datasets_config = DatasetsConfig()
+        self.study_group_facade = StudyGroupFacade()
         self._init_config()
         self.cache = {}
 
     def _init_config(self):
-        self.datasets_pedigree_selectors = OrderedDict()
+        self.study_group_pedigree_selectors = OrderedDict()
         for pedigree_selector_str in self._get_att_list(
                 'datasets.pedigreeSelectors'):
             pedigree_selector = pedigree_selector_str.split(':')
-            self.datasets_pedigree_selectors[pedigree_selector[0]] = {
+            self.study_group_pedigree_selectors[pedigree_selector[0]] = {
                 'id': pedigree_selector[1],
                 'source': pedigree_selector[2]
             }
@@ -168,24 +169,25 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         self._generate_cache(datasets)
 
     def _generate_cache(self, datasets=None):
-        for dataset in self._get_dataset_descs(datasets):
+        for dataset in self._get_study_config_descs(datasets):
             self._gene_sets_for(dataset)
 
-    def _get_dataset_descs(self, datasets=None):
-        if datasets is None:
-            datasets = self.datasets_pedigree_selectors.keys()
-        return [self.datasets_config.get_dataset_desc(gid)
-                for gid in datasets]
+    def _get_study_config_descs(self, study_groups=None):
+        if study_groups is None:
+            study_groups = self.study_group_pedigree_selectors.keys()
+        return [
+            self.study_group_facade.get_study_group(study_group_id)
+            for study_group_id in study_groups
+        ]
 
     def get_gene_sets_types_legend(self, **kwargs):
         permitted_datasets = kwargs.get('permitted_datasets')
         return [
             {
                 'datasetId': dataset_desc['id'],
-                'datasetName': dataset_desc['name'],
                 'phenotypes': self._get_configured_dataset_legend(dataset_desc)
             }
-            for dataset_desc in self._get_dataset_descs()
+            for dataset_desc in self._get_study_config_descs()
             if permitted_datasets is None or
             dataset_desc['id'] in permitted_datasets
         ]
@@ -198,7 +200,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return [p['id'] for p in res[dataset_id]['phenotypes']]
 
     def _get_configured_dataset_legend(self, dataset_desc):
-        configured_pedigree_selector_id = self.datasets_pedigree_selectors[
+        configured_pedigree_selector_id = self.study_group_pedigree_selectors[
             dataset_desc['id']]['id']
         for pedigree_selector in dataset_desc['pedigreeSelectors']:
             if pedigree_selector['id'] == configured_pedigree_selector_id:
@@ -340,7 +342,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return cls._get_gene_families(cache[next_key], criterias - {next_key})
 
     def _gene_sets_for(self, dataset):
-        pedigree_selector = self.datasets_pedigree_selectors[
+        pedigree_selector = self.study_group_pedigree_selectors[
             dataset['id']]['source']
         pedigree_selector_values = map(
             lambda value: value['id'],
@@ -465,7 +467,7 @@ class GeneSetsCollections(GeneInfoConfig):
             formatStr = self.gene_info.getGeneTermAtt(gsc_id, "webFormatStr")
             if not label or not formatStr:
                 continue
-            gene_sets_types = self.get_gene_sets_collection(gsc_id)\
+            gene_sets_types = self.get_gene_sets_collection(gsc_id) \
                 .get_gene_sets_types_legend(
                     permitted_datasets=permitted_datasets)
             gene_sets_collections_desc.append(

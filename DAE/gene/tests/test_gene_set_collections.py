@@ -6,11 +6,7 @@ Created on Feb 16, 2017
 from gene.gene_set_collections import GeneSetsCollections
 import pytest
 
-
-@pytest.fixture(scope='session')
-def gscs(request):
-    res = GeneSetsCollections()
-    return res
+pytestmark = pytest.mark.skip('depends on real data')
 
 
 def test_gscs_config_cache(gscs):
