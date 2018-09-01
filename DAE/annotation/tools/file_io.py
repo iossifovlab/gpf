@@ -148,7 +148,7 @@ class TSVFormat(AbstractFormat):
             sys.stderr.write('Cannot read in write mode!\n')
             sys.exit(-78)
 
-        line = self.variantFile.readline()
+        line = next(self.variantFile)
         self.linecount += 1
         if (self.linecount % self.linecount_threshold) == 0:
             new_p = (self.variantFile.tell() * 100) / self.filesize
