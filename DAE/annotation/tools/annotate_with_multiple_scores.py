@@ -122,7 +122,14 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
     def _annotator_for(self, score):
         if score not in self.annotators:
-            score_file = '{dir}/{score}/{score}.gz'.format(dir=self.scores_directory, score=score) 
+            score_dir = '{dir}/{score}'.format(dir=self.scores_directory, score=score) 
+            score_file = None
+            for file in get_files(score_dir):
+                if file[-3:] == '.gz':
+                    score_file = file
+                    break
+            if score_file is None:
+                sys.stderr.write('could not find score file for score {}'.format(score))
             if self.opts.direct:
                 assert_tabix(score_file)
 
