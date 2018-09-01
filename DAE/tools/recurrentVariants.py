@@ -1,86 +1,104 @@
 #!/usr/bin/env python
 
-from DAE import *
+from __future__ import print_function
 import sys
+import argparse
+from DAE import vDB
 from itertools import groupby
-from collections import Counter 
-
-# studyNamesS= 'wig683,DalyWE2012,EichlerWE2012,StateWE2012'
-studyNamesS= 'IossifovWE2012,DalyWE2012,EichlerWE2012,StateWE2012,wigStateWE2012,wigEichlerWE2012,wig683'
-# studyNamesS= 'EichlerWE2012,StateWE2012,DalyWE2012'
-# studyNamesS= 'wig683,wigState333,wigEichler374'
-# studyNamesS= 'DalyWE2012'
-# studyNamesS= 'StateWE2012'
-
-if len(sys.argv)>1:
-    #print sys.argv
-    studyNamesS=sys.argv[1]
-else:
-    studyNamesS="allWEAndTG"
+from collections import Counter
 
 
-stdyMap = { 'wig781':'W', 'wig683': 'W' ,'DalyWE2012': 'D' ,'EichlerWE2012': 'E' ,'StateWE2012':'S', 'wigState333': 'S', 'wigEichler374': 'E' , 'wigStateWE2012':'S', 'wigEichlerWE2012':'E', 'EichlerTG2012':'G', 'IossifovWE2012':'W', 'wig1019n':'W', 'wigState333n':'S', 'wigEichler515n':'E' }
-
-studies = vDB.get_studies(studyNamesS)
-
-prbLGDs =  list(vDB.get_denovo_variants(studies,inChild='prb', effectTypes="LGDs"))
+def sort_by_family_id(x):
+    return x.familyId
 
 
+def get_families(prb_LGDs):
+    sorted_families = sorted(prb_LGDs, key=sort_by_family_id)
+    sorted_families_dict = {k: list(g) for k, g in
+                            groupby(sorted_families, key=sort_by_family_id)}
+    return sorted_families_dict
 
-print "There are ", len(prbLGDs), "variants in probands"
 
-gfiF = lambda x: x.familyId
-fmSorted = sorted(prbLGDs,key=gfiF);
-byFams = {k: list(g) for k, g in groupby(fmSorted, key=gfiF)}
+def list_variants_by_families(prb_LGDs):
+    for family_id, variants in get_families(prb_LGDs).items():
+        if len(variants) == 1:
+            continue
+        print('The proband of family {} has {} LGD variants'
+              .format(family_id, len(variants)))
+        for v in variants:
+            effects = '|'.join([x['sym'] + ':' + x['eff']
+                                for x in v.requestedGeneEffects])
+            line = [v.study.name, v.location, v.variant,
+                    v.atts['inChild'], effects]
+            print('\t' + '\t'.join(line))
 
-for fmId, vs in byFams.items():
-    if len(vs)==1:
-       continue
-    print "The proband of family ", fmId, "has", len(vs), "LGD variants"
-    for v in vs:
-        print "\t" + "\t".join((v.study.name, v.location, v.variant, v.atts['inChild'],  
-                    "|".join([x['sym']+":"+x['eff'] for x in v.requestedGeneEffects]),
-                            ))
 
-# test for recurrence in the same probant
-ccs = Counter([str(v.familyId)+":"+ge['sym']  for v in prbLGDs for ge in v.requestedGeneEffects ])
-for fgs in ccs:
-    if ccs[fgs]>1:
-        print "WARNING: ", fgs, "is seen", ccs[fgs], "times"
+# test for recurrence in the same proband
+def recurrence_in_proband(prb_LGDs):
+    ccs = Counter([str(v.familyId) + ':' + ge['sym'] for v in prb_LGDs
+                   for ge in v.requestedGeneEffects])
+    for fgs in ccs:
+        if ccs[fgs] > 1:
+            print('WARNING: {} is seen {} times'.format(fgs, ccs[fgs]))
 
-gnSorted = sorted([[ge['sym'], v.familyId, v.location, v] for v in prbLGDs for ge in v.requestedGeneEffects ])
-sym2Vars = { sym: [ t[3] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
-sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() }
 
-for g, FN in sorted(sym2FN.items(), key=lambda x: (x[1],x[0])):
-    gnId = giDB.getCleanGeneId("sym",g)
-    desc = ""
-    if gnId:
-        desc = giDB.genes[gnId].desc
+def parse_cli_studies():
+    parser = argparse.ArgumentParser(
+        description='Recurrent Variants')
 
-    # print g + "\t" + str(FN) + "\t" + desc + "\t",
-    print g + "\t" + str(FN),
-    
-    outSet = dict()
-    for v in sym2Vars[g]:
-        eff = ''
-        for ge in v.requestedGeneEffects:
-            if ge['sym'] == g:
-                eff = ge['eff']
-        if eff == '':
-            raise Exception('breh')
-        outSet[v.familyId] = "".join((stdyMap[v.study.name] if v.study.name in stdyMap else v.study.name, eff[0], v.atts['inChild'][3])) 
-    
-    outSetKeys = sorted(outSet.keys())
-    for fid in outSetKeys:
-        o = outSet[fid]
-        print str(fid)+":"+o,
-        
-    print
+    parser.add_argument('studies')
+    args = parser.parse_args(sys.argv[1:])
+    return args.studies
 
-recCnt = Counter(sym2FN.values())
-fs = set([f for s in studies for f in s.families])
-print "The recurrence in", len(fs), "probands"
-print "hits\tgeneNumber" 
-for hn,cnt in sorted(recCnt.items(), key=lambda x: x[1]):
-    print hn,"\t",cnt
+
+def get_symbols2variants(prb_LGDs):
+    gn_sorted = sorted([[ge['sym'], v.familyId, v.location, v]
+                        for v in prb_LGDs for ge in v.requestedGeneEffects])
+    return {sym: [t[3] for t in tpi] for sym, tpi
+            in groupby(gn_sorted, key=lambda x: x[0])}
+
+
+def get_effect(v, sym):
+    effect = ''
+    for gene_effects in v.requestedGeneEffects:
+        if gene_effects['sym'] == sym:
+            effect = gene_effects['eff']
+    if effect == '':
+        raise Exception('breh')
+    return effect
+
+
+if __name__ == '__main__':
+    study_names = parse_cli_studies()
+    studies = vDB.get_studies(study_names)
+    prb_LGDs = list(vDB.get_denovo_variants(
+                    studies, inChild='prb', effectTypes="LGDs"))
+
+    print('There are {} variants in probands'.format(len(prb_LGDs)))
+    list_variants_by_families(prb_LGDs)
+    recurrence_in_proband(prb_LGDs)
+
+    symbols2variants = get_symbols2variants(prb_LGDs)
+    symbols2families_len = {sym: len(set([v.familyId for v in vs]))
+                            for sym, vs in symbols2variants.items()}
+    symbols2families_len_sorted = sorted(
+        symbols2families_len.items(), key=lambda x: (x[1], x[0]))
+
+    for sym, families_len in symbols2families_len_sorted:
+        print(sym + '\t' + str(families_len), end='\t')
+
+        effects_dict = dict()
+        for v in symbols2variants[sym]:
+            effects_dict[v.familyId] = ';'.join(
+                [v.study.name, get_effect(v, sym)[0], v.atts['inChild'][3]])
+
+        for f_id in sorted(effects_dict.keys()):
+            print(str(f_id) + ':' + effects_dict[f_id], end='\t')
+        print()
+
+    recurrence_counter = Counter(symbols2families_len.values())
+    families = set([f for s in studies for f in s.families])
+    print('The recurrence in {} probands'.format(len(families)))
+    print('hits\tgeneNumber')
+    for hn, cnt in sorted(recurrence_counter.items(), key=lambda x: x[1]):
+        print(hn, '\t', cnt)
