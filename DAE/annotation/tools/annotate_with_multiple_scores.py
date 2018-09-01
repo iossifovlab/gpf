@@ -106,7 +106,10 @@ class MultipleScoresAnnotator(AnnotatorBase):
         super(MultipleScoresAnnotator, self).__init__(opts, header)
         self._init_score_directory()
         self.annotators = {}
-        self.scores = opts.scores.split(',')
+        if opts.scores is not None:
+            self.scores = opts.scores.split(',')
+        else:
+            self.scores = None
         if self.opts.labels is not None:
             self.header.extend(self.opts.labels.split(','))
         elif self.scores is not None:
