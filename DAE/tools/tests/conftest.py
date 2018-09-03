@@ -96,4 +96,3 @@ def instrument_ids_filter(request):
                      'complex: instrumentId:i2, type:categorical'])
 def complex_measures_filter(request):
     return request.param
->>>>>>> master

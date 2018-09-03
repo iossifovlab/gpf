@@ -8,6 +8,7 @@ import zlib
 
 from permissions import belongs_to_dataset
 
+
 def family_buffer(studies):
     fam_buff = defaultdict(dict)
     for study in studies:
@@ -79,7 +80,7 @@ def get_denovo_studies_names():
         if not order:
             continue
         r.append((int(order), stGN,
-            "%s (%s)" % (stG.description, ', '.join(stG.studyNames))))
+                  "%s (%s)" % (stG.description, ', '.join(stG.studyNames))))
 
     for stN in vDB.get_study_names():
         if not belongs_to_dataset(stN):
@@ -95,18 +96,23 @@ def get_denovo_studies_names():
     r = [(stN, dsc) for _o, stN, dsc in sorted(r)]
     return r
 
+
 def get_sorted_datasets():
     datasets = preloaded.register.get('datasets').get_factory().get_datasets()
     return sorted(datasets,
-        key=lambda ds: ds.descriptor.get('wdae.production.order', '0'))
+                  key=lambda ds: ds.descriptor.get('wdae.production.order',
+                                                   '0'))
+
 
 def get_datasets_names():
     return [(dataset.descriptor['name'], '')
             for dataset in get_sorted_datasets()]
 
+
 def get_all_studies_names():
     return get_datasets_names() + get_denovo_studies_names() + \
         get_transmitted_studies_names()
+
 
 class StudiesSummaries(Precompute):
     def __init__(self):
@@ -158,13 +164,13 @@ class StudiesSummaries(Precompute):
     def __build_studies_summaries(cls):
         result = [
             cls.__build_single_studies_summary(dataset.descriptor['name'], '',
-                dataset.studies)
+                                               dataset.studies)
             for dataset in get_sorted_datasets()
         ]
         result += [cls.__build_single_studies_summary(name, description,
-                        vDB.get_studies(name))
+                                                      vDB.get_studies(name))
                    for name, description in get_all_studies_names()]
-        return result 
+        return result
 
     @classmethod
     def __build_single_studies_summary(cls, name, description, studies):

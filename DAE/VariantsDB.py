@@ -75,8 +75,10 @@ class StudyGroup:
             self.description = self.vdb._config.get(
                 self._configSection, 'description')
 
-        self.studyNames = self.vdb._config.get(
-            self._configSection, 'studies').split(",")
+        self.studyNames = [
+            st.strip() for st in self.vdb._config.get(
+                self._configSection, 'studies').split(",")
+        ]
 
     def get_attr(self, attName):
         if self.vdb._config.has_option(self._configSection, attName):

@@ -17,8 +17,8 @@ def client():
 
 
 @pytest.fixture()
-def default_datasets(db):
-    Dataset.recreate_dataset_perm('SD', [])
+def default_datasets():
+    Dataset.recreate_dataset_perm('SD_TEST', [])
     Dataset.recreate_dataset_perm('SSC', [])
     Dataset.recreate_dataset_perm('SVIP', [])
 
@@ -48,6 +48,6 @@ def user_client(user, client):
 
 
 @pytest.fixture()
-def admin_client(db, admin_user, client):
+def admin_client(admin_user, client):
     client.login(email=admin_user.email, password='secret')
     return client

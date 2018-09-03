@@ -30,7 +30,7 @@ EXAMPLE_REQUEST_SSC = {
 }
 
 EXAMPLE_REQUEST_SD = {
-    "datasetId": "SD",
+    "datasetId": "SD_TEST",
     "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
     "gender": ["female", "male"],
     "variantTypes": [
@@ -43,8 +43,10 @@ EXAMPLE_REQUEST_SD = {
     },
     "pedigreeSelector": {
         "id": "phenotype",
-        "checkedValues": ["autism", "unaffected", "congenital_heart_disease",
-            "epilepsy", "schizophrenia", "intellectual_disability"]
+        "checkedValues": [
+            "autism", "unaffected", "congenital_heart_disease",
+            "epilepsy", "schizophrenia", "intellectual_disability"
+        ]
     }
 }
 

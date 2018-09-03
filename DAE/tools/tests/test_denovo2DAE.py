@@ -1,6 +1,6 @@
 import os
 import pytest
-from denovo2DAE import denovo2DAE, parse_cli_arguments
+from tools.denovo2DAE import denovo2DAE, parse_cli_arguments
 
 
 HEADER = ['familyId', 'chr', 'pos', 'ref', 'alt',

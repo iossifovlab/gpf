@@ -39,7 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
         if unknown_keys:
             raise serializers.ValidationError(
                 "Got unknown fields: {}".format(unknown_keys))
-        
+
         return super(UserSerializer, self).validate(data)
 
     @staticmethod
@@ -114,5 +114,5 @@ class BulkGroupOperationSerializer(serializers.Serializer):
         raise NotImplementedError()
 
     def to_internal_value(self, data):
-        return super(BulkGroupOperationSerializer, self).to_internal_value(data)
-
+        return super(BulkGroupOperationSerializer, self).\
+            to_internal_value(data)
