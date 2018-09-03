@@ -41,7 +41,7 @@ def get_argument_parser():
 class GenerateScoresHistograms(object):
 
     def __init__(self, input_files, output_files, scores, xscales, yscales,
-                 bins_num, ranges, round=None, chunk_size=None):
+                 bins_num, ranges, round_pos=None, chunk_size=None):
         self.genomic_score_files = input_files
         self.output_files = output_files
         self.scores = scores
@@ -49,7 +49,7 @@ class GenerateScoresHistograms(object):
         self.yscales = yscales
         self.ranges = ranges
         self.bins_num = bins_num
-        self.round = round
+        self.round_pos = round_pos
         self.chunk_size = chunk_size
 
     def get_min_max(self, file, head, score_column):
@@ -66,12 +66,13 @@ class GenerateScoresHistograms(object):
             if max_chunk > max_value or max_value is None:
                 max_value = max_chunk
 
-        if self.round is not None:
-            min_value = np.around(min_value, self.round)
+        if self.round_pos is not None:
+            min_value = np.around(min_value, self.round_pos)
+            max_value = np.around(max_value, self.round_pos)
 
         return min_value, max_value
 
-    def get_lenght(self, data, start, end):
+    def get_length(self, data, start, end):
         if start is not None and end is not None:
             data[start] = pd.to_numeric(data[start], errors='coerce')
             data[end] = pd.to_numeric(data[end], errors='coerce')
@@ -86,14 +87,16 @@ class GenerateScoresHistograms(object):
             bins = np.linspace(range[0], range[1], bin_num)
         elif xscale == 'log':
             bins = []
-            if range[0] == 0:
+            min_range = range[0]
+            if range[0] == 0.0:
                 bins = [0.0]
-                range[0] += 1
+                min_range += 1
                 bin_num -= 1
-            bins = bins + list(np.logspace(np.log10(range[0]),
+            bins = bins + list(np.logspace(np.log10(min_range),
                                            np.log10(range[1]),
                                            bin_num))
         bars = np.zeros(len(bins) - 1)
+        bins = np.array(bins)
 
         return bars, bins
 
@@ -132,30 +135,40 @@ class GenerateScoresHistograms(object):
                     head = None
 
                 if self.chunk_size is not None:
-                    min_value, max_value = self.get_min_max(
-                        genomic_score_file, head, score_column)
-                    step = (max_value - min_value) / (bin_num - 1)
-                    max_value += step
-                    if self.round is not None:
-                        max_value = np.around(max_value, self.round)
-                    range = [min_value, max_value]
+                    if score in self.ranges:
+                        range = self.ranges[score]
+                    else:
+                        min_value, max_value = self.get_min_max(
+                            genomic_score_file, head, score_column)
+                        range = [min_value, max_value]
 
                     bars, bins = self.get_bars_and_bins(xscale, range, bin_num)
-
                     for chunk in pd.read_csv(
                         genomic_score_file, usecols=use_columns, sep='\t',
                             header=head, chunksize=self.chunk_size,
                             low_memory=True):
-                        chunk = self.get_lenght(chunk, start, end)
-                        for s, l in zip(chunk[score_column], chunk['length']):
-                            idx = (np.abs(bins - s)).argmin()
-                            if idx == bin_num:
-                                idx -= 1
-                            bars[idx] += l
+                        chunk = self.get_length(chunk, start, end)
+                        if 'length' in chunk:
+                            for s, l in\
+                                    zip(chunk[score_column], chunk['length']):
+                                if s < range[0] or s > range[1]:
+                                    continue
+                                idx = (np.abs(bins - s)).argmin()
+                                if idx == bin_num - 1:
+                                    idx -= 1
+                                bars[idx] += l
+                        else:
+                            for s in chunk[score_column]:
+                                if s < range[0] or s > range[1]:
+                                    continue
+                                idx = (np.abs(bins - s)).argmin()
+                                if idx == bin_num - 1:
+                                    idx -= 1
+                                bars[idx] += 1
                 else:
                     v = pd.read_csv(genomic_score_file, usecols=use_columns,
                                     sep='\t', header=head)
-                    v = self.get_lenght(v, start, end)
+                    v = self.get_length(v, start, end)
                     v = v.rename({score_column: score}, axis='columns')
                     v[score] = pd.to_numeric(v[score], errors='coerce')
                     v = pd.DataFrame(v)
@@ -165,24 +178,24 @@ class GenerateScoresHistograms(object):
                 if score in self.ranges:
                     range = self.ranges[score]
                 else:
-                    if self.round is None:
+                    if self.round_pos is None:
                         min_value = values[score].min()
                         max_value = values[score].max()
                     else:
-                        min_value = np.around(values[score].min(), self.round)
-                        max_value = values[score].max()
-                    step = (max_value - min_value) / (bin_num - 1)
-                    max_value += step
-                    if self.round is not None:
-                        max_value = np.around(max_value, self.round)
+                        min_value = np.around(values[score].min(),
+                                              self.round_pos)
+                        max_value = np.around(values[score].max(),
+                                              self.round_pos)
                     range = [min_value, max_value]
 
                 bars, bins = self.get_bars_and_bins(xscale, range, bin_num)
 
                 if start is not None and end is not None:
                     for s, l in zip(values[score], values['length']):
+                        if s < range[0] or s > range[1]:
+                            continue
                         idx = (np.abs(bins - s)).argmin()
-                        if idx == bin_num:
+                        if idx == bin_num - 1:
                             idx -= 1
                         bars[idx] += l
                 else:
@@ -244,9 +257,9 @@ def main():
         if end.isdigit():
             end = int(opts.e)
 
-    round = opts.r
-    if round is not None:
-        round = int(round)
+    round_pos = opts.r
+    if round_pos is not None:
+        round_pos = int(round_pos)
 
     chunk_size = opts.chunk_size
     if chunk_size:
@@ -259,7 +272,7 @@ def main():
 
     gsh = GenerateScoresHistograms(
         input_files, output_files, scores, xscale, yscale, bins_num, ranges,
-        round, chunk_size)
+        round_pos, chunk_size)
     gsh.generate_scores_histograms(score_columns, start, end)
 
     sys.stderr.write(
