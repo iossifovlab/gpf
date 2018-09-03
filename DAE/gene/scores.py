@@ -27,6 +27,7 @@ class Scores(GenomicValues):
             self.range = None
 
         self._load_data()
+        self.df.fillna(value=0, inplace=True)
 
     def get_scores(self):
         return self.df['scores'].values
