@@ -68,7 +68,6 @@ class GenerateScoresHistograms(object):
 
         if self.round is not None:
             min_value = np.around(min_value, self.round)
-            max_value = np.around(max_value, self.round)
 
         return min_value, max_value
 
@@ -136,7 +135,10 @@ class GenerateScoresHistograms(object):
                     min_value, max_value = self.get_min_max(
                         genomic_score_file, head, score_column)
                     step = (max_value - min_value) / (bin_num - 1)
-                    range = [min_value, max_value + step]
+                    max_value += step
+                    if self.round is not None:
+                        max_value = np.around(max_value, self.round)
+                    range = [min_value, max_value]
 
                     bars, bins = self.get_bars_and_bins(xscale, range, bin_num)
 
@@ -168,7 +170,11 @@ class GenerateScoresHistograms(object):
                         max_value = values[score].max()
                     else:
                         min_value = np.around(values[score].min(), self.round)
-                        max_value = np.around(values[score].max(), self.round)
+                        max_value = values[score].max()
+                    step = (max_value - min_value) / (bin_num - 1)
+                    max_value += step
+                    if self.round is not None:
+                        max_value = np.around(max_value, self.round)
                     range = [min_value, max_value]
 
                 bars, bins = self.get_bars_and_bins(xscale, range, bin_num)
