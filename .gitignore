@@ -20,3 +20,4 @@ output
 .pytest_cache
 metastore_db
 setenv.sh
+_build/

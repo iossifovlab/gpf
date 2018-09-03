@@ -330,8 +330,8 @@ class SamochaBackground(BackgroundBase):
         return self.background
 
     def serialize(self):
-        ndarray = self.background.as_matrix(
-            ['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS'])
+        ndarray = self.background[
+            ['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS']].values
         fout = cStringIO.StringIO()
         np.save(fout, ndarray)
 
