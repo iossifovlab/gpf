@@ -6,9 +6,12 @@
         <option *ngFor="let genomicScores of genomicScoresArray" [ngValue]="genomicScores">
           {{ genomicScores.desc }}
         </option>
-		  </select>
+      </select>
     </div>
-    <div class="col-sm-9">
+    <div class="col-sm-1">
+      <img class="clickable" src="{{imgPathPrefix}}question_mark.svg" (click)="showHelp()">
+    </div>
+    <div class="col-sm-8">
       <gpf-histogram
         *ngIf="selectedGenomicScores"
         width="650" height="145"

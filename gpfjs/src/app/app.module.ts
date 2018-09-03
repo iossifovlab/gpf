@@ -144,6 +144,9 @@ import { StudyFiltersBlockComponent } from './study-filters-block/study-filters-
 import { StudyFilterComponent } from './study-filter/study-filter.component';
 import { AddButtonComponent } from './add-button/add-button.component';
 import { RemoveButtonComponent } from './remove-button/remove-button.component';
+import { PopupComponent } from './popup/popup.component';
+
+import { MatDialogModule } from '@angular/material';
 
 const appRoutes: Routes = [
   {
@@ -340,6 +343,7 @@ const appRoutes: Routes = [
     StudyFilterComponent,
     AddButtonComponent,
     RemoveButtonComponent,
+    PopupComponent,
   ],
   imports: [
     BrowserModule,
@@ -356,7 +360,8 @@ const appRoutes: Routes = [
     Select2Module,
     ConfirmationPopoverModule.forRoot({
       confirmButtonType: 'danger'
-    })
+    }),
+    MatDialogModule
   ],
   providers: [
     ConfigService,
@@ -387,7 +392,8 @@ const appRoutes: Routes = [
   entryComponents: [
     RegistrationComponent,
     ForgotPasswordComponent,
-    PhenoBrowserModalContentComponent
+    PhenoBrowserModalContentComponent,
+    PopupComponent
   ],
 
   bootstrap: [AppComponent]
