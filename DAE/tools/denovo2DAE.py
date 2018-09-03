@@ -251,7 +251,7 @@ def consecutive_subs_correction(v):
 
 
 def ref_alt_nan_correction(v):
-    genome = genomesDB.get_genome()
+    genome = genomesDB.get_genome()  # @UndefinedVariable
     rows_to_change = {}
 
     for index, row in v.iterrows():
