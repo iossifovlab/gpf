@@ -27,7 +27,7 @@ class StudyGroupFacade(object):
 
     def get_all_study_group_ids(self):
         return [
-            conf.study_group_id
+            conf.name
             for conf in
             self.study_group_definition.get_all_study_group_configs()
         ]

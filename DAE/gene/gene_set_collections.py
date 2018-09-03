@@ -98,10 +98,14 @@ class GeneSetsCollection(GeneInfoConfig):
 
 class DenovoGeneSetsCollection(GeneInfoConfig):
 
-    def __init__(self, gsc_id='denovo'):
+    def __init__(self, gsc_id='denovo',
+                 study_group_facade=None):
         super(DenovoGeneSetsCollection, self).__init__()
+        if study_group_facade is None:
+            study_group_facade = StudyGroupFacade()
+
         self.gsc_id = gsc_id
-        self.study_group_facade = StudyGroupFacade()
+        self.study_group_facade = study_group_facade
         self._init_config()
         self.cache = {}
 
@@ -443,11 +447,14 @@ class MetaDenovoGeneSetsCollection(DenovoGeneSetsCollection):
 
 class GeneSetsCollections(GeneInfoConfig):
 
-    def __init__(self):
+    def __init__(self, study_group_facade=None):
         super(GeneSetsCollections, self).__init__()
+        if study_group_facade is None:
+            study_group_facade = StudyGroupFacade()
 
         self.cache = self.config.get("cache", "file")
         self.db = None
+        self.study_group_facade = study_group_facade
         self.gene_sets_collections = {}
         self.gene_sets_collections_desc = None
 
@@ -490,7 +497,8 @@ class GeneSetsCollections(GeneInfoConfig):
     def get_gene_sets_collection(self, gene_sets_collection_id):
         if gene_sets_collection_id not in self.gene_sets_collections:
             if gene_sets_collection_id == 'denovo':
-                gsc = DenovoGeneSetsCollection()
+                gsc = DenovoGeneSetsCollection(
+                    study_group_facade=self.study_group_facade)
             elif gene_sets_collection_id == 'metadenovo':
                 gsc = MetaDenovoGeneSetsCollection()
             else:

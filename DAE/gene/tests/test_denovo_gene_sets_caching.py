@@ -5,9 +5,8 @@ Created on Feb 27, 2017
 '''
 import pytest
 
-pytestmark = pytest.mark.skip('depends on real data')
 
-
+@pytest.mark.skip('depends on real data')
 def test_load_cache(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
     computed = denovo.load()
