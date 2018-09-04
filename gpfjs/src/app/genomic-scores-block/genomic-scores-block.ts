@@ -8,6 +8,7 @@ export class GenomicScores {
       json['bins'],
       json['range'],
       json['desc'],
+      json['help'],
       json['xscale'],
       json['yscale']
     );
@@ -23,6 +24,7 @@ export class GenomicScores {
     readonly bins: number[],
     readonly domain: number[],
     readonly desc: string,
+    readonly help: string,
     xScale: string,
     yScale:  string
   ) {

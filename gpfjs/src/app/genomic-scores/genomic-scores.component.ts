@@ -1,11 +1,12 @@
 import { Component, Input } from '@angular/core';
-import { GenomicScores } from '../genomic-scores-block/genomic-scores-block';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 import 'rxjs/add/operator/filter';
-
-import { GenomicScoreState } from './genomic-scores-store';
-
 import { ReplaySubject } from 'rxjs/ReplaySubject';
+
+import { GenomicScores } from '../genomic-scores-block/genomic-scores-block';
+import { PopupComponent } from '../popup/popup.component';
+import { GenomicScoreState } from './genomic-scores-store';
 
 @Component({
   selector: 'gpf-genomic-scores',
@@ -18,6 +19,15 @@ export class GenomicScoresComponent {
   @Input() genomicScoresArray: GenomicScores[];
 
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
+
+  constructor(private modalService: NgbModal) {}
+
+  showHelp() {
+    const modalRef = this.modalService.open(PopupComponent, {
+      size: 'lg'
+    });
+    modalRef.componentInstance.data = this.genomicScoreState.score.help;
+  }
 
   set rangeStart(range: number) {
     this.genomicScoreState.rangeStart = range;
