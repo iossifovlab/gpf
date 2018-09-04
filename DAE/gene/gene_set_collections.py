@@ -445,14 +445,16 @@ class MetaDenovoGeneSetsCollection(DenovoGeneSetsCollection):
             get_dataset_phenotypes(MetaDataset.ID)
 
 
-class GeneSetsCollections(GeneInfoConfig):
+class GeneSetsCollections(object):
 
-    def __init__(self, study_group_facade=None):
-        super(GeneSetsCollections, self).__init__()
+    def __init__(self, study_group_facade=None, config=None):
         if study_group_facade is None:
             study_group_facade = StudyGroupFacade()
+        if config is None:
+            config = GeneInfoConfig()
 
-        self.cache = self.config.get("cache", "file")
+        self.config = config
+        self.cache = self.config.config.get("cache", "file")
         self.db = None
         self.study_group_facade = study_group_facade
         self.gene_sets_collections = {}
@@ -469,9 +471,10 @@ class GeneSetsCollections(GeneInfoConfig):
 
     def get_gene_sets_collections(self, permitted_datasets=None):
         gene_sets_collections_desc = []
-        for gsc_id in self.gene_info.getGeneTermIds():
-            label = self.gene_info.getGeneTermAtt(gsc_id, "webLabel")
-            formatStr = self.gene_info.getGeneTermAtt(gsc_id, "webFormatStr")
+        for gsc_id in self.config.gene_info.getGeneTermIds():
+            label = self.config.gene_info.getGeneTermAtt(gsc_id, "webLabel")
+            formatStr = self.config.gene_info.getGeneTermAtt(
+                gsc_id, "webFormatStr")
             if not label or not formatStr:
                 continue
             gene_sets_types = self.get_gene_sets_collection(gsc_id) \

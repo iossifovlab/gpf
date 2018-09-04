@@ -13,9 +13,10 @@ class GeneInfoConfig(object):
     Helper class for accessing DAE and geneInfo configuration.
     """
 
-    def __init__(self, *args, **kwargs):
-        super(GeneInfoConfig, self).__init__(*args, **kwargs)
-        self.dae_config = Config()
+    def __init__(self, config=None):
+        if config is None:
+            config = Config()
+        self.dae_config = config
 
         wd = self.dae_config.daeDir
         data_dir = self.dae_config.data_dir
