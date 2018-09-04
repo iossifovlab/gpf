@@ -243,6 +243,8 @@ class ParquetFormat(AbstractFormat):
         line = self.row_group_buffer[0]
         self.row_group_buffer = self.row_group_buffer[1:]
         self.linecount += 1
+        if self.linecount % self.linecount_threshold == 0:
+            sys.stderr.write(str(self.linecount) + ' lines read.\n')
         return line
 
     def line_write(self, input_):

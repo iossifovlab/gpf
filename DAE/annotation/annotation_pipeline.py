@@ -222,6 +222,10 @@ def get_argument_parser():
                         dest='default_arguments', action='store', metavar=('=OPTION:VALUE'))
     parser.add_argument('--skip-preannotators', help='skips preannotators',
                         action='store_true')
+    parser.add_argument('--read-parquet', help='read from a parquet file',
+                        action='store_true')
+    parser.add_argument('--write-parquet', help='write to a parquet file',
+                        action='store_true')
 
     for name, args in PreannotatorLoader.load_preannotators_arguments().items():
         parser.add_argument(name, **args)
