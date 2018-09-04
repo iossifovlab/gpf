@@ -205,7 +205,7 @@ export class HistogramComponent implements OnInit, OnChanges {
       };
     }
 
-    let width = 400.0;
+    let width = 450.0;
     let height = 50;
 
     let svg = d3.select(this.histogramContainer.nativeElement);
@@ -273,7 +273,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   set rangeStart(rangeStart: any) {
     if (rangeStart !== this.internalRangeStart) {
       this.setRangeStart(rangeStart);
-      this.internalRangeStartField = this.rangeStart.toPrecision(5);
+      this.internalRangeStartField = Number(this.rangeStart.toFixed(4));
     }
   }
 
@@ -295,7 +295,7 @@ export class HistogramComponent implements OnInit, OnChanges {
   set rangeEnd(rangeEnd: any) {
     if (rangeEnd !== this.internalRangeEnd) {
       this.setRangeEnd(rangeEnd);
-      this.internalRangeEndField = this.rangeEnd.toPrecision(5);
+      this.internalRangeEndField = Number(this.rangeEnd.toFixed(4));
     }
   }
 
@@ -339,6 +339,13 @@ export class HistogramComponent implements OnInit, OnChanges {
     return this.internalRangeEndField;
   }
 
+  get min_value() {
+    return Number(this.bins[0].toFixed(4));
+  }
+
+  get max_value() {
+    return Number(this.bins[this.bins.length - 1].toFixed(4));
+  }
 
   startStepUp(event: any) {
       this.selectedStartIndex += 1;
