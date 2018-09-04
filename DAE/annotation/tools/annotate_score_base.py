@@ -93,7 +93,9 @@ class ScoreFile(object):
                 conf_settings = conf_to_dict(conf_file)
                 self.config = Box(conf_settings, default_box=True, default_box_attr=None)
         else:
-            sys.stderr.write("You must provide a configuration file for the score file.\n")
+            sys.stderr.write(
+                "You must provide a configuration file for the score file '{}'.\n"
+                    .format(self.name))
             sys.exit(-78)
 
         if self.compression:
@@ -101,7 +103,7 @@ class ScoreFile(object):
         else:
             self.file = open(self.name, 'rb')
         if self.config.header is None:
-            header_str = self.file.readline().rstrip('\n')
+            header_str = self.file.readline().rstrip()
             if header_str[0] == '#':
                 header_str = header_str[1:]
             self.config.header = header_str.split('\t')
