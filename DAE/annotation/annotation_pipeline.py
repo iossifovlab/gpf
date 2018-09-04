@@ -154,7 +154,7 @@ class MultiAnnotator(object):
             self.header = [self.header[i-1]
                            for i in self.stored_columns_indices]
             self.header[0] = '#' + self.header[0]
-            file_io.line_write(self.header)
+            file_io.header_write(self.header)
 
         annotators = self.annotators
 

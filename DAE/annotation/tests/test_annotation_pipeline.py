@@ -52,6 +52,9 @@ class DummyIOAdapter(object):
     def line_write(self, input_):
         self.output.append(input_)
 
+    def header_write(self, input_):
+        self.output.append(input_)
+
 
 @pytest.fixture(autouse=True)
 def mock(mocker):
