@@ -1,5 +1,5 @@
-import { Component, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { Component, Input } from '@angular/core';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'gpf-popup',
@@ -8,11 +8,12 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/materia
 })
 export class PopupComponent {
 
-  constructor(
-    public dialogRef: MatDialogRef<PopupComponent>,
-    @Inject(MAT_DIALOG_DATA) public data) {}
+  @Input() data;
 
-  onNoClick(): void {
-    this.dialogRef.close();
+  constructor(
+    public activeModal: NgbActiveModal) {}
+
+  closeModal() {
+    this.activeModal.close();
   }
 }

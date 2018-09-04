@@ -1,6 +1,6 @@
-<mat-dialog-content>
-  <markdown [data]="data.help"></markdown>
-</mat-dialog-content>
-<mat-dialog-actions>
-  <input type="button" class="btn btn-md btn-primary" value="Close" (click)="onNoClick()">
-</mat-dialog-actions>
+<div class="modal-body">
+  <markdown [data]="data"></markdown>
+</div>
+<div class="modal-footer">
+  <input type="button" class="btn btn-md btn-primary" value="Close" (click)="closeModal()">
+</div>

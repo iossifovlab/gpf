@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 import 'rxjs/add/operator/filter';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
@@ -21,17 +21,17 @@ export class GenomicScoresComponent {
 
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
 
-  constructor(private dialog: MatDialog) {}
+  constructor(private modalService: NgbModal) {}
 
   get imgPathPrefix() {
     return environment.imgPathPrefix;
   }
 
   showHelp() {
-    let dialogRef = this.dialog.open(PopupComponent, {
-      data: {name: this.genomicScoreState.score,
-             help: this.genomicScoreState.score.help}
+    const modalRef = this.modalService.open(PopupComponent, {
+      size: 'lg'
     });
+    modalRef.componentInstance.data = this.genomicScoreState.score.help;
   }
 
   set rangeStart(range: number) {

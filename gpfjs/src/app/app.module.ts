@@ -146,8 +146,6 @@ import { AddButtonComponent } from './add-button/add-button.component';
 import { RemoveButtonComponent } from './remove-button/remove-button.component';
 import { PopupComponent } from './popup/popup.component';
 
-import { MatDialogModule } from '@angular/material';
-
 const appRoutes: Routes = [
   {
     path: 'datasets',
@@ -360,8 +358,7 @@ const appRoutes: Routes = [
     Select2Module,
     ConfirmationPopoverModule.forRoot({
       confirmButtonType: 'danger'
-    }),
-    MatDialogModule
+    })
   ],
   providers: [
     ConfigService,
