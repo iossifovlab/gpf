@@ -7,7 +7,6 @@ import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { GenomicScores } from '../genomic-scores-block/genomic-scores-block';
 import { PopupComponent } from '../popup/popup.component';
 import { GenomicScoreState } from './genomic-scores-store';
-import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'gpf-genomic-scores',
@@ -22,10 +21,6 @@ export class GenomicScoresComponent {
   private rangeChanges = new ReplaySubject<[string, number, number]>(1);
 
   constructor(private modalService: NgbModal) {}
-
-  get imgPathPrefix() {
-    return environment.imgPathPrefix;
-  }
 
   showHelp() {
     const modalRef = this.modalService.open(PopupComponent, {
