@@ -55,9 +55,3 @@ class DatasetFacade(object):
 
         self._dataset_cache[dataset_id] = \
             self.dataset_factory.get_dataset(conf)
-
-    def get_dataset_definition(self):
-        return self.dataset_definition
-
-    def get_dataset_factory(self):
-        return self.dataset_factory

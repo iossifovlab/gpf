@@ -58,9 +58,3 @@ class DatasetsPreload(Preload, Precompute):
 
     def get_facade(self):
         return self.dataset_facade
-
-    def get_definition(self):
-        return self.dataset_facade.get_dataset_definition()
-
-    def get_factory(self):
-        return self.dataset_facade.get_dataset_factory()
