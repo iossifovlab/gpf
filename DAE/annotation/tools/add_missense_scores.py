@@ -36,7 +36,6 @@ def get_argument_parser():
           --direct              read score files using tabix index (default: read
                                 score files iteratively)
           --labels              comma separated list of the new header entries, defaults to added columns' names  
-          --gzip                indicates the score files are in a compressed .gz format
     """
     
     parser = argparse.ArgumentParser(
@@ -59,8 +58,6 @@ def get_argument_parser():
                         default=False, action='store_true')
     parser.add_argument('--labels', help='comma separated list of the new labels '
                         'of the added columns, defaults to column names', action='store')
-    parser.add_argument('--gzip', help='indicates that the file is a compressed .gz file',
-                        action='store_true')
     return parser
 
 
@@ -109,7 +106,7 @@ class MissenseScoresAnnotator(AnnotatorBase):
                 'scores_file': self.path.format(chr),
                 'scores_config_file': score_conf,
                 'labels': self.opts.labels,
-                'gzip': self.opts.gzip
+                'gzip': True
             }
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
 
