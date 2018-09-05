@@ -17,7 +17,7 @@ class Dataset(object):
     def __init__(
             self, name, study_group, dataset_config):
         super(Dataset, self).__init__()
-        genotypeBrowser = dict(dataset_config)['genotypeBrowser']
+        genotypeBrowser = dataset_config.genotypeBrowser
         preview_columns = []
         download_columns = []
         if genotypeBrowser:

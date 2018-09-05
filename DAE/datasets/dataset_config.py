@@ -63,44 +63,9 @@ class DatasetConfig(ConfigurableEntityConfig):
     @staticmethod
     def _new_keys_names():
         return {
-            'phenotypebrowser': 'phenotypeBrowser',
-            'phenogenotool': 'phenotypeGenotypeTool',
-            'authorizedgroups': 'authorizedGroups',
-            'phenodb': 'phenoDB',
-            'enrichmenttool': 'enrichmentTool',
-            'enrichmenttool.selector': 'enrichmentTool.selector',
-            'enrichmenttool.studytypes': 'enrichmentTool.studyTypes',
-            'genotypebrowser': 'genotypeBrowser',
-            'genotypebrowser.genesblockshowall':
-                'genotypeBrowser.genesBlockShowAll',
-            'genotypebrowser.hasfamilyfilters':
-                'genotypeBrowser.hasFamilyFilters',
-            'genotypebrowser.hasstudyfilters':
-                'genotypeBrowser.hasStudyFilters',
-            'genotypebrowser.phenofilters': 'genotypeBrowser.phenoFilters',
-            'genotypebrowser.haspresentinchild':
-                'genotypeBrowser.hasPresentInChild',
-            'genotypebrowser.haspresentinparent':
-                'genotypeBrowser.hasPresentInParent',
-            'genotypebrowser.haspedigreeselector':
-                'genotypeBrowser.hasPedigreeSelector',
-            'genotypebrowser.mainform': 'genotypeBrowser.mainForm',
-            'genotypebrowser.phenocolumns': 'genotypeBrowser.phenoColumns',
-            'genotypebrowser.familyfilters':
+            'phenoGenoTool': 'phenotypeGenotypeTool',
+            'genotypeBrowser.familyFilters':
                 'genotypeBrowser.familyStudyFilters',
-            'genotypebrowser.phenofilters.filters':
-                'genotypeBrowser.phenoFilters.filters',
-            'genotypebrowser.genotype.basecolumns':
-                'genotypeBrowser.genotype.baseColumns',
-            'genotypebrowser.genotype.columns':
-                'genotypeBrowser.genotype.columns',
-            'genotypebrowser.basepreviewcolumns':
-                'genotypeBrowser.basePreviewColumns',
-            'genotypebrowser.previewcolumns': 'genotypeBrowser.previewColumns',
-            'genotypebrowser.basedownloadcolumns':
-                'genotypeBrowser.baseDownloadColumns',
-            'genotypebrowser.downloadcolumns':
-                'genotypeBrowser.downloadColumns'
         }
 
     @staticmethod
@@ -237,7 +202,7 @@ class DatasetConfig(ConfigurableEntityConfig):
 
     @staticmethod
     def _get_genotype_browser_pheno_filter(dataset_config, f):
-        prefix = 'genotypebrowser.phenofilters.{}'.format(f)
+        prefix = 'genotypeBrowser.phenoFilters.{}'.format(f)
         name = dataset_config.pop('{}.{}'.format(prefix, 'name'), None)
         measure_type = dataset_config.pop(
             '{}.{}'.format(prefix, 'type'), None)
@@ -280,7 +245,7 @@ class DatasetConfig(ConfigurableEntityConfig):
 
     @staticmethod
     def _get_genotype_browser_genotype_column(dataset_config, col_id):
-        prefix = 'genotypebrowser.genotype.{}'.format(col_id)
+        prefix = 'genotypeBrowser.genotype.{}'.format(col_id)
         name = dataset_config.pop('{}.{}'.format(prefix, 'name'), None)
         source = dataset_config.pop('{}.{}'.format(prefix, 'source'), None)
         slots = dataset_config.pop('{}.{}'.format(prefix, 'slots'), None)

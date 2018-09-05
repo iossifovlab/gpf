@@ -1,6 +1,12 @@
 from box import ConfigBox
 import os
-import reusables
+from ConfigParser import ConfigParser
+
+
+class MyConfigParser(ConfigParser):
+
+    def optionxform(self, option):
+        return str(option)
 
 
 class ConfigurableEntityConfig(ConfigBox):
@@ -16,12 +22,11 @@ class ConfigurableEntityConfig(ConfigBox):
 
         default_values['work_dir'] = work_dir
 
-        config = reusables.config_dict(
-            config_file,
-            auto_find=False,
-            verify=True,
-            defaults=default_values
-        )
+        config_parser = MyConfigParser(defaults=default_values)
+        config_parser.read(config_file)
+
+        config = dict((section, dict(config_parser.items(section)))
+                      for section in config_parser.sections())
 
         return config
 

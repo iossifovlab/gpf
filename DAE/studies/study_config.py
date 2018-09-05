@@ -23,16 +23,6 @@ class StudyConfig(ConfigurableEntityConfig):
         self.make_vcf_prefix_absolute_path()
 
     @staticmethod
-    def _new_keys_names():
-        return {
-            'studytype': 'studyType',
-            'hascomplex': 'hasComplex',
-            'hascnv': 'hasCNV',
-            'hasdenovo': 'hasDenovo',
-            'hastransmitted': 'hasTransmitted',
-        }
-
-    @staticmethod
     def _split_str_lists_keys():
         return [
             'phenotypes'
@@ -53,8 +43,6 @@ class StudyConfig(ConfigurableEntityConfig):
         cls.add_default_config_key_from_section(config_section, section,
                                                 'study_name')
 
-        config_section =\
-            cls._change_keys_names(cls._new_keys_names(), config_section)
         config_section =\
             cls._split_str_lists(cls._split_str_lists_keys(), config_section)
         config_section =\
