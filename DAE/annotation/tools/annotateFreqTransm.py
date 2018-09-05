@@ -61,7 +61,7 @@ def get_argument_parser():
 FREQ_SCORE_CONFIG = '''
 [general]
 header=chr,position,variant,familyData,all_nParCalled,all_prcntParCalled,all_nAltAlls,all_altFreq,effectType,effectGene,effectDetails,segDups,HW,SSC-freq,EVS-freq,E65-freq
-noScoreValue=-105
+noScoreValue=
 [columns]
 chr=chr
 pos_begin=position
