@@ -4,8 +4,8 @@ from configurable_entities.configurable_entity_config import\
 
 class DatasetConfig(ConfigurableEntityConfig):
 
-    def __init__(self, *args, **kwargs):
-        super(DatasetConfig, self).__init__(*args, **kwargs)
+    def __init__(self, config, *args, **kwargs):
+        super(DatasetConfig, self).__init__(config, *args, **kwargs)
         assert self.dataset_id
         assert self.dataset_name
         assert self.id

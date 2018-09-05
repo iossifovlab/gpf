@@ -7,8 +7,8 @@ from studies.study_factory import StudyFactory
 
 class StudyConfig(ConfigurableEntityConfig):
 
-    def __init__(self, *args, **kwargs):
-        super(StudyConfig, self).__init__(*args, **kwargs)
+    def __init__(self, config, *args, **kwargs):
+        super(StudyConfig, self).__init__(config, *args, **kwargs)
         assert self.prefix
         assert self.study_name
         assert self.type

@@ -9,10 +9,74 @@ class MyConfigParser(ConfigParser):
         return str(option)
 
 
-class ConfigurableEntityConfig(ConfigBox):
+class ConfigurableEntityConfig(object):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, config, *args, **kwargs):
         super(ConfigurableEntityConfig, self).__init__(*args, **kwargs)
+        self.config = ConfigBox(config)
+
+    def bool(self, item, default=None):
+        return self.config.bool(item, default=default)
+
+    def int(self, item, default=None):
+        return self.config.int(item, default=default)
+
+    def float(self, item, default=None):
+        return self.config.float(item, default=default)
+
+    def list(self, item, default=None, spliter=",", strip=True, mod=None):
+        return self.config.list(
+            item, default=default, spliter=spliter, strip=strip, mod=mod)
+
+    def __getitem__(self, key):
+        return self.config.__getitem__(key)
+
+    def __getattr__(self, key):
+        if key == 'config':
+            return super(ConfigurableEntityConfig, self).__getattr__(key)
+        return self.config.__getattr__(key)
+
+    def __contains__(self, key):
+        return self.config.__contains__(key)
+
+    def __str__(self):
+        return self.config.__str__()
+
+    def __repr__(self):
+        return self.config.__repr__()
+
+    def __hash__(self):
+        return self.config.__hash__()
+
+    def keys(self):
+        return self.config.keys()
+
+    def values(self):
+        return self.config.values()
+
+    def items(self):
+        return self.config.items()
+
+    def __setitem__(self, key, value):
+        return self.config.__setitem__(key, value)
+
+    def __setattr__(self, key, value):
+        if key == 'config':
+            return\
+                super(ConfigurableEntityConfig, self).__setattr__(key, value)
+        return self.config.__setattr__(key, value)
+
+    def __delitem__(self, key):
+        return self.config.__delitem__(key)
+
+    def __delattr__(self, item):
+        return self.config.__delattr__(item)
+
+    def __iter__(self):
+        return self.config.__iter__()
+
+    def to_dict(self):
+        return self.config.to_dict()
 
     @staticmethod
     def get_config(config_file, work_dir, default_values={}):

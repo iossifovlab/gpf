@@ -4,8 +4,8 @@ from configurable_entities.configurable_entity_config import \
 
 class StudyGroupConfig(ConfigurableEntityConfig):
 
-    def __init__(self, *args, **kwargs):
-        super(StudyGroupConfig, self).__init__(*args, **kwargs)
+    def __init__(self, config, *args, **kwargs):
+        super(StudyGroupConfig, self).__init__(config, *args, **kwargs)
         assert self.enabled
         assert self.studies
         self.studies = self.list('studies')
