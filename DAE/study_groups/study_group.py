@@ -16,8 +16,10 @@ class StudyGroup(object):
             any([study.has_transmitted for study in self.studies])
         self._has_complex = any([study.has_complex for study in self.studies])
         self._has_CNV = any([study.has_CNV for study in self.studies])
-        self._study_types = set([study.study_type for study in self.studies
-                                 if study.study_type is not None])
+        study_types = set([study.study_type for study in self.studies
+                           if study.study_type is not None])
+        self._study_types = study_types if len(study_types) != 0 else None
+        self._has_study_types = True if len(study_types) != 0 else False
 
     def get_variants(self, **kwargs):
         return itertools.chain(*[
@@ -45,8 +47,8 @@ class StudyGroup(object):
 
     @property
     def study_types(self):
-        return self._study_types if len(self._study_types) != 0 else None
+        return self._study_types
 
     @property
     def has_study_types(self):
-        return True if len(self._study_types) != 0 else False
+        return self._has_study_types
