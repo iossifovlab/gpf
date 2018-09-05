@@ -15,8 +15,7 @@ class StudyConfig(ConfigurableEntityConfig):
         assert self.type in StudyFactory.STUDY_TYPES.keys()
         assert self.work_dir
         assert self.phenotypes
-        assert 'studyTypes' in self
-        assert 'hasStudyTypes' in self
+        assert 'studyType' in self
         assert 'hasComplex' in self
         assert 'hasCNV' in self
         assert 'hasDenovo' in self
@@ -26,7 +25,7 @@ class StudyConfig(ConfigurableEntityConfig):
     @staticmethod
     def _new_keys_names():
         return {
-            'studytypes': 'studyTypes',
+            'studytype': 'studyType',
             'hascomplex': 'hasComplex',
             'hascnv': 'hasCNV',
             'hasdenovo': 'hasDenovo',
@@ -36,7 +35,7 @@ class StudyConfig(ConfigurableEntityConfig):
     @staticmethod
     def _split_str_lists_keys():
         return [
-            'studyTypes', 'phenotypes'
+            'phenotypes'
         ]
 
     @staticmethod
@@ -61,11 +60,6 @@ class StudyConfig(ConfigurableEntityConfig):
         config_section =\
             cls._cast_to_bool(cls._cast_to_bool_keys(), config_section)
 
-        if config_section['studyTypes'] is not None:
-            config_section['hasStudyTypes'] = True
-        else:
-            config_section['hasStudyTypes'] = False
-
         print config_section
         print section
 
@@ -79,7 +73,7 @@ class StudyConfig(ConfigurableEntityConfig):
     @staticmethod
     def get_default_values():
         return {
-            'studyTypes': None,
+            'studyType': None,
             'hasComplex': 'no',
             'hasCNV': 'no',
             'hasDenovo': 'no',
