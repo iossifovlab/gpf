@@ -30,7 +30,7 @@ class DatasetApiTest(APITestCase):
 
         self.assertIn('data', data)
         print(data)
-        self.assertEquals(6, len(data['data']))
+        self.assertEquals(7, len(data['data']))
 
     def test_get_dataset_ssc(self):
         url = '/api/v3/datasets/SSC'
