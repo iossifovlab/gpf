@@ -122,7 +122,7 @@ class TSVFormat(AbstractFormat):
     def _cleanup(self):
         if self.mode == 'r':
             sys.stderr.write('Processed ' + str(self.linecount) + ' lines.' + '\n')
-            if self.opts.infile != '-':
+            if self.opts.infile != '-' and self.opts.region is None:
                 self.variantFile.close()
         else:
             if self.opts.outfile != '-':
