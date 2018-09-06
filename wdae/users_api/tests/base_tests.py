@@ -19,7 +19,8 @@ class BaseAuthenticatedUserTest(APITestCase):
         Dataset.recreate_dataset_perm('SD', [])
         Dataset.recreate_dataset_perm('SSC', [])
         Dataset.recreate_dataset_perm('SVIP', [])
-        Dataset.recreate_dataset_perm('SPARK', [])
+        Dataset.recreate_dataset_perm('SPARKv1', [])
+        Dataset.recreate_dataset_perm('SPARKv2', [])
         Dataset.recreate_dataset_perm('AGRE_WG', [])
         Dataset.recreate_dataset_perm('denovo_db', [])
 

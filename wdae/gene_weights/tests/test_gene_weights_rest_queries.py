@@ -16,7 +16,8 @@ class Test(BaseAuthenticatedUserTest):
         Dataset.recreate_dataset_perm('SD_TEST', [])
         Dataset.recreate_dataset_perm('SSC', [])
         Dataset.recreate_dataset_perm('SVIP', [])
-        Dataset.recreate_dataset_perm('SPARK', [])
+        Dataset.recreate_dataset_perm('SPARKv1', [])
+        Dataset.recreate_dataset_perm('SPARKv2', [])
 
     def test_rvis_rank_in_autism_zero_genes(self):
         data = copy.deepcopy(EXAMPLE_QUERY_SD)
