@@ -209,8 +209,6 @@ def get_argument_parser():
     parser.add_argument('--append', help='always add columns; '
                         'default behavior is to replace columns with the same label',
                         default=False, action='store_true')
-    parser.add_argument('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)',
-                        action='store')
     parser.add_argument('--split', help='split variants based on given column',
                         action='store')
     parser.add_argument('--separator', help='separator used in the split column; defaults to ","',
