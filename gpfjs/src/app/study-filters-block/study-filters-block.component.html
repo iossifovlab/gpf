@@ -1,18 +1,24 @@
 <div class="form-block">
   <div class="card">
-    <div class="card-header card-title">
-      Studies
-      <gpf-add-button
-        (addFilter)="addFilter($event)">
-      </gpf-add-button>
-    </div>
+    <gpf-tabset #tabset>
+      <div class="gpf-tabset-left">
+        Studies
+      </div>
+      <ngb-tab>
+        <ng-template ngbTabTitle>
+          <gpf-add-button
+            (addFilter)="addFilter($event)">
+          </gpf-add-button>
+        </ng-template>
+      </ngb-tab>
+    </gpf-tabset>
     <div class="card-block">
       <div style="padding: 5px" *ngFor="let study of studyFiltersState.studyFiltersState; trackBy: trackById; let i = index">
-        <gpf-remove-button
-          [field]="study"
-          (removeFilter)="removeFilter($event)">
-        </gpf-remove-button>
         <span style="padding: 5px; display: block; overflow: hidden">
+          <gpf-remove-button
+            [field]="study"
+            (removeFilter)="removeFilter($event)">
+          </gpf-remove-button>
           <gpf-study-filter
             [studyFilterState]="study"
             [errors]="errors && errors[i]"
