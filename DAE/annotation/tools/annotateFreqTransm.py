@@ -48,8 +48,8 @@ def get_argument_parser():
     parser.add_argument('-H', help='no header in the input file', action='store_true', dest='no_header')
     parser.add_argument('-F', '--scores-file', help='file containing the scores',
                         type=str, action='store')
-    parser.add_argument('--frequency', help='comma separated list of frequencies to annotate with (defaults to all.altFreq)',
-                        action='store', default='all.altFreq')
+    parser.add_argument('--frequency', help='frequency column to annotate with (defaults to all.altFreq)',
+                        action='store')
     parser.add_argument('--direct', help='the score files is tabix indexed', action='store_true')
     parser.add_argument('--labels', help='labels of the new column; defaults to the name of the score column',
                         type=str, action='store')
@@ -60,12 +60,11 @@ def get_argument_parser():
 
 FREQ_SCORE_CONFIG = '''
 [general]
-header=chr,position,variant,familyData,all_nParCalled,all_prcntParCalled,all_nAltAlls,all_altFreq,effectType,effectGene,effectDetails,segDups,HW,SSC-freq,EVS-freq,E65-freq
 noScoreValue=
 [columns]
 chr=chr
 pos_begin=position
-score=all_nParCalled,all_prcntParCalled,all_nAltAlls,all_altFreq
+score=all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq
 search=variant
 '''
 
@@ -78,12 +77,18 @@ class FrequencyAnnotator(ScoreAnnotator):
             opts.scores_config_file['noScoreValue'] = opts.default_value
         opts.search_columns = opts.v
         opts.gzip = True
-        self.freqcols = opts.frequency.split(',')
+        if opts.frequency is None:
+            opts.frequency = 'all.altFreq'
+        self.frequency = opts.frequency
         super(FrequencyAnnotator, self).__init__(opts, header)
 
     @property
     def new_columns(self):
-        return self.freqcols
+        return [self.frequency]
+
+    def line_annotations(self, line, new_columns):
+        return super(FrequencyAnnotator, self).line_annotations(
+            line, [self.frequency])
 
 
 if __name__ == "__main__":
