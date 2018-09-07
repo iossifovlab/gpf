@@ -97,6 +97,7 @@ def get_opts(infile, outfile, config, reannotate=False,
             self.skip_preannotators = opt_skip_pre
             self.default_arguments = [opt_def_arg]
             self.no_header = True
+            self.region = None
     return AnnotatorOpts(infile, outfile, config, reannotate,
                          split, split_separator,
                          skip_preannotators, default_args)

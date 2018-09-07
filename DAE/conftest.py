@@ -93,4 +93,4 @@ def vip_pheno():
 
 @pytest.fixture(scope='session')
 def spark(datasets_factory):
-    return datasets_factory.get_dataset('SPARK')
+    return datasets_factory.get_dataset('SPARKv1')

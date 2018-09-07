@@ -86,7 +86,7 @@ def test_spark_recurrent(spark, gscs):
 
     denovo = gscs.get_gene_sets_collection('denovo')
     gs = denovo.get_gene_set(
-        'LGDs.Recurrent', gene_sets_types={'SPARK': ['autism']})
+        'LGDs.Recurrent', gene_sets_types={'SPARKv1': ['autism']})
 
     assert set(recurrent) == gs['syms']
     assert len(recurrent) == gs['count']
@@ -105,7 +105,7 @@ def test_ssc_spark_recurrent_combined(ssc, spark, gscs):
     gs = denovo.get_gene_set(
         'LGDs.Recurrent', gene_sets_types={
             'SSC': ['autism'],
-            'SPARK': ['autism']
+            'SPARKv1': ['autism']
         })
 
     assert set(recurrent) == gs['syms']
