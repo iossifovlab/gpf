@@ -17,6 +17,12 @@ class CaseSensitiveConfigParser(ConfigParser):
 
 class ConfigurableEntityConfig(object):
 
+    NEW_KEYS_NAMES = {}
+    CONCAT_OPTIONS = {}
+    SPLIT_STR_LISTS = ()
+    CAST_TO_BOOL = ()
+    ELEMENTS_TO_COPY = {}
+
     def __init__(self, config, *args, **kwargs):
         super(ConfigurableEntityConfig, self).__init__(*args, **kwargs)
         self.config = ConfigBox(config)
@@ -84,8 +90,8 @@ class ConfigurableEntityConfig(object):
     def to_dict(self):
         return self.config.to_dict()
 
-    @staticmethod
-    def get_config(config_file, work_dir, default_values={}):
+    @classmethod
+    def get_config(cls, config_file, work_dir, default_values={}):
         if not os.path.exists(config_file):
             config_file = os.path.join(work_dir, config_file)
         assert os.path.exists(config_file), config_file
@@ -97,6 +103,13 @@ class ConfigurableEntityConfig(object):
 
         config = dict((section, dict(config_parser.items(section)))
                       for section in config_parser.sections())
+
+        for section in config.keys():
+            config[section] = cls._change_keys_names(config[section])
+            config[section] = cls._concat_two_options(config[section])
+            config[section] = cls._split_str_lists(config[section])
+            config[section] = cls._cast_to_bool(config[section])
+            config[section] = cls._copy_elements(config[section])
 
         return config
 
@@ -111,9 +124,9 @@ class ConfigurableEntityConfig(object):
         true_values = ['yes', 'Yes', 'True', 'true']
         return True if val in true_values else False
 
-    @staticmethod
-    def _change_keys_names(new_keys_names, config):
-        for old, new in new_keys_names.items():
+    @classmethod
+    def _change_keys_names(cls, config):
+        for old, new in cls.NEW_KEYS_NAMES.items():
             if '.' in new and (
                 (new.split('.')[0] in config and
                  config.get(new.split('.')[0], None) == 'no') or
@@ -124,9 +137,9 @@ class ConfigurableEntityConfig(object):
 
         return config
 
-    @staticmethod
-    def _split_str_lists(split_str_lists_keys, config):
-        for key in split_str_lists_keys:
+    @classmethod
+    def _split_str_lists(cls, config):
+        for key in cls.SPLIT_STR_LISTS:
             if key not in config:
                 continue
             if config[key] is not None and config[key] != '':
@@ -138,9 +151,25 @@ class ConfigurableEntityConfig(object):
         return config
 
     @classmethod
-    def _cast_to_bool(cls, cast_to_bool_keys, config):
-        for key in cast_to_bool_keys:
+    def _cast_to_bool(cls, config):
+        for key in cls.CAST_TO_BOOL:
             if key in config:
                 config[key] = cls._str_to_bool(config[key])
+
+        return config
+
+    @classmethod
+    def _concat_two_options(cls, config):
+        for first, second in cls.CONCAT_OPTIONS.items():
+            config[second] =\
+                ','.join(filter(None, [config.pop(first, None),
+                                       config.pop(second, None)]))
+
+        return config
+
+    @classmethod
+    def _copy_elements(cls, config):
+        for old, new in cls.ELEMENTS_TO_COPY.items():
+            config[new] = config[old]
 
         return config
