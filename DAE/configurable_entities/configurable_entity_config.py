@@ -3,9 +3,15 @@ import os
 from ConfigParser import ConfigParser
 
 
-class MyConfigParser(ConfigParser):
+class CaseSensitiveConfigParser(ConfigParser):
+    """
+    Modified ConfigParser that allows case sensitive options.
+    """
 
     def optionxform(self, option):
+        """
+        The default implementation returns a lower-case version of options.
+        """
         return str(option)
 
 
@@ -86,7 +92,7 @@ class ConfigurableEntityConfig(object):
 
         default_values['work_dir'] = work_dir
 
-        config_parser = MyConfigParser(defaults=default_values)
+        config_parser = CaseSensitiveConfigParser(defaults=default_values)
         config_parser.read(config_file)
 
         config = dict((section, dict(config_parser.items(section)))
