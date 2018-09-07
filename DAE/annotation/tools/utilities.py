@@ -29,7 +29,7 @@ class AnnotatorBase():
             if '#' in line[0]:
                 file_io_manager.line_write(line)
                 continue
-            annotated = self.line_annotations(line, self.new_columns)
+            annotated = line + self.line_annotations(line, self.new_columns)
             file_io_manager.line_write(annotated)
 
     @property
