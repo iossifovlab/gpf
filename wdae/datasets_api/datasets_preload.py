@@ -58,5 +58,3 @@ class DatasetsPreload(Preload, Precompute):
 
     def get_facade(self):
         return self.dataset_facade
-
-

@@ -1,9 +1,9 @@
 class Study(object):
 
-    def __init__(self, name, backend, phenotypes):
+    def __init__(self, name, backend, study_config):
         self.name = name
         self.backend = backend
-        self.phenotypes = phenotypes
+        self.study_config = study_config
 
     def query_variants(self, **kwargs):
         return self.backend.query_variants(**kwargs)
@@ -15,16 +15,28 @@ class Study(object):
         return self.backend.families
 
     @property
+    def phenotypes(self):
+        return self.study_config.phenotypes
+
+    @property
     def has_denovo(self):
-        return True
+        return self.study_config.hasDenovo
 
     @property
     def has_transmitted(self):
-        return False
+        return self.study_config.hasTransmitted
 
     @property
-    def type(self):
-        return None
+    def has_complex(self):
+        return self.study_config.hasComplex
+
+    @property
+    def has_CNV(self):
+        return self.study_config.hasCNV
+
+    @property
+    def study_type(self):
+        return self.study_config.studyType
 
     @property
     def year(self):

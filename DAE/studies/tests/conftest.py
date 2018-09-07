@@ -20,7 +20,8 @@ def fixtures_config():
 @pytest.fixture(scope='session')
 def study_configs():
     return StudyDefinition.list_from_config(
-        fixtures_config(), fixtures_dir(), StudyConfig)
+        fixtures_config(), fixtures_dir(), StudyConfig,
+        StudyConfig.get_default_values())
 
 
 @pytest.fixture(scope='session')
