@@ -78,8 +78,10 @@ class StudyGroup:
             self.description = self.vdb._config.get(
                 self._configSection, 'description')
 
-        self.studyNames = self.vdb._config.get(
-            self._configSection, 'studies').split(",")
+        self.studyNames = [
+            st.strip() for st in self.vdb._config.get(
+                self._configSection, 'studies').split(",")
+        ]
 
     def get_attr(self, attName):
         if self.vdb._config.has_option(self._configSection, attName):
@@ -312,9 +314,11 @@ class Study:
                                         "E65-freq": float_conv})
             if len(dt.shape) == 0:
                 dt = dt.reshape(1)
-            hasCenter = 'center' in dt.dtype.names
+            col_names = [cn.strip("#") for cn in dt.dtype.names]
+
+            hasCenter = 'center' in col_names
             for vr in dt:
-                atts = {x: vr[x] for x in dt.dtype.names}
+                atts = {x: vr[x] for x in col_names}
                 if not hasCenter:
                     atts['center'] = "CSHL"
 

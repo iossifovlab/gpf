@@ -26,3 +26,4 @@ gpf-html.tar.gz
 .pytest_cache
 metastore_db
 setenv.sh
+test_data
