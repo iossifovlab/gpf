@@ -19,9 +19,7 @@ class Person(object):
             self.atts = {}
         assert 'personId' in atts
         self.family_id = atts['familyId']
-        self.family_index = atts['familyIndex']
         self.person_id = atts['personId']
-        self.person_index = atts['personIndex']
         self.sample_id = atts['sampleId']
         self.index = atts['index']
         self.sex = atts['sex']
@@ -72,8 +70,6 @@ class Family(object):
         self.family_id = family_id
         self.ped_df = ped_df
         assert np.all(ped_df['familyId'].isin(set([family_id])).values)
-        self.family_index = ped_df['familyIndex'].values[0]
-        assert np.all(ped_df['familyIndex'] == self.family_index)
 
         self.persons, self.members_in_order = self._build_persons(self.ped_df)
         self.trios = self._build_trios(self.persons)
@@ -134,23 +130,6 @@ class FamiliesBase(object):
         return sorted([p.index for p in persons])
 
     @staticmethod
-    def augment_family_index(ped_df):
-        ped_df['personIndex'] = ped_df.index
-
-        def get_family_index(fid):
-            return (ped_df['familyId'] == fid).idxmax()
-
-        family_index = ped_df['familyId'].apply(get_family_index)
-        ped_df['familyIndex'] = family_index
-
-        unique_family_index = ped_df['familyIndex'].unique()
-        for findex in unique_family_index:
-            fids = ped_df[ped_df['familyIndex'] == findex]['familyId'].unique()
-            assert len(fids) == 1
-
-        return ped_df
-
-    @staticmethod
     def load_pedigree_file(infile, sep="\t"):
         ped_df = pd.read_csv(
             infile, sep=sep, index_col=False,
@@ -172,7 +151,7 @@ class FamiliesBase(object):
             sample_ids = pd.Series(data=ped_df['personId'].values)
             ped_df['sampleId'] = sample_ids
 
-        return FamiliesBase.augment_family_index(ped_df)
+        return ped_df
 
     @staticmethod
     def load_simple_family_file(infile, sep="\t"):
@@ -215,7 +194,7 @@ class FamiliesBase(object):
             sample_ids = pd.Series(data=fam_df['personId'].values)
             fam_df['sampleId'] = sample_ids
 
-        return FamiliesBase.augment_family_index(fam_df)
+        return fam_df
 
     @staticmethod
     def sort_pedigree(ped_df):
