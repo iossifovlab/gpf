@@ -241,7 +241,7 @@ class ScoreAnnotator(AnnotatorBase):
                 self.file = IterativeAccess(self.opts.scores_file,
                                             self.opts.scores_config_file,
                                             self.opts.gzip)
-        self.header.extend(self.labels.split(',') if self.labels
+        self.header.extend(self.labels if self.labels
                            else self.file.config.columns.score)
 
     @property
