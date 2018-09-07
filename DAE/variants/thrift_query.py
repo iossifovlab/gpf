@@ -153,7 +153,6 @@ def thrift_query(
 
     if limit is not None:
         final_query += "\nLIMIT {}".format(limit)
-    print(final_query)
 
     cursor = thrift_connection.cursor()
     cursor.execute(final_query)
