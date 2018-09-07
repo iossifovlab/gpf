@@ -13,7 +13,7 @@ from gene.gene_set_collections import GeneSetsCollection
 
 def test_simple_example():
     # load WE denovo studies
-    studies = vDB.get_studies('ALL WHOLE EXOME')
+    studies = vDB.get_studies('TEST WHOLE EXOME')
     denovo_studies = [
         st for st in studies if 'WE' == st.get_attr('study.type')]
 

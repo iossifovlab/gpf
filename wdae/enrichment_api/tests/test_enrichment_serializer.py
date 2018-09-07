@@ -14,7 +14,7 @@ def test_enrichment_serializer_experiment():
     model = EnrichmentModelsMixin().get_enrichment_model({})
     config = DatasetsConfig()
     factory = DatasetsFactory(config)
-    dataset = factory.get_dataset('SD')
+    dataset = factory.get_dataset('SD_TEST')
     builder = EnrichmentBuilder(dataset, model, ['POGZ'])
     results = builder.build()
 

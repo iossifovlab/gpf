@@ -21,7 +21,7 @@ class Test(APITestCase):
         model = EnrichmentModelsMixin().get_enrichment_model({})
         config = DatasetsConfig()
         factory = DatasetsFactory(config)
-        dataset = factory.get_dataset('SD')
+        dataset = factory.get_dataset('SD_TEST')
         gscs = GeneSetsCollections()
         gsc = gscs.get_gene_sets_collection('main')
 
