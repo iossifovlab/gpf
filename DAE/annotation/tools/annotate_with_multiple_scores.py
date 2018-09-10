@@ -158,7 +158,6 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
     def line_annotations(self, line, new_cols_order):
         result = []
-        new_cols_order = self.new_columns
         for col in new_cols_order:
             annotator = self._annotator_for(col)
             annotations = annotator.line_annotations(line, annotator.new_columns)
