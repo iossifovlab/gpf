@@ -53,7 +53,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'DAE'
-copyright = u'2016, iossifovlab.com'
+copyright = u'2016, 2017, 2018, iossifovlab.com'
 author = u'iossifovlab.com'
 
 # The version info for the project you're documenting, acts as replacement for

@@ -6,14 +6,15 @@ from datasets.datasets_factory import DatasetsConfig
 import re
 import itertools
 import collections
-import vcf as PyVCF
+import vcf as PyVCF  # @UnresolvedImport
 from pprint import pprint
-from vcf.parser import _Contig, _Format, _Info, _Filter, _Call
-from vcf.model import make_calldata_tuple
+from vcf.parser import _Contig, _Format, _Info, _Filter, _Call  # @UnresolvedImport
+from vcf.model import make_calldata_tuple  # @UnresolvedImport
+import copy
 
 
-GA = genomesDB.get_genome()
-gmDB = genomesDB.get_gene_models()
+GA = genomesDB.get_genome()  # @UndefinedVariable
+gmDB = genomesDB.get_gene_models()  # @UndefinedVariable
 
 subRE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
 insRE = re.compile('^ins\(([ACGT]+)\)$')

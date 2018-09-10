@@ -4,11 +4,13 @@ Created on Feb 6, 2017
 @author: lubo
 '''
 import itertools
+import pprint
 
 from rest_framework import views, status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
 
+from datasets.dataset_factory import DatasetFactory
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 from helpers.logger import log_filter
@@ -21,6 +23,7 @@ import json
 from query_variants import join_line, generate_web_response, generate_response
 from datasets_api.permissions import IsDatasetAllowed
 from datasets.metadataset import MetaDataset
+from datasets.helpers import get_variants_web_preview
 import logging
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
@@ -31,13 +34,22 @@ class QueryBaseView(views.APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
     permission_classes = (IsDatasetAllowed,)
 
+    datasets_cache = {}
+
+    def get_dataset(self, dataset_id):
+        if dataset_id not in self.datasets_cache:
+            config = self.dataset_definitions.get_dataset_config(dataset_id)
+            self.datasets_cache[dataset_id] = self.dataset_factory.get_dataset(config)
+
+        return self.datasets_cache[dataset_id]
+
     def __init__(self):
         register = preloaded.register
         self.datasets = register.get('datasets')
         assert self.datasets is not None
 
-        self.datasets_config = self.datasets.get_config()
-        self.datasets_factory = self.datasets.get_factory()
+        self.dataset_definitions = self.datasets.get_definitions()
+        self.dataset_factory = DatasetFactory()
 
 
 class QueryPreviewView(QueryBaseView):
@@ -81,20 +93,22 @@ class QueryPreviewView(QueryBaseView):
             self.check_object_permissions(request, dataset_id)
 
             if dataset_id == MetaDataset.ID:
-                dataset_ids = self.datasets_config.get_dataset_ids()
+                dataset_ids = self.dataset_definitions.get_dataset_ids()
                 dataset_ids.remove(MetaDataset.ID)
                 data['dataset_ids'] = filter(
                     lambda dataset_id: IsDatasetAllowed.user_has_permission(
                         request.user, dataset_id),
                     dataset_ids)
 
-            dataset = self.datasets_factory.get_dataset(dataset_id)
+            dataset = self.get_dataset(dataset_id)
+            # LOGGER.info("dataset " + str(dataset))
 
-            response = self.__prepare_variants_response(
-                **generate_web_response(
+            response = get_variants_web_preview(
                     dataset.get_variants(safe=True, **data),
-                    dataset.get_preview_columns()))
+                    dataset.preview_columns
+            )
 
+            # pprint.pprint(response)
             response['legend'] = dataset.get_legend(safe=True, **data)
 
             return Response(response, status=status.HTTP_200_OK)
@@ -147,7 +161,7 @@ class QueryDownloadView(QueryBaseView):
             self.check_object_permissions(request, data['datasetId'])
 
             if data['datasetId'] == MetaDataset.ID:
-                dataset_ids = self.datasets_config.get_dataset_ids()
+                dataset_ids = self.dataset_definitions.get_dataset_ids()
                 dataset_ids.remove(MetaDataset.ID)
                 data['dataset_ids'] = filter(
                     lambda dataset_id: IsDatasetAllowed.user_has_permission(
@@ -156,7 +170,7 @@ class QueryDownloadView(QueryBaseView):
 
             dataset = self.datasets_factory.get_dataset(data['datasetId'])
 
-            columns = dataset.get_download_columns()
+            columns = dataset.download_columns
             try:
                 columns.remove('pedigree')
             except ValueError:
@@ -172,9 +186,9 @@ class QueryDownloadView(QueryBaseView):
 
             response = StreamingHttpResponse(
                 itertools.imap(join_line, variants_data),
-                content_type='text/csv')
+                content_type='text/tsv')
 
-            response['Content-Disposition'] = 'attachment; filename=unruly.csv'
+            response['Content-Disposition'] = 'attachment; filename=variants.tsv'
             response['Expires'] = '0'
             return response
         except NotAuthenticated:

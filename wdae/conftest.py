@@ -20,7 +20,7 @@ def client():
 def default_datasets(db):
     Dataset.recreate_dataset_perm('SD', [])
     Dataset.recreate_dataset_perm('SSC', [])
-    Dataset.recreate_dataset_perm('VIP', [])
+    Dataset.recreate_dataset_perm('SVIP', [])
 
 
 @pytest.fixture()

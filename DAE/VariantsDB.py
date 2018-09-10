@@ -28,16 +28,18 @@ import logging
 from Variant import Variant, mat2Str, filter_gene_effect, str2Mat,\
     present_in_child_filter,\
     denovo_present_in_parent_filter, \
-    filter_by_status
-
+    filter_by_status, chromosome_prefix
 from Family import Family, Person
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
 from ConfigParser import NoOptionError
+from variant_db.variant_query import VariantQuery
 from pheno.common import Role, Status, Gender
 
 LOGGER = logging.getLogger(__name__)
+
+CHROMOSOME_PREFIX = None
 
 
 def regions_matcher(regions):
@@ -51,6 +53,8 @@ def regions_matcher(regions):
         smcP = r.find(":")
         dsP = r.find("-")
         chrom = r[0:smcP]
+        if CHROMOSOME_PREFIX not in chrom:
+            chrom = CHROMOSOME_PREFIX + chrom
         beg = int(r[smcP + 1:dsP])
         end = int(r[dsP + 1:])
         reg_defs.append((chrom, beg, end))
@@ -74,8 +78,10 @@ class StudyGroup:
             self.description = self.vdb._config.get(
                 self._configSection, 'description')
 
-        self.studyNames = self.vdb._config.get(
-            self._configSection, 'studies').split(",")
+        self.studyNames = [
+            st.strip() for st in self.vdb._config.get(
+                self._configSection, 'studies').split(",")
+        ]
 
     def get_attr(self, attName):
         if self.vdb._config.has_option(self._configSection, attName):
@@ -155,6 +161,9 @@ class Study:
             elif impl_format == 'mysql':
                 self.transmission_impl[callSet] = \
                     MysqlTransmittedQuery(self, callSet)
+            elif impl_format == 'new_mysql':
+                self.transmission_impl[callSet] = \
+                    VariantQuery(self)
             else:
                 raise Exception("unexpected transmission format")
 
@@ -197,8 +206,8 @@ class Study:
                             presentInParent=None, genomicScores=[],
                             gender=None, roles=None, status=None,
                             variantTypes=None, effectTypes=None, geneSyms=None,
-                            familyIds=None, regionS=None, callSet=None):
-
+                            familyIds=None, regionS=None, callSet=None,
+                            limit=None):
         picFilter = present_in_child_filter(presentInChild, gender)
         pipFilter = denovo_present_in_parent_filter(presentInParent)
 
@@ -305,9 +314,11 @@ class Study:
                                         "E65-freq": float_conv})
             if len(dt.shape) == 0:
                 dt = dt.reshape(1)
-            hasCenter = 'center' in dt.dtype.names
+            col_names = [cn.strip("#") for cn in dt.dtype.names]
+
+            hasCenter = 'center' in col_names
             for vr in dt:
-                atts = {x: vr[x] for x in dt.dtype.names}
+                atts = {x: vr[x] for x in col_names}
                 if not hasCenter:
                     atts['center'] = "CSHL"
 
@@ -656,7 +667,6 @@ class Study:
             f = Family()
             f.familyId = fid
 
-            # print fid, pDct.keys()
             if len(pDct) == 3:
                 f.memberInOrder = \
                     [pDct[Role.mom.name], pDct[Role.dad.name], pDct[Role.prb.name]]
@@ -846,6 +856,10 @@ class VariantsDB:
 
         # self.phDB = phDB
         self.genomesDB = genomesDB
+
+        global CHROMOSOME_PREFIX
+        if CHROMOSOME_PREFIX is None:
+            CHROMOSOME_PREFIX = chromosome_prefix(self.genomesDB)
 
         if not confFile:
             confFile = daeDir + "/variantDB.conf"

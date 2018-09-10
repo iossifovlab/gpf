@@ -14,24 +14,31 @@ def main():
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    pheno_name = 'ssc'
+    pheno_name = 'spark'
 
     pheno_db = pheno.get_pheno_db(pheno_name)
-    pheno_regression = PhenoRegression.build(pheno_name)
+    pheno_regression = PhenoRegression.build_from_config(pheno_name)
 
-    drawer = PreparePhenoBrowserBase(pheno_name, pheno_db, pheno_regression, output_folder)
+    drawer = PreparePhenoBrowserBase(
+        pheno_name, pheno_db, pheno_regression, output_folder)
+
+    pheno_db = pheno.get_pheno_db(pheno_name)
+    pheno_regression = PhenoRegression.build_from_config(pheno_name)
+
+    drawer = PreparePhenoBrowserBase(
+        pheno_name, pheno_db, pheno_regression, output_folder)
 
     # db.build()
 
     # instrument = drawer.pheno_db.instruments['individuals']
     # instrument2 = drawer.pheno_db.instruments['basic_medical_screening']
-    instrument3 = drawer.pheno_db.instruments['adi_r']
+    instrument3 = drawer.pheno_db.instruments['basic_medical_screening']
 
     # drawer.handle_measure(instrument.measures['age_at_registration_years'])
     # drawer.handle_measure(instrument.measures['diagnosis'])
     # drawer.handle_measure(instrument2.measures['age_at_eval_years'])
 
-    drawer.handle_measure(instrument3.measures['q06b_bladder_daytimeb'])
+    drawer.handle_measure(instrument3.measures['asd'])
 
     # drawer.handle_measure(instrument.measures['status'])
 

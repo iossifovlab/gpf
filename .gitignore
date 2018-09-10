@@ -16,3 +16,14 @@ coverage.xml
 junit.xml
 logs
 output
+<<<<<<< HEAD
+*.tmp
+*.swp
+gpf-html.tar.gz
+.pytest_cache
+*.parquet
+/gpf-html.tar.gz
+.pytest_cache
+metastore_db
+setenv.sh
+test_data

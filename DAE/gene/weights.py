@@ -3,15 +3,16 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-
-from collections import OrderedDict
-
 import numpy as np
-import pandas as pd
+from collections import OrderedDict
+import ConfigParser
+
+from genomic_values import GenomicValues
 from gene.config import GeneInfoConfig
+from Config import Config
 
 
-class Weights(GeneInfoConfig):
+class Weights(GenomicValues):
     """
     Represents gene weights.
 
@@ -20,30 +21,26 @@ class Weights(GeneInfoConfig):
     """
 
     def __init__(self, weights_name, *args, **kwargs):
-        super(Weights, self).__init__(*args, **kwargs)
-        self.name = weights_name
-        self.section_name = 'geneWeights.{}'.format(weights_name)
-        self.desc = self.config.get(self.section_name, 'desc')
-        self.bins = int(self.config.get(self.section_name, 'bins'))
-        self.xscale = self.config.get(self.section_name, 'xscale')
-        self.yscale = self.config.get(self.section_name, 'yscale')
+        super(Weights, self).__init__('geneWeights.{}'.format(weights_name),
+                                      *args, **kwargs)
 
-        self.df = None
-        self._dict = None
-        self._load_weights()
+        self.config = GeneInfoConfig()
 
-    def _load_weights(self):
-        assert self.config.get(self.section_name, 'file') is not None
+        self.genomic_values_col = 'gene'
 
-        filename = self.config.get(self.section_name, 'file')
-        assert filename is not None
-        df = pd.read_csv(filename)
-        assert self.name in df.columns
+        self.desc = self.config.config.get(self.section_name, 'desc')
+        self.bins = int(self.config.config.get(self.section_name, 'bins'))
+        self.xscale = self.config.config.get(self.section_name, 'xscale')
+        self.yscale = self.config.config.get(self.section_name, 'yscale')
+        self.filename = self.config.config.get(self.section_name, 'file')
 
-        self.df = df[['gene', self.name]].copy()
-        self.df.dropna(inplace=True)
+        if self.config.config.has_option(self.section_name, 'range'):
+            self.range = tuple(map(float, self.config.config.get(
+                self.section_name, 'range').split(',')))
+        else:
+            self.range = None
 
-        return self.df
+        self._load_data()
 
     def min(self):
         """
@@ -94,9 +91,6 @@ class Weights(GeneInfoConfig):
         """
         return self.df
 
-    def values(self):
-        return self.df[self.name].values
-
     @staticmethod
     def load_gene_weights(name):
         """
@@ -105,6 +99,25 @@ class Weights(GeneInfoConfig):
         assert name in Weights.list_gene_weights()
         w = Weights(name)
         return w
+
+    @staticmethod
+    def list_gene_weights():
+        """
+        Lists all available gene weights configured in `geneInfo.conf`.
+        """
+        dae_config = Config()
+        wd = dae_config.daeDir
+        data_dir = dae_config.data_dir
+
+        config = ConfigParser.SafeConfigParser({
+            'wd': wd,
+            'data': data_dir,
+        })
+        config.read(dae_config.geneInfoDBconfFile)
+
+        weights = config.get('geneWeights', 'weights')
+        names = [n.strip() for n in weights.split(',')]
+        return names
 
 
 class WeightsLoader(object):
@@ -127,14 +140,14 @@ class WeightsLoader(object):
             w = Weights(name)
             self.weights[name] = w
 
-    def __getitem__(self, weights_name):
-        if weights_name not in self.weights:
+    def __getitem__(self, weight_name):
+        if weight_name not in self.weights:
             raise KeyError()
 
-        res = self.weights[weights_name]
+        res = self.weights[weight_name]
         if res.df is None:
             res.load_weights()
         return res
 
-    def __contains__(self, weights_name):
-        return weights_name in self.weights
+    def __contains__(self, weight_name):
+        return weight_name in self.weights

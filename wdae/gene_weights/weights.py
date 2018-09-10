@@ -58,7 +58,8 @@ class Weights(Preload):
                 "bars": bars,
                 "bins": bins,
                 "xscale": w.xscale,
-                "yscale": w.yscale
+                "yscale": w.yscale,
+                "range": w.range
             })
         return result
 
