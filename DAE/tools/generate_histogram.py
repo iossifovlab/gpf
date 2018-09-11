@@ -130,8 +130,7 @@ class GenerateScoresHistograms(object):
                     use_columns.extend([start, end])
 
                 head = 'infer'
-                if type(score_column) is int and type(start) is int and\
-                        type(end) is int:
+                if type(score_column) is int:
                     head = None
 
                 if self.chunk_size is not None:
