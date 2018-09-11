@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from impala.util import as_pandas
 from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
     QueryTreeToSQLTransformer, QueryTreeToSQLListTransformer, \
@@ -104,9 +106,12 @@ def query_parts(queries, **kwargs):
         stage_two = stage_two_transformers.get(
             key, QueryTreeToSQLTransformer(key))
 
-        result.append(
-            stage_two.transform(stage_one.parse_and_transform(arg))
-        )
+        if isinstance(arg, str):
+            result.append(
+                stage_two.transform(stage_one.parse_and_transform(arg))
+            )
+        else:
+            result.append(stage_two.transform(arg))
     return result
 
 
