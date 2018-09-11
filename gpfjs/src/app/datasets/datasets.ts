@@ -65,27 +65,6 @@ export class PedigreeSelector extends IdName {
   }
 }
 
-export class GenomicMetric {
-  static fromJson(json: any): GenomicMetric {
-    return new GenomicMetric(
-      json['id'],
-      json['name']
-    );
-  }
-
-  static fromJsonArray(jsonArray: Array<Object>): Array<GenomicMetric> {
-    if (!jsonArray) {
-      return undefined;
-    }
-    return jsonArray.map((json) => GenomicMetric.fromJson(json));
-  }
-
-  constructor(
-    readonly id: string,
-    readonly name: string,
-  ) {}
-}
-
 export class AdditionalColumnSlot {
   static fromJson(json: any): AdditionalColumnSlot {
     return new AdditionalColumnSlot(
@@ -197,8 +176,7 @@ export class GenotypeBrowser {
       [...AdditionalColumn.fromJsonArray(json['genotypeColumns']),
        ...AdditionalColumn.fromJsonArray(json['phenoColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
-      PhenoFilter.fromJsonArray(json['familyStudyFilters']),
-      GenomicMetric.fromJsonArray(json['genomicMetrics'])
+      PhenoFilter.fromJsonArray(json['familyStudyFilters'])
     );
   }
 
@@ -216,8 +194,7 @@ export class GenotypeBrowser {
     readonly previewColumnsIds: string[],
     readonly allColumns: Array<AdditionalColumn>,
     readonly phenoFilters: Array<PhenoFilter>,
-    readonly familyStudyFilters: Array<PhenoFilter>,
-    readonly genomicMetrics: Array<GenomicMetric>,
+    readonly familyStudyFilters: Array<PhenoFilter>
   ) {
     this.columns = _.filter(this.allColumns,
       (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);
