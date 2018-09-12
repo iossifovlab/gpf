@@ -1,6 +1,7 @@
 import pytest
 from copy import deepcopy
 from StringIO import StringIO
+from box import Box
 
 from annotation.annotation_pipeline import MultiAnnotator,\
     MyConfigParser, str_to_class
@@ -14,7 +15,7 @@ from annotation.tools import file_io
 class Annotator(object):
 
     def __init__(self, options, header):
-        self.default = options['default']
+        self.default = options.default
 
     def line_annotations(self, line, new_columns):
         if self.default:
@@ -81,26 +82,22 @@ def virtuals_config():
 
 
 @pytest.fixture
-def get_opts(infile, outfile, config, reannotate=False,
+def get_opts(infile, outfile, config, append=True,
              split=None, split_separator=']',
              skip_preannotators=True, default_args='default:False'):
-    class AnnotatorOpts:
-        def __init__(self, opt_infile, opt_outfile,
-                     opt_conf, opt_reannotate, opt_split,
-                     opt_splitsep, opt_skip_pre, opt_def_arg):
-            self.infile = opt_infile
-            self.outfile = opt_outfile
-            self.config = opt_conf
-            self.reannotate = opt_reannotate
-            self.split = opt_split
-            self.separator = opt_splitsep
-            self.skip_preannotators = opt_skip_pre
-            self.default_arguments = [opt_def_arg]
-            self.no_header = True
-            self.region = None
-    return AnnotatorOpts(infile, outfile, config, reannotate,
-                         split, split_separator,
-                         skip_preannotators, default_args)
+    options = {
+        'infile': infile,
+        'outfile': outfile,
+        'config': config,
+        'append': append,
+        'split': split,
+        'separator': split_separator,
+        'skip_preannotators': skip_preannotators,
+        'default_arguments': default_args.split(','),
+        'no_header': True,
+        'region': None,
+    }
+    return Box(options, default_box=True, default_box_attr=None)
 
 
 @pytest.fixture
@@ -110,7 +107,7 @@ def base_opts(base_input, base_config, mocker):
 
 @pytest.fixture
 def reannotate_opts(base_input, reannotate_config, mocker):
-    return get_opts(base_input, StringIO(), reannotate_config, reannotate=True)
+    return get_opts(base_input, StringIO(), reannotate_config, append=False)
 
 
 @pytest.fixture
