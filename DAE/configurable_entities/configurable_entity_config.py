@@ -20,6 +20,7 @@ class ConfigurableEntityConfig(object):
     NEW_KEYS_NAMES = {}
     CONCAT_OPTIONS = {}
     SPLIT_STR_LISTS = ()
+    SPLIT_STR_SETS = ()
     CAST_TO_BOOL = ()
     ELEMENTS_TO_COPY = {}
 
@@ -108,6 +109,7 @@ class ConfigurableEntityConfig(object):
             config[section] = cls._change_keys_names(config[section])
             config[section] = cls._concat_two_options(config[section])
             config[section] = cls._split_str_lists(config[section])
+            config[section] = cls._split_str_sets(config[section])
             config[section] = cls._cast_to_bool(config[section])
             config[section] = cls._copy_elements(config[section])
 
@@ -137,16 +139,28 @@ class ConfigurableEntityConfig(object):
 
         return config
 
+    @staticmethod
+    def _split_str_option_list(str_option):
+        if str_option is not None and str_option != '':
+            return [el.strip() for el in str_option.split(',')]
+        elif str_option == '':
+            return []
+
     @classmethod
     def _split_str_lists(cls, config):
         for key in cls.SPLIT_STR_LISTS:
             if key not in config:
                 continue
-            if config[key] is not None and config[key] != '':
-                config[key] =\
-                    set([el.strip() for el in config[key].split(',')])
-            elif config[key] == '':
-                config[key] = []
+            config[key] = cls._split_str_option_list(config[key])
+
+        return config
+
+    @classmethod
+    def _split_str_sets(cls, config):
+        for key in cls.SPLIT_STR_SETS:
+            if key not in config:
+                continue
+            config[key] = set(cls._split_str_option_list(config[key]))
 
         return config
 

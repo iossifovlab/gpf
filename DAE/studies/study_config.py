@@ -7,7 +7,7 @@ from studies.study_factory import StudyFactory
 
 class StudyConfig(ConfigurableEntityConfig):
 
-    SPLIT_STR_LISTS = (
+    SPLIT_STR_SETS = (
         'phenotypes',
     )
     CAST_TO_BOOL = (
