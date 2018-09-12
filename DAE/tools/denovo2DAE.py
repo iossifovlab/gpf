@@ -3,38 +3,61 @@
 from __future__ import print_function
 import sys
 import argparse
+from collections import defaultdict
 import pandas as pd
-from DAE import genomesDB
 
 
-def parse_cli_arguments(argv=sys.argv[1:]):
-    parser = argparse.ArgumentParser(
-        description="Convert denovo data to DAE")
+ROLES = ['mom', 'dad', 'prb', 'sib']
 
+
+def create_families_arguments(parser):
     parser.add_argument(
-        'variantsFile', type=str,
-        help='VCF format variant file. Available formats include '
-             '.tsv, .csv, .xlsx'
+        '-pi', '--personId',
+        type=str, default='personId',
+        dest='personId', metavar='families personIdColumn',
+        help='personId column name in families file. Default is \'personId\''
     )
     parser.add_argument(
-        'pedFile', type=str,
-        help='pedigree file with certain established format'
+        '-s', '--status',
+        type=str, default='status',
+        dest='status', metavar='statusColumn',
+        help='status column name in families file. Default is \'status\''
     )
     parser.add_argument(
-        '-f', '--file', type=str, default=None,
-        dest='outputFile', metavar='outputFileName',
-        help='output filepath'
+        '--sex',
+        type=str, default=None,
+        dest='sex', metavar='sexColumn',
+        help='column name for sex in families file. Optional argument. '
+             'When ommited default for everybody is Unspecified'
     )
     parser.add_argument(
-        '--skiprows', type=int, default=0,
-        metavar='NumberOfRows',
-        help='number of rows to be skipped from variants file. '
-             'Applied only for xlsx files'
+        '--familyId',
+        type=str, default=None,
+        metavar='familyIdColumn',
+        help='column name for familyId in families file. Optional argument. '
+             'When ommited default for everybody is same as sample\'s Id'
     )
     parser.add_argument(
-        '-i', '--sampleIdColumn',
+        '--momId',
+        type=str, default=None,
+        metavar='momIdColumn',
+        help='column name for momId in families file. Optional argument. '
+             'When ommited default for everybody is 0'
+    )
+    parser.add_argument(
+        '--dadId',
+        type=str, default=None,
+        metavar='dadIdColumn',
+        help='column name for dadId in families file. Optional argument. '
+             'When ommited default for everybody is 0'
+    )
+
+
+def create_variants_arguments(parser):
+    parser.add_argument(
+        '-si', '--sampleIdColumn',
         type=str, default='sampleId',
-        dest='sampleId', metavar='sampleIdColumn',
+        dest='sampleId', metavar='variants sampleIdColumn',
         help='column name for sampleId. Default is \'sampleId\''
     )
     parser.add_argument(
@@ -67,20 +90,60 @@ def parse_cli_arguments(argv=sys.argv[1:]):
         help='flag chromosome positions as zero based'
     )
 
+
+def parse_cli_arguments(argv=sys.argv[1:]):
+    parser = argparse.ArgumentParser(
+        description='Convert denovo data to DAE')
+
+    parser.add_argument(
+        'variantsFile', type=str,
+        help='VCF format variant file. Available formats include '
+             '.tsv, .csv, .xlsx'
+    )
+    parser.add_argument(
+        'familiesFile', type=str,
+        help='pedigree file with certain established format'
+    )
+    parser.add_argument(
+        '-o', '--out', type=str, default=None,
+        dest='outputFile', metavar='outputFilePath',
+        help='output filepath'
+    )
+
+    create_variants_arguments(parser)
+    create_families_arguments(parser)
+
     args = parser.parse_args(argv)
     return {a: getattr(args, a) for a in dir(args) if a[0] != '_'}
 
 
-def import_file(filepath, skiprows=0):
-    extension = filepath.split('.').pop()
+def group_consecutive_sub_variants(v):
+    data_groupby_samples = v.groupby(['sampleId', 'chr'])
+    to_delete = []
 
+    for _, samples_df in data_groupby_samples:
+        for index1, row1 in samples_df.iterrows():
+            row1_end = row1.pos + len(row1.ref)
+            for index2, row2 in samples_df.iterrows():
+                if row1_end == row2.pos:
+                    start = row1.pos
+                    ref, alt = row1.ref + row2.ref, row1.alt + row2.alt
+
+                    v.loc[index1, ['pos', 'ref', 'alt']] = [start, ref, alt]
+                    to_delete.append(index2)
+
+    return v.drop(to_delete)
+
+
+def load_file(filepath):
+    extension = filepath.split('.').pop()
     try:
         if extension == 'tsv' or extension == 'ped':
             return pd.read_table(filepath, sep='\t')
         elif extension == 'csv':
             return pd.read_csv(filepath)
         elif extension == 'xlsx':
-            return pd.read_excel(filepath, skiprows=skiprows)
+            return pd.read_excel(filepath)
         else:
             raise IOError
     except IOError:
@@ -101,191 +164,177 @@ def form_variant(row):
             str(row.ref) + '->' + str(row.alt))
 
 
-def append_val(k, val, d):
-    try:
-        d[k].append(val)
-    except KeyError:
-        d[k] = [val]
-
-
-def associate_person_variant(variants):
-    for _, row in variants.iterrows():
-        variant = form_variant(row)
-        append_val(row.sampleId, variant, person_variant)
-
-
-ROLES = ['mom', 'dad', 'prb', 'sib']
-UNCOMMON_FAMILY_MEMBERS = []
-
-
-def special_case(person):
-    if person.role not in ROLES:
-        if person.personId in person_variant:
-            print('Uncommon family name with variant:', file=sys.stdout)
-            print(person.personId + '-' + person.role + ': ' +
-                  person_variant[person.personId], file=sys.stdout)
-            print('No action taken...', file=sys.stdout)
-        else:
-            UNCOMMON_FAMILY_MEMBERS.append(person)  # export if necessary
-            print('Removing ' + str(len(UNCOMMON_FAMILY_MEMBERS)) + ': '
-                  + person.personId + ', role:' + person.role, file=sys.stdout)
-        return True
-    return False
-
-
-def assign_family(grouped):
-    for family_id, family_df in grouped:
-        f = families_dict[family_id] = {}
-
-        for _, person in family_df.iterrows():
-            if special_case(person):
-                continue
-
-            pid, role = person.personId, person.role
-            person_gender[pid] = person.gender
-            person_family[pid] = family_id
-
-            if role == 'mom':
-                f['mom'] = [pid]
-            elif role == 'dad':
-                f['dad'] = [pid]
-            elif role == 'prb':
-                append_val('prb', pid, f)
-            else:
-                append_val('sib', pid, f)
-
-
-def populate_global_data(variants, families):
-    global person_variant, families_dict, person_gender, person_family
-
+class SharedData(object):
     families_dict = {}
-    person_gender = {}
+    person_sex = {}
     person_family = {}
-    person_variant = {}
+    person_variant = defaultdict(list)
 
-    associate_person_variant(variants)
-    assign_family(families.groupby(['familyId']))
+    def __init__(self, variants, families):
+        self.counter = 0
+        self.associate_person_variant(variants)
+        self.assign_family(families.groupby(['familyId']))
 
 
-def find_prob_family(proband_id):
-    try:
-        return person_family[proband_id]
-    except KeyError:
-        return None
+    def associate_person_variant(self, variants):
+        for _, row in variants.iterrows():
+            variant = form_variant(row)
+            self.person_variant[row.sampleId].append(variant)
+
+
+    def assign_family(self, grouped):
+        for family_id, family_df in grouped:
+            f = self.families_dict[family_id] = defaultdict(list)
+
+            for _, person in family_df.iterrows():
+                self.person_sex[person.personId] = person.sex
+                self.person_family[person.personId] = family_id
+                f[person.role].append(person.personId)
+
+
+    def increment_counter(self):
+        self.counter += 1
+        if self.counter % 1000 == 0:
+            print('{} lines processed'.format(self.counter), file=sys.stdout)
+
 
 
 def bs2str(state):
     return state + '/' + state.replace('2', '0')
 
 
-def stats(variant, family):
+def calculate_additional_columns(sd, variant, family):
     best_state, sample_id, in_child = [], [], ''
 
     for role in ROLES:
         if role in family:
             for member_id in family[role]:
-                if member_id in person_variant and \
-                   variant in person_variant[member_id]:
+                if member_id in sd.person_variant and \
+                   variant in sd.person_variant[member_id]:
                     best_state.append('1')
                     sample_id.append(member_id)
-                    in_child += role + person_gender[member_id]
+                    in_child += role + sd.person_sex[member_id]
                 else:
                     best_state.append('2')
 
     return bs2str(' '.join(best_state)), in_child, ', '.join(sample_id)
 
 
-def generate_dae(variants, families, zb):
-    populate_global_data(variants, families)
-    counter = 0
+def generate_dae(variants, families, zero_based):
+    sd = SharedData(variants, families)
+
     for _, row in variants.iterrows():
-        counter += 1
-        if counter % 1000 == 0:
-            print('{} lines processed'.format(counter), file=sys.stdout)
+        sd.increment_counter()
 
-        family_id = find_prob_family(row.sampleId)
-        if not family_id:
+        if row.sampleId not in sd.person_family:
+            print('Omitting variant. Sample {} not found in pedigree file.'
+                  .format(row.sampleId), file=sys.stderr)
             continue
+        family_id = sd.person_family[row.sampleId]
 
-        bs, ch, chid = stats(form_variant(row), families_dict[family_id])
-        pos = row.pos + 1 if zb else row.pos
+        bs, ch, chid = calculate_additional_columns(
+            sd, form_variant(row), sd.families_dict[family_id])
+        pos = row.pos + 1 if zero_based else row.pos
         yield [family_id, row.chr, pos, row.ref, row.alt, bs, ch, chid]
 
 
-def transform_files(args):
-    variants = import_file(args['variantsFile'], args['skiprows'])
-    families = import_file(args['pedFile']).astype(str)
+def assert_required_columns(column_names, df, args):
+    def error_msg(c, df):
+        if c is not None and c not in df.columns:
+            print('Column {} is missing from file'.format(c), file=sys.stderr)
+            return True
 
-    assert all([c in variants.columns for c in
-                [args[k] for k in ['sampleId', 'chr', 'pos', 'ref', 'alt']]])
+    errors = [error_msg(c, df) for c in [args[k] for k in column_names]]
+    if any(errors):
+        sys.exit(1)
 
-    families = families.astype({'status': int})
+
+def prepare_families_df(args):
+    families = load_file(args['familiesFile'])
+
+    assert_required_columns(['personId', 'status'], families, args)
+
+    families = families.rename(columns={
+        args['personId']: 'personId',
+        args['status']: 'status',
+        args['familyId']: 'familyId',
+        args['sex']: 'sex',
+        args['momId']: 'momId',
+        args['dadId']: 'dadId'})
+
+    if args['sex'] is None:
+        print('Sex column unspecified. Assigning U...', file=sys.stderr)
+        families['sex'] = 'U'
+    if args['familyId'] is None:
+        print('FamilyId column unspecified. Generating them automatically...',
+              file=sys.stderr)
+        families['familyId'] = families.personId
+    if args['momId'] is None:
+        print('MomId column unspecified. Assigning 0''s...', file=sys.stderr)
+        families['momId'] = 0
+    if args['dadId'] is None:
+        print('DadId column unspecified. Assigning 0''s...', file=sys.stderr)
+        families['dadId'] = 0
+
+    families = families.astype(str).astype({'status': int})
+    families = drop_dups(families, 'families')
+
+    families['role'] = families['status'].map({1: 'sib', 2: 'prb'})
+    return families
+
+
+def prepare_variants_df(args):
+    variants = load_file(args['variantsFile'])
+
+    assert_required_columns(['sampleId', 'chr', 'pos', 'ref', 'alt'],
+                            variants, args)
     variants = variants.rename(columns={
         args['sampleId']: 'sampleId',
         args['chr']: 'chr', args['pos']: 'pos',
         args['ref']: 'ref', args['alt']: 'alt'}) \
         .astype({'sampleId': str, 'pos': int, 'chr': str})
-
     variants = drop_dups(variants, 'variants')
-    families = drop_dups(families, 'families')
-
-    return variants, families
+    return variants
 
 
-def consecutive_subs_correction(v):
-    data_groupby_samples = v.groupby(['sampleId', 'chr'])
-    to_delete = []
-
-    for _, samples_df in data_groupby_samples:
-        for index1, row1 in samples_df.iterrows():
-            row1_end = row1.pos + len(row1.ref)
-            for index2, row2 in samples_df.iterrows():
-                if row1_end == row2.pos:
-                    start = row1.pos
-                    ref, alt = row1.ref + row2.ref, row1.alt + row2.alt
-
-                    v.loc[index1, ['pos', 'ref', 'alt']] = [start, ref, alt]
-                    to_delete.append(index2)
-
-    return v.drop(to_delete)
+def get_parent(families, parent_id, role):
+    parent = families.loc[families.personId == parent_id].iloc[0]
+    assert parent.sex == ('F' if role == 'mom' else 'M')
+    return [parent.personId, 0, 0, role, parent.sex]
 
 
-def ref_alt_nan_correction(v):
-    genome = genomesDB.get_genome()  # @UndefinedVariable
-    rows_to_change = {}
-
-    for index, row in v.iterrows():
-        # insertion ref:next alt:next+given
-        if row.ref is pd.np.nan:
-            new_ref = genome.getSequence(row.chr, row.pos,
-                                         row.pos + len(row.alt) - 1)
-            rows_to_change[index] = new_ref, new_ref+row.alt, row.pos
-        # deletion ref:prev+given alt:prev
-        if row.alt is pd.np.nan:
-            new_alt = genome.getSequence(row.chr, row.pos-1, row.pos-1)
-            rows_to_change[index] = new_alt+row.ref, new_alt, row.pos-1
-
-    for index, values in rows_to_change.items():
-        row = v.loc[index].copy()
-        row.ref, row.alt, row.pos = values
-        v = v.drop(index).append(row)
-    return v
+def get_family_id(children, existing_family_id):
+    if existing_family_id:
+        prbs = children.loc[children.status == 2]
+        assert len(prbs) > 0
+        return sorted(prbs.familyId)[0]
+    else:
+        family_ids = set(children.familyId)
+        assert len(family_ids) == 1
+        return family_ids.pop()
 
 
-def perform_corrections(v):
-    if v.ref.isnull().any() or v.alt.isnull().any():
-        print('Correcting incomplete ref and alt allele data...',
-              file=sys.stdout)
-        count = v.ref.isnull().sum() + v.alt.isnull().sum()
-        v = ref_alt_nan_correction(v)
-        print('>>> {} variants changed.'.format(count), file=sys.stdout)
+def reduce_families(families, variants, set_family_id=False):
+    sample_ids = set(variants.sampleId)
+    samples = families.loc[families.personId.isin(sample_ids)]
+    grouped = samples.groupby(['momId', 'dadId'])
 
-    print('Grouping consecutive substitutions...', file=sys.stdout)
-    count, v = len(v), consecutive_subs_correction(v)
-    print('>>> {} new complex variants formed.'.format(count-len(v)),
-          file=sys.stdout)
+    for ids, children in grouped:
+        mom_id, dad_id = ids
+        if mom_id == '0' and dad_id == '0':
+            for _, child in children.iterrows():
+                yield [child.personId, child.personId, 0, 0,
+                       child.role, child.sex]
+            continue
 
-    return v
+        assert mom_id != '0' and dad_id != '0'
+
+        family_id = get_family_id(children, set_family_id)
+        yield [family_id] + get_parent(families, mom_id, 'mom')
+        yield [family_id] + get_parent(families, dad_id, 'dad')
+        for _, child in children.iterrows():
+            yield [family_id, child.personId, mom_id, dad_id,
+                   child.role, child.sex]
 
 
 def export(filename, prepared_data):
@@ -294,8 +343,11 @@ def export(filename, prepared_data):
 
 
 def denovo2DAE(args):
-    v, f = transform_files(args)
-    v = perform_corrections(v)
+    v, f = prepare_variants_df(args), prepare_families_df(args)
+
+    f = pd.DataFrame(
+        reduce_families(f, v, args['familyId'] is None),
+        columns=['familyId', 'personId', 'momId', 'dadId', 'role', 'sex'])
 
     prepared_data = pd.DataFrame(
         generate_dae(v, f, args['zerobased']),
@@ -307,8 +359,7 @@ def denovo2DAE(args):
 
 def output_filename(args):
     if not args['outputFile']:
-        args['outputFile'] = '.'.join(
-            args['variantsFile'].split('.')[:-1]) + '_prepared.tsv'
+        return '.'.join(args['variantsFile'].split('.')[:-1]) + '_prepared.tsv'
     return args['outputFile']
 
 

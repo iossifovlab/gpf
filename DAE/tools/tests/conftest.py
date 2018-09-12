@@ -3,28 +3,24 @@ from tools.denovo2DAE import parse_cli_arguments, denovo2DAE, \
     output_filename, export
 from tools.tests.test_denovo2DAE import path
 from DAE import pheno
-from fixtures.pheno_data import populate_instruments, DB, DBS
+from tools.tests.fixtures.pheno_data import DB, DBS, populate_instruments
 
+
+FAMILIES_COLUMNS = ['--familyId=familyId', '--sex=gender',
+                    '--momId=momId', '--dadId=dadId']
 
 @pytest.fixture(scope='session')
 def dae():
-    args = [path('dnv2dae/lelieveld-2016.tsv'),
-            path('dnv2dae/lelieveld-2016-families.tsv')]
+    args = [path('dnv2dae/vs.tsv'), path('dnv2dae/fs.ped')] + FAMILIES_COLUMNS
     return denovo2DAE(parse_cli_arguments(args))
-
-
-@pytest.fixture(scope='session')
-def dae_without_columns_error():
-    args = [path('dnv2dae/lelieveld-2016-err.tsv'),
-            path('dnv2dae/lelieveld-2016-families.tsv')]
-    return parse_cli_arguments(args)
 
 
 @pytest.fixture(scope='session')
 def dae_file():
     out = path('dnv2dae/dae.tsv')
     path_args = [path('dnv2dae/yuen_subset.csv'),
-                 path('dnv2dae/yuen_families.ped'), '-f', out]
+                 path('dnv2dae/yuen_families.ped'),
+                 '-o', out] + FAMILIES_COLUMNS
     args = parse_cli_arguments(path_args)
     export(output_filename(args), denovo2DAE(args))
     return out
@@ -33,15 +29,15 @@ def dae_file():
 @pytest.fixture(scope='session')
 def dae_with_columns():
     args = [path('dnv2dae/yuen_subset_cols.csv'),
-            path('dnv2dae/yuen_families.ped'), '-i=SAMPLE',
-            '-c=CHROM', '-p=START', '-r=REF', '-a=ALT']
+            path('dnv2dae/yuen_families.ped'), '-si=SAMPLE',
+            '-c=CHROM', '-p=START', '-r=REF', '-a=ALT'] + FAMILIES_COLUMNS
     return denovo2DAE(parse_cli_arguments(args))
 
 
 @pytest.fixture(scope='session')
 def dae_xlsx():
     args = [path('dnv2dae/yuen_subset.xlsx'),
-            path('dnv2dae/yuen_families.ped'), '--skiprows=1']
+            path('dnv2dae/yuen_families.ped')] + FAMILIES_COLUMNS
     return denovo2DAE(parse_cli_arguments(args))
 
 
