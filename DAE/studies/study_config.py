@@ -16,7 +16,7 @@ class StudyConfig(ConfigurableEntityConfig):
 
     def __init__(self, config, *args, **kwargs):
         super(StudyConfig, self).__init__(config, *args, **kwargs)
-        assert self.prefix
+        assert 'prefix' in self
         assert self.study_name
         assert self.type
         assert self.type in StudyFactory.STUDY_TYPES.keys()
