@@ -76,7 +76,8 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
             if v is None:
                 return []
             else:
-                return v.strip("[]").split(",")
+                return v.strip('[]').replace("\"", "")\
+                        .replace("'", "").split(",")
         df.effect_gene_types = df.effect_gene_types.apply(s2a)
         df.effect_gene_genes = df.effect_gene_genes.apply(s2a)
 
