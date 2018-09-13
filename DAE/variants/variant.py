@@ -208,6 +208,17 @@ class SummaryAllele(VariantBase):
             self.attributes = {}
             self.update_attributes(attributes)
 
+    @property
+    def cshl_variant(self):
+        if self.details is not None:
+            return self.details.cshl_variant
+        else:
+            return None
+
+    @property
+    def effects(self):
+        return self.effect
+
     @staticmethod
     def create_reference_allele(allele):
         return SummaryAllele(

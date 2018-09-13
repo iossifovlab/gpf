@@ -38,8 +38,8 @@ class QueryBaseView(views.APIView):
 
     def get_dataset(self, dataset_id):
         if dataset_id not in self.datasets_cache:
-            config = self.dataset_definitions.get_dataset_config(dataset_id)
-            self.datasets_cache[dataset_id] = self.dataset_factory.get_dataset(config)
+            self.datasets_cache[dataset_id] =\
+                self.dataset_facade.get_dataset(dataset_id)
 
         return self.datasets_cache[dataset_id]
 
@@ -48,7 +48,7 @@ class QueryBaseView(views.APIView):
         self.datasets = register.get('datasets')
         assert self.datasets is not None
 
-        self.dataset_definitions = self.datasets.get_definitions()
+        self.dataset_facade = self.datasets.get_facade()
         self.dataset_factory = DatasetFactory()
 
 
@@ -93,7 +93,7 @@ class QueryPreviewView(QueryBaseView):
             self.check_object_permissions(request, dataset_id)
 
             if dataset_id == MetaDataset.ID:
-                dataset_ids = self.dataset_definitions.get_dataset_ids()
+                dataset_ids = self.dataset_facade.get_all_dataset_ids()
                 dataset_ids.remove(MetaDataset.ID)
                 data['dataset_ids'] = filter(
                     lambda dataset_id: IsDatasetAllowed.user_has_permission(
@@ -161,7 +161,7 @@ class QueryDownloadView(QueryBaseView):
             self.check_object_permissions(request, data['datasetId'])
 
             if data['datasetId'] == MetaDataset.ID:
-                dataset_ids = self.dataset_definitions.get_dataset_ids()
+                dataset_ids = self.dataset_facade.get_all_dataset_ids()
                 dataset_ids.remove(MetaDataset.ID)
                 data['dataset_ids'] = filter(
                     lambda dataset_id: IsDatasetAllowed.user_has_permission(

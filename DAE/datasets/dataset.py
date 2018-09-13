@@ -21,8 +21,8 @@ class Dataset(object):
         preview_columns = []
         download_columns = []
         if genotypeBrowser:
-            self.preview_columns = genotypeBrowser['previewColumns']
-            self.download_columns = genotypeBrowser['downloadColumns']
+            preview_columns = genotypeBrowser['previewColumns']
+            download_columns = genotypeBrowser['downloadColumns']
 
         self.name = name
         self.study_group = study_group
@@ -31,6 +31,8 @@ class Dataset(object):
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
+
+        self.legend = self.dataset_config.pedigreeSelectors[0]['domain']
 
     def get_variants(self, **kwargs):
         return self.study_group.get_variants(**kwargs)
@@ -44,7 +46,7 @@ class Dataset(object):
         return ['']
 
     def get_legend(self, *args, **kwargs):
-        return ['autism']
+        return self.legend
 
     @property
     def order(self):
@@ -56,7 +58,7 @@ class Dataset(object):
             'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
             'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
             'enrichmentTool', 'genotypeBrowser', 'pedigreeSelectors',
-            'studyTypes'
+            'studyTypes', 'studies'
         ]
 
     def _get_study_group_config_options(self, dataset_config):
@@ -71,6 +73,8 @@ class Dataset(object):
             self.study_group.has_denovo
         dataset_config['genotypeBrowser']['hasTransmitted'] =\
             self.study_group.has_transmitted
+        dataset_config['studies'] =\
+            self.study_group.study_names
 
         return dataset_config
 
