@@ -1,6 +1,6 @@
+import os
 import pytest
-from tools.denovo2DAE import parse_cli_arguments, denovo2DAE, \
-    output_filename, export
+from tools.denovo2DAE import parse_cli_arguments, denovo2DAE, export
 from tools.tests.test_denovo2DAE import path
 from DAE import pheno
 from tools.tests.fixtures.pheno_data import DB, DBS, populate_instruments
@@ -16,13 +16,10 @@ def dae():
 
 
 @pytest.fixture(scope='session')
-def dae_file():
-    out = path('dnv2dae/dae.tsv')
-    path_args = [path('dnv2dae/yuen_subset.csv'),
-                 path('dnv2dae/yuen_families.ped'),
-                 '-o', out] + FAMILIES_COLUMNS
-    args = parse_cli_arguments(path_args)
-    export(output_filename(args), denovo2DAE(args))
+def dae_file(dae, request):
+    out = path('dnv2dae/out.tsv')
+    export(out, dae)
+    request.addfinalizer(lambda: os.remove(out))
     return out
 
 

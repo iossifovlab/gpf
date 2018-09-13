@@ -109,6 +109,11 @@ def parse_cli_arguments(argv=sys.argv[1:]):
         dest='outputFile', metavar='outputFilePath',
         help='output filepath'
     )
+    parser.add_argument(
+        '--force',
+        action='store_true',
+        help='resolve conflicts concerning missing samples'
+    )
 
     create_variants_arguments(parser)
     create_families_arguments(parser)
@@ -165,15 +170,17 @@ def form_variant(row):
 
 
 class SharedData(object):
-    families_dict = {}
+    families_dict = defaultdict(lambda: defaultdict(list))
     person_sex = {}
     person_family = {}
     person_variant = defaultdict(list)
 
-    def __init__(self, variants, families):
+    def __init__(self, variants, families, force):
         self.counter = 0
+        self.force = force
         self.associate_person_variant(variants)
         self.assign_family(families.groupby(['familyId']))
+        self.force_missing_samples(variants, families)
 
 
     def associate_person_variant(self, variants):
@@ -183,19 +190,30 @@ class SharedData(object):
 
 
     def assign_family(self, grouped):
-        for family_id, family_df in grouped:
-            f = self.families_dict[family_id] = defaultdict(list)
-
+        for fid, family_df in grouped:
             for _, person in family_df.iterrows():
                 self.person_sex[person.personId] = person.sex
-                self.person_family[person.personId] = family_id
-                f[person.role].append(person.personId)
+                self.person_family[person.personId] = fid
+                self.families_dict[fid][person.role].append(person.personId)
 
 
     def increment_counter(self):
         self.counter += 1
         if self.counter % 1000 == 0:
             print('{} lines processed'.format(self.counter), file=sys.stdout)
+
+
+    def force_missing_samples(self, variants, families):
+        if not self.force:
+            return
+
+        missing_ids = set(variants.sampleId) - set(families.personId)
+        for mid in missing_ids:
+            self.person_family[mid] = mid
+            self.families_dict[mid]['prb'].append(mid)
+            self.person_sex[mid] = 'U'
+            print('Including sample {}\'s variants...'
+                  .format(mid), file=sys.stderr)
 
 
 
@@ -220,15 +238,17 @@ def calculate_additional_columns(sd, variant, family):
     return bs2str(' '.join(best_state)), in_child, ', '.join(sample_id)
 
 
-def generate_dae(variants, families, zero_based):
-    sd = SharedData(variants, families)
+def generate_dae(variants, families, zero_based, force):
+    sd = SharedData(variants, families, force)
 
     for _, row in variants.iterrows():
         sd.increment_counter()
 
         if row.sampleId not in sd.person_family:
-            print('Omitting variant. Sample {} not found in pedigree file.'
-                  .format(row.sampleId), file=sys.stderr)
+            assert force is False
+            print('Omitting variant. Sample {}\'s variant({}) not found in '
+                  'pedigree file. Use --force if you wish to include it.'
+                  .format(row.sampleId, form_variant(row)), file=sys.stderr)
             continue
         family_id = sd.person_family[row.sampleId]
 
@@ -350,7 +370,7 @@ def denovo2DAE(args):
         columns=['familyId', 'personId', 'momId', 'dadId', 'role', 'sex'])
 
     prepared_data = pd.DataFrame(
-        generate_dae(v, f, args['zerobased']),
+        generate_dae(v, f, args['zerobased'], args['force']),
         columns=['familyId', 'chr', 'pos', 'ref', 'alt',
                  'bestState', 'inChild', 'sampleIds'])
     prepared_data = prepared_data.sort_values(by=['chr', 'pos'])

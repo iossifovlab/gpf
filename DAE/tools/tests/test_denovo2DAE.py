@@ -35,9 +35,8 @@ def test_incorrect_filepaths():
     assert_system_exit(['wrong_v', 'wrong_f'])
 
 
-def test_file_output(dae_file, dae_with_columns):
-    cmp_file_df(dae_file, dae_with_columns)
-    os.remove(dae_file)
+def test_exporting_dae(dae_file, dae):
+    cmp_file_df(dae_file, dae)
 
 
 def test_xlsx_format_variants(dae_xlsx):
