@@ -48,37 +48,37 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope='session')
-def datasets_config(request):
+def datasets_config():
     return DatasetsConfig()
 
 
 @pytest.fixture(scope='session')
-def datasets_factory(request, datasets_config):
+def datasets_factory(datasets_config):
     return DatasetsFactory(datasets_config)
 
 
 @pytest.fixture(scope='session')
-def ssc(request, datasets_factory):
+def ssc(datasets_factory):
     return datasets_factory.get_dataset('SSC')
 
 
 @pytest.fixture(scope='session')
-def vip(request,  datasets_factory):
+def vip(datasets_factory):
     return datasets_factory.get_dataset('SVIP')
 
 
 @pytest.fixture(scope='session')
-def sd(request,  datasets_factory):
-    return datasets_factory.get_dataset('SD')
+def sd(datasets_factory):
+    return datasets_factory.get_dataset('SD_TEST')
 
 
 @pytest.fixture(scope='session')
-def denovodb(request,  datasets_factory):
+def denovodb(datasets_factory):
     return datasets_factory.get_dataset('denovo_db')
 
 
 @pytest.fixture(scope='session')
-def ssc_pheno(request):
+def ssc_pheno():
     pf = DAE.pheno
     db = pf.get_pheno_db('ssc')
     return db
@@ -92,5 +92,5 @@ def vip_pheno():
 
 
 @pytest.fixture(scope='session')
-def spark(request,  datasets_factory):
-    return datasets_factory.get_dataset('SPARK')
+def spark(datasets_factory):
+    return datasets_factory.get_dataset('SPARKv1')

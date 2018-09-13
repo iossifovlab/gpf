@@ -11,7 +11,7 @@ from pprint import pprint
 class Test(BaseAuthenticatedUserTest):
 
     URL = '/api/v3/common_reports/variant_reports/IossifovWE2014'
-    URL2 = '/api/v3/common_reports/variant_reports/ALL%20WHOLE%20EXOME'
+    URL2 = '/api/v3/common_reports/variant_reports/TEST%20WHOLE%20EXOME'
 
     def test_has_study_description(self):
         response = self.client.get(self.URL)
@@ -26,7 +26,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertIn('study_description', data)
         self.assertEqual(
             data['study_description'],
-            "All whole-exomes studies")
+            "Test whole-exomes studies")
 
     def test_denovo_children_counters(self):
         response = self.client.get(self.URL)

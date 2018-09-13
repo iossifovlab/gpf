@@ -2,7 +2,7 @@ import os
 import itertools
 import pytest
 from DAE import pheno
-from get_pheno_property import parse_cli_arguments, query_data
+from tools.get_pheno_property import parse_cli_arguments, query_data
 from fixtures.pheno_data import M, DB, DBS, DBS_HEADER, INSTRUMENTS_HEADER, \
                                 MEASURES_HEADER, MEASURE_ROWS, \
                                 get_people, get_people_filtered

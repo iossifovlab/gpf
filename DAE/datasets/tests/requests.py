@@ -53,7 +53,7 @@ EXAMPLE_QUERY_SD = {
         "CNV", "del", "ins", "sub",
     ],
     "genes": "All",
-    "datasetId": "SD",
+    "datasetId": "SD_TEST",
     "pedigreeSelector": {
         'id': "phenotype",
         "checkedValues": ["autism", "unaffected"]
