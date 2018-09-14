@@ -10,6 +10,7 @@ import os
 import shutil
 import tempfile
 import time
+import socket
 
 import pytest
 
@@ -80,12 +81,24 @@ def composite_annotator(
     ])
 
 
-@pytest.fixture(scope='session')
-def testing_thriftserver_port():
+def get_thriftserver_port():
     thrift_port = os.environ.get("THRIFTSERVER_PORT")
     if thrift_port is None:
         return 10000
-    return int(thrift_port)
+    thrift_port = int(thrift_port)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    while True:
+        result = sock.connect_ex(('127.0.0.1', thrift_port))
+        if result != 0:
+            break
+        thrift_port += 1
+    return thrift_port
+
+
+@pytest.fixture(scope='session')
+def testing_thriftserver_port():
+    thrift_port = get_thriftserver_port()
+    return thrift_port
 
 
 @pytest.fixture(scope='session')
@@ -95,11 +108,7 @@ def testing_thriftserver(request):
     spark_home = os.environ.get("SPARK_HOME")
     assert spark_home is not None
 
-    thrift_port = os.environ.get("THRIFTSERVER_PORT")
-    if thrift_port is not None:
-        thrift_port = int(thrift_port)
-    else:
-        thrift_port = 10000
+    thrift_port = get_thriftserver_port()
 
     def thrift_connect(retries=10):
         for count in range(retries + 1):
