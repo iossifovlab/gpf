@@ -59,6 +59,8 @@ class GenerateScoresHistograms(object):
         for chunk in pd.read_csv(
             file, usecols=[score_column], sep='\t', header=head,
                 chunksize=self.chunk_size, low_memory=True):
+            chunk[score_column] = pd.to_numeric(
+                chunk[score_column], errors='coerce')
             min_chunk = chunk[score_column].min()
             max_chunk = chunk[score_column].max()
             if min_chunk < min_value or min_value is None:
@@ -147,6 +149,8 @@ class GenerateScoresHistograms(object):
                             header=head, chunksize=self.chunk_size,
                             low_memory=True):
                         chunk = self.get_length(chunk, start, end)
+                        chunk[score_column] = pd.to_numeric(
+                            chunk[score_column], errors='coerce')
                         if 'length' in chunk:
                             for s, l in\
                                     zip(chunk[score_column], chunk['length']):
