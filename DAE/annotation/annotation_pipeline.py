@@ -37,18 +37,6 @@ class MultiAnnotator(object):
     After processing of user options this class passes line by line the data
     to `Annotators` and `Preannotators`.
 
-    Arguments of the constructor are:
-
-    * `reannotate` - True/False. True - reannotate column and don't add new columns.
-                     False - add new column and don't reannotate old columns.
-
-    * `preannotators` - list of `Preannotators`
-
-    * `split_column` - Column to split before annotation and generate values for
-                       all parts of split column and after that to join new values
-                       in one column.
-
-    * `split_separator` - Separator for split column, default value is `,`
     """
 
     def __init__(self, opts, header=None):
@@ -68,6 +56,7 @@ class MultiAnnotator(object):
                 all_columns_labels.update(preannotator.new_columns)
                 if self.header:
                     self.header.extend(preannotator.new_columns)
+
                 virtual_columns_indices.extend(
                     [assign_values(column, self.header)
                      for column in preannotator.new_columns])
@@ -108,11 +97,11 @@ class MultiAnnotator(object):
             all_columns_labels.update(step_columns_labels)
 
             if self.header is not None:
-                if opts.reannotate:
+                if opts.append:
+                    new_columns = step_columns_labels
+                else:
                     new_columns = [column for column in step_columns_labels
                                    if column not in self.header]
-                else:
-                    new_columns = step_columns_labels
                 self.header.extend(new_columns)
 
             if annotation_step_config.virtuals is not None:
@@ -217,11 +206,9 @@ def get_argument_parser():
                         default=False,  action='store_true', dest='no_header')
     parser.add_argument('-c', '--config', help='config file location',
                         required=True, action='store')
-    parser.add_argument('--reannotate', help='always add columns; '
+    parser.add_argument('--append', help='always add columns; '
                         'default behavior is to replace columns with the same label',
                         default=False, action='store_true')
-    parser.add_argument('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)',
-                        action='store')
     parser.add_argument('--split', help='split variants based on given column',
                         action='store')
     parser.add_argument('--separator', help='separator used in the split column; defaults to ","',
@@ -239,3 +226,4 @@ def get_argument_parser():
 
 if __name__ == '__main__':
     main(get_argument_parser(), MultiAnnotator)
+

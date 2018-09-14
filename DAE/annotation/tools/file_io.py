@@ -130,11 +130,15 @@ class TSVFormat(AbstractFormat):
 
     def _header_read(self):
         if not self.opts.no_header:
-            header_str = self.variantFile.readline()[:-1]
+            header_str = ""
             if hasattr(self.opts, 'region'):
                 if(self.opts.region is not None):
                     with gzip.open(self.opts.infile) as file:
                         header_str = file.readline()[:-1]
+                else:
+                    header_str = self.variantFile.readline()[:-1]
+            else:
+                header_str = self.variantFile.readline()[:-1]
             if header_str[0] == '#':
                 header_str = header_str[1:]
             self.header = header_str.split('\t')
@@ -144,14 +148,11 @@ class TSVFormat(AbstractFormat):
             sys.stderr.write('Cannot read in write mode!\n')
             sys.exit(-78)
 
-        line = self.variantFile.readline()
+        line = next(self.variantFile)
         self.linecount += 1
         if self.linecount % self.linecount_threshold == 0:
-            new_p = (self.variantFile.tell() * 100) / self.filesize
-            if new_p > self.percent_read:
-                self.percent_read = new_p
-                sys.stderr.write(str(self.percent_read) + '%' + '\n')
-        return line.rstrip().split('\t')
+            sys.stderr.write(str(self.linecount) + ' lines read\n')
+        return line.rstrip('\n').split('\t')
 
     def line_write(self, input_):
         if self.mode != 'w':
