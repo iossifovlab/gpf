@@ -1,6 +1,48 @@
+import os
 import pytest
+from tools.denovo2DAE import parse_cli_arguments, denovo2DAE, export
+from tools.tests.test_denovo2DAE import path
 from DAE import pheno
-from fixtures.pheno_data import populate_instruments, DB, DBS
+from tools.tests.fixtures.pheno_data import DB, DBS, populate_instruments
+
+
+FAMILIES_COLUMNS = ['--familyId=familyId', '--sex=gender',
+                    '--momId=momId', '--dadId=dadId']
+
+@pytest.fixture(scope='session')
+def dae():
+    args = [path('dnv2dae/vs.tsv'), path('dnv2dae/fs.ped')] + FAMILIES_COLUMNS
+    return denovo2DAE(parse_cli_arguments(args))
+
+
+@pytest.fixture(scope='session')
+def dae_file(dae, request):
+    out = path('dnv2dae/out.tsv')
+    export(out, dae)
+    request.addfinalizer(lambda: os.remove(out))
+    return out
+
+
+@pytest.fixture(scope='session')
+def dae_with_columns():
+    args = [path('dnv2dae/yuen_subset_cols.csv'),
+            path('dnv2dae/yuen_families.ped'), '-si=SAMPLE',
+            '-c=CHROM', '-p=START', '-r=REF', '-a=ALT'] + FAMILIES_COLUMNS
+    return denovo2DAE(parse_cli_arguments(args))
+
+
+@pytest.fixture(scope='session')
+def dae_xlsx():
+    args = [path('dnv2dae/yuen_subset.xlsx'),
+            path('dnv2dae/yuen_families.ped')] + FAMILIES_COLUMNS
+    return denovo2DAE(parse_cli_arguments(args))
+
+
+@pytest.fixture(scope='session')
+def dae_zero_based():
+    args = [path('dnv2dae/yuen_subset.csv'), path('dnv2dae/yuen_families.ped')]
+    return denovo2DAE(parse_cli_arguments(args)), \
+        denovo2DAE(parse_cli_arguments(args + ['--zerobased']))
 
 
 @pytest.fixture()
