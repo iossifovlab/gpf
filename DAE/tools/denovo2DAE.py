@@ -170,18 +170,20 @@ def form_variant(row):
 
 
 class SharedData(object):
-    families_dict = defaultdict(lambda: defaultdict(list))
-    person_sex = {}
-    person_family = {}
-    person_variant = defaultdict(list)
-
     def __init__(self, variants, families, force):
-        self.counter = 0
+        self.initiate_values()
         self.force = force
         self.associate_person_variant(variants)
         self.assign_family(families.groupby(['familyId']))
         self.force_missing_samples(variants, families)
 
+
+    def initiate_values(self):
+        self.families_dict = defaultdict(lambda: defaultdict(list))
+        self.person_sex = {}
+        self.person_family = {}
+        self.person_variant = defaultdict(list)
+        self.counter = 0
 
     def associate_person_variant(self, variants):
         for _, row in variants.iterrows():

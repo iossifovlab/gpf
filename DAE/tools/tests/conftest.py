@@ -9,10 +9,26 @@ from tools.tests.fixtures.pheno_data import DB, DBS, populate_instruments
 FAMILIES_COLUMNS = ['--familyId=familyId', '--sex=gender',
                     '--momId=momId', '--dadId=dadId']
 
+
+def converted_dae(vs, fs, addition=[], start_slice=0):
+    args = [path('dnv2dae/' + vs), path('dnv2dae/' + fs)] \
+            + FAMILIES_COLUMNS[start_slice:] + addition
+    return denovo2DAE(parse_cli_arguments(args))
+
+
 @pytest.fixture(scope='session')
 def dae():
-    args = [path('dnv2dae/vs.tsv'), path('dnv2dae/fs.ped')] + FAMILIES_COLUMNS
-    return denovo2DAE(parse_cli_arguments(args))
+    return converted_dae('vs.tsv', 'fs.ped')
+
+
+@pytest.fixture(scope='session')
+def dae_force():
+    return converted_dae('vs.tsv', 'fs.ped', ['--force'])
+
+
+@pytest.fixture(scope='session')
+def dae_ids():
+    return converted_dae('vs.tsv', 'fs.ped', start_slice=1)
 
 
 @pytest.fixture(scope='session')
@@ -24,25 +40,30 @@ def dae_file(dae, request):
 
 
 @pytest.fixture(scope='session')
-def dae_with_columns():
-    args = [path('dnv2dae/yuen_subset_cols.csv'),
-            path('dnv2dae/yuen_families.ped'), '-si=SAMPLE',
-            '-c=CHROM', '-p=START', '-r=REF', '-a=ALT'] + FAMILIES_COLUMNS
-    return denovo2DAE(parse_cli_arguments(args))
-
-
-@pytest.fixture(scope='session')
 def dae_xlsx():
-    args = [path('dnv2dae/yuen_subset.xlsx'),
-            path('dnv2dae/yuen_families.ped')] + FAMILIES_COLUMNS
-    return denovo2DAE(parse_cli_arguments(args))
+    return converted_dae('yuen_subset.xlsx', 'yuen_families.ped')
 
 
 @pytest.fixture(scope='session')
-def dae_zero_based():
-    args = [path('dnv2dae/yuen_subset.csv'), path('dnv2dae/yuen_families.ped')]
-    return denovo2DAE(parse_cli_arguments(args)), \
-        denovo2DAE(parse_cli_arguments(args + ['--zerobased']))
+def dae_csv():
+    return converted_dae('yuen_subset.csv', 'yuen_families.ped')
+
+
+@pytest.fixture(scope='session')
+def dae_tsv():
+    return converted_dae('yuen_subset.tsv', 'yuen_families.ped')
+
+
+@pytest.fixture(scope='session')
+def dae_with_columns():
+    columns = ['-si=SAMPLE', '-c=CHROM', '-p=START', '-r=REF', '-a=ALT']
+    return converted_dae('yuen_subset_cols.csv', 'yuen_families.ped', columns)
+
+
+@pytest.fixture(scope='session')
+def dae_zero_based(dae_tsv):
+    d = converted_dae('yuen_subset.csv', 'yuen_families.ped', ['--zerobased'])
+    return dae_tsv, d
 
 
 @pytest.fixture()
