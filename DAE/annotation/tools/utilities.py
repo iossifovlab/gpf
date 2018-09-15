@@ -29,7 +29,7 @@ class AnnotatorBase():
             if '#' in line[0]:
                 file_io_manager.line_write(line)
                 continue
-            annotated = self.line_annotations(line, self.new_columns)
+            annotated = line + self.line_annotations(line, self.new_columns)
             file_io_manager.line_write(annotated)
 
     @property
@@ -70,6 +70,10 @@ def assign_values(param, header=None):
 
 def main(argument_parser, annotator_factory,
          start=time.time()):
+
+    argument_parser.add_argument('--region',
+        help='region to annotate (chr:begin-end) (input should be tabix indexed)',
+        action='store')
 
     argument_parser.add_argument(
             'infile', nargs='?', action='store',
