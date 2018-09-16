@@ -177,7 +177,6 @@ class SharedData(object):
         self.assign_family(families.groupby(['familyId']))
         self.force_missing_samples(variants, families)
 
-
     def initiate_values(self):
         self.families_dict = defaultdict(lambda: defaultdict(list))
         self.person_sex = {}
@@ -190,7 +189,6 @@ class SharedData(object):
             variant = form_variant(row)
             self.person_variant[row.sampleId].append(variant)
 
-
     def assign_family(self, grouped):
         for fid, family_df in grouped:
             for _, person in family_df.iterrows():
@@ -198,12 +196,10 @@ class SharedData(object):
                 self.person_family[person.personId] = fid
                 self.families_dict[fid][person.role].append(person.personId)
 
-
     def increment_counter(self):
         self.counter += 1
         if self.counter % 1000 == 0:
             print('{} lines processed'.format(self.counter), file=sys.stdout)
-
 
     def force_missing_samples(self, variants, families):
         if not self.force:
@@ -218,9 +214,15 @@ class SharedData(object):
                   .format(mid), file=sys.stderr)
 
 
-
 def bs2str(state):
     return state + '/' + state.replace('2', '0')
+
+
+def sex_leter(sex):
+    if sex in ["M", "F", "U"]:
+        return sex
+    else:
+        return {1: "M", 2: "F", 0: "U"}[int(sex)]
 
 
 def calculate_additional_columns(sd, variant, family):
@@ -233,7 +235,7 @@ def calculate_additional_columns(sd, variant, family):
                    variant in sd.person_variant[member_id]:
                     best_state.append('1')
                     sample_id.append(member_id)
-                    in_child += role + sd.person_sex[member_id]
+                    in_child += role + sex_leter(sd.person_sex[member_id])
                 else:
                     best_state.append('2')
 
@@ -367,9 +369,9 @@ def export(filename, prepared_data):
 def denovo2DAE(args):
     v, f = prepare_variants_df(args), prepare_families_df(args)
 
-    f = pd.DataFrame(
-        reduce_families(f, v, args['familyId'] is None),
-        columns=['familyId', 'personId', 'momId', 'dadId', 'role', 'sex'])
+#     f = pd.DataFrame(
+#         reduce_families(f, v, args['familyId'] is None),
+#         columns=['familyId', 'personId', 'momId', 'dadId', 'role', 'sex'])
 
     prepared_data = pd.DataFrame(
         generate_dae(v, f, args['zerobased'], args['force']),
