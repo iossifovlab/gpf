@@ -12,6 +12,7 @@ from itertools import chain, product
 from collections import OrderedDict
 import cPickle
 import logging
+from pprint import pprint
 
 # from denovo_gene_sets import build_denovo_gene_sets
 from gene.config import GeneInfoConfig
@@ -20,7 +21,9 @@ from datasets.metadataset import MetaDataset
 from GeneTerms import loadGeneTerm
 # from DAE import vDB
 import DAE
+from pheno.common import Status
 from study_groups.study_group_facade import StudyGroupFacade
+from variants.attributes import Inheritance
 
 LOGGER = logging.getLogger(__name__)
 
@@ -234,7 +237,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         else:
             return pedigree_selectors
 
-    def get_gene_sets(self, gene_sets_types={'SD': ['autism']}, **kwargs):
+    def get_gene_sets(self, gene_sets_types={'f1': ['autism']}, **kwargs):
         gene_sets_types = self._filter_gene_sets_types(
             gene_sets_types,
             kwargs.get('permitted_datasets'))
@@ -242,6 +245,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             gene_sets_types,
             kwargs.get('include_datasets_desc', True))
         result = []
+        print()
+        pprint(self.cache)
         for gsn in self.gene_sets_names:
             gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
             if gene_set_syms:
@@ -345,27 +350,24 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         # next_criterias = criterias - {next_key}
         return cls._get_gene_families(cache[next_key], criterias - {next_key})
 
-    def _gene_sets_for(self, dataset):
+    def _gene_sets_for(self, study_group):
         pedigree_selector = self.study_group_pedigree_selectors[
-            dataset['id']]['source']
-        pedigree_selector_values = map(
-            lambda value: value['id'],
-            self._get_configured_dataset_legend(dataset))
+            study_group.name]['source']
+        pedigree_selector_values = study_group.phenotypes
 
         dataset_cache = {value: {} for value in pedigree_selector_values}
-        self.cache[dataset['id']] = dataset_cache
+        self.cache[study_group.name] = dataset_cache
 
         for criterias_combination in product(*self.standard_criterias):
             search_args = {criteria['property']: criteria['value']
                            for criteria in criterias_combination}
-            variants = list(DAE.vDB.get_denovo_variants(dataset['studies'],
-                                                        **search_args))
             for pedigree_selector_value in pedigree_selector_values:
                 cache = self._init_criterias_cache(
                     dataset_cache[pedigree_selector_value],
                     criterias_combination)
-                self._add_genes_families(cache, pedigree_selector,
-                                         pedigree_selector_value, variants)
+                self._add_genes_families(
+                    cache, pedigree_selector,
+                    pedigree_selector_value, study_group, search_args)
 
     @staticmethod
     def _init_criterias_cache(dataset_cache, criterias_combination):
@@ -376,15 +378,21 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     @classmethod
     def _add_genes_families(cls, cache, pedigree_selector,
-                            pedigree_selector_value, variants):
-        for variant in cls._filter_by_pedigree_selector(
-                pedigree_selector, pedigree_selector_value,
-                variants):
-            gene_symbols = {ge['sym']
-                            for ge in variant.requestedGeneEffects}
-            family_id = variant.familyId
-            for gene in gene_symbols:
-                cache.setdefault(gene, set()).add(family_id)
+                            pedigree_selector_value, study_group, search_args):
+        print(search_args)
+        variants = study_group.get_variants(
+                inheritance=Inheritance.denovo.name,
+                status='{} or {}'.format(
+                    Status.affected.name, Status.unaffected.name),
+                **search_args)
+
+        print(pedigree_selector, pedigree_selector_value)
+        for variant in variants:
+            family_id = variant.family_id
+            for allele in variant.matched_alleles:
+                effect = allele.summary_allele.effect
+                for gene in effect.genes:
+                    cache.setdefault(gene.symbol, set()).add(family_id)
 
     @staticmethod
     def _filter_by_pedigree_selector(pedigree_selector, value, variants):

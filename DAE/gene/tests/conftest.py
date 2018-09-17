@@ -3,6 +3,9 @@ Created on Mar 29, 2018
 
 @author: lubo
 '''
+import os
+import shutil
+
 import pytest
 
 from Config import Config
@@ -60,3 +63,17 @@ def gscs(study_group_facade, gene_info_config):
     res = GeneSetsCollections(
         study_group_facade=study_group_facade, config=gene_info_config)
     return res
+
+
+@pytest.fixture(scope='session')
+def gene_info_cache_dir():
+    cache_dir = path_to_fixtures('geneInfo', 'cache')
+    shutil.rmtree(cache_dir, ignore_errors=True)
+    assert not os.path.exists(cache_dir)
+    os.makedirs(cache_dir)
+
+    yield
+
+    shutil.rmtree(cache_dir)
+
+

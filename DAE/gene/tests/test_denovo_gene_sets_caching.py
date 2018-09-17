@@ -5,8 +5,11 @@ Created on Feb 27, 2017
 '''
 import pytest
 
+pytestmark = pytest.mark.usefixtures("gene_info_cache_dir")
+
 
 def test_load_cache(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
     computed = denovo.load()
     assert computed is not None
+
