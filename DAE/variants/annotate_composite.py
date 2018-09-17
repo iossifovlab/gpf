@@ -5,6 +5,7 @@ Created on Mar 7, 2018
 '''
 from __future__ import print_function
 
+from builtins import object
 import pandas as pd
 import numpy as np
 

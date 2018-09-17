@@ -1,16 +1,20 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import random
 import sys
 
 def write_random_records(fqa, fqb, N=100000):
 	""" get N random headers from a fastq file without reading the
 	whole thing into memory"""
-	records = sum(1 for _ in open(fqa)) / 4
+	records = old_div(sum(1 for _ in open(fqa)), 4)
 
-	print "there are %d records" % (records)
+	print("there are %d records" % (records))
 
-	rand_records = sorted([random.randint(0, records - 1) for _ in xrange(N)])
+	rand_records = sorted([random.randint(0, records - 1) for _ in range(N)])
 
 	fha, fhb = open(fqa),  open(fqb)
 	suba, subb = open(fqa + ".subset", "w"), open(fqb + ".subset", "w")
@@ -26,7 +30,7 @@ def write_random_records(fqa, fqb, N=100000):
 			subb.write(fhb.readline())
 		rec_no += 1 # (thanks @anderwo)
 
-	print >>sys.stderr, "wrote to %s, %s" % (suba.name, subb.name)
+	print("wrote to %s, %s" % (suba.name, subb.name), file=sys.stderr)
 
 if __name__ == "__main__":
 	write_random_records(sys.argv[1], sys.argv[2], int(sys.argv[3]))

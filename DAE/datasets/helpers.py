@@ -53,7 +53,7 @@ def ge2str(gs):
 
 def mat2str(mat, col_sep=" ", row_sep="/"):
     return row_sep.join([col_sep.join([str(n) for n in mat[i, :]])
-                        for i in xrange(mat.shape[0])])
+                        for i in range(mat.shape[0])])
 
 
 def gene_effect_get_worst_effect(gs):

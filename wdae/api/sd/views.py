@@ -3,6 +3,8 @@ Created on Jun 18, 2015
 
 @author: lubo
 '''
+from builtins import map
+from builtins import str
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from api.views import build_effect_type_filter
@@ -69,12 +71,12 @@ class SequencingDenovoDownload(SequencingDenovoPrepare):
                                "sd query variants request: " + str(data)))
 
         comment = ', '.join([': '.join([k, str(v)])
-                             for (k, v) in data.items()])
+                             for (k, v) in list(data.items())])
 
         generator = wdae_query_wrapper(data)
         response = StreamingHttpResponse(
             itertools.chain(
-                itertools.imap(join_line, generator),
+                list(map(join_line, generator)),
                 ['# %s' % comment]),
             content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=unruly.csv'

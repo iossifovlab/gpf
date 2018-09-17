@@ -1,5 +1,7 @@
 #!/bin/env python
 
+from __future__ import print_function
+from __future__ import unicode_literals
 from DAE import *
 
 from collections import defaultdict
@@ -14,27 +16,27 @@ for v in allDnvVs:
 
 
 nb = 0
-for fgs, lst in bf.items():
+for fgs, lst in list(bf.items()):
     if len(lst)==1:
         continue
     nb+=1
-    print nb, "###### ", fgs
+    print(nb, "###### ", fgs)
     for v in lst:
-        print "|", v.study.name, "|", v.familyId, "|", v.location, "|", v.variant, "|", mat2Str(v.bestSt), "|", v.atts['effectType']
+        print("|", v.study.name, "|", v.familyId, "|", v.location, "|", v.variant, "|", mat2Str(v.bestSt), "|", v.atts['effectType'])
 
 ## the same location+variant accross different families
 vbf = defaultdict(lambda : defaultdict(list))
 for v in allDnvVs: 
     vbf[v.location + ":" + v.variant][v.familyId].append(v)
 
-for locVs, fams in vbf.items():
+for locVs, fams in list(vbf.items()):
     if len(fams)==1:
         continue
-    print "AAAAAAAAAAAA",  locVs, ",".join(fams)
+    print("AAAAAAAAAAAA",  locVs, ",".join(fams))
  
-    for fvs in fams.values(): 
+    for fvs in list(fams.values()): 
         for v in fvs:
-            print "|", v.study.name, "|", v.familyId, "|", v.location, "|", v.variant, "|", v.atts['effectType'], "|", v.atts['effectGene']
+            print("|", v.study.name, "|", v.familyId, "|", v.location, "|", v.variant, "|", v.atts['effectType'], "|", v.atts['effectGene'])
 
 
 

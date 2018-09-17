@@ -3,6 +3,7 @@ Created on Nov 25, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from pheno_tool.tool import PhenoTool
 from pheno.common import Role
 
@@ -17,7 +18,7 @@ def test_pheno_tool_studies_proband_subjects(phdb, all_ssc_studies):
 
     assert 2870 == len(persons)
     for p in persons.values():
-        assert Role.prb == p.role
+        assert Role.prb.name == p.role
 
 
 def test_pheno_tool_studies_siblings(phdb, all_ssc_studies):

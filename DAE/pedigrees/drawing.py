@@ -1,3 +1,7 @@
+from __future__ import division
+from __future__ import unicode_literals
+from past.utils import old_div
+from builtins import object
 from copy import deepcopy
 
 import matplotlib.pyplot as plt
@@ -99,7 +103,7 @@ class OffsetLayoutDrawer(object):
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
                     patches.append(mpatches.Circle(
-                        coords, individual.size / 2,
+                        coords, old_div(individual.size, 2),
                         facecolor="white", edgecolor="black"))
                 else:
                     coords = [individual.x + self._x_offset,

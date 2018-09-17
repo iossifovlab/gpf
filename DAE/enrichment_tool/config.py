@@ -3,7 +3,11 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-import ConfigParser
+from __future__ import unicode_literals
+from builtins import object
+from future import standard_library
+standard_library.install_aliases()
+from configparser import ConfigParser
 from collections import Counter
 from DAE import Config
 
@@ -17,7 +21,7 @@ class BackgroundConfig(object):
         wd = self.dae_config.daeDir
         data_dir = self.dae_config.data_dir
 
-        self.config = ConfigParser.SafeConfigParser({
+        self.config = ConfigParser({
             'wd': wd,
             'data': data_dir
         })
@@ -41,7 +45,7 @@ def children_stats_counter(studies, role):
     seen = set()
     counter = Counter()
     for st in studies:
-        for fid, fam in st.families.items():
+        for fid, fam in list(st.families.items()):
             for p in fam.memberInOrder[2:]:
                 iid = "{}:{}".format(fid, p.personId)
                 if iid in seen:

@@ -3,6 +3,8 @@ Created on Apr 21, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
 import numpy as np
 
 from rest_framework.views import APIView
@@ -15,7 +17,6 @@ import os
 from pheno_browser_api.common import PhenoBrowserCommon
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.permissions import IsDatasetAllowed
-import cStringIO
 from django.http.response import HttpResponse
 from pheno_browser.db import DbManager
 
@@ -87,7 +88,7 @@ class PhenoMeasuresView(APIView):
 
         instrument = request.query_params.get('instrument', None)
         if instrument is None:
-            instruments = dataset.pheno_db.instruments.keys()
+            instruments = list(dataset.pheno_db.instruments.keys())
             instrument = instruments[0]
 
         browser_dbfile = self.get_browser_dbfile(
@@ -99,8 +100,10 @@ class PhenoMeasuresView(APIView):
         df = db.get_instrument_df(instrument)
 
         res = []
-        for row in df.itertuples():
-            m = dict(vars(row))
+        for row in df.to_dict('records'):
+            print((row, type(row)))
+            m = row
+            print(m)
             if isnan(m['pvalue_correlation_nviq_male']):
                 m['pvalue_correlation_nviq_male'] = "NaN"
             if isnan(m['pvalue_correlation_age_male']):
@@ -142,16 +145,13 @@ class PhenoMeasuresDownload(APIView):
 
         instrument = request.query_params.get('instrument', None)
         if instrument is None:
-            instruments = dataset.pheno_db.instruments.keys()
+            instruments = list(dataset.pheno_db.instruments.keys())
             instrument = instruments[0]
 
         df = dataset.pheno_db.get_instrument_values_df(instrument)
-        output = cStringIO.StringIO()
-        df.to_csv(output, index=False)
+        df_csv = df.to_csv(index=False, encoding="utf-8")
 
-        response = HttpResponse(
-            output.getvalue(),
-            content_type='text/csv')
+        response = HttpResponse(df_csv, content_type='text/csv')
 
         response['Content-Disposition'] = 'attachment; filename=instrument.csv'
         response['Expires'] = '0'

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import unittest
 from variant_annotation.annotator import VariantAnnotator as VariantAnnotation
 from DAE import genomesDB

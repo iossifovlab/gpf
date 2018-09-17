@@ -1,7 +1,7 @@
 import pytest
 from copy import deepcopy
-from StringIO import StringIO
-from ConfigParser import SafeConfigParser
+from io import StringIO
+from builtins import str
 
 from annotation.annotation_pipeline_cluster import main
 from annotation.tests import configs
@@ -17,10 +17,8 @@ class MyStringIO(StringIO):
         return second
 
 
-class MyConfigParser(SafeConfigParser):
-
-    def read(self, filename):
-        self.readfp(variant_db_config())
+def open_config(filename, mode):
+    return variant_db_config()
 
 
 @pytest.fixture
@@ -72,11 +70,17 @@ def return_input(*args, **kwargs):
 
 def test_annotation_pipeline_cluster(config, data_dir, output_dir, sge_rreq,
                                      output, os_walk, mocker, capsys):
-    mocker.patch('ConfigParser.SafeConfigParser', side_effect=MyConfigParser)
     mocker.patch('os.path.abspath', side_effect=return_input)
+    mocker.patch(
+        'annotation.annotation_pipeline_cluster.open', side_effect=open_config)
     mocker.patch('os.walk', side_effect=lambda path: os_walk)
     mocker.patch('annotation.annotation_pipeline_cluster.'
                  'VariantDBConf._validate', return_value=None)
     main(config, data_dir, output_dir, sge_rreq)
 
-    assert str(capsys.readouterr()[0]) == str(output)
+    a = str(capsys.readouterr().out)
+    b = str(output)
+
+    print(('a', a))
+    print(('b', b))
+    assert a == b

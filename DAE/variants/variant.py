@@ -5,6 +5,10 @@ Created on Feb 13, 2018
 '''
 from __future__ import print_function
 
+from builtins import str
+from builtins import zip
+from builtins import range
+from builtins import object
 from variants.vcf_utils import vcf2cshl
 
 from variants.attributes import VariantType
@@ -97,7 +101,7 @@ class AltAlleleItems(object):
 
         if alt_alleles is None:
             self.items = items
-            self.alt_alleles = range(1, len(self.items) + 1)
+            self.alt_alleles = list(range(1, len(self.items) + 1))
         else:
             assert len(alt_alleles) == len(items) or len(items) == 1
             if len(items) == 1:
@@ -249,7 +253,7 @@ class SummaryAllele(VariantBase):
         """
         updates additional attributes of variant using dictionary `atts`.
         """
-        for key, val in atts.items():
+        for key, val in list(atts.items()):
             self.attributes[key] = val
 
     def __getitem__(self, item):
@@ -359,7 +363,7 @@ class SummaryVariant(VariantBase):
 
     def update_attributes(self, atts):
         # FIXME:
-        for key, values in atts.items():
+        for key, values in list(atts.items()):
             assert len(values) == 1 or len(values) == len(self.alt_alleles)
             for sa, val in zip(self.alt_alleles, itertools.cycle(values)):
                 sa.update_attributes({key: val})
@@ -374,10 +378,10 @@ class SummaryVariantFactory(object):
         else:
             effects = Effect.from_effects(
                 record['effect_type'],
-                zip(record['effect_gene_genes'],
-                    record['effect_gene_types']),
-                zip(record['effect_details_transcript_ids'],
-                    record['effect_details_details']))
+                list(zip(record['effect_gene_genes'],
+                    record['effect_gene_types'])),
+                list(zip(record['effect_details_transcript_ids'],
+                    record['effect_details_details'])))
         alternative = record['alternative']
 
         return SummaryAllele(

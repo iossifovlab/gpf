@@ -3,12 +3,14 @@ Created on Jan 31, 2013
 
 @author: Tony
 '''
+from __future__ import unicode_literals
 
+from builtins import object
 import SfariVariable
 import csv
 
 # a keeper for variables
-class SfariVariableTracker:   
+class SfariVariableTracker(object):   
     
     def __init__(self):
         self.variables = {}
@@ -17,7 +19,7 @@ class SfariVariableTracker:
         return len(self.variables)
         
     def variableNames(self):
-        return self.variables.keys()
+        return list(self.variables.keys())
     
     def getVariable(self, name):
         if name in self.variables:            

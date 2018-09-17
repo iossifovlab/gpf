@@ -1,10 +1,12 @@
 from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import map
 import itertools
 import logging
 
 from RegionOperations import Region
 from variants.attributes import Role
-from helpers import EFFECT_TYPES_MAPPING
+from datasets.helpers import EFFECT_TYPES_MAPPING
 from study_groups.study_group import StudyGroup
 from variants.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, EqualsNode, ContainsNode
@@ -29,6 +31,7 @@ class Dataset(object):
 
         self.dataset_config = dataset_config
 
+        self.name = name
         self.preview_columns = preview_columns
         self.download_columns = download_columns
 
@@ -114,7 +117,7 @@ class DatasetWrapper(Dataset):
             limit = kwargs['limit']
 
         if 'regions' in kwargs:
-            kwargs['regions'] = map(Region.from_str, kwargs['regions'])
+            kwargs['regions'] = list(map(Region.from_str, kwargs['regions']))
 
         if 'presentInChild' in kwargs:
             self._transform_present_in_child(kwargs)
@@ -155,8 +158,8 @@ class DatasetWrapper(Dataset):
             super(DatasetWrapper, self).get_variants(**kwargs), limit)
 
     def _transform_min_max_alt_frequency(self, kwargs):
-        min_value = float('-inf')
-        max_value = float('inf')
+        min_value = None
+        max_value = None
 
         if 'minAltFrequencyPercent' in kwargs:
             min_value = kwargs['minAltFrequencyPercent']
@@ -170,6 +173,14 @@ class DatasetWrapper(Dataset):
 
         if value_range == (None, None):
             return
+
+        if value_range[0] is None:
+            value_range = (float('-inf'), value_range[1])
+
+        if value_range[1] is None:
+            value_range = (value_range[0], float('inf'))
+
+        print(value_range)
 
         value = 'af_allele_freq'
         if 'real_attr_filter' not in kwargs:

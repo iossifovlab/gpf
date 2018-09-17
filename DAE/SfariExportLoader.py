@@ -3,6 +3,14 @@ Created on Jan 31, 2013
 
 @author: Tony
 '''
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import next
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import csv
 import locale
 import os
@@ -60,7 +68,7 @@ methods:
 '''
 
 
-class SfariH5File():
+class SfariH5File(object):
 
     def __init__(self, filename):
         self.filename = filename
@@ -87,7 +95,7 @@ class SfariH5File():
         if not self.fileOpen:
 
             if not os.path.exists(self.filename):
-                print >> sys.stderr, "File %s not found" % (self.filename)
+                print("File %s not found" % (self.filename), file=sys.stderr)
                 return
 
             self.handle = tables.openFile(self.filename, mode="r")
@@ -176,7 +184,7 @@ methods:
 '''
 
 
-class SfariExportLoader:
+class SfariExportLoader(object):
 
     def __init__(self):
         self.variableTracker = SfariVariableTracker.SfariVariableTracker()
@@ -330,7 +338,7 @@ class SfariExportLoader:
         f = open(filename, 'rb')
         reader = csv.reader(f)
 
-        reader.next()
+        next(reader)
 
         index = 0
         for data in reader:
@@ -361,7 +369,7 @@ class SfariExportLoader:
         datatypes = {}
 
         datatypeProportionThreshold = 0.95
-        for key in self.variableTracker.variables.keys():
+        for key in list(self.variableTracker.variables.keys()):
             variable = self.variableTracker.variables[key]
             variableName = variable.name
 
@@ -442,7 +450,7 @@ class SfariExportLoader:
 
         # print "There are %d variable keys"%(len(variables))
 
-        for variableName in variables.keys():
+        for variableName in list(variables.keys()):
 
             dataTypes = variables[variableName]['datatype']
             valueDict = variables[variableName]['values']
@@ -454,11 +462,11 @@ class SfariExportLoader:
                 dataType = 'unknown'
 
             if dataTypes['numeric'] > 0 and dataTypes['string'] > 0:
-                if float(dataTypes['numeric']) / float(dataTypes['string']) > \
+                if old_div(float(dataTypes['numeric']), float(dataTypes['string'])) > \
                         datatypeProportionThreshold:
                     dataType = 'numeric'
-                elif float(dataTypes['string']) / \
-                    float(dataTypes['numeric']) > \
+                elif old_div(float(dataTypes['string']), \
+                    float(dataTypes['numeric'])) > \
                         datatypeProportionThreshold:
                     dataType = 'string'
                 else:
@@ -545,7 +553,7 @@ class SfariExportLoader:
                 # rs = rolesS[variableName]
                 sortedValues = sorted(
                     valueDict, key=valueDict.get, reverse=True)
-                values = valueDict.values()
+                values = list(valueDict.values())
                 tokenCount = sum(np.array(values))
                 tokenInMostUsed = sum(
                     np.array([valueDict[x] for x in sortedValues[0:maxVars]]))
@@ -748,8 +756,8 @@ class SfariExportLoader:
             try:
                 earray.append(data)
             except ValueError:
-                print "ValueError error with ", variableName, ", ", \
-                    sys.exc_info()[0]
+                print("ValueError error with ", variableName, ", ", \
+                    sys.exc_info()[0])
 
         h5File.flush()
         h5File.close()
@@ -862,28 +870,25 @@ class SfariExportLoader:
                             try:
                                 variableValue = int(variableValue)
                             except ValueError:
-                                print >> sys.stderr, \
-                                    "ValueError error int ", \
+                                print("ValueError error int ", \
                                     variableName, ", ", variableValue, ",", \
-                                    sys.exc_info()[0]
+                                    sys.exc_info()[0], file=sys.stderr)
                                 variableValue = None
                         elif dataType == 'long':
                             try:
                                 variableValue = int(variableValue)
                             except ValueError:
-                                print >> sys.stderr, \
-                                    "ValueError error float ", \
+                                print("ValueError error float ", \
                                     variableName, ", ", variableValue, ",", \
-                                    sys.exc_info()[0]
+                                    sys.exc_info()[0], file=sys.stderr)
                                 variableValue = None
                         elif dataType == 'float' or dataType == 'numeric':
                             try:
                                 variableValue = float(variableValue)
                             except ValueError:
-                                print >> sys.stderr, \
-                                    "ValueError error float ", \
+                                print("ValueError error float ", \
                                     variableName, ", ", variableValue, ",", \
-                                    sys.exc_info()[0]
+                                    sys.exc_info()[0], file=sys.stderr)
                                 variableValue = None
                         elif dataType == 'date':
                             pass
@@ -909,9 +914,8 @@ class SfariExportLoader:
                 try:
                     earray.append(data)
                 except ValueError:
-                    print >> sys.stderr, \
-                        "ValueError error with ", variableName, ", ", \
-                        sys.exc_info()[0]
+                    print("ValueError error with ", variableName, ", ", \
+                        sys.exc_info()[0], file=sys.stderr)
 
         h5File.flush()
         h5File.close()

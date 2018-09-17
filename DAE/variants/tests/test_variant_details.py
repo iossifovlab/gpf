@@ -3,6 +3,7 @@ Created on Mar 30, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
 import pytest
 from variants.variant import VariantDetail
 from variants.attributes import VariantType

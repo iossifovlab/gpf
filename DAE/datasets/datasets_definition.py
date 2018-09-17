@@ -31,7 +31,7 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
     def __init__(self, datasets_dir=None, work_dir=None):
         super(DirectoryEnabledDatasetsDefinition, self).__init__()
         if datasets_dir is None:
-            from default_settings import DATA_DATASETS_DIR
+            from datasets.default_settings import DATA_DATASETS_DIR
             datasets_dir = DATA_DATASETS_DIR
         if work_dir is None:
             work_dir = DatasetsDefinition._work_dir_from_environment()

@@ -4,8 +4,10 @@ Created on Feb 7, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
-import StringIO
+from builtins import range
+from io import StringIO
 import os
 import shutil
 import tempfile
@@ -368,7 +370,7 @@ f1,          p1,          d1,       m1,       1,     2,         prb
 @pytest.fixture(scope='session')
 def fam1():
     ped_df = FamiliesBase.load_pedigree_file(
-        StringIO.StringIO(PED1), sep=",")
+        StringIO(PED1), sep=",")
 
     family = Family("f1", ped_df)
     assert len(family.trios) == 1

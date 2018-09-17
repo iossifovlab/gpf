@@ -1,13 +1,15 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from builtins import str
 from DAE import vDB
 from collections import Counter, defaultdict
 from helpers.logger import LOGGER
 from precompute.register import Precompute
 import preloaded
-import cPickle
+import pickle
 import zlib
 
-from permissions import belongs_to_dataset
-
+from .permissions import belongs_to_dataset
 
 def family_buffer(studies):
     fam_buff = defaultdict(dict)
@@ -120,13 +122,13 @@ class StudiesSummaries(Precompute):
         self.summaries = None
 
     def serialize(self):
-        data = zlib.compress(cPickle.dumps(self.summaries))
+        data = zlib.compress(pickle.dumps(self.summaries, protocol=2))
         return {
             'data': data,
         }
 
     def deserialize(self, data):
-        self.summaries = cPickle.loads(zlib.decompress(data['data']))
+        self.summaries = pickle.loads(zlib.decompress(data['data']))
 
     def is_precomputed(self):
         return self.summaries is not None
@@ -182,8 +184,6 @@ class StudiesSummaries(Precompute):
 
         has_denovo = False
         has_transmitted = False
-
-        print("STUDIES", studies)
 
         for study in studies:
             phenotype.update(study.phenotypes)

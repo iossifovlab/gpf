@@ -3,6 +3,7 @@ Created on Jun 7, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
 
 
 import pytest
@@ -126,7 +127,7 @@ def test_df_query_multiallelic_families(variants_df, fixture_name):
     assert len(vs) == 1
     v = vs[0]
 
-    print(v, mat2str(v.best_st))
+    print((v, mat2str(v.best_st)))
     fa1 = v.alt_alleles[0]
     fa2 = v.alt_alleles[1]
 
@@ -158,7 +159,7 @@ def test_df_query_multiallelic3_families(variants_df, fixture_name):
     assert len(vs) == 1
     v = vs[0]
 
-    print(v, mat2str(v.best_st))
+    print((v, mat2str(v.best_st)))
     fa1 = v.alt_alleles[0]
     fa2 = v.alt_alleles[1]
     assert len(v.alt_alleles) == 2

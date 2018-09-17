@@ -1,7 +1,14 @@
 #!/bin/env python
 from __future__ import print_function
+from __future__ import unicode_literals
 
-import ConfigParser
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
+from future import standard_library
+standard_library.install_aliases()
+from configparser import ConfigParser
 import os
 import sys
 from numpy.lib.npyio import genfromtxt
@@ -33,7 +40,6 @@ from Family import Family, Person
 from transmitted.base_query import TransmissionConfig
 from transmitted.mysql_query import MysqlTransmittedQuery
 from transmitted.legacy_query import TransmissionLegacy
-from ConfigParser import NoOptionError
 from variant_db.variant_query import VariantQuery
 from pheno.common import Role, Status, Gender
 
@@ -66,7 +72,7 @@ def regions_matcher(regions):
              for(chrom, beg, end) in reg_defs])
 
 
-class StudyGroup:
+class StudyGroup(object):
 
     def __init__(self, vdb, name):
         self.vdb = vdb
@@ -91,7 +97,7 @@ class StudyGroup:
         return '<{}: {}>'.format(self.__class__.__name__, self.name)
 
 
-class Study:
+class Study(object):
 
     def __init__(self, vdb, name):
         self.vdb = vdb
@@ -150,10 +156,7 @@ class Study:
     def _get_transmitted_impl(self, callSet):
         if callSet not in self.transmission_impl:
             conf = TransmissionConfig(self, callSet)
-            try:
-                impl_format = conf._get_params("format")
-            except NoOptionError:
-                impl_format = 'legacy'
+            impl_format = conf._get_params("format") or 'legacy'
 
             if impl_format is None or impl_format == 'legacy':
                 self.transmission_impl[callSet] = \
@@ -239,8 +242,7 @@ class Study:
             elif inChild and inChild not in v.inChS:
                 continue
 
-            if variantTypes and all(map(
-                    lambda vt: not v.variant.startswith(vt), variantTypes)):
+            if variantTypes and all([not v.variant.startswith(vt) for vt in variantTypes]):
                 continue
             if reg_matcher:
                 smcP = v.location.find(":")
@@ -311,7 +313,8 @@ class Study:
                             case_sensitive=True, deletechars='',
                             converters={"SSC-freq": float_conv,
                                         "EVS-freq": float_conv,
-                                        "E65-freq": float_conv})
+                                        "E65-freq": float_conv},
+                            encoding='utf-8')
             if len(dt.shape) == 0:
                 dt = dt.reshape(1)
             col_names = [cn.strip("#") for cn in dt.dtype.names]
@@ -372,12 +375,12 @@ class Study:
         self._families, self._badFamilies = fmMethod[fdFormat](fdFile)
 
         if len(self.phenotypes) != 1:
-            for fam in self._families.values():
+            for fam in list(self._families.values()):
                 for p in fam.memberInOrder:
                     p.phenotype = p.atts['phenotype']
             return
         phenotype = self.phenotypes[0]
-        for fam in self._families.values():
+        for fam in list(self._families.values()):
             fam.phenotype = phenotype
             fam.atts['phenotype'] = phenotype
 
@@ -401,14 +404,14 @@ class Study:
     def _load_family_data_SSCFams(self, reportF):
         rf = open(reportF)
         families = {l.strip(): Family() for l in rf}
-        for f in families.values():
+        for f in list(families.values()):
             f.memberInOrder = []
 
         rlsMp = {"mother": Role.mom, "father": Role.dad, "proband": Role.prb,
                  "designated-sibling": Role.sib, "other-sibling": Role.sib}
         genderMap = {"female": Gender.F, "male": Gender.M}
 
-        for indS in self.vdb.sfariDB.individual.values():
+        for indS in list(self.vdb.sfariDB.individual.values()):
             if indS.familyId not in families:
                 continue
             p = Person()
@@ -420,15 +423,15 @@ class Study:
 
     def _load_family_data_SSCTrios(self, reportF):
         buff = defaultdict(dict)
-        for _indId, indS in self.vdb.sfariDB.individual.items():
+        for _indId, indS in list(self.vdb.sfariDB.individual.items()):
             if indS.collection != "ssc":
                 continue
             buff[indS.familyId][indS.role] = indS
 
-        rlsMp = zip(
+        rlsMp = list(zip(
             "mother,father,proband".split(','),
             [Role.mom, Role.dad, Role.prb]
-        )
+        ))
         genderMap = {"female": Gender.F, "male": Gender.M}
 
         families = {}
@@ -451,6 +454,13 @@ class Study:
     @staticmethod
     def _load_family_data_from_pickle(fn):
         result = pickle.load(open(fn, "rb"))
+        for families in result:
+            for family in list(families.values()):
+                for member in family.memberInOrder:
+                    if not isinstance(member.role, str):
+                        member.role = member.role.decode("UTF-8")
+                    if not isinstance(member.gender, str):
+                        member.gender = member.gender.decode("UTF-8")
 
         # FIXME: this should be done when the pickles are generated
         for family_dict in result:
@@ -470,40 +480,15 @@ class Study:
         return result
 
     @staticmethod
-    def gender_converter(gender):
-        return Gender(int(gender))
-
-    @staticmethod
-    def gender_converter_by_name(gender_name):
-        return Gender[gender_name]
-
-    @staticmethod
-    def gender_converter_by_name_or_value(gender_name_or_value):
-        if gender_name_or_value in Gender.__members__:
-            return Gender[gender_name_or_value]
-        raise ValueError('not standard gender: {}'.format(gender_name_or_value))
-        # return Gender(gender_name_or_value)
-
-    @staticmethod
-    def role_converter(role):
-        if role in Role.__members__:
-            return Role[role]
-        raise ValueError("Unknown role {}, defaulting to unknown".format(role))
-
-    @staticmethod
-    def status_converter(status):
-        return Status(int(status))
-
-    @staticmethod
     def _load_family_data_from_simple(reportF):
-        dt = genfromtxt(
-            reportF, delimiter='\t', dtype=None,
-            names=True, case_sensitive=True,
-            comments="asdgasdgasdga", converters={
-                'role': Study.role_converter,
-                'status': Study.status_converter,
-                'gender': Study.gender_converter_by_name_or_value
-            })
+        dt = genfromtxt(reportF, delimiter='\t', dtype=None,
+                        names=True, case_sensitive=True,
+                        comments="asdgasdgasdga", encoding='utf-8', 
+			converters={
+				'role': Study.role_converter,
+				'status': Study.status_converter,
+				'gender': Study.gender_converter_by_name_or_value
+			})
         families = defaultdict(Family)
         for dtR in dt:
             fmId = str(dtR['familyId'])
@@ -511,9 +496,9 @@ class Study:
             atts = {x: dtR[x] for x in dt.dtype.names}
             families[fmId].atts.update(atts)
             p = Person(atts)
-            p.personId = atts['personId']
-            p.gender = atts['gender']
-            p.role = atts['role']
+            p.personId = str(atts['personId'])
+            p.gender = str(atts['gender'])
+            p.role = str(atts['role'])
             try:
                 families[fmId].memberInOrder.append(p)
             except AttributeError:
@@ -561,7 +546,8 @@ class Study:
 
         dt = genfromtxt(reportF, delimiter='\t', dtype=None,
                         names=True, case_sensitive=True,
-                        comments="asdgasdgasdga")
+                        comments="asdgasdgasdga", encoding='utf-8'
+        )
 
         genderDecoding = {"female": Gender.F, "male": Gender.M}
 
@@ -594,7 +580,9 @@ class Study:
     def _load_family_data_from_EichlerWE2012_SupTab1(self, reportF):
         famBuff = defaultdict(dict)
         dt = genfromtxt(reportF, delimiter='\t', dtype=None,
-                        names=True, case_sensitive=True, comments="asdgasdgasdga")
+                        names=True, case_sensitive=True,
+                        comments="asdgasdgasdga", encoding='utf-8'
+        )
 
         genderDecoding = {"female": Gender.F, "male": Gender.M}
         roleDecoding = {"SSC189": Role.prb, "SSC189_Sib": Role.sib,
@@ -644,7 +632,9 @@ class Study:
         famBuff = defaultdict(dict)
         badFamBuff = defaultdict(dict)
         dt = genfromtxt(reportF, delimiter='\t', dtype=None,
-                        names=True, case_sensitive=True, comments="asdgasdgasdga")
+                        names=True, case_sensitive=True,
+                        comments="asdgasdgasdga", encoding='utf-8'
+        )
 
         genderDecoding = {"Male": Gender.M, "Female": Gender.F}
         roleDecoding = {"Mother": Role.mom, "Father": Role.dad,
@@ -696,7 +686,9 @@ class Study:
         families = {}
         badFamilies = {}
         qrp = genfromtxt(
-            reportF, delimiter='\t', dtype=None, names=True, case_sensitive=True)
+            reportF, delimiter='\t', dtype=None, names=True,
+            case_sensitive=True, encoding='utf-8'
+        )
         for qrpR in qrp:
             f = Family()
             f.familyId = str(qrpR['familyId'])
@@ -777,7 +769,9 @@ class Study:
         families = {}
         badFamilies = {}
         qrp = genfromtxt(
-            reportF, delimiter='\t', dtype=None, names=True, case_sensitive=True)
+            reportF, delimiter='\t', dtype=None, names=True,
+            case_sensitive=True, encoding='utf-8'
+        )
         for qrpR in qrp:
             f = Family()
             f.familyId = qrpR['quadquad_id']
@@ -845,7 +839,7 @@ class Study:
         return families, badFamilies
 
 
-class VariantsDB:
+class VariantsDB(object):
 
     def __init__(self, daeDir,
                  confFile=None, sfariDB=None, giDB=None,
@@ -864,7 +858,7 @@ class VariantsDB:
         if not confFile:
             confFile = daeDir + "/variantDB.conf"
 
-        self._config = ConfigParser.SafeConfigParser({
+        self._config = ConfigParser({
             'wd': daeDir,
             'data': data_dir
         })
@@ -948,13 +942,11 @@ class VariantsDB:
         seenVs = set()
         if isinstance(studies, str):
             studies = self.get_studies(studies)
-        denovo_studies = filter(lambda st: st.has_denovo, studies)
+        denovo_studies = [st for st in studies if st.has_denovo]
         if 'studyTypes' in filters:
             studyTypes = filters['studyTypes']
             studyTypes = {studyTypes} if type(studyTypes) == str else set(studyTypes)
-            denovo_studies = filter(
-                lambda st: not studyTypes.isdisjoint(st.types()),
-                denovo_studies)
+            denovo_studies = [st for st in denovo_studies if not studyTypes.isdisjoint(st.types())]
             del filters['studyTypes']
         for study in denovo_studies:
             for v in study.get_denovo_variants(**filters):
@@ -969,7 +961,9 @@ class VariantsDB:
               file=sys.stderr)
         variants = []
         dt = genfromtxt(
-            fn, delimiter='\t', dtype=None, names=True, case_sensitive=True)
+            fn, delimiter='\t', dtype=None, names=True, case_sensitive=True,
+            encoding='utf-8'
+        )
         # if there is only row of data in the file then the genfromtxt function returns a 0d array.
         # this causes an error when trying to iterate over it, so it must be
         # converted to a 1d array
@@ -980,7 +974,7 @@ class VariantsDB:
             batchId = dirname(fn).split("/")[-2]
 
         for dtR in dt:
-            class ValidationVariant:
+            class ValidationVariant(object):
 
                 @property
                 def bestSt(self):
@@ -1011,7 +1005,7 @@ class VariantsDB:
                     mbrs = self.memberInOrder
                     bs = self.bestSt
                     childStr = ''
-                    for c in xrange(2, len(mbrs)):
+                    for c in range(2, len(mbrs)):
                         if bs[1][c]:
                             childStr += (mbrs[c].role + mbrs[c].gender)
                     return childStr
@@ -1173,9 +1167,9 @@ class VariantsDB:
             sym2Vars = {sym: [t[1] for t in tpi]
                         for sym, tpi in groupby(gnSorted, key=lambda x: x[0])}
             sym2FN = {sym: len(set([v.familyId for v in vs]))
-                      for sym, vs in sym2Vars.items()}
-            return {g for g, nf in sym2FN.items() if nf > 1}, \
-                {g for g, nf in sym2FN.items() if nf == 1}
+                      for sym, vs in list(sym2Vars.items())}
+            return {g for g, nf in list(sym2FN.items()) if nf > 1}, \
+                {g for g, nf in list(sym2FN.items()) if nf == 1}
 
         addSet("prb.LoF",             genes('prb', 'LGDs'))
         recPrbLGDs, sinPrbLGDs = recSingleGenes('prb', 'LGDs')

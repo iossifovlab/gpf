@@ -1,3 +1,4 @@
+from builtins import next
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -24,7 +25,7 @@ class ApiTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.streaming_content
 
-        data.next()
+        next(data)
         for row in data:
             self.assertIn('del', row)
             self.assertIn('frame-shift', row)

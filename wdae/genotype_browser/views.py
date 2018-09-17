@@ -3,6 +3,10 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import map
+from builtins import str
 import itertools
 import pprint
 
@@ -95,10 +99,8 @@ class QueryPreviewView(QueryBaseView):
             if dataset_id == MetaDataset.ID:
                 dataset_ids = self.dataset_facade.get_all_dataset_ids()
                 dataset_ids.remove(MetaDataset.ID)
-                data['dataset_ids'] = filter(
-                    lambda dataset_id: IsDatasetAllowed.user_has_permission(
-                        request.user, dataset_id),
-                    dataset_ids)
+                data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids if IsDatasetAllowed.user_has_permission(
+                        request.user, dataset_id)]
 
             dataset = self.get_dataset(dataset_id)
             # LOGGER.info("dataset " + str(dataset))
@@ -132,7 +134,7 @@ class QueryDownloadView(QueryBaseView):
     def _parse_query_params(self, data):
         print(data)
 
-        res = {str(k): str(v) for k, v in data.items()}
+        res = {str(k): str(v) for k, v in list(data.items())}
         assert 'queryData' in res
         query = json.loads(res['queryData'])
         return query
@@ -163,10 +165,8 @@ class QueryDownloadView(QueryBaseView):
             if data['datasetId'] == MetaDataset.ID:
                 dataset_ids = self.dataset_facade.get_all_dataset_ids()
                 dataset_ids.remove(MetaDataset.ID)
-                data['dataset_ids'] = filter(
-                    lambda dataset_id: IsDatasetAllowed.user_has_permission(
-                        user, dataset_id),
-                    dataset_ids)
+                data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids if IsDatasetAllowed.user_has_permission(
+                        user, dataset_id)]
 
             dataset = self.datasets_factory.get_dataset(data['datasetId'])
 
@@ -185,7 +185,7 @@ class QueryDownloadView(QueryBaseView):
                                              self.DOWNLOAD_LIMIT)
 
             response = StreamingHttpResponse(
-                itertools.imap(join_line, variants_data),
+                list(map(join_line, variants_data)),
                 content_type='text/tsv')
 
             response['Content-Disposition'] = 'attachment; filename=variants.tsv'

@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import zip
+from builtins import map
+from builtins import str
+from builtins import range
 import optparse
 import sys
 import os
@@ -194,8 +200,6 @@ def fixNonAutoX(familyVariant):  # fam, pInfo ):
     return True
 
 # possible hap state
-
-
 def hapState(cn):
     if cn == 0:
         return [0]
@@ -274,8 +278,6 @@ def isDenovoNonAutosomalX(familyVariant):
     return False
 
 # output: dict[pos] = (out,str)
-
-
 def printSome(output, pos=None, wsize=1000):
     if pos == None:
         for k in sorted(output.keys()):

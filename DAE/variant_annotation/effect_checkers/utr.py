@@ -1,8 +1,10 @@
+from __future__ import unicode_literals
+from builtins import object
 from ..effect import EffectFactory
 import logging
 
 
-class UTREffectChecker:
+class UTREffectChecker(object):
     def __init__(self):
         self.logger = logging.getLogger(__name__)
 

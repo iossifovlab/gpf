@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import map
+from builtins import object
 from rest_framework import serializers
 from users_api.models import WdaeUser
 from django.contrib.auth.models import Group
@@ -12,7 +15,7 @@ class ProtectedGroupsValidator(object):
         if not self.is_update:
             return
 
-        group_names = map(str, value)
+        group_names = list(map(str, value))
         missing_groups = []
         for group in self.user_instance.get_protected_group_names():
             if group not in group_names:
@@ -42,7 +45,7 @@ class SomeSuperuserLeftValidator(object):
         if not self.is_update:
             return
 
-        group_names = map(str, value)
+        group_names = list(map(str, value))
         has_superuser = WdaeUser.SUPERUSER_GROUP in group_names
         try:
             superuser_group = Group.objects.get(name=WdaeUser.SUPERUSER_GROUP)

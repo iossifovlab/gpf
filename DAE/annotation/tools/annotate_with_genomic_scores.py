@@ -3,8 +3,11 @@
 # Dec 12th 2013
 # by Ewa
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from builtins import map
 from GenomicScores import load_genomic_scores
-from utilities import *
+from .utilities import *
 import argparse
 
 def get_argument_parser():
@@ -83,8 +86,8 @@ class GenomicScoresAnnotator(AnnotatorBase):
         else:
             location = line[self.chrCol] + ":" + line[self.posCol]
 
-        line_scores = map(str,
-            self.genomic_scores.get_score(location, scores_in_order))
+        line_scores = list(map(str,
+            self.genomic_scores.get_score(location, scores_in_order)))
         if not line_scores:
             line_scores = ['NA'] * len(scores_in_order)
         return line_scores

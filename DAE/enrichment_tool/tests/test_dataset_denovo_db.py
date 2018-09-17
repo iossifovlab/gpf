@@ -3,6 +3,7 @@ Created on Mar 15, 2018
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from enrichment_tool.tool import EnrichmentTool
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
 from enrichment_tool.event_counters import GeneEventsCounter, EventsCounter

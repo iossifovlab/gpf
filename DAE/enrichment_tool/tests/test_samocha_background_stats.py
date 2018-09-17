@@ -3,6 +3,7 @@ Created on Nov 8, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import pytest
 from enrichment_tool.background import SamochaBackground
 from enrichment_tool.event_counters import GeneEventsCounter

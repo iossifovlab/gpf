@@ -1,4 +1,6 @@
+from __future__ import unicode_literals
 # from django.core.cache import cache
+from builtins import map
 import preloaded
 from datasets_api.models import Dataset
 from DAE import vDB
@@ -32,10 +34,9 @@ def get_datasets_by_study(study_group_name):
     #     cache.set('study_name_to_dataset_id', study_name_to_dataset_id, None)
 
     studies = vDB.get_studies(study_group_name)
-    ds_to_check = map(
-        lambda s: study_name_to_dataset_id[s.name], studies)
+    ds_to_check = [study_name_to_dataset_id[s.name] for s in studies]
 
-    ds_to_check = map(frozenset, ds_to_check)
+    ds_to_check = list(map(frozenset, ds_to_check))
     return ds_to_check
 
 
@@ -48,9 +49,7 @@ def user_has_study_permission(user, study_group_name):
     has_permission = all(
         any(
             user.has_perm('datasets_api.view', d)
-            for d in itertools.imap(
-                lambda d: Dataset.objects.get(dataset_id=d),
-                datasets)
+            for d in [Dataset.objects.get(dataset_id=d) for d in datasets]
         )
         for datasets in ds_to_check
     )

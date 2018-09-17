@@ -4,8 +4,9 @@ Created on Mar 12, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
-import StringIO
+from io import StringIO
 
 from variants.attributes import Role
 from variants.family import FamiliesBase, Family
@@ -34,7 +35,7 @@ SF0014912,SP0014912,SP0024751,SP0015221,1,2,prb
 
 def test_pedigree_keep_family_order_local():
     ped_df = FamiliesBase.load_pedigree_file(
-        StringIO.StringIO(PED_FILE1), sep=",")
+        StringIO(PED_FILE1), sep=",")
     families = FamiliesBase(ped_df)
     families.families_build(ped_df, family_class=Family)
 

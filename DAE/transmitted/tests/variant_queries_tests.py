@@ -3,6 +3,7 @@ Created on Oct 22, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import unittest
 
 from Variant import present_in_child_filter

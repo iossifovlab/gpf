@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import zip
 import optparse
 import sys
 import os
 import pysam
 import numpy
 from collections import namedtuple, defaultdict
-from itertools import izip
 import itertools
 
 pedInfo = namedtuple('PED', 'fid,pid,fa,ma,sex,phenotype,aux'.split(','))
@@ -25,6 +27,7 @@ pidInfo = namedtuple('PID', 'fid,fa,ma,sex,phenotype,aux'.split(','))
 
 # split family to nuclear
 
+clist, plist = set(), set()
 
 def procPED2Nuc(fname):
     fInfo = defaultdict(list)

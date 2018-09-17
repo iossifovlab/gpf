@@ -1,4 +1,6 @@
 #!/bin/env python
+from __future__ import print_function
+from __future__ import unicode_literals
 from DAE import genomesDB
 import re
 import sys
@@ -49,5 +51,5 @@ if __name__ == "__main__":
             row["pos"] = pos
             row["ref"] = ref
             row["alt"] = alt
-            print(chromosome, pos, ref, alt)
+            print((chromosome, pos, ref, alt))
             writer.writerow(row)

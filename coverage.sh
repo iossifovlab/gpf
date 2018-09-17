@@ -33,10 +33,10 @@
 
 
 py.test --runslow --withspark -v --cov-config coveragerc \
-    --junitxml=DAE/junit.xml \
+    --junitxml=coverage/dae-junit.xml \
+    --cov-report html:coverage/coverage.html \
+    --cov-report xml:coverage/coverage.xml \
     --cov-append \
-    --cov-report html \
-    --cov-report xml \
     --cov common_reports_api \
     --cov datasets_api \
     --cov enrichment_api \

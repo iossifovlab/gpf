@@ -3,19 +3,20 @@ Created on Nov 23, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import pytest
 
 import DAE
 
 
 def pytest_addoption(parser):
-    parser.addoption("--runslow", action="store_true",
+    parser.addoption("--runslow", action="store_true", default=False,
                      help="run slow tests")
-    parser.addoption("--runveryslow", action="store_true",
+    parser.addoption("--runveryslow", action="store_true", default=False,
                      help="run very slow tests")
-    parser.addoption("--ssc_wg", action="store_true",
+    parser.addoption("--ssc_wg", action="store_true", default=False,
                      help="run SSC WG tests")
-    parser.addoption("--nomysql", action="store_true",
+    parser.addoption("--nomysql", action="store_true", default=False,
                      help="skip tests that require mysql")
     parser.addoption("--withspark", action="store_true",
                      help="run tests that require spark")

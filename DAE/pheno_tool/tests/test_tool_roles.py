@@ -3,6 +3,7 @@ Created on Nov 22, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from pheno_tool.tool import PhenoTool
 from pheno_tool.genotype_helper import VariantsType as VT
 from pheno.common import Role
@@ -24,7 +25,7 @@ def test_siblings(phdb, autism_candidates_genes, all_ssc_studies):
         )
     )
 
-    for vals in res.phenotypes.values():
+    for vals in list(res.phenotypes.values()):
         assert vals['role'] == Role.sib
 
 
@@ -44,5 +45,5 @@ def test_prb_or_sib(phdb, autism_candidates_genes, all_ssc_studies):
         )
     )
 
-    for vals in res.phenotypes.values():
+    for vals in list(res.phenotypes.values()):
         assert vals['role'] in set([Role.prb, Role.sib])

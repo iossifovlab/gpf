@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
-import sys, commands, optparse
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+import sys, subprocess, optparse
 
 def main():
    #copy of options for vcf2DAEc.py
@@ -37,37 +42,37 @@ def main():
                         '-t', str(ox.tooManyThresholdFamilies)] )
    if ox.missingInfoAsNone: cmd +=  ' '.join( [' --missingInfoAsNone',' > '+ox.outputPrefix+'-complex.txt'] )
    else: cmd += ' > '+ox.outputPrefix+'-complex.txt'
-   status, out = commands.getstatusoutput( cmd )
-   print status, out
+   status, out = subprocess.getstatusoutput( cmd )
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #family file 
    cmd = ' '.join( ['\\mv', ox.outputPrefix+tExt(0)+'-families.txt', ox.outputPrefix+'-families.txt'] )
-   status, out = commands.getstatusoutput( cmd )
-   print status, out
+   status, out = subprocess.getstatusoutput( cmd )
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #HW
    cmd = ' '.join( ['hw.py -c', ox.outputPrefix+tExt(0)+'.txt', ox.outputPrefix+tExt(1)+'.txt'] )
-   status, out = commands.getstatusoutput( cmd )
-   print status, out
+   status, out = subprocess.getstatusoutput( cmd )
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #TOOMANY bgzip
    cmd = ' '.join( ['\\mv', ox.outputPrefix+tExt(0)+'-TOOMANY.txt', ox.outputPrefix+'-TOOMANY.txt;', \
                     'bgzip -f', ox.outputPrefix+'-TOOMANY.txt;', \
                     '\\mv', ox.outputPrefix+'-TOOMANY.txt.gz', ox.outputPrefix+'-TOOMANY.txt.bgz;', \
                     'tabix -S 1 -s 1 -b 2 -e 2', ox.outputPrefix+'-TOOMANY.txt.bgz'] )
-   status, out = commands.getstatusoutput( cmd )
-   print status, out
+   status, out = subprocess.getstatusoutput( cmd )
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    # bgzip and tabix
    cmd = ' '.join( ['bgzip -f', ox.outputPrefix + tExt(1) + '.txt', ox.outputPrefix + '.txt.bgz;',
                     'tabix -S 1 -s 1 -b 2 -e 2', ox.outputPrefix + '.txt.bgz'] )
-   status, out = commands.getstatusoutput( cmd )
-   print status, out
+   status, out = subprocess.getstatusoutput( cmd )
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
    #remove tmp files
    cmd = ' '.join( ['\\rm', ox.outputPrefix+tExt('*')+'.txt*'] )
-   status, out = commands.getstatusoutput( cmd )
-   print status, out
+   status, out = subprocess.getstatusoutput( cmd )
+   print(status, out)
    if status: raise Exception("FAILURE AT: " + cmd)
 
 if __name__ == "__main__":

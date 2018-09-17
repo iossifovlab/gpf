@@ -3,6 +3,7 @@ Created on Apr 25, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import pytest
 
 from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter

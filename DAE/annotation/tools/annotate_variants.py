@@ -3,12 +3,14 @@
 # Oct 9th 2013
 # written by Ewa
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import argparse
 import re, os.path, sys
 import GenomeAccess
 from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import VariantAnnotator as VariantAnnotation
-from utilities import *
+from .utilities import *
 
 class ColumnOrderAction(argparse.Action):
 
@@ -168,7 +170,7 @@ class EffectAnnotator(AnnotatorBase):
             gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
 
 
-        if "1" in GA.allChromosomes and "1" not in gmDB._utrModels.keys():
+        if "1" in GA.allChromosomes and "1" not in list(gmDB._utrModels.keys()):
             gmDB.relabel_chromosomes()
 
         sys.stderr.write("GENOME: " + GA.genomicFile + "\n")

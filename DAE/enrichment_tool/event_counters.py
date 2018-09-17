@@ -3,6 +3,8 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import object
 import itertools
 
 
@@ -38,8 +40,8 @@ def filter_denovo_one_gene_per_recurrent_events(vs):
                   for sym, tpi in itertools.groupby(gn_sorted,
                                                     key=lambda x: x[0])}
     sym_2_fn = {sym: len(set([v.familyId for v in vs]))
-                for sym, vs in sym_2_vars.items()}
-    return [[gs] for gs, fn in sym_2_fn.items() if fn > 1]
+                for sym, vs in list(sym_2_vars.items())}
+    return [[gs] for gs, fn in list(sym_2_fn.items()) if fn > 1]
 
 
 def filter_denovo_one_gene_per_events(vs):
@@ -49,8 +51,8 @@ def filter_denovo_one_gene_per_events(vs):
                   for sym, tpi in itertools.groupby(gn_sorted,
                                                     key=lambda x: x[0])}
     sym_2_fn = {sym: len(set([v.familyId for v in vs]))
-                for sym, vs in sym_2_vars.items()}
-    return [[gs] for gs, _fn in sym_2_fn.items()]
+                for sym, vs in list(sym_2_vars.items())}
+    return [[gs] for gs, _fn in list(sym_2_fn.items())]
 
 
 class EnrichmentResult(object):
@@ -96,7 +98,7 @@ def overlap_enrichment_result(enrichment_result, gene_syms):
 def overlap_enrichment_result_dict(enrichment_results, gene_syms):
     gene_syms = [gs.upper() for gs in gene_syms]
 
-    for enrichment_result in enrichment_results.values():
+    for enrichment_result in list(enrichment_results.values()):
         enrichment_result.overlapped = filter_overlapping_events(
             enrichment_result.events, gene_syms)
 

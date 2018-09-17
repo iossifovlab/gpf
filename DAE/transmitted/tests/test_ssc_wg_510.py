@@ -3,27 +3,15 @@ Created on Nov 22, 2016
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from DAE import vDB
 import pytest
 from transmitted.mysql_query import MysqlTransmittedQuery
 import time
-from mysql_transmitted_std_queries import get_gene_set_syms
-
-slow = pytest.mark.skipif(
-    not pytest.config.getoption("--runslow"),  # @UndefinedVariable
-    reason="need --runslow option to run"
-)
-
-veryslow = pytest.mark.skipif(
-    not pytest.config.getoption("--runveryslow"),  # @UndefinedVariable
-    reason="need --runveryslow option to run"
-)
-
-
-ssc_wg = pytest.mark.skipif(
-    not pytest.config.getoption("--ssc_wg"),  # @UndefinedVariable
-    reason="need --ssc_wg option to run"
-)
+from .mysql_transmitted_std_queries import get_gene_set_syms
+from tests.pytest_marks import slow, veryslow, ssc_wg
 
 
 @pytest.fixture(scope='session')
@@ -33,7 +21,7 @@ def wg_study(request):
 
 
 def report_time(start, res):
-    print ": {:.3}s (count={})".format(time.time() - start, len(res))
+    print(": {:.3}s (count={})".format(time.time() - start, len(res)))
 
 
 @ssc_wg

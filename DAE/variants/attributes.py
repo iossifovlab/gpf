@@ -4,6 +4,8 @@ Created on Feb 13, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from builtins import str
+from builtins import object
 import enum
 import ast
 
@@ -176,7 +178,7 @@ class QLeaf(QNode):
         assert isinstance(vals, set)
         assert all([isinstance(v, enum.Enum) for v in vals]) or \
             all([isinstance(v, str) for v in vals]) or \
-            all([isinstance(v, unicode) for v in vals])
+            all([isinstance(v, str) for v in vals])
         super(QLeaf, self).__init__(vals=vals)
 
 

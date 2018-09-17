@@ -1,7 +1,10 @@
+from builtins import str
+from builtins import object
 import enum
 
 from lark import Lark, InlineTransformer
 from lark.reconstruct import Reconstructor
+from functools import reduce
 
 from variants.attributes import Role, Inheritance, VariantType, Sex
 
@@ -91,6 +94,7 @@ class BaseQueryTransformerMatcher(object):
         self.parser = parser
         self.transformer = StringQueryToTreeTransformer(parser,
                                                         token_converter)
+        self.transformer2 = None
 
     def parse(self, expression):
         return self.parser.parse(expression)

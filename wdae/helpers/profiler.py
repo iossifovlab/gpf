@@ -4,6 +4,7 @@ Created on Feb 23, 2016
 @author: lubo
 copied from https://code.djangoproject.com/wiki/ProfilingDjango
 '''
+from __future__ import unicode_literals
 
 import hotshot
 import os

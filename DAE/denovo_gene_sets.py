@@ -3,6 +3,8 @@ Created on May 27, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import zip
 from DAE import vDB
 from DAE import giDB
 
@@ -56,7 +58,7 @@ def genes_set_prepare_counting(
     sym2Vars = {sym: [t[1] for t in tpi]
                 for sym, tpi in groupby(gnSorted, key=lambda x: x[0])}
     sym2FN = {sym: len(set([v.familyId for v in vs]))
-              for sym, vs in sym2Vars.items()}
+              for sym, vs in list(sym2Vars.items())}
     return sym2FN
 
 
@@ -68,7 +70,7 @@ def genes_set_recurrent(
 
     sym2FN = genes_set_prepare_counting(denovo_studies, in_child,
                                         effect_types, gene_set)
-    return {g for g, nf in sym2FN.items() if nf > 1}
+    return {g for g, nf in list(sym2FN.items()) if nf > 1}
 
 
 def genes_set_single(
@@ -79,15 +81,15 @@ def genes_set_single(
 
     sym2FN = genes_set_prepare_counting(denovo_studies, in_child,
                                         effect_types, gene_set)
-    return {g for g, nf in sym2FN.items() if nf == 1}
+    return {g for g, nf in list(sym2FN.items()) if nf == 1}
 
 
 def get_measure(measure_name):
     from DAE import phDB
-    strD = dict(zip(phDB.families, phDB.get_variable(measure_name)))
+    strD = dict(list(zip(phDB.families, phDB.get_variable(measure_name))))
     # fltD = {f:float(m) for f,m in strD.items() if m!=''}
     fltD = {}
-    for f, m in strD.items():
+    for f, m in list(strD.items()):
         try:
             # mf = float(m)
             # if mf>70:
@@ -244,7 +246,7 @@ def build_prb_set_by_phenotype(denovo_studies, phenotype):
                 denovo_studies, phenotype)
     prb_tests = prb_set_per_phenotype()
     gene_terms = GeneTerms()
-    for test_name, test_filter in prb_tests.items():
+    for test_name, test_filter in list(prb_tests.items()):
         add_set(gene_terms, test_name, test_filter(phenotype_studies))
     return gene_terms
 
@@ -316,7 +318,7 @@ def sib_sets(studies):
 def build_sib_set(denovo_studies):
     gene_syms = sib_sets(denovo_studies)
     gene_terms = GeneTerms()
-    for test_name, gene_set in gene_syms.items():
+    for test_name, gene_set in list(gene_syms.items()):
         add_set(gene_terms, test_name, gene_set)
     return gene_terms
 

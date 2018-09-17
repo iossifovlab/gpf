@@ -175,7 +175,7 @@ def test_quary_min_alt_frequency(option, count, quads_in_child):
 @pytest.mark.parametrize(
     "option,count",
     [
-        (None, 0),
+        (None, 4),
         (0, 0),
         (12.5, 0),
         (25, 4),

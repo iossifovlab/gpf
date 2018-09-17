@@ -1,6 +1,7 @@
-from pheno.common import Role
+from __future__ import unicode_literals
 
-class Family:
+from builtins import object
+class Family(object):
 
     def __init__(self, atts=None):
         if atts:
@@ -17,7 +18,7 @@ class Family:
         return [p for p in self.memberInOrder if p.is_child]
 
 
-class Person:
+class Person(object):
 
     def __init__(self, atts=None):
         if atts:
@@ -36,4 +37,3 @@ class Person:
     @property
     def is_child(self):
         return self.role == Role.prb or self.role == Role.sib
-

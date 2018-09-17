@@ -3,6 +3,7 @@ Created on Oct 23, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import unittest
 from DAE import vDB
 from transmitted.base_query import TransmissionConfig

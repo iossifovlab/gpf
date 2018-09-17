@@ -1,10 +1,16 @@
 #!/data/software/local/bin/python
 
+from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import gzip, pysam, sys, optparse, os
 import numpy as np
 # from DAE import *
 
-class family:
+class family(object):
 	def __init__(self, fname):
 	   try:
 		self.familyID = ''
@@ -13,7 +19,7 @@ class family:
 		self.role   = dict()
 		self.gender = dict()
 		with open( fname, 'r' ) as infile:
-			for line in infile.xreadlines():
+			for line in infile:
 				line = line.rstrip()
 				x = line.split('=')
 				#print x[0]
@@ -32,15 +38,15 @@ class family:
 				   elif y[0] == 'quad':
 					#print 'quad-line\t', line, x[0], x[1]
 					self.familyID = x[1]
-	   except IOError, e:
-		print e
+	   except IOError as e:
+		print(e)
 		exit(0)
 	def Print( self ):
-		print self.familyID
-		print self.member
-		print self.order
-		print self.role
-		print self.gender
+		print(self.familyID)
+		print(self.member)
+		print(self.order)
+		print(self.role)
+		print(self.gender)
 	def Sample( self, idx ):
 		if  (sample < self.member) & (sample >= 0):
 			return self.member
@@ -87,22 +93,22 @@ class family:
 			return ''
 	def familyID( self ):
 		return self.familyID
-class alpha:
+class alpha(object):
 	def __init__(self, fname):
 	   try:
 		with open( fname, 'r' ) as infile:
 			line = infile.readline()
 			self.value = [float(n) for n in line.split()[1::2]]
 			#self.CNVState = CNVState( self.value )
-	   except IOError, e:
-		print e
+	   except IOError as e:
+		print(e)
 		exit(0)
 	def getValue( self ):
 		return self.value
 	def Print( self ):
-		print self.value
+		print(self.value)
 
-class ommission:
+class ommission(object):
    def __init__( self, alph, male ):
 	self.alpha = alph
 	self.male  = male 
@@ -177,10 +183,10 @@ class ommission:
 	xstr = ''
 
 	issues = []
-	for c in xrange(2,len(gens)):
+	for c in range(2,len(gens)):
 	    if gens[c]==1:
         	continue
-	    for p in xrange(2):
+	    for p in range(2):
 	        if gens[p]!=1 and gens[p]!=gens[c]: # report which is lost
 	            issues.append(str(p)+str(c))
 	if not issues:
@@ -209,9 +215,9 @@ class ommission:
 	gens[ np.array(self.male) & (gens>1)] = 1
 	#print 'processX',gens
 	issues = []
-	for c in xrange(2,len(gens)):
+	for c in range(2,len(gens)):
 	   if self.male[c]:
-		if (gens[0] != 1 ) and (gens[0]/2 != gens[c]):
+		if (gens[0] != 1 ) and (old_div(gens[0],2) != gens[c]):
 			issues.append(str(0)+str(c))
 	   else:
 		if gens[c] == 1:
@@ -311,7 +317,7 @@ try:
 
 	ln+=1
 	if ln%100000==0:
-		print >>sys.stderr, ln
+		print(ln, file=sys.stderr)
 
 	'''
 	allCnts  = np.array([[100, 1, 0, 0],
@@ -323,8 +329,8 @@ try:
 	    continue
 	#print '%s\t%s'%( line, xstr )
 	outfile.write( line+"\t" + xstr +"\n" )
-except IOError, e:
-	print e
+except IOError as e:
+	print(e)
 	exit(1)
 
 

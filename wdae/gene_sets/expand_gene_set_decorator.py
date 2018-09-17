@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from preloaded import register
 from common.query_base import GeneSymsMixin
 from datasets_api.permissions import IsDatasetAllowed

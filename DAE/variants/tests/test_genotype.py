@@ -5,6 +5,7 @@ Created on Feb 15, 2018
 '''
 from __future__ import print_function
 
+from builtins import next
 import pytest
 
 from RegionOperations import Region

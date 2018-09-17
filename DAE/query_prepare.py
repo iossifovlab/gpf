@@ -1,11 +1,15 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
 import itertools
 import logging
 from DAE import vDB
 import operator
 
 
-from __builtin__ import str
+# from __builtin__ import str
 from VariantsDB import Study
+from functools import reduce
 
 LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +73,7 @@ def prepare_gene_syms(data):
     if isinstance(gene_sym, set):
         return gene_sym
 
-    elif isinstance(gene_sym, str) or isinstance(gene_sym, unicode):
+    elif isinstance(gene_sym, str) or isinstance(gene_sym, str):
         gl = [s.strip()
               for s in str(gene_sym).replace(',', ' ').split()
               if len(s.strip()) > 0]
@@ -150,7 +154,7 @@ def prepare_denovo_phenotype(data):
 
     if isinstance(phenoType, list):
         phenoType = ','.join(phenoType)
-    if isinstance(phenoType, str) or isinstance(phenoType, unicode):
+    if isinstance(phenoType, str) or isinstance(phenoType, str):
         phenoType = set(str(phenoType).split(','))
     elif isinstance(phenoType, list):
         phenoType = set([str(pt) for pt in phenoType])
@@ -162,7 +166,7 @@ def prepare_gender_filter(data):
         return None
     genderFilter = data['gender']
 
-    if isinstance(genderFilter, str) or isinstance(genderFilter, unicode):
+    if isinstance(genderFilter, str) or isinstance(genderFilter, str):
         genderFilter = str(data['gender']).split(',')
         res = []
         if 'female' in genderFilter:
@@ -343,12 +347,14 @@ def build_effect_types(effects):
 def build_effect_type_filter(data):
     if "effectTypes" not in data:
         return
+
     effects_string = data['effectTypes']
     if effects_string is None:
         return
     if isinstance(effects_string, list):
         effects_string = ','.join(effects_string)
-    if isinstance(effects_string, str) or isinstance(effects_string, unicode):
+
+    if isinstance(effects_string, str) or isinstance(effects_string, str):
         effects = effects_string.split(',')
         result_effects = build_effect_types(effects)
     elif isinstance(effects_string, list):

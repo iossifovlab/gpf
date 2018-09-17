@@ -3,6 +3,7 @@ Created on Aug 3, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from django.http.response import StreamingHttpResponse
 from rest_framework import status
 from rest_framework.response import Response

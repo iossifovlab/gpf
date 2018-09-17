@@ -1,8 +1,11 @@
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+
+from configparser import ConfigParser
 from box import Box
 from collections import OrderedDict
 
-from genomic_values import GenomicValues
+from gene.genomic_values import GenomicValues
 from Config import Config
 import common.config
 
@@ -38,7 +41,7 @@ class ScoreLoader(object):
         super(ScoreLoader, self).__init__(*args, **kwargs)
         self.daeConfig = Config()
 
-        config = ConfigParser.SafeConfigParser({
+        config = ConfigParser({
             'wd': self.daeConfig.daeDir
         })
         config.optionxform = str

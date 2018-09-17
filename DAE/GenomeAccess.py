@@ -3,9 +3,15 @@
 # June 6th 2013
 # by Ewa
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import next
+from past.utils import old_div
+from builtins import object
 import sys, os
 
-class GenomicSequence_Dan:
+class GenomicSequence_Dan(object):
     
     _seq_dic = None
     genomicFile = None
@@ -65,7 +71,7 @@ class GenomicSequence_Dan:
                     continue
 
                 full = ""
-                infile.next()
+                next(infile)
                 for line in infile:
                     full += line.strip().upper()
                 print(key + " ..done!")
@@ -80,11 +86,11 @@ class GenomicSequence_Dan:
 
         
         for key in SeqDic:
-            print key, len(SeqDic[key])
+            print(key, len(SeqDic[key]))
 
 
         seq_pickle = outputDir + "seqDic_upper.dump"
-        pickle.dump(SeqDic, open(seq_pickle, 'wb'))
+        pickle.dump(SeqDic, open(seq_pickle, 'wb'), protocol=2)
 
     def __loadPickleSeq(self, file="/data/unsafe/autism/genomes/hg19/seqDic_upper.dump"):
         import pickle
@@ -100,7 +106,7 @@ class GenomicSequence_Dan:
         
         self.genomicFile = file
         self.__loadPickleSeq(file)
-        self.allChromosomes = self._seq_dic.keys()
+        self.allChromosomes = list(self._seq_dic.keys())
         return(self)
 
     def get_chr_length(self, chrom):
@@ -121,7 +127,7 @@ class GenomicSequence_Dan:
 
         
 
-class GenomicSequence_Ivan:
+class GenomicSequence_Ivan(object):
 
     genomicFile = None
     genomicIndexFile = None
@@ -202,10 +208,10 @@ class GenomicSequence_Ivan:
             print("Unknown chromosome!")
             return(-1)
 
-        self.__f.seek(self._Indexing[chr]['startBit']+start-1+(start-1)/self._Indexing[chr]['seqLineLength'])
+        self.__f.seek(self._Indexing[chr]['startBit']+start-1+old_div((start-1),self._Indexing[chr]['seqLineLength']))
         
         l = stop-start+1
-        x = 1 + l/self._Indexing[chr]['seqLineLength']
+        x = 1 + old_div(l,self._Indexing[chr]['seqLineLength'])
         
         w = self.__f.read(l+x)
         w = w.replace("\n", "")[:l]

@@ -3,7 +3,10 @@ Created on Dec 8, 2016
 
 @author: lubo
 '''
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
+from builtins import object
 from pheno.utils.configuration import PhenoConfig
 import logging
 
@@ -33,7 +36,7 @@ class PhenoFactory(object):
         if not self.has_pheno_db(dbname):
             raise ValueError("can't find pheno DB {}; available pheno DBs: {}"
                              .format(dbname, self.get_pheno_db_names()))
-        import pheno_db
+        from . import pheno_db
         LOGGER.info("loading pheno db <{}>".format(dbname))
         phdb = pheno_db.PhenoDB(dbfile=self.get_dbfile(dbname))
         phdb.load()

@@ -1,3 +1,4 @@
+from builtins import str
 import unittest
 import logging
 from DAE import giDB

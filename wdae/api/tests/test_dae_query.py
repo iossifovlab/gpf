@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import str
 import unittest
 
 from query_variants import prepare_inchild, \
@@ -82,7 +84,7 @@ class CombinedTests(unittest.TestCase):
 
     def test_variants_gene_sets_1(self):
         vs = wdae_query_wrapper(self.TEST_DATA_1)
-        vs.next()
+        next(vs)
         count = 0
         for v in vs:
             count += 1
@@ -106,7 +108,7 @@ class CombinedTests(unittest.TestCase):
 
     def test_variants_gene_sets_3(self):
         vs = wdae_query_wrapper(self.TEST_DATA_3)
-        vs.next()
+        next(vs)
 
         for v in vs:
             self.assertTrue('del' in v[4], "%s: %s" % (str(v[3]), str(v)))
@@ -131,7 +133,7 @@ class GeneRegionCombinedTests(unittest.TestCase):
 
     def test_gene_region_filter(self):
         vs = wdae_query_wrapper(self.TEST_DATA)
-        vs.next()
+        next(vs)
 
         for v in vs:
             loc = int(v[3].split(':')[1])
@@ -195,7 +197,7 @@ class PreviewQueryTests(unittest.TestCase):
 
     def test_preview_1(self):
         vs = wdae_query_wrapper(self.PREVIEW_TEST_1)
-        vs.next()
+        next(vs)
         count = 0
         for _v in vs:
             count += 1

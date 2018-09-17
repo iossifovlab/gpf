@@ -3,6 +3,7 @@ Created on Oct 26, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import unittest
 from query_variants import prepare_transmitted_filters, \
     prepare_denovo_filters, \
