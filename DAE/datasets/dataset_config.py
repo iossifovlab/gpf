@@ -294,7 +294,7 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypeBrowser.hasPresentInParent': 'yes',
             'genotypeBrowser.hasPedigreeSelector': 'no',
             'genotypeBrowser.mainForm': 'default',
-            'genotypeBrowser.phenoColumns': '',
+            'genotypeBrowser.phenoColumns': None,
             'genotypeBrowser.familyFilters': None,
             'pedigree.phenotype.source': 'legacy',
             'pedigree.phenotype.default': 'unknown:unknown:#aaaaaa',
