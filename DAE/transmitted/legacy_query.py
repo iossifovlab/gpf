@@ -143,6 +143,7 @@ class TransmissionLegacy(TransmissionConfig):
         if regionS:
             f = gzip.open(transmittedVariantsFile, mode="rt")
             colNms = f.readline().strip().split("\t")
+            colNms = [cn.strip("#") for cn in colNms]
             f.close()
             tbf = pysam.Tabixfile(transmittedVariantsFile)
 
@@ -172,6 +173,7 @@ class TransmissionLegacy(TransmissionConfig):
             f = gzip.open(transmittedVariantsFile, mode="rt")
 
             colNms = f.readline().strip().split("\t")
+            colNms = [cn.strip("#") for cn in colNms]
             for v in self.filter_transmitted_variants(
                     f, colNms,
                     minParentsCalled,

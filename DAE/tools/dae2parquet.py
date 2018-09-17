@@ -13,6 +13,7 @@ import os
 import sys
 
 import pysam
+import argparse
 
 from variants.builder import get_genome
 from variants.configure import Configure
@@ -77,17 +78,11 @@ def convert_contig(contig, outprefix=None, config=None,):
 
 
 def dae_build(argv):
-
-    prefix = os.path.join(
-        os.environ.get("DAE_DB_DIR"), 'cccc/w1202s766e611')
     config = Configure.from_dict({
         "dae": {
-            'summary_filename': os.path.join(
-                prefix, 'transmissionIndex-HW-DNRM.txt.bgz'),
-            'toomany_filename': os.path.join(
-                prefix, 'transmissionIndex-HW-DNRM-TOOMANY.txt.bgz'),
-            'family_filename': os.path.join(
-                prefix, 'familyInfo.txt'),
+            'summary_filename': argv.summary,
+            'toomany_filename': argv.toomany,
+            'family_filename': argv.families
         }})
 
     contigs = get_contigs(config.dae.summary_filename)
@@ -110,7 +105,7 @@ def dae_build(argv):
     dae.load_families()
     save_ped_df_to_parquet(
         dae.ped_df,
-        "out/w1202s766e611/pedigree.parquet")
+        os.path.join(argv.out, 'pedigree.parquet'))
 
     build_contigs = []
     for contig in contigs:
@@ -126,21 +121,17 @@ def dae_build(argv):
     converter = functools.partial(
         convert_contig,
         config=config,
-        outprefix="out/w1202s766e611")
+        outprefix=argv.out)
 
-    pool = multiprocessing.Pool(processes=15)
+    pool = multiprocessing.Pool(processes=argv.processes_count)
     pool.map(converter, build_contigs)
 
 
 def denovo_build(argv):
-    prefix = os.path.join(
-        os.environ.get("DAE_DB_DIR"), 'cccc/IossifovWE2014/')
     config = Configure.from_dict({
         "denovo": {
-            'denovo_filename': os.path.join(
-                prefix, 'Supplement-T2-eventsTable-annot.txt'),
-            'family_filename': os.path.join(
-                prefix, 'familyInfo.txt'),
+            'denovo_filename': argv.variants,
+            'family_filename': argv.families
         }})
 
     genome = get_genome()
@@ -154,7 +145,7 @@ def denovo_build(argv):
     denovo.load_families()
     df = denovo.load_denovo_variants()
 
-    parquet_config = Configure.from_prefix_parquet("out/IossifovWE2014/")
+    parquet_config = Configure.from_prefix_parquet(argv.out)
     save_ped_df_to_parquet(
         denovo.ped_df,
         parquet_config.parquet.pedigree)
@@ -169,5 +160,77 @@ def denovo_build(argv):
         parquet_config.parquet.family_alleles)
 
 
+def init_parser_denovo(subparsers):
+    parser_denovo = subparsers.add_parser('denovo')
+
+    parser_denovo.add_argument(
+        'variants', type=str,
+        metavar='variants filename',
+        help='annotated variants file'
+    )
+    parser_denovo.add_argument(
+        'families', type=str,
+        metavar='families filename',
+        help='families file in pedigree format'
+    )
+    parser_denovo.add_argument(
+        '-o', '--out', type=str, default='./',
+        dest='out', metavar='output filepath',
+        help='output filepath. If none specified, current directory is used'
+    )
+
+
+def init_parser_dae(subparsers):
+    parser_dae = subparsers.add_parser('dae')
+
+    parser_dae.add_argument(
+        'summary', type=str,
+        metavar='summary filename',
+        help=''
+    )
+    parser_dae.add_argument(
+        'toomany', type=str,
+        metavar='toomany filename',
+        help=''
+    )
+    parser_dae.add_argument(
+        'families', type=str,
+        metavar='families filename',
+        help='families file in pedigree format'
+    )
+    parser_dae.add_argument(
+        '-o', '--out', type=str, default='./',
+        dest='out', metavar='output filepath',
+        help='output filepath. If none specified, current directory is used'
+    )
+    parser_dae.add_argument(
+        '-p', '--processes', type=int, default=1,
+        dest='processes_count', metavar='processes count',
+        help='number of processes'
+    )
+
+
+def parse_cli_arguments(argv=sys.argv[1:]):
+    parser = argparse.ArgumentParser(
+        description='Convert DAE file to parquet')
+
+    subparsers = parser.add_subparsers(
+        dest='type',
+        title='subcommands',
+        description='choose what type of data to convert',
+        help='denovo or transmitted study')
+
+    init_parser_denovo(subparsers)
+    init_parser_dae(subparsers)
+
+    parser_args = parser.parse_args(argv)
+    return parser_args
+
+
 if __name__ == "__main__":
-    dae_build(sys.argv)
+    argv = parse_cli_arguments(sys.argv[1:])
+
+    if argv.type == 'denovo':
+        denovo_build(argv)
+    elif argv.type == 'dae':
+        dae_build(argv)

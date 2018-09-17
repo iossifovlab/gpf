@@ -63,16 +63,12 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
                 query = "any({})".format(",".join(query))
                 kwargs["person_ids"] = query
 
-        print(self.config)
-
         df = thrift_query(
             thrift_connection=self.connection,
             summary_variants=self.config.summary_variants,
             family_alleles=self.config.family_alleles,
             **kwargs
         )
-        print(df)
-
         df.genotype = df.genotype.apply(
             lambda v: np.fromstring(v.strip("[]"), dtype=np.int8, sep=','))
 
@@ -80,7 +76,8 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
             if v is None:
                 return []
             else:
-                return v.strip("[]").split(",")
+                return v.strip('[]').replace("\"", "")\
+                        .replace("'", "").split(",")
         df.effect_gene_types = df.effect_gene_types.apply(s2a)
         df.effect_gene_genes = df.effect_gene_genes.apply(s2a)
 

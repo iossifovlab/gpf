@@ -1,71 +1,53 @@
 import abc
-import os
 
+from configurable_entities.configurable_entity_definition import\
+    ConfigurableEntityDefinition
 from datasets.dataset_config import DatasetConfig
 
 
-class DatasetsDefinition(object):
+class DatasetsDefinition(ConfigurableEntityDefinition):
     __metaclass__ = abc.ABCMeta
-
-    configs = {}
 
     @property
     def dataset_ids(self):
-        return list(self.configs.keys())
+        return self.configurable_entity_ids()
 
     def get_dataset_config(self, dataset_id):
-        if dataset_id not in self.configs:
-            return None
-
-        return self.configs[dataset_id]
+        return self.get_configurable_entity_config(dataset_id)
 
     def get_all_dataset_configs(self):
-        return list(self.configs.values())
+        return self.get_all_configurable_entity_configs()
+
+    @staticmethod
+    def _work_dir_from_environment():
+        from datasets.default_settings import DATA_DIR
+        return DATA_DIR
 
 
 class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
 
     ENABLED_DIR = 'datasets-enabled'
 
-    def __init__(self, datasets_dir=None):
+    def __init__(self, datasets_dir=None, work_dir=None):
         super(DirectoryEnabledDatasetsDefinition, self).__init__()
         if datasets_dir is None:
             from datasets.default_settings import DATA_DATASETS_DIR
             datasets_dir = DATA_DATASETS_DIR
+        if work_dir is None:
+            work_dir = DatasetsDefinition._work_dir_from_environment()
 
-        assert isinstance(datasets_dir, str), type(datasets_dir)
-        assert os.path.exists(datasets_dir), datasets_dir
-
-        self.datasets_dir = datasets_dir
-
-        enabled_dir = os.path.join(
-            datasets_dir, DirectoryEnabledDatasetsDefinition.ENABLED_DIR)
-        assert os.path.exists(enabled_dir), enabled_dir
-        assert os.path.isdir(enabled_dir), enabled_dir
-
-        config_paths = []
-        configs = []
-
-        for path in os.listdir(enabled_dir):
-            if not os.path.isdir(path) and path.endswith('.conf'):
-                config_paths.append(os.path.join(enabled_dir, path))
-
-        print(config_paths)
-
-        for config_path in config_paths:
-            configs.append(DatasetConfig.from_config(config_path))
-
-        self.configs = {conf.dataset_id: conf for conf in configs}
+        self.directory_enabled_configurable_entity_definition(
+            datasets_dir, DatasetConfig, work_dir, 'dataset_id',
+            DatasetConfig.get_default_values())
 
 
 class SingleFileDatasetsDefinition(DatasetsDefinition):
 
     def __init__(self, config_path, work_dir=None):
-        self.config_path = config_path
+        super(SingleFileDatasetsDefinition, self).__init__()
+        if work_dir is None:
+            work_dir = DatasetsDefinition._work_dir_from_environment()
 
-        config = DatasetConfig.from_config(config_path, work_dir)
-
-        self.configs = {
-            config.dataset_id: config
-        }
-        print(self.configs)
+        self.single_file_configurable_entity_definition(
+            config_path, work_dir, DatasetConfig, 'dataset_id',
+            DatasetConfig.get_default_values())

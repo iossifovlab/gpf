@@ -6,8 +6,10 @@ Created on Feb 9, 2018
 from __future__ import print_function
 
 from RegionOperations import Region
+import pytest
 
 
+@pytest.mark.xfail
 def test_study_load(ustudy_vcf):
 
     assert ustudy_vcf.annot_df is not None
@@ -17,6 +19,7 @@ def test_study_load(ustudy_vcf):
         len(ustudy_vcf.vcf_vars)
 
 
+@pytest.mark.xfail
 def test_query_regions(ustudy_vcf):
     regions = [Region("1", 11539, 11541)]
     vs = ustudy_vcf.query_variants(regions=regions)
@@ -25,6 +28,7 @@ def test_query_regions(ustudy_vcf):
     assert len(vl) == 1
 
 
+@pytest.mark.xfail
 def test_query_regions_2(ustudy_vcf):
     regions = [
         Region("1", 11539, 11541),

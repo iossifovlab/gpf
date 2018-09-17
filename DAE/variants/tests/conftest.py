@@ -12,6 +12,7 @@ import os
 import shutil
 import tempfile
 import time
+import socket
 
 import pytest
 
@@ -83,14 +84,6 @@ def composite_annotator(
 
 
 @pytest.fixture(scope='session')
-def testing_thriftserver_port():
-    thrift_port = os.environ.get("THRIFTSERVER_PORT")
-    if thrift_port is None:
-        return 10000
-    return int(thrift_port)
-
-
-@pytest.fixture(scope='session')
 def testing_thriftserver(request):
     from impala.dbapi import connect
 
@@ -98,10 +91,16 @@ def testing_thriftserver(request):
     assert spark_home is not None
 
     thrift_port = os.environ.get("THRIFTSERVER_PORT")
-    if thrift_port is not None:
-        thrift_port = int(thrift_port)
-    else:
+    if thrift_port is None:
         thrift_port = 10000
+    else:
+        thrift_port = int(thrift_port)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while True:
+            result = sock.connect_ex(('127.0.0.1', thrift_port))
+            if result != 0:
+                break
+            thrift_port += 1
 
     def thrift_connect(retries=10):
         for count in range(retries + 1):
@@ -163,23 +162,23 @@ def temp_filename(request):
     return output
 
 
-@pytest.fixture(scope='session')
-def ustudy_config():
-    config = Configure.from_config()
-    return config
+# @pytest.fixture(scope='session')
+# def ustudy_config():
+#     config = Configure.from_config()
+#     return config
 
 
-@pytest.fixture(scope='session')
-def ustudy_loader(ustudy_config):
-    return RawVariantsLoader(ustudy_config.vcf)
+# @pytest.fixture(scope='session')
+# def ustudy_loader(ustudy_config):
+#     return RawVariantsLoader(ustudy_config.vcf)
 
 
-@pytest.fixture(scope='session')
-def ustudy_vcf(ustudy_config, composite_annotator):
-    fvariants = RawFamilyVariants(
-        ustudy_config, annotator=composite_annotator,
-        variant_factory=VariantFactory)
-    return fvariants
+# @pytest.fixture(scope='session')
+# def ustudy_vcf(ustudy_config, composite_annotator):
+#     fvariants = RawFamilyVariants(
+#         ustudy_config, annotator=composite_annotator,
+#         variant_factory=VariantFactory)
+#     return fvariants
 
 
 @pytest.fixture(scope='session')

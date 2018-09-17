@@ -30,21 +30,3 @@ def test_load_family_simple(fixture_name):
     families.families_build(fam_df, Family)
 
     assert families is not None
-
-
-@pytest.mark.parametrize("fixture_name", [
-    "fixtures/family_simple.txt",
-])
-def test_family_simple_index(fixture_name):
-    family_filename = relative_to_this_test_folder(fixture_name)
-    assert os.path.exists(family_filename)
-
-    ped_df = FamiliesBase.load_simple_family_file(family_filename)
-
-    unique_family_index = ped_df['familyIndex'].unique()
-    print(unique_family_index)
-
-    for findex in unique_family_index:
-        fids = ped_df[ped_df['familyIndex'] == findex]['familyId'].unique()
-        print(fids)
-        assert len(fids) == 1
