@@ -3,6 +3,7 @@ Created on Nov 8, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from enrichment_tool.event_counters import EventsCounter,\
     GeneEventsCounter, overlap_enrichment_result_dict
 from enrichment_tool.genotype_helper import GenotypeHelper as GH

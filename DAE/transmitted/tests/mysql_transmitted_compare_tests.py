@@ -3,6 +3,7 @@ Created on Oct 15, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from transmitted.tests.variants_compare_base import VariantsCompareBase
 from transmitted.tests.mysql_transmitted_std_queries import dae_query_q101,\
     mysql_query_q101, dae_query_q201, mysql_query_q201, dae_query_q301,\

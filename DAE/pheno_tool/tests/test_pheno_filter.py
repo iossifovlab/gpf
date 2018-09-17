@@ -3,6 +3,7 @@ Created on Nov 25, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 from pheno_tool.pheno_common import PhenoFilterSet, PhenoFilterRange
 from pheno_tool.tool import PhenoTool

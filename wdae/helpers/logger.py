@@ -3,6 +3,7 @@ Created on Jun 12, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import logging
 
 LOGGER = logging.getLogger('wdae.api')

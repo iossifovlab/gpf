@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import next
+from builtins import str
 import logging
 import helpers.GeneTerm
 from precompute import register
@@ -17,13 +20,13 @@ def prepare_query_dict(data):
     if isinstance(data, QueryDict):
         items = data.iterlists()
     else:
-        items = data.items()
+        items = list(data.items())
 
     for (key, val) in items:
         key = str(key)
         if isinstance(val, list):
             value = ','.join([str(s).strip() for s in val])
-        elif isinstance(val, str) or isinstance(val, unicode):
+        elif isinstance(val, str) or isinstance(val, str):
             value = str(val.replace(u'\xa0', u' ').encode('utf-8'))
             value = value.strip()
         else:
@@ -89,7 +92,7 @@ def combine_denovo_gene_sets(gene_set_phenotype):
 
 def prepare_summary(vs):
     rows = []
-    cols = vs.next()
+    cols = next(vs)
     count = 0
     for r in vs:
         count += 1

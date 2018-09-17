@@ -3,6 +3,8 @@ Created on Jan 20, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+from builtins import next
 from rest_framework.test import APITestCase
 from rest_framework import status
 from guardian.shortcuts import get_groups_with_perms
@@ -21,7 +23,7 @@ class DatasetApiTest(APITestCase):
         Dataset.recreate_dataset_perm('denovo_db', [])
 
     def test_get_datasets(self):
-        url = '/api/v3/datasets/'
+        url = '/api/v3/datasets'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
@@ -97,7 +99,7 @@ class DatasetApiTest(APITestCase):
         self.assertIn('phenoColumns', gbdata)
 
     def test_datasets_have_default_groups(self):
-        url = '/api/v3/datasets/'
+        url = '/api/v3/datasets'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
@@ -109,7 +111,7 @@ class DatasetApiTest(APITestCase):
                          if group['name'] == dataset_id), None)
 
     def test_datasets_have_all_their_groups(self):
-        url = '/api/v3/datasets/'
+        url = '/api/v3/datasets'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data

@@ -3,6 +3,7 @@ Created on Jan 4, 2016
 
 @author: lubo
 '''
+from __future__ import print_function
 from rest_framework import status
 import json
 from query_variants import prepare_denovo_filters, get_denovo_variants

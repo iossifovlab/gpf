@@ -1,7 +1,11 @@
+from __future__ import unicode_literals
 
+from builtins import object
 from DAE import *
 
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from configparser import ConfigParser
 
 from GenomeAccess import openRef
 from GeneModelFiles import load_gene_models
@@ -25,14 +29,14 @@ gmDB = GeneModels("/home/ivan/ccdsGene.txt.gz",geneMappingFile="")
 gmDB.....
 '''
 
-class GenomesDB:
+class GenomesDB(object):
     def __init__(self, daeDir, confFile=None, data_dir=None):
         
         self.daeDir = daeDir
         if not confFile:
             confFile = daeDir + "/genomesDB.conf"
 
-        self.config = ConfigParser.SafeConfigParser({
+        self.config = ConfigParser({
             'wd': daeDir,
             'data': data_dir
         })

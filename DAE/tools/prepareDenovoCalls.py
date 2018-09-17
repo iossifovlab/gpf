@@ -1,6 +1,14 @@
 #!/bin/env python
 
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import zip
+from builtins import str
+from builtins import map
+from builtins import range
+from past.utils import old_div
 from DAE import *
 from subprocess import Popen
 from subprocess import PIPE 
@@ -20,7 +28,7 @@ subFN = '/data/safe/autism/pilot2/denovoCalls/objLinks/denovoSnvs/1019/snv-CSHL-
 quadReportFN = '/home/iossifov/work/T115/data-dev/study/wig1019/report_quad_20131006.txt'
 
 if len(sys.argv) != 4:
-    print >>sys.stderr , "need 3 arguments <quad report> <indel file> <sub file>"
+    print("need 3 arguments <quad report> <indel file> <sub file>", file=sys.stderr)
     sys.exit(1)
 
 quadReportFN = sys.argv[1]
@@ -41,7 +49,7 @@ vRawData = defaultdict(list)
 for v in vDB.get_validation_variants():
     vRawData[vKey(v)].append(v)
 valStatusPriority = defaultdict(lambda:4,{ vst:(i+1) for i,vst in enumerate("valid invalid failed".split()) })
-vData = {k:sorted(l,key=lambda v: valStatusPriority[v.valStatus])[0] for k,l in vRawData.items()}
+vData = {k:sorted(l,key=lambda v: valStatusPriority[v.valStatus])[0] for k,l in list(vRawData.items())}
 
 
 def indelRecStrength(r):
@@ -60,10 +68,10 @@ def indelRecStrength(r):
     if countMat[1,0]>0 or countMat[1,1]>0:
         return "supper weak"
 
-    for c in xrange(2,countMat.shape[1]):
+    for c in range(2,countMat.shape[1]):
         if countMat[1,c]>=2:
             totalCnt=float(countMat.sum(0)[c])
-            if countMat[1,c]/totalCnt > 0.05:
+            if old_div(countMat[1,c],totalCnt) > 0.05:
                 return "weak"
     
     return "supper weak"
@@ -89,7 +97,7 @@ def subRecStrength(r):
     bs = str2Mat(r['counts'],colSep=' ')
     if bs[1,0]>0 or bs[1,1]>0:
         return "supper weak"
-    for c in xrange(2,bs.shape[1]):
+    for c in range(2,bs.shape[1]):
         if bs[1,c]>=3:
             return "weak"
     return "supper weak"
@@ -133,7 +141,7 @@ def procDenovoFile(iFn,vtype):
     rmColInds = sorted([i for i,cn in enumerate(hdr) if cn in columnsToRemove],reverse=True)
     for i in rmColInds:
         del hdr[i]
-    for oF in fls[vtype].values():
+    for oF in list(fls[vtype].values()):
         if not oF.name.endswith('ToValidate.txt'):
             oF.write("\t".join(hdr + "strength val.status val.counts val.batch val.parent val.note".split()) + "\n")
         else:
@@ -145,7 +153,7 @@ def procDenovoFile(iFn,vtype):
         cs = l.strip("\n\r").split("\t")
         for i in rmColInds:
             del cs[i]
-        rec = dict(zip(hdr,cs))
+        rec = dict(list(zip(hdr,cs)))
         ## repair variant column
 
         if vtype=="sub":
@@ -156,7 +164,7 @@ def procDenovoFile(iFn,vtype):
             if grps:
                 rprIns = "ins(" + grps.group(2) + ")"
                 if rprIns != rec['variant']:
-                    print >>sys.stderr, "REPAIRING", rec['variant'], rprIns
+                    print("REPAIRING", rec['variant'], rprIns, file=sys.stderr)
                     rec['variant'] = "ins(" + grps.group(2) + ")"
                     cs[hdr.index('variant')] = rec['variant']
             if not indelRE.match(rec['variant']):
@@ -214,13 +222,13 @@ procDenovoFile(indelFN,"indel")
 procDenovoFile(subFN,"sub")
 
 # close files
-[f.close() for dd in fls.values() for f in dd.values()]
+[f.close() for dd in list(fls.values()) for f in list(dd.values())]
 
-for vtype,vtStats in stats.items():
-    print "#############", vtype, "#############"
-    print "\t".join("            ,N,valAtt,valid,invalid,failed,incon.,toValidate".split(','))
+for vtype,vtStats in list(stats.items()):
+    print("#############", vtype, "#############")
+    print("\t".join("            ,N,valAtt,valid,invalid,failed,incon.,toValidate".split(',')))
     for strn in "strong,weak,supper weak".split(","):
-        print "\t".join(['%12s' % strn] + [str(vtStats[strn+x]) for x in ",-valAtt,-valStat-valid,-valStat-invalid,-valStat-failed,-valStat-inconclusiv,-toValidate".split(",")])
+        print("\t".join(['%12s' % strn] + [str(vtStats[strn+x]) for x in ",-valAtt,-valStat-valid,-valStat-invalid,-valStat-failed,-valStat-inconclusiv,-toValidate".split(",")]))
 
 ## load the ok families from the quad report
 familyIdRE = re.compile('^auSSC(\d\d\d\d\d)') 
@@ -244,7 +252,7 @@ otherValidatedF.write("\t".join(("familyId location variant strength val.batchId
 
 otherStats = defaultdict(lambda : defaultdict(int))
 
-for vKey,vv in vData.items():
+for vKey,vv in list(vData.items()):
     if vKey in valVarsInLists:
         continue            
     if vv.location.startswith('M:'):
@@ -271,14 +279,14 @@ for vKey,vv in vData.items():
 
     addAtts = ['counts', 'denovoScore', 'chi2APval']
     if vv.bestSt.shape[1] == 3 and len(vv.memberInOrder) == 4:
-        print "EXTENDING the best state for ", vv.familyId, vv.location, vv.variant
+        print("EXTENDING the best state for ", vv.familyId, vv.location, vv.variant)
         vv.bestSt = np.append(vv.bestSt,[[2],[0]],axis=1)
-    otherValidatedF.write("\t".join(map(str,[vv.familyId,vv.location,vv.variant,"other",vv.batchId, mat2Str(vv.bestSt),vv.valStatus,vv.valCountsS, vv.valParent, vv.resultNote, vv.inChS,vv.who,vv.why]) + 
+    otherValidatedF.write("\t".join(list(map(str,[vv.familyId,vv.location,vv.variant,"other",vv.batchId, mat2Str(vv.bestSt),vv.valStatus,vv.valCountsS, vv.valParent, vv.resultNote, vv.inChS,vv.who,vv.why])) + 
                     [str(vv.atts[aa]) if aa in vv.atts else "" for aa in addAtts] + list(desc)) + "\n")
 otherValidatedF.close()
 
-print "############# other #############"
-print "\t".join(",LGD,nonLGD".split(","))
+print("############# other #############")
+print("\t".join(",LGD,nonLGD".split(",")))
 for vtype in "indel sub".split():
-    print "\t".join([vtype,str(otherStats[vtype]["LGD"]),str(otherStats[vtype]['nonLGD'])])
+    print("\t".join([vtype,str(otherStats[vtype]["LGD"]),str(otherStats[vtype]['nonLGD'])]))
 

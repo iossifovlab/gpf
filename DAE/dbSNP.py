@@ -3,6 +3,9 @@
 # Jan 21th 2014
 # by Ewa
 
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 import gzip
 from collections import defaultdict
 import sys
@@ -46,7 +49,7 @@ def string_complement(s):
 	return(s2)
 
 
-class DbSNP:
+class DbSNP(object):
 	location = None
 	Scores = None
 	_S1 = None
@@ -90,7 +93,7 @@ class DbSNP:
         
 		h5py_file = h5py.File(file, 'w')
 	
-		for chrom, arr in self.Scores.items():
+		for chrom, arr in list(self.Scores.items()):
 			h5py_file[chrom] = arr
         
     
@@ -104,7 +107,7 @@ class DbSNP:
 		self.Scores = {}
 		f = h5py.File(file, 'r')
 
-		for k,v in f.items():
+		for k,v in list(f.items()):
 			self.Scores[str(k)] = np.array(v) 
 
 		f.close()
@@ -188,7 +191,7 @@ class DbSNP:
 		f.close()
 
 		
-		for k, v in self.Scores.items():
+		for k, v in list(self.Scores.items()):
 			sys.stderr.write("Relabeling chromosome: " + k + "\n")
 			try:
 				self.Scores[Relabel[k]] = v

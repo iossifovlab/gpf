@@ -3,6 +3,7 @@ Created on Apr 26, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from DAE import vDB
 
 

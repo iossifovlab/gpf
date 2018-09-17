@@ -3,6 +3,7 @@ Created on Oct 17, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 
 def test_single_variant_region(ssc):

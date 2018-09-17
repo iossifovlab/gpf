@@ -3,6 +3,7 @@ Created on Sep 14, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import re
 
 
@@ -73,6 +74,6 @@ def remove_annoying_characters(text):
         return ANNOYING_CHARACTERS[char]
 
     return re.sub(
-        '(' + '|'.join(ANNOYING_CHARACTERS.keys()) + ')',
+        '(' + '|'.join(list(ANNOYING_CHARACTERS.keys())) + ')',
         replace_chars, text
     )

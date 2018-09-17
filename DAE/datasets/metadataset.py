@@ -1,7 +1,11 @@
+from __future__ import unicode_literals
+from builtins import map
+from builtins import next
 import heapq
 import itertools
 
 from datasets.dataset import Dataset
+from functools import reduce
 
 class MetaDataset(Dataset):
 
@@ -13,7 +17,7 @@ class MetaDataset(Dataset):
 
     @staticmethod
     def __distinct(variants, max_count=None):
-        count = 0;
+        count = 0
         previous_variant = next(variants)
         seen_keys = {previous_variant.key}
         for variant in variants:
@@ -33,9 +37,7 @@ class MetaDataset(Dataset):
         dataset_ids = kwargs['dataset_ids']
         studies = []
         studies_datasets = {}
-        for dataset in itertools.ifilter(
-                lambda ds: ds.dataset_id in dataset_ids,
-                self.datasets):
+        for dataset in [ds for ds in self.datasets if ds.dataset_id in dataset_ids]:
             for study in dataset.get_studies(safe=safe, **kwargs):
                 if study.name not in studies_datasets:
                     studies_datasets[study.name] = []
@@ -56,8 +58,10 @@ class MetaDataset(Dataset):
                  for study in unique_studies])
 
         augment_vars = self._get_var_augmenter(safe=safe, **kwargs)
-        return itertools.imap(augment_vars,
-            self.__distinct(self._phenotype_filter(all_variants, **kwargs)))
+        return list(map(
+            augment_vars,
+            self.__distinct(self._phenotype_filter(all_variants, **kwargs))
+        ))
 
     def __get_variants_from_study(self, study, safe=True, **kwargs):
         variant_iterators = []

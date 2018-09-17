@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import object
 from django.db import models
 from django.contrib.auth.models import Group
 from guardian.shortcuts import assign_perm, remove_perm
@@ -9,7 +11,7 @@ class Dataset(models.Model):
 
     DEFAULT_GROUPS_FOR_DATASET = ["any_dataset"]
 
-    class Meta:
+    class Meta(object):
         permissions = (
             ('view', 'View dataset'),
         )

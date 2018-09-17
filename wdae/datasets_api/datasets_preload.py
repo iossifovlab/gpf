@@ -3,6 +3,8 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from django.conf import settings
 
 from datasets.dataset_facade import DatasetFacade
@@ -52,6 +54,7 @@ class DatasetsPreload(Preload, Precompute):
         if preload_active:
             for dataset_id in self.dataset_facade.load_cache():
                 logger.info(dataset_id)
+                # self.factory.get_dataset(dataset_id)
 
     def get(self):
         return self

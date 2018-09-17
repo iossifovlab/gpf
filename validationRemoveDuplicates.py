@@ -1,5 +1,8 @@
 #!/data/software/local/bin/python
 
+from __future__ import print_function
+from builtins import str
+from builtins import range
 import csv
 
 lol = list(csv.reader(open('validationWithDuplicates20131018.txt', 'rb'), delimiter='\t'))
@@ -44,7 +47,7 @@ lout.append(lol1[n])
 lout.append(lol1[len(lol1) -1])
 
 for n in range(len(lout)-1):
-    print "\t".join(lout[n])
+    print("\t".join(lout[n]))
     #print "\t".join(lol1[n])
             
         

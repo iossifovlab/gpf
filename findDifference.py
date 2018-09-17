@@ -1,6 +1,7 @@
 #!/bin/env python 
 
 
+from __future__ import print_function
 import optparse, os, sys, math
 
 usage = "usage: %prog [options]"
@@ -24,8 +25,8 @@ try:
 		x = line.split('\t')
 
 		ref.add( x[0]+'>'+x[1] )
-except IOError, e:
-	print e
+except IOError as e:
+	print(e)
 	sys.exit(1)
 
 try:
@@ -47,6 +48,6 @@ try:
 		#outfile.write( line +'\n' )
 
 	outfile.close()
-except IOError, e:
-	print e
+except IOError as e:
+	print(e)
 	sys.exit(1)

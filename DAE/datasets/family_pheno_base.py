@@ -3,6 +3,9 @@ Created on Mar 2, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import map
+from builtins import object
 import numpy as np
 from pheno.common import MeasureType
 
@@ -98,9 +101,9 @@ class FamilyPhenoQueryMixin(object):
             ff is None or isinstance(ff, set)
             for ff in result
         ])
-        result = map(self.get_geno_families, result)
+        result = list(map(self.get_geno_families, result))
 
-        return filter(lambda ff: isinstance(ff, set), result)
+        return [ff for ff in result if isinstance(ff, set)]
 
     def _filter_continuous_filter(self, safe=True, **kwargs):
         measure_id = kwargs.get('measure', None)

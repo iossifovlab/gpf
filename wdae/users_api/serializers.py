@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import object
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -30,7 +32,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     hasPassword = serializers.BooleanField(source='is_active', read_only=True)
 
-    class Meta:
+    class Meta(object):
         model = get_user_model()
         fields = ('id', 'email', 'name', 'hasPassword', 'groups')
 
@@ -52,7 +54,7 @@ class UserSerializer(serializers.ModelSerializer):
     def _update_groups(user, new_groups):
         with transaction.atomic():
             to_add = []
-            old_ids = set(map(lambda x: x.id, user.groups.all()))
+            old_ids = set([x.id for x in user.groups.all()])
 
             for group in new_groups:
                 if group.id in old_ids:
@@ -94,7 +96,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserWithoutEmailSerializer(UserSerializer):
 
-    class Meta:
+    class Meta(object):
         model = get_user_model()
         fields = tuple(x for x in UserSerializer.Meta.fields if x != 'email')
 

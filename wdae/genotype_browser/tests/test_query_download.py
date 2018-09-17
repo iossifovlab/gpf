@@ -3,11 +3,16 @@ Created on Jul 11, 2017
 
 @author: lubo
 '''
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import zip
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
 import copy
 from rest_framework import status
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import json
+
 EXAMPLE_REQUEST_SVIP = {
     "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
     "gender": ["female", "male"],
@@ -124,9 +129,9 @@ def count_iterable(iterable):
 
 def collect(iterable):
     res = []
-    header = next(iterable)
+    header = next(iterable).decode("utf-8")
     for v in iterable:
-        res.append(v)
+        res.append(v.decode("utf-8"))
     return header, res
 
 
@@ -136,7 +141,7 @@ class Test(BaseAuthenticatedUserTest):
 
     def test_query_download_urlencoded(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SVIP)
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -161,7 +166,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
 
     def test_query_download_ssc(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SSC)
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -180,7 +185,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
 
     def test_query_download_svip(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SVIP)
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -201,7 +206,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
     def test_query_download_sd_autism(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SD)
         data['pedigreeSelector']['checkedValues'] = ['autism']
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -222,7 +227,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
     def test_query_download_sd_unaffected(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SD)
         data['pedigreeSelector']['checkedValues'] = ['unaffected']
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -247,7 +252,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
     def test_query_download_denovo_db_autism(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_DENOVO_DB)
         data['pedigreeSelector']['checkedValues'] = ['autism']
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')
@@ -261,13 +266,14 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
 
         for v in res:
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
+
             study_phenotype = variant['Study Phenotype']
             assert study_phenotype == 'autism'
 
     def test_query_download_denovo_db_unaffected(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_DENOVO_DB)
         data['pedigreeSelector']['checkedValues'] = ['unaffected']
-        query = urllib.urlencode({"queryData": json.dumps(data)})
+        query = urllib.parse.urlencode({"queryData": json.dumps(data)})
 
         response = self.client.post(
             self.URL, query, content_type='application/x-www-form-urlencoded')

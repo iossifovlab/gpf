@@ -3,6 +3,7 @@ Created on Jul 2, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
 import pytest
 from RegionOperations import Region
 

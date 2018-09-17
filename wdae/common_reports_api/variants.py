@@ -4,12 +4,18 @@ Created on Jul 27, 2015
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
 
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from collections import defaultdict, Counter
 import itertools
 import logging
 import zlib
-import cPickle
+import pickle
 
 from query_prepare import EFFECT_GROUPS, build_effect_types
 from DAE import vDB
@@ -153,7 +159,7 @@ class FamiliesCounters(CounterBase):
 
     @property
     def counters(self):
-        res = self.data.values()[:]
+        res = list(self.data.values())[:]
         res = sorted(res, key=lambda v: (-v[1]))
         return res
 
@@ -288,20 +294,20 @@ class FamiliesReport(ReportBase, precompute.register.Precompute):
         self.build()
 
     def serialize(self):
-        fc = zlib.compress(cPickle.dumps(self.families_counters))
-        cc = zlib.compress(cPickle.dumps(self.children_counters))
-        ft = zlib.compress(cPickle.dumps(self.families_total))
+        fc = zlib.compress(pickle.dumps(self.families_counters, protocol=2))
+        cc = zlib.compress(pickle.dumps(self.children_counters, protocol=2))
+        ft = zlib.compress(pickle.dumps(self.families_total, protocol=2))
         return {'families_counters': fc,
                 'families_total': ft,
                 'children_counters': cc}
 
     def deserialize(self, data):
         fc = data['families_counters']
-        self.families_counters = cPickle.loads(zlib.decompress(fc))
+        self.families_counters = pickle.loads(zlib.decompress(fc))
         ft = data['families_total']
-        self.families_total = cPickle.loads(zlib.decompress(ft))
+        self.families_total = pickle.loads(zlib.decompress(ft))
         cc = data['children_counters']
-        self.children_counters = cPickle.loads(zlib.decompress(cc))
+        self.children_counters = pickle.loads(zlib.decompress(cc))
 
 
 class DenovoEventsCounter(CounterBase):
@@ -367,12 +373,12 @@ class DenovoEventsCounter(CounterBase):
         if self.children_counter.children_total != 0:
 
             self.events_children_percent = \
-                round((1.0 * self.events_children_count) /
-                      self.children_counter.children_total, 3)
+                round(old_div((1.0 * self.events_children_count),
+                      self.children_counter.children_total), 3)
 
             self.events_rate_per_child = \
-                round((1.0 * self.events_count) /
-                      self.children_counter.children_total, 3)
+                round(old_div((1.0 * self.events_count),
+                      self.children_counter.children_total), 3)
 
 
 class DenovoEventsReportRow(object):
@@ -401,6 +407,7 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
 
     def build_row(self, effect_type):
         row = []
+        effect_type = str(effect_type)
         for phenotype_id in self.phenotype_ids:
             cc = self.families_report.get_children_counters(phenotype_id)
             ec = DenovoEventsCounter(
@@ -470,12 +477,12 @@ class DenovoEventsReport(ReportBase, precompute.register.Precompute):
         self.build()
 
     def serialize(self):
-        rows = zlib.compress(cPickle.dumps(self.rows))
+        rows = zlib.compress(pickle.dumps(self.rows, protocol=2))
         return {'rows': rows}
 
     def deserialize(self, data):
         rows = data['rows']
-        self.rows = cPickle.loads(zlib.decompress(rows))
+        self.rows = pickle.loads(zlib.decompress(rows))
         self.clear_empty_rows()
         self.clear_empty_columns()
 
@@ -553,7 +560,7 @@ class VariantReports(precompute.register.Precompute):
         for (study_name, _) in self.studies:
             sr = self.data[study_name]
             sdict = sr.serialize()
-            data[study_name] = zlib.compress(cPickle.dumps(sdict))
+            data[study_name] = zlib.compress(pickle.dumps(sdict, protocol=2))
         return data
 
     def deserialize(self, data):
@@ -563,7 +570,7 @@ class VariantReports(precompute.register.Precompute):
                 continue
             assert study_name in data
             sr = StudyVariantReports(study_name)
-            sdict = cPickle.loads(zlib.decompress(data[study_name]))
+            sdict = pickle.loads(zlib.decompress(data[study_name]))
             sr.deserialize(sdict)
             res[study_name] = sr
         self.data = res

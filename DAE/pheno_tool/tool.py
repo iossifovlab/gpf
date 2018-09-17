@@ -3,7 +3,9 @@ Created on Nov 9, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
+from builtins import object
 from collections import Counter
 
 from scipy.stats.stats import ttest_ind
@@ -66,7 +68,7 @@ class PhenoTool(object):
         filter_builder = PhenoFilterBuilder(phdb)
 
         self.pheno_filters = [
-            filter_builder.make_filter(m, c) for m, c in pheno_filters.items()
+            filter_builder.make_filter(m, c) for m, c in list(pheno_filters.items())
         ]
         self._build_subjects()
         self._normalize_df(self.df, self.measure_id, self.normalize_by)
@@ -86,7 +88,7 @@ class PhenoTool(object):
     def _studies_persons(cls, studies, roles):
         persons = {}
         for st in studies:
-            for fam in st.families.values():
+            for fam in list(st.families.values()):
                 for person in fam.memberInOrder:
                     if person.role in roles and \
                             person.personId not in persons:
@@ -164,9 +166,7 @@ class PhenoTool(object):
         list of measure_ids.
         """
         assert isinstance(normalize_by, list)
-        assert all(map(
-            lambda m: self.phdb.get_measure(m).measure_type == 'continuous',
-            normalize_by))
+        assert all([self.phdb.get_measure(m).measure_type == 'continuous' for m in normalize_by])
         assert self.phdb.get_measure(measure_id).measure_type == 'continuous'
 
         measures = normalize_by[:]
@@ -257,7 +257,7 @@ class PhenoTool(object):
         elif isinstance(variants, Counter):
 
             persons_variants = pd.DataFrame(
-                data=[(k, v) for k, v in variants.items()],
+                data=[(k, v) for k, v in list(variants.items())],
                 columns=['person_id', 'variants'])
             persons_variants.set_index('person_id', inplace=True)
         elif isinstance(variants, pd.DataFrame):

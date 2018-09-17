@@ -4,6 +4,7 @@ Created on Feb 7, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from builtins import object
 import os
 
 from cyvcf2 import VCF

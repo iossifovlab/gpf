@@ -5,11 +5,13 @@ Created on Jul 23, 2018
 '''
 from __future__ import print_function
 
+from builtins import str
 import gzip
 import os
 import re
 import sys
 import traceback
+from contextlib import closing
 
 import pysam
 
@@ -72,8 +74,8 @@ class BaseDAE(FamiliesBase):
             return [u'intergenic'], [u'intergenic']
 
         res = [ge.split(':') for ge in data.split(sep)]
-        genes = [unicode(ge[0], 'utf-8') for ge in res]
-        effects = [unicode(ge[1], 'utf-8') for ge in res]
+        genes = [str(ge[0]) for ge in res]
+        effects = [str(ge[1]) for ge in res]
         return genes, effects
 
     def summary_variant_from_dae_record(self, rec):
@@ -107,7 +109,7 @@ class BaseDAE(FamiliesBase):
         ref_allele = SummaryVariantFactory.summary_allele_from_record(ref)
 
         genes, effects = self.split_gene_effects(rec['effectGene'])
-        effect_details = [unicode(rec['effectDetails'], 'utf-8')]
+        effect_details = [str(rec['effectDetails'])]
         alt = {
             'chrom': rec['chrom'],
             'position': rec['position'],
@@ -161,7 +163,7 @@ class RawDAE(BaseDAE):
             annotator=annotator)
 
         if region is not None:
-            assert isinstance(region, str)
+            assert isinstance(region, str), type(region)
 
         os.path.exists(summary_filename)
         os.path.exists(toomany_filename)
@@ -174,14 +176,18 @@ class RawDAE(BaseDAE):
     @staticmethod
     def load_column_names(filename):
         with gzip.open(filename) as infile:
-            column_names = infile.readline().strip().split("\t")
+            column_names = infile.readline().decode('utf-8').strip().split("\t")
         return column_names
 
     @staticmethod
     def load_region(filename, region):
         column_names = RawDAE.load_column_names(filename)
+        print(filename, type(filename))
+        print(region, type(region))
 
-        with pysam.Tabixfile(filename) as tbf:  # @UndefinedVariable
+        # using a context manager because of
+        # https://stackoverflow.com/a/25968716/2316754
+        with closing(pysam.Tabixfile(filename)) as tbf:  # @UndefinedVariable
             infile = tbf.fetch(
                 region=region,
                 parser=pysam.asTuple())  # @UndefinedVariable
@@ -199,7 +205,7 @@ class RawDAE(BaseDAE):
             df = pd.read_csv(
                 infile,
                 dtype={
-                    'chr': str,
+                    'chr': np.str,
                     'position': int,
                 },
                 sep='\t')
@@ -247,7 +253,7 @@ class RawDAE(BaseDAE):
         }
         res = {
             fid: best2gt(str2mat(bs, col_sep=col_sep, row_sep=row_sep))
-            for fid, bs in res.items()
+            for fid, bs in list(res.items())
         }
         return res
 
@@ -401,8 +407,8 @@ class RawDenovo(BaseDAE):
         df = pd.read_csv(
             self.denovo_filename,
             dtype={
-                'familyId': str,
-                'chr': str,
+                'familyId': np.str,
+                'chr': np.str,
                 'position': int,
             },
             sep='\t')

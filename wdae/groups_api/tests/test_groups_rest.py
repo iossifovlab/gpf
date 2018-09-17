@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import next
 import pytest
 
 from guardian.models import Group

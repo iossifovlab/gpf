@@ -3,8 +3,17 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-import cPickle
-import cStringIO
+from __future__ import division
+from __future__ import print_function
+# from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import zip
+from builtins import str
+from past.utils import old_div
+import pickle
+import io
 from collections import Counter
 import csv
 import os
@@ -48,16 +57,17 @@ class BackgroundBase(BackgroundConfig):
 
     def cache_save(self):
         assert self.name is not None
-        with open(self.cache_filename, 'w') as output:
+        with open(self.cache_filename, 'wb') as output:
             data = self.serialize()
-            cPickle.dump(data, output)
+            pickle.dump(data, output, protocol=2)
 
     def cache_load(self):
         if not os.path.exists(self.cache_filename):
             return False
 
-        with open(self.cache_filename, 'r') as infile:
-            data = cPickle.load(infile)
+        with open(self.cache_filename, 'rb') as infile:
+            print(self.cache_filename)
+            data = pickle.load(infile)
             self.deserialize(data)
 
         return True
@@ -141,11 +151,11 @@ class SynonymousBackground(BackgroundCommon):
 
         base_counts = SynonymousBackground._count_gene_syms(base)
 
-        base_sorted = sorted(zip(base_counts.keys(),
-                                 base_counts.values()))
+        base_sorted = sorted(zip(list(base_counts.keys()),
+                                 list(base_counts.values())))
 
         background = np.array(base_sorted,
-                              dtype=[('sym', '|S32'), ('raw', '>i4')])
+                              dtype=[('sym', '|U32'), ('raw', '>i4')])
 
         return (background, foreground)
 
@@ -159,21 +169,17 @@ class SynonymousBackground(BackgroundCommon):
         return self.background
 
     def serialize(self):
-        fout = cStringIO.StringIO()
-        np.save(fout, self.background)
-
-        b = zlib.compress(fout.getvalue())
-        f = zlib.compress(cPickle.dumps(self.foreground))
+        b = zlib.compress(pickle.dumps(self.background, protocol=2))
+        f = zlib.compress(pickle.dumps(self.foreground, protocol=2))
         return {'background': b,
                 'foreground': f}
 
     def deserialize(self, data):
         b = data['background']
-        fin = cStringIO.StringIO(zlib.decompress(b))
-        self.background = np.load(fin)
+        self.background = pickle.loads(zlib.decompress(b))
 
         f = data['foreground']
-        self.foreground = cPickle.loads(zlib.decompress(f))
+        self.foreground = pickle.loads(zlib.decompress(f))
 
     def _count_foreground_events(self, gene_syms):
         count = 0
@@ -189,7 +195,10 @@ class SynonymousBackground(BackgroundCommon):
 
     def _count(self, gene_syms):
         vpred = np.vectorize(lambda sym: sym in gene_syms)
+        print(self.background['sym'])
         index = vpred(self.background['sym'])
+        print(index)
+        print(np.sum(index))
         base = np.sum(self.background['raw'][index])
         foreground = self._count_foreground_events(gene_syms)
         res = base + foreground
@@ -212,9 +221,10 @@ class CodingLenBackground(BackgroundCommon):
         back = []
         with open(filename, 'r') as f:
             reader = csv.reader(f)
-            reader.next()
+            next(reader)
             for row in reader:
-                back.append((str(row[1]), int(row[2])))
+                assert len([row[1]]) <= 32, row[1]
+                back.append((row[1], int(row[2])))
         return back
 
     def __init__(self, use_cache=False):
@@ -225,11 +235,11 @@ class CodingLenBackground(BackgroundCommon):
         back = self._load_and_prepare_build()
         self.background = np.array(
             back,
-            dtype=[('sym', '|S32'), ('raw', '>i4')])
+            dtype=[('sym', "|U32"), ('raw', '>i4')])
         return self.background
 
     def serialize(self):
-        fout = cStringIO.StringIO()
+        fout = io.BytesIO()
         np.save(fout, self.background)
 
         b = zlib.compress(fout.getvalue())
@@ -237,12 +247,13 @@ class CodingLenBackground(BackgroundCommon):
 
     def deserialize(self, data):
         b = data['background']
-        fin = cStringIO.StringIO(zlib.decompress(b))
+        fin = io.BytesIO(zlib.decompress(b))
         self.background = np.load(fin)
 
     def _count(self, gene_syms):
         vpred = np.vectorize(lambda sym: sym in gene_syms)
         index = vpred(self.background['sym'])
+
         res = np.sum(self.background['raw'][index])
         return res
 
@@ -332,7 +343,7 @@ class SamochaBackground(BackgroundBase):
     def serialize(self):
         ndarray = self.background.as_matrix(
             ['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS'])
-        fout = cStringIO.StringIO()
+        fout = io.BytesIO()
         np.save(fout, ndarray)
 
         data = zlib.compress(fout.getvalue())
@@ -340,7 +351,7 @@ class SamochaBackground(BackgroundBase):
 
     def deserialize(self, data):
         b = data['background']
-        fin = cStringIO.StringIO(zlib.decompress(b))
+        fin = io.BytesIO(zlib.decompress(b))
         ndarray = np.load(fin)
 
         self.background = pd.DataFrame(
@@ -385,9 +396,9 @@ class SamochaBackground(BackgroundBase):
         children_count = children_stats['M'] + children_stats['U'] \
             + children_stats['F']
         # p = (p_boys + p_girls) / 2.0
-        p = ((children_stats['M'] + children_stats['U']) * p_boys +
-             children_stats['F'] * p_girls) / \
-            (children_count)
+        p = old_div(((children_stats['M'] + children_stats['U']) * p_boys +
+                     children_stats['F'] * p_girls),
+                    (children_count))
 #         result.rec_expected = \
 #             (children_stats['M'] + children_stats['F']) * p * p
         if len(rec_result.events) == 0 or len(all_result.events) == 0:

@@ -1,8 +1,15 @@
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
 #/usr/bin/env python
 
+from builtins import next
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import sys, gzip
 import pysam, numpy
-from itertools import izip
+
 from collections import namedtuple
 
 #imitate VariantRecord for many files
@@ -23,7 +30,7 @@ def RefAltsIndex( ra ):
    alts = tuple(set(alts))
    #print nIdx
    iAlt = {}
-   for k, v in nIdx.items():
+   for k, v in list(nIdx.items()):
         ix = [0] + [alts.index(a)+1 for a in v]
         #print k,v,alts,ix
         iAlt[k] = numpy.array(ix) #(lambda x: tuple( [ix[n] for n in x] ) )
@@ -44,9 +51,9 @@ def RefAltsIndex( ra ):
 def getGQ( dx ):
    try:
         return list(dx['GQ'])
-   except TypeError, e:
+   except TypeError as e:
         return [dx['GQ']]
-   except KeyError, e:
+   except KeyError as e:
         if ('QR' in dx) and ('QA' in dx):
                 return [dx['QR']] + list(dx['QA'])
         else:
@@ -103,10 +110,10 @@ def universalRefAlt( RX, sI, missingInfoAsRef=True ):
    samples = {}
 
    if len(ra) == 1: #simplest case
-        for s,i in sI.items():
+        for s,i in list(sI.items()):
            try:
                 samples[s] = dict(RX[i].samples[s])
-           except AttributeError, e:
+           except AttributeError as e:
              if missingInfoAsRef:
                 samples[s] = {'GT':(0,0)}
              else:
@@ -118,14 +125,14 @@ def universalRefAlt( RX, sI, missingInfoAsRef=True ):
         #only change genotype index
         ref, alts, iAlt = RefAltsIndex( ra )
 
-        for s,i in sI.items():
+        for s,i in list(sI.items()):
            try:
                 idx = (RX[i].ref, RX[i].alts)
                 sx = RX[i].samples[s]
                 #sx['GT'] = tuple( iAlt[idx][ list(sx['GT']) ] )
                 # Done by modifyData
                 samples[s] = modifyData( iAlt[idx], sx, alts )
-           except AttributeError, e:
+           except AttributeError as e:
              if missingInfoAsRef:
                 samples[s] = {'GT':(0,0)}
              else:
@@ -149,7 +156,7 @@ def procFileNames( fNames ):
 # 1)      all the files are sorted
 # 2)      the order and numbers of their chromosomes are the same
 # 3)      non of chromosomes are skippped.
-class vcfFiles:
+class vcfFiles(object):
    def __init__(cls,fNames,missingInfoAsRef=True):
         cls.__fNames = procFileNames( fNames )
 
@@ -193,14 +200,14 @@ class vcfFiles:
    def __iter__(cls):
         return cls
 
-   def next(cls):
+   def __next__(cls):
      for nx, rflag in enumerate(cls.__rFlag):
         if not rflag: continue
 
         fl = cls.__fetch[nx]
  
         try:
-           rx = fl.next()
+           rx = next(fl)
         except StopIteration:
                 continue
 
@@ -214,7 +221,7 @@ class vcfFiles:
         #idx = ('{:>4s}'.format(rx.chrom),rx.pos)
 
         if idx not in cls.__data:
-                cls.__data[idx] = [None for n in xrange(cls.__nF)]
+                cls.__data[idx] = [None for n in range(cls.__nF)]
 
         cls.__data[idx][nx] = rx
 
@@ -232,7 +239,7 @@ class vcfFiles:
      #           return RX
      return universalRefAlt( RX, cls.__sI, missingInfoAsRef=cls.__missingInfoAsRef )
 
-class Reader:
+class Reader(object):
    def __init__( self, fname=None ):
         self.fname = fname
         try:
@@ -243,7 +250,7 @@ class Reader:
                 self.file = gzip.open( fname, 'rb' )
            else:
                 self.file = open( fname, 'r' )
-        except IOError, e:
+        except IOError as e:
                 pass
 
    def exists(self):
@@ -257,13 +264,13 @@ class Reader:
         try:
                 self.file
         except AttributeError:
-                print self.fname +'\tnot exist'
+                print(self.fname +'\tnot exist')
                 exit(1)
 
    def readline( self ):
         return self.file.readline()
 
-   def next( self ):
+   def __next__( self ):
         line = self.readline()
 
         if not line:
@@ -281,7 +288,7 @@ class ReaderStat( Reader ):
 
         self.head = self.file.readline().strip('\n')
         hdr = self.head.split('\t')
-        self.dct = dict((hdr[n],n) for n in xrange(len(hdr)))
+        self.dct = dict((hdr[n],n) for n in range(len(hdr)))
 
         self.idxID = [self.dct['chr'], self.dct['position'], self.dct['variant']];
 
@@ -312,11 +319,11 @@ class ReaderStat( Reader ):
    
    def getStat( self ):
         v = [int(self.cTerms[self.dct[x]]) for x in ['all.nParCalled','all.nAltAlls']]
-        w = [float(self.cTerms[self.dct[x]])/100. for x in ['all.prcntParCalled','all.altFreq']]
+        w = [old_div(float(self.cTerms[self.dct[x]]),100.) for x in ['all.prcntParCalled','all.altFreq']]
 
         return v, w
 
-class Writer:
+class Writer(object):
    def __init__( self, fname=None ):
       self.bgzFlag = False
 
@@ -341,8 +348,8 @@ class Writer:
         try:
                 fname =  self.filename
                 os.system( 'bgzip '+ fname +'; mv '+ fname +'.gz '+ fname +'.bgz' )#, self.filename+'.bgz' )
-        except IOError, e:
-                print e
+        except IOError as e:
+                print(e)
 
    def write( self, xstr ):
         self.file.write( xstr )
@@ -374,12 +381,12 @@ def posStateXFemale( p ):
         f = [1]*p[1] + [0]*(1-p[1])     
         return set( [m[0]+f[0], m[1]+f[0]] )
 
-class dbFamily:
+class dbFamily(object):
    def __init__( self, fname ):
         infile = Reader( fname )
         self.head = infile.readline().strip('\n')
         hdr = self.head.split('\t')
-        self.dct = dict((hdr[n],n) for n in xrange(len(hdr)))
+        self.dct = dict((hdr[n],n) for n in range(len(hdr)))
 
         self.family = dict()
         for line in infile:

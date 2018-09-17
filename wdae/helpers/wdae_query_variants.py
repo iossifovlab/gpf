@@ -3,8 +3,10 @@ Created on Oct 21, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 # from DAE import get_gene_sets_symNS
+from builtins import str
 from helpers.dae_query import combine_denovo_gene_sets
 from preloaded import register
 from query_prepare import prepare_gene_syms, prepare_string_value
@@ -15,7 +17,7 @@ def gene_set_loader2(gene_set_label, gene_set_phenotype=None):
 
     gene_term = None
     if gene_set_label != 'denovo':
-        if register.has_key(gene_set_label):  # @IgnorePep8
+        if gene_set_label in register:  # @IgnorePep8
             return register.get(gene_set_label)
 
         gene_term = None  # get_gene_sets_symNS(gene_set_label)

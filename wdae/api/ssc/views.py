@@ -3,6 +3,8 @@ Created on Jun 18, 2015
 
 @author: lubo
 '''
+from builtins import map
+from builtins import str
 import itertools
 
 from django.http.response import StreamingHttpResponse
@@ -80,12 +82,12 @@ class SSCDownload(SSCPrepare):
                                "ssc query variants request: " + str(data)))
 
         comment = ', '.join([': '.join([k, str(v)])
-                             for (k, v) in data.items()])
+                             for (k, v) in list(data.items())])
 
         generator = wdae_query_wrapper(data)
         response = StreamingHttpResponse(
             itertools.chain(
-                itertools.imap(join_line, generator),
+                list(map(join_line, generator)),
                 ['# "%s"' % comment]),
             content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename=unruly.csv'

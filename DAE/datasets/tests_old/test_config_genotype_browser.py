@@ -3,6 +3,7 @@ Created on Mar 21, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 
 def test_vip_pheno_columns(datasets_config):

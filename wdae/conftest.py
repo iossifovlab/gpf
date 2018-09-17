@@ -1,9 +1,21 @@
+from __future__ import unicode_literals
 import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from datasets_api.models import Dataset
 from django.contrib.auth.models import Group
 from users_api.models import WdaeUser
+
+
+def pytest_addoption(parser):
+    parser.addoption("--runslow", action="store_true", default=False,
+                     help="run slow tests")
+    parser.addoption("--runveryslow", action="store_true", default=False,
+                     help="run very slow tests")
+    parser.addoption("--ssc_wg", action="store_true", default=False,
+                     help="run SSC WG tests")
+    parser.addoption("--nomysql", action="store_true", default=False,
+                     help="skip tests that require mysql")
 
 
 @pytest.fixture()

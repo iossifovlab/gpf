@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from django.conf.urls import url
 from query_state_save.views import QueryStateSaveView, QueryStateLoadView
 

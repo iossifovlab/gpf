@@ -3,6 +3,7 @@ Created on Apr 13, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from rest_framework import status
 from rest_framework.response import Response
 from genotype_browser.views import QueryBaseView
@@ -62,7 +63,7 @@ Example:
 
             family_ids = dataset.get_family_ids(**data)
             if family_ids is None:
-                family_ids = dataset.families.keys()
+                family_ids = list(dataset.families.keys())
 
             pedigree_selector = dataset.get_pedigree_selector(**data)
             pedigree_selector_id = pedigree_selector['id']

@@ -1,10 +1,12 @@
 from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import map
 import itertools
 import logging
 
 from RegionOperations import Region
 from variants.attributes import Role
-from helpers import EFFECT_TYPES_MAPPING
+from datasets.helpers import EFFECT_TYPES_MAPPING
 from study_groups.study_group import StudyGroup
 from variants.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, EqualsNode, ContainsNode
@@ -21,16 +23,19 @@ class Dataset(object):
         preview_columns = []
         download_columns = []
         if genotypeBrowser:
-            self.preview_columns = genotypeBrowser['previewColumns']
-            self.download_columns = genotypeBrowser['downloadColumns']
+            preview_columns = genotypeBrowser['previewColumns']
+            download_columns = genotypeBrowser['downloadColumns']
 
         self.name = name
         self.study_group = study_group
 
         self.dataset_config = dataset_config
 
+        self.name = name
         self.preview_columns = preview_columns
         self.download_columns = download_columns
+
+        self.legend = self.dataset_config.pedigreeSelectors[0]['domain']
 
     def get_variants(self, **kwargs):
         return self.study_group.get_variants(**kwargs)
@@ -44,7 +49,7 @@ class Dataset(object):
         return ['']
 
     def get_legend(self, *args, **kwargs):
-        return ['autism']
+        return self.legend
 
     @property
     def order(self):
@@ -56,7 +61,7 @@ class Dataset(object):
             'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
             'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
             'enrichmentTool', 'genotypeBrowser', 'pedigreeSelectors',
-            'studyTypes'
+            'studyTypes', 'studies'
         ]
 
     def _get_study_group_config_options(self, dataset_config):
@@ -71,6 +76,8 @@ class Dataset(object):
             self.study_group.has_denovo
         dataset_config['genotypeBrowser']['hasTransmitted'] =\
             self.study_group.has_transmitted
+        dataset_config['studies'] =\
+            self.study_group.study_names
 
         return dataset_config
 
@@ -110,7 +117,7 @@ class DatasetWrapper(Dataset):
             limit = kwargs['limit']
 
         if 'regions' in kwargs:
-            kwargs['regions'] = map(Region.from_str, kwargs['regions'])
+            kwargs['regions'] = list(map(Region.from_str, kwargs['regions']))
 
         if 'presentInChild' in kwargs:
             self._transform_present_in_child(kwargs)
@@ -151,8 +158,8 @@ class DatasetWrapper(Dataset):
             super(DatasetWrapper, self).get_variants(**kwargs), limit)
 
     def _transform_min_max_alt_frequency(self, kwargs):
-        min_value = float('-inf')
-        max_value = float('inf')
+        min_value = None
+        max_value = None
 
         if 'minAltFrequencyPercent' in kwargs:
             min_value = kwargs['minAltFrequencyPercent']
@@ -166,6 +173,14 @@ class DatasetWrapper(Dataset):
 
         if value_range == (None, None):
             return
+
+        if value_range[0] is None:
+            value_range = (float('-inf'), value_range[1])
+
+        if value_range[1] is None:
+            value_range = (value_range[0], float('inf'))
+
+        print(value_range)
 
         value = 'af_allele_freq'
         if 'real_attr_filter' not in kwargs:

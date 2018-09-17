@@ -1,9 +1,13 @@
 #!/usr/bin/env python
 
+from __future__ import unicode_literals
 import sys
 import glob
 import argparse
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
+from configparser import ConfigParser
 import common.config
 import re
 from os.path import exists, dirname, basename, realpath
@@ -11,16 +15,17 @@ from box import Box
 from importlib import import_module
 from ast import literal_eval
 from collections import OrderedDict
-from tools.utilities import assign_values
-from tools.utilities import main as main
-from tools import *
+from functools import reduce
+from annotation.tools.utilities import assign_values
+from annotation.tools.utilities import main as main
+from annotation.tools import *
 
 
 def str_to_class(val):
     return reduce(getattr, val.split("."), sys.modules[__name__])
 
 
-class MyConfigParser(ConfigParser.SafeConfigParser):
+class MyConfigParser(ConfigParser):
     """Modified ConfigParser.SafeConfigParser that
     allows ':' in keys and only '=' as separator.
     """

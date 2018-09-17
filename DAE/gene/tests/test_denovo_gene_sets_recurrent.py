@@ -4,6 +4,7 @@ Created on Mar 29, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from DAE import vDB
 from itertools import groupby
@@ -20,9 +21,9 @@ def recSingleGenes(studies, inChild, effectTypes, phenotype):
     sym2Vars = {sym: [t[1] for t in tpi]
                 for sym, tpi in groupby(gnSorted, key=lambda x: x[0])}
     sym2FN = {sym: len({v.familyId for v in vs})
-              for sym, vs in sym2Vars.items()}
-    return {g for g, nf in sym2FN.items() if nf > 1}, \
-        {g for g, nf in sym2FN.items() if nf == 1}
+              for sym, vs in list(sym2Vars.items())}
+    return {g for g, nf in list(sym2FN.items()) if nf > 1}, \
+        {g for g, nf in list(sym2FN.items()) if nf == 1}
 
 
 def test_ssc_recurrent(ssc, gscs):

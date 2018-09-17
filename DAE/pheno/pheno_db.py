@@ -3,6 +3,8 @@ Created on Sep 10, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import object
 import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_
@@ -221,13 +223,13 @@ class PhenoDB(object):
         families = defaultdict(list)
         persons = self.get_persons()
 
-        for p in persons.values():
+        for p in list(persons.values()):
             families[p.atts['family_id']].append(p)
 
         self.persons = persons
         self.families = {}
 
-        for family_id, members in families.items():
+        for family_id, members in list(families.items()):
             f = Family()
             f.memberInOrder = members
             f.familyId = family_id
@@ -565,7 +567,7 @@ class PhenoDB(object):
         assert instrument_name in self.instruments
         instrument = self.instruments[instrument_name]
         measure_ids = [
-            m.measure_id for m in instrument.measures.values()
+            m.measure_id for m in list(instrument.measures.values())
         ]
         return measure_ids
 

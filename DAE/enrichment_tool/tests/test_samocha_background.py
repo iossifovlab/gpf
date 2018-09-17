@@ -3,6 +3,7 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import numpy as np
 import pandas as pd
 

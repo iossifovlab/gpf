@@ -3,11 +3,16 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-import numpy as np
-from collections import OrderedDict
-import ConfigParser
+from __future__ import unicode_literals
 
-from genomic_values import GenomicValues
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
+from configparser import ConfigParser
+from collections import OrderedDict
+
+import numpy as np
+from gene.genomic_values import GenomicValues
 from gene.config import GeneInfoConfig
 from Config import Config
 
@@ -109,7 +114,7 @@ class Weights(GenomicValues):
         wd = dae_config.daeDir
         data_dir = dae_config.data_dir
 
-        config = ConfigParser.SafeConfigParser({
+        config = ConfigParser({
             'wd': wd,
             'data': data_dir,
         })

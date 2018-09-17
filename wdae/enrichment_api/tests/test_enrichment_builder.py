@@ -3,6 +3,7 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
 
 from rest_framework.test import APITestCase
 from enrichment_api.views import EnrichmentModelsMixin

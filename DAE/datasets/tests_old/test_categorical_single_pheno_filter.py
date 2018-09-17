@@ -3,6 +3,7 @@ Created on Mar 30, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 
 def test_mother_race_filter_ssc(ssc):

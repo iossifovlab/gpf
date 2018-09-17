@@ -1,6 +1,7 @@
 #!/bin/env python
 
 
+from __future__ import print_function
 import optparse, os, sys, math
 
 usage = "usage: %prog [options]"
@@ -30,8 +31,8 @@ try:
 
 		ref.append( (' '*(15-len(x[0]))) + x[0]+'\t'+ (' '*(15-len(x[1])))+ x[1] +'\t'+ x[2] )
 		#print ref
-except IOError, e:
-	print e
+except IOError as e:
+	print(e)
 	sys.exit(1)
 
 try:
@@ -43,8 +44,8 @@ try:
 		x = line.split('\t')
 
 		ref.append( (' '*(15-len(x[0]))) + x[0]+'\t'+ (' '*(15-len(x[1])))+ x[1] +'\t'+ x[2] )
-except IOError, e:
-	print e
+except IOError as e:
+	print(e)
 	sys.exit(1)
 
 ref.sort()

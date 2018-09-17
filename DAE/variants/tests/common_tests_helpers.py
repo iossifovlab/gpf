@@ -5,6 +5,7 @@ Created on Mar 7, 2018
 '''
 from __future__ import print_function
 
+from builtins import zip
 import pytest
 
 import numpy as np
@@ -22,7 +23,7 @@ def assert_annotation_equals(vars_df, vars1_df):
 
     for v1, v2 in zip(vars_df.to_dict(orient='record'),
                       vars1_df.to_dict(orient='record')):
-        for k in v1.keys():
+        for k in list(v1.keys()):
             res = v1[k] == v2[k]
             print(k,
                   "|{}|".format(v1[k]),

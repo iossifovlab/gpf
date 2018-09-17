@@ -9,7 +9,8 @@ class DatasetConfig(ConfigurableEntityConfig):
         'genotypeBrowser.familyFilters': 'genotypeBrowser.familyStudyFilters',
     }
     CONCAT_OPTIONS = {
-        'genotypeBrowser.baseColumns': 'genotypeBrowser.columns',
+        'genotypeBrowser.genotype.baseColumns':
+            'genotypeBrowser.genotype.columns',
         'genotypeBrowser.basePreviewColumns': 'genotypeBrowser.previewColumns',
         'genotypeBrowser.baseDownloadColumns':
             'genotypeBrowser.downloadColumns'
@@ -293,15 +294,16 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypeBrowser.hasPresentInParent': 'yes',
             'genotypeBrowser.hasPedigreeSelector': 'no',
             'genotypeBrowser.mainForm': 'default',
-            'genotypeBrowser.phenoColumns': '',
+            'genotypeBrowser.phenoColumns': None,
             'genotypeBrowser.familyFilters': None,
             'pedigree.phenotype.source': 'legacy',
             'pedigree.phenotype.default': 'unknown:unknown:#aaaaaa',
-            'genotypeBrowser.baseColumns':
+            'genotypeBrowser.genotype.baseColumns':
                 'family,phenotype,variant,best,fromparent,inchild,genotype,'
                 'effect,count,geneeffect,effectdetails,weights,freq',
             'genotypeBrowser.basePreviewColumns':
-                'family,variant,genotype,effect,weights,freq',
+                'family,variant,genotype,effect,weights,freq,studyName,'
+                'location,pedigree,inChS,fromParentS,effects,requestedGeneEffects,genes,worstEffect',
             'genotypeBrowser.baseDownloadColumns':
                 'family,phenotype,variant,best,fromparent,inchild,effect,'
                 'count,geneeffect,effectdetails,weights,freq',

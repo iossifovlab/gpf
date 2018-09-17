@@ -5,6 +5,7 @@ Created on Mar 20, 2018
 '''
 from __future__ import print_function
 
+from builtins import next
 import pytest
 from variants.variant import AltAlleleItems
 

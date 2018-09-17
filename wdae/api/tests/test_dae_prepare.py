@@ -1,4 +1,5 @@
 
+from builtins import str
 from query_prepare import prepare_gene_syms, \
     prepare_denovo_studies, \
     prepare_transmitted_studies

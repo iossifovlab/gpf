@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pytest
 
 from variants.attributes_query_builder import is_token, and_node, or_node, \
@@ -22,8 +23,8 @@ def test_can_match_simple_and(parser):
 ])
 def test_and_parses_no_whitespaces_correctly(parser, expr):
     tree = parser.parse(expr)
-    print tree.pretty()
-    print tree
+    print(tree.pretty())
+    print(tree)
     assert len(tree.children) == 1
 
 
@@ -33,8 +34,8 @@ def test_and_parses_no_whitespaces_correctly(parser, expr):
 ])
 def test_and_parses_whitespaces_correctly(parser, expr):
     tree = parser.parse(expr)
-    print tree.pretty()
-    print tree
+    print(tree.pretty())
+    print(tree)
     assert len(tree.children) == 2
 
 
@@ -204,8 +205,8 @@ def test_ambiguity_is_resolved_through_priority_correctly(
 
 def test_predence(parser_with_ambiguity):
     tree = parser_with_ambiguity.parse("A and B and C")
-    print tree
-    print tree.pretty()
+    print(tree)
+    print(tree.pretty())
 
     assert len(tree.children) == 3
 
@@ -226,7 +227,7 @@ def test_can_match_not_and_priority_expression(parser):
 
 def parse_and_transform(transformer_matcher, query, expr):
     tree = transformer_matcher.parse(query)
-    print tree.pretty()
+    print(tree.pretty())
     assert tree is not None
     matcher = transformer_matcher.transform(tree)
     assert matcher is not None
@@ -348,7 +349,7 @@ def test_can_filter_complex_all(transformer_matcher, expr, output):
     ["", False]
 ])
 def test_can_filter_simple_any(transformer_matcher, expr, output):
-    print transformer_matcher.parse("any(some, other)")
+    print(transformer_matcher.parse("any(some, other)"))
     assert parse_and_transform(
         transformer_matcher, "any(some, other)", expr
     ) == output
@@ -424,7 +425,7 @@ def test_token_eq_transformer(transformer_matcher_class, expr, output):
 def test_can_reconstruct_single_token(parser, transformer):
     query = "not some and not other"
     tree = parser.parse(query)
-    print(tree, tree.data, tree.children)
+    print((tree, tree.data, tree.children))
     matcher = transformer(parser).transform(tree)
 
     assert matcher.query_str() == query

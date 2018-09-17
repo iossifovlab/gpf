@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import zip
+from builtins import str
+from builtins import range
 import optparse, sys, os
 import pysam, numpy
 from collections import namedtuple, defaultdict
-from itertools import izip
+
 
 #from vcf2DAEutil import *
 import variantFormat as vrtF
@@ -97,7 +102,7 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
    for rx in vrt:
 	flag = False
 	pid = rx[cI.pid] #'SP_id']
-	for k1, v1 in famInfo.items():
+	for k1, v1 in list(famInfo.items()):
 	   if pid not in v1['ids']: continue
 	   if v1['ids'].index(pid) < 2: continue
 
@@ -106,11 +111,11 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
 	   break 
 
 	if not flag:
-		print >> sys.stderr, '\t'.join( [pid, 'asChildNotFound'] ), rx
+		print('\t'.join( [pid, 'asChildNotFound'] ), rx, file=sys.stderr)
 		#exit(1)
    #
    #handle based on family
-   for k, v in fVrt.items():
+   for k, v in list(fVrt.items()):
 	terms = v[0]
 
 	chrom, pos = getLoc( rx, cI )
@@ -128,9 +133,9 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
 		tx = [pInfo[xx].sex for xx in fIx] #M:'1' F:'2'
 		tx = [xx if xx in ['1','2'] else '2' for xx in tx]
 		# correct if sex is not given and assume it as a girl
-		bSts = [tx, ['0' for n in xrange(fs)]]
+		bSts = [tx, ['0' for n in range(fs)]]
 	else:	
-		bSts = [['2' for n in xrange(fs)], ['0' for n in xrange(fs)]]
+		bSts = [['2' for n in range(fs)], ['0' for n in range(fs)]]
 
 	#cnts = [['0' for n in xrange(fs)], ['0' for n in xrange(fs)]]
         for rx in v:
@@ -162,12 +167,12 @@ def printDenovo( vrt, famInfo, pInfo, header=[], cI=defaultCol, out=sys.stdout )
         #print ped
 	#print terms['SP_id'] #'\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], bSts, ','.join( cS )] )     
 	if vx[0].startswith( 'complex' ):
-		print >> sys.stdout, '\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], bSts, ','.join( cS )] + [terms[h] for h in header] )
+		print('\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], bSts, ','.join( cS )] + [terms[h] for h in header] ), file=sys.stdout)
 		continue
 
-        print >> out, '\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], \
+        print('\t'.join( [nfid, '{}:{}'.format(chrom,str(px[0])), vx[0], \
 			  #cnts, \
-		          bSts, ','.join( cS )] + [terms[h] for h in header] )     
+		          bSts, ','.join( cS )] + [terms[h] for h in header] ), file=out)     
 
 def main():
    #svip.ped
@@ -219,7 +224,7 @@ def main():
  
       for line in ifile:
         terms = procLine( line, delimiter=ox.delimiter )
-        rx = {k:v for k, v in izip(hdr,terms)}
+        rx = {k:v for k, v in zip(hdr,terms)}
 	rx['terms'] = terms
 	#
 	#idx = ','.join( ['%4s' %(rx['CHROM']), '%12s' %(rx['POS']), rx['REF'], rx['ALT']] )
@@ -227,8 +232,8 @@ def main():
 	idx = ','.join( ['%4s' %(chrom), '%12s' %(pos), rx[colI.ref], rx[colI.alt]] )
 	denovo[idx].append( rx )
 
-   print >> out, '\t'.join( 'familyId,location,variant,bestState,inChild'.split(',') \
-			+ hdr )
+   print('\t'.join( 'familyId,location,variant,bestState,inChild'.split(',') \
+			+ hdr ), file=out)
    #colI = columnInfo( *(ox.columnNames.split(',')) )
    for k in sorted(denovo.keys()):
 	v = denovo[k]

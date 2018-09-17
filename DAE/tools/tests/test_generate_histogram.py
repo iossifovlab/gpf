@@ -1,6 +1,7 @@
+from __future__ import unicode_literals
 import pytest
 import pandas as pd
-from StringIO import StringIO
+from io import StringIO
 
 from tools.generate_histogram import GenerateScoresHistograms
 
@@ -62,8 +63,9 @@ output = [MyStringIO(), MyStringIO(), MyStringIO()]
 
 @pytest.fixture
 def generate_histograms(mocker, score_files, scores):
+
     mocker.patch('pandas.read_csv',
-                 side_effect=lambda _, usecols, sep: score_files.pop(0))
+                 side_effect=lambda _, usecols, sep, **kwargs: score_files.pop(0))
     mocker.patch('matplotlib.pyplot.savefig', side_effect=None)
     return GenerateScoresHistograms(['1'], output, scores)
 

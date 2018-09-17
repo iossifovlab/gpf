@@ -5,6 +5,10 @@ Created on Jun 25, 2013
 
 @author: leotta
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
+from builtins import range
 import sys, getopt
 import os
 import re
@@ -13,7 +17,7 @@ import filecmp
 def getComparison(commandsA, folderA, folderB):
     comparison = {}
     
-    for i in commandsA.keys():
+    for i in list(commandsA.keys()):
         name = "%s-out.txt"%(i)
         filenameA = os.path.join(folderA, name)
         filenameB= os.path.join(folderB, name)
@@ -134,14 +138,14 @@ def compare(folderA,folderB):
         
         else:
             row.append('Err')
-            print [comparisonAB[i],exitCodesA[i],exitCodesB[i]]
+            print([comparisonAB[i],exitCodesA[i],exitCodesB[i]])
             #row.append(":".join([comparisonAB[i],exitCodesA[i],exitCodesB[i]]))
             
             
             
         row.append(commandsA[i])
         
-        print "\t".join(row)
+        print("\t".join(row))
         
     #Output
     # 
@@ -156,7 +160,7 @@ def compare(folderA,folderB):
 
     
 def usage(exitCode=0):
-    print 'compareUT.py <folderA> <folderB>'
+    print('compareUT.py <folderA> <folderB>')
     sys.exit(exitCode)
     
 def main(argv):

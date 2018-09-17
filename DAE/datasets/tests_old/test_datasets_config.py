@@ -4,6 +4,7 @@ Created on Jan 20, 2017
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import unittest
 from datasets.config import DatasetsConfig
@@ -56,6 +57,8 @@ class DatasetsConfigTest(unittest.TestCase):
         self.assertEquals('vip', ds['phenoDB'])
         self.assertEquals(2, len(ds['pedigreeSelectors']))
         pedigrees = ds['pedigreeSelectors']
+        for pedigree in pedigrees:
+            print(pedigree)
 
         p16p = pedigrees[0]
         self.assertIn('16pstatus', p16p['id'])

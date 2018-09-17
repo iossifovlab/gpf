@@ -1,6 +1,7 @@
 import sys
 import argparse
-from utilities import *
+from annotation.tools.utilities import *
+
 
 def get_argument_parser():
     """

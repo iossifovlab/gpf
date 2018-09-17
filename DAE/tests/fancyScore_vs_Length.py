@@ -1,5 +1,11 @@
 #!/bin/env python
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import sys
 from DAE import *
 from collections import defaultdict
@@ -32,16 +38,16 @@ for l in locs:
 
 
 
-part_size = len(S)/N
+part_size = old_div(len(S),N)
 
 # FANCY SCORE
 Obs = []
 Exp_fs = []
 Exp_len = []
 #print("obs", "exp_fs", "exp_len")
-for i in xrange(part_size, len(S), part_size):
-    exp_fs =  denovo_cnt*(float(sum([float(x[1]) for x in S[i - part_size : i]]))/total_Score)
-    exp_len = denovo_cnt*(float(sum([float(x[2]) for x in S[i - part_size : i]]))/total_length_cov)
+for i in range(part_size, len(S), part_size):
+    exp_fs =  denovo_cnt*(old_div(float(sum([float(x[1]) for x in S[i - part_size : i]])),total_Score))
+    exp_len = denovo_cnt*(old_div(float(sum([float(x[2]) for x in S[i - part_size : i]])),total_length_cov))
     Exp_fs.append(exp_fs)
     Exp_len.append(exp_len)
     obs = float(sum([G[g[0]] for g in S[i - part_size : i] if  G[g[0]]]))

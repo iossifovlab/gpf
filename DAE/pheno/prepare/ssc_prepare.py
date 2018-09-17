@@ -3,6 +3,8 @@ Created on Sep 18, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
 import os
 
 import pandas as pd
@@ -263,7 +265,7 @@ def build_pedigree(persons_df):
         family = []
         for _index, row in family_df.iterrows():
             person = {
-                k: row[k] for k in row.keys()
+                k: row[k] for k in list(row.keys())
             }
 
             if row.role not in set([Role.mom.name, Role.dad.name]):

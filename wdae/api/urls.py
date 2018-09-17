@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, url
+from __future__ import unicode_literals
 from rest_framework.urlpatterns import format_suffix_patterns
 
 # from api.sd.views import SequencingDenovoPreview, SequencingDenovoDownload
@@ -6,8 +6,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 # from api.vip.views import VIPPreview, VIPDownload
 
 
-urlpatterns = patterns(
-    'api.views',
+urlpatterns = [
+    # 'api.views',
     #     url(r'^effect_types$', 'effect_types_list'),
     #     url(r'^effect_types_filters$', 'effect_types_filters'),
     #     url(r'^chromes_effect_types$', 'chromes_effect_types'),
@@ -43,7 +43,6 @@ urlpatterns = patterns(
     #     # url(r'^report_studies$', 'report_studies'),
     #     url(r'^child_types$', 'child_type_list'),
     #     # url(r'^studies_summaries$', 'studies_summaries'),
-
-)
+]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

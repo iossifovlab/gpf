@@ -3,6 +3,7 @@ Created on Jun 16, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 from django.apps import AppConfig
 from django.conf import settings
@@ -30,7 +31,7 @@ class WdaePrecomputeConfig(AppConfig):
     def _load_precomputed(self):
         from precompute.register import get_register
         register = get_register()
-        for key, cls_name in settings.PRECOMPUTE_CONFIG.items():
+        for key, cls_name in list(settings.PRECOMPUTE_CONFIG.items()):
             m, c = self._split_class_name(cls_name)
             module = import_module(m)
             cls = getattr(module, c)
@@ -38,7 +39,7 @@ class WdaePrecomputeConfig(AppConfig):
 
     def _load_preloaded(self):
         from preloaded.register import register
-        for key, cls_name in settings.PRELOAD_CONFIG.items():
+        for key, cls_name in list(settings.PRELOAD_CONFIG.items()):
             m, c = self._split_class_name(cls_name)
             logger.info("preloading  {}.{}".format(m, c))
             module = import_module(m)

@@ -3,6 +3,7 @@ Created on Nov 8, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from collections import Counter
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
 from pheno.common import Role, Gender
@@ -13,7 +14,7 @@ def test_count_unaffected(denovo_studies):
     counter = Counter()
     studies = denovo_studies
     for st in studies:
-        for fid, fam in st.families.items():
+        for fid, fam in list(st.families.items()):
             for p in fam.memberInOrder[2:]:
                 iid = "{}:{}".format(fid, p.personId)
                 if iid in seen:

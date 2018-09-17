@@ -1,4 +1,7 @@
+from __future__ import unicode_literals
 # Create your views here.
+from builtins import map
+from builtins import str
 import itertools
 import string
 
@@ -242,7 +245,7 @@ def child_type_list(request):
 def families_list(request, study_name=None):
 
     st = vDB.get_study(study_name)
-    families = st.families.keys()
+    families = list(st.families.keys())
 
     query_params = request.query_params
     if 'filter' in query_params:
@@ -287,14 +290,14 @@ def __gene_set_filter_response_dict(query_params, gts):
         else:
             filter_by_desc = False
 
-        lr = [(key, {"desc": value, "count": len(gts.t2G[key].keys())})
-              for (key, value) in gts.tDesc.items() if key in gts.t2G and
+        lr = [(key, {"desc": value, "count": len(list(gts.t2G[key].keys()))})
+              for (key, value) in list(gts.tDesc.items()) if key in gts.t2G and
               (filter_string in key.lower() and filter_by_key) or
               (filter_string in value.lower() and filter_by_desc)]
         return dict(lr[0:page_count])
     else:
-        lr = [(key, {"desc": value, "count": len(gts.t2G[key].keys())})
-              for (key, value) in gts.tDesc.items() if key in gts.t2G]
+        lr = [(key, {"desc": value, "count": len(list(gts.t2G[key].keys()))})
+              for (key, value) in list(gts.tDesc.items()) if key in gts.t2G]
         return dict(lr[0:page_count])
 
 
@@ -303,9 +306,9 @@ def __gene_set_response(query_params, gts, gt):
         res = __gene_set_filter_response_dict(query_params, gts)
         return Response(res)
 
-    if str(gt) not in gts.tDesc.keys():
+    if str(gt) not in list(gts.tDesc.keys()):
         return Response({})
-    gl = gts.t2G[gt].keys()
+    gl = list(gts.t2G[gt].keys())
     if not gl:
         return Response({})
     return Response({"gene_count": len(gl), "key": gt, "desc": gts.tDesc[gt]})
@@ -373,8 +376,8 @@ def gene_set_download(request):
                 title += " ({})".format(gene_set_phenotype)
             gene_syms.append('"{}"'.format(title))
             gene_syms.append('"{}"'.format(gts.tDesc[gene_name]))
-            gene_syms.extend(gts.t2G[gene_name].keys())
-    res = map(lambda s: "{}\r\n".format(s), gene_syms)
+            gene_syms.extend(list(gts.t2G[gene_name].keys()))
+    res = ["{}\r\n".format(s) for s in gene_syms]
     response = StreamingHttpResponse(
         res,
         content_type='text/csv')
@@ -536,12 +539,12 @@ Advanced family filter expects following fields:
 
     LOGGER.info(log_filter(request, "query variants request: " + str(data)))
 
-    comment = ', '.join([': '.join([k, str(v)]) for (k, v) in data.items()])
+    comment = ', '.join([': '.join([k, str(v)]) for (k, v) in list(data.items())])
 
     generator = wdae_query_wrapper(data)
     response = StreamingHttpResponse(
         itertools.chain(
-            itertools.imap(join_line, generator),
+            list(map(join_line, generator)),
             ['# %s' % comment]),
         content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename=unruly.csv'

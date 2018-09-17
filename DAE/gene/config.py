@@ -3,8 +3,12 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import object
 from Config import Config
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from configparser import ConfigParser
 from GeneInfoDB import GeneInfoDB
 
 
@@ -20,7 +24,7 @@ class GeneInfoConfig(object):
         wd = self.dae_config.daeDir
         data_dir = self.dae_config.data_dir
 
-        self.config = ConfigParser.SafeConfigParser({
+        self.config = ConfigParser({
             'wd': wd,
             'data': data_dir
         })

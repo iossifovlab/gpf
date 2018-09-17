@@ -3,6 +3,7 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from enrichment_tool.background import BackgroundConfig
 
 

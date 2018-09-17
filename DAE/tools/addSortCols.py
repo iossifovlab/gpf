@@ -1,5 +1,8 @@
 #!/bin/env python
 
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
 import sys
 
 fmt = "dnv"
@@ -19,7 +22,7 @@ FAIF.close()
 
 
 hdL = sys.stdin.readline()
-print "-1\t", hdL, 
+print("-1\t", hdL, end=' ') 
 hdCs = hdL.split("\t")
 
 if fmt=="dnv":
@@ -35,7 +38,7 @@ if fmt=="dnv":
             continue
         chI = str(chrInd[ch])
         vr = cs[varCI]
-        print "\t".join([chI,pos,vr,l]),
+        print("\t".join([chI,pos,vr,l]), end=' ')
 
 elif fmt=="trm":
     chrCI = hdCs.index("chr")
@@ -52,7 +55,7 @@ elif fmt=="trm":
         pos = cs[posCI]
         chI = str(chrInd[ch])
         vr = cs[varCI]
-        print "\t".join([chI,pos,vr,l]),
+        print("\t".join([chI,pos,vr,l]), end=' ')
 
 else:
-    print >>sys.stderr, "Unknown format", fmt
+    print("Unknown format", fmt, file=sys.stderr)

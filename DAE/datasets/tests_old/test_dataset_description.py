@@ -3,6 +3,8 @@ Created on Jul 21, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
 import pprint
 import pytest
 

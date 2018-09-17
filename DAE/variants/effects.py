@@ -5,6 +5,8 @@ Created on Jul 1, 2018
 '''
 
 
+from builtins import str
+from builtins import object
 class EffectGene(object):
     def __init__(self, symbol=None, effect=None):
         self.symbol = symbol
@@ -21,6 +23,9 @@ class EffectGene(object):
 
         return self.symbol == other.symbol and \
             self.effect == other.effect
+
+    def __hash__(self):
+        return hash(tuple([self.symbol, self.effect]))
 
     @classmethod
     def from_gene_effects(cls, gene_effects):

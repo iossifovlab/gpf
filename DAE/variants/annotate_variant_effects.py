@@ -4,7 +4,10 @@ Created on Mar 6, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
+from builtins import str
+from builtins import next
 from DAE import genomesDB
 from variant_annotation.annotator import VariantAnnotator
 from variant_annotation.variant import Variant
@@ -113,8 +116,8 @@ class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
                 result.append((gene, next(gene_effects).effect))
 
         return [
-            [unicode(r[0], "utf-8") for r in result],
-            [unicode(r[1], "utf-8") for r in result]
+            [str(r[0]) for r in result],
+            [str(r[1]) for r in result]
         ]
 
     @classmethod
@@ -129,8 +132,8 @@ class VcfVariantEffectsAnnotator(VcfVariantEffectsAnnotatorBase):
         for effect in effects:
             result[effect.transcript_id] = effect.create_effect_details()
         return (
-            [unicode(r, "utf-8") for r in result.keys()],
-            [unicode(r, "utf-8") for r in result.values()]
+            [str(r) for r in list(result.keys())],
+            [str(r) for r in list(result.values())]
         )
 
     @classmethod

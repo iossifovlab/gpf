@@ -40,13 +40,13 @@ class Test(unittest.TestCase):
         gt2 = gene_terms[1].t2G
         r = ddunion(gt1, gt2)
         self.assertTrue(r)
-        for k in set(gt1.keys()).union(gt2.keys()):
+        for k in set(gt1.keys()).union(list(gt2.keys())):
             self.assertIn(k, r)
             if k in gt1 and k in gt2:
                 v1 = gt1[k]
                 v2 = gt2[k]
                 rv = r[k]
-                for rk in set(v1.keys()).union(v2.keys()):
+                for rk in set(v1.keys()).union(list(v2.keys())):
                     self.assertIn(rk, rv)
 
     def test_ddunion_g2t(self):
@@ -55,13 +55,13 @@ class Test(unittest.TestCase):
         gt2 = gene_terms[1].g2T
         r = ddunion(gt1, gt2)
         self.assertTrue(r)
-        for k in set(gt1.keys()).union(gt2.keys()):
+        for k in set(gt1.keys()).union(list(gt2.keys())):
             self.assertIn(k, r)
             if k in gt1 and k in gt2:
                 v1 = gt1[k]
                 v2 = gt2[k]
                 rv = r[k]
-                for rk in set(v1.keys()).union(v2.keys()):
+                for rk in set(v1.keys()).union(list(v2.keys())):
                     self.assertIn(rk, rv)
 
     def test_double_pheno(self):
