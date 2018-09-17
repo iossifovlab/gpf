@@ -94,6 +94,7 @@ class BaseQueryTransformerMatcher(object):
         self.parser = parser
         self.transformer = StringQueryToTreeTransformer(parser,
                                                         token_converter)
+        self.transformer2 = None
 
     def parse(self, expression):
         return self.parser.parse(expression)

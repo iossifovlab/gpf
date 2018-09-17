@@ -8,7 +8,8 @@ from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
     inheritance_converter, variant_type_converter,\
     StringListQueryToTreeTransformer
 from RegionOperations import Region
-from lark.tree import Transformer
+from variants.attributes_query_builder import is_transformer
+
 q = """
     SELECT * FROM parquet.`/data-raw-dev/pspark/family01` AS A
     INNER JOIN parquet.`/data-raw-dev/pspark/summary01` AS B
@@ -108,7 +109,7 @@ def query_parts(queries, **kwargs):
         stage_two = stage_two_transformers.get(
             key, QueryTreeToSQLTransformer(key))
 
-        if not isinstance(arg, Transformer):
+        if not is_transformer(arg):
             result.append(
                 stage_two.transform(stage_one.parse_and_transform(arg))
             )

@@ -1,4 +1,4 @@
-from lark import Tree
+from lark import Tree, Transformer
 from lark.lexer import Token
 
 AND_NODE = "logical_and"
@@ -11,6 +11,7 @@ ARG_NODE = "arg"
 SIMPLE_ARG_NODE = "simple_arg"
 
 ALL_NODES = (AND_NODE, OR_NODE, NOT_NODE, ALL_NODE, ANY_NODE, EQ_NODE)
+
 
 
 def token(value):
@@ -31,6 +32,10 @@ def is_tree(object):
 
 def is_token(object):
     return isinstance(object, Token)
+
+
+def is_transformer(value):
+    return isinstance(value, Transformer)
 
 
 def is_and(object):
