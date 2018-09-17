@@ -88,6 +88,9 @@ def testing_thriftserver(request):
     spark_home = os.environ.get("SPARK_HOME")
     assert spark_home is not None
 
+    thrift_host = os.environ.get("THRIFTSERVER_HOST")
+    if thrift_host is None:
+        thrift_host = '127.0.0.1'
     thrift_port = os.environ.get("THRIFTSERVER_PORT")
     if thrift_port is None:
         thrift_port = 10000
@@ -95,7 +98,7 @@ def testing_thriftserver(request):
         thrift_port = int(thrift_port)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         while True:
-            result = sock.connect_ex(('127.0.0.1', thrift_port))
+            result = sock.connect_ex((thrift_host, thrift_port))
             if result != 0:
                 break
             thrift_port += 1
@@ -106,7 +109,7 @@ def testing_thriftserver(request):
                 time.sleep(2.0)
                 print("trying to connect to thrift server: try={}".format(
                     count + 1))
-                conn = connect(host='127.0.0.1', port=thrift_port,
+                conn = connect(host=thrift_host, port=thrift_port,
                                auth_mechanism='PLAIN')
                 return conn
             except Exception as ex:
