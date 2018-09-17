@@ -9,7 +9,6 @@ import abc
 from collections import defaultdict
 import argparse
 import csv
-from functools import reduce
 import collections
 
 from .interval_sandwich import SandwichInstance, SandwichSolver
@@ -348,8 +347,7 @@ def main():
         help="layout column name to be used when saving the layout")
 
     args = parser.parse_args()
-    with open(args.file, "r") as input_file:
-        pedigrees = CsvPedigreeReader().read_file(input_file)
+    pedigrees = PedigreeReader().read_file(args.file)
 
     pdf_drawer = PDFLayoutDrawer(args.output)
     layout_saver = None
@@ -359,14 +357,17 @@ def main():
             args.file, args.save_layout, args.layout_column)
 
     for family in sorted(pedigrees, key=lambda x: x.family_id):
-        sandwich_instance = family.create_sandwich_instance()
+        sandwich_instance = create_sandwich_instance(family)
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:
             print(family.family_id)
             print("No intervals")
         if intervals:
-            individuals_intervals = [interval for interval in intervals if isinstance(interval.vertex, Individual)]
+            individuals_intervals = filter(
+                lambda interval: interval.vertex.is_individual(),
+                intervals
+            )
             mating_units = {mu for i in individuals_intervals
                             for mu in i.vertex.mating_units}
             if len(mating_units) > 1:

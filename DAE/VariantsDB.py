@@ -480,6 +480,31 @@ class Study(object):
         return result
 
     @staticmethod
+    def gender_converter(gender):
+        return Gender(int(gender))
+
+    @staticmethod
+    def gender_converter_by_name(gender_name):
+        return Gender[gender_name]
+
+    @staticmethod
+    def gender_converter_by_name_or_value(gender_name_or_value):
+        if gender_name_or_value in Gender.__members__:
+            return Gender[gender_name_or_value]
+        # raise ValueError('not standard gender: {}'.format(gender_name_or_value))
+        return Gender(int(gender_name_or_value))
+
+    @staticmethod
+    def role_converter(role):
+        if role in Role.__members__:
+            return Role[role]
+        raise ValueError("Unknown role {}, defaulting to unknown".format(role))
+
+    @staticmethod
+    def status_converter(status):
+        return Status(int(status))
+
+    @staticmethod
     def _load_family_data_from_simple(reportF):
         dt = genfromtxt(reportF, delimiter='\t', dtype=None,
                         names=True, case_sensitive=True,

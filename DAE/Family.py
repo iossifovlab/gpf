@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
-
 from builtins import object
+
+
 class Family(object):
 
     def __init__(self, atts=None):
