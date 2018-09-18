@@ -21,22 +21,23 @@ class CsvPedigreeReader(object):
 
     def read_file(self, file):
         families = {}
-        reader = csv.DictReader(file, delimiter='\t')
-        for row in reader:
-            kwargs = {
-                "family_id": row["familyId"],
-                "id": row["personId"],
-                "father": row["dadId"],
-                "mother": row["momId"],
-                "sex": row["gender"],
-                "label": "",
-                "effect": row["status"],
-            }
-            member = PedigreeMember(**kwargs)
-            if member.family_id not in families:
-                families[member.family_id] = Pedigree([member])
-
-            families[member.family_id].members.append(member)
+        with open(file) as csvfile:
+            reader = csv.DictReader(csvfile, delimiter='\t'.encode('utf-8'))
+            for row in reader:
+                kwargs = {
+                    "family_id": row["familyId"],
+                    "id": row["personId"],
+                    "father": row["dadId"],
+                    "mother": row["momId"],
+                    "sex": row["gender"],
+                    "label": "",
+                    "effect": row["status"],
+                }
+                member = PedigreeMember(**kwargs)
+                if member.family_id not in families:
+                    families[member.family_id] = Pedigree([member])
+                else:
+                    families[member.family_id].members.append(member)
 
         return list(families.values())
 
@@ -347,7 +348,7 @@ def main():
         help="layout column name to be used when saving the layout")
 
     args = parser.parse_args()
-    pedigrees = PedigreeReader().read_file(args.file)
+    pedigrees = CsvPedigreeReader().read_file(args.file)
 
     pdf_drawer = PDFLayoutDrawer(args.output)
     layout_saver = None
