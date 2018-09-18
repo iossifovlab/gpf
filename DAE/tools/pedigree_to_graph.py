@@ -11,9 +11,9 @@ import argparse
 import csv
 import collections
 
-from .interval_sandwich import SandwichInstance, SandwichSolver
-from .layout import Layout
-from .drawing import PDFLayoutDrawer, OffsetLayoutDrawer
+from tools.interval_sandwich import SandwichInstance, SandwichSolver
+from tools.layout import Layout
+from tools.drawing import PDFLayoutDrawer, OffsetLayoutDrawer
 from future.utils import with_metaclass
 
 
