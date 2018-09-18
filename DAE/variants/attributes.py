@@ -76,6 +76,13 @@ class Sex(enum.Enum):
     def from_value(val):
         return Sex(int(val))
 
+    @classmethod
+    def from_name_or_value(cls, name_or_value):
+        try:
+            return cls.from_name(name_or_value)
+        except ValueError:
+            return cls.from_value(name_or_value)
+
     def __repr__(self):
         return self.name
 
