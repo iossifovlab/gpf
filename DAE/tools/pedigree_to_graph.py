@@ -367,7 +367,7 @@ def main():
             args.file, args.save_layout, args.layout_column)
 
     for family in sorted(pedigrees, key=lambda x: x.family_id):
-        sandwich_instance = create_sandwich_instance(family)
+        sandwich_instance = family.create_sandwich_instance()
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:
