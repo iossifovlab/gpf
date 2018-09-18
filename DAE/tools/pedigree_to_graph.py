@@ -58,6 +58,17 @@ class Pedigree(object):
         self.members = members
         self.family_id = members[0].family_id if len(members) > 0 else ""
 
+    def validate_family(self, family):
+        for parents in family.keys():
+            if family[parents].mother.member is None:
+                return False
+            if family[parents].father.member is None:
+                return False
+            for children in family[parents].children.individuals:
+                if children.member is None:
+                    return False
+        return True
+
     def create_sandwich_instance(self):
         id_to_individual = defaultdict(Individual)
         id_to_mating_unit = {}
@@ -79,10 +90,8 @@ class Pedigree(object):
                 individual.parents = parental_unit
                 parental_unit.children.individuals.add(individual)
 
-        for parents in id_to_mating_unit.keys():
-            if id_to_mating_unit[parents].mother.member is None and\
-                    id_to_mating_unit[parents].father.member is None:
-                return None
+        if self.validate_family(id_to_mating_unit) is False:
+            return None
 
         try:
             del id_to_individual["0"]
