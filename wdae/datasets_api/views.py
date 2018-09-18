@@ -53,9 +53,9 @@ class DatasetView(APIView):
             res = [self.augment_status_filter(ds) for ds in res]
             return Response({'data': res})
         else:
-            res = self.datasets_facade.get_dataset(dataset_id)\
-                      .get_dataset_description()
-            if res:
+            dataset = self.datasets_facade.get_dataset(dataset_id)
+            if dataset:
+                res = dataset.get_dataset_description()
                 res = self.augment_accessibility(res, user)
                 res = self.augment_with_groups(res)
                 res = self.augment_status_filter(res)
