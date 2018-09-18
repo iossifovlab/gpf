@@ -378,16 +378,14 @@ def main():
                 lambda interval: interval.vertex.is_individual(),
                 intervals
             )
-            mating_units = {mu for i in individuals_intervals
-                            for mu in i.vertex.mating_units}
-            if len(mating_units) > 1:
-                print(family.family_id)
-                layout = Layout(individuals_intervals)
-                layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
-                pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
 
-                if layout_saver is not None:
-                    layout_saver.writerow(family, layout)
+            print(family.family_id)
+            layout = Layout(individuals_intervals)
+            layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
+            pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
+
+            if layout_saver is not None:
+                layout_saver.writerow(family, layout)
 
     pdf_drawer.save_file()
     if layout_saver:
