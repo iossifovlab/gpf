@@ -132,7 +132,7 @@ class Layout(object):
             # print(moved_individuals, "moved overlapping individuals")
 
             counter += 1
-        print(("done", counter))
+        # print(("done", counter))
         self._align_left()
 
     def _create_positioned_individuals(self):
