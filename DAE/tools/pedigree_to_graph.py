@@ -79,6 +79,11 @@ class Pedigree(object):
                 individual.parents = parental_unit
                 parental_unit.children.individuals.add(individual)
 
+        for parents in id_to_mating_unit.keys():
+            if id_to_mating_unit[parents].mother.member is None and\
+                    id_to_mating_unit[parents].father.member is None:
+                return None
+
         try:
             del id_to_individual["0"]
         except KeyError:
@@ -368,6 +373,10 @@ def main():
 
     for family in sorted(pedigrees, key=lambda x: x.family_id):
         sandwich_instance = family.create_sandwich_instance()
+        if sandwich_instance is None:
+            print(family.family_id)
+            print("Missing members")
+            continue
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:
