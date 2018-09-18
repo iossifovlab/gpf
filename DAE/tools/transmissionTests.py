@@ -1,5 +1,13 @@
 #!/bin/env python
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import str
+from builtins import range
+from past.builtins import basestring
+from builtins import object
+from past.utils import old_div
 from DAE import *
 from GeneTerms import loadGeneTerm
 from VariantsDB import *
@@ -13,7 +21,7 @@ import sys
 from collections import defaultdict
 import argparse
 
-class Counts:
+class Counts(object):
     def __init__(self, study, 
                     geneSets=None, byGene=False, byFamilyGenderType=False, 
                     bySibGender=False, byParent=False, testsFilter=None ):
@@ -61,7 +69,7 @@ class Counts:
 
         famTps = ["all"]
         if self.byFamilyGenderType:
-            famTps.append("full:" + "".join([self.study.families[fid].memberInOrder[i].gender for i in xrange(2,5)]))
+            famTps.append("full:" + "".join([self.study.families[fid].memberInOrder[i].gender for i in range(2,5)]))
         if self.bySibGender:
             famTps.append("sib:x" + self.study.families[fid].memberInOrder[3].gender)
 
@@ -97,7 +105,7 @@ class Counts:
             f = out
         
         f.write("\t".join(self.colNames) + "\t" + "\t".join("neither prb sib both prbVsSibPVal patternPVal expCounts".split()) + "\n");
-        for tsKey, stat in self.stats.items():
+        for tsKey, stat in list(self.stats.items()):
             # two-sided: 
             prbVsSibPVal = binom_test(stat["10"], stat["10"]+stat["01"], p=0.5)
 
@@ -112,7 +120,7 @@ class Counts:
                 ps = self.inhPattPs[test]
                 O = np.array([stat[x] for x in self.inhPattOrder ])
                 E = ps * O.sum()
-                chiStat = sum((O-E)**2/E)
+                chiStat = sum(old_div((O-E)**2,E))
                 pattPValS = str(1.0 - chi2.cdf(chiStat,3))
                 expS = " ".join(['%.1f' % (x) for x in E])
 
@@ -133,7 +141,7 @@ class Counts:
         if toClose:
             close(f) 
 
-class HomozygousTest:
+class HomozygousTest(object):
     def __init__(self): 
         self.buff = defaultdict(lambda : defaultdict( list )) 
 
@@ -160,11 +168,11 @@ class HomozygousTest:
                     self.buff[v.familyId][ge['sym']].append(v)
 
     def done(self, counts):
-        for fid,gss in self.buff.items():
-            for gs,vs in gss.items(): 
+        for fid,gss in list(self.buff.items()):
+            for gs,vs in list(gss.items()): 
                 counts.add(fid, gs, "HomozygousGene", "TotalWithErr")
                 if len(vs)>5:
-                    print >>sys.stderr, "TOO MANY VARIANTS:", fid, gs, len(vs)
+                    print("TOO MANY VARIANTS:", fid, gs, len(vs), file=sys.stderr)
                 if len(vs):
                     counts.add(fid, gs, "HomozygousGene", "Multi")
                     phsType = self._phsType(vs)
@@ -177,7 +185,7 @@ class HomozygousTest:
                 counts.add(fid, gs, "HomozygousGene", "Total")
                 counts.add(fid, gs, "HomozygousGene", str(a)+str(s))
 
-class DistTest:
+class DistTest(object):
     def __init__(self): 
         self.buff = defaultdict(lambda : defaultdict( lambda : defaultdict(list))) 
         self.buffX = defaultdict(lambda : defaultdict(list)) 
@@ -226,15 +234,15 @@ class DistTest:
         rPhs = rSimple 
         if rSimple != rPhs:
             for v in vs:
-                print v.bestSt
+                print(v.bestSt)
             raise Exception('AAAAAAAA: ' + rSimple + ", " + rPhs)
         return rSimple
                 
     def done(self, counts):
-        for fid,gss in self.buff.items():
-            for gs,pars in gss.items(): 
+        for fid,gss in list(self.buff.items()):
+            for gs,pars in list(gss.items()): 
                 parBuf = [] 
-                for par,vs in pars.items():
+                for par,vs in list(pars.items()):
                     counts.add(fid, gs, "DistGene", "TotalWithErr", par)
                     if len(vs)>1:
                         counts.add(fid, gs, "DistGene", "Multi", par)
@@ -252,8 +260,8 @@ class DistTest:
                     s = 1 if all([x[1] for x in parBuf]) else 0
                     counts.add(fid, gs, "CompoundHitGene", "Total")
                     counts.add(fid, gs, "CompoundHitGene", str(a)+str(s))
-        for fid,gss in self.buffX.items():
-            for gs,vs in gss.items(): 
+        for fid,gss in list(self.buffX.items()):
+            for gs,vs in list(gss.items()): 
                 counts.add(fid, gs, "DistGeneX", "TotalWithErr")
                 if len(vs)>1:
                     counts.add(fid, gs, "DistGeneX", "Multi", "mom")
@@ -282,7 +290,7 @@ if __name__ == "__main__":
     parser.add_argument('--geneSets', default="main", type=str, help='gene sets (i.e. denovo, main, miRNA, ...)')
     args = parser.parse_args()
 
-    print >>sys.stderr, args
+    print(args, file=sys.stderr)
 
 
     '''
@@ -348,7 +356,7 @@ if __name__ == "__main__":
         homozT.addV(v)
         n+=1
 
-    print >>sys.stderr, "number of variants:", n
+    print("number of variants:", n, file=sys.stderr)
     distT.done(cnts)
     homozT.done(cnts)
     cnts.dump()

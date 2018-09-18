@@ -3,6 +3,8 @@ Created on Oct 21, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import zip
 from Variant import parseGeneEffect, filter_gene_effect, Variant,\
     present_in_parent_filter, present_in_child_filter, \
     filter_by_status, chromosome_prefix
@@ -63,7 +65,7 @@ class TransmissionLegacy(TransmissionConfig):
                 LOGGER.error("colNms len: {}; variant col: {}".
                              format(len(colNms), len(vls)))
                 raise Exception("Incorrect transmitted variants file: ")
-            mainAtts = dict(zip(colNms, vls))
+            mainAtts = dict(list(zip(colNms, vls)))
             mainAtts["location"] = mainAtts["chr"] + ":" + mainAtts["position"]
 
             if minParentsCalled != -1:
@@ -139,8 +141,9 @@ class TransmissionLegacy(TransmissionConfig):
             regionS = self.study.vdb.get_gene_regions(geneSyms)
 
         if regionS:
-            f = gzip.open(transmittedVariantsFile)
+            f = gzip.open(transmittedVariantsFile, mode="rt")
             colNms = f.readline().strip().split("\t")
+            colNms = [cn.strip("#") for cn in colNms]
             f.close()
             tbf = pysam.Tabixfile(transmittedVariantsFile)
 
@@ -167,8 +170,10 @@ class TransmissionLegacy(TransmissionConfig):
                     LOGGER.warn("Bad region: {}".format(ex))
                     continue
         else:
-            f = gzip.open(transmittedVariantsFile)
+            f = gzip.open(transmittedVariantsFile, mode="rt")
+
             colNms = f.readline().strip().split("\t")
+            colNms = [cn.strip("#") for cn in colNms]
             for v in self.filter_transmitted_variants(
                     f, colNms,
                     minParentsCalled,
@@ -283,7 +288,7 @@ class TransmissionLegacy(TransmissionConfig):
                 if familyIds and familyId not in familyIds:
                     continue
                 v = copy.copy(vs)
-                v.atts = {kk: vv for kk, vv in vs.atts.items()}
+                v.atts = {kk: vv for kk, vv in list(vs.atts.items())}
                 v.atts['familyId'] = familyId
                 v.atts['bestState'] = bestStateS
                 v.atts['counts'] = cntsS

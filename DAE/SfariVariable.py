@@ -3,8 +3,10 @@ Created on Jan 31, 2013
 
 @author: Tony
 '''
+from __future__ import unicode_literals
 # Tracks the family references of a variable
-class SfariVariable:
+from builtins import object
+class SfariVariable(object):
     
     def __init__(self, name):
         self.name = name

@@ -1,5 +1,9 @@
 #!/bin/env python
 
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
+from builtins import range
 import numpy as np
 import sys
 
@@ -60,7 +64,7 @@ def phase(inp):
 
     chSts = set()
 
-    for c in xrange(2, P):
+    for c in range(2, P):
         chSts.add(str(np.array([st[:, c] for st in inp])))
 
     posFamilyPhs = []
@@ -71,23 +75,23 @@ def phase(inp):
                 for dh in dph:
                     m = np.zeros((L, 2), dtype=int)
                     for h in (mh, dh):
-                        for l in xrange(L):
+                        for l in range(L):
                             m[l, h[l]] += 1
                     posChSts.add(str(m))
                 if nCpies[1] == 1:
                     m = np.matrix(np.zeros((L, 2)))
-                    for l in xrange(L):
+                    for l in range(L):
                         m[l, mh[l]] += 1
                     posChSts.add(str(m))
-            print chSts
-            print posChSts
+            print(chSts)
+            print(posChSts)
             if all([x in posChSts for x in chSts]):
                 posFamilyPhs.append((mph, dph))
 
     return posFamilyPhs
 
 if __name__ == "__main__":
-    print "hi"
+    print("hi")
 
     inpR = [
         [[1,2,2,1],
@@ -97,30 +101,30 @@ if __name__ == "__main__":
 
     ]
     inp = [np.array(x) for x in inpR]
-    print "inp", inp
+    print("inp", inp)
     L,P,nCpies = getDims(inp)
-    print "L:", L
-    print "P:", P
-    print "nCpies:", nCpies
+    print("L:", L)
+    print("P:", P)
+    print("nCpies:", nCpies)
 
     posFamilyPhs = phase(inp)
     for pfphs in posFamilyPhs:
-        print "-----------------" 
-        print "mom"
-        print pfphs[0] 
-        print "dad"
-        print pfphs[1] 
+        print("-----------------") 
+        print("mom")
+        print(pfphs[0]) 
+        print("dad")
+        print(pfphs[1]) 
 
-    for ph in possiblePersonPhasing(inp,L,P,nCpies,0): print "oo", ph
+    for ph in possiblePersonPhasing(inp,L,P,nCpies,0): print("oo", ph)
 
     
-    print posFamilyPhs
+    print(posFamilyPhs)
 
     L,P,nCpies = getDims(inp)
-    print L, P, nCpies
+    print(L, P, nCpies)
 
     checkConsistency(inp)
-    print "hurrey"
+    print("hurrey")
 
-    for ph in possiblePersonPhasing(inp,L,P,nCpies,1): print ph
+    for ph in possiblePersonPhasing(inp,L,P,nCpies,1): print(ph)
     

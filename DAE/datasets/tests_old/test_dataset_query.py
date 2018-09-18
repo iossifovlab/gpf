@@ -3,6 +3,7 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import pytest
 import copy
 from DAE import vDB
@@ -62,9 +63,11 @@ def test_get_transmitted_stuides(ssc):
 
 
 def test_get_denovo_variants_ssc(ssc):
-    vs = ssc.get_denovo_variants(**EXAMPLE_QUERY_SSC)
-    res = [v for v in vs]
-    assert 422 == len(res)
+    query = copy.deepcopy(EXAMPLE_QUERY_SSC)
+    vs = ssc.get_denovo_variants(**query)
+    res = list(vs)
+
+    assert len(res) == 422
 
 
 def test_get_denovo_variants_vip(vip):
@@ -77,7 +80,7 @@ def test_denovo_studies_persons_phenotype_ssc(ssc):
     studies = ssc.denovo_studies
     for st in studies:
         phenotype = st.get_attr('study.phenotype')
-        for fam in st.families.values():
+        for fam in list(st.families.values()):
             for p in fam.memberInOrder:
                 if p.role == Role.prb:
                     assert p.phenotype == phenotype
@@ -88,7 +91,7 @@ def test_denovo_studies_persons_phenotype_ssc(ssc):
 def test_denovo_studies_persons_phenotype_sd(sd):
     for st in sd.denovo_studies:
         phenotype = st.get_attr('study.phenotype')
-        for fam in st.families.values():
+        for fam in list(st.families.values()):
             for p in fam.memberInOrder:
                 if p.role == Role.prb:
                     assert p.phenotype == phenotype

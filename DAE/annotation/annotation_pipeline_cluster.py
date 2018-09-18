@@ -1,18 +1,23 @@
 #!/usr/bin/env python
 
 import os, sys
-import time
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
+from configparser import ConfigParser
+
 
 class VariantDBConf(object):
 
     def __init__(self, data_dir):
         self.data_dir = data_dir
-        variant_db_conf = ConfigParser.SafeConfigParser({
+        variant_db_conf = ConfigParser({
             'wd': data_dir,
             'data': data_dir
         })
-        variant_db_conf.read(data_dir + '/variantDB.conf')
+
+        with open(data_dir + '/variantDB.conf', 'rt') as fp:
+            variant_db_conf.read_file(fp)
         self.denovo_files = []
         self.transm_files = []
         for section in variant_db_conf.sections():
@@ -43,8 +48,10 @@ class VariantDBConf(object):
     def all_variant_files(self):
         return self.denovo_files + self.transm_files
 
+
 def escape_target(target):
     return target.replace(' ', '__')
+
 
 def main(config, data_dir, output_dir, sge_rreq):
     def to_destination(path):
@@ -94,7 +101,7 @@ def main(config, data_dir, output_dir, sge_rreq):
             args=denovo_args, job_sufix='',
             log_prefix=log_dir + '/' + os.path.basename(file)))
 
-    chromosomes = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
+    chromosomes = list(map(lambda x: str(x), range(1, 23))) + ['X', 'Y']
     chr_labels = {'X': '23', 'Y': '24'}
     for file in variant_db_conf.transm_files:
         output_file=to_destination(file).replace('.bgz', '')

@@ -3,6 +3,8 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import object
 from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -67,7 +69,7 @@ class EnrichmentModelsMixin(object):
         background_name = query.get('enrichmentBackgroundModel', None)
         if background_name is None:
             background_name = self.get_default_background_name()
-        if precompute.register.has_key(background_name):  # @IgnorePep8
+        if precompute.register.has_data(background_name):  # @IgnorePep8
             background = precompute.register.get(background_name)
         else:
             background_name = self.get_default_background_name()

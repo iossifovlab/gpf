@@ -4,7 +4,9 @@ Created on Apr 24, 2017
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
+from builtins import object
 from collections import Counter
 
 
@@ -51,7 +53,7 @@ class StudiesGenotypeHelper(GenotypeHelper):
         seen = set()
         counter = Counter()
         for st in self.denovo_studies:
-            for fid, fam in st.families.items():
+            for fid, fam in list(st.families.items()):
                 for p in fam.children_in_order:
                     iid = "{}:{}".format(fid, p.personId)
                     if iid in seen:
@@ -97,7 +99,7 @@ class DatasetGenotypeHelper(GenotypeHelper):
         enrichment_studies = self.dataset.get_denovo_studies(
             studyTypes=self.study_types)
         for st in enrichment_studies:
-            for fid, fam in st.families.items():
+            for fid, fam in list(st.families.items()):
                 for p in fam.children_in_order:
                     iid = "{}:{}".format(fid, p.personId)
                     if iid in seen:

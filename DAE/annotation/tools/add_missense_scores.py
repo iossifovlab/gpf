@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
 from box import Box
 
-from variant_annotation.missense_scores_tabix import MissenseScoresDB
-from variant_annotation.variant import Variant
-from utilities import *
-from annotate_score_base import ScoreAnnotator
+from annotation.tools.utilities import *
+from annotation.tools.annotate_score_base import ScoreAnnotator
 
 def get_argument_parser():
     """

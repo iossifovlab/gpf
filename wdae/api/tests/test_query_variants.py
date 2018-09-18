@@ -1,3 +1,4 @@
+from builtins import next
 import unittest
 from helpers.wdae_query_variants import wdae_query_wrapper
 import pytest
@@ -29,7 +30,7 @@ class IvanchoSubmittedDoubleGenesQueryTests(unittest.TestCase):
 
     def test_double_genes(self):
         vs = wdae_query_wrapper(self.TEST_DATA)
-        vs.next()
+        next(vs)
 
         for v in vs:
             gl = v[9].split(';')
@@ -64,6 +65,6 @@ class AlexPopovSubmittedBadRegionQueryTests(unittest.TestCase):
 
         vs = wdae_query_wrapper(self.TEST_DATA)
 
-        vs.next()
+        next(vs)
         for v in vs:
             self.assertIsNotNone(v)

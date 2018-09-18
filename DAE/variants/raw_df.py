@@ -5,6 +5,8 @@ Created on Jun 7, 2018
 '''
 from __future__ import print_function
 
+from builtins import map
+from builtins import object
 import numpy as np
 import pandas as pd
 
@@ -89,7 +91,7 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
     @staticmethod
     def filter_roles(sdf, vdf, roles):
         si = set(vdf[vdf.variant_in_roles
-                     .apply(lambda r: map(Role, r))
+                     .apply(lambda r: list(map(Role, r)))
                      .apply(roles)].summary_index.values)
         vdf = vdf[vdf.summary_index.isin(si)]
         sdf = sdf[sdf.summary_index.isin(si)]
@@ -98,7 +100,7 @@ class DfFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
     @staticmethod
     def filter_sexes(sdf, vdf, sexes):
         si = set(vdf[vdf.variant_in_sexes
-                     .apply(lambda v: map(Sex, v))
+                     .apply(lambda v: list(map(Sex, v)))
                      .apply(sexes)].summary_index.values)
         vdf = vdf[vdf.summary_index.isin(si)]
         sdf = sdf[sdf.summary_index.isin(si)]

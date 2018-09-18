@@ -3,6 +3,7 @@ Created on Sep 26, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from query_variants import validate_region, fix_region
 
 

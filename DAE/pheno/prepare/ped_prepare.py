@@ -4,6 +4,10 @@ Created on Jul 25, 2017
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
+from builtins import range
+from builtins import object
 import numpy as np
 import pandas as pd
 from pheno.db import DbManager
@@ -142,10 +146,10 @@ class PreparePersons(PrepareBase):
         df = pd.read_csv(
             pedfile, sep='\t',
             dtype={
-                'familyId': object,
-                'personId': object,
-                'dadId': object,
-                'momId': object,
+                'familyId': np.object,
+                'personId': np.object,
+                'dadId': np.object,
+                'momId': np.object,
                 'gender': np.int32,
                 'status': np.int32,
             }
@@ -213,7 +217,7 @@ class Task(PrepareCommon):
     def done(self):
         raise NotImplemented()
 
-    def next(self):
+    def __next__(self):
         raise NotImplemented()
 
     def __call__(self):
@@ -309,7 +313,7 @@ class MeasureValuesTask(Task):
                 value = convert_to_string(value)
                 if value is None:
                     continue
-                assert isinstance(value, unicode), record['value']
+                assert isinstance(value, str), record['value']
             elif MeasureType.is_numeric(measure.measure_type):
                 value = convert_to_numeric(value)
                 if np.isnan(value):
@@ -464,7 +468,7 @@ class PrepareVariables(PreparePersons):
         ins = value_table.insert()
 
         with self.db.engine.begin() as connection:
-            connection.execute(ins, values.values())
+            connection.execute(ins, list(values.values()))
 
     def _collect_instruments(self, dirname):
         instruments = defaultdict(list)
@@ -485,7 +489,7 @@ class PrepareVariables(PreparePersons):
         self.build_pheno_common()
 
         instruments = self._collect_instruments(instruments_dirname)
-        for instrument_name, instrument_filenames in instruments.items():
+        for instrument_name, instrument_filenames in list(instruments.items()):
             assert instrument_name is not None
             df = self.load_instrument(instrument_name, instrument_filenames)
             self.build_instrument(instrument_name, df)

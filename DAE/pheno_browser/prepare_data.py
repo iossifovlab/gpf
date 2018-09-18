@@ -3,6 +3,10 @@ Created on Apr 10, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 import os
 import matplotlib as mpl
 import numpy as np
@@ -283,9 +287,9 @@ class PreparePhenoBrowserBase(object):
         db = DbManager(dbfile=self.browser_db)
         db.build()
 
-        for instrument in self.pheno_db.instruments.values():
+        for instrument in list(self.pheno_db.instruments.values()):
             progress_nl()
-            for measure in instrument.measures.values():
+            for measure in list(instrument.measures.values()):
                 progress(text=str(measure) + "\n")
                 var = self.handle_measure(measure)
                 db.save(var)

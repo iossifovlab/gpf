@@ -3,6 +3,11 @@ Created on Dec 10, 2015
 
 @author: lubo
 '''
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import map
+from builtins import str
+from past.utils import old_div
 from rest_framework import views, status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
@@ -26,11 +31,10 @@ class GeneWeightsDownloadView(views.APIView):
         weights = register.get('gene_weights')
         df = weights.get_weight(weight).df
         columns = df.columns.values.tolist()
-        m = itertools.imap(lambda x: [str(getattr(x, col)) for col in columns],
-                           df.itertuples())
+        m = [[str(getattr(x, col)) for col in columns] for x in df.itertuples()]
         m = itertools.chain([columns], m)
 
-        response = StreamingHttpResponse(itertools.imap(join_line, m),
+        response = StreamingHttpResponse(list(map(join_line, m)),
                                          content_type='text/csv')
 
         response['Content-Disposition'] = 'attachment; filename=weights.csv'
@@ -101,7 +105,7 @@ class GeneWeightsPartitionsView(views.APIView):
         mdf = df[np.logical_and(
             df[weight_name] >= wmin, df[weight_name] < wmax)]
 
-        res = {"left": {"count": len(ldf), "percent": len(ldf) / total},
-               "mid": {"count": len(mdf), "percent": len(mdf) / total},
-               "right": {"count": len(rdf), "percent": len(rdf) / total}}
+        res = {"left": {"count": len(ldf), "percent": old_div(len(ldf), total)},
+               "mid": {"count": len(mdf), "percent": old_div(len(mdf), total)},
+               "right": {"count": len(rdf), "percent": old_div(len(rdf), total)}}
         return Response(res)

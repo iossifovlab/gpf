@@ -67,14 +67,14 @@ class Test(unittest.TestCase):
                           'schizophrenia']:
             gene_terms = build_prb_set_by_phenotype(all_denovo_studies,
                                                     phenotype)
-            for _key, value in gene_terms.t2G.items():
+            for _key, value in list(gene_terms.t2G.items()):
                 self.assertTrue(len(value) > 0)
 
     def test_build_sib_tests(self):
         denovo_studies = get_all_denovo_studies()
         gene_terms = build_sib_set(denovo_studies)
 
-        for _key, value in gene_terms.t2G.items():
+        for _key, value in list(gene_terms.t2G.items()):
             self.assertTrue(len(value) > 0)
 
     def test_build_denovo_gene_sets(self):

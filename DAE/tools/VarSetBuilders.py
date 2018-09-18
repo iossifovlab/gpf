@@ -1,5 +1,9 @@
 #!/bin/env python
 
+from __future__ import unicode_literals
+from builtins import str
+from builtins import range
+from builtins import object
 from pylab import *
 from collections import defaultdict
 from DAE import *
@@ -27,11 +31,11 @@ def vcf2CshlVar(chr,pos,refA,altA):
     return variant,location
 
 
-class VarSet:
+class VarSet(object):
     def __init__(self,families):
         self.families = families
         self.pids = {pd.personId:(fd.familyId,pInd) 
-                                for fd in self.families.values() 
+                                for fd in list(self.families.values()) 
                                     for pInd,pd in enumerate(fd.memberInOrder) }
         self.fmVars = {}
         self.allAttsS = set()
@@ -45,7 +49,7 @@ class VarSet:
         if kk not in self.fmVars:
             fd = self.families[fmId]
 
-            class FMVar:
+            class FMVar(object):
                 pass
 
             fmVr = FMVar()
@@ -54,7 +58,7 @@ class VarSet:
             fmVr.var = var
 
             fmVr.bsSt = zeros((2,len(fd.memberInOrder)),dtype=int)
-            for c in xrange(len(fd.memberInOrder)):
+            for c in range(len(fd.memberInOrder)):
                 fmVr.bsSt[0,c] = normalRefCopyNumber(loc,fd.memberInOrder[c].gender)
 
             self.fmVars[kk] = fmVr
@@ -79,13 +83,13 @@ class VarSet:
         OF = open(noAnnotFn,"w")
         hcs = "familyId location variant bestState inChild effectType effectGene effectDetails".split() + allAtts
         OF.write("\t".join(hcs) + "\n")
-        for v in sorted(self.fmVars.values(),key=lambda x: (chrOrd[x.loc.split(":")[0]],int(x.loc.split(":")[1]),x.var)):
+        for v in sorted(list(self.fmVars.values()),key=lambda x: (chrOrd[x.loc.split(":")[0]],int(x.loc.split(":")[1]),x.var)):
             effects = VariantAnnotation.annotate_variant(gmDB, GA, var=v.var, loc=v.loc)
             desc = VariantAnnotation.effect_description(effects)
 
             mbrs = self.families[v.fmId].memberInOrder
             childStr = ''
-            for c in xrange(2,len(mbrs)):
+            for c in range(2,len(mbrs)):
                 if isVariant(v.bsSt,c,v.loc,mbrs[c].gender):
                     childStr += (mbrs[c].role + mbrs[c].gender)
  

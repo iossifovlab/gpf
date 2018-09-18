@@ -3,6 +3,10 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import map
+from builtins import str
 import itertools
 import pprint
 
@@ -38,8 +42,8 @@ class QueryBaseView(views.APIView):
 
     def get_dataset(self, dataset_id):
         if dataset_id not in self.datasets_cache:
-            config = self.dataset_definitions.get_dataset_config(dataset_id)
-            self.datasets_cache[dataset_id] = self.dataset_factory.get_dataset(config)
+            self.datasets_cache[dataset_id] =\
+                self.dataset_facade.get_dataset(dataset_id)
 
         return self.datasets_cache[dataset_id]
 
@@ -48,7 +52,7 @@ class QueryBaseView(views.APIView):
         self.datasets = register.get('datasets')
         assert self.datasets is not None
 
-        self.dataset_definitions = self.datasets.get_definitions()
+        self.dataset_facade = self.datasets.get_facade()
         self.dataset_factory = DatasetFactory()
 
 
@@ -93,12 +97,10 @@ class QueryPreviewView(QueryBaseView):
             self.check_object_permissions(request, dataset_id)
 
             if dataset_id == MetaDataset.ID:
-                dataset_ids = self.dataset_definitions.get_dataset_ids()
+                dataset_ids = self.dataset_facade.get_all_dataset_ids()
                 dataset_ids.remove(MetaDataset.ID)
-                data['dataset_ids'] = filter(
-                    lambda dataset_id: IsDatasetAllowed.user_has_permission(
-                        request.user, dataset_id),
-                    dataset_ids)
+                data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids if IsDatasetAllowed.user_has_permission(
+                        request.user, dataset_id)]
 
             dataset = self.get_dataset(dataset_id)
             # LOGGER.info("dataset " + str(dataset))
@@ -132,7 +134,7 @@ class QueryDownloadView(QueryBaseView):
     def _parse_query_params(self, data):
         print(data)
 
-        res = {str(k): str(v) for k, v in data.items()}
+        res = {str(k): str(v) for k, v in list(data.items())}
         assert 'queryData' in res
         query = json.loads(res['queryData'])
         return query
@@ -161,12 +163,10 @@ class QueryDownloadView(QueryBaseView):
             self.check_object_permissions(request, data['datasetId'])
 
             if data['datasetId'] == MetaDataset.ID:
-                dataset_ids = self.dataset_definitions.get_dataset_ids()
+                dataset_ids = self.dataset_facade.get_all_dataset_ids()
                 dataset_ids.remove(MetaDataset.ID)
-                data['dataset_ids'] = filter(
-                    lambda dataset_id: IsDatasetAllowed.user_has_permission(
-                        user, dataset_id),
-                    dataset_ids)
+                data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids if IsDatasetAllowed.user_has_permission(
+                        user, dataset_id)]
 
             dataset = self.datasets_factory.get_dataset(data['datasetId'])
 
@@ -185,7 +185,7 @@ class QueryDownloadView(QueryBaseView):
                                              self.DOWNLOAD_LIMIT)
 
             response = StreamingHttpResponse(
-                itertools.imap(join_line, variants_data),
+                list(map(join_line, variants_data)),
                 content_type='text/tsv')
 
             response['Content-Disposition'] = 'attachment; filename=variants.tsv'

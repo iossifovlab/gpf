@@ -3,6 +3,8 @@ Created on Dec 2, 2016
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from DAE import *
 from pheno_tool.tool import *

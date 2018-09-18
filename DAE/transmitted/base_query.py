@@ -3,7 +3,11 @@ Created on Oct 23, 2015
 
 @author: lubo
 '''
-from ConfigParser import NoOptionError
+from __future__ import unicode_literals
+from builtins import object
+from future import standard_library
+standard_library.install_aliases()
+from configparser import NoOptionError
 
 
 class TransmissionConfig(object):

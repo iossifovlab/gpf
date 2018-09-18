@@ -1,3 +1,4 @@
+from __future__ import print_function
 from django.core.management.base import BaseCommand
 from datasets_api.models import Dataset
 from django.contrib.auth.models import Group

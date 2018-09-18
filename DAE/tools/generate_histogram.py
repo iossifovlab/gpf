@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import unicode_literals
 import argparse
 import sys
 import time
@@ -7,7 +8,10 @@ import datetime
 from os.path import exists
 import pandas as pd
 import numpy as np
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from configparser import ConfigParser
+from builtins import object, str
 from box import Box
 import matplotlib.pyplot as plt
 
@@ -42,7 +46,7 @@ class GenerateScoresHistograms(object):
             values = pd.DataFrame(columns=[score])
 
             for genomic_score_file in self.genomic_score_files:
-                v = pd.read_csv(genomic_score_file, usecols=[score], sep='\t')
+                v = pd.read_csv(genomic_score_file, usecols=[score], sep='\t', encoding='utf-8')
                 v = pd.to_numeric(v[score], errors='coerce')
                 v = pd.DataFrame(v)
                 values = pd.concat([values, v])
@@ -64,16 +68,21 @@ class GenerateScoresHistograms(object):
                 bins = bins + list(np.logspace(np.log10(range[0]),
                                                np.log10(range[1]), bin_num))
 
+                bins = list(bins)
                 bars, bins = np.histogram(values[score].values, bins)
 
+            # print(bins, bars)
             scores = pd.Series(bins, name='scores')
             data = pd.Series(bars, name=score)
             histogram = pd.concat([data, scores], axis=1)
-            histogram.to_csv(output_file, index=False)
+            histogram_csv = histogram.to_csv(index=False)
+
+            output_file.write(str(histogram_csv))
+
 
             histogram.dropna(inplace=True)
             bins = histogram['scores'].values
-            bars = map(int, histogram[score].values)
+            bars = list(map(int, histogram[score].values))
             fig, ax = plt.subplots()
             plt.yscale(yscale)
             ax.bar(bins, bars, width=0.01)
@@ -87,7 +96,7 @@ def main():
 
     opts = get_argument_parser().parse_args()
 
-    config = ConfigParser.SafeConfigParser()
+    config = ConfigParser()
     config.optionxform = str
     config.read(opts.config)
     config = Box(common.config.to_dict(config),

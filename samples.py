@@ -1,17 +1,18 @@
 #!/data/software/local/bin/python
 
+from __future__ import print_function
 from DAE import *
 
 sfariDB.individual
-print ",sample_id,person_id,sample_type,FamilyId,Gender,RelationToProband,Source,ENDC,,"
-for x in sfariDB.sample.values():
+print(",sample_id,person_id,sample_type,FamilyId,Gender,RelationToProband,Source,ENDC,,")
+for x in list(sfariDB.sample.values()):
     fid=x.sampleId.rsplit('.')[0]
     if (fid != 'id()'):
         sampleType = x.sampleType
         if (sampleType == "wb-dna"):
             sampleType = "whole blood"
 
-        if x.personId in sfariDB.individual.keys() and sfariDB.individual[x.personId].collection == "ssc":
+        if x.personId in list(sfariDB.individual.keys()) and sfariDB.individual[x.personId].collection == "ssc":
             p=sfariDB.individual[x.personId]
             familyId = p.familyId
             if (p.sex == "female"):
@@ -19,7 +20,7 @@ for x in sfariDB.sample.values():
             elif (p.sex == "male"):
                 Gender = "M"
             else:
-                print "Strange gender ", p.sex, "\n"
+                print("Strange gender ", p.sex, "\n")
             role = p.role
             if (p.role == "proband"):
                 role = "self"
@@ -30,9 +31,9 @@ for x in sfariDB.sample.values():
             elif (role == "father"):
                 role = "father"
             else:
-                print "Strange role ",  role, "\n"
+                print("Strange role ",  role, "\n")
 
-            print "%s,%s,%s,%s,auSSC%s,%s,%s,%s"  %("RR",x.sampleNumber,x.sampleNumber,sampleType,familyId,Gender,role,"Rutgers University DNA & Cell Repository; SSC Collection,,,")
+            print("%s,%s,%s,%s,auSSC%s,%s,%s,%s"  %("RR",x.sampleNumber,x.sampleNumber,sampleType,familyId,Gender,role,"Rutgers University DNA & Cell Repository; SSC Collection,,,"))
     
 
     

@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 import unittest
 from AnnovarAdapter import VariantAnnotation
 from DAE import genomesDB
@@ -157,7 +159,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(len(effects), 5)
         effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
         for e in effects_sorted:
-            print(e.gene, e.transcript_id, e.effect, e.prot_pos, e.aa_change)
+            print((e.gene, e.transcript_id, e.effect, e.prot_pos, e.aa_change))
 
         self.assertEqual(effects_sorted[0].gene, "SERBP1")
         self.assertEqual(effects_sorted[0].transcript_id, None)
@@ -209,7 +211,7 @@ class VariantAnnotationTest(unittest.TestCase):
         self.assertEqual(len(effects), 6)
         effects_sorted = sorted(effects, key=lambda k: k.transcript_id)
         for e in effects_sorted:
-            print(e.gene, e.transcript_id, e.effect, e.prot_pos, e.aa_change)
+            print((e.gene, e.transcript_id, e.effect, e.prot_pos, e.aa_change))
 
         for effect in effects_sorted:
             self.assertEqual(effect.gene, "METTL23")

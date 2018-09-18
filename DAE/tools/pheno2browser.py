@@ -4,6 +4,10 @@
 pheno2browser -- prepares a DAE pheno browser data
 
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
 import sys
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -12,7 +16,7 @@ from pheno import pheno_db
 from pheno.pheno_regression import PhenoRegression
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
 import hashlib
-from __builtin__ import str
+from builtins import str
 
 
 class CLIError(Exception):
@@ -170,7 +174,7 @@ USAGE
         return 0
     except KeyboardInterrupt:
         return 0
-    except Exception, e:
+    except Exception as e:
         traceback.print_exc()
         print()
         indent = len(program_name) * " "

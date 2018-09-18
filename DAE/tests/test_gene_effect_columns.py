@@ -3,6 +3,9 @@ Created on Sep 27, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import next
+from builtins import zip
 import itertools
 
 from query_variants import dae_query_variants, generate_response
@@ -48,9 +51,9 @@ def test_effect_type_vs_worst_effect_counterexample():
 
 def variant_response_dict(v, atts):
     g = generate_response([v], atts)
-    names = g.next()
-    vr = g.next()
-    d = dict(zip(names, vr))
+    names = next(g)
+    vr = next(g)
+    d = dict(list(zip(names, vr)))
     return d
 
 

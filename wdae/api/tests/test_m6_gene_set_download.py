@@ -3,9 +3,11 @@ Created on Jul 1, 2015
 
 @author: lubo
 '''
+from future import standard_library
+standard_library.install_aliases()
 import unittest
 from rest_framework.test import APITestCase
-import urllib
+import urllib.request, urllib.parse, urllib.error
 from rest_framework import status
 import pytest
 
@@ -21,14 +23,14 @@ class Test(APITestCase):
 
     def test_call_gene_set_download_status(self):
         data = {'gene_set': 'main', 'gene_name': 'chromatin modifiers'}
-        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        url = '/api/gene_set_download?{}'.format(urllib.parse.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
     def test_call_gene_set_download_content(self):
         data = {'gene_set': 'main', 'gene_name': 'chromatin modifiers'}
-        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        url = '/api/gene_set_download?{}'.format(urllib.parse.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -40,7 +42,7 @@ class Test(APITestCase):
                 'gene_set_phenotype': 'autism',
                 'gene_name': 'LGDs'}
 
-        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        url = '/api/gene_set_download?{}'.format(urllib.parse.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -52,7 +54,7 @@ class Test(APITestCase):
                 'gene_set_phenotype': 'autism,unaffected',
                 'gene_name': 'LGDs'}
 
-        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        url = '/api/gene_set_download?{}'.format(urllib.parse.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -64,7 +66,7 @@ class Test(APITestCase):
                 'gene_set_phenotype': 'autism,epilepsy,unaffected',
                 'gene_name': 'LGDs'}
 
-        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        url = '/api/gene_set_download?{}'.format(urllib.parse.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -75,7 +77,7 @@ class Test(APITestCase):
         data = {'gene_set': 'ala-bala',
                 'gene_name': 'portokala'}
 
-        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        url = '/api/gene_set_download?{}'.format(urllib.parse.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -86,7 +88,7 @@ class Test(APITestCase):
         data = {'gene_set': 'main',
                 'gene_name': 'portokala'}
 
-        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        url = '/api/gene_set_download?{}'.format(urllib.parse.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -97,7 +99,7 @@ class Test(APITestCase):
         data = {'ala': 'main',
                 'bala': 'chromatin modifiers'}
 
-        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        url = '/api/gene_set_download?{}'.format(urllib.parse.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -106,7 +108,7 @@ class Test(APITestCase):
 
     def test_gene_set_download_title(self):
         data = {'gene_set': 'main', 'gene_name': 'chromatin modifiers'}
-        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        url = '/api/gene_set_download?{}'.format(urllib.parse.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -118,7 +120,7 @@ class Test(APITestCase):
         data = {'gene_set': 'denovo',
                 'gene_set_phenotype': 'autism,epilepsy,unaffected',
                 'gene_name': 'LGDs'}
-        url = '/api/gene_set_download?{}'.format(urllib.urlencode(data))
+        url = '/api/gene_set_download?{}'.format(urllib.parse.urlencode(data))
         response = self.client.get(url)
 
         self.assertEqual(status.HTTP_200_OK, response.status_code)

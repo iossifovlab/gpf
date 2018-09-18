@@ -3,6 +3,8 @@ Created on Nov 5, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import object
 from django.conf import settings
 import logging
 
@@ -60,12 +62,12 @@ def get(key):
     return None
 
 
-def has_key(key):
+def has_data(key):
     # global _REGISTER
     value = False
 
     try:
-        value = _REGISTER.has_key(key)  # @IgnorePep8
+        value = key in _REGISTER  # @IgnorePep8
     finally:
         pass
 

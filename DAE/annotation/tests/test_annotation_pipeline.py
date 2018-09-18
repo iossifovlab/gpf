@@ -1,6 +1,6 @@
 import pytest
 from copy import deepcopy
-from StringIO import StringIO
+from io import StringIO
 
 from annotation.annotation_pipeline import MultiAnnotator,\
     MyConfigParser, str_to_class

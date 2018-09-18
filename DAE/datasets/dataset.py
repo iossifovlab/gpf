@@ -1,10 +1,12 @@
 from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import map
 import itertools
 import logging
 
 from RegionOperations import Region
 from variants.attributes import Role
-from helpers import EFFECT_TYPES_MAPPING
+from datasets.helpers import EFFECT_TYPES_MAPPING
 from study_groups.study_group import StudyGroup
 from variants.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, EqualsNode, ContainsNode
@@ -15,19 +17,25 @@ logger = logging.getLogger(__name__)
 class Dataset(object):
 
     def __init__(
-            self, name, study_group, preview_columns=None, download_columns=None):
+            self, name, study_group, dataset_config):
         super(Dataset, self).__init__()
-        if preview_columns is None:
-            preview_columns = []
-
-        if download_columns is None:
-            download_columns = []
+        genotypeBrowser = dataset_config.genotypeBrowser
+        preview_columns = []
+        download_columns = []
+        if genotypeBrowser:
+            preview_columns = genotypeBrowser['previewColumns']
+            download_columns = genotypeBrowser['downloadColumns']
 
         self.name = name
         self.study_group = study_group
 
+        self.dataset_config = dataset_config
+
+        self.name = name
         self.preview_columns = preview_columns
         self.download_columns = download_columns
+
+        self.legend = self.dataset_config.pedigreeSelectors[0]['domain']
 
     @property
     def studies(self):
@@ -45,11 +53,45 @@ class Dataset(object):
         return ['']
 
     def get_legend(self, *args, **kwargs):
-        return ['autism']
+        return self.legend
 
     @property
     def order(self):
         return 0
+
+    @staticmethod
+    def _get_dataset_description_keys():
+        return [
+            'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
+            'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
+            'enrichmentTool', 'genotypeBrowser', 'pedigreeSelectors',
+            'studyTypes', 'studies'
+        ]
+
+    def _get_study_group_config_options(self, dataset_config):
+        dataset_config['studyTypes'] = self.study_group.study_types
+        dataset_config['genotypeBrowser']['hasStudyTypes'] =\
+            self.study_group.has_study_types
+        dataset_config['genotypeBrowser']['hasComplex'] =\
+            self.study_group.has_complex
+        dataset_config['genotypeBrowser']['hasCNV'] =\
+            self.study_group.has_CNV
+        dataset_config['genotypeBrowser']['hasDenovo'] =\
+            self.study_group.has_denovo
+        dataset_config['genotypeBrowser']['hasTransmitted'] =\
+            self.study_group.has_transmitted
+        dataset_config['studies'] =\
+            self.study_group.study_names
+
+        return dataset_config
+
+    def get_dataset_description(self):
+        keys = Dataset._get_dataset_description_keys()
+        dataset_config = self.dataset_config.to_dict()
+
+        dataset_config = self._get_study_group_config_options(dataset_config)
+
+        return {key: dataset_config[key] for key in keys}
 
 
 class DatasetWrapper(Dataset):
@@ -79,7 +121,7 @@ class DatasetWrapper(Dataset):
             limit = kwargs['limit']
 
         if 'regions' in kwargs:
-            kwargs['regions'] = map(Region.from_str, kwargs['regions'])
+            kwargs['regions'] = list(map(Region.from_str, kwargs['regions']))
 
         if 'presentInChild' in kwargs:
             self._transform_present_in_child(kwargs)
@@ -120,8 +162,8 @@ class DatasetWrapper(Dataset):
             super(DatasetWrapper, self).get_variants(**kwargs), limit)
 
     def _transform_min_max_alt_frequency(self, kwargs):
-        min_value = float('-inf')
-        max_value = float('inf')
+        min_value = None
+        max_value = None
 
         if 'minAltFrequencyPercent' in kwargs:
             min_value = kwargs['minAltFrequencyPercent']
@@ -135,6 +177,14 @@ class DatasetWrapper(Dataset):
 
         if value_range == (None, None):
             return
+
+        if value_range[0] is None:
+            value_range = (float('-inf'), value_range[1])
+
+        if value_range[1] is None:
+            value_range = (value_range[0], float('inf'))
+
+        print(value_range)
 
         value = 'af_allele_freq'
         if 'real_attr_filter' not in kwargs:

@@ -3,7 +3,11 @@ Created on Jun 15, 2015
 
 @author: lubo
 '''
-from cache import PrecomputeStore
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from builtins import object
+from .cache import PrecomputeStore
 from django.conf import settings
 
 
@@ -72,11 +76,11 @@ class PrecomputeRegister(object):
 
         return precompute
 
-    def has_key(self, key):
-        return key in self.reg
+    def __contains__(self, item):
+        return item in self.reg
 
     def keys(self):
-        return self.reg.keys()
+        return list(self.reg.keys())
 
 
 _REGISTER = PrecomputeRegister()
@@ -103,12 +107,12 @@ def get(key):
     return value
 
 
-def has_key(key):
+def has_data(key):
     # global _REGISTER
     value = False
 
     try:
-        value = _REGISTER.has_key(key)  # @IgnorePep8
+        value = key in _REGISTER  # @IgnorePep8
     finally:
         pass
 

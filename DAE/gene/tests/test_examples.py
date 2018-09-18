@@ -4,6 +4,7 @@ Created on Apr 16, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 from gene.gene_set_collections import DenovoGeneSetsCollection,\
     MetaDenovoGeneSetsCollection
 
@@ -83,7 +84,7 @@ def test_example2_denovo_gene_sets():
         'SD': ['autism'],
         'denovo_db': ['autism']})
     assert denovo_sets
-    print(denovo_sets.keys())
+    print(list(denovo_sets.keys()))
 
     print(denovo_sets['LGDs.Recurrent'])
     print(denovo_sets['LGDs.Triple'])

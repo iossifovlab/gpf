@@ -4,7 +4,13 @@ Created on Oct 21, 2015
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
+from functools import reduce
 import numpy as np
 import operator
 from pprint import pprint
@@ -138,7 +144,7 @@ def isVariant(bs, c, location=None, gender=None):
         normalRefCN = normalRefCopyNumber(location, gender)
 
     if bs[0, c] != normalRefCN or \
-            any([bs[o, c] != 0 for o in xrange(1, bs.shape[0])]):
+            any([bs[o, c] != 0 for o in range(1, bs.shape[0])]):
         return True
     return False
 
@@ -196,10 +202,10 @@ def str2Mat(matS, colSep=-1, rowSep="/", str2NumF=int):
 
 def mat2Str(mat, colSep=" ", rowSep="/"):
     return rowSep.join([colSep.join([str(n) for n in mat[i, :]])
-                        for i in xrange(mat.shape[0])])
+                        for i in range(mat.shape[0])])
 
 
-class Variant:
+class Variant(object):
 
     def __init__(self, atts, familyIdAtt="familyId", locationAtt="location",
                  variantAtt="variant", bestStAtt="bestState", bestStColSep=-1,
@@ -240,6 +246,10 @@ class Variant:
     @property
     def studyName(self):
         return self.atts.get(self.studyNameAtt, self.study.name)
+
+    @studyName.setter
+    def studyName(self, new_value):
+        self.atts[self.studyNameAtt] = new_value
 
     @property
     def location(self):
@@ -347,7 +357,7 @@ class Variant:
         parentStr = ''
         mbrs = self.memberInOrder
         bs = self.bestSt
-        for c in xrange(2):
+        for c in range(2):
             if isVariant(bs, c, self.location, mbrs[c].gender.name):
                 parentStr += mbrs[c].role.name
         return parentStr
@@ -386,7 +396,6 @@ class Variant:
                     '#ffffff')
                 for p in mbrs]
 
-
         denovo_parent = self.denovo_parent()
         res = [reduce(operator.add, [[m.role,
                                       m.gender],
@@ -409,9 +418,10 @@ class Variant:
         return self.key < other.key
 
     CHROMOSOMES_ORDER = dict(
-        {str(x): '0' + str(x) for x in range(1, 10)}.items() +
-        {str(x): str(x) for x in range(10, 23)}.items() +
-        {'X': '23', 'Y': '24'}.items())
+        [(str(x), '0' + str(x)) for x in range(1, 10)] +
+        [(str(x), str(x)) for x in range(10, 23)] +
+        [('X', '23'), ('Y', '24')]
+    )
 
     @property
     def key(self):

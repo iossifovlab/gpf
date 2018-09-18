@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 import argparse
-import gzip
 
-from utilities import main
-from annotate_score_base import ScoreAnnotator
+from annotation.tools.utilities import main
+from annotation.tools.annotate_score_base import ScoreAnnotator
 
 
 def get_argument_parser():

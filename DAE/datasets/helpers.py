@@ -48,24 +48,24 @@ def merge_dicts(*dicts):
 
 
 def ge2str(gs):
-    return "|".join(g.symbol + ":" + g.effects for x in gs for g in x.genes)
+    return "|".join(g.symbol + ":" + g.effects for g in gs.genes)
 
 
 def mat2str(mat, col_sep=" ", row_sep="/"):
     return row_sep.join([col_sep.join([str(n) for n in mat[i, :]])
-                        for i in xrange(mat.shape[0])])
+                        for i in range(mat.shape[0])])
 
 
 def gene_effect_get_worst_effect(gs):
-    if gs is None or len(gs) == 0:
+    if gs is None:
         return ''
-    return ','.join([e.worst for e in gs])
+    return ','.join([gs.worst])
 
 
 def gene_effect_get_genes(gs):
-    if gs is None or len(gs) == 0:
+    if gs is None:
         return ''
-    genes_set = set([x.symbol for g in gs for x in g.genes])
+    genes_set = set([x.symbol for x in gs.genes])
     genes = list(genes_set)
 
     return ';'.join(genes)
@@ -144,7 +144,7 @@ def variant_count_v3(bs, c, location=None, gender=None, denovo_parent=None):
 STANDARD_ATTRS = {
     "family": "family_id",
     "location": "location",
-    "variant": "variant",
+    "variant": "cshl_variant",
 }
 
 
@@ -160,13 +160,13 @@ STANDARD_ATTRS_LAMBDAS = {
 SPECIAL_ATTRS_FORMAT = {
     "bestSt": lambda v: mat2str(v.bestSt),
     "counts": lambda v: mat2str(v.alt_alleles[0]["counts"]),
-    "genotype": lambda v: mat2str(v.alt_alleles[0]["genotype"]),
+    "genotype": lambda v: mat2str(v.alt_alleles[0].genotype),
     "pedigree": lambda v: generate_pedigree(v),
-    "effects": lambda v: ge2str(v.alt_alleles[0]["effects"]),
+    "effects": lambda v: ge2str(v.alt_alleles[0].effects),
     "requestedGeneEffects": lambda v:
         ge2str(v.alt_alleles[0]["requestedGeneEffects"]),
-    "genes": lambda v: gene_effect_get_genes(v.alt_alleles[0]["effects"]),
-    "worstEffect": lambda v: gene_effect_get_worst_effect(v.alt_alleles[0]["effects"])
+    "genes": lambda v: gene_effect_get_genes(v.alt_alleles[0].effects),
+    "worstEffect": lambda v: gene_effect_get_worst_effect(v.alt_alleles[0].effects)
 }
 
 

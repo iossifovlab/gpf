@@ -9,14 +9,12 @@ wdae.sql
 .settings
 .ipynb_checkpoints
 .vagrant
-.ipynb_checkpoints
 .coverage
 htmlcov
 coverage.xml
 junit.xml
 logs
 output
-<<<<<<< HEAD
 *.tmp
 *.swp
 gpf-html.tar.gz
@@ -26,3 +24,4 @@ gpf-html.tar.gz
 .pytest_cache
 metastore_db
 setenv.sh
+test_data

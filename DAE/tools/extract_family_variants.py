@@ -9,7 +9,12 @@ Created on Jan 19, 2018
 
 @contact:    lubomir.chorbadjiev@gmail.com
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
 
+from builtins import str
+from builtins import zip
+from builtins import object
 import sys
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
@@ -76,7 +81,7 @@ class FilterFamilies(object):
                         continue
                     line = line.strip("\r\n")
                     data = line.split("\t")
-                    vals = dict(zip(column_names, data))
+                    vals = dict(list(zip(column_names, data)))
                     family_data = vals['familyData']
                     if family_data == 'TOOMANY':
                         tm_line = tmfh.readline()
@@ -176,7 +181,7 @@ USAGE
     except KeyboardInterrupt:
         # handle keyboard interrupt
         return 0
-    except Exception, e:
+    except Exception as e:
         import traceback
         traceback.print_exc()
 

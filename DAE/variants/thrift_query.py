@@ -1,3 +1,6 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+
 from impala.util import as_pandas
 from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
     QueryTreeToSQLTransformer, QueryTreeToSQLListTransformer, \
@@ -5,6 +8,8 @@ from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
     inheritance_converter, variant_type_converter,\
     StringListQueryToTreeTransformer
 from RegionOperations import Region
+from variants.attributes_query_builder import is_transformer
+
 q = """
     SELECT * FROM parquet.`/data-raw-dev/pspark/family01` AS A
     INNER JOIN parquet.`/data-raw-dev/pspark/summary01` AS B
@@ -104,14 +109,17 @@ def query_parts(queries, **kwargs):
         stage_two = stage_two_transformers.get(
             key, QueryTreeToSQLTransformer(key))
 
-        result.append(
-            stage_two.transform(stage_one.parse_and_transform(arg))
-        )
+        if not is_transformer(arg):
+            result.append(
+                stage_two.transform(stage_one.parse_and_transform(arg))
+            )
+        else:
+            result.append(stage_two.transform(arg))
     return result
 
 
 VARIANT_QUERIES = [
-    'regions',
+    # 'regions',
     'family_ids',
     'effect_types',
     'genes',
@@ -127,6 +135,7 @@ def thrift_query(
         thrift_connection,
         summary_variants, family_alleles,
         limit=2000, **kwargs):
+
     final_query = Q.format(
         summary_variants=summary_variants,
         family_alleles=family_alleles,
@@ -134,8 +143,7 @@ def thrift_query(
 
     variant_queries = []
     if 'regions' in kwargs and kwargs['regions'] is not None:
-        regions = kwargs['regions']
-        del kwargs['regions']
+        regions = kwargs.pop('regions')
         variant_queries.append(regions_transformer(regions))
 
     variant_queries.extend(
@@ -153,7 +161,6 @@ def thrift_query(
 
     if limit is not None:
         final_query += "\nLIMIT {}".format(limit)
-    print(final_query)
 
     cursor = thrift_connection.cursor()
     cursor.execute(final_query)

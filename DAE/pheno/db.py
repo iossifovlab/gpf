@@ -3,6 +3,8 @@ Created on Jul 24, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import object
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
     ForeignKey
@@ -100,7 +102,7 @@ class DbManager(object):
         )
 
     def get_value_table(self, value_type):
-        if isinstance(value_type, unicode) or isinstance(value_type, str):
+        if isinstance(value_type, str) or isinstance(value_type, str):
             value_type = MeasureType.from_str(value_type)
 
         if value_type == MeasureType.continuous:

@@ -1,14 +1,20 @@
 #!/usr/bin/env python2.7
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from builtins import str
+from builtins import map
+from builtins import object
 import abc
 from collections import defaultdict
 import argparse
 import csv
-from functools import reduce
 import collections
 
-from interval_sandwich import SandwichInstance, SandwichSolver
-from layout import Layout
-from drawing import PDFLayoutDrawer, OffsetLayoutDrawer
+from .interval_sandwich import SandwichInstance, SandwichSolver
+from .layout import Layout
+from .drawing import PDFLayoutDrawer, OffsetLayoutDrawer
+from future.utils import with_metaclass
 
 
 class CsvPedigreeReader(object):
@@ -32,7 +38,7 @@ class CsvPedigreeReader(object):
 
             families[member.family_id].members.append(member)
 
-        return families.values()
+        return list(families.values())
 
 
 class PedigreeMember(object):
@@ -84,7 +90,7 @@ class Pedigree(object):
 
         individuals = set(id_to_individual.values())
         mating_units = set(id_to_mating_unit.values())
-        sibship_units = set([mu.children for mu in id_to_mating_unit.values()])
+        sibship_units = set([mu.children for mu in list(id_to_mating_unit.values())])
 
         all_vertices = individuals | mating_units | sibship_units
 
@@ -165,9 +171,7 @@ class Pedigree(object):
             individual.rank = -individual.rank
 
 
-class IndividualGroup(object):
-    __metaclass__ = abc.ABCMeta
-
+class IndividualGroup(with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def individual_set(self):
         return {}
@@ -289,7 +293,7 @@ class LayoutSaver(object):
         return "{};{}".format(family_id, individual_id)
 
     def writerow(self, family, layout):
-        for individual_id, position in layout.id_to_position.items():
+        for individual_id, position in list(layout.id_to_position.items()):
             row = {
                 self.fieldname: "{},{}".format(position.x, position.y)
             }
@@ -343,8 +347,7 @@ def main():
         help="layout column name to be used when saving the layout")
 
     args = parser.parse_args()
-    with open(args.file, "r") as input_file:
-        pedigrees = CsvPedigreeReader().read_file(input_file)
+    pedigrees = PedigreeReader().read_file(args.file)
 
     pdf_drawer = PDFLayoutDrawer(args.output)
     layout_saver = None
@@ -354,7 +357,7 @@ def main():
             args.file, args.save_layout, args.layout_column)
 
     for family in sorted(pedigrees, key=lambda x: x.family_id):
-        sandwich_instance = family.create_sandwich_instance()
+        sandwich_instance = create_sandwich_instance(family)
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:
@@ -362,7 +365,7 @@ def main():
             print("No intervals")
         if intervals:
             individuals_intervals = filter(
-                lambda interval: isinstance(interval.vertex, Individual),
+                lambda interval: interval.vertex.is_individual(),
                 intervals
             )
             mating_units = {mu for i in individuals_intervals

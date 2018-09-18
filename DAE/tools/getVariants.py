@@ -1,5 +1,7 @@
 #!/bin/env python
 
+from __future__ import print_function
+from __future__ import unicode_literals
 import argparse
 import itertools
 import sys
@@ -37,7 +39,7 @@ parser.add_argument('--geneIdFile', type=str, help='the first column should cota
 parser.add_argument('--regionS', type=str, help='region')
 args = parser.parse_args()
 
-print >>sys.stderr, args
+print(args, file=sys.stderr)
 
 argsD = {a:getattr(args,a) for a in dir(args) if a[0] != '_'}
 getVariantsInterface(argsD)

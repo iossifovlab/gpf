@@ -3,6 +3,10 @@ Created on Jun 10, 2015
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import object
+from builtins import str
 import hashlib
 
 from django.core.cache import caches
@@ -19,25 +23,32 @@ class PrecomputeStore(object):
         self.cache = caches['pre']
 
     def hash_key(self, key):
+        assert isinstance(key, str), type(key)
+        key = bytearray(key, 'utf-8')
         return hashlib.sha1(key).hexdigest()
 
     def store(self, key, data):
-        for v in data.values():
-            assert isinstance(v, str)
+        assert isinstance(key, str)
+        for v in list(data.values()):
+            assert isinstance(v, bytes), type(v)
             assert (len(v) < self.MAX_CHUNK_SIZE)
 
         description = {"name": key,
-                       "keys": data.keys(),
+                       "keys": list(data.keys()),
                        "timestamp": datetime.now()}
 
         LOGGER.info("storing cache value: for %s at %s" %
                     (description['name'],
                      description['timestamp'],))
 
-        values = {"{}.{}".format(key, k): v for k, v in data.items()}
+        values = {"{}.{}".format(key, k): v for k, v in list(data.items())}
         values["{}.description".format(key)] = description
 
-        self.cache.set_many({self.hash_key(k): v for k, v in values.items()})
+        v = {
+            self.hash_key(k): v
+            for k, v in list(values.items())
+        }
+        self.cache.set_many(v)
 
     def retrieve(self, key):
         dkey = self.hash_key("{}.description".format(key))
@@ -47,6 +58,6 @@ class PrecomputeStore(object):
 
         vkeys = {self.hash_key("{}.{}".format(key, k)): k
                  for k in description['keys']}
-        result = self.cache.get_many(vkeys.keys())
+        result = self.cache.get_many(list(vkeys.keys()))
 
-        return {vkeys[k]: v for k, v in result.items()}
+        return {vkeys[k]: v for k, v in list(result.items())}

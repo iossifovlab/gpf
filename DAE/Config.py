@@ -3,24 +3,31 @@ Created on Jul 4, 2013
 
 @author: leotta
 '''
+from __future__ import unicode_literals
+from builtins import object
 import os
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from configparser import ConfigParser
 
 # adds exceptions for error handling
 
 
-class Config:
+class Config(object):
 
     def __init__(self):
         self._dae_data_dir = os.environ.get('DAE_DATA_DIR', None)
         self._daeDir = os.environ['DAE_DB_DIR']
 
-        self._daeConfig = ConfigParser.SafeConfigParser({
+        self._daeConfig = ConfigParser({
             'wd': self._daeDir,
             'data': self._dae_data_dir
         })
         self._daeConfig.optionxform = lambda x: x
-        self._daeConfig.read(os.path.join(self._daeDir, "DAE.conf"))
+        self._daeConfig.read(
+            os.path.join(self._daeDir, "DAE.conf"),
+            encoding="ascii"
+        )
 
         # self._phenoDBFile = self._daeConfig.get('phenoDB', 'file')
 

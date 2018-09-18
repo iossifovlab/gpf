@@ -3,6 +3,7 @@ Created on Mar 7, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
 import pytest
 from variants.parquet_io import family_variants_table,\
     save_ped_df_to_parquet, read_ped_df_from_parquet, \
@@ -70,7 +71,7 @@ def test_experiment_with_parquet_partitioned_datasets(
 
     summary_dataset_filename = os.path.join(
         temp_dirname, "summary.dataset")
-    print("summary:>>", summary_dataset_filename)
+    print(("summary:>>", summary_dataset_filename))
     pq.write_to_dataset(
         summary_variants_table,
         root_path=summary_dataset_filename,
@@ -81,14 +82,14 @@ def test_experiment_with_parquet_partitioned_datasets(
 
     for family_table, allele_table in family_variants_table(variants):
 
-        print("family:>>", family_dataset_filename)
+        print(("family:>>", family_dataset_filename))
         pq.write_to_dataset(
             family_table,
             root_path=family_dataset_filename,
             partition_cols=["chrom", "family_index"],
             preserve_index=False)
 
-        print("allele:>>", allele_dataset_filename)
+        print(("allele:>>", allele_dataset_filename))
         pq.write_to_dataset(
             allele_table,
             root_path=allele_dataset_filename,

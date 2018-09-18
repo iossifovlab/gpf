@@ -4,19 +4,56 @@ from configurable_entities.configurable_entity_config import\
 
 class DatasetConfig(ConfigurableEntityConfig):
 
-    def __init__(self, *args, **kwargs):
-        super(DatasetConfig, self).__init__(*args, **kwargs)
+    NEW_KEYS_NAMES = {
+        'phenoGenoTool': 'phenotypeGenotypeTool',
+        'genotypeBrowser.familyFilters': 'genotypeBrowser.familyStudyFilters',
+    }
+    CONCAT_OPTIONS = {
+        'genotypeBrowser.genotype.baseColumns':
+            'genotypeBrowser.genotype.columns',
+        'genotypeBrowser.basePreviewColumns': 'genotypeBrowser.previewColumns',
+        'genotypeBrowser.baseDownloadColumns':
+            'genotypeBrowser.downloadColumns'
+    }
+    SPLIT_STR_LISTS = (
+        'authorizedGroups', 'phenoDB',
+        'genotypeBrowser.phenoFilters',
+        'genotypeBrowser.baseColumns',
+        'genotypeBrowser.basePreviewColumns',
+        'genotypeBrowser.baseDownloadColumns',
+        'genotypeBrowser.previewColumns',
+        'genotypeBrowser.downloadColumns',
+        'genotypeBrowser.phenoColumns',
+        'genotypeBrowser.familyStudyFilters',
+        'genotypeBrowser.phenoFilters.filters',
+        'genotypeBrowser.genotype.columns',
+    )
+    CAST_TO_BOOL = (
+        'phenotypeBrowser', 'phenotypeGenotypeTool', 'enrichmentTool',
+        'genotypeBrowser', 'genotypeBrowser.genesBlockShowAll',
+        'genotypeBrowser.hasPresentInParent', 'genotypeBrowser.hasComplex',
+        'genotypeBrowser.hasPresentInChild', 'genotypeBrowser.hasDenovo',
+        'genotypeBrowser.hasPedigreeSelector', 'genotypeBrowser.hasCNV',
+        'genotypeBrowser.hasFamilyFilters',
+        'genotypeBrowser.hasStudyFilters',
+        'genotypeBrowser.hasTransmitted',
+    )
+    ELEMENTS_TO_COPY = {
+        'dataset_id': 'id', 'dataset_name': 'name'
+    }
+
+    def __init__(self, config, *args, **kwargs):
+        super(DatasetConfig, self).__init__(config, *args, **kwargs)
         assert self.dataset_id
         assert self.dataset_name
         assert self.id
         assert self.name
-        assert 'description' in self
+        assert self.description
         assert self.study_group
         assert self.data_dir
         assert 'phenotypeBrowser' in self
         assert 'phenotypeGenotypeTool' in self
         assert self.authorizedGroups
-        assert 'studyTypes' in self
         assert 'phenoDB' in self
         assert 'enrichmentTool' in self
         enrichmentTool = dict(self)['enrichmentTool']
@@ -32,12 +69,7 @@ class DatasetConfig(ConfigurableEntityConfig):
             assert 'phenoFilters' in genotypeBrowser
             assert 'hasPresentInChild' in genotypeBrowser
             assert 'hasPresentInParent' in genotypeBrowser
-            assert 'hasStudyTypes' in genotypeBrowser
             assert 'hasPedigreeSelector' in genotypeBrowser
-            assert 'hasComplex' in genotypeBrowser
-            assert 'hasCNV' in genotypeBrowser
-            assert 'hasDenovo' in genotypeBrowser
-            assert 'hasTransmitted' in genotypeBrowser
             assert genotypeBrowser['mainForm']
             assert 'phenoColumns' in genotypeBrowser
             assert 'familyStudyFilters' in genotypeBrowser
@@ -55,10 +87,7 @@ class DatasetConfig(ConfigurableEntityConfig):
             assert pedigree['source']
             assert pedigree['values']
 
-    @staticmethod
-    def _str_to_bool(val):
-        true_values = ['yes', 'Yes', 'True', 'true']
-        return True if val in true_values else False
+        print("study_group", self.study_group)
 
     @staticmethod
     def _split_section(section):
@@ -68,140 +97,6 @@ class DatasetConfig(ConfigurableEntityConfig):
         section_type = section[:index]
         section_name = section[index + 1:]
         return (section_type, section_name)
-
-    @staticmethod
-    def _change_keys_names(dataset_config):
-        new_keys_names = {
-            'phenotypebrowser': 'phenotypeBrowser',
-            'phenotypetool': 'phenotypeGenotypeTool',
-            'authorizedgroups': 'authorizedGroups',
-            'studytypes': 'studyTypes',
-            'phenodb': 'phenoDB',
-            'enrichmenttool': 'enrichmentTool',
-            'enrichmenttool.selector': 'enrichmentTool.selector',
-            'enrichmenttool.studytypes': 'enrichmentTool.studyTypes',
-            'genotypebrowser': 'genotypeBrowser',
-            'genotypebrowser.genesblockshowall':
-                'genotypeBrowser.genesBlockShowAll',
-            'genotypebrowser.hasfamilyfilters':
-                'genotypeBrowser.hasFamilyFilters',
-            'genotypebrowser.hasstudyfilters':
-                'genotypeBrowser.hasStudyFilters',
-            'genotypebrowser.phenofilters': 'genotypeBrowser.phenoFilters',
-            'genotypebrowser.haspresentinchild':
-                'genotypeBrowser.hasPresentInChild',
-            'genotypebrowser.haspresentinparent':
-                'genotypeBrowser.hasPresentInParent',
-            'genotypebrowser.hasstudytypes': 'genotypeBrowser.hasStudyTypes',
-            'genotypebrowser.haspedigreeselector':
-                'genotypeBrowser.hasPedigreeSelector',
-            'genotypebrowser.hascomplex': 'genotypeBrowser.hasComplex',
-            'genotypebrowser.hascnv': 'genotypeBrowser.hasCNV',
-            'genotypebrowser.hasdenovo': 'genotypeBrowser.hasDenovo',
-            'genotypebrowser.hastransmitted': 'genotypeBrowser.hasTransmitted',
-            'genotypebrowser.mainform': 'genotypeBrowser.mainForm',
-            'genotypebrowser.phenocolumns': 'genotypeBrowser.phenoColumns',
-            'genotypebrowser.familyfilters':
-                'genotypeBrowser.familyStudyFilters',
-            'genotypebrowser.phenofilters.filters':
-                'genotypeBrowser.phenoFilters.filters',
-            'genotypebrowser.genotype.basecolumns':
-                'genotypeBrowser.genotype.baseColumns',
-            'genotypebrowser.genotype.columns':
-                'genotypeBrowser.genotype.columns',
-            'genotypebrowser.basepreviewcolumns':
-                'genotypeBrowser.basePreviewColumns',
-            'genotypebrowser.previewcolumns': 'genotypeBrowser.previewColumns',
-            'genotypebrowser.basedownloadcolumns':
-                'genotypeBrowser.baseDownloadColumns',
-            'genotypebrowser.downloadcolumns':
-                'genotypeBrowser.downloadColumns'
-        }
-        for old, new in new_keys_names.items():
-            if '.' in new and (
-                (new.split('.')[0] in dataset_config and
-                 dataset_config.get(new.split('.')[0], None) == 'no') or
-                    (dataset_config.get(old.split('.')[0], None) == 'no')):
-                continue
-            if old in dataset_config:
-                dataset_config[new] = dataset_config.pop(old)
-
-        return dataset_config
-
-    @staticmethod
-    def _split_str_lists(dataset_config):
-        split_str_lists_keys = [
-            'studies', 'authorizedGroups', 'phenoDB',
-            'genotypeBrowser.phenoFilters',
-            'genotypeBrowser.baseColumns',
-            'genotypeBrowser.basePreviewColumns',
-            'genotypeBrowser.baseDownloadColumns',
-            'genotypeBrowser.previewColumns', 'genotypeBrowser.downloadColumns'
-            'genotypeBrowser.phenoColumns',
-            'genotypeBrowser.familyStudyFilters',
-            'genotypeBrowser.phenoFilters.filters',
-            'genotypeBrowser.genotype.columns'
-        ]
-
-        for key in split_str_lists_keys:
-            if key not in dataset_config:
-                continue
-            if dataset_config[key] is not None and dataset_config[key] != '':
-                dataset_config[key] =\
-                    [el.strip() for el in dataset_config[key].split(',')]
-            elif dataset_config[key] == '':
-                dataset_config[key] = []
-
-        return dataset_config
-
-    @classmethod
-    def _cast_to_bool(cls, dataset_config):
-        cast_to_bool_keys = [
-            'phenotypeBrowser', 'phenotypeGenotypeTool', 'enrichmentTool',
-            'genotypeBrowser', 'genotypeBrowser.genesBlockShowAll',
-            'genotypeBrowser.hasPresentInParent', 'genotypeBrowser.hasComplex',
-            'genotypeBrowser.hasStudyTypes', 'genotypeBrowser.hasTransmitted',
-            'genotypeBrowser.hasPresentInChild', 'genotypeBrowser.hasDenovo',
-            'genotypeBrowser.hasPedigreeSelector', 'genotypeBrowser.hasCNV',
-            'genotypeBrowser.hasFamilyFilters',
-            'genotypeBrowser.hasStudyFilters'
-        ]
-
-        for key in cast_to_bool_keys:
-            if key in dataset_config:
-                dataset_config[key] = cls._str_to_bool(dataset_config[key])
-
-        return dataset_config
-
-    @staticmethod
-    def _concat_two_options(dataset_config):
-        concat_options = {
-            'genotypeBrowser.baseColumns':
-                'genotypeBrowser.columns',
-            'genotypeBrowser.basePreviewColumns':
-                'genotypeBrowser.previewColumns',
-            'genotypeBrowser.baseDownloadColumns':
-                'genotypeBrowser.downloadColumns'
-        }
-
-        for first, second in concat_options.items():
-            dataset_config[second] =\
-                ','.join(filter(None, [dataset_config.pop(first, None),
-                                       dataset_config.pop(second, None)]))
-
-        return dataset_config
-
-    @staticmethod
-    def _copy_elements(dataset_config):
-        elements_to_copy = {
-            'dataset_id': 'id',
-            'dataset_name': 'name'
-        }
-
-        for old, new in elements_to_copy.items():
-            dataset_config[new] = dataset_config[old]
-
-        return dataset_config
 
     @staticmethod
     def _combine_dict_options(dataset_config):
@@ -279,7 +174,7 @@ class DatasetConfig(ConfigurableEntityConfig):
 
     @staticmethod
     def _get_genotype_browser_pheno_filter(dataset_config, f):
-        prefix = 'genotypebrowser.phenofilters.{}'.format(f)
+        prefix = 'genotypeBrowser.phenoFilters.{}'.format(f)
         name = dataset_config.pop('{}.{}'.format(prefix, 'name'), None)
         measure_type = dataset_config.pop(
             '{}.{}'.format(prefix, 'type'), None)
@@ -322,7 +217,7 @@ class DatasetConfig(ConfigurableEntityConfig):
 
     @staticmethod
     def _get_genotype_browser_genotype_column(dataset_config, col_id):
-        prefix = 'genotypebrowser.genotype.{}'.format(col_id)
+        prefix = 'genotypeBrowser.genotype.{}'.format(col_id)
         name = dataset_config.pop('{}.{}'.format(prefix, 'name'), None)
         source = dataset_config.pop('{}.{}'.format(prefix, 'source'), None)
         slots = dataset_config.pop('{}.{}'.format(prefix, 'slots'), None)
@@ -374,11 +269,6 @@ class DatasetConfig(ConfigurableEntityConfig):
     def from_config(cls, config_section, section=None):
         dataset_config = config_section
 
-        dataset_config = cls._change_keys_names(dataset_config)
-        dataset_config = cls._concat_two_options(dataset_config)
-        dataset_config = cls._split_str_lists(dataset_config)
-        dataset_config = cls._cast_to_bool(dataset_config)
-        dataset_config = cls._copy_elements(dataset_config)
         dataset_config['pedigreeSelectors'] =\
             cls._get_pedigree_selectors(dataset_config)
         dataset_config['genotypeBrowser.phenoFilters'] =\
@@ -395,50 +285,27 @@ class DatasetConfig(ConfigurableEntityConfig):
     @staticmethod
     def get_default_values():
         return {
-            'studyTypes': None,
             'phenoDB': None,
-            'description': None,
-            'phenotypeBrowser': 'no',
-            'phenotypetool': 'no',
             'genotypeBrowser.genesBlockShowAll': 'yes',
             'genotypeBrowser.hasFamilyFilters': 'yes',
             'genotypeBrowser.hasStudyFilters': 'yes',
             'genotypeBrowser.phenoFilters': '',
             'genotypeBrowser.hasPresentInChild': 'yes',
             'genotypeBrowser.hasPresentInParent': 'yes',
-            'genotypeBrowser.hasStudyTypes': 'no',
             'genotypeBrowser.hasPedigreeSelector': 'no',
-            'genotypeBrowser.hasComplex': 'no',
-            'genotypeBrowser.hasCNV': 'no',
-            'genotypeBrowser.hasDenovo': 'no',
-            'genotypeBrowser.hasTransmitted': 'no',
             'genotypeBrowser.mainForm': 'default',
-            'genotypeBrowser.phenoColumns': '',
+            'genotypeBrowser.phenoColumns': None,
             'genotypeBrowser.familyFilters': None,
             'pedigree.phenotype.source': 'legacy',
             'pedigree.phenotype.default': 'unknown:unknown:#aaaaaa',
-            'genotypeBrowser.baseColumns':
+            'genotypeBrowser.genotype.baseColumns':
                 'family,phenotype,variant,best,fromparent,inchild,genotype,'
                 'effect,count,geneeffect,effectdetails,weights,freq',
             'genotypeBrowser.basePreviewColumns':
-                'family,variant,genotype,effect,weights,freq',
+                'family,variant,genotype,effect,weights,freq,studyName,'
+                'location,pedigree,inChS,fromParentS,effects,requestedGeneEffects,genes,worstEffect',
             'genotypeBrowser.baseDownloadColumns':
                 'family,phenotype,variant,best,fromparent,inchild,effect,'
                 'count,geneeffect,effectdetails,weights,freq',
             'phenoFilters': ''
         }
-
-    @staticmethod
-    def _get_dataset_description_keys():
-        return [
-            'id', 'name', 'description', 'studies', 'data_dir',
-            'phenotypeBrowser', 'phenotypeGenotypeTool', 'authorizedGroups',
-            'studyTypes', 'phenoDB', 'enrichmentTool', 'genotypeBrowser',
-            'pedigreeSelectors'
-        ]
-
-    def get_dataset_description(self):
-        keys = DatasetConfig._get_dataset_description_keys()
-        dataset_config = self.to_dict()
-
-        return {key: dataset_config[key] for key in keys}

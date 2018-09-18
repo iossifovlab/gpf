@@ -3,6 +3,7 @@ Created on Mar 27, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import copy
 from datasets.tests.requests import EXAMPLE_QUERY_SD
 

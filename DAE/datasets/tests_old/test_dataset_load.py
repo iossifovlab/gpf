@@ -3,6 +3,7 @@ Created on Feb 9, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 
 
 def test_dataset_ssc_load(ssc):
@@ -23,7 +24,7 @@ def test_dataset_vip_supplement_pedigree_selector(vip):
     vip.load_families()
     vip.load_pedigree_selectors()
 
-    for p in vip.persons.values():
+    for p in list(vip.persons.values()):
         assert p.atts['16pstatus']
         assert p.atts['phenotype']
 
@@ -32,7 +33,7 @@ def test_dataset_pheno_families_load(vip):
     vip.load_pheno_families()
     vip.load_families()
 
-    for gf, pf in vip.geno2pheno_families.items():
+    for gf, pf in list(vip.geno2pheno_families.items()):
         assert len(pf) == 1, gf
 
 

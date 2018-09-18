@@ -3,6 +3,8 @@ Created on Nov 16, 2016
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
 from pheno_tool.genotype_helper import VariantsType as VT
 
 
@@ -43,7 +45,7 @@ def test_get_variants_father_ultra_rare(
             dcount += 1
         else:
             tcount += 1
-    print(dcount, tcount)
+    print((dcount, tcount))
     assert 176 == len(variants)
 
 
@@ -82,7 +84,7 @@ def test_get_variants_father_rarity(
             tcount += 1
             assert 'dad' in v.fromParentS or v.fromParentS == ''
             assert v.altFreqPrcnt <= 1.0
-    print(dcount, tcount)
+    print((dcount, tcount))
 
     assert 250 == len(variants)
 
@@ -120,7 +122,7 @@ def test_get_variants_father_interval(
             assert v.altFreqPrcnt >= 1.0 and v.altFreqPrcnt <= 50.0
         else:
             dcount += 1
-    print(dcount, tcount)
+    print((dcount, tcount))
     assert 593 == len(variants)
 
 
@@ -203,7 +205,7 @@ def test_get_person_variants_father_all(
     )
     assert 934 == len(res)
     assert 3 == max(res.values())
-    ps3 = [p for (p, c) in res.items() if c == 3]
+    ps3 = [p for (p, c) in list(res.items()) if c == 3]
     assert 6 == len(ps3)
 
     assert '13528.p1' in ps3

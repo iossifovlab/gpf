@@ -1,7 +1,9 @@
 # import unittest
+from future import standard_library
+standard_library.install_aliases()
 import logging
-import urllib
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 # import itertools
 
 # from VariantAnnotation import get_effect_types, get_effect_types_set
@@ -24,16 +26,16 @@ class RecurrentLGDsGenesTests(APITestCase):
 
     def test_load_gene_set(self):
         geneTerms = vDB.get_denovo_sets("AUTISM")
-        LOGGER.info("gene terms: %s", geneTerms.t2G.keys())
-        self.assertEqual(15, len(geneTerms.t2G.keys()))
+        LOGGER.info("gene terms: %s", list(geneTerms.t2G.keys()))
+        self.assertEqual(15, len(list(geneTerms.t2G.keys())))
 
     def test_rec_lgds_count(self):
         geneTerms = vDB.get_denovo_sets("AUTISM")
-        LOGGER.info("gene terms: %s", geneTerms.t2G.keys())
+        LOGGER.info("gene terms: %s", list(geneTerms.t2G.keys()))
         LOGGER.info("rec lgds: %s", geneTerms.t2G["prb.LoF.Recurrent"])
         LOGGER.info("rec lgds: %s",
-                    len(geneTerms.t2G["prb.LoF.Recurrent"].keys()))
-        self.assertEqual(45, len(geneTerms.t2G["prb.LoF.Recurrent"].keys()))
+                    len(list(geneTerms.t2G["prb.LoF.Recurrent"].keys())))
+        self.assertEqual(45, len(list(geneTerms.t2G["prb.LoF.Recurrent"].keys())))
 
 
 def count_iterable(iterable):
@@ -128,7 +130,7 @@ class PhenotypeFilterTests(APITestCase):
         url = '/api/query_variants'
 
         response = self.client.post(
-            url, urllib.urlencode(data),
+            url, urllib.parse.urlencode(data),
             content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(10, count_iterable(response.streaming_content))
@@ -150,7 +152,7 @@ class PhenotypeFilterTests(APITestCase):
             "familyRace=All&familyVerbalIqLo=&familyVerbalIqHi=&" \
             "familyQuadTrio=All&familyPrbGender=All&familySibGender=All"
 
-        LOGGER.error("urldecoded: %s", urlparse.parse_qs(data))
+        LOGGER.error("urldecoded: %s", urllib.parse.parse_qs(data))
         url = '/api/query_variants'
 
         response = self.client.post(
@@ -470,7 +472,7 @@ class SSCPresentInChildDownloadTests(BaseAuthenticatedUserTest):
             'familyVerbalIqLo=&familyVerbalIqHi=&familyQuadTrio=All&' \
             'familyPrbGender=All&familySibGender=All'
 
-        LOGGER.info("urldecoded: %s", urlparse.parse_qs(data))
+        LOGGER.info("urldecoded: %s", urllib.parse.parse_qs(data))
         url = '/api/ssc_query_variants'
 
         response = self.client.post(

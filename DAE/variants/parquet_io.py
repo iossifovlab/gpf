@@ -5,6 +5,7 @@ Created on May 30, 2018
 '''
 from __future__ import print_function
 
+from builtins import str
 import sys
 import traceback
 
@@ -96,9 +97,9 @@ def batch_from_data_dict(data, schema):
         assert name in data
         column = data[name]
         field = schema.field_by_name(name)
-        if field.type == pa.string() and not isinstance(column[0], unicode):
+        if field.type == pa.string() and not isinstance(column[0], str):
             column = [
-                unicode(v, 'utf-8') if v is not None else None
+                str(v) if v is not None else None
                 for v in column
             ]
         batch_data.append(pa.array(column, type=field.type))
@@ -119,6 +120,10 @@ def summary_batch(sum_df):
         assert name in sum_df, name
         data = sum_df[name].values
         field = schema.field_by_name(name)
+        print("==========")
+        print(name)
+        print("DATA:", data, type(data[0]))
+        print("FIELD:", field)
         batch_data.append(pa.array(data, type=field.type))
 
     batch = pa.RecordBatch.from_arrays(
@@ -192,7 +197,7 @@ def family_variants_table(variants, batch_size=1000000):
                     allele_data["variant_in_sexes"].append(None)
                 else:
                     allele_data["variant_in_members"].append(
-                        [unicode(m, "utf-8")
+                        [str(m)
                          for m in allele.variant_in_members])
                     allele_data["variant_in_roles"].append(
                         [r.value for r in allele.variant_in_roles])

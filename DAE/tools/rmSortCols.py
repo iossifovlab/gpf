@@ -1,5 +1,7 @@
 #!/bin/env python
 
+from __future__ import print_function
+from __future__ import unicode_literals
 import sys
 
 def find_nth(haystack, needle, n):
@@ -10,6 +12,6 @@ def find_nth(haystack, needle, n):
     return start
 
 hdL = sys.stdin.readline()
-print hdL[(find_nth(hdL,"\t",1)+1):],
+print(hdL[(find_nth(hdL,"\t",1)+1):], end=' ')
 for l in sys.stdin:
-   print l[(find_nth(l,"\t",3)+1):],
+   print(l[(find_nth(l,"\t",3)+1):], end=' ')

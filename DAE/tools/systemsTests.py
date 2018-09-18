@@ -1,5 +1,12 @@
 #!/bin/env python
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import zip
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from DAE import *
 from WeightedSample import WeightedSample
 from tfidf import GetTFIDFMatrix 
@@ -24,7 +31,7 @@ import pickle
 # randIterss = [100,1000,10000]
 randIterss = [1000]
 
-class PPINetwork:
+class PPINetwork(object):
     def __init__(self, fn=None, ppn=None):
         if fn:
             self._load_from_file(fn)
@@ -87,10 +94,10 @@ class PPINetwork:
             # print "FAIL 2"
             return False
         
-        for i in xrange(E):
+        for i in range(E):
             if i in processedI:
                 continue
-            for j in xrange(i+1,E):
+            for j in range(i+1,E):
                 if j in processedI:
                     continue
                 
@@ -98,7 +105,7 @@ class PPINetwork:
                     break
             if i not in processedI:
                 if es[i][0] in newNbrs[es[i][1]]:
-                    for j in xrange(E):
+                    for j in range(E):
                         if swap(i,j):
                             break
                 else:
@@ -143,7 +150,7 @@ class PPINetwork:
             if nId not in self.nbrs:
                 # print "AAAAA",cs 
                 continue
-            class NodeProps:
+            class NodeProps(object):
                 pass
             
             nps = NodeProps()
@@ -171,9 +178,9 @@ def run_a_test(scrF,gs,ws,withReplacement=False):
     N = len(gs)
 
     if withReplacement:
-        N = sum([x for x in gs.values()])
+        N = sum([x for x in list(gs.values())])
 
-    class TestResult:
+    class TestResult(object):
         pass
 
     # for Iter in [100,1000,10000]:
@@ -184,7 +191,7 @@ def run_a_test(scrF,gs,ws,withReplacement=False):
         ts.Iter = Iter
         ts.realScr = realScr
 
-        for i in xrange(Iter):
+        for i in range(Iter):
             if withReplacement:
                 rScr = scrF(ws.getWithReplacement(N))
             else:
@@ -192,7 +199,7 @@ def run_a_test(scrF,gs,ws,withReplacement=False):
             ts.randScrs.append(rScr)
             if rScr >= realScr:
                 ts.nBigger+=1
-        ts.pVal = float(ts.nBigger)/Iter
+        ts.pVal = old_div(float(ts.nBigger),Iter)
         if ts.nBigger > 4 and ts.nBigger < Iter - 4:
             return ts
     return ts
@@ -211,7 +218,7 @@ def getRandNets(ppn,n):
         prevS = PPINetwork(ppn=prevS)
         prevS.shuffle()
         rr.append(prevS)
-        print "built ", len(rr), "rand networks"
+        print("built ", len(rr), "rand networks")
     return rr[0:n]
             
         
@@ -219,7 +226,7 @@ def getRandNets(ppn,n):
 def run_a_PPI_shuffle_test(scrF,ppn):
     realScr = scrF(ppn)
 
-    class TestResult:
+    class TestResult(object):
         pass
 
     ppnS = PPINetwork(ppn=ppn)
@@ -227,7 +234,7 @@ def run_a_PPI_shuffle_test(scrF,ppn):
     # for Iter in [100,1000,10000]:
     for Iter in randIterss: 
     # for Iter in [100]:
-        print "Runniter with Iter:", Iter
+        print("Runniter with Iter:", Iter)
         ts = TestResult()
         ts.nBigger = 0
         ts.randScrs = []
@@ -239,7 +246,7 @@ def run_a_PPI_shuffle_test(scrF,ppn):
             ts.randScrs.append(rScr)
             if rScr >= realScr:
                 ts.nBigger+=1
-        ts.pVal = float(ts.nBigger)/Iter
+        ts.pVal = old_div(float(ts.nBigger),Iter)
         if ts.nBigger > 4 and ts.nBigger < Iter - 4:
             return ts
     return ts
@@ -258,7 +265,7 @@ def run_in_set_test(genes, geneWeights, inSet):
     return run_a_test(scrF,gns,ws)
 
 def run_ppn_sc_test(genes, geneWeights, ppn):
-    sbWghts = {g:w for g,w in geneWeights.items() if g in ppn.nodes} 
+    sbWghts = {g:w for g,w in list(geneWeights.items()) if g in ppn.nodes} 
     ws = WeightedSample(sbWghts)
     gns = [x for x in genes if x in sbWghts]
 
@@ -274,7 +281,7 @@ def run_ppn_sc_shuffle_test(genes, ppn):
     gns = [x for x in genes if x in ppn.nodes]
 
     if len(gns)==0:
-        print 'hahaha'
+        print('hahaha')
         return
 
     def scrF(ppn):
@@ -286,7 +293,7 @@ def run_ppn_link_test(genesFixed, genes, geneWeights, ppn):
     genesFixedS = {g for g in genesFixed if g in ppn.nodes} 
     if len(genesFixedS)==0:
         return
-    sbWghts = {g:w for g,w in geneWeights.items() if g in ppn.nodes and g not in genesFixedS} 
+    sbWghts = {g:w for g,w in list(geneWeights.items()) if g in ppn.nodes and g not in genesFixedS} 
     ws = WeightedSample(sbWghts)
     gns = [x for x in genes if x in sbWghts and x not in genesFixedS]
 
@@ -312,7 +319,7 @@ def run_ppn_link_shuffle_test(genesFixed, genes, ppn):
     return run_a_PPI_shuffle_test(scrF,ppn)
 
 def run_wn_sc_test(genes, geneWeights, wn):
-    sbWghts = {g:w for g,w in geneWeights.items() if g in wn.geneIdToIndex} 
+    sbWghts = {g:w for g,w in list(geneWeights.items()) if g in wn.geneIdToIndex} 
     ws = WeightedSample(sbWghts)
     gns = [x for x in genes if x in sbWghts]
 
@@ -326,7 +333,7 @@ def run_wn_sc_test(genes, geneWeights, wn):
 
 def run_wn_link_test(genesFixed, genes, geneWeights, wn):
     genesFixedS = {g for g in genesFixed if g in wn.geneIdToIndex } 
-    sbWghts = {g:w for g,w in geneWeights.items() if g in wn.geneIdToIndex and g not in genesFixedS} 
+    sbWghts = {g:w for g,w in list(geneWeights.items()) if g in wn.geneIdToIndex and g not in genesFixedS} 
     ws = WeightedSample(sbWghts)
     gns = [x for x in genes if x in sbWghts and x not in genesFixedS]
 
@@ -343,14 +350,14 @@ def run_number_test(genes, geneWeights, numbers, defaultVal=None):
 
     testGenes = set(geneWeights.keys()) & set(numbers.keys())
     vals = {x:numbers[x] for x in testGenes}
-    wghts = {g:w for g,w in geneWeights.items() if g in testGenes}
-    gns = {g:n for g,n in genes.items() if g in testGenes}
+    wghts = {g:w for g,w in list(geneWeights.items()) if g in testGenes}
+    gns = {g:n for g,n in list(genes.items()) if g in testGenes}
 
     if len(gns)==0:
         return
 
     def scrF(gs):
-        return float(sum(vals[g] for g in gs))/len(gs)
+        return old_div(float(sum(vals[g] for g in gs)),len(gs))
 
     ws = WeightedSample(wghts)
 
@@ -373,11 +380,11 @@ def run_number_test(genes, geneWeights, numbers, defaultVal=None):
     '''
 
 
-class FunctionalProfiler:
+class FunctionalProfiler(object):
     def __init__(self,denovoStudies='allWE',geneWeightProp='refSeqCodingInTargetLen'):
         giDB.fprops
-        self._geneWeightsId = {id:gi.fprops[geneWeightProp] for id,gi in giDB.genes.items() if geneWeightProp in gi.fprops}
-        self._geneWeightsSym = {gi.sym:gi.fprops[geneWeightProp] for gi in giDB.genes.values() if geneWeightProp in gi.fprops}
+        self._geneWeightsId = {id:gi.fprops[geneWeightProp] for id,gi in list(giDB.genes.items()) if geneWeightProp in gi.fprops}
+        self._geneWeightsSym = {gi.sym:gi.fprops[geneWeightProp] for gi in list(giDB.genes.values()) if geneWeightProp in gi.fprops}
         self.geneSets = vDB.get_denovo_sets(denovoStudies)
         # self.toGeneSets = ['recPrbLGDs', 'sinPrbLGDs']
         self.toGeneSets = ['prb.LoF.Recurrent', 'prb.LoF.Single']
@@ -397,19 +404,19 @@ class FunctionalProfiler:
         nodeDegrees = weightedNetworkNodeDegrees(wn) 
         
         fpRes = defaultdict(dict)
-        for gsN,gsGs in gSets.t2G.items(): 
+        for gsN,gsGs in list(gSets.t2G.items()): 
 
-            print >>sys.stderr, gsN,'sc ...'
+            print(gsN,'sc ...', file=sys.stderr)
             fpRes[gsN]['sc'] = run_wn_sc_test(gsGs, gWghts, wn)
 
-            print >>sys.stderr, gsN,'degree ...'
+            print(gsN,'degree ...', file=sys.stderr)
             fpRes[gsN]['degree'] = run_number_test(gsGs, gWghts, nodeDegrees)
 
-            print >>sys.stderr, gsN,'inNet ...'
+            print(gsN,'inNet ...', file=sys.stderr)
             fpRes[gsN]['inNet'] = run_in_set_test(gsGs, gWghts, wn.geneIdToIndex)
 
             for fixedGenes in self.toGeneSets:
-                print >>sys.stderr, gsN,fixedGenes,'...'
+                print(gsN,fixedGenes,'...', file=sys.stderr)
                 fpRes[gsN][fixedGenes] = run_wn_link_test(gSets.t2G[fixedGenes], gsGs, gWghts, wn)
 
         return fpRes
@@ -418,12 +425,12 @@ class FunctionalProfiler:
     def profile_gts(self,gts,metric='tfidf'):
         gSets,gWghts = self.get_sets_and_weights(gts.geneNS)
 
-        termNumbers = {g:len(tms) for g,tms in gts.g2T.items() }
+        termNumbers = {g:len(tms) for g,tms in list(gts.g2T.items()) }
 
         # an alternative that uses the multiplicity of the terms per gene
         # termNumbers = {g:sum(tms.values()) for g,tms in gts.g2T.items() }
 
-        aaaFixMe = [(g,ts.keys()) for g,ts in gts.g2T.items()]
+        aaaFixMe = [(g,list(ts.keys())) for g,ts in list(gts.g2T.items())]
 
         if metric=='tfidf':
             wn = GetTFIDFMatrix(aaaFixMe)
@@ -434,22 +441,22 @@ class FunctionalProfiler:
         nodeDegrees = weightedNetworkNodeDegrees(wn) 
 
         fpRes = defaultdict(dict)
-        for gsN,gsGs in gSets.t2G.items(): 
+        for gsN,gsGs in list(gSets.t2G.items()): 
 
-            print >>sys.stderr, gsN,'sc ...'
+            print(gsN,'sc ...', file=sys.stderr)
             fpRes[gsN]['sc'] = run_wn_sc_test(gsGs, gWghts, wn)
 
-            print >>sys.stderr, gsN,'termNumber...'
+            print(gsN,'termNumber...', file=sys.stderr)
             fpRes[gsN]['termNumber'] = run_number_test(gsGs, gWghts, termNumbers)
 
-            print >>sys.stderr, gsN,'degree ...'
+            print(gsN,'degree ...', file=sys.stderr)
             fpRes[gsN]['degree'] = run_number_test(gsGs, gWghts, nodeDegrees)
 
-            print >>sys.stderr, gsN,'withTerms ...'
+            print(gsN,'withTerms ...', file=sys.stderr)
             fpRes[gsN]['withTerms'] = run_in_set_test(gsGs, gWghts, wn.geneIdToIndex)
 
             for fixedGenes in self.toGeneSets:
-                print >>sys.stderr, gsN,fixedGenes,'...'
+                print(gsN,fixedGenes,'...', file=sys.stderr)
                 fpRes[gsN][fixedGenes] = run_wn_link_test(gSets.t2G[fixedGenes], gsGs, gWghts, wn)
 
         return fpRes
@@ -458,28 +465,28 @@ class FunctionalProfiler:
         gSets,gWghts = self.get_sets_and_weights(ppn.geneNS)
 
         fpRes = defaultdict(dict)
-        for gsN,gsGs in gSets.t2G.items(): 
+        for gsN,gsGs in list(gSets.t2G.items()): 
 
-            print >>sys.stderr, gsN,'inNetwork...'
+            print(gsN,'inNetwork...', file=sys.stderr)
             fpRes[gsN]['inNetwork'] = run_in_set_test(gsGs, gWghts, ppn.nodes )
 
-            print >>sys.stderr, gsN,'degree ...'
-            fpRes[gsN]['degree'] = run_number_test(gsGs, gWghts, {ni.nId:ni.degree for ni in ppn.nodes.values()} )
+            print(gsN,'degree ...', file=sys.stderr)
+            fpRes[gsN]['degree'] = run_number_test(gsGs, gWghts, {ni.nId:ni.degree for ni in list(ppn.nodes.values())} )
 
-            print >>sys.stderr, gsN,'betweennes ...'
-            fpRes[gsN]['betweennes'] = run_number_test(gsGs, gWghts, {ni.nId:ni.betweennes for ni in ppn.nodes.values()} )
+            print(gsN,'betweennes ...', file=sys.stderr)
+            fpRes[gsN]['betweennes'] = run_number_test(gsGs, gWghts, {ni.nId:ni.betweennes for ni in list(ppn.nodes.values())} )
 
-            print >>sys.stderr, gsN,'clustCoef...'
-            fpRes[gsN]['clustCoef'] = run_number_test(gsGs, gWghts, {ni.nId:ni.clustCoef for ni in ppn.nodes.values()} )
+            print(gsN,'clustCoef...', file=sys.stderr)
+            fpRes[gsN]['clustCoef'] = run_number_test(gsGs, gWghts, {ni.nId:ni.clustCoef for ni in list(ppn.nodes.values())} )
 
-            print >>sys.stderr, gsN,'sc ...'
+            print(gsN,'sc ...', file=sys.stderr)
             if shuffle:
                 fpRes[gsN]['sc'] = run_ppn_sc_shuffle_test(gsGs, ppn)
             else:
                 fpRes[gsN]['sc'] = run_ppn_sc_test(gsGs, gWghts, ppn)
 
             for fixedGenes in self.toGeneSets:
-                print >>sys.stderr, gsN,fixedGenes,'...'
+                print(gsN,fixedGenes,'...', file=sys.stderr)
                 if shuffle:
                     fpRes[gsN][fixedGenes] = run_ppn_link_shuffle_test(gSets.t2G[fixedGenes], gsGs, ppn)
                 else:
@@ -490,12 +497,12 @@ class FunctionalProfiler:
         gSets,gWghts = self.get_sets_and_weights(keyNS)
 
         fpRes = defaultdict(dict)
-        for gsN,gsGs in gSets.t2G.items(): 
+        for gsN,gsGs in list(gSets.t2G.items()): 
 
-            print >>sys.stderr, gsN,'inScalar...'
+            print(gsN,'inScalar...', file=sys.stderr)
             fpRes[gsN]['inScalar'] = run_in_set_test(gsGs, gWghts, scalar )
 
-            print >>sys.stderr, gsN,'scalar...'
+            print(gsN,'scalar...', file=sys.stderr)
             fpRes[gsN]['scalar'] = run_number_test(gsGs, gWghts, scalar)
         return fpRes
 
@@ -507,7 +514,7 @@ class FunctionalProfiler:
 
         specialTests = ['sc'] + self.toGeneSets       
         specialTests = [tn for tn in specialTests if tn in allTests]
-        testOrder = specialTests + sorted([x for x in {t for gs in res.values() for t in gs} if x not in specialTests])
+        testOrder = specialTests + sorted([x for x in {t for gs in list(res.values()) for t in gs} if x not in specialTests])
 
         def tr_pval_s(tr):
             if not tr:
@@ -517,10 +524,10 @@ class FunctionalProfiler:
             return "%10.4f" % (tr.pVal)
 
 
-        f.write("\t".join(["%20s" % " "] + map(lambda x: "%10s" % (x),testOrder)) + "\n")
+        f.write("\t".join(["%20s" % " "] + ["%10s" % (x) for x in testOrder]) + "\n")
                   
         for gs in allGeneSetsOrd:
-            f.write("\t".join(["%20s" % (gs)] + map(lambda x: tr_pval_s(res[gs][x]), testOrder)) + "\n")
+            f.write("\t".join(["%20s" % (gs)] + [tr_pval_s(res[gs][x]) for x in testOrder]) + "\n")
     
         
 
@@ -547,13 +554,13 @@ def weightedNetworkNodeDegrees(m):
 
 
 def prepareGeneTerms(name):
-    class GTS:
+    class GTS(object):
         pass
 
     gts = GTS()
     gts.name = name
     gts.geneTerms = giDB.getGeneTerms(gts.name, inNS='id')
-    aaaFixMe = [(g,ts.keys()) for g,ts in gts.geneTerms.g2T.items()]
+    aaaFixMe = [(g,list(ts.keys())) for g,ts in list(gts.geneTerms.g2T.items())]
 
     gts.tfidfM = GetTFIDFMatrix(aaaFixMe)
     gts.tfidfWNDegree = weightedNetworkNodeDegrees(gts.tfidfM) 
@@ -565,8 +572,8 @@ def prepareGeneTerms(name):
     return gts
 
 def prepareWeightedNetwork(netF): 
-    print >>sys.stderr, "Loading", netF,"..."
-    class WNT:
+    print("Loading", netF,"...", file=sys.stderr)
+    class WNT(object):
         pass
 
     wnt = WNT()
@@ -577,19 +584,19 @@ def prepareWeightedNetwork(netF):
     weightedNetworks.append(wnt)
 
 def recurrentVariantList(name, fromVls):
-    class VLS:
+    class VLS(object):
         pass
     vls = VLS()
     vls.name = name
     
-    vls.genes = { g:n for g,n in fromVls.genes.items() if n>1 }
-    vls.genesSym = { g:n for g,n in fromVls.genesSym.items() if n>1 }
+    vls.genes = { g:n for g,n in list(fromVls.genes.items()) if n>1 }
+    vls.genesSym = { g:n for g,n in list(fromVls.genesSym.items()) if n>1 }
   
     variantLists.append(vls)
     return vls
     
 def prepareVariantList(name,vs):
-    class VLS:
+    class VLS(object):
         pass
     vls = VLS()
     vls.name = name
@@ -598,13 +605,13 @@ def prepareVariantList(name,vs):
     for v in vs:
         for ge in v.requestedGeneEffects:
             geneSymFamily[ge['sym']][v.familyId]+=1
-    vls.genesSym = { g:len(fms) for g,fms in geneSymFamily.items() }
-    vls.genes = { giDB.getCleanGeneId("sym",g):n for g,n in vls.genesSym.items() if giDB.getCleanGeneId("sym",g) }
+    vls.genesSym = { g:len(fms) for g,fms in list(geneSymFamily.items()) }
+    vls.genes = { giDB.getCleanGeneId("sym",g):n for g,n in list(vls.genesSym.items()) if giDB.getCleanGeneId("sym",g) }
   
     variantLists.append(vls)
     return vls
 
-class TestResult:
+class TestResult(object):
     pass
     
 def runATest(scrF,gs,ws,withReplacement=False):
@@ -612,7 +619,7 @@ def runATest(scrF,gs,ws,withReplacement=False):
     N = len(gs)
 
     if withReplacement:
-        N = sum([x for x in gs.values()])
+        N = sum([x for x in list(gs.values())])
 
 
     for Iter in randIterss:
@@ -622,7 +629,7 @@ def runATest(scrF,gs,ws,withReplacement=False):
         ts.Iter = Iter
         ts.realScr = realScr
 
-        for i in xrange(Iter):
+        for i in range(Iter):
             if withReplacement:
                 rScr = scrF(ws.getWithReplacement(N))
             else:
@@ -630,18 +637,18 @@ def runATest(scrF,gs,ws,withReplacement=False):
             ts.randScrs.append(rScr)
             if rScr >= realScr:
                 ts.nBigger+=1
-        ts.pVal = float(ts.nBigger)/Iter
+        ts.pVal = old_div(float(ts.nBigger),Iter)
         if ts.nBigger > 4 and ts.nBigger < Iter - 4:
             return ts
     return ts
 
 def runPpnScTest(testGroup, testName, vls, geneWeights, ppn):
-    sbWghts = {g:w for g,w in geneWeights.items() if g in ppn.nodes} 
+    sbWghts = {g:w for g,w in list(geneWeights.items()) if g in ppn.nodes} 
     ws = WeightedSample(sbWghts)
     gns = [x for x in vls.genes if x in sbWghts]
 
     if len(gns)==0:
-        print testGroup, testName, vls.name, "Empty gene set"
+        print(testGroup, testName, vls.name, "Empty gene set")
         return
 
     def scrF(gis):
@@ -653,12 +660,12 @@ def runPpnScTest(testGroup, testName, vls, geneWeights, ppn):
 
 def runWnScTest(testGroup, testName, vls, geneWeights, wn):
 # def SMCTest(wn, propName, geneIds, Iter=1000):
-    sbWghts = {g:w for g,w in geneWeights.items() if g in wn.geneIdToIndex} 
+    sbWghts = {g:w for g,w in list(geneWeights.items()) if g in wn.geneIdToIndex} 
     ws = WeightedSample(sbWghts)
     gns = [x for x in vls.genes if x in sbWghts]
 
     if len(gns)==0:
-        print testGroup, testName, vls.name, "Empty gene set"
+        print(testGroup, testName, vls.name, "Empty gene set")
         return
 
     def scrF(gis):
@@ -673,15 +680,15 @@ def runNumberTest(testGroup, testName, vls, geneWeights, numbers, defaultVal=Non
 
     testGenes = set(geneWeights.keys()) & set(numbers.keys())
     vals = {x:numbers[x] for x in testGenes}
-    wghts = {g:w for g,w in geneWeights.items() if g in testGenes}
-    gns = {g:n for g,n in vls.genes.items() if g in testGenes}
+    wghts = {g:w for g,w in list(geneWeights.items()) if g in testGenes}
+    gns = {g:n for g,n in list(vls.genes.items()) if g in testGenes}
 
     if len(gns)==0:
-        print testGroup, testName, vls.name, "Empty gene set"
+        print(testGroup, testName, vls.name, "Empty gene set")
         return
 
     def scrF(gs):
-        return float(sum(vals[g] for g in gs))/len(gs)
+        return old_div(float(sum(vals[g] for g in gs)),len(gs))
 
     ws = WeightedSample(wghts)
 
@@ -695,13 +702,13 @@ def runNumberTest(testGroup, testName, vls, geneWeights, numbers, defaultVal=Non
     if defaultVal==None:
         return
 
-    testGenesD = geneWeights.keys()
+    testGenesD = list(geneWeights.keys())
     valsD = {x:numbers[x] if x in numbers else 0 for x in testGenesD }
-    wghtsD = {g:w for g,w in geneWeights.items() if g in testGenesD}
-    gnsD = {g:n for g,n in vls.genes.items() if g in testGenesD }
+    wghtsD = {g:w for g,w in list(geneWeights.items()) if g in testGenesD}
+    gnsD = {g:n for g,n in list(vls.genes.items()) if g in testGenesD }
 
     def scrFD(gs):
-        return float(sum(valsD[g] for g in gs))/len(gs)
+        return old_div(float(sum(valsD[g] for g in gs)),len(gs))
     wsD = WeightedSample(wghtsD)
 
     trD = runATest(scrFD,gnsD,wsD)
@@ -716,12 +723,12 @@ def saveTestR(testGroup,testName,variantListName, tsr):
     rscrs = np.array(tsr.randScrs)
     key = "-".join((testGroup, testName, variantListName))
     testResults[key] = tsr
-    print tsr.pVal, testGroup, testName, variantListName, tsr.Iter, tsr.realScr, rscrs.mean(), rscrs.std() 
+    print(tsr.pVal, testGroup, testName, variantListName, tsr.Iter, tsr.realScr, rscrs.mean(), rscrs.std()) 
 
 def procPPN(ppn,vls,geneWeights):
-    runNumberTest("PPN." + ppn.name, "degree",  vls, geneWeights, {ni.nId:ni.degree for ni in ppn.nodes.values()} ) 
-    runNumberTest("PPN." + ppn.name, "betweennes",  vls, geneWeights, {ni.nId:ni.betweennes for ni in ppn.nodes.values()} ) 
-    runNumberTest("PPN." + ppn.name, "clustCoef",  vls, geneWeights, {ni.nId:ni.clustCoef for ni in ppn.nodes.values()} ) 
+    runNumberTest("PPN." + ppn.name, "degree",  vls, geneWeights, {ni.nId:ni.degree for ni in list(ppn.nodes.values())} ) 
+    runNumberTest("PPN." + ppn.name, "betweennes",  vls, geneWeights, {ni.nId:ni.betweennes for ni in list(ppn.nodes.values())} ) 
+    runNumberTest("PPN." + ppn.name, "clustCoef",  vls, geneWeights, {ni.nId:ni.clustCoef for ni in list(ppn.nodes.values())} ) 
     runPpnScTest("PPN." + ppn.name, "SVC",  vls, geneWeights, ppn)
 
 
@@ -730,7 +737,7 @@ def procWN(wnt,vls,geneWeights):
     runNumberTest("WN." + wnt.name, "degree",  vls, geneWeights, wnt.nodeDegrees)
 
 def procGT(gts,vls,geneWeights):
-    numbers = {g:sum([1 for tnum in gts.geneTerms.g2T[g].values()]) for g in gts.geneTerms.g2T }
+    numbers = {g:sum([1 for tnum in list(gts.geneTerms.g2T[g].values())]) for g in gts.geneTerms.g2T }
 
     runNumberTest("GT." + gts.name, "nTerms", vls, geneWeights, numbers, 0)
     runNumberTest("GT." + gts.name, "tfidfDegree", vls, geneWeights, gts.tfidfWNDegree)
@@ -759,8 +766,8 @@ def procGT(gts,vls,geneWeights):
 def drawNumberTestData(trName):
     tr = testResults[trName]
     figure()
-    c = Counter(tr.ntVals.values())
-    plot(c.keys(), c.values())
+    c = Counter(list(tr.ntVals.values()))
+    plot(list(c.keys()), list(c.values()))
     # hist(tr.ntVals.values(),1000)
     plot([tr.ntVals[x] for x in tr.ntSubset],1.0 + randn(len(tr.ntSubset))*max(c.values())/100.0,'ro')
 
@@ -768,7 +775,7 @@ if __name__ == "__main_test__":
     fp = FunctionalProfiler()
     geneWeightProp = 'refSeqCodingInTargetLen'
 
-    scalar = {id:gi.fprops[geneWeightProp] for id,gi in giDB.genes.items() if geneWeightProp in gi.fprops}
+    scalar = {id:gi.fprops[geneWeightProp] for id,gi in list(giDB.genes.items()) if geneWeightProp in gi.fprops}
 
     fpRes = fp.profile_gene_scalar(scalar,'id')
     fp.print_res_summary(sys.stdout,fpRes)
@@ -820,13 +827,13 @@ def drawTwoSets(s1,s2,gts,ppn):
     gs3 = sorted(gs2S&gs1S,key=gSym) 
     gs3Ind = {g:i for i,g in enumerate(gs2)}
 
-    print [gSym(g) for g in gs3]
-    ddd = {'s1U'   : [gs1, gs1Ind, -10, len(gs1)/2, 'right','s2U'],
-           's2U'   : [gs2, gs2Ind,  10, len(gs2)/2, 'left', 's1U'] }
+    print([gSym(g) for g in gs3])
+    ddd = {'s1U'   : [gs1, gs1Ind, -10, old_div(len(gs1),2), 'right','s2U'],
+           's2U'   : [gs2, gs2Ind,  10, old_div(len(gs2),2), 'left', 's1U'] }
            # 'common': [gs3, gs3Ind,  20, len(gs3)/2, 'left']}
 
     # for gs,sId,x,ha in zip([gs1,gs2,gs3],[s1,s2,'common'],[-10,10,20],['right','left','left']):
-    for sId,(gs, gsIn,x,y0,ha,otherSId) in ddd.items():
+    for sId,(gs, gsIn,x,y0,ha,otherSId) in list(ddd.items()):
         otherGsInd = ddd[otherSId][1]
         otherX = ddd[otherSId][2]
         otherY0 = ddd[otherSId][3]
@@ -859,7 +866,7 @@ def drawTwoSets(s1,s2,gts,ppn):
                 txt = txt + " " + gSym(g) 
             text(1.1*x,y,txt,horizontalalignment=ha,va="center")
             y-=1
-        print sId, totalInt2Other
+        print(sId, totalInt2Other)
     xlim([-20,30]) 
     My = 1.2*max(len(gs1),len(gs2))/2
     ylim([-My,My]) 
@@ -879,18 +886,18 @@ def testCount(genesFixed, genes, ppn):
     return scrF(ppn) 
 
 if __name__ == "__test_shuffle_main__":
-    realNds = {g:len(nbs) for g,nbs in ppn.nbrs.items()}
-    assert len([1 for g1,nbs in ppn.nbrs.items() if g1 in nbs]) == 0
-    realE = sum([len(nbs) for nbs in ppn.nbrs.values()])/2
+    realNds = {g:len(nbs) for g,nbs in list(ppn.nbrs.items())}
+    assert len([1 for g1,nbs in list(ppn.nbrs.items()) if g1 in nbs]) == 0
+    realE = old_div(sum([len(nbs) for nbs in list(ppn.nbrs.values())]),2)
 
     
 
     rnts = getRandNets(ppn,10)
     for rPpn in rnts:
-        nds = {g:len(nbs) for g,nbs in rPpn.nbrs.items()}
+        nds = {g:len(nbs) for g,nbs in list(rPpn.nbrs.items())}
         assert realNds == nds
-        assert len([1 for g1,nbs in rPpn.nbrs.items() if g1 in nbs]) == 0
-        E = sum([len(nbs) for nbs in rPpn.nbrs.values()])/2
+        assert len([1 for g1,nbs in list(rPpn.nbrs.items()) if g1 in nbs]) == 0
+        E = old_div(sum([len(nbs) for nbs in list(rPpn.nbrs.values())]),2)
         assert realE == E
 
 
@@ -902,15 +909,15 @@ if __name__ == "__draw_two_main__":
     s2 = 'prb.Missense'
     figure()
     drawTwoSets(s1,s2,gSets,ppn)
-    print testCount(gSets.t2G[s1],gSets.t2G[s2],ppn)
-    print testCount(gSets.t2G[s2],gSets.t2G[s1],ppn)
+    print(testCount(gSets.t2G[s1],gSets.t2G[s2],ppn))
+    print(testCount(gSets.t2G[s2],gSets.t2G[s1],ppn))
 
     rnts = getRandNets(ppn,2)
     for rPpn in rnts:
         # raw_input("Press Enter to continue...")
         figure()
         drawTwoSets(s1,s2,gSets,rPpn)
-        print testCount(gSets.t2G[s1],gSets.t2G[s2],rPpn)
+        print(testCount(gSets.t2G[s1],gSets.t2G[s2],rPpn))
 if __name__ == "__main__":
     fp = FunctionalProfiler()
     cmd = sys.argv[1]

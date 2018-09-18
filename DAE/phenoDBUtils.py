@@ -3,6 +3,10 @@ Created on Nov 7, 2012
 
 @author: Tony
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import next
+from builtins import object
 import csv
 import re
 
@@ -21,7 +25,7 @@ def setBoolean(value):
     elif value == "FALSE":
         return False
     else:
-        print "Error: setBoolean (%s) is invalid" % (value)
+        print("Error: setBoolean (%s) is invalid" % (value))
         return False
 
 
@@ -42,7 +46,7 @@ def saveCSV(filename, columns, data):
     f.close()
 
 
-class CSV:
+class CSV(object):
 
     def __init__(self):
         self.data = []
@@ -71,7 +75,7 @@ class CSV:
         except:
             raise
 
-        columnNames = csvReader.next()
+        columnNames = next(csvReader)
 
         validColumns = True
         if len(self.columnNames) == 0:
@@ -104,7 +108,7 @@ class CSV:
 
         inFile.close()
 
-        print "Loaded %d rows" % (rowNum)
+        print("Loaded %d rows" % (rowNum))
 
 
 def findWords(value):
@@ -124,7 +128,7 @@ def findWords(value):
     value = value.strip()
     value = value.lower()
     if len(value) == 0:
-        return words.keys()
+        return list(words.keys())
 
     # uncomment to filter values
     # if is_garbage(value):
@@ -166,7 +170,7 @@ def findWords(value):
         #    else:
         #        words[word]=0
 
-    return words.keys()
+    return list(words.keys())
 
 
 def is_boolean(s):

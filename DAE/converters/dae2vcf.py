@@ -72,7 +72,8 @@ class DaeToVcf(object):
             ],
             "gender": [
                 "female",
-                "male"
+                "male",
+                # "unspecified"
             ],
             "variantTypes": [
                 "sub",
@@ -94,7 +95,7 @@ class DaeToVcf(object):
         with_difference = 0
         without_difference = 0
 
-        for variant in variants:
+        for variant in itertools.islice(variants, 1000):
             total += 1
             try:
 
@@ -107,55 +108,37 @@ class DaeToVcf(object):
                     total -= 1
                     continue
 
-                key = "{}:{};{}:{}".format(
+                key = VcfVariant.get_variant_key(
                     chromosome, position, reference, alternative)
 
                 if key in variant_map:
                     cached_variant = variant_map[key]
-                    metadata = self._get_metadata_for_variant(variant)
-                    cached_metadata = cached_variant.metadata
+                    samples = self._get_samples_for_variant(variant)
+                    cached_samples = cached_variant.samples
 
-                    common = set(metadata.keys()) & \
-                        set(cached_metadata.keys())
-
+                    common = set(samples.keys()) & \
+                        set(cached_samples.keys())
 
                     for each in common:
-                        person1 = metadata[each]
-                        person2 = cached_metadata[each]
-                        assert person1['GT'] == person2['GT']
-                        if person1['AD'] != person2['AD']:
-                            with_difference += 1
-                            print('personId = {}'.format(each))
-                            self._print_variant_info_about_person(person2['_variant'], each)
-                            print('------')
-                            self._print_variant_info_about_person(person1['_variant'], each)
-                            print
-                            print
-                        else:
-                            without_difference += 1
+                        person1 = samples[each]
+                        person2 = cached_samples[each]
 
-                        ad1s = map(int, person1['AD'].split(','))
-                        ad2s = map(int, person2['AD'].split(','))
+                        ad1s = map(int, person1.allele_depth.split(','))
+                        ad2s = map(int, person2.allele_depth.split(','))
 
                         if ad2s[1] > ad1s[1]:
-                            # print("updating AD values {} -> {}".format(
-                            #     person2['AD'], person1['AD']
-                            # ))
-                            person1['AD'] = person2['AD']
+                            person1.allele_depth = person2.allele_depth
 
-
-                    cached_variant.metadata.update(metadata)
+                    cached_samples.update(samples)
                 else:
                     variant_map[key] = VcfVariant(
                         chromosome=chromosome,
                         position=position,
                         reference=reference,
                         alternative=alternative,
-                        quality=100,
                         info={'END': end},
                         format_='GT:AD',
-                        samples=[],
-                        metadata=self._get_metadata_for_variant(variant)
+                        samples=self._get_samples_for_variant(variant)
                     )
                 cohort += variant.memberInOrder
             except (AssertionError, KeyError, NotImplementedError) as e:
@@ -182,9 +165,8 @@ class DaeToVcf(object):
         writer.open()
 
         for variant in variant_map.values():
-            variant.samples = self._generate_samples(variant, ordered_cohort)
             writer.write_variant(variant)
-            variant.samples = None
+            # variant.samples = None
 
         writer.close()
 
@@ -206,22 +188,15 @@ class DaeToVcf(object):
         print('variant counts:')
         pprint(variant.counts)
 
-    def _get_metadata_for_variant(self, variant):
+    def _get_samples_for_variant(self, variant):
         return {
-            p.personId: {
-                'GT': self._get_genotype_info(index, variant),
-                'AD': self._get_alleles_coverage_info(index, variant),
-                '_variant': variant
-            } for index, p in enumerate(variant.memberInOrder)
+            p.personId: VcfVariantSample(
+                p.personId,
+                genotype=self._get_genotype_info(index, variant),
+                allele_depth=self._get_alleles_coverage_info(index, variant)
+            )
+            for index, p in enumerate(variant.memberInOrder)
         }
-
-    @staticmethod
-    def _generate_samples(variant, cohort):
-        empty = {'GT': '0/0', 'AD': '0,0'}
-        get = variant.metadata.get
-        samples = map(lambda i: get(i, empty), cohort)
-
-        return samples
 
     ORDERED_GENOTYPE_INFO = ['0/0', '0', '0/1', '1', '1/1']
 
@@ -250,7 +225,6 @@ class DaeToVcf(object):
 
         return DaeToVcf.ORDERED_GENOTYPE_INFO[genotype_index]
 
-
     @staticmethod
     def _get_alleles_coverage_info(index, variant):
         assert len(variant.counts[0]) > index, 'Ref index out of bounds'
@@ -274,29 +248,30 @@ class VcfWriter(object):
     def __init__(self, filename, samples_labels, additional_chromosomes=set()):
         self.filename = filename
         self.samples_labels = samples_labels
-        self.writer = None
+        self._writer = None
         self.additional_chromosomes = additional_chromosomes
 
     def open(self):
-        if self.writer is not None:
+        if self._writer is not None:
             return
 
         f = open(self.filename, 'w')
         template = self._prepare_template(set(self.additional_chromosomes))
-        self.writer = PyVCF.Writer(f, template)
+        self._writer = PyVCF.Writer(f, template)
 
     def close(self):
-        if self.writer is None:
+        if self._writer is None:
             return
 
-        self.writer.close()
-        self.writer = None
+        self._writer.close()
+        self._writer = None
 
     def _assert_open(self):
-        assert self.writer is not None
+        assert self._writer is not None
 
     def write_variant(self, variant):
         self._assert_open()
+        # print("SAMPLES", variant.samples)
 
         if ('END' in variant.info and
                 variant.info['END'] == variant.position):
@@ -318,31 +293,16 @@ class VcfWriter(object):
         reverse_map = {v: k for k, v in record._sample_indexes.items()}
         calldata_tuple = make_calldata_tuple(variant.format.split(':'))
 
-        variant_samples = variant.samples
-        variant.samples = self._get_public_sample_data(variant_samples)
+        # variant.samples = self._get_public_sample_data(variant_samples)
+        samples = self._generate_samples(variant, self.samples_labels)
 
-        samples = map(
+        record_samples = map(
             lambda x: _Call(record, reverse_map[x[0]],
                             calldata_tuple(**x[1])),
-            enumerate(variant.samples))
-        variant.samples = variant_samples
+            enumerate(samples))
 
-        record.samples = samples
-        self.writer.write_record(record)
-
-    @staticmethod
-    def _get_public_sample_data(variant_samples):
-        result = []
-
-        for sample in variant_samples:
-            sample_copy = copy.copy(sample)
-
-            result.append(sample_copy)
-            for key in sample:
-                if key[0] == '_':
-                    sample_copy.pop(key)
-
-        return result
+        record.samples = record_samples
+        self._writer.write_record(record)
 
     def _prepare_template(self, additional_chromosomes=set()):
         contigs = set([str(num) for num in range(1, 23)] + ['X', 'Y'])
@@ -371,16 +331,27 @@ class VcfWriter(object):
 
         return template
 
+    @staticmethod
+    def _generate_samples(variant, cohort):
+        empty = {'GT': '0/0', 'AD': '0,0'}
+
+        get = collections.OrderedDict(
+            ((k, v.to_dict())
+             for k, v in variant.samples.items())).get
+        samples = map(lambda i: get(i, empty), cohort)
+
+        return samples
+
 
 class VcfVariant(object):
 
     def __init__(self, chromosome='.', position=0, id_='.', reference='.',
                  alternative='.', quality=100, filter_='.', info=None,
-                 format_='.', samples=None, metadata=None):
+                 format_='.', samples=None):
         if not samples:
-            samples = []
-        if not metadata:
-            metadata = {}
+            samples = {}
+        if not info:
+            info = {}
 
         self.chromosome = chromosome
         self.position = position
@@ -392,20 +363,49 @@ class VcfVariant(object):
         self.info = info
         self.format = format_
         self.samples = samples
-        self.metadata = metadata
 
     def __repr__(self):
-        return '{}:{} {}->{} ({}){}'.format(
+        return '{}:{} {}->{} ({}):{}'.format(
             self.chromosome, self.position, self.reference, self.alternative,
             len(self.samples), self.samples)
+
+    def has_variant(self, sample_id):
+        return any(
+            s.sample_id == sample_id and s.genotype != '0/0'
+            for s in self.samples.values())
+
+    def get_sample(self, sample_id):
+        return self.samples.get(sample_id, None)
+
+    @staticmethod
+    def get_variant_key(chromosome, position, reference, alternative):
+        return "{}:{};{}:{}".format(
+                    chromosome, position, reference, alternative)
 
 
 class VcfVariantSample(object):
 
-    def __init__(self, genotype, allele_depth, **kwargs):
+    def __init__(self, sample_id, genotype, allele_depth, **metadata):
+        self.sample_id = sample_id
         self.genotype = genotype
         self.allele_depth = allele_depth
-        self.kwargs = kwargs
+        self.metadata = metadata
+
+    def to_dict(self):
+        return {
+            'GT': self.genotype,
+            'AD': self.allele_depth
+        }
+
+    def alternative_alleles_count(self):
+        return len(self.genotype.split("/").filter(lambda x: x != 0))
+        # if self.genotype == '0/0':
+        #     return 0
+        # if self.genotype == '0/1':
+        #     return 1
+        # if self.genotype == '1/1':
+        #     return 2
+        raise ValueError('Unknown genotype: {}'.format(self.genotype))
 
 
 class PyVcfTemplate(object):

@@ -5,6 +5,8 @@ Created on Jul 9, 2018
 '''
 from __future__ import print_function
 
+from builtins import range
+from builtins import object
 import numpy as np
 
 from variants.variant import SummaryVariant, SummaryAllele
@@ -93,7 +95,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         if self._inheritance_in_members is None:
             allele_index = self.allele_index
             result = {pid: Inheritance.unknown for pid in self.members_ids}
-            for ch_id, trio in self.family.trios.items():
+            for ch_id, trio in list(self.family.trios.items()):
                 index = self.family.members_index(trio)
                 tgt = self.gt[:, index]
                 if np.any(tgt == -1):

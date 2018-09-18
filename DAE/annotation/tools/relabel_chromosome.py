@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import sys
 import argparse
-from utilities import *
+from .utilities import *
 
 def get_argument_parser():
     """

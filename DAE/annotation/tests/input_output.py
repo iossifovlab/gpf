@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import os
 
 BASE_INPUT = [
@@ -76,11 +77,13 @@ TRANSMITTED_FILES =\
 
 JOB_SUFIX = '-part-{chr:0>2}-{pos}'
 
-DENOVO_INPUT_FILES = map(lambda df: DATA_DIR + df, DENOVO_FILES)
-DENOVO_OUTPUT_FILES = map(lambda df: OUTPUT_DIR + df, DENOVO_FILES)
+DENOVO_INPUT_FILES = list(map(lambda df: DATA_DIR + df, DENOVO_FILES))
+DENOVO_OUTPUT_FILES = list(map(lambda df: OUTPUT_DIR + df, DENOVO_FILES))
 
-TRANSMITTED_INPUT_FILES = map(lambda tf: DATA_DIR + tf, TRANSMITTED_FILES)
-TRANSMITTED_OUTPUT_FILES = map(lambda tf: OUTPUT_DIR + tf, TRANSMITTED_FILES)
+TRANSMITTED_INPUT_FILES = list(
+    map(lambda tf: DATA_DIR + tf, TRANSMITTED_FILES))
+TRANSMITTED_OUTPUT_FILES = list(
+    map(lambda tf: OUTPUT_DIR + tf, TRANSMITTED_FILES))
 
 SGE_RREQ = 'sge_rreq'
 
@@ -89,7 +92,7 @@ TRANSMITTED_ARGS = DENOVO_ARGS + ' --options=direct:False -c chr -p position '\
                                  '--region={chr}:{begin_pos}-{end_pos}'
 DENOVO_ARGS += ' --options=direct:True'
 
-CHROMOSOMES = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
+CHROMOSOMES = list(map(lambda x: str(x), range(1, 23))) + ['X', 'Y']
 CHROMOSOMES_LABELS = {'X': '23', 'Y': '24'}
 
 CMD_FORMAT = ('{target}: {output_dir}\n\t(SGE_RREQ="{sge_rreq}" time'

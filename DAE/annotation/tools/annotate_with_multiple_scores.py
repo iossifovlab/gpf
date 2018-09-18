@@ -1,12 +1,15 @@
 #!/usr/bin/env python
-import sys, glob
+from __future__ import absolute_import
+from __future__ import unicode_literals
+import glob
 import argparse
-from collections import OrderedDict
 from box import Box
-from jproperties import Properties
+from future import standard_library
+standard_library.install_aliases()
+from configparser import ConfigParser
 
-from utilities import *
-from annotate_score_base import ScoreAnnotator
+from .utilities import *
+from .annotate_score_base import ScoreAnnotator
 
 
 def get_argument_parser():
@@ -109,13 +112,24 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 sys.stderr.write('could not find params.txt file for score {}'.format(score))
                 sys.exit(-50)
 
-            params = Properties({'format': score, 'noScoreValue': ''})
+            # params = Properties({'format': score, 'noScoreValue': ''})
             with open(params_file, 'r') as file:
-                params.load(file)
-            score_column = params['format'].data
-            score_default_value = params['noScoreValue'].data
+                # FIXME: workaround for reading .properties file without
+                # FIXME: jproperties, should be removed when Iordan merges his
+                # FIXME: stuff
+                params = ConfigParser({
+                    'format': score,
+                    'noScoreValue': ''
+                })
+                def add_dummy_header(f):
+                    yield '[root]'
+                    for line in f:
+                        yield line
+                params.read_file(add_dummy_header(file))
+            score_column = params['format']
+            score_default_value = params['noScoreValue']
 
-            score_header_file = score_directory + '/' + params['scoreDescFile'].data[1:-1]
+            score_header_file = score_directory + '/' + params['scoreDescFile'][1:-1]
             with open(score_header_file, 'r') as file:
                 score_header = file.readline().strip('\n\r').split('\t')
 

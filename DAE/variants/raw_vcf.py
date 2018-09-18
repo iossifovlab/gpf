@@ -198,7 +198,7 @@ class RawFamilyVariants(FamiliesBase):
 
     @staticmethod
     def filter_real_attr(va, real_attr_filter):
-        for key, ranges in real_attr_filter.items():
+        for key, ranges in list(real_attr_filter.items()):
             if not va.has_attribute(key):
                 return False
 
@@ -371,7 +371,7 @@ class RawFamilyVariants(FamiliesBase):
             summary_variant = self.VF.summary_variant_from_records(
                 group_df.to_dict(orient='records'))
 
-            for fam in self.families.values():
+            for fam in list(self.families.values()):
                 v = self.VF.family_variant_from_vcf(
                     summary_variant, fam, vcf=vcf)
                 yield v

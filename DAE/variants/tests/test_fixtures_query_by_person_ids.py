@@ -3,6 +3,7 @@ Created on Jul 5, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
 import pytest
 
 

@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import object
 import logging
 import hgvs
 import hgvs.location
@@ -7,7 +9,7 @@ import hgvs.sequencevariant
 from bioutils.sequences import aa3_to_aa1
 
 
-class EffectToHGVS:
+class EffectToHGVS(object):
     @classmethod
     def effect_to_HGVS(cls, effect):
         if effect.ref_aa is None or len(effect.ref_aa) == 0:

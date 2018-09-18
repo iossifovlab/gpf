@@ -5,8 +5,10 @@ Created on May 14, 2018
 '''
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
 from common_reports_api.variants import StudyVariantReports
+from tests.pytest_marks import slow
 
 
+@slow
 class Test(BaseAuthenticatedUserTest):
 
     @classmethod

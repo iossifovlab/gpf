@@ -1,5 +1,7 @@
 #!/bin/env python
 
+from __future__ import print_function
+from __future__ import unicode_literals
 import os
 import sys 
 import gzip
@@ -23,11 +25,11 @@ def isAnnotated(fn,zipped=False):
     return all([cl in hdr for cl in cols])
 
 
-print "SHELL=/bin/bash -o pipefail"
-print ".DELETE_ON_ERROR:"
-print
-print "all:"
-print
+print("SHELL=/bin/bash -o pipefail")
+print(".DELETE_ON_ERROR:")
+print()
+print("all:")
+print()
 
 allFiles = []
 
@@ -82,10 +84,10 @@ for r, sf, fls in os.walk(fDir):
         elif op=="copy bgz":
             cmd = "cp $^ $@ && tabix -s 1 -b 2 -e 2 $@ 2> %s-tabix.txt" % (tfnLog)
 
-        print '%s: %s\n\t(time %s) 2> %s-time.txt\n' % (tfn, ffn, cmd, tfnLog)
+        print('%s: %s\n\t(time %s) 2> %s-time.txt\n' % (tfn, ffn, cmd, tfnLog))
 
  
         # print "\t", f, op
          
-print "all:", " ".join(allFiles)
+print("all:", " ".join(allFiles))
 

@@ -1,9 +1,11 @@
+from __future__ import unicode_literals
+from builtins import object
 import unittest
 from variant_annotation.mutation import Mutation, MutatedGenomicSequence
 import pytest
 
 
-class GenomicSequenceMock:
+class GenomicSequenceMock(object):
     GENOME = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
     def getSequence(self, chromosome, pos_start, pos_end):

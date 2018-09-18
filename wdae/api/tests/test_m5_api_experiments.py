@@ -1,6 +1,8 @@
+from future import standard_library
+standard_library.install_aliases()
 import unittest
 import logging
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import itertools
 
 from VariantAnnotation import get_effect_types, get_effect_types_set
@@ -31,21 +33,21 @@ class EffectTypesFiltersTests(APITestCase):
 
     def test_effect_types_all(self):
         data = {"effectFilter": "All"}
-        url = '/api/effect_types_filters?%s' % urllib.urlencode(data)
+        url = '/api/effect_types_filters?%s' % urllib.parse.urlencode(data)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         LOGGER.info("result data: %s", response.data)
 
     def test_effect_types_bad_request(self):
         data = {"effectFilter": "strangefilter"}
-        url = '/api/effect_types_filters?%s' % urllib.urlencode(data)
+        url = '/api/effect_types_filters?%s' % urllib.parse.urlencode(data)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         LOGGER.info("result data: %s", response.data)
 
     def test_effect_types_non_coding(self):
         data = {"effectFilter": "noncoding"}
-        url = '/api/effect_types_filters?%s' % urllib.urlencode(data)
+        url = '/api/effect_types_filters?%s' % urllib.parse.urlencode(data)
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         LOGGER.info("result data: %s", response.data)
@@ -107,7 +109,7 @@ class VariantTypesFiltersTests(APITestCase):
 
     def test_variant_types_whole_exome(self):
         data = {"variantFilter": "WHOLE EXOME"}
-        url = '/api/variant_types_filters?%s' % urllib.urlencode(data)
+        url = '/api/variant_types_filters?%s' % urllib.parse.urlencode(data)
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -115,7 +117,7 @@ class VariantTypesFiltersTests(APITestCase):
 
     def test_variant_types_ssc(self):
         data = {"variantFilter": "SSC"}
-        url = '/api/variant_types_filters?%s' % urllib.urlencode(data)
+        url = '/api/variant_types_filters?%s' % urllib.parse.urlencode(data)
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -196,7 +198,7 @@ class PhenotypeFiltersTests(APITestCase):
 
     def test_pheno_types_whole_exome(self):
         data = {"phenotypeFilter": "WHOLE EXOME"}
-        url = '/api/pheno_types_filters?%s' % urllib.urlencode(data)
+        url = '/api/pheno_types_filters?%s' % urllib.parse.urlencode(data)
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

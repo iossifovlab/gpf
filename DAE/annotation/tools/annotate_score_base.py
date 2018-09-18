@@ -4,7 +4,7 @@ import gzip
 import pysam
 
 import GenomeAccess
-from utilities import *
+from annotation.tools.utilities import *
 
 class ScoreFile(object):
 

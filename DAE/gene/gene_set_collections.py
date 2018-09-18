@@ -4,13 +4,16 @@ Created on Feb 16, 2017
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
+from builtins import next
+from builtins import filter
 import os
 import traceback
 import sqlite3
 from itertools import chain, product
 from collections import OrderedDict
-import cPickle
+import pickle
 import logging
 from pprint import pprint
 
@@ -65,9 +68,9 @@ class GeneSetsCollection(GeneInfoConfig):
             {
                 'name': key,
                 'desc': value,
-                'count': len(self.gene_sets_collections.t2G[key].keys())
+                'count': len(list(self.gene_sets_collections.t2G[key].keys()))
             }
-            for key, value in self.gene_sets_collections.tDesc.items()
+            for key, value in list(self.gene_sets_collections.tDesc.items())
         ]
         return self.gene_sets_collections
 
@@ -165,12 +168,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _pickle_cache(self):
         cache_file_path = self.gene_info.getGeneTermAtt(self.gsc_id, 'file')
         if os.path.exists(cache_file_path):
-            infile = open(cache_file_path, 'r')
-            self.cache = cPickle.load(infile)
+            infile = open(cache_file_path, 'rb')
+            self.cache = pickle.load(infile)
         else:
             self._generate_cache()
-            infile = open(cache_file_path, 'w')
-            cPickle.dump(self.cache, infile)
+            infile = open(cache_file_path, 'wb')
+            pickle.dump(self.cache, infile, protocol=2)
 
     def build_cache(self, datasets=None):
         self._generate_cache(datasets)
@@ -229,7 +232,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             return ";".join(["{}:{}".format(d, ",".join(p))
                              for d, p in gene_sets_types.items()])
 
-        pedigree_selectors = ', '.join(set(chain(*gene_sets_types.values())))
+        pedigree_selectors = ', '.join(set(chain(*list(gene_sets_types.values()))))
         if include_datasets_desc:
             return '{}::{}'.format(
                 ', '.join(set(gene_sets_types.keys())),
@@ -331,7 +334,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _get_gene_families(cls, cache, criterias):
         if len(cache) == 0:
             return {}
-        cache_keys = cache.keys()
+        cache_keys = list(cache.keys())
         next_keys = criterias.intersection(cache_keys)
         if len(next_keys) == 0:
             result = {}

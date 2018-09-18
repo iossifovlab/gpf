@@ -19,7 +19,7 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
     def __init__(
         self, config=None, prefix=None,
-            thrift_host='127.0.0.1', thrift_port=10000,
+            thrift_host=None, thrift_port=None,
             thrift_connection=None):
 
         super(ThriftFamilyVariants, self).__init__()
@@ -35,15 +35,27 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         assert os.path.exists(self.config.family_alleles)
 
         if not thrift_connection:
-            thrift_connection = connect(
-                host=thrift_host,
-                port=thrift_port,
-                auth_mechanism='PLAIN')
+            thrift_connection = ThriftFamilyVariants.get_thrift_connection(
+                thrift_host, thrift_port)
         self.connection = thrift_connection
 
         assert self.connection is not None
         self.ped_df = read_ped_df_from_parquet(self.config.pedigree)
         self.families_build(self.ped_df, family_class=Family)
+
+    @staticmethod
+    def get_thrift_connection(thrift_host, thrift_port):
+        if thrift_host is None:
+            thrift_host = os.getenv("THRIFTSERVER_HOST", "127.0.0.1")
+        if thrift_port is None:
+            thrift_port = int(os.getenv("THRIFTSERVER_PORT", 10000))
+
+        thrift_connection = connect(
+            host=thrift_host,
+            port=thrift_port,
+            auth_mechanism='PLAIN')
+
+        return thrift_connection
 
     def query_variants(self, **kwargs):
         if kwargs.get("effect_types") is not None:
@@ -63,16 +75,12 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
                 query = "any({})".format(",".join(query))
                 kwargs["person_ids"] = query
 
-        print(self.config)
-
         df = thrift_query(
             thrift_connection=self.connection,
             summary_variants=self.config.summary_variants,
             family_alleles=self.config.family_alleles,
             **kwargs
         )
-        print(df)
-
         df.genotype = df.genotype.apply(
             lambda v: np.fromstring(v.strip("[]"), dtype=np.int8, sep=','))
 
@@ -80,7 +88,8 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
             if v is None:
                 return []
             else:
-                return v.strip("[]").split(",")
+                return v.strip('[]').replace("\"", "")\
+                        .replace("'", "").split(",")
         df.effect_gene_types = df.effect_gene_types.apply(s2a)
         df.effect_gene_genes = df.effect_gene_genes.apply(s2a)
 

@@ -3,6 +3,7 @@ Created on Sep 27, 2016
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from query_variants import do_query_variants, dae_query_variants, augment_vars
 import itertools
 

@@ -3,6 +3,7 @@ Created on May 22, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 # from pheno_tool.genotype_helper import VariantsType as VT
 from DAE import vDB
 from transmitted.legacy_query import TransmissionLegacy
