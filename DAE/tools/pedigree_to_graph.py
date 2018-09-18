@@ -379,7 +379,7 @@ def main():
                 intervals
             )
 
-            print(family.family_id)
+            # print(family.family_id)
             layout = Layout(individuals_intervals)
             layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
             pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
