@@ -239,6 +239,9 @@ class Individual(IndividualGroup):
         return len(set(self.mating_units) &
                    set(other_individual.mating_units)) == 1
 
+    def is_individual(self):
+        return True
+
 
 class SibshipUnit(IndividualGroup):
     def __init__(self, individuals=None):
@@ -252,6 +255,9 @@ class SibshipUnit(IndividualGroup):
 
     def children_set(self):
         return set()
+
+    def is_individual(self):
+        return False
 
 
 class MatingUnit(IndividualGroup):
@@ -278,6 +284,9 @@ class MatingUnit(IndividualGroup):
         if this_parent == self.mother:
             return self.father
         return self.mother
+
+    def is_individual(self):
+        return False
 
 
 class LayoutSaver(object):
