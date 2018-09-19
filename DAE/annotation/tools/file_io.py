@@ -67,7 +67,6 @@ class AbstractFormat(object):
         self.mode = mode
         self.linecount = 0
         self.linecount_threshold = 1000
-        self.percent_read = -1
         self.header = None
 
     @abstractmethod
@@ -96,7 +95,6 @@ class TSVFormat(AbstractFormat):
         if self.mode == 'r':
             if self.opts.infile != '-':
                 assert_file_exists(self.opts.infile)
-                self.filesize = os.path.getsize(self.opts.infile)
 
                 if hasattr(self.opts, 'region'):
                     if(self.opts.region is not None):
