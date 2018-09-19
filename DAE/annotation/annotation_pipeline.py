@@ -63,7 +63,7 @@ class MultiAnnotator(object):
 
         extracted_options = []
         if opts.default_arguments is not None:
-            for option in opts.default_arguments:
+            for option in opts.default_arguments.split(','):
                 split_options = option.split(':')
                 try:
                     split_options[1] = literal_eval(split_options[1])
@@ -214,7 +214,7 @@ def get_argument_parser():
     parser.add_argument('--separator', help='separator used in the split column; defaults to ","',
                         default=',', action='store')
     parser.add_argument('--options', help='add default arguments',
-                        dest='default_arguments', action='append', metavar=('=OPTION:VALUE'))
+                        dest='default_arguments', action='store', metavar=('=OPTION:VALUE'))
     parser.add_argument('--skip-preannotators', help='skips preannotators',
                         action='store_true')
 

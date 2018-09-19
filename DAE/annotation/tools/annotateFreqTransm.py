@@ -76,7 +76,6 @@ class FrequencyAnnotator(ScoreAnnotator):
         if opts.default_value != '' and opts.default_value is not None:
             opts.scores_config_file['noScoreValue'] = opts.default_value
         opts.search_columns = opts.v
-        opts.gzip = True
         if opts.frequency is None:
             opts.frequency = 'all.altFreq'
         self.frequency = opts.frequency

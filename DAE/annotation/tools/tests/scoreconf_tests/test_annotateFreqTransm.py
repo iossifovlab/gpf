@@ -1,10 +1,10 @@
 import pytest
-import input_output
 import gzip
 from annotation.tools.annotateFreqTransm \
         import FrequencyAnnotator
 from StringIO import StringIO
 from box import Box
+
 
 def get_opts(score_file):
     options = {
@@ -14,10 +14,10 @@ def get_opts(score_file):
         'H': False,
         'scores_file': score_file,
         'direct': False,
-        'frequency': 'all.altFreq',
-        'gzip': True,
+        'frequency': 'all.altFreq'
     }
     return Box(options, default_box=True, default_box_attr=None)
+
 
 def fake_gzip_open(filename, *args):
     return filename
@@ -37,9 +37,11 @@ def freq_input():
         ['1', '69511', 'sub(A->G)']
     ]
 
+
 @pytest.fixture
 def freq_annotations():
     return [['0.49'], ['0.03'], ['0.03'], ['98.00']]
+
 
 @pytest.fixture
 def freq_scores():
@@ -52,6 +54,7 @@ def freq_scores():
     ]
     return StringIO('\n'.join(map(lambda line: '\t'.join(line), score_lines)))
 
+
 @pytest.fixture
 def freq_annotator(freq_scores, mocker):
     freq_opts = get_opts(score_file=freq_scores)
@@ -61,7 +64,7 @@ def freq_annotator(freq_scores, mocker):
 
 def test_freq_score(freq_input, freq_annotations, freq_annotator, mocker):
     all_line_annotations = [freq_annotator.line_annotations(line,
-                                freq_annotator.new_columns)
+                                                            freq_annotator.new_columns)
                             for line in freq_input]
 
     assert (all_line_annotations == freq_annotations)

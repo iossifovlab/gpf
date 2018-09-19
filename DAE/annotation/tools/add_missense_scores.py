@@ -106,7 +106,6 @@ class MissenseScoresAnnotator(AnnotatorBase):
                 'scores_file': self.path.format(chr),
                 'scores_config_file': score_conf,
                 'labels': self.opts.labels,
-                'gzip': True
             }
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
 
