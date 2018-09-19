@@ -31,7 +31,6 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None, search_columns=[],
             self.scores_config_file = conf
             self.direct = tabix
             self.labels = None
-            self.gzip = True
 
     return MockOpts(c_inp, p_inp, x_inp, search_columns, file_inp, conf_inp,
         direct_inp)
