@@ -113,8 +113,7 @@ def testing_thriftserver(request):
             spark_home, thrift_port)
 
     print("starting thrift command: ", start_cmd)
-    status = os.system(start_cmd)
-    assert status == 0
+    os.system(start_cmd)
 
     return thrift_connect()
 
