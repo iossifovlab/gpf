@@ -33,7 +33,6 @@ class CsvPedigreeReader(object):
                     "father": row[columns_labels["father"]],
                     "mother": row[columns_labels["mother"]],
                     "sex": row[columns_labels["sex"]],
-                    "label": "",
                     "effect": row[columns_labels["effect"]],
                 }
                 member = PedigreeMember(**kwargs)
@@ -52,19 +51,17 @@ class CsvPedigreeReader(object):
             "father": "dadId",
             "mother": "momId",
             "sex": "gender",
-            "label": "",
             "effect": "status"
         }
 
 
 class PedigreeMember(object):
-    def __init__(self, id, family_id, mother, father, sex, effect, label):
+    def __init__(self, id, family_id, mother, father, sex, effect):
         self.id = id
         self.family_id = family_id
         self.mother = mother
         self.father = father
         self.sex = sex
-        self.label = label
 
 
 class Pedigree(object):
