@@ -90,20 +90,8 @@ def testing_thriftserver(request):
     spark_home = os.environ.get("SPARK_HOME")
     assert spark_home is not None
 
-    thrift_host = os.environ.get("THRIFTSERVER_HOST")
-    if thrift_host is None:
-        thrift_host = '127.0.0.1'
-    thrift_port = os.environ.get("THRIFTSERVER_PORT")
-    if thrift_port is None:
-        thrift_port = 10000
-    else:
-        thrift_port = int(thrift_port)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        while True:
-            result = sock.connect_ex((thrift_host, thrift_port))
-            if result != 0:
-                break
-            thrift_port += 1
+    thrift_host = os.getenv("THRIFTSERVER_HOST", "127.0.0.1")
+    thrift_port = int(os.getenv("THRIFTSERVER_PORT", 10000))
 
     def thrift_connect(retries=10):
         for count in range(retries + 1):
@@ -125,16 +113,9 @@ def testing_thriftserver(request):
     start_cmd = "{}/sbin/start-thriftserver.sh " \
         "--hiveconf hive.server2.thrift.port={}".format(
             spark_home, thrift_port)
-    stop_cmd = "{}/sbin/stop-thriftserver.sh".format(spark_home)
-
-    def fin():
-        print("stoping  thrift command: ", stop_cmd)
-        os.system(stop_cmd)
-    request.addfinalizer(fin)
 
     print("starting thrift command: ", start_cmd)
-    status = os.system(start_cmd)
-    assert status == 0
+    os.system(start_cmd)
 
     return thrift_connect()
 
