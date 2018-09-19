@@ -19,19 +19,22 @@ from future.utils import with_metaclass
 
 class CsvPedigreeReader(object):
 
-    def read_file(self, file):
+    def read_file(self, file, columns_labels={}, header=None, delimiter='\t'):
+        if not columns_labels:
+            columns_labels = CsvPedigreeReader.get_column_labels
         families = {}
         with open(file) as csvfile:
-            reader = csv.DictReader(csvfile, delimiter='\t'.encode('utf-8'))
+            reader = csv.DictReader(csvfile, fieldnames=header,
+                                    delimiter=delimiter.encode('utf-8'))
             for row in reader:
                 kwargs = {
-                    "family_id": row["familyId"],
-                    "id": row["personId"],
-                    "father": row["dadId"],
-                    "mother": row["momId"],
-                    "sex": row["gender"],
+                    "family_id": row[columns_labels["family_id"]],
+                    "id": row[columns_labels["id"]],
+                    "father": row[columns_labels["father"]],
+                    "mother": row[columns_labels["mother"]],
+                    "sex": row[columns_labels["sex"]],
                     "label": "",
-                    "effect": row["status"],
+                    "effect": row[columns_labels["effect"]],
                 }
                 member = PedigreeMember(**kwargs)
                 if member.family_id not in families:
@@ -40,6 +43,18 @@ class CsvPedigreeReader(object):
                     families[member.family_id].members.append(member)
 
         return list(families.values())
+
+    @staticmethod
+    def get_column_labels():
+        return {
+            "family_id": "familyId",
+            "id": "personId",
+            "father": "dadId",
+            "mother": "momId",
+            "sex": "gender",
+            "label": "",
+            "effect": "status"
+        }
 
 
 class PedigreeMember(object):
@@ -369,9 +384,35 @@ def main():
     parser.add_argument(
         "--layout-column", metavar="l", default="layoutCoords",
         help="layout column name to be used when saving the layout")
+    parser.add_argument(
+        '--no-header', help='no header in the input file',
+        default=None, action='store_true', dest='no_header')
+    parser.add_argument(
+        '--delimiter', help='delimiter used in the split column; defaults to '
+        '"\\t"', default='\t', action='store')
+    parser.add_argument(
+        '--column', help='Add column names. Possible columns with there '
+        'default values are family_id:familyId, id:personId, father:dadId, '
+        'mother:momId, sex:gender, label:, effect:status. If value is int it '
+        'is 0 position.', dest='columns', action='append',
+        metavar=('=COLUMN:VALUE'))
 
     args = parser.parse_args()
-    pedigrees = CsvPedigreeReader().read_file(args.file)
+
+    columns_labels = CsvPedigreeReader.get_column_labels()
+    if args.columns is not None:
+        for option in args.columns:
+            column, label = option.split(':')
+            if label.isdigit():
+                label = int(label)
+            columns_labels[column] = label
+    header = args.no_header
+    if header:
+        header = list(range(len(args.columns)))
+    delimiter = args.delimiter
+
+    pedigrees = CsvPedigreeReader().read_file(
+        args.file, columns_labels, header, delimiter)
 
     pdf_drawer = PDFLayoutDrawer(args.output)
     layout_saver = None
