@@ -144,7 +144,10 @@ class IterativeAccess(ScoreFile):
             self.config.header.index(self.config.columns.pos_end)
 
         self.file = pysam.Tabixfile(score_file_name)
-        self.file_iterator = self.file.fetch(region=region, parser=pysam.asTuple())
+        try:
+            self.file_iterator = self.file.fetch(region=region, parser=pysam.asTuple())
+        except ValueError:
+            self.file_iterator = iter([])
         self.current_lines = [self._next_line()]
 
     def _fetch(self, chr, pos):
