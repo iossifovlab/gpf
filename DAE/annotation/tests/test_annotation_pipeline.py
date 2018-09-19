@@ -73,7 +73,7 @@ def get_opts(config, append=True,
         'split': split,
         'separator': split_separator,
         'skip_preannotators': skip_preannotators,
-        'default_arguments': default_args.split(','),
+        'default_arguments': default_args,
         'no_header': True,
     }
     return Box(options, default_box=True, default_box_attr=None)

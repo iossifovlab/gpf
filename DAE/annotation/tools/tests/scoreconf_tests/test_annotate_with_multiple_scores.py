@@ -3,7 +3,7 @@ import config
 import input_output
 import os.path
 import gzip
-from os import remove, rmdir, mkdir
+from os import remove, rmdir
 from annotation.tools.annotate_with_multiple_scores \
         import MultipleScoresAnnotator
 from copy import deepcopy
@@ -24,7 +24,6 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None,
             self.labels = None
             self.explicit = True
             self.scores = 'score1,score2'
-            self.gzip = False
 
     return MockOpts(c_inp, p_inp, x_inp, dir_inp, direct_inp)
 

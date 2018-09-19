@@ -40,7 +40,6 @@ def get_argument_parser():
           --direct              the score files is tabix indexed
           --labels LABEL        label of the new column; defaults to the name of the
                                 score column
-          --gzip                used to indicate a passed file has gzip compression
     """
     desc = """Program to annotate variants with scores"""
     parser = argparse.ArgumentParser(description=desc)
@@ -57,8 +56,6 @@ def get_argument_parser():
     parser.add_argument('--direct', help='the score files is tabix indexed', action='store_true')
     parser.add_argument('--labels', help='labels of the new column; defaults to the name of the score column',
                         type=str, action='store')
-    parser.add_argument('--gzip', help='indicates that the file is a compressed .gz file',
-                        action='store_true')
     return parser
 
 
@@ -75,9 +72,8 @@ def conf_to_dict(path):
 
 class ScoreFile(object):
 
-    def __init__(self, score_file_name, config_input, compression):
+    def __init__(self, score_file_name, config_input):
         self.name = score_file_name
-        self.compression = compression
         self._load_config(config_input)
 
     def _load_config(self, config_input=None):
@@ -98,10 +94,7 @@ class ScoreFile(object):
                     .format(self.name))
             sys.exit(-78)
 
-        if self.compression:
-            self.file = gzip.open(self.name, 'rb')
-        else:
-            self.file = open(self.name, 'rb')
+        self.file = gzip.open(self.name, 'rb')
         if self.config.header is None:
             header_str = self.file.readline().rstrip()
             if header_str[0] == '#':
@@ -140,8 +133,8 @@ class IterativeAccess(ScoreFile):
 
     XY_INDEX = {'X': 23, 'Y': 24}
 
-    def __init__(self, score_file_name, score_config=None, compression=False):
-        super(IterativeAccess, self).__init__(score_file_name, score_config, compression)
+    def __init__(self, score_file_name, score_config=None):
+        super(IterativeAccess, self).__init__(score_file_name, score_config)
 
         self.chr_index = \
             self.config.header.index(self.config.columns.chr)
@@ -195,8 +188,8 @@ class IterativeAccess(ScoreFile):
 
 class DirectAccess(ScoreFile):
 
-    def __init__(self, score_file_name, score_config=None, compression=False):
-        super(DirectAccess, self).__init__(score_file_name, score_config, compression)
+    def __init__(self, score_file_name, score_config=None):
+        super(DirectAccess, self).__init__(score_file_name, score_config)
         self.file = pysam.Tabixfile(score_file_name)
 
     def _fetch(self, chr, pos):
@@ -235,12 +228,10 @@ class ScoreAnnotator(AnnotatorBase):
         else:
             if self.opts.direct:
                 self.file = DirectAccess(self.opts.scores_file,
-                                         self.opts.scores_config_file,
-                                         self.opts.gzip)
+                                         self.opts.scores_config_file)
             else:
                 self.file = IterativeAccess(self.opts.scores_file,
-                                            self.opts.scores_config_file,
-                                            self.opts.gzip)
+                                            self.opts.scores_config_file)
         self.header.extend(self.labels if self.labels
                            else self.file.config.columns.score)
 
