@@ -59,7 +59,8 @@ def test_variants_autism_with_effect_type_lgd(autism_studies):
     for v in variants:
         assert 'prb' in v.inChS
         count += 1
-    assert 607 == count
+    # assert 607 == count FIXME: changed after reannotation
+    assert 612 == count
 
 
 def test_events_autism_with_effect_type_lgd(autism_studies):
@@ -69,10 +70,13 @@ def test_events_autism_with_effect_type_lgd(autism_studies):
     result = counter.events(gh.get_variants('LGDs'))
     assert result is not None
 
-    assert 606 == len(result['all'].events)
+    # assert 606 == len(result['all'].events) FIXME: changed after reannotation
+    assert 611 == len(result['all'].events)
     assert 39 == len(result['rec'].events)
-    assert 492 == len(result['male'].events)
-    assert 114 == len(result['female'].events)
+    # assert 492 == len(result['male'].events)
+    assert 496 == len(result['male'].events)
+    # assert 114 == len(result['female'].events)
+    assert 115 == len(result['female'].events)
 
 
 def test_events_unaffected_with_effect_type_lgd(unaffected_studies):
@@ -96,9 +100,11 @@ def test_events_schizophrenia_with_effect_type_lgd(schizophrenia_studies):
 
     assert result is not None
 
-    assert 95 == len(result['all'].events)
+    # assert 95 == len(result['all'].events) FIXME: changed after reannotation
+    assert 94 == len(result['all'].events)
     assert 2 == len(result['rec'].events)
-    assert 49 == len(result['male'].events)
+    # assert 49 == len(result['male'].events)
+    assert 48 == len(result['male'].events)
     assert 46 == len(result['female'].events)
 
 
@@ -113,9 +119,11 @@ def test_overlapped_events_autism_with_effect_type_lgd(
     overlapped_events = overlap_enrichment_result_dict(result, gene_set)
     assert overlapped_events is not None
 
-    assert 56 == len(result['all'].overlapped)
+    # assert 56 == len(result['all'].overlapped) FIXME: changed after reannotation
+    assert 57 == len(result['all'].overlapped)
     assert 9 == len(result['rec'].overlapped)
-    assert 40 == len(result['male'].overlapped)
+    # assert 40 == len(result['male'].overlapped)
+    assert 41 == len(result['male'].overlapped)
     assert 16 == len(result['female'].overlapped)
 
 
@@ -161,10 +169,13 @@ def test_gene_events_autism_with_effect_type_lgd(autism_studies):
 
     result = counter.events(gh.get_variants('LGDs'))
 
-    assert 546 == len(result['all'].events)
+    # assert 546 == len(result['all'].events) FIXME: changed after reannotation
+    assert 551 == len(result['all'].events)
     assert 39 == len(result['rec'].events)
-    assert 458 == len(result['male'].events)
-    assert 107 == len(result['female'].events)
+    # assert 458 == len(result['male'].events)
+    assert 462 == len(result['male'].events)
+    # assert 107 == len(result['female'].events)
+    assert 108 == len(result['female'].events)
 
 
 def test_gene_events_unaffected_with_effect_type_lgd(unaffected_studies):
@@ -187,9 +198,11 @@ def test_gene_events_schizophrenia_with_effect_type_lgd(schizophrenia_studies):
 
     result = counter.events(gh.get_variants('LGDs'))
 
-    assert 93 == len(result['all'].events)
+    # assert 93 == len(result['all'].events) FIXME: changed after reannotation
+    assert 92 == len(result['all'].events)
     assert 2 == len(result['rec'].events)
-    assert 48 == len(result['male'].events)
+    # assert 48 == len(result['male'].events)
+    assert 47 == len(result['male'].events)
     assert 45 == len(result['female'].events)
 
 
@@ -203,9 +216,11 @@ def test_overlapped_gene_events_autism_with_effect_type_lgd(
     overlapped_events = overlap_enrichment_result_dict(result, gene_set)
     assert overlapped_events is not None
 
-    assert 36 == len(result['all'].overlapped)
+    # assert 36 == len(result['all'].overlapped) FIXME: changed after reannotation
+    assert 37 == len(result['all'].overlapped)
     assert 9 == len(result['rec'].overlapped)
-    assert 28 == len(result['male'].overlapped)
+    # assert 28 == len(result['male'].overlapped)
+    assert 29 == len(result['male'].overlapped)
     assert 13 == len(result['female'].overlapped)
 
 
