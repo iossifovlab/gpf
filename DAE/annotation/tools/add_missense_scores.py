@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 import argparse
+import os
 from box import Box
 
-from annotation.tools.utilities import *
-from annotation.tools.annotate_score_base import ScoreAnnotator
+from utilities import AnnotatorBase, assign_values, main
+from annotate_score_base import ScoreAnnotator, conf_to_dict
 
 def get_argument_parser():
     """
@@ -30,12 +31,13 @@ def get_argument_parser():
           -a A                  alternative column number/name
           -H                    no header in the input file
           --dbnsfp DBNSFP       path to dbNSFP
-          --columns COLUMNS
+          --config CONFIG       path to .conf file for score file, defaults to score name
+          --columns COLUMNS     score columns to include in the output file
           --direct              read score files using tabix index (default: read
                                 score files iteratively)
-          --reference-genome {hg19,hg38}
-
+          --labels              comma separated list of the new header entries, defaults to added columns' names  
     """
+    
     parser = argparse.ArgumentParser(
         description='Add missense scores from dbSNFP')
     parser.add_argument('-c', help='chromosome column number/name', action='store')
@@ -44,15 +46,18 @@ def get_argument_parser():
     parser.add_argument('-r', help='reference column number/name', action='store')
     parser.add_argument('-a', help='alternative column number/name', action='store')
     parser.add_argument('-H', help='no header in the input file',
-        default=False,  action='store_true', dest='no_header')
+                        default=False,  action='store_true', dest='no_header')
     parser.add_argument('--dbnsfp', help='path to dbNSFP', action='store')
-    parser.add_argument('--columns', action='append', default=[], dest="columns")
+    parser.add_argument('--config', help='path to config', action='store')
+    parser.add_argument('--columns',
+                        help='comma separated list of score columns to annotate with',
+                        action='store')
     parser.add_argument('--direct',
-        help='read score files using tabix index '
-              '(default: read score files iteratively)',
-        default=False, action='store_true')
-    parser.add_argument('--reference-genome', choices=['hg19', 'hg38'])
-
+                        help='read score files using tabix index '
+                        '(default: read score files iteratively)',
+                        default=False, action='store_true')
+    parser.add_argument('--labels', help='comma separated list of the new labels '
+                        'of the added columns, defaults to column names', action='store')
     return parser
 
 
@@ -64,17 +69,11 @@ class MissenseScoresAnnotator(AnnotatorBase):
         self.opts = opts
         self.header = header
         if self.opts.columns is not None:
+            self.opts.columns = self.opts.columns.split(',')
             self.header.extend(self.opts.columns)
         if opts.dbnsfp is None:
             opts.dbnsfp = os.path.join(os.environ['dbNSFP_PATH'])
         self.path = opts.dbnsfp
-        if opts.reference_genome is None or \
-                opts.reference_genome == 'hg19':
-            self.score_file_index_columns = ['chr', 'pos(1-coor)',
-                'pos(1-coor)', 'ref', 'alt']
-        else:
-            self.score_file_index_columns = ['chr', 'pos(1-based)',
-                'pos(1-based)',  'ref', 'alt']
         self.annotators = {}
         self._init_cols()
 
@@ -93,21 +92,26 @@ class MissenseScoresAnnotator(AnnotatorBase):
         if chr not in self.annotators:
             if chr not in self.CHROMOSOMES:
                 return None
+
+            if self.opts.config is None:
+                score_conf = self.path.format(chr) + '.conf'
+            else:
+                score_conf = conf_to_dict(self.opts.config)
             config = {
                 'c': self.opts.c,
                 'p': self.opts.p,
                 'x': self.opts.x,
-                'scores_columns': ','.join(scores),
-                'default_values': None,
+                'search_columns': ','.join([self.opts.r, self.opts.a]),
                 'direct': self.opts.direct,
-                'scores_file': self.path.format(chr)
+                'scores_file': self.path.format(chr),
+                'scores_config_file': score_conf,
+                'labels': self.opts.labels,
             }
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
 
-            self.annotators[chr] = ScoreAnnotator(score_annotator_opts,
-                header=list(self.header), search_columns=[self.opts.r, self.opts.a],
-                score_file_header=None,
-                score_file_index_columns=self.score_file_index_columns)
+            self.annotators[chr] = ScoreAnnotator(
+                    score_annotator_opts,
+                    header=list(self.header))
         return self.annotators[chr]
 
     def _get_chr(self, line):

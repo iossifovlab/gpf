@@ -21,7 +21,7 @@ class Test(BaseAuthenticatedUserTest):
 
         denovo = data[1]
         self.assertEquals('denovo', denovo['name'])
-        self.assertEquals(5, len(denovo['types']))
+        self.assertEquals(7, len(denovo['types']))
 
     def test_gene_set_download(self):
         url = "/api/v3/gene_sets/gene_set_download"
@@ -29,7 +29,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs",
             "geneSetsTypes": {
-                "SD": ["autism", "epilepsy"]
+                "SD_TEST": ["autism", "epilepsy"]
             }
         }
         response = self.client.post(url, query, format='json')
@@ -44,7 +44,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.Recurrent",
             "geneSetsTypes": {
-                "SD": ["autism"]
+                "SD_TEST": ["autism"]
             }
         }
         response = self.client.post(url, query, format='json')
@@ -59,7 +59,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.BadBad",
             "geneSetsTypes": {
-                "SD": ["autism"]
+                "SD_TEST": ["autism"]
             }
         }
         response = self.client.post(url, query, format='json')
@@ -89,7 +89,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs",
             "geneSetsTypes": {
-                "SD": ["autism", "epilepsy"]
+                "SD_TEST": ["autism", "epilepsy"]
             }
         }
         request = "{}?{}".format(url, urlencode(query))
@@ -105,7 +105,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs",
             "geneSetsTypes": {
-                "SD": ["autism"]
+                "SD_TEST": ["autism"]
             }
         }
         request = "{}?{}".format(url, urlencode(query))
@@ -121,7 +121,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.Recurrent",
             "geneSetsTypes": {
-                "SD": ["autism"]
+                "SD_TEST": ["autism"]
             }
         }
         request = "{}?{}".format(url, urlencode(query))
@@ -137,7 +137,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.BadBad",
             "geneSetsTypes": {
-                "SD": ["autism"]
+                "SD_TEST": ["autism"]
             }
         }
         request = "{}?{}".format(url, urlencode(query))

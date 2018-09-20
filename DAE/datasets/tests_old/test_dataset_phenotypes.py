@@ -25,4 +25,5 @@ def test_phenotypes_sd(sd):
 
 def test_phenotypes_vip(vip):
     phenotypes = vip.get_phenotypes()
-    assert ['autism', 'unaffected'] == phenotypes
+    assert ['ASD and other neurodevelopmental disorders', 'unaffected'] == \
+        phenotypes

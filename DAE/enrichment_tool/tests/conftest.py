@@ -25,7 +25,7 @@ def gene_set():
 
 @pytest.fixture(scope='session')
 def denovo_studies():
-    studies = vDB.get_studies('ALL WHOLE EXOME')
+    studies = vDB.get_studies('TEST WHOLE EXOME')
     return [st for st in studies if 'WE' == st.get_attr('study.type')]
 
 
@@ -74,7 +74,7 @@ def vip(datasets_factory):
 
 @pytest.fixture(scope='session')
 def sd(datasets_factory):
-    return datasets_factory.get_dataset('SD')
+    return datasets_factory.get_dataset('SD_TEST')
 
 
 @pytest.fixture(scope='session')

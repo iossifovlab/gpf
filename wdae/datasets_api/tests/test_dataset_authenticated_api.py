@@ -21,7 +21,7 @@ class DatasetApiTest(BaseAuthenticatedUserTest):
         self.assertTrue(data['accessRights'])
 
     def test_get_dataset_sd(self):
-        url = '/api/v3/datasets/SD'
+        url = '/api/v3/datasets/SD_TEST'
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data

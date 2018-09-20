@@ -42,18 +42,6 @@ class MultiAnnotator(object):
     After processing of user options this class passes line by line the data
     to `Annotators` and `Preannotators`.
 
-    Arguments of the constructor are:
-
-    * `reannotate` - True/False. True - reannotate column and don't add new columns.
-                     False - add new column and don't reannotate old columns.
-
-    * `preannotators` - list of `Preannotators`
-
-    * `split_column` - Column to split before annotation and generate values for
-                       all parts of split column and after that to join new values
-                       in one column.
-
-    * `split_separator` - Separator for split column, default value is `,`
     """
 
     def __init__(self, opts, header=None):
@@ -73,13 +61,14 @@ class MultiAnnotator(object):
                 all_columns_labels.update(preannotator.new_columns)
                 if self.header:
                     self.header.extend(preannotator.new_columns)
+
                 virtual_columns_indices.extend(
                     [assign_values(column, self.header)
                      for column in preannotator.new_columns])
 
         extracted_options = []
         if opts.default_arguments is not None:
-            for option in opts.default_arguments:
+            for option in opts.default_arguments.split(','):
                 split_options = option.split(':')
                 try:
                     split_options[1] = literal_eval(split_options[1])
@@ -113,11 +102,11 @@ class MultiAnnotator(object):
             all_columns_labels.update(step_columns_labels)
 
             if self.header is not None:
-                if opts.reannotate:
+                if opts.append:
+                    new_columns = step_columns_labels
+                else:
                     new_columns = [column for column in step_columns_labels
                                    if column not in self.header]
-                else:
-                    new_columns = step_columns_labels
                 self.header.extend(new_columns)
 
             if annotation_step_config.virtuals is not None:
@@ -150,17 +139,7 @@ class MultiAnnotator(object):
         return [column[0] if len(set(column)) == 1 else self.split_separator.join(column)
                 for column in zip(*lines)]
 
-    def annotate_file(self, input, output):
-        if self.header:
-            output.write("#")
-            output.write("\t".join([self.header[i-1]
-                                    for i in self.stored_columns_indices]))
-            output.write("\n")
-
-        sys.stderr.write("...processing....................\n")
-
-        annotators = self.annotators
-
+    def annotate_file(self, file_io):
         def annotate_line(line):
             for annotator in annotators:
                 columns = annotator['columns'].keys()
@@ -171,22 +150,23 @@ class MultiAnnotator(object):
                     line[position - 1:position] = [value]
             return line
 
-        k = 0
-        for l in input:
-            if l[0] == "#":
-                output.write(l)
+        if self.header:
+            self.header = [self.header[i-1]
+                           for i in self.stored_columns_indices]
+            self.header[0] = '#' + self.header[0]
+            file_io.line_write(self.header)
+
+        annotators = self.annotators
+
+        for line in file_io.lines_read():
+            if '#' in line[0]:
+                file_io.line_write(line)
                 continue
-            k += 1
-            if k % 1000 == 0:
-                sys.stderr.write(str(k) + " lines processed\n")
 
-            line = self._join_variant(
-                [annotate_line(line)
-                 for line in self._split_variant(l.rstrip('\n').split("\t"))])
-
-            line = [line[i-1] for i in self.stored_columns_indices]
-
-            output.write("\t".join(line) + "\n")
+            annotated = [annotate_line(segment)
+                         for segment in self._split_variant(line)]
+            annotated = self._join_variant(annotated)
+            file_io.line_write([annotated[i-1] for i in self.stored_columns_indices])
 
 
 class PreannotatorLoader(object):
@@ -231,17 +211,15 @@ def get_argument_parser():
                         default=False,  action='store_true', dest='no_header')
     parser.add_argument('-c', '--config', help='config file location',
                         required=True, action='store')
-    parser.add_argument('--reannotate', help='always add columns; '
+    parser.add_argument('--append', help='always add columns; '
                         'default behavior is to replace columns with the same label',
                         default=False, action='store_true')
-    parser.add_argument('--region', help='region to annotate (chr:begin-end) (input should be tabix indexed)',
-                        action='store')
     parser.add_argument('--split', help='split variants based on given column',
                         action='store')
     parser.add_argument('--separator', help='separator used in the split column; defaults to ","',
                         default=',', action='store')
     parser.add_argument('--options', help='add default arguments',
-                        dest='default_arguments', action='append', metavar=('=OPTION:VALUE'))
+                        dest='default_arguments', action='store', metavar=('=OPTION:VALUE'))
     parser.add_argument('--skip-preannotators', help='skips preannotators',
                         action='store_true')
 
@@ -253,3 +231,4 @@ def get_argument_parser():
 
 if __name__ == '__main__':
     main(get_argument_parser(), MultiAnnotator)
+

@@ -57,14 +57,14 @@ class Test(BaseAuthenticatedUserTest):
 
     def test_gene_set_denovo_lgds_rec_sd(self):
         data = {
-            'datasetId': 'SD',
+            'datasetId': 'SD_TEST',
             'enrichmentBackgroundModel': 'synonymousBackgroundModel',
             'enrichmentCountingModel': 'enrichmentGeneCounting',
             'geneSet': {
                 'geneSetsCollection': 'denovo',
                 'geneSet': 'LGDs.Recurrent',
                 'geneSetsTypes': {
-                    'SD': ['autism']
+                    'SD_TEST': ['autism']
                 }
             }
         }
@@ -79,7 +79,7 @@ class Test(BaseAuthenticatedUserTest):
 
     def test_gene_set_denovo_main_autism_candidates_sd(self):
         data = {
-            'datasetId': 'SD',
+            'datasetId': 'SD_TEST',
             'enrichmentBackgroundModel': 'synonymousBackgroundModel',
             'enrichmentCountingModel': 'enrichmentGeneCounting',
             'geneSet': {
@@ -108,7 +108,7 @@ class Test(BaseAuthenticatedUserTest):
                 'geneSetsCollection': 'denovo',
                 'geneSet': 'LGDs.Recurrent',
                 'geneSetsTypes': {
-                    'SD': ['autism']
+                    'SD_TEST': ['autism']
                 }
             }
         }
@@ -121,7 +121,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEquals(386, data['result'][0]['LGDs']['all']['count'])
         self.assertEquals(28, data['result'][0]['LGDs']['rec']['count'])
         self.assertEquals(
-            "Gene Set: LGDs.Recurrent (SD:autism) (45)", data['desc'])
+            "Gene Set: LGDs.Recurrent (SD_TEST:autism) (45)", data['desc'])
 
     def test_gene_syms_description(self):
         data = {
