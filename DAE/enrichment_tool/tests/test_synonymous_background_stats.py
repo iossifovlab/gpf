@@ -42,6 +42,8 @@ def background(request):
 def test_synonymous_background_stats_default(background):
     assert background is not None
 
+    # assert 211645 == np.sum(background.background['raw'])
+    # FIXME: changed after reannotation
     assert 211645 == np.sum(background.background['raw'])
 
 

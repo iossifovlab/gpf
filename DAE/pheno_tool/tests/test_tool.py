@@ -32,7 +32,9 @@ def test_tool_calc(phdb, all_ssc_studies, default_request):
 
     male, female = male_female_result(r)
 
-    assert 310 == male.positive_count
+    # FIXME: changed after rennotation
+    # assert 310 == male.positive_count
+    assert 314 == male.positive_count
     assert 2053 == male.negative_count
 
     assert 64 == female.positive_count
@@ -71,7 +73,9 @@ def test_tool_present_in_parent_ultra_rare(
 
     male, female = male_female_result(r)
 
-    assert 165 == male.positive_count
+    # FIXME: changed after rennotation
+    # assert 165 == male.positive_count
+    assert 167 == male.positive_count
     assert 2231 == male.negative_count
 
     assert 47 == female.positive_count
@@ -131,5 +135,7 @@ def test_gender_split_false(phdb, all_ssc_studies, default_request):
         gender_split=False,
     )
 
-    assert 374 == r.positive_count
+    # FIXME: changed after rennotation
+    # assert 374 == r.positive_count
+    assert 379 == r.positive_count
     assert 2362 == r.negative_count

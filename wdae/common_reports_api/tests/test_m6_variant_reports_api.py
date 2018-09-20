@@ -76,7 +76,9 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual('LGDs', data[0]['effect_type'])
         autism = data[0]['row'][0]
         value = autism['events_count']
-        self.assertEquals(383, value)
+        # FIXME: changed after rennotation
+        # self.assertEquals(383, value)
+        self.assertEquals(388, value)
         value = autism['events_children_count']
         self.assertEquals(357, value)
         value = autism['events_rate_per_child']

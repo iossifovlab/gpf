@@ -44,7 +44,9 @@ def test_get_variants_father_ultra_rare(
         else:
             tcount += 1
     print(dcount, tcount)
-    assert 176 == len(variants)
+    # FIXME: changed after rennotation
+    # assert 176 == len(variants)
+    assert 178 == len(variants)
 
 
 def test_get_variants_father_rarity(
@@ -84,7 +86,9 @@ def test_get_variants_father_rarity(
             assert v.altFreqPrcnt <= 1.0
     print(dcount, tcount)
 
-    assert 250 == len(variants)
+    # FIXME: changed after rennotation
+    # assert 250 == len(variants)
+    assert 256 == len(variants)
 
 
 def test_get_variants_father_interval(
@@ -189,7 +193,9 @@ def test_get_person_variants_father_all(
         )
     )
     variants = [v for v in vs]
-    assert 503 == len(variants)
+    # FIXME: changed after rennotation
+    # assert 503 == len(variants)
+    assert 509 == len(variants)
 
     res = genotype_helper.get_persons_variants(
         VT(
@@ -230,7 +236,9 @@ def test_get_lgds_variants_for_family(
         )
     )
     variants = [v for v in vs]
-    assert 100 == len(variants)
+    # FIXME: changed after rennotation
+    # assert 100 == len(variants)
+    assert 106 == len(variants)
 
 
 def test_get_persons_variants_df_denovo(

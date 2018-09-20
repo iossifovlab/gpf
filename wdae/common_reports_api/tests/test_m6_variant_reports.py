@@ -169,7 +169,9 @@ class Test(unittest.TestCase):
         dc = DenovoEventsCounter('autism', fr.legend, cc, 'LGDs')
         dc.build(fr.studies)
 
-        self.assertEqual(383, dc.events_count)
+        # FIXME: changed after rennotation
+        # self.assertEqual(383, dc.events_count)
+        self.assertEqual(388, dc.events_count)
         self.assertEqual(357, dc.events_children_count)
         self.assertAlmostEqual(0.153, dc.events_rate_per_child, 3)
         self.assertAlmostEqual(0.142, dc.events_children_percent, 3)

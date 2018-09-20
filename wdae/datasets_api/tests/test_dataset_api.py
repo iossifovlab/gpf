@@ -21,6 +21,7 @@ class DatasetApiTest(APITestCase):
         Dataset.recreate_dataset_perm('SPARKv2', [])
         Dataset.recreate_dataset_perm('AGRE_WG', [])
         Dataset.recreate_dataset_perm('denovo_db', [])
+        Dataset.recreate_dataset_perm('TESTdenovo_db', [])
 
     def test_get_datasets(self):
         url = '/api/v3/datasets/'
