@@ -24,6 +24,28 @@ class PDFLayoutDrawer(object):
             figure.text(0.5, 0.9, title, horizontalalignment="center")
         self._pages.append(figure)
 
+    def add_error_page(self, family, title=None):
+        figure = self._draw_table(family)
+        if title:
+            figure.text(0.5, 0.9, title, horizontalalignment="center")
+        self._pages.append(figure)
+
+    def _draw_table(self, family):
+        figure, ax = plt.subplots()
+        ax.axis('off')
+
+        col_labels =\
+            ["familyId", "individualId", "father", "mother", "sex", "effect"]
+        table_vals = []
+
+        for member in family:
+            table_vals.append([member.family_id, member.id, member.father,
+                               member.mother, member.sex, member.effect])
+        figure.table = plt.table(
+            cellText=table_vals, colLabels=col_labels, loc='center')
+
+        return figure
+
     def save_file(self):
         with PdfPages(self._filename) as pdf:
             for page in self._pages:

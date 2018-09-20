@@ -427,12 +427,17 @@ def main():
         if sandwich_instance is None:
             print(family.family_id)
             print("Missing members")
+            pdf_drawer.add_error_page(
+                family.members, "Missing members in family " +
+                                family.family_id)
             continue
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:
             print(family.family_id)
             print("No intervals")
+            pdf_drawer.add_error_page(
+                family.members, "No intervals in family " + family.family_id)
         if intervals:
             individuals_intervals = filter(
                 lambda interval: interval.vertex.is_individual(),
