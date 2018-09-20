@@ -123,45 +123,6 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
     def _annotator_for(self, score):
         if score not in self.annotators:
-<<<<<<< HEAD
-            opts = self.opts
-            score_directory = self.scores_directory + '/' + score
-
-            if not os.path.isdir(score_directory):
-                sys.stderr.write('directory for "{}" not found, please provide only valid scores'.format(score))
-                sys.exit(-78)
-
-            tabix_files = glob.glob(score_directory + '/*.tbi')
-            if len(tabix_files) == 0:
-                sys.stderr.write('could not find .tbi file for score {}'.format(score))
-                sys.exit(-64)
-
-            params_file = score_directory + '/params.txt'
-            if not os.path.exists(params_file):
-                sys.stderr.write('could not find params.txt file for score {}'.format(score))
-                sys.exit(-50)
-
-            # params = Properties({'format': score, 'noScoreValue': ''})
-            with open(params_file, 'r') as file:
-                # FIXME: workaround for reading .properties file without
-                # FIXME: jproperties, should be removed when Iordan merges his
-                # FIXME: stuff
-                params = ConfigParser({
-                    'format': score,
-                    'noScoreValue': ''
-                })
-                def add_dummy_header(f):
-                    yield '[root]'
-                    for line in f:
-                        yield line
-                params.read_file(add_dummy_header(file))
-            score_column = params['format']
-            score_default_value = params['noScoreValue']
-
-            score_header_file = score_directory + '/' + params['scoreDescFile'][1:-1]
-            with open(score_header_file, 'r') as file:
-                score_header = file.readline().strip('\n\r').split('\t')
-=======
             score_dir = '{dir}/{score}'.format(dir=self.scores_directory, score=score) 
             score_file = None
             for file in get_files(score_dir):
@@ -172,7 +133,6 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 sys.stderr.write('could not find score file for score {}'.format(score))
             if self.opts.direct:
                 assert_tabix(score_file)
->>>>>>> origin/master
 
             config = {
                 'c': self.opts.c,
