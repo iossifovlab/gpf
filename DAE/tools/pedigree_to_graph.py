@@ -21,7 +21,7 @@ class CsvPedigreeReader(object):
 
     def read_file(self, file, columns_labels={}, header=None, delimiter='\t'):
         if not columns_labels:
-            columns_labels = CsvPedigreeReader.get_column_labels
+            columns_labels = CsvPedigreeReader.get_column_labels()
         families = {}
         with open(file) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=header,
@@ -382,30 +382,45 @@ def main():
         "--layout-column", metavar="l", default="layoutCoords",
         help="layout column name to be used when saving the layout")
     parser.add_argument(
-        '--no-header', help='no header in the input file',
-        default=None, action='store_true', dest='no_header')
-    parser.add_argument(
         '--delimiter', help='delimiter used in the split column; defaults to '
         '"\\t"', default='\t', action='store')
     parser.add_argument(
-        '--column', help='Add column names. Possible columns with there '
-        'default values are family_id:familyId, id:personId, father:dadId, '
-        'mother:momId, sex:gender, label:, effect:status. If value is int it '
-        'is 0 position.', dest='columns', action='append',
-        metavar=('=COLUMN:VALUE'))
+        '--family_id', help='Specify family id column label. Default to '
+        'familyId.', default='familyId', action='store')
+    parser.add_argument(
+        '--id', help='Specify id column label. Default to personId.',
+        default='personId', action='store')
+    parser.add_argument(
+        '--father', help='Specify father column label. Default to dadId.',
+        default='dadId', action='store')
+    parser.add_argument(
+        '--mother', help='Specify mother column label. Default to momId.',
+        default='momId', action='store')
+    parser.add_argument(
+        '--sex', help='Specify sex column label. Default to gender.',
+        default='gender', action='store')
+    parser.add_argument(
+        '--effect', help='Specify effect column label. Default to status.',
+        default='status', action='store')
+    parser.add_argument(
+        '--no-header-order', help='Comma separated order of columns in header '
+        'with default values of columns when header is not in the input file. '
+        'You can replace unnecessary column with `_`.', dest='no_header_order',
+        action='store')
 
     args = parser.parse_args()
 
-    columns_labels = CsvPedigreeReader.get_column_labels()
-    if args.columns is not None:
-        for option in args.columns:
-            column, label = option.split(':')
-            if label.isdigit():
-                label = int(label)
-            columns_labels[column] = label
-    header = args.no_header
+    columns_labels = {
+        "family_id": args.family_id,
+        "id": args.id,
+        "father": args.father,
+        "mother": args.mother,
+        "sex": args.sex,
+        "effect": args.effect
+    }
+    header = args.no_header_order
     if header:
-        header = list(range(len(args.columns)))
+        header = header.split(',')
     delimiter = args.delimiter
 
     pedigrees = CsvPedigreeReader().read_file(
