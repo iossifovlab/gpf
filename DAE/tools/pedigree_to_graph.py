@@ -19,7 +19,7 @@ from future.utils import with_metaclass
 
 class CsvPedigreeReader(object):
 
-    def read_file(self, file, columns_labels={}, header=None, delimiter='\t'):
+    def read_file(self, file, columns_labels, header=None, delimiter='\t'):
         families = {}
         with open(file) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=header,
@@ -393,7 +393,8 @@ def main():
         '--no-header-order', help='Comma separated order of columns in header '
         'when header is not in the input file. Values for columns are '
         'familyId, personId, dadId, momId, gender, status. You can replace '
-        'unnecessary column with `_`.', dest='no_header_order', action='store')
+        'unnecessary column with `_`.', dest='no_header_order', default=None,
+        action='store')
 
     args = parser.parse_args()
 
