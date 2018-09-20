@@ -391,9 +391,9 @@ def main():
         default='status', action='store')
     parser.add_argument(
         '--no-header-order', help='Comma separated order of columns in header '
-        'with default values of columns when header is not in the input file. '
-        'You can replace unnecessary column with `_`.', dest='no_header_order',
-        action='store')
+        'when header is not in the input file. Values for columns are '
+        'familyId, personId, dadId, momId, gender, status. You can replace '
+        'unnecessary column with `_`.', dest='no_header_order', action='store')
 
     args = parser.parse_args()
 
