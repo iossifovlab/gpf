@@ -28,6 +28,7 @@ class PDFLayoutDrawer(object):
         with PdfPages(self._filename) as pdf:
             for page in self._pages:
                 pdf.savefig(page)
+                plt.close()
 
 
 class OffsetLayoutDrawer(object):
@@ -101,19 +102,23 @@ class OffsetLayoutDrawer(object):
 
         for level in self._layout.positions:
             for individual in level:
+                if individual.individual.member.effect == "1":
+                    individual_color = "white"
+                else:
+                    individual_color = "red"
                 if Sex.from_name_or_value(
                         individual.individual.member.sex) == Sex.male:
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
                     patches.append(mpatches.Circle(
                         coords, old_div(individual.size, 2),
-                        facecolor="white", edgecolor="black"))
+                        facecolor=individual_color, edgecolor="black"))
                 else:
                     coords = [individual.x + self._x_offset,
                               individual.y + self._y_offset]
                     patches.append(mpatches.Rectangle(
-                                  coords, individual.size, individual.size,
-                                  facecolor="white", edgecolor="black"))
+                        coords, individual.size, individual.size,
+                        facecolor=individual_color, edgecolor="black"))
 
         figure.patches += patches
 

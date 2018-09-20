@@ -49,6 +49,7 @@ class PedigreeMember(object):
         self.mother = mother
         self.father = father
         self.sex = sex
+        self.effect = effect
 
 
 class Pedigree(object):
