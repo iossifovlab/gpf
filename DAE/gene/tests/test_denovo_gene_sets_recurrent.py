@@ -51,7 +51,7 @@ def test_denovo_db_recurrent(denovodb, gscs):
 
     denovo = gscs.get_gene_sets_collection('denovo')
     gs = denovo.get_gene_set(
-        'LGDs.Recurrent', gene_sets_types={'denovo_db': ['autism']})
+        'LGDs.Recurrent', gene_sets_types={'TESTdenovo_db': ['autism']})
 
     print(recurrent)
     print(gs)

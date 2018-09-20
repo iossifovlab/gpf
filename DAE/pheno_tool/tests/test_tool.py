@@ -19,6 +19,7 @@ def test_pheno_tool_create_default(phdb, all_ssc_studies):
     assert tool.phdb is not None
 
 
+@pytest.mark.slow
 def test_tool_calc(phdb, all_ssc_studies, default_request):
     tool = PhenoTool(phdb, all_ssc_studies, roles=[Role.prb],
                      measure_id='ssc_commonly_used.head_circumference',
@@ -35,21 +36,24 @@ def test_tool_calc(phdb, all_ssc_studies, default_request):
     # FIXME: changed after rennotation
     # assert 310 == male.positive_count
     assert 314 == male.positive_count
-    assert 2053 == male.negative_count
+    # assert 2053 == male.negative_count
+    assert 2049 == male.negative_count
 
-    assert 64 == female.positive_count
-    assert 309 == female.negative_count
+    # assert 64 == female.positive_count
+    assert 65 == female.positive_count
+    assert 308 == female.negative_count
 
-    assert -0.0246 == pytest.approx(male.positive_mean, abs=1E-4)
-    assert 0.1189 == pytest.approx(male.negative_mean, abs=1E-4)
+    assert -0.0354 == pytest.approx(male.positive_mean, abs=1E-4)
+    assert 0.1208 == pytest.approx(male.negative_mean, abs=1E-4)
 
-    assert 0.2007 == pytest.approx(male.pvalue, abs=1E-4)
+    assert 0.1616 == pytest.approx(male.pvalue, abs=1E-4)
 
 
 def male_female_result(r):
     return r[Gender.M], r[Gender.F]
 
 
+@pytest.mark.slow
 def test_tool_present_in_parent_ultra_rare(
         phdb, all_ssc_studies, gene_set):
 
@@ -76,7 +80,8 @@ def test_tool_present_in_parent_ultra_rare(
     # FIXME: changed after rennotation
     # assert 165 == male.positive_count
     assert 167 == male.positive_count
-    assert 2231 == male.negative_count
+    # assert 2231 == male.negative_count
+    assert 2229 == male.negative_count
 
     assert 47 == female.positive_count
     assert 329 == female.negative_count
@@ -138,4 +143,5 @@ def test_gender_split_false(phdb, all_ssc_studies, default_request):
     # FIXME: changed after rennotation
     # assert 374 == r.positive_count
     assert 379 == r.positive_count
-    assert 2362 == r.negative_count
+    # assert 2362 == r.negative_count
+    assert 2357 == r.negative_count
