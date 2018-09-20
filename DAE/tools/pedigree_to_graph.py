@@ -20,8 +20,6 @@ from future.utils import with_metaclass
 class CsvPedigreeReader(object):
 
     def read_file(self, file, columns_labels={}, header=None, delimiter='\t'):
-        if not columns_labels:
-            columns_labels = CsvPedigreeReader.get_column_labels()
         families = {}
         with open(file) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=header,
@@ -42,17 +40,6 @@ class CsvPedigreeReader(object):
                     families[member.family_id].members.append(member)
 
         return list(families.values())
-
-    @staticmethod
-    def get_column_labels():
-        return {
-            "family_id": "familyId",
-            "id": "personId",
-            "father": "dadId",
-            "mother": "momId",
-            "sex": "gender",
-            "effect": "status"
-        }
 
 
 class PedigreeMember(object):
