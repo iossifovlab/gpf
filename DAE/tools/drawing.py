@@ -32,7 +32,7 @@ class PDFLayoutDrawer(object):
 
     def _draw_table(self, family):
         figure, ax = plt.subplots()
-        ax.axis('off')
+        ax.axis("off")
 
         col_labels =\
             ["familyId", "individualId", "father", "mother", "sex", "effect"]
@@ -50,7 +50,7 @@ class PDFLayoutDrawer(object):
         with PdfPages(self._filename) as pdf:
             for page in self._pages:
                 pdf.savefig(page)
-                plt.close()
+                plt.close(page)
 
 
 class OffsetLayoutDrawer(object):
@@ -65,30 +65,29 @@ class OffsetLayoutDrawer(object):
         if figure is None:
             figure = plt.figure()
 
-        self._draw_lines(figure)
-        self._draw_rounded_lines(figure)
+        ax = figure.add_axes((0.35, 0.33, 0.33, 0.33))
+        ax.axis("off")
+        ax.set_aspect(aspect="equal", adjustable="datalim", anchor="C")
 
-        self._draw_members(figure)
+        self._draw_lines(ax)
+        self._draw_rounded_lines(ax)
+
+        self._draw_members(ax)
+
+        ax.plot()
 
         return figure
 
-    def _draw_lines(self, figure):
-        lines = []
-
+    def _draw_lines(self, axes):
         for line in self._layout.lines:
             if not line.curved:
-                lines.append(mlines.Line2D(
+                axes.add_line(mlines.Line2D(
                     [line.x1 + self._x_offset, line.x2 + self._x_offset],
                     [line.y1 + self._y_offset, line.y2 + self._y_offset],
                     color="black"
                 ))
 
-        figure.lines += lines
-
-    def _draw_rounded_lines(self, figure):
-        patches = []
-        lines = []
-
+    def _draw_rounded_lines(self, axes):
         elementwise_sum = lambda x, y: tuple([x[0] + y[0], x[1] + y[1]])
 
         for line in self._layout.lines:
@@ -110,18 +109,11 @@ class OffsetLayoutDrawer(object):
 
                 path = Path(verts, codes)
 
-                patches.append(
-                    mpatches.PathPatch(path, facecolor='none')
-                )
+                axes.add_patch(mpatches.PathPatch(path, facecolor='none'))
 
                 # line = ()
 
-        figure.lines += lines
-        figure.patches += patches
-
-    def _draw_members(self, figure):
-        patches = []
-
+    def _draw_members(self, axes):
         for level in self._layout.positions:
             for individual in level:
                 if individual.individual.member.effect == "1":
@@ -132,17 +124,15 @@ class OffsetLayoutDrawer(object):
                         individual.individual.member.sex) == Sex.male:
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
-                    patches.append(mpatches.Circle(
+                    axes.add_patch(mpatches.Circle(
                         coords, old_div(individual.size, 2),
                         facecolor=individual_color, edgecolor="black"))
                 else:
                     coords = [individual.x + self._x_offset,
                               individual.y + self._y_offset]
-                    patches.append(mpatches.Rectangle(
+                    axes.add_patch(mpatches.Rectangle(
                         coords, individual.size, individual.size,
                         facecolor=individual_color, edgecolor="black"))
-
-        figure.patches += patches
 
     def _horizontal_mirror_layout(self):
         highest_y = max([i.y for level in self._layout.positions
