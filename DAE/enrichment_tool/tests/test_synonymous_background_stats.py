@@ -44,7 +44,7 @@ def test_synonymous_background_stats_default(background):
 
     # assert 211645 == np.sum(background.background['raw'])
     # FIXME: changed after reannotation
-    assert 211645 == np.sum(background.background['raw'])
+    assert 211661 == np.sum(background.background['raw'])
 
 
 def test_stats_autism_lgd(background, autism_studies,
