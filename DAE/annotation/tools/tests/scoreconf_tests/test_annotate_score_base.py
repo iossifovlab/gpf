@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import pytest
 import config
 import input_output
@@ -7,10 +8,10 @@ from os import remove
 from annotation.tools.annotate_score_base \
         import ScoreAnnotator, gzip, conf_to_dict
 from copy import deepcopy
-from StringIO import StringIO
+from io import StringIO
 
 
-def fake_gzip_open(filename, *args):
+def fake_gzip_open(filename, *args, **kwargs):
     return filename
 
 
@@ -39,7 +40,7 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None, search_columns=[],
 def to_file(content, where=None):
     if where is None:
         where = os.path.dirname('.')
-    temp = tempfile.NamedTemporaryFile(dir=where, delete=False)
+    temp = tempfile.NamedTemporaryFile(dir=where, delete=False, mode='w+t')
     temp.write(content.read())
     temp.seek(0)
     return temp

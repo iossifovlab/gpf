@@ -1,6 +1,7 @@
+from __future__ import unicode_literals
 import pytest
 import annotation.tools.file_io as file_io
-from StringIO import StringIO
+from io import StringIO
 from box import Box
 
 

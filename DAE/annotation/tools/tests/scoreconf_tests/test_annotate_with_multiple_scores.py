@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import pytest
 import config
 import input_output
@@ -7,7 +8,7 @@ from os import remove, rmdir
 from annotation.tools.annotate_with_multiple_scores \
         import MultipleScoresAnnotator
 from copy import deepcopy
-from StringIO import StringIO
+from io import StringIO
 
 
 def get_opts(c_inp=None, p_inp=None, x_inp=None,
@@ -60,7 +61,7 @@ def cleanup(dirs, files):
         rmdir(tmpdir)
 
 
-def fake_gzip_open(filename, *args):
+def fake_gzip_open(filename, *args, **kwargs):
     return open(filename, 'r')
 
 

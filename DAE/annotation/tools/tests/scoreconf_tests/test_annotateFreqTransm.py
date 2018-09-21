@@ -1,8 +1,9 @@
+from __future__ import unicode_literals
 import pytest
 import gzip
 from annotation.tools.annotateFreqTransm \
         import FrequencyAnnotator
-from StringIO import StringIO
+from io import StringIO
 from box import Box
 
 
@@ -19,7 +20,7 @@ def get_opts(score_file):
     return Box(options, default_box=True, default_box_attr=None)
 
 
-def fake_gzip_open(filename, *args):
+def fake_gzip_open(filename, *args, **kwargs):
     return filename
 
 

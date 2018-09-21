@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import pytest
 import input_output
 import config
@@ -9,13 +10,14 @@ from annotation.tools.add_missense_scores \
 from annotation.tools.annotate_score_base \
         import conf_to_dict
 from copy import deepcopy
-from StringIO import StringIO
+from io import StringIO
 
 
 def to_file(content, where=None):
     if where is None:
         where = os.path.dirname('.')
-    temp = tempfile.NamedTemporaryFile(dir=where, delete=False, suffix='.chr1')
+    temp = tempfile.NamedTemporaryFile(dir=where, delete=False, suffix='.chr1',
+        mode='w+t')
     temp.write(content)
     temp.seek(0)
     return temp
@@ -46,7 +48,7 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None,
     return MockOpts(c_inp, p_inp, x_inp, dir_inp, direct_inp, config)
 
 
-def fake_gzip_open(filename, *args):
+def fake_gzip_open(filename, *args, **kwargs):
     return open(filename, 'r')
 
 
