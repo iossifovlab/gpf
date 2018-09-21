@@ -124,14 +124,14 @@ class OffsetLayoutDrawer(object):
                         individual.individual.member.sex) == Sex.male:
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
-                    axes.add_patch(mpatches.Circle(
-                        coords, old_div(individual.size, 2),
+                    axes.add_patch(mpatches.Rectangle(
+                        coords, individual.size, individual.size,
                         facecolor=individual_color, edgecolor="black"))
                 else:
                     coords = [individual.x + self._x_offset,
                               individual.y + self._y_offset]
-                    axes.add_patch(mpatches.Rectangle(
-                        coords, individual.size, individual.size,
+                    axes.add_patch(mpatches.Circle(
+                        coords, old_div(individual.size, 2),
                         facecolor=individual_color, edgecolor="black"))
 
     def _horizontal_mirror_layout(self):
