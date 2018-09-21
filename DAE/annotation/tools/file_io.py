@@ -129,12 +129,9 @@ class TSVFormat(AbstractFormat):
     def _header_read(self):
         if not self.opts.no_header:
             header_str = ""
-            if hasattr(self.opts, 'region'):
-                if(self.opts.region is not None):
-                    with gzip.open(self.opts.infile) as file:
+            if self.opts.region is not None:
+                with gzip.open(self.opts.infile, 'rt', encoding='utf8') as file:
                         header_str = file.readline()[:-1]
-                else:
-                    header_str = self.variantFile.readline()[:-1]
             else:
                 header_str = self.variantFile.readline()[:-1]
             if header_str[0] == '#':

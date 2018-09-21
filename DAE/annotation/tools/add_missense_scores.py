@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-
+from __future__ import unicode_literals
 import argparse
 import os
 from box import Box
 
-from utilities import AnnotatorBase, assign_values, main
-from annotate_score_base import ScoreAnnotator, conf_to_dict
+from .utilities import AnnotatorBase, assign_values, main
+from .annotate_score_base import ScoreAnnotator, conf_to_dict
 
 def get_argument_parser():
     """

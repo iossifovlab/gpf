@@ -2,6 +2,7 @@ name: dae-python3
 channels:
   - defaults
 dependencies:
+  - pyliftover=0.3=py_2
   - attrs=18.1.0=py36_0
   - blas=1.0=mkl
   - ca-certificates=2018.03.07=0

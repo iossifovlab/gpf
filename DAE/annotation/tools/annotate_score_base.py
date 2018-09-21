@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-
+from __future__ import unicode_literals
 import sys
 import gzip
 import pysam
 import argparse
-from ConfigParser import SafeConfigParser
-from utilities import AnnotatorBase, assign_values, main, give_column_number
+from configparser import SafeConfigParser
 from os.path import exists
 from box import Box
 
+from .utilities import AnnotatorBase, assign_values, main, give_column_number
 
 def get_argument_parser():
     """
@@ -94,7 +94,7 @@ class ScoreFile(object):
                     .format(self.name))
             sys.exit(-78)
 
-        self.file = gzip.open(self.name, 'rb')
+        self.file = gzip.open(self.name, 'rt', encoding='utf8')
         if self.config.header is None:
             header_str = self.file.readline().rstrip()
             if header_str[0] == '#':

@@ -9,7 +9,7 @@ import gzip
 from abc import ABCMeta, abstractmethod
 from future.utils import with_metaclass
 
-from file_io import IOManager, IOType
+from .file_io import IOManager, IOType
 
 
 class AnnotatorBase():

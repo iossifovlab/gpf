@@ -1,9 +1,10 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import argparse
-
-from utilities import main
-from annotate_score_base import ScoreAnnotator, conf_to_dict
 from io import StringIO
+
+from .utilities import main
+from .annotate_score_base import ScoreAnnotator, conf_to_dict
 
 
 def get_argument_parser():
