@@ -104,7 +104,8 @@ class Test(unittest.TestCase):
         # FIXME: changed after rennotation
         # self.assertEquals(383, de.events_count)
         self.assertEquals(388, de.events_count)
-        self.assertEquals(357, de.events_children_count)
+        # self.assertEquals(357, de.events_children_count)
+        self.assertEquals(362, de.events_children_count)
 
         de = effect_groups[0].row[1]
         self.assertEqual('unaffected', de.phenotype)

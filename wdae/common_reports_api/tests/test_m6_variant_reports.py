@@ -172,9 +172,10 @@ class Test(unittest.TestCase):
         # FIXME: changed after rennotation
         # self.assertEqual(383, dc.events_count)
         self.assertEqual(388, dc.events_count)
-        self.assertEqual(357, dc.events_children_count)
-        self.assertAlmostEqual(0.153, dc.events_rate_per_child, 3)
-        self.assertAlmostEqual(0.142, dc.events_children_percent, 3)
+        # self.assertEqual(357, dc.events_children_count)
+        self.assertEqual(362, dc.events_children_count)
+        self.assertAlmostEqual(0.155, dc.events_rate_per_child, 3)
+        self.assertAlmostEqual(0.144, dc.events_children_percent, 3)
 
     def test_denovo_counter_unaffected_iossifov(self):
         fr = FamiliesReport('IossifovWE2014')

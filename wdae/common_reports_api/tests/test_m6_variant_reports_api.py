@@ -80,8 +80,9 @@ class Test(BaseAuthenticatedUserTest):
         # self.assertEquals(383, value)
         self.assertEquals(388, value)
         value = autism['events_children_count']
-        self.assertEquals(357, value)
+        # self.assertEquals(357, value)
+        self.assertEquals(362, value)
         value = autism['events_rate_per_child']
-        self.assertAlmostEqual(0.153, value, 3)
+        self.assertAlmostEqual(0.155, value, 3)
         value = autism['events_children_percent']
-        self.assertAlmostEqual(0.142, value, 3)
+        self.assertAlmostEqual(0.144, value, 3)
