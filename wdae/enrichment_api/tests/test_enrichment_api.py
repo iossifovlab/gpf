@@ -13,7 +13,7 @@ class Test(BaseAuthenticatedUserTest):
 
     def test_gene_set_denovo_main_autism_candidates_denovo_db(self):
         data = {
-            'datasetId': 'denovo_db',
+            'datasetId': 'TESTdenovo_db',
             'enrichmentBackgroundModel': 'synonymousBackgroundModel',
             'enrichmentCountingModel': 'enrichmentGeneCounting',
             'geneSet': {
@@ -27,7 +27,6 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         data = response.data
 
-        print(data['result'])
         assert data['result']
 
         res = data['result'][0]
@@ -72,7 +71,8 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         data = response.data
 
-        self.assertEquals(546, data['result'][0]['LGDs']['all']['count'])
+        # self.assertEquals(546, data['result'][0]['LGDs']['all']['count'])
+        self.assertEquals(551, data['result'][0]['LGDs']['all']['count'])
         self.assertEquals(39, data['result'][0]['LGDs']['rec']['count'])
 
     def test_gene_set_denovo_main_autism_candidates_sd(self):
@@ -91,7 +91,8 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         data = response.data
 
-        self.assertEquals(546, data['result'][0]['LGDs']['all']['count'])
+        # self.assertEquals(546, data['result'][0]['LGDs']['all']['count'])
+        self.assertEquals(551, data['result'][0]['LGDs']['all']['count'])
         self.assertEquals(39, data['result'][0]['LGDs']['rec']['count'])
 
         self.assertEquals('unaffected', data['result'][5]['selector'])
@@ -116,7 +117,8 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         data = response.data
 
-        self.assertEquals(386, data['result'][0]['LGDs']['all']['count'])
+        # self.assertEquals(386, data['result'][0]['LGDs']['all']['count'])
+        self.assertEquals(391, data['result'][0]['LGDs']['all']['count'])
         self.assertEquals(28, data['result'][0]['LGDs']['rec']['count'])
         self.assertEquals(
             "Gene Set: LGDs.Recurrent (SD_TEST:autism) (45)", data['desc'])

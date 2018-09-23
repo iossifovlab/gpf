@@ -112,7 +112,8 @@ def test_transmitted_query_vip(vip):
     assert vs
     res = [v for v in vs]
 
-    assert 595 == count(res)
+    # assert 595 == count(res)
+    assert 608 == count(res)
     for v in res:
         assert 'mom' in v.fromParentS
 
@@ -122,7 +123,8 @@ def test_transmitted_check_vip(vip):
     assert st
     vs = st.get_transmitted_variants(**Q1)
     res = [v for v in vs]
-    assert 595 == count(res)
+    # assert 595 == count(res)
+    assert 608 == count(res)
 
 
 Q_DATASET = {

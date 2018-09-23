@@ -20,7 +20,9 @@ class DatasetApiTest(APITestCase):
         Dataset.recreate_dataset_perm('SPARKv1', [])
         Dataset.recreate_dataset_perm('SPARKv2', [])
         Dataset.recreate_dataset_perm('AGRE_WG', [])
+        Dataset.recreate_dataset_perm('SSC_WG', [])
         Dataset.recreate_dataset_perm('denovo_db', [])
+        Dataset.recreate_dataset_perm('TESTdenovo_db', [])
 
     def test_get_datasets(self):
         url = '/api/v3/datasets/'
@@ -30,7 +32,7 @@ class DatasetApiTest(APITestCase):
 
         self.assertIn('data', data)
         print(data)
-        self.assertEquals(7, len(data['data']))
+        self.assertEquals(8, len(data['data']))
 
     def test_get_dataset_ssc(self):
         url = '/api/v3/datasets/SSC'

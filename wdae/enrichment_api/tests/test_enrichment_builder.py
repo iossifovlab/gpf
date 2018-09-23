@@ -39,8 +39,10 @@ class Test(APITestCase):
         res = self.res[0]
         self.assertEquals('autism', res['selector'])
 
-        self.assertEquals(546, res['LGDs']['all']['count'])
-        self.assertEquals(36, res['LGDs']['all']['overlapped'])
+        # self.assertEquals(546, res['LGDs']['all']['count'])
+        self.assertEquals(551, res['LGDs']['all']['count'])
+        # self.assertEquals(36, res['LGDs']['all']['overlapped'])
+        self.assertEquals(37, res['LGDs']['all']['overlapped'])
 
     def test_autism_missense_all(self):
         res = self.res[0]
