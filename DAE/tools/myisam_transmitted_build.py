@@ -599,6 +599,8 @@ UNLOCK TABLES;
                 gzip.open(outfilename, 'w') as outfile:
 
             column_names = fh.readline().rstrip().split('\t')
+            column_names = [cn.strip("#") for cn in column_names]
+
             tmfh.readline()  # skip column names in too may family file
 
             outfile.write(self.CREATE_TABLE)
