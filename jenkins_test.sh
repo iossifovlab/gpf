@@ -43,7 +43,7 @@ py.test -v --cov-config coveragerc \
     wdae/
 
 
-py.test -v --nomysql --cov-config coveragerc \
+py.test -v --cov-config coveragerc \
     --junitxml=DAE/junit.xml \
     --cov-append \
     --cov-report html \

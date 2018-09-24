@@ -86,8 +86,9 @@ class VariantsBase(object):
             return 'NULL'
         if s.strip() == '.':
             return 'NULL'
-        else:
-            return s
+        if s.strip() == '-':
+            return 'NULL'
+        return s
 
     @staticmethod
     def get_study_filenames(study_name):
@@ -231,7 +232,7 @@ UNLOCK TABLES;
         ''' %(n_par_called)d, %(n_alt_alls)d, %(alt_freq)f, ''' \
         ''' %(prcnt_par_called)f, %(hw)f, ''' \
         ''' {} ''' \
-        ''' %(ssc_freq)s, %(evs_freq)s, %(e65_freq)s )'''
+        ''' %(ssc_freq)s, %(evs_freq)s, %(e65_freq)s )\n'''
 
     def create_table_statement(self, score_names=None):
         if not score_names:

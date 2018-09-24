@@ -59,8 +59,8 @@ def test_compare_father_ultra_rare(autism_candidates_genes):
     for v in lvs:
         assert 'dad' in v.fromParentS
 
-    assert len(mvs) == 39
-    # assert len(mvs) == len(lvs)
+    # assert len(mvs) == 39
+    assert len(mvs) == len(lvs)
     assert 41 == len(lvs)
 
 
@@ -90,6 +90,6 @@ def test_compare_father_rarity(autism_candidates_genes):
     tvs = impl.get_transmitted_variants(**query)
     mvs = [v for v in tvs]
 
-    assert len(mvs) == 73
-    # assert len(mvs) == len(lvs)
+    # assert len(mvs) == 73
+    assert len(mvs) == len(lvs)
     assert 79 == len(lvs)
