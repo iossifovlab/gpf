@@ -21,7 +21,7 @@ def test_denovo_get_gene_set_sd_denovo_db_lgds_autism_and_epilepsy(gscs):
         'denovo', 'LGDs',
         {
             'SD_TEST': ['autism', 'epilepsy'],
-            'denovo_db': ['autism', 'epilepsy'],
+            'TESTdenovo_db': ['autism', 'epilepsy'],
         })
     assert lgds is not None
     # FIXME: changed after rennotation
@@ -30,4 +30,4 @@ def test_denovo_get_gene_set_sd_denovo_db_lgds_autism_and_epilepsy(gscs):
     assert lgds['name'] == 'LGDs'
 
     assert "SD_TEST:autism,epilepsy" in lgds['desc']
-    assert "denovo_db:autism,epilepsy" in lgds['desc']
+    assert "TESTdenovo_db:autism,epilepsy" in lgds['desc']

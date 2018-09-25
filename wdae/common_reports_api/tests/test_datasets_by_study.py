@@ -7,13 +7,13 @@ from common_reports_api.permissions import get_datasets_by_study
 
 
 def test_denovo_db():
-    datasets_list = get_datasets_by_study("denovo_db")
+    datasets_list = get_datasets_by_study("TESTdenovo_db")
     print(datasets_list)
     assert len(datasets_list) == 1
     datasets = datasets_list[0]
 
     assert len(datasets) == 1
-    assert "denovo_db" in datasets
+    assert "TESTdenovo_db" in datasets
 
 
 def test_iosiffov_2014():

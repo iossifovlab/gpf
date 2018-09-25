@@ -13,8 +13,8 @@ import VariantAnnotation
 def denovo_db_full():
     from DAE import vDB
 
-    assert 'denovo_db' in vDB._studies
-    dst = vDB._studies['denovo_db']
+    assert 'TESTdenovo_db' in vDB._studies
+    dst = vDB._studies['TESTdenovo_db']
     filename = dst.vdb._config.get(dst._configSection, 'denovoCalls.files')
     dirname = os.path.dirname(filename)
 
@@ -24,7 +24,7 @@ def denovo_db_full():
     print("denovo db full:", filename)
 
     dst.vdb._config.set(dst._configSection, "denovoCalls.full.files", filename)
-    dst = vDB.get_study("denovo_db")
+    dst = vDB.get_study("TESTdenovo_db")
 
     return dst
 

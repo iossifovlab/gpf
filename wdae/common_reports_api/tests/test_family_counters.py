@@ -6,14 +6,6 @@ Created on Mar 1, 2018
 from common_reports_api.variants import FamiliesReport
 
 
-# def test_families_report_denovo_db():
-#     fr = FamiliesReport('denovo_db')
-#     assert fr is not None
-#
-#     fr.build()
-#     print(fr)
-
-
 def test_families_report_iossifov_2014():
     fr = FamiliesReport('IossifovWE2014')
     assert fr is not None
