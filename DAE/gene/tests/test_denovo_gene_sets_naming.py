@@ -26,7 +26,7 @@ def test_denovo_get_gene_set_sd_denovo_db_lgds_autism_and_epilepsy(gscs):
     assert lgds is not None
     # FIXME: changed after rennotation
     # assert lgds['count'] == 597
-    assert lgds['count'] == 791
+    assert lgds['count'] == 602
     assert lgds['name'] == 'LGDs'
 
     assert "SD_TEST:autism,epilepsy" in lgds['desc']
