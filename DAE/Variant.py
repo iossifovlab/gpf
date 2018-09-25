@@ -52,11 +52,13 @@ def normalRefCopyNumber(location, gender):
             if gender == 'M':
                 return 1
             elif gender == 'U':
-                LOGGER.debug(
-                    'unspecified gender when calculating normal number of allels '
-                    'in chr%s',
-                    location
-                )
+                pass
+                # LOGGER.debug(
+                #     'unspecified gender when calculating normal number '
+                #     'of allels '
+                #     'in chr%s',
+                #     location
+                # )
                 # return 1
             elif gender != 'F':
                 raise Exception('weird gender ' + gender)
@@ -64,11 +66,12 @@ def normalRefCopyNumber(location, gender):
         if gender == 'M':
             return 1
         elif gender == 'U':
-            LOGGER.debug(
-                'unspecified gender when calculating normal number of allels '
-                'in chr%s',
-                location
-            )
+            # LOGGER.debug(
+            #     'unspecified gender when calculating normal number of '
+            #     'allels '
+            #     'in chr%s',
+            #     location
+            # )
             return 1
         elif gender == 'F':
             return 0

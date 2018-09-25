@@ -74,7 +74,7 @@ def sd(datasets_factory):
 
 @pytest.fixture(scope='session')
 def denovodb(datasets_factory):
-    return datasets_factory.get_dataset('denovo_db')
+    return datasets_factory.get_dataset('TESTdenovo_db')
 
 
 @pytest.fixture(scope='session')

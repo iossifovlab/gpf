@@ -63,7 +63,8 @@ def test_get_transmitted_stuides(ssc):
 def test_get_denovo_variants_ssc(ssc):
     vs = ssc.get_denovo_variants(**EXAMPLE_QUERY_SSC)
     res = [v for v in vs]
-    assert 422 == len(res)
+    # assert 422 == len(res) FIXME: changed after reannotation
+    assert 427 == len(res)
 
 
 def test_get_denovo_variants_vip(vip):

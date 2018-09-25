@@ -74,7 +74,7 @@ EXAMPLE_REQUEST_SD = {
 
 
 EXAMPLE_REQUEST_DENOVO_DB = {
-    "datasetId": "denovo_db",
+    "datasetId": "TESTdenovo_db",
     "genomicScores": [],
     "pedigreeSelector": {
         "id": "phenotype",
@@ -142,7 +142,7 @@ class Test(BaseAuthenticatedUserTest):
             self.URL, query, content_type='application/x-www-form-urlencoded')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        self.assertEqual(64 + 1, count_iterable(response.streaming_content))
+        self.assertEqual(63 + 1, count_iterable(response.streaming_content))
 
     def test_query_download_json(self):
         data = copy.deepcopy(EXAMPLE_REQUEST_SVIP)
@@ -152,7 +152,7 @@ class Test(BaseAuthenticatedUserTest):
             self.URL, query, format="json")
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        self.assertEqual(64 + 1, count_iterable(response.streaming_content))
+        self.assertEqual(63 + 1, count_iterable(response.streaming_content))
 
 
 class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
@@ -171,7 +171,8 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert header is not None
         assert res is not None
 
-        assert 422 == len(res)
+        # assert 422 == len(res)
+        assert 427 == len(res)
         for v in res:
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
@@ -190,7 +191,8 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert header is not None
         assert res is not None
 
-        assert 64 == len(res)
+        # assert 64 == len(res)
+        assert 63 == len(res)
 
         for v in res:
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
@@ -212,7 +214,8 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         assert header is not None
         assert res is not None
 
-        assert 622 == len(res)
+        # assert 622 == len(res)
+        assert 627 == len(res)
 
         for v in res:
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}

@@ -49,7 +49,8 @@ class CLIError(Exception):
 
 class VariantsBase(object):
 
-    def create_summary_variant_dict(self, nrow, vals, evvals):
+    def create_summary_variant_dict(
+            self, nrow, vals, evvals, score_names=None):
         res = {
             'id': nrow,
             'ln': nrow,
@@ -71,6 +72,10 @@ class VariantsBase(object):
             'evs_freq': self.safe_float(vals.get('EVS-freq', None)),
             'e65_freq': self.safe_float(vals.get('E65-freq', None)),
         }
+        if score_names:
+            for sn in score_names:
+                res[sn] = self.safe_float(vals[sn])
+
         return res
 
     @staticmethod
@@ -79,8 +84,11 @@ class VariantsBase(object):
             return 'NULL'
         if s.strip() == '':
             return 'NULL'
-        else:
-            return s
+        if s.strip() == '.':
+            return 'NULL'
+        if s.strip() == '-':
+            return 'NULL'
+        return s
 
     @staticmethod
     def get_study_filenames(study_name):
@@ -186,6 +194,7 @@ CREATE TABLE `transmitted_summaryvariant` (
   `alt_freq` double NOT NULL,
   `prcnt_par_called` double NOT NULL,
   `hw` double NOT NULL,
+  {}
   `ssc_freq` double DEFAULT NULL,
   `evs_freq` double DEFAULT NULL,
   `e65_freq` double DEFAULT NULL,
@@ -222,12 +231,29 @@ UNLOCK TABLES;
         ''' %(effect_count)d, "%(effect_details)s", ''' \
         ''' %(n_par_called)d, %(n_alt_alls)d, %(alt_freq)f, ''' \
         ''' %(prcnt_par_called)f, %(hw)f, ''' \
-        ''' %(ssc_freq)s, %(evs_freq)s, %(e65_freq)s )'''
+        ''' {} ''' \
+        ''' %(ssc_freq)s, %(evs_freq)s, %(e65_freq)s )\n'''
 
-    def handle(self, study_name, summary_filename, outdir):
+    def create_table_statement(self, score_names=None):
+        if not score_names:
+            return self.CREATE_TABLE.format("")
+        scores = [
+            "`{}`  double DEFAULT NULL".format(name) for name in score_names
+        ]
+        create = ",\n".join(scores) + ",\n"
+        return self.CREATE_TABLE.format(create)
+
+    def values_statement(self, score_names=None):
+        if not score_names:
+            return self.VALUES.format("")
+        statements = [" %({})s, ".format(name) for name in score_names]
+        return self.VALUES.format("".join(statements))
+
+    def handle(self, study_name, summary_filename, outdir, score_names=None):
 
         print("Working with transmitted study: {}".format(study_name))
         print("Working with summary filename: {}".format(summary_filename))
+        print("Working with score names: {}".format(score_names))
         outfilename = os.path.join(
             outdir,
             '{}_sql_summary_variants_myisam.sql.gz'.format(study_name)
@@ -237,8 +263,14 @@ UNLOCK TABLES;
                 gzip.open(outfilename, 'w') as outfile:
 
             column_names = fh.readline().rstrip().split('\t')
+            column_names = [cn.strip("#") for cn in column_names]
 
-            outfile.write(self.CREATE_TABLE)
+            assert score_names is None or all(
+                [sc in column_names for sc in score_names])
+            create_table_sql = self.create_table_statement(score_names)
+            values_sql = self.values_statement(score_names)
+
+            outfile.write(create_table_sql)
             outfile.write('\n')
             outfile.write(self.BEGIN_DUMPING_DATA)
             outfile.write('\n')
@@ -256,8 +288,8 @@ UNLOCK TABLES;
                     erow, evvals = \
                         self.create_effect_variant_dict(vals, nrow, erow)
                     svvals = self.create_summary_variant_dict(
-                        nrow, vals, evvals)
-                    ins_values = self.VALUES % svvals
+                        nrow, vals, evvals, score_names=score_names)
+                    ins_values = values_sql % svvals
                     ins_line.append(ins_values)
                     nrow += 1
                     if nrow % 100 == 0:
@@ -568,6 +600,8 @@ UNLOCK TABLES;
                 gzip.open(outfilename, 'w') as outfile:
 
             column_names = fh.readline().rstrip().split('\t')
+            column_names = [cn.strip("#") for cn in column_names]
+
             tmfh.readline()  # skip column names in too may family file
 
             outfile.write(self.CREATE_TABLE)
@@ -690,6 +724,15 @@ USAGE
             dest='toomanyfile',
             help='transmitted variants family variants file name')
 
+        parser.add_argument(
+            '-G', '--genomic_scores',
+            dest='genomic_scores',
+            help='list of genomic scores to transfer into MySQL tables')
+        parser.add_argument(
+            '--genomic_scores_filename',
+            dest='genomic_scores_filename',
+            help='file with list of genomic scores to transfer into MySQL tables')
+
         args = parser.parse_args()
 
         study_name = args.study_name
@@ -698,6 +741,15 @@ USAGE
         summary = args.summary
         gene_effect = args.gene_effect
         family = args.family
+
+        genomic_scores = None
+        if args.genomic_scores:
+            genomic_scores = args.genomic_scores.split(",")
+        if genomic_scores is None and args.genomic_scores_filename:
+            with open(args.genomic_scores_filename, "r") as infile:
+                lines = infile.readlines()
+                lines = [ln.strip() for ln in lines]
+                genomic_scores = [ln for ln in lines if ln]
 
         if args.all:
             summary = True
@@ -710,7 +762,9 @@ USAGE
         print(study.name, summary_filename, tm_filename)
         if summary:
             summary_variants = SummaryVariants()
-            summary_variants.handle(study_name, summary_filename, outdir)
+            summary_variants.handle(
+                study_name, summary_filename, outdir,
+                score_names=genomic_scores)
         if gene_effect:
             gene_effect_variants = GeneEffectVariants()
             gene_effect_variants.handle(study_name, summary_filename, outdir)

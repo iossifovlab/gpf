@@ -4,6 +4,7 @@ Created on Nov 16, 2016
 @author: lubo
 '''
 from pheno_tool.genotype_helper import VariantsType as VT
+import pytest
 
 
 def test_get_variants_denovo(
@@ -20,6 +21,7 @@ def test_get_variants_denovo(
     assert 137 == len(variants)
 
 
+@pytest.mark.slow
 def test_get_variants_father_ultra_rare(
         autism_candidates_genes, genotype_helper):
 
@@ -44,9 +46,12 @@ def test_get_variants_father_ultra_rare(
         else:
             tcount += 1
     print(dcount, tcount)
-    assert 176 == len(variants)
+    # FIXME: changed after rennotation
+    # assert 176 == len(variants)
+    assert 178 == len(variants)
 
 
+@pytest.mark.slow
 def test_get_variants_father_rarity(
         autism_candidates_genes, genotype_helper):
 
@@ -84,9 +89,12 @@ def test_get_variants_father_rarity(
             assert v.altFreqPrcnt <= 1.0
     print(dcount, tcount)
 
-    assert 250 == len(variants)
+    # FIXME: changed after rennotation
+    # assert 250 == len(variants)
+    assert 256 == len(variants)
 
 
+@pytest.mark.slow
 def test_get_variants_father_interval(
         autism_candidates_genes, genotype_helper):
 
@@ -175,6 +183,7 @@ def test_get_persons_variants_denovo(
     assert 137 == len(res)
 
 
+@pytest.mark.slow
 def test_get_person_variants_father_all(
         autism_candidates_genes, genotype_helper):
 
@@ -189,7 +198,9 @@ def test_get_person_variants_father_all(
         )
     )
     variants = [v for v in vs]
-    assert 503 == len(variants)
+    # FIXME: changed after rennotation
+    # assert 503 == len(variants)
+    assert 509 == len(variants)
 
     res = genotype_helper.get_persons_variants(
         VT(
@@ -201,7 +212,9 @@ def test_get_person_variants_father_all(
             present_in_parent=['father only', 'mother and father', 'neither'],
         )
     )
-    assert 934 == len(res)
+    # FIXME: changed after rennotation
+    # assert 934 == len(res)
+    assert 947 == len(res)
     assert 3 == max(res.values())
     ps3 = [p for (p, c) in res.items() if c == 3]
     assert 6 == len(ps3)
@@ -213,6 +226,7 @@ def test_get_person_variants_father_all(
     assert '13216.fa' in ps3
 
 
+@pytest.mark.slow
 def test_get_lgds_variants_for_family(
         autism_candidates_genes, genotype_helper):
 
@@ -230,9 +244,12 @@ def test_get_lgds_variants_for_family(
         )
     )
     variants = [v for v in vs]
-    assert 100 == len(variants)
+    # FIXME: changed after rennotation
+    # assert 100 == len(variants)
+    assert 106 == len(variants)
 
 
+@pytest.mark.slow
 def test_get_persons_variants_df_denovo(
         autism_candidates_genes, genotype_helper):
 
