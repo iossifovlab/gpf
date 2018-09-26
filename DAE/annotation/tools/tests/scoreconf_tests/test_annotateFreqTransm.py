@@ -1,4 +1,5 @@
 import pytest
+import pysam
 import gzip
 from annotation.tools.annotateFreqTransm \
         import FrequencyAnnotator
@@ -23,8 +24,25 @@ def fake_gzip_open(filename, *args):
     return filename
 
 
+class Dummy_tbi:
+
+    def __init__(self, filename):
+        self.file = filename 
+
+    def get_splitted_line(self):
+        res = self.file.readline().rstrip('\n')
+        if res == '':
+            return res
+        else:
+            return res.split('\t')
+
+    def fetch(self, region, parser):
+        return iter(self.get_splitted_line, '')
+
+
 @pytest.fixture
 def mocker(mocker):
+    mocker.patch.object(pysam, 'Tabixfile', new=Dummy_tbi)
     mocker.patch.object(gzip, 'open', new=fake_gzip_open)
 
 
