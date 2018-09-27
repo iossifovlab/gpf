@@ -133,7 +133,7 @@ class IterativeAccess(ScoreFile):
 
     XY_INDEX = {'X': 23, 'Y': 24}
 
-    def __init__(self, score_file_name, score_config=None):
+    def __init__(self, score_file_name, score_config=None, region=None):
         super(IterativeAccess, self).__init__(score_file_name, score_config)
 
         self.chr_index = \
@@ -142,6 +142,12 @@ class IterativeAccess(ScoreFile):
             self.config.header.index(self.config.columns.pos_begin)
         self.pos_end_index = \
             self.config.header.index(self.config.columns.pos_end)
+
+        self.file = pysam.Tabixfile(score_file_name)
+        try:
+            self.file_iterator = self.file.fetch(region=region, parser=pysam.asTuple())
+        except ValueError:
+            self.file_iterator = iter([])
         self.current_lines = [self._next_line()]
 
     def _fetch(self, chr, pos):
@@ -171,15 +177,14 @@ class IterativeAccess(ScoreFile):
         return self.current_lines[:-1]
 
     def _next_line(self):
-        line = self.file.readline()
-        if line is None or line == '':
+        try:
+            return next(self.file_iterator)
+        except StopIteration:
             line = self.config.header[:]
             line[self.chr_index] = '25'
             line[self.pos_begin_index] = '-1'
             line[self.pos_end_index] = '-1'
-        else:
-            line = line.rstrip('\n').split('\t')
-        return line
+            return line
 
     def _chr_to_int(self, chr):
         chr = chr.replace('chr', '')
@@ -231,7 +236,9 @@ class ScoreAnnotator(AnnotatorBase):
                                          self.opts.scores_config_file)
             else:
                 self.file = IterativeAccess(self.opts.scores_file,
-                                            self.opts.scores_config_file)
+                                            self.opts.scores_config_file,
+                                            self.opts.region)
+
         self.header.extend(self.labels if self.labels
                            else self.file.config.columns.score)
 
