@@ -7,54 +7,13 @@ from box import Box
 from os import remove, rmdir, getcwd
 from annotation.tools.annotate_with_multiple_scores \
         import MultipleScoresAnnotator
-
-
-def to_file(content, name, where=None):
-    if where is None:
-        where = os.path.dirname('.')
-    name = where + '/' + name
-    temp = open(name, 'w')
-    temp.write(content)
-    temp.seek(0)
-    temp.close()
-    return temp.name
-
-
-class Dummy_tbi:
-
-    def __init__(self, filename):
-        self.file = open(filename, 'r')
-
-    def get_splitted_line(self):
-        res = self.file.readline().rstrip('\n')
-        if res == '':
-            return res
-        else:
-            return res.split('\t')
-
-    def fetch(self, region, parser):
-        return iter(self.get_splitted_line, '')
-
-
-def fake_gzip_open(filename, *args, **kwargs):
-    return open(filename, 'r')
-
-
-def get_opts():
-    options = {
-            'c': 'chrom',
-            'p': 'pos',
-            'H': False,
-            'scores_directory': getcwd()+'/test_multiple_scores_tmpdir',
-            'scores': 'score1,score2'
-    }
-    return Box(options, default_box=True, default_box_attr=None)
+from utils import Dummy_tbi, dummy_gzip_open, to_file, get_opts
 
 
 @pytest.fixture(autouse=True)
 def mock(mocker):
     mocker.patch.object(pysam, 'Tabixfile', new=Dummy_tbi)
-    mocker.patch.object(gzip, 'open', new=fake_gzip_open)
+    mocker.patch.object(gzip, 'open', new=dummy_gzip_open)
 
 
 @pytest.fixture
@@ -100,7 +59,7 @@ def config():
             'score=scoreValue,scoreValue2')
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def setup_scores(score, score2, config):
     pathlist = [getcwd()+'/test_multiple_scores_tmpdir',
                 getcwd()+'/test_multiple_scores_tmpdir/score1',
@@ -116,8 +75,7 @@ def setup_scores(score, score2, config):
         rmdir(dir_)
 
 
-def test_multi_score(input_, expected_output, setup_scores): 
-    scores = setup_scores
+def test_multi_score(input_, expected_output):
     annotator = MultipleScoresAnnotator(get_opts(), header=['id', 'chrom', 'pos', 'variant'])
     output = ""
     for line in input_.split('\n'):
