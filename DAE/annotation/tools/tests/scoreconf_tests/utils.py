@@ -1,6 +1,7 @@
 import random
 import string
 from os import getcwd
+from box import Box
 
 class Dummy_tbi:
 
@@ -39,3 +40,20 @@ def to_file(content, name=None, where=None, suffix='.temp'):
     temp.seek(0)
     temp.close()
     return temp.name
+
+
+def get_opts(score_file=None, conf=None, search_cols=[]):
+    options = {
+        'c': 'chrom',
+        'p': 'pos',
+        'v': 'variant',
+        'H': False,
+        'search_columns': ','.join(search_cols),
+        'scores_file': score_file,
+        'scores_config_file': conf,
+        'scores_directory': getcwd()+'/test_multiple_scores_tmpdir',
+        'scores': 'score1,score2',
+        'direct': False,
+        'frequency': 'all.altFreq'
+    }
+    return Box(options, default_box=True, default_box_attr=None)

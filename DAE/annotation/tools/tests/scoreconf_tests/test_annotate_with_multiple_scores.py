@@ -7,18 +7,7 @@ from box import Box
 from os import remove, rmdir, getcwd
 from annotation.tools.annotate_with_multiple_scores \
         import MultipleScoresAnnotator
-from utils import Dummy_tbi, dummy_gzip_open, to_file
-
-
-def get_opts():
-    options = {
-            'c': 'chrom',
-            'p': 'pos',
-            'H': False,
-            'scores_directory': getcwd()+'/test_multiple_scores_tmpdir',
-            'scores': 'score1,score2'
-    }
-    return Box(options, default_box=True, default_box_attr=None)
+from utils import Dummy_tbi, dummy_gzip_open, to_file, get_opts
 
 
 @pytest.fixture(autouse=True)
