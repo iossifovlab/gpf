@@ -11,4 +11,9 @@ Adding group to a dataset
 In the *Datasets* tab, by typing group names in the text bar in the 'Groups with access'
 column, and then clicking 'Add', existing groups can be assigned to datasets.
 
-.. image:: imgs/d-img1.png
+.. figure:: imgs/d-img1.png
+   :width: 450px
+   :alt: Example of changing groups of a dataset
+   :align: center
+   
+   Example of changing groups of a dataset

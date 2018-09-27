@@ -1,32 +1,12 @@
 from __future__ import unicode_literals
 import pytest
-import config
-import input_output
 import os.path
 import gzip
-from os import remove, rmdir
+import pysam
+from box import Box
+from os import remove, rmdir, getcwd
 from annotation.tools.annotate_with_multiple_scores \
         import MultipleScoresAnnotator
-from copy import deepcopy
-from io import StringIO
-
-
-def get_opts(c_inp=None, p_inp=None, x_inp=None,
-             dir_inp=None,
-             direct_inp=False):
-    class MockOpts:
-        def __init__(self, chrom, pos, loc, scoredir, tabix):
-            self.c = chrom
-            self.p = pos
-            self.x = loc
-            self.H = False
-            self.scores_directory = scoredir
-            self.direct = tabix
-            self.labels = None
-            self.explicit = True
-            self.scores = 'score1,score2'
-
-    return MockOpts(c_inp, p_inp, x_inp, dir_inp, direct_inp)
 
 
 def to_file(content, name, where=None):
@@ -37,85 +17,111 @@ def to_file(content, name, where=None):
     temp.write(content)
     temp.seek(0)
     temp.close()
-    return temp
+    return temp.name
 
 
-def setup_scoredirs():
-    pathlist = [os.path.abspath('.')+'/masterdir',
-                os.path.abspath('.')+'/masterdir/score1',
-                os.path.abspath('.')+'/masterdir/score2']
-    os.mkdir(pathlist[0])
-    os.mkdir(pathlist[1])
-    os.mkdir(pathlist[2])
-    return pathlist
+class Dummy_tbi:
 
+    def __init__(self, filename):
+        self.file = open(filename, 'r')
 
-def setup_score(score, conf, name, path):
-    return [to_file(score, name, path), to_file(conf, name+'.conf', path)]
+    def get_splitted_line(self):
+        res = self.file.readline().rstrip('\n')
+        if res == '':
+            return res
+        else:
+            return res.split('\t')
 
-
-def cleanup(dirs, files):
-    for tmpfile in files:
-        remove(tmpfile)
-    for tmpdir in dirs[::-1]:
-        rmdir(tmpdir)
+    def fetch(self, region, parser):
+        return iter(self.get_splitted_line, '')
 
 
 def fake_gzip_open(filename, *args, **kwargs):
     return open(filename, 'r')
 
 
-@pytest.fixture
-def mocker(mocker):
+def get_opts():
+    options = {
+            'c': 'chrom',
+            'p': 'pos',
+            'H': False,
+            'scores_directory': getcwd()+'/test_multiple_scores_tmpdir',
+            'scores': 'score1,score2'
+    }
+    return Box(options, default_box=True, default_box_attr=None)
+
+
+@pytest.fixture(autouse=True)
+def mock(mocker):
+    mocker.patch.object(pysam, 'Tabixfile', new=Dummy_tbi)
     mocker.patch.object(gzip, 'open', new=fake_gzip_open)
 
 
 @pytest.fixture
-def multi_config():
-    return [StringIO(deepcopy(config.MULTI_SCORE_CONFIG)),
-            StringIO(deepcopy(config.MULTI_SCORE_ALT_CONFIG))]
+def input_():
+    return ('1\t4\t4372372973\tsub(A->C)\n'
+            '5\t10\t4372372973\tsub(G->A)\n'
+            '3\tX\t4372\tins(AAA)\n'
+            '6\tY\t4372372973\tdel(2)')
 
 
 @pytest.fixture
-def multi_input():
-    return StringIO(''.join(deepcopy(input_output.BASE_INPUT_FILE)))
+def expected_output():
+    return ('1\t4\t4372372973\tsub(A->C)\t0.214561|1234\t0.561\n'
+            '5\t10\t4372372973\tsub(G->A)\t1.410786|2345\t1.786\n'
+            '3\tX\t4372\tins(AAA)\t2.593045|3456\t2.045\n'
+            '6\tY\t4372372973\tdel(2)\t3.922039|4567\t3.039\n')
 
 
 @pytest.fixture
-def multi_output():
-    return input_output.MULTI_OUTPUT
+def score():
+    return ('1\t4\t4372372973\t0.214561\t1234\n'
+            '5\t10\t4372372973\t1.410786\t2345\n'
+            '3\tX\t4372\t2.593045\t3456\n'
+            '6\tY\t4372372973\t3.922039\t4567')
 
 
 @pytest.fixture
-def multi_scores():
-    return [StringIO(''.join(deepcopy(input_output.MULTI_INPUT_SCORE))),
-            StringIO(''.join(deepcopy(input_output.MULTI_INPUT_SCORE_ALT)))]
+def score2():
+    return ('1\t4\t4372372973\t0.561\n'
+            '5\t10\t4372372973\t1.786\n'
+            '3\tX\t4372\t2.045\n'
+            '6\tY\t4372372973\t3.039')
 
 
-def multi_annotator(masterdir):
-    multi_opts = get_opts(c_inp='chrom', p_inp='pos',
-                          dir_inp=masterdir)
-    return MultipleScoresAnnotator(multi_opts,
-                                   header=['id', 'chrom', 'pos', 'variation'])
+@pytest.fixture
+def config():
+    return ('[general]\n'
+            'header=id,chrom,starting_pos,scoreValue,scoreValue2\n'
+            'noScoreValue=-103\n'
+            '[columns]\n'
+            'chr=chrom\n'
+            'pos_begin=starting_pos\n'
+            'score=scoreValue,scoreValue2')
 
 
-def test_multi_score(multi_input, multi_scores, multi_config, multi_output, mocker):
-    tmp_dirs = setup_scoredirs()
+@pytest.fixture
+def setup_scores(score, score2, config):
+    pathlist = [getcwd()+'/test_multiple_scores_tmpdir',
+                getcwd()+'/test_multiple_scores_tmpdir/score1',
+                getcwd()+'/test_multiple_scores_tmpdir/score2']
+    for path in pathlist:
+        os.mkdir(path)
+    files = [to_file(score, 'score1.gz', pathlist[1]), to_file(config, 'score1.gz.conf', pathlist[1]),
+             to_file(score2, 'score2.gz', pathlist[2]), to_file(config.replace(',scoreValue2', ''), 'score2.gz.conf', pathlist[2])]
+    yield files
+    for file_ in files:
+        remove(file_)
+    for dir_ in pathlist[::-1]:
+        rmdir(dir_)
 
-    score1 = setup_score(multi_scores[0].getvalue(),
-                         config.MULTI_SCORE_CONFIG.lstrip(),
-                         'score1.gz', tmp_dirs[1])
-    score2 = setup_score(multi_scores[1].getvalue(),
-                         config.MULTI_SCORE_ALT_CONFIG.lstrip(),
-                         'score2.gz', tmp_dirs[2])
 
-    annotator = multi_annotator(tmp_dirs[0])
+def test_multi_score(input_, expected_output, setup_scores): 
+    scores = setup_scores
+    annotator = MultipleScoresAnnotator(get_opts(), header=['id', 'chrom', 'pos', 'variant'])
     output = ""
-    for line in multi_input.readlines():
-        line = line.rstrip()
-        output += line + '\t' + '\t'.join(
-            annotator.line_annotations(
-                line.split('\t'),
-                annotator.new_columns)) + '\n'
-    cleanup(tmp_dirs, [tmp.name for tmp in score1+score2])
-    assert (output == multi_output)
+    for line in input_.split('\n'):
+        line = line.split('\t')
+        annotation = '\t'.join(annotator.line_annotations(line, annotator.new_columns))
+        output += '\t'.join(line) + '\t' + annotation + '\n'
+    assert (output == expected_output)

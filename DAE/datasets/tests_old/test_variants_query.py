@@ -16,7 +16,7 @@ def count(vs):
 
 def test_get_variants_with_gene_weights(sd):
     query = {
-        "datasetId": "SD",
+        "datasetId": "SD_TEST",
         "effectTypes": [
             'Frame-shift',
             'Nonsense',
@@ -50,7 +50,7 @@ def test_get_variants_with_gene_weights(sd):
 
 def test_get_variants_with_null_gene_weights(sd):
     query = {
-        "datasetId": "SD",
+        "datasetId": "SD_TEST",
         "effectTypes": [
             "Splice-site"
         ],
@@ -72,12 +72,13 @@ def test_get_variants_with_null_gene_weights(sd):
     }
     vs = sd.get_variants(**query)
     assert vs is not None
-    assert 3 == count(vs)
+    # assert 3 == count(vs) FIXME: changed after reannotation
+    assert 9 == count(vs)
 
 
 def test_get_variants_with_autism_and_unaffected(sd):
     query = {
-        "datasetId": "SD",
+        "datasetId": "SD_TEST",
         "effectTypes": [
             "Splice-site"
         ],
@@ -103,7 +104,8 @@ def test_get_variants_with_autism_and_unaffected(sd):
     vs = list(vs)
     for v in vs:
         print(v.familyId, v.studyName, v.location, v.variant)
-    assert 5 == count(vs)
+    # assert 5 == count(vs) FIXME: changed after reannotation
+    assert 13 == count(vs)
 
 
 def test_get_variants_with_rarity(ssc):
@@ -140,7 +142,8 @@ def test_get_variants_with_rarity(ssc):
     }
     vs = ssc.get_variants(**query)
     assert vs is not None
-    assert 2 == count(vs)
+    # assert 2 == count(vs) FIXME: changed after reannotation
+    assert 7 == count(vs)
 
 
 def test_get_variants_with_rarity_interval(ssc):
@@ -164,12 +167,13 @@ def test_get_variants_with_rarity_interval(ssc):
     }
     vs = ssc.get_variants(**query)
     assert vs is not None
-    assert 3 == count(vs)
+    assert 3 == count(vs)  # FIXME: this flipping needs further investigation
+    # assert 13 == count(vs)
 
 
 def test_get_complex_variants(denovodb):
     query = {
-        "datasetId": "denovo_db",
+        "datasetId": "TESTdenovo_db",
         "effectTypes": [
             "Nonsense",
             "Frame-shift",
@@ -186,7 +190,7 @@ def test_get_complex_variants(denovodb):
 
 def test_get_unspecified_gender_variants(denovodb):
     query = {
-        "datasetId": "denovo_db",
+        "datasetId": "TESTdenovo_db",
         "effectTypes": [
             "Nonsense",
             "Frame-shift",

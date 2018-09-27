@@ -5,6 +5,7 @@ import config
 import gzip
 import tempfile
 import os
+import pysam
 from annotation.tools.add_missense_scores \
         import MissenseScoresAnnotator
 from annotation.tools.annotate_score_base \
@@ -59,8 +60,26 @@ def cleanup(dirs, files):
         os.rmdir(tmpdir)
 
 
+class Dummy_tbi:
+
+    def __init__(self, filename):
+        self.file = open(filename, 'r')
+        self.file.readline()
+
+    def get_splitted_line(self):
+        res = self.file.readline().rstrip('\n')
+        if res == '':
+            return res
+        else:
+            return res.split('\t')
+
+    def fetch(self, region, parser):
+        return iter(self.get_splitted_line, '')
+
+
 @pytest.fixture
 def mocker(mocker):
+    mocker.patch.object(pysam, 'Tabixfile', new=Dummy_tbi)
     mocker.patch.object(gzip, 'open', new=fake_gzip_open)
 
 

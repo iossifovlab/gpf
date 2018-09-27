@@ -113,6 +113,7 @@ class MultiAnnotator(object):
                 virtual_columns_indices.extend(
                     [assign_values(annotation_step_config.columns[column.strip()], self.header)
                      for column in annotation_step_config.virtuals.split(',')])
+            annotation_step_config.options.region = opts.region
             self.annotators.append({
                 'instance': str_to_class(annotation_step_config.annotator)(
                     annotation_step_config.options, list(self.header)),

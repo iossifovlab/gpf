@@ -14,7 +14,9 @@ def test_denovo_gene_sets_exist(gscs):
 def test_denovo_get_gene_set_sd_lgds_autism(gscs):
     lgds = gscs.get_gene_set('denovo', 'LGDs', {'SD_TEST': ['autism']})
     assert lgds is not None
-    assert lgds['count'] == 546
+    # FIXME: changed after rennotation
+    # assert lgds['count'] == 546
+    assert lgds['count'] == 551
     assert lgds['name'] == 'LGDs'
 
 
@@ -29,7 +31,9 @@ def test_denovo_get_gene_set_sd_lgds_autism_and_epilepsy(gscs):
     lgds = gscs.get_gene_set(
         'denovo', 'LGDs', {'SD_TEST': ['autism', 'epilepsy']})
     assert lgds is not None
-    assert lgds['count'] == 576
+    # FIXME: changed after rennotation
+    # assert lgds['count'] == 576
+    assert lgds['count'] == 581
     assert lgds['name'] == 'LGDs'
 
 
@@ -46,7 +50,9 @@ def test_denovo_get_gene_sets_sd_autism(gscs):
     assert gene_sets is not None
     assert len(gene_sets) == 19
     gs = gene_sets[0]
-    assert gs['count'] == 546
+    # FIXME: changed after rennotation
+    # assert gs['count'] == 546
+    assert gs['count'] == 551
     assert gs['name'] == 'LGDs'
 
 
@@ -66,7 +72,9 @@ def test_denovo_get_gene_sets_sd_autism_and_epilepsy(gscs):
     assert gene_sets is not None
     assert len(gene_sets) == 19
     gs = gene_sets[0]
-    assert gs['count'] == 576
+    # FIXME: changed after rennotation
+    # assert gs['count'] == 576
+    assert gs['count'] == 581
     assert gs['name'] == 'LGDs'
 
 
@@ -83,14 +91,18 @@ def test_denovo_sd_lgds_single(gscs):
     gs = denovo.get_gene_set(
         'LGDs.Single', gene_sets_types={'SD_TEST': ['autism']})
     assert gs is not None
-    assert gs['count'] == 501
+    # FIXME: changed after rennotation
+    # assert gs['count'] == 501
+    assert gs['count'] == 506
 
 
 def test_denovo_get_gene_set_sd_ssc_lgds_autism(gscs):
     lgds = gscs.get_gene_set(
         'denovo', 'LGDs', {'SD_TEST': ['autism'], 'SSC': ['autism']})
     assert lgds is not None
-    assert lgds['count'] == 546
+    # FIXME: changed after rennotation
+    # assert lgds['count'] == 546
+    assert lgds['count'] == 551
     assert lgds['name'] == 'LGDs'
 
 
@@ -103,7 +115,9 @@ def test_denovo_get_gene_set_sd_svip_lgds_autism(gscs):
             'SVIP': ['ASD and other neurodevelopmental disorders']
         })
     assert lgds is not None
-    assert lgds['count'] == 582
+    # FIXME: changed after rennotation
+    # assert lgds['count'] == 582
+    assert lgds['count'] == 585
     assert lgds['name'] == 'LGDs'
 
 
@@ -144,7 +158,9 @@ def test_denovo_get_gene_sets_sd_ssc_autism(gscs):
     assert gene_sets is not None
     assert len(gene_sets) == 19
     gs = gene_sets[0]
-    assert gs['count'] == 546
+    # FIXME: changed after rennotation
+    # assert gs['count'] == 546
+    assert gs['count'] == 551
     assert gs['name'] == 'LGDs'
 
 
@@ -155,7 +171,9 @@ def test_denovo_get_gene_sets_sd_ssc_autism_and_epilepsy(gscs):
     assert gene_sets is not None
     assert len(gene_sets) == 19
     gs = gene_sets[0]
-    assert gs['count'] == 576
+    # FIXME: changed after rennotation
+    # assert gs['count'] == 576
+    assert gs['count'] == 581
     assert gs['name'] == 'LGDs'
 
 

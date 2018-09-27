@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import pytest
 import config
 import input_output
+import pysam
 import tempfile
 import os.path
 from os import remove
@@ -15,8 +16,25 @@ def fake_gzip_open(filename, *args, **kwargs):
     return filename
 
 
+class Dummy_tbi:
+
+    def __init__(self, filename):
+        self.file = filename
+
+    def get_splitted_line(self):
+        res = self.file.readline().rstrip('\n')
+        if res == '':
+            return res
+        else:
+            return res.split('\t')
+
+    def fetch(self, region, parser):
+        return iter(self.get_splitted_line, '')
+
+
 @pytest.fixture
 def mocker(mocker):
+    mocker.patch.object(pysam, 'Tabixfile', new=Dummy_tbi)
     mocker.patch.object(gzip, 'open', new=fake_gzip_open)
 
 
@@ -32,6 +50,7 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None, search_columns=[],
             self.scores_config_file = conf
             self.direct = tabix
             self.labels = None
+            self.region = None
 
     return MockOpts(c_inp, p_inp, x_inp, search_columns, file_inp, conf_inp,
         direct_inp)
