@@ -52,10 +52,7 @@ class Family(object):
         trios = {}
         for pid, p in list(persons.items()):
             if p['momId'] in persons and p['dadId'] in persons:
-                pp = [pid]
-                pp.append(p['momId'])
-                pp.append(p['dadId'])
-                trios[pid] = pp
+                trios[pid] = [pid, p['momId'], p['dadId']]
         return trios
 
     def _build_persons(self, ped_df):
