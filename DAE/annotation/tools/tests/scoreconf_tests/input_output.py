@@ -80,7 +80,6 @@ MISSENSE_INPUT_FILE = [
 ]
 
 MISSENSE_INPUT_SCORE = [
-    '#id\tchr\tpos(1-coor)\tref\talt\tmissense\n',
     '1\t1\t4372372973\t2\t3\t0.56789\n',
     '5\t1\t4372372975\t1\t4\t1.5678\n',
     '3\t1\t4372493499\t2\t3\t2.4567\n',

@@ -7,37 +7,7 @@ from box import Box
 from os import remove, rmdir, getcwd
 from annotation.tools.annotate_with_multiple_scores \
         import MultipleScoresAnnotator
-
-
-def to_file(content, name, where=None):
-    if where is None:
-        where = os.path.dirname('.')
-    name = where + '/' + name
-    temp = open(name, 'w')
-    temp.write(content)
-    temp.seek(0)
-    temp.close()
-    return temp.name
-
-
-class Dummy_tbi:
-
-    def __init__(self, filename):
-        self.file = open(filename, 'r')
-
-    def get_splitted_line(self):
-        res = self.file.readline().rstrip('\n')
-        if res == '':
-            return res
-        else:
-            return res.split('\t')
-
-    def fetch(self, region, parser):
-        return iter(self.get_splitted_line, '')
-
-
-def fake_gzip_open(filename, *args, **kwargs):
-    return open(filename, 'r')
+from utils import Dummy_tbi, dummy_gzip_open, to_file
 
 
 def get_opts():
@@ -54,7 +24,7 @@ def get_opts():
 @pytest.fixture(autouse=True)
 def mock(mocker):
     mocker.patch.object(pysam, 'Tabixfile', new=Dummy_tbi)
-    mocker.patch.object(gzip, 'open', new=fake_gzip_open)
+    mocker.patch.object(gzip, 'open', new=dummy_gzip_open)
 
 
 @pytest.fixture

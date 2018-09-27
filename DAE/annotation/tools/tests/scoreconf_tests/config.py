@@ -53,6 +53,7 @@ score=scoreValue
 
 DBNSFP_SCORE_CONFIG = '''
 [general]
+header=id,chr,pos(1-coor),ref,alt,missense
 reference_genome=hg19
 noScoreValue=-104
 [columns]

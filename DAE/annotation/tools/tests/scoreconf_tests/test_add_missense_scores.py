@@ -12,16 +12,7 @@ from annotation.tools.annotate_score_base \
         import conf_to_dict
 from copy import deepcopy
 from io import StringIO
-
-
-def to_file(content, where=None):
-    if where is None:
-        where = os.path.dirname('.')
-    temp = tempfile.NamedTemporaryFile(dir=where, delete=False, suffix='.chr1',
-        mode='w+t')
-    temp.write(content)
-    temp.seek(0)
-    return temp
+from utils import Dummy_tbi, dummy_gzip_open, to_file
 
 
 def setup_scoredir():
@@ -49,10 +40,6 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None,
     return MockOpts(c_inp, p_inp, x_inp, dir_inp, direct_inp, config)
 
 
-def fake_gzip_open(filename, *args, **kwargs):
-    return open(filename, 'r')
-
-
 def cleanup(dirs, files):
     for tmpfile in files:
         os.remove(tmpfile)
@@ -60,27 +47,10 @@ def cleanup(dirs, files):
         os.rmdir(tmpdir)
 
 
-class Dummy_tbi:
-
-    def __init__(self, filename):
-        self.file = open(filename, 'r')
-        self.file.readline()
-
-    def get_splitted_line(self):
-        res = self.file.readline().rstrip('\n')
-        if res == '':
-            return res
-        else:
-            return res.split('\t')
-
-    def fetch(self, region, parser):
-        return iter(self.get_splitted_line, '')
-
-
 @pytest.fixture
 def mocker(mocker):
     mocker.patch.object(pysam, 'Tabixfile', new=Dummy_tbi)
-    mocker.patch.object(gzip, 'open', new=fake_gzip_open)
+    mocker.patch.object(gzip, 'open', new=dummy_gzip_open)
 
 
 @pytest.fixture
@@ -113,9 +83,9 @@ def missense_annotator(dbnsfp, conf_inp):
 def test_missense_score(missense_input, missense_scores, missense_output,
                         dbnsfp_config, mocker):
     tmp_dir = setup_scoredir()
-    dbnsfp_score = to_file(missense_scores.getvalue(), where=tmp_dir)
+    dbnsfp_score = to_file(missense_scores.getvalue(), where=tmp_dir, suffix='.chr1')
 
-    annotator = missense_annotator(dbnsfp_score.name, dbnsfp_config)
+    annotator = missense_annotator(dbnsfp_score, dbnsfp_config)
     output = ""
     for line in missense_input.readlines():
         line = line.rstrip()
@@ -126,5 +96,5 @@ def test_missense_score(missense_input, missense_scores, missense_output,
             line += '\t' + annotation
         output += line + '\n'
 
-    cleanup([tmp_dir], [dbnsfp_score.name])
+    cleanup([tmp_dir], [dbnsfp_score])
     assert (output == missense_output)

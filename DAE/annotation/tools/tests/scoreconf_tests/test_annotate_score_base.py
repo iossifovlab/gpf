@@ -10,32 +10,13 @@ from annotation.tools.annotate_score_base \
         import ScoreAnnotator, gzip, conf_to_dict
 from copy import deepcopy
 from io import StringIO
-
-
-def fake_gzip_open(filename, *args, **kwargs):
-    return filename
-
-
-class Dummy_tbi:
-
-    def __init__(self, filename):
-        self.file = filename
-
-    def get_splitted_line(self):
-        res = self.file.readline().rstrip('\n')
-        if res == '':
-            return res
-        else:
-            return res.split('\t')
-
-    def fetch(self, region, parser):
-        return iter(self.get_splitted_line, '')
+from utils import Dummy_tbi, dummy_gzip_open, to_file
 
 
 @pytest.fixture
 def mocker(mocker):
     mocker.patch.object(pysam, 'Tabixfile', new=Dummy_tbi)
-    mocker.patch.object(gzip, 'open', new=fake_gzip_open)
+    mocker.patch.object(gzip, 'open', new=dummy_gzip_open)
 
 
 def get_opts(c_inp=None, p_inp=None, x_inp=None, search_columns=[],
@@ -55,14 +36,6 @@ def get_opts(c_inp=None, p_inp=None, x_inp=None, search_columns=[],
     return MockOpts(c_inp, p_inp, x_inp, search_columns, file_inp, conf_inp,
         direct_inp)
 
-
-def to_file(content, where=None):
-    if where is None:
-        where = os.path.dirname('.')
-    temp = tempfile.NamedTemporaryFile(dir=where, delete=False, mode='w+t')
-    temp.write(content.read())
-    temp.seek(0)
-    return temp
 
 
 @pytest.fixture
@@ -138,7 +111,7 @@ def base_annotator(base_config, base_scores, mocker):
 def base_annotator_file(base_config, base_scores, mocker):
     base_opts = get_opts(c_inp='chrom', p_inp='pos',
                          file_inp=base_scores,
-                         conf_inp=to_file(base_config).name)
+                         conf_inp=to_file(base_config.read()))
     return ScoreAnnotator(base_opts,
                           header=['id', 'chrom', 'pos', 'variation'])
 

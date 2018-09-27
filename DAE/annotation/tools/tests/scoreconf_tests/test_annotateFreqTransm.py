@@ -6,6 +6,7 @@ from annotation.tools.annotateFreqTransm \
         import FrequencyAnnotator
 from io import StringIO
 from box import Box
+from utils import Dummy_tbi, dummy_gzip_open
 
 
 def get_opts(score_file):
@@ -21,30 +22,10 @@ def get_opts(score_file):
     return Box(options, default_box=True, default_box_attr=None)
 
 
-def fake_gzip_open(filename, *args, **kwargs):
-    return filename
-
-
-class Dummy_tbi:
-
-    def __init__(self, filename):
-        self.file = filename 
-
-    def get_splitted_line(self):
-        res = self.file.readline().rstrip('\n')
-        if res == '':
-            return res
-        else:
-            return res.split('\t')
-
-    def fetch(self, region, parser):
-        return iter(self.get_splitted_line, '')
-
-
 @pytest.fixture
 def mocker(mocker):
     mocker.patch.object(pysam, 'Tabixfile', new=Dummy_tbi)
-    mocker.patch.object(gzip, 'open', new=fake_gzip_open)
+    mocker.patch.object(gzip, 'open', new=dummy_gzip_open)
 
 
 @pytest.fixture
