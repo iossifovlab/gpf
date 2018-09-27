@@ -70,7 +70,7 @@ def config():
             'score=scoreValue,scoreValue2')
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def setup_scores(score, score2, config):
     pathlist = [getcwd()+'/test_multiple_scores_tmpdir',
                 getcwd()+'/test_multiple_scores_tmpdir/score1',
@@ -86,8 +86,7 @@ def setup_scores(score, score2, config):
         rmdir(dir_)
 
 
-def test_multi_score(input_, expected_output, setup_scores): 
-    scores = setup_scores
+def test_multi_score(input_, expected_output):
     annotator = MultipleScoresAnnotator(get_opts(), header=['id', 'chrom', 'pos', 'variant'])
     output = ""
     for line in input_.split('\n'):
