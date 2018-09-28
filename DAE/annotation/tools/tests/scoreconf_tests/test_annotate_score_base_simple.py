@@ -35,7 +35,7 @@ def input_():
 
 @pytest.fixture
 def expected_annotations():
-    return [['0.214561'], ['1.410786'], ['2.593045'], ['3.922039']]
+    return [[[0.214561]], [[1.410786]], [[2.593045]], [[3.922039]]]
 
 
 @pytest.fixture

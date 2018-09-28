@@ -70,6 +70,16 @@ def conf_to_dict(path):
     return conf_settings
 
 
+def normalize_value(score_value):
+    if ';' in score_value:
+        result = score_value.split(';')
+    elif ',' in score_value:
+        result = score_value.split(',')
+    else:
+        result = [score_value]
+    return [None if value in ['.', ''] else float(value)
+            for value in result]
+
 class ScoreFile(object):
 
     def __init__(self, score_file_name, config_input):
@@ -250,9 +260,12 @@ class ScoreAnnotator(AnnotatorBase):
         if loc is not None:
             chr, pos = loc.split(':')
         if chr != '':
-            return self.file.get_scores(new_columns, chr, int(pos), *args)
+            
+            return [normalize_value(score)
+                    for score
+                    in self.file.get_scores(new_columns, chr, int(pos), *args)]
         else:
-            return ['' for col in new_columns]
+            return [None for col in new_columns]
 
     def line_annotations(self, line, new_columns):
         params = [line[i-1] if i is not None else None for i in self.arg_columns]
