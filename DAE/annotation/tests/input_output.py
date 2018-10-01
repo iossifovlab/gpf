@@ -1,66 +1,6 @@
 from __future__ import unicode_literals
 import os
 
-BASE_INPUT = [
-    '1\t4:4372372973\tsub(A->C)\n',
-    '5\t10:4372372973\tsub(G->A)\n',
-    '3\tX:4372\tins(AAA)\n',
-    '6\tY:4372372973\tdel(2)\n'
-]
-
-SPLIT_COLUMN_INPUT = [
-    '1\t4:4372372973\tsub(A->C)\n',
-    '5\t10:4372372973|1:8493943843\tsub(G->A)\n',
-    '3\tX:4372\tins(AAA)\n',
-    '6\tY:4372372973\tdel(2)\n'
-]
-
-MULTIPLE_HEADERS_INPUT = [
-    '#Second header\n',
-    '1\t4:4372372973\tsub(A->C)\n',
-    '5\t10:4372372973\tsub(G->A)\n',
-    '#Last header\n',
-    '3\tX:4372\tins(AAA)\n',
-    '6\tY:4372372973\tdel(2)\n'
-]
-
-BASE_OUTPUT = """#id\tlocation\tvariant\tloc
-1\t4:4372372973\tsub(A->C)\t4:437237297
-5\t10:4372372973\tsub(G->A)\t10:437237297
-3\tX:4372\tins(AAA)\tX:437
-6\tY:4372372973\tdel(2)\tY:437237297
-"""
-
-REANNOTATE_OUTPUT = """#id\tlocation\tvariant
-1\t4:437237297\tsub(A->C)
-5\t10:437237297\tsub(G->A)
-3\tX:437\tins(AAA)
-6\tY:437237297\tdel(2)
-"""
-
-DEFAULT_ARGUMENTS_OUTPUT = """#id\tlocation\tvariant\tlocation
-1\t4:4372372973\tsub(A->C)\t4:4372372
-5\t10:4372372973\tsub(G->A)\t10:4372372
-3\tX:4372\tins(AAA)\tX:4
-6\tY:4372372973\tdel(2)\tY:4372372
-"""
-
-SPLIT_COLUMN_OUTPUT = """#id\tlocation\tvariant\tloc
-1\t4:4372372973\tsub(A->C)\t4:437237297
-5\t10:4372372973|1:8493943843\tsub(G->A)\t10:437237297|1:849394384
-3\tX:4372\tins(AAA)\tX:437
-6\tY:4372372973\tdel(2)\tY:437237297
-"""
-
-MULTIPLE_HEADERS_OUTPUT = """#id\tlocation\tvariant\tloc
-#Second header
-1\t4:4372372973\tsub(A->C)\t4:437237297
-5\t10:4372372973\tsub(G->A)\t10:437237297
-#Last header
-3\tX:4372\tins(AAA)\tX:437
-6\tY:4372372973\tdel(2)\tY:437237297
-"""
-
 DATA_DIR = './data/dir'
 
 OUTPUT_DIR = './output/dir'
@@ -130,8 +70,8 @@ TRANSMITTED = ''.join([''.join([''.join([
     '{target}: {parts}\n\tSGE_RREQ="{sge_rreq}" merge.sh "$@"\n\n'.format(
         target=output_file.replace('.bgz', ''), sge_rreq=SGE_RREQ,
         parts=temp_files) +
-    '{bgz_target}: {merge_target}\n\tSGE_RREQ="{sge_rreq}" bgzip "$<" && '
-    'mv "$<.gz" "$@" && tabix -b 2 -e 2 -S 1 "$@"\n'.format(
+    '{bgz_target}: {merge_target}\n\tSGE_RREQ="{sge_rreq}" '
+    'bgzip -c "$<" > "$@" && tabix -b 2 -e 2 -S 1 "$@"\n'.format(
         bgz_target=output_file,
         merge_target=output_file.replace('.bgz', ''), sge_rreq=SGE_RREQ)
     for input_file, output_file, temp_files in zip(TRANSMITTED_INPUT_FILES,
@@ -141,7 +81,7 @@ TRANSMITTED = ''.join([''.join([''.join([
 MAKEFILE_OUTPUT = """SHELL=/bin/bash -o pipefail
 .DELETE_ON_ERROR:\n
 all:\n
-{output_dir}:\n\tmkdir {subdir_list}\n
+{output_dir}:\n\tmkdir -p {subdir_list}\n
 {denovo}
 {transmitted}
 all: {denovo_output} {transmitted_output}

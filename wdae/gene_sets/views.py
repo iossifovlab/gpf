@@ -43,7 +43,7 @@ class GeneSetsView(GeneSetsBaseView):
         {
         "geneSetsCollection": "main",
         "geneSetsTypes": {
-            "SD": ["autism", "epilepsy"],
+            "SD_TEST": ["autism", "epilepsy"],
         },
         "filter": "ivan",
         "limit": 100
@@ -107,7 +107,7 @@ class GeneSetDownloadView(GeneSetsBaseView):
         "geneSetsCollection": "denovo",
         "geneSet": "LGDs",
         "geneSetsTypes": {
-            "SD": ["autism", "epilepsy"]
+            "SD_TEST": ["autism", "epilepsy"]
         }
         }
     """

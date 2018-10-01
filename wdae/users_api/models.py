@@ -32,6 +32,8 @@ class WdaeUserManager(BaseUserManager):
             raise ValueError('The given email must be set')
 
         email = self.normalize_email(email)
+        email = email.lower()
+
         user = self.model(email=email, **kwargs)
         user.set_password(password)
 
@@ -113,7 +115,8 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
 
     @property
     def has_unlimitted_download(self):
-        return self.groups.filter(name=self.UMLIMITTED_DOWNLOAD_GROUP).count() > 0
+        return self.groups.filter(
+            name=self.UMLIMITTED_DOWNLOAD_GROUP).count() > 0
 
     def email_user(self, subject, message, from_email=None):
         override = None
@@ -231,7 +234,8 @@ def _create_reset_mail(host, path, verification_path, by_admin=False):
         'GPF: Genotype and Phenotype in Families ' \
         'please follow this link: '
     if by_admin:
-        message = 'Hello. Your password has been reset by an admin. Your old ' \
+        message = \
+            'Hello. Your password has been reset by an admin. Your old ' \
             'password will not work. To set a new password in ' \
             'GPF: Genotype and Phenotype in Families ' \
             'please follow this link: '
@@ -264,8 +268,9 @@ def _build_email_template(settings):
 
 def _create_verif_path(user):
     verif_path, _ = \
-        VerificationPath.objects.get_or_create(user=user,
-                                               defaults={'path': uuid.uuid4()})
+        VerificationPath.objects.get_or_create(
+            user=user,
+            defaults={'path': uuid.uuid4()})
     return verif_path
 
 

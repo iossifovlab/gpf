@@ -12,6 +12,7 @@ import traceback
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
+import pandas as pd
 
 from tqdm import tqdm
 
@@ -120,10 +121,10 @@ def summary_batch(sum_df):
         assert name in sum_df, name
         data = sum_df[name].values
         field = schema.field_by_name(name)
-        print("==========")
-        print(name)
-        print("DATA:", data, type(data[0]))
-        print("FIELD:", field)
+        # print("==========")
+        # print(name)
+        # print("DATA:", data, type(data[0]))
+        # print("FIELD:", field)
         batch_data.append(pa.array(data, type=field.type))
 
     batch = pa.RecordBatch.from_arrays(
@@ -295,13 +296,12 @@ def save_ped_df_to_parquet(ped_df, filename):
     ped_df.role = ped_df.role.apply(lambda r: r.value)
     ped_df.sex = ped_df.sex.apply(lambda s: s.value)
 
-    table = pa.Table.from_pandas(ped_df)
+    table = pa.Table.from_pandas(ped_df, schema=pedigree_parquet_schema())
     pq.write_table(table, filename)
 
 
 def read_ped_df_from_parquet(filename):
-    table = pq.read_table(filename)
-    ped_df = table.to_pandas()
+    ped_df = pd.read_parquet(filename, engine="pyarrow")
     ped_df.role = ped_df.role.apply(lambda v: Role(v))
     ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
 

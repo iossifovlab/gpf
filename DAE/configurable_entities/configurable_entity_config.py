@@ -1,6 +1,6 @@
 from box import ConfigBox
 import os
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 
 
 class CaseSensitiveConfigParser(ConfigParser):

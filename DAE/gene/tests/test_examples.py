@@ -12,21 +12,6 @@ import pytest
 
 pytestmark = pytest.mark.skip('depends on real data')
 
-# def test_example1_denovo_gene_sets():
-#     gsc = DenovoGeneSetsCollection()
-#     gsc.build_cache(datasets=['SD', 'denovo_db'])
-#     gs = gsc.get_gene_set("LGDs.Recurrent", {'SD': ['autism']})
-#     assert gs
-#
-#     print("SD: autism rec lgds:", gs)
-#
-#     gss = gsc.get_gene_sets({'SD': ['autism']})
-#     gss = {g['name']: g['syms'] for g in gss}
-#
-#     print("SD: autism gene sets keys: ", gss.keys())
-#
-#     gss = gsc.get_gene_sets({'SSC': ['autism']})
-#     print(gss)
 """
 Denovo Gene Sets are configured into 'geneInfo.conf'. There is a section
 'geneTerms.denovo', that specifies available denovo gene sets.
@@ -78,11 +63,11 @@ def test_example2_denovo_gene_sets():
     gsc.load()
 
     print(gsc.get_dataset_phenotypes('SD'))
-    print(gsc.get_dataset_phenotypes('denovo_db'))
+    print(gsc.get_dataset_phenotypes('TESTdenovo_db'))
 
     denovo_sets = gsc.get_denovo_sets({
         'SD': ['autism'],
-        'denovo_db': ['autism']})
+        'TESTdenovo_db': ['autism']})
     assert denovo_sets
     print(list(denovo_sets.keys()))
 
@@ -91,7 +76,7 @@ def test_example2_denovo_gene_sets():
 
     denovo_sets2 = gsc.get_denovo_sets({
         'SD': None,
-        'denovo_db': None})
+        'TESTdenovo_db': None})
     assert len(denovo_sets['LGDs.Recurrent']) <= \
         len(denovo_sets2['LGDs.Recurrent'])
 

@@ -11,9 +11,9 @@ from DAE import genomesDB
 GA = genomesDB.get_genome()  # @UndefinedVariable
 
 
-SUB_RE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
-INS_RE = re.compile('^ins\(([ACGT]+)\)$')
-DEL_RE = re.compile('^del\((\d+)\)$')
+SUB_RE = re.compile(r'^sub\(([ACGT])->([ACGT])\)$')
+INS_RE = re.compile(r'^ins\(([ACGT]+)\)$')
+DEL_RE = re.compile(r'^del\((\d+)\)$')
 
 
 def dae2vcf_variant(chrom, position, var):

@@ -19,6 +19,9 @@ class DatasetFacade(object):
     def get_dataset(self, dataset_id):
         self.load_cache({dataset_id})
 
+        if dataset_id not in self._dataset_cache:
+            return None
+
         return self._dataset_cache[dataset_id]
 
     def get_all_datasets(self):

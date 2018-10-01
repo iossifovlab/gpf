@@ -46,6 +46,7 @@ class Weights(GenomicValues):
             self.range = None
 
         self._load_data()
+        self.df.dropna(inplace=True)
 
     def min(self):
         """

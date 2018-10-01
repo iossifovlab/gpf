@@ -7,14 +7,6 @@ from __future__ import print_function
 from common_reports_api.variants import FamiliesReport
 
 
-# def test_families_report_denovo_db():
-#     fr = FamiliesReport('denovo_db')
-#     assert fr is not None
-#
-#     fr.build()
-#     print(fr)
-
-
 def test_families_report_iossifov_2014():
     fr = FamiliesReport('IossifovWE2014')
     assert fr is not None
@@ -42,5 +34,3 @@ def test_families_report_iossifov_2014():
     assert cc.children_male == 900
     assert cc.children_unspecified == 0
     assert cc.children_total == 1911
-
-    

@@ -432,7 +432,7 @@ class RegionsMixin(object):
         if not res:
             return None
         chrome, start, end = res
-        return "chr{}:{}-{}".format(chrome, start, end)
+        return "{}:{}-{}".format(chrome, start, end)
 
     @classmethod
     def parse(cls, region):

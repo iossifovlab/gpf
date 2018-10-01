@@ -62,7 +62,6 @@ def pytest_collection_modifyitems(config, items):
 # def datasets_factory(request, datasets_config):
 #     return DatasetsFactory(datasets_config)
 
-
 # @pytest.fixture(scope='session')
 # def ssc(request, datasets_factory):
 #     return datasets_factory.get_dataset('SSC')
@@ -84,7 +83,7 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope='session')
-def ssc_pheno(request):
+def ssc_pheno():
     pf = DAE.pheno
     db = pf.get_pheno_db('ssc')
     return db

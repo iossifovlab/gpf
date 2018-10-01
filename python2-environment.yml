@@ -2,6 +2,7 @@ name: dae-python2
 channels:
   - defaults
 dependencies:
+  - pyliftover=0.3=py_2
   - attrs=18.1.0=py27_0
   - backports=1.0=py27h63c9359_1
   - backports.functools_lru_cache=1.5=py27_1

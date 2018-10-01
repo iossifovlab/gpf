@@ -381,8 +381,12 @@ def main():
 
         # # print family Info in a format
         FAMOUT = ox.outputPrefix + '-families.txt'
+
+        # FIXME: Do not reduce families because some people are not sequenced
+        # printFamData(fInfo, pInfo, proj=ox.project, lab=ox.lab,
+        #              listFam=fam, out=open(FAMOUT, 'w'))
         printFamData(fInfo, pInfo, proj=ox.project, lab=ox.lab,
-                     listFam=fam, out=open(FAMOUT, 'w'))
+                     listFam=[], out=open(FAMOUT, 'w'))
 
         def keyfunc(variant):
             return (variant['variant'].CHROM, variant['variant'].POS)

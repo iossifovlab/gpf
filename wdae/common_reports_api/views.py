@@ -26,6 +26,7 @@ class VariantReportsView(APIView):
         report = self.variant_reports[study_name]
         if not report:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
         serializer = StudyVariantReportsSerializer(
             report, context={'request': request})
         res = serializer.data.copy()

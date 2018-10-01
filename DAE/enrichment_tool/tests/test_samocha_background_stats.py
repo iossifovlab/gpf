@@ -37,7 +37,8 @@ def test_stats_autism_lgd(background, autism_studies,
     assert 12.5358 == pytest.approx(results['all'].expected, abs=1E-4)
     assert 0.0 == pytest.approx(results['all'].pvalue, abs=1E-4)
 
-    assert 0.89924 == pytest.approx(results['rec'].expected, abs=1E-4)
+    # assert 0.89924 == pytest.approx(results['rec'].expected, abs=1E-4)
+    assert 0.89108 == pytest.approx(results['rec'].expected, abs=1E-4)
     assert 0.0 == pytest.approx(results['rec'].pvalue, abs=1E-4)
 
     assert 10.65059 == pytest.approx(results['male'].expected, abs=1E-4)

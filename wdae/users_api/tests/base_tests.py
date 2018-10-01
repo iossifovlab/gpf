@@ -15,12 +15,14 @@ class BaseAuthenticatedUserTest(APITestCase):
     def setUpClass(cls):
         super(BaseAuthenticatedUserTest, cls).setUpClass()
         Dataset.recreate_dataset_perm('META', [])
+        Dataset.recreate_dataset_perm('SD_TEST', [])
         Dataset.recreate_dataset_perm('SD', [])
         Dataset.recreate_dataset_perm('SSC', [])
         Dataset.recreate_dataset_perm('SVIP', [])
-        Dataset.recreate_dataset_perm('SPARK', [])
+        Dataset.recreate_dataset_perm('SPARKv1', [])
+        Dataset.recreate_dataset_perm('SPARKv2', [])
         Dataset.recreate_dataset_perm('AGRE_WG', [])
-        Dataset.recreate_dataset_perm('denovo_db', [])
+        Dataset.recreate_dataset_perm('TESTdenovo_db', [])
 
         User = get_user_model()
         u = User.objects.create(

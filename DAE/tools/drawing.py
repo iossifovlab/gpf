@@ -10,6 +10,8 @@ import matplotlib.lines as mlines
 from matplotlib.path import Path
 from matplotlib.backends.backend_pdf import PdfPages
 
+from variants.attributes import Sex
+
 
 class PDFLayoutDrawer(object):
 
@@ -99,7 +101,8 @@ class OffsetLayoutDrawer(object):
 
         for level in self._layout.positions:
             for individual in level:
-                if individual.individual.member.sex == '1':
+                if Sex.from_name_or_value(
+                        individual.individual.member.sex) == Sex.male:
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
                     patches.append(mpatches.Circle(

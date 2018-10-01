@@ -52,7 +52,7 @@ def recSingleGenes(studies, inChild, effectTypes, phenotype):
 #
 #     denovo = gscs.get_gene_sets_collection('denovo')
 #     gs = denovo.get_gene_set(
-#         'LGDs.Recurrent', gene_sets_types={'denovo_db': ['autism']})
+#         'LGDs.Recurrent', gene_sets_types={'TESTdenovo_db': ['autism']})
 #
 #     print(recurrent)
 #     print(gs)
@@ -87,7 +87,7 @@ def recSingleGenes(studies, inChild, effectTypes, phenotype):
 #
 #     denovo = gscs.get_gene_sets_collection('denovo')
 #     gs = denovo.get_gene_set(
-#         'LGDs.Recurrent', gene_sets_types={'SPARK': ['autism']})
+#         'LGDs.Recurrent', gene_sets_types={'SPARKv1': ['autism']})
 #
 #     assert set(recurrent) == gs['syms']
 #     assert len(recurrent) == gs['count']
@@ -106,7 +106,7 @@ def recSingleGenes(studies, inChild, effectTypes, phenotype):
 #     gs = denovo.get_gene_set(
 #         'LGDs.Recurrent', gene_sets_types={
 #             'SSC': ['autism'],
-#             'SPARK': ['autism']
+#             'SPARKv1': ['autism']
 #         })
 #
 #     assert set(recurrent) == gs['syms']
