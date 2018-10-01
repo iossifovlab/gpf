@@ -69,9 +69,53 @@ class Pedigree(object):
                     return False
         return True
 
+    def add_new_members(self):
+        new_members = []
+        id_to_individual = defaultdict(Individual)
+
+        for member in self.members:
+            individual = id_to_individual[member.id]
+            individual.member = member
+
+        missing_father_mothers = {}
+        missing_mother_fathers = {}
+
+        for member in self.members:
+            if member.mother == member.father:
+                continue
+            if member.mother == "0":
+                if member.father not in missing_mother_fathers:
+                    missing_mother_fathers[member.father] = PedigreeMember(
+                        member.father + ".mother", self.family_id,
+                        "0", "0", "2", "1")
+                    new_members.append(missing_mother_fathers[member.father])
+                member.mother = member.father + ".mother"
+            elif member.father == "0":
+                if member.mother not in missing_father_mothers:
+                    missing_father_mothers[member.mother] = PedigreeMember(
+                        member.mother + ".father", self.family_id,
+                        "0", "0", "1", "1")
+                    new_members.append(missing_father_mothers[member.mother])
+                member.father = member.mother + ".father"
+            else:
+                mother = id_to_individual[member.mother]
+                father = id_to_individual[member.father]
+                if mother.member is None:
+                    mother.member = PedigreeMember(
+                        member.mother, self.family_id, "0", "0", "2", "1")
+                    new_members.append(mother.member)
+                if father.member is None:
+                    father.member = PedigreeMember(
+                        member.father, self.family_id, "0", "0", "1", "1")
+                    new_members.append(father.member)
+
+        self.members += new_members
+
     def create_sandwich_instance(self):
         id_to_individual = defaultdict(Individual)
         id_to_mating_unit = {}
+
+        self.add_new_members()
 
         for member in self.members:
             mother = id_to_individual[member.mother]
