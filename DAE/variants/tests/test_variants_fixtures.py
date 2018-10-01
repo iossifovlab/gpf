@@ -11,10 +11,8 @@ from variants.vcf_utils import mat2str
 
 
 @pytest.mark.parametrize("variants", [
-    # "variants_df",
     "variants_vcf",
     "variants_thrift",
-    "variants_parquet",
 ])
 @pytest.mark.parametrize("fixture_name,count", [
     ("fixtures/effects_trio_multi", 3),
@@ -39,10 +37,8 @@ def test_variants_all_count(variants_impl, variants, fixture_name, count):
     "fixtures/trios2",
 ])
 @pytest.mark.parametrize("variants", [
-    #"variants_df",
     "variants_vcf",
     "variants_thrift",
-    "variants_parquet",
 ])
 def test_df_query_multiallelic3_families(
         variants_impl, variants, fixture_name):
@@ -76,7 +72,6 @@ def test_df_query_multiallelic3_families(
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_thrift",
-    "variants_parquet",
 ])
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/trios2_11541",
@@ -96,8 +91,8 @@ def test_reference_variant(
     print(vs)
 
     for v in vs:
-        print(mat2str(v.best_st))
-        print("summary:", v.summary_variant)
+        print(v.family_id, mat2str(v.best_st))
+        print(variants, "summary:", v.summary_variant)
 
     assert vs[0].summary_variant == vs[1].summary_variant
 
@@ -106,7 +101,6 @@ def test_reference_variant(
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_thrift",
-    "variants_parquet",
 ])
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/trios2_11600",

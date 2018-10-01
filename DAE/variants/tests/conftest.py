@@ -146,25 +146,6 @@ def temp_filename(request):
     return output
 
 
-# @pytest.fixture(scope='session')
-# def ustudy_config():
-#     config = Configure.from_config()
-#     return config
-
-
-# @pytest.fixture(scope='session')
-# def ustudy_loader(ustudy_config):
-#     return RawVariantsLoader(ustudy_config.vcf)
-
-
-# @pytest.fixture(scope='session')
-# def ustudy_vcf(ustudy_config, composite_annotator):
-#     fvariants = RawFamilyVariants(
-#         ustudy_config, annotator=composite_annotator,
-#         variant_factory=VariantFactory)
-#     return fvariants
-
-
 @pytest.fixture(scope='session')
 def config_dae():
     def builder(path):
