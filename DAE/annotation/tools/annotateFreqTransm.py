@@ -88,7 +88,7 @@ class FrequencyAnnotator(ScoreAnnotator):
 
     def line_annotations(self, line, new_columns):
         return super(FrequencyAnnotator, self).line_annotations(
-            line, [self.frequency])
+            line, [self.frequency])[0]
 
 
 if __name__ == "__main__":

@@ -106,6 +106,15 @@ class AbstractFormat(object):
         pass
 
 
+def to_str(column_value):
+    if isinstance(column_value, list):
+        return '|'.join(map(to_str, column_value))
+    elif column_value is None:
+        return ''
+    else:
+        return str(column_value)
+                                      
+
 class TSVFormat(AbstractFormat):
 
     def __init__(self, opts, mode):
@@ -158,8 +167,8 @@ class TSVFormat(AbstractFormat):
                 header_str = header_str[1:]
             self.header = header_str.split('\t')
 
-    def header_write(self, input_):
-        self.line_write(input_)
+    def header_write(self, header):
+        self.line_write(header)
 
     def line_read(self):
         if self.mode != 'r':
@@ -172,12 +181,13 @@ class TSVFormat(AbstractFormat):
             sys.stderr.write(str(self.linecount) + ' lines read\n')
         return line.rstrip('\n').split('\t')
 
-    def line_write(self, input_):
+    def line_write(self, line):
         if self.mode != 'w':
             sys.stderr.write('Cannot write in read mode!\n')
             sys.exit(-78)
 
-        self.outfile.write('\t'.join(input_) + '\n')
+        self.outfile.write('\t'.join([to_str(column)
+                                      for column in line]) + '\n')
 
 
 class ParquetFormat(AbstractFormat):

@@ -18,19 +18,22 @@ def mock(mocker):
 
 @pytest.fixture
 def input_():
-    return ('1\t4\t4372372973\tsub(A->C)\n'
-            '5\t10\t4372372973\tsub(G->A)\n'
-            '3\tX\t4372\tins(AAA)\n'
-            '6\tY\t4372372973\tdel(2)')
+    return [
+        ['1', '4', '4372372973', 'sub(A->C)'],
+        ['5', '10', '4372372973', 'sub(G->A)'],
+        ['3', 'X', '4372', 'ins(AAA)'],
+        ['6', 'Y', '4372372973', 'del(2)']
+    ]
 
 
 @pytest.fixture
 def expected_output():
-    return ('1\t4\t4372372973\tsub(A->C)\t0.214561|1234\t0.561\n'
-            '5\t10\t4372372973\tsub(G->A)\t1.410786|2345\t1.786\n'
-            '3\tX\t4372\tins(AAA)\t2.593045|3456\t2.045\n'
-            '6\tY\t4372372973\tdel(2)\t3.922039|4567\t3.039\n')
-
+    return [
+        [[0.214561, 1234.0], [0.561]],
+        [[1.410786, 2345.0], [1.786]],
+        [[2.593045, 3456.0], [2.045]],
+        [[3.922039, 4567.0], [3.039]]
+    ]
 
 @pytest.fixture
 def score():
@@ -77,9 +80,8 @@ def setup_scores(score, score2, config):
 
 def test_multi_score(input_, expected_output):
     annotator = MultipleScoresAnnotator(get_opts(), header=['id', 'chrom', 'pos', 'variant'])
-    output = ""
-    for line in input_.split('\n'):
-        line = line.split('\t')
-        annotation = '\t'.join(annotator.line_annotations(line, annotator.new_columns))
-        output += '\t'.join(line) + '\t' + annotation + '\n'
-    assert (output == expected_output)
+    result = []
+    for line in input_:
+        annotation = annotator.line_annotations(line, annotator.new_columns)
+        result.append(annotation)
+    assert (result == expected_output)

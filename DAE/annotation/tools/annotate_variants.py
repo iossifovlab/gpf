@@ -189,9 +189,10 @@ class EffectAnnotator(AnnotatorBase):
         try:
             effects = self.annotation_helper.do_annotate_variant(*params)
             effect_type, effect_gene, effect_details = self.annotation_helper.effect_description(effects)
-            return [locals()[col] for col in new_cols_order]
+            local_vars = locals()
+            return [local_vars[col] for col in new_cols_order]
         except ValueError as e:
-            return ['' for col in new_cols_order]
+            return [None for col in new_cols_order]
 
 
 
