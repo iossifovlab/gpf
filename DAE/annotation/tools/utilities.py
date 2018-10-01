@@ -89,8 +89,17 @@ def main(argument_parser, annotator_factory,
 
     opts = argument_parser.parse_args()
 
-    # Hardcoded to work with tsv files until parquet support is added
-    with IOManager(opts, IOType.TSV, IOType.TSV) as io_manager:
+    # File IO format specification
+    reader_type = IOType.TSV
+    writer_type = IOType.TSV
+    if hasattr(opts, 'read_parquet'):
+        if opts.read_parquet:
+            reader_type = IOType.Parquet
+    if hasattr(opts, 'write_parquet'):
+        if opts.write_parquet:
+            writer_type = IOType.Parquet
+
+    with IOManager(opts, reader_type, writer_type) as io_manager:
         annotator = annotator_factory(opts=opts, header=io_manager.header)
         annotator.annotate_file(io_manager)
 

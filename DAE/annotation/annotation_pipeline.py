@@ -113,6 +113,7 @@ class MultiAnnotator(object):
                 virtual_columns_indices.extend(
                     [assign_values(annotation_step_config.columns[column.strip()], self.header)
                      for column in annotation_step_config.virtuals.split(',')])
+            annotation_step_config.options.region = opts.region
             self.annotators.append({
                 'instance': str_to_class(annotation_step_config.annotator)(
                     annotation_step_config.options, list(self.header)),
@@ -154,7 +155,7 @@ class MultiAnnotator(object):
             self.header = [self.header[i-1]
                            for i in self.stored_columns_indices]
             self.header[0] = '#' + self.header[0]
-            file_io.line_write(self.header)
+            file_io.header_write(self.header)
 
         annotators = self.annotators
 
@@ -221,6 +222,10 @@ def get_argument_parser():
     parser.add_argument('--options', help='add default arguments',
                         dest='default_arguments', action='store', metavar=('=OPTION:VALUE'))
     parser.add_argument('--skip-preannotators', help='skips preannotators',
+                        action='store_true')
+    parser.add_argument('--read-parquet', help='read from a parquet file',
+                        action='store_true')
+    parser.add_argument('--write-parquet', help='write to a parquet file',
                         action='store_true')
 
     for name, args in PreannotatorLoader.load_preannotators_arguments().items():

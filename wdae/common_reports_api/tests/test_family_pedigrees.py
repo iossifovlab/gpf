@@ -14,12 +14,12 @@ class Test(BaseAuthenticatedUserTest):
     @classmethod
     def setUpClass(cls):
         super(Test, cls).setUpClass()
-        cls.vr = StudyVariantReports('denovo_db')
+        cls.vr = StudyVariantReports('TESTdenovo_db')
         cls.vr.build()
 
     def setUp(self):
         self.data = self.vr.serialize()
-        vr = StudyVariantReports('denovo_db')
+        vr = StudyVariantReports('TESTdenovo_db')
         vr.deserialize(self.data)
         fr = vr.families_report
         self.fc = fr.get_families_counters('autism')

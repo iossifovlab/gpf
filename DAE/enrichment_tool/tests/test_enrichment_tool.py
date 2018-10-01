@@ -26,10 +26,13 @@ def test_enrichment_tool_gene_events(autism_studies,
     assert enrichment_results is not None
 
     er = enrichment_results
-    assert 546 == len(er['all'].events)
+    # assert 546 == len(er['all'].events) FIXME: changed after reannotation
+    assert 551 == len(er['all'].events)
     assert 39 == len(er['rec'].events)
-    assert 458 == len(er['male'].events)
-    assert 107 == len(er['female'].events)
+    # assert 458 == len(er['male'].events)
+    assert 462 == len(er['male'].events)
+    # assert 107 == len(er['female'].events)
+    assert 108 == len(er['female'].events)
 
     assert 12.54 == pytest.approx(er['all'].expected, abs=1E-2)
     assert 0.0 == pytest.approx(er['all'].pvalue, abs=1E-2)
@@ -60,10 +63,13 @@ def test_enrichment_tool_events(autism_studies,
 
     er = enrichment_results
 
-    assert 606 == len(er['all'].events)
+    # assert 606 == len(er['all'].events) FIXME: changed after reannotation
+    assert 611 == len(er['all'].events)
     assert 39 == len(er['rec'].events)
-    assert 492 == len(er['male'].events)
-    assert 114 == len(er['female'].events)
+    # assert 492 == len(er['male'].events)
+    assert 496 == len(er['male'].events)
+    # assert 114 == len(er['female'].events)
+    assert 115 == len(er['female'].events)
 
     assert 12.54 == pytest.approx(er['all'].expected, abs=1E-2)
     assert 0.0 == pytest.approx(er['all'].pvalue, abs=1E-2)

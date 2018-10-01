@@ -47,8 +47,8 @@ class Test(BaseAuthenticatedUserTest):
         self.assertIn('count', res)
         self.assertIn('legend', res)
 
-        self.assertEquals(64, int(res['count']))
-        self.assertEquals(64, len(res['rows']))
+        self.assertEquals(63, int(res['count']))
+        self.assertEquals(63, len(res['rows']))
 
         self.assertEquals(5, len(res['legend']))
         self.assertEquals('deletion', res['legend'][0]['id'])
@@ -73,8 +73,8 @@ class Test(BaseAuthenticatedUserTest):
         self.assertIn('count', res)
         self.assertIn('legend', res)
 
-        self.assertEquals(64, int(res['count']))
-        self.assertEquals(64, len(res['rows']))
+        self.assertEquals(63, int(res['count']))
+        self.assertEquals(63, len(res['rows']))
 
         self.assertEquals(3, len(res['legend']))
         self.assertEquals(
