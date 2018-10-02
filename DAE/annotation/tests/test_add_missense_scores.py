@@ -5,7 +5,7 @@ import pysam
 from box import Box
 from io import StringIO
 from os import mkdir, getcwd, remove, rmdir
-from utils import Dummy_tbi, dummy_gzip_open, to_file
+from .utils import Dummy_tbi, dummy_gzip_open, to_file
 from annotation.tools.add_missense_scores import MissenseScoresAnnotator
 
 

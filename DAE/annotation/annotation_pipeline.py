@@ -18,7 +18,7 @@ from collections import OrderedDict
 from functools import reduce
 from annotation.tools.utilities import assign_values
 from annotation.tools.utilities import main as main
-from annotation.tools import *
+from annotation.tools import duplicate_columns
 
 
 def str_to_class(val):
@@ -86,7 +86,7 @@ class MultiAnnotator(object):
 
         config_parser = MyConfigParser()
         config_parser.optionxform = str
-        config_parser.read(opts.config)
+        config_parser.read_file(opts.config)
         self.config = Box(common.config.to_dict(config_parser),
                           default_box=True, default_box_attr=None)
 
@@ -210,7 +210,7 @@ def get_argument_parser():
     parser = argparse.ArgumentParser(description=desc, conflict_handler='resolve')
     parser.add_argument('-H', help='no header in the input file',
                         default=False,  action='store_true', dest='no_header')
-    parser.add_argument('-c', '--config', help='config file location',
+    parser.add_argument('--config', help='config file location',
                         required=True, action='store')
     parser.add_argument('--append', help='always add columns; '
                         'default behavior is to replace columns with the same label',

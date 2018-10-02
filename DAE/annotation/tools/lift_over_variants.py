@@ -6,15 +6,17 @@ from builtins import str
 import sys
 import argparse
 from pyliftover import LiftOver
-from .utilities import *
+from .utilities import AnnotatorBase, assign_values, main
+
 
 def get_argument_parser():
     """
     LiftOverAnnotator options::
 
-        usage: lift_over_variants.py [-h] [-v] [-c C] [-p P] [-x X] -F FILE [-H]
-                             [--new-c NEW_C] [--new-p NEW_P] [--new-x NEW_X]
-                             [infile] [outfile]
+        usage: lift_over_variants.py [-h] [-v] [-c C] [-p P]
+                            [-x X] -F FILE [-H]
+                            [--new-c NEW_C] [--new-p NEW_P] [--new-x NEW_X]
+                            [infile] [outfile]
 
         Program to annotate variants (substitutions & indels & cnvs)
 
@@ -32,18 +34,33 @@ def get_argument_parser():
           -H                    no header in the input file
           --new-c NEW_C         name for the generated chromosome column
           --new-p NEW_P         name for the generated position column
-          --new-x NEW_X         name for the generated location (chr:pos) column
+          --new-x NEW_X         name for the generated location (chr:pos) 
+                                column
     """
     desc = """Program to annotate variants (substitutions & indels & cnvs)"""
-    parser = argparse.ArgumentParser(version='%prog version 2.2 10/October/2013', description=desc)
-    parser.add_argument('-c', help='chromosome column number/name', action='store')
-    parser.add_argument('-p', help='position column number/name', action='store')
-    parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
-    parser.add_argument('-F', '--file', help='lift over description file path', required=True, action='store')
-    parser.add_argument('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
-    parser.add_argument('--new-c', help='name for the generated chromosome column', default='chrLiftOver', action='store')
-    parser.add_argument('--new-p', help='name for the generated position column', default='positionLiftOver', action='store')
-    parser.add_argument('--new-x', help='name for the generated location (chr:pos) column', default='locationLiftOver', action='store')
+    parser = argparse.ArgumentParser(
+        version='%prog version 2.2 10/October/2013', description=desc)
+    parser.add_argument(
+        '-c', help='chromosome column number/name', action='store')
+    parser.add_argument(
+        '-p', help='position column number/name', action='store')
+    parser.add_argument(
+        '-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_argument(
+        '-F', '--file', help='lift over description file path',
+        required=True, action='store')
+    parser.add_argument(
+        '-H', help='no header in the input file', default=False,
+        action='store_true', dest='no_header')
+    parser.add_argument(
+        '--new-c', help='name for the generated chromosome column',
+        default='chrLiftOver', action='store')
+    parser.add_argument(
+        '--new-p', help='name for the generated position column',
+        default='positionLiftOver', action='store')
+    parser.add_argument(
+        '--new-x', help='name for the generated location (chr:pos) column',
+        default='locationLiftOver', action='store')
     return parser
 
 
@@ -61,8 +78,10 @@ class LiftOverAnnotator(AnnotatorBase):
         else:
             assert(opts.c is not None)
             assert(opts.p is not None)
-            self.argCols = [assign_values(opts.c, header),
-                assign_values(opts.p, header)]
+            self.argCols = [
+                assign_values(opts.c, header),
+                assign_values(opts.p, header)
+            ]
             self._new_columns = ['new_c', 'new_p']
             labels = [opts.new_c, opts.new_p]
 
@@ -97,6 +116,7 @@ class LiftOverAnnotator(AnnotatorBase):
         new_c = convert_result[0][0][0]
         new_p = '-'.join(result)
         new_x = '{}:{}'.format(new_c, new_p)
+        # FIXME: this should be fixed!!!
         return [locals()[col] for col in new_columns]
 
 

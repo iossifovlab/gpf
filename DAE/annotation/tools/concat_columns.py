@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-import sys
 import argparse
-from annotation.tools.utilities import *
+from annotation.tools.utilities import AnnotatorBase, main, assign_values
+
 
 def get_argument_parser():
     """
@@ -27,14 +27,18 @@ def get_argument_parser():
     """
     desc = """Program to concatenate list of columns"""
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument('-H', help='no header in the input file',
+    parser.add_argument(
+        '-H', help='no header in the input file',
         default=False,  action='store_true', dest='no_header')
-    parser.add_argument('-c', '--columns',
+    parser.add_argument(
+        '-c', '--columns',
         help='comma separated list of columns to concatenate',
         required=True, action='store')
-    parser.add_argument('-s', '--sep', help='separator', default="",
+    parser.add_argument(
+        '-s', '--sep', help='separator', default="",
         action='store')
-    parser.add_argument('--label', help='label for the generated column',
+    parser.add_argument(
+        '--label', help='label for the generated column',
         default='concatenated', action='store')
     return parser
 

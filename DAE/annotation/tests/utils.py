@@ -3,6 +3,7 @@ import string
 from os import getcwd
 from box import Box
 
+
 class Dummy_tbi:
 
     def __init__(self, filename):
@@ -33,7 +34,8 @@ def to_file(content, name=None, where=None, suffix='.temp'):
     if where is None:
         where = getcwd()
     if name is None:
-        name = ''.join(random.choice(string.ascii_lowercase) for i in range(3)) + suffix
+        name = ''.join(
+            random.choice(string.ascii_lowercase) for i in range(3)) + suffix
     name = where + '/' + name
     temp = open(name, 'w')
     temp.write(content)
@@ -42,7 +44,7 @@ def to_file(content, name=None, where=None, suffix='.temp'):
     return temp.name
 
 
-def get_opts(score_file=None, conf=None, search_cols=[]):
+def get_test_annotator_opts(score_file=None, conf=None, search_cols=[]):
     options = {
         'c': 'chrom',
         'p': 'pos',

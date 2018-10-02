@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
 import argparse
-from annotation.tools.utilities import *
+from annotation.tools.utilities import AnnotatorBase, assign_values, main
 
 
 def get_argument_parser():
     """
     DuplicateColumnsAnnotator options::
 
-        usage: duplicate_columns.py [-h] [-H] -c COLUMNS -l LABELS [infile] [outfile]
+        usage:
+        duplicate_columns.py [-h] [-H] -c COLUMNS -l LABELS [infile] [outfile]
 
         Program to duplicate list of columns
 
@@ -22,19 +23,23 @@ def get_argument_parser():
           -c COLUMNS, --columns COLUMNS
                                 comma separated list of columns to duplicate
           -l LABELS, --labels LABELS
-                                comma separated list of labels for the new columns
+                                comma separated list of labels for the
+                                new columns
     """
     desc = """Program to duplicate list of columns"""
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument('-H', help='no header in the input file',
-                        default=False, action='store_true',
-                        dest='no_header')
-    parser.add_argument('-c', '--columns',
-                        help='comma separated list of columns to duplicate',
-                        required=True, action='store')
-    parser.add_argument('-l', '--labels',
-                        help='comma separated list of labels for the new columns',
-                        required=True, action='store')
+    parser.add_argument(
+        '-H', help='no header in the input file',
+        default=False, action='store_true',
+        dest='no_header')
+    parser.add_argument(
+        '-c', '--columns',
+        help='comma separated list of columns to duplicate',
+        required=True, action='store')
+    parser.add_argument(
+        '-l', '--labels',
+        help='comma separated list of labels for the new columns',
+        required=True, action='store')
     return parser
 
 

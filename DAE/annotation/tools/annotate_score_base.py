@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
+from __future__ import print_function
 import sys
 import gzip
 import pysam
 import argparse
-from configparser import SafeConfigParser
+from configparser import ConfigParser
 from os.path import exists
 from box import Box
 
 from .utilities import AnnotatorBase, assign_values, main, give_column_number
+
 
 def get_argument_parser():
     """
@@ -32,37 +34,54 @@ def get_argument_parser():
           -c C                  chromosome column number/name
           -p P                  position column number/name
           -x X                  location (chr:pos) column number/name
-          --search-columns      additional columns in the file to use for matching scores
+          --search-columns      additional columns in the file to use for
+                                matching scores
           -H                    no header in the input file
           -F SCORES_FILE, --scores-file SCORES_FILE
                                 file containing the scores
-          --scores-config-file  .conf file for the scores file; defaults to score file name
+          --scores-config-file  .conf file for the scores file; defaults to
+                                score file name
           --direct              the score files is tabix indexed
-          --labels LABEL        label of the new column; defaults to the name of the
-                                score column
+          --labels LABEL        label of the new column; defaults to the name
+                                of the score column
     """
     desc = """Program to annotate variants with scores"""
     parser = argparse.ArgumentParser(description=desc)
 
-    parser.add_argument('-c', help='chromosome column number/name', action='store')
-    parser.add_argument('-p', help='position column number/name', action='store')
-    parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
-    parser.add_argument('--search-columns', help='additional columns in file to use for matching scores')
-    parser.add_argument('-H', help='no header in the input file', action='store_true', dest='no_header')
-    parser.add_argument('-F', '--scores-file', help='file containing the scores',
-                        type=str, action='store')
-    parser.add_argument('--scores-config-file', help='file containing configurations for the score file',
-                        type=str, action='store')
-    parser.add_argument('--direct', help='the score files is tabix indexed', action='store_true')
-    parser.add_argument('--labels', help='labels of the new column; defaults to the name of the score column',
-                        type=str, action='store')
+    parser.add_argument(
+        '-c', help='chromosome column number/name', action='store')
+    parser.add_argument(
+        '-p', help='position column number/name', action='store')
+    parser.add_argument(
+        '-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_argument(
+        '--search-columns',
+        help='additional columns in file to use for matching scores')
+    parser.add_argument(
+        '-H', help='no header in the input file',
+        action='store_true', dest='no_header')
+    parser.add_argument(
+        '-F', '--scores-file', help='file containing the scores',
+        type=str, action='store')
+    parser.add_argument(
+        '--scores-config-file',
+        help='file containing configurations for the score file',
+        type=str, action='store')
+    parser.add_argument(
+        '--direct', help='the score files is tabix indexed',
+        action='store_true')
+    parser.add_argument(
+        '--labels',
+        help='labels of the new column; '
+        'defaults to the name of the score column',
+        type=str, action='store')
     return parser
 
 
 def conf_to_dict(path):
-    conf_parser = SafeConfigParser()
+    conf_parser = ConfigParser()
     conf_parser.optionxform = str
-    conf_parser.readfp(path)
+    conf_parser.read_file(path)
 
     conf_settings = dict(conf_parser.items('general'))
     conf_settings_cols = {'columns': dict(conf_parser.items('columns'))}
@@ -79,6 +98,7 @@ def normalize_value(score_value):
         result = [score_value]
     return [None if value in ['.', ''] else float(value)
             for value in result]
+
 
 class ScoreFile(object):
 
@@ -97,12 +117,15 @@ class ScoreFile(object):
         elif exists(config_input):
             with open(config_input, 'r') as conf_file:
                 conf_settings = conf_to_dict(conf_file)
-                self.config = Box(conf_settings, default_box=True, default_box_attr=None)
+                self.config = Box(
+                    conf_settings, default_box=True,
+                    default_box_attr=None)
         else:
-            sys.stderr.write(
-                "You must provide a configuration file for the score file '{}'.\n"
-                    .format(self.name))
-            sys.exit(-78)
+            print(
+                "You must provide a configuration file "
+                "for the score file '{}'.\n".format(self.name),
+                file=sys.stderr)
+            sys.exit(-1)
 
         self.file = gzip.open(self.name, 'rt', encoding='utf8')
         if self.config.header is None:
@@ -119,7 +142,8 @@ class ScoreFile(object):
         self.search_indices = []
         if hasattr(self.config.columns, 'search'):
             if self.config.columns.search is not None:
-                self.config.columns.search = self.config.columns.search.split(',')
+                self.config.columns.search = \
+                    self.config.columns.search.split(',')
                 self.search_indices = [self.config.header.index(col)
                                        for col in self.config.columns.search]
 
@@ -127,11 +151,16 @@ class ScoreFile(object):
         self.scores_indices = [self.config.header.index(col)
                                for col in self.config.columns.score]
 
-    def get_scores(self, new_columns, chr, pos, *args):
+    def _fetch(self, chrom, pos):
+        raise NotImplementedError()
+
+    def get_scores(self, new_columns, chrom, pos, *args):
         args = list(args)
-        new_col_indices = [give_column_number(col, self.config.header)-1 for col in new_columns]
+        new_col_indices = [
+            give_column_number(col, self.config.header)-1 
+            for col in new_columns]
         try:
-            for line in self._fetch(chr, pos):
+            for line in self._fetch(chrom, pos):
                 if args == [line[i] for i in self.search_indices]:
                     return [line[i] for i in new_col_indices]
         except ValueError:
@@ -155,33 +184,34 @@ class IterativeAccess(ScoreFile):
 
         self.file = pysam.Tabixfile(score_file_name)
         try:
-            self.file_iterator = self.file.fetch(region=region, parser=pysam.asTuple())
+            self.file_iterator = self.file.fetch(
+                region=region, parser=pysam.asTuple())
         except ValueError:
             self.file_iterator = iter([])
         self.current_lines = [self._next_line()]
 
-    def _fetch(self, chr, pos):
-        chr = self._chr_to_int(chr)
+    def _fetch(self, chrom, pos):
+        chrom = self._chr_to_int(chrom)
 
         for i in range(len(self.current_lines) - 1, -1, -1):
-            if self._chr_to_int(self.current_lines[i][self.chr_index]) < chr or \
+            if self._chr_to_int(self.current_lines[i][self.chr_index]) < chrom or \
                     int(self.current_lines[i][self.pos_end_index]) < pos:
                 del self.current_lines[0:i+1]
                 break
 
         if len(self.current_lines) == 0 or \
                 (int(self.current_lines[-1][self.pos_begin_index]) <= pos and
-                 self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chr):
+                 self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chrom):
 
             line = self._next_line()
-            while self._chr_to_int(line[self.chr_index]) <= chr and \
+            while self._chr_to_int(line[self.chr_index]) <= chrom and \
                     (int(line[self.pos_end_index]) < pos or
-                     self._chr_to_int(line[self.chr_index]) != chr):
+                     self._chr_to_int(line[self.chr_index]) != chrom):
                 line = self._next_line()
             self.current_lines.append(line)
 
             while int(self.current_lines[-1][self.pos_begin_index]) <= pos and \
-                    self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chr:
+                    self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chrom:
                 self.current_lines.append(self._next_line())
 
         return self.current_lines[:-1]
