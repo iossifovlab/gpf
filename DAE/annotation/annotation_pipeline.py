@@ -205,7 +205,7 @@ def get_argument_parser():
     parser = argparse.ArgumentParser(description=desc, conflict_handler='resolve')
     parser.add_argument('-H', help='no header in the input file',
                         default=False,  action='store_true', dest='no_header')
-    parser.add_argument('-c', '--config', help='config file location',
+    parser.add_argument('--config', help='config file location',
                         required=True, action='store')
     parser.add_argument('--append', help='always add columns; '
                         'default behavior is to replace columns with the same label',
