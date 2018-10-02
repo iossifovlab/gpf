@@ -649,6 +649,7 @@ class Dataset(QueryBase, FamilyPhenoQueryMixin):
 
         def augment_vars(v):
             v.atts["pedigree"] = v.pedigree_v3(legend)
+            v.atts["family_structure"] = v.family_structure
             if v.familyId:
                 family = families.get(v.familyId, None)
                 fatts = family.atts if family else {}
