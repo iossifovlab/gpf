@@ -26,4 +26,5 @@ metastore_db
 setenv.sh
 _build/
 test_data/
+/test_data/
 .vscode/
