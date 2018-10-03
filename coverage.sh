@@ -67,7 +67,7 @@ py.test --runslow --withspark -v --cov-config coveragerc \
     DAE/variants/tests/
     DAE/studies/tests/
     DAE/study_groups/tests/
-    # DAE/datasets/tests/
+    DAE/datasets/tests/
 
 #     DAE/variant_db/tests/ \
 #     DAE/tools/tests
