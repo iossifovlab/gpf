@@ -35,7 +35,8 @@ class Dataset(object):
         self.preview_columns = preview_columns
         self.download_columns = download_columns
 
-        self.legend = self.dataset_config.pedigreeSelectors[0]['domain']
+        if len(self.dataset_config.pedigreeSelectors) != 0:
+            self.legend = self.dataset_config.pedigreeSelectors[0]['domain']
 
     def get_variants(self, **kwargs):
         return self.study_group.get_variants(**kwargs)
