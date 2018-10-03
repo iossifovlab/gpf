@@ -22,7 +22,7 @@ from variants.attributes import VariantType
      VariantType.insertion, 874866),
 
 ])
-def test_variant_effect_annotation(variant, variant_type, position):
+def test_variant_details(variant, variant_type, position):
     print(variant)
     [chrom, pos, ref, alt] = variant.split(":")
     detail = VariantDetail.from_vcf(chrom, int(pos), ref, alt)
@@ -30,28 +30,3 @@ def test_variant_effect_annotation(variant, variant_type, position):
 
     assert detail.variant_type == variant_type
     assert detail.cshl_position == position
-
-
-@pytest.mark.xfail
-@pytest.mark.parametrize("variant_types,query,count", [
-    (set([VariantType.substitution]),
-     "sub", 415),
-    (set([VariantType.deletion, VariantType.insertion]),
-     "del or ins", 96),
-    (set([VariantType.complex, VariantType.substitution]),
-     "complex or sub", 415),
-    (set([VariantType.complex]),
-     "complex", 1),
-    (set([VariantType.complex]),
-     "complex and sub", 0),
-])
-def test_query_by_variant_type(ustudy_vcf, variant_types, query, count):
-    vs = ustudy_vcf.query_variants(
-        # inheritance="not reference and not unknown",
-        variant_type=query)
-    vs = list(vs)
-
-    for v in vs:
-        vts = set([ad.variant_type for ad in v.details])
-        assert variant_types.intersection(vts)
-    assert len(vs) == count

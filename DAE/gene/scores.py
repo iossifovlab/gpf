@@ -23,13 +23,20 @@ class Scores(GenomicValues):
         self.xscale = self.config[self.section_name].xscale
         self.yscale = self.config[self.section_name].yscale
         self.filename = self.config[self.section_name].file
+        self.help_filename = self.config[self.section_name].help_file
         if self.config[self.section_name].range:
             self.range = tuple(map(
                 float, self.config[self.section_name].range.split(',')))
         else:
             self.range = None
+        if self.help_filename:
+            with open(self.help_filename, 'r') as f:
+                self.help = f.read()
+        else:
+            self.help = ''
 
         self._load_data()
+        self.df.fillna(value=0, inplace=True)
 
     def get_scores(self):
         return self.df['scores'].values

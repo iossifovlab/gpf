@@ -5,7 +5,6 @@ Created on Feb 7, 2018
 '''
 from __future__ import unicode_literals
 from box import ConfigBox
-import reusables
 import os
 
 
@@ -29,31 +28,6 @@ class Configure(ConfigBox):
                 result.append(Configure.from_config(enabled_dir, filename))
 
         return result
-
-    @staticmethod
-    def from_config(work_dir=None, filename=None):
-        if work_dir is None:
-            from variants.default_settings import DATA_DIR
-            work_dir = DATA_DIR
-
-        if filename is None:
-            from variants.default_settings import CONFIG_FILE
-            filename = CONFIG_FILE
-
-        if not os.path.exists(filename):
-            filename = os.path.abspath(os.path.join(work_dir, filename))
-
-        assert os.path.exists(filename)
-
-        conf = reusables.config_dict(
-            filename,
-            auto_find=False,
-            verify=True,
-            defaults={
-                'wd': work_dir,
-            })
-
-        return Configure(conf)
 
     @staticmethod
     def from_dict(conf):

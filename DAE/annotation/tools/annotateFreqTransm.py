@@ -1,8 +1,10 @@
 #!/usr/bin/env python
+from __future__ import unicode_literals
 import argparse
+from io import StringIO
 
-from annotation.tools.utilities import main
-from annotation.tools.annotate_score_base import ScoreAnnotator
+from .utilities import main
+from .annotate_score_base import ScoreAnnotator, conf_to_dict
 
 
 def get_argument_parser():
@@ -10,9 +12,9 @@ def get_argument_parser():
     FrequencyAnnotator options::
 
         usage: annotateFreqTransm.py [-h] [-c C] [-p P] [-x X] [-v V] [-H]
-                                 [-F SCORES_FILE] [--direct]
-                                 [--score-column SCORE_COLUMN]
-                                 [--default-value DEFAULT_VALUE] [--label LABEL]
+                                 [-F SCORES_FILE]
+                                 [--frequency FREQUENCY] [--direct]
+                                 [--label LABEL]
                                  [infile] [outfile]
 
         Program to annotate variants with frequencies
@@ -30,54 +32,64 @@ def get_argument_parser():
           -H                    no header in the input file
           -F SCORES_FILE, --scores-file SCORES_FILE
                                 file containing the scores
+          --frequency FREQUENCY comma separated list of frequencies to annotate the output file with
           --direct              the score files is tabix indexed
-          --score-column SCORE_COLUMN
-                                column in score file that contains the score (default:
-                                all.altFreq)
+          --labels LABEL        label of the new column; defaults to the name of the
+                                score column
           --default-value DEFAULT_VALUE
                                 default value if score for variant is not found
-          --label LABEL         label of the new column; defaults to the name of the
-                                score column
     """
     desc = """Program to annotate variants with frequencies"""
     parser = argparse.ArgumentParser(description=desc)
+
     parser.add_argument('-c', help='chromosome column number/name', action='store')
     parser.add_argument('-p', help='position column number/name', action='store')
     parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
-    parser.add_argument('-v', help='variant column number/name', action='store')
-
-    parser.add_argument('-H',help='no header in the input file', default=False,  action='store_true', dest='no_header')
-
-    parser.add_argument('-F', '--scores-file', help='file containing the scores', type=str, action='store')
-    parser.add_argument('--direct', help='the score files is tabix indexed', default=False, action='store_true')
-
-    parser.add_argument('--score-column', help='column in score file that contains the score (default: all.altFreq)', type=str, action='store')
-    parser.add_argument('--default-value', help='default value if score for variant is not found', default='', type=str, action='store')
-    parser.add_argument('--label', help='label of the new column; defaults to the name of the score column', type=str, action='store')
-
+    parser.add_argument('-v', help='variant column number/name', default='variant', action='store')
+    parser.add_argument('-H', help='no header in the input file', action='store_true', dest='no_header')
+    parser.add_argument('-F', '--scores-file', help='file containing the scores',
+                        type=str, action='store')
+    parser.add_argument('--frequency', help='frequency column to annotate with (defaults to all.altFreq)',
+                        action='store')
+    parser.add_argument('--direct', help='the score files is tabix indexed', action='store_true')
+    parser.add_argument('--labels', help='labels of the new column; defaults to the name of the score column',
+                        type=str, action='store')
+    parser.add_argument('--default-value', help='default value if score for variant is not found',
+                        default='', type=str, action='store')
     return parser
+
+
+FREQ_SCORE_CONFIG = '''
+[general]
+noScoreValue=
+[columns]
+chr=chr
+pos_begin=position
+score=all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq
+search=variant
+'''
 
 
 class FrequencyAnnotator(ScoreAnnotator):
 
     def __init__(self, opts, header=None):
-        if opts.v is None:
-            opts.v = 'variant'
+        opts.scores_config_file = conf_to_dict(StringIO(FREQ_SCORE_CONFIG))
+        if opts.default_value != '' and opts.default_value is not None:
+            opts.scores_config_file['noScoreValue'] = opts.default_value
+        opts.search_columns = opts.v
+        if opts.frequency is None:
+            opts.frequency = 'all.altFreq'
+        self.frequency = opts.frequency
+        super(FrequencyAnnotator, self).__init__(opts, header)
 
-        if opts.score_column is None:
-            opts.scores_columns = 'all.altFreq'
-        else:
-            opts.scores_columns = opts.score_column
+    @property
+    def new_columns(self):
+        return [self.frequency]
 
-        if opts.default_value is None:
-            opts.default_values = ''
-        else:
-            opts.default_values = opts.default_value
+    def line_annotations(self, line, new_columns):
+        return super(FrequencyAnnotator, self).line_annotations(
+            line, [self.frequency])[0]
 
-        opts.labels = opts.label
-
-        super(FrequencyAnnotator, self).__init__(opts, header, [opts.v],
-            None, ['chr', 'position', 'position', 'variant'])
 
 if __name__ == "__main__":
     main(get_argument_parser(), FrequencyAnnotator)

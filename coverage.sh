@@ -54,20 +54,19 @@ py.test --runslow --withspark -v --cov-config coveragerc \
     --cov tools \
     --cov users_api \
     --cov common \
-    --cov datasets \
-    --cov enrichment_tool \
-    --cov gene \
-    --cov pheno \
-    --cov pheno_browser \
-    --cov pheno_tool \
-    --cov transmitted \
-    --cov utils \
-    --cov variant_db \
+    --cov variant_annotation \
+    --cov annotation \
     --cov variants \
-    DAE/variants/tests/
-    DAE/studies/tests/
-    DAE/study_groups/tests/
-    DAE/datasets/tests/
-
+    --cov studies \
+    --cov study_groups \
+    --cov datasets \
+    DAE/common/tests/ \
+    DAE/variants/tests/ \
+    DAE/variant_annotation/tests \
+    DAE/annotation/tests
+    DAE/studies/tests
+    DAE/study_groups/tests 
+    DAE/datasets/tests
+    
 #     DAE/variant_db/tests/ \
 #     DAE/tools/tests

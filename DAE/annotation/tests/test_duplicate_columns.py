@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import pytest
 from box import Box
 from collections import OrderedDict

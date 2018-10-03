@@ -144,10 +144,12 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             }
             if score['min'] != float("-inf"):
                 where.append('( {} >= {} )'.format(
-                    column_names[score['metric']], score['min']))
+                    column_names.get(score['metric'], score['metric']),
+                    score['min']))
             if score['max'] != float("inf"):
                 where.append('( {} < {} )'.format(
-                    column_names[score['metric']], score['max']))
+                    column_names.get(score['metric'], score['metric']),
+                    score['max']))
 
         res = ' AND '.join(where)
         return res
@@ -472,7 +474,8 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             "tsv.hw as `HW`, " \
             "tsv.ssc_freq as `SSC-freq`, " \
             "tsv.evs_freq as `EVS-freq`, " \
-            "tsv.e65_freq as `E65-freq` " \
+            "tsv.e65_freq as `E65-freq`, " \
+            "tsv.*" \
             "from transmitted_summaryvariant as tsv " \
             "where {}".format(where)
 
@@ -512,6 +515,7 @@ class MysqlTransmittedQuery(TransmissionConfig, QueryBase):
             "tsv.ssc_freq as `SSC-freq`, " \
             "tsv.evs_freq as `EVS-freq`, " \
             "tsv.e65_freq as `E65-freq`, " \
+            "tsv.*," \
             "tfv.family_id as `familyId`, " \
             "tfv.best as `bestState`, " \
             "tfv.counts as `counts` " \

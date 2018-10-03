@@ -9,13 +9,13 @@ from tests.pytest_marks import slow
 
 @slow
 def test_denovo_db():
-    datasets_list = get_datasets_by_study("denovo_db")
+    datasets_list = get_datasets_by_study("TESTdenovo_db")
     print(datasets_list)
     assert len(datasets_list) == 1
     datasets = datasets_list[0]
 
     assert len(datasets) == 1
-    assert "denovo_db" in datasets
+    assert "TESTdenovo_db" in datasets
 
 
 def test_iosiffov_2014():
@@ -24,8 +24,9 @@ def test_iosiffov_2014():
     assert len(datasets_list) == 1
     datasets = datasets_list[0]
 
-    assert len(datasets) == 2
+    assert len(datasets) == 3
     assert "SSC" in datasets
+    assert "SD_TEST" in datasets
     assert "SD" in datasets
 
 

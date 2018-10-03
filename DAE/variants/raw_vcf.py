@@ -362,7 +362,7 @@ class RawFamilyVariants(FamiliesBase):
 
     def wrap_variants(self, annot_df):
         if annot_df is None:
-            raise StopIteration()
+            return
 
         variants = self.vcf_vars
         for summary_index, group_df in \
@@ -375,4 +375,4 @@ class RawFamilyVariants(FamiliesBase):
                 v = self.VF.family_variant_from_vcf(
                     summary_variant, fam, vcf=vcf)
                 yield v
-        raise StopIteration()
+        return

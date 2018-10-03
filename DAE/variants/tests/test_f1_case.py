@@ -76,16 +76,16 @@ def count_variants(variants, regions, inheritance, effect_types):
 
 
 @pytest.mark.parametrize("variants", [
-# "variants_vcf",
+    "variants_vcf",
     # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
     ([Region("1", 878152, 878152)], None, None, 1),
-#     ([Region("1", 878152, 878152)], "denovo", ["synonymous"], 0),
-#     ([Region("1", 878152, 878152)], "denovo", ["missense"], 1),
-#     ([Region("1", 878152, 878152)], "mendelian", ["synonymous"], 1),
-#     ([Region("1", 878152, 878152)], "mendelian", ["missense"], 0),
+    ([Region("1", 878152, 878152)], "denovo", ["synonymous"], 0),
+    ([Region("1", 878152, 878152)], "denovo", ["missense"], 1),
+    ([Region("1", 878152, 878152)], "mendelian", ["synonymous"], 1),
+    ([Region("1", 878152, 878152)], "mendelian", ["missense"], 0),
 ])
 def test_f1_simple(
         variants_impl, variants,

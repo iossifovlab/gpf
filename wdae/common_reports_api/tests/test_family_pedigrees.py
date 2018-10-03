@@ -14,12 +14,12 @@ class Test(BaseAuthenticatedUserTest):
     @classmethod
     def setUpClass(cls):
         super(Test, cls).setUpClass()
-        cls.vr = StudyVariantReports('denovo_db')
+        cls.vr = StudyVariantReports('TESTdenovo_db')
         cls.vr.build()
 
     def setUp(self):
         self.data = self.vr.serialize()
-        vr = StudyVariantReports('denovo_db')
+        vr = StudyVariantReports('TESTdenovo_db')
         vr.deserialize(self.data)
         fr = vr.families_report
         self.fc = fr.get_families_counters('autism')
@@ -49,9 +49,10 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(prbMsibF, pedigree)
 
         prbUprbUprbU = [
-            ['f1', 'p1', '.', '.', 'U', '#e35252', 0, 0],
-            ['f1', 'p2', '.', '.', 'U', '#e35252', 0, 0],
-            ['f1', 'p3', '.', '.', 'U', '#e35252', 0, 0],
+            ['f1', 'p1', '', '', 'U', '#e35252', 0, 0],
+            ['f1', 'p2', '', '', 'U', '#e35252', 0, 0],
+            ['f1', 'p3', '', '', 'U', '#e35252', 0, 0],
         ]
         pedigree = self.fc.family_configuration_to_pedigree_v3("prbUprbUprbU")
         print(pedigree)
+        self.assertEqual(prbUprbUprbU, pedigree)

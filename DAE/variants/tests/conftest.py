@@ -12,7 +12,6 @@ import os
 import shutil
 import tempfile
 import time
-import socket
 
 import pytest
 
@@ -28,7 +27,7 @@ from variants.attributes_query import \
 from variants.configure import Configure
 from variants.family import Family, FamiliesBase
 from variants.family_variant import FamilyVariant
-from variants.loader import RawVariantsLoader
+
 from variants.parquet_io import family_variants_df, save_summary_to_parquet,\
     save_ped_df_to_parquet,\
     save_family_allele_df_to_parquet
@@ -144,25 +143,6 @@ def temp_filename(request):
         'annotation.tmp'
     )
     return output
-
-
-# @pytest.fixture(scope='session')
-# def ustudy_config():
-#     config = Configure.from_config()
-#     return config
-
-
-# @pytest.fixture(scope='session')
-# def ustudy_loader(ustudy_config):
-#     return RawVariantsLoader(ustudy_config.vcf)
-
-
-# @pytest.fixture(scope='session')
-# def ustudy_vcf(ustudy_config, composite_annotator):
-#     fvariants = RawFamilyVariants(
-#         ustudy_config, annotator=composite_annotator,
-#         variant_factory=VariantFactory)
-#     return fvariants
 
 
 @pytest.fixture(scope='session')
@@ -324,19 +304,6 @@ def variants_implementations(
 @pytest.fixture
 def variants_impl(variants_implementations):
     return lambda impl_name: variants_implementations[impl_name]
-
-
-@pytest.fixture(scope='session')
-def data_vcf19(composite_annotator):
-    def builder(path):
-        from variants.default_settings import DATA_DIR
-        a_prefix = os.path.join(DATA_DIR, path)
-        a_conf = Configure.from_prefix_vcf(a_prefix)
-        fvars = RawFamilyVariants(
-            a_conf, annotator=composite_annotator,
-            variant_factory=VariantFactory)
-        return fvars
-    return builder
 
 
 PED1 = """

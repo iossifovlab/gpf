@@ -94,24 +94,29 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
     def inheritance_in_members(self):
         if self._inheritance_in_members is None:
             allele_index = self.allele_index
-            result = {pid: Inheritance.unknown for pid in self.members_ids}
-            for ch_id, trio in list(self.family.trios.items()):
-                index = self.family.members_index(trio)
-                tgt = self.gt[:, index]
-                if np.any(tgt == -1):
-                    result[ch_id] = Inheritance.unknown
-                elif np.all(tgt != allele_index):
-                    result[ch_id] = Inheritance.missing
+            result = []
+            for pid in self.members_ids:
+                if pid not in self.family.trios:
+                    result.append(Inheritance.unknown)
+                    continue
+                trio = self.family.trios[pid]
+                trio_index = self.family.members_index(trio)
+
+                trio_gt = self.gt[:, trio_index]
+                if np.any(trio_gt == -1):
+                    inh = Inheritance.unknown
+                elif np.all(trio_gt != allele_index):
+                    inh = Inheritance.missing
                 else:
-                    ch = tgt[:, 0]
-                    p1 = tgt[:, 1]
-                    p2 = tgt[:, 2]
+                    ch = trio_gt[:, 0]
+                    p1 = trio_gt[:, 1]
+                    p2 = trio_gt[:, 2]
                     inh = self.calc_inheritance_trio(p1, p2, ch, allele_index)
                     if inh != Inheritance.omission and \
                             np.all(ch != allele_index):
                         inh = Inheritance.missing
-                    result[ch_id] = inh
-            self._inheritance_in_members = set(result.values())
+                result.append(inh)
+            self._inheritance_in_members = result
         return self._inheritance_in_members
 
     @property
@@ -331,7 +336,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
             self._inheritance_in_members = set()
             for allele in self.alleles:
                 self._inheritance_in_members = self._inheritance_in_members | \
-                    allele.inheritance_in_members
+                    set(allele.inheritance_in_members)
         return self._inheritance_in_members
 
     @property

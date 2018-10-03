@@ -7,7 +7,14 @@ from django.contrib.auth.models import Group
 
 
 class DatasetPermTest(APITestCase):
-    def get_dataset_permission(self, url='/api/v3/datasets/SD'):
+
+    @classmethod
+    def setUpClass(cls):
+        super(DatasetPermTest, cls).setUpClass()
+        Dataset.recreate_dataset_perm('META', [])
+        Dataset.recreate_dataset_perm('SD_TEST', [])
+
+    def get_dataset_permission(self, url='/api/v3/datasets/SD_TEST'):
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
@@ -20,13 +27,13 @@ class DatasetPermTest(APITestCase):
 
     def test_wrong_group(self):
         groups = ["blabla"]
-        Dataset.recreate_dataset_perm("SD", groups)
+        Dataset.recreate_dataset_perm("SD_TEST", groups)
 
         self.assertFalse(self.get_dataset_permission())
 
     def test_default_user_groups(self):
         groups = WdaeUser.DEFAULT_GROUPS_FOR_USER
-        Dataset.recreate_dataset_perm("SD", groups)
+        Dataset.recreate_dataset_perm("SD_TEST", groups)
 
         self.assertTrue(self.get_dataset_permission())
 
@@ -39,7 +46,7 @@ class DatasetPermTest(APITestCase):
         self.assertTrue(self.get_dataset_permission())
 
     def test_default_dataset_group(self):
-        Dataset.recreate_dataset_perm("SD", [])
+        Dataset.recreate_dataset_perm("SD_TEST", [])
         self.assertFalse(self.get_dataset_permission())
 
         user = WdaeUser.objects.create_user(email='admin@example.com',
@@ -49,13 +56,13 @@ class DatasetPermTest(APITestCase):
         self.client.login(email='admin@example.com', password='secret')
         self.assertFalse(self.get_dataset_permission())
 
-        group, _ = Group.objects.get_or_create(name="SD")
+        group, _ = Group.objects.get_or_create(name="SD_TEST")
         group.user_set.add(user)
         self.client.login(email='admin@example.com', password='secret')
         self.assertTrue(self.get_dataset_permission())
 
     def test_default_all_datasets_access_group(self):
-        Dataset.recreate_dataset_perm("SD", [])
+        Dataset.recreate_dataset_perm("SD_TEST", [])
         self.assertFalse(self.get_dataset_permission())
 
         user = WdaeUser.objects.create_user(email='admin@example.com',
@@ -73,7 +80,7 @@ class DatasetPermTest(APITestCase):
 
     def test_anonymous_user_group(self):
         groups = [get_anonymous_user().email]
-        Dataset.recreate_dataset_perm("SD", groups)
+        Dataset.recreate_dataset_perm("SD_TEST", groups)
         self.assertTrue(self.get_dataset_permission())
 
         user = WdaeUser.objects.create_user(email='admin@example.com',
@@ -85,7 +92,7 @@ class DatasetPermTest(APITestCase):
 
     def test_group_with_email_name(self):
         groups = ['admin@example.com']
-        Dataset.recreate_dataset_perm("SD", groups)
+        Dataset.recreate_dataset_perm("SD_TEST", groups)
         self.assertFalse(self.get_dataset_permission())
 
         user = WdaeUser.objects.create_user(email='admin@example.com',

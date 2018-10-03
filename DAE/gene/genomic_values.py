@@ -18,7 +18,6 @@ class GenomicValues(object):
         assert self.name in df.columns
 
         self.df = df[[self.genomic_values_col, self.name]].copy()
-        self.df.dropna(inplace=True)
 
         return self.df
 
