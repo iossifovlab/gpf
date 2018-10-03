@@ -15,14 +15,12 @@ def test_get_denovo_variants_ssc_11563(ssc):
 
     vs = ssc.get_variants_preview(**query)
     v = vs.next()
-    assert len(v) == 89
     assert 'Proband IQs NvIQ' in v
     assert 'Proband IQs vIQ' in v
     assert 'Races Mom' in v
     assert 'Races Dad' in v
 
     v = vs.next()
-    assert len(v) == 89
     assert '11563' == v[0]
 
 
@@ -33,14 +31,12 @@ def test_get_denovo_variants_ssc_11825(ssc):
     vs = ssc.get_variants_preview(**query)
     v = vs.next()
 
-    assert len(v) == 89
     assert 'Proband IQs NvIQ' in v
     assert 'Proband IQs vIQ' in v
     assert 'Races Mom' in v
     assert 'Races Dad' in v
 
     v = vs.next()
-    assert len(v) == 89
 
     assert '11825' == v[0]
 
@@ -57,11 +53,9 @@ def test_get_denovo_variants_vip(vip):
 
     vs = vip.get_variants_preview(**query)
     v = vs.next()
-    assert len(v) == 89
     assert 'Proband IQs NvIQ' in v
     assert 'Proband IQs vIQ' in v
 
-    assert len(v) == 89
     _families = vip.pheno_db.families
     count = 0
     for v in vs:
