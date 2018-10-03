@@ -108,6 +108,7 @@ class MultiAnnotator(object):
                 virtual_columns_indices.extend(
                     [assign_values(annotation_step_config.columns[column.strip()], self.header)
                      for column in annotation_step_config.virtuals.split(',')])
+            annotation_step_config.options.region = opts.region
             self.annotators.append({
                 'instance': str_to_class(annotation_step_config.annotator)(
                     annotation_step_config.options, list(self.header)),
@@ -204,7 +205,7 @@ def get_argument_parser():
     parser = argparse.ArgumentParser(description=desc, conflict_handler='resolve')
     parser.add_argument('-H', help='no header in the input file',
                         default=False,  action='store_true', dest='no_header')
-    parser.add_argument('-c', '--config', help='config file location',
+    parser.add_argument('--config', help='config file location',
                         required=True, action='store')
     parser.add_argument('--append', help='always add columns; '
                         'default behavior is to replace columns with the same label',
