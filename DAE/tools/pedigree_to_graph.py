@@ -440,6 +440,8 @@ def main():
         'familyId, personId, dadId, momId, gender, status. You can replace '
         'unnecessary column with `_`.', dest='no_header_order', default=None,
         action='store')
+    parser.add_argument('--show-id', help='show individual id in pedigree',
+                        dest='show_id', action='store_true', default=False)
 
     args = parser.parse_args()
 
@@ -466,6 +468,8 @@ def main():
         layout_saver = LayoutSaver(
             args.file, args.save_layout, args.layout_column)
 
+    show_id = args.show_id
+
     for family in sorted(pedigrees, key=lambda x: x.family_id):
         sandwich_instance = family.create_sandwich_instance()
         if sandwich_instance is None:
@@ -490,7 +494,7 @@ def main():
 
             # print(family.family_id)
             layout = Layout(individuals_intervals)
-            layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
+            layout_drawer = OffsetLayoutDrawer(layout, 0, 0, show_id)
             pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
 
             if layout_saver is not None:

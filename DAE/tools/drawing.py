@@ -55,11 +55,12 @@ class PDFLayoutDrawer(object):
 
 class OffsetLayoutDrawer(object):
 
-    def __init__(self, layout, x_offset, y_offset):
+    def __init__(self, layout, x_offset, y_offset, show_id=False):
         self._x_offset = x_offset
         self._y_offset = y_offset
         self._layout = deepcopy(layout)
         self._horizontal_mirror_layout()
+        self.show_id = show_id
 
     def draw(self, figure=None):
         if figure is None:
@@ -68,6 +69,7 @@ class OffsetLayoutDrawer(object):
         ax = figure.add_axes((0.35, 0.33, 0.33, 0.33))
         ax.axis("off")
         ax.set_aspect(aspect="equal", adjustable="datalim", anchor="C")
+        ax.autoscale_view()
 
         self._draw_lines(ax)
         self._draw_rounded_lines(ax)
@@ -127,12 +129,21 @@ class OffsetLayoutDrawer(object):
                     axes.add_patch(mpatches.Rectangle(
                         coords, individual.size, individual.size,
                         facecolor=individual_color, edgecolor="black"))
+                    cx = coords[0] + individual.size / 2.0
+                    cy = coords[1] + individual.size / 2.0
                 else:
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
                     axes.add_patch(mpatches.Circle(
                         coords, old_div(individual.size, 2),
                         facecolor=individual_color, edgecolor="black"))
+                    cx = coords[0]
+                    cy = coords[1]
+
+                if self.show_id:
+                    axes.annotate(individual.individual.member.id, (cx, cy),
+                                  color='black', weight='bold', fontsize=6,
+                                  ha='center', va='center')
 
     def _horizontal_mirror_layout(self):
         highest_y = max([i.y for level in self._layout.positions
