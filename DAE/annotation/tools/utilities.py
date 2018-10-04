@@ -1,13 +1,11 @@
 from __future__ import unicode_literals
+from __future__ import print_function
+
 from builtins import str
-from builtins import object
 import sys
 import time
 import datetime
-import pysam
-import gzip
 from abc import ABCMeta, abstractmethod
-from future.utils import with_metaclass
 
 from .file_io import IOManager, IOType
 
@@ -55,29 +53,35 @@ class AnnotatorBase():
 def give_column_number(s, header):
     try:
         return len(header) - header[::-1].index(s)
-    except:
-        sys.stderr.write("Used parameter: " + s + " does NOT exist in the input file header\n")
-        sys.exit(-678)
+    except Exception:
+        print(
+            "Used parameter: " + s + 
+            " does NOT exist in the input file header", file=sys.stderr)
+        sys.exit(-1)
 
 
 def assign_values(param, header=None):
     if param is None:
-        return(param)
+        return param
     try:
         param = int(param)
-    except:
+    except Exception:
         if header is None:
-            sys.stderr.write("You cannot use column names when the file doesn't have a header (-H option set)!\n")
-            sys.exit(-49)
+            print(
+                "You cannot use column names when the file doesn't have"
+                " a header (-H option set)!", file=sys.stderr)
+            sys.exit(-1)
         param = give_column_number(param, header)
-    return(param)
+    return param
 
 
 def main(argument_parser, annotator_factory,
          start=time.time()):
 
-    argument_parser.add_argument('--region',
-        help='region to annotate (chr:begin-end) (input should be tabix indexed)',
+    argument_parser.add_argument(
+        '--region',
+        help='region to annotate (chr:begin-end) '
+        '(input should be tabix indexed)',
         action='store')
 
     argument_parser.add_argument(
@@ -107,4 +111,6 @@ def main(argument_parser, annotator_factory,
     sys.stderr.write("# " + time.asctime() + "\n")
     sys.stderr.write("# " + " ".join(sys.argv[1:]) + "\n")
 
-    sys.stderr.write("The program was running for [h:m:s]: " + str(datetime.timedelta(seconds=round(time.time()-start, 0))) + "\n")
+    sys.stderr.write(
+        "The program was running for [h:m:s]: " + 
+        str(datetime.timedelta(seconds=round(time.time()-start, 0))) + "\n")

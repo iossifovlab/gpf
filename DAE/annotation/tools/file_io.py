@@ -1,8 +1,8 @@
+from __future__ import print_function
 import sys
 import os
 import gzip
 import pysam
-import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -11,8 +11,9 @@ from abc import ABCMeta, abstractmethod
 
 def assert_file_exists(filepath):
     if filepath != '-' and os.path.exists(filepath) is False:
-        sys.stderr.write("The given file '{}' does not exist!\n".format(filepath))
-        sys.exit(-78)
+        sys.stderr.write(
+            "The given file '{}' does not exist!\n".format(filepath))
+        sys.exit(-1)
 
 
 class IOType:
@@ -78,8 +79,8 @@ class AbstractFormat(object):
     def __init__(self, opts, mode):
         self.opts = opts
         if mode != 'r' and mode != 'w':
-            sys.stderr.write("Unrecognized I/O mode '{}'!\n".format(mode))
-            sys.exit(-78)
+            print("Unrecognized I/O mode '{}'!".format(mode), file=sys.stderr)
+            sys.exit(-1)
         self.mode = mode
         self.linecount = 0
         self.linecount_threshold = 1000
@@ -113,7 +114,7 @@ def to_str(column_value):
         return ''
     else:
         return str(column_value)
-                                      
+
 
 class TSVFormat(AbstractFormat):
 
@@ -126,10 +127,11 @@ class TSVFormat(AbstractFormat):
                 assert_file_exists(self.opts.infile)
 
                 if hasattr(self.opts, 'region'):
-                    if(self.opts.region is not None):
+                    region = self.opts.region
+                    if(region is not None):
                         tabix_file = pysam.TabixFile(self.opts.infile)
                         try:
-                            self.variantFile = tabix_file.fetch(region=self.opts.region)
+                            self.variantFile = tabix_file.fetch(region=region)
                         except ValueError:
                             self.variantFile = iter([])
                     else:
@@ -148,7 +150,7 @@ class TSVFormat(AbstractFormat):
 
     def _cleanup(self):
         if self.mode == 'r':
-            sys.stderr.write('Processed ' + str(self.linecount) + ' lines.' + '\n')
+            sys.stderr.write('Processed ' + str(self.linecount) + ' lines.\n')
             if self.opts.infile != '-' and self.opts.region is None:
                 self.variantFile.close()
         else:

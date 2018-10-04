@@ -6,7 +6,7 @@ from io import StringIO
 from box import Box
 
 
-class Dummy_annotator:
+class Dummy_annotator(object):
 
     def __init__(self):
         pass

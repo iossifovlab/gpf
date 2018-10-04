@@ -1,6 +1,5 @@
-import sys
 import argparse
-from annotation.tools.utilities import *
+from annotation.tools.utilities import AnnotatorBase, assign_values, main
 
 
 def get_argument_parser():
@@ -10,8 +9,8 @@ def get_argument_parser():
         usage: change_coordinate_base.py [-h] [-H] -p POSITION [-o] [-l]
                                      [infile] [outfile]
 
-        Program to change the variant coordinates from 0-based to 1-based and vice-
-        versa.
+        Program to change the variant coordinates from 0-based to 1-based and
+        vice-versa.
 
         positional arguments:
           infile                path to input file; defaults to stdin
@@ -21,24 +20,38 @@ def get_argument_parser():
           -h, --help            show this help message and exit
           -H                    no header in the input file
           -p POSITION, --position POSITION
-                                label of the column containing the variant's position
+                                label of the column containing the variant's 
+                                position
           -o, --to-one-base     convert to 1-based (default is 0-based)
-          -l, --label           label of the column that will contain the new position
+          -l, --label           label of the column that will contain the new 
+                                position
     """
-    desc = """Program to change the variant coordinates from 0-based to 1-based and vice-versa."""
+    desc = """Program to change the variant coordinates from 0-based to" \
+        " 1-based and vice-versa."""
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument("-H", help="no header in the input file", default=False, dest="no_header", action="store_true")
-    parser.add_argument("-p", "--position", help="label of the column containing the variant's position", required=True, action="store")
-    parser.add_argument("-o", "--to-one-base", help="convert to 1-based (default is 0-based)", action="store_true") 
-    parser.add_argument("-l", "--label", help="label of the column that will contain the new position", action="store_const", const="new-pos")
+    parser.add_argument(
+        "-H", help="no header in the input file", default=False,
+        dest="no_header", action="store_true")
+    parser.add_argument(
+        "-p", "--position",
+        help="label of the column containing the variant's position",
+        required=True, action="store")
+    parser.add_argument(
+        "-o", "--to-one-base", help="convert to 1-based (default is 0-based)",
+        action="store_true") 
+    parser.add_argument(
+        "-l", "--label", 
+        help="label of the column that will contain the new position",
+        action="store_const", const="new-pos")
 
     return parser
+
 
 class CoordinateBaseAnnotator(AnnotatorBase):
     def __init__(self, opts, header=None):
         super(CoordinateBaseAnnotator, self).__init__(opts, header)
         
-        if(opts.label == None):
+        if opts.label is None:
             opts.label = "new-pos"
         opts.label = [opts.label]
 
@@ -58,8 +71,9 @@ class CoordinateBaseAnnotator(AnnotatorBase):
 
     def line_annotations(self, line, new_columns):
         pos = int(line[self.column_id-1])
-        pos+=self.base_modifier
+        pos += self.base_modifier
         return [str(pos)] 
+
 
 if(__name__ == "__main__"):
     main(get_argument_parser(), CoordinateBaseAnnotator)

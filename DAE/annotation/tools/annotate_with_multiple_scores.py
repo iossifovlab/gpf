@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
 import sys
 import glob
 from os import listdir
@@ -138,6 +139,8 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 'c': self.opts.c,
                 'p': self.opts.p,
                 'x': self.opts.x,
+                'region': self.opts.region,
+                'gzip': self.opts.gzip,
                 'scores_file': score_file,
                 'direct': self.opts.direct,
                 'labels': self.opts.labels,

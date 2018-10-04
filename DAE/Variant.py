@@ -228,6 +228,8 @@ class Variant(object):
         self.studyNameAtt = studyNameAtt
         self.sampleIdAtt = sampleIdAtt
 
+        self._family_structure = None
+
     def get_attr(self, attr):
         return self.atts.get(attr, None)
 
@@ -328,6 +330,14 @@ class Variant(object):
                     else Role.prb
                 self._memberInOrder = [person]
         return self._memberInOrder
+
+    @property
+    def family_structure(self):
+        if self._family_structure is None:
+            self._family_structure = "".join([
+                "{}{}".format(m.role, m.gender) for m in self.memberInOrder
+            ])
+        return self._family_structure
 
     @property
     def children_in_order(self):

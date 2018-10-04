@@ -3,8 +3,10 @@ import pytest
 import pysam
 from os import remove
 from io import StringIO
-from utils import Dummy_tbi, dummy_gzip_open, to_file, get_opts
-from annotation.tools.annotate_score_base import ScoreAnnotator, gzip, conf_to_dict
+from .utils import Dummy_tbi, dummy_gzip_open, to_file, \
+    get_test_annotator_opts
+from annotation.tools.annotate_score_base import ScoreAnnotator, gzip, \
+    conf_to_dict
 
 
 @pytest.fixture(autouse=True)
@@ -49,24 +51,30 @@ def scores():
 
 @pytest.fixture
 def annotator(config, scores):
-    opts = get_opts(scores, conf_to_dict(config))
+    opts = get_test_annotator_opts(scores, conf_to_dict(config))
     return ScoreAnnotator(opts,
                           header=['id', 'chrom', 'pos', 'variation'])
 
 
 @pytest.fixture
 def annotator_file(config, scores):
-    opts = get_opts(scores, to_file(config.read()))
+    opts = get_test_annotator_opts(scores, to_file(config.read()))
     yield ScoreAnnotator(opts,
                          header=['id', 'chrom', 'pos', 'variation'])
     remove(opts.scores_config_file)
 
 
 def test_base_simple_dictconf(annotator, input_, expected_annotations):
-    annotations = [annotator.line_annotations(line, annotator.new_columns) for line in input_]
+    annotations = [
+        annotator.line_annotations(line, annotator.new_columns) 
+        for line in input_
+    ]
     assert (annotations == expected_annotations)
 
 
 def test_base_simple_fileconf(annotator_file, input_, expected_annotations):
-    annotations = [annotator_file.line_annotations(line, annotator_file.new_columns) for line in input_]
+    annotations = [
+        annotator_file.line_annotations(line, annotator_file.new_columns) 
+        for line in input_
+    ]
     assert (annotations == expected_annotations)
