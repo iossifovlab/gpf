@@ -25,6 +25,13 @@ class StudyGroup(object):
         return itertools.chain(*[
             study.query_variants(**kwargs) for study in self.studies])
 
+    def get_phenotype_values(self, pheno_column):
+        result = set()
+        for study in self.studies:
+            result.update(study.get_phenotype_values(pheno_column))
+
+        return result
+
     @property
     def study_names(self):
         return self._study_names

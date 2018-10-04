@@ -121,8 +121,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 'datasets.pedigreeSelectors'):
             pedigree_selector = pedigree_selector_str.split(':')
             self.study_group_pedigree_selectors[pedigree_selector[0]] = {
-                'id': pedigree_selector[1],
-                'source': pedigree_selector[2]
+                'source': pedigree_selector[1]
             }
 
         self.standard_criterias = []
@@ -356,7 +355,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _gene_sets_for(self, study_group):
         pedigree_selector = self.study_group_pedigree_selectors[
             study_group.name]['source']
-        pedigree_selector_values = study_group.phenotypes
+        pedigree_selector_values = study_group.get_phenotype_values(
+            pedigree_selector)
 
         dataset_cache = {value: {} for value in pedigree_selector_values}
         self.cache[study_group.name] = dataset_cache
@@ -380,22 +380,35 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return cache
 
     @classmethod
-    def _add_genes_families(cls, cache, pedigree_selector,
-                            pedigree_selector_value, study_group, search_args):
-        print(search_args)
+    def _add_genes_families(cls, cache, phenotype_column,
+                            phenotype, study_group, search_args):
+        affected_people = DenovoGeneSetsCollection \
+              ._get_affected_people(study_group, phenotype_column, phenotype)
         variants = study_group.get_variants(
                 inheritance=Inheritance.denovo.name,
                 status='{} or {}'.format(
                     Status.affected.name, Status.unaffected.name),
+                person_ids=list(affected_people),
                 **search_args)
 
-        print(pedigree_selector, pedigree_selector_value)
+        print(phenotype_column, phenotype)
         for variant in variants:
             family_id = variant.family_id
             for allele in variant.matched_alleles:
                 effect = allele.summary_allele.effect
                 for gene in effect.genes:
                     cache.setdefault(gene.symbol, set()).add(family_id)
+
+    @staticmethod
+    def _get_affected_people(study_group, phenotype_column, phenotype):
+        affected_person_ids = set()
+        for study in study_group.studies:
+            pedigree_df = study.backend.ped_df
+            people_ids = pedigree_df[pedigree_df[phenotype_column] == phenotype]
+            affected_person_ids.update(people_ids['personId'])
+
+        return affected_person_ids
+
 
     @staticmethod
     def _filter_by_pedigree_selector(pedigree_selector, value, variants):

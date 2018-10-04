@@ -8,7 +8,8 @@ class Study(object):
     def query_variants(self, **kwargs):
         return self.backend.query_variants(**kwargs)
 
-    # FIXME: fill these with real data
+    def get_phenotype_values(self, pheno_column):
+        return set(self.backend.ped_df[pheno_column])
 
     @property
     def families(self):
@@ -37,6 +38,8 @@ class Study(object):
     @property
     def study_type(self):
         return self.study_config.studyType
+
+    # FIXME: fill these with real data
 
     @property
     def year(self):

@@ -6,7 +6,8 @@ Created on Feb 16, 2017
 from __future__ import unicode_literals
 import pytest
 
-pytestmark = pytest.mark.skip('depends on real data')
+# pytestmark = pytest.mark.skip('depends on real data')
+pytestmark = pytest.mark.usefixtures("gene_info_cache_dir")
 
 
 def test_denovo_gene_sets_exist(gscs):

@@ -66,7 +66,7 @@ def gscs(study_group_facade, gene_info_config):
     return res
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def gene_info_cache_dir():
     cache_dir = path_to_fixtures('geneInfo', 'cache')
     shutil.rmtree(cache_dir, ignore_errors=True)
