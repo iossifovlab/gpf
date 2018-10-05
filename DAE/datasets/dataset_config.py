@@ -106,9 +106,9 @@ class DatasetConfig(ConfigurableEntityConfig):
         for key in dict_options_keys:
             if dataset_config.get(key, True):
                 dict_options = {}
-                for k in dataset_config.keys():
+                for k in list(dataset_config.keys()):
                     if k.startswith(key + '.'):
-                        dict_options[k.replace(key + '.', '')] =\
+                        dict_options[k.replace(key + '.', '')] = \
                             dataset_config.pop(k)
                 dataset_config[key] = dict_options
 

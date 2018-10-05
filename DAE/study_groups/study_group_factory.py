@@ -11,10 +11,11 @@ LOGGER = logging.getLogger(__name__)
 
 class StudyGroupFactory(object):
 
-    def __init__(self, studies_definition=None):
+    def __init__(self, studies_definition=None, _class=StudyGroup):
         if studies_definition is None:
             studies_definition = SingleFileStudiesDefinition()
 
+        self._class = _class
         self.studies_factory = StudyFactory()
         self.studies_definition = studies_definition
 
@@ -39,7 +40,7 @@ class StudyGroupFactory(object):
                     ",".join(study_group_config.studies))
             )
 
-        return StudyGroup(
+        return self._class(
             study_group_config.name,
             studies
         )

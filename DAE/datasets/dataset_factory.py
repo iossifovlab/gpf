@@ -11,17 +11,14 @@ LOGGER = logging.getLogger(__name__)
 
 class DatasetFactory(object):
 
-    def __init__(
-            self, _class=Dataset, study_definition=None,
+    def __init__(self, study_group_factory=None,
             study_group_definition=None):
         if study_group_definition is None:
             study_group_definition = SingleFileStudiesGroupDefinition()
+        if study_group_factory is None:
+            study_group_factory = StudyGroupFactory()
 
-        studies_factory = StudyGroupFactory(
-            studies_definition=study_definition)
-
-        self._class = _class
-        self.study_group_factory = studies_factory
+        self.study_group_factory = study_group_factory
         self.study_group_definition = study_group_definition
 
     def get_dataset(self, dataset_config):
@@ -40,7 +37,7 @@ class DatasetFactory(object):
         study_group = \
             self.study_group_factory.get_study_group(study_group_config)
 
-        return self._class(
+        return Dataset(
             dataset_config.dataset_name,
             study_group,
             dataset_config

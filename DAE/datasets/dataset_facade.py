@@ -1,4 +1,3 @@
-from datasets.dataset import DatasetWrapper
 from datasets.dataset_factory import DatasetFactory
 from datasets.datasets_definition import DirectoryEnabledDatasetsDefinition
 
@@ -11,7 +10,7 @@ class DatasetFacade(object):
         if dataset_definition is None:
             dataset_definition = DirectoryEnabledDatasetsDefinition()
         if dataset_factory is None:
-            dataset_factory = DatasetFactory(_class=DatasetWrapper)
+            dataset_factory = DatasetFactory()
 
         self.dataset_definition = dataset_definition
         self.dataset_factory = dataset_factory
