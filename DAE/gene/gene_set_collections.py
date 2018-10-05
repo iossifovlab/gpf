@@ -384,7 +384,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                             phenotype, study_group, search_args):
         affected_people = DenovoGeneSetsCollection \
               ._get_affected_people(study_group, phenotype_column, phenotype)
-        print(search_args)
         variants = study_group.get_variants(
                 inheritance=Inheritance.denovo.name,
                 status='{} or {}'.format(
@@ -392,7 +391,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 person_ids=list(affected_people),
                 **search_args)
 
-        print(phenotype_column, phenotype)
         for variant in variants:
             family_id = variant.family_id
             for allele in variant.matched_alleles:
@@ -409,7 +407,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             affected_person_ids.update(people_ids['personId'])
 
         return affected_person_ids
-
 
     @staticmethod
     def _filter_by_pedigree_selector(pedigree_selector, value, variants):

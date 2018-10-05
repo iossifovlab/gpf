@@ -1,6 +1,7 @@
 import pytest
 
 from studies.study_definition import SingleFileStudiesDefinition
+from study_groups.study_group import StudyGroupWrapper
 from study_groups.study_group_definition import SingleFileStudiesGroupDefinition
 from study_groups.study_group_factory import StudyGroupFactory
 from study_groups.study_group_facade import StudyGroupFacade
@@ -33,7 +34,7 @@ def studies_definition():
 
 @pytest.fixture(scope='session')
 def study_groups_factory(studies_definition):
-    return StudyGroupFactory(studies_definition=studies_definition)
+    return StudyGroupFactory(studies_definition=studies_definition, _class=StudyGroupWrapper)
 
 
 @pytest.fixture(scope='session')

@@ -229,6 +229,27 @@ def get_variants_web_preview(
     }
 
 
+def expand_effect_types(effect_types):
+    if isinstance(effect_types, str):
+        effect_types = [effect_types]
+
+    effects = []
+    for effect in effect_types:
+        effect_lower = effect.lower()
+        if effect_lower in EFFECT_GROUPS:
+            effects += EFFECT_GROUPS[effect_lower]
+        else:
+            effects.append(effect)
+
+    result = []
+    for effect in effects:
+        if effect not in EFFECT_TYPES_MAPPING:
+            result.append(effect)
+        else:
+            result += EFFECT_TYPES_MAPPING[effect]
+    return result
+
+
 EFFECT_TYPES_MAPPING = {
     "Nonsense": ["nonsense"],
     "Frame-shift": ["frame-shift"],
@@ -247,4 +268,47 @@ EFFECT_TYPES_MAPPING = {
     "CNV": ["CNV+", "CNV-"],
     "CNV+": ["CNV+"],
     "CNV-": ["CNV-"],
+}
+
+EFFECT_GROUPS = {
+    "coding": [
+        "Nonsense",
+        "Frame-shift",
+        "Splice-site",
+        "Missense",
+        "Non-frame-shift",
+        "noStart",
+        "noEnd",
+        "Synonymous",
+    ],
+    "noncoding": [
+        "Non coding",
+        "Intron",
+        "Intergenic",
+        "3'-UTR",
+        "5'-UTR",
+    ],
+    "cnv": [
+        "CNV+",
+        "CNV-"
+    ],
+    "lgds": [
+        "Frame-shift",
+        "Nonsense",
+        "Splice-site",
+        "No-frame-shift-newStop",
+    ],
+    "nonsynonymous": [
+        "Nonsense",
+        "Frame-shift",
+        "Splice-site",
+        "Missense",
+        "Non-frame-shift",
+        "noStart",
+        "noEnd",
+    ],
+    "utrs": [
+        "3'-UTR",
+        "5'-UTR",
+    ]
 }

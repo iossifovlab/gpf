@@ -3,7 +3,7 @@ import functools
 
 from RegionOperations import Region
 from variants.attributes import Role
-from datasets.helpers import EFFECT_TYPES_MAPPING
+from datasets.helpers import expand_effect_types
 from variants.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, EqualsNode, ContainsNode
 
@@ -123,13 +123,7 @@ class StudyGroupWrapper(StudyGroup):
             kwargs['variant_type'] = OrNode(variant_types)
 
         if 'effect_types' in kwargs:
-            effect_types = kwargs['effect_types']
-            effect_types = [
-                EFFECT_TYPES_MAPPING[effect] for effect in effect_types
-            ]
-            kwargs['effect_types'] = [
-                item for sublist in effect_types for item in sublist
-            ]
+            kwargs['effect_types'] = expand_effect_types(kwargs['effect_types'])
 
         return itertools.islice(
             super(StudyGroupWrapper, self).get_variants(**kwargs), limit)
