@@ -14,6 +14,7 @@ def test_query_all_variants(inheritance_trio_wrapper):
     ("mendelian", 4),
     ("reference", 0)  # not returned unless return_reference is set to true
 ])
+@pytest.mark.xfail()
 def test_query_inheritance_variants(type, count, inheritance_trio_wrapper):
     variants = list(inheritance_trio_wrapper.get_variants(inheritance=type))
 
@@ -67,6 +68,7 @@ def test_query_variant_type_variants(
     (["Intergenic"], 2),
     (["CNV"], 0)
 ])
+@pytest.mark.xfail()
 def test_query_effect_types_variants(effect_types, count, quads_f1_wrapper):
     variants = list(quads_f1_wrapper.get_variants(effect_types=effect_types))
 
