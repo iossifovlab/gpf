@@ -6,6 +6,11 @@ class Study(object):
         self.study_config = study_config
 
     def query_variants(self, **kwargs):
+        study_types_filter = kwargs.get('studyTypes', None)
+        if study_types_filter:
+            if self.study_type not in study_types_filter:
+                return []
+
         return self.backend.query_variants(**kwargs)
 
     def get_phenotype_values(self, pheno_column):
