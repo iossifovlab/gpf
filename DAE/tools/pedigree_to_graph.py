@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
@@ -10,6 +10,7 @@ from collections import defaultdict
 import argparse
 import csv
 import collections
+from functools import reduce
 
 from tools.interval_sandwich import SandwichInstance, SandwichSolver
 from tools.layout import Layout
@@ -23,7 +24,7 @@ class CsvPedigreeReader(object):
         families = {}
         with open(file) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=header,
-                                    delimiter=delimiter.encode('utf-8'))
+                                    delimiter=delimiter)
             for row in reader:
                 kwargs = {
                     "family_id": row[columns_labels["family_id"]],
@@ -154,7 +155,7 @@ class Pedigree(object):
         all_vertices = individuals | mating_units | sibship_units
 
         if len(individuals) != 0:
-            individuals.__iter__().next().add_rank(0)
+            next(individuals.__iter__()).add_rank(0)
             Pedigree._fix_rank(individuals)
 
         # Ea-
@@ -245,6 +246,9 @@ class IndividualGroup(with_metaclass(abc.ABCMeta, object)):
     def __repr__(self):
         return self.__class__.__name__[0].lower() + \
                "{" + ",".join(sorted(map(repr, self.individual_set()))) + "}"
+
+    def __lt__(self, other):
+        return repr(self) < repr(other)
 
 
 class Individual(IndividualGroup):
