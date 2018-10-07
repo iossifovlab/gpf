@@ -88,14 +88,14 @@ class Pedigree(object):
                 if member.father not in missing_mother_fathers:
                     missing_mother_fathers[member.father] = PedigreeMember(
                         member.father + ".mother", self.family_id,
-                        "0", "0", "2", "1")
+                        "0", "0", "2", "-")
                     new_members.append(missing_mother_fathers[member.father])
                 member.mother = member.father + ".mother"
             elif member.father == "0":
                 if member.mother not in missing_father_mothers:
                     missing_father_mothers[member.mother] = PedigreeMember(
                         member.mother + ".father", self.family_id,
-                        "0", "0", "1", "1")
+                        "0", "0", "1", "-")
                     new_members.append(missing_father_mothers[member.mother])
                 member.father = member.mother + ".father"
             else:
@@ -103,11 +103,11 @@ class Pedigree(object):
                 father = id_to_individual[member.father]
                 if mother.member is None:
                     mother.member = PedigreeMember(
-                        member.mother, self.family_id, "0", "0", "2", "1")
+                        member.mother, self.family_id, "0", "0", "2", "-")
                     new_members.append(mother.member)
                 if father.member is None:
                     father.member = PedigreeMember(
-                        member.father, self.family_id, "0", "0", "1", "1")
+                        member.father, self.family_id, "0", "0", "1", "-")
                     new_members.append(father.member)
 
         self.members += new_members

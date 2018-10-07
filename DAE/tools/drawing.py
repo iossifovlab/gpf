@@ -120,6 +120,8 @@ class OffsetLayoutDrawer(object):
             for individual in level:
                 if individual.individual.member.effect == "1":
                     individual_color = "white"
+                elif individual.individual.member.effect == "-":
+                    individual_color = "grey"
                 else:
                     individual_color = "red"
                 if Sex.from_name_or_value(
