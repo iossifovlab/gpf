@@ -309,6 +309,9 @@ class SandwichSolver(object):
     def solve(sandwich_instance):
         forbidden_graph = sandwich_instance.forbidden_graph
         # print(max(sandwich_instance.required_graph.degree().values()))
+
+        if len(sandwich_instance.required_graph.edges()) == 0:
+            return SandwichSolver.try_solve(sandwich_instance)
         for count in range(0, len(forbidden_graph.edges())):
             for edges_to_remove in itertools.combinations(
                     sorted(forbidden_graph.edges()),
@@ -355,6 +358,10 @@ class SandwichSolver(object):
         visited_realizations = set()
 
         vertices_length = len(sandwich_instance.vertices)
+
+        if vertices_length == 1:
+            realization = realizations_queue.pop()
+            return realization.intervals
 
         while len(realizations_queue) > 0:
             realization = realizations_queue.pop()
