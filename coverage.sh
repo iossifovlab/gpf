@@ -37,6 +37,22 @@ py.test --runslow --withspark -v --cov-config coveragerc \
     --cov-report html:coverage/coverage.html \
     --cov-report xml:coverage/coverage.xml \
     --cov-append \
+    --cov common_reports_api \
+    --cov datasets_api \
+    --cov enrichment_api \
+    --cov family_counters_api \
+    --cov gene_sets \
+    --cov gene_weights \
+    --cov genotype_browser \
+    --cov groups_api \
+    --cov helpers \
+    --cov measures_api \
+    --cov pheno_browser_api \
+    --cov pheno_tool_api \
+    --cov precompute \
+    --cov preloaded \
+    --cov tools \
+    --cov users_api \
     --cov common \
     --cov variant_annotation \
     --cov annotation \
@@ -47,10 +63,10 @@ py.test --runslow --withspark -v --cov-config coveragerc \
     DAE/common/tests/ \
     DAE/variants/tests/ \
     DAE/variant_annotation/tests \
-    DAE/annotation/tests
-    # DAE/studies/tests
-    # DAE/study_groups/tests 
-    # DAE/datasets/tests
+    DAE/annotation/tests \
+    DAE/studies/tests \
+    DAE/study_groups/tests \
+    DAE/datasets/tests
     
 #     DAE/variant_db/tests/ \
 #     DAE/tools/tests

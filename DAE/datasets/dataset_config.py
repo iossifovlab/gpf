@@ -106,7 +106,7 @@ class DatasetConfig(ConfigurableEntityConfig):
         for key in dict_options_keys:
             if dataset_config.get(key, True):
                 dict_options = {}
-                for k in list(dataset_config.keys()):
+                for k in list(dataset_config.keys()):  # FIXME:
                     if k.startswith(key + '.'):
                         dict_options[k.replace(key + '.', '')] = \
                             dataset_config.pop(k)
@@ -303,7 +303,8 @@ class DatasetConfig(ConfigurableEntityConfig):
                 'effect,count,geneeffect,effectdetails,weights,freq',
             'genotypeBrowser.basePreviewColumns':
                 'family,variant,genotype,effect,weights,freq,studyName,'
-                'location,pedigree,inChS,fromParentS,effects,requestedGeneEffects,genes,worstEffect',
+                'location,pedigree,inChS,fromParentS,effects,'
+                'requestedGeneEffects,genes,worstEffect',
             'genotypeBrowser.baseDownloadColumns':
                 'family,phenotype,variant,best,fromparent,inchild,effect,'
                 'count,geneeffect,effectdetails,weights,freq',
