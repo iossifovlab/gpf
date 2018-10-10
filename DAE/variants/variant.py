@@ -379,9 +379,9 @@ class SummaryVariantFactory(object):
             effects = Effect.from_effects(
                 record['effect_type'],
                 list(zip(record['effect_gene_genes'],
-                    record['effect_gene_types'])),
+                         record['effect_gene_types'])),
                 list(zip(record['effect_details_transcript_ids'],
-                    record['effect_details_details'])))
+                         record['effect_details_details'])))
         alternative = record['alternative']
 
         return SummaryAllele(
@@ -400,7 +400,8 @@ class SummaryVariantFactory(object):
 
         alleles = []
         for record in records:
-            sa = SummaryVariantFactory.summary_allele_from_record(record)
+            sa = SummaryVariantFactory.\
+                summary_allele_from_record(record)
             alleles.append(sa)
 
         return SummaryVariant(alleles)
