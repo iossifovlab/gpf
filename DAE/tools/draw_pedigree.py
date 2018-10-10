@@ -1,4 +1,5 @@
-from pedigree_to_graph import get_argument_parser, CsvPedigreeReader
+from pedigree_reader import PedigreeReader
+from pedigree_to_graph import get_argument_parser
 from drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from layout import Layout, IndividualWithCoordinates
 
@@ -74,7 +75,7 @@ def main():
 
     show_id = args.show_id
 
-    pedigrees = CsvPedigreeReader().read_file(
+    pedigrees = PedigreeReader().read_file(
         args.file, columns_labels, header, delimiter)
 
     pdf_drawer = PDFLayoutDrawer(args.output)

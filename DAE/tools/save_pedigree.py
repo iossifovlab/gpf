@@ -5,7 +5,8 @@ from __future__ import unicode_literals
 import collections
 import csv
 
-from pedigree_to_graph import get_argument_parser, CsvPedigreeReader
+from pedigree_reader import PedigreeReader
+from pedigree_to_graph import get_argument_parser
 from interval_sandwich import SandwichSolver
 from layout import Layout
 
@@ -130,7 +131,7 @@ def main():
         header = header.split(',')
     delimiter = args.delimiter
 
-    pedigrees = CsvPedigreeReader().read_file(
+    pedigrees = PedigreeReader().read_file(
         args.file, columns_labels, header, delimiter)
 
     layout_saver = LayoutSaver(

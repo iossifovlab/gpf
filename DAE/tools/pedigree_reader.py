@@ -1,31 +1,32 @@
 import csv
 from collections import OrderedDict
-from pedigrees import Pedigree, PedigreeMember
+from pedigree_to_graph import Pedigree, PedigreeMember
 
 
 class PedigreeReader(object):
 
-    def read_file(self, filename, return_as_dict=False):
+    def read_file(self, file, columns_labels, header=None, delimiter='\t',
+                  return_as_dict=False):
         families = OrderedDict()
-        with open(filename, 'r') as file:
-            reader = csv.DictReader(file, delimiter='\t')
-
+        with open(file) as csvfile:
+            reader = csv.DictReader(csvfile, fieldnames=header,
+                                    delimiter=delimiter)
             for row in reader:
                 kwargs = {
-                    "family_id": row["familyId"],
-                    "id": row["personId"],
-                    "father": row["dadId"],
-                    "mother": row["momId"],
-                    "sex": row["sex"],
-                    "label": "",
-                    "effect": row["status"],
+                    "family_id": row[columns_labels["family_id"]],
+                    "id": row[columns_labels["id"]],
+                    "father": row[columns_labels["father"]],
+                    "mother": row[columns_labels["mother"]],
+                    "sex": row[columns_labels["sex"]],
+                    "effect": row[columns_labels["effect"]],
+                    "layout": row.get(columns_labels["layout"], None)
                 }
                 member = PedigreeMember(**kwargs)
                 if member.family_id not in families:
                     families[member.family_id] = Pedigree([member])
                 else:
-                    families[member.family_id].add_member(member)
+                    families[member.family_id].members.append(member)
 
         if return_as_dict:
             return families
-        return families.values()
+        return list(families.values())
