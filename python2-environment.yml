@@ -1,6 +1,7 @@
 name: dae-python2
 channels:
   - defaults
+  - bioconda
 dependencies:
   - pyliftover=0.3=py_2
   - attrs=18.1.0=py27_0
