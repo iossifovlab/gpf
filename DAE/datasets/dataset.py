@@ -7,9 +7,8 @@ import logging
 from RegionOperations import Region
 from variants.attributes import Role
 from datasets.helpers import EFFECT_TYPES_MAPPING
-from study_groups.study_group import StudyGroup
 from variants.attributes_query import role_query, variant_type_converter, \
-    sex_converter, AndNode, NotNode, OrNode, EqualsNode, ContainsNode
+    sex_converter, AndNode, NotNode, OrNode, ContainsNode
 
 logger = logging.getLogger(__name__)
 
