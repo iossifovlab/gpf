@@ -9,12 +9,9 @@ import abc
 from collections import defaultdict
 import argparse
 import csv
-import collections
 from functools import reduce
 
-from tools.interval_sandwich import SandwichInstance, SandwichSolver
-from tools.layout import Layout
-from tools.drawing import PDFLayoutDrawer, OffsetLayoutDrawer
+from tools.interval_sandwich import SandwichInstance
 from future.utils import with_metaclass
 
 
@@ -33,6 +30,7 @@ class CsvPedigreeReader(object):
                     "mother": row[columns_labels["mother"]],
                     "sex": row[columns_labels["sex"]],
                     "effect": row[columns_labels["effect"]],
+                    "layout": row.get(columns_labels["layout"], None)
                 }
                 member = PedigreeMember(**kwargs)
                 if member.family_id not in families:
@@ -44,13 +42,15 @@ class CsvPedigreeReader(object):
 
 
 class PedigreeMember(object):
-    def __init__(self, id, family_id, mother, father, sex, effect):
+    def __init__(self, id, family_id, mother, father, sex, effect,
+                 layout=None):
         self.id = id
         self.family_id = family_id
         self.mother = mother
         self.father = father
         self.sex = sex
         self.effect = effect
+        self.layout = layout
 
 
 class Pedigree(object):
@@ -112,11 +112,9 @@ class Pedigree(object):
 
         self.members += new_members
 
-    def create_sandwich_instance(self):
+    def get_individuals(self):
         id_to_individual = defaultdict(Individual)
         id_to_mating_unit = {}
-
-        self.add_new_members()
 
         for member in self.members:
             mother = id_to_individual[member.mother]
@@ -150,7 +148,19 @@ class Pedigree(object):
 
         individuals = set(id_to_individual.values())
         mating_units = set(id_to_mating_unit.values())
-        sibship_units = set([mu.children for mu in list(id_to_mating_unit.values())])
+        sibship_units =\
+            set([mu.children for mu in list(id_to_mating_unit.values())])
+
+        return individuals, mating_units, sibship_units
+
+    def create_sandwich_instance(self):
+        self.add_new_members()
+
+        family = self.get_individuals()
+        if family is None:
+            return None
+
+        individuals, mating_units, sibship_units = family
 
         all_vertices = individuals | mating_units | sibship_units
 
@@ -351,72 +361,20 @@ class MatingUnit(IndividualGroup):
         return False
 
 
-class LayoutSaver(object):
-
-    def __init__(self, input_filename, output_filename,
-            fieldname="person_coordinates"):
-        self.input_filename = input_filename
-        self.output_filename = output_filename
-        self.fieldname = fieldname
-        self._people_with_layout = collections.OrderedDict()
-
-    @staticmethod
-    def _member_key(family_id, individual_id):
-        return "{};{}".format(family_id, individual_id)
-
-    def writerow(self, family, layout):
-        for individual_id, position in list(layout.id_to_position.items()):
-            row = {
-                self.fieldname: "{},{}".format(position.x, position.y)
-            }
-
-            key = self._member_key(family.family_id, individual_id)
-
-            self._people_with_layout[key] = row
-
-    def save(self):
-        with open(self.input_filename, "r") as input_file, \
-                open(self.output_filename, "w") as output_file:
-
-            reader = csv.DictReader(input_file, delimiter="\t")
-            fieldnames = list(reader.fieldnames)
-
-            assert self.fieldname not in fieldnames, \
-                "{} already in file {}".format(
-                    self.fieldname, self.input_filename)
-
-            writer = csv.DictWriter(
-                output_file, reader.fieldnames + [self.fieldname],
-                delimiter='\t')
-
-            writer.writeheader()
-
-            for row in reader:
-                row_copy = row.copy()
-
-                key = self._member_key(row['familyId'], row['personId'])
-
-                if key in self._people_with_layout:
-                    row_copy.update(self._people_with_layout[key])
-                else:
-                    row_copy[self.fieldname] = ""
-
-                writer.writerow(row_copy)
-
-
-def main():
+def get_argument_parser():
     parser = argparse.ArgumentParser(description="Draw PDP.")
+
     parser.add_argument(
         "file", metavar="f", help="the .ped file")
     parser.add_argument(
         "--output", metavar="o", help="the output filename file",
         default="output.pdf")
     parser.add_argument(
-        "--save-layout", metavar="o",
-        help="save the layout with pedigree info ")
-    parser.add_argument(
         "--layout-column", metavar="l", default="layoutCoords",
         help="layout column name to be used when saving the layout")
+    parser.add_argument(
+        "--generated-column", metavar="m", default="generated",
+        help="generated column name to be used when generate person")
     parser.add_argument(
         '--delimiter', help='delimiter used in the split column; defaults to '
         '"\\t"', default='\t', action='store')
@@ -444,70 +402,5 @@ def main():
         'familyId, personId, dadId, momId, gender, status. You can replace '
         'unnecessary column with `_`.', dest='no_header_order', default=None,
         action='store')
-    parser.add_argument('--show-id', help='show individual id in pedigree',
-                        dest='show_id', action='store_true', default=False)
 
-    args = parser.parse_args()
-
-    columns_labels = {
-        "family_id": args.family_id,
-        "id": args.id,
-        "father": args.father,
-        "mother": args.mother,
-        "sex": args.sex,
-        "effect": args.effect
-    }
-    header = args.no_header_order
-    if header:
-        header = header.split(',')
-    delimiter = args.delimiter
-
-    pedigrees = CsvPedigreeReader().read_file(
-        args.file, columns_labels, header, delimiter)
-
-    pdf_drawer = PDFLayoutDrawer(args.output)
-    layout_saver = None
-
-    if args.save_layout:
-        layout_saver = LayoutSaver(
-            args.file, args.save_layout, args.layout_column)
-
-    show_id = args.show_id
-
-    for family in sorted(pedigrees, key=lambda x: x.family_id):
-        sandwich_instance = family.create_sandwich_instance()
-        if sandwich_instance is None:
-            print(family.family_id)
-            print("Missing members")
-            pdf_drawer.add_error_page(
-                family.members, "Missing members in family " +
-                                family.family_id)
-            continue
-        intervals = SandwichSolver.solve(sandwich_instance)
-
-        if intervals is None:
-            print(family.family_id)
-            print("No intervals")
-            pdf_drawer.add_error_page(
-                family.members, "No intervals in family " + family.family_id)
-        if intervals:
-            individuals_intervals = filter(
-                lambda interval: interval.vertex.is_individual(),
-                intervals
-            )
-
-            # print(family.family_id)
-            layout = Layout(individuals_intervals)
-            layout_drawer = OffsetLayoutDrawer(layout, 0, 0, show_id)
-            pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
-
-            if layout_saver is not None:
-                layout_saver.writerow(family, layout)
-
-    pdf_drawer.save_file()
-    if layout_saver:
-        layout_saver.save()
-
-
-if __name__ == "__main__":
-    main()
+    return parser
