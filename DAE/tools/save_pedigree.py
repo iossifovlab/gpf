@@ -6,7 +6,7 @@ import collections
 import csv
 
 from pedigree_reader import PedigreeReader
-from pedigree_to_graph import get_argument_parser
+from pedigrees import get_argument_parser, FamilyConnections
 from interval_sandwich import SandwichSolver
 from layout import Layout
 
@@ -114,7 +114,7 @@ class LayoutSaver(object):
 
 
 def main():
-    parser = get_argument_parser()
+    parser = get_argument_parser("Save PDP.")
     args = parser.parse_args()
 
     columns_labels = {
@@ -138,12 +138,13 @@ def main():
         args.file, args.output, args.generated_column, args.layout_column)
 
     for family in sorted(pedigrees, key=lambda x: x.family_id):
-        sandwich_instance = family.create_sandwich_instance()
-        if sandwich_instance is None:
+        family_connections = FamilyConnections.from_pedigree(family)
+        if family_connections is None:
             layout_saver.writerow_error(family, "Missing members")
             print(family.family_id)
             print("Missing members")
             continue
+        sandwich_instance = family_connections.create_sandwich_instance()
         intervals = SandwichSolver.solve(sandwich_instance)
 
         if intervals is None:

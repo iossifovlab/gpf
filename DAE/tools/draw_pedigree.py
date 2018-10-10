@@ -1,5 +1,5 @@
 from pedigree_reader import PedigreeReader
-from pedigree_to_graph import get_argument_parser
+from pedigrees import get_argument_parser, FamilyConnections
 from drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from layout import Layout, IndividualWithCoordinates
 
@@ -8,17 +8,19 @@ class LayoutLoader(object):
 
     def __init__(self, family):
         self.family = family
+        self.family_connections = FamilyConnections.from_pedigree(
+            family, add_new_members=False)
 
     def get_positions_from_family(self):
         positions = {}
-        individuals = self.family.get_individuals()
-        if individuals is None:
+        if self.family_connections is None:
             position = self.family.members[0].layout.split(":")
             if len(position) == 1:
                 return position[0]
             else:
                 return ''
-        for individual in individuals[0]:
+        individuals = self.family_connections.get_individuals()
+        for individual in individuals:
             position = individual.member.layout.split(":")
             if len(position) == 1:
                 return position[0]
@@ -52,7 +54,7 @@ class LayoutLoader(object):
 
 
 def main():
-    parser = get_argument_parser()
+    parser = get_argument_parser("Draw PDP.")
     parser.add_argument(
         '--show-id', help='show individual id in pedigree', dest='show_id',
         action='store_true', default=False)

@@ -1,16 +1,29 @@
+#!/usr/bin/env python
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from builtins import str
+from builtins import map
+from builtins import object
 import abc
 from collections import defaultdict
+import argparse
+from functools import reduce
+
+from tools.interval_sandwich import SandwichInstance
+from future.utils import with_metaclass
 
 
 class PedigreeMember(object):
-    def __init__(self, id, family_id, mother, father, sex, effect, label):
+    def __init__(self, id, family_id, mother, father, sex, effect,
+                 layout=None):
         self.id = id
         self.family_id = family_id
         self.mother = mother
         self.father = father
         self.sex = sex
-        self.label = label
         self.effect = effect
+        self.layout = layout
 
     def has_known_mother(self):
         return self.mother == '0' or self.mother == ''
@@ -33,6 +46,9 @@ class Pedigree(object):
     def members(self):
         return self._members
 
+    def add_members(self, new_members):
+        self._members += new_members
+
     def add_member(self, member):
         self._members.append(member)
         self._independent_members = None
@@ -53,7 +69,65 @@ class FamilyConnections(object):
         self.id_to_mating_unit = id_to_mating_unit
 
     @staticmethod
-    def from_pedigree(pedigree):
+    def validate_family(family):
+        for parents in family.keys():
+            if family[parents].mother.member is None:
+                return False
+            if family[parents].father.member is None:
+                return False
+            for children in family[parents].children.individuals:
+                if children.member is None:
+                    return False
+        return True
+
+    @staticmethod
+    def add_new_members(pedigree):
+        new_members = []
+        id_to_individual = defaultdict(Individual)
+
+        for member in pedigree.members:
+            individual = id_to_individual[member.id]
+            individual.member = member
+
+        missing_father_mothers = {}
+        missing_mother_fathers = {}
+
+        for member in pedigree.members:
+            if member.mother == member.father:
+                continue
+            if member.mother == "0":
+                if member.father not in missing_mother_fathers:
+                    missing_mother_fathers[member.father] = PedigreeMember(
+                        member.father + ".mother", pedigree.family_id,
+                        "0", "0", "2", "-")
+                    new_members.append(missing_mother_fathers[member.father])
+                member.mother = member.father + ".mother"
+            elif member.father == "0":
+                if member.mother not in missing_father_mothers:
+                    missing_father_mothers[member.mother] = PedigreeMember(
+                        member.mother + ".father", pedigree.family_id,
+                        "0", "0", "1", "-")
+                    new_members.append(missing_father_mothers[member.mother])
+                member.father = member.mother + ".father"
+            else:
+                mother = id_to_individual[member.mother]
+                father = id_to_individual[member.father]
+                if mother.member is None:
+                    mother.member = PedigreeMember(
+                        member.mother, pedigree.family_id, "0", "0", "2", "-")
+                    new_members.append(mother.member)
+                if father.member is None:
+                    father.member = PedigreeMember(
+                        member.father, pedigree.family_id, "0", "0", "1", "-")
+                    new_members.append(father.member)
+
+        pedigree.add_members(new_members)
+
+    @classmethod
+    def from_pedigree(cls, pedigree, add_new_members=True):
+        if add_new_members:
+            cls.add_new_members(pedigree)
+
         id_to_individual = defaultdict(Individual)
         id_to_mating_unit = {}
 
@@ -73,6 +147,9 @@ class FamilyConnections(object):
                 individual.parents = parental_unit
                 parental_unit.children.individuals.add(individual)
 
+        if cls.validate_family(id_to_mating_unit) is False:
+            return None
+
         try:
             del id_to_individual["0"]
         except KeyError:
@@ -85,6 +162,80 @@ class FamilyConnections(object):
 
         return FamilyConnections(pedigree, id_to_individual, id_to_mating_unit)
 
+    def create_sandwich_instance(self):
+        self.add_ranks()
+
+        individuals = self.get_individuals()
+        mating_units = self.get_mating_units()
+        sibship_units = self.get_sibship_units()
+
+        all_vertices = individuals | mating_units | sibship_units
+
+        # Ea-
+        same_rank_edges = {frozenset([i1, i2])
+                           for i1 in individuals for i2 in individuals
+                           if i1 is not i2 and i1.rank is i2.rank}
+        multiple_partners_edges = {
+            frozenset([i1, i2])
+            for i1 in individuals
+            for i2 in [m.other_parent(i1) for m in i1.mating_units]
+            if len(i1.mating_units) > 2
+        }
+        same_rank_edges -= multiple_partners_edges
+        same_rank_edges = set(map(tuple, same_rank_edges))
+
+        # Eb+
+        mating_edges = {(i, m) for i in individuals for m in mating_units
+                        if i.individual_set().issubset(m.individual_set())}
+        # Eb-
+        same_generation_not_mates = \
+            {(i, m) for i in individuals for m in mating_units
+             if i.generation_ranks() == m.generation_ranks()}
+        same_generation_not_mates = same_generation_not_mates - mating_edges
+
+        # Ec+
+        sibship_edges = {(i, s) for i in individuals for s in sibship_units
+                         if i.individual_set().issubset(s.individual_set())}
+        # Ec-
+        same_generation_not_siblings = \
+            {(i, s) for i in individuals for s in sibship_units
+             if i.parents is not None and
+                i.generation_ranks() == s.generation_ranks()}
+        same_generation_not_siblings = same_generation_not_siblings \
+            - sibship_edges
+
+        # Ed+
+        mates_siblings_edges = {(m, s) for m in mating_units
+                                for s in sibship_units
+                                if(m.children.individual_set() is
+                                    s.individual_set())}
+
+        # Ee-
+        intergenerational_edges = \
+            {(m, a) for m in mating_units for a in sibship_units | mating_units
+             if (m.generation_ranks() & a.generation_ranks() == set()) and
+             (m.individual_set() & a.individual_set() == set())}
+        intergenerational_edges -= mates_siblings_edges
+
+        required_set = mating_edges | sibship_edges | mates_siblings_edges
+        forbidden_set = same_rank_edges | same_generation_not_mates \
+            | same_generation_not_siblings | intergenerational_edges
+
+        # print("same_rank_edges", len(same_rank_edges), same_rank_edges)
+        # print("same_generation_not_mates",
+        #       len(same_generation_not_mates), same_generation_not_mates)
+        # print("same_generation_not_siblings",
+        #       len(same_generation_not_siblings), same_generation_not_siblings)
+        # print("intergenerational_edges",
+        #       len(intergenerational_edges), intergenerational_edges)
+
+        # print("all vertices", len(all_vertices), all_vertices)
+        # print("required edges", len(required_set), required_set)
+        # print("forbidden edges", len(forbidden_set), forbidden_set)
+
+        return SandwichInstance.from_sets(
+            all_vertices, required_set, forbidden_set)
+
     @property
     def members(self):
         if not self.pedigree:
@@ -93,7 +244,7 @@ class FamilyConnections(object):
 
     def add_ranks(self):
         if len(self.members) > 0:
-            self.id_to_individual.values()[0].add_rank(0)
+            list(self.id_to_individual.values())[0].add_rank(0)
             self._fix_ranks()
 
     def _fix_ranks(self):
@@ -110,10 +261,18 @@ class FamilyConnections(object):
     def get_individuals_with_rank(self, rank):
         return {i for i in self.id_to_individual.values() if i.rank == rank}
 
+    def get_individuals(self):
+        return set(self.id_to_individual.values())
 
-class IndividualGroup(object):
-    __metaclass__ = abc.ABCMeta
+    def get_mating_units(self):
+        return set(self.id_to_mating_unit.values())
 
+    def get_sibship_units(self):
+        return set([mu.children
+                    for mu in list(self.id_to_mating_unit.values())])
+
+
+class IndividualGroup(with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def individual_set(self):
         return {}
@@ -125,12 +284,16 @@ class IndividualGroup(object):
     def children_set(self):
         return {}
 
+    def __repr__(self):
+        return\
+            self.__class__.__name__[0].lower() + \
+            "{" + ",".join(sorted(map(repr, self.individual_set()))) + "}"
+
+    def __lt__(self, other):
+        return repr(self) < repr(other)
+
     def is_individual(self):
         return False
-
-    def __repr__(self):
-        return self.__class__.__name__[0].lower() + \
-               "{" + ",".join(sorted(map(repr, self.individual_set()))) + "}"
 
 
 class Individual(IndividualGroup):
@@ -146,9 +309,6 @@ class Individual(IndividualGroup):
         self.member = member
         self.parents = parents
         self.rank = rank
-
-    def is_individual(self):
-        return True
 
     def individual_set(self):
         return {self}
@@ -185,6 +345,9 @@ class Individual(IndividualGroup):
     def are_mates(self, other_individual):
         return len(set(self.mating_units) &
                    set(other_individual.mating_units)) == 1
+
+    def is_individual(self):
+        return True
 
 
 class SibshipUnit(IndividualGroup):
@@ -225,3 +388,48 @@ class MatingUnit(IndividualGroup):
         if this_parent == self.mother:
             return self.father
         return self.mother
+
+
+def get_argument_parser(description):
+    parser = argparse.ArgumentParser(description=description)
+
+    parser.add_argument(
+        "file", metavar="f", help="the .ped file")
+    parser.add_argument(
+        "--output", metavar="o", help="the output filename file",
+        default="output.pdf")
+    parser.add_argument(
+        "--layout-column", metavar="l", default="layoutCoords",
+        help="layout column name to be used when saving the layout")
+    parser.add_argument(
+        "--generated-column", metavar="m", default="generated",
+        help="generated column name to be used when generate person")
+    parser.add_argument(
+        '--delimiter', help='delimiter used in the split column; defaults to '
+        '"\\t"', default='\t', action='store')
+    parser.add_argument(
+        '--family_id', help='Specify family id column label. Default to '
+        'familyId.', default='familyId', action='store')
+    parser.add_argument(
+        '--id', help='Specify id column label. Default to personId.',
+        default='personId', action='store')
+    parser.add_argument(
+        '--father', help='Specify father column label. Default to dadId.',
+        default='dadId', action='store')
+    parser.add_argument(
+        '--mother', help='Specify mother column label. Default to momId.',
+        default='momId', action='store')
+    parser.add_argument(
+        '--sex', help='Specify sex column label. Default to gender.',
+        default='gender', action='store')
+    parser.add_argument(
+        '--effect', help='Specify effect column label. Default to status.',
+        default='status', action='store')
+    parser.add_argument(
+        '--no-header-order', help='Comma separated order of columns in header '
+        'when header is not in the input file. Values for columns are '
+        'familyId, personId, dadId, momId, gender, status. You can replace '
+        'unnecessary column with `_`.', dest='no_header_order', default=None,
+        action='store')
+
+    return parser

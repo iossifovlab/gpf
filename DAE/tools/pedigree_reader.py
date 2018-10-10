@@ -1,6 +1,6 @@
 import csv
 from collections import OrderedDict
-from pedigree_to_graph import Pedigree, PedigreeMember
+from pedigrees import Pedigree, PedigreeMember
 
 
 class PedigreeReader(object):
