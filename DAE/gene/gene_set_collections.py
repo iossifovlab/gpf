@@ -184,6 +184,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _get_study_config_descs(self, study_groups=None):
         if study_groups is None:
             study_groups = self.study_group_pedigree_selectors.keys()
+        print(study_groups)
         return [
             self.study_group_facade.get_study_group(study_group_id)
             for study_group_id in study_groups
@@ -193,12 +194,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         permitted_datasets = kwargs.get('permitted_datasets')
         return [
             {
-                'datasetId': dataset_desc['id'],
+                'datasetId': dataset_desc.name,
                 'phenotypes': self._get_configured_dataset_legend(dataset_desc)
             }
             for dataset_desc in self._get_study_config_descs()
             if permitted_datasets is None or
-            dataset_desc['id'] in permitted_datasets
+            dataset_desc.name in permitted_datasets
         ]
 
     def get_dataset_phenotypes(self, dataset_id):
@@ -209,9 +210,10 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return [p['id'] for p in res[dataset_id]['phenotypes']]
 
     def _get_configured_dataset_legend(self, dataset_desc):
+        print(self.study_group_pedigree_selectors)
         configured_pedigree_selector_id = self.study_group_pedigree_selectors[
-            dataset_desc['id']]['id']
-        for pedigree_selector in dataset_desc['pedigreeSelectors']:
+            dataset_desc.name]['source']
+        for pedigree_selector in dataset_desc.pedigreeSelectors:
             if pedigree_selector['id'] == configured_pedigree_selector_id:
                 return pedigree_selector.domain
         return None
@@ -494,6 +496,7 @@ class GeneSetsCollections(object):
     def get_gene_sets_collections(self, permitted_datasets=None):
         gene_sets_collections_desc = []
         for gsc_id in self.config.gene_info.getGeneTermIds():
+            print("gsc_id", gsc_id)
             label = self.config.gene_info.getGeneTermAtt(gsc_id, "webLabel")
             formatStr = self.config.gene_info.getGeneTermAtt(
                 gsc_id, "webFormatStr")

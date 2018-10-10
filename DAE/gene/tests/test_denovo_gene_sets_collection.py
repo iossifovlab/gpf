@@ -15,6 +15,11 @@ def test_denovo_gene_sets_exist(gscs):
     assert denovo is not None
 
 
+def test_get_all_gene_sets(gscs):
+    gene_sets_collections = gscs.get_gene_sets_collections()
+    assert gene_sets_collections
+
+
 # def test_denovo_get_gene_set_sd_lgds_autism(gscs):
 #     lgds = gscs.get_gene_set('denovo', 'LGDs', {'SD_TEST': ['autism']})
 #     assert lgds is not None
