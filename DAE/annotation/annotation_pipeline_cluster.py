@@ -140,7 +140,8 @@ def main(config, data_dir, output_dir, sge_rreq):
 
         all_cmds.append(escaped_output_file + '.bgz')
         print('{bgz_target}: {merge_target}\n\t'
-              'SGE_RREQ="{sge_rreq}" bgzip -c "$<" > "$@" && tabix -b 2 -e 2 -S 1 "$@"\n'.format(
+              'SGE_RREQ="{sge_rreq}" bgzip -c "$<" > "$@" && '
+              'tabix -S 1 -s 1 -b 2 -e 2 "$@"\n'.format(
                   bgz_target=all_cmds[-1], merge_target=escaped_output_file,
                   sge_rreq=sge_rreq))
 
