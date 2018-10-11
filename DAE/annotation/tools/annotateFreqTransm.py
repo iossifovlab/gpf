@@ -67,6 +67,9 @@ chr=chr
 pos_begin=position
 score=all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq
 search=variant
+[schema]
+str=chr,position,variant
+float=all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq
 '''
 
 

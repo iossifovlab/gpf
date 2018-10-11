@@ -16,6 +16,58 @@ def assert_file_exists(filepath):
         sys.exit(-1)
 
 
+class Schema:
+
+    # New types only need to be added here.
+    type_map = {'str': str, 'float': float}
+
+    def __init__(self, schema_input=None):
+        self.column_types = {}
+        for type_ in self.type_map.keys():
+            self.column_types[type_] = []
+        if schema_input is not None:
+            if type(schema_input) is dict:
+                self.merge_schema_content(schema_input)
+            else:
+                self.load_from_config(schema_input)
+
+    def load_from_config(self, schema_config):
+        for entry in schema_config:
+            if entry[0] in self.type_map:
+                self.column_types[entry[0]] = entry[1].split(',')
+            else:
+                print(('Unrecognized column type {} when'
+                       'loading schema from config file.').format(entry[0]))
+                sys.exit(-1)
+
+    def merge_schema_content(self, foreign):
+        for type_ in self.type_map.keys():
+            if type_ not in self.column_types:
+                self.column_types[type_] = []
+            if type_ not in foreign:
+                foreign[type_] = []
+
+            self.column_types[type_] += foreign[type_]
+
+    def rename_column(self, column, new_name):
+        for type_ in self.type_map.keys():
+            if column in self.column_types[type_]:
+                col_index = self.column_types[type_].index(column)
+                self.column_types[type_][col_index] = new_name
+
+    def __iadd__(self, other):
+        self.merge_schema_content(other.column_types)
+        return self
+
+    def __str__(self):
+        ret_str = ""
+        for key, value in self.column_types.items():
+            ret_str += '#{}#\n'.format(key)
+            for col in value:
+                ret_str += '->{}\n'.format(col)
+        return ret_str
+
+
 class IOType:
     class TSV:
         @staticmethod

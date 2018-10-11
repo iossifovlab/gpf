@@ -14,6 +14,7 @@ from configparser import ConfigParser
 
 from .utilities import AnnotatorBase, main
 from .annotate_score_base import ScoreAnnotator
+from .file_io import Schema
 
 
 def get_argument_parser():
@@ -73,11 +74,14 @@ def get_argument_parser():
 
 
 def get_dirs(path):
+    # TODO Improve and fix this method.
+    # Files without extensions will be detected as folders.
     path = os.path.abspath(path)
     return [path + '/' + dir_ for dir_ in listdir(path) if len(dir_.split('.')) == 1]
 
 
 def get_files(path):
+    # TODO Improve this method.
     path = os.path.abspath(path)
     return [path + '/' + dir_ for dir_ in listdir(path) if len(dir_.split('.')) > 1]
 
@@ -86,7 +90,7 @@ def get_score(path):
     conf = [f.split('.') for f in get_files(path) if 'conf' in f.split('.')]
     if not conf:
         sys.stderr.write('Could not find score config file in ' + path + '\n')
-        sys.exit(-64)
+        sys.exit(-1)
     else:
         conf = conf[0]
         conf.remove('conf')
@@ -98,7 +102,7 @@ def assert_tabix(score):
     tabix_files = glob.glob(score_path + '/*.tbi')
     if len(tabix_files) == 0:
         sys.stderr.write('could not find .tbi file for score {}'.format(score))
-        sys.exit(-64)
+        sys.exit(-1)
     return True
 
 
@@ -117,14 +121,17 @@ class MultipleScoresAnnotator(AnnotatorBase):
         elif self.scores is not None:
             self.header.extend(self.scores)
 
+        for col in self.new_columns:
+            self._init_annotator(col)
+
     def _init_score_directory(self):
         self.scores_directory = self.opts.scores_directory
         if self.scores_directory is None:
             self.scores_directory = os.path.join(os.environ['GFD_DIR'])
 
-    def _annotator_for(self, score):
+    def _init_annotator(self, score):
         if score not in self.annotators:
-            score_dir = '{dir}/{score}'.format(dir=self.scores_directory, score=score) 
+            score_dir = '{dir}/{score}'.format(dir=self.scores_directory, score=score)
             score_file = None
             for file in get_files(score_dir):
                 if file[-3:] == '.gz':
@@ -150,8 +157,6 @@ class MultipleScoresAnnotator(AnnotatorBase):
             self.annotators[score] = ScoreAnnotator(score_annotator_opts,
                                                     list(self.header))
 
-        return self.annotators[score]
-
     @property
     def new_columns(self):
         if self.opts.scores is None or self.opts.scores == '':
@@ -159,13 +164,24 @@ class MultipleScoresAnnotator(AnnotatorBase):
             sys.exit(-12)
         return self.scores
 
+    @property
+    def schema(self):
+        schema = Schema()
+        for score, annotator in self.annotators.items():
+            schema += annotator.schema
+        return schema
+
     def line_annotations(self, line, new_cols_order):
         result = []
         for col in new_cols_order:
-            annotator = self._annotator_for(col)
+            annotator = self.annotators[col]
             annotations = annotator.line_annotations(line,
                                                      annotator.new_columns)
-            result.append([value for scores in annotations for value in scores])
+            for scores in annotations:
+                if len(scores) == 1:
+                    result.append(scores[0])
+                else:
+                    result.append([value for score in scores for value in score])
         return result
 
 

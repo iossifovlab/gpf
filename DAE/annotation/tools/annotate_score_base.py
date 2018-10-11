@@ -9,6 +9,7 @@ from configparser import ConfigParser
 from os.path import exists
 from box import Box
 
+from .file_io import Schema
 from .utilities import AnnotatorBase, assign_values, main, give_column_number
 
 
@@ -84,8 +85,8 @@ def conf_to_dict(path):
     conf_parser.read_file(path)
 
     conf_settings = dict(conf_parser.items('general'))
-    conf_settings_cols = {'columns': dict(conf_parser.items('columns'))}
-    conf_settings.update(conf_settings_cols)
+    conf_settings['columns'] = dict(conf_parser.items('columns'))
+    conf_settings['schema'] = Schema(conf_parser.items('schema'))
     return conf_settings
 
 
@@ -96,8 +97,13 @@ def normalize_value(score_value):
         result = score_value.split(',')
     else:
         result = [score_value]
-    return [None if value in ['.', ''] else float(value)
-            for value in result]
+    try:
+        return [None if value in ['.', ''] else float(value)
+                for value in result]
+    except ValueError:
+        print('Error encountered when normalizing score value *{}*!'.format(score_value))
+        print('This is likely caused due to an error in the score config schema.')
+        return None
 
 
 class ScoreFile(object):
@@ -157,7 +163,7 @@ class ScoreFile(object):
     def get_scores(self, new_columns, chrom, pos, *args):
         args = list(args)
         new_col_indices = [
-            give_column_number(col, self.config.header)-1 
+            give_column_number(col, self.config.header)-1
             for col in new_columns]
         try:
             for line in self._fetch(chrom, pos):
@@ -286,14 +292,27 @@ class ScoreAnnotator(AnnotatorBase):
     def new_columns(self):
         return self.file.config.columns.score
 
+    @property
+    def schema(self):
+        return self.file.config.schema
+
+    def normalize_column(self, value, column_index, new_columns):
+        column_name = new_columns[column_index]
+        float_cols = self.file.config.schema.column_types['float']
+        if column_name in float_cols:
+            value = normalize_value(value)
+            if value is None:
+                print('Normalization error occured for column *{}*.'.format(column_name))
+                sys.exit(-1)
+        return value
+
     def _get_scores(self, new_columns, chr=None, pos=None, loc=None, *args):
         if loc is not None:
             chr, pos = loc.split(':')
         if chr != '':
-            
-            return [normalize_value(score)
-                    for score
-                    in self.file.get_scores(new_columns, chr, int(pos), *args)]
+            scores = self.file.get_scores(new_columns, chr, int(pos), *args)
+            return [self.normalize_column(score, scores.index(score), new_columns)
+                    for score in scores]
         else:
             return [None for col in new_columns]
 

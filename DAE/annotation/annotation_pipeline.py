@@ -18,7 +18,12 @@ from collections import OrderedDict
 from functools import reduce
 from annotation.tools.utilities import assign_values
 from annotation.tools.utilities import main as main
-from annotation.tools import duplicate_columns
+from annotation.tools import *
+# from annotation.tools import duplicate_columns
+# TODO
+# This has been replaced with a star import as the
+# str_to_class method can not otherwise find the specified
+# class.
 
 
 def str_to_class(val):
@@ -45,6 +50,9 @@ class MultiAnnotator(object):
     """
 
     def __init__(self, opts, header=None):
+        # TODO Split up this method into smaller sections
+        # for clarity.
+
         self.header = header
         self.preannotators = PreannotatorLoader.load_preannotators(opts, header)
 
@@ -86,7 +94,11 @@ class MultiAnnotator(object):
 
         config_parser = MyConfigParser()
         config_parser.optionxform = str
-        config_parser.read_file(opts.config)
+        if type(opts.config) is str:
+            with open(opts.config) as conf_file:
+                config_parser.read_file(conf_file)
+        else:
+            config_parser.read_file(opts.config)
         self.config = Box(common.config.to_dict(config_parser),
                           default_box=True, default_box_attr=None)
 
@@ -132,6 +144,11 @@ class MultiAnnotator(object):
             self.split_index = assign_values(opts.split, self.header)
             self.split_separator = opts.separator
 
+    def _init_schema(self):
+        self.schema = file_io.Schema()
+        for annotator in self.annotators:
+            schema += annotator['instance'].schema
+
     def _split_variant(self, line):
         return [line[:self.split_index-1] + [value] + line[self.split_index:]
                 for value in line[self.split_index-1].split(self.split_separator)]
@@ -168,6 +185,10 @@ class MultiAnnotator(object):
                          for segment in self._split_variant(line)]
             annotated = self._join_variant(annotated)
             file_io.line_write([annotated[i-1] for i in self.stored_columns_indices])
+
+    @property
+    def schema(self):
+        return self.schema
 
 
 class PreannotatorLoader(object):
@@ -236,4 +257,3 @@ def get_argument_parser():
 
 if __name__ == '__main__':
     main(get_argument_parser(), MultiAnnotator)
-
