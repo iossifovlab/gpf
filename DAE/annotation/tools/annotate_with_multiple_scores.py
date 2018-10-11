@@ -168,7 +168,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
     def schema(self):
         schema = Schema()
         for score, annotator in self.annotators.items():
-            schema += annotator.schema
+            schema.merge(annotator.schema)
         return schema
 
     def line_annotations(self, line, new_cols_order):

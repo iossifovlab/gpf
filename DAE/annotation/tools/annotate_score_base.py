@@ -298,7 +298,7 @@ class ScoreAnnotator(AnnotatorBase):
 
     def normalize_column(self, value, column_index, new_columns):
         column_name = new_columns[column_index]
-        float_cols = self.file.config.schema.column_types['float']
+        float_cols = self.file.config.schema.type_query('float')
         if column_name in float_cols:
             value = normalize_value(value)
             if value is None:

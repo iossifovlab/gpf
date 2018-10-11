@@ -22,49 +22,56 @@ class Schema:
     type_map = {'str': str, 'float': float}
 
     def __init__(self, schema_input=None):
-        self.column_types = {}
-        for type_ in self.type_map.keys():
-            self.column_types[type_] = []
+        self.column_map = {}
         if schema_input is not None:
-            if type(schema_input) is dict:
-                self.merge_schema_content(schema_input)
-            else:
-                self.load_from_config(schema_input)
+            self.load_from_config(schema_input)
 
     def load_from_config(self, schema_config):
         for entry in schema_config:
             if entry[0] in self.type_map:
-                self.column_types[entry[0]] = entry[1].split(',')
+                for col in entry[1].split(','):
+                    self.column_map[col] = entry[0]
             else:
                 print(('Unrecognized column type {} when'
                        'loading schema from config file.').format(entry[0]))
                 sys.exit(-1)
 
-    def merge_schema_content(self, foreign):
-        for type_ in self.type_map.keys():
-            if type_ not in self.column_types:
-                self.column_types[type_] = []
-            if type_ not in foreign:
-                foreign[type_] = []
-
-            self.column_types[type_] += foreign[type_]
+    def merge(self, foreign):
+        foreign_schema = foreign.column_map
+        for key, value in foreign_schema.items():
+            if key in self.column_map:
+                if self.column_map[key] != value:
+                    print('Error encountered during merging of schemas!')
+                    print('Column {} has conflicting types:'.format(key))
+                    print('> {}'.format(self.column_map[key]))
+                    print('< {}'.format(value))
+                    sys.exit(-1)
+            else:
+                self.column_map[key] = value
 
     def rename_column(self, column, new_name):
-        for type_ in self.type_map.keys():
-            if column in self.column_types[type_]:
-                col_index = self.column_types[type_].index(column)
-                self.column_types[type_][col_index] = new_name
+        if column in self.column_map:
+            self.column_map[new_name] = self.column_map[column]
+            del(self.column_map[column])
+        else:
+            print('No such column {} to be renamed.'.format(column))
+            return 0 # TODO should this return or exit?
 
-    def __iadd__(self, other):
-        self.merge_schema_content(other.column_types)
-        return self
+    def type_query(self, query_type):
+        if query_type not in self.type_map:
+            print('No such type "{}" is defined.'.format(type))
+            sys.exit(-1)
+        else:
+            result = []
+            for col, type in self.column_map.items():
+                if type == query_type:
+                    result.append(col)
+            return result
 
     def __str__(self):
         ret_str = ""
-        for key, value in self.column_types.items():
-            ret_str += '#{}#\n'.format(key)
-            for col in value:
-                ret_str += '->{}\n'.format(col)
+        for key, value in self.column_map.items():
+            ret_str += '{} -> {}\n'.format(key, value)
         return ret_str
 
 

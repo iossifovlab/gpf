@@ -97,7 +97,7 @@ class VariantFormatPreannotator(AnnotatorBase):
 
     @property
     def schema(self):
-        return Schema({'str': self.new_columns})
+        return Schema([('str', ','.join(self.new_columns))])
 
     def _from_dae(self, chromosome=None, position=None, location=None,
                   variant=None):

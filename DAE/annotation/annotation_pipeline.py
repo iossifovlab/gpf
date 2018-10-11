@@ -188,7 +188,10 @@ class MultiAnnotator(object):
 
     @property
     def schema(self):
-        return self.schema
+        schema = file_io.Schema()
+        for annotator in self.annotators:
+            schema.merge(annotator['instance'].schema)
+        return schema
 
 
 class PreannotatorLoader(object):
