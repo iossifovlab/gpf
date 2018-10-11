@@ -155,7 +155,6 @@ def denovo_build(argv):
 
     save_family_variants_to_parquet(
         denovo.wrap_family_variants(df),
-        parquet_config.parquet.family_variants,
         parquet_config.parquet.family_alleles)
 
 
@@ -164,12 +163,12 @@ def init_parser_denovo(subparsers):
 
     parser_denovo.add_argument(
         'variants', type=str,
-        metavar='variants filename',
+        metavar='<variants filename>',
         help='annotated variants file'
     )
     parser_denovo.add_argument(
         'families', type=str,
-        metavar='families filename',
+        metavar='<pedigree filename>',
         help='families file in pedigree format'
     )
     parser_denovo.add_argument(
