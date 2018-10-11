@@ -56,8 +56,6 @@ def convert_contig(contig, outprefix=None, config=None,):
 
         summary_filename = "{prefix}_summary_variants_{contig}.parquet".format(
             **out)
-        variants_filename = "{prefix}_family_variants_{contig}.parquet".format(
-            **out)
         alleles_filename = "{prefix}_family_alleles_{contig}.parquet".format(
             **out)
 
@@ -67,7 +65,6 @@ def convert_contig(contig, outprefix=None, config=None,):
 
         save_family_variants_to_parquet(
             dae.wrap_family_variants(df),
-            variants_filename,
             alleles_filename)
 
     except Exception as ex:

@@ -135,6 +135,7 @@ class FamiliesBase(object):
             converters={
                 'role': lambda r: Role.from_name(r),
                 'sex': lambda s: Sex.from_value(s),
+                'gender': lambda s: Sex.from_value(s),
             },
             dtype={
                 'familyId': str,
@@ -145,10 +146,21 @@ class FamiliesBase(object):
             },
             comment="#",
         )
+        if 'gender' in ped_df.columns:
+            ped_df = ped_df.rename(columns={
+                'gender': 'sex',
+            })
+
         if 'sampleId' not in ped_df.columns:
             sample_ids = pd.Series(data=ped_df['personId'].values)
             ped_df['sampleId'] = sample_ids
-
+        else:
+            sample_ids = ped_df.apply(
+                lambda r: r.personId if np.isnan(r.sampleId) else r.sampleId,
+                axis=1,
+                result_type='reduce',
+            )
+            ped_df['sampleId'] = sample_ids
         return ped_df
 
     @staticmethod
@@ -191,7 +203,6 @@ class FamiliesBase(object):
         if 'sampleId' not in fam_df.columns:
             sample_ids = pd.Series(data=fam_df['personId'].values)
             fam_df['sampleId'] = sample_ids
-
         return fam_df
 
     @staticmethod
