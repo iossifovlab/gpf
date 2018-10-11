@@ -10,7 +10,7 @@ from collections import defaultdict
 import argparse
 from functools import reduce
 
-from tools.interval_sandwich import SandwichInstance
+from pedigrees.interval_sandwich import SandwichInstance
 from future.utils import with_metaclass
 
 

@@ -1,6 +1,6 @@
 import csv
 from collections import OrderedDict
-from pedigrees import Pedigree, PedigreeMember
+from pedigrees.pedigrees import Pedigree, PedigreeMember
 
 
 class PedigreeReader(object):

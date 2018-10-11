@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-from pedigree_reader import PedigreeReader
-from pedigrees import get_argument_parser, FamilyConnections
-from drawing import OffsetLayoutDrawer, PDFLayoutDrawer
-from layout import Layout, IndividualWithCoordinates
+from pedigrees.pedigree_reader import PedigreeReader
+from pedigrees.pedigrees import get_argument_parser, FamilyConnections
+from pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
+from pedigrees.layout import Layout, IndividualWithCoordinates
 
 
 class LayoutLoader(object):

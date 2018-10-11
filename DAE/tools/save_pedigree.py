@@ -5,10 +5,10 @@ from __future__ import unicode_literals
 import collections
 import csv
 
-from pedigree_reader import PedigreeReader
-from pedigrees import get_argument_parser, FamilyConnections
-from interval_sandwich import SandwichSolver
-from layout import Layout
+from pedigrees.pedigree_reader import PedigreeReader
+from pedigrees.pedigrees import get_argument_parser, FamilyConnections
+from pedigrees.interval_sandwich import SandwichSolver
+from pedigrees.layout import Layout
 
 
 class LayoutSaver(object):
