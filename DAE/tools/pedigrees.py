@@ -69,7 +69,7 @@ class FamilyConnections(object):
         self.id_to_mating_unit = id_to_mating_unit
 
     @staticmethod
-    def validate_family(family):
+    def is_valid_family(family):
         for parents in family.keys():
             if family[parents].mother.member is None:
                 return False
@@ -81,7 +81,7 @@ class FamilyConnections(object):
         return True
 
     @staticmethod
-    def add_new_members(pedigree):
+    def add_missing_members(pedigree):
         new_members = []
         id_to_individual = defaultdict(Individual)
 
@@ -124,9 +124,9 @@ class FamilyConnections(object):
         pedigree.add_members(new_members)
 
     @classmethod
-    def from_pedigree(cls, pedigree, add_new_members=True):
-        if add_new_members:
-            cls.add_new_members(pedigree)
+    def from_pedigree(cls, pedigree, add_missing_members=True):
+        if add_missing_members:
+            cls.add_missing_members(pedigree)
 
         id_to_individual = defaultdict(Individual)
         id_to_mating_unit = {}
@@ -147,7 +147,7 @@ class FamilyConnections(object):
                 individual.parents = parental_unit
                 parental_unit.children.individuals.add(individual)
 
-        if cls.validate_family(id_to_mating_unit) is False:
+        if cls.is_valid_family(id_to_mating_unit) is False:
             return None
 
         try:

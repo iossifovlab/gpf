@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from pedigree_reader import PedigreeReader
 from pedigrees import get_argument_parser, FamilyConnections
 from drawing import OffsetLayoutDrawer, PDFLayoutDrawer
@@ -9,7 +10,7 @@ class LayoutLoader(object):
     def __init__(self, family):
         self.family = family
         self.family_connections = FamilyConnections.from_pedigree(
-            family, add_new_members=False)
+            family, add_missing_members=False)
 
     def get_positions_from_family(self):
         positions = {}
