@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
@@ -8,56 +8,68 @@ from builtins import object
 import abc
 from collections import defaultdict
 import argparse
-import csv
-import collections
+from functools import reduce
 
-from tools.interval_sandwich import SandwichInstance, SandwichSolver
-from tools.layout import Layout
-from tools.drawing import PDFLayoutDrawer, OffsetLayoutDrawer
+from pedigrees.interval_sandwich import SandwichInstance
 from future.utils import with_metaclass
 
 
-class CsvPedigreeReader(object):
-
-    def read_file(self, file, columns_labels, header=None, delimiter='\t'):
-        families = {}
-        with open(file) as csvfile:
-            reader = csv.DictReader(csvfile, fieldnames=header,
-                                    delimiter=delimiter.encode('utf-8'))
-            for row in reader:
-                kwargs = {
-                    "family_id": row[columns_labels["family_id"]],
-                    "id": row[columns_labels["id"]],
-                    "father": row[columns_labels["father"]],
-                    "mother": row[columns_labels["mother"]],
-                    "sex": row[columns_labels["sex"]],
-                    "effect": row[columns_labels["effect"]],
-                }
-                member = PedigreeMember(**kwargs)
-                if member.family_id not in families:
-                    families[member.family_id] = Pedigree([member])
-                else:
-                    families[member.family_id].members.append(member)
-
-        return list(families.values())
-
-
 class PedigreeMember(object):
-    def __init__(self, id, family_id, mother, father, sex, effect):
+    def __init__(self, id, family_id, mother, father, sex, effect,
+                 layout=None):
         self.id = id
         self.family_id = family_id
         self.mother = mother
         self.father = father
         self.sex = sex
+        self.effect = effect
+        self.layout = layout
+
+    def has_known_mother(self):
+        return self.mother == '0' or self.mother == ''
+
+    def has_known_father(self):
+        return self.father == '0' or self.father == ''
+
+    def has_known_parents(self):
+        return self.has_known_father() or self.has_known_mother()
 
 
 class Pedigree(object):
 
     def __init__(self, members):
-        self.members = members
+        self._members = members
         self.family_id = members[0].family_id if len(members) > 0 else ""
+        self._independent_members = None
 
-    def validate_family(self, family):
+    @property
+    def members(self):
+        return self._members
+
+    def add_members(self, new_members):
+        self._members += new_members
+
+    def add_member(self, member):
+        self._members.append(member)
+        self._independent_members = None
+
+    def independent_members(self):
+        if not self._independent_members:
+            self._independent_members = \
+                [m for m in self._members if m.has_known_parents()]
+
+        return self._independent_members
+
+
+class FamilyConnections(object):
+
+    def __init__(self, pedigree, id_to_individual, id_to_mating_unit):
+        self.pedigree = pedigree
+        self.id_to_individual = id_to_individual
+        self.id_to_mating_unit = id_to_mating_unit
+
+    @staticmethod
+    def is_valid_family(family):
         for parents in family.keys():
             if family[parents].mother.member is None:
                 return False
@@ -68,16 +80,62 @@ class Pedigree(object):
                     return False
         return True
 
-    def create_sandwich_instance(self):
+    @staticmethod
+    def add_missing_members(pedigree):
+        new_members = []
+        id_to_individual = defaultdict(Individual)
+
+        for member in pedigree.members:
+            individual = id_to_individual[member.id]
+            individual.member = member
+
+        missing_father_mothers = {}
+        missing_mother_fathers = {}
+
+        for member in pedigree.members:
+            if member.mother == member.father:
+                continue
+            if member.mother == "0":
+                if member.father not in missing_mother_fathers:
+                    missing_mother_fathers[member.father] = PedigreeMember(
+                        member.father + ".mother", pedigree.family_id,
+                        "0", "0", "2", "-")
+                    new_members.append(missing_mother_fathers[member.father])
+                member.mother = member.father + ".mother"
+            elif member.father == "0":
+                if member.mother not in missing_father_mothers:
+                    missing_father_mothers[member.mother] = PedigreeMember(
+                        member.mother + ".father", pedigree.family_id,
+                        "0", "0", "1", "-")
+                    new_members.append(missing_father_mothers[member.mother])
+                member.father = member.mother + ".father"
+            else:
+                mother = id_to_individual[member.mother]
+                father = id_to_individual[member.father]
+                if mother.member is None:
+                    mother.member = PedigreeMember(
+                        member.mother, pedigree.family_id, "0", "0", "2", "-")
+                    new_members.append(mother.member)
+                if father.member is None:
+                    father.member = PedigreeMember(
+                        member.father, pedigree.family_id, "0", "0", "1", "-")
+                    new_members.append(father.member)
+
+        pedigree.add_members(new_members)
+
+    @classmethod
+    def from_pedigree(cls, pedigree, add_missing_members=True):
+        if add_missing_members:
+            cls.add_missing_members(pedigree)
+
         id_to_individual = defaultdict(Individual)
         id_to_mating_unit = {}
 
-        for member in self.members:
+        for member in pedigree.members:
             mother = id_to_individual[member.mother]
             father = id_to_individual[member.father]
 
             mating_unit_key = member.mother + "," + member.father
-            # print("key", mating_unit_key)
             if mother != father and not (mating_unit_key in id_to_mating_unit):
                 id_to_mating_unit[mating_unit_key] = MatingUnit(mother, father)
 
@@ -89,7 +147,7 @@ class Pedigree(object):
                 individual.parents = parental_unit
                 parental_unit.children.individuals.add(individual)
 
-        if self.validate_family(id_to_mating_unit) is False:
+        if cls.is_valid_family(id_to_mating_unit) is False:
             return None
 
         try:
@@ -102,15 +160,16 @@ class Pedigree(object):
         except KeyError:
             pass
 
-        individuals = set(id_to_individual.values())
-        mating_units = set(id_to_mating_unit.values())
-        sibship_units = set([mu.children for mu in list(id_to_mating_unit.values())])
+        return FamilyConnections(pedigree, id_to_individual, id_to_mating_unit)
+
+    def create_sandwich_instance(self):
+        self.add_ranks()
+
+        individuals = self.get_individuals()
+        mating_units = self.get_mating_units()
+        sibship_units = self.get_sibship_units()
 
         all_vertices = individuals | mating_units | sibship_units
-
-        if len(individuals) != 0:
-            individuals.__iter__().next().add_rank(0)
-            Pedigree._fix_rank(individuals)
 
         # Ea-
         same_rank_edges = {frozenset([i1, i2])
@@ -177,12 +236,40 @@ class Pedigree(object):
         return SandwichInstance.from_sets(
             all_vertices, required_set, forbidden_set)
 
-    @staticmethod
-    def _fix_rank(individuals):
-        max_rank = reduce(lambda acc, i: max(acc, i.rank), individuals, 0)
-        for individual in individuals:
-            individual.rank -= max_rank
-            individual.rank = -individual.rank
+    @property
+    def members(self):
+        if not self.pedigree:
+            return []
+        return self.pedigree.members
+
+    def add_ranks(self):
+        if len(self.members) > 0:
+            list(self.id_to_individual.values())[0].add_rank(0)
+            self._fix_ranks()
+
+    def _fix_ranks(self):
+        max_rank = self.max_rank()
+        for member in self.id_to_individual.values():
+            member.rank -= max_rank
+            member.rank = -member.rank
+
+    def max_rank(self):
+        return reduce(
+            lambda acc, i: max(acc, i.rank),
+            self.id_to_individual.values(), 0)
+
+    def get_individuals_with_rank(self, rank):
+        return {i for i in self.id_to_individual.values() if i.rank == rank}
+
+    def get_individuals(self):
+        return set(self.id_to_individual.values())
+
+    def get_mating_units(self):
+        return set(self.id_to_mating_unit.values())
+
+    def get_sibship_units(self):
+        return set([mu.children
+                    for mu in list(self.id_to_mating_unit.values())])
 
 
 class IndividualGroup(with_metaclass(abc.ABCMeta, object)):
@@ -198,8 +285,15 @@ class IndividualGroup(with_metaclass(abc.ABCMeta, object)):
         return {}
 
     def __repr__(self):
-        return self.__class__.__name__[0].lower() + \
-               "{" + ",".join(sorted(map(repr, self.individual_set()))) + "}"
+        return\
+            self.__class__.__name__[0].lower() + \
+            "{" + ",".join(sorted(map(repr, self.individual_set()))) + "}"
+
+    def __lt__(self, other):
+        return repr(self) < repr(other)
+
+    def is_individual(self):
+        return False
 
 
 class Individual(IndividualGroup):
@@ -269,9 +363,6 @@ class SibshipUnit(IndividualGroup):
     def children_set(self):
         return set()
 
-    def is_individual(self):
-        return False
-
 
 class MatingUnit(IndividualGroup):
 
@@ -298,76 +389,21 @@ class MatingUnit(IndividualGroup):
             return self.father
         return self.mother
 
-    def is_individual(self):
-        return False
 
+def get_argument_parser(description):
+    parser = argparse.ArgumentParser(description=description)
 
-class LayoutSaver(object):
-
-    def __init__(self, input_filename, output_filename,
-            fieldname="person_coordinates"):
-        self.input_filename = input_filename
-        self.output_filename = output_filename
-        self.fieldname = fieldname
-        self._people_with_layout = collections.OrderedDict()
-
-    @staticmethod
-    def _member_key(family_id, individual_id):
-        return "{};{}".format(family_id, individual_id)
-
-    def writerow(self, family, layout):
-        for individual_id, position in list(layout.id_to_position.items()):
-            row = {
-                self.fieldname: "{},{}".format(position.x, position.y)
-            }
-
-            key = self._member_key(family.family_id, individual_id)
-
-            self._people_with_layout[key] = row
-
-    def save(self):
-        with open(self.input_filename, "r") as input_file, \
-                open(self.output_filename, "w") as output_file:
-
-            reader = csv.DictReader(input_file, delimiter="\t")
-            fieldnames = list(reader.fieldnames)
-
-            assert self.fieldname not in fieldnames, \
-                "{} already in file {}".format(
-                    self.fieldname, self.input_filename)
-
-            writer = csv.DictWriter(
-                output_file, reader.fieldnames + [self.fieldname],
-                delimiter='\t')
-
-            writer.writeheader()
-
-            for row in reader:
-                row_copy = row.copy()
-
-                key = self._member_key(row['familyId'], row['personId'])
-
-                if key in self._people_with_layout:
-                    row_copy.update(self._people_with_layout[key])
-                else:
-                    row_copy[self.fieldname] = ""
-
-                writer.writerow(row_copy)
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Draw PDP.")
     parser.add_argument(
         "file", metavar="f", help="the .ped file")
     parser.add_argument(
         "--output", metavar="o", help="the output filename file",
         default="output.pdf")
     parser.add_argument(
-        "--save-layout", metavar="o",
-        help="save the layout with pedigree info ")
-    parser.add_argument(
         "--layout-column", metavar="l", default="layoutCoords",
         help="layout column name to be used when saving the layout")
+    parser.add_argument(
+        "--generated-column", metavar="m", default="generated",
+        help="generated column name to be used when generate person")
     parser.add_argument(
         '--delimiter', help='delimiter used in the split column; defaults to '
         '"\\t"', default='\t', action='store')
@@ -396,60 +432,4 @@ def main():
         'unnecessary column with `_`.', dest='no_header_order', default=None,
         action='store')
 
-    args = parser.parse_args()
-
-    columns_labels = {
-        "family_id": args.family_id,
-        "id": args.id,
-        "father": args.father,
-        "mother": args.mother,
-        "sex": args.sex,
-        "effect": args.effect
-    }
-    header = args.no_header_order
-    if header:
-        header = header.split(',')
-    delimiter = args.delimiter
-
-    pedigrees = CsvPedigreeReader().read_file(
-        args.file, columns_labels, header, delimiter)
-
-    pdf_drawer = PDFLayoutDrawer(args.output)
-    layout_saver = None
-
-    if args.save_layout:
-        layout_saver = LayoutSaver(
-            args.file, args.save_layout, args.layout_column)
-
-    for family in sorted(pedigrees, key=lambda x: x.family_id):
-        sandwich_instance = family.create_sandwich_instance()
-        if sandwich_instance is None:
-            print(family.family_id)
-            print("Missing members")
-            continue
-        intervals = SandwichSolver.solve(sandwich_instance)
-
-        if intervals is None:
-            print(family.family_id)
-            print("No intervals")
-        if intervals:
-            individuals_intervals = filter(
-                lambda interval: interval.vertex.is_individual(),
-                intervals
-            )
-
-            # print(family.family_id)
-            layout = Layout(individuals_intervals)
-            layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
-            pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
-
-            if layout_saver is not None:
-                layout_saver.writerow(family, layout)
-
-    pdf_drawer.save_file()
-    if layout_saver:
-        layout_saver.save()
-
-
-if __name__ == "__main__":
-    main()
+    return parser
