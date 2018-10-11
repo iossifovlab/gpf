@@ -176,7 +176,8 @@ class RawDAE(BaseDAE):
     @staticmethod
     def load_column_names(filename):
         with gzip.open(filename) as infile:
-            column_names = infile.readline().decode('utf-8').strip().split("\t")
+            column_names = \
+                infile.readline().decode('utf-8').strip().split("\t")
         return column_names
 
     @staticmethod
@@ -187,10 +188,10 @@ class RawDAE(BaseDAE):
 
         # using a context manager because of
         # https://stackoverflow.com/a/25968716/2316754
-        with closing(pysam.Tabixfile(filename)) as tbf:  # @UndefinedVariable
+        with closing(pysam.Tabixfile(filename)) as tbf:
             infile = tbf.fetch(
                 region=region,
-                parser=pysam.asTuple())  # @UndefinedVariable
+                parser=pysam.asTuple())
 
             df = pd.DataFrame.from_records(
                 data=infile, columns=column_names)
@@ -206,6 +207,7 @@ class RawDAE(BaseDAE):
                 infile,
                 dtype={
                     'chr': np.str,
+                    '#chr': np.str,
                     'position': int,
                 },
                 sep='\t')
@@ -301,6 +303,7 @@ class RawDAE(BaseDAE):
             "position": "cshl_position",
             "variant": "cshl_variant",
             "chr": "chrom",
+            "#chr": "chrom",
         })
         return df
 

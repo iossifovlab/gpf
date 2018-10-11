@@ -64,9 +64,9 @@ class Sex(enum.Enum):
 
     @staticmethod
     def from_name(name):
-        if name == 'male' or name == 'M':
+        if name == 'male' or name == 'M' or name == '1':
             return Sex.male
-        elif name == 'female' or name == 'F':
+        elif name == 'female' or name == 'F' or name == '2':
             return Sex.female
         elif name == 'unspecified' or name == 'U':
             return Sex.unspecified

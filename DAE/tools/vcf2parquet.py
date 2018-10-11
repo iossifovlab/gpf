@@ -45,7 +45,7 @@ def create_vcf_variants(
     ])
 
     fvars = RawFamilyVariants(
-        config=config, annotator=annotator, 
+        config=config, annotator=annotator,
         region=region)
     return fvars
 
@@ -121,7 +121,7 @@ def import_vcf(argv):
 
     pool = multiprocessing.Pool(processes=argv.processes_count)
     pool.map(
-        functools.partial(import_vcf_contig, config), 
+        functools.partial(import_vcf_contig, config),
         contigs_to_process)
 
 
