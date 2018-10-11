@@ -68,7 +68,7 @@ TRANSMITTED = ''.join([''.join([''.join([
         target=output_file.replace('.bgz', ''), sge_rreq=SGE_RREQ,
         parts=temp_files) +
     '{bgz_target}: {merge_target}\n\tSGE_RREQ="{sge_rreq}" '
-    'bgzip -c "$<" > "$@" && tabix -b 2 -e 2 -S 1 "$@"\n'.format(
+    'bgzip -c "$<" > "$@" && tabix -S 1 -s 1 -b 2 -e 2 "$@"\n'.format(
         bgz_target=output_file,
         merge_target=output_file.replace('.bgz', ''), sge_rreq=SGE_RREQ)
     for input_file, output_file, temp_files in zip(TRANSMITTED_INPUT_FILES,
