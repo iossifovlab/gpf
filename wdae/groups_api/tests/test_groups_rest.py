@@ -163,7 +163,7 @@ def test_grant_permission_for_group(
     group, user = group_with_user
     data = {
         'datasetId': dataset.dataset_id,
-        'groupId': group.id
+        'groupName': group.name
     }
 
     assert not user.has_perm('view', dataset)
@@ -174,12 +174,28 @@ def test_grant_permission_for_group(
     assert user.has_perm('view', dataset)
 
 
+def test_grant_permission_creates_new_group(
+        admin_client, user, grant_permission_url, dataset):
+    groupName = 'NewGroup'
+    data = {
+        'datasetId': dataset.dataset_id,
+        'groupName': groupName
+    }
+
+    assert not user.has_perm('view', dataset)
+
+    response = admin_client.post(grant_permission_url, data, format='json')
+
+    assert response.status_code == status.HTTP_200_OK
+    assert Group.objects.filter(name=groupName).count() == 1
+
+
 def test_not_admin_cant_grant_permissions(
         user_client, group_with_user, grant_permission_url, dataset):
     group, user = group_with_user
     data = {
         'datasetId': dataset.dataset_id,
-        'groupId': group.id
+        'groupName': group.name
     }
 
     assert not user.has_perm('view', dataset)
@@ -188,6 +204,20 @@ def test_not_admin_cant_grant_permissions(
 
     assert response.status_code == status.HTTP_403_FORBIDDEN
     assert not user.has_perm('view', dataset)
+
+
+def test_not_admin_grant_permissions_does_not_create_group(
+        user_client, grant_permission_url, dataset):
+    groupName = 'NewGroup'
+    data = {
+        'datasetId': dataset.dataset_id,
+        'groupName': groupName
+    }
+
+    response = user_client.post(grant_permission_url, data, format='json')
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert Group.objects.filter(name=groupName).count() == 0
 
 
 def test_revoke_permission_for_group(
