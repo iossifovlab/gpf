@@ -84,18 +84,33 @@ class Line(object):
 
 class Layout(object):
 
-    def __init__(self, intervals):
+    def __init__(self, intervals=None):
         self._intervals = intervals
         self.lines = []
         self.positions = []
-        self._individuals_by_rank = self._intervals_by_ranks()
-        self._id_to_position = self._generate_simple_layout(
-            self._individuals_by_rank)
-        self._generate_from_intervals()
+        if intervals is not None:
+            self._individuals_by_rank = self._intervals_by_ranks()
+            self._id_to_position = self._generate_simple_layout(
+                self._individuals_by_rank)
+            self._generate_from_intervals()
+
+    @staticmethod
+    def get_layout_from_positions(positions):
+        layout = Layout()
+        layout.positions = positions
+        layout._create_lines()
+
+        return layout
 
     @property
     def id_to_position(self):
         return {k.member.id: v for k, v in list(self._id_to_position.items())}
+
+    @property
+    def individuals_by_rank(self):
+        return {individual.member.id: rank for rank, individuals in
+                enumerate(self._individuals_by_rank, start=1)
+                for individual in individuals}
 
     def _generate_from_intervals(self):
 
