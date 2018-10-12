@@ -300,7 +300,7 @@ class ScoreAnnotator(AnnotatorBase):
 
     @property
     def schema(self):
-        return self.schema_ 
+        return self.schema_
 
     def normalize_column(self, value, column_index, new_columns):
         column_name = new_columns[column_index]

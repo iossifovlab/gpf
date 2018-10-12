@@ -49,14 +49,6 @@ class Schema:
             else:
                 self.column_map[key] = value
 
-    def rename_column(self, column, new_name):
-        if column in self.column_map:
-            self.column_map[new_name] = self.column_map[column]
-            del(self.column_map[column])
-        else:
-            print('No such column {} to be renamed.'.format(column))
-            return 0 # TODO should this return or exit?
-
     def merge_columns(self, columns, new_name=None):
         # TODO
         # Add proper type combination into an array type
@@ -66,7 +58,7 @@ class Schema:
         for column in columns:
             if column not in self.column_map:
                 print('No such column {} to be merged.'.format(column))
-                continue # TODO should this continue or exit?
+                continue  # TODO should this continue or exit?
             if new_name is None:
                 new_name = column
             if col_type is None:

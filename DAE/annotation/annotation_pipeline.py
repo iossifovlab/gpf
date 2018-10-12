@@ -51,8 +51,8 @@ class MultiAnnotator(object):
     """
 
     def __init__(self, opts, header=None):
-        self.header = header
-        self.preannotators = PreannotatorLoader.load_preannotators(opts, header)
+        self.header = header.copy()
+        self.preannotators = PreannotatorLoader.load_preannotators(opts, self.header)
 
         self.annotators = []
         self.virtual_columns_indices = []
@@ -74,8 +74,8 @@ class MultiAnnotator(object):
             sys.exit(-78)
         else:
             self._init_config(opts)
-        
-        self._init_schema()
+
+        self._init_schema(header)
 
         self.column_indices = {label: assign_values(label, self.header)
                                for label in self.all_columns_labels}
@@ -148,15 +148,15 @@ class MultiAnnotator(object):
                     [assign_values(annotation_step_config.columns[column.strip()], self.header)
                      for column in annotation_step_config.virtuals.split(',')])
             annotation_step_config.options.region = opts.region
-            
+
             self.annotators.append({
                 'instance': str_to_class(annotation_step_config.annotator)(
                     annotation_step_config.options, list(self.header)),
                 'columns': annotation_step_config.columns
             })
 
-    def _init_schema(self):
-        self.schema_ = file_io.Schema()
+    def _init_schema(self, header):
+        self.schema_ = file_io.Schema([('str', ','.join(header))])
         for annotator in self.annotators:
             if hasattr(annotator['instance'], 'annotators'):
                 # Multiple scores annotator case

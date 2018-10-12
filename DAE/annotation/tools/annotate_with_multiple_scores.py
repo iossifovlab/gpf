@@ -10,7 +10,6 @@ import argparse
 from box import Box
 from future import standard_library
 standard_library.install_aliases()
-from configparser import ConfigParser
 
 from .utilities import AnnotatorBase, main
 from .annotate_score_base import ScoreAnnotator
