@@ -112,6 +112,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
         super(MultipleScoresAnnotator, self).__init__(opts, header)
         self._init_score_directory()
         self.annotators = {}
+        self.schema_ = Schema()
         if opts.scores is not None:
             self.scores = opts.scores.split(',')
         else:
@@ -156,6 +157,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
             score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
             self.annotators[score] = ScoreAnnotator(score_annotator_opts,
                                                     list(self.header))
+            self.schema_.merge(self.annotators[score].schema)
 
     @property
     def new_columns(self):
@@ -166,10 +168,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
     @property
     def schema(self):
-        schema = Schema()
-        for score, annotator in self.annotators.items():
-            schema.merge(annotator.schema)
-        return schema
+        return self.schema_
 
     def line_annotations(self, line, new_cols_order):
         result = []

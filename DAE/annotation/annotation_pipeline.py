@@ -39,6 +39,7 @@ class MyConfigParser(ConfigParser):
         r'\s*(?P<vi>[=])\s*'                # for option separator
         r'(?P<value>.*)$'
         )
+    optionxform = str
 
 
 class MultiAnnotator(object):
@@ -50,40 +51,20 @@ class MultiAnnotator(object):
     """
 
     def __init__(self, opts, header=None):
-        # TODO Split up this method into smaller sections
-        # for clarity.
-
         self.header = header
         self.preannotators = PreannotatorLoader.load_preannotators(opts, header)
 
         self.annotators = []
-        virtual_columns_indices = []
-        all_columns_labels = set()
+        self.virtual_columns_indices = []
+        self.all_columns_labels = set()
 
         if not opts.skip_preannotators:
-            for preannotator in self.preannotators:
-                self.annotators.append({
-                    'instance': preannotator,
-                    'columns': OrderedDict([(c, c) for c in preannotator.new_columns])
-                })
-                all_columns_labels.update(preannotator.new_columns)
-                if self.header:
-                    self.header.extend(preannotator.new_columns)
+            self._init_preannotators(opts)
 
-                virtual_columns_indices.extend(
-                    [assign_values(column, self.header)
-                     for column in preannotator.new_columns])
-
-        extracted_options = []
         if opts.default_arguments is not None:
-            for option in opts.default_arguments.split(','):
-                split_options = option.split(':')
-                try:
-                    split_options[1] = literal_eval(split_options[1])
-                except ValueError:
-                    pass
-                extracted_options.append(split_options)
-        default_arguments = dict(extracted_options)
+            self._init_default_args(opts)
+        else:
+            self.default_arguments = dict()
 
         if opts.config is None:
             sys.stderr.write("You should provide a config file location.\n")
@@ -91,9 +72,50 @@ class MultiAnnotator(object):
         elif not exists(opts.config):
             sys.stderr.write("The provided config file does not exist!\n")
             sys.exit(-78)
+        else:
+            self._init_config(opts)
+        
+        self._init_schema()
 
+        self.column_indices = {label: assign_values(label, self.header)
+                               for label in self.all_columns_labels}
+        self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
+                                       if i not in self.virtual_columns_indices]
+
+        if opts.split is None:
+            self._split_variant = lambda v: [v]
+            self._join_variant = lambda v: v[0]
+        else:
+            self.split_index = assign_values(opts.split, self.header)
+            self.split_separator = opts.separator
+
+    def _init_preannotators(self, opts):
+        for preannotator in self.preannotators:
+            self.annotators.append({
+                'instance': preannotator,
+                'columns': OrderedDict([(c, c) for c in preannotator.new_columns])
+            })
+            self.all_columns_labels.update(preannotator.new_columns)
+            if self.header:
+                self.header.extend(preannotator.new_columns)
+
+            self.virtual_columns_indices.extend(
+                [assign_values(column, self.header)
+                 for column in preannotator.new_columns])
+
+    def _init_default_args(self, opts):
+        extracted_options = []
+        for option in opts.default_arguments.split(','):
+            split_options = option.split(':')
+            try:
+                split_options[1] = literal_eval(split_options[1])
+            except ValueError:
+                pass
+            extracted_options.append(split_options)
+        self.default_arguments = dict(extracted_options)
+
+    def _init_config(self, opts):
         config_parser = MyConfigParser()
-        config_parser.optionxform = str
         if type(opts.config) is str:
             with open(opts.config) as conf_file:
                 config_parser.read_file(conf_file)
@@ -106,12 +128,12 @@ class MultiAnnotator(object):
         for annotation_step in config_parser.sections():
             annotation_step_config = self.config[annotation_step]
 
-            for default_argument, value in default_arguments.items():
+            for default_argument, value in self.default_arguments.items():
                 if annotation_step_config.options[default_argument] is None:
                     annotation_step_config.options[default_argument] = value
 
             step_columns_labels = annotation_step_config.columns.values()
-            all_columns_labels.update(step_columns_labels)
+            self.all_columns_labels.update(step_columns_labels)
 
             if self.header is not None:
                 if opts.append:
@@ -122,32 +144,29 @@ class MultiAnnotator(object):
                 self.header.extend(new_columns)
 
             if annotation_step_config.virtuals is not None:
-                virtual_columns_indices.extend(
+                self.virtual_columns_indices.extend(
                     [assign_values(annotation_step_config.columns[column.strip()], self.header)
                      for column in annotation_step_config.virtuals.split(',')])
             annotation_step_config.options.region = opts.region
+            
             self.annotators.append({
                 'instance': str_to_class(annotation_step_config.annotator)(
                     annotation_step_config.options, list(self.header)),
                 'columns': annotation_step_config.columns
             })
 
-        self.column_indices = {label: assign_values(label, self.header)
-                               for label in all_columns_labels}
-        self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
-                                       if i not in virtual_columns_indices]
-
-        if opts.split is None:
-            self._split_variant = lambda v: [v]
-            self._join_variant = lambda v: v[0]
-        else:
-            self.split_index = assign_values(opts.split, self.header)
-            self.split_separator = opts.separator
-
     def _init_schema(self):
-        self.schema = file_io.Schema()
+        self.schema_ = file_io.Schema()
         for annotator in self.annotators:
-            schema += annotator['instance'].schema
+            if hasattr(annotator['instance'], 'annotators'):
+                # Multiple scores annotator case
+                for score_name, score_annotator in annotator['instance'].annotators.items():
+                    annotator['instance'].schema.merge_columns(score_annotator.new_columns,
+                                                               annotator['columns'][score_name])
+            else:
+                new_name = list(annotator['columns'].values())[0]
+                annotator['instance'].schema.merge_columns(annotator['instance'].new_columns, new_name)
+            self.schema_.merge(annotator['instance'].schema)
 
     def _split_variant(self, line):
         return [line[:self.split_index-1] + [value] + line[self.split_index:]
@@ -188,10 +207,7 @@ class MultiAnnotator(object):
 
     @property
     def schema(self):
-        schema = file_io.Schema()
-        for annotator in self.annotators:
-            schema.merge(annotator['instance'].schema)
-        return schema
+        return self.schema_
 
 
 class PreannotatorLoader(object):

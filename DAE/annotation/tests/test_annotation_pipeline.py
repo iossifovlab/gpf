@@ -1,6 +1,7 @@
 import pytest
 from io import StringIO
 from box import Box
+from annotation.tools.file_io import Schema
 
 from annotation.annotation_pipeline import MultiAnnotator,\
     MyConfigParser, str_to_class
@@ -24,6 +25,17 @@ class Annotator(object):
                 elif c == 'variant':
                     result.append(line[2])
             return result
+   
+    # TODO
+    # The following properties are currently useless.
+    # Perhaps use them for schema testing?
+    @property
+    def schema(self):
+        return Schema()
+    
+    @property
+    def new_columns(self):
+        return ['TEST:score']
 
 
 class Preannotator(object):
@@ -37,6 +49,10 @@ class Preannotator(object):
 
     def line_annotations(self, line, new_columns):
         return ['test:' + line[1]]
+    
+    @property
+    def schema(self):
+        return Schema()
 
 
 class DummyIOAdapter(object):

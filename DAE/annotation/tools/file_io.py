@@ -57,6 +57,27 @@ class Schema:
             print('No such column {} to be renamed.'.format(column))
             return 0 # TODO should this return or exit?
 
+    def merge_columns(self, columns, new_name=None):
+        # TODO
+        # Add proper type combination into an array type
+        # using numpy to account for merging of columns
+        # with different types.
+        col_type = None
+        for column in columns:
+            if column not in self.column_map:
+                print('No such column {} to be merged.'.format(column))
+                continue # TODO should this continue or exit?
+            if new_name is None:
+                new_name = column
+            if col_type is None:
+                col_type = self.column_map[column]
+            elif self.column_map[column] != col_type:
+                print('Error - attempted merging columns with different types!')
+                print(columns)
+                sys.exit(-1)
+            del(self.column_map[column])
+        self.column_map[new_name] = col_type
+
     def type_query(self, query_type):
         if query_type not in self.type_map:
             print('No such type "{}" is defined.'.format(type))

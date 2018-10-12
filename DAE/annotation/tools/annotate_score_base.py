@@ -253,6 +253,12 @@ class ScoreAnnotator(AnnotatorBase):
         super(ScoreAnnotator, self).__init__(opts, header)
         self.labels = opts.labels.split(',') if opts.labels else None
         self._init_score_file()
+        self.schema_ = Schema()
+
+        for col, type_ in self.file.config.schema.column_map.items():
+            if col in self.new_columns:
+                self.schema_.column_map[col] = type_
+
         if opts.search_columns is not None and opts.search_columns != '':
             self.search_columns = opts.search_columns.split(',')
         else:
@@ -294,7 +300,7 @@ class ScoreAnnotator(AnnotatorBase):
 
     @property
     def schema(self):
-        return self.file.config.schema
+        return self.schema_ 
 
     def normalize_column(self, value, column_index, new_columns):
         column_name = new_columns[column_index]
