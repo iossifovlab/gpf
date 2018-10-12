@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import Group
 from guardian import shortcuts
 from datasets_api.models import Dataset
+from users_api.serializers import CreatableSlugRelatedField
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -30,6 +31,20 @@ class GroupRetrieveSerializer(GroupSerializer):
 
 
 class PermissionChangeSerializer(serializers.Serializer):
+
+    groupName = CreatableSlugRelatedField(
+        slug_field='name', queryset=Group.objects.all(), read_only=False
+    )
+
+    datasetId = serializers.SlugRelatedField(
+        queryset=Dataset.objects.all(),
+        # read_only=True,
+        slug_field='dataset_id'
+
+    )
+
+
+class PermissionRevokeSerializer(serializers.Serializer):
 
     groupId = serializers.PrimaryKeyRelatedField(
         queryset=Group.objects.all()
