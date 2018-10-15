@@ -61,8 +61,10 @@ def mock(mocker):
     mocker.patch.object(MyConfigParser, 'read', MyConfigParser.readfp)
     mocker.patch('annotation.annotation_pipeline.str_to_class',
                  return_value=Annotator)
-    mocker.patch('annotation.annotation_pipeline.PreannotatorLoader.load_preannotators',
-                 return_value=[Preannotator()])
+    mocker.patch(
+        'annotation.annotation_pipeline.PreannotatorLoader.'
+        'load_preannotators',
+        return_value=[Preannotator()])
     mocker.patch('annotation.annotation_pipeline.exists',
                  return_value=True)
 
@@ -132,7 +134,10 @@ def output_default_args():
 def output_split_column():
     return [
         ['#id', 'location', 'variant', 'loc'],
-        ['5', '10:4372372973,1:8493943843', 'sub(G->A)', '10:4372372973,1:8493943843'],
+        [
+            '5', '10:4372372973,1:8493943843', 
+            'sub(G->A)', '10:4372372973,1:8493943843'
+        ],
     ]
 
 
@@ -145,68 +150,68 @@ def output_multiple_headers():
 
 def options_base():
     config = (
-        '[Add location]\n'
-        'options.columns=location\n'
-        'columns.location=loc\n')
+        u'[Add location]\n'
+        u'options.columns=location\n'
+        u'columns.location=loc\n')
     return get_opts(config)
 
 
 def options_reannotate():
     config = (
-        '[Reannotate location]\n'
-        'options.columns=location\n'
-        'columns.location=location\n')
+        u'[Reannotate location]\n'
+        u'options.columns=location\n'
+        u'columns.location=location\n')
     return get_opts(config, append=False, default_args='default:True')
 
 
 def options_preannotate():
     config = (
-        '[Add location]\n'
-        'options.columns=location\n'
-        'columns.location=loc\n')
+        u'[Add location]\n'
+        u'options.columns=location\n'
+        u'columns.location=loc\n')
     return get_opts(config, skip_preannotators=False)
 
 
 def options_default_args():
     config = (
-        '[Add location]\n'
-        'options.columns=location\n'
-        'columns.location=def_arg:location\n'
-        'options.default=True\n')
+        u'[Add location]\n'
+        u'options.columns=location\n'
+        u'columns.location=def_arg:location\n'
+        u'options.default=True\n')
     return get_opts(config)
 
 
 def options_default_args_alt():
     config = (
-        '[Reannotate location]\n'
-        'options.columns=location\n'
-        'columns.location=def_arg:location\n')
+        u'[Reannotate location]\n'
+        u'options.columns=location\n'
+        u'columns.location=def_arg:location\n')
     return get_opts(config, default_args='default:True')
 
 
 def options_virtuals():
     config = (
-        '[Add location]\n'
-        'options.columns=location,variant\n'
-        'columns.location=loc\n'
-        'columns.variant=var\n'
-        'virtuals=variant\n')
+        u'[Add location]\n'
+        u'options.columns=location,variant\n'
+        u'columns.location=loc\n'
+        u'columns.variant=var\n'
+        u'virtuals=variant\n')
     return get_opts(config)
 
 
 def options_split_column():
     config = (
-        '[Add location]\n'
-        'options.columns=location\n'
-        'columns.location=loc\n')
+        u'[Add location]\n'
+        u'options.columns=location\n'
+        u'columns.location=loc\n')
     return get_opts(config, split='location', split_separator='|')
 
 
 def options_multiple_headers():
     config = (
-        '[Add location]\n'
-        'options.columns=location\n'
-        'columns.location=loc\n')
+        u'[Add location]\n'
+        u'options.columns=location\n'
+        u'columns.location=loc\n')
     return get_opts(config, split='location', split_separator='|')
 
 
@@ -223,7 +228,8 @@ def test_str_to_class():
     (input_base(), options_default_args_alt(), output_default_args()),
     (input_base(), options_virtuals(), output_base()),
     (input_split_column(), options_split_column(), output_split_column()),
-    (input_multiple_headers(), options_multiple_headers(), output_multiple_headers())
+    (input_multiple_headers(), options_multiple_headers(), 
+        output_multiple_headers())
 ])
 def test_annotators_tsv(input_file, options, expected_output):
     io = DummyIOAdapter(input_file)

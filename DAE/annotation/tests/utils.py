@@ -7,12 +7,15 @@ from box import Box
 class Dummy_tbi:
 
     def __init__(self, filename):
-        if type(filename) is str:
+        print(filename, type(filename))
+        if type(filename) == unicode or type(filename) == str:  # noqa
             self.file = open(filename, 'r')
         else:
             self.file = filename
 
     def get_splitted_line(self):
+        print(self.file, type(self.file))
+
         res = self.file.readline().rstrip('\n')
         if res == '':
             return res

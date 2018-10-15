@@ -1,4 +1,4 @@
-VARIANT_DB_CONFIG = """
+VARIANT_DB_CONFIG = u"""
 [DEFAULT]
 studyDir = %(wd)s/cccc
 

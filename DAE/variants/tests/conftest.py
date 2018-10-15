@@ -6,6 +6,10 @@ Created on Feb 7, 2018
 from __future__ import print_function
 from __future__ import unicode_literals
 
+# make sure env variables are set correctly
+import findspark  # this needs to be the first import
+findspark.init()
+
 from builtins import range
 from io import StringIO
 import os
@@ -43,10 +47,6 @@ from variants.raw_dae import RawDAE, RawDenovo
 import logging
 
 from pyspark.sql import SparkSession
-
-# make sure env variables are set correctly
-import findspark  # this needs to be the first import
-findspark.init()
 
 
 def quiet_py4j():

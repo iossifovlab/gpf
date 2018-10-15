@@ -109,9 +109,9 @@ class AbstractFormat(object):
 
 def to_str(column_value):
     if isinstance(column_value, list):
-        return '|'.join(map(to_str, column_value))
+        return u'|'.join(map(to_str, column_value))
     elif column_value is None:
-        return ''
+        return u''
     else:
         return str(column_value)
 
@@ -161,8 +161,9 @@ class TSVFormat(AbstractFormat):
         if not self.opts.no_header:
             header_str = ""
             if self.opts.region is not None:
-                with gzip.open(self.opts.infile, 'rt', encoding='utf8') as file:
-                        header_str = file.readline()[:-1]
+                with gzip.open(
+                        self.opts.infile, 'rt', encoding='utf8') as infile:
+                    header_str = infile.readline()[:-1]
             else:
                 header_str = self.variantFile.readline()[:-1]
             if header_str[0] == '#':
@@ -188,8 +189,9 @@ class TSVFormat(AbstractFormat):
             sys.stderr.write('Cannot write in read mode!\n')
             sys.exit(-78)
 
-        self.outfile.write('\t'.join([to_str(column)
-                                      for column in line]) + '\n')
+        self.outfile.write(u'\t'.join(
+            [to_str(column) for column in line]) 
+            + u'\n')
 
 
 class ParquetFormat(AbstractFormat):
@@ -220,7 +222,8 @@ class ParquetFormat(AbstractFormat):
 
     def _cleanup(self):
         if self.mode == 'r':
-            sys.stderr.write('Processed ' + str(self.linecount) + ' lines.' + '\n')
+            sys.stderr.write(
+                'Processed ' + str(self.linecount) + ' lines.' + '\n')
         else:
             self._write_buffer()
             if self.opts.outfile != '-':
@@ -229,12 +232,14 @@ class ParquetFormat(AbstractFormat):
     def _read_row_group(self):
         if self.row_group_curr < self.row_group_count:
             if self.header is None:
-                pd_buffer = self.pqfile.read_row_group(self.row_group_curr).to_pandas()
+                pd_buffer = self.pqfile.read_row_group(
+                    self.row_group_curr).to_pandas()
                 self.header = [str(i) for i in list(pd_buffer)]
                 self.header[0] = self.header[0].strip('#')
                 self.row_group_buffer = pd_buffer.values
             else:
-                self.row_group_buffer = self.pqfile.read_row_group(self.row_group_curr).to_pandas().values
+                self.row_group_buffer = self.pqfile.read_row_group(
+                    self.row_group_curr).to_pandas().values
             self.row_group_buffer = self.row_group_buffer.tolist()
             self.row_group_curr += 1
 
@@ -272,6 +277,7 @@ class ParquetFormat(AbstractFormat):
         buffer_df = pd.DataFrame(self.row_group_buffer, columns=self.header)
         buffer_table = pa.Table.from_pandas(buffer_df, preserve_index=False)
         if self.pq_writer is None:
-            self.pq_writer = pq.ParquetWriter(self.pqfile_out, buffer_table.schema)
+            self.pq_writer = pq.ParquetWriter(
+                self.pqfile_out, buffer_table.schema)
         self.pq_writer.write_table(buffer_table)
         self.row_group_buffer = []
