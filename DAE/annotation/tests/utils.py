@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+
 import random
 import string
 from os import getcwd
@@ -8,7 +11,7 @@ class Dummy_tbi:
 
     def __init__(self, filename):
         print(filename, type(filename))
-        if type(filename) == unicode or type(filename) == str:  # noqa
+        if isinstance(filename, str):
             self.file = open(filename, 'r')
         else:
             self.file = filename
