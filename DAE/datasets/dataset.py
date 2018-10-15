@@ -1,6 +1,8 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import map
+from builtins import str
+
 import itertools
 import logging
 

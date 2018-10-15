@@ -4,6 +4,7 @@ Created on Mar 7, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from builtins import object
 import pandas as pd

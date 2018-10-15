@@ -4,6 +4,7 @@ Created on Mar 12, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from variants.vcf_utils import vcf2cshl
 from variants.dae_utils import dae2vcf_variant

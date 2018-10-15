@@ -4,7 +4,11 @@ Created on Feb 7, 2018
 @author: lubo
 '''
 from __future__ import print_function
+# from __future__ import unicode_literals
 from builtins import object
+# from builtins import str
+from builtins import open
+
 import os
 
 from cyvcf2 import VCF
@@ -36,7 +40,7 @@ def save_annotation_to_csv(annot_df, filename, sep="\t"):
     vars_df.to_csv(
         filename,
         index=False,
-        sep=sep,
+        sep=sep
     )
 
 
@@ -129,7 +133,8 @@ class RawVariantsLoader(object):
                         cls.convert_array_of_strings,
                         'effect_details_details':
                         cls.convert_array_of_strings,
-                    }
+                    },
+                    encoding="utf-8"
                 )
             for col in ['alternative', 'effect_type']:
                 annot_df[col] = annot_df[col].astype(object). \

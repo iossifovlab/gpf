@@ -3,6 +3,7 @@ Created on Feb 27, 2018
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from variants.attributes import SexQuery, Sex, AQuery
 
 

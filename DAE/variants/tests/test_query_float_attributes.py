@@ -4,6 +4,7 @@ Created on Mar 8, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 import numpy as np
 
 from RegionOperations import Region

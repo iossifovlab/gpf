@@ -98,7 +98,7 @@ def regions_transformer(rs):
 
 def query_parts(queries, **kwargs):
     result = []
-    for key, arg in kwargs.items():
+    for key, arg in list(kwargs.items()):
         if arg is None:
             continue
         if key not in queries:

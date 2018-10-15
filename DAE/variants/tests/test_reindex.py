@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 from pyspark.sql import Row
 from variants.reindex import collect_summary_index_max, \
     summary_index_shift, \

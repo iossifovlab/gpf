@@ -3,6 +3,7 @@ Created on Jul 3, 2018
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import pytest
 
 
