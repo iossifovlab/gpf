@@ -40,6 +40,46 @@ from variants.variant import SummaryAllele, SummaryVariant
 from variants.tests.common_tests_helpers import relative_to_this_test_folder
 from variants.raw_dae import RawDAE, RawDenovo
 
+import logging
+
+from pyspark.sql import SparkSession
+
+# make sure env variables are set correctly
+import findspark  # this needs to be the first import
+findspark.init()
+
+
+def quiet_py4j():
+    """ turn down spark logging for the test context """
+    logger = logging.getLogger('py4j')
+    logger.setLevel(logging.WARN)
+
+
+@pytest.fixture(scope="session")
+def spark(request):
+    """ fixture for creating a spark context
+    Args:
+        request: pytest.FixtureRequest object
+    """
+    spark = SparkSession.\
+        builder.\
+        appName("pytest-pyspark-local-testing").\
+        getOrCreate()
+
+    request.addfinalizer(lambda: spark.stop())
+
+    quiet_py4j()
+    return spark
+
+
+@pytest.fixture(scope="session")
+def spark_context(spark):
+    """ fixture for creating a spark context
+    Args:
+        request: pytest.FixtureRequest object
+    """
+    return spark.sparkContext
+
 
 @pytest.fixture(scope='session')
 def default_genome():
