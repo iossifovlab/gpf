@@ -1,4 +1,7 @@
 from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
+
 import sys
 import os
 import gzip
@@ -109,9 +112,9 @@ class AbstractFormat(object):
 
 def to_str(column_value):
     if isinstance(column_value, list):
-        return u'|'.join(map(to_str, column_value))
+        return '|'.join(map(to_str, column_value))
     elif column_value is None:
-        return u''
+        return ''
     else:
         return str(column_value)
 
@@ -189,9 +192,8 @@ class TSVFormat(AbstractFormat):
             sys.stderr.write('Cannot write in read mode!\n')
             sys.exit(-78)
 
-        self.outfile.write(u'\t'.join(
-            [to_str(column) for column in line]) 
-            + u'\n')
+        self.outfile.write('\t'.join(
+            [to_str(column) for column in line]) + '\n')
 
 
 class ParquetFormat(AbstractFormat):

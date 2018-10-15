@@ -49,32 +49,32 @@ def get_opts(input_, output):
 
 def input_base():
     return (
-        u'#col1\t#col2\t#col3\t#col4\t#col5\n'
-        u'entryOne\tentryTwo\tentryThree\tentryPreFinal\tentryFinal\n'
-        u'entryOneEE\tentryTwo\tentryThree\tentryFollowedByEmptyEntry\t\n'
-        u'1.3552\t64423.23423\t.,!@#$%^&*()_+-=[]{}|""/\\<>~`\tplaceholder\t'
+        '#col1\t#col2\t#col3\t#col4\t#col5\n'
+        'entryOne\tentryTwo\tentryThree\tentryPreFinal\tentryFinal\n'
+        'entryOneEE\tentryTwo\tentryThree\tentryFollowedByEmptyEntry\t\n'
+        '1.3552\t64423.23423\t.,!@#$%^&*()_+-=[]{}|""/\\<>~`\tplaceholder\t'
         'CAPITALLETTERS\n'
-        u'placeholder\tcol3and4willbemissing\t\t\tplaceholder\n')
+        'placeholder\tcol3and4willbemissing\t\t\tplaceholder\n')
 
 
 def score():
     return [
-        [u'#col1', u'#score'],
-        [u'entryOne', u'0.5435'],
-        [u'entryOneEE', u'1.3525'],
-        [u'1.3552', u'2.4531'],
-        [u'placeholder', u'3.5123']]
+        ['#col1', '#score'],
+        ['entryOne', '0.5435'],
+        ['entryOneEE', '1.3525'],
+        ['1.3552', '2.4531'],
+        ['placeholder', '3.5123']]
 
 
 def expected_output():
     return (
-        u'#col1\t#col2\t#col3\t#col4\t#col5\t#score\n'
-        u'entryOne\tentryTwo\tentryThree\tentryPreFinal\tentryFinal\t0.5435\n'
-        u'entryOneEE\tentryTwo\tentryThree\t'
+        '#col1\t#col2\t#col3\t#col4\t#col5\t#score\n'
+        'entryOne\tentryTwo\tentryThree\tentryPreFinal\tentryFinal\t0.5435\n'
+        'entryOneEE\tentryTwo\tentryThree\t'
         'entryFollowedByEmptyEntry\t\t1.3525\n'
-        u'1.3552\t64423.23423\t.,!@#$%^&*()_+-=[]{}|""/\\<>~`\t'
+        '1.3552\t64423.23423\t.,!@#$%^&*()_+-=[]{}|""/\\<>~`\t'
         'placeholder\tCAPITALLETTERS\t2.4531\n'
-        u'placeholder\tcol3and4willbemissing\t\t\tplaceholder\t3.5123\n')
+        'placeholder\tcol3and4willbemissing\t\t\tplaceholder\t3.5123\n')
 
 
 @pytest.fixture
@@ -100,7 +100,7 @@ def test_tsv_io():
     annotator = Dummy_annotator()
     with file_io.IOManager(
             options, file_io.IOType.TSV, file_io.IOType.TSV) as io:
-        io.line_write(io.header + [u'#score'])
+        io.line_write(io.header + ['#score'])
         for line in io.lines_read():
             annotated = annotator.line_annotations(line, score())
             io.line_write(annotated)

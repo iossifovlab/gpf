@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import pytest
 from io import StringIO
 from box import Box
@@ -150,68 +152,68 @@ def output_multiple_headers():
 
 def options_base():
     config = (
-        u'[Add location]\n'
-        u'options.columns=location\n'
-        u'columns.location=loc\n')
+        '[Add location]\n'
+        'options.columns=location\n'
+        'columns.location=loc\n')
     return get_opts(config)
 
 
 def options_reannotate():
     config = (
-        u'[Reannotate location]\n'
-        u'options.columns=location\n'
-        u'columns.location=location\n')
+        '[Reannotate location]\n'
+        'options.columns=location\n'
+        'columns.location=location\n')
     return get_opts(config, append=False, default_args='default:True')
 
 
 def options_preannotate():
     config = (
-        u'[Add location]\n'
-        u'options.columns=location\n'
-        u'columns.location=loc\n')
+        '[Add location]\n'
+        'options.columns=location\n'
+        'columns.location=loc\n')
     return get_opts(config, skip_preannotators=False)
 
 
 def options_default_args():
     config = (
-        u'[Add location]\n'
-        u'options.columns=location\n'
-        u'columns.location=def_arg:location\n'
-        u'options.default=True\n')
+        '[Add location]\n'
+        'options.columns=location\n'
+        'columns.location=def_arg:location\n'
+        'options.default=True\n')
     return get_opts(config)
 
 
 def options_default_args_alt():
     config = (
-        u'[Reannotate location]\n'
-        u'options.columns=location\n'
-        u'columns.location=def_arg:location\n')
+        '[Reannotate location]\n'
+        'options.columns=location\n'
+        'columns.location=def_arg:location\n')
     return get_opts(config, default_args='default:True')
 
 
 def options_virtuals():
     config = (
-        u'[Add location]\n'
-        u'options.columns=location,variant\n'
-        u'columns.location=loc\n'
-        u'columns.variant=var\n'
-        u'virtuals=variant\n')
+        '[Add location]\n'
+        'options.columns=location,variant\n'
+        'columns.location=loc\n'
+        'columns.variant=var\n'
+        'virtuals=variant\n')
     return get_opts(config)
 
 
 def options_split_column():
     config = (
-        u'[Add location]\n'
-        u'options.columns=location\n'
-        u'columns.location=loc\n')
+        '[Add location]\n'
+        'options.columns=location\n'
+        'columns.location=loc\n')
     return get_opts(config, split='location', split_separator='|')
 
 
 def options_multiple_headers():
     config = (
-        u'[Add location]\n'
-        u'options.columns=location\n'
-        u'columns.location=loc\n')
+        '[Add location]\n'
+        'options.columns=location\n'
+        'columns.location=loc\n')
     return get_opts(config, split='location', split_separator='|')
 
 

@@ -1,4 +1,7 @@
-VARIANT_DB_CONFIG = u"""
+from __future__ import unicode_literals
+
+
+VARIANT_DB_CONFIG = """
 [DEFAULT]
 studyDir = %(wd)s/cccc
 
