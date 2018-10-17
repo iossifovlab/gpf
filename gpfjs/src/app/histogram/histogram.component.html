@@ -10,7 +10,7 @@
 
 	<div class="histogram-controls" *ngIf="showMinMaxInputWithDefaultValue">
 	    <div class="histogram-to">
-	        <label>To (Max: {{ bins[bins.length - 1] }})</label>
+	        <label>To (Max: {{ max_value }})</label>
 			<div class="stepper">
 		        <input
 		          class="steps form-control no-arrows"
@@ -22,7 +22,7 @@
 			</div>
 	    </div>
 	    <div class="histogram-from">
-	        <label>From (Min: {{ bins[0] }})</label>
+	        <label>From (Min: {{ min_value }})</label>
 			<div class="stepper">
 		        <input
 		          class="steps form-control no-arrows"

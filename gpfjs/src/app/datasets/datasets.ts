@@ -65,27 +65,6 @@ export class PedigreeSelector extends IdName {
   }
 }
 
-export class GenomicMetric {
-  static fromJson(json: any): GenomicMetric {
-    return new GenomicMetric(
-      json['id'],
-      json['name']
-    );
-  }
-
-  static fromJsonArray(jsonArray: Array<Object>): Array<GenomicMetric> {
-    if (!jsonArray) {
-      return undefined;
-    }
-    return jsonArray.map((json) => GenomicMetric.fromJson(json));
-  }
-
-  constructor(
-    readonly id: string,
-    readonly name: string,
-  ) {}
-}
-
 export class AdditionalColumnSlot {
   static fromJson(json: any): AdditionalColumnSlot {
     return new AdditionalColumnSlot(
@@ -189,6 +168,7 @@ export class GenotypeBrowser {
       json['hasCNV'],
       json['hasComplex'],
       json['hasFamilyFilters'],
+      json['hasStudyFilters'],
       json['hasStudyTypes'],
       json['mainForm'],
       json['genesBlockShowAll'],
@@ -197,8 +177,7 @@ export class GenotypeBrowser {
       [...AdditionalColumn.fromJsonArray(json['genotypeColumns']),
        ...AdditionalColumn.fromJsonArray(json['phenoColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
-      PhenoFilter.fromJsonArray(json['familyStudyFilters']),
-      GenomicMetric.fromJsonArray(json['genomicMetrics'])
+      PhenoFilter.fromJsonArray(json['familyStudyFilters'])
     );
   }
 
@@ -209,6 +188,7 @@ export class GenotypeBrowser {
     readonly hasCNV: boolean,
     readonly hasComplex: boolean,
     readonly hasFamilyFilters: boolean,
+    readonly hasStudyFilters: boolean,
     readonly hasStudyTypes: boolean,
     readonly mainForm: string,
     readonly genesBlockShowAll: boolean,
@@ -216,8 +196,7 @@ export class GenotypeBrowser {
     readonly rolesFilterOptions: string[],
     readonly allColumns: Array<AdditionalColumn>,
     readonly phenoFilters: Array<PhenoFilter>,
-    readonly familyStudyFilters: Array<PhenoFilter>,
-    readonly genomicMetrics: Array<GenomicMetric>,
+    readonly familyStudyFilters: Array<PhenoFilter>
   ) {
     this.columns = _.filter(this.allColumns,
       (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);
@@ -255,13 +234,16 @@ export class Dataset extends IdName {
     return jsonArray.map((json) => Dataset.fromJson(json));
   }
 
+  getDefaultGroups() {
+    return ['any_dataset', this.id];
+  }
 
   constructor(
     readonly id: string,
     readonly description: string,
     readonly name: string,
     readonly accessRights: boolean,
-    readonly studies: string[],
+    readonly studies: string,
     readonly studyTypes: string[],
     readonly phenoDB: string,
     readonly phenotypeGenotypeTool: boolean,

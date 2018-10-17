@@ -109,8 +109,8 @@ import { VariantReportsService } from './variant-reports/variant-reports.service
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
 
 import { GenomicScoresComponent } from './genomic-scores/genomic-scores.component';
-import { GenomicScoresService } from './genomic-scores/genomic-scores.service';
 import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component';
+import { GenomicScoresBlockService } from './genomic-scores-block/genomic-scores-block.service';
 
 import { MarkdownModule } from 'angular2-markdown';
 import { UserManagementComponent } from './user-management/user-management.component';
@@ -137,8 +137,8 @@ import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-vi
 import { GenotypeBrowserMetaViewComponent } from './genotype-browser-meta-view/genotype-browser-meta-view.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
+import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
 import { SaveQueryButtonComponent } from './save-query-button/save-query-button.component';
-import { SaveQueryService } from './save-query-button/save-query.service';
 import { LoadQueryComponent } from './load-query/load-query.component';
 import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.component';
 import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
@@ -147,6 +147,11 @@ import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.
 import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { StatusFilterComponent } from './status-filter/status-filter.component';
 import { RolesFilterComponent } from './roles-filter/roles-filter.component';
+import { StudyFiltersBlockComponent } from './study-filters-block/study-filters-block.component';
+import { StudyFilterComponent } from './study-filter/study-filter.component';
+import { AddButtonComponent } from './add-button/add-button.component';
+import { RemoveButtonComponent } from './remove-button/remove-button.component';
+import { PopupComponent } from './popup/popup.component';
 
 const appRoutes: Routes = [
   {
@@ -347,6 +352,12 @@ const appRoutes: Routes = [
     NonPdpPedigreesComponent,
     StatusFilterComponent,
     RolesFilterComponent,
+    SmallRemoveButtonComponent,
+    StudyFiltersBlockComponent,
+    StudyFilterComponent,
+    AddButtonComponent,
+    RemoveButtonComponent,
+    PopupComponent,
   ],
   imports: [
     BrowserModule,
@@ -384,7 +395,7 @@ const appRoutes: Routes = [
     PValueIntensityPipe,
     StudiesSummariesService,
     VariantReportsService,
-    GenomicScoresService,
+    GenomicScoresBlockService,
     UsersGroupsService,
     ChromosomeService,
     { provide: Http, useClass: RedirectOnErrorHttpService,
@@ -397,7 +408,8 @@ const appRoutes: Routes = [
   entryComponents: [
     RegistrationComponent,
     ForgotPasswordComponent,
-    PhenoBrowserModalContentComponent
+    PhenoBrowserModalContentComponent,
+    PopupComponent
   ],
 
   bootstrap: [AppComponent]

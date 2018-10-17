@@ -1,25 +1,29 @@
 <div class="row">
     <div class="col-sm-3">
       <select class="form-control"
-        [ngModel]="selectedMetric"
-        (ngModelChange)="chooseMetric($event)" required>
-		    <option *ngFor="let metric of genomicMetrics" [ngValue]="metric">
-          {{ metric.name }}
+        [(ngModel)]="selectedGenomicScores"
+         required>
+        <option *ngFor="let genomicScores of genomicScoresArray" [ngValue]="genomicScores">
+          {{ genomicScores.desc }}
         </option>
-		  </select>
+      </select>
     </div>
-    <div class="col-sm-9">
+    <div class="col-sm-1">
+      <i class="clickable fa fa-question-circle-o fa-2x" aria-hidden="true" (click)="showHelp()"></i>
+    </div>
+    <div class="col-sm-8">
       <gpf-histogram
-		    *ngIf="genomicScoreState.histogramData"
-		    width="650" height="145"
-            [logScaleY]="true"
-            [showCounts]="false"
-            [xLabels]="[0, 0.05, 0.1, 0.5, 1.0, 5.0, 10, 50, 100]"
-		    [bins]="genomicScoreState.histogramData.bins"
-		    [bars]="genomicScoreState.histogramData.bars"
-		    [rangesCounts]="rangesCounts"
-		    [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
-		  </gpf-histogram>
+        *ngIf="selectedGenomicScores"
+        width="650" height="145"
+        [bins]="selectedGenomicScores.bins"
+        [bars]="selectedGenomicScores.bars"
+        [domainMin]="domainMin"
+        [domainMax]="domainMax"
+        [logScaleX]="selectedGenomicScores.logScaleX"
+        [logScaleY]="selectedGenomicScores.logScaleY"
+        [rangesCounts]="rangesCounts | async"
+        [(rangeStart)]="rangeStart" [(rangeEnd)]="rangeEnd">
+      </gpf-histogram>
       <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
     </div>
 </div>

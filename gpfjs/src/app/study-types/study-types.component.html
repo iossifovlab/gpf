@@ -26,6 +26,16 @@
             <span>TG</span>
           </label>
         </div>
+        <div class="checkbox">
+          <label>
+            <input
+                #wgCheckbox
+                type="checkbox"
+                [checked]="studyTypes.wg"
+                (change)="studyTypesCheckValue('wg',wgCheckbox.checked)">
+            <span>WG</span>
+          </label>
+        </div>
     </div>
 
     <gpf-errors-alert [errors]="errors"></gpf-errors-alert>

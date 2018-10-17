@@ -21,7 +21,6 @@ export const PHENO_TOOL_INITIAL_VALUES: string[] = [
   'LGDs',
   'Missense',
   'Synonymous',
-  'CNV',
 ];
 
 export const PHENO_TOOL_ALL: string[] =

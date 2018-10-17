@@ -50,20 +50,20 @@ export class UserEditComponent implements OnInit {
       .subscribe(groups => this.groups$.next(groups));
   };
 
-  getDefaultGroups() {
-    return [{
-        id: 'any_user',
-        text: 'any_user',
+  getDefaultGroupsSelect2() {
+    return this.getDefaultGroups().map(group => ({
+        id: group,
+        text: group,
         selected: true,
-      }, {
-        id: this.emailValue,
-        text: this.emailValue,
-        selected: true,
-      }];
+      }));
   }
 
   updateGroups(groups) {
     this.user$.value.groups = groups;
+  }
+
+  getDefaultGroups() {
+    return ['any_user', this.emailValue]
   }
 
   submit(user) {

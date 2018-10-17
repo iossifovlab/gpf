@@ -12,7 +12,7 @@
         "assets",
         "favicon.ico"
       ],
-      "baseHref": "/",
+      "deployUrl": "/",
       "index": "index.html",
       "main": "main.ts",
       "polyfills": "polyfills.ts",
@@ -41,7 +41,8 @@
       "environments": {
         "dev": "environments/environment.ts",
         "prod": "environments/environment.prod.ts",
-        "deploy": "environments/environment.deploy.ts"
+        "hg19": "environments/environment.hg19.ts",
+        "hg38": "environments/environment.hg38.ts"
       }
     }
   ],

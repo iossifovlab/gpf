@@ -48,15 +48,17 @@ export class UserCreateComponent implements OnInit {
     };
   }
 
-
- getDefaultGroups() {
-    return this.user$.value.getDefaultGroups().map(group => ({
-      id: group,
-      text: group,
-      selected: true,
-    }));
+  getDefaultGroupsSelect2() {
+    return this.getDefaultGroups().map(group => ({
+        id: group,
+        text: group,
+        selected: true,
+      }));
   }
 
+  getDefaultGroups() {
+    return this.user$.value.getDefaultGroups();
+  }
 
   updateGroups(groups) {
     this.user$.value.groups = groups;

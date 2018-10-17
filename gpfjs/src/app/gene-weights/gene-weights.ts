@@ -7,6 +7,7 @@ export class GeneWeights {
       json['weight'],
       json['bins'],
       json['desc'],
+      json['range'],
       json['xscale'],
       json['yscale']
     );
@@ -22,6 +23,7 @@ export class GeneWeights {
     readonly weight: string,
     readonly bins: number[],
     readonly desc: string,
+    readonly domain: number[],
     xScale: string,
     yScale: string
   ) { 

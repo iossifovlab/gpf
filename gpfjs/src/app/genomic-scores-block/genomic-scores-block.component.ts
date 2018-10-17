@@ -1,12 +1,11 @@
-import { Component, OnInit, Input, forwardRef } from '@angular/core';
-import { Dataset } from '../datasets/datasets';
+import { Component, OnInit, forwardRef } from '@angular/core';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { environment } from '../../environments/environment';
 
-import { Observable } from 'rxjs/Observable';
-
 import { GenomicScoreState, GenomicScoresState } from '../genomic-scores/genomic-scores-store';
+import { GenomicScoresBlockService } from './genomic-scores-block.service';
 import { StateRestoreService } from '../store/state-restore.service';
+import { GenomicScores } from './genomic-scores-block';
 
 
 @Component({
@@ -19,9 +18,9 @@ import { StateRestoreService } from '../store/state-restore.service';
     }]
 })
 export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider implements OnInit {
-    @Input() dataset: Dataset;
     genomicScoresState = new GenomicScoresState();
     scores = [];
+    genomicScoresArray: GenomicScores[];
 
     get imgPathPrefix() {
         return environment.imgPathPrefix;
@@ -33,7 +32,7 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
 
     addFilter(genomicScoreState: GenomicScoreState = null) {
         if (!genomicScoreState) {
-            genomicScoreState = new GenomicScoreState();
+            genomicScoreState = new GenomicScoreState(this.genomicScoresArray[0]);
         }
         this.genomicScoresState.genomicScoresState.push(genomicScoreState);
     }
@@ -44,26 +43,40 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
     }
 
     constructor(
+        private genomicScoresBlockService: GenomicScoresBlockService,
         private stateRestoreService: StateRestoreService
     ) {
         super();
     }
 
-    ngOnInit() {
+    restoreStateSubscribe() {
         this.stateRestoreService.getState(this.constructor.name)
             .take(1)
             .subscribe(state => {
                 if (state['genomicScores'] && state['genomicScores'].length > 0) {
                     for (let score of state['genomicScores']) {
                         let genomicScore = new GenomicScoreState();
-                        genomicScore.metric = score['metric'];
+                        genomicScore.score = this.genomicScoresArray
+                                                 .find(el => el['score'] === score['metric']);
                         genomicScore.rangeStart = score['rangeStart'];
                         genomicScore.rangeEnd = score['rangeEnd'];
+                        genomicScore.domainMin = genomicScore.score.bins[0];
+                        genomicScore.domainMax =
+                          genomicScore.score.bins[genomicScore.score.bins.length - 1];
                         this.addFilter(genomicScore);
                     }
                 }
-            }
-        );
+            });
+    }
+
+    ngOnInit() {
+        this.genomicScoresBlockService.getGenomicScores()
+        .take(1)
+        .subscribe(genomicScores => {
+            this.genomicScoresArray = genomicScores
+
+            this.restoreStateSubscribe();
+        });
     }
 
     getState() {
@@ -71,10 +84,10 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
             .map(genomicScoresState => {
                 return {
                     genomicScores: genomicScoresState.genomicScoresState
-                        .filter(el => el.histogramData)
+                        .filter(el => el.score)
                         .map(el => {
                             return {
-                                metric: el.histogramData.metric,
+                                metric: el.score.score,
                                 rangeStart: el.rangeStart,
                                 rangeEnd: el.rangeEnd
                             };

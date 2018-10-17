@@ -138,10 +138,11 @@ label {
 }
 
 #search-box, #selected-value {
-	border: 1px solid #ccc;
-	border-top-left-radius: 5px;
-    border-bottom-left-radius: 5px;
-    padding-left: 10px;
+  border: 1px solid #ccc;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  padding-left: 10px;
+  line-height: 34px;
 }
 
 .username-field {
