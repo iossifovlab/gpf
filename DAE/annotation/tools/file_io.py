@@ -171,7 +171,7 @@ class TSVFormat(AbstractFormat):
                 header_str = self.variant_file.readline()[:-1]
             if header_str[0] == '#':
                 header_str = header_str[1:]
-            self.header = header_str.split('\t')
+            self.header = header_str.split(self.opts.separator)
 
     def header_write(self, header):
         self.line_write(header)
@@ -185,7 +185,7 @@ class TSVFormat(AbstractFormat):
         self.linecount += 1
         if self.linecount % self.linecount_threshold == 0:
             print(self.linecount, 'lines read', file=sys.stderr)
-        return line.rstrip('\n').split('\t')
+        return line.rstrip('\n').split(self.opts.separator)
 
     def line_write(self, line):
         if self.mode != 'w':

@@ -1,5 +1,4 @@
 import GenomeAccess
-import common.config
 from annotation.tools.utilities import AnnotatorBase, assign_values
 from utils.vcf import cshl_format
 from utils.dae import dae2vcf_variant
@@ -132,7 +131,7 @@ class VariantFormatPreannotator(AnnotatorBase):
         if len(new_columns) == 0:
             return []
         params = [
-            line[i-1] if i is not None else None for i in self.arg_columns
+            line[i - 1] if i is not None else None for i in self.arg_columns
         ]
         values = self._generate_columns(*params)
         return [values[col] for col in new_columns]

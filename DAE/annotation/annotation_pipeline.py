@@ -23,7 +23,7 @@ from collections import OrderedDict
 from functools import reduce
 from annotation.tools.utilities import assign_values
 from annotation.tools.utilities import main as main
-from annotation.tools import duplicate_columns
+from annotation.tools import *
 
 
 def str_to_class(val):
@@ -93,7 +93,7 @@ class MultiAnnotator(object):
 
         config_parser = MyConfigParser()
         config_parser.optionxform = str
-        config_parser.read_file(opts.config)
+        config_parser.read(opts.config)
         self.config = Box(common.config.to_dict(config_parser),
                           default_box=True, default_box_attr=None)
 
