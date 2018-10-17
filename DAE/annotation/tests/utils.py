@@ -7,7 +7,7 @@ from box import Box
 class Dummy_tbi:
 
     def __init__(self, filename):
-        if type(filename) is str:
+        if isinstance(filename, str):
             self.file = open(filename, 'r')
         else:
             self.file = filename

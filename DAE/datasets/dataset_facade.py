@@ -23,6 +23,13 @@ class DatasetFacade(object):
 
         return self._dataset_cache[dataset_id]
 
+    def get_dataset_by_study_group(self, study_group_id):
+        for dataset_config in self.get_all_dataset_configs():
+            if dataset_config.study_group == study_group_id:
+                return self.get_dataset(dataset_config.id)
+
+        return None
+
     def get_all_datasets(self):
         self.load_cache()
 

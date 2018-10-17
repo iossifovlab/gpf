@@ -131,6 +131,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 self._get_att_list(
                     'standardCriterias.{}.segments'.format(
                         standard_criteria_id)))
+            print(segments_arrs)
             self.standard_criterias.append(
                 [{
                     'property': standard_criteria_id,
@@ -178,10 +179,10 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         self._generate_cache(datasets)
 
     def _generate_cache(self, datasets=None):
-        for dataset in self._get_study_config_descs(datasets):
+        for dataset in self._get_study_groups(datasets):
             self._gene_sets_for(dataset)
 
-    def _get_study_config_descs(self, study_groups=None):
+    def _get_study_groups(self, study_groups=None):
         if study_groups is None:
             study_groups = self.study_group_pedigree_selectors.keys()
         print(study_groups)
@@ -190,16 +191,14 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             for study_group_id in study_groups
         ]
 
-    def get_gene_sets_types_legend(self, **kwargs):
-        permitted_datasets = kwargs.get('permitted_datasets')
+    def get_gene_sets_types_legend(self, permitted_study_groups=None):
         return [
             {
-                'datasetId': dataset_desc.name,
-                'phenotypes': self._get_configured_dataset_legend(dataset_desc)
+                'studyGroupId': study_group.name,
             }
-            for dataset_desc in self._get_study_config_descs()
-            if permitted_datasets is None or
-            dataset_desc.name in permitted_datasets
+            for study_group in self._get_study_groups()
+            if permitted_study_groups is None or
+            study_group.name in permitted_study_groups
         ]
 
     def get_dataset_phenotypes(self, dataset_id):
@@ -249,8 +248,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             gene_sets_types,
             kwargs.get('include_datasets_desc', True))
         result = []
-        print()
-        pprint(self.cache)
+        # print()
+        # pprint(self.cache)
         for gsn in self.gene_sets_names:
             gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
             if gene_set_syms:
@@ -493,7 +492,7 @@ class GeneSetsCollections(object):
     def is_connected(self):
         return self.db is not None
 
-    def get_gene_sets_collections(self, permitted_datasets=None):
+    def get_gene_sets_collections(self, permitted_study_groups=None):
         gene_sets_collections_desc = []
         for gsc_id in self.config.gene_info.getGeneTermIds():
             print("gsc_id", gsc_id)
@@ -504,7 +503,7 @@ class GeneSetsCollections(object):
                 continue
             gene_sets_types = self.get_gene_sets_collection(gsc_id) \
                 .get_gene_sets_types_legend(
-                    permitted_datasets=permitted_datasets)
+                    permitted_study_groups=permitted_study_groups)
             gene_sets_collections_desc.append(
                 {
                     'desc': label,

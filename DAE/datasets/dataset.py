@@ -29,6 +29,10 @@ class Dataset(object):
             self.legend = {}
 
     @property
+    def id(self):
+        return self.dataset_config.id
+
+    @property
     def studies(self):
         return self.study_group.studies
 

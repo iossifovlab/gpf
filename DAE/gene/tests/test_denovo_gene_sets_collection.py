@@ -18,6 +18,8 @@ def test_denovo_gene_sets_exist(gscs):
 def test_get_all_gene_sets(gscs):
     gene_sets_collections = gscs.get_gene_sets_collections()
     assert gene_sets_collections
+    print(gene_sets_collections)
+    assert False
 
 
 # def test_denovo_get_gene_set_sd_lgds_autism(gscs):
