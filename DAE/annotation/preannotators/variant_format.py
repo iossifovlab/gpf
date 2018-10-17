@@ -128,6 +128,6 @@ class VariantFormatPreannotator(AnnotatorBase):
     def line_annotations(self, line, new_columns):
         if len(new_columns) == 0:
             return []
-        params = [line[i-1] if i!=None else None for i in self.arg_columns]
+        params = [line[i] if i is not None else None for i in self.arg_columns]
         values = self._generate_columns(*params)
         return [values[col] for col in new_columns]
