@@ -142,7 +142,6 @@ import { SaveQueryButtonComponent } from './save-query-button/save-query-button.
 import { LoadQueryComponent } from './load-query/load-query.component';
 import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.component';
 import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
-import { VisPedigreeInputComponent } from './vis-pedigree-input/vis-pedigree-input.component';
 import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
 import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { StatusFilterComponent } from './status-filter/status-filter.component';
@@ -348,7 +347,6 @@ const appRoutes: Routes = [
     SaveQueryButtonComponent,
     LoadQueryComponent,
     PerfectlyDrawablePedigreeComponent,
-    VisPedigreeInputComponent,
     NonPdpPedigreesComponent,
     StatusFilterComponent,
     RolesFilterComponent,
@@ -400,7 +398,6 @@ const appRoutes: Routes = [
     ChromosomeService,
     { provide: Http, useClass: RedirectOnErrorHttpService,
       deps: [XHRBackend, RequestOptions, Injector]},
-    SaveQueryService,
     PedigreeMockService,
     PerfectlyDrawablePedigreeService
   ],
