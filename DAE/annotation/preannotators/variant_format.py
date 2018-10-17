@@ -1,8 +1,8 @@
 import GenomeAccess
-import common.config
-from annotation.tools.utilities import *
+from annotation.tools.utilities import AnnotatorBase, assign_values
 from utils.vcf import cshl_format
 from utils.dae import dae2vcf_variant
+
 
 def get_arguments():
     return {
@@ -33,6 +33,7 @@ def get_arguments():
             'help': 'genome file location'
         }
     }
+
 
 class VariantFormatPreannotator(AnnotatorBase):
     """
@@ -92,14 +93,15 @@ class VariantFormatPreannotator(AnnotatorBase):
     def new_columns(self):
         return self._new_columns
 
-    def _from_dae(self, chromosome=None, position=None, location=None,
+    def _from_dae(
+            self, chromosome=None, position=None, location=None,
             variant=None):
         if location is not None:
             chromosome, position = location.split(':')
         else:
             location = '{}:{}'.format(chromosome, position)
-        vcf_position, ref, alt = dae2vcf_variant(chromosome, int(position),
-            variant, self.GA)
+        vcf_position, ref, alt = dae2vcf_variant(
+            chromosome, int(position), variant, self.GA)
         return {
             'CSHL:location': location,
             'CSHL:chr': chromosome,
@@ -112,8 +114,8 @@ class VariantFormatPreannotator(AnnotatorBase):
         }
 
     def _from_vcf(self, chromosome, position, reference, alternative):
-        cshl_position, variant, _ = cshl_format(int(position), reference,
-            alternative)
+        cshl_position, variant, _ = cshl_format(
+            int(position), reference, alternative)
         return {
             'CSHL:location': '{}:{}'.format(chromosome, cshl_position),
             'CSHL:chr': chromosome,
@@ -128,7 +130,8 @@ class VariantFormatPreannotator(AnnotatorBase):
     def line_annotations(self, line, new_columns):
         if len(new_columns) == 0:
             return []
-        params = [line[i - 1] if i is not None else None
-                  for i in self.arg_columns]
+        params = [
+            line[i - 1] if i is not None else None for i in self.arg_columns
+        ]
         values = self._generate_columns(*params)
         return [values[col] for col in new_columns]

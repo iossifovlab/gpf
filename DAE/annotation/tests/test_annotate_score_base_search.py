@@ -47,13 +47,12 @@ def expected_annotation_columns():
     return [[[0.56789]], [[2.4567]]]
 
 
-
 @pytest.fixture
 def annotator(scores_config, scores):
     opts = get_test_annotator_opts(
         scores, conf_to_dict(scores_config), search_cols=['marker'])
     return ScoreAnnotator(
-        opts, 
+        opts,
         header=['id', 'chrom', 'pos', 'ending_pos', 'variation', 'marker'])
 
 
@@ -63,7 +62,7 @@ def test_new_columns(annotator):
 
 def test_search_score(annotator, variants_input, expected_annotation_columns):
     annotations = [
-        annotator.line_annotations(line, annotator.new_columns) 
+        annotator.line_annotations(line, annotator.new_columns)
         for line in variants_input
     ]
     assert (annotations == expected_annotation_columns)

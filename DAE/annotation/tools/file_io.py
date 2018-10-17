@@ -14,9 +14,12 @@ from abc import ABCMeta, abstractmethod
 
 def assert_file_exists(filepath):
     if filepath != '-' and os.path.exists(filepath) is False:
-        sys.stderr.write(
-            "The given file '{}' does not exist!\n".format(filepath))
-        sys.exit(-1)
+        print(
+            "The given file",
+            filepath,
+            "does not exist!",
+            file=sys.stderr)
+        sys.exit(1)
 
 
 class IOType:
@@ -83,7 +86,7 @@ class AbstractFormat(object):
         self.opts = opts
         if mode != 'r' and mode != 'w':
             print("Unrecognized I/O mode '{}'!".format(mode), file=sys.stderr)
-            sys.exit(-1)
+            sys.exit(1)
         self.mode = mode
         self.linecount = 0
         self.linecount_threshold = 1000
@@ -126,23 +129,20 @@ class TSVFormat(AbstractFormat):
 
     def _setup(self):
         if self.mode == 'r':
-            if self.opts.infile != '-':
+            if self.opts.infile == '-':
+                self.variant_file = sys.stdin
+            else:
                 assert_file_exists(self.opts.infile)
 
-                if hasattr(self.opts, 'region'):
-                    region = self.opts.region
-                    if(region is not None):
-                        tabix_file = pysam.TabixFile(self.opts.infile)
-                        try:
-                            self.variantFile = tabix_file.fetch(region=region)
-                        except ValueError:
-                            self.variantFile = iter([])
-                    else:
-                        self.variantFile = open(self.opts.infile, 'r')
+                region = self.opts.get('region', None)
+                if region is None:
+                    self.variant_file = open(self.opts.infile, 'r')
                 else:
-                    self.variantFile = open(self.opts.infile, 'r')
-            else:
-                self.variantFile = sys.stdin
+                    tabix_file = pysam.TabixFile(self.opts.infile)
+                    try:
+                        self.variant_file = tabix_file.fetch(region=region)
+                    except ValueError:
+                        self.variant_file = iter([])
             self._header_read()
 
         else:
@@ -155,7 +155,7 @@ class TSVFormat(AbstractFormat):
         if self.mode == 'r':
             sys.stderr.write('Processed ' + str(self.linecount) + ' lines.\n')
             if self.opts.infile != '-' and self.opts.region is None:
-                self.variantFile.close()
+                self.variant_file.close()
         else:
             if self.opts.outfile != '-':
                 self.outfile.close()
@@ -168,7 +168,7 @@ class TSVFormat(AbstractFormat):
                         self.opts.infile, 'rt', encoding='utf8') as infile:
                     header_str = infile.readline()[:-1]
             else:
-                header_str = self.variantFile.readline()[:-1]
+                header_str = self.variant_file.readline()[:-1]
             if header_str[0] == '#':
                 header_str = header_str[1:]
             self.header = header_str.split(self.opts.separator)
@@ -178,19 +178,19 @@ class TSVFormat(AbstractFormat):
 
     def line_read(self):
         if self.mode != 'r':
-            sys.stderr.write('Cannot read in write mode!\n')
-            sys.exit(-78)
+            print('Cannot read in write mode!', file=sys.stderr)
+            sys.exit(1)
 
-        line = next(self.variantFile)
+        line = next(self.variant_file)
         self.linecount += 1
         if self.linecount % self.linecount_threshold == 0:
-            sys.stderr.write(str(self.linecount) + ' lines read\n')
+            print(self.linecount, 'lines read', file=sys.stderr)
         return line.rstrip('\n').split(self.opts.separator)
 
     def line_write(self, line):
         if self.mode != 'w':
-            sys.stderr.write('Cannot write in read mode!\n')
-            sys.exit(-78)
+            print('Cannot write in read mode!', file=sys.stderr)
+            sys.exit(1)
 
         self.outfile.write('\t'.join(
             [to_str(column) for column in line]) + '\n')
@@ -224,8 +224,7 @@ class ParquetFormat(AbstractFormat):
 
     def _cleanup(self):
         if self.mode == 'r':
-            sys.stderr.write(
-                'Processed ' + str(self.linecount) + ' lines.' + '\n')
+            print('Processed', self.linecount, 'lines.', file=sys.stderr)
         else:
             self._write_buffer()
             if self.opts.outfile != '-':
@@ -250,8 +249,8 @@ class ParquetFormat(AbstractFormat):
 
     def line_read(self):
         if self.mode != 'r':
-            sys.stderr.write('Cannot read in write mode!\n')
-            sys.exit(-78)
+            print('Cannot read in write mode!', file=sys.stderr)
+            sys.exit(1)
 
         if not self.row_group_buffer:
             if self.row_group_curr >= self.row_group_count:
@@ -263,13 +262,13 @@ class ParquetFormat(AbstractFormat):
         self.row_group_buffer = self.row_group_buffer[1:]
         self.linecount += 1
         if self.linecount % self.linecount_threshold == 0:
-            sys.stderr.write(str(self.linecount) + ' lines read.\n')
+            print(self.linecount, 'lines read.', file=sys.stderr)
         return line
 
     def line_write(self, input_):
         if self.mode != 'w':
-            sys.stderr.write('Cannot write in read mode!\n')
-            sys.exit(-78)
+            print('Cannot write in read mode!', file=sys.stderr)
+            sys.exit(1)
 
         self.row_group_buffer.append(input_)
         if len(self.row_group_buffer) >= self.buffer_limit:
