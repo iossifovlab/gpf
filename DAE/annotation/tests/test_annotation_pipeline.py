@@ -6,7 +6,7 @@ from box import Box
 
 from annotation.annotation_pipeline import MultiAnnotator,\
     MyConfigParser, str_to_class
-from annotation.tools.duplicate_columns import\
+from annotation.tools.duplicate_columns import \
     DuplicateColumnsAnnotator
 
 
@@ -137,7 +137,7 @@ def output_split_column():
     return [
         ['#id', 'location', 'variant', 'loc'],
         [
-            '5', '10:4372372973,1:8493943843', 
+            '5', '10:4372372973,1:8493943843',
             'sub(G->A)', '10:4372372973,1:8493943843'
         ],
     ]
@@ -230,7 +230,7 @@ def test_str_to_class():
     (input_base(), options_default_args_alt(), output_default_args()),
     (input_base(), options_virtuals(), output_base()),
     (input_split_column(), options_split_column(), output_split_column()),
-    (input_multiple_headers(), options_multiple_headers(), 
+    (input_multiple_headers(), options_multiple_headers(),
         output_multiple_headers())
 ])
 def test_annotators_tsv(input_file, options, expected_output):
