@@ -1,17 +1,17 @@
-<div class="container variant-report-block form-block mb-3">
-  <div class="row">
-    <div class="col-2">
-      <label class="form-block-title" for="studies">Study</label>
-    </div>
+<div class="container">
+  <div class="row variant-report-block form-block mb-3">
+      <div class="col-2">
+        <label class="form-block-title" for="studies">Study</label>
+      </div>
 
-    <div class="col-4">
-      <select class="form-control"
-        [ngModel]="selectedReport$ | async"
-        (ngModelChange)="selectReport($event)">
-        <option *ngFor="let study of (reports$ | async)?.studies"
-          [ngValue]="study">{{ study.name }}</option>
-      </select>
-    </div>
+      <div class="col-4">
+        <select class="form-control"
+          [ngModel]="selectedReport$ | async"
+          (ngModelChange)="selectReport($event)">
+          <option *ngFor="let study of (reports$ | async)?.studies"
+            [ngValue]="study">{{ study.name }}</option>
+        </select>
+      </div>
   </div>
 </div>
 
@@ -96,7 +96,7 @@
                 <td class="centered">
                   <div *ngIf="pedigree">
                     <div>
-                      <gpf-pedigree-chart [pedigreeData]="pedigree.data"></gpf-pedigree-chart>
+                      <gpf-pedigree-chart [family]="pedigree.data"></gpf-pedigree-chart>
                     </div>
                     <div>
                       {{ pedigree.count }}

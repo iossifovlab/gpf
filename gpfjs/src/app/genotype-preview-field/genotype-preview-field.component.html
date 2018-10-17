@@ -1,4 +1,7 @@
- <gpf-pedigree-chart *ngIf="field == 'pedigree' && value" [pedigreeData]=value></gpf-pedigree-chart>
+<div *ngIf="field == 'pedigree'" style="max-height: 93px; height: 93px; overflow: hidden">
+    <gpf-pedigree-chart *ngIf="value" [family]="value">
+    </gpf-pedigree-chart>
+</div>
  <span *ngIf="field == 'location'">
    <a target="_blank" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr{{value}}">{{ formattedValue() }}</a>
  </span>

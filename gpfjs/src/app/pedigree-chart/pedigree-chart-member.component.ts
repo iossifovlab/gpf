@@ -9,7 +9,3 @@ import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 export class PedigreeChartMemberComponent  {
   @Input() pedigreeData: PedigreeData
 }
-
-
-
-

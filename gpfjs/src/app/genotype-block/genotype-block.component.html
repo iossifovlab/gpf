@@ -1,5 +1,8 @@
 <div class="genotype-block form-block">
 	<div class="row row-eq-height">
+
+		<gpf-status-filter class="col-lg-3"></gpf-status-filter>
+		<gpf-roles-filter class="col-lg-3" [availableRoles]="rolesFilterOptions | async" ></gpf-roles-filter>
 		<div *ngIf="hasPedigreeSelector | async" class="col-lg-3">
 			<gpf-pedigree-selector [pedigrees]="pedigrees | async"></gpf-pedigree-selector>
 		</div>

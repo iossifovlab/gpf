@@ -140,6 +140,13 @@ import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
 import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
 import { SaveQueryButtonComponent } from './save-query-button/save-query-button.component';
 import { LoadQueryComponent } from './load-query/load-query.component';
+import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.component';
+import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
+import { VisPedigreeInputComponent } from './vis-pedigree-input/vis-pedigree-input.component';
+import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
+import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
+import { StatusFilterComponent } from './status-filter/status-filter.component';
+import { RolesFilterComponent } from './roles-filter/roles-filter.component';
 import { StudyFiltersBlockComponent } from './study-filters-block/study-filters-block.component';
 import { StudyFilterComponent } from './study-filter/study-filter.component';
 import { AddButtonComponent } from './add-button/add-button.component';
@@ -147,6 +154,10 @@ import { RemoveButtonComponent } from './remove-button/remove-button.component';
 import { PopupComponent } from './popup/popup.component';
 
 const appRoutes: Routes = [
+  {
+    path: 'pedigrees',
+    component: NonPdpPedigreesComponent
+  },
   {
     path: 'datasets',
     component: DatasetsComponent
@@ -336,6 +347,11 @@ const appRoutes: Routes = [
     ErrorsAlertComponent,
     SaveQueryButtonComponent,
     LoadQueryComponent,
+    PerfectlyDrawablePedigreeComponent,
+    VisPedigreeInputComponent,
+    NonPdpPedigreesComponent,
+    StatusFilterComponent,
+    RolesFilterComponent,
     SmallRemoveButtonComponent,
     StudyFiltersBlockComponent,
     StudyFilterComponent,
@@ -384,6 +400,9 @@ const appRoutes: Routes = [
     ChromosomeService,
     { provide: Http, useClass: RedirectOnErrorHttpService,
       deps: [XHRBackend, RequestOptions, Injector]},
+    SaveQueryService,
+    PedigreeMockService,
+    PerfectlyDrawablePedigreeService
   ],
 
   entryComponents: [

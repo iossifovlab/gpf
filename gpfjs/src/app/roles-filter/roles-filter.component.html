@@ -1,0 +1,22 @@
+<div class="card">
+    <div class="card-header card-title">Role</div>
+    <div class="card-block">
+        <div class="btn-group btn-group-sm">
+            <button (click)="selectAll()"
+                class="btn btn-default">All</button>
+            <button (click)="selectNone()"
+                class="btn btn-default">None</button>
+        </div>
+        <div *ngFor="let role of availableRoles" class="checkbox">
+          <label>
+            <input #input
+                type="checkbox"
+                [checked]="rolesFilter.selected.has(role)"
+                (change)="rolesFilterCheckValue(role, $event.target.checked)">
+            {{ role }}
+          </label>
+        </div>
+    </div>
+
+    <gpf-errors-alert [errors]="errors"></gpf-errors-alert>
+</div>
