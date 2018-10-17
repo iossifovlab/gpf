@@ -1,26 +1,31 @@
 <div class="form-block">
   <div class="card">
-      <div class="card-header card-title">
+    <gpf-tabset #tabset>
+      <div class="gpf-tabset-left">
           Genomic scores
+      </div>
+      <ngb-tab>
+        <ng-template ngbTabTitle>
           <gpf-add-button
             (addFilter)="addFilter($event)">
           </gpf-add-button>
+        </ng-template>
+      </ngb-tab>
+    </gpf-tabset>
+    <div class="card-block">
+      <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; trackBy: trackById; let i = index">
+        <span style="padding: 5px; display: block; overflow: hidden">
+          <gpf-remove-button
+            [field]="score"
+            (removeFilter)="removeFilter($event)">
+          </gpf-remove-button>
+          <gpf-genomic-scores
+            [genomicScoreState]="score"
+            [errors]="errors && errors[i]"
+            [genomicScoresArray]="genomicScoresArray">
+          </gpf-genomic-scores>
+        </span>
       </div>
-      <div class="card-block">
-        <div style="padding: 5px" *ngFor="let score of genomicScoresState.genomicScoresState; trackBy: trackById; let i = index">
-            <gpf-remove-button
-              [field]="score"
-              (removeFilter)="removeFilter($event)">
-            </gpf-remove-button>
-            <span style="padding: 5px; display: block; overflow: hidden">
-                <gpf-genomic-scores
-                  [genomicScoreState]="score"
-                  [errors]="errors && errors[i]"
-                  [genomicScoresArray]="genomicScoresArray">
-                </gpf-genomic-scores>
-            </span>
-        </div>
-
-      </div>
+    </div>
   </div>
 </div>
