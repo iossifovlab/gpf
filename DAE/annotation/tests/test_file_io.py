@@ -42,7 +42,8 @@ def get_opts(input_, output):
         'infile': input_,
         'outfile': output,
         'no_header': False,
-        'region': None
+        'region': None,
+        'separator': '\t'
     }
     return Box(options, default_box=True, default_box_attr=None)
 
