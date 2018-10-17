@@ -56,7 +56,8 @@ def expected_annotation_columns():
 def annotator(score_config, scores):
     opts = get_test_annotator_opts(scores, conf_to_dict(score_config))
     return ScoreAnnotator(
-        opts, header=['id', 'chrom', 'pos', 'ending_pos', 'variation'])
+        opts, header=['id', 'chrom', 'pos', 'ending_pos', 'variation']
+    )
 
 
 def test_base_full(annotator, variants_input, expected_annotation_columns):

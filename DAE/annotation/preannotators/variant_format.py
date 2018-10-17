@@ -2,6 +2,7 @@ import GenomeAccess
 from annotation.tools.utilities import AnnotatorBase, assign_values
 from utils.vcf import cshl_format
 from utils.dae import dae2vcf_variant
+from variants.variant import SummaryAllele
 
 
 def get_arguments():
@@ -102,6 +103,9 @@ class VariantFormatPreannotator(AnnotatorBase):
             location = '{}:{}'.format(chromosome, position)
         vcf_position, ref, alt = dae2vcf_variant(
             chromosome, int(position), variant, self.GA)
+        summary = SummaryAllele(
+            chromosome, vcf_position, ref, alt
+        )
         return {
             'CSHL:location': location,
             'CSHL:chr': chromosome,
@@ -110,12 +114,16 @@ class VariantFormatPreannotator(AnnotatorBase):
             'VCF:chr': chromosome,
             'VCF:position': str(vcf_position),
             'VCF:ref': ref,
-            'VCF:alt': alt
+            'VCF:alt': alt,
+            'internal:summary': summary,
         }
 
     def _from_vcf(self, chromosome, position, reference, alternative):
         cshl_position, variant, _ = cshl_format(
             int(position), reference, alternative)
+        summary = SummaryAllele(
+            chromosome, position, reference, alternative
+        )
         return {
             'CSHL:location': '{}:{}'.format(chromosome, cshl_position),
             'CSHL:chr': chromosome,
@@ -124,7 +132,8 @@ class VariantFormatPreannotator(AnnotatorBase):
             'VCF:chr': chromosome,
             'VCF:position': str(position),
             'VCF:ref': reference,
-            'VCF:alt': alternative
+            'VCF:alt': alternative,
+            'internal:summary': summary,
         }
 
     def line_annotations(self, line, new_columns):

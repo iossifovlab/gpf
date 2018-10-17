@@ -23,7 +23,7 @@ from collections import OrderedDict
 from functools import reduce
 from annotation.tools.utilities import assign_values
 from annotation.tools.utilities import main as main
-from annotation.tools import *
+from annotation.tools import *  # noqa
 
 
 def str_to_class(val):
