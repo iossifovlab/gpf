@@ -45,8 +45,8 @@ def test_merge_schemas():
 def test_merge_columns():
     schema = Schema([('str', 'col1,col2,col3'),
                      ('float', 'col4,col5,col6',)])
-    expected_schema = Schema([('str', 'merged_str_col'),
-                              ('float', 'merged_float_col',)])
+    expected_schema = Schema([('list(str)', 'merged_str_col'),
+                              ('list(float)', 'merged_float_col',)])
 
     schema.merge_columns(['col1','col2', 'col3'], 'merged_str_col')
     schema.merge_columns(['col4','col5', 'col6'], 'merged_float_col')
@@ -67,5 +67,5 @@ def test_column_coercion():
                      ('float', 'col2',)])
     col1 = [1,2.5,3,'a',-5,6,'b']
     col2 = [1.5, 4.3, '-3.4', '6.4', 5.0]
-    assert(schema.coerce_column(col1, 'col1') == list(map(str, col1)))
-    assert(schema.coerce_column(col2, 'col2') == list(map(float, col2)))
+    assert(schema.coerce_column('col1', col1) == list(map(str, col1)))
+    assert(schema.coerce_column('col2', col2) == list(map(float, col2)))

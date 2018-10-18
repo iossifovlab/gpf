@@ -24,7 +24,9 @@ class Schema:
     type_map = {'str': (str, pa.string()),
                 'float': (float, pa.float64()),
                 'int': (int, pa.int32()),
-                'list(float)': (float, pa.list_(pa.float64()))}
+                'list(str)': (str, pa.list_(pa.string())),
+                'list(float)': (float, pa.list_(pa.float64())),
+                'list(int)': (int, pa.list_(pa.float32()))}
 
     def __init__(self, schema_input=None):
         self.column_map = {}
