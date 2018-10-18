@@ -3,6 +3,7 @@ Created on Mar 27, 2018
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import pytest
 from RegionOperations import Region
 import numpy as np

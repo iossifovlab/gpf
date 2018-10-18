@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 
 from __future__ import unicode_literals
+from __future__ import print_function
+
 import sys
 import glob
 import argparse
-from future import standard_library
-standard_library.install_aliases()
+# from future import standard_library
+# standard_library.install_aliases()
+
 from builtins import object
+
 from configparser import ConfigParser
+
 import common.config
 import re
 from os.path import exists, dirname, basename, realpath
@@ -18,7 +23,7 @@ from collections import OrderedDict
 from functools import reduce
 from annotation.tools.utilities import assign_values
 from annotation.tools.utilities import main as main
-from annotation.tools import duplicate_columns
+from annotation.tools import *
 
 
 def str_to_class(val):
@@ -38,15 +43,15 @@ class MyConfigParser(ConfigParser):
 
 class MultiAnnotator(object):
     """
-    `MultiAnnotator` class processes user passed options and annotates variant data.
-    After processing of user options this class passes line by line the data
-    to `Annotators` and `Preannotators`.
-
+    `MultiAnnotator` class processes user passed options and annotates variant
+    data. After processing of user options this class passes line by line the
+    data to `Annotators` and `Preannotators`.
     """
 
     def __init__(self, opts, header=None):
         self.header = header
-        self.preannotators = PreannotatorLoader.load_preannotators(opts, header)
+        self.preannotators = PreannotatorLoader.load_preannotators(
+            opts, header)
 
         self.annotators = []
         virtual_columns_indices = []
@@ -56,7 +61,8 @@ class MultiAnnotator(object):
             for preannotator in self.preannotators:
                 self.annotators.append({
                     'instance': preannotator,
-                    'columns': OrderedDict([(c, c) for c in preannotator.new_columns])
+                    'columns': OrderedDict(
+                        [(c, c) for c in preannotator.new_columns])
                 })
                 all_columns_labels.update(preannotator.new_columns)
                 if self.header:
@@ -78,19 +84,21 @@ class MultiAnnotator(object):
         default_arguments = dict(extracted_options)
 
         if opts.config is None:
-            sys.stderr.write("You should provide a config file location.\n")
-            sys.exit(-78)
+            print(
+                "You should provide a config file location.", file=sys.stderr)
+            sys.exit(1)
         elif not exists(opts.config):
-            sys.stderr.write("The provided config file does not exist!\n")
-            sys.exit(-78)
+            print("The provided config file does not exist!", file=sys.stderr)
+            sys.exit(1)
 
         config_parser = MyConfigParser()
         config_parser.optionxform = str
-        config_parser.read_file(opts.config)
+        config_parser.read(opts.config)
         self.config = Box(common.config.to_dict(config_parser),
                           default_box=True, default_box_attr=None)
 
-        # config_parser.sections() this gives the sections in order which is important
+        # config_parser.sections() this gives the sections in order which
+        # is important
         for annotation_step in config_parser.sections():
             annotation_step_config = self.config[annotation_step]
 
@@ -111,7 +119,9 @@ class MultiAnnotator(object):
 
             if annotation_step_config.virtuals is not None:
                 virtual_columns_indices.extend(
-                    [assign_values(annotation_step_config.columns[column.strip()], self.header)
+                    [assign_values(
+                        annotation_step_config.columns[column.strip()],
+                        self.header)
                      for column in annotation_step_config.virtuals.split(',')])
             annotation_step_config.options.region = opts.region
             self.annotators.append({
@@ -122,8 +132,10 @@ class MultiAnnotator(object):
 
         self.column_indices = {label: assign_values(label, self.header)
                                for label in all_columns_labels}
-        self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
-                                       if i not in virtual_columns_indices]
+        self.stored_columns_indices = [
+            i for i in range(1, len(self.header) + 1)
+            if i not in virtual_columns_indices
+        ]
 
         if opts.split is None:
             self._split_variant = lambda v: [v]
@@ -133,12 +145,17 @@ class MultiAnnotator(object):
             self.split_separator = opts.separator
 
     def _split_variant(self, line):
-        return [line[:self.split_index-1] + [value] + line[self.split_index:]
-                for value in line[self.split_index-1].split(self.split_separator)]
+        return [
+            line[:self.split_index-1] + [value] + line[self.split_index:]
+            for value in line[self.split_index-1].split(self.split_separator)
+        ]
 
     def _join_variant(self, lines):
-        return [column[0] if len(set(column)) == 1 else self.split_separator.join(column)
-                for column in zip(*lines)]
+        return [
+            column[0] if len(set(column)) == 1
+            else self.split_separator.join(column)
+            for column in zip(*lines)
+        ]
 
     def annotate_file(self, file_io):
         def annotate_line(line):
@@ -167,13 +184,15 @@ class MultiAnnotator(object):
             annotated = [annotate_line(segment)
                          for segment in self._split_variant(line)]
             annotated = self._join_variant(annotated)
-            file_io.line_write([annotated[i-1] for i in self.stored_columns_indices])
+            file_io.line_write([
+                annotated[i-1] for i in self.stored_columns_indices
+            ])
 
 
 class PreannotatorLoader(object):
     """
-    Class for finding and loading `Preannotators`. It imports preannotator classes
-    from `annotation/preannotators` and stores them in list.
+    Class for finding and loading `Preannotators`. It imports preannotator
+    classes from `annotation/preannotators` and stores them in list.
 
     It is used by `MultiAnnotator`.
     """
@@ -183,11 +202,15 @@ class PreannotatorLoader(object):
     @classmethod
     def get_preannotator_modules(cls):
         if cls.PREANNOTATOR_MODULES is None:
-            abs_files = glob.glob(dirname(realpath(__file__)) + '/preannotators/*.py')
+            abs_files = glob.glob(
+                dirname(realpath(__file__)) +
+                '/preannotators/*.py')
             files = [basename(f) for f in abs_files]
             files.remove('__init__.py')
             module_names = ['preannotators.' + f[:-3] for f in files]
-            cls.PREANNOTATOR_MODULES = [import_module(name) for name in module_names]
+            cls.PREANNOTATOR_MODULES = [
+                import_module(name) for name in module_names
+            ]
         return cls.PREANNOTATOR_MODULES
 
     @classmethod
@@ -206,29 +229,41 @@ class PreannotatorLoader(object):
 
 
 def get_argument_parser():
-    desc = """Program to annotate variants combining multiple annotating tools"""
-    parser = argparse.ArgumentParser(description=desc, conflict_handler='resolve')
-    parser.add_argument('-H', help='no header in the input file',
-                        default=False,  action='store_true', dest='no_header')
-    parser.add_argument('--config', help='config file location',
-                        required=True, action='store')
-    parser.add_argument('--append', help='always add columns; '
-                        'default behavior is to replace columns with the same label',
-                        default=False, action='store_true')
-    parser.add_argument('--split', help='split variants based on given column',
-                        action='store')
-    parser.add_argument('--separator', help='separator used in the split column; defaults to ","',
-                        default=',', action='store')
-    parser.add_argument('--options', help='add default arguments',
-                        dest='default_arguments', action='store', metavar=('=OPTION:VALUE'))
-    parser.add_argument('--skip-preannotators', help='skips preannotators',
-                        action='store_true')
-    parser.add_argument('--read-parquet', help='read from a parquet file',
-                        action='store_true')
-    parser.add_argument('--write-parquet', help='write to a parquet file',
-                        action='store_true')
+    desc = "Program to annotate variants combining multiple annotating tools"
+    parser = argparse.ArgumentParser(
+        description=desc, conflict_handler='resolve')
+    parser.add_argument(
+        '-H', help='no header in the input file',
+        default=False,  action='store_true', dest='no_header')
+    parser.add_argument(
+        '--config', help='config file location',
+        required=True, action='store')
+    parser.add_argument(
+        '--append', help='always add columns; '
+        'default behavior is to replace columns with the same label',
+        default=False, action='store_true')
+    parser.add_argument(
+        '--split', help='split variants based on given column',
+        action='store')
+    parser.add_argument(
+        '--separator',
+        help='separator used in the split column; defaults to ","',
+        default=',', action='store')
+    parser.add_argument(
+        '--options', help='add default arguments',
+        dest='default_arguments', action='store', metavar=('=OPTION:VALUE'))
+    parser.add_argument(
+        '--skip-preannotators', help='skips preannotators',
+        action='store_true')
+    parser.add_argument(
+        '--read-parquet', help='read from a parquet file',
+        action='store_true')
+    parser.add_argument(
+        '--write-parquet', help='write to a parquet file',
+        action='store_true')
 
-    for name, args in PreannotatorLoader.load_preannotators_arguments().items():
+    for name, args in PreannotatorLoader.\
+            load_preannotators_arguments().items():
         parser.add_argument(name, **args)
 
     return parser
@@ -236,4 +271,3 @@ def get_argument_parser():
 
 if __name__ == '__main__':
     main(get_argument_parser(), MultiAnnotator)
-

@@ -61,12 +61,11 @@ def test_load_dae_family(raw_dae, temp_dirname):
     df = dae.load_family_variants()
     assert df is not None
 
-    fname = os.path.join(temp_dirname, "f.parquet")
     aname = os.path.join(temp_dirname, "a.parquet")
 
     save_family_variants_to_parquet(
         dae.wrap_family_variants(df, return_reference=False),
-        fname, aname, batch_size=5)
+        aname, batch_size=5)
 
 
 def test_explode_family_genotype():

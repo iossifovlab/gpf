@@ -1,4 +1,7 @@
 from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
+
 import sys
 import os
 import gzip
@@ -11,9 +14,12 @@ from abc import ABCMeta, abstractmethod
 
 def assert_file_exists(filepath):
     if filepath != '-' and os.path.exists(filepath) is False:
-        sys.stderr.write(
-            "The given file '{}' does not exist!\n".format(filepath))
-        sys.exit(-1)
+        print(
+            "The given file",
+            filepath,
+            "does not exist!",
+            file=sys.stderr)
+        sys.exit(1)
 
 
 class IOType:
@@ -80,7 +86,7 @@ class AbstractFormat(object):
         self.opts = opts
         if mode != 'r' and mode != 'w':
             print("Unrecognized I/O mode '{}'!".format(mode), file=sys.stderr)
-            sys.exit(-1)
+            sys.exit(1)
         self.mode = mode
         self.linecount = 0
         self.linecount_threshold = 1000
@@ -123,23 +129,20 @@ class TSVFormat(AbstractFormat):
 
     def _setup(self):
         if self.mode == 'r':
-            if self.opts.infile != '-':
+            if self.opts.infile == '-':
+                self.variant_file = sys.stdin
+            else:
                 assert_file_exists(self.opts.infile)
 
-                if hasattr(self.opts, 'region'):
-                    region = self.opts.region
-                    if(region is not None):
-                        tabix_file = pysam.TabixFile(self.opts.infile)
-                        try:
-                            self.variantFile = tabix_file.fetch(region=region)
-                        except ValueError:
-                            self.variantFile = iter([])
-                    else:
-                        self.variantFile = open(self.opts.infile, 'r')
+                region = self.opts.get('region', None)
+                if region is None:
+                    self.variant_file = open(self.opts.infile, 'r')
                 else:
-                    self.variantFile = open(self.opts.infile, 'r')
-            else:
-                self.variantFile = sys.stdin
+                    tabix_file = pysam.TabixFile(self.opts.infile)
+                    try:
+                        self.variant_file = tabix_file.fetch(region=region)
+                    except ValueError:
+                        self.variant_file = iter([])
             self._header_read()
 
         else:
@@ -152,7 +155,7 @@ class TSVFormat(AbstractFormat):
         if self.mode == 'r':
             sys.stderr.write('Processed ' + str(self.linecount) + ' lines.\n')
             if self.opts.infile != '-' and self.opts.region is None:
-                self.variantFile.close()
+                self.variant_file.close()
         else:
             if self.opts.outfile != '-':
                 self.outfile.close()
@@ -161,35 +164,36 @@ class TSVFormat(AbstractFormat):
         if not self.opts.no_header:
             header_str = ""
             if self.opts.region is not None:
-                with gzip.open(self.opts.infile, 'rt', encoding='utf8') as file:
-                        header_str = file.readline()[:-1]
+                with gzip.open(
+                        self.opts.infile, 'rt', encoding='utf8') as infile:
+                    header_str = infile.readline()[:-1]
             else:
-                header_str = self.variantFile.readline()[:-1]
+                header_str = self.variant_file.readline()[:-1]
             if header_str[0] == '#':
                 header_str = header_str[1:]
-            self.header = header_str.split('\t')
+            self.header = header_str.split(self.opts.separator)
 
     def header_write(self, header):
         self.line_write(header)
 
     def line_read(self):
         if self.mode != 'r':
-            sys.stderr.write('Cannot read in write mode!\n')
-            sys.exit(-78)
+            print('Cannot read in write mode!', file=sys.stderr)
+            sys.exit(1)
 
-        line = next(self.variantFile)
+        line = next(self.variant_file)
         self.linecount += 1
         if self.linecount % self.linecount_threshold == 0:
-            sys.stderr.write(str(self.linecount) + ' lines read\n')
-        return line.rstrip('\n').split('\t')
+            print(self.linecount, 'lines read', file=sys.stderr)
+        return line.rstrip('\n').split(self.opts.separator)
 
     def line_write(self, line):
         if self.mode != 'w':
-            sys.stderr.write('Cannot write in read mode!\n')
-            sys.exit(-78)
+            print('Cannot write in read mode!', file=sys.stderr)
+            sys.exit(1)
 
-        self.outfile.write('\t'.join([to_str(column)
-                                      for column in line]) + '\n')
+        self.outfile.write('\t'.join(
+            [to_str(column) for column in line]) + '\n')
 
 
 class ParquetFormat(AbstractFormat):
@@ -220,7 +224,7 @@ class ParquetFormat(AbstractFormat):
 
     def _cleanup(self):
         if self.mode == 'r':
-            sys.stderr.write('Processed ' + str(self.linecount) + ' lines.' + '\n')
+            print('Processed', self.linecount, 'lines.', file=sys.stderr)
         else:
             self._write_buffer()
             if self.opts.outfile != '-':
@@ -229,12 +233,14 @@ class ParquetFormat(AbstractFormat):
     def _read_row_group(self):
         if self.row_group_curr < self.row_group_count:
             if self.header is None:
-                pd_buffer = self.pqfile.read_row_group(self.row_group_curr).to_pandas()
+                pd_buffer = self.pqfile.read_row_group(
+                    self.row_group_curr).to_pandas()
                 self.header = [str(i) for i in list(pd_buffer)]
                 self.header[0] = self.header[0].strip('#')
                 self.row_group_buffer = pd_buffer.values
             else:
-                self.row_group_buffer = self.pqfile.read_row_group(self.row_group_curr).to_pandas().values
+                self.row_group_buffer = self.pqfile.read_row_group(
+                    self.row_group_curr).to_pandas().values
             self.row_group_buffer = self.row_group_buffer.tolist()
             self.row_group_curr += 1
 
@@ -243,8 +249,8 @@ class ParquetFormat(AbstractFormat):
 
     def line_read(self):
         if self.mode != 'r':
-            sys.stderr.write('Cannot read in write mode!\n')
-            sys.exit(-78)
+            print('Cannot read in write mode!', file=sys.stderr)
+            sys.exit(1)
 
         if not self.row_group_buffer:
             if self.row_group_curr >= self.row_group_count:
@@ -256,13 +262,13 @@ class ParquetFormat(AbstractFormat):
         self.row_group_buffer = self.row_group_buffer[1:]
         self.linecount += 1
         if self.linecount % self.linecount_threshold == 0:
-            sys.stderr.write(str(self.linecount) + ' lines read.\n')
+            print(self.linecount, 'lines read.', file=sys.stderr)
         return line
 
     def line_write(self, input_):
         if self.mode != 'w':
-            sys.stderr.write('Cannot write in read mode!\n')
-            sys.exit(-78)
+            print('Cannot write in read mode!', file=sys.stderr)
+            sys.exit(1)
 
         self.row_group_buffer.append(input_)
         if len(self.row_group_buffer) >= self.buffer_limit:
@@ -272,6 +278,7 @@ class ParquetFormat(AbstractFormat):
         buffer_df = pd.DataFrame(self.row_group_buffer, columns=self.header)
         buffer_table = pa.Table.from_pandas(buffer_df, preserve_index=False)
         if self.pq_writer is None:
-            self.pq_writer = pq.ParquetWriter(self.pqfile_out, buffer_table.schema)
+            self.pq_writer = pq.ParquetWriter(
+                self.pqfile_out, buffer_table.schema)
         self.pq_writer.write_table(buffer_table)
         self.row_group_buffer = []

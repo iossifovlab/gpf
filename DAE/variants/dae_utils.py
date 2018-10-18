@@ -3,6 +3,7 @@ Created on Mar 5, 2018
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import re
 
 from DAE import genomesDB

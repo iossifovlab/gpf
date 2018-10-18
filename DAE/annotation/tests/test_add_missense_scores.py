@@ -78,9 +78,12 @@ def setup_scores(scores):
 @pytest.fixture
 def annotator(setup_scores, config):
     opts = get_opts(setup_scores[1], config)
-    return MissenseScoresAnnotator(opts, header=['id', 'chrom', 'pos', 'variant', 'ref', 'alt'])
+    return MissenseScoresAnnotator(
+        opts, header=['id', 'chrom', 'pos', 'variant', 'ref', 'alt'])
 
 
 def test_missense_score(annotator, input_, expected_annotations):
-    annotations = [annotator.line_annotations(line, annotator.new_columns) for line in input_]
+    annotations = [
+        annotator.line_annotations(line, annotator.new_columns) 
+        for line in input_]
     assert (annotations == expected_annotations)

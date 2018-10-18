@@ -3,6 +3,7 @@ Created on Feb 7, 2018
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import os
 
 DATA_DIR = os.environ.get(

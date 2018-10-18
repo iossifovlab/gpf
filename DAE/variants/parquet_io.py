@@ -4,6 +4,7 @@ Created on May 30, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from builtins import str
 import sys
@@ -222,7 +223,7 @@ def family_variants_table(variants, batch_size=1000000):
 
 
 def save_family_variants_to_parquet(
-        variants, family_filename, allele_filename, batch_size=100000):
+        variants, allele_filename, batch_size=100000):
     allele_schema = family_allele_parquet_schema()
 
     allele_writer = pq.ParquetWriter(allele_filename, allele_schema)

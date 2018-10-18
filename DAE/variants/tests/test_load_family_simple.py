@@ -4,6 +4,7 @@ Created on Jul 23, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 import os
 
 import pytest

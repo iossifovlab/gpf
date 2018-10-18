@@ -1,4 +1,7 @@
 from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
+
 import pytest
 
 from variants.attributes_query_builder import is_token, and_node, or_node, \
@@ -234,7 +237,7 @@ def parse_and_transform(transformer_matcher, query, expr):
 
     if not expr:
         expr = []
-
+    print(isinstance(expr, str))
     if isinstance(expr, str):
         expr = expr.split(",")
 

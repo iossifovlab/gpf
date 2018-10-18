@@ -28,9 +28,9 @@ def get_contigs(tabixfilename):
         return tbx.contigs
 
 
-def convert_contig(contig, outprefix=None, config=None,):
+def import_dae_contig(contig, outdir, config):
     try:
-        print("converting contig {} to {}".format(contig, outprefix))
+        print("converting contig {} to {}".format(contig, outdir))
         print(config)
 
         assert isinstance(config, Configure)
@@ -39,27 +39,27 @@ def convert_contig(contig, outprefix=None, config=None,):
         assert os.path.exists(config.dae.family_filename)
 
         genome = get_genome()
+        region = contig
 
         dae = RawDAE(
             config.dae.summary_filename,
             config.dae.toomany_filename,
             config.dae.family_filename,
-            region=contig,
+            region=region,
             genome=genome,
             annotator=None)
 
         dae.load_families()
-
         df = dae.load_family_variants()
-
-        out = {"prefix": outprefix, "contig": contig}
-
-        summary_filename = "{prefix}_summary_variants_{contig}.parquet".format(
-            **out)
-        variants_filename = "{prefix}_family_variants_{contig}.parquet".format(
-            **out)
-        alleles_filename = "{prefix}_family_alleles_{contig}.parquet".format(
-            **out)
+        if len(df) == 0:
+            print("DONE EMTPY contig {}".format(contig))
+            return
+        summary_filename = os.path.join(
+            outdir,
+            "summary_variants_{}.parquet".format(contig))
+        alleles_filename = os.path.join(
+            outdir,
+            "family_alleles_{}.parquet".format(contig))
 
         save_summary_variants_to_parquet(
             dae.wrap_summary_variants(df),
@@ -67,7 +67,6 @@ def convert_contig(contig, outprefix=None, config=None,):
 
         save_family_variants_to_parquet(
             dae.wrap_family_variants(df),
-            variants_filename,
             alleles_filename)
 
     except Exception as ex:
@@ -119,9 +118,9 @@ def dae_build(argv):
     print("going to build: ", build_contigs)
 
     converter = functools.partial(
-        convert_contig,
+        import_dae_contig,
         config=config,
-        outprefix=argv.out)
+        outdir=argv.out)
 
     pool = multiprocessing.Pool(processes=argv.processes_count)
     pool.map(converter, build_contigs)
@@ -156,7 +155,6 @@ def denovo_build(argv):
 
     save_family_variants_to_parquet(
         denovo.wrap_family_variants(df),
-        parquet_config.parquet.family_variants,
         parquet_config.parquet.family_alleles)
 
 
@@ -165,12 +163,12 @@ def init_parser_denovo(subparsers):
 
     parser_denovo.add_argument(
         'variants', type=str,
-        metavar='variants filename',
+        metavar='<variants filename>',
         help='annotated variants file'
     )
     parser_denovo.add_argument(
         'families', type=str,
-        metavar='families filename',
+        metavar='<pedigree filename>',
         help='families file in pedigree format'
     )
     parser_denovo.add_argument(
@@ -184,19 +182,19 @@ def init_parser_dae(subparsers):
     parser_dae = subparsers.add_parser('dae')
 
     parser_dae.add_argument(
+        'families', type=str,
+        metavar='<pedigree filename>',
+        help='families file in pedigree format'
+    )
+    parser_dae.add_argument(
         'summary', type=str,
-        metavar='summary filename',
+        metavar='<summary filename>',
         help=''
     )
     parser_dae.add_argument(
         'toomany', type=str,
-        metavar='toomany filename',
+        metavar='<toomany filename>',
         help=''
-    )
-    parser_dae.add_argument(
-        'families', type=str,
-        metavar='families filename',
-        help='families file in pedigree format'
     )
     parser_dae.add_argument(
         '-o', '--out', type=str, default='./',
@@ -204,7 +202,7 @@ def init_parser_dae(subparsers):
         help='output filepath. If none specified, current directory is used'
     )
     parser_dae.add_argument(
-        '-p', '--processes', type=int, default=1,
+        '-p', '--processes', type=int, default=4,
         dest='processes_count', metavar='processes count',
         help='number of processes'
     )

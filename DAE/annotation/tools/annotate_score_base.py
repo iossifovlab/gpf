@@ -103,13 +103,13 @@ def normalize_value(score_value):
 class ScoreFile(object):
 
     def __init__(self, score_file_name, config_input):
-        self.name = score_file_name
+        self.filename = score_file_name
         self._load_config(config_input)
 
     def _load_config(self, config_input=None):
         # try default config path
         if config_input is None:
-            config_input = self.name + '.conf'
+            config_input = self.filename + '.conf'
         # config is dict case
         if isinstance(config_input, dict):
             self.config = Box(config_input,
@@ -123,11 +123,11 @@ class ScoreFile(object):
         else:
             print(
                 "You must provide a configuration file "
-                "for the score file '{}'.\n".format(self.name),
+                "for the score file '{}'.\n".format(self.filename),
                 file=sys.stderr)
-            sys.exit(-1)
+            sys.exit(1)
 
-        self.file = gzip.open(self.name, 'rt', encoding='utf8')
+        self.file = gzip.open(self.filename, 'rt', encoding='utf8')
         if self.config.header is None:
             header_str = self.file.readline().rstrip()
             if header_str[0] == '#':
@@ -151,16 +151,17 @@ class ScoreFile(object):
         self.scores_indices = [self.config.header.index(col)
                                for col in self.config.columns.score]
 
-    def _fetch(self, chrom, pos):
+    def _fetch(self, chrom, pos_begin, pos_end):
         raise NotImplementedError()
 
     def get_scores(self, new_columns, chrom, pos, *args):
         args = list(args)
         new_col_indices = [
-            give_column_number(col, self.config.header)-1 
+            give_column_number(col, self.config.header) - 1
             for col in new_columns]
         try:
-            for line in self._fetch(chrom, pos):
+            score_lines = self._fetch(chrom, pos, pos)
+            for line in score_lines:
                 if args == [line[i] for i in self.search_indices]:
                     return [line[i] for i in new_col_indices]
         except ValueError:
@@ -190,31 +191,77 @@ class IterativeAccess(ScoreFile):
             self.file_iterator = iter([])
         self.current_lines = [self._next_line()]
 
-    def _fetch(self, chrom, pos):
+    def _purge_line_buffer(self, chrom, pos_begin, pos_end):
+        # purge start of line buffer
+        while len(self.current_lines) > 0:
+            line = self.current_lines[0]
+            line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
+            if line_chrom > chrom or \
+                    (line_chrom == chrom and line_pos_end >= pos_begin):
+                break
+            self.current_lines.pop(0)
+
+    def _line_buffer_last_pos(self):
+        if len(self.current_lines) == 0:
+            return -1, -1, -1
+        return self._line_pos(self.current_lines[-1])
+
+    def _line_pos(self, line):
+        return self._chr_to_int(line[self.chr_index]), \
+            int(line[self.pos_begin_index]), \
+            int(line[self.pos_end_index])
+
+    def _fill_line_buffer(self, chrom, pos_begin, pos_end):
+        buffer_chrom, buffer_pos_begin, buffer_pos_end = \
+            self._line_buffer_last_pos()
+        if (buffer_chrom == chrom and buffer_pos_end > pos_end) or \
+                buffer_chrom > chrom:
+            # the line buffer is full enough
+            return
+        line = self._next_line()
+        line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
+        while line_chrom < chrom or \
+                (line_chrom == chrom and line_pos_end < pos_begin):
+            line = self._next_line()
+            line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
+
+        self.current_lines.append(line)
+        while line_chrom == chrom and pos_end <= line_pos_end:
+            line = self._next_line()
+            self.current_lines.append(line)
+            line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
+
+    def _regions_intersect(self, b1, e1, b2, e2):
+        if b1 >= b2 and b1 <= e2:
+            return True
+        if e1 >= b2 and e1 <= e2:
+            return True
+        if b2 >= b1 and b2 <= e1:
+            return True
+        if e2 >= b1 and e2 <= e1:
+            return True
+        return False
+
+    def _select_line_buffer(self, chrom, pos_begin, pos_end):
+        result = []
+        for line in self.current_lines:
+            line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
+            if line_chrom != chrom:
+                continue
+            if self._regions_intersect(
+                    pos_begin, pos_end,
+                    line_pos_begin, line_pos_end):
+                result.append(line)
+        return result
+
+    def _fetch(self, chrom, pos_begin, pos_end):
         chrom = self._chr_to_int(chrom)
 
-        for i in range(len(self.current_lines) - 1, -1, -1):
-            if self._chr_to_int(self.current_lines[i][self.chr_index]) < chrom or \
-                    int(self.current_lines[i][self.pos_end_index]) < pos:
-                del self.current_lines[0:i+1]
-                break
+        self._purge_line_buffer(chrom, pos_begin, pos_end)
 
-        if len(self.current_lines) == 0 or \
-                (int(self.current_lines[-1][self.pos_begin_index]) <= pos and
-                 self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chrom):
-
-            line = self._next_line()
-            while self._chr_to_int(line[self.chr_index]) <= chrom and \
-                    (int(line[self.pos_end_index]) < pos or
-                     self._chr_to_int(line[self.chr_index]) != chrom):
-                line = self._next_line()
-            self.current_lines.append(line)
-
-            while int(self.current_lines[-1][self.pos_begin_index]) <= pos and \
-                    self._chr_to_int(self.current_lines[-1][self.chr_index]) <= chrom:
-                self.current_lines.append(self._next_line())
-
-        return self.current_lines[:-1]
+        # fill the file buffer
+        self._fill_line_buffer(chrom, pos_begin, pos_end)
+        return self._select_line_buffer(chrom, pos_begin, pos_end)
 
     def _next_line(self):
         try:
@@ -226,9 +273,9 @@ class IterativeAccess(ScoreFile):
             line[self.pos_end_index] = '-1'
             return line
 
-    def _chr_to_int(self, chr):
-        chr = chr.replace('chr', '')
-        return self.XY_INDEX.get(chr) or int(chr)
+    def _chr_to_int(self, chrom):
+        chrom = chrom.replace('chr', '')
+        return self.XY_INDEX.get(chrom) or int(chrom)
 
 
 class DirectAccess(ScoreFile):
@@ -237,8 +284,9 @@ class DirectAccess(ScoreFile):
         super(DirectAccess, self).__init__(score_file_name, score_config)
         self.file = pysam.Tabixfile(score_file_name)
 
-    def _fetch(self, chr, pos):
-        return self.file.fetch(chr, pos-1, pos, parser=pysam.asTuple())
+    def _fetch(self, chrom, pos_begin, pos_end):
+        return self.file.fetch(
+            chrom, pos_begin-1, pos_end, parser=pysam.asTuple())
 
 
 class ScoreAnnotator(AnnotatorBase):
@@ -268,8 +316,8 @@ class ScoreAnnotator(AnnotatorBase):
 
     def _init_score_file(self):
         if not self.opts.scores_file:
-            sys.stderr.write("You should provide a score file location.\n")
-            sys.exit(-78)
+            print("You should provide a score file location.", file=sys.stderr)
+            sys.exit(1)
         else:
             if self.opts.direct:
                 self.file = DirectAccess(self.opts.scores_file,
@@ -290,7 +338,6 @@ class ScoreAnnotator(AnnotatorBase):
         if loc is not None:
             chr, pos = loc.split(':')
         if chr != '':
-            
             return [normalize_value(score)
                     for score
                     in self.file.get_scores(new_columns, chr, int(pos), *args)]
@@ -298,7 +345,9 @@ class ScoreAnnotator(AnnotatorBase):
             return [None for col in new_columns]
 
     def line_annotations(self, line, new_columns):
-        params = [line[i-1] if i is not None else None for i in self.arg_columns]
+        params = [
+            line[i-1] if i is not None else None for i in self.arg_columns
+        ]
         return self._get_scores(new_columns, *params)
 
 

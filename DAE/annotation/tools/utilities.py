@@ -10,7 +10,7 @@ from abc import ABCMeta, abstractmethod
 from .file_io import IOManager, IOType
 
 
-class AnnotatorBase():
+class AnnotatorBase(object):
     """
     `AnnotatorBase` is base class of all `Annotators` and `Preannotators`.
     """
@@ -55,7 +55,7 @@ def give_column_number(s, header):
         return len(header) - header[::-1].index(s)
     except Exception:
         print(
-            "Used parameter: " + s + 
+            "Used parameter: " + s +
             " does NOT exist in the input file header", file=sys.stderr)
         sys.exit(-1)
 
@@ -112,5 +112,5 @@ def main(argument_parser, annotator_factory,
     sys.stderr.write("# " + " ".join(sys.argv[1:]) + "\n")
 
     sys.stderr.write(
-        "The program was running for [h:m:s]: " + 
+        "The program was running for [h:m:s]: " +
         str(datetime.timedelta(seconds=round(time.time()-start, 0))) + "\n")

@@ -3,6 +3,7 @@ Created on Jul 5, 2018
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from variants.annotate_composite import AnnotatorBase
 from variants.vcf_utils import cshl_format
 from variants.attributes import VariantType

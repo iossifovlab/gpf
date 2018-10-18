@@ -3,6 +3,7 @@ Created on Feb 13, 2018
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from variants.attributes import Role, RoleQuery
 from variants.attributes import RoleQuery as RQ
 

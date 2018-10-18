@@ -1,10 +1,12 @@
+from __future__ import unicode_literals
+
 import pytest
 from io import StringIO
 from box import Box
 
 from annotation.annotation_pipeline import MultiAnnotator,\
     MyConfigParser, str_to_class
-from annotation.tools.duplicate_columns import\
+from annotation.tools.duplicate_columns import \
     DuplicateColumnsAnnotator
 
 
@@ -61,8 +63,10 @@ def mock(mocker):
     mocker.patch.object(MyConfigParser, 'read', MyConfigParser.readfp)
     mocker.patch('annotation.annotation_pipeline.str_to_class',
                  return_value=Annotator)
-    mocker.patch('annotation.annotation_pipeline.PreannotatorLoader.load_preannotators',
-                 return_value=[Preannotator()])
+    mocker.patch(
+        'annotation.annotation_pipeline.PreannotatorLoader.'
+        'load_preannotators',
+        return_value=[Preannotator()])
     mocker.patch('annotation.annotation_pipeline.exists',
                  return_value=True)
 
@@ -132,7 +136,10 @@ def output_default_args():
 def output_split_column():
     return [
         ['#id', 'location', 'variant', 'loc'],
-        ['5', '10:4372372973,1:8493943843', 'sub(G->A)', '10:4372372973,1:8493943843'],
+        [
+            '5', '10:4372372973,1:8493943843',
+            'sub(G->A)', '10:4372372973,1:8493943843'
+        ],
     ]
 
 
@@ -223,7 +230,8 @@ def test_str_to_class():
     (input_base(), options_default_args_alt(), output_default_args()),
     (input_base(), options_virtuals(), output_base()),
     (input_split_column(), options_split_column(), output_split_column()),
-    (input_multiple_headers(), options_multiple_headers(), output_multiple_headers())
+    (input_multiple_headers(), options_multiple_headers(),
+        output_multiple_headers())
 ])
 def test_annotators_tsv(input_file, options, expected_output):
     io = DummyIOAdapter(input_file)
