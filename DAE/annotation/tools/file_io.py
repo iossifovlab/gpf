@@ -8,6 +8,15 @@ import pyarrow.parquet as pq
 from abc import ABCMeta, abstractmethod
 
 
+def to_str(column_value):
+    if isinstance(column_value, list):
+        return '|'.join(map(to_str, column_value))
+    elif column_value is None:
+        return ''
+    else:
+        return str(column_value)
+
+
 def assert_file_exists(filepath):
     if filepath != '-' and os.path.exists(filepath) is False:
         sys.stderr.write(
@@ -71,7 +80,7 @@ class Schema:
 
             if col_type is None:
                 col_type = self.column_map[column]
-                
+
             elif self.column_map[column] != col_type:
                 print('Error - attempted merging columns with different types!')
                 print(columns)
@@ -225,15 +234,6 @@ class AbstractFormat(object):
         pass
 
 
-def to_str(column_value):
-    if isinstance(column_value, list):
-        return '|'.join(map(to_str, column_value))
-    elif column_value is None:
-        return ''
-    else:
-        return str(column_value)
-
-
 class TSVFormat(AbstractFormat):
 
     def __init__(self, opts, mode):
@@ -316,6 +316,7 @@ class ParquetFormat(AbstractFormat):
         super(ParquetFormat, self).__init__(opts, mode)
 
         self.row_group_buffer = []
+        self.column_buffer = {}
         if self.mode == 'w':
             self.buffer_size = buffer_size
             self.column_buffer = {}
@@ -325,8 +326,10 @@ class ParquetFormat(AbstractFormat):
             if self.opts.infile != '-':
                 assert_file_exists(self.opts.infile)
                 self.pqfile = pq.ParquetFile(self.opts.infile)
+                self.header = self.pqfile.schema.to_arrow_schema().names
                 self.row_group_count = self.pqfile.num_row_groups
                 self.row_group_curr = 0
+                self.curr_line = 0
             else:
                 self.variantFile = sys.stdin
             self._read_row_group()
@@ -348,15 +351,13 @@ class ParquetFormat(AbstractFormat):
 
     def _read_row_group(self):
         if self.row_group_curr < self.row_group_count:
-            if self.header is None:
-                pd_buffer = self.pqfile.read_row_group(self.row_group_curr).to_pandas()
-                self.header = [str(i) for i in list(pd_buffer)]
-                self.header[0] = self.header[0].strip('#')
-                self.row_group_buffer = pd_buffer.values
-            else:
-                self.row_group_buffer = self.pqfile.read_row_group(self.row_group_curr).to_pandas().values
-            self.row_group_buffer = self.row_group_buffer.tolist()
+            for col in self.header:
+                self.column_buffer[col] = []
+
+            row_group_buffer = self.pqfile.read_row_group(self.row_group_curr)
             self.row_group_curr += 1
+            for col in row_group_buffer.itercolumns():
+                self.column_buffer[col.name] = col.data.to_pylist()
 
     def header_write(self, input_):
         self.header = input_
@@ -369,18 +370,21 @@ class ParquetFormat(AbstractFormat):
             sys.stderr.write('Cannot read in write mode!\n')
             sys.exit(-78)
 
-        if not self.row_group_buffer:
+        line = []
+        for col_name, col_data in self.column_buffer.items():
+            line.append(col_data[self.curr_line])
+
+        self.linecount += 1
+        self.curr_line += 1
+        if self.curr_line == len(col_data):
+            self.curr_line = 0
             if self.row_group_curr >= self.row_group_count:
                 return ['']  # EOF
             else:
                 self._read_row_group()
-
-        line = self.row_group_buffer[0]
-        self.row_group_buffer = self.row_group_buffer[1:]
-        self.linecount += 1
         if self.linecount % self.linecount_threshold == 0:
             sys.stderr.write(str(self.linecount) + ' lines read.\n')
-        return line
+        return list(map(to_str, line))
 
     def line_write(self, line):
         if self.mode != 'w':
