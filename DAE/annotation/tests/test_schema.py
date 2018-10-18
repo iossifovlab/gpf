@@ -55,8 +55,17 @@ def test_merge_columns():
 
 def test_query_by_type():
     schema = Schema([('str', 'col1,col2,col3'),
-                       ('float', 'col4,col5,col6',)])
+                     ('float', 'col4,col5,col6',)])
     expected_str_cols = ['col1','col2', 'col3']
     expected_float_cols = ['col4','col5', 'col6']
     assert(schema.type_query('str') == expected_str_cols)
     assert(schema.type_query('float') == expected_float_cols)
+
+
+def test_column_coercion():
+    schema = Schema([('str', 'col1'),
+                     ('float', 'col2',)])
+    col1 = [1,2.5,3,'a',-5,6,'b']
+    col2 = [1.5, 4.3, '-3.4', '6.4', 5.0]
+    assert(schema.coerce_column(col1, 'col1') == list(map(str, col1)))
+    assert(schema.coerce_column(col2, 'col2') == list(map(float, col2)))

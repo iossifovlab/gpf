@@ -90,22 +90,6 @@ def conf_to_dict(path):
     return conf_settings
 
 
-def normalize_value(score_value):
-    if ';' in score_value:
-        result = score_value.split(';')
-    elif ',' in score_value:
-        result = score_value.split(',')
-    else:
-        result = [score_value]
-    try:
-        return [None if value in ['.', ''] else float(value)
-                for value in result]
-    except ValueError:
-        print('Error encountered when normalizing score value *{}*!'.format(score_value))
-        print('This is likely caused due to an error in the score config schema.')
-        return None
-
-
 class ScoreFile(object):
 
     def __init__(self, score_file_name, config_input):
@@ -302,23 +286,11 @@ class ScoreAnnotator(AnnotatorBase):
     def schema(self):
         return self.schema_
 
-    def normalize_column(self, value, column_index, new_columns):
-        column_name = new_columns[column_index]
-        float_cols = self.file.config.schema.type_query('float')
-        if column_name in float_cols:
-            value = normalize_value(value)
-            if value is None:
-                print('Normalization error occured for column *{}*.'.format(column_name))
-                sys.exit(-1)
-        return value
-
     def _get_scores(self, new_columns, chr=None, pos=None, loc=None, *args):
         if loc is not None:
             chr, pos = loc.split(':')
         if chr != '':
-            scores = self.file.get_scores(new_columns, chr, int(pos), *args)
-            return [self.normalize_column(score, scores.index(score), new_columns)
-                    for score in scores]
+            return [self.file.get_scores(new_columns, chr, int(pos), *args)]
         else:
             return [None for col in new_columns]
 

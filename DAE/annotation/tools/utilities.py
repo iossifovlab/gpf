@@ -112,6 +112,7 @@ def main(argument_parser, annotator_factory,
 
     with IOManager(opts, reader_type, writer_type) as io_manager:
         annotator = annotator_factory(opts=opts, header=io_manager.header)
+        io_manager.set_schema(annotator.schema)
         annotator.annotate_file(io_manager)
 
     sys.stderr.write("# PROCESSING DETAILS:\n")

@@ -75,12 +75,11 @@ class MultiAnnotator(object):
         else:
             self._init_config(opts)
 
-        self._init_schema(header)
-
         self.column_indices = {label: assign_values(label, self.header)
                                for label in self.all_columns_labels}
         self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
                                        if i not in self.virtual_columns_indices]
+        self._init_schema(header, self.stored_columns_indices)
 
         if opts.split is None:
             self._split_variant = lambda v: [v]
@@ -155,7 +154,11 @@ class MultiAnnotator(object):
                 'columns': annotation_step_config.columns
             })
 
-    def _init_schema(self, header):
+    def _init_schema(self, header, col_indices):
+        # TODO Can a base score annotator
+        # add more than one column to the output file?
+        # This method currently assumes that that a base
+        # score annotator adds only one new column.
         self.schema_ = file_io.Schema([('str', ','.join(header))])
         for annotator in self.annotators:
             if hasattr(annotator['instance'], 'annotators'):
@@ -167,6 +170,11 @@ class MultiAnnotator(object):
                 new_name = list(annotator['columns'].values())[0]
                 annotator['instance'].schema.merge_columns(annotator['instance'].new_columns, new_name)
             self.schema_.merge(annotator['instance'].schema)
+
+        # Trim unused columns
+        trim_header = [self.header[idx-1] for idx in range(1, len(self.header)+1) if idx not in col_indices]
+        for col in trim_header:
+            del(self.schema.column_map[col])
 
     def _split_variant(self, line):
         return [line[:self.split_index-1] + [value] + line[self.split_index:]

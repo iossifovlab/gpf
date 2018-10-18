@@ -175,11 +175,10 @@ class MultipleScoresAnnotator(AnnotatorBase):
             annotator = self.annotators[col]
             annotations = annotator.line_annotations(line,
                                                      annotator.new_columns)
-            for scores in annotations:
-                if len(scores) == 1:
-                    result.append(scores[0])
-                else:
-                    result.append([value for score in scores for value in score])
+            if len(annotations) == 1:
+                result.append(annotations[0])
+            else:
+                return annotations
         return result
 
 
