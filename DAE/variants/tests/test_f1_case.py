@@ -6,7 +6,7 @@ Created on Jul 12, 2018
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from variants.vcf_utils import mat2str
+from utils.vcf_utils import mat2str
 from variants.attributes_query import inheritance_query
 from variants.attributes import Inheritance
 import pytest

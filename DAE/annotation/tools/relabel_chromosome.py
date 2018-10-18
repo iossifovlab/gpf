@@ -2,9 +2,9 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
-import sys
 import argparse
-from .utilities import *
+from .utilities import AnnotatorBase, assign_values, main
+
 
 def get_argument_parser():
     """
@@ -28,9 +28,14 @@ def get_argument_parser():
     """
     desc = """Program to relabel chromosome with or without 'chr' prefix"""
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument('-c', help='chromosome column number/name', action='store')
-    parser.add_argument('-H', help='no header in the input file', default=False,  action='store_true', dest='no_header')
-    parser.add_argument('--new-c', help='name for the generated chromosome column', default='relabledChr', action='store')
+    parser.add_argument(
+        '-c', help='chromosome column number/name', action='store')
+    parser.add_argument(
+        '-H', help='no header in the input file',
+        default=False,  action='store_true', dest='no_header')
+    parser.add_argument(
+        '--new-c', help='name for the generated chromosome column',
+        default='relabledChr', action='store')
     return parser
 
 

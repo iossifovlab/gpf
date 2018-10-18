@@ -1,0 +1,66 @@
+import pytest
+from .utils import relative_to_this_test_folder
+from annotation.tools.annotate_score_base import IterativeAccess, \
+    DirectAccess
+
+
+def test_iterative_access_simple():
+    score_filename = relative_to_this_test_folder(
+        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+    score_config = None
+
+    score_io = IterativeAccess(score_filename, score_config)
+    assert score_io is not None
+
+    for line in score_io._fetch("1", 10918, 10919):
+        print(list(line))
+
+    lines = list(score_io._fetch("1", 10918, 10920))
+    for line in lines:
+        print(list(line))
+
+    res = score_io.fetch_score_lines("1", 10918, 10920)
+    print(res)
+    for line in res:
+        print(line.columns)
+
+    res = score_io.fetch_score_lines("1", 10934, 10934)
+
+    assert len(res) == 1
+    line = res[0]
+    print(line.columns)
+
+    assert float(line.columns['TESTphastCons100way']) == \
+        pytest.approx(0.204, 1E-3)
+
+
+def test_direct_access_simple():
+    score_filename = relative_to_this_test_folder(
+        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+    score_config = None
+
+    score_io = DirectAccess(score_filename, score_config)
+    assert score_io is not None
+
+    for line in score_io._fetch("1", 10918, 10919):
+        print(list(line))
+
+    lines = list(score_io._fetch("1", 10918, 10920))
+    for line in lines:
+        print(list(line))
+
+    res = score_io.fetch_score_lines("1", 10918, 10920)
+    print(res)
+    assert len(res) == 2
+
+    for line in res:
+        print(line.columns)
+
+    res = score_io.fetch_score_lines("1", 10934, 10934)
+
+    assert len(res) == 1
+    line = res[0]
+    print(line.columns)
+
+    assert float(line.columns['TESTphastCons100way']) == \
+        pytest.approx(0.204, 1E-3)

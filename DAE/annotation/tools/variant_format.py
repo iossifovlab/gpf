@@ -1,7 +1,7 @@
 import GenomeAccess
 from annotation.tools.utilities import AnnotatorBase, assign_values
 from utils.vcf import cshl_format
-from utils.dae import dae2vcf_variant
+from utils.dae_utils import dae2vcf_variant
 from variants.variant import SummaryAllele
 
 
@@ -62,7 +62,8 @@ class VariantFormatPreannotator(AnnotatorBase):
     def __init__(self, opts, header=None):
         self._new_columns = [
             'CSHL:location', 'CSHL:chr', 'CSHL:position', 'CSHL:variant',
-            'VCF:chr', 'VCF:position', 'VCF:ref', 'VCF:alt'
+            'VCF:chr', 'VCF:position', 'VCF:ref', 'VCF:alt',
+            'internal:summary'
         ]
         if opts.vcf:
             if opts.c is None:
@@ -107,14 +108,14 @@ class VariantFormatPreannotator(AnnotatorBase):
             chromosome, vcf_position, ref, alt
         )
         return {
-            'CSHL:location': location,
-            'CSHL:chr': chromosome,
-            'CSHL:position': str(position),
-            'CSHL:variant': variant,
-            'VCF:chr': chromosome,
-            'VCF:position': str(vcf_position),
-            'VCF:ref': ref,
-            'VCF:alt': alt,
+            'CSHL:location': summary.details.cshl_location,
+            'CSHL:chr': summary.chromosome,
+            'CSHL:position': summary.details.cshl_position,
+            'CSHL:variant': summary.details.cshl_variant,
+            'VCF:chr': summary.chromosome,
+            'VCF:position': summary.position,
+            'VCF:ref': summary.reference,
+            'VCF:alt': summary.alternative,
             'internal:summary': summary,
         }
 
@@ -125,14 +126,14 @@ class VariantFormatPreannotator(AnnotatorBase):
             chromosome, position, reference, alternative
         )
         return {
-            'CSHL:location': '{}:{}'.format(chromosome, cshl_position),
-            'CSHL:chr': chromosome,
-            'CSHL:position': str(cshl_position),
-            'CSHL:variant': variant,
-            'VCF:chr': chromosome,
-            'VCF:position': str(position),
-            'VCF:ref': reference,
-            'VCF:alt': alternative,
+            'CSHL:location': summary.details.cshl_location,
+            'CSHL:chr': summary.chromosome,
+            'CSHL:position': summary.details.cshl_position,
+            'CSHL:variant': summary.details.cshl_variant,
+            'VCF:chr': summary.chromosome,
+            'VCF:position': summary.position,
+            'VCF:ref': summary.reference,
+            'VCF:alt': summary.alternative,
             'internal:summary': summary,
         }
 

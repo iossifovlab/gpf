@@ -13,7 +13,7 @@ Example usage of `variants` package::
     from __future__ import print_function
     
     import os
-    from variants.vcf_utils import mat2str
+    from utils.vcf_utils import mat2str
     from variants.builder import variants_builder as VB
     
     prefix = "ivan-tiny/a"

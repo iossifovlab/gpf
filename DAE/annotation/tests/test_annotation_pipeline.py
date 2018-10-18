@@ -67,7 +67,7 @@ def mock(mocker):
         'annotation.annotation_pipeline.PreannotatorLoader.'
         'load_preannotators',
         return_value=[Preannotator()])
-    mocker.patch('annotation.annotation_pipeline.exists',
+    mocker.patch('os.path.exists',
                  return_value=True)
 
 
@@ -91,21 +91,21 @@ def input_base():
         ['1', '4:4372372973', 'sub(A->C)'],
         ['5', '10:4372372973', 'sub(G->A)'],
         ['3', 'X:4372', 'ins(AAA)'],
-        ['6', 'Y:4372372973', 'del(2)']
+        ['6', 'Y:4372', 'del(2)']
     ]
 
 
-def input_split_column():
-    return [
-        ['5', '10:4372372973,1:8493943843', 'sub(G->A)'],
-    ]
+# def input_split_column():
+#     return [
+#         ['5', '10:4372372973,1:8493943843', 'sub(G->A)'],
+#     ]
 
 
 def input_multiple_headers():
-    input_ = input_base()
-    input_.insert(0, ['#Second header'])
-    input_.insert(3, ['#Last header'])
-    return input_
+    data = input_base()
+    data.insert(0, ['#Second header'])
+    data.insert(3, ['#Last header'])
+    return data
 
 
 def output_base():
@@ -114,7 +114,7 @@ def output_base():
         ['1', '4:4372372973', 'sub(A->C)', '4:4372372973'],
         ['5', '10:4372372973', 'sub(G->A)', '10:4372372973'],
         ['3', 'X:4372', 'ins(AAA)', 'X:4372'],
-        ['6', 'Y:4372372973', 'del(2)', 'Y:4372372973']
+        ['6', 'Y:4372', 'del(2)', 'Y:4372']
     ]
 
 
@@ -124,7 +124,7 @@ def output_reannotate():
         ['1', 'def_arg:4:4372372973', 'sub(A->C)'],
         ['5', 'def_arg:10:4372372973', 'sub(G->A)'],
         ['3', 'def_arg:X:4372', 'ins(AAA)'],
-        ['6', 'def_arg:Y:4372372973', 'del(2)']
+        ['6', 'def_arg:Y:4372', 'del(2)']
     ]
 
 
@@ -133,14 +133,14 @@ def output_default_args():
             for line in output_base()]
 
 
-def output_split_column():
-    return [
-        ['#id', 'location', 'variant', 'loc'],
-        [
-            '5', '10:4372372973,1:8493943843',
-            'sub(G->A)', '10:4372372973,1:8493943843'
-        ],
-    ]
+# def output_split_column():
+#     return [
+#         ['#id', 'location', 'variant', 'loc'],
+#         [
+#             '5', '10:4372372973,1:8493943843',
+#             'sub(G->A)', '10:4372372973,1:8493943843'
+#         ],
+#     ]
 
 
 def output_multiple_headers():
@@ -201,12 +201,12 @@ def options_virtuals():
     return get_opts(config)
 
 
-def options_split_column():
-    config = (
-        '[Add location]\n'
-        'options.columns=location\n'
-        'columns.location=loc\n')
-    return get_opts(config, split='location', split_separator='|')
+# def options_split_column():
+#     config = (
+#         '[Add location]\n'
+#         'options.columns=location\n'
+#         'columns.location=loc\n')
+#     return get_opts(config, split='location', split_separator='|')
 
 
 def options_multiple_headers():
@@ -229,7 +229,7 @@ def test_str_to_class():
     (input_base(), options_default_args(), output_default_args()),
     (input_base(), options_default_args_alt(), output_default_args()),
     (input_base(), options_virtuals(), output_base()),
-    (input_split_column(), options_split_column(), output_split_column()),
+    # (input_split_column(), options_split_column(), output_split_column()),
     (input_multiple_headers(), options_multiple_headers(),
         output_multiple_headers())
 ])

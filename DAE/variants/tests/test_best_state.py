@@ -4,7 +4,7 @@ Created on Mar 19, 2018
 @author: lubo
 '''
 from __future__ import unicode_literals
-from variants.vcf_utils import mat2str
+from utils.vcf_utils import mat2str
 from RegionOperations import Region
 
 

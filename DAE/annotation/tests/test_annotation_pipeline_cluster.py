@@ -26,7 +26,6 @@ def config():
     return deepcopy(input_output.CONFIG)
 
 
-@pytest.fixture
 def variant_db_config():
     return MyStringIO(deepcopy(configs.VARIANT_DB_CONFIG))
 

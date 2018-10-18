@@ -6,10 +6,12 @@ import gzip
 import pysam
 import argparse
 from configparser import ConfigParser
-from os.path import exists
+import os
 from box import Box
-
-from .utilities import AnnotatorBase, assign_values, main, give_column_number
+from annotation.tools.annotator_config import LineConfig
+from annotation.tools.utilities import AnnotatorBase, \
+    assign_values, main, give_column_number
+# from annotation.preannotators import variant_format
 
 
 def get_argument_parser():
@@ -75,6 +77,10 @@ def get_argument_parser():
         help='labels of the new column; '
         'defaults to the name of the score column',
         type=str, action='store')
+
+    # for name, args in variant_format.get_arguments().items():
+    #     parser.add_argument(name, **args)
+
     return parser
 
 
@@ -105,6 +111,7 @@ class ScoreFile(object):
     def __init__(self, score_file_name, config_input):
         self.filename = score_file_name
         self._load_config(config_input)
+        self.line_config = LineConfig(self.config.header)
 
     def _load_config(self, config_input=None):
         # try default config path
@@ -114,7 +121,7 @@ class ScoreFile(object):
         if isinstance(config_input, dict):
             self.config = Box(config_input,
                               default_box=True, default_box_attr=None)
-        elif exists(config_input):
+        elif os.path.exists(config_input):
             with open(config_input, 'r') as conf_file:
                 conf_settings = conf_to_dict(conf_file)
                 self.config = Box(
@@ -153,6 +160,13 @@ class ScoreFile(object):
 
     def _fetch(self, chrom, pos_begin, pos_end):
         raise NotImplementedError()
+
+    def fetch_score_lines(self, chrom, pos_begin, pos_end):
+        score_lines = self._fetch(chrom, pos_begin, pos_end)
+        res = []
+        for line in score_lines:
+            res.append(self.line_config.build(list(line)))
+        return res
 
     def get_scores(self, new_columns, chrom, pos, *args):
         args = list(args)
@@ -260,7 +274,7 @@ class IterativeAccess(ScoreFile):
         self._purge_line_buffer(chrom, pos_begin, pos_end)
 
         # fill the file buffer
-        self._fill_line_buffer(chrom, pos_begin, pos_end)
+        self._fill_line_buffer(chrom, pos_begin, pos_end+1)
         return self._select_line_buffer(chrom, pos_begin, pos_end)
 
     def _next_line(self):
@@ -318,14 +332,16 @@ class ScoreAnnotator(AnnotatorBase):
         if not self.opts.scores_file:
             print("You should provide a score file location.", file=sys.stderr)
             sys.exit(1)
+
+        if self.opts.direct:
+            self.file = DirectAccess(
+                self.opts.scores_file,
+                self.opts.scores_config_file)
         else:
-            if self.opts.direct:
-                self.file = DirectAccess(self.opts.scores_file,
-                                         self.opts.scores_config_file)
-            else:
-                self.file = IterativeAccess(self.opts.scores_file,
-                                            self.opts.scores_config_file,
-                                            self.opts.region)
+            self.file = IterativeAccess(
+                self.opts.scores_file,
+                self.opts.scores_config_file,
+                self.opts.region)
 
         self.header.extend(self.labels if self.labels
                            else self.file.config.columns.score)

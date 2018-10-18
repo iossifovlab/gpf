@@ -8,9 +8,6 @@ from os import listdir
 import os.path
 import argparse
 from box import Box
-from future import standard_library
-standard_library.install_aliases()
-from configparser import ConfigParser
 
 from .utilities import AnnotatorBase, main
 from .annotate_score_base import ScoreAnnotator
@@ -20,10 +17,11 @@ def get_argument_parser():
     """
     MultipleScoresAnnotator options::
 
-        usage: annotate_with_multiple_scores.py [-h] [-c C] [-p P] [-x X] [-H]
-                                        [-D SCORES_DIRECTORY] [--direct]
-                                        [--scores SCORES] [--labels LABELS]
-                                        [infile] [outfile]
+        usage: annotate_with_multiple_scores.py [-h]
+                                [-c C] [-p P] [-x X] [-H]
+                                [-D SCORES_DIRECTORY] [--direct]
+                                [--scores SCORES] [--labels LABELS]
+                                [infile] [outfile]
 
         Program to annotate variants with multiple score files
 
@@ -38,48 +36,62 @@ def get_argument_parser():
           -x X                  location (chr:pos) column number/name
           -H                    no header in the input file
           -D SCORES_DIRECTORY, --scores-directory SCORES_DIRECTORY
-                                directory containing the scores - each score should
-                                have its own subdirectory (defaults to $GFD_DIR)
-          --direct              read score files using tabix index (default: read
-                                score files iteratively)
+                                directory containing the scores - each score
+                                should have its own subdirectory
+                                (defaults to $GFD_DIR)
+          --direct              read score files using tabix index
+                                (default: read score files iteratively)
           --scores SCORES       comma separated list of scores to annotate with
-          --labels LABELS       comma separated list of labels for the new columns in
-                                the output file (defaults to score names)
+          --labels LABELS       comma separated list of labels for the new
+                                columns in the output file
+                                (defaults to score names)
     """
     desc = """Program to annotate variants with multiple score files"""
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument('-c', help='chromosome column number/name', action='store')
-    parser.add_argument('-p', help='position column number/name', action='store')
-    parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
-    parser.add_argument('-H',
-                        help='no header in the input file', default=False,
-                        action='store_true', dest='no_header')
-    parser.add_argument('-D', '--scores-directory',
-                        help='directory containing the scores - each score should have its own subdirectory '
-                        '(defaults to $GFD_DIR)',
-                        action='store')
-    parser.add_argument('--direct',
-                        help='read score files using tabix index '
-                        '(default: read score files iteratively)',
-                        default=False, action='store_true')
-    parser.add_argument('--scores',
-                        help='comma separated list of scores to annotate with',
-                        action='store')
-    parser.add_argument('--labels',
-                        help='comma separated list of labels for the new columns in the output file '
-                        '(defaults to score names)',
-                        action='store')
+    parser.add_argument(
+        '-c', help='chromosome column number/name', action='store')
+    parser.add_argument(
+        '-p', help='position column number/name', action='store')
+    parser.add_argument(
+        '-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_argument(
+        '-H',
+        help='no header in the input file', default=False,
+        action='store_true', dest='no_header')
+    parser.add_argument(
+        '-D', '--scores-directory',
+        help='directory containing the scores - each score should have its '
+        'own subdirectory (defaults to $GFD_DIR)',
+        action='store')
+    parser.add_argument(
+        '--direct',
+        help='read score files using tabix index '
+        '(default: read score files iteratively)',
+        default=False, action='store_true')
+    parser.add_argument(
+        '--scores',
+        help='comma separated list of scores to annotate with',
+        action='store')
+    parser.add_argument(
+        '--labels',
+        help='comma separated list of labels for the new columns in the '
+        'output file (defaults to score names)',
+        action='store')
     return parser
 
 
 def get_dirs(path):
     path = os.path.abspath(path)
-    return [path + '/' + dir_ for dir_ in listdir(path) if len(dir_.split('.')) == 1]
+    return [
+        path + '/' + dir_ 
+        for dir_ in listdir(path) if len(dir_.split('.')) == 1]
 
 
 def get_files(path):
     path = os.path.abspath(path)
-    return [path + '/' + dir_ for dir_ in listdir(path) if len(dir_.split('.')) > 1]
+    return [
+        path + '/' + dir_ 
+        for dir_ in listdir(path) if len(dir_.split('.')) > 1]
 
 
 def get_score(path):
@@ -124,14 +136,17 @@ class MultipleScoresAnnotator(AnnotatorBase):
 
     def _annotator_for(self, score):
         if score not in self.annotators:
-            score_dir = '{dir}/{score}'.format(dir=self.scores_directory, score=score) 
+            score_dir = '{dir}/{score}'.format(
+                dir=self.scores_directory, score=score) 
             score_file = None
             for file in get_files(score_dir):
                 if file[-3:] == '.gz':
                     score_file = file
                     break
             if score_file is None:
-                sys.stderr.write('could not find score file for score {}'.format(score))
+                print(
+                    'could not find score file for score',
+                    score, file=sys.stderr)
             if self.opts.direct:
                 assert_tabix(score_file)
 
@@ -146,7 +161,8 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 'labels': self.opts.labels,
             }
 
-            score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
+            score_annotator_opts = Box(
+                config, default_box=True, default_box_attr=None)
             self.annotators[score] = ScoreAnnotator(score_annotator_opts,
                                                     list(self.header))
 
@@ -163,9 +179,11 @@ class MultipleScoresAnnotator(AnnotatorBase):
         result = []
         for col in new_cols_order:
             annotator = self._annotator_for(col)
-            annotations = annotator.line_annotations(line,
-                                                     annotator.new_columns)
-            result.append([value for scores in annotations for value in scores])
+            annotations = annotator.line_annotations(
+                line,
+                annotator.new_columns)
+            result.append([
+                value for scores in annotations for value in scores])
         return result
 
 

@@ -58,6 +58,14 @@ class IOManager(object):
         self.reader._cleanup()
         self.writer._cleanup()
 
+    def _setup(self):
+        self.reader._setup()
+        self.writer._setup()
+
+    def _cleanup(self):
+        self.reader._cleanup()
+        self.writer._cleanup()
+
     @property
     def header(self):
         return self.reader.header
@@ -133,8 +141,11 @@ class TSVFormat(AbstractFormat):
                 self.variant_file = sys.stdin
             else:
                 assert_file_exists(self.opts.infile)
+                if hasattr(self.opts, 'region'):
+                    region = self.opts.region
+                else:
+                    region = None
 
-                region = self.opts.get('region', None)
                 if region is None:
                     self.variant_file = open(self.opts.infile, 'r')
                 else:
@@ -193,7 +204,8 @@ class TSVFormat(AbstractFormat):
             sys.exit(1)
 
         self.outfile.write('\t'.join(
-            [to_str(column) for column in line]) + '\n')
+            [to_str(column) for column in line]))
+        self.outfile.write('\n')
 
 
 class ParquetFormat(AbstractFormat):

@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import numpy as np
 from variants.family_variant import FamilyAllele as FA
 
-from variants.vcf_utils import mat2str
+from utils.vcf_utils import mat2str
 
 
 def test_inheritance_trio_denovo_omissions(variants_vcf):
