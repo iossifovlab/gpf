@@ -157,7 +157,7 @@ class FamiliesBase(object):
             ped_df['sampleId'] = sample_ids
         else:
             sample_ids = ped_df.apply(
-                lambda r: r.personId if np.isnan(r.sampleId) else r.sampleId,
+                lambda r: r.personId if pd.isna(r.sampleId) else r.sampleId,
                 axis=1,
                 result_type='reduce',
             )
