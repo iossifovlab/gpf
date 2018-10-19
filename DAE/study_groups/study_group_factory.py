@@ -2,7 +2,7 @@ import logging
 
 from studies.study_definition import SingleFileStudiesDefinition
 from studies.study_factory import StudyFactory
-from study_groups.study_group import StudyGroup
+from study_groups.study_group import StudyGroupWrapper
 from study_groups.study_group_config import StudyGroupConfig
 
 
@@ -11,7 +11,7 @@ LOGGER = logging.getLogger(__name__)
 
 class StudyGroupFactory(object):
 
-    def __init__(self, studies_definition=None, _class=StudyGroup):
+    def __init__(self, studies_definition=None, _class=StudyGroupWrapper):
         if studies_definition is None:
             studies_definition = SingleFileStudiesDefinition()
 

@@ -89,6 +89,7 @@ class StudyGroupWrapper(StudyGroup):
     # ultraRareOnly
     # TMM_ALL
     def get_variants(self, **kwargs):
+        print("kwargs in study group:", kwargs)
         limit = None
         if 'limit' in kwargs:
             limit = kwargs['limit']

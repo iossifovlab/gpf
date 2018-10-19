@@ -15,15 +15,12 @@ from itertools import chain, product
 from collections import OrderedDict
 import pickle
 import logging
-from pprint import pprint
 
 # from denovo_gene_sets import build_denovo_gene_sets
 from gene.config import GeneInfoConfig
-from datasets.config_old import DatasetsConfig
 from datasets.metadataset import MetaDataset
 from GeneTerms import loadGeneTerm
 # from DAE import vDB
-import DAE
 from pheno.common import Status
 from study_groups.study_group_facade import StudyGroupFacade
 from variants.attributes import Inheritance
@@ -131,7 +128,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 self._get_att_list(
                     'standardCriterias.{}.segments'.format(
                         standard_criteria_id)))
-            print(segments_arrs)
             self.standard_criterias.append(
                 [{
                     'property': standard_criteria_id,
@@ -185,7 +181,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _get_study_groups(self, study_groups=None):
         if study_groups is None:
             study_groups = self.study_group_pedigree_selectors.keys()
-        print(study_groups)
         return [
             self.study_group_facade.get_study_group(study_group_id)
             for study_group_id in study_groups
@@ -209,7 +204,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return [p['id'] for p in res[dataset_id]['phenotypes']]
 
     def _get_configured_dataset_legend(self, dataset_desc):
-        print(self.study_group_pedigree_selectors)
         configured_pedigree_selector_id = self.study_group_pedigree_selectors[
             dataset_desc.name]['source']
         for pedigree_selector in dataset_desc.pedigreeSelectors:

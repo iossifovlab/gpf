@@ -189,7 +189,7 @@ def transform_variants_to_lists(variants, attrs):
                 else:
                     row_variant.append(str(getattr(v, attr, '')))
             except (AttributeError, KeyError) as e:
-                print(attr, type(e), e)
+                # print(attr, type(e), e)
                 row_variant.append('')
         yield row_variant
 
