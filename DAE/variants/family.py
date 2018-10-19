@@ -29,6 +29,7 @@ class Person(object):
         self.status = atts['status']
         self.mom = atts['momId']
         self.dad = atts['dadId']
+        self.layout_position = atts.get('layoutCoords', None)
 
     def __repr__(self):
         return "Person({} ({}); {}; {})".format(
@@ -137,6 +138,7 @@ class FamiliesBase(object):
                 'role': lambda r: Role.from_name(r),
                 'sex': lambda s: Sex.from_value(s),
                 'gender': lambda s: Sex.from_value(s),
+                'layoutCoords': lambda lc: lc.split(':')[1],
             },
             dtype={
                 'familyId': str,
