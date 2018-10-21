@@ -191,7 +191,7 @@ class AnnotatorBase(object):
     def build_ouput_line(self, annotation_line):
         output_columns = self.config.output_columns
         return [
-            annotation_line.columns[key] for key in output_columns
+            annotation_line.columns.get(key, '') for key in output_columns
         ]
 
     def annotate_file(self, file_io_manager):

@@ -5,6 +5,7 @@ import sys
 import gzip
 import pysam
 import argparse
+import pandas as pd
 from configparser import ConfigParser
 import os
 from box import Box
@@ -147,13 +148,15 @@ class ScoreFile(object):
             self.config.columns.pos_end = self.config.columns.pos_begin
 
         self.search_indices = []
+        self.search_columns = []
         if hasattr(self.config.columns, 'search'):
             if self.config.columns.search is not None:
                 self.config.columns.search = \
                     self.config.columns.search.split(',')
-                self.search_indices = [self.config.header.index(col)
-                                       for col in self.config.columns.search]
-
+                self.search_indices = [
+                    self.config.header.index(col)
+                    for col in self.config.columns.search]
+                self.search_columns = self.config.columns.search
         self.config.columns.score = self.config.columns.score.split(',')
         self.scores_indices = [self.config.header.index(col)
                                for col in self.config.columns.score]
@@ -165,8 +168,12 @@ class ScoreFile(object):
         score_lines = self._fetch(chrom, pos_begin, pos_end)
         res = []
         for line in score_lines:
-            res.append(self.line_config.build(list(line)))
-        return res
+            res.append(self.line_config.build(list(line)).columns)
+        df = pd.DataFrame.from_records(
+            res, columns=self.line_config.source_header)
+        for score_name in self.config.columns.score:
+            df[score_name] = df[score_name].astype("float32")
+        return df
 
     def get_scores(self, new_columns, chrom, pos, *args):
         args = list(args)
@@ -240,7 +247,7 @@ class IterativeAccess(ScoreFile):
             line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
 
         self.current_lines.append(line)
-        while line_chrom == chrom and pos_end <= line_pos_end:
+        while line_chrom == chrom and line_pos_end <= pos_end:
             line = self._next_line()
             self.current_lines.append(line)
             line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
@@ -274,7 +281,7 @@ class IterativeAccess(ScoreFile):
         self._purge_line_buffer(chrom, pos_begin, pos_end)
 
         # fill the file buffer
-        self._fill_line_buffer(chrom, pos_begin, pos_end+1)
+        self._fill_line_buffer(chrom, pos_begin, pos_end)
         return self._select_line_buffer(chrom, pos_begin, pos_end)
 
     def _next_line(self):

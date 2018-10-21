@@ -123,7 +123,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEquals(391, data['result'][0]['LGDs']['all']['count'])
         self.assertEquals(28, data['result'][0]['LGDs']['rec']['count'])
         self.assertEquals(
-            "Gene Set: LGDs.Recurrent (SD_TEST:autism) (45)", data['desc'])
+            "Gene Set: LGDs.Recurrent (SD_TEST:autism) (44)", data['desc'])
 
     def test_gene_syms_description(self):
         data = {
