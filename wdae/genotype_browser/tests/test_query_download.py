@@ -270,8 +270,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
 
         for v in res:
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
-
-            study_phenotype = variant['Study Phenotype']
+            study_phenotype = variant['study phenotype']
             assert study_phenotype == 'autism'
 
     def test_query_download_denovo_db_unaffected(self):
@@ -292,7 +291,7 @@ class TestDownloadStudyPhenotype(BaseAuthenticatedUserTest):
         for v in res:
             variant = {k: v for k, v in zip(header.split('\t'), v.split('\t'))}
 
-            study_phenotype = variant['Study Phenotype']
+            study_phenotype = variant['study phenotype']
             assert study_phenotype in [
                 "acromelic_frontonasal_dysostosis",
                 "amyotrophic_lateral_sclerosis",
