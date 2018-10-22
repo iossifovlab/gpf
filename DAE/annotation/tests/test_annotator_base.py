@@ -67,7 +67,7 @@ def test_annotator_base_simple():
 
 
 def test_copy_annotator_simple(capsys, variants_io1):
-    opts = Box({}, default_box=True, default_box_attr=None),
+    opts = Box({}, default_box=True, default_box_attr=None)
 
     section_config = AnnotatorConfig(
         name="copy",

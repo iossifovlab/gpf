@@ -16,7 +16,7 @@ from .utils import relative_to_this_test_folder
 
 @pytest.fixture
 def empty_options():
-    return Box({}, default_box=True, default_box_attr=None)
+    return Box({"vcf": True}, default_box=True, default_box_attr=None)
 
 
 def test_parse_pipeline_config():
@@ -131,7 +131,7 @@ input2_score2_expected = \
 def test_build_pipeline(variants_io, capsys, config_file, expected):
     options = Box({
             "default_arguments": None,
-            "mode": "VCF",
+            "vcf": True,
         },
         default_box=True,
         default_box_attr=None)

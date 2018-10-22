@@ -3,7 +3,12 @@
 from __future__ import unicode_literals
 from __future__ import print_function
 
+import os
+import sys
+import time
+import datetime
 import re
+import argparse
 
 from box import Box
 from ast import literal_eval
@@ -13,6 +18,7 @@ from collections import OrderedDict
 import common.config
 from annotation.tools.annotator_base import CompositeVariantAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
+from annotation.tools.file_io import IOType, IOManager
 
 
 class PipelineConfig(VariantAnnotatorConfig):
@@ -30,6 +36,7 @@ class PipelineConfig(VariantAnnotatorConfig):
         configuration = PipelineConfig._parse_pipeline_config(
             config_file, defaults
         )
+
         result = PipelineConfig(
             name="pipeline",
             annotator_name="annotation_pipeline.Pipeline",
@@ -58,7 +65,6 @@ class PipelineConfig(VariantAnnotatorConfig):
                 )
 
         config_parser = PipelineConfigParser(defaults=defaults)
-        print(config_parser.defaults())
 
         config_parser.optionxform = str
         with open(filename, "r", encoding="utf8") as infile:
@@ -122,3 +128,54 @@ class PipelineAnnotator(CompositeVariantAnnotator):
             pipeline.config.output_columns.extend(output_columns)
         return pipeline
 
+
+def pipeline_main(argv):
+    desc = "Program to annotate variants combining multiple annotating tools"
+    parser = argparse.ArgumentParser(
+        description=desc, conflict_handler='resolve')
+    parser.add_argument(
+        '--config', help='config file location',
+        required=True, action='store')
+
+    for name, args in VariantAnnotatorConfig.cli_options():
+        parser.add_argument(name, **args)
+
+    options = parser.parse_args()
+    assert options.config is not None
+    assert os.path.exists(options.config)
+    config_filename = options.config
+
+    options = Box({
+        k: v for k, v in options._get_kwargs()
+    }, default_box=True, default_box_attr=None)
+
+    pipeline = PipelineAnnotator.build(options, config_filename)
+    assert pipeline is not None
+
+    # File IO format specification
+    reader_type = IOType.TSV
+    writer_type = IOType.TSV
+    if hasattr(options, 'read_parquet'):
+        if options.read_parquet:
+            reader_type = IOType.Parquet
+    if hasattr(options, 'write_parquet'):
+        if options.write_parquet:
+            writer_type = IOType.Parquet
+
+    start = time.time()
+
+    with IOManager(options, reader_type, writer_type) as io_manager:
+        pipeline.annotate_file(io_manager)
+
+    print("# PROCESSING DETAILS:", file=sys.stderr)
+    print("#", time.asctime(), file=sys.stderr)
+    print("#", " ".join(sys.argv[1:]), file=sys.stderr)
+
+    print(
+        "The program was running for [h:m:s]:",
+        str(datetime.timedelta(seconds=round(time.time()-start, 0))),
+        file=sys.stderr)
+
+
+if __name__ == '__main__':
+    pipeline_main(sys.argv)

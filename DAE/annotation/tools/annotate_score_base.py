@@ -165,6 +165,9 @@ class ScoreFile(object):
         raise NotImplementedError()
 
     def fetch_score_lines(self, chrom, pos_begin, pos_end):
+        pos_begin = int(pos_begin)
+        pos_end = int(pos_end)
+
         score_lines = self._fetch(chrom, pos_begin, pos_end)
         res = []
         for line in score_lines:

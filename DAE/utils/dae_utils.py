@@ -30,7 +30,7 @@ def dae2vcf_variant(chrom, position, var, GA=None):
     if match:
         count = int(match.group(1))
         reference = GA.getSequence(chrom, position - 1, position + count - 1)
-        assert len(reference) == count + 1
+        assert len(reference) == count + 1, reference
         return position - 1, reference, reference[0]
 
     raise NotImplementedError('weird variant: ' + var)

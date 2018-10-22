@@ -49,6 +49,47 @@ class AnnotatorConfig(object):
         assert clazz is not None
         return clazz(section_config)
 
+    @staticmethod
+    def cli_options():
+        return [
+            ('infile', {
+                'nargs': '?',
+                'action': 'store',
+                'default': '-',
+                'help': 'path to input file; defaults to stdin'
+            }),
+            ('outfile', {
+                'nargs': '?',
+                'action': 'store',
+                'default': '-',
+                'help': 'path to output file; defaults to stdout'
+            }),
+            ('--mode', {
+                'help': 'annotator mode; available modes are `overwrite`'
+                '`replace` and `append`',
+                'default': 'overwrite',
+                'action': 'store'
+            }),
+            ('--direct', {
+                'help': 'use direct access to score files',
+                'default': False,
+                'action': 'store_true'
+            }),
+            ('--region', {
+                'help': 'work only in the specified region',
+                'default': None,
+                'action': 'store'
+            }),
+            ('--read-parquet', {
+                'help': 'read from a parquet file',
+                'action': 'store_true'
+            }),
+            ('--write-parquet', {
+                'help': 'write to a parquet file',
+                'action': 'store_true'
+            })
+        ]
+
 
 class VariantAnnotatorConfig(AnnotatorConfig):
 
@@ -62,8 +103,7 @@ class VariantAnnotatorConfig(AnnotatorConfig):
         self._setup_defaults()
 
     def _setup_defaults(self):
-        if self.options.vcf or self.options.mode == "VCF":
-            self.mode = "VCF"
+        if self.options.vcf:
             if self.options.c is None:
                 self.options.c = 'CHROM'
             if self.options.p is None:
@@ -73,7 +113,6 @@ class VariantAnnotatorConfig(AnnotatorConfig):
             if self.options.a is None:
                 self.options.a = 'ALT'
         else:
-            self.mode = "DAE"
             if self.options.x is None and self.options.c is None:
                 self.options.x = 'location'
             if self.options.v is None:
@@ -87,34 +126,37 @@ class VariantAnnotatorConfig(AnnotatorConfig):
 
     @staticmethod
     def cli_options():
-        return {
-            '-c': {
+        options = AnnotatorConfig.cli_options()
+
+        options.extend([
+            ('-c', {
                 'help': 'chromosome column number/name'
-            },
-            '-p': {
+            }),
+            ('-p', {
                 'help': 'position column number/name'
-            },
-            '-x': {
+            }),
+            ('-x', {
                 'help': 'location (chr:position) column number/name'
-            },
-            '-v': {
+            }),
+            ('-v', {
                 'help': 'variant (CSHL format) column number/name'
-            },
-            '-r': {
+            }),
+            ('-r', {
                 'help': 'reference column number/name'
-            },
-            '-a': {
+            }),
+            ('-a', {
                 'help': 'alternative column number/name'
-            },
-            '--vcf': {
+            }),
+            ('--vcf', {
                 'help': 'if the variant description uses VCF convention',
                 'default': False,
                 'action': 'store_true'
-            },
-            '--Graw': {
+            }),
+            ('--Graw', {
                 'help': 'genome file location'
-            }
-        }
+            }),
+        ])
+        return options
 
 
 class LineConfig(object):

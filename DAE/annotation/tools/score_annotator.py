@@ -78,11 +78,13 @@ class VariantScoreAnnotator(VariantAnnotatorBase):
     def line_annotation(self, aline, variant=None):
         assert variant is not None
         assert isinstance(aline, Line)
+        chrom = aline.columns[self.config.options.c]
+        pos = aline.columns[self.config.options.p]
 
         scores_df = self.score_file.fetch_score_lines(
-            variant.chromosome,
-            variant.position,
-            variant.position
+            chrom,
+            pos,
+            pos
         )
 
         if len(scores_df) == 0:
@@ -116,7 +118,6 @@ class VariantMultiScoreAnnotator(CompositeVariantAnnotator):
         assert os.path.exists(self.config.options.scores_directory)
 
         score_filename = self._get_score_file(score_name)
-        print(score_filename)
         options = Box(
             self.config.options.to_dict(),
             default_box=True, default_box_attr=None)
@@ -124,7 +125,6 @@ class VariantMultiScoreAnnotator(CompositeVariantAnnotator):
         columns_config = {
             score_name: self.config.columns_config[score_name]
         }
-        print(options)
 
         variant_config = VariantAnnotatorConfig(
             name="{}.{}".format(self.config.name, score_name),

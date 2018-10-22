@@ -18,6 +18,10 @@ class AnnotatorBase(object):
 
         self.config = config
 
+        self.mode = "overwrite"
+        if self.config.options.mode == "replace":
+            self.mode = "replace"
+
     def build_ouput_line(self, annotation_line):
         output_columns = self.config.output_columns
         return [
@@ -29,6 +33,13 @@ class AnnotatorBase(object):
             Method for annotating file from `Annotator`.
         """
         line_config = LineConfig(file_io_manager.header)
+        if self.mode == 'replace':
+            output_columns = file_io_manager.header
+            extended = [
+                col for col in self.config.output_columns
+                if col not in output_columns]
+            output_columns.extend(extended)
+            self.config.output_columns = output_columns
 
         file_io_manager.line_write(self.config.output_columns)
 
@@ -72,7 +83,9 @@ class VariantBuilder(object):
         raise NotImplementedError()
 
     def build(self, annotation_line):
+        # import pdb; pdb.set_trace()
         summary = self.build_variant(annotation_line)
+
         data = {
             'CSHL:location': summary.details.cshl_location,
             'CSHL:chr': summary.chromosome,
@@ -109,7 +122,7 @@ class DAEBuilder(VariantBuilder):
         vcf_position, ref, alt = dae2vcf_variant(
             chrom, int(position), variant, self.genome
         )
-        summary = SummaryAllele(vcf_position, ref, alt)
+        summary = SummaryAllele(chrom, vcf_position, ref, alt)
         return summary
 
 
@@ -127,7 +140,7 @@ class VCFBuilder(VariantBuilder):
         position = aline.columns[self.position]
         ref = aline.columns[self.ref]
         alt = aline.columns[self.alt]
-
+    
         summary = SummaryAllele(
             chrom, int(position), ref, alt
         )
@@ -143,13 +156,12 @@ class VariantAnnotatorBase(AnnotatorBase):
 
         self.genome = None
 
-        if self.config.mode == "VCF":
+        if self.config.options.vcf:
             self.variant_builder = VCFBuilder(self.config, self.genome)
-        elif self.config.mode == "DAE":
-            self.variant_builder = DAEBuilder(self.config, self.genome)
-            self.genome = GenomeAccess.openRef(self.config.genome_file)
         else:
-            raise ValueError(self.config.mode)
+            self.genome = GenomeAccess.openRef(self.config.genome_file)
+            assert self.genome is not None
+            self.variant_builder = DAEBuilder(self.config, self.genome)
 
         if not self.config.virtual_columns:
             self.config.virtual_columns = [
@@ -168,6 +180,13 @@ class VariantAnnotatorBase(AnnotatorBase):
             Method for annotating file from `Annotator`.
         """
         line_config = LineConfig(file_io_manager.header)
+        if self.mode == 'replace':
+            output_columns = file_io_manager.header
+            extended = [
+                col for col in self.config.output_columns
+                if col not in output_columns]
+            output_columns.extend(extended)
+            self.config.output_columns = output_columns
 
         file_io_manager.line_write(self.config.output_columns)
 
