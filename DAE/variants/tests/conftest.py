@@ -7,7 +7,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 # make sure env variables are set correctly
-import findspark  # this needs to be the first import
+import findspark; findspark.init()  # noqa this needs to be the first import
 
 from builtins import range
 from io import StringIO
@@ -46,7 +46,6 @@ from variants.raw_dae import RawDAE, RawDenovo
 import logging
 
 from pyspark.sql import SparkSession
-findspark.init()
 
 
 def quiet_py4j():
