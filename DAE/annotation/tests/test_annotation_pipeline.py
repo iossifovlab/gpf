@@ -4,10 +4,13 @@ import pytest
 from io import StringIO
 from box import Box
 
-from annotation.annotation_pipeline import MultiAnnotator,\
+from annotation.obsolete.annotation_pipeline import MultiAnnotator,\
     MyConfigParser, str_to_class
 from annotation.tools.duplicate_columns import \
     DuplicateColumnsAnnotator
+
+
+pytestmark = pytest.mark.skip
 
 
 class Annotator(object):

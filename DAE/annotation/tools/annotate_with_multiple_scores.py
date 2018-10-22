@@ -83,14 +83,14 @@ def get_argument_parser():
 def get_dirs(path):
     path = os.path.abspath(path)
     return [
-        path + '/' + dir_ 
+        path + '/' + dir_
         for dir_ in listdir(path) if len(dir_.split('.')) == 1]
 
 
 def get_files(path):
     path = os.path.abspath(path)
     return [
-        path + '/' + dir_ 
+        path + '/' + dir_
         for dir_ in listdir(path) if len(dir_.split('.')) > 1]
 
 

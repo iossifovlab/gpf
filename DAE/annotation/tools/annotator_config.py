@@ -13,10 +13,12 @@ class AnnotatorConfig(object):
 
         self.native_columns = list(columns_config.keys())
         self.virtual_columns = list(virtuals)
-        assert all([c in self.input_columns for c in self.virtual_columns])
+        assert all([
+            c in self.columns_config.values()
+            for c in self.virtual_columns])
 
         self.output_columns = [
-            c for c in self.columns_config.values() 
+            c for c in self.columns_config.values()
             if c not in self.virtual_columns
         ]
 
@@ -42,10 +44,10 @@ class AnnotatorConfig(object):
         return clazz
 
     @staticmethod
-    def instantiate(section):
-        clazz = AnnotatorConfig._name_to_class(section.annotator_name)
+    def instantiate(section_config):
+        clazz = AnnotatorConfig._name_to_class(section_config.annotator_name)
         assert clazz is not None
-        return clazz(section.options, section)
+        return clazz(section_config)
 
 
 class VariantAnnotatorConfig(AnnotatorConfig):
@@ -60,7 +62,7 @@ class VariantAnnotatorConfig(AnnotatorConfig):
         self._setup_defaults()
 
     def _setup_defaults(self):
-        if self.options.vcf:
+        if self.options.vcf or self.options.mode == "VCF":
             self.mode = "VCF"
             if self.options.c is None:
                 self.options.c = 'CHROM'
@@ -118,7 +120,9 @@ class VariantAnnotatorConfig(AnnotatorConfig):
 class LineConfig(object):
 
     def __init__(self, source_header):
-        self.source_header = source_header
+        self.source_header = [
+            col.strip('#') for col in source_header
+        ]
 
     def build(self, source_line):
         return Line(self, source_line)

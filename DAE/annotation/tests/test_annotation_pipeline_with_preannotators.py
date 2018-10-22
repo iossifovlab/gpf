@@ -1,7 +1,10 @@
 import pytest
-from annotation.annotation_pipeline import MultiAnnotator
+from annotation.obsolete.annotation_pipeline import MultiAnnotator
 from .test_annotation_pipeline import DummyIOAdapter, input_base, \
     options_preannotate
+
+
+pytestmark = pytest.mark.skip
 
 
 @pytest.fixture(autouse=True)

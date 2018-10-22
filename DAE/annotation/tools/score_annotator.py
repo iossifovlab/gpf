@@ -32,13 +32,16 @@ class VariantScoreAnnotator(VariantAnnotatorBase):
             print("You should provide a score file location.", file=sys.stderr)
             sys.exit(1)
 
+        scores_filename = os.path.abspath(self.config.options.scores_file)
+        assert os.path.exists(scores_filename), scores_filename
+
         if self.config.options.direct:
             self.score_file = DirectAccess(
-                self.config.options.scores_file,
+                scores_filename,
                 self.config.options.scores_config_file)
         else:
             self.score_file = IterativeAccess(
-                self.config.options.scores_file,
+                scores_filename,
                 self.config.options.scores_config_file,
                 self.config.options.region)
 
