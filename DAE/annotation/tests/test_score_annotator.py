@@ -2,7 +2,9 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import pytest
+import pandas as pd
 
+from collections import OrderedDict
 from box import Box
 
 from .utils import relative_to_this_test_folder
@@ -35,7 +37,8 @@ input2_phast_pylo_expected = \
     True,
     False
 ])
-def test_variant_score_annotator_simple(variants_io, direct, capsys):
+def test_variant_score_annotator_simple(
+        expected_df, variants_io, direct, capsys):
 
     options = Box({
         "vcf": True,
@@ -70,14 +73,18 @@ def test_variant_score_annotator_simple(variants_io, direct, capsys):
     captured = capsys.readouterr()
     print(captured.err)
     print(captured.out)
-    assert captured.out == input2_phast_exptected
+    pd.testing.assert_frame_equal(
+        expected_df(captured.out),
+        expected_df(input2_phast_exptected),
+        check_less_precise=3)
 
 
 @pytest.mark.parametrize("direct", [
     True,
     False
 ])
-def test_variant_multi_score_annotator_simple(variants_io, direct, capsys):
+def test_variant_multi_score_annotator_simple(
+        expected_df, variants_io, direct, capsys):
 
     options = Box({
         "vcf": True,
@@ -112,14 +119,19 @@ def test_variant_multi_score_annotator_simple(variants_io, direct, capsys):
     captured = capsys.readouterr()
     print(captured.err)
     print(captured.out)
-    assert captured.out == input2_phast_exptected
+
+    pd.testing.assert_frame_equal(
+        expected_df(captured.out),
+        expected_df(input2_phast_exptected),
+        check_less_precise=3)
 
 
 @pytest.mark.parametrize("direct", [
     True,
     False
 ])
-def test_variant_multi_score_annotator_multi(variants_io, direct, capsys):
+def test_variant_multi_score_annotator_multi(
+        expected_df, variants_io, direct, capsys):
 
     options = Box({
         "vcf": True,
@@ -129,10 +141,10 @@ def test_variant_multi_score_annotator_multi(variants_io, direct, capsys):
             "fixtures/")
     }, default_box=True, default_box_attr=None)
 
-    columns_config = {
-        'TESTphastCons100way': "RESULT_phastCons100way",
-        'TESTphyloP100way': "RESULT_phyloP100way",
-    }
+    columns_config = OrderedDict([
+        ('TESTphastCons100way',  "RESULT_phastCons100way"),
+        ('TESTphyloP100way', "RESULT_phyloP100way"),
+    ])
 
     config = VariantAnnotatorConfig(
         name="test_annotator",
@@ -155,7 +167,10 @@ def test_variant_multi_score_annotator_multi(variants_io, direct, capsys):
     captured = capsys.readouterr()
     print(captured.err)
     print(captured.out)
-    assert captured.out == input2_phast_pylo_expected
+    pd.testing.assert_frame_equal(
+        expected_df(captured.out),
+        expected_df(input2_phast_pylo_expected),
+        check_less_precise=3)
 
 
 input2_cadd_expected = """RESULT_RawScore\tRESULT_PHRED
@@ -171,7 +186,8 @@ input2_cadd_expected = """RESULT_RawScore\tRESULT_PHRED
     True,
     False
 ])
-def test_variant_score_annotator_cadd(variants_io, direct, capsys):
+def test_variant_score_annotator_cadd(
+        expected_df, variants_io, direct, capsys):
 
     options = Box({
         "vcf": True,
@@ -182,10 +198,10 @@ def test_variant_score_annotator_cadd(variants_io, direct, capsys):
         "search_columns": "VCF:ref,VCF:alt",
     }, default_box=True, default_box_attr=None)
 
-    columns_config = {
-        'RawScore': "RESULT_RawScore",
-        'PHRED': "RESULT_PHRED",
-    }
+    columns_config = OrderedDict([
+        ('RawScore',  "RESULT_RawScore"),
+        ('PHRED', "RESULT_PHRED"),
+    ])
 
     config = VariantAnnotatorConfig(
         name="test_annotator",
@@ -208,5 +224,8 @@ def test_variant_score_annotator_cadd(variants_io, direct, capsys):
     captured = capsys.readouterr()
     print(captured.err)
     print(captured.out)
-    assert captured.out == input2_cadd_expected
 
+    pd.testing.assert_frame_equal(
+        expected_df(captured.out),
+        expected_df(input2_cadd_expected),
+        check_less_precise=3)

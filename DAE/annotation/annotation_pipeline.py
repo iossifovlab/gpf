@@ -70,18 +70,23 @@ class PipelineConfig(VariantAnnotatorConfig):
         config_parser.optionxform = str
         with open(filename, "r", encoding="utf8") as infile:
             config_parser.read_file(infile)
-            config = Box(
-                common.config.to_dict(config_parser),
-                default_box=True, default_box_attr=None)
+            config = common.config.to_dict(config_parser)
+            print(list(config.keys()))
+            # config = Box(
+            #     config,
+            #     default_box=True, default_box_attr=None)
+            # print(list(config.keys()))
         return config
 
     @staticmethod
     def _parse_config_section(section_name, section, options):
-        assert section.annotator is not None
-        annotator_name = section.annotator
+        # section = Box(section, default_box=True, default_box_attr=None)
+        assert 'annotator' in section
+
+        annotator_name = section['annotator']
         options = dict(options.to_dict())
-        if section.options:
-            for key, val in section.options.items():
+        if 'options' in section:
+            for key, val in section['options'].items():
                 try:
                     val = literal_eval(val)
                 except Exception:
@@ -90,12 +95,16 @@ class PipelineConfig(VariantAnnotatorConfig):
 
         options = Box(options, default_box=True, default_box_attr=None)
 
-        columns_config = OrderedDict(section.columns)
-        if section.virtuals is None:
+        if 'columns' in section:
+            columns_config = OrderedDict(section['columns'])
+        else:
+            columns_config = OrderedDict()
+    
+        if 'virtuals' not in section:
             virtuals = []
         else:
             virtuals = [
-                c.strip() for c in section.virtuals.split(',')
+                c.strip() for c in section['virtuals'].split(',')
             ]
         return VariantAnnotatorConfig(
             name=section_name,

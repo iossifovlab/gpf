@@ -1,4 +1,9 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+
 import pytest
+import pandas as pd
+
 from box import Box
 
 from annotation.annotation_pipeline import PipelineConfig, PipelineAnnotator
@@ -126,9 +131,11 @@ input2_score2_expected = \
 @pytest.mark.parametrize("config_file,expected", [
     ("fixtures/copy_annotator.conf", input2_copy_expected),
     ("fixtures/score_annotator.conf", input2_score_expected),
-    ("fixtures/score2_annotator.conf", input2_score2_expected),
+    # ("fixtures/score2_annotator.conf", input2_score2_expected),
 ])
-def test_build_pipeline(variants_io, capsys, config_file, expected):
+def test_build_pipeline(
+        expected_df, variants_io, capsys, config_file, expected):
+    
     options = Box({
             "default_arguments": None,
             "vcf": True,
@@ -152,7 +159,12 @@ def test_build_pipeline(variants_io, capsys, config_file, expected):
     print(captured.err)
     print(captured.out)
 
-    assert captured.out == expected
+    cap_df = expected_df(captured.out)
+    
+    pd.testing.assert_frame_equal(
+        cap_df, expected_df(expected),
+        check_less_precise=3,
+        check_names=False)
 
 
 # def test_build_annotation_configuration_region(annotation_test_conf):

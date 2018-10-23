@@ -1,6 +1,10 @@
 import pytest
-from annotation.tools.file_io import IOManager, IOType
+
+import pandas as pd
+from io import StringIO
+
 from box import Box
+from annotation.tools.file_io import IOManager, IOType
 from .utils import relative_to_this_test_folder
 
 
@@ -15,4 +19,13 @@ def variants_io(request):
         io_config = Box(io_config, default_box=True, default_box_attr=None)
         io_manager = IOManager(io_config, IOType.TSV, IOType.TSV)
         return io_manager
+    return build
+
+
+@pytest.fixture
+def expected_df():
+    def build(data):
+        infile = StringIO(data)
+        df = pd.read_csv(infile, sep="\t")
+        return df
     return build
