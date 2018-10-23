@@ -71,11 +71,6 @@ class PipelineConfig(VariantAnnotatorConfig):
         with open(filename, "r", encoding="utf8") as infile:
             config_parser.read_file(infile)
             config = common.config.to_dict(config_parser)
-            print(list(config.keys()))
-            # config = Box(
-            #     config,
-            #     default_box=True, default_box_attr=None)
-            # print(list(config.keys()))
         return config
 
     @staticmethod

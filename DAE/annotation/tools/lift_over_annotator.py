@@ -2,6 +2,9 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
+
+import gzip
 
 import sys
 import os
@@ -17,7 +20,7 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         assert self.config.options.chain_file
         assert os.path.exists(self.config.options.chain_file)
 
-        self.chain_file = self.config.options.chain_file
+        self.chain_file = gzip.open(self.config.options.chain_file, "r")
         self.lift_over = LiftOver(self.chain_file)
 
         self.chrom = self.config.options.c
@@ -45,7 +48,7 @@ class LiftOverAnnotator(VariantAnnotatorBase):
 
         convert_position = self.lift_over.convert_coordinate(chrom, pos)
         if len(convert_position) == 0:
-            print("position: chrom=", chrom, "; pos=", pos, 
+            print("position: chrom=", chrom, "; pos=", pos,
                   "can not be converted into target reference genome",
                   file=sys.stderr)
             new_c = ''

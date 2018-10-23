@@ -11,7 +11,6 @@ from configparser import ConfigParser
 import os
 from box import Box
 from annotation.tools.annotator_config import LineConfig
-from annotation.tools.utilities import give_column_number
 
 # from annotation.tools.utilities import AnnotatorBase, \
 #     assign_values, main, give_column_number
@@ -80,19 +79,12 @@ class ScoreFile(object):
         if self.config.columns.pos_end is None:
             self.config.columns.pos_end = self.config.columns.pos_begin
 
-        self.search_indices = []
-        self.search_columns = []
         if hasattr(self.config.columns, 'search'):
             if self.config.columns.search is not None:
                 self.config.columns.search = \
                     self.config.columns.search.split(',')
-                self.search_indices = [
-                    self.config.header.index(col)
-                    for col in self.config.columns.search]
                 self.search_columns = self.config.columns.search
         self.config.columns.score = self.config.columns.score.split(',')
-        self.scores_indices = [self.config.header.index(col)
-                               for col in self.config.columns.score]
 
     def _fetch(self, chrom, pos_begin, pos_end):
         raise NotImplementedError()
@@ -111,19 +103,19 @@ class ScoreFile(object):
             df[score_name] = df[score_name].astype("float32")
         return df
 
-    def get_scores(self, new_columns, chrom, pos, *args):
-        args = list(args)
-        new_col_indices = [
-            give_column_number(col, self.config.header) - 1
-            for col in new_columns]
-        try:
-            score_lines = self._fetch(chrom, pos, pos)
-            for line in score_lines:
-                if args == [line[i] for i in self.search_indices]:
-                    return [line[i] for i in new_col_indices]
-        except ValueError:
-            pass
-        return [self.config.noScoreValue] * len(new_col_indices)
+    # def get_scores(self, new_columns, chrom, pos, *args):
+    #     args = list(args)
+    #     new_col_indices = [
+    #         give_column_number(col, self.config.header) - 1
+    #         for col in new_columns]
+    #     try:
+    #         score_lines = self._fetch(chrom, pos, pos)
+    #         for line in score_lines:
+    #             if args == [line[i] for i in self.search_indices]:
+    #                 return [line[i] for i in new_col_indices]
+    #     except ValueError:
+    #         pass
+    #     return [self.config.noScoreValue] * len(new_col_indices)
 
 
 class IterativeAccess(ScoreFile):
