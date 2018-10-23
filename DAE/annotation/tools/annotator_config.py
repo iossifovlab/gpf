@@ -28,7 +28,9 @@ class AnnotatorConfig(object):
         module_path = splitted[:-1]
         assert len(module_path) >= 1
         if len(module_path) == 1:
-            module_path = ["annotation", "tools", *module_path]
+            res = ["annotation", "tools"]
+            res.extend(module_path)
+            module_path = res
 
         module_name = '.'.join(module_path)
         class_name = splitted[-1]

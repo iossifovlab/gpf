@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
 from __future__ import print_function
+from builtins import open
+
 import sys
 import gzip
 import pysam
@@ -66,7 +68,7 @@ class ScoreFile(object):
                 file=sys.stderr)
             sys.exit(1)
 
-        self.file = gzip.open(self.filename, 'rt', encoding='utf8')
+        self.file = gzip.open(self.filename, 'rt')  # , encoding='utf8')
         if self.config.header is None:
             header_str = self.file.readline().rstrip()
             if header_str[0] == '#':
