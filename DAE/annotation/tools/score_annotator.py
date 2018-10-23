@@ -7,7 +7,7 @@ from annotation.tools.annotator_base import VariantAnnotatorBase, \
     CompositeVariantAnnotator
 from annotation.tools.annotator_config import Line, VariantAnnotatorConfig
 
-from annotation.tools.annotate_score_base import DirectAccess, \
+from annotation.tools.score_file_io import DirectAccess, \
     IterativeAccess
 
 

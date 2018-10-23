@@ -1,6 +1,6 @@
 import pytest
 from .utils import relative_to_this_test_folder
-from annotation.tools.annotate_score_base import IterativeAccess, \
+from annotation.tools.score_file_io import IterativeAccess, \
     DirectAccess
 
 

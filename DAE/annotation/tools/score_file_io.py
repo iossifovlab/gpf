@@ -4,85 +4,16 @@ from __future__ import print_function
 import sys
 import gzip
 import pysam
-import argparse
 import pandas as pd
 from configparser import ConfigParser
 import os
 from box import Box
 from annotation.tools.annotator_config import LineConfig
-from annotation.tools.utilities import AnnotatorBase, \
-    assign_values, main, give_column_number
+from annotation.tools.utilities import give_column_number
+
+# from annotation.tools.utilities import AnnotatorBase, \
+#     assign_values, main, give_column_number
 # from annotation.preannotators import variant_format
-
-
-def get_argument_parser():
-    """
-    ScoreAnnotator options::
-
-        usage: annotate_score_base.py [-h] [-c C] [-p P] [-x X] [-H]
-                                 [-F SCORES_FILE]
-                                 [--scores-config-file]
-                                 [--direct]
-                                 [--labels LABELS]
-                                 [infile] [outfile]
-
-        Program to annotate variants with frequencies
-
-        positional arguments:
-          infile                path to input file; defaults to stdin
-          outfile               path to output file; defaults to stdout
-
-        optional arguments:
-          -h, --help            show this help message and exit
-          -c C                  chromosome column number/name
-          -p P                  position column number/name
-          -x X                  location (chr:pos) column number/name
-          --search-columns      additional columns in the file to use for
-                                matching scores
-          -H                    no header in the input file
-          -F SCORES_FILE, --scores-file SCORES_FILE
-                                file containing the scores
-          --scores-config-file  .conf file for the scores file; defaults to
-                                score file name
-          --direct              the score files is tabix indexed
-          --labels LABEL        label of the new column; defaults to the name
-                                of the score column
-    """
-    desc = """Program to annotate variants with scores"""
-    parser = argparse.ArgumentParser(description=desc)
-
-    parser.add_argument(
-        '-c', help='chromosome column number/name', action='store')
-    parser.add_argument(
-        '-p', help='position column number/name', action='store')
-    parser.add_argument(
-        '-x', help='location (chr:pos) column number/name', action='store')
-    parser.add_argument(
-        '--search-columns',
-        help='additional columns in file to use for matching scores')
-    parser.add_argument(
-        '-H', help='no header in the input file',
-        action='store_true', dest='no_header')
-    parser.add_argument(
-        '-F', '--scores-file', help='file containing the scores',
-        type=str, action='store')
-    parser.add_argument(
-        '--scores-config-file',
-        help='file containing configurations for the score file',
-        type=str, action='store')
-    parser.add_argument(
-        '--direct', help='the score files is tabix indexed',
-        action='store_true')
-    parser.add_argument(
-        '--labels',
-        help='labels of the new column; '
-        'defaults to the name of the score column',
-        type=str, action='store')
-
-    # for name, args in variant_format.get_arguments().items():
-    #     parser.add_argument(name, **args)
-
-    return parser
 
 
 def conf_to_dict(path):
@@ -309,73 +240,148 @@ class DirectAccess(ScoreFile):
         self.file = pysam.Tabixfile(score_file_name)
 
     def _fetch(self, chrom, pos_begin, pos_end):
-        return self.file.fetch(
-            chrom, pos_begin-1, pos_end, parser=pysam.asTuple())
+        try:
+            return self.file.fetch(
+                chrom, pos_begin-1, pos_end, parser=pysam.asTuple())
+        except ValueError as ex:
+            print("could not find region: ", chrom, pos_begin, pos_end,
+                  ex, file=sys.stderr)
+            return []
 
 
-class ScoreAnnotator(AnnotatorBase):
+# class ScoreAnnotator(AnnotatorBase):
 
-    def __init__(self, opts, header=None):
-        super(ScoreAnnotator, self).__init__(opts, header)
-        self.labels = opts.labels.split(',') if opts.labels else None
-        self._init_score_file()
-        if opts.search_columns is not None and opts.search_columns != '':
-            self.search_columns = opts.search_columns.split(',')
-        else:
-            self.search_columns = []
-        self._init_cols()
+#     def __init__(self, opts, header=None):
+#         super(ScoreAnnotator, self).__init__(opts, header)
+#         self.labels = opts.labels.split(',') if opts.labels else None
+#         self._init_score_file()
+#         if opts.search_columns is not None and opts.search_columns != '':
+#             self.search_columns = opts.search_columns.split(',')
+#         else:
+#             self.search_columns = []
+#         self._init_cols()
 
-    def _init_cols(self):
-        opts = self.opts
-        header = self.header
-        if opts.x is None and opts.c is None:
-            opts.x = "location"
+#     def _init_cols(self):
+#         opts = self.opts
+#         header = self.header
+#         if opts.x is None and opts.c is None:
+#             opts.x = "location"
 
-        chr_col = assign_values(opts.c, header)
-        pos_col = assign_values(opts.p, header)
-        loc_col = assign_values(opts.x, header)
+#         chr_col = assign_values(opts.c, header)
+#         pos_col = assign_values(opts.p, header)
+#         loc_col = assign_values(opts.x, header)
 
-        self.arg_columns = [chr_col, pos_col, loc_col] + \
-            [assign_values(col, header) for col in self.search_columns]
+#         self.arg_columns = [chr_col, pos_col, loc_col] + \
+#             [assign_values(col, header) for col in self.search_columns]
 
-    def _init_score_file(self):
-        if not self.opts.scores_file:
-            print("You should provide a score file location.", file=sys.stderr)
-            sys.exit(1)
+#     def _init_score_file(self):
+#         if not self.opts.scores_file:
+#             print("You should provide a score file location.",
+#                   file=sys.stderr)
+#             sys.exit(1)
 
-        if self.opts.direct:
-            self.file = DirectAccess(
-                self.opts.scores_file,
-                self.opts.scores_config_file)
-        else:
-            self.file = IterativeAccess(
-                self.opts.scores_file,
-                self.opts.scores_config_file,
-                self.opts.region)
+#         if self.opts.direct:
+#             self.file = DirectAccess(
+#                 self.opts.scores_file,
+#                 self.opts.scores_config_file)
+#         else:
+#             self.file = IterativeAccess(
+#                 self.opts.scores_file,
+#                 self.opts.scores_config_file,
+#                 self.opts.region)
 
-        self.header.extend(self.labels if self.labels
-                           else self.file.config.columns.score)
+#         self.header.extend(self.labels if self.labels
+#                            else self.file.config.columns.score)
 
-    @property
-    def new_columns(self):
-        return self.file.config.columns.score
+#     @property
+#     def new_columns(self):
+#         return self.file.config.columns.score
 
-    def _get_scores(self, new_columns, chr=None, pos=None, loc=None, *args):
-        if loc is not None:
-            chr, pos = loc.split(':')
-        if chr != '':
-            return [normalize_value(score)
-                    for score
-                    in self.file.get_scores(new_columns, chr, int(pos), *args)]
-        else:
-            return [None for col in new_columns]
+#     def _get_scores(self, new_columns, chr=None, pos=None, loc=None, *args):
+#         if loc is not None:
+#             chr, pos = loc.split(':')
+#         if chr != '':
+#             return [normalize_value(score)
+#                     for score
+#                     in self.file.get_scores(
+#                           new_columns, chr, int(pos), *args)]
+#         else:
+#             return [None for col in new_columns]
 
-    def line_annotations(self, line, new_columns):
-        params = [
-            line[i-1] if i is not None else None for i in self.arg_columns
-        ]
-        return self._get_scores(new_columns, *params)
+#     def line_annotations(self, line, new_columns):
+#         params = [
+#             line[i-1] if i is not None else None for i in self.arg_columns
+#         ]
+#         return self._get_scores(new_columns, *params)
 
+# def get_argument_parser():
+#     """
+#     ScoreAnnotator options::
 
-if __name__ == "__main__":
-    main(get_argument_parser(), ScoreAnnotator)
+#         usage: annotate_score_base.py [-h] [-c C] [-p P] [-x X] [-H]
+#                                  [-F SCORES_FILE]
+#                                  [--scores-config-file]
+#                                  [--direct]
+#                                  [--labels LABELS]
+#                                  [infile] [outfile]
+
+#         Program to annotate variants with frequencies
+
+#         positional arguments:
+#           infile                path to input file; defaults to stdin
+#           outfile               path to output file; defaults to stdout
+
+#         optional arguments:
+#           -h, --help            show this help message and exit
+#           -c C                  chromosome column number/name
+#           -p P                  position column number/name
+#           -x X                  location (chr:pos) column number/name
+#           --search-columns      additional columns in the file to use for
+#                                 matching scores
+#           -H                    no header in the input file
+#           -F SCORES_FILE, --scores-file SCORES_FILE
+#                                 file containing the scores
+#           --scores-config-file  .conf file for the scores file; defaults to
+#                                 score file name
+#           --direct              the score files is tabix indexed
+#           --labels LABEL        label of the new column; defaults to the name
+#                                 of the score column
+#     """
+#     desc = """Program to annotate variants with scores"""
+#     parser = argparse.ArgumentParser(description=desc)
+
+#     parser.add_argument(
+#         '-c', help='chromosome column number/name', action='store')
+#     parser.add_argument(
+#         '-p', help='position column number/name', action='store')
+#     parser.add_argument(
+#         '-x', help='location (chr:pos) column number/name', action='store')
+#     parser.add_argument(
+#         '--search-columns',
+#         help='additional columns in file to use for matching scores')
+#     parser.add_argument(
+#         '-H', help='no header in the input file',
+#         action='store_true', dest='no_header')
+#     parser.add_argument(
+#         '-F', '--scores-file', help='file containing the scores',
+#         type=str, action='store')
+#     parser.add_argument(
+#         '--scores-config-file',
+#         help='file containing configurations for the score file',
+#         type=str, action='store')
+#     parser.add_argument(
+#         '--direct', help='the score files is tabix indexed',
+#         action='store_true')
+#     parser.add_argument(
+#         '--labels',
+#         help='labels of the new column; '
+#         'defaults to the name of the score column',
+#         type=str, action='store')
+
+#     # for name, args in variant_format.get_arguments().items():
+#     #     parser.add_argument(name, **args)
+
+#     return parser
+
+# if __name__ == "__main__":
+#     main(get_argument_parser(), ScoreAnnotator)

@@ -49,15 +49,6 @@ class RelabelChromosomeAnnotator(AnnotatorBase):
         self.chrom_column = self.config.options.c
         self.chrom_new_column = self.config.options.new_c
 
-    def line_annotations(self, line, new_columns):
-        chromosome = line[self.chrCol - 1]
-        if not chromosome:
-            return [chromosome]
-        if 'chr' in chromosome:
-            return [chromosome.replace('chr', '')]
-        else:
-            return ['chr' + chromosome]
-
     def line_annotation(self, annotation_line, variant=None):
         value = annotation_line.columns.get(self.chrom_column, None)
         if not value:

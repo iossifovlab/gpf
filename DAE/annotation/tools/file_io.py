@@ -147,7 +147,8 @@ class TSVFormat(AbstractFormat):
                     region = None
 
                 if region is None:
-                    self.variant_file = open(self.opts.infile, 'r')
+                    self.variant_file = open(
+                        self.opts.infile, 'r')  # , encoding='utf8')
                 else:
                     tabix_file = pysam.TabixFile(self.opts.infile)
                     try:
@@ -164,7 +165,8 @@ class TSVFormat(AbstractFormat):
 
     def _cleanup(self):
         if self.mode == 'r':
-            sys.stderr.write('Processed ' + str(self.linecount) + ' lines.\n')
+            print('Processed', self.linecount, 'lines.', file=sys.stderr)
+
             if self.opts.infile != '-' and self.opts.region is None:
                 self.variant_file.close()
         else:

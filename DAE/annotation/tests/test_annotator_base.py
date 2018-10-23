@@ -1,5 +1,4 @@
 import pytest
-from .test_annotation_pipeline import DummyIOAdapter
 from .utils import relative_to_this_test_folder
 from box import Box
 from annotation.tools.annotator_base import AnnotatorBase, \
@@ -7,19 +6,6 @@ from annotation.tools.annotator_base import AnnotatorBase, \
 from annotation.tools.annotator_config import AnnotatorConfig
 
 from annotation.tools.file_io import IOManager, IOType
-
-
-@pytest.fixture
-def variants_input():
-    data = [
-        ['1', '4:4372372973', 'sub(A->C)'],
-        ['5', '10:4372372973', 'sub(G->A)'],
-        ['3', 'X:4372', 'ins(AAA)'],
-        ['6', 'Y:4372', 'del(2)']
-    ]
-    io = DummyIOAdapter(data)
-    io.header = ['#id', 'location', 'variant']
-    return io
 
 
 @pytest.fixture
