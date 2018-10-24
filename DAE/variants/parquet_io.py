@@ -305,5 +305,7 @@ def read_ped_df_from_parquet(filename):
     ped_df = pd.read_parquet(filename, engine="pyarrow")
     ped_df.role = ped_df.role.apply(lambda v: Role(v))
     ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
+    if 'layout' in ped_df:
+        ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
 
     return ped_df
