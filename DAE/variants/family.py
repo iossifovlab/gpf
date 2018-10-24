@@ -29,6 +29,8 @@ class Person(object):
         self.status = atts['status']
         self.mom = atts['momId']
         self.dad = atts['dadId']
+        self.layout_position = atts.get('layout', None)
+        self.generated = atts.get('generated', False)
 
     def __repr__(self):
         return "Person({} ({}); {}; {})".format(
@@ -137,6 +139,8 @@ class FamiliesBase(object):
                 'role': lambda r: Role.from_name(r),
                 'sex': lambda s: Sex.from_value(s),
                 'gender': lambda s: Sex.from_value(s),
+                'layout': lambda lc: lc.split(':')[-1],
+                'generated': lambda g: True if g == 1.0 else False,
             },
             dtype={
                 'familyId': str,
@@ -157,7 +161,7 @@ class FamiliesBase(object):
             ped_df['sampleId'] = sample_ids
         else:
             sample_ids = ped_df.apply(
-                lambda r: r.personId if np.isnan(r.sampleId) else r.sampleId,
+                lambda r: r.personId if pd.isna(r.sampleId) else r.sampleId,
                 axis=1,
                 result_type='reduce',
             )

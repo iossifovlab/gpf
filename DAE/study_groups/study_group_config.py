@@ -6,6 +6,7 @@ class StudyGroupConfig(ConfigurableEntityConfig):
 
     def __init__(self, config, *args, **kwargs):
         super(StudyGroupConfig, self).__init__(config, *args, **kwargs)
+        assert self.name
         assert self.enabled
         assert self.studies
         self.studies = self.list('studies')

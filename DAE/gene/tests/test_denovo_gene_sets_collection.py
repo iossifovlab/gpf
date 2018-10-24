@@ -4,6 +4,10 @@ Created on Feb 16, 2017
 @author: lubo
 '''
 from __future__ import unicode_literals
+import pytest
+
+# pytestmark = pytest.mark.skip('depends on real data')
+pytestmark = pytest.mark.usefixtures("gene_info_cache_dir")
 
 
 def test_denovo_gene_sets_exist(gscs):
@@ -11,13 +15,9 @@ def test_denovo_gene_sets_exist(gscs):
     assert denovo is not None
 
 
-def test_denovo_get_gene_set_sd_lgds_autism(gscs):
-    lgds = gscs.get_gene_set('denovo', 'LGDs', {'SD_TEST': ['autism']})
-    assert lgds is not None
-    # FIXME: changed after rennotation
-    # assert lgds['count'] == 546
-    assert lgds['count'] == 551
-    assert lgds['name'] == 'LGDs'
+def test_get_all_gene_sets(gscs):
+    gene_sets_collections = gscs.get_gene_sets_collections()
+    assert gene_sets_collections
 
 
 def test_denovo_get_gene_set_sd_missense_autism(gscs):
@@ -61,7 +61,7 @@ def test_denovo_get_gene_sets_sd_unaffected(gscs):
     assert gene_sets is not None
     assert len(gene_sets) == 17
     gs = gene_sets[0]
-    assert gs['count'] == 221
+    assert gs['count'] == 222
     assert gs['name'] == 'LGDs'
 
 
@@ -83,7 +83,7 @@ def test_denovo_sd_lgds_recurrent(gscs):
     gs = denovo.get_gene_set(
         'LGDs.Recurrent', gene_sets_types={'SD_TEST': ['autism']})
     assert gs is not None
-    assert gs['count'] == 44
+    assert gs['count'] == 45
 
 
 def test_denovo_sd_lgds_single(gscs):
@@ -93,7 +93,7 @@ def test_denovo_sd_lgds_single(gscs):
     assert gs is not None
     # FIXME: changed after rennotation
     # assert gs['count'] == 501
-    assert gs['count'] == 507
+    assert gs['count'] == 506
 
 
 def test_denovo_get_gene_set_sd_ssc_lgds_autism(gscs):
