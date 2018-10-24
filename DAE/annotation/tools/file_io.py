@@ -279,17 +279,19 @@ class TabixReader(TSVFormat):
             return data[3:]
         return data
 
-    def _setup(self):
-        self.infile = pysam.TabixFile(self.filename)
-        contig_name = self.infile.contigs[0]
-        self._has_chrom_prefix = contig_name.startswith('chr')
-
-        region = self._handle_chrom_prefix(self.region)
+    def _region_reset(self, region):
+        region = self._handle_chrom_prefix(region)
 
         self.lines_iterator = self.infile.fetch(
             region=region,
             parser=pysam.asTuple())
 
+    def _setup(self):
+        self.infile = pysam.TabixFile(self.filename)
+        contig_name = self.infile.contigs[0]
+        self._has_chrom_prefix = contig_name.startswith('chr')
+
+        self._region_reset(self.region)
         self.header = self._header_read()
 
     def _header_read(self):

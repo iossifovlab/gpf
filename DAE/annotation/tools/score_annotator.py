@@ -40,13 +40,15 @@ class VariantScoreAnnotator(VariantAnnotatorBase):
 
         if self.config.options.direct:
             self.score_file = DirectAccess(
+                self.config.options,
                 scores_filename,
                 self.config.options.scores_config_file)
         else:
             self.score_file = IterativeAccess(
+                self.config.options,
                 scores_filename,
-                self.config.options.scores_config_file,
-                self.config.options.region)
+                self.config.options.scores_config_file)
+        self.score_file._setup()
 
     def _scores_not_found(self, aline):
         values = {
