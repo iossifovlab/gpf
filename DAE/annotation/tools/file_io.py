@@ -1,6 +1,8 @@
 from __future__ import print_function
 from __future__ import unicode_literals
+
 from builtins import str
+from builtins import open
 
 import sys
 import os
@@ -55,6 +57,14 @@ class IOManager(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        self.reader._cleanup()
+        self.writer._cleanup()
+
+    def _setup(self):
+        self.reader._setup()
+        self.writer._setup()
+
+    def _cleanup(self):
         self.reader._cleanup()
         self.writer._cleanup()
 
@@ -127,21 +137,39 @@ class TSVFormat(AbstractFormat):
     def __init__(self, opts, mode):
         super(TSVFormat, self).__init__(opts, mode)
 
+    @staticmethod
+    def is_gzip(filename):
+        try:
+            with gzip.open(filename, "rt") as infile:
+                infile.readline()
+            return True
+        except Exception:
+            return False
+
     def _setup(self):
         if self.mode == 'r':
             if self.opts.infile == '-':
                 self.variant_file = sys.stdin
             else:
                 assert_file_exists(self.opts.infile)
+                if hasattr(self.opts, 'region'):
+                    region = self.opts.region
+                else:
+                    region = None
 
-                region = self.opts.get('region', None)
                 if region is None:
-                    self.variant_file = open(self.opts.infile, 'r')
+                    if self.is_gzip(self.opts.infile):
+                        self.variant_file = gzip.open(
+                            self.opts.infile, 'rt')
+                    else:
+                        self.variant_file = open(
+                            self.opts.infile, 'r', encoding='utf8')
                 else:
                     tabix_file = pysam.TabixFile(self.opts.infile)
                     try:
                         self.variant_file = tabix_file.fetch(region=region)
-                    except ValueError:
+                    except ValueError as ex:
+                        print(ex)
                         self.variant_file = iter([])
             self._header_read()
 
@@ -153,7 +181,8 @@ class TSVFormat(AbstractFormat):
 
     def _cleanup(self):
         if self.mode == 'r':
-            sys.stderr.write('Processed ' + str(self.linecount) + ' lines.\n')
+            print('Processed', self.linecount, 'lines.', file=sys.stderr)
+
             if self.opts.infile != '-' and self.opts.region is None:
                 self.variant_file.close()
         else:
@@ -165,10 +194,11 @@ class TSVFormat(AbstractFormat):
             header_str = ""
             if self.opts.region is not None:
                 with gzip.open(
-                        self.opts.infile, 'rt', encoding='utf8') as infile:
+                        self.opts.infile, 'rt') as infile:
                     header_str = infile.readline()[:-1]
             else:
-                header_str = self.variant_file.readline()[:-1]
+                line = self.variant_file.readline()
+                header_str = line.strip()
             if header_str[0] == '#':
                 header_str = header_str[1:]
             self.header = header_str.split(self.opts.separator)
@@ -193,7 +223,8 @@ class TSVFormat(AbstractFormat):
             sys.exit(1)
 
         self.outfile.write('\t'.join(
-            [to_str(column) for column in line]) + '\n')
+            [to_str(column) for column in line]))
+        self.outfile.write('\n')
 
 
 class ParquetFormat(AbstractFormat):

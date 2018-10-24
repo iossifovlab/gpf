@@ -43,7 +43,7 @@ class AnnotatorBase(object):
         """
 
     @abstractmethod
-    def line_annotations(self, line, new_columns):
+    def line_annotations(self, line, new_columns, variant=None):
         """
             Method returning annotations for the given line
             in the order from new_columns parameter.
@@ -56,7 +56,8 @@ def give_column_number(s, header):
     except Exception:
         print(
             "Used parameter: " + s +
-            " does NOT exist in the input file header", file=sys.stderr)
+            " does NOT exist in the input file header",
+            header, file=sys.stderr)
         sys.exit(-1)
 
 

@@ -10,7 +10,7 @@ import os
 
 import engarde.checks as ec
 import numpy as np
-from variants.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
+from utils.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
 from variants.parquet_io import save_family_variants_to_parquet,\
     save_summary_variants_to_parquet
 from variants.raw_dae import RawDAE, BaseDAE

@@ -22,7 +22,7 @@ from variants.attributes import VariantType
 from variants.family import FamiliesBase, Family
 from variants.family_variant import FamilyVariant
 from variants.variant import SummaryVariantFactory, SummaryVariant
-from variants.vcf_utils import best2gt, str2mat, \
+from utils.vcf_utils import best2gt, str2mat, \
     reference_genotype
 
 

@@ -180,7 +180,7 @@ class GenomicSequence_Ivan(object):
         if os.path.exists(file + ".fai") == False:
             self.__createIndexFile(file)
 
-        self.genomicIndexFile =  file + ".fai"
+        self.genomicIndexFile = file + ".fai"
         self.genomicFile = file
         self.__chromNames()
         self.__initiate()
@@ -199,27 +199,24 @@ class GenomicSequence_Ivan(object):
         for chr in self.allChromosomes:
             R.append((chr, self._Indexing[chr]['length']))
         return(R)
-
-            
+      
     def getSequence(self, chr, start, stop):
-        
         
         if chr not in self.allChromosomes:
             print("Unknown chromosome!")
             return(-1)
 
-        self.__f.seek(self._Indexing[chr]['startBit']+start-1+old_div((start-1),self._Indexing[chr]['seqLineLength']))
-        
+        self.__f.seek(
+            self._Indexing[chr]['startBit']+start-1+old_div((start-1),
+            self._Indexing[chr]['seqLineLength']))
+
         l = stop-start+1
-        x = 1 + old_div(l,self._Indexing[chr]['seqLineLength'])
-        
+        x = 1 + old_div(l, self._Indexing[chr]['seqLineLength'])
+
         w = self.__f.read(l+x)
         w = w.replace("\n", "")[:l]
-        
-       
-        return w.upper()
 
-        
+        return w.upper()
 
 
 def openRef(file="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa"):
@@ -227,7 +224,6 @@ def openRef(file="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b37_phiX1
     if os.path.exists(file) == False:
         print("The input file: " + file + " does NOT exist!")
         sys.exit(-100)
-        
 
     if file.endswith('.fa'):
         # ivan's method

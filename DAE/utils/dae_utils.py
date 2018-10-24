@@ -3,11 +3,13 @@ Created on Mar 5, 2018
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import re
 
-SUB_COMPLEX_RE = re.compile('^(sub|complex)\(([NACGT]+)->([NACGT]+)\)$')
-INS_RE = re.compile('^ins\(([NACGT]+)\)$')
-DEL_RE = re.compile('^del\((\d+)\)$')
+SUB_COMPLEX_RE = re.compile(r'^(sub|complex)\(([NACGT]+)->([NACGT]+)\)$')
+INS_RE = re.compile(r'^ins\(([NACGT]+)\)$')
+DEL_RE = re.compile(r'^del\((\d+)\)$')
+
 
 def dae2vcf_variant(chrom, position, var, GA=None):
     if GA is None:
@@ -28,6 +30,7 @@ def dae2vcf_variant(chrom, position, var, GA=None):
     if match:
         count = int(match.group(1))
         reference = GA.getSequence(chrom, position - 1, position + count - 1)
+        assert len(reference) == count + 1, reference
         return position - 1, reference, reference[0]
 
     raise NotImplementedError('weird variant: ' + var)
