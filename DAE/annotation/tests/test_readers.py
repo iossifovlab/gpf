@@ -125,3 +125,24 @@ def test_tabix_reader(filename, header, region, linecount):
             print(line)
         assert reader.linecount == linecount
 
+
+def test_tabix_reader_simple():
+    filename, header, region, linecount = (
+        'fixtures/input3.tsv.gz',
+        ['CHROM', 'POS', 'REF', 'ALT'], None, 18)
+
+    infilename = relative_to_this_test_folder(filename)
+    os.path.exists(infilename)
+
+    options = Box({
+        'region': region,
+    }, default_box=True, default_box_attr=None)
+
+    with TabixReader(options, filename=infilename) as reader:
+        assert reader is not None
+        print(reader.header)
+        assert reader.header == header
+
+        for line in reader.lines_read_iterator():
+            print(line)
+        assert reader.linecount == linecount

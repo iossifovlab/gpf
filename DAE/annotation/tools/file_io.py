@@ -111,9 +111,9 @@ class AbstractFormat(object):
     def _cleanup(self):
         pass
 
-    @abstractmethod
-    def line_read(self):
-        pass
+    # @abstractmethod
+    # def line_read(self):
+    #     pass
 
     @abstractmethod
     def lines_read_iterator(self):
@@ -287,7 +287,8 @@ class TabixReader(TSVFormat):
         region = self._handle_chrom_prefix(self.region)
 
         self.lines_iterator = self.infile.fetch(
-            region=region, parser=pysam.asTuple())
+            region=region,
+            parser=pysam.asTuple())
 
         self.header = self._header_read()
 
@@ -318,14 +319,16 @@ class TabixReader(TSVFormat):
     def line_write(self, line):
         raise NotImplementedError()
 
-    def line_read(self):
-        line = next(self.lines_iterator)
-        self._progress_step()
-        return line
+    # def line_read(self):
+    #     line = next(self.lines_iterator)
+    #     self._progress_step()
+    #     return line
 
     def lines_read_iterator(self):
         for line in self.lines_iterator:
             self._progress_step()
+            # print(self.linecount, line)
+
             yield line
 
 

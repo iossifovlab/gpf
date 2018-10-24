@@ -16,7 +16,7 @@ from annotation.tools.score_annotator import VariantScoreAnnotator, \
 
 input2_phast_exptected = \
     """RESULT_phastCons100way
--100
+0.253
 0.251
 0.249
 0.247
@@ -25,7 +25,7 @@ input2_phast_exptected = \
 
 input2_phast_pylo_expected = \
     """RESULT_phastCons100way\tRESULT_phyloP100way
--100\t-100
+0.253\t0.064
 0.251\t0.061
 0.249\t0.064
 0.247\t0.061

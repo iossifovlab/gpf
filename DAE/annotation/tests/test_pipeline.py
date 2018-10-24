@@ -111,7 +111,7 @@ input2_copy_expected = """loc1\tvar1
 """
 
 input2_score_expected = """loc1\tvar1\tRESULT_phastCons100way
-1:10918\tsub(G->A)\t-100
+1:10918\tsub(G->A)\t0.253
 1:10919\tsub(A->C)\t0.251
 1:10920\tsub(G->T)\t0.249
 1:10921\tsub(A->C)\t0.247
@@ -120,7 +120,7 @@ input2_score_expected = """loc1\tvar1\tRESULT_phastCons100way
 
 input2_score2_expected = \
     """loc1\tvar1\tRESULT_phastCons100way\tRESULT_RawScore\tRESULT_PHRED
-1:10918\tsub(G->A)\t-100\t0.40161\t6.631
+1:10918\tsub(G->A)\t0.253\t0.40161\t6.631
 1:10919\tsub(A->C)\t0.251\t0.537788\t7.986
 1:10920\tsub(G->T)\t0.249\t0.371362\t6.298
 1:10921\tsub(A->C)\t0.247\t0.537794\t7.986
