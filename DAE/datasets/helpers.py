@@ -204,7 +204,8 @@ def generate_pedigree(variant):
             member.mom if member.has_mom() else '',
             member.dad if member.has_dad() else '',
             member.sex.short(),
-            '#ffffff' if member.status == Status.unaffected.value else '#e35252'
+            '#D3D3D3' if member.generated else '#ffffff'
+            if member.status == Status.unaffected.value else '#e35252'
             ] + variant_count_v3(
                 variant.best_st, index, variant.location, member.sex.short())
         )
