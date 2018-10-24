@@ -45,7 +45,7 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         self.families_build(self.ped_df, family_class=Family)
 
     @staticmethod
-    def get_thrift_connection(thrift_host, thrift_port):
+    def get_thrift_connection(thrift_host=None, thrift_port=None):
         if thrift_host is None:
             thrift_host = os.getenv("THRIFTSERVER_HOST", "127.0.0.1")
         if thrift_port is None:

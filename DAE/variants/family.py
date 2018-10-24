@@ -30,6 +30,7 @@ class Person(object):
         self.mom = atts['momId']
         self.dad = atts['dadId']
         self.layout_position = atts.get('layout', None)
+        self.generated = atts.get('generated', False)
 
     def __repr__(self):
         return "Person({} ({}); {}; {})".format(
@@ -139,6 +140,7 @@ class FamiliesBase(object):
                 'sex': lambda s: Sex.from_value(s),
                 'gender': lambda s: Sex.from_value(s),
                 'layout': lambda lc: lc.split(':')[-1],
+                'generated': lambda g: True if g == 1.0 else False,
             },
             dtype={
                 'familyId': str,

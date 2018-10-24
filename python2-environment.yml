@@ -59,7 +59,7 @@ dependencies:
   - py=1.5.3=py27_0
   - pyparsing=2.2.0=py27hf1513f8_1
   - pyqt=5.9.2=py27h751905a_0
-  - pysam=0.6=py27_0
+  - pysam=0.15.1
   - pytest=3.5.1=py27_0
   - pytest-cov=2.5.1=py27hc4181bb_0
   - pytest-mock=1.10.0=py27_0

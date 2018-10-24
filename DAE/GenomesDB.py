@@ -29,6 +29,7 @@ gmDB = GeneModels("/home/ivan/ccdsGene.txt.gz",geneMappingFile="")
 gmDB.....
 '''
 
+
 class GenomesDB(object):
     def __init__(self, daeDir, confFile=None, data_dir=None):
         
@@ -47,10 +48,15 @@ class GenomesDB(object):
         self._geneModels = {}
         self._mitoGeneModels = {}
 
-    def get_genome(self, genomeId=None):
+    def get_genome_file(self, genomeId=None):
         if not genomeId:
             genomeId = self.defaultGenome
         genomeFile = self.config.get('genome.' + genomeId, 'chrAllFile')
+        return genomeFile
+
+    def get_genome(self, genomeId=None):
+        genomeFile = self.get_genome_file(genomeId)
+
         # print "AAAAAAAAAAAAAA: genomeId:", genomeId, "genomeFile:", genomeFile
         return openRef(genomeFile)
 

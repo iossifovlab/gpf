@@ -14,7 +14,7 @@ from variants.variant import SummaryVariant, SummaryAllele
 from variants.family import Family
 from variants.attributes import Inheritance
 import itertools
-from variants.vcf_utils import GENOTYPE_TYPE
+from utils.vcf_utils import GENOTYPE_TYPE
 
 
 class FamilyDelegate(object):

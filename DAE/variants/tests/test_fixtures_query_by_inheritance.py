@@ -8,7 +8,7 @@ from __future__ import unicode_literals
 import pytest
 
 from variants.attributes import Inheritance
-from variants.vcf_utils import mat2str
+from utils.vcf_utils import mat2str
 
 
 @pytest.mark.parametrize("variants", [

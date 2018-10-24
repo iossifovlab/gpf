@@ -10,7 +10,7 @@ from builtins import str
 from builtins import zip
 from builtins import range
 from builtins import object
-from variants.vcf_utils import vcf2cshl
+from utils.vcf_utils import vcf2cshl
 
 from variants.attributes import VariantType
 from variants.effects import Effect

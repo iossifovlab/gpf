@@ -1,6 +1,6 @@
 FROM continuumio/miniconda3
 
-RUN mkdir /data-work && mkdir /spark-home && mkdir /data-raw-dev
+RUN mkdir /data && mkdir /spark-home && mkdir /code
 
 RUN apt-get update --fix-missing && \ 
 	apt-get install -y default-libmysqlclient-dev gcc libgl1-mesa-glx openjdk-8-jre-headless && \
@@ -14,19 +14,15 @@ RUN conda env update -n root -f python3-environment.yml && \
 	pip install git+git://github.com/seqpipe/cyvcf2 && \
 	rm -r ~/.cache/pip
 
-COPY . /code
-
 WORKDIR /code
 
 ENV DAE_SOURCE_DIR="/code/DAE"
-ENV DAE_DB_DIR="/data-work"
+ENV DAE_DB_DIR="/data"
 ENV PYTHONPATH="$DAE_SOURCE_DIR:$PYTHONPATH"
 
 ENV SPARK_HOME="/spark-home"
 ENV THRIFTSERVER_PORT="60008"
 
-ENV DAE_DATA_DIR="/data-raw-dev"
-ENV DATA_DATASETS_DIR="/data-raw-dev/datasets"
-ENV DAE_CONFIG_FILE="variants.conf"
+ENV DAE_DATA_DIR="/data/parquet"
 
 SHELL ["/bin/bash", "-c"]

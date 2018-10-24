@@ -307,5 +307,8 @@ def read_ped_df_from_parquet(filename):
     ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
     if 'layout' in ped_df:
         ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
+    if 'generated' in ped_df:
+        ped_df.generated = ped_df.generated.apply(
+            lambda v: True if v == 1.0 else False)
 
     return ped_df
