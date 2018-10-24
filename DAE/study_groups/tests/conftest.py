@@ -9,7 +9,7 @@ from utils.fixtures import path_to_fixtures as _path_to_fixtures
 
 
 def path_to_fixtures(path=None):
-    return _path_to_fixtures('gene', path)
+    return _path_to_fixtures('study_groups', path)
 
 
 @pytest.fixture(scope='session')
