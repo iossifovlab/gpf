@@ -43,7 +43,7 @@ class AnnotatorBase(object):
 
         file_io_manager.line_write(self.config.output_columns)
 
-        for line in file_io_manager.lines_read():
+        for line in file_io_manager.lines_read_iterator():
             if '#' in line[0]:
                 file_io_manager.line_write(line)
                 continue
@@ -190,7 +190,7 @@ class VariantAnnotatorBase(AnnotatorBase):
 
         file_io_manager.line_write(self.config.output_columns)
 
-        for line in file_io_manager.lines_read():
+        for line in file_io_manager.lines_read_iterator():
             if '#' in line[0]:
                 file_io_manager.line_write(line)
                 continue

@@ -92,18 +92,18 @@ def expected_output():
 #     remove(output_path)
 
 
-def test_tsv_io():
-    input_buffer = StringIO(input_base())
-    output_buffer = StringIO()
-    options = get_opts(input_buffer, output_buffer)
-    # annotator = Dummy_annotator()
-    with file_io.IOManager(
-            options, file_io.IOType.TSV, file_io.IOType.TSV) as io:
-        io.line_write(io.header + ['#score'])
-        for line in io.lines_read():
-            line.append(42)
-            io.line_write(line)
-        assert str(output_buffer.getvalue()) == str(expected_output())[1:]
+# def test_tsv_io():
+#     input_buffer = StringIO(input_base())
+#     output_buffer = StringIO()
+#     options = get_opts(input_buffer, output_buffer)
+#     # annotator = Dummy_annotator()
+#     with file_io.IOManager(
+#             options, file_io.IOType.TSV, file_io.IOType.TSV) as io:
+#         io.line_write(io.header + ['#score'])
+#         for line in io.lines_read():
+#             line.append(42)
+#             io.line_write(line)
+#         assert str(output_buffer.getvalue()) == str(expected_output())[1:]
 
 
 # def test_parquet_io(setup_parquet_input):

@@ -27,7 +27,7 @@ def test_create_file_io():
     io_config = Box(io, default_box=True, default_box_attr=None)
     with IOManager(io_config, IOType.TSV, IOType.TSV) as io:
         assert io is not None
-        lines = list(io.lines_read())
+        lines = list(io.lines_read_iterator())
         print(lines)
         assert len(lines) == 4
         print(io.header)
