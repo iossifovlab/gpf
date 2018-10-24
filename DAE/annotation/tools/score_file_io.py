@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-from __future__ import unicode_literals
+
 from __future__ import print_function
-from builtins import open
 
 import sys
 
@@ -65,7 +64,7 @@ class ScoreFile(TabixReader):
             self.config_filename = "{}.conf".format(self.filename)
         assert os.path.exists(self.config_filename)
 
-        with open(self.config_filename, 'r', encoding='utf8') as conf_file:
+        with open(self.config_filename, 'r') as conf_file:
             conf_settings = conf_to_dict(conf_file)
             self.config = Box(
                 conf_settings, default_box=True,
@@ -149,7 +148,7 @@ class IterativeAccess(ScoreFile):
         if buffer_pos_end >= pos_end and buffer_pos_begin <= pos_begin:
             # the line buffer is full enough
             return
-    
+ 
         for line in self.lines_iterator:
             line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
             assert line_chrom == self.current_chrom
@@ -212,6 +211,8 @@ class DirectAccess(ScoreFile):
 
     def _fetch(self, chrom, pos_begin, pos_end):
         try:
+            # print(type(chrom), type(pos_begin), type(pos_end))
+
             return self.infile.fetch(
                 chrom, pos_begin-1, pos_end, parser=pysam.asTuple())
         except ValueError as ex:

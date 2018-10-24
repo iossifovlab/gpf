@@ -1,6 +1,7 @@
 import pytest
 
 import pandas as pd
+from builtins import str
 from io import StringIO
 
 from box import Box
@@ -28,7 +29,7 @@ def variants_io(request):
 @pytest.fixture
 def expected_df():
     def build(data):
-        infile = StringIO(data)
+        infile = StringIO(str(data))
         df = pd.read_csv(infile, sep="\t")
         return df
     return build

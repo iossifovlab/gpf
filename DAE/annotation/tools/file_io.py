@@ -1,8 +1,4 @@
 from __future__ import print_function
-from __future__ import unicode_literals
-
-from builtins import str
-from builtins import open
 
 import sys
 import os
@@ -111,10 +107,6 @@ class AbstractFormat(object):
     def _cleanup(self):
         pass
 
-    # @abstractmethod
-    # def line_read(self):
-    #     pass
-
     @abstractmethod
     def lines_read_iterator(self):
         pass
@@ -194,7 +186,7 @@ class TSVReader(TSVFormat):
         else:
             assert os.path.exists(self.filename)
             assert not self.is_gzip(self.filename)
-            self.infile = open(self.filename, 'r', encoding='utf8')
+            self.infile = open(self.filename, 'r')
 
         self.header = self._header_read()
 
@@ -270,7 +262,7 @@ class TabixReader(TSVFormat):
         self.region = self.options.region
         self._has_chrom_prefix = None
 
-    def _handle_chrom_prefix(self, data):
+    def _handle_chrom_prefix(self, data):        
         if data is None:
             return data
         if self._has_chrom_prefix and not data.startswith('chr'):
@@ -281,6 +273,7 @@ class TabixReader(TSVFormat):
 
     def _region_reset(self, region):
         region = self._handle_chrom_prefix(region)
+        # print("_region_reset(", region, ")")
 
         self.lines_iterator = self.infile.fetch(
             region=region,
@@ -351,7 +344,7 @@ class TSVWriter(TSVFormat):
         if self.filename == '-':
             self.outfile = sys.stdout
         else:
-            self.outfile = open(self.filename, 'w', encoding='utf8')
+            self.outfile = open(self.filename, 'w')
 
     def _cleanup(self):
         if self.filename != '-':
