@@ -17,15 +17,12 @@ def relative_to_this_test_folder(path):
 class Dummy_tbi:
 
     def __init__(self, filename):
-        print(filename, type(filename))
         if isinstance(filename, str):
             self.file = open(filename, 'r')
         else:
             self.file = filename
 
     def get_splitted_line(self):
-        print(self.file, type(self.file))
-
         res = self.file.readline().rstrip('\n')
         if res == '':
             return res

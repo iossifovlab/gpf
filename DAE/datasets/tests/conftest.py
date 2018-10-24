@@ -1,12 +1,14 @@
 import pytest
 import os
+import functools
 
-from datasets.dataset import DatasetWrapper
+from datasets.dataset_facade import DatasetFacade
 from datasets.dataset_factory import DatasetFactory
 from datasets.datasets_definition import SingleFileDatasetsDefinition
 from studies.study_definition import SingleFileStudiesDefinition
-from study_groups.study_group_definition import\
-    SingleFileStudiesGroupDefinition
+from study_groups.study_group import StudyGroupWrapper
+from study_groups.study_group_definition import SingleFileStudiesGroupDefinition
+from study_groups.study_group_factory import StudyGroupFactory
 
 
 def fixtures_dir(path):
@@ -31,6 +33,22 @@ def load_dataset(fixtures_folder, dataset_factory, dataset_name):
 
 
 @pytest.fixture(scope='session')
+def dataset_facade(dataset_factory):
+    return lambda dataset_id: \
+        DatasetFacade(
+            dataset_definition=SingleFileDatasetsDefinition(
+                dataset_id, fixtures_dir(None)),
+            dataset_factory=dataset_factory
+        )
+
+
+@pytest.fixture(scope='session')
+def study_group_factory(study_definition):
+    return StudyGroupFactory(
+        studies_definition=study_definition, _class=StudyGroupWrapper)
+
+
+@pytest.fixture(scope='session')
 def study_definition():
     return SingleFileStudiesDefinition(
         'studies.conf', fixtures_dir('studies'))
@@ -44,10 +62,9 @@ def basic_study_group_definition(study_definition):
 
 
 @pytest.fixture(scope='session')
-def dataset_factory(basic_study_group_definition, study_definition):
+def dataset_factory(basic_study_group_definition, study_group_factory):
     return DatasetFactory(
-        _class=DatasetWrapper,
-        study_definition=study_definition,
+        study_group_factory=study_group_factory,
         study_group_definition=basic_study_group_definition)
 
 

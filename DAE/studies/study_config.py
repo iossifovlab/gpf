@@ -52,5 +52,5 @@ class StudyConfig(ConfigurableEntityConfig):
             'hasComplex': 'no',
             'hasCNV': 'no',
             'hasDenovo': 'no',
-            'hasTransmitted': 'no'
+            'hasTransmitted': 'no',
         }

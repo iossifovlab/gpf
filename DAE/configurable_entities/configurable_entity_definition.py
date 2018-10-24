@@ -43,8 +43,6 @@ class ConfigurableEntityDefinition(object):
             if not os.path.isdir(path) and path.endswith('.conf'):
                 config_paths.append(os.path.join(enabled_dir, path))
 
-        print(config_paths)
-
         for config_path in config_paths:
             configs.append(ConfigurableEntityDefinition.list_from_config(
                 config_path, work_dir, configurable_entity_config,
@@ -67,8 +65,6 @@ class ConfigurableEntityDefinition(object):
             for config in configs
         }
 
-        print(self.configs)
-
     @classmethod
     def list_from_config(cls, config_file, work_dir,
                          configurable_entity_config, default_values={}):
@@ -77,6 +73,7 @@ class ConfigurableEntityDefinition(object):
 
         result = list()
         for section in config.keys():
+
             entity_config = configurable_entity_config.from_config(
                 config[section], section)
             if entity_config is not None:

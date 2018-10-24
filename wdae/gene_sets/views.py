@@ -26,6 +26,8 @@ class GeneSetsBaseView(views.APIView):
 
     def __init__(self):
         self.gscs = register.get('gene_sets_collections')
+        self.dataset_facade = register.get('datasets').get_facade()
+
 
 class GeneSetsCollectionsView(GeneSetsBaseView):
 
@@ -33,9 +35,32 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
         super(GeneSetsCollectionsView, self).__init__()
 
     def get(self, request):
+        permitted_datasets = IsDatasetAllowed.permitted_datasets(request.user)
+        permitted_study_groups = [
+            self.dataset_facade.get_dataset(dataset).study_group.name
+            for dataset in permitted_datasets
+        ]
         gene_sets_collections = deepcopy(self.gscs.get_gene_sets_collections(
-            IsDatasetAllowed.permitted_datasets(request.user)))
+            permitted_study_groups))
+        self.study_groups_to_datasets(gene_sets_collections)
         return Response(gene_sets_collections, status=status.HTTP_200_OK)
+
+    def study_groups_to_datasets(self, gene_sets_collections):
+        for gene_sets in gene_sets_collections:
+            for datasetMap in gene_sets['types']:
+                study_group_id = datasetMap.pop('studyGroupId')
+                dataset = self.dataset_facade.get_dataset_by_study_group(
+                    study_group_id)
+                if dataset is None:
+                    raise RuntimeError(
+                        "No dataset configured for study group '{}' in gene_"
+                        "sets '{}'".format(
+                            study_group_id, gene_sets['name']
+                        ))
+
+                datasetMap['datasetId'] = dataset.id
+                datasetMap['datasetName'] = dataset.name
+                datasetMap['phenotypes'] = dataset.get_legend()
 
 
 class GeneSetsView(GeneSetsBaseView):
