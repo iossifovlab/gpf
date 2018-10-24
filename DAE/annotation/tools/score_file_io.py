@@ -4,7 +4,7 @@ from __future__ import print_function
 from builtins import open
 
 import sys
-import gzip
+
 import pysam
 import pandas as pd
 from configparser import ConfigParser
@@ -67,9 +67,18 @@ class ScoreFile(object):
                 file=sys.stderr)
             sys.exit(1)
 
-        self.file = gzip.open(self.filename, 'rt')  # , encoding='utf8')
+        # self.file = gzip.open(self.filename, 'rt')  # , encoding='utf8')
+        self.file = pysam.Tabixfile(self.filename)
+        contigs = self.file.contigs
+
+        if 'chr' in contigs:
+            self.has_chrom_prefix = True
+        else:
+            self.has_chrom_prefix = False
+
         if self.config.header is None:
-            header_str = self.file.readline().rstrip()
+            header_str = self.file.header
+
             if header_str[0] == '#':
                 header_str = header_str[1:]
             self.config.header = header_str.split('\t')
@@ -89,14 +98,26 @@ class ScoreFile(object):
     def _fetch(self, chrom, pos_begin, pos_end):
         raise NotImplementedError()
 
+    def _strip_chrom_prefix(self, chrom):
+        if self.has_chrom_prefix and 'chr' not in chrom:
+            return "chr{}".format(chrom)
+        elif not self.has_chrom_prefix and 'chr' in chrom:
+            return chrom.replace('chr', '')
+        return chrom
+
     def fetch_score_lines(self, chrom, pos_begin, pos_end):
+        stripped_chrom = self._strip_chrom_prefix(chrom)
+
         pos_begin = int(pos_begin)
         pos_end = int(pos_end)
 
-        score_lines = self._fetch(chrom, pos_begin, pos_end)
+        score_lines = self._fetch(stripped_chrom, pos_begin, pos_end)
         res = []
         for line in score_lines:
-            res.append(self.line_config.build(list(line)).columns)
+            aline = self.line_config.build(list(line))
+            aline.columns[self.config.columns.chr] = chrom
+            res.append(aline.columns)
+
         df = pd.DataFrame.from_records(
             res, columns=self.line_config.source_header)
         for score_name in self.config.columns.score:
@@ -131,6 +152,12 @@ class IterativeAccess(ScoreFile):
             self.config.header.index(self.config.columns.pos_begin)
         self.pos_end_index = \
             self.config.header.index(self.config.columns.pos_end)
+
+        if region is not None:
+            if self.has_chrom_prefix and not region.startswith('chr'):
+                region = "chr{}".format(region)
+            if not self.has_chrom_prefix and region.startswith('chr'):
+                region = region.replace('chr', '')
 
         self.file = pysam.Tabixfile(score_file_name)
         try:

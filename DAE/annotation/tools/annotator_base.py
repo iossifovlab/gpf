@@ -140,7 +140,7 @@ class VCFBuilder(VariantBuilder):
         position = aline.columns[self.position]
         ref = aline.columns[self.ref]
         alt = aline.columns[self.alt]
-    
+
         summary = SummaryAllele(
             chrom, int(position), ref, alt
         )

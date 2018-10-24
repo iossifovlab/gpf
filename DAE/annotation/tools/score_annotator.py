@@ -58,6 +58,9 @@ class VariantScoreAnnotator(VariantAnnotatorBase):
     def _scores_no_search(self, aline, scores_df):
         for score_name in self.score_names:
             column_name = self.config.columns_config[score_name]
+            assert score_name in scores_df.columns, \
+                "Score {} not found in scores {}".format(
+                    score_name, scores_df.columns)
             aline.columns[column_name] = scores_df[score_name].mean()
 
     def _scores_with_search(self, aline, scores_df):
@@ -139,4 +142,3 @@ class VariantMultiScoreAnnotator(CompositeVariantAnnotator):
 
         annotator = VariantScoreAnnotator(variant_config)
         return annotator
-
