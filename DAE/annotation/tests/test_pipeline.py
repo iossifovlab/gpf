@@ -6,6 +6,8 @@ import pandas as pd
 from box import Box
 
 from annotation.annotation_pipeline import PipelineConfig, PipelineAnnotator
+from annotation.tools.annotator_base import VariantAnnotatorBase
+
 
 from .utils import relative_to_this_test_folder
 
@@ -166,62 +168,57 @@ def test_build_pipeline(
         check_names=False)
 
 
-# def test_build_annotation_configuration_region(annotation_test_conf):
-#     assert annotation_test_conf.default_options.region == "1:100001-1000001"
+def dummy_variant_annotate(annotator, aline, variant):
+    # print(variant)
+
+    aline['changed_chrom'] = "test"
+    aline['changed_position'] = 42
 
 
-# @pytest.fixture
-# def annotation_test_conf():
-#     args = Box({
-#         "region": "1:100001-1000001",
-#         },
-#         default_box=True, 
-#         default_box_attr=None)
-
-#     header = ["#chr", "position", "ref", "alt"]
-#     filename = relative_to_this_test_folder(
-#         "fixtures/annotation_test.conf")
-
-#     config = AnnotationConfig.build(
-#         args, filename, header)
-#     return config
+@pytest.fixture(autouse=True)
+def mock(mocker):
+    mocker.patch.object(
+        VariantAnnotatorBase, 'do_annotate', new=dummy_variant_annotate)
 
 
-# def test_build_annotation_configuration_step5(annotation_test_conf):
-#     section = annotation_test_conf.annotation_sections[5]
-#     assert section.name == "Step5"
-
-#     print(section.options)
-#     assert section.options['c'] == "VCF:chr"
-#     assert section.options['p'] == "VCF:position"
-#     assert not section.options['gzip']
-
-
-# def test_build_annotation_configuration_step2(annotation_test_conf):
-#     section = annotation_test_conf.annotation_sections[2]
-#     assert section.name == "Step2"
-
-#     print(section.options)
-#     assert section.options['c'] == "CSHL:chr"
-#     assert section.options['p'] == "CSHL:position"
-
-#     assert len(section.native_columns) == 4
-#     assert len(section.input_columns) == 4
-#     assert len(section.output_columns) == 2
-#     assert len(section.virtual_columns) == 2
+expected_change_variants_position = \
+    """test_copy_chr	test_copy_pos	test_vcf_chr	""" \
+    """test_vcf_pos	test_cshl_chr	test_cshl_pos
+test	42	test	42	test	42
+test	42	test	42	test	42
+test	42	test	42	test	42
+test	42	test	42	test	42
+test	42	test	42	test	42
+"""
 
 
-# def test_annotator_class_instance():
-#     clazz = AnnotationSection._name_to_class(
-#         "annotation.tools.relabel_chromosome.RelabelChromosomeAnnotator"
-#     )
-#     assert clazz is not None
-#     assert clazz == \
-#         annotation.tools.relabel_chromosome.RelabelChromosomeAnnotator
+def test_pipeline_change_variants_position(variants_io, capsys, expected_df):
+    
+    options = Box({
+            "default_arguments": None,
+            "vcf": True,
+        },
+        default_box=True,
+        default_box_attr=None)
 
-#     clazz = AnnotationSection._name_to_class(
-#         "annotate_with_multiple_scores.MultipleScoresAnnotator"
-#     )
-#     assert clazz is not None
-#     assert clazz == \
-#         annotation.tools.annotate_with_multiple_scores.MultipleScoresAnnotator
+    filename = relative_to_this_test_folder(
+        "fixtures/variant_coordinates_change.conf")
+
+    pipeline = PipelineAnnotator.build(
+        options, filename, defaults={
+            "fixtures_dir": relative_to_this_test_folder("fixtures/")
+        })
+    assert pipeline is not None
+
+    with variants_io("fixtures/input2.tsv") as io_manager:
+        pipeline.annotate_file(io_manager)
+    captured = capsys.readouterr()
+
+    print(captured.err)
+    print(captured.out)
+
+    pd.testing.assert_frame_equal(
+        expected_df(captured.out), 
+        expected_df(expected_change_variants_position),
+        check_less_precise=3,
+        check_names=False)
