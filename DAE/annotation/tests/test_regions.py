@@ -8,7 +8,7 @@ from box import Box
 from .utils import relative_to_this_test_folder
 
 from annotation.tools.annotator_config import VariantAnnotatorConfig
-from annotation.tools.score_annotator import VariantScoreAnnotator
+from annotation.tools.score_annotator import PositionScoreAnnotator
 
 
 phast_chr1_2 = """CHROM	POS	REF	ALT	RESULT_phastCons100way
@@ -71,7 +71,7 @@ def test_regions_parameterized(
         virtuals=[]
     )
 
-    score_annotator = VariantScoreAnnotator(config)
+    score_annotator = PositionScoreAnnotator(config)
     assert score_annotator is not None
 
     captured = capsys.readouterr()
@@ -121,7 +121,7 @@ def test_regions_simple(
         virtuals=[]
     )
 
-    score_annotator = VariantScoreAnnotator(config)
+    score_annotator = PositionScoreAnnotator(config)
     assert score_annotator is not None
 
     captured = capsys.readouterr()

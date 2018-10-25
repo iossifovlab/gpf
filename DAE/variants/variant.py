@@ -221,6 +221,13 @@ class SummaryAllele(VariantBase):
             return None
 
     @property
+    def variant_type(self):
+        if self.details is not None:
+            return self.details.variant_type
+        else:
+            return None
+
+    @property
     def effects(self):
         return self.effect
 

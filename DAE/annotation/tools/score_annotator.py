@@ -3,7 +3,10 @@ from __future__ import print_function
 import sys
 import os
 import glob
+
 from box import Box
+
+from variants.attributes import VariantType
 
 from annotation.tools.annotator_base import VariantAnnotatorBase, \
     CompositeVariantAnnotator
@@ -13,21 +16,18 @@ from annotation.tools.score_file_io import DirectAccess, \
     IterativeAccess
 
 
-class VariantScoreAnnotator(VariantAnnotatorBase):
+class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
     def __init__(self, config):
-        super(VariantScoreAnnotator, self).__init__(config)
+        super(VariantScoreAnnotatorBase, self).__init__(config)
 
         self._init_score_file()
 
-        if self.config.options.search_columns is not None and \
-                self.config.options.search_columns != '':
-            self.search_columns = self.config.options.search_columns.split(',')
-        else:
-            self.search_columns = []
-
         assert len(self.config.native_columns) >= 1
         self.score_names = self.config.native_columns
+
+        assert all([
+            sn in self.score_file.score_names for sn in self.score_names])
 
     def _init_score_file(self):
         if not self.config.options.scores_file:
@@ -54,57 +54,118 @@ class VariantScoreAnnotator(VariantAnnotatorBase):
             self.config.columns_config[score_name]:
             self.score_file.config.noScoreValue
             for score_name in self.score_names}
-        aline.columns.update(values)
+        aline.update(values)
 
-    def _scores_no_search(self, aline, scores_df):
-        for score_name in self.score_names:
-            column_name = self.config.columns_config[score_name]
-            assert score_name in scores_df.columns, \
-                "Score {} not found in scores {}".format(
-                    score_name, scores_df.columns)
-            aline[column_name] = scores_df[score_name].mean()
+    def _fetch_scores(self, variant):
+        scores = None
+        if variant.variant_type == VariantType.substitution:
+            scores = self.score_file.fetch_scores(
+                variant.chromosome,
+                variant.position,
+                variant.position
+            )
+        elif variant.variant_type in set([
+                VariantType.insertion, VariantType.deletion, 
+                VariantType.complex]):
 
-    def _scores_with_search(self, aline, scores_df):
-        assert len(self.search_columns) == len(self.score_file.search_columns)
-
-        match_expr = None
-        for col_index in range(len(self.search_columns)):
-            line_column = self.search_columns[col_index]
-            score_column = self.score_file.search_columns[col_index]
-            expr = scores_df[score_column] == aline[line_column]
-            if match_expr is None:
-                match_expr = expr
-            else:
-                match_expr = match_expr & expr
-        matched_df = scores_df[match_expr]
-        if len(matched_df) == 0:
-            self._scores_not_found(aline)
+            scores = self.score_file.fetch_scores(
+                variant.chromosome,
+                variant.position,
+                variant.position + len(variant.reference)
+            )
         else:
-            self._scores_no_search(aline, matched_df)
+            print("Unexpected variant type: {}, {}".format(
+                variant, variant.variant_type
+            ), file=sys.stderr)
+        return scores
+
+
+class PositionScoreAnnotator(VariantScoreAnnotatorBase):
+
+    def __init__(self, config):
+        super(PositionScoreAnnotator, self).__init__(config)
 
     def do_annotate(self, aline, variant):
         assert variant is not None
-        chrom = aline[self.config.options.c]
-        pos = aline[self.config.options.p]
 
-        scores_df = self.score_file.fetch_score_lines(
-            chrom,
-            pos,
-            pos
-        )
+        scores = self._fetch_scores(variant)
 
-        if len(scores_df) == 0:
+        if not scores:
             self._scores_not_found(aline)
-        elif not self.search_columns or not self.score_file.search_columns:
-            self._scores_no_search(aline, scores_df)
-        else:
-            self._scores_with_search(aline, scores_df)
+            return
+
+        for score_name in self.score_names:
+            column_name = self.config.columns_config[score_name]
+            values = scores[score_name]
+            assert len(values) > 0
+            if len(values) == 1:
+                aline[column_name] = values[0]
+            else:
+                aline[column_name] = \
+                    sum([float(v) for v in values]) / len(values)
 
 
-class VariantMultiScoreAnnotator(CompositeVariantAnnotator):
+class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
     def __init__(self, config):
-        super(VariantMultiScoreAnnotator, self).__init__(config)
+        super(NPScoreAnnotator, self).__init__(config)
+        assert self.score_file.ref_name is not None
+        assert self.score_file.alt_name is not None
+        self.ref_name = self.score_file.ref_name
+        self.alt_name = self.score_file.alt_name
+        self.chr_name = self.score_file.chr_name
+        self.pos_begin_name = self.score_file.pos_begin_name
+
+    def do_annotate(self, aline, variant):
+        assert variant is not None
+
+        scores = self._fetch_scores(variant)
+
+        if not scores:
+            self._scores_not_found(aline)
+            return
+
+        scores_df = self.score_file.scores_to_dataframe(scores)
+
+        if variant.variant_type == VariantType.substitution:
+
+            matched = (scores_df[self.ref_name] == variant.reference) & \
+                (scores_df[self.alt_name] == variant.alternative)
+            matched_df = scores_df[matched]
+            if len(matched_df) == 0:
+                self._scores_not_found()
+                return
+            
+            for score_name in self.score_names:
+                column_name = self.config.columns_config[score_name]
+                aline[column_name] = matched_df[score_name].mean()
+            return
+
+        if variant.variant_type in set([
+                VariantType.insertion, VariantType.deletion, 
+                VariantType.complex]):
+            aggregate = {
+                sn: 'max' for sn in self.score_names
+            }
+            aggregate['COUNT'] = 'max'
+            group_df = scores_df.groupby(
+                by=[self.chr_name, self.pos_begin_name]).agg(aggregate)
+            count = group_df['COUNT'].sum()
+
+            for score_name in self.score_names:
+                column_name = self.config.columns_config[score_name]
+                total_df = group_df[score_name] * group_df['COUNT']
+                aline[column_name] = total_df.sum()/count
+
+            return
+
+        self._scores_not_found(aline)
+
+
+class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
+
+    def __init__(self, config):
+        super(PositionMultiScoreAnnotator, self).__init__(config)
         assert self.config.options.scores_directory is not None
 
         for score_name in self.config.columns_config.keys():
@@ -140,5 +201,5 @@ class VariantMultiScoreAnnotator(CompositeVariantAnnotator):
             virtuals=[]
         )
 
-        annotator = VariantScoreAnnotator(variant_config)
+        annotator = PositionScoreAnnotator(variant_config)
         return annotator

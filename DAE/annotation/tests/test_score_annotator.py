@@ -9,8 +9,8 @@ from box import Box
 from .utils import relative_to_this_test_folder
 
 from annotation.tools.annotator_config import VariantAnnotatorConfig
-from annotation.tools.score_annotator import VariantScoreAnnotator, \
-    VariantMultiScoreAnnotator
+from annotation.tools.score_annotator import PositionScoreAnnotator, \
+    PositionMultiScoreAnnotator, NPScoreAnnotator
 
 
 input2_phast_exptected = \
@@ -61,7 +61,7 @@ def test_variant_score_annotator_simple(
     print(config.options)
     print(type(config.options))
 
-    score_annotator = VariantScoreAnnotator(config)
+    score_annotator = PositionScoreAnnotator(config)
     assert score_annotator is not None
 
     captured = capsys.readouterr()
@@ -107,7 +107,7 @@ def test_variant_multi_score_annotator_simple(
     print(config.options)
     print(type(config.options))
 
-    score_annotator = VariantMultiScoreAnnotator(config)
+    score_annotator = PositionMultiScoreAnnotator(config)
     assert score_annotator is not None
 
     captured = capsys.readouterr()
@@ -155,7 +155,7 @@ def test_variant_multi_score_annotator_multi(
     print(config.options)
     print(type(config.options))
 
-    score_annotator = VariantMultiScoreAnnotator(config)
+    score_annotator = PositionMultiScoreAnnotator(config)
     assert score_annotator is not None
 
     captured = capsys.readouterr()
@@ -212,7 +212,7 @@ def test_variant_score_annotator_cadd(
     print(config.options)
     print(type(config.options))
 
-    score_annotator = VariantScoreAnnotator(config)
+    score_annotator = NPScoreAnnotator(config)
     assert score_annotator is not None
 
     captured = capsys.readouterr()

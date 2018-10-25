@@ -130,7 +130,7 @@ input2_score2_expected = \
 @pytest.mark.parametrize("config_file,expected", [
     ("fixtures/copy_annotator.conf", input2_copy_expected),
     ("fixtures/score_annotator.conf", input2_score_expected),
-    # ("fixtures/score2_annotator.conf", input2_score2_expected),
+    ("fixtures/score2_annotator.conf", input2_score2_expected),
 ])
 def test_build_pipeline(
         expected_df, variants_io, capsys, config_file, expected):

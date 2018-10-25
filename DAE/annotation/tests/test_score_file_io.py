@@ -17,10 +17,10 @@ def test_iterative_access_simple():
             options, score_filename, score_config_filename) as score_io:
         assert score_io is not None
 
-        res = score_io.fetch_score_lines("1", 10918, 10920)
+        res = score_io.fetch_scores_df("1", 10918, 10920)
         print(res)
 
-        res = score_io.fetch_score_lines("1", 10934, 10934)
+        res = score_io.fetch_scores_df("1", 10934, 10934)
 
         assert len(res) == 1
 
@@ -39,7 +39,7 @@ def test_direct_access_simple():
 
         assert score_io is not None
 
-        res = score_io.fetch_score_lines("1", 10934, 10934)
+        res = score_io.fetch_scores_df("1", 10934, 10934)
         print(res)
 
         assert len(res) == 1

@@ -3,11 +3,12 @@
 from __future__ import print_function
 
 import sys
+import os
 
 import pysam
 import pandas as pd
+from collections import defaultdict
 from configparser import ConfigParser
-import os
 from box import Box
 from annotation.tools.annotator_config import LineConfig
 from annotation.tools.file_io import TabixReader
@@ -54,9 +55,15 @@ class ScoreFile(TabixReader):
         self._load_config()
         self.line_config = LineConfig(self.config.header)
 
-        self.chr_index = self.header.index(self.config.columns.chr)
-        self.pos_begin_index = self.header.index(self.config.columns.pos_begin)
-        self.pos_end_index = self.header.index(self.config.columns.pos_end)
+        self.chr_name = self.config.columns.chr
+        self.pos_begin_name = self.config.columns.pos_begin
+        self.pos_end_name = self.config.columns.pos_end
+        self.ref_name = self.config.columns.ref
+        self.alt_name = self.config.columns.alt
+
+        self.chr_index = self.header.index(self.chr_name)
+        self.pos_begin_index = self.header.index(self.pos_begin_name)
+        self.pos_end_index = self.header.index(self.pos_end_name)
 
     def _load_config(self, config_filename=None):
         if self.config_filename is None:
@@ -76,34 +83,37 @@ class ScoreFile(TabixReader):
         if self.config.columns.pos_end is None:
             self.config.columns.pos_end = self.config.columns.pos_begin
 
-        if hasattr(self.config.columns, 'search'):
-            if self.config.columns.search is not None:
-                self.config.columns.search = \
-                    self.config.columns.search.split(',')
-                self.search_columns = self.config.columns.search
         self.config.columns.score = self.config.columns.score.split(',')
+        self.score_names = self.config.columns.score
+        assert all([sn in self.header for sn in self.score_names])
 
     def _fetch(self, chrom, pos_begin, pos_end):
         raise NotImplementedError()
 
-    def fetch_score_lines(self, chrom, pos_begin, pos_end):
-        stripped_chrom = self._handle_chrom_prefix(chrom)
+    def fetch_scores_df(self, chrom, pos_begin, pos_end):
+        scores = self.fetch_scores(chrom, pos_begin, pos_end)
+        return self.scores_to_dataframe(scores)
 
-        pos_begin = int(pos_begin)
-        pos_end = int(pos_end)
+    def scores_to_dataframe(self, scores):
+        df = pd.DataFrame(scores)
 
-        score_lines = self._fetch(stripped_chrom, pos_begin, pos_end)
-        res = []
-        for line in score_lines:
-            aline = self.line_config.build(list(line))
-            aline[self.config.columns.chr] = chrom
-            res.append(aline)
-
-        df = pd.DataFrame.from_records(
-            res, columns=self.line_config.source_header)
-        for score_name in self.config.columns.score:
+        for score_name in self.score_names:
             df[score_name] = df[score_name].astype("float32")
         return df
+
+    def fetch_scores(self, chrom, pos_begin, pos_end):
+        stripped_chrom = self._handle_chrom_prefix(chrom)
+
+        score_lines = self._fetch(stripped_chrom, pos_begin, pos_end)
+        result = defaultdict(list)
+        for line in score_lines:
+            count = line[self.pos_end_index] - \
+                max(line[self.pos_begin_index], pos_begin) + 1
+            assert count >= 1
+            result["COUNT"].append(count)
+            for index, column in enumerate(self.header):
+                result[column].append(line[index])
+        return result
 
 
 class IterativeAccess(ScoreFile):
@@ -136,8 +146,8 @@ class IterativeAccess(ScoreFile):
 
     def _line_pos(self, line):
         return line[self.chr_index], \
-            int(line[self.pos_begin_index]), \
-            int(line[self.pos_end_index])
+            line[self.pos_begin_index], \
+            line[self.pos_end_index]
 
     def _fill_line_buffer(self, chrom, pos_begin, pos_end):
         buffer_chrom, buffer_pos_begin, buffer_pos_end = \
@@ -147,8 +157,13 @@ class IterativeAccess(ScoreFile):
         if buffer_pos_end >= pos_end and buffer_pos_begin <= pos_begin:
             # the line buffer is full enough
             return
- 
+
         for line in self.lines_iterator:
+            line = list(line)
+
+            line[self.pos_begin_index] = int(line[self.pos_begin_index])
+            line[self.pos_end_index] = int(line[self.pos_end_index])
+
             line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
             assert line_chrom == self.current_chrom
 
@@ -157,6 +172,9 @@ class IterativeAccess(ScoreFile):
 
         self.current_lines.append(line)
         for line in self.lines_iterator:
+            line = list(line)
+            line[self.pos_begin_index] = int(line[self.pos_begin_index])
+            line[self.pos_end_index] = int(line[self.pos_end_index])
             line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
             assert line_chrom == self.current_chrom
             self.current_lines.append(line)
@@ -210,10 +228,14 @@ class DirectAccess(ScoreFile):
 
     def _fetch(self, chrom, pos_begin, pos_end):
         try:
-            # print(type(chrom), type(pos_begin), type(pos_end))
-
-            return self.infile.fetch(
-                chrom, pos_begin-1, pos_end, parser=pysam.asTuple())
+            result = []
+            for line in self.infile.fetch(
+                    chrom, pos_begin-1, pos_end, parser=pysam.asTuple()):
+                line = list(line)
+                line[self.pos_begin_index] = int(line[self.pos_begin_index])
+                line[self.pos_end_index] = int(line[self.pos_end_index])
+                result.append(line)
+            return result
         except ValueError as ex:
             print("could not find region: ", chrom, pos_begin, pos_end,
                   ex, file=sys.stderr)
