@@ -133,7 +133,7 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
                 (scores_df[self.alt_name] == variant.alternative)
             matched_df = scores_df[matched]
             if len(matched_df) == 0:
-                self._scores_not_found()
+                self._scores_not_found(aline)
                 return
             
             for score_name in self.score_names:
