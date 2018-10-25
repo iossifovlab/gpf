@@ -65,10 +65,10 @@ class PipelineConfig(VariantAnnotatorConfig):
                 r'\s*(?P<vi>[=])\s*'                # for option separator
                 r'(?P<value>.*)$'
                 )
+            optionxform = str
 
         config_parser = PipelineConfigParser(defaults=defaults)
 
-        config_parser.optionxform = str
         with open(filename, "r", encoding="utf8") as infile:
             config_parser.read_file(infile)
             config = common.config.to_dict(config_parser)
@@ -95,7 +95,7 @@ class PipelineConfig(VariantAnnotatorConfig):
             columns_config = OrderedDict(section['columns'])
         else:
             columns_config = OrderedDict()
-    
+
         if 'virtuals' not in section:
             virtuals = []
         else:

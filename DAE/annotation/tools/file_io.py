@@ -29,9 +29,6 @@ def assert_file_exists(filepath):
 
 
 class Schema:
-    # TODO Schema and various header lists overlap.
-    # The order of the column names can be stored
-    # in the Schema class instead, to reduce redundancy.
 
     # New types only need to be added here.
     type_map = {'str': (str, pa.string()),
@@ -47,61 +44,44 @@ class Schema:
             self.load_from_config(schema_input)
 
     def load_from_config(self, schema_config):
-        for entry in schema_config:
-            if entry[0] in self.type_map:
-                for col in entry[1].split(','):
-                    self.column_map[col] = entry[0]
-            else:
-                print(('Unrecognized column type {} when'
-                       'loading schema from config file.').format(entry[0]))
-                sys.exit(-1)
+        assert type(schema_config) is dict
+        for type_, col_list in schema_config.items():
+            assert type_ in self.type_map
+            for col in col_list.split(','):
+                self.column_map[col] = type_
 
     def merge(self, foreign):
         foreign_schema = foreign.column_map
         for key, value in foreign_schema.items():
             if key in self.column_map:
-                if self.column_map[key] != value:
-                    print('Error encountered during merging of schemas!')
-                    print('Column {} has conflicting types:'.format(key))
-                    print('> {}'.format(self.column_map[key]))
-                    print('< {}'.format(value))
-                    sys.exit(-1)
+                assert self.column_map[key] == value
             else:
                 self.column_map[key] = value
 
     def merge_columns(self, columns, new_name=None):
         col_type = None
         for column in columns:
-            if column not in self.column_map:
-                print('No such column {} exists that can be merged.'.format(column))
-                sys.exit(-1)
-
+            assert column in self.column_map
             if new_name is None:
                 new_name = column
-            elif type(new_name) is not str:
-                print('Non-string new name passed for merged columns!')
-                sys.exit(-1)
-
             if col_type is None:
                 col_type = self.column_map[column]
-
-            elif self.column_map[column] != col_type:
-                print('Error - attempted merging columns with different types!')
-                print(columns)
-                sys.exit(-1)
+            assert self.column_map[column] == col_type
             del(self.column_map[column])
-        self.column_map[new_name] = 'list({})'.format(col_type)
+        self.column_map[str(new_name)] = 'list({})'.format(col_type)
+
+    def rename_column(self, column, new_name):
+        assert column in self.column_map
+        self.column_map[str(new_name)] = self.column_map[column]
+        del(self.column_map[column])
 
     def type_query(self, query_type):
-        if query_type not in self.type_map:
-            print('No such type "{}" is defined.'.format(type))
-            sys.exit(-1)
-        else:
-            result = []
-            for col, type in self.column_map.items():
-                if type == query_type:
-                    result.append(col)
-            return result
+        assert query_type in self.type_map
+        result = []
+        for col, type_ in self.column_map.items():
+            if type_ == query_type:
+                result.append(col)
+        return result
 
     def to_pyarrow(self):
         return pa.schema([pa.field(col, self.type_map[type_][1])
@@ -109,7 +89,7 @@ class Schema:
                           in self.column_map.items()])
 
     def coerce_value(self, type_):
-        def coerce(value):
+        def coerce_(value):
             if type(value) is not list:
                 if value in ['.', '']:
                     return None
@@ -123,7 +103,7 @@ class Schema:
                 result = value
             return [None if value in ['.', ''] else type_(value)
                     for value in result]
-        return coerce
+        return coerce_
 
     def coerce_column(self, col_name, col_data):
         try:
@@ -374,7 +354,7 @@ class TabixReader(TSVFormat):
         self.region = self.options.region
         self._has_chrom_prefix = None
 
-    def _handle_chrom_prefix(self, data):        
+    def _handle_chrom_prefix(self, data):
         if data is None:
             return data
         if self._has_chrom_prefix and not data.startswith('chr'):

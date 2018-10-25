@@ -11,7 +11,7 @@ from collections import defaultdict
 from configparser import ConfigParser
 from box import Box
 from annotation.tools.annotator_config import LineConfig
-from annotation.tools.file_io import TabixReader
+from annotation.tools.file_io import TabixReader, Schema
 
 
 # from annotation.tools.utilities import AnnotatorBase, \
@@ -25,8 +25,8 @@ def conf_to_dict(path):
     conf_parser.read_file(path)
 
     conf_settings = dict(conf_parser.items('general'))
-    conf_settings_cols = {'columns': dict(conf_parser.items('columns'))}
-    conf_settings.update(conf_settings_cols)
+    conf_settings['columns'] = dict(conf_parser.items('columns'))
+    conf_settings['schema'] = Schema(dict(conf_parser.items('schema')))
     return conf_settings
 
 
