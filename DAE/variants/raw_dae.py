@@ -7,7 +7,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from builtins import str
-from past.builtins import str as old_str
 import gzip
 import os
 import re
@@ -165,7 +164,8 @@ class RawDAE(BaseDAE):
             annotator=annotator)
 
         if region is not None:
-            assert isinstance(region, old_str), type(region)
+            assert isinstance(region, bytes), \
+                '{} != {}'.format(type(region), bytes)
 
         os.path.exists(summary_filename)
         os.path.exists(toomany_filename)
