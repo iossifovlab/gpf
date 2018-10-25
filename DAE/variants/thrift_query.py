@@ -113,7 +113,7 @@ def query_parts(queries, **kwargs):
 
         print("arg", key, type(arg), arg, isinstance(arg, str))
 
-        if isinstance(arg, collections.Collection) and not isinstance(arg, str):
+        if isinstance(arg, collections.Iterable) and not isinstance(arg, str):
             arg = 'any({})'.format(','.join(arg))
 
         if isinstance(arg, str):
