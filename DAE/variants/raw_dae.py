@@ -164,7 +164,8 @@ class RawDAE(BaseDAE):
             annotator=annotator)
 
         if region is not None:
-            assert isinstance(region, str), type(region)
+            assert isinstance(region, bytes), \
+                '{} != {}'.format(type(region), bytes)
 
         os.path.exists(summary_filename)
         os.path.exists(toomany_filename)

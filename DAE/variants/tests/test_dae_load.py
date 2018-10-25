@@ -4,7 +4,6 @@ Created on Jul 23, 2018
 @author: lubo
 '''
 from __future__ import print_function
-from __future__ import unicode_literals
 
 import os
 
@@ -50,7 +49,7 @@ def test_load_dae_summary(raw_dae, temp_filename):
 
 # @pytest.mark.skip
 def test_load_dae_family(raw_dae, temp_dirname):
-    dae = raw_dae("fixtures/transmission", "1")
+    dae = raw_dae("fixtures/transmission", b"1")
     dae.load_families()
 
     f2 = dae.families['f2']
