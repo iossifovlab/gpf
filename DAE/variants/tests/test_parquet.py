@@ -4,6 +4,7 @@ Created on Mar 7, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 import pytest
 from variants.parquet_io import family_variants_table,\
     save_ped_df_to_parquet, read_ped_df_from_parquet, \

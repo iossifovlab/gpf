@@ -18,7 +18,7 @@ def mat2str(mat, col_sep="", row_sep="/"):
         col_sep.join(
             [str(n) if n >= 0 else "?" for n in mat[i, :]]
         )
-        for i in xrange(mat.shape[0])])
+        for i in range(mat.shape[0])])
 
 
 def trim_str(pos, ref, alt):

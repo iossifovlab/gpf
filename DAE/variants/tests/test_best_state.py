@@ -3,7 +3,8 @@ Created on Mar 19, 2018
 
 @author: lubo
 '''
-from variants.vcf_utils import mat2str
+from __future__ import unicode_literals
+from utils.vcf_utils import mat2str
 from RegionOperations import Region
 
 

@@ -1,6 +1,9 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from builtins import str
+import collections
+
 from impala.util import as_pandas
 from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
     QueryTreeToSQLTransformer, QueryTreeToSQLListTransformer, \
@@ -8,7 +11,6 @@ from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
     inheritance_converter, variant_type_converter,\
     StringListQueryToTreeTransformer
 from RegionOperations import Region
-from variants.attributes_query_builder import is_transformer
 
 q = """
     SELECT * FROM parquet.`/data-raw-dev/pspark/family01` AS A
@@ -98,7 +100,7 @@ def regions_transformer(rs):
 
 def query_parts(queries, **kwargs):
     result = []
-    for key, arg in kwargs.items():
+    for key, arg in list(kwargs.items()):
         if arg is None:
             continue
         if key not in queries:
@@ -109,10 +111,16 @@ def query_parts(queries, **kwargs):
         stage_two = stage_two_transformers.get(
             key, QueryTreeToSQLTransformer(key))
 
-        if not is_transformer(arg):
+        print("arg", key, type(arg), arg, isinstance(arg, str))
+
+        if isinstance(arg, collections.Iterable) and not isinstance(arg, str):
+            arg = 'any({})'.format(','.join(arg))
+
+        if isinstance(arg, str):
             result.append(
                 stage_two.transform(stage_one.parse_and_transform(arg))
             )
+            # result.append()
         else:
             result.append(stage_two.transform(arg))
     return result
@@ -155,6 +163,7 @@ def thrift_query(
         variant_queries.append(aq)
 
     if variant_queries:
+        print(variant_queries)
         final_query += "\nWHERE\n{}".format(
             ' AND '.join(["({})".format(q) for q in variant_queries])
         )
@@ -162,6 +171,11 @@ def thrift_query(
     if limit is not None:
         final_query += "\nLIMIT {}".format(limit)
 
+    # print()
+    # print()
+    # print()
+    # print()
+    print("FINAL QUERY", final_query)
     cursor = thrift_connection.cursor()
     cursor.execute(final_query)
     return as_pandas(cursor)

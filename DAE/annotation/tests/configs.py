@@ -1,3 +1,5 @@
+
+
 VARIANT_DB_CONFIG = """
 [DEFAULT]
 studyDir = %(wd)s/cccc
@@ -21,3 +23,4 @@ familyInfo.fileFormat = simple
 transmittedVariants.indexFile = %(studyDir)s/TRANSMITTED_STUDY/TRANSMITTED_STUDY.format-annot
 description=TRANSMITTED_STUDY
 """
+

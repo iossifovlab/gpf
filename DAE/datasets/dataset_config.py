@@ -1,4 +1,4 @@
-from configurable_entities.configurable_entity_config import\
+from configurable_entities.configurable_entity_config import \
     ConfigurableEntityConfig
 
 
@@ -48,7 +48,7 @@ class DatasetConfig(ConfigurableEntityConfig):
         assert self.dataset_name
         assert self.id
         assert self.name
-        assert self.description
+        assert 'description' in self
         assert self.study_group
         assert self.data_dir
         assert 'phenotypeBrowser' in self
@@ -78,8 +78,8 @@ class DatasetConfig(ConfigurableEntityConfig):
             assert genotypeBrowser['downloadColumns']
             assert 'genotypeColumns' in genotypeBrowser
         assert 'pedigreeSelectors' in self
-        pedigreeSelectors = dict(self)['pedigreeSelectors']
-        for pedigree in pedigreeSelectors:
+        pedigree_selectors = self['pedigreeSelectors']
+        for pedigree in pedigree_selectors:
             assert pedigree['name']
             assert pedigree['id']
             assert pedigree['domain']
@@ -106,10 +106,14 @@ class DatasetConfig(ConfigurableEntityConfig):
         for key in dict_options_keys:
             if dataset_config.get(key, True):
                 dict_options = {}
+                keys_to_remove = []
                 for k in dataset_config.keys():
                     if k.startswith(key + '.'):
+                        keys_to_remove.append(k)
                         dict_options[k.replace(key + '.', '')] =\
-                            dataset_config.pop(k)
+                            dataset_config.get(k)
+                for k in keys_to_remove:
+                    dataset_config.pop(k)
                 dataset_config[key] = dict_options
 
         return dataset_config
@@ -151,18 +155,19 @@ class DatasetConfig(ConfigurableEntityConfig):
 
     @classmethod
     def _get_pedigree_selectors(cls, dataset_config):
+        PEDIGREE_KEY = 'peopleGroup'
         pedigree = {}
         for key, value in dataset_config.items():
             option_type, option_fullname = cls._split_section(key)
-            if option_type != 'pedigree':
+            if option_type != PEDIGREE_KEY:
                 continue
 
             pedigree_type, pedigree_option =\
                 cls._split_section(option_fullname)
-            if 'pedigree.' + pedigree_type not in pedigree:
-                pedigree['pedigree.' + pedigree_type] = [pedigree_option]
+            if PEDIGREE_KEY + '.' + pedigree_type not in pedigree:
+                pedigree[PEDIGREE_KEY + '.' + pedigree_type] = [pedigree_option]
             else:
-                pedigree['pedigree.' + pedigree_type].append(pedigree_option)
+                pedigree[PEDIGREE_KEY + '.' + pedigree_type].append(pedigree_option)
 
         pedigrees = []
         for pedigree_type, pedigree_options in pedigree.items():
@@ -286,6 +291,7 @@ class DatasetConfig(ConfigurableEntityConfig):
     def get_default_values():
         return {
             'phenoDB': None,
+            'description': None,
             'genotypeBrowser.genesBlockShowAll': 'yes',
             'genotypeBrowser.hasFamilyFilters': 'yes',
             'genotypeBrowser.hasStudyFilters': 'yes',
@@ -296,16 +302,17 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypeBrowser.mainForm': 'default',
             'genotypeBrowser.phenoColumns': None,
             'genotypeBrowser.familyFilters': None,
-            'pedigree.phenotype.source': 'legacy',
-            'pedigree.phenotype.default': 'unknown:unknown:#aaaaaa',
             'genotypeBrowser.genotype.baseColumns':
                 'family,phenotype,variant,best,fromparent,inchild,genotype,'
                 'effect,count,geneeffect,effectdetails,weights,freq',
             'genotypeBrowser.basePreviewColumns':
                 'family,variant,genotype,effect,weights,freq,studyName,'
-                'location,pedigree,inChS,fromParentS,effects,requestedGeneEffects,genes,worstEffect',
+                'location,pedigree,inChS,fromParentS,effects,'
+                'requestedGeneEffects,genes,worstEffect',
             'genotypeBrowser.baseDownloadColumns':
                 'family,phenotype,variant,best,fromparent,inchild,effect,'
                 'count,geneeffect,effectdetails,weights,freq',
-            'phenoFilters': ''
+            'phenoFilters': '',
+            'phenotypeBrowser': False,
+            'phenotypeGenotypeTool': False,
         }

@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from __future__ import print_function
 
 from builtins import str
@@ -10,7 +9,7 @@ from abc import ABCMeta, abstractmethod
 from .file_io import IOManager, IOType
 
 
-class AnnotatorBase():
+class AnnotatorBase(object):
     """
     `AnnotatorBase` is base class of all `Annotators` and `Preannotators`.
     """
@@ -50,7 +49,7 @@ class AnnotatorBase():
         """
 
     @abstractmethod
-    def line_annotations(self, line, new_columns):
+    def line_annotations(self, line, new_columns, variant=None):
         """
             Method returning annotations for the given line
             in the order from new_columns parameter.

@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from builtins import str
+
 import pytest
 
 
@@ -8,10 +11,10 @@ def test_query_all_variants(inheritance_trio_wrapper):
 
 
 @pytest.mark.parametrize("type,count", [
-    ("denovo", 4),
-    ("omission", 5),
+    ("denovo", 2),
+    ("omission", 4),
     ("unknown", 14),  # matches all variants
-    ("mendelian", 4),
+    ("mendelian", 3),
     ("reference", 0)  # not returned unless return_reference is set to true
 ])
 def test_query_inheritance_variants(type, count, inheritance_trio_wrapper):
@@ -34,7 +37,8 @@ def test_query_limit_variants(inheritance_trio_wrapper):
     # FIXME: (None, 28)
 ])
 def test_query_family_variants(families, count, quads_two_families_wrapper):
-    variants = list(quads_two_families_wrapper.get_variants(family_ids=families))
+    variants = list(
+        quads_two_families_wrapper.get_variants(family_ids=families))
 
     assert len(variants) == count
 
@@ -119,7 +123,8 @@ def test_query_present_in_child(option, count, quads_in_child):
 )
 def test_query_present_in_child_compared_to_raw(
         option, raw_query, quads_f1_wrapper):
-    vs = quads_f1_wrapper.study_group.studies[0].query_variants(roles=raw_query)
+    vs = quads_f1_wrapper.study_group.studies[0]\
+        .query_variants(roles=raw_query)
     vs = list(vs)
 
     variants = list(quads_f1_wrapper.get_variants(presentInChild=option))

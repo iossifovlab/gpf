@@ -28,3 +28,5 @@ _build/
 test_data/
 /test_data/
 .vscode/
+.idea/
+*.temp

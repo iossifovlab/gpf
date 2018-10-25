@@ -4,10 +4,11 @@ Created on Jul 3, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 import pytest
 
 from variants.attributes import Inheritance
-from variants.vcf_utils import mat2str
+from utils.vcf_utils import mat2str
 
 
 @pytest.mark.parametrize("variants", [
@@ -16,19 +17,19 @@ from variants.vcf_utils import mat2str
     "variants_thrift",
 ])
 @pytest.mark.parametrize("inheritance,count", [
-    (Inheritance.mendelian, 14),
-    (Inheritance.omission, 5),
-    (Inheritance.denovo, 4),
-    (Inheritance.unknown, 15),
+    ("mendelian", 14),
+    ("omission", 5),
+    ("denovo", 4),
+    ("unknown", 15),
 ])
 def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
     fvars = variants_impl(variants)("fixtures/inheritance_trio")
     vs = list(fvars.query_variants(
-        inheritance=inheritance.name,
+        inheritance=inheritance,
         return_reference=True))
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance_in_members)
-        assert inheritance in v.inheritance_in_members
+        assert Inheritance.from_name(inheritance) in v.inheritance_in_members
         assert len(mat2str(v.best_st)) == 7
     assert len(vs) == count
 
@@ -39,14 +40,14 @@ def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
     "variants_thrift",
 ])
 @pytest.mark.parametrize("count,inheritance", [
-    (11, Inheritance.mendelian),
-    (3, Inheritance.omission),
-    (2, Inheritance.denovo),
+    (11, "mendelian"),
+    (3, "omission"),
+    (2, "denovo"),
 ])
 def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
     fvars = variants_impl(variants)("fixtures/inheritance_quad")
     vs = list(fvars.query_variants(
-        inheritance=inheritance.name,
+        inheritance=inheritance,
         return_reference=True))
     assert len(vs) == count
     for v in vs:

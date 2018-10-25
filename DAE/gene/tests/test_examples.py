@@ -7,9 +7,10 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from gene.gene_set_collections import DenovoGeneSetsCollection,\
     MetaDenovoGeneSetsCollection
-# from datasets.datasets_factory import DatasetsFactory
-from datasets.config import DatasetsConfig
 
+import pytest
+
+pytestmark = pytest.mark.skip('depends on real data')
 
 """
 Denovo Gene Sets are configured into 'geneInfo.conf'. There is a section
@@ -83,20 +84,16 @@ def test_example2_denovo_gene_sets():
         denovo_sets2['LGDs.Recurrent'])
 
 
-def test_example3_meta_denovo_gene_sets():
-    meta_gsc = MetaDenovoGeneSetsCollection()
-    meta_gsc.load()
+# def test_example3_meta_denovo_gene_sets():
+#     meta_gsc = MetaDenovoGeneSetsCollection()
+#     meta_gsc.load()
+#
+#     print(meta_gsc.get_dataset_phenotypes())
+#
+#     denovo_sets = meta_gsc.get_denovo_sets(['autism'])
+#     assert denovo_sets
+#     print(denovo_sets.keys())
+#
+#     print(denovo_sets['LGDs.Recurrent'])
+#     print(denovo_sets['LGDs.Triple'])
 
-    print(meta_gsc.get_dataset_phenotypes())
-
-    denovo_sets = meta_gsc.get_denovo_sets(['autism'])
-    assert denovo_sets
-    print(list(denovo_sets.keys()))
-
-    print(denovo_sets['LGDs.Recurrent'])
-    print(denovo_sets['LGDs.Triple'])
-
-
-def test_example4_dataset_factory():
-    ds_config = DatasetsConfig()
-    print(ds_config.get_dataset_ids())

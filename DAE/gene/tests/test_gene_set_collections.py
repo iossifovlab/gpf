@@ -7,11 +7,7 @@ from __future__ import unicode_literals
 from gene.gene_set_collections import GeneSetsCollections
 import pytest
 
-
-@pytest.fixture(scope='session')
-def gscs(request):
-    res = GeneSetsCollections()
-    return res
+pytestmark = pytest.mark.skip('depends on real data')
 
 
 def test_gscs_config_cache(gscs):

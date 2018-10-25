@@ -1,286 +1,196 @@
 #!/usr/bin/env python
 
-from __future__ import unicode_literals
+from __future__ import print_function
+from builtins import open
+
+import os
 import sys
-import glob
-import argparse
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
-from configparser import ConfigParser
-import common.config
+import time
+import datetime
 import re
-from os.path import exists, dirname, basename, realpath
+import argparse
+
 from box import Box
-from importlib import import_module
 from ast import literal_eval
+from configparser import ConfigParser
 from collections import OrderedDict
-from functools import reduce
-from annotation.tools.utilities import assign_values
-from annotation.tools.utilities import main as main
-from annotation.tools import *
-# from annotation.tools import duplicate_columns
-# TODO
-# This has been replaced with a star import as the
-# str_to_class method can not otherwise find the specified
-# class.
+
+import common.config
+from annotation.tools.annotator_base import AnnotatorBase, \
+    CompositeVariantAnnotator
+from annotation.tools.annotator_config import VariantAnnotatorConfig
+from annotation.tools.file_io import IOType, IOManager
 
 
-def str_to_class(val):
-    return reduce(getattr, val.split("."), sys.modules[__name__])
+class PipelineConfig(VariantAnnotatorConfig):
 
-
-class MyConfigParser(ConfigParser):
-    """Modified ConfigParser.SafeConfigParser that
-    allows ':' in keys and only '=' as separator.
-    """
-    OPTCRE = re.compile(
-        r'(?P<option>[^=\s][^=]*)'          # allow only =
-        r'\s*(?P<vi>[=])\s*'                # for option separator
-        r'(?P<value>.*)$'
+    def __init__(self, name, annotator_name, options,
+                 columns_config, virtuals):
+        super(PipelineConfig, self).__init__(
+            name, annotator_name, options,
+            columns_config, virtuals
         )
-    optionxform = str
+        self.pipeline_sections = []
+        self.optionxform = str
 
+    @staticmethod
+    def build(options, config_file, defaults={}):
+        configuration = PipelineConfig._parse_pipeline_config(
+            config_file, defaults
+        )
 
-class MultiAnnotator(object):
-    """
-    `MultiAnnotator` class processes user passed options and annotates variant data.
-    After processing of user options this class passes line by line the data
-    to `Annotators` and `Preannotators`.
+        result = PipelineConfig(
+            name="pipeline",
+            annotator_name="annotation_pipeline.Pipeline",
+            options=options,
+            columns_config=OrderedDict(),
+            virtuals=[]
+        )
+        result.pipeline_sections = []
 
-    """
-
-    def __init__(self, opts, header=None):
-        self.header = header.copy()
-        self.preannotators = PreannotatorLoader.load_preannotators(opts, self.header)
-
-        self.annotators = []
-        self.virtual_columns_indices = []
-        self.all_columns_labels = set()
-
-        if not opts.skip_preannotators:
-            self._init_preannotators(opts)
-
-        if opts.default_arguments is not None:
-            self._init_default_args(opts)
-        else:
-            self.default_arguments = dict()
-
-        if opts.config is None:
-            sys.stderr.write("You should provide a config file location.\n")
-            sys.exit(-78)
-        elif not exists(opts.config):
-            sys.stderr.write("The provided config file does not exist!\n")
-            sys.exit(-78)
-        else:
-            self._init_config(opts)
-
-        self.column_indices = {label: assign_values(label, self.header)
-                               for label in self.all_columns_labels}
-        self.stored_columns_indices = [i for i in range(1, len(self.header) + 1)
-                                       if i not in self.virtual_columns_indices]
-        self._init_schema(header, self.stored_columns_indices)
-
-        if opts.split is None:
-            self._split_variant = lambda v: [v]
-            self._join_variant = lambda v: v[0]
-        else:
-            self.split_index = assign_values(opts.split, self.header)
-            self.split_separator = opts.separator
-
-    def _init_preannotators(self, opts):
-        for preannotator in self.preannotators:
-            self.annotators.append({
-                'instance': preannotator,
-                'columns': OrderedDict([(c, c) for c in preannotator.new_columns])
-            })
-            self.all_columns_labels.update(preannotator.new_columns)
-            if self.header:
-                self.header.extend(preannotator.new_columns)
-
-            self.virtual_columns_indices.extend(
-                [assign_values(column, self.header)
-                 for column in preannotator.new_columns])
-
-    def _init_default_args(self, opts):
-        extracted_options = []
-        for option in opts.default_arguments.split(','):
-            split_options = option.split(':')
-            try:
-                split_options[1] = literal_eval(split_options[1])
-            except ValueError:
-                pass
-            extracted_options.append(split_options)
-        self.default_arguments = dict(extracted_options)
-
-    def _init_config(self, opts):
-        config_parser = MyConfigParser()
-        if type(opts.config) is str:
-            with open(opts.config) as conf_file:
-                config_parser.read_file(conf_file)
-        else:
-            config_parser.read_file(opts.config)
-        self.config = Box(common.config.to_dict(config_parser),
-                          default_box=True, default_box_attr=None)
-
-        # config_parser.sections() this gives the sections in order which is important
-        for annotation_step in config_parser.sections():
-            annotation_step_config = self.config[annotation_step]
-
-            for default_argument, value in self.default_arguments.items():
-                if annotation_step_config.options[default_argument] is None:
-                    annotation_step_config.options[default_argument] = value
-
-            step_columns_labels = annotation_step_config.columns.values()
-            self.all_columns_labels.update(step_columns_labels)
-
-            if self.header is not None:
-                if opts.append:
-                    new_columns = step_columns_labels
-                else:
-                    new_columns = [column for column in step_columns_labels
-                                   if column not in self.header]
-                self.header.extend(new_columns)
-
-            if annotation_step_config.virtuals is not None:
-                self.virtual_columns_indices.extend(
-                    [assign_values(annotation_step_config.columns[column.strip()], self.header)
-                     for column in annotation_step_config.virtuals.split(',')])
-            annotation_step_config.options.region = opts.region
-
-            self.annotators.append({
-                'instance': str_to_class(annotation_step_config.annotator)(
-                    annotation_step_config.options, list(self.header)),
-                'columns': annotation_step_config.columns
-            })
-
-    def _init_schema(self, header, col_indices):
-        # TODO Can a base score annotator
-        # add more than one column to the output file?
-        # This method currently assumes that that a base
-        # score annotator adds only one new column.
-        self.schema_ = file_io.Schema([('str', ','.join(header))])
-        for annotator in self.annotators:
-            if hasattr(annotator['instance'], 'annotators'):
-                # Multiple scores annotator case
-                for score_name, score_annotator in annotator['instance'].annotators.items():
-                    annotator['instance'].schema.merge_columns(score_annotator.new_columns,
-                                                               annotator['columns'][score_name])
-            else:
-                new_name = list(annotator['columns'].values())[0]
-                annotator['instance'].schema.merge_columns(annotator['instance'].new_columns, new_name)
-            self.schema_.merge(annotator['instance'].schema)
-
-        # Trim unused columns
-        trim_header = [self.header[idx-1] for idx in range(1, len(self.header)+1) if idx not in col_indices]
-        for col in trim_header:
-            del(self.schema.column_map[col])
-
-    def _split_variant(self, line):
-        return [line[:self.split_index-1] + [value] + line[self.split_index:]
-                for value in line[self.split_index-1].split(self.split_separator)]
-
-    def _join_variant(self, lines):
-        return [column[0] if len(set(column)) == 1 else self.split_separator.join(column)
-                for column in zip(*lines)]
-
-    def annotate_file(self, file_io):
-        def annotate_line(line):
-            for annotator in annotators:
-                columns = annotator['columns'].keys()
-                columns_labels = annotator['columns'].values()
-                values = annotator['instance'].line_annotations(line, columns)
-                for label, value in zip(columns_labels, values):
-                    position = self.column_indices[label]
-                    line[position - 1:position] = [value]
-            return line
-
-        if self.header:
-            self.header = [self.header[i-1]
-                           for i in self.stored_columns_indices]
-            self.header[0] = '#' + self.header[0]
-            file_io.header_write(self.header)
-
-        annotators = self.annotators
-
-        for line in file_io.lines_read():
-            if '#' in line[0]:
-                file_io.line_write(line)
-                continue
-
-            annotated = [annotate_line(segment)
-                         for segment in self._split_variant(line)]
-            annotated = self._join_variant(annotated)
-            file_io.line_write([annotated[i-1] for i in self.stored_columns_indices])
-
-    @property
-    def schema(self):
-        return self.schema_
-
-
-class PreannotatorLoader(object):
-    """
-    Class for finding and loading `Preannotators`. It imports preannotator classes
-    from `annotation/preannotators` and stores them in list.
-
-    It is used by `MultiAnnotator`.
-    """
-
-    PREANNOTATOR_MODULES = None
-
-    @classmethod
-    def get_preannotator_modules(cls):
-        if cls.PREANNOTATOR_MODULES is None:
-            abs_files = glob.glob(dirname(realpath(__file__)) + '/preannotators/*.py')
-            files = [basename(f) for f in abs_files]
-            files.remove('__init__.py')
-            module_names = ['preannotators.' + f[:-3] for f in files]
-            cls.PREANNOTATOR_MODULES = [import_module(name) for name in module_names]
-        return cls.PREANNOTATOR_MODULES
-
-    @classmethod
-    def load_preannotators(cls, opts, header=None):
-        return [getattr(module, clazz)(opts, header)
-                for module in cls.get_preannotator_modules()
-                for clazz in dir(module)
-                if clazz.endswith('Preannotator')]
-
-    @classmethod
-    def load_preannotators_arguments(cls):
-        result = {}
-        for module in cls.get_preannotator_modules():
-            result.update(getattr(module, 'get_arguments')())
+        for section_name, section_config in configuration.items():
+            section_config = result._parse_config_section(
+                section_name, section_config, options)
+            result.pipeline_sections.append(section_config)
         return result
 
+    @staticmethod
+    def _parse_pipeline_config(filename, defaults={}):
+        class PipelineConfigParser(ConfigParser):
+            """Modified ConfigParser.SafeConfigParser that
+            allows ':' in keys and only '=' as separator.
+            """
+            OPTCRE = re.compile(
+                r'(?P<option>[^=\s][^=]*)'          # allow only =
+                r'\s*(?P<vi>[=])\s*'                # for option separator
+                r'(?P<value>.*)$'
+                )
 
-def get_argument_parser():
-    desc = """Program to annotate variants combining multiple annotating tools"""
-    parser = argparse.ArgumentParser(description=desc, conflict_handler='resolve')
-    parser.add_argument('-H', help='no header in the input file',
-                        default=False,  action='store_true', dest='no_header')
-    parser.add_argument('--config', help='config file location',
-                        required=True, action='store')
-    parser.add_argument('--append', help='always add columns; '
-                        'default behavior is to replace columns with the same label',
-                        default=False, action='store_true')
-    parser.add_argument('--split', help='split variants based on given column',
-                        action='store')
-    parser.add_argument('--separator', help='separator used in the split column; defaults to ","',
-                        default=',', action='store')
-    parser.add_argument('--options', help='add default arguments',
-                        dest='default_arguments', action='store', metavar=('=OPTION:VALUE'))
-    parser.add_argument('--skip-preannotators', help='skips preannotators',
-                        action='store_true')
-    parser.add_argument('--read-parquet', help='read from a parquet file',
-                        action='store_true')
-    parser.add_argument('--write-parquet', help='write to a parquet file',
-                        action='store_true')
+        config_parser = PipelineConfigParser(defaults=defaults)
 
-    for name, args in PreannotatorLoader.load_preannotators_arguments().items():
+        config_parser.optionxform = str
+        with open(filename, "r", encoding="utf8") as infile:
+            config_parser.read_file(infile)
+            config = common.config.to_dict(config_parser)
+        return config
+
+    @staticmethod
+    def _parse_config_section(section_name, section, options):
+        # section = Box(section, default_box=True, default_box_attr=None)
+        assert 'annotator' in section
+
+        annotator_name = section['annotator']
+        options = dict(options.to_dict())
+        if 'options' in section:
+            for key, val in section['options'].items():
+                try:
+                    val = literal_eval(val)
+                except Exception:
+                    pass
+                options[key] = val
+
+        options = Box(options, default_box=True, default_box_attr=None)
+
+        if 'columns' in section:
+            columns_config = OrderedDict(section['columns'])
+        else:
+            columns_config = OrderedDict()
+    
+        if 'virtuals' not in section:
+            virtuals = []
+        else:
+            virtuals = [
+                c.strip() for c in section['virtuals'].split(',')
+            ]
+        return VariantAnnotatorConfig(
+            name=section_name,
+            annotator_name=annotator_name,
+            options=options,
+            columns_config=columns_config,
+            virtuals=virtuals
+        )
+
+
+class PipelineAnnotator(CompositeVariantAnnotator):
+
+    def __init__(self, config):
+        super(PipelineAnnotator, self).__init__(config)
+
+    @staticmethod
+    def build(options, config_file, defaults={}):
+        pipeline_config = PipelineConfig.build(options, config_file, defaults)
+        assert pipeline_config.pipeline_sections
+
+        pipeline = PipelineAnnotator(pipeline_config)
+        for section_config in pipeline_config.pipeline_sections:
+            annotator = VariantAnnotatorConfig.instantiate(
+                section_config
+            )
+            pipeline.add_annotator(annotator)
+            output_columns = [
+                col for col in annotator.config.output_columns
+                if col not in pipeline.config.output_columns
+            ]
+            pipeline.config.output_columns.extend(output_columns)
+        return pipeline
+
+    def add_annotator(self, annotator):
+        assert isinstance(annotator, AnnotatorBase)
+        self.annotators.append(annotator)
+
+    def line_annotation(self, aline):
+        self.variant_builder.build(aline)
+        for annotator in self.annotators:
+            annotator.line_annotation(aline)
+
+
+def pipeline_main(argv):
+    desc = "Program to annotate variants combining multiple annotating tools"
+    parser = argparse.ArgumentParser(
+        description=desc, conflict_handler='resolve')
+    parser.add_argument(
+        '--config', help='config file location',
+        required=True, action='store')
+
+    for name, args in VariantAnnotatorConfig.cli_options():
         parser.add_argument(name, **args)
 
-    return parser
+    options = parser.parse_args()
+    assert options.config is not None
+    assert os.path.exists(options.config)
+    config_filename = options.config
+
+    options = Box({
+        k: v for k, v in options._get_kwargs()
+    }, default_box=True, default_box_attr=None)
+
+    pipeline = PipelineAnnotator.build(options, config_filename)
+    assert pipeline is not None
+
+    # File IO format specification
+    reader_type = IOType.TSV
+    writer_type = IOType.TSV
+    if hasattr(options, 'read_parquet'):
+        if options.read_parquet:
+            reader_type = IOType.Parquet
+    if hasattr(options, 'write_parquet'):
+        if options.write_parquet:
+            writer_type = IOType.Parquet
+
+    start = time.time()
+
+    with IOManager(options, reader_type, writer_type) as io_manager:
+        pipeline.annotate_file(io_manager)
+
+    print("# PROCESSING DETAILS:", file=sys.stderr)
+    print("#", time.asctime(), file=sys.stderr)
+    print("#", " ".join(sys.argv[1:]), file=sys.stderr)
+
+    print(
+        "The program was running for [h:m:s]:",
+        str(datetime.timedelta(seconds=round(time.time()-start, 0))),
+        file=sys.stderr)
 
 
 if __name__ == '__main__':
-    main(get_argument_parser(), MultiAnnotator)
+    pipeline_main(sys.argv)

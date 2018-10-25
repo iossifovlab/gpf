@@ -4,11 +4,12 @@ Created on Jul 9, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import pytest
 
 import numpy as np
-from variants.vcf_utils import mat2str
+from utils.vcf_utils import mat2str
 
 
 @pytest.mark.parametrize("gt,bs", [

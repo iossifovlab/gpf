@@ -167,7 +167,6 @@ class StudiesSummaries(Precompute):
     @classmethod
     def __build_studies_summaries(cls):
         result = [
-<<<<<<< HEAD
             cls.__build_single_studies_summary(dataset.name, '',
                 dataset.studies)
             for dataset in get_sorted_datasets()
@@ -176,17 +175,7 @@ class StudiesSummaries(Precompute):
         # result += [cls.__build_single_studies_summary(name, description,
         #                 vDB.get_studies(name))
         #            for name, description in get_all_studies_names()]
-        return result 
-=======
-            cls.__build_single_studies_summary(dataset.descriptor['name'], '',
-                                               dataset.studies)
-            for dataset in get_sorted_datasets()
-        ]
-        result += [cls.__build_single_studies_summary(name, description,
-                                                      vDB.get_studies(name))
-                   for name, description in get_all_studies_names()]
         return result
->>>>>>> origin/master
 
     @classmethod
     def __build_single_studies_summary(cls, name, description, studies):

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from lark import Tree, Transformer
 from lark.lexer import Token
 

@@ -4,9 +4,10 @@ Created on Apr 16, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 from RegionOperations import Region
 import pytest
-from variants.vcf_utils import mat2str
+from utils.vcf_utils import mat2str
 
 
 @pytest.mark.parametrize("region,worst_effect,count", [

@@ -4,29 +4,30 @@ Created on Mar 20, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import pytest
 from RegionOperations import Region
 from variants.attributes import Inheritance
-from variants.vcf_utils import mat2str
+from utils.vcf_utils import mat2str
 
 
 @pytest.mark.parametrize("region,count,inheritance", [
-    (Region('1', 11501, 11510), 4, Inheritance.mendelian),
-    (Region('1', 11511, 11520), 5, Inheritance.omission),
-    (Region('1', 11521, 11530), 4, Inheritance.denovo),
-    (Region('1', 11531, 11540), 1, Inheritance.unknown),
+    (Region('1', 11501, 11510), 4, "mendelian"),
+    (Region('1', 11511, 11520), 5, "omission"),
+    (Region('1', 11521, 11530), 4, "denovo"),
+    (Region('1', 11531, 11540), 1, "unknown"),
 ])
 def test_inheritance_trio_full(variants_vcf, region, count, inheritance):
     fvars = variants_vcf("fixtures/inheritance_trio")
     vs = list(fvars.query_variants(
-        inheritance=inheritance.name,
+        inheritance=inheritance,
         regions=[region],
         return_reference=True))
 
     for v in vs:
         print(v, mat2str(v.best_st), v.inheritance_in_members)
-        assert inheritance in v.inheritance_in_members
+        assert Inheritance.from_name(inheritance) in v.inheritance_in_members
         assert len(mat2str(v.best_st)) == 7
         for a in v.alleles:
             print(">>>", a, a.inheritance_in_members)
@@ -36,9 +37,9 @@ def test_inheritance_trio_full(variants_vcf, region, count, inheritance):
 
 
 @pytest.mark.parametrize("region,count,inheritance", [
-    (Region('1', 11501, 11510), 5, Inheritance.mendelian),
-    (Region('1', 11511, 11520), 3, Inheritance.omission),
-    (Region('1', 11521, 11530), 2, Inheritance.denovo),
+    (Region('1', 11501, 11510), 5, "mendelian"),
+    (Region('1', 11511, 11520), 3, "omission"),
+    (Region('1', 11521, 11530), 2, "denovo"),
 ])
 def test_inheritance_quad_full(variants_vcf, region, count, inheritance):
     fvars = variants_vcf("fixtures/inheritance_quad")
@@ -52,14 +53,14 @@ def test_inheritance_quad_full(variants_vcf, region, count, inheritance):
             print(a, mat2str(a.gt),
                   a.members_ids, a.inheritance_in_members)
             assert len(a.inheritance_in_members) == 4
-        assert inheritance in v.inheritance_in_members
+        assert Inheritance.from_name(inheritance) in v.inheritance_in_members
         assert len(mat2str(v.best_st)) == 9
 
 
 @pytest.mark.parametrize("region,count,inheritance", [
-    (Region('1', 11501, 11510), 3, Inheritance.mendelian),
-    (Region('1', 11511, 11520), 1, Inheritance.omission),
-    (Region('1', 11521, 11530), 1, Inheritance.unknown),
+    (Region('1', 11501, 11510), 3, "mendelian"),
+    (Region('1', 11511, 11520), 1, "omission"),
+    (Region('1', 11521, 11530), 1, "unknown"),
 ])
 def test_inheritance_multi_full(variants_vcf, region, count, inheritance):
     fvars = variants_vcf("fixtures/inheritance_multi")
@@ -73,5 +74,5 @@ def test_inheritance_multi_full(variants_vcf, region, count, inheritance):
             print(a, mat2str(a.gt),
                   a.members_ids, a.inheritance_in_members)
             assert len(a.inheritance_in_members) == 7
-        assert inheritance in v.inheritance_in_members
+        assert Inheritance.from_name(inheritance) in v.inheritance_in_members
         assert len(mat2str(v.best_st)) == 15

@@ -4,12 +4,13 @@ Created on Feb 13, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from builtins import str
 from builtins import zip
 from builtins import range
 from builtins import object
-from variants.vcf_utils import vcf2cshl
+from utils.vcf_utils import vcf2cshl
 
 from variants.attributes import VariantType
 from variants.effects import Effect
@@ -220,6 +221,13 @@ class SummaryAllele(VariantBase):
             return None
 
     @property
+    def variant_type(self):
+        if self.details is not None:
+            return self.details.variant_type
+        else:
+            return None
+
+    @property
     def effects(self):
         return self.effect
 
@@ -379,9 +387,9 @@ class SummaryVariantFactory(object):
             effects = Effect.from_effects(
                 record['effect_type'],
                 list(zip(record['effect_gene_genes'],
-                    record['effect_gene_types'])),
+                         record['effect_gene_types'])),
                 list(zip(record['effect_details_transcript_ids'],
-                    record['effect_details_details'])))
+                         record['effect_details_details'])))
         alternative = record['alternative']
 
         return SummaryAllele(
@@ -400,7 +408,8 @@ class SummaryVariantFactory(object):
 
         alleles = []
         for record in records:
-            sa = SummaryVariantFactory.summary_allele_from_record(record)
+            sa = SummaryVariantFactory.\
+                summary_allele_from_record(record)
             alleles.append(sa)
 
         return SummaryVariant(alleles)

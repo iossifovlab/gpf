@@ -6,9 +6,17 @@ class Study(object):
         self.study_config = study_config
 
     def query_variants(self, **kwargs):
+        study_types_filter = kwargs.get('studyTypes', None)
+        if study_types_filter:
+            print("StudyTypes filtered...", study_types_filter, self.study_type)
+            # FIXME: lowercase vs uppercase
+            # if self.study_type not in study_types_filter:
+            #     return []
+
         return self.backend.query_variants(**kwargs)
 
-    # FIXME: fill these with real data
+    def get_phenotype_values(self, pheno_column):
+        return set(self.backend.ped_df[pheno_column])
 
     @property
     def families(self):
@@ -37,6 +45,8 @@ class Study(object):
     @property
     def study_type(self):
         return self.study_config.studyType
+
+    # FIXME: fill these with real data
 
     @property
     def year(self):

@@ -4,13 +4,12 @@ Created on Jul 23, 2018
 @author: lubo
 '''
 from __future__ import print_function
-from __future__ import unicode_literals
 
 import os
 
 import engarde.checks as ec
 import numpy as np
-from variants.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
+from utils.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
 from variants.parquet_io import save_family_variants_to_parquet,\
     save_summary_variants_to_parquet
 from variants.raw_dae import RawDAE, BaseDAE
@@ -50,7 +49,7 @@ def test_load_dae_summary(raw_dae, temp_filename):
 
 # @pytest.mark.skip
 def test_load_dae_family(raw_dae, temp_dirname):
-    dae = raw_dae("fixtures/transmission", "1")
+    dae = raw_dae("fixtures/transmission", b"1")
     dae.load_families()
 
     f2 = dae.families['f2']
@@ -61,12 +60,11 @@ def test_load_dae_family(raw_dae, temp_dirname):
     df = dae.load_family_variants()
     assert df is not None
 
-    fname = os.path.join(temp_dirname, "f.parquet")
     aname = os.path.join(temp_dirname, "a.parquet")
 
     save_family_variants_to_parquet(
         dae.wrap_family_variants(df, return_reference=False),
-        fname, aname, batch_size=5)
+        aname, batch_size=5)
 
 
 def test_explode_family_genotype():

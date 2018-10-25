@@ -4,6 +4,7 @@ Created on Jul 9, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from builtins import range
 from builtins import object
@@ -13,7 +14,7 @@ from variants.variant import SummaryVariant, SummaryAllele
 from variants.family import Family
 from variants.attributes import Inheritance
 import itertools
-from variants.vcf_utils import GENOTYPE_TYPE
+from utils.vcf_utils import GENOTYPE_TYPE
 
 
 class FamilyDelegate(object):

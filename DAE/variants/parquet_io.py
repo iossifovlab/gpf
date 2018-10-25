@@ -4,6 +4,7 @@ Created on May 30, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from builtins import str
 import sys
@@ -222,7 +223,7 @@ def family_variants_table(variants, batch_size=1000000):
 
 
 def save_family_variants_to_parquet(
-        variants, family_filename, allele_filename, batch_size=100000):
+        variants, allele_filename, batch_size=100000):
     allele_schema = family_allele_parquet_schema()
 
     allele_writer = pq.ParquetWriter(allele_filename, allele_schema)
@@ -304,5 +305,10 @@ def read_ped_df_from_parquet(filename):
     ped_df = pd.read_parquet(filename, engine="pyarrow")
     ped_df.role = ped_df.role.apply(lambda v: Role(v))
     ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
+    if 'layout' in ped_df:
+        ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
+    if 'generated' in ped_df:
+        ped_df.generated = ped_df.generated.apply(
+            lambda v: True if v == 1.0 else False)
 
     return ped_df

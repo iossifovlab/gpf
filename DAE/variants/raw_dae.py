@@ -4,6 +4,7 @@ Created on Jul 23, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from builtins import str
 import gzip
@@ -21,7 +22,7 @@ from variants.attributes import VariantType
 from variants.family import FamiliesBase, Family
 from variants.family_variant import FamilyVariant
 from variants.variant import SummaryVariantFactory, SummaryVariant
-from variants.vcf_utils import best2gt, str2mat, \
+from utils.vcf_utils import best2gt, str2mat, \
     reference_genotype
 
 
@@ -163,7 +164,8 @@ class RawDAE(BaseDAE):
             annotator=annotator)
 
         if region is not None:
-            assert isinstance(region, str), type(region)
+            assert isinstance(region, bytes), \
+                '{} != {}'.format(type(region), bytes)
 
         os.path.exists(summary_filename)
         os.path.exists(toomany_filename)
@@ -176,7 +178,8 @@ class RawDAE(BaseDAE):
     @staticmethod
     def load_column_names(filename):
         with gzip.open(filename) as infile:
-            column_names = infile.readline().decode('utf-8').strip().split("\t")
+            column_names = \
+                infile.readline().decode('utf-8').strip().split("\t")
         return column_names
 
     @staticmethod
@@ -187,10 +190,10 @@ class RawDAE(BaseDAE):
 
         # using a context manager because of
         # https://stackoverflow.com/a/25968716/2316754
-        with closing(pysam.Tabixfile(filename)) as tbf:  # @UndefinedVariable
+        with closing(pysam.Tabixfile(filename)) as tbf:
             infile = tbf.fetch(
                 region=region,
-                parser=pysam.asTuple())  # @UndefinedVariable
+                parser=pysam.asTuple())
 
             df = pd.DataFrame.from_records(
                 data=infile, columns=column_names)
@@ -206,6 +209,7 @@ class RawDAE(BaseDAE):
                 infile,
                 dtype={
                     'chr': np.str,
+                    '#chr': np.str,
                     'position': int,
                 },
                 sep='\t')
@@ -301,6 +305,7 @@ class RawDAE(BaseDAE):
             "position": "cshl_position",
             "variant": "cshl_variant",
             "chr": "chrom",
+            "#chr": "chrom",
         })
         return df
 

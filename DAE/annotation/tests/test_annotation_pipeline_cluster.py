@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import pytest
 from copy import deepcopy
 from io import StringIO
@@ -6,6 +8,8 @@ from builtins import str
 from annotation.annotation_pipeline_cluster import main
 from annotation.tests import configs
 from annotation.tests import input_output
+
+pytestmark = pytest.mark.xfail
 
 
 class MyStringIO(StringIO):
@@ -26,7 +30,6 @@ def config():
     return deepcopy(input_output.CONFIG)
 
 
-@pytest.fixture
 def variant_db_config():
     return MyStringIO(deepcopy(configs.VARIANT_DB_CONFIG))
 
