@@ -24,7 +24,7 @@ familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout
         'sex': [Sex.female, Sex.male, Sex.female],
         'status': [1, 1, 2],
         'role': [Role.mom, Role.dad, Role.prb],
-        'layoutCoords': ['53.5,50.0', '10.0,50.0', '31.75,80.0'],
+        'layout': ['53.5,50.0', '10.0,50.0', '31.75,80.0'],
         'sampleId': ['1.x1', '1.x2', '1.x3']
     })),
     (StringIO("""
@@ -40,7 +40,7 @@ familyId\tpersonId\tdadId\tmomId\tgender\tstatus\trole\tlayout\tsampleId
         'sex': [Sex.female, Sex.male, Sex.female],
         'status': [1, 1, 2],
         'role': [Role.mom, Role.dad, Role.prb],
-        'layoutCoords': ['53.5,50.0', '10.0,50.0', '31.75,80.0'],
+        'layout': ['53.5,50.0', '10.0,50.0', '31.75,80.0'],
         'sampleId': ['1.x1', '1.x2', '1.x3']
     })),
     (StringIO("""
@@ -56,10 +56,13 @@ familyId\tpersonId\tdadId\tmomId\tsex\tstatus\trole\tlayout\tsampleId
         'sex': [Sex.female, Sex.male, Sex.female],
         'status': [1, 1, 2],
         'role': [Role.mom, Role.dad, Role.prb],
-        'layoutCoords': ['53.5,50.0', '10.0,50.0', '31.75,80.0'],
+        'layout': ['53.5,50.0', '10.0,50.0', '31.75,80.0'],
         'sampleId': ['1.x1', '1.x2', '1.x3']
     })),
 ])
 def test_load_pedigree_file(infile, pedigree):
-    loaded_pedigree = FamiliesBase.load_pedigree_file(infile)
-    assert (loaded_pedigree.values == pedigree.values).all()
+    loaded_pedigree = FamiliesBase.load_pedigree_file(infile, sep='\t')
+    columns = ['familyId', 'personId', 'dadId', 'momId', 'sex', 'status',
+               'role', 'layout', 'sampleId']
+    for column in columns:
+        assert (loaded_pedigree[column].values == pedigree[column].values).all()

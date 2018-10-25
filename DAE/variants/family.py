@@ -131,44 +131,6 @@ class FamiliesBase(object):
         return sorted([p.index for p in persons])
 
     @staticmethod
-    def load_pedigree_file(infile, sep="\t"):
-        ped_df = pd.read_csv(
-            infile, sep=sep, index_col=False,
-            skipinitialspace=True,
-            converters={
-                'role': lambda r: Role.from_name(r),
-                'sex': lambda s: Sex.from_value(s),
-                'gender': lambda s: Sex.from_value(s),
-                'layout': lambda lc: lc.split(':')[-1],
-                'generated': lambda g: True if g == 1.0 else False,
-            },
-            dtype={
-                'familyId': str,
-                'personId': str,
-                'sampleId': str,
-                'momId': str,
-                'dadId': str,
-            },
-            comment="#",
-        )
-        if 'gender' in ped_df.columns:
-            ped_df = ped_df.rename(columns={
-                'gender': 'sex',
-            })
-
-        if 'sampleId' not in ped_df.columns:
-            sample_ids = pd.Series(data=ped_df['personId'].values)
-            ped_df['sampleId'] = sample_ids
-        else:
-            sample_ids = ped_df.apply(
-                lambda r: r.personId if pd.isna(r.sampleId) else r.sampleId,
-                axis=1,
-                result_type='reduce',
-            )
-            ped_df['sampleId'] = sample_ids
-        return ped_df
-
-    @staticmethod
     def load_simple_family_file(infile, sep="\t"):
         fam_df = pd.read_csv(
             infile, sep=sep, index_col=False,
@@ -209,6 +171,45 @@ class FamiliesBase(object):
             sample_ids = pd.Series(data=fam_df['personId'].values)
             fam_df['sampleId'] = sample_ids
         return fam_df
+
+    @staticmethod
+    def load_pedigree_file(infile, sep="\t"):
+        ped_df = pd.read_csv(
+            infile, sep=sep, index_col=False,
+            skipinitialspace=True,
+            converters={
+                'role': lambda r: Role.from_name(r),
+                'sex': lambda s: Sex.from_value(s),
+                'gender': lambda s: Sex.from_value(s),
+                'layout': lambda lc: lc.split(':')[-1],
+                'generated': lambda g: True if g == 1.0 else False,
+            },
+            dtype={
+                'familyId': str,
+                'personId': str,
+                'sampleId': str,
+                'momId': str,
+                'dadId': str,
+            },
+            comment='#',
+            encoding='utf-8'
+        )
+        if 'gender' in ped_df.columns:
+            ped_df = ped_df.rename(columns={
+                'gender': 'sex',
+            })
+
+        if 'sampleId' not in ped_df.columns:
+            sample_ids = pd.Series(data=ped_df['personId'].values)
+            ped_df['sampleId'] = sample_ids
+        else:
+            sample_ids = ped_df.apply(
+                lambda r: r.personId if pd.isna(r.sampleId) else r.sampleId,
+                axis=1,
+                result_type='reduce',
+            )
+            ped_df['sampleId'] = sample_ids
+        return ped_df
 
     @staticmethod
     def sort_pedigree(ped_df):
