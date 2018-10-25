@@ -34,14 +34,14 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         assert 'new_x' in self.columns_config or \
             ('new_c' in self.columns_config and 'new_p' in self.columns_config)
 
-    def line_annotation(self, aline, variant=None):
+    def do_annotate(self, aline, variant):
         if self.location:
-            location = aline.columns[self.location]
+            location = aline[self.location]
             chrom, pos = location.split(":")
             pos = int(pos)
         else:
-            chrom = aline.columns[self.chrom]
-            pos = int(aline.columns[self.pos])
+            chrom = aline[self.chrom]
+            pos = int(aline[self.pos])
 
         # positions = [int(p) - 1 for p in position.split('-')]
 
@@ -66,11 +66,11 @@ class LiftOverAnnotator(VariantAnnotatorBase):
             new_x = '{}:{}'.format(new_c, new_p)
 
         if 'new_x' in self.columns_config:
-            aline.columns[self.columns_config['new_x']] = new_x
+            aline[self.columns_config['new_x']] = new_x
         if 'new_c' in self.columns_config:
-            aline.columns[self.columns_config['new_c']] = new_c
+            aline[self.columns_config['new_c']] = new_c
         if 'new_p' in self.columns_config:
-            aline.columns[self.columns_config['new_p']] = new_p
+            aline[self.columns_config['new_p']] = new_p
 
 
 # def get_argument_parser():

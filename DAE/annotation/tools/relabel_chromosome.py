@@ -5,6 +5,27 @@ from __future__ import absolute_import
 from .annotator_base import AnnotatorBase
 
 
+class RelabelChromosomeAnnotator(AnnotatorBase):
+
+    def __init__(self, config):
+        super(RelabelChromosomeAnnotator, self).__init__(config)
+
+        assert self.config.options.c is not None
+        assert self.config.options.new_c is not None
+        self.chrom_column = self.config.options.c
+        self.chrom_new_column = self.config.options.new_c
+
+    def line_annotation(self, aline):
+        value = aline.columns.get(self.chrom_column, None)
+        if not value:
+            value = ''
+        if 'chr' in value:
+            value = value.replace('chr', '')
+        else:
+            value = 'chr' + value
+        aline[self.chrom_new_column] = value
+
+
 # def get_argument_parser():
 #     """
 #     RelabelChromosomeAnnotator options::
@@ -36,28 +57,5 @@ from .annotator_base import AnnotatorBase
 #         '--new-c', help='name for the generated chromosome column',
 #         default='relabledChr', action='store')
 #     return parser
-
-
-class RelabelChromosomeAnnotator(AnnotatorBase):
-
-    def __init__(self, config):
-        super(RelabelChromosomeAnnotator, self).__init__(config)
-
-        assert self.config.options.c is not None
-        assert self.config.options.new_c is not None
-        self.chrom_column = self.config.options.c
-        self.chrom_new_column = self.config.options.new_c
-
-    def line_annotation(self, annotation_line, variant=None):
-        value = annotation_line.columns.get(self.chrom_column, None)
-        if not value:
-            value = ''
-        if 'chr' in value:
-            value = value.replace('chr', '')
-        else:
-            value = 'chr' + value
-        annotation_line.columns[self.chrom_new_column] = value
-
-
 # if __name__ == "__main__":
 #     main(get_argument_parser(), RelabelChromosomeAnnotator)

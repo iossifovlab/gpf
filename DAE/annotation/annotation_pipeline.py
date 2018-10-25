@@ -16,7 +16,8 @@ from configparser import ConfigParser
 from collections import OrderedDict
 
 import common.config
-from annotation.tools.annotator_base import CompositeVariantAnnotator
+from annotation.tools.annotator_base import AnnotatorBase, \
+    CompositeVariantAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.file_io import IOType, IOManager
 
@@ -131,6 +132,15 @@ class PipelineAnnotator(CompositeVariantAnnotator):
             ]
             pipeline.config.output_columns.extend(output_columns)
         return pipeline
+
+    def add_annotator(self, annotator):
+        assert isinstance(annotator, AnnotatorBase)
+        self.annotators.append(annotator)
+
+    def line_annotation(self, aline):
+        self.variant_builder.build(aline)
+        for annotator in self.annotators:
+            annotator.line_annotation(aline)
 
 
 def pipeline_main(argv):

@@ -169,12 +169,5 @@ class LineConfig(object):
         ]
 
     def build(self, source_line):
-        return Line(self, source_line)
+        return dict(zip(self.source_header, source_line))
 
-
-class Line(object):
-
-    def __init__(self, config, source_line):
-        self.config = config
-        self.source_line = source_line
-        self.columns = dict(zip(self.config.source_header, self.source_line))

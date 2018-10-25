@@ -101,20 +101,20 @@ def test_build_pipeline_configuration():
     # assert config.default_options.region is None
 
 
-input2_copy_expected = """loc1\tvar1
-1:10918\tsub(G->A)
-1:10919\tsub(A->C)
-1:10920\tsub(G->T)
-1:10921\tsub(A->C)
-1:10922\tsub(G->C)
+input2_copy_expected = """chr\tposition
+1\t10918
+1\t10919
+1\t10920
+1\t10921
+1\t10922
 """
 
-input2_score_expected = """loc1\tvar1\tRESULT_phastCons100way
-1:10918\tsub(G->A)\t0.253
-1:10919\tsub(A->C)\t0.251
-1:10920\tsub(G->T)\t0.249
-1:10921\tsub(A->C)\t0.247
-1:10922\tsub(G->C)\t0.245
+input2_score_expected = """RESULT_phastCons100way\tloc1\tvar1
+0.253\t1:10918\tsub(G->A)
+0.251\t1:10919\tsub(A->C)
+0.249\t1:10920\tsub(G->T)
+0.247\t1:10921\tsub(A->C)
+0.245\t1:10922\tsub(G->C)
 """
 
 input2_score2_expected = \

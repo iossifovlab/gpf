@@ -1,5 +1,5 @@
 
-from annotation.tools.annotator_config import LineConfig, Line, \
+from annotation.tools.annotator_config import LineConfig, \
     AnnotatorConfig, \
     VariantAnnotatorConfig
 from utils.dae_utils import dae2vcf_variant
@@ -25,7 +25,7 @@ class AnnotatorBase(object):
     def build_ouput_line(self, annotation_line):
         output_columns = self.config.output_columns
         return [
-            annotation_line.columns.get(key, '') for key in output_columns
+            annotation_line.get(key, '') for key in output_columns
         ]
 
     def annotate_file(self, file_io_manager):
@@ -53,7 +53,7 @@ class AnnotatorBase(object):
             file_io_manager.line_write(
                 self.build_ouput_line(annotation_line))
 
-    def line_annotation(self, annotation_line, variant=None):
+    def line_annotation(self, annotation_line):
         """
             Method returning annotations for the given line
             in the order from new_columns parameter.
@@ -69,8 +69,8 @@ class CopyAnnotator(AnnotatorBase):
     def line_annotation(self, annotation_line, variant=None):
         data = {}
         for key, value in self.config.columns_config.items():
-            data[value] = annotation_line.columns[key]
-        annotation_line.columns.update(data)
+            data[value] = annotation_line[key]
+        annotation_line.update(data)
 
 
 class VariantBuilder(object):
@@ -83,7 +83,6 @@ class VariantBuilder(object):
         raise NotImplementedError()
 
     def build(self, annotation_line):
-        # import pdb; pdb.set_trace()
         summary = self.build_variant(annotation_line)
 
         data = {
@@ -96,7 +95,7 @@ class VariantBuilder(object):
             'VCF:ref': summary.reference,
             'VCF:alt': summary.alternative,
         }
-        annotation_line.columns.update(data)
+        annotation_line.update(data)
         return summary
 
 
@@ -110,15 +109,15 @@ class DAEBuilder(VariantBuilder):
         self.location = self.config.options.x
 
     def build_variant(self, aline):
-        variant = aline.columns[self.variant]
+        variant = aline[self.variant]
         if self.location:
-            location = aline.columns[self.location]
+            location = aline[self.location]
             chrom, position = location.split(':')
         else:
             assert self.chrom is not None
             assert self.position is not None
-            chrom = aline.columns[self.chrom]
-            position = aline.columns[self.position]
+            chrom = aline[self.chrom]
+            position = aline[self.position]
         vcf_position, ref, alt = dae2vcf_variant(
             chrom, int(position), variant, self.genome
         )
@@ -136,10 +135,10 @@ class VCFBuilder(VariantBuilder):
         self.alt = self.config.options.a
 
     def build_variant(self, aline):
-        chrom = aline.columns[self.chrom]
-        position = aline.columns[self.position]
-        ref = aline.columns[self.ref]
-        alt = aline.columns[self.alt]
+        chrom = aline[self.chrom]
+        position = aline[self.position]
+        ref = aline[self.ref]
+        alt = aline[self.alt]
 
         summary = SummaryAllele(
             chrom, int(position), ref, alt
@@ -175,32 +174,27 @@ class VariantAnnotatorBase(AnnotatorBase):
                 'VCF:alt',
             ]
 
-    def annotate_file(self, file_io_manager):
-        """
-            Method for annotating file from `Annotator`.
-        """
-        line_config = LineConfig(file_io_manager.header)
-        if self.mode == 'replace':
-            output_columns = file_io_manager.header
-            extended = [
-                col for col in self.config.output_columns
-                if col not in output_columns]
-            output_columns.extend(extended)
-            self.config.output_columns = output_columns
+    def line_annotation(self, aline):
+        variant = self.variant_builder.build(aline)
+        self.do_annotate(aline, variant)
 
-        file_io_manager.line_write(self.config.output_columns)
+    def do_annotate(self, aline, variant):
+        raise NotImplementedError()
 
-        for line in file_io_manager.lines_read_iterator():
-            if '#' in line[0]:
-                file_io_manager.line_write(line)
-                continue
-            annotation_line = line_config.build(line)
-            variant = self.variant_builder.build(annotation_line)
 
-            self.line_annotation(annotation_line, variant=variant)
+class CompositeAnnotator(AnnotatorBase):
 
-            file_io_manager.line_write(
-                self.build_ouput_line(annotation_line))
+    def __init__(self, config):
+        super(CompositeAnnotator, self).__init__(config)
+        self.annotators = []
+
+    def add_annotator(self, annotator):
+        assert isinstance(annotator, AnnotatorBase)
+        self.annotators.append(annotator)
+
+    def line_annotation(self, aline):
+        for annotator in self.annotators:
+            annotator.line_annotation(aline)
 
 
 class CompositeVariantAnnotator(VariantAnnotatorBase):
@@ -210,12 +204,10 @@ class CompositeVariantAnnotator(VariantAnnotatorBase):
         self.annotators = []
 
     def add_annotator(self, annotator):
-        assert isinstance(annotator, AnnotatorBase)
+        assert isinstance(annotator, VariantAnnotatorBase)
         self.annotators.append(annotator)
 
-    def line_annotation(self, aline, variant=None):
-        assert variant is not None
-        assert isinstance(aline, Line)
-
+    def line_annotation(self, aline):
+        variant = self.variant_builder.build(aline)
         for annotator in self.annotators:
-            annotator.line_annotation(aline, variant)
+            annotator.do_annotate(aline, variant)

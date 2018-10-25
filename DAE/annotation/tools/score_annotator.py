@@ -7,7 +7,7 @@ from box import Box
 
 from annotation.tools.annotator_base import VariantAnnotatorBase, \
     CompositeVariantAnnotator
-from annotation.tools.annotator_config import Line, VariantAnnotatorConfig
+from annotation.tools.annotator_config import VariantAnnotatorConfig
 
 from annotation.tools.score_file_io import DirectAccess, \
     IterativeAccess
@@ -62,7 +62,7 @@ class VariantScoreAnnotator(VariantAnnotatorBase):
             assert score_name in scores_df.columns, \
                 "Score {} not found in scores {}".format(
                     score_name, scores_df.columns)
-            aline.columns[column_name] = scores_df[score_name].mean()
+            aline[column_name] = scores_df[score_name].mean()
 
     def _scores_with_search(self, aline, scores_df):
         assert len(self.search_columns) == len(self.score_file.search_columns)
@@ -71,7 +71,7 @@ class VariantScoreAnnotator(VariantAnnotatorBase):
         for col_index in range(len(self.search_columns)):
             line_column = self.search_columns[col_index]
             score_column = self.score_file.search_columns[col_index]
-            expr = scores_df[score_column] == aline.columns[line_column]
+            expr = scores_df[score_column] == aline[line_column]
             if match_expr is None:
                 match_expr = expr
             else:
@@ -82,11 +82,10 @@ class VariantScoreAnnotator(VariantAnnotatorBase):
         else:
             self._scores_no_search(aline, matched_df)
 
-    def line_annotation(self, aline, variant=None):
+    def do_annotate(self, aline, variant):
         assert variant is not None
-        assert isinstance(aline, Line)
-        chrom = aline.columns[self.config.options.c]
-        pos = aline.columns[self.config.options.p]
+        chrom = aline[self.config.options.c]
+        pos = aline[self.config.options.p]
 
         scores_df = self.score_file.fetch_score_lines(
             chrom,

@@ -53,7 +53,6 @@ class ScoreFile(TabixReader):
 
         self._load_config()
         self.line_config = LineConfig(self.config.header)
-        print(self.header, self.config.header)
 
         self.chr_index = self.header.index(self.config.columns.chr)
         self.pos_begin_index = self.header.index(self.config.columns.pos_begin)
@@ -97,8 +96,8 @@ class ScoreFile(TabixReader):
         res = []
         for line in score_lines:
             aline = self.line_config.build(list(line))
-            aline.columns[self.config.columns.chr] = chrom
-            res.append(aline.columns)
+            aline[self.config.columns.chr] = chrom
+            res.append(aline)
 
         df = pd.DataFrame.from_records(
             res, columns=self.line_config.source_header)

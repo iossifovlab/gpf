@@ -35,7 +35,7 @@ class EffectAnnotator(VariantAnnotatorBase):
         self.annotation_helper = VariantEffectAnnotator(
             genome, gene_models, promoter_len=self.config.options.prom_len)
 
-    def line_annotation(self, aline, variant=None):
+    def do_annotate(self, aline, variant):
         assert variant is not None
 
         try:
@@ -46,9 +46,9 @@ class EffectAnnotator(VariantAnnotatorBase):
                 alt=variant.alternative)
             effect_type, effect_gene, effect_details = \
                 self.annotation_helper.effect_description1(effects)
-            aline.columns[self.effect_type_column] = effect_type
-            aline.columns[self.effect_gene_column] = effect_gene
-            aline.columns[self.effect_details_column] = effect_details
+            aline[self.effect_type_column] = effect_type
+            aline[self.effect_gene_column] = effect_gene
+            aline[self.effect_details_column] = effect_details
 
         except ValueError as e:
             pass
