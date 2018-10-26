@@ -1,45 +1,98 @@
 #!/usr/bin/env python
+from __future__ import print_function
 
 import os
 import sys
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
+import pysam
+
+from collections import OrderedDict
 from configparser import ConfigParser
+from box import Box
+
+import common.config
 
 
-class VariantDBConf(object):
+class VariantDBConfig(object):
 
-    def __init__(self, data_dir):
-        self.data_dir = data_dir
-        variant_db_conf = ConfigParser({
+    @classmethod
+    def _parse_variants_db_config(cls, data_dir):
+        config_parser = ConfigParser({
             'wd': data_dir,
             'data': data_dir
         })
+        filename = os.path.join(data_dir, "variantDB.conf")
 
-        with open(data_dir + '/variantDB.conf', 'rt') as fp:
-            variant_db_conf.read_file(fp)
-        self.denovo_files = []
-        self.transm_files = []
-        for section in variant_db_conf.sections():
-            if section.startswith('study.'):
-                if variant_db_conf.has_option(section, 'study.type'):
-                    study_types = variant_db_conf.get(section, 'study.type')
-                    if 'CNV' in study_types:
-                        # SKIP CNV studies
-                        continue
-                if variant_db_conf.has_option(section, 'denovoCalls.files'):
-                    self.denovo_files.extend(
-                        variant_db_conf.get(
-                            section, 'denovoCalls.files').split('\n'))
-                if variant_db_conf.has_option(section,
-                                              'transmittedVariants.indexFile'):
-                    self.transm_files.extend([
-                        index_file + '.txt.bgz'
-                        for index_file in variant_db_conf.get(
-                            section,
-                            'transmittedVariants.indexFile').split('\n')
-                    ])
+        config = OrderedDict()
+
+        with open(filename, "r", encoding="utf8") as infile:
+            config_parser.read_file(infile)
+            for section in config_parser.sections():
+                if section.startswith('study.'):
+                    study = common.config._section_tree(
+                        section, config_parser)
+                    config[section] = study
+        return config
+
+    @classmethod
+    def _collect_denovo_calls(cls, study):
+        denovo_files = []
+
+        denovo_calls = study.denovocalls
+        if not denovo_calls:
+            return []
+
+        for key, data in denovo_calls.items():
+            file_list = None
+            if key == 'files':
+                file_list = data
+            else:
+                if 'files' in data:
+                    file_list = data['files']
+            if not file_list:
+                continue
+            for filename in file_list.split("\n"):
+                denovo_files.append(filename.strip())
+        return denovo_files
+
+    @classmethod
+    def _collect_transmitted_calls(cls, study):
+
+        transmitted_calls = study.transmittedvariants
+        if not transmitted_calls:
+            return []
+
+        if 'indexfile' not in transmitted_calls:
+            return []
+
+        filename = "{}.txt.bgz".format(transmitted_calls.indexfile)
+        # assert os.path.exists(filename)
+        return [filename]
+
+    @classmethod
+    def _collect_studies(cls, config):
+        denovo_files = []
+        transmitted_files = []
+
+        for study_name, study_config in config.items():
+            if not study_name.startswith("study."):
+                continue
+            study = Box(study_config, default_box=True, default_box_attr=None)
+
+            if 'CNV' in study.study.type:
+                continue
+            denovo_files.extend(cls._collect_denovo_calls(study))
+            transmitted_files.extend(cls._collect_transmitted_calls(study))
+
+        return denovo_files, transmitted_files
+
+    def __init__(self, data_dir):
+        self.data_dir = data_dir
+
+        config = VariantDBConfig._parse_variants_db_config(data_dir)
+
+        self.denovo_files, self.transmitted_files = \
+            VariantDBConfig._collect_studies(config)
+
         self._validate()
 
     def _validate(self):
@@ -47,15 +100,15 @@ class VariantDBConf(object):
             filename for filename in self.all_variant_files
             if self.data_dir not in filename]
         if len(outside_files) != 0:
-            sys.stderr.write(
-                '[ERROR] Some configured variant files are '
+            print(
+                '[ERROR] Some configured variant files are'
                 'outside of the data directory:\n{}\n'.format(
-                    '\n'.join(outside_files)))
+                    '\n'.join(outside_files)), file=sys.stderr)
             sys.exit(1)
 
     @property
     def all_variant_files(self):
-        return self.denovo_files + self.transm_files
+        return self.denovo_files + self.transmitted_files
 
 
 def escape_target(target):
@@ -75,7 +128,7 @@ def main(config, data_dir, output_dir, sge_rreq):
 
     all_cmds = []
 
-    variant_db_conf = VariantDBConf(data_dir)
+    variant_db_conf = VariantDBConfig(data_dir)
     all_input_files = variant_db_conf.all_variant_files
 
     dirs = [to_destination(data_dir)]
@@ -99,13 +152,13 @@ def main(config, data_dir, output_dir, sge_rreq):
         ' 2> "{log_prefix}-err{job_sufix}.txt")'
         ' 2> "{log_prefix}-time{job_sufix}.txt"\n')
 
-    denovo_args = '--config {}'.format(config)
+    common_args = '--config {}'.format(config)
 
-    transm_args_format = denovo_args +\
-        ' --options=direct:False -c chr -p position' \
+    transm_args_format = common_args +\
+        ' -c chr -p position' \
         ' --region={chr}:{begin_pos}-{end_pos}'
 
-    denovo_args += ' --options=direct:True'
+    denovo_args = common_args + ' --direct'
 
     for filename in variant_db_conf.denovo_files:
         all_cmds.append(escape_target(to_destination(filename)))
@@ -115,15 +168,17 @@ def main(config, data_dir, output_dir, sge_rreq):
             args=denovo_args, job_sufix='',
             log_prefix=log_dir + '/' + os.path.basename(filename)))
 
-    chromosomes = list(map(lambda x: str(x), range(1, 23))) + ['X', 'Y']
-    chr_labels = {'X': '23', 'Y': '24'}
-    for filename in variant_db_conf.transm_files:
+    for filename in variant_db_conf.transmitted_files:
         output_file = to_destination(filename).replace('.bgz', '')
+        tf = pysam.TabixFile(filename)
+        contigs = tf.contigs
+        tf.close()
+
         file_cmds = []
-        for chromosome in chromosomes:
+        for index, chromosome in enumerate(contigs):
             for i in range(0, 5):
-                job_sufix = '-part-{chr:0>2}-{pos}'.format(
-                    chr=chr_labels.get(chromosome, chromosome), pos=i)
+                job_sufix = '-part-{chr_index:0>3}-{pos}-{chromosome}'.format(
+                    chr_index=index, pos=i, chromosome=chromosome)
                 file_cmds.append(escape_target(output_file + job_sufix))
                 print(cmd_format.format(
                     target=file_cmds[-1],

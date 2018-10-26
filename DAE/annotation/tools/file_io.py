@@ -4,9 +4,9 @@ import sys
 import os
 import gzip
 import pysam
-import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
+# import pandas as pd
+# import pyarrow as pa
+# import pyarrow.parquet as pq
 from abc import ABCMeta, abstractmethod
 
 
@@ -35,14 +35,14 @@ class IOType:
         def instance_w(opts):
             return TSVWriter(opts)
 
-    class Parquet:
-        @staticmethod
-        def instance_r(opts):
-            return ParquetFormat(opts, 'r')
+    # class Parquet:
+    #     @staticmethod
+    #     def instance_r(opts):
+    #         return ParquetFormat(opts, 'r')
 
-        @staticmethod
-        def instance_w(opts):
-            return ParquetFormat(opts, 'w')
+    #     @staticmethod
+    #     def instance_w(opts):
+    #         return ParquetFormat(opts, 'w')
 
 
 class IOManager(object):
@@ -362,89 +362,89 @@ class TSVWriter(TSVFormat):
         raise NotImplementedError()
 
 
-class ParquetFormat(AbstractFormat):
+# class ParquetFormat(AbstractFormat):
 
-    def __init__(self, opts, mode):
-        super(ParquetFormat, self).__init__(opts, mode)
+#     def __init__(self, opts, mode):
+#         super(ParquetFormat, self).__init__(opts, mode)
 
-        self.row_group_buffer = []
-        if self.mode == 'w':
-            self.pq_writer = None
-            self.buffer_limit = 50
+#         self.row_group_buffer = []
+#         if self.mode == 'w':
+#             self.pq_writer = None
+#             self.buffer_limit = 50
 
-    def _setup(self):
-        if self.mode == 'r':
-            if self.opts.infile != '-':
-                assert_file_exists(self.opts.infile)
-                self.pqfile = pq.ParquetFile(self.opts.infile)
-                self.row_group_count = self.pqfile.num_row_groups
-                self.row_group_curr = 0
-            else:
-                self.variantFile = sys.stdin
-            self._read_row_group()
-        else:
-            if self.opts.outfile != '-':
-                self.pqfile_out = self.opts.outfile
-            else:
-                self.pqfile_out = sys.stdout
+#     def _setup(self):
+#         if self.mode == 'r':
+#             if self.opts.infile != '-':
+#                 assert_file_exists(self.opts.infile)
+#                 self.pqfile = pq.ParquetFile(self.opts.infile)
+#                 self.row_group_count = self.pqfile.num_row_groups
+#                 self.row_group_curr = 0
+#             else:
+#                 self.variantFile = sys.stdin
+#             self._read_row_group()
+#         else:
+#             if self.opts.outfile != '-':
+#                 self.pqfile_out = self.opts.outfile
+#             else:
+#                 self.pqfile_out = sys.stdout
 
-    def _cleanup(self):
-        if self.mode == 'r':
-            print('Processed', self.linecount, 'lines.', file=sys.stderr)
-        else:
-            self._write_buffer()
-            if self.opts.outfile != '-':
-                self.pq_writer.close()
+#     def _cleanup(self):
+#         if self.mode == 'r':
+#             print('Processed', self.linecount, 'lines.', file=sys.stderr)
+#         else:
+#             self._write_buffer()
+#             if self.opts.outfile != '-':
+#                 self.pq_writer.close()
 
-    def _read_row_group(self):
-        if self.row_group_curr < self.row_group_count:
-            if self.header is None:
-                pd_buffer = self.pqfile.read_row_group(
-                    self.row_group_curr).to_pandas()
-                self.header = [str(i) for i in list(pd_buffer)]
-                self.header[0] = self.header[0].strip('#')
-                self.row_group_buffer = pd_buffer.values
-            else:
-                self.row_group_buffer = self.pqfile.read_row_group(
-                    self.row_group_curr).to_pandas().values
-            self.row_group_buffer = self.row_group_buffer.tolist()
-            self.row_group_curr += 1
+#     def _read_row_group(self):
+#         if self.row_group_curr < self.row_group_count:
+#             if self.header is None:
+#                 pd_buffer = self.pqfile.read_row_group(
+#                     self.row_group_curr).to_pandas()
+#                 self.header = [str(i) for i in list(pd_buffer)]
+#                 self.header[0] = self.header[0].strip('#')
+#                 self.row_group_buffer = pd_buffer.values
+#             else:
+#                 self.row_group_buffer = self.pqfile.read_row_group(
+#                     self.row_group_curr).to_pandas().values
+#             self.row_group_buffer = self.row_group_buffer.tolist()
+#             self.row_group_curr += 1
 
-    def header_write(self, input_):
-        self.header = input_
+#     def header_write(self, input_):
+#         self.header = input_
 
-    def line_read(self):
-        if self.mode != 'r':
-            print('Cannot read in write mode!', file=sys.stderr)
-            sys.exit(1)
+#     def line_read(self):
+#         if self.mode != 'r':
+#             print('Cannot read in write mode!', file=sys.stderr)
+#             sys.exit(1)
 
-        if not self.row_group_buffer:
-            if self.row_group_curr >= self.row_group_count:
-                return ['']  # EOF
-            else:
-                self._read_row_group()
+#         if not self.row_group_buffer:
+#             if self.row_group_curr >= self.row_group_count:
+#                 return ['']  # EOF
+#             else:
+#                 self._read_row_group()
 
-        line = self.row_group_buffer[0]
-        self.row_group_buffer = self.row_group_buffer[1:]
-        self.linecount += 1
-        if self.linecount % self.linecount_threshold == 0:
-            print(self.linecount, 'lines read.', file=sys.stderr)
-        return line
+#         line = self.row_group_buffer[0]
+#         self.row_group_buffer = self.row_group_buffer[1:]
+#         self.linecount += 1
+#         if self.linecount % self.linecount_threshold == 0:
+#             print(self.linecount, 'lines read.', file=sys.stderr)
+#         return line
 
-    def line_write(self, input_):
-        if self.mode != 'w':
-            print('Cannot write in read mode!', file=sys.stderr)
-            sys.exit(1)
+#     def line_write(self, input_):
+#         if self.mode != 'w':
+#             print('Cannot write in read mode!', file=sys.stderr)
+#             sys.exit(1)
 
-        self.row_group_buffer.append(input_)
-        if len(self.row_group_buffer) >= self.buffer_limit:
-            self._write_buffer()
+#         self.row_group_buffer.append(input_)
+#         if len(self.row_group_buffer) >= self.buffer_limit:
+#             self._write_buffer()
 
-    def _write_buffer(self):
-        buffer_df = pd.DataFrame(self.row_group_buffer, columns=self.header)
-        buffer_table = pa.Table.from_pandas(buffer_df, preserve_index=False)
-        if self.pq_writer is None:
-            self.pq_writer = pq.ParquetWriter(
-                self.pqfile_out, buffer_table.schema)
-        self.pq_writer.write_table(buffer_table)
-        self.row_group_buffer = []
+#     def _write_buffer(self):
+#         buffer_df = pd.DataFrame(self.row_group_buffer, columns=self.header)
+#         buffer_table = pa.Table.from_pandas(buffer_df, preserve_index=False)
+#         if self.pq_writer is None:
+#             self.pq_writer = pq.ParquetWriter(
+#                 self.pqfile_out, buffer_table.schema)
+#         self.pq_writer.write_table(buffer_table)
+#         self.row_group_buffer = []
