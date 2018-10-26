@@ -55,10 +55,13 @@ Example:
         super(FamilyCounters, self).__init__()
 
     def post(self, request):
+        # FIXME:
+        # It uses old interface
+        return Response([], status=status.HTTP_200_OK)
         data = request.data
         try:
             dataset_id = data['datasetId']
-            dataset = self.datasets_factory.get_dataset(dataset_id)
+            dataset = self.get_dataset(dataset_id)
             self.check_object_permissions(request, dataset_id)
 
             family_ids = dataset.get_family_ids(**data)
