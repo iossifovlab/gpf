@@ -144,8 +144,6 @@ import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigre
 import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
 import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
 import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
-import { StatusFilterComponent } from './status-filter/status-filter.component';
-import { RolesFilterComponent } from './roles-filter/roles-filter.component';
 import { StudyFiltersBlockComponent } from './study-filters-block/study-filters-block.component';
 import { StudyFilterComponent } from './study-filter/study-filter.component';
 import { AddButtonComponent } from './add-button/add-button.component';
@@ -348,8 +346,6 @@ const appRoutes: Routes = [
     LoadQueryComponent,
     PerfectlyDrawablePedigreeComponent,
     NonPdpPedigreesComponent,
-    StatusFilterComponent,
-    RolesFilterComponent,
     SmallRemoveButtonComponent,
     StudyFiltersBlockComponent,
     StudyFilterComponent,
