@@ -14,7 +14,7 @@ import { Subject, ReplaySubject, BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class DatasetsService {
-  private datasetUrl = 'datasets/';
+  private datasetUrl = 'datasets';
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
@@ -59,7 +59,7 @@ export class DatasetsService {
   }
 
   getDataset(datasetId: string): Observable<Dataset> {
-    let url = `${this.datasetUrl}${datasetId}`;
+    let url = `${this.datasetUrl}/${datasetId}`;
     let options = new RequestOptions({ withCredentials: true });
 
     return this.http.get(url, options)
