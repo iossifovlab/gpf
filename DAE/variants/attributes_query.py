@@ -49,7 +49,7 @@ QUERY_GRAMMAR = """
 
     simple_arg: STRING | "'" STRING "'" | "\\"" STRING "\\""
 
-    STRING : ("_"|LETTER|DIGIT|"."|"-")+
+    STRING : ("_"|LETTER|DIGIT|"."|"-"|"'"|"+")+
 
     _arglist: (arg "," )* arg [","]
 
@@ -328,9 +328,9 @@ class QueryTreeToSQLTransformer(BaseTreeTransformer):
 
     def token_converter(self, arg):
         if isinstance(arg, enum.Enum):
-            return "'" + str(arg.value) + "'"
+            return "'" + str(arg.value).replace("'", "\\'") + "'"
         else:
-            return "'" + str(arg) + "'"
+            return "'" + str(arg).replace("'", "\\'") + "'"
 
     def LessThanNode(self, arg):
         return self.column_name + " > " + self.token_converter(arg)
