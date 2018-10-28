@@ -37,7 +37,7 @@ class VariantAnnotationTest(unittest.TestCase):
 
     def test_synonymous_sub_ref_alt_pos(self):
         [effect] = VariantAnnotation.annotate_variant(self.gmDB, self.GA,
-                                                      chr="1",
+                                                      chrom="1",
                                                       position="897349",
                                                       ref="G",
                                                       alt="A")

@@ -65,7 +65,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
                 variant.position
             )
         elif variant.variant_type in set([
-                VariantType.insertion, VariantType.deletion, 
+                VariantType.insertion, VariantType.deletion,
                 VariantType.complex]):
 
             scores = self.score_file.fetch_scores(
@@ -135,14 +135,14 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
             if len(matched_df) == 0:
                 self._scores_not_found(aline)
                 return
-            
+
             for score_name in self.score_names:
                 column_name = self.config.columns_config[score_name]
                 aline[column_name] = matched_df[score_name].mean()
             return
 
         if variant.variant_type in set([
-                VariantType.insertion, VariantType.deletion, 
+                VariantType.insertion, VariantType.deletion,
                 VariantType.complex]):
             aggregate = {
                 sn: 'max' for sn in self.score_names

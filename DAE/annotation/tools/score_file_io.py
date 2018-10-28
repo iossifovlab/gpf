@@ -117,6 +117,7 @@ class ScoreFile(TabixReader):
 
 
 class IterativeAccess(ScoreFile):
+    LONG_JUMP_THRESHOLD = 10000
 
     def __init__(self, options, score_filename, score_config_filename=None):
         super(IterativeAccess, self).__init__(
@@ -129,7 +130,7 @@ class IterativeAccess(ScoreFile):
         # purge start of line buffer
         while len(self.current_lines) > 0:
             line = self.current_lines[0]
-            line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
+            line_chrom, line_pos_begin, line_pos_end = self.line_pos(line)
             if line_chrom > chrom or \
                     (line_chrom == chrom and line_pos_end >= pos_begin):
                 break
@@ -138,13 +139,13 @@ class IterativeAccess(ScoreFile):
     def _buffer_pos(self):
         if len(self.current_lines) == 0:
             return None, -1, -1
-        chrom_begin, pos_begin, _ = self._line_pos(self.current_lines[0])
-        chrom_end, _, pos_end = self._line_pos(self.current_lines[-1])
+        chrom_begin, pos_begin, _ = self.line_pos(self.current_lines[0])
+        chrom_end, _, pos_end = self.line_pos(self.current_lines[-1])
         assert chrom_begin == chrom_end
 
         return chrom_begin, pos_begin, pos_end
 
-    def _line_pos(self, line):
+    def line_pos(self, line):
         return line[self.chr_index], \
             line[self.pos_begin_index], \
             line[self.pos_end_index]
@@ -164,7 +165,7 @@ class IterativeAccess(ScoreFile):
             line[self.pos_begin_index] = int(line[self.pos_begin_index])
             line[self.pos_end_index] = int(line[self.pos_end_index])
 
-            line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
+            line_chrom, line_pos_begin, line_pos_end = self.line_pos(line)
             assert line_chrom == self.current_chrom
 
             if line_pos_end >= pos_begin:
@@ -175,7 +176,7 @@ class IterativeAccess(ScoreFile):
             line = list(line)
             line[self.pos_begin_index] = int(line[self.pos_begin_index])
             line[self.pos_end_index] = int(line[self.pos_end_index])
-            line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
+            line_chrom, line_pos_begin, line_pos_end = self.line_pos(line)
             assert line_chrom == self.current_chrom
             self.current_lines.append(line)
             if line_pos_end > pos_end:
@@ -195,7 +196,7 @@ class IterativeAccess(ScoreFile):
     def _select_line_buffer(self, chrom, pos_begin, pos_end):
         result = []
         for line in self.current_lines:
-            line_chrom, line_pos_begin, line_pos_end = self._line_pos(line)
+            line_chrom, line_pos_begin, line_pos_end = self.line_pos(line)
             if line_chrom != chrom:
                 continue
             if self._regions_intersect(
@@ -209,10 +210,17 @@ class IterativeAccess(ScoreFile):
         self.current_lines = []
 
         region = "{}:{}".format(chrom, pos_begin)
+        print("RESETTING score file: {} to {}".format(
+            self.score_filename, region
+        ), file=sys.stderr)
+
         self._region_reset(region)
 
     def _fetch(self, chrom, pos_begin, pos_end):
-        if chrom != self.current_chrom:
+        buffer_chrom, buffer_begin_pos, buffer_end_pos = self._buffer_pos()
+        if chrom != buffer_chrom or \
+                pos_begin < buffer_begin_pos or \
+                (pos_begin - buffer_end_pos) > self.LONG_JUMP_THRESHOLD:
             self._reset(chrom, pos_begin)
 
         self._purge_line_buffer(chrom, pos_begin, pos_end)
