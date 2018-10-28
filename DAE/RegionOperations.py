@@ -39,9 +39,9 @@ class Region(object):
         "^(chr)?(\d+|[Xx]):([\d]{1,3}(,?[\d]{3})*)"
         "(-([\d]{1,3}(,?[\d]{3})*))?$")
 
-    def __init__(self, chrom, start, stop):
+    def __init__(self, chrom=None, start=None, stop=None, chr=None):
 
-        self.chrom = chrom
+        self.chrom = chrom if not None else chr
         self.start = start
         self.stop = stop
 
@@ -120,7 +120,7 @@ def unique_regions(R):
 def connected_component(R):
     """This might be the same as collapse"""
 
-    import networkx as nx
+    import networkx as nx  # noqa
 
     G = nx.Graph()
 
@@ -179,7 +179,7 @@ def collapse(r, is_sorted=False):
 def collapse_noChr(r, is_sorted=False):
     """collapse by ignoring the chromosome. Useful when the caller knows
     that all the regions are from the same chromosome."""
-   
+
     if r == []:
 
         return r
