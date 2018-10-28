@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 from __future__ import print_function
+from builtins import open
 
 import os
 import sys
+import argparse
 import pysam
 
 from collections import OrderedDict
@@ -10,6 +12,8 @@ from configparser import ConfigParser
 from box import Box
 
 import common.config
+import GenomeAccess
+from RegionOperations import Region
 
 
 class VariantDBConfig(object):
@@ -51,7 +55,7 @@ class VariantDBConfig(object):
             if not file_list:
                 continue
             for filename in file_list.split("\n"):
-                denovo_files.append(filename.strip())
+                denovo_files.append(os.path.abspath(filename.strip()))
         return denovo_files
 
     @classmethod
@@ -66,7 +70,7 @@ class VariantDBConfig(object):
 
         filename = "{}.txt.bgz".format(transmitted_calls.indexfile)
         # assert os.path.exists(filename)
-        return [filename]
+        return [os.path.abspath(filename)]
 
     @classmethod
     def _collect_studies(cls, config):
@@ -115,98 +119,258 @@ def escape_target(target):
     return target.replace(' ', '__')
 
 
-def main(config, data_dir, output_dir, sge_rreq):
-    def to_destination(path):
-        return path.replace(data_dir, output_dir)
+class MakefileBuilder(VariantDBConfig):
+    TRANSMITTED_STEP = 50000000
 
-    print('SHELL=/bin/bash -o pipefail')
-    print('.DELETE_ON_ERROR:\n')
-    print('all:\n')
+    def __init__(
+            self, annotation_config, data_dir, output_dir, 
+            sge_rreq, genome):
+        super(MakefileBuilder, self).__init__(os.path.abspath(data_dir))
+        self.annotation_config = annotation_config
+        self.output_dir = os.path.abspath(output_dir)
+        self.log_dir = os.path.join(output_dir, 'log')
 
-    output_dir = os.path.abspath(output_dir)
-    data_dir = os.path.abspath(data_dir)
+        self.sge_rreq = sge_rreq
+        self.genome = genome
+        assert self.genome is not None
 
-    all_cmds = []
+        self.makefile = []
+        self.all_targets = []
 
-    variant_db_conf = VariantDBConfig(data_dir)
-    all_input_files = variant_db_conf.all_variant_files
+        self.build_contig_regions()
 
-    dirs = [to_destination(data_dir)]
-    copy_files = []
-    for dirpath, _dirnames, filenames in os.walk(data_dir + "/cccc"):
-        dirs.append(to_destination(dirpath))
-        copy_files.extend([
-            dirpath + '/' + filename
-            for filename in filenames
-            if dirpath + '/' + filename not in all_input_files])
+    def build_contig_regions(self):
+        self.contigs = OrderedDict(self.genome.get_all_chr_lengths())
+        self.contig_parts = OrderedDict([
+            (contig, int(size / self.TRANSMITTED_STEP + 1)) 
+            for contig, size in self.contigs.items() 
+        ])
+        self.contig_regions = OrderedDict()
+        for contig, size in self.contigs.items():
+            regions = []
+            total_parts = self.contig_parts[contig]
+            step = int(size / total_parts + 1)
+            for index in range(total_parts):
+                begin_pos = index * step
+                end_pos = (index + 1) * step - 1
+                if index + 1 == total_parts:
+                    end_pos = size
+                region = Region(contig, begin_pos, end_pos)
+                regions.append(region)
+            self.contig_regions[contig] = regions
 
-    log_dir = output_dir + '/log'
-    dirs.append(log_dir)
-    print('{output_dir}:\n\tmkdir -p {subdir_list}\n'.format(
-        output_dir=output_dir, subdir_list=' '.join(dirs)))
+    def to_destination(self, path):
+        return path.replace(self.data_dir, self.output_dir)
 
-    cmd_format = (
-        '{target}: {output_dir}\n\t(SGE_RREQ="{sge_rreq}" time'
+    def escape_target(self, target):
+        return target.replace(' ', '__')
+
+    def build_directory_structure(self, variant_files=None):
+        directories = [self.to_destination(self.data_dir)]
+        directories.append(os.path.join(self.output_dir, 'log'))
+
+        if variant_files is None:
+            variant_files = set([
+                os.path.abspath(name) for name in self.all_variant_files])
+        for dirpath, _dirnames, filenames in os.walk(self.data_dir):
+            check = any([
+                os.path.join(dirpath, name) in variant_files
+                for name in filenames
+            ])
+            if check:
+                directories.append(self.to_destination(dirpath))
+
+        command = '{output_dir}:\n\tmkdir -p {subdir_list}\n'.format(
+                output_dir=self.output_dir, subdir_list=' '.join(directories)
+            )
+        self.makefile.append(command)
+
+    COMMAND = (
+        '{target}: {output_dir} {input_file}\n\t(SGE_RREQ="{sge_rreq}" time'
         ' annotation_pipeline.py {args}'
         ' "{input_file}" "$@"'
         ' 2> "{log_prefix}-err{job_sufix}.txt")'
         ' 2> "{log_prefix}-time{job_sufix}.txt"\n')
 
-    common_args = '--config {}'.format(config)
+    def build_denovo_files(self):
+        args = '--config {} --direct'.format(self.annotation_config)
 
-    transm_args_format = common_args +\
-        ' -c chr -p position' \
-        ' --region={chr}:{begin_pos}-{end_pos}'
+        for filename in self.denovo_files:
+            target = self.escape_target(self.to_destination(filename))
+            command = self.COMMAND.format(
+                target=target,
+                sge_rreq=self.sge_rreq,
+                input_file=filename,
+                output_dir=self.output_dir,
+                args=args,
+                job_sufix='',
+                log_prefix=os.path.join(
+                    self.log_dir, os.path.basename(filename))
+            )
+            self.makefile.append(command)
+            self.all_targets.append(target)
 
-    denovo_args = common_args + ' --direct'
-
-    for filename in variant_db_conf.denovo_files:
-        all_cmds.append(escape_target(to_destination(filename)))
-        print(cmd_format.format(
-            target=all_cmds[-1], sge_rreq=sge_rreq,
-            input_file=filename, output_dir=output_dir,
-            args=denovo_args, job_sufix='',
-            log_prefix=log_dir + '/' + os.path.basename(filename)))
-
-    for filename in variant_db_conf.transmitted_files:
-        output_file = to_destination(filename).replace('.bgz', '')
-        tf = pysam.TabixFile(filename)
+    def transmitted_file_contigs(self, source_filename):
+        tf = pysam.TabixFile(source_filename)
         contigs = tf.contigs
         tf.close()
+        if 'chr' in contigs:
+            contigs = [c for c in contigs if c != 'chr']
+        return contigs
 
-        file_cmds = []
-        for index, chromosome in enumerate(contigs):
-            for i in range(0, 5):
-                job_sufix = '-part-{chr_index:0>3}-{pos}-{chromosome}'.format(
-                    chr_index=index, pos=i, chromosome=chromosome)
-                file_cmds.append(escape_target(output_file + job_sufix))
-                print(cmd_format.format(
-                    target=file_cmds[-1],
-                    sge_rreq=sge_rreq,
-                    input_file=filename,
-                    output_dir=output_dir,
-                    args=transm_args_format.format(
-                        chr=chromosome,
-                        begin_pos=i * 50000000,
-                        end_pos=(i + 1) * 50000000 - 1),
-                    log_prefix=log_dir + '/' + os.path.basename(filename),
-                    job_sufix=job_sufix))
+    def build_transmitted_file_parts(self, source_filename, output_basename):
+        parts = []
+        contigs = self.transmitted_file_contigs(source_filename)
 
-        escaped_output_file = escape_target(output_file)
-        print('{target}: {parts}\n\tSGE_RREQ="{sge_rreq}"'
-              ' merge.sh "$@"\n'.format(
-                  target=escaped_output_file, sge_rreq=sge_rreq,
-                  parts=' '.join(file_cmds)))
+        for contig_index, contig in enumerate(contigs):
+            assert contig in self.contigs, contig
+            for region_index, region in enumerate(self.contig_regions[contig]):
+                part_sufix = \
+                    '-part-{contig_index:0>3}-{region_index}-{contig}'.format(
+                        contig_index=contig_index, 
+                        region_index=region_index, 
+                        contig=contig)
+                target = self.escape_target(output_basename + part_sufix)
+                args = '--config {config} -c chr -p position' \
+                    ' --region={chr}:{begin_pos}-{end_pos}'.format(
+                        config=self.annotation_config,
+                        chr=contig,
+                        begin_pos=region.start,
+                        end_pos=region.end,
+                    )
 
-        all_cmds.append(escaped_output_file + '.bgz')
-        print('{bgz_target}: {merge_target}\n\t'
-              'SGE_RREQ="{sge_rreq}" bgzip -c "$<" > "$@" && '
-              'tabix -S 1 -s 1 -b 2 -e 2 "$@"\n'.format(
-                  bgz_target=all_cmds[-1], merge_target=escaped_output_file,
-                  sge_rreq=sge_rreq))
+                command = self.COMMAND.format(
+                    target=target,
+                    sge_rreq=self.sge_rreq,
+                    input_file=source_filename,
+                    output_dir=self.output_dir,
+                    args=args,
+                    log_prefix=os.path.join(
+                        self.log_dir, os.path.basename(source_filename)),
+                    job_sufix=part_sufix)
+                self.makefile.append(command)
+                parts.append(target)
+        return parts
 
-    print(" ".join(["all:"] + all_cmds))
+    def build_transmitted_file(self, source_filename):
+        output_basename = self.to_destination(
+            source_filename).replace('.bgz', '')
+
+        parts = self.build_transmitted_file_parts(
+            source_filename, output_basename)
+
+        escaped_output_file = escape_target(output_basename)
+        command = '{target}: {parts}\n\tSGE_RREQ="{sge_rreq}"' \
+            ' merge.sh "$@"\n'.format(
+                target=escaped_output_file, 
+                sge_rreq=self.sge_rreq,
+                parts=' '.join(parts))
+        self.makefile.append(command)
+
+        target = escaped_output_file + '.bgz'
+        command = '{bgz_target}: {merge_target}\n\t' \
+            'SGE_RREQ="{sge_rreq}" bgzip -c "$<" > "$@" && ' \
+            'tabix -S 1 -s 1 -b 2 -e 2 "$@"\n'.format(
+                bgz_target=target,
+                merge_target=escaped_output_file,
+                sge_rreq=self.sge_rreq)
+        self.all_targets.append(target)
+        self.makefile.append(command)
+
+    def build_transmitted_files(self):
+        for filename in self.transmitted_files:
+            self.build_transmitted_file(filename)
+
+    def build(self, outfile=sys.stdout):
+
+        self.build_directory_structure()
+        self.build_denovo_files()
+        self.build_transmitted_files()
+
+        print('SHELL=/bin/bash -o pipefail', file=outfile)
+        print('.DELETE_ON_ERROR:\n', file=outfile)
+        print('all:\n', file=outfile)
+
+        for ln in self.makefile:
+            print(ln, file=outfile)
+            print('\n', file=outfile)
+
+        print(" ".join(["all:"] + self.all_targets), file=outfile)
+
+    @staticmethod
+    def main(argv):
+        parser = argparse.ArgumentParser(
+            description="generates a makefile to reannotate GPF instance data", 
+            conflict_handler='resolve')
+
+        parser.add_argument(
+            'data_dir',
+            nargs=1,
+            action='store',
+            help="path to the instance data directory"
+        )
+        parser.add_argument(
+            'output_dir',
+            nargs=1,
+            action='store',
+            help="path to the ouput data directory"
+        )
+
+        parser.add_argument(
+            '--annotation-config',
+            required=True, action='store',
+            help='config file location')
+
+        parser.add_argument(
+            '--sge-options',
+            action='store',
+            default='',
+            help="options to pass to SGE"
+        )
+
+        parser.add_argument(
+            '--Graw',
+            dest='genome_file',
+            required=True,
+            action='store',
+            help='reference genome file location',
+        )
+
+        parser.add_argument(
+            '-m', '--makefile',
+            dest='makefile',
+            action='store',
+            default=None,
+            help='output file name where to sore the generated makefile'
+        )
+
+        options = parser.parse_args(argv)
+        assert options.annotation_config is not None
+        assert os.path.exists(options.annotation_config)
+
+        assert options.genome_file is not None
+        assert os.path.exists(options.genome_file)
+
+        genome = GenomeAccess.openRef(options.genome_file)
+
+        assert len(options.data_dir) == 1
+        assert len(options.output_dir) == 1
+        data_dir = options.data_dir[0]
+        output_dir = options.output_dir[0]
+
+        builder = MakefileBuilder(
+            os.path.abspath(options.annotation_config),
+            os.path.abspath(data_dir),
+            os.path.abspath(output_dir),
+            options.sge_options,
+            genome)
+
+        if options.makefile is None:
+            builder.build(sys.stdout)
+        else:
+            with open(options.makefile, "w") as outfile:
+                builder.build(outfile)
 
 
 if __name__ == '__main__':
-    main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    MakefileBuilder.main(sys.argv[1:])
