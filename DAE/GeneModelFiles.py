@@ -18,7 +18,7 @@ import os.path
 import os
 import sys
 from collections import defaultdict, \
-    namedtuple
+    namedtuple, OrderedDict
 
 
 class AbstractClassDoNotInstantiate(object):
@@ -326,9 +326,9 @@ class Exon(object):
 
 class GeneModels(AbstractClassDoNotInstantiate):
 
-    _utrModels = {}
-    transcriptModels = {}
-    _geneModels = {}
+    _utrModels = OrderedDict()
+    transcriptModels = OrderedDict()
+    _geneModels = OrderedDict
     _Alternative_names = None
 
     def __addToDict(self, line):
@@ -463,7 +463,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
         tm.tx = (transcription_start + 1, int(transcription_end))
         tm.cds = (int(cds_start)+1, int(cds_end))
         tm.exons = exons
-        tm.attr = {}
+        tm.attr = OrderedDict()
 
         try:
             tm.attr['exonCount'] = exon_count
@@ -508,14 +508,14 @@ class GeneModels(AbstractClassDoNotInstantiate):
                  int(transcription_end))].append(tm)
         except KeyError as e:
             if e.args[0] == chrom:
-                self._utrModels[chrom] = {}
+                self._utrModels[chrom] = OrderedDict()
             self._utrModels[chrom][
                 (transcription_start + 1, int(transcription_end))] = [tm]
 
         return -1
 
     def _create_gene_model_dict(self, location=None, gene_mapping_file=None):
-        self._Alternative_names = {}
+        self._Alternative_names = OrderedDict()
         if gene_mapping_file is not None:
             if gene_mapping_file.endswith(".gz"):
                 dict_file = gzip.open(gene_mapping_file)
@@ -613,10 +613,16 @@ class GeneModels(AbstractClassDoNotInstantiate):
         self._updateIndexes()
 
     def _updateIndexes(self):
-        self._geneModels = defaultdict(list)
-        self._utrModels = defaultdict(lambda: defaultdict(list))
+        self._geneModels = OrderedDict()
+        self._utrModels = OrderedDict()
         for tm in list(self.transcriptModels.values()):
+            if tm.gene not in self._geneModels:
+                self._geneModels[tm.gene] = []
             self._geneModels[tm.gene].append(tm)
+            if tm.chr not in self._utrModels:
+                self._utrModels[tm.chr] = OrderedDict()
+            if tm.tx not in self._utrModels[tm.chr]:
+                self._utrModels[tm.chr][tm.tx] = []
             self._utrModels[tm.chr][tm.tx].append(tm)
 
     def gene_names(self):
@@ -732,7 +738,7 @@ class MitoModel(GeneModels):
 
     def _create_gene_model_dict(self, file_name):
 
-        self._utrModels['chrM'] = {}
+        self._utrModels['chrM'] = OrderedDict()
         if file_name is None:
             file = open(self.location)
         else:
@@ -827,8 +833,8 @@ def join_gene_models(*gene_models):
         raise Exception("The function needs at least 2 arguments!")
 
     gm = GeneModels()
-    gm._utrModels = {}
-    gm._geneModels = {}
+    gm._utrModels = OrderedDict()
+    gm._geneModels = OrderedDict()
 
     gm.transcriptModels = gene_models[0].transcriptModels.copy()
 
@@ -890,18 +896,18 @@ def load_gene_models(
 
     if format.lower() == "refseq":
         gm = RefSeq()
-        gm._utrModels = {}
-        gm.transcriptModels = {}
-        gm._geneModels = {}
+        gm._utrModels = OrderedDict()
+        gm.transcriptModels = OrderedDict()
+        gm._geneModels = OrderedDict()
         if gene_mapping_file == "default":
             gene_mapping_file = None
         gm.location = file_name
         gm._create_gene_model_dict(file_name, gene_mapping_file)
     elif format.lower() == "ccds":
         gm = Ccds()
-        gm._utrModels = {}
-        gm.transcriptModels = {}
-        gm._geneModels = {}
+        gm._utrModels = OrderedDict()
+        gm.transcriptModels = OrderedDict()
+        gm._geneModels = OrderedDict()
         if gene_mapping_file == "default":
             gene_mapping_file = os.path.dirname(file_name) + \
                 "/ccdsId2Sym.txt.gz"
@@ -909,9 +915,9 @@ def load_gene_models(
         gm._create_gene_model_dict(file_name, gene_mapping_file)
     elif format.lower() == "knowngene":
         gm = KnownGene()
-        gm._utrModels = {}
-        gm.transcriptModels = {}
-        gm._geneModels = {}
+        gm._utrModels = OrderedDict()
+        gm.transcriptModels = OrderedDict()
+        gm._geneModels = OrderedDict()
         if gene_mapping_file == "default":
             gene_mapping_file = os.path.dirname(file_name) + "/kgId2Sym.txt.gz"
         gm.location = file_name
