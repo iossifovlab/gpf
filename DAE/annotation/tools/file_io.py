@@ -273,7 +273,6 @@ class TabixReader(TSVFormat):
 
     def _region_reset(self, region):
         region = self._handle_chrom_prefix(region)
-        # print("_region_reset(", region, ")")
 
         self.lines_iterator = self.infile.fetch(
             region=region,
