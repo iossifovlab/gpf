@@ -113,6 +113,22 @@ def test_can_match_complex_parentheses(parser, expr, expected_tree):
     assert tree == expected_tree
 
 
+@pytest.mark.parametrize("expr,expected_tree", [
+    [
+        "a+", arg_node([simple_arg_node([token("a+")])]),
+    ],
+    [
+        "a'b", arg_node([simple_arg_node([token("a'b")])]),
+    ]
+])
+def test_can_match_plus_and_quote(parser, expr, expected_tree):
+    tree = parser.parse(expr)
+    assert tree is not None
+    assert is_tree(tree)
+
+    assert tree == expected_tree
+
+
 @pytest.mark.parametrize("equivalents", [
     ["some and other", "some   and    other", "    some   and  other   "],
     ["any(some,other)", "any(some, other)", "any ( some , other )",

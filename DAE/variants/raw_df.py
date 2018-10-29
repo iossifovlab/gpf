@@ -43,9 +43,9 @@ class DfFamilyVariantsBase(object):
     @staticmethod
     def wrap_variants(families, join_df):
         join_df = join_df.sort_values(
-            by=["summary_variant_index", "family_id", "allele_index"])
+            by=["chrom", "summary_variant_index", "family_id", "allele_index"])
         for _name, group in join_df.groupby(
-                by=["summary_variant_index", "family_id"]):
+                by=["chrom", "summary_variant_index", "family_id"]):
             rec = group.to_dict(orient='records')
             yield DfFamilyVariantsBase.wrap_family_variant_multi(families, rec)
 

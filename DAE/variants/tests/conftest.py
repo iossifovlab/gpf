@@ -131,7 +131,7 @@ def testing_thriftserver(request):
     thrift_host = os.getenv("THRIFTSERVER_HOST", "127.0.0.1")
     thrift_port = int(os.getenv("THRIFTSERVER_PORT", 10000))
 
-    def thrift_connect(retries=10):
+    def thrift_connect(retries=200):
         for count in range(retries + 1):
             try:
                 time.sleep(2.0)
@@ -144,7 +144,7 @@ def testing_thriftserver(request):
                 print("connect to thriftserver failed:", ex)
         return None
 
-    conn = thrift_connect(1)
+    conn = thrift_connect(3)
     if conn is not None:
         return conn
 

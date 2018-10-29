@@ -172,12 +172,12 @@ def pipeline_main(argv):
     # File IO format specification
     reader_type = IOType.TSV
     writer_type = IOType.TSV
-    if hasattr(options, 'read_parquet'):
-        if options.read_parquet:
-            reader_type = IOType.Parquet
-    if hasattr(options, 'write_parquet'):
-        if options.write_parquet:
-            writer_type = IOType.Parquet
+    # if hasattr(options, 'read_parquet'):
+    #     if options.read_parquet:
+    #         reader_type = IOType.Parquet
+    # if hasattr(options, 'write_parquet'):
+    #     if options.write_parquet:
+    #         writer_type = IOType.Parquet
 
     start = time.time()
 

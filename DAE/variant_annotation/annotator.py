@@ -78,9 +78,8 @@ class VariantAnnotator(object):
         logger = logging.getLogger(__name__)
 
         for key in self.gene_models._utrModels[variant.chromosome]:
-            if (variant.position <= key[1] + self.promoter_len
-                    and variant.ref_position_last >= key[0] -
-                    self.promoter_len):
+            if (variant.position <= key[1] + self.promoter_len and
+                    variant.ref_position_last >= key[0] - self.promoter_len):
                 for tm in self.gene_models._utrModels[variant.chromosome][key]:
                     logger.debug("========: %s-%s :====================",
                                  tm.gene, tm.trID)
