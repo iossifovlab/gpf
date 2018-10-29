@@ -19,7 +19,7 @@ import common.config
 from annotation.tools.annotator_base import AnnotatorBase, \
     CompositeVariantAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
-from annotation.tools.file_io import IOType, IOManager
+from annotation.tools.file_io import IOType, IOManager, Schema
 
 
 class PipelineConfig(VariantAnnotatorConfig):
@@ -115,6 +115,7 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
     def __init__(self, config):
         super(PipelineAnnotator, self).__init__(config)
+        self.schema = Schema()
 
     @staticmethod
     def build(options, config_file, defaults={}):
@@ -137,6 +138,7 @@ class PipelineAnnotator(CompositeVariantAnnotator):
     def add_annotator(self, annotator):
         assert isinstance(annotator, AnnotatorBase)
         self.annotators.append(annotator)
+        self.schema.merge(annotator.schema)
 
     def line_annotation(self, aline):
         self.variant_builder.build(aline)
@@ -180,6 +182,8 @@ def pipeline_main(argv):
     start = time.time()
 
     with IOManager(options, reader_type, writer_type) as io_manager:
+        pipeline.schema.merge(io_manager.reader.schema, front=False)
+        io_manager.writer.schema = pipeline.schema
         pipeline.annotate_file(io_manager)
 
     print("# PROCESSING DETAILS:", file=sys.stderr)

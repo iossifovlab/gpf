@@ -7,6 +7,20 @@ import pysam
 import pyarrow as pa
 import pyarrow.parquet as pq
 from abc import ABCMeta, abstractmethod
+from collections import OrderedDict
+
+
+def coerce_list(type_):
+    def coerce_(list_):
+        return [None if val in ['.', ''] else type_(val)
+                for val in list_]
+    return coerce_
+
+
+def coerce_single(type_):
+    def coerce_(value):
+        return type_(value)
+    return coerce_
 
 
 def to_str(column_value):
@@ -16,16 +30,6 @@ def to_str(column_value):
         return ''
     else:
         return str(column_value)
-
-
-def assert_file_exists(filepath):
-    if filepath != '-' and os.path.exists(filepath) is False:
-        print(
-            "The given file",
-            filepath,
-            "does not exist!",
-            file=sys.stderr)
-        sys.exit(1)
 
 
 class Schema:
@@ -39,7 +43,7 @@ class Schema:
                 'list(int)': (int, pa.list_(pa.float32()))}
 
     def __init__(self, schema_input=None):
-        self.column_map = {}
+        self.column_map = OrderedDict()
         if schema_input is not None:
             self.load_from_config(schema_input)
 
@@ -47,77 +51,78 @@ class Schema:
         assert type(schema_config) is dict
         for type_, col_list in schema_config.items():
             assert type_ in self.type_map
+            col_list.replace(' ', '')
+            col_list.replace('\t', '')
+            col_list.replace('\n', '')
             for col in col_list.split(','):
                 self.column_map[col] = type_
 
-    def merge(self, foreign):
+    def merge(self, foreign, front=True):
         foreign_schema = foreign.column_map
+        missing_columns = OrderedDict()
         for key, value in foreign_schema.items():
             if key in self.column_map:
                 assert self.column_map[key] == value
             else:
-                self.column_map[key] = value
-
-    def merge_columns(self, columns, new_name=None):
-        col_type = None
-        for column in columns:
-            assert column in self.column_map
-            if new_name is None:
-                new_name = column
-            if col_type is None:
-                col_type = self.column_map[column]
-            assert self.column_map[column] == col_type
-            del(self.column_map[column])
-        self.column_map[str(new_name)] = 'list({})'.format(col_type)
+                missing_columns[key] = value
+        if front:
+            self.column_map.update(missing_columns)
+        else:
+            missing_columns.update(self.column_map)
+            self.column_map = missing_columns
 
     def rename_column(self, column, new_name):
         assert column in self.column_map
         self.column_map[str(new_name)] = self.column_map[column]
         del(self.column_map[column])
 
-    def type_query(self, query_type):
-        assert query_type in self.type_map
-        result = []
-        for col, type_ in self.column_map.items():
-            if type_ == query_type:
-                result.append(col)
-        return result
+    def isolate_columns(self, columns):
+        assert all([(col in self.column_map)
+                    for col in columns])
+        remove_list = [col for col in self.column_map
+                       if col not in columns]
+        for col in remove_list:
+            del(self.column_map[col])
 
-    def to_pyarrow(self):
+    def to_arrow(self):
         return pa.schema([pa.field(col, self.type_map[type_][1])
                           for col, type_
                           in self.column_map.items()])
 
-    def coerce_value(self, type_):
-        def coerce_(value):
-            if type(value) is not list:
-                if value in ['.', '']:
-                    return None
-                else:
-                    return type_(value)
-            if ';' in value:
-                result = value.split(';')
-            elif ',' in value:
-                result = value.split(',')
-            else:
-                result = value
-            return [None if value in ['.', ''] else type_(value)
-                    for value in result]
-        return coerce_
+    def from_parquet(self, pq_schema):
+        self.from_arrow(pq_schema.to_arrow_schema())
+
+    def from_arrow(self, pa_schema):
+        self.column_map = OrderedDict()
+        for col in pa_schema:
+            for type_name, types in self.type_map.items():
+                if col.type == types[1]:
+                    self.column_map[col.name] = type_name
+                    break
 
     def coerce_column(self, col_name, col_data):
+        assert col_data
+        col_data_type = type(col_data[0])
+        col_type = self.type_map[self.column_map[col_name]][0]
+
+        if col_data_type is list:
+            coerce_func = coerce_list(col_type)
+        else:
+            coerce_func = coerce_single(col_type)
+
         try:
-            col_type = self.type_map[self.column_map[col_name]][0]
-            return list(map(self.coerce_value(col_type), col_data))
+            return list(map(coerce_func, col_data))
         except ValueError:
             print('Column coercion failed:')
-            print('Could not coerce column {} to specified type!'.format(col_name))
+            print('Could not coerce column', col_name, 'to specified type!',
+                  file=sys.stderr)
             sys.exit(-1)
 
     def __str__(self):
         ret_str = ""
         for key, value in self.column_map.items():
-            ret_str += '{} -> {}: {}\n'.format(key, value, str(self.type_map[value]))
+            ret_str += '{} -> {}: {}\n'.format(key, value,
+                                               str(self.type_map[value]))
         return ret_str
 
 
@@ -139,11 +144,11 @@ class IOType:
     class Parquet:
         @staticmethod
         def instance_r(opts):
-            return ParquetFormat(opts, 'r')
+            return ParquetReader(opts)
 
         @staticmethod
         def instance_w(opts):
-            return ParquetFormat(opts, 'w')
+            return ParquetWriter(opts)
 
 
 class IOManager(object):
@@ -188,14 +193,10 @@ class AbstractFormat(object):
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, opts, mode):
+    def __init__(self, opts):
         self.opts = opts
         self.options = opts
 
-        if mode != 'r' and mode != 'w':
-            print("Unrecognized I/O mode '{}'!".format(mode), file=sys.stderr)
-            sys.exit(1)
-        self.mode = mode
         self.linecount = 0
         self.linecount_threshold = 1000
         self.header = None
@@ -219,8 +220,8 @@ class AbstractFormat(object):
 
 class TSVFormat(AbstractFormat):
 
-    def __init__(self, opts, mode):
-        super(TSVFormat, self).__init__(opts, mode)
+    def __init__(self, opts):
+        super(TSVFormat, self).__init__(opts)
 
     @staticmethod
     def is_tabix(filename):
@@ -256,11 +257,12 @@ class TSVFormat(AbstractFormat):
 class TSVReader(TSVFormat):
 
     def __init__(self, options, filename=None):
-        super(TSVReader, self).__init__(options, 'r')
+        super(TSVReader, self).__init__(options)
         if filename is None:
             assert options.infile is not None
             filename = options.infile
         self.filename = filename
+        self.schema = None
 
         if self.options.region is not None:
             print(
@@ -281,6 +283,7 @@ class TSVReader(TSVFormat):
             self.infile = open(self.filename, 'r')
 
         self.header = self._header_read()
+        self.schema = Schema({'str': ','.join(self.header)})
 
     def _cleanup(self):
         self._progress_done()
@@ -341,7 +344,7 @@ class TSVGzipReader(TSVReader):
 class TabixReader(TSVFormat):
 
     def __init__(self, options, filename=None):
-        super(TabixReader, self).__init__(options, 'r')
+        super(TabixReader, self).__init__(options)
         if filename is None:
             assert options.infile is not None
             filename = options.infile
@@ -422,7 +425,7 @@ class TabixReader(TSVFormat):
 class TSVWriter(TSVFormat):
 
     def __init__(self, options, filename=None):
-        super(TSVWriter, self).__init__(options, 'w')
+        super(TSVWriter, self).__init__(options)
         if filename is None:
             assert options.outfile is not None
             filename = options.outfile
@@ -447,6 +450,9 @@ class TSVWriter(TSVFormat):
             [to_str(column) for column in line]))
         self.outfile.write('\n')
 
+    def header_write(self, line):
+        self.line_write(line)
+
     def line_read(self):
         raise NotImplementedError()
 
@@ -454,104 +460,115 @@ class TSVWriter(TSVFormat):
         raise NotImplementedError()
 
 
-class ParquetFormat(AbstractFormat):
+class ParquetReader(AbstractFormat):
 
-    def __init__(self, opts, mode, buffer_size=1000):
-        super(ParquetFormat, self).__init__(opts, mode)
-
+    def __init__(self, opts, buffer_size=1000):
+        super(ParquetReader, self).__init__(opts)
+        self.opts = opts
         self.row_group_buffer = []
         self.column_buffer = {}
-        if self.mode == 'w':
-            self.buffer_size = buffer_size
-            self.column_buffer = {}
+        self.buffer_size = buffer_size
+        self.row_group_curr = 0
+        self.linecount = 0
+        self.buffer_line = 1
+        self.schema = Schema()
 
     def _setup(self):
-        if self.mode == 'r':
-            if self.opts.infile != '-':
-                assert_file_exists(self.opts.infile)
-                self.pqfile = pq.ParquetFile(self.opts.infile)
-                self.header = self.pqfile.schema.to_arrow_schema().names
-                self.row_group_count = self.pqfile.num_row_groups
-                self.row_group_curr = 0
-                self.curr_line = 0
-            else:
-                self.variantFile = sys.stdin
-            self._read_row_group()
-        else:
-            self.pq_writer = None
-            if self.opts.outfile != '-':
-                self.pqfile_out = self.opts.outfile
-            else:
-                self.pqfile_out = sys.stdout
+        assert self.opts.infile != '-'
+        assert os.path.exists(self.opts.infile)
+        self.pqfile = pq.ParquetFile(self.opts.infile)
+        self.schema.from_parquet(self.pqfile.schema)
+        self.header = list(self.schema.column_map.keys())
+        self.row_group_count = self.pqfile.num_row_groups
+        self._read_row_group()
 
     def _cleanup(self):
-        if self.mode == 'r':
-            print('Processed', self.linecount, 'lines.', file=sys.stderr)
-        else:
-            sys.stderr.write('Wrote {} lines.\n'.format(self.linecount))
-            self._write_buffer()
-            if self.opts.outfile != '-':
-                self.pq_writer.close()
+        print('Read', self.linecount, 'lines.', file=sys.stderr)
 
     def _read_row_group(self):
         if self.row_group_curr < self.row_group_count:
-            for col in self.header:
-                self.column_buffer[col] = []
-
             row_group_buffer = self.pqfile.read_row_group(self.row_group_curr)
             self.row_group_curr += 1
             for col in row_group_buffer.itercolumns():
                 self.column_buffer[col.name] = col.data.to_pylist()
 
-    def header_write(self, input_):
-        self.header = input_
-        if self.mode == 'w':
-            for col in self.header:
-                self.column_buffer[col.replace('#', '')] = []
-
     def line_read(self):
-        if self.mode != 'r':
-            print('Cannot read in write mode!', file=sys.stderr)
-            sys.exit(1)
-
-        line = []
+        line = {}
         for col_name, col_data in self.column_buffer.items():
-            line.append(col_data[self.curr_line])
+            line[col_name] = col_data[self.linecount % len(col_data)]
 
-        self.linecount += 1
-        self.curr_line += 1
-        if self.curr_line == len(col_data):
-            self.curr_line = 0
+        if self.buffer_line % (len(col_data)+1) == 0:
+            self.buffer_line = 1
             if self.row_group_curr >= self.row_group_count:
-                return ['']  # EOF
+                return None  # EOF
             else:
                 self._read_row_group()
-        if self.linecount % self.linecount_threshold == 0:
-            print(self.linecount, 'lines read.', file=sys.stderr)
-        return list(map(to_str, line))
-
-    def line_write(self, line):
-        if self.mode != 'w':
-            print('Cannot write in read mode!', file=sys.stderr)
-            sys.exit(1)
 
         self.linecount += 1
-        if self.linecount % self.buffer_size == 0:
-            self._write_buffer()
-        for col in range(0, len(line)):
-            self.column_buffer[self.header[col].replace('#', '')].append(line[col])
+        self.buffer_line += 1
+        if self.linecount % self.linecount_threshold == 0:
+            print(self.linecount, 'lines read.', file=sys.stderr)
+
+        return list(map(to_str, line.values()))
+
+    def lines_read_iterator(self):
+        line = self.line_read()
+        while line:
+            yield line
+            line = self.line_read()
+
+    def line_write(self, input_):
+        raise NotImplementedError()
+
+
+class ParquetWriter(AbstractFormat):
+
+    def __init__(self, opts, buffer_size=1000):
+        self.opts = opts
+        self.row_group_buffer = []
+        self.buffer_size = buffer_size
+        self.column_buffer = {}
+        self.pq_writer = None
+        self.linecount = 1
+
+    def _setup(self):
+        assert self.opts.outfile != '-'
+
+    def _cleanup(self):
+        print('Wrote', self.linecount-1, 'lines.', file=sys.stderr)
+        self._write_buffer()
+        self.pq_writer.close()
+
+    def header_write(self, input_):
+        self.header = input_
+        for col in self.header:
+            self.column_buffer[col.replace('#', '')] = []
 
     def _write_buffer(self):
-        pa_col_buffer = []
-        if self.pq_writer is None:
-            self.pq_writer = pq.ParquetWriter(self.pqfile_out, self.schema.to_pyarrow())
-        for col_name, col_data in self.column_buffer.items():
-            pa_col_buffer.append(
-                pa.column(col_name,
-                          pa.array(self.schema.coerce_column(col_name, col_data))))
+        buffer_table = []
+        if not self.pq_writer:
+            self.pq_writer = pq.ParquetWriter(self.opts.outfile,
+                                              self.schema.to_arrow())
 
-        buffer_table = pa.Table.from_arrays(pa_col_buffer, schema=self.schema.to_pyarrow())
-        self.pq_writer.write_table(buffer_table)
+        for col_name, col_data in self.column_buffer.items():
+            col = pa.column(col_name,
+                            pa.array(self.schema.coerce_column(col_name,
+                                                               col_data)))
+            buffer_table.append(col)
+
+        table = pa.Table.from_arrays(buffer_table,
+                                     schema=self.schema.to_arrow())
+        self.pq_writer.write_table(table)
 
         for col in self.column_buffer.keys():
             self.column_buffer[col] = []
+
+    def line_write(self, line):
+        if self.linecount % self.buffer_size == 0:
+            self._write_buffer()
+        for col in range(0, len(line)):
+            self.column_buffer[self.header[col]].append(line[col])
+        self.linecount += 1
+
+    def lines_read_iterator(self):
+        raise NotImplementedError()

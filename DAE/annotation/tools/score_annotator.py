@@ -21,7 +21,9 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
     def __init__(self, config):
         super(VariantScoreAnnotatorBase, self).__init__(config)
 
+        self.schema = None
         self._init_score_file()
+        self._init_schema()
 
         assert len(self.config.native_columns) >= 1
         self.score_names = self.config.native_columns
@@ -49,6 +51,12 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
                 self.config.options.scores_config_file)
         self.score_file._setup()
 
+    def _init_schema(self):
+        self.schema = self.score_file.schema
+        self.schema.isolate_columns(self.score_file.config.columns.score)
+        for native, output in self.config.columns_config.items():
+            self.schema.rename_column(native, output)
+
     def _scores_not_found(self, aline):
         values = {
             self.config.columns_config[score_name]:
@@ -65,7 +73,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
                 variant.position
             )
         elif variant.variant_type in set([
-                VariantType.insertion, VariantType.deletion, 
+                VariantType.insertion, VariantType.deletion,
                 VariantType.complex]):
 
             scores = self.score_file.fetch_scores(
@@ -135,14 +143,14 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
             if len(matched_df) == 0:
                 self._scores_not_found()
                 return
-            
+
             for score_name in self.score_names:
                 column_name = self.config.columns_config[score_name]
                 aline[column_name] = matched_df[score_name].mean()
             return
 
         if variant.variant_type in set([
-                VariantType.insertion, VariantType.deletion, 
+                VariantType.insertion, VariantType.deletion,
                 VariantType.complex]):
             aggregate = {
                 sn: 'max' for sn in self.score_names

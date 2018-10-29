@@ -1,71 +1,98 @@
 import pytest
+import pyarrow as pa
 from annotation.tools.file_io import Schema
-from annotation.tools.score_file_io import conf_to_dict
 from configparser import ConfigParser
 from io import StringIO
 
-# @pytest.fixture
-# def sample_config():
-#     conf = (
-#         '[general]\n'
-#         'header=chr,position,variant,dummy_score\n'
-#         'noScoreValue=-100\n'
-#         '[columns]\n'
-#         'chr=chr\n'
-#         'pos_begin=position\n'
-#         'score=dummy_score\n'
-#         '[schema]\n'
-#         'str=chr,position,variant\n'
-#         'float=dummy_score\n'
-#         )
-#     return StringIO(conf)
 
-# def test_schema_from_config(sample_config):
-#     expected_columns = {'chr': 'str', 'position': 'str',
-#                   'variant': 'str', 'dummy_score': 'float'}
-#     parsed_conf = conf_to_dict(sample_config)
-# 
-#     for col, type_ in expected_columns.items():
-#         assert(col in parsed_conf['schema'].column_map)
-#         assert(type_ == parsed_conf['schema'].column_map[col])
+@pytest.fixture
+def sample_config():
+    conf = (
+        '[general]\n'
+        'header=chr,position,variant,dummy_score\n'
+        'noScoreValue=-100\n'
+        '[columns]\n'
+        'chr=chr\n'
+        'pos_begin=position\n'
+        'score=dummy_score\n'
+        '[schema]\n'
+        'str=chr,position,variant\n'
+        'float=dummy_score\n'
+        )
+    return StringIO(conf)
 
 
-def test_merge_schemas():
-    schema_1 = Schema([('str', 'col1,col2,col3'),
-                       ('float', 'col4,col5,col6',)])
-    schema_2 = Schema([('str', 'col1,col7,col8'),
-                       ('float', 'col11,col12,col6')])
-    expected_schema = Schema([('str','col1,col2,col3,col7,col8'),
-                              ('float','col4,col5,col6,col11,col12')])
-
-    schema_1.merge(schema_2)
-    assert(schema_1.column_map == expected_schema.column_map)
+@pytest.fixture
+def generic_schema():
+    return Schema({'str': 'col1,col2,col3',
+                   'float': 'col4,col5,col6'})
 
 
-def test_merge_columns():
-    schema = Schema([('str', 'col1,col2,col3'),
-                     ('float', 'col4,col5,col6',)])
-    expected_schema = Schema([('list(str)', 'merged_str_col'),
-                              ('list(float)', 'merged_float_col',)])
-
-    schema.merge_columns(['col1','col2', 'col3'], 'merged_str_col')
-    schema.merge_columns(['col4','col5', 'col6'], 'merged_float_col')
-    assert(schema.column_map == expected_schema.column_map)
+@pytest.fixture
+def generic_schema_alt():
+    return Schema({'str': 'col1,col7,col8',
+                   'float': 'col11,col12,col6'})
 
 
-def test_query_by_type():
-    schema = Schema([('str', 'col1,col2,col3'),
-                     ('float', 'col4,col5,col6',)])
-    expected_str_cols = ['col1','col2', 'col3']
-    expected_float_cols = ['col4','col5', 'col6']
-    assert(schema.type_query('str') == expected_str_cols)
-    assert(schema.type_query('float') == expected_float_cols)
+@pytest.fixture
+def generic_pa_schema():
+    return pa.schema([pa.field('col1', pa.string()),
+                      pa.field('col2', pa.string()),
+                      pa.field('col3', pa.string()),
+                      pa.field('col4', pa.float64()),
+                      pa.field('col5', pa.float64()),
+                      pa.field('col6', pa.float64())])
 
 
-def test_column_coercion():
-    schema = Schema([('str', 'col1'),
-                     ('float', 'col2',)])
-    col1 = [1,2.5,3,'a',-5,6,'b']
-    col2 = [1.5, 4.3, '-3.4', '6.4', 5.0]
-    assert(schema.coerce_column('col1', col1) == list(map(str, col1)))
-    assert(schema.coerce_column('col2', col2) == list(map(float, col2)))
+def test_schema_from_config(sample_config):
+    expected_columns = {'chr': 'str', 'position': 'str',
+                        'variant': 'str', 'dummy_score': 'float'}
+    conf_parser = ConfigParser()
+    conf_parser.read_file(sample_config)
+    conf_schema = Schema(dict(conf_parser.items('schema')))
+
+    for col, type_ in expected_columns.items():
+        assert col in conf_schema.column_map
+        assert type_ == conf_schema.column_map[col]
+
+
+def test_merge_schemas(generic_schema, generic_schema_alt):
+    generic_schema.merge(generic_schema_alt)
+    expected_cols = ['col1', 'col2', 'col3', 'col4', 'col5',
+                     'col6', 'col7', 'col8', 'col11', 'col12']
+    assert list(generic_schema.column_map.keys()) == expected_cols
+
+
+def test_rename_column(generic_schema):
+    generic_schema.rename_column('col1', 'newColName')
+    assert 'newColName' in generic_schema.column_map
+
+
+def test_isolate_columns(generic_schema):
+    generic_schema.isolate_columns(['col3', 'col5'])
+    assert list(generic_schema.column_map.keys()) == ['col3', 'col5']
+
+
+def test_to_arrow(generic_schema, generic_pa_schema):
+    assert generic_schema.to_arrow() == generic_pa_schema
+
+
+def test_from_arrow(generic_schema, generic_pa_schema):
+    schema_from_pa = Schema()
+    schema_from_pa.from_arrow(generic_pa_schema)
+    assert schema_from_pa.column_map == generic_schema.column_map
+
+
+def test_column_coercion(generic_schema):
+    def recursive_coerce(data):
+        if type(data) is list:
+            return [recursive_coerce(elem) for elem in data]
+        else:
+            return float(data)
+
+    col1 = [1, 2.5, 3, 'a', -5, 6, 'b']
+    col4 = [[1.5, 4.3], ['-3.4', '6.4'], [5.0, '4.2']]
+    assert generic_schema.coerce_column('col1', col1) \
+        == list(map(str, col1))
+    assert generic_schema.coerce_column('col4', col4) \
+        == list(map(recursive_coerce, col4))

@@ -5,6 +5,7 @@ from annotation.tools.annotator_config import LineConfig, \
 from utils.dae_utils import dae2vcf_variant
 from variants.variant import SummaryAllele
 import GenomeAccess
+from annotation.tools.file_io import Schema
 
 
 class AnnotatorBase(object):
@@ -21,6 +22,8 @@ class AnnotatorBase(object):
         self.mode = "overwrite"
         if self.config.options.mode == "replace":
             self.mode = "replace"
+
+        self.schema = Schema()
 
     def build_ouput_line(self, annotation_line):
         output_columns = self.config.output_columns
@@ -41,7 +44,7 @@ class AnnotatorBase(object):
             output_columns.extend(extended)
             self.config.output_columns = output_columns
 
-        file_io_manager.line_write(self.config.output_columns)
+        file_io_manager.header_write(self.config.output_columns)
 
         for line in file_io_manager.lines_read_iterator():
             if '#' in line[0]:
@@ -195,6 +198,10 @@ class CompositeAnnotator(AnnotatorBase):
     def line_annotation(self, aline):
         for annotator in self.annotators:
             annotator.line_annotation(aline)
+
+    @property
+    def schema(self):
+        raise NotImplementedError()
 
 
 class CompositeVariantAnnotator(VariantAnnotatorBase):

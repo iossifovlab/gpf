@@ -14,11 +14,6 @@ from annotation.tools.annotator_config import LineConfig
 from annotation.tools.file_io import TabixReader, Schema
 
 
-# from annotation.tools.utilities import AnnotatorBase, \
-#     assign_values, main, give_column_number
-# from annotation.preannotators import variant_format
-
-
 def conf_to_dict(path):
     conf_parser = ConfigParser()
     conf_parser.optionxform = str
@@ -114,6 +109,10 @@ class ScoreFile(TabixReader):
             for index, column in enumerate(self.header):
                 result[column].append(line[index])
         return result
+
+    @property
+    def schema(self):
+        return self.config.schema
 
 
 class IterativeAccess(ScoreFile):

@@ -170,4 +170,3 @@ class LineConfig(object):
 
     def build(self, source_line):
         return dict(zip(self.source_header, source_line))
-
