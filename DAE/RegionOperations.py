@@ -247,7 +247,7 @@ def intersection(s1, s2):
                 k += 1
                 continue
 
-    return(intersect)
+    return intersect
 
 
 def union(*r):
