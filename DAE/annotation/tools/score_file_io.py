@@ -241,7 +241,7 @@ class LineBufferAdapter(object):
 
 
 class IterativeAccess(ScoreFile):
-    LONG_JUMP_THRESHOLD = 10000
+    LONG_JUMP_THRESHOLD = 5000
 
     def __init__(self, options, score_filename, score_config_filename=None):
         super(IterativeAccess, self).__init__(
@@ -253,9 +253,9 @@ class IterativeAccess(ScoreFile):
         self.buffer.reset()
 
         region = "{}:{}".format(chrom, pos_begin)
-        print("RESETTING score file: {} to {}".format(
-            self.score_filename, region
-        ), file=sys.stderr)
+        # print("RESETTING score file: {} to {}".format(
+        #     self.score_filename, region
+        # ), file=sys.stderr)
 
         self._region_reset(region)
 
