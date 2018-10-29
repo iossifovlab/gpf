@@ -10,13 +10,9 @@ import pandas as pd
 from collections import defaultdict
 from configparser import ConfigParser
 from box import Box
+
 from annotation.tools.annotator_config import LineConfig
 from annotation.tools.file_io import TabixReader
-
-
-# from annotation.tools.utilities import AnnotatorBase, \
-#     assign_values, main, give_column_number
-# from annotation.preannotators import variant_format
 
 
 def conf_to_dict(path):
@@ -28,17 +24,6 @@ def conf_to_dict(path):
     conf_settings_cols = {'columns': dict(conf_parser.items('columns'))}
     conf_settings.update(conf_settings_cols)
     return conf_settings
-
-
-# def normalize_value(score_value):
-#     if ';' in score_value:
-#         result = score_value.split(';')
-#     elif ',' in score_value:
-#         result = score_value.split(',')
-#     else:
-#         result = [score_value]
-#     return [None if value in ['.', ''] else float(value)
-#             for value in result]
 
 
 class ScoreFile(TabixReader):
@@ -64,6 +49,8 @@ class ScoreFile(TabixReader):
         self.chr_index = self.header.index(self.chr_name)
         self.pos_begin_index = self.header.index(self.pos_begin_name)
         self.pos_end_index = self.header.index(self.pos_end_name)
+
+        self.no_score_value = self.config.noScoreValue
 
     def _load_config(self, config_filename=None):
         if self.config_filename is None:
@@ -107,8 +94,8 @@ class ScoreFile(TabixReader):
         score_lines = self._fetch(stripped_chrom, pos_begin, pos_end)
         result = defaultdict(list)
         for line in score_lines:
-            count = line[self.pos_end_index] - \
-                max(line[self.pos_begin_index], pos_begin) + 1
+            count = line.pos_end - \
+                max(line.pos_begin, pos_begin) + 1
             assert count >= 1
             result["COUNT"].append(count)
             for index, column in enumerate(self.header):
@@ -116,73 +103,121 @@ class ScoreFile(TabixReader):
         return result
 
 
-class IterativeAccess(ScoreFile):
-    LONG_JUMP_THRESHOLD = 10000
+class LineAdapter(object):
+    def __init__(self, score_file, line):
+        self.score_file = score_file
+        self.line = list(line)
 
-    def __init__(self, options, score_filename, score_config_filename=None):
-        super(IterativeAccess, self).__init__(
-            options, score_filename, score_config_filename)
+        self.line[self.score_file.pos_begin_index] = int(self.pos_begin)
+        self.line[self.score_file.pos_end_index] = int(self.pos_end)
 
-        self.current_lines = []
-        self.current_chrom = None
+    @property
+    def pos_begin(self):
+        return self.line[self.score_file.pos_begin_index]
 
-    def _purge_line_buffer(self, chrom, pos_begin, pos_end):
+    @property
+    def pos_end(self):
+        return self.line[self.score_file.pos_end_index]
+
+    @property
+    def chrom(self):
+        return self.line[self.score_file.chr_index]
+
+    def __getitem__(self, index):
+        return self.line[index]
+
+    def __len__(self):
+        return len(self.line)
+
+
+class NoLine(object):
+    def __init__(self, score_file):
+        self.score_file = score_file
+        self.pos_begin = -1
+        self.pos_end = -1
+        self.chrom = None
+
+    def __getitem__(self, index):
+        return self.score_file.no_score_value
+
+
+class LineBufferAdapter(object):            
+
+    def __init__(self, score_file):
+        self.score_file = score_file
+        self.buffer = []
+        self.no_line = NoLine(score_file)
+
+    def __len__(self):
+        return len(self.buffer)
+
+    def __iter__(self):
+        return iter(self.buffer)
+
+    def append(self, line):
+        self.buffer.append(line)
+
+    def reset(self):
+        self.buffer = []
+
+    def pop(self):
+        return self.buffer.pop(0)
+
+    def empty(self):
+        return len(self.buffer) == 0
+
+    def front(self):
+        if self.empty():
+            return self.no_line
+        return self.buffer[0]
+
+    def back(self):
+        if self.empty():
+            return self.no_line
+        return self.buffer[-1]
+
+    @property
+    def chrom(self):
+        return self.front().chrom
+
+    @property
+    def pos_begin(self):
+        return self.front().pos_begin
+
+    @property
+    def pos_end(self):
+        return self.back().pos_end
+
+    def purge(self, chrom, pos_begin, pos_end):
         # purge start of line buffer
-        while len(self.current_lines) > 0:
-            line = self.current_lines[0]
-            line_chrom, line_pos_begin, line_pos_end = self.line_pos(line)
-            if line_chrom > chrom or \
-                    (line_chrom == chrom and line_pos_end >= pos_begin):
+        while not self.empty():
+            line = self.front()
+            if line.chrom == chrom and line.pos_end >= pos_begin:
                 break
-            self.current_lines.pop(0)
+            self.pop()
 
-    def _buffer_pos(self):
-        if len(self.current_lines) == 0:
-            return None, -1, -1
-        chrom_begin, pos_begin, _ = self.line_pos(self.current_lines[0])
-        chrom_end, _, pos_end = self.line_pos(self.current_lines[-1])
-        assert chrom_begin == chrom_end
-
-        return chrom_begin, pos_begin, pos_end
-
-    def line_pos(self, line):
-        return line[self.chr_index], \
-            line[self.pos_begin_index], \
-            line[self.pos_end_index]
-
-    def _fill_line_buffer(self, chrom, pos_begin, pos_end):
-        buffer_chrom, buffer_pos_begin, buffer_pos_end = \
-            self._buffer_pos()
-        assert buffer_chrom is None or buffer_chrom == self.current_chrom
-
-        if buffer_pos_end >= pos_end and buffer_pos_begin <= pos_begin:
-            # the line buffer is full enough
+    def fill(self, chrom, pos_begin, pos_end):
+        if self.chrom == chrom and \
+                self.pos_end >= pos_end:
             return
 
-        for line in self.lines_iterator:
-            line = list(line)
-
-            line[self.pos_begin_index] = int(line[self.pos_begin_index])
-            line[self.pos_end_index] = int(line[self.pos_end_index])
-
-            line_chrom, line_pos_begin, line_pos_end = self.line_pos(line)
-            assert line_chrom == self.current_chrom
-
-            if line_pos_end >= pos_begin:
+        for line in self.score_file.lines_iterator:
+            line = LineAdapter(self.score_file, line)
+            if line.pos_end >= pos_begin:
                 break
 
-        self.current_lines.append(line)
-        for line in self.lines_iterator:
-            line = list(line)
-            line[self.pos_begin_index] = int(line[self.pos_begin_index])
-            line[self.pos_end_index] = int(line[self.pos_end_index])
-            line_chrom, line_pos_begin, line_pos_end = self.line_pos(line)
-            assert line_chrom == self.current_chrom
-            self.current_lines.append(line)
-            if line_pos_end > pos_end:
+        self.append(line)
+
+        for line in self.score_file.lines_iterator:
+            line = LineAdapter(self.score_file, line)
+            assert line.chrom == self.chrom, \
+                (line.chrom, self.chrom)
+            self.append(line)
+            if line.pos_end > pos_end:
                 break
 
-    def _regions_intersect(self, b1, e1, b2, e2):
+    @staticmethod
+    def regions_intersect(b1, e1, b2, e2):
         if b1 >= b2 and b1 <= e2:
             return True
         if e1 >= b2 and e1 <= e2:
@@ -193,39 +228,47 @@ class IterativeAccess(ScoreFile):
             return True
         return False
 
-    def _select_line_buffer(self, chrom, pos_begin, pos_end):
+    def select_lines(self, chrom, pos_begin, pos_end):
         result = []
-        for line in self.current_lines:
-            line_chrom, line_pos_begin, line_pos_end = self.line_pos(line)
-            if line_chrom != chrom:
+        for line in self.buffer:
+            if line.chrom != chrom:
                 continue
-            if self._regions_intersect(
+            if self.regions_intersect(
                     pos_begin, pos_end,
-                    line_pos_begin, line_pos_end):
+                    line.pos_begin, line.pos_end):
                 result.append(line)
         return result
 
+
+class IterativeAccess(ScoreFile):
+    LONG_JUMP_THRESHOLD = 5000
+
+    def __init__(self, options, score_filename, score_config_filename=None):
+        super(IterativeAccess, self).__init__(
+            options, score_filename, score_config_filename)
+
+        self.buffer = LineBufferAdapter(self)
+
     def _reset(self, chrom, pos_begin):
-        self.current_chrom = chrom
-        self.current_lines = []
+        self.buffer.reset()
 
         region = "{}:{}".format(chrom, pos_begin)
-        print("RESETTING score file: {} to {}".format(
-            self.score_filename, region
-        ), file=sys.stderr)
+        # print("RESETTING score file: {} to {}".format(
+        #     self.score_filename, region
+        # ), file=sys.stderr)
 
         self._region_reset(region)
 
     def _fetch(self, chrom, pos_begin, pos_end):
-        buffer_chrom, buffer_begin_pos, buffer_end_pos = self._buffer_pos()
-        if chrom != buffer_chrom or \
-                pos_begin < buffer_begin_pos or \
-                (pos_begin - buffer_end_pos) > self.LONG_JUMP_THRESHOLD:
+
+        if chrom != self.buffer.chrom or \
+                pos_begin < self.buffer.pos_begin or \
+                (pos_begin - self.buffer.pos_end) > self.LONG_JUMP_THRESHOLD:
             self._reset(chrom, pos_begin)
 
-        self._purge_line_buffer(chrom, pos_begin, pos_end)
-        self._fill_line_buffer(chrom, pos_begin, pos_end)
-        return self._select_line_buffer(chrom, pos_begin, pos_end)
+        self.buffer.purge(chrom, pos_begin, pos_end)
+        self.buffer.fill(chrom, pos_begin, pos_end)
+        return self.buffer.select_lines(chrom, pos_begin, pos_end)
 
 
 class DirectAccess(ScoreFile):
@@ -239,9 +282,7 @@ class DirectAccess(ScoreFile):
             result = []
             for line in self.infile.fetch(
                     chrom, pos_begin-1, pos_end, parser=pysam.asTuple()):
-                line = list(line)
-                line[self.pos_begin_index] = int(line[self.pos_begin_index])
-                line[self.pos_end_index] = int(line[self.pos_end_index])
+                line = LineAdapter(self, line)
                 result.append(line)
             return result
         except ValueError as ex:

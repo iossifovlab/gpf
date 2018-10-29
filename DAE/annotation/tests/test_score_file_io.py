@@ -4,7 +4,7 @@ from box import Box
 
 from .utils import relative_to_this_test_folder
 from annotation.tools.score_file_io import \
-    DirectAccess, IterativeAccess
+    DirectAccess, IterativeAccess, LineAdapter
 
 
 def test_iterative_access_simple():
@@ -26,6 +26,22 @@ def test_iterative_access_simple():
 
         assert float(res['TESTphastCons100way'][0]) == \
             pytest.approx(0.204, 1E-3)
+
+
+def test_iterative_line_adapter():
+    score_filename = relative_to_this_test_folder(
+        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+    score_config_filename = None
+    options = Box({}, default_box=True, default_box_attr=None)
+
+    with IterativeAccess(
+            options, score_filename, score_config_filename) as score_io:
+        assert score_io is not None
+
+        line = LineAdapter(
+            score_io, ["1", "10", "20", "1", "10", "20", "30"])
+        
+        assert line.pos_begin == 10
 
 
 def test_direct_access_simple():
