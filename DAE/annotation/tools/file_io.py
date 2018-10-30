@@ -19,7 +19,10 @@ def coerce_list(type_):
 
 def coerce_single(type_):
     def coerce_(value):
-        return type_(value)
+        if value in ['.', '']:
+            return None
+        else:
+            return type_(value)
     return coerce_
 
 
