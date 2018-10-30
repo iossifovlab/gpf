@@ -96,6 +96,9 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(aline)
             return
 
+        counts = scores['COUNT']
+        total_count = sum(counts)
+
         for score_name in self.score_names:
             column_name = self.config.columns_config[score_name]
             values = scores[score_name]
@@ -103,8 +106,9 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             if len(values) == 1:
                 aline[column_name] = values[0]
             else:
-                aline[column_name] = \
-                    sum([float(v) for v in values]) / len(values)
+                total_sum = sum([
+                    c * float(v) for (c, v) in zip(counts, values)])
+                aline[column_name] = total_sum / total_count
 
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
