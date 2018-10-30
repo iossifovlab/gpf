@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from builtins import str
 
 import itertools
@@ -91,7 +93,6 @@ class StudyGroupWrapper(StudyGroup):
     # ultraRareOnly
     # TMM_ALL
     def get_variants(self, **kwargs):
-        print("kwargs in study group:", kwargs)
         limit = None
         if 'limit' in kwargs:
             limit = kwargs['limit']

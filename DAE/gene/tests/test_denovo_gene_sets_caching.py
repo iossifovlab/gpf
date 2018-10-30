@@ -9,8 +9,15 @@ import pytest
 pytestmark = pytest.mark.usefixtures("gene_info_cache_dir")
 
 
-def test_load_cache(gscs):
+def test_generate_cache(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
     computed = denovo.load()
     assert computed is not None
+
+
+def test_load_cache(gscs):
+    denovo = gscs.get_gene_sets_collection('denovo')
+    denovo.load()
+    loaded = denovo.load()
+    assert loaded is not None
 
