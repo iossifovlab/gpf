@@ -142,7 +142,7 @@ class NoLine(object):
         return self.score_file.no_score_value
 
 
-class LineBufferAdapter(object):            
+class LineBufferAdapter(object):
 
     def __init__(self, score_file):
         self.score_file = score_file
@@ -200,6 +200,8 @@ class LineBufferAdapter(object):
     def fill(self, chrom, pos_begin, pos_end):
         if self.chrom == chrom and \
                 self.pos_end >= pos_end:
+            return
+        if self.score_file.lines_iterator is None:
             return
 
         for line in self.score_file.lines_iterator:

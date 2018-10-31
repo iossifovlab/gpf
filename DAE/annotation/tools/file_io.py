@@ -282,9 +282,14 @@ class TabixReader(TSVFormat):
     def _region_reset(self, region):
         region = self._handle_chrom_prefix(region)
 
-        self.lines_iterator = self.infile.fetch(
-            region=region,
-            parser=pysam.asTuple())
+        try:
+            self.lines_iterator = self.infile.fetch(
+                region=region,
+                parser=pysam.asTuple())
+        except ValueError as ex:
+            print("could not find region: ", region,
+                  ex, file=sys.stderr)
+            self.lines_iterator = None
 
     def _setup(self):
         self.infile = pysam.TabixFile(self.filename)
@@ -332,6 +337,9 @@ class TabixReader(TSVFormat):
     #     return line
 
     def lines_read_iterator(self):
+        if self.lines_iterator is None:
+            return
+
         for line in self.lines_iterator:
             self._progress_step()
             # print(self.linecount, line)

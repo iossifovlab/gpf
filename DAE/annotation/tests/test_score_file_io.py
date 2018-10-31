@@ -58,7 +58,7 @@ def test_iterative_line_adapter():
 
         line = LineAdapter(
             score_io, ["1", "10", "20", "1", "10", "20", "30"])
-        
+
         assert line.pos_begin == 10
 
 
