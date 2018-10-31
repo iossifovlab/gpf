@@ -3,7 +3,11 @@ from __future__ import print_function
 import sys
 import os
 import gzip
+# import copy
+
 import pysam
+from box import Box
+
 # import pandas as pd
 # import pyarrow as pa
 # import pyarrow.parquet as pq
@@ -88,8 +92,9 @@ class AbstractFormat(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, opts, mode):
-        self.opts = opts
-        self.options = opts
+        options = Box(opts.to_dict(), default_box=True, default_box_attr=None)
+        self.opts = options
+        self.options = options
 
         if mode != 'r' and mode != 'w':
             print("Unrecognized I/O mode '{}'!".format(mode), file=sys.stderr)
@@ -204,6 +209,9 @@ class TSVReader(TSVFormat):
         self._cleanup()
 
     def _header_read(self):
+        if self.header:
+            return self.header
+
         if self.options.no_header:
             return None
         else:
@@ -262,7 +270,7 @@ class TabixReader(TSVFormat):
         self.region = self.options.region
         self._has_chrom_prefix = None
 
-    def _handle_chrom_prefix(self, data):        
+    def _handle_chrom_prefix(self, data):
         if data is None:
             return data
         if self._has_chrom_prefix and not data.startswith('chr'):
@@ -280,13 +288,16 @@ class TabixReader(TSVFormat):
 
     def _setup(self):
         self.infile = pysam.TabixFile(self.filename)
-        contig_name = self.infile.contigs[0]
+        contig_name = self.infile.contigs[-1]
         self._has_chrom_prefix = contig_name.startswith('chr')
 
         self._region_reset(self.region)
         self.header = self._header_read()
 
     def _header_read(self):
+        if self.header:
+            return self.header
+
         if self.options.no_header:
             return None
 
