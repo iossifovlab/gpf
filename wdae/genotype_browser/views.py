@@ -106,7 +106,7 @@ class QueryPreviewView(QueryBaseView):
 
             response = get_variants_web_preview(
                     dataset.get_variants(safe=True, **data),
-                    dataset.preview_columns
+                    dataset.preview_columns + dataset.pheno_columns
             )
 
             # pprint.pprint(response)

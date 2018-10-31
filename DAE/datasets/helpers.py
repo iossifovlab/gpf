@@ -169,7 +169,12 @@ SPECIAL_ATTRS_FORMAT = {
     "requestedGeneEffects": lambda v:
         ge2str(v.alt_alleles[0]["requestedGeneEffects"]),
     "genes": lambda v: gene_effect_get_genes(v.alt_alleles[0].effects),
-    "worstEffect": lambda v: gene_effect_get_worst_effect(v.alt_alleles[0].effects)
+    "worstEffect":
+        lambda v: gene_effect_get_worst_effect(v.alt_alleles[0].effects),
+    "svip_summary_variables.genetic_status_16p":
+        lambda v: v.generic_status_16p,
+    "diagnosis_summary.diagnosis_summary.svip_diagnosis_m1":
+        lambda v: v.svip_diagnosis_m1
 }
 
 

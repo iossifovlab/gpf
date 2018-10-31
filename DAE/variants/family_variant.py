@@ -45,6 +45,14 @@ class FamilyDelegate(object):
         """
         return self.family.family_id
 
+    @property
+    def generic_status_16p(self):
+        return self.family.probant.genetic_status_16p
+
+    @property
+    def svip_diagnosis_m1(self):
+        return self.family.probant.svip_diagnosis_m1
+
 
 class FamilyAllele(SummaryAllele, FamilyDelegate):
 

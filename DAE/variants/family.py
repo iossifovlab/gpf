@@ -31,6 +31,10 @@ class Person(object):
         self.dad = atts['dadId']
         self.layout_position = atts.get('layout', None)
         self.generated = atts.get('generated', False)
+        self.genetic_status_16p = atts.get(
+            'svip_summary_variables.genetic_status_16p', None)
+        self.svip_diagnosis_m1 = atts.get(
+            'diagnosis_summary.diagnosis_summary.svip_diagnosis_m1', None)
 
     def __repr__(self):
         return "Person({} ({}); {}; {})".format(
@@ -74,6 +78,9 @@ class Family(object):
 
         self.persons, self.members_in_order = self._build_persons(self.ped_df)
         self.trios = self._build_trios(self.persons)
+        probants =\
+            list(filter(lambda m: m.role == Role.prb, self.members_in_order))
+        self.probant = probants[0] if probants else self.members_in_order[0]
 
     def __len__(self):
         return len(self.ped_df)
