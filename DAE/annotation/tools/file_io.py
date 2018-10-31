@@ -289,11 +289,13 @@ class TabixReader(TSVFormat):
     def _header_read(self):
         if self.options.no_header:
             return None
+
+        line = self.infile.header
+        line = list(line)
+        if not line:
+            with TSVGzipReader(self.options, self.filename) as tempreader:
+                return tempreader.header
         else:
-            line = self.infile.header
-            line = list(line)
-            if not line:
-                return None
             header_str = line[0]
             if header_str.startswith("#"):
                 header_str = header_str[1:]
