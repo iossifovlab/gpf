@@ -23,7 +23,7 @@ class DatasetConfig(ConfigurableEntityConfig):
         'genotypeBrowser.baseDownloadColumns',
         'genotypeBrowser.previewColumns',
         'genotypeBrowser.downloadColumns',
-        'genotypeBrowser.phenoColumns',
+        'genotypeBrowser.pheno.columns',
         'genotypeBrowser.familyStudyFilters',
         'genotypeBrowser.phenoFilters.filters',
         'genotypeBrowser.genotype.columns',
@@ -221,6 +221,42 @@ class DatasetConfig(ConfigurableEntityConfig):
         return result
 
     @staticmethod
+    def _get_genotype_browser_pheno_column(dataset_config, col_id):
+        prefix = 'genotypeBrowser.pheno.{}'.format(col_id)
+        name = dataset_config.pop('{}.{}'.format(prefix, 'name'))
+        slots = dataset_config.pop('{}.{}'.format(prefix, 'slots')).split(',')
+        column = {}
+        column['id'] = col_id
+        column['name'] = name
+
+        column_slots = []
+        for slot in slots:
+            role, source, label = slot.split(':')
+            column_slots.append(
+                {
+                    'role': role,
+                    'source': source,
+                    'name': label,
+                    'id': '{}.{}'.format(role, source),
+                })
+        column['slots'] = column_slots
+        return column
+
+    @classmethod
+    def _get_genotype_browser_pheno_columns(cls, dataset_config):
+        result = []
+        columns = dataset_config.pop('genotypeBrowser.pheno.columns', None)
+        if not columns:
+            return None
+
+        for col in columns:
+            column = cls._get_genotype_browser_pheno_column(
+                dataset_config, col)
+            result.append(column)
+
+        return result
+
+    @staticmethod
     def _get_genotype_browser_genotype_column(dataset_config, col_id):
         prefix = 'genotypeBrowser.genotype.{}'.format(col_id)
         name = dataset_config.pop('{}.{}'.format(prefix, 'name'), None)
@@ -278,6 +314,8 @@ class DatasetConfig(ConfigurableEntityConfig):
             cls._get_pedigree_selectors(dataset_config)
         dataset_config['genotypeBrowser.phenoFilters'] =\
             cls._get_genotype_browser_pheno_filters(dataset_config)
+        dataset_config['genotypeBrowser.phenoColumns'] =\
+            cls._get_genotype_browser_pheno_columns(dataset_config)
         dataset_config['genotypeBrowser.genotypeColumns'] =\
             cls._get_genotype_browser_genotype_columns(dataset_config)
         dataset_config = cls._combine_dict_options(dataset_config)
@@ -300,7 +338,7 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypeBrowser.hasPresentInParent': 'yes',
             'genotypeBrowser.hasPedigreeSelector': 'no',
             'genotypeBrowser.mainForm': 'default',
-            'genotypeBrowser.phenoColumns': None,
+            'genotypeBrowser.pheno.columns': None,
             'genotypeBrowser.familyFilters': None,
             'genotypeBrowser.genotype.baseColumns':
                 'family,phenotype,variant,best,fromparent,inchild,genotype,'

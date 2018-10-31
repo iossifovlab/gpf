@@ -10,9 +10,14 @@ class Dataset(object):
         genotypeBrowser = dataset_config.genotypeBrowser
         preview_columns = []
         download_columns = []
+        pheno_columns = []
         if genotypeBrowser:
             preview_columns = genotypeBrowser['previewColumns']
             download_columns = genotypeBrowser['downloadColumns']
+            if genotypeBrowser['phenoColumns']:
+                pheno_columns =\
+                    [slot['source'] for pc in genotypeBrowser['phenoColumns']
+                     for slot in pc['slots']]
 
         self.name = name
         self.study_group = study_group
@@ -22,6 +27,7 @@ class Dataset(object):
         self.name = name
         self.preview_columns = preview_columns
         self.download_columns = download_columns
+        self.pheno_columns = pheno_columns
 
         if len(self.dataset_config.pedigreeSelectors) != 0:
             self.legend = self.dataset_config.pedigreeSelectors[0]['domain']
