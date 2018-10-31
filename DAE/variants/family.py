@@ -80,7 +80,7 @@ class Family(object):
         self.trios = self._build_trios(self.persons)
         probants =\
             list(filter(lambda m: m.role == Role.prb, self.members_in_order))
-        self.probant = probants[0] if probants else self.members_in_order[0]
+        self.probant = probants[0] if probants else None
 
     def __len__(self):
         return len(self.ped_df)

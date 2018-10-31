@@ -47,11 +47,13 @@ class FamilyDelegate(object):
 
     @property
     def generic_status_16p(self):
-        return self.family.probant.genetic_status_16p
+        return self.family.probant.genetic_status_16p\
+            if self.family.probant else None
 
     @property
     def svip_diagnosis_m1(self):
-        return self.family.probant.svip_diagnosis_m1
+        return self.family.probant.svip_diagnosis_m1\
+            if self.family.probant else None
 
 
 class FamilyAllele(SummaryAllele, FamilyDelegate):
