@@ -45,6 +45,12 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
     this.family$.next(data);
   }
 
+  @Input()
+  parent_width;
+
+  @Input()
+  parent_height;
+
   private family$ = new BehaviorSubject<PedigreeData[]>(null);
   levels$: Observable<Array<OrderedIndividuals>>;
 
@@ -115,8 +121,6 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
           .reduce((acc, current) => Math.max(acc, current), 0);
         
         });
-
-        this.scaleSvg();
   }
 
   ngOnDestroy() {
@@ -152,6 +156,9 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
       this.scale = 1.0;
     } else if (this.width && this.height) {
       this.scale = Math.min(1.0, width / this.width, height / this.height);
+      if (this.parent_width && this.parent_height) {
+        this.scale = Math.min(this.scale, this.parent_height / height, this.parent_width / width);
+      }
     } else {
       return;
     }
