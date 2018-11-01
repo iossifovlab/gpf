@@ -27,6 +27,7 @@ class DatasetConfig(ConfigurableEntityConfig):
         'genotypeBrowser.familyStudyFilters',
         'genotypeBrowser.phenoFilters.filters',
         'genotypeBrowser.genotype.columns',
+        'genotypeBrowser.peopleGroup.columns'
     )
     CAST_TO_BOOL = (
         'phenotypeBrowser', 'phenotypeGenotypeTool', 'enrichmentTool',
@@ -66,7 +67,6 @@ class DatasetConfig(ConfigurableEntityConfig):
             assert 'genesBlockShowAll' in genotypeBrowser
             assert 'hasFamilyFilters' in genotypeBrowser
             assert 'hasStudyFilters' in genotypeBrowser
-            assert 'phenoFilters' in genotypeBrowser
             assert 'hasPresentInChild' in genotypeBrowser
             assert 'hasPresentInParent' in genotypeBrowser
             assert 'hasPedigreeSelector' in genotypeBrowser
@@ -74,6 +74,7 @@ class DatasetConfig(ConfigurableEntityConfig):
             assert 'phenoColumns' in genotypeBrowser
             assert 'familyStudyFilters' in genotypeBrowser
             assert 'phenoFilters' in genotypeBrowser
+            assert 'pedigreeColumns' in genotypeBrowser
             assert genotypeBrowser['previewColumns']
             assert genotypeBrowser['downloadColumns']
             assert 'genotypeColumns' in genotypeBrowser
@@ -138,10 +139,9 @@ class DatasetConfig(ConfigurableEntityConfig):
         pedigree = {}
 
         pedigree['name'] = dataset_config.pop(pedigree_type + '.name', None)
-        pedigree['source'] = dataset_config.pop(pedigree_type + '.source',
+        pedigree['source'] = dataset_config.get(pedigree_type + '.source',
                                                 None)
-        pedigree['id'] = dataset_config.pop(pedigree_type + '.id',
-                                            pedigree['name'])
+        _, pedigree['id'] = cls._split_section(pedigree_type)
         pedigree['default'] =\
             cls._pedigree_selectors_split_dict(
                 dataset_config.pop(pedigree_type + '.default'))
@@ -154,20 +154,21 @@ class DatasetConfig(ConfigurableEntityConfig):
         return pedigree
 
     @classmethod
-    def _get_pedigree_selectors(cls, dataset_config):
-        PEDIGREE_KEY = 'peopleGroup'
+    def _get_pedigree_selectors(cls, dataset_config, pedigree_key):
         pedigree = {}
         for key, value in dataset_config.items():
             option_type, option_fullname = cls._split_section(key)
-            if option_type != PEDIGREE_KEY:
+            if option_type != pedigree_key:
                 continue
 
             pedigree_type, pedigree_option =\
                 cls._split_section(option_fullname)
-            if PEDIGREE_KEY + '.' + pedigree_type not in pedigree:
-                pedigree[PEDIGREE_KEY + '.' + pedigree_type] = [pedigree_option]
+            if pedigree_key + '.' + pedigree_type not in pedigree:
+                pedigree[pedigree_key + '.' + pedigree_type] =\
+                    [pedigree_option]
             else:
-                pedigree[PEDIGREE_KEY + '.' + pedigree_type].append(pedigree_option)
+                pedigree[pedigree_key + '.' + pedigree_type].append(
+                    pedigree_option)
 
         pedigrees = []
         for pedigree_type, pedigree_options in pedigree.items():
@@ -176,6 +177,49 @@ class DatasetConfig(ConfigurableEntityConfig):
                     pedigree_type, pedigree_options, dataset_config))
 
         return pedigrees
+
+    @staticmethod
+    def _get_pedigree_selector_column(
+            pedigree_selector_column, dataset_config, parent_key,
+            pedigree_key):
+
+        pedigree = {}
+
+        pedigree['id'] = pedigree_selector_column
+        pedigree['name'] = dataset_config.pop(
+            parent_key + '.' + pedigree_key + '.' + pedigree_selector_column +
+            '.name', None)
+        pedigree['role'] = dataset_config.pop(
+            parent_key + '.' + pedigree_key + '.' + pedigree_selector_column +
+            '.role', None)
+        pedigree['source'] = dataset_config.get(
+            pedigree_key + '.' + pedigree_selector_column + '.source', None)
+
+        return pedigree
+
+    @classmethod
+    def _get_pedigree_selector_columns(
+            cls, dataset_config, parent_key, pedigree_key):
+        pedigree_selector_columns = dataset_config.pop(
+            parent_key + '.' + pedigree_key + '.' + 'columns', None)
+        if not pedigree_selector_columns:
+            return []
+
+        pedigrees = {}
+
+        pedigrees['name'] = dataset_config.pop(
+            parent_key + '.' + pedigree_key + '.' + 'columns.name')
+        pedigrees['id'] = dataset_config.pop(
+            parent_key + '.' + pedigree_key + '.' + 'columns.id',
+            pedigrees['name'])
+        pedigrees['slots'] = []
+
+        for pedigree_selector_column in pedigree_selector_columns:
+            pedigrees['slots'].append(cls._get_pedigree_selector_column(
+                pedigree_selector_column, dataset_config, parent_key,
+                pedigree_key))
+
+        return [pedigrees]
 
     @staticmethod
     def _get_genotype_browser_pheno_filter(dataset_config, f):
@@ -247,7 +291,7 @@ class DatasetConfig(ConfigurableEntityConfig):
         result = []
         columns = dataset_config.pop('genotypeBrowser.pheno.columns', None)
         if not columns:
-            return None
+            return []
 
         for col in columns:
             column = cls._get_genotype_browser_pheno_column(
@@ -298,7 +342,7 @@ class DatasetConfig(ConfigurableEntityConfig):
         result = []
         columns = dataset_config.pop('genotypeBrowser.genotype.columns', None)
         if not columns:
-            return None
+            return []
 
         for col in columns:
             column =\
@@ -311,13 +355,18 @@ class DatasetConfig(ConfigurableEntityConfig):
         dataset_config = config_section
 
         dataset_config['pedigreeSelectors'] =\
-            cls._get_pedigree_selectors(dataset_config)
+            cls._get_pedigree_selectors(dataset_config, 'peopleGroup')
+        dataset_config['genotypeBrowser.pedigreeColumns'] =\
+            cls._get_pedigree_selector_columns(
+                dataset_config, 'genotypeBrowser', 'peopleGroup')
         dataset_config['genotypeBrowser.phenoFilters'] =\
             cls._get_genotype_browser_pheno_filters(dataset_config)
         dataset_config['genotypeBrowser.phenoColumns'] =\
             cls._get_genotype_browser_pheno_columns(dataset_config)
         dataset_config['genotypeBrowser.genotypeColumns'] =\
-            cls._get_genotype_browser_genotype_columns(dataset_config)
+            cls._get_genotype_browser_genotype_columns(dataset_config) + \
+            dataset_config['genotypeBrowser.pedigreeColumns'] + \
+            dataset_config['genotypeBrowser.phenoColumns']
         dataset_config = cls._combine_dict_options(dataset_config)
 
         dataset_config['authorizedGroups'] = dataset_config.get(

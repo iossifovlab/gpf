@@ -7,17 +7,21 @@ class Dataset(object):
     def __init__(
             self, name, study_group, dataset_config):
         super(Dataset, self).__init__()
-        genotypeBrowser = dataset_config.genotypeBrowser
+        genotype_browser = dataset_config.genotypeBrowser
         preview_columns = []
         download_columns = []
-        pheno_columns = []
-        if genotypeBrowser:
-            preview_columns = genotypeBrowser['previewColumns']
-            download_columns = genotypeBrowser['downloadColumns']
-            if genotypeBrowser['phenoColumns']:
-                pheno_columns =\
-                    [slot['source'] for pc in genotypeBrowser['phenoColumns']
-                     for slot in pc['slots']]
+        pedigree_columns = {}
+        pheno_columns = {}
+        if genotype_browser:
+            preview_columns = genotype_browser['previewColumns']
+            download_columns = genotype_browser['downloadColumns']
+            if genotype_browser['pedigreeColumns']:
+                pedigree_columns =\
+                    [s for pc in genotype_browser['pedigreeColumns']
+                     for s in pc['slots']]
+            if genotype_browser['phenoColumns']:
+                pheno_columns = [s for pc in genotype_browser['phenoColumns']
+                                 for s in pc['slots']]
 
         self.name = name
         self.study_group = study_group
@@ -27,6 +31,7 @@ class Dataset(object):
         self.name = name
         self.preview_columns = preview_columns
         self.download_columns = download_columns
+        self.pedigree_columns = pedigree_columns
         self.pheno_columns = pheno_columns
 
         if len(self.dataset_config.pedigreeSelectors) != 0:
