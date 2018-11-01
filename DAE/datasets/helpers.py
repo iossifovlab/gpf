@@ -164,7 +164,6 @@ SPECIAL_ATTRS_FORMAT = {
     "bestSt": lambda v: mat2str(v.bestSt),
     "counts": lambda v: mat2str(v.alt_alleles[0]["counts"]),
     "genotype": lambda v: mat2str(v.alt_alleles[0].genotype),
-    "pedigree": lambda v: generate_pedigree(v),
     "effects": lambda v: ge2str(v.alt_alleles[0].effects),
     "requestedGeneEffects": lambda v:
         ge2str(v.alt_alleles[0]["requestedGeneEffects"]),
@@ -180,13 +179,18 @@ SPECIAL_ATTRS = merge_dicts(
 )
 
 
-def transform_variants_to_lists(variants, genotype_attrs, pedigree_attrs):
+def transform_variants_to_lists(
+        variants, genotype_attrs, pedigree_attrs, pedigree_selectors,
+        selected_pedigree_selector):
     for v in variants:
         row_variant = []
         for attr in genotype_attrs:
             try:
                 if attr in SPECIAL_ATTRS:
                     row_variant.append(SPECIAL_ATTRS[attr](v))
+                elif attr == 'pedigree':
+                    row_variant.append(generate_pedigree(
+                        v, pedigree_selectors, selected_pedigree_selector))
                 else:
                     row_variant.append(str(getattr(v, attr, '')))
             except (AttributeError, KeyError) as e:
@@ -204,7 +208,24 @@ def transform_variants_to_lists(variants, genotype_attrs, pedigree_attrs):
         yield row_variant
 
 
-def generate_pedigree(variant):
+def get_person_color(member, pedigree_selectors, selected_pedigree_selector):
+    pedigree_selector_id = selected_pedigree_selector.get('id', None)
+    selected_pedigree_selectors = list(filter(
+        lambda ps: ps.id == pedigree_selector_id, pedigree_selectors))[0]
+    if member.generated:
+        return '#E0E0E0'
+    else:
+        people_group_attribute =\
+            member.get_attr(selected_pedigree_selectors['source'])
+        domain = list(filter(lambda d: d['name'] == people_group_attribute,
+                             selected_pedigree_selectors['domain']))
+        if domain and people_group_attribute:
+            return domain[0]['color']
+        else:
+            return selected_pedigree_selectors['default']['color']
+
+
+def generate_pedigree(variant, pedigree_selectors, selected_pedigree_selector):
     result = []
     for index, member in enumerate(variant.members_in_order):
         # FIXME: add missing denovo parent parameter to variant_count_v3 call
@@ -214,8 +235,8 @@ def generate_pedigree(variant):
             member.mom if member.has_mom() else '',
             member.dad if member.has_dad() else '',
             member.sex.short(),
-            '#D3D3D3' if member.generated else '#ffffff'
-            if member.status == Status.unaffected.value else '#e35252',
+            get_person_color(
+                member, pedigree_selectors, selected_pedigree_selector),
             member.layout_position
             ] + variant_count_v3(
                 variant.best_st, index, variant.location, member.sex.short())
@@ -225,10 +246,12 @@ def generate_pedigree(variant):
 
 
 def get_variants_web_preview(
-        variants, genotype_attrs, pedigree_attrs, max_variants_count=1000):
+        variants, pedigree_selectors, selected_pedigree_selector,
+        genotype_attrs, pedigree_attrs, max_variants_count=1000):
     VARIANTS_HARD_MAX = 2000
     rows = transform_variants_to_lists(
-        variants, genotype_attrs, pedigree_attrs)
+        variants, genotype_attrs, pedigree_attrs, pedigree_selectors,
+        selected_pedigree_selector)
     count = min(max_variants_count, VARIANTS_HARD_MAX)
 
     limited_rows = itertools.islice(rows, count)

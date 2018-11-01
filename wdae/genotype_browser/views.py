@@ -107,6 +107,8 @@ class QueryPreviewView(QueryBaseView):
 
             response = get_variants_web_preview(
                     dataset.get_variants(safe=True, **data),
+                    dataset.pedigree_selectors,
+                    data.get('pedigreeSelector', {}),
                     dataset.preview_columns,
                     dataset.pedigree_columns
             )
