@@ -219,9 +219,6 @@ def get_person_color(member, pedigree_selectors, selected_pedigree_selector):
             member.get_attr(selected_pedigree_selectors['source'])
         domain = list(filter(lambda d: d['name'] == people_group_attribute,
                              selected_pedigree_selectors['domain']))
-        print(member.family_id)
-        print(domain)
-        print(people_group_attribute)
         if domain and people_group_attribute:
             return domain[0]['color']
         else:
