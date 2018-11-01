@@ -237,7 +237,8 @@ def generate_pedigree(variant, pedigree_selectors, selected_pedigree_selector):
             member.sex.short(),
             get_person_color(
                 member, pedigree_selectors, selected_pedigree_selector),
-            member.layout_position
+            member.layout_position,
+            member.generated
             ] + variant_count_v3(
                 variant.best_st, index, variant.location, member.sex.short())
         )
