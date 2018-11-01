@@ -1,3 +1,7 @@
+from __future__ import print_function
+
+import sys
+import traceback
 
 from annotation.tools.annotator_config import LineConfig, \
     AnnotatorConfig, \
@@ -48,7 +52,12 @@ class AnnotatorBase(object):
                 file_io_manager.line_write(line)
                 continue
             annotation_line = line_config.build(line)
-            self.line_annotation(annotation_line)
+            try:
+                self.line_annotation(annotation_line)
+            except Exception as ex:
+                print("Problems annotating line:", line, file=sys.stderr)
+                print(annotation_line, file=sys.stderr)
+                traceback.print_exc(file=sys.stderr)
 
             file_io_manager.line_write(
                 self.build_ouput_line(annotation_line))
@@ -118,6 +127,7 @@ class DAEBuilder(VariantBuilder):
             assert self.position is not None
             chrom = aline[self.chrom]
             position = aline[self.position]
+
         vcf_position, ref, alt = dae2vcf_variant(
             chrom, int(position), variant, self.genome
         )

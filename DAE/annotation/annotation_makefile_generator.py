@@ -56,7 +56,7 @@ class VariantDBConfig(object):
                 continue
             for filename in file_list.split("\n"):
                 denovo_files.append(os.path.abspath(filename.strip()))
-        return denovo_files
+        return list(set(denovo_files))
 
     @classmethod
     def _collect_transmitted_calls(cls, study):
@@ -123,14 +123,19 @@ class MakefileBuilder(VariantDBConfig):
     TRANSMITTED_STEP = 50000000
 
     def __init__(
-            self, annotation_config, data_dir, output_dir, 
-            sge_rreq, genome):
+            self, annotation_config, data_dir, output_dir,
+            sge_rreq, genome_file):
         super(MakefileBuilder, self).__init__(os.path.abspath(data_dir))
         self.annotation_config = annotation_config
         self.output_dir = os.path.abspath(output_dir)
         self.log_dir = os.path.join(output_dir, 'log')
 
         self.sge_rreq = sge_rreq
+
+        self.genome_file = genome_file
+        assert os.path.exists(self.genome_file)
+
+        genome = GenomeAccess.openRef(self.genome_file)
         self.genome = genome
         assert self.genome is not None
 
@@ -142,8 +147,8 @@ class MakefileBuilder(VariantDBConfig):
     def build_contig_regions(self):
         self.contigs = OrderedDict(self.genome.get_all_chr_lengths())
         self.contig_parts = OrderedDict([
-            (contig, int(size / self.TRANSMITTED_STEP + 1)) 
-            for contig, size in self.contigs.items() 
+            (contig, int(size / self.TRANSMITTED_STEP + 1))
+            for contig, size in self.contigs.items()
         ])
         self.contig_regions = OrderedDict()
         for contig, size in self.contigs.items():
@@ -193,7 +198,9 @@ class MakefileBuilder(VariantDBConfig):
         ' 2> "{log_prefix}-time{job_sufix}.txt"\n')
 
     def build_denovo_files(self):
-        args = '--config {} --direct'.format(self.annotation_config)
+        args = '--mode=replace --config {} --direct --Graw {}'.format(
+            self.annotation_config,
+            self.genome_file)
 
         for filename in self.denovo_files:
             target = self.escape_target(self.to_destination(filename))
@@ -227,13 +234,15 @@ class MakefileBuilder(VariantDBConfig):
             for region_index, region in enumerate(self.contig_regions[contig]):
                 part_sufix = \
                     '-part-{contig_index:0>3}-{region_index}-{contig}'.format(
-                        contig_index=contig_index, 
-                        region_index=region_index, 
+                        contig_index=contig_index,
+                        region_index=region_index,
                         contig=contig)
                 target = self.escape_target(output_basename + part_sufix)
-                args = '--config {config} -c chr -p position' \
+                args = '--mode=replace --config {config} -c chr -p position' \
+                    ' --Graw {genome_file}' \
                     ' --region={chr}:{begin_pos}-{end_pos}'.format(
                         config=self.annotation_config,
+                        genome_file=self.genome_file,
                         chr=contig,
                         begin_pos=region.start,
                         end_pos=region.end,
@@ -262,7 +271,7 @@ class MakefileBuilder(VariantDBConfig):
         escaped_output_file = escape_target(output_basename)
         command = '{target}: {parts}\n\tSGE_RREQ="{sge_rreq}"' \
             ' merge.sh "$@"\n'.format(
-                target=escaped_output_file, 
+                target=escaped_output_file,
                 sge_rreq=self.sge_rreq,
                 parts=' '.join(parts))
         self.makefile.append(command)
@@ -300,7 +309,7 @@ class MakefileBuilder(VariantDBConfig):
     @staticmethod
     def main(argv):
         parser = argparse.ArgumentParser(
-            description="generates a makefile to reannotate GPF instance data", 
+            description="generates a makefile to reannotate GPF instance data",
             conflict_handler='resolve')
 
         parser.add_argument(
@@ -351,8 +360,6 @@ class MakefileBuilder(VariantDBConfig):
         assert options.genome_file is not None
         assert os.path.exists(options.genome_file)
 
-        genome = GenomeAccess.openRef(options.genome_file)
-
         assert len(options.data_dir) == 1
         assert len(options.output_dir) == 1
         data_dir = options.data_dir[0]
@@ -363,7 +370,7 @@ class MakefileBuilder(VariantDBConfig):
             os.path.abspath(data_dir),
             os.path.abspath(output_dir),
             options.sge_options,
-            genome)
+            options.genome_file)
 
         if options.makefile is None:
             builder.build(sys.stdout)

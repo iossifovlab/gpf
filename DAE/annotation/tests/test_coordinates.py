@@ -1,0 +1,30 @@
+import pytest
+
+from utils.dae_utils import dae2vcf_variant
+from variants.variant import SummaryAllele
+
+
+@pytest.mark.parametrize("variant,check_pos,check_ref,check_alt", [
+    ('sub(A->T)', 150013938, 'A', 'T'),
+    ('ins(AA)', 150013937, 'A', 'AAA'),
+    ('del(1)', 150013937, 'AA', 'A'),
+])
+def test_substituion_dae2vcf(mocker, variant, check_pos, check_ref, check_alt):
+
+        genome = mocker.Mock()
+        genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
+
+        pos, ref, alt = dae2vcf_variant(
+            'chr1', 150013938, variant, genome
+        )
+
+        assert pos == check_pos
+        assert ref == check_ref
+        assert alt == check_alt
+
+        summary = SummaryAllele('chr1', pos, ref, alt)
+        assert summary is not None
+
+        assert summary.details.cshl_position == 150013938
+        assert summary.details.cshl_location == "chr1:150013938"
+        assert summary.details.cshl_variant == variant

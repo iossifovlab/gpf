@@ -8,7 +8,7 @@ from box import Box
 from annotation.tools.file_io import TSVReader, TSVGzipReader, \
     TabixReader
 
-from .utils import relative_to_this_test_folder
+from .conftest import relative_to_this_test_folder
 
 
 @pytest.mark.parametrize("filename,header,no_header,linecount", [

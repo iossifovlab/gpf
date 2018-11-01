@@ -203,11 +203,14 @@ class LineBufferAdapter(object):
             return
         if self.score_file.lines_iterator is None:
             return
-
+        line = None
         for line in self.score_file.lines_iterator:
             line = LineAdapter(self.score_file, line)
             if line.pos_end >= pos_begin:
                 break
+
+        if not line:
+            return
 
         self.append(line)
 
@@ -268,6 +271,9 @@ class IterativeAccess(ScoreFile):
                 pos_begin < self.buffer.pos_begin or \
                 (pos_begin - self.buffer.pos_end) > self.LONG_JUMP_THRESHOLD:
             self._reset(chrom, pos_begin)
+
+        if self.lines_iterator is None:
+            return []
 
         self.buffer.purge(chrom, pos_begin, pos_end)
         self.buffer.fill(chrom, pos_begin, pos_end)

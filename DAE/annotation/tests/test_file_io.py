@@ -1,7 +1,7 @@
 
 import pytest
 from box import Box
-from annotation.tests.utils import relative_to_this_test_folder
+from annotation.tests.conftest import relative_to_this_test_folder
 from annotation.tools.file_io import TabixReader
 
 

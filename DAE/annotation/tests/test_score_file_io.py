@@ -2,7 +2,7 @@ import pytest
 
 from box import Box
 
-from .utils import relative_to_this_test_folder
+from .conftest import relative_to_this_test_folder
 from annotation.tools.score_file_io import \
     DirectAccess, IterativeAccess, LineAdapter
 
