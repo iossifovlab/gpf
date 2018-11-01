@@ -174,8 +174,7 @@ export class GenotypeBrowser {
       json['genesBlockShowAll'],
       json['previewColumns'],
       json['rolesFilterOptions'],
-      [...AdditionalColumn.fromJsonArray(json['genotypeColumns']),
-       ...AdditionalColumn.fromJsonArray(json['phenoColumns'])],
+      [...AdditionalColumn.fromJsonArray(json['genotypeColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
       PhenoFilter.fromJsonArray(json['familyStudyFilters'])
     );
