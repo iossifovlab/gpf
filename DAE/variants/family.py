@@ -31,6 +31,10 @@ class Person(object):
         self.dad = atts['dadId']
         self.layout_position = atts.get('layout', None)
         self.generated = atts.get('generated', False)
+        self.genetic_status_16p = atts.get(
+            'svip_summary_variables.genetic_status_16p', None)
+        self.svip_diagnosis_m1 = atts.get(
+            'diagnosis_summary.diagnosis_summary.svip_diagnosis_m1', None)
 
     def __repr__(self):
         return "Person({} ({}); {}; {})".format(
@@ -86,6 +90,12 @@ class Family(object):
         for pid in person_ids:
             index.append(self.persons[pid]['index'])
         return index
+
+    def get_person_with_role(self, role):
+        persons_with_role =\
+            list(filter(lambda m: m.role == Role.from_name(role),
+                        self.members_in_order))
+        return persons_with_role[0] if persons_with_role else None
 
     @property
     def members_ids(self):

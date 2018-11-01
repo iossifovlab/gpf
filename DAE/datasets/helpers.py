@@ -169,7 +169,8 @@ SPECIAL_ATTRS_FORMAT = {
     "requestedGeneEffects": lambda v:
         ge2str(v.alt_alleles[0]["requestedGeneEffects"]),
     "genes": lambda v: gene_effect_get_genes(v.alt_alleles[0].effects),
-    "worstEffect": lambda v: gene_effect_get_worst_effect(v.alt_alleles[0].effects)
+    "worstEffect":
+        lambda v: gene_effect_get_worst_effect(v.alt_alleles[0].effects),
 }
 
 
@@ -179,15 +180,24 @@ SPECIAL_ATTRS = merge_dicts(
 )
 
 
-def transform_variants_to_lists(variants, attrs):
+def transform_variants_to_lists(variants, genotype_attrs, pedigree_attrs):
     for v in variants:
         row_variant = []
-        for attr in attrs:
+        for attr in genotype_attrs:
             try:
                 if attr in SPECIAL_ATTRS:
                     row_variant.append(SPECIAL_ATTRS[attr](v))
                 else:
                     row_variant.append(str(getattr(v, attr, '')))
+            except (AttributeError, KeyError) as e:
+                # print(attr, type(e), e)
+                row_variant.append('')
+        for attr in pedigree_attrs:
+            try:
+                if attr['source'] in SPECIAL_ATTRS:
+                    row_variant.append(SPECIAL_ATTRS[attr['source']](v))
+                else:
+                    row_variant.append(v.people_group_attribute(attr))
             except (AttributeError, KeyError) as e:
                 # print(attr, type(e), e)
                 row_variant.append('')
@@ -215,9 +225,10 @@ def generate_pedigree(variant):
 
 
 def get_variants_web_preview(
-        variants, attrs, max_variants_count=1000):
+        variants, genotype_attrs, pedigree_attrs, max_variants_count=1000):
     VARIANTS_HARD_MAX = 2000
-    rows = transform_variants_to_lists(variants, attrs)
+    rows = transform_variants_to_lists(
+        variants, genotype_attrs, pedigree_attrs)
     count = min(max_variants_count, VARIANTS_HARD_MAX)
 
     limited_rows = itertools.islice(rows, count)
@@ -229,7 +240,7 @@ def get_variants_web_preview(
 
     return {
         'count': count,
-        'cols': attrs,
+        'cols': genotype_attrs + [pa['source'] for pa in pedigree_attrs],
         'rows': list(limited_rows)
     }
 

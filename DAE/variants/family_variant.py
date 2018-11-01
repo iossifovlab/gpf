@@ -45,6 +45,10 @@ class FamilyDelegate(object):
         """
         return self.family.family_id
 
+    def people_group_attribute(self, attribute):
+        person = self.family.get_person_with_role(attribute['role'])
+        return person.get_attr(attribute['source']) if person else None
+
 
 class FamilyAllele(SummaryAllele, FamilyDelegate):
 
