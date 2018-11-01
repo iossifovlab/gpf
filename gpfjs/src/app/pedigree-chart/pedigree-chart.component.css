@@ -4,6 +4,7 @@
 	margin: 0 auto;
 	max-width: 96%;
 	max-height: 96%;
+	min-width: 40%;
     overflow: auto;
     background: white;
     height: auto;
@@ -11,4 +12,14 @@
 	padding: 10px;
 	z-index: 1;
 	transform: translateX(-50%);
+}
+
+.fullscreen-div {
+	opacity:0;
+    position:fixed;
+    width:100%;
+    height:100%;
+    top:0px;
+    left:0px;
+    z-index:1000;
 }
