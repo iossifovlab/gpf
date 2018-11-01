@@ -270,7 +270,7 @@ class MakefileBuilder(VariantDBConfig):
 
         escaped_output_file = escape_target(output_basename)
         command = '{target}: {parts}\n\tSGE_RREQ="{sge_rreq}"' \
-            ' merge.sh "$@"\n'.format(
+            ' merge.sh $? > "$@"\n'.format(
                 target=escaped_output_file,
                 sge_rreq=self.sge_rreq,
                 parts=' '.join(parts))
