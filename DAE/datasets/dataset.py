@@ -8,10 +8,14 @@ class Dataset(object):
             self, name, study_group, dataset_config):
         super(Dataset, self).__init__()
         genotype_browser = dataset_config.genotypeBrowser
+
         preview_columns = []
         download_columns = []
         pedigree_columns = {}
         pheno_columns = {}
+
+        pedigree_selectors = []
+
         if genotype_browser:
             preview_columns = genotype_browser['previewColumns']
             download_columns = genotype_browser['downloadColumns']
@@ -23,6 +27,9 @@ class Dataset(object):
                 pheno_columns = [s for pc in genotype_browser['phenoColumns']
                                  for s in pc['slots']]
 
+        if dataset_config.pedigreeSelectors:
+            pedigree_selectors = dataset_config.pedigreeSelectors
+
         self.name = name
         self.study_group = study_group
 
@@ -33,6 +40,8 @@ class Dataset(object):
         self.download_columns = download_columns
         self.pedigree_columns = pedigree_columns
         self.pheno_columns = pheno_columns
+
+        self.pedigree_selectors = pedigree_selectors
 
         if len(self.dataset_config.pedigreeSelectors) != 0:
             self.legend = self.dataset_config.pedigreeSelectors[0]['domain']
