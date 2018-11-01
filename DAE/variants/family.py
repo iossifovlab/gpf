@@ -188,7 +188,7 @@ class FamiliesBase(object):
                 'sex': lambda s: Sex.from_value(s),
                 'gender': lambda s: Sex.from_value(s),
                 'layout': lambda lc: lc.split(':')[-1],
-                'generated': lambda g: True if g == 1.0 else False,
+                'generated': lambda g: True if g == '1.0' else False,
             },
             dtype={
                 'familyId': str,
