@@ -78,9 +78,6 @@ class Family(object):
 
         self.persons, self.members_in_order = self._build_persons(self.ped_df)
         self.trios = self._build_trios(self.persons)
-        probants =\
-            list(filter(lambda m: m.role == Role.prb, self.members_in_order))
-        self.probant = probants[0] if probants else None
 
     def __len__(self):
         return len(self.ped_df)
@@ -93,6 +90,12 @@ class Family(object):
         for pid in person_ids:
             index.append(self.persons[pid]['index'])
         return index
+
+    def get_person_with_role(self, role):
+        persons_with_role =\
+            list(filter(lambda m: m.role == Role.from_name(role),
+                        self.members_in_order))
+        return persons_with_role[0] if persons_with_role else None
 
     @property
     def members_ids(self):

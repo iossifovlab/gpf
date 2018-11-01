@@ -45,15 +45,9 @@ class FamilyDelegate(object):
         """
         return self.family.family_id
 
-    @property
-    def generic_status_16p(self):
-        return self.family.probant.genetic_status_16p\
-            if self.family.probant else None
-
-    @property
-    def svip_diagnosis_m1(self):
-        return self.family.probant.svip_diagnosis_m1\
-            if self.family.probant else None
+    def people_group_attribute(self, attribute):
+        person = self.family.get_person_with_role(attribute['role'])
+        return person.get_attr(attribute['source']) if person else None
 
 
 class FamilyAllele(SummaryAllele, FamilyDelegate):
