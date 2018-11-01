@@ -44,7 +44,8 @@ class Dataset(object):
         self.pedigree_selectors = pedigree_selectors
 
         if len(self.dataset_config.pedigreeSelectors) != 0:
-            self.legend = self.dataset_config.pedigreeSelectors[0]['domain']
+            self.legend = {ps['id']: ps['domain']
+                           for ps in self.dataset_config.pedigreeSelectors}
         else:
             self.legend = {}
 
@@ -68,7 +69,10 @@ class Dataset(object):
         return ['']
 
     def get_legend(self, *args, **kwargs):
-        return self.legend
+        if 'pedigreeSelector' not in kwargs:
+            return self.legend.values()[0] if self.legend else []
+        else:
+            return self.legend.get(kwargs['pedigreeSelector']['id'], [])
 
     @property
     def order(self):
