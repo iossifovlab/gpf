@@ -5,8 +5,10 @@ from pedigrees.pedigrees import Pedigree, PedigreeMember
 
 class PedigreeReader(object):
 
-    def read_file(self, file, columns_labels, header=None, delimiter='\t',
+    def read_file(self, file, columns_labels=None, header=None, delimiter='\t',
                   return_as_dict=False):
+        if columns_labels is None:
+            columns_labels = PedigreeReader.get_default_colum_labels()
         families = OrderedDict()
         with open(file) as csvfile:
             reader = csv.DictReader(csvfile, fieldnames=header,
@@ -30,3 +32,15 @@ class PedigreeReader(object):
         if return_as_dict:
             return families
         return list(families.values())
+
+    @staticmethod
+    def get_default_colum_labels():
+        return {
+            "family_id": "familyId",
+            "id": "personId",
+            "father": "dadId",
+            "mother": "momId",
+            "sex": "gender",
+            "effect": "status",
+            "layout": "layoutCoords"
+        }
