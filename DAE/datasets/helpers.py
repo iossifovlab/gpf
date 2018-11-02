@@ -74,6 +74,16 @@ def gene_effect_get_genes(gs):
     return ';'.join(genes)
 
 
+def get_people_group_attribute(v, attr):
+    attributes = v.people_group_attribute(attr)
+
+    attributes = list(filter(None.__ne__, attributes))
+    attributes_set = set(attributes)
+    people_group_attributes = list(attributes_set)
+
+    return ';'.join(people_group_attributes)
+
+
 def normalRefCopyNumber(location, gender):
     clnInd = location.find(":")
     chrome = location[0:clnInd]
@@ -201,7 +211,7 @@ def transform_variants_to_lists(
                 if attr['source'] in SPECIAL_ATTRS:
                     row_variant.append(SPECIAL_ATTRS[attr['source']](v))
                 else:
-                    row_variant.append(v.people_group_attribute(attr))
+                    row_variant.append(get_people_group_attribute(v, attr))
             except (AttributeError, KeyError) as e:
                 # print(attr, type(e), e)
                 row_variant.append('')
