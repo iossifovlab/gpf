@@ -245,7 +245,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def get_gene_sets(self, gene_sets_types={'f1': ['autism']}, **kwargs):
         gene_sets_types = self._filter_gene_sets_types(
             gene_sets_types,
-            kwargs.get('permitted_datasets'))
+            kwargs.get('permitted_datasets', None))
         gene_sets_types_desc = self._format_description(
             gene_sets_types,
             kwargs.get('include_datasets_desc', True))
@@ -257,7 +257,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         for gsn in self.gene_sets_names:
             gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
-            # print(gene_set_syms)
+            print("gene_set_syms", gene_set_syms)
             if gene_set_syms:
                 result.append({
                     'name': gsn,
