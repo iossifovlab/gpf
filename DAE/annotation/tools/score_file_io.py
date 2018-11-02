@@ -34,11 +34,11 @@ class ScoreFile(TabixReader):
 
         self.score_filename = score_filename
         self.config_filename = config_filename
+        self._load_config()
 
     def _setup(self):
         super(ScoreFile, self)._setup()
 
-        self._load_config()
         self.line_config = LineConfig(self.config.header)
 
         self.chr_name = self.config.columns.chr
@@ -74,6 +74,7 @@ class ScoreFile(TabixReader):
         self.config.columns.score = self.config.columns.score.split(',')
         self.score_names = self.config.columns.score
         assert all([sn in self.header for sn in self.score_names])
+        self.options.update(self.config)
 
     def _fetch(self, chrom, pos_begin, pos_end):
         raise NotImplementedError()
@@ -205,11 +206,16 @@ class LineBufferAdapter(object):
         if self.chrom == chrom and \
                 self.pos_end >= pos_end:
             return
-
+        if self.score_file.lines_iterator is None:
+            return
+        line = None
         for line in self.score_file.lines_iterator:
             line = LineAdapter(self.score_file, line)
             if line.pos_end >= pos_begin:
                 break
+
+        if not line:
+            return
 
         self.append(line)
 
@@ -246,7 +252,7 @@ class LineBufferAdapter(object):
 
 
 class IterativeAccess(ScoreFile):
-    LONG_JUMP_THRESHOLD = 5000
+    LONG_JUMP_THRESHOLD = 250
 
     def __init__(self, options, score_filename, score_config_filename=None):
         super(IterativeAccess, self).__init__(
@@ -270,6 +276,9 @@ class IterativeAccess(ScoreFile):
                 pos_begin < self.buffer.pos_begin or \
                 (pos_begin - self.buffer.pos_end) > self.LONG_JUMP_THRESHOLD:
             self._reset(chrom, pos_begin)
+
+        if self.lines_iterator is None:
+            return []
 
         self.buffer.purge(chrom, pos_begin, pos_end)
         self.buffer.fill(chrom, pos_begin, pos_end)

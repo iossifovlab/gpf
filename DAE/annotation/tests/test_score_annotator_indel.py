@@ -6,7 +6,7 @@ import pandas as pd
 from box import Box
 from collections import OrderedDict
 
-from .utils import relative_to_this_test_folder
+from .conftest import relative_to_this_test_folder
 
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.score_annotator import NPScoreAnnotator, \

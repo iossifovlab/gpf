@@ -28,6 +28,7 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         if self.config.options.x is not None:
             self.location = self.config.options.x
         else:
+            self.location = None
             assert self.chrom is not None
             assert self.pos is not None
 
@@ -53,25 +54,27 @@ class LiftOverAnnotator(VariantAnnotatorBase):
             pos = int(aline[self.pos])
 
         # positions = [int(p) - 1 for p in position.split('-')]
-
-        convert_position = self.lift_over.convert_coordinate(chrom, pos)
-        if len(convert_position) == 0:
+        liftover_pos = pos - 1
+        convert_coordinates = self.lift_over.convert_coordinate(
+            chrom, liftover_pos)
+        if len(convert_coordinates) == 0:
             print("position: chrom=", chrom, "; pos=", pos,
+                  "(0-pos=", liftover_pos, ")",
                   "can not be converted into target reference genome",
                   file=sys.stderr)
             new_c = ''
             new_p = ''
             new_x = ''
         else:
-            if len(convert_position) > 1:
+            if len(convert_coordinates) > 1:
                 print(
                     "position: chrom=", chrom, "; pos=", pos,
                     "has more than one corresponding position "
-                    "into target reference genome", convert_position,
+                    "into target reference genome", convert_coordinates,
                     file=sys.stderr)
 
-            new_c = convert_position[0][0]
-            new_p = convert_position[0][1]
+            new_c = convert_coordinates[0][0]
+            new_p = convert_coordinates[0][1] + 1
             new_x = '{}:{}'.format(new_c, new_p)
 
         if 'new_x' in self.columns_config:
