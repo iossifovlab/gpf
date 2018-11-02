@@ -54,6 +54,16 @@ class LayoutLoader(object):
         return layout
 
 
+def draw_family_pedigree(family, show_id=False):
+    layout_loader = LayoutLoader(family)
+    layout = layout_loader.load()
+    if isinstance(layout, str):
+        return layout + " in family " + family.family_id
+    else:
+        layout_drawer = OffsetLayoutDrawer(layout, 0, 0, show_id)
+        return layout_drawer.draw()
+
+
 def main():
     parser = get_argument_parser("Draw PDP.")
     parser.add_argument(
