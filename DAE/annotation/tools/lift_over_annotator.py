@@ -9,12 +9,13 @@ import sys
 import os
 from pyliftover import LiftOver
 from annotation.tools.annotator_base import VariantAnnotatorBase
+from annotation.tools.file_io import Schema
 
 
 class LiftOverAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config):
-        super(LiftOverAnnotator, self).__init__(config)
+    def __init__(self, config, schema):
+        super(LiftOverAnnotator, self).__init__(config, schema)
 
         assert self.config.options.chain_file
         assert os.path.exists(self.config.options.chain_file)
@@ -33,6 +34,14 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         self.columns_config = self.config.columns_config
         assert 'new_x' in self.columns_config or \
             ('new_c' in self.columns_config and 'new_p' in self.columns_config)
+
+        for key, value in self.columns_config.items():
+            if key == 'new_x' or key == 'new_c':
+                self.schema.columns[value] = \
+                    Schema.produce_type('str')
+            elif key == 'new_p':
+                self.schema.columns[value] = \
+                    Schema.produce_type('str')
 
     def do_annotate(self, aline, variant):
         if self.location:

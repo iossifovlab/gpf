@@ -14,16 +14,15 @@ class AnnotatorBase(object):
     `AnnotatorBase` is base class of all `Annotators` and `Preannotators`.
     """
 
-    def __init__(self, config):
+    def __init__(self, config, schema):
         assert isinstance(config, AnnotatorConfig)
 
         self.config = config
+        self.schema = schema
 
         self.mode = "overwrite"
         if self.config.options.mode == "replace":
             self.mode = "replace"
-
-        self.schema = Schema()
 
     def build_ouput_line(self, annotation_line):
         output_columns = self.config.output_columns
@@ -47,6 +46,8 @@ class AnnotatorBase(object):
         file_io_manager.header_write(self.config.output_columns)
 
         for line in file_io_manager.lines_read_iterator():
+            # TODO How will additional headers behave
+            # with column type support (and coercion)?
             if '#' in line[0]:
                 file_io_manager.line_write(line)
                 continue
@@ -66,8 +67,12 @@ class AnnotatorBase(object):
 
 class CopyAnnotator(AnnotatorBase):
 
-    def __init__(self, config):
-        super(CopyAnnotator, self).__init__(config)
+    def __init__(self, config, schema):
+        super(CopyAnnotator, self).__init__(config, schema)
+        for key, value in self.config.columns_config.items():
+            assert key in self.schema.columns
+            self.schema.columns[value] = \
+                self.schema.columns[key]
 
     def line_annotation(self, annotation_line, variant=None):
         data = {}
@@ -151,8 +156,8 @@ class VCFBuilder(VariantBuilder):
 
 class VariantAnnotatorBase(AnnotatorBase):
 
-    def __init__(self, config):
-        super(VariantAnnotatorBase, self).__init__(config)
+    def __init__(self, config, schema):
+        super(VariantAnnotatorBase, self).__init__(config, schema)
 
         assert isinstance(config, VariantAnnotatorConfig)
 
@@ -177,6 +182,14 @@ class VariantAnnotatorBase(AnnotatorBase):
                 'VCF:alt',
             ]
 
+        for vcol in self.config.virtual_columns:
+            if 'position' in vcol:
+                self.schema.columns[vcol] = \
+                    Schema.produce_type('int')
+            else:
+                self.schema.columns[vcol] = \
+                    Schema.produce_type('str')
+
     def line_annotation(self, aline):
         variant = self.variant_builder.build(aline)
         self.do_annotate(aline, variant)
@@ -187,8 +200,8 @@ class VariantAnnotatorBase(AnnotatorBase):
 
 class CompositeAnnotator(AnnotatorBase):
 
-    def __init__(self, config):
-        super(CompositeAnnotator, self).__init__(config)
+    def __init__(self, config, schema):
+        super(CompositeAnnotator, self).__init__(config, schema)
         self.annotators = []
 
     def add_annotator(self, annotator):
@@ -206,8 +219,8 @@ class CompositeAnnotator(AnnotatorBase):
 
 class CompositeVariantAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config):
-        super(CompositeVariantAnnotator, self).__init__(config)
+    def __init__(self, config, schema):
+        super(CompositeVariantAnnotator, self).__init__(config, schema)
         self.annotators = []
 
     def add_annotator(self, annotator):

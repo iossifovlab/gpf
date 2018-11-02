@@ -36,10 +36,10 @@ def dummy_assert(file_inp, *args):
     return True
 
 
-@pytest.fixture(autouse=True)
-def mock(mocker):
-    mocker.patch.object(file_io, 'open', dummy_open)
-    mocker.patch.object(file_io, 'assert_file_exists', dummy_assert)
+# @pytest.fixture(autouse=True)
+# def mock(mocker):
+#     mocker.patch.object(file_io, 'open', dummy_open)
+#     mocker.patch.object(file_io, 'assert_file_exists', dummy_assert)
 
 
 def get_opts(input_, output):
@@ -73,6 +73,21 @@ def expected_output():
         '1.3552\t64423.23423\t.,!@#$%^&*()_+-=[]{}|""/\\<>~`\t'
         'placeholder\tCAPITALLETTERS\t42\n'
         'placeholder\tcol3and4willbemissing\t\t\tplaceholder\t42\n')
+
+
+def test_column_coercion():
+    def recursive_coerce(data):
+        if type(data) is list:
+            return [recursive_coerce(elem) for elem in data]
+        else:
+            return float(data)
+
+    col1 = [1, 2.5, 3, 'a', -5, 6, 'b']
+    col4 = [['1.5', '4.3'], ['-3.4', '6.4'], ['5.0', '4.2']]
+    assert file_io.ParquetWriter.coerce_column('col1', col1, str) \
+        == list(map(str, col1))
+    assert file_io.ParquetWriter.coerce_column('col4', col4, float) \
+        == list(map(recursive_coerce, col4))
 
 
 # @pytest.fixture

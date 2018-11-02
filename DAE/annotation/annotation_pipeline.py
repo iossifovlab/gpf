@@ -113,19 +113,19 @@ class PipelineConfig(VariantAnnotatorConfig):
 
 class PipelineAnnotator(CompositeVariantAnnotator):
 
-    def __init__(self, config):
-        super(PipelineAnnotator, self).__init__(config)
-        self.schema = Schema()
+    def __init__(self, config, schema):
+        super(PipelineAnnotator, self).__init__(config, schema)
 
     @staticmethod
-    def build(options, config_file, defaults={}):
+    def build(options, config_file, variants_schema, defaults={}):
         pipeline_config = PipelineConfig.build(options, config_file, defaults)
         assert pipeline_config.pipeline_sections
+        assert variants_schema.columns
 
-        pipeline = PipelineAnnotator(pipeline_config)
+        pipeline = PipelineAnnotator(pipeline_config, variants_schema)
         for section_config in pipeline_config.pipeline_sections:
             annotator = VariantAnnotatorConfig.instantiate(
-                section_config
+                section_config, pipeline.schema
             )
             pipeline.add_annotator(annotator)
             output_columns = [
@@ -137,13 +137,21 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
     def add_annotator(self, annotator):
         assert isinstance(annotator, AnnotatorBase)
+        self.schema = Schema.merge_schemas(self.schema,
+                                           annotator.schema)
         self.annotators.append(annotator)
-        self.schema.merge(annotator.schema)
 
     def line_annotation(self, aline):
         self.variant_builder.build(aline)
         for annotator in self.annotators:
             annotator.line_annotation(aline)
+
+    def get_output_schema(self):
+        output_schema = self.schema
+        if self.config.virtual_columns:
+            for vcol in self.config.virtual_columns:
+                del(output_schema.columns[vcol])
+        return output_schema
 
 
 def pipeline_main(argv):
@@ -161,29 +169,27 @@ def pipeline_main(argv):
     assert options.config is not None
     assert os.path.exists(options.config)
     config_filename = options.config
-
+        
     options = Box({
         k: v for k, v in options._get_kwargs()
     }, default_box=True, default_box_attr=None)
 
-    pipeline = PipelineAnnotator.build(options, config_filename)
-    assert pipeline is not None
-
     # File IO format specification
     reader_type = IOType.TSV
     writer_type = IOType.TSV
-    if hasattr(options, 'read_parquet'):
-        if options.read_parquet:
-            reader_type = IOType.Parquet
-    if hasattr(options, 'write_parquet'):
-        if options.write_parquet:
-            writer_type = IOType.Parquet
+    if options.read_parquet:
+        reader_type = IOType.Parquet
+    if options.write_parquet:
+        writer_type = IOType.Parquet
 
     start = time.time()
 
     with IOManager(options, reader_type, writer_type) as io_manager:
-        pipeline.schema.merge(io_manager.reader.schema, front=False)
-        io_manager.writer.schema = pipeline.schema
+        pipeline = PipelineAnnotator.build(options, config_filename,
+                                           io_manager.reader.schema)
+        assert pipeline is not None
+
+        io_manager.writer.schema = pipeline.get_output_schema()# pipeline.schema
         pipeline.annotate_file(io_manager)
 
     print("# PROCESSING DETAILS:", file=sys.stderr)

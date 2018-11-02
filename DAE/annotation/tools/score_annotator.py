@@ -18,10 +18,9 @@ from annotation.tools.score_file_io import DirectAccess, \
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
-    def __init__(self, config):
-        super(VariantScoreAnnotatorBase, self).__init__(config)
+    def __init__(self, config, schema):
+        super(VariantScoreAnnotatorBase, self).__init__(config, schema)
 
-        self.schema = None
         self._init_score_file()
         self._init_schema()
 
@@ -30,7 +29,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
         assert all([
             sn in self.score_file.score_names for sn in self.score_names]), \
-            (self.score_names, self.score_file.score_names, 
+            (self.score_names, self.score_file.score_names,
              self.score_file.filename)
 
     def _init_score_file(self):
@@ -54,10 +53,9 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         self.score_file._setup()
 
     def _init_schema(self):
-        self.schema = self.score_file.schema
-        self.schema.isolate_columns(self.score_file.config.columns.score)
         for native, output in self.config.columns_config.items():
-            self.schema.rename_column(native, output)
+            self.schema.columns[output] = \
+                    self.score_file.schema.columns[native]
 
     def _scores_not_found(self, aline):
         values = {
@@ -92,8 +90,8 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
-    def __init__(self, config):
-        super(PositionScoreAnnotator, self).__init__(config)
+    def __init__(self, config, schema):
+        super(PositionScoreAnnotator, self).__init__(config, schema)
 
     def do_annotate(self, aline, variant):
         assert variant is not None
@@ -117,8 +115,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
-    def __init__(self, config):
-        super(NPScoreAnnotator, self).__init__(config)
+    def __init__(self, config, schema):
+        super(NPScoreAnnotator, self).__init__(config, schema)
         assert self.score_file.ref_name is not None
         assert self.score_file.alt_name is not None
         self.ref_name = self.score_file.ref_name
@@ -194,8 +192,8 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
 class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
 
-    def __init__(self, config):
-        super(PositionMultiScoreAnnotator, self).__init__(config)
+    def __init__(self, config, schema):
+        super(PositionMultiScoreAnnotator, self).__init__(config, schema)
         assert self.config.options.scores_directory is not None
 
         for score_name in self.config.columns_config.keys():

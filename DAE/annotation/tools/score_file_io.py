@@ -22,7 +22,8 @@ def conf_to_dict(path):
 
     conf_settings = dict(conf_parser.items('general'))
     conf_settings['columns'] = dict(conf_parser.items('columns'))
-    conf_settings['schema'] = Schema(dict(conf_parser.items('schema')))
+    conf_settings['schema'] = \
+        Schema.from_dict(dict(conf_parser.items('schema')))
     return conf_settings
 
 
@@ -145,7 +146,7 @@ class NoLine(object):
         return self.score_file.no_score_value
 
 
-class LineBufferAdapter(object):            
+class LineBufferAdapter(object):
 
     def __init__(self, score_file):
         self.score_file = score_file
