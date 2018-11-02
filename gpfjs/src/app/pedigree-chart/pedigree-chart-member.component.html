@@ -1,22 +1,22 @@
 <svg:rect *ngIf="pedigreeData.gender=='M' || pedigreeData.gender=='U'"
-     [attr.x]=0
-     [attr.y]=0
-     [attr.width]=21
-     [attr.height]=21
+     x=0
+     y=0
+     width=21
+     height=21
+     stroke-width="1"
+     fill-opacity="1"
      [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
-     [attr.stroke-width]="1"
-     [attr.fill-opacity]="1"
      [attr.fill]="pedigreeData.color"
      [attr.transform]="pedigreeData.gender=='U' ? 'rotate(45 10.5 10.5)' : ''"
 />
 
 <svg:circle *ngIf="pedigreeData.gender=='F'"
-     [attr.cx]=10.5
-     [attr.cy]=10.5
-     [attr.r]=10.5
+     cx=10.5
+     cy=10.5
+     r=10.5
+     stroke-width="1"
+     fill-opacity="1"
      [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
-     [attr.stroke-width]="1"
-     [attr.fill-opacity]="1"
      [attr.fill]="pedigreeData.color"
 />
 
