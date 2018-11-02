@@ -44,7 +44,8 @@ class Dataset(object):
         self.pedigree_selectors = pedigree_selectors
 
         if len(self.dataset_config.pedigreeSelectors) != 0:
-            self.legend = self.dataset_config.pedigreeSelectors[0]['domain']
+            self.legend = {ps['id']: ps['domain'] + [ps['default']]
+                           for ps in self.dataset_config.pedigreeSelectors}
         else:
             self.legend = {}
 
@@ -67,8 +68,21 @@ class Dataset(object):
     def get_column_labels(self):
         return ['']
 
+    def _get_legend_default_values(self):
+        return [{
+            'color': '#E0E0E0',
+            'id': 'missing-person',
+            'name': 'missing-person'
+        }]
+
     def get_legend(self, *args, **kwargs):
-        return self.legend
+        if 'pedigreeSelector' not in kwargs:
+            legend = self.legend.values()[0] if self.legend else []
+        else:
+            legend = self.legend.get(kwargs['pedigreeSelector']['id'], [])
+        legend += self._get_legend_default_values()
+
+        return legend
 
     @property
     def order(self):
