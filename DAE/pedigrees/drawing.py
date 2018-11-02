@@ -118,10 +118,10 @@ class OffsetLayoutDrawer(object):
     def _draw_members(self, axes):
         for level in self._layout.positions:
             for individual in level:
-                if individual.individual.member.effect == "1":
-                    individual_color = "white"
-                elif individual.individual.member.effect == "-":
+                if individual.individual.member.generated:
                     individual_color = "grey"
+                elif individual.individual.member.effect == "1":
+                    individual_color = "white"
                 else:
                     individual_color = "red"
                 if Sex.from_name_or_value(

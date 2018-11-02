@@ -23,6 +23,9 @@ class PedigreeReader(object):
                     "effect": row[columns_labels["effect"]],
                     "layout": row.get(columns_labels["layout"], None)
                 }
+                if 'generated' in columns_labels:
+                    generated = row.get(columns_labels["generated"], False)
+                    kwargs["generated"] = True if generated else False
                 member = PedigreeMember(**kwargs)
                 if member.family_id not in families:
                     families[member.family_id] = Pedigree([member])
