@@ -3,9 +3,9 @@
      y=0
      width=21
      height=21
-     stroke="black"
      stroke-width="1"
      fill-opacity="1"
+     [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
      [attr.fill]="pedigreeData.color"
      [attr.transform]="pedigreeData.gender=='U' ? 'rotate(45 10.5 10.5)' : ''"
 />
@@ -14,9 +14,9 @@
      cx=10.5
      cy=10.5
      r=10.5
-     stroke="black"
      stroke-width="1"
      fill-opacity="1"
+     [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
      [attr.fill]="pedigreeData.color"
 />
 

@@ -18,7 +18,8 @@ export class PedigreeData {
       arr[5],
       PedigreeData.parsePosition(arr[6]),
       arr[7],
-      arr[8]
+      arr[8],
+      arr[9]
     );
   }
 
@@ -30,6 +31,7 @@ export class PedigreeData {
     readonly gender: string,
     readonly color: string,
     readonly position: [number, number],
+    readonly generated: boolean,
     readonly label: string,
     readonly smallLabel: string
   ) { }
