@@ -151,8 +151,8 @@ STANDARD_ATTRS = {
 }
 
 
-def get_standard_attr(property, v):
-    return getattr(v.alt_alleles[0], property)
+def get_standard_attr(property, v, aa):
+    return getattr(v.alt_alleles[aa], property)
 
 
 STANDARD_ATTRS_LAMBDAS = {
@@ -161,15 +161,15 @@ STANDARD_ATTRS_LAMBDAS = {
 }
 
 SPECIAL_ATTRS_FORMAT = {
-    "bestSt": lambda v: mat2str(v.bestSt),
-    "counts": lambda v: mat2str(v.alt_alleles[0]["counts"]),
-    "genotype": lambda v: mat2str(v.alt_alleles[0].genotype),
-    "effects": lambda v: ge2str(v.alt_alleles[0].effects),
-    "requestedGeneEffects": lambda v:
-        ge2str(v.alt_alleles[0]["requestedGeneEffects"]),
-    "genes": lambda v: gene_effect_get_genes(v.alt_alleles[0].effects),
+    "bestSt": lambda v, aa: mat2str(v.bestSt),
+    "counts": lambda v, aa: mat2str(v.alt_alleles[aa]["counts"]),
+    "genotype": lambda v, aa: mat2str(v.alt_alleles[aa].genotype),
+    "effects": lambda v, aa: ge2str(v.alt_alleles[aa].effects),
+    "requestedGeneEffects": lambda v, aa:
+        ge2str(v.alt_alleles[aa]["requestedGeneEffects"]),
+    "genes": lambda v, aa: gene_effect_get_genes(v.alt_alleles[aa].effects),
     "worstEffect":
-        lambda v: gene_effect_get_worst_effect(v.alt_alleles[0].effects),
+        lambda v, aa: gene_effect_get_worst_effect(v.alt_alleles[aa].effects),
 }
 
 
@@ -183,29 +183,32 @@ def transform_variants_to_lists(
         variants, genotype_attrs, pedigree_attrs, pedigree_selectors,
         selected_pedigree_selector):
     for v in variants:
-        row_variant = []
-        for attr in genotype_attrs:
-            try:
-                if attr in SPECIAL_ATTRS:
-                    row_variant.append(SPECIAL_ATTRS[attr](v))
-                elif attr == 'pedigree':
-                    row_variant.append(generate_pedigree(
-                        v, pedigree_selectors, selected_pedigree_selector))
-                else:
-                    row_variant.append(str(getattr(v, attr, '')))
-            except (AttributeError, KeyError) as e:
-                # print(attr, type(e), e)
-                row_variant.append('')
-        for attr in pedigree_attrs:
-            try:
-                if attr['source'] in SPECIAL_ATTRS:
-                    row_variant.append(SPECIAL_ATTRS[attr['source']](v))
-                else:
-                    row_variant.append(v.people_group_attribute(attr))
-            except (AttributeError, KeyError) as e:
-                # print(attr, type(e), e)
-                row_variant.append('')
-        yield row_variant
+        alt_alleles_count = len(v.alt_alleles)
+        for alt_allele in range(alt_alleles_count):
+            row_variant = []
+            for attr in genotype_attrs:
+                try:
+                    if attr in SPECIAL_ATTRS:
+                        row_variant.append(SPECIAL_ATTRS[attr](v, alt_allele))
+                    elif attr == 'pedigree':
+                        row_variant.append(generate_pedigree(
+                            v, pedigree_selectors, selected_pedigree_selector))
+                    else:
+                        row_variant.append(str(getattr(v, attr, '')))
+                except (AttributeError, KeyError) as e:
+                    # print(attr, type(e), e)
+                    row_variant.append('')
+            for attr in pedigree_attrs:
+                try:
+                    if attr['source'] in SPECIAL_ATTRS:
+                        row_variant.\
+                            append(SPECIAL_ATTRS[attr['source']](v, aa))
+                    else:
+                        row_variant.append(v.people_group_attribute(attr))
+                except (AttributeError, KeyError) as e:
+                    # print(attr, type(e), e)
+                    row_variant.append('')
+            yield row_variant
 
 
 def get_person_color(member, pedigree_selectors, selected_pedigree_selector):
