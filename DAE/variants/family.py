@@ -87,11 +87,9 @@ class Family(object):
             index.append(self.persons[pid]['index'])
         return index
 
-    def get_person_with_role(self, role):
-        persons_with_role =\
-            list(filter(lambda m: m.role == Role.from_name(role),
-                        self.members_in_order))
-        return persons_with_role[0] if persons_with_role else None
+    def get_people_with_role(self, role):
+        return list(filter(
+            lambda m: m.role == Role.from_name(role), self.members_in_order))
 
     @property
     def members_ids(self):
