@@ -105,6 +105,6 @@ def test_pipeline_with_liftover(
 
         pipeline.line_annotation(aline)
         print(aline)
-        assert int(aline['RESULT_phastCons100way']) == -100
-        assert int(aline['RESULT_RawScore']) == -100
-        assert int(aline['RESULT_PHRED']) == -100
+        assert aline['RESULT_phastCons100way'] is None
+        assert aline['RESULT_RawScore'] is None
+        assert aline['RESULT_PHRED'] is None

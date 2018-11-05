@@ -348,6 +348,7 @@ class TabixReader(TSVFormat):
 
 
 class TSVWriter(TSVFormat):
+    NA_VALUE = ''
 
     def __init__(self, options, filename=None):
         super(TSVWriter, self).__init__(options, 'w')
@@ -372,7 +373,10 @@ class TSVWriter(TSVFormat):
 
     def line_write(self, line):
         self.outfile.write('\t'.join(
-            [to_str(column) for column in line]))
+            [
+                to_str(val) if val is not None else self.NA_VALUE
+                for val in line
+            ]))
         self.outfile.write('\n')
 
     def line_read(self):
