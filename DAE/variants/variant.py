@@ -213,6 +213,9 @@ class SummaryAllele(VariantBase):
             self.attributes = {}
             self.update_attributes(attributes)
 
+        self.update_attributes({'variant_type': self.variant_type.value
+                                if self.variant_type else None})
+
     @property
     def cshl_variant(self):
         if self.details is not None:
