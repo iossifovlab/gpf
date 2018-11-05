@@ -257,7 +257,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         for gsn in self.gene_sets_names:
             gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
-            print("gene_set_syms", gene_set_syms)
+            # print("gene_set_syms", gene_set_syms)
             if gene_set_syms:
                 result.append({
                     'name': gsn,
@@ -312,28 +312,38 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         else:
             recurrency_criteria = None
 
+        # print()
         genes_families = {}
         for dataset_id, pedigree_selector_values in gene_sets_types.items():
             for pedigree_selector_value in pedigree_selector_values:
+                # print("criterias", criterias)
+                # print("recurrency_criterias", recurrency_criterias)
+                # print("standard_criterias", standard_criterias, dataset_id, pedigree_selector_value)
                 ds_pedigree_genes_families = self._get_gene_families(
                     self.cache,
                     {dataset_id, pedigree_selector_value} | standard_criterias)
                 for gene, families in ds_pedigree_genes_families.items():
                     genes_families.setdefault(gene, set()).update(families)
 
+        matching_genes = genes_families
         if recurrency_criteria:
             if recurrency_criteria['to'] < 0:
                 def filter_lambda(item): return len(
-                    item[1]) >= recurrency_criteria['from']
+                    item) >= recurrency_criteria['from']
             else:
                 def filter_lambda(item):
-                    return len(item[1]) >= recurrency_criteria['from'] \
-                        and len(item[1]) < recurrency_criteria['to']
+                    return recurrency_criteria['from'] < len(item) \
+                           < recurrency_criteria['to']
 
-            matching_genes = map(lambda item: item[0],
-                                 filter(filter_lambda, genes_families.items()))
-        else:
-            matching_genes = genes_families.keys()
+            matching_genes = {
+                k: v
+                for k, v in genes_families.items()
+                if filter_lambda(v)
+            }
+
+        matching_genes = matching_genes.keys()
+        # print("matching_genes", matching_genes)
+
         return set(matching_genes)
 
     @classmethod

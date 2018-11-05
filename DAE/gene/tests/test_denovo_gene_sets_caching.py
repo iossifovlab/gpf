@@ -37,6 +37,8 @@ def test_f1_autism_get_gene_sets(gscs):
 
     assert gene_sets
 
+    print("gene_sets", gene_sets)
+
     assert name_in_gene_sets(gene_sets, 'Synonymous')
     assert name_in_gene_sets(gene_sets, 'Synonymous.WE')
 
@@ -48,5 +50,9 @@ def test_f1_unaffected_get_gene_sets(gscs):
 
     assert gene_sets
 
+    print("gene_sets", gene_sets)
+
     assert name_in_gene_sets(gene_sets, 'Missense')
     assert name_in_gene_sets(gene_sets, 'Missense.Male')
+
+    assert False
