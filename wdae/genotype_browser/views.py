@@ -98,15 +98,19 @@ class QueryPreviewView(QueryBaseView):
             if dataset_id == MetaDataset.ID:
                 dataset_ids = self.dataset_facade.get_all_dataset_ids()
                 dataset_ids.remove(MetaDataset.ID)
-                data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids if IsDatasetAllowed.user_has_permission(
-                        request.user, dataset_id)]
+                data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids
+                                       if IsDatasetAllowed.user_has_permission(
+                                            request.user, dataset_id)]
 
             dataset = self.get_dataset(dataset_id)
             # LOGGER.info("dataset " + str(dataset))
 
             response = get_variants_web_preview(
                     dataset.get_variants(safe=True, **data),
-                    dataset.preview_columns
+                    dataset.pedigree_selectors,
+                    data.get('pedigreeSelector', {}),
+                    dataset.preview_columns,
+                    dataset.pedigree_columns
             )
 
             # pprint.pprint(response)

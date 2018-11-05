@@ -7,12 +7,28 @@ class Dataset(object):
     def __init__(
             self, name, study_group, dataset_config):
         super(Dataset, self).__init__()
-        genotypeBrowser = dataset_config.genotypeBrowser
+        genotype_browser = dataset_config.genotypeBrowser
+
         preview_columns = []
         download_columns = []
-        if genotypeBrowser:
-            preview_columns = genotypeBrowser['previewColumns']
-            download_columns = genotypeBrowser['downloadColumns']
+        pedigree_columns = {}
+        pheno_columns = {}
+
+        pedigree_selectors = []
+
+        if genotype_browser:
+            preview_columns = genotype_browser['previewColumns']
+            download_columns = genotype_browser['downloadColumns']
+            if genotype_browser['pedigreeColumns']:
+                pedigree_columns =\
+                    [s for pc in genotype_browser['pedigreeColumns']
+                     for s in pc['slots']]
+            if genotype_browser['phenoColumns']:
+                pheno_columns = [s for pc in genotype_browser['phenoColumns']
+                                 for s in pc['slots']]
+
+        if dataset_config.pedigreeSelectors:
+            pedigree_selectors = dataset_config.pedigreeSelectors
 
         self.name = name
         self.study_group = study_group
@@ -22,9 +38,14 @@ class Dataset(object):
         self.name = name
         self.preview_columns = preview_columns
         self.download_columns = download_columns
+        self.pedigree_columns = pedigree_columns
+        self.pheno_columns = pheno_columns
+
+        self.pedigree_selectors = pedigree_selectors
 
         if len(self.dataset_config.pedigreeSelectors) != 0:
-            self.legend = self.dataset_config.pedigreeSelectors[0]['domain']
+            self.legend = {ps['id']: ps['domain'] + [ps['default']]
+                           for ps in self.dataset_config.pedigreeSelectors}
         else:
             self.legend = {}
 
@@ -47,8 +68,21 @@ class Dataset(object):
     def get_column_labels(self):
         return ['']
 
+    def _get_legend_default_values(self):
+        return [{
+            'color': '#E0E0E0',
+            'id': 'missing-person',
+            'name': 'missing-person'
+        }]
+
     def get_legend(self, *args, **kwargs):
-        return self.legend
+        if 'pedigreeSelector' not in kwargs:
+            legend = self.legend.values()[0] if self.legend else []
+        else:
+            legend = self.legend.get(kwargs['pedigreeSelector']['id'], [])
+        legend += self._get_legend_default_values()
+
+        return legend
 
     @property
     def order(self):

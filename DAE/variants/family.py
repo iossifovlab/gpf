@@ -87,6 +87,10 @@ class Family(object):
             index.append(self.persons[pid]['index'])
         return index
 
+    def get_people_with_role(self, role):
+        return list(filter(
+            lambda m: m.role == Role.from_name(role), self.members_in_order))
+
     @property
     def members_ids(self):
         return self.ped_df['personId'].values
@@ -182,7 +186,7 @@ class FamiliesBase(object):
                 'sex': lambda s: Sex.from_value(s),
                 'gender': lambda s: Sex.from_value(s),
                 'layout': lambda lc: lc.split(':')[-1],
-                'generated': lambda g: True if g == 1.0 else False,
+                'generated': lambda g: True if g == '1.0' else False,
             },
             dtype={
                 'familyId': str,

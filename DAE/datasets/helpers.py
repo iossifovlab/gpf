@@ -74,6 +74,16 @@ def gene_effect_get_genes(gs):
     return ';'.join(genes)
 
 
+def get_people_group_attribute(v, attr):
+    attributes = v.people_group_attribute(attr)
+
+    attributes = list(filter(None.__ne__, attributes))
+    attributes_set = set(attributes)
+    people_group_attributes = list(attributes_set)
+
+    return ';'.join(people_group_attributes)
+
+
 def normalRefCopyNumber(location, gender):
     clnInd = location.find(":")
     chrome = location[0:clnInd]
@@ -151,8 +161,8 @@ STANDARD_ATTRS = {
 }
 
 
-def get_standard_attr(property, v):
-    return getattr(v.alt_alleles[0], property)
+def get_standard_attr(property, v, aa):
+    return getattr(v.alt_alleles[aa], property)
 
 
 STANDARD_ATTRS_LAMBDAS = {
@@ -161,15 +171,15 @@ STANDARD_ATTRS_LAMBDAS = {
 }
 
 SPECIAL_ATTRS_FORMAT = {
-    "bestSt": lambda v: mat2str(v.bestSt),
-    "counts": lambda v: mat2str(v.alt_alleles[0]["counts"]),
-    "genotype": lambda v: mat2str(v.alt_alleles[0].genotype),
-    "pedigree": lambda v: generate_pedigree(v),
-    "effects": lambda v: ge2str(v.alt_alleles[0].effects),
-    "requestedGeneEffects": lambda v:
-        ge2str(v.alt_alleles[0]["requestedGeneEffects"]),
-    "genes": lambda v: gene_effect_get_genes(v.alt_alleles[0].effects),
-    "worstEffect": lambda v: gene_effect_get_worst_effect(v.alt_alleles[0].effects)
+    "bestSt": lambda v, aa: mat2str(v.bestSt),
+    "counts": lambda v, aa: mat2str(v.alt_alleles[aa]["counts"]),
+    "genotype": lambda v, aa: mat2str(v.alt_alleles[aa].genotype),
+    "effects": lambda v, aa: ge2str(v.alt_alleles[aa].effects),
+    "requestedGeneEffects": lambda v, aa:
+        ge2str(v.alt_alleles[aa]["requestedGeneEffects"]),
+    "genes": lambda v, aa: gene_effect_get_genes(v.alt_alleles[aa].effects),
+    "worstEffect":
+        lambda v, aa: gene_effect_get_worst_effect(v.alt_alleles[aa].effects),
 }
 
 
@@ -179,22 +189,56 @@ SPECIAL_ATTRS = merge_dicts(
 )
 
 
-def transform_variants_to_lists(variants, attrs):
+def transform_variants_to_lists(
+        variants, genotype_attrs, pedigree_attrs, pedigree_selectors,
+        selected_pedigree_selector):
     for v in variants:
-        row_variant = []
-        for attr in attrs:
-            try:
-                if attr in SPECIAL_ATTRS:
-                    row_variant.append(SPECIAL_ATTRS[attr](v))
-                else:
-                    row_variant.append(str(getattr(v, attr, '')))
-            except (AttributeError, KeyError) as e:
-                # print(attr, type(e), e)
-                row_variant.append('')
-        yield row_variant
+        alt_alleles_count = len(v.alt_alleles)
+        for alt_allele in range(alt_alleles_count):
+            row_variant = []
+            for attr in genotype_attrs:
+                try:
+                    if attr in SPECIAL_ATTRS:
+                        row_variant.append(SPECIAL_ATTRS[attr](v, alt_allele))
+                    elif attr == 'pedigree':
+                        row_variant.append(generate_pedigree(
+                            v, pedigree_selectors, selected_pedigree_selector))
+                    else:
+                        row_variant.append(str(getattr(v, attr, '')))
+                except (AttributeError, KeyError) as e:
+                    # print(attr, type(e), e)
+                    row_variant.append('')
+            for attr in pedigree_attrs:
+                try:
+                    if attr['source'] in SPECIAL_ATTRS:
+                        row_variant.\
+                            append(SPECIAL_ATTRS[attr['source']](v, aa))
+                    else:
+                        row_variant.append(get_people_group_attribute(v, attr))
+                except (AttributeError, KeyError) as e:
+                    # print(attr, type(e), e)
+                    row_variant.append('')
+            yield row_variant
 
 
-def generate_pedigree(variant):
+def get_person_color(member, pedigree_selectors, selected_pedigree_selector):
+    pedigree_selector_id = selected_pedigree_selector.get('id', None)
+    selected_pedigree_selectors = list(filter(
+        lambda ps: ps.id == pedigree_selector_id, pedigree_selectors))[0]
+    if member.generated:
+        return '#E0E0E0'
+    else:
+        people_group_attribute =\
+            member.get_attr(selected_pedigree_selectors['source'])
+        domain = list(filter(lambda d: d['name'] == people_group_attribute,
+                             selected_pedigree_selectors['domain']))
+        if domain and people_group_attribute:
+            return domain[0]['color']
+        else:
+            return selected_pedigree_selectors['default']['color']
+
+
+def generate_pedigree(variant, pedigree_selectors, selected_pedigree_selector):
     result = []
     for index, member in enumerate(variant.members_in_order):
         # FIXME: add missing denovo parent parameter to variant_count_v3 call
@@ -204,9 +248,10 @@ def generate_pedigree(variant):
             member.mom if member.has_mom() else '',
             member.dad if member.has_dad() else '',
             member.sex.short(),
-            '#D3D3D3' if member.generated else '#ffffff'
-            if member.status == Status.unaffected.value else '#e35252',
-            member.layout_position
+            get_person_color(
+                member, pedigree_selectors, selected_pedigree_selector),
+            member.layout_position,
+            member.generated
             ] + variant_count_v3(
                 variant.best_st, index, variant.location, member.sex.short())
         )
@@ -215,9 +260,12 @@ def generate_pedigree(variant):
 
 
 def get_variants_web_preview(
-        variants, attrs, max_variants_count=1000):
+        variants, pedigree_selectors, selected_pedigree_selector,
+        genotype_attrs, pedigree_attrs, max_variants_count=1000):
     VARIANTS_HARD_MAX = 2000
-    rows = transform_variants_to_lists(variants, attrs)
+    rows = transform_variants_to_lists(
+        variants, genotype_attrs, pedigree_attrs, pedigree_selectors,
+        selected_pedigree_selector)
     count = min(max_variants_count, VARIANTS_HARD_MAX)
 
     limited_rows = itertools.islice(rows, count)
@@ -229,7 +277,7 @@ def get_variants_web_preview(
 
     return {
         'count': count,
-        'cols': attrs,
+        'cols': genotype_attrs + [pa['source'] for pa in pedigree_attrs],
         'rows': list(limited_rows)
     }
 

@@ -52,6 +52,10 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
                 self.config.options.scores_config_file)
         self.score_file._setup()
 
+        self.no_score_value = self.score_file.config.noScoreValue
+        if self.no_score_value.lower() in set(['na', 'none']):
+            self.no_score_value = None
+
     def _init_schema(self):
         for native, output in self.config.columns_config.items():
             self.schema.columns[output] = \
@@ -60,7 +64,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
     def _scores_not_found(self, aline):
         values = {
             self.config.columns_config[score_name]:
-            self.score_file.config.noScoreValue
+            self.no_score_value
             for score_name in self.score_names}
         aline.update(values)
 
@@ -94,7 +98,9 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         super(PositionScoreAnnotator, self).__init__(config, schema)
 
     def do_annotate(self, aline, variant):
-        assert variant is not None
+        if variant is None:
+            self._scores_not_found(aline)
+            return
 
         scores = self._fetch_scores(variant)
 
@@ -165,7 +171,9 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         return res
 
     def do_annotate(self, aline, variant):
-        assert variant is not None
+        if variant is None:
+            self._scores_not_found(aline)
+            return
 
         scores = self._fetch_scores(variant)
 
