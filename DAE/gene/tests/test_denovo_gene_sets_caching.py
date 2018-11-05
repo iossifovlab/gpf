@@ -56,6 +56,18 @@ def test_f1_unaffected_get_gene_sets(gscs):
     assert name_in_gene_sets(gene_sets, 'Missense.Male')
 
 
+def test_f1_single_get_gene_sets(gscs):
+    denovo = gscs.get_gene_sets_collection('denovo')
+
+    gene_sets = denovo.get_gene_sets(gene_sets_types={'f1_group': ['unaffected']})
+
+    assert gene_sets
+
+    print("gene_sets", gene_sets)
+
+    assert name_in_gene_sets(gene_sets, 'Missense.Single')
+
+
 def test_synonymous_recurrency_get_gene_sets(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
 

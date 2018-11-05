@@ -252,8 +252,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         result = []
 
         # print()
-        from pprint import pprint
-        pprint(self.cache)
+        # from pprint import pprint
+        # pprint(self.cache)
 
         for gsn in self.gene_sets_names:
             gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
@@ -325,14 +325,16 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 for gene, families in ds_pedigree_genes_families.items():
                     genes_families.setdefault(gene, set()).update(families)
 
+        # print("genes_families", genes_families)
         matching_genes = genes_families
         if recurrency_criteria:
+            # print("recurrency_criteria", recurrency_criteria)
             if recurrency_criteria['to'] < 0:
                 def filter_lambda(item): return len(
                     item) >= recurrency_criteria['from']
             else:
                 def filter_lambda(item):
-                    return recurrency_criteria['from'] < len(item) \
+                    return recurrency_criteria['from'] <= len(item) \
                            < recurrency_criteria['to']
 
             matching_genes = {
