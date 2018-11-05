@@ -30,13 +30,13 @@ class EffectAnnotator(VariantAnnotatorBase):
 
         if self.effect_type_column:
             self.schema.columns[self.effect_type_column] = \
-                    Schema.produce_type('str')
+                    Schema.produce_type('list(str)')
         if self.effect_gene_column:
             self.schema.columns[self.effect_gene_column] = \
-                    Schema.produce_type('str')
+                    Schema.produce_type('list(str)')
         if self.effect_details_column:
             self.schema.columns[self.effect_details_column] = \
-                    Schema.produce_type('str')
+                    Schema.produce_type('list(str)')
 
     def _init_variant_annotation(self):
         genome = GenomeAccess.openRef(self.config.options.Graw)
