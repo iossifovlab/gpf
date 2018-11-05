@@ -247,7 +247,7 @@ class LineBufferAdapter(object):
 
 
 class IterativeAccess(ScoreFile):
-    LONG_JUMP_THRESHOLD = 250
+    LONG_JUMP_THRESHOLD = 100000
 
     def __init__(self, options, score_filename, score_config_filename=None):
         super(IterativeAccess, self).__init__(
