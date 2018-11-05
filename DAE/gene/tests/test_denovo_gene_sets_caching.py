@@ -55,4 +55,54 @@ def test_f1_unaffected_get_gene_sets(gscs):
     assert name_in_gene_sets(gene_sets, 'Missense')
     assert name_in_gene_sets(gene_sets, 'Missense.Male')
 
-    assert False
+
+def test_synonymous_recurrency_get_gene_sets(gscs):
+    denovo = gscs.get_gene_sets_collection('denovo')
+
+    gene_sets = denovo.get_gene_sets(gene_sets_types={'f2_group': ['autism']})
+
+    assert gene_sets
+
+    print("gene_sets", gene_sets)
+
+    assert name_in_gene_sets(gene_sets, 'Synonymous.WE.Recurrent')
+    assert not name_in_gene_sets(gene_sets, 'Synonymous.WE.Triple')
+
+
+def test_missense_recurrency_get_gene_sets(gscs):
+    denovo = gscs.get_gene_sets_collection('denovo')
+
+    gene_sets = denovo.get_gene_sets(gene_sets_types={'f2_group': ['unaffected']})
+
+    assert gene_sets
+
+    print("gene_sets", gene_sets)
+
+    assert name_in_gene_sets(gene_sets, 'Missense.Recurrent')
+    assert not name_in_gene_sets(gene_sets, 'Missense.Triple')
+
+
+def test_synonymous_triple_get_gene_sets(gscs):
+    denovo = gscs.get_gene_sets_collection('denovo')
+
+    gene_sets = denovo.get_gene_sets(gene_sets_types={'f3_group': ['autism']})
+
+    assert gene_sets
+
+    print("gene_sets", gene_sets)
+
+    assert name_in_gene_sets(gene_sets, 'Synonymous.WE.Recurrent')
+    assert name_in_gene_sets(gene_sets, 'Synonymous.WE.Triple')
+
+
+def test_missense_triple_get_gene_sets(gscs):
+    denovo = gscs.get_gene_sets_collection('denovo')
+
+    gene_sets = denovo.get_gene_sets(gene_sets_types={'f3_group': ['unaffected']})
+
+    assert gene_sets
+
+    print("gene_sets", gene_sets)
+
+    assert name_in_gene_sets(gene_sets, 'Missense.Recurrent')
+    assert name_in_gene_sets(gene_sets, 'Missense.Triple')
