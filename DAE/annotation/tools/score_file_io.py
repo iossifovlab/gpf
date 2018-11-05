@@ -73,6 +73,7 @@ class ScoreFile(TabixReader):
 
         self.config.columns.score = self.config.columns.score.split(',')
         self.score_names = self.config.columns.score
+        self.schema = self.config.schema
         assert all([sn in self.header for sn in self.score_names])
         self.options.update(self.config)
 
@@ -103,10 +104,6 @@ class ScoreFile(TabixReader):
             for index, column in enumerate(self.header):
                 result[column].append(line[index])
         return result
-
-    @property
-    def schema(self):
-        return self.config.schema
 
 
 class LineAdapter(object):

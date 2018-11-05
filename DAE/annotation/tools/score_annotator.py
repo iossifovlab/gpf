@@ -14,6 +14,7 @@ from annotation.tools.annotator_config import VariantAnnotatorConfig
 
 from annotation.tools.score_file_io import DirectAccess, \
     IterativeAccess
+from annotation.tools.file_io import Schema
 
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):
@@ -241,5 +242,6 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
             virtuals=[]
         )
 
-        annotator = PositionScoreAnnotator(variant_config)
+        annotator = PositionScoreAnnotator(variant_config, self.schema)
+        self.schema = Schema.merge_schemas(self.schema, annotator.schema)
         return annotator

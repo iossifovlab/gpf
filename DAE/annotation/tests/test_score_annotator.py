@@ -61,12 +61,13 @@ def test_variant_score_annotator_simple(
     print(config.options)
     print(type(config.options))
 
-    score_annotator = PositionScoreAnnotator(config)
-    assert score_annotator is not None
-
-    captured = capsys.readouterr()
-
     with variants_io("fixtures/input2.tsv") as io_manager:
+        score_annotator = PositionScoreAnnotator(config,
+                                                 io_manager.reader.schema)
+        assert score_annotator is not None
+
+        captured = capsys.readouterr()
+
         score_annotator.annotate_file(io_manager)
 
     captured = capsys.readouterr()
@@ -107,12 +108,13 @@ def test_variant_multi_score_annotator_simple(
     print(config.options)
     print(type(config.options))
 
-    score_annotator = PositionMultiScoreAnnotator(config)
-    assert score_annotator is not None
-
-    captured = capsys.readouterr()
-
     with variants_io("fixtures/input2.tsv") as io_manager:
+        score_annotator = PositionMultiScoreAnnotator(config,
+                                                      io_manager.reader.schema)
+        assert score_annotator is not None
+
+        captured = capsys.readouterr()
+
         score_annotator.annotate_file(io_manager)
 
     captured = capsys.readouterr()
@@ -155,12 +157,13 @@ def test_variant_multi_score_annotator_multi(
     print(config.options)
     print(type(config.options))
 
-    score_annotator = PositionMultiScoreAnnotator(config)
-    assert score_annotator is not None
-
-    captured = capsys.readouterr()
-
     with variants_io("fixtures/input2.tsv") as io_manager:
+        score_annotator = PositionMultiScoreAnnotator(config,
+                                                      io_manager.reader.schema)
+        assert score_annotator is not None
+
+        captured = capsys.readouterr()
+
         score_annotator.annotate_file(io_manager)
 
     captured = capsys.readouterr()
@@ -212,12 +215,13 @@ def test_variant_score_annotator_cadd(
     print(config.options)
     print(type(config.options))
 
-    score_annotator = NPScoreAnnotator(config)
-    assert score_annotator is not None
-
-    captured = capsys.readouterr()
-
     with variants_io("fixtures/input2.tsv") as io_manager:
+        score_annotator = NPScoreAnnotator(config,
+                                           io_manager.reader.schema)
+        assert score_annotator is not None
+
+        captured = capsys.readouterr()
+
         score_annotator.annotate_file(io_manager)
 
     captured = capsys.readouterr()

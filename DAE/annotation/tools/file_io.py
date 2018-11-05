@@ -37,6 +37,7 @@ class Schema(object):
 
     @classmethod
     def produce_type(cls, type_name):
+        assert type_name in cls.type_map
         return Box({'type_name': type_name,
                     'type_py': cls.type_map[type_name][0],
                     'type_pa': cls.type_map[type_name][1]},
@@ -76,7 +77,8 @@ class Schema(object):
         missing_columns = OrderedDict()
         for key, value in right.columns.items():
             if key in left.columns:
-                assert left.columns[key] == value
+                # assert left.columns[key] == value
+                left.columns[key] = value
             else:
                 missing_columns[key] = value
         merged_schema.columns.update(left.columns)
@@ -84,7 +86,7 @@ class Schema(object):
         return merged_schema
 
     def to_arrow(self):
-        return pa.schema([pa.field(col, col_type.type_pa)
+        return pa.schema([pa.field(col, col_type.type_pa, nullable=True)
                           for col, col_type
                           in self.columns.items()])
 
@@ -170,6 +172,7 @@ class AbstractFormat(object):
         self.linecount = 0
         self.linecount_threshold = 1000
         self.header = None
+        self.schema = None
 
     @abstractmethod
     def _setup(self):
@@ -312,6 +315,7 @@ class TSVGzipReader(TSVReader):
         self.infile = gzip.open(self.filename, 'rt')
 
         self.header = self._header_read()
+        self.schema = Schema.from_dict({'str': ','.join(self.header)})
 
 
 class TabixReader(TSVFormat):
@@ -358,6 +362,7 @@ class TabixReader(TSVFormat):
 
         self._region_reset(self.region)
         self.header = self._header_read()
+        self.schema = Schema.from_dict({'str': ','.join(self.header)})
 
     def _header_read(self):
         if self.header:
@@ -552,7 +557,7 @@ class ParquetWriter(AbstractFormat):
     @classmethod
     def coerce_column(cls, col_name, col_data, expected_col_type):
         assert col_data
-        actual_col_type = cls.get_col_type(col_data)
+        # actual_col_type = cls.get_col_type(col_data)
 
         # if actual_col_type is expected_col_type:
         #     return col_data
