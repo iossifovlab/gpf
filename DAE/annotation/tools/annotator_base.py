@@ -93,17 +93,28 @@ class VariantBuilder(object):
 
     def build(self, annotation_line):
         summary = self.build_variant(annotation_line)
-
-        data = {
-            'CSHL:location': summary.details.cshl_location,
-            'CSHL:chr': summary.chromosome,
-            'CSHL:position': summary.details.cshl_position,
-            'CSHL:variant': summary.details.cshl_variant,
-            'VCF:chr': summary.chromosome,
-            'VCF:position': summary.position,
-            'VCF:ref': summary.reference,
-            'VCF:alt': summary.alternative,
-        }
+        if summary is None:
+            data = {
+                'CSHL:location': None,
+                'CSHL:chr': None,
+                'CSHL:position': None,
+                'CSHL:variant': None,
+                'VCF:chr': None,
+                'VCF:position': None,
+                'VCF:ref': None,
+                'VCF:alt': None,
+            }
+        else:
+            data = {
+                'CSHL:location': summary.details.cshl_location,
+                'CSHL:chr': summary.chromosome,
+                'CSHL:position': summary.details.cshl_position,
+                'CSHL:variant': summary.details.cshl_variant,
+                'VCF:chr': summary.chromosome,
+                'VCF:position': summary.position,
+                'VCF:ref': summary.reference,
+                'VCF:alt': summary.alternative,
+            }
         annotation_line.update(data)
         return summary
 
@@ -149,6 +160,9 @@ class VCFBuilder(VariantBuilder):
         position = aline[self.position]
         ref = aline[self.ref]
         alt = aline[self.alt]
+
+        if chrom is None or position is None:
+            return None
 
         summary = SummaryAllele(
             chrom, int(position), ref, alt

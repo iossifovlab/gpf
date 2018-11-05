@@ -88,7 +88,9 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         super(PositionScoreAnnotator, self).__init__(config)
 
     def do_annotate(self, aline, variant):
-        assert variant is not None
+        if variant is None:
+            self._scores_not_found(aline)
+            return
 
         scores = self._fetch_scores(variant)
 
@@ -159,7 +161,9 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         return res
 
     def do_annotate(self, aline, variant):
-        assert variant is not None
+        if variant is None:
+            self._scores_not_found(aline)
+            return
 
         scores = self._fetch_scores(variant)
 
