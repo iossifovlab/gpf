@@ -151,3 +151,111 @@ def test_position_score_annotator_indels(
         expected_df(captured.out), expected_df(expected),
         check_less_precise=3,
         check_names=False)
+
+
+@pytest.mark.parametrize("chrom,pos,ref,alt,t1,t2,t3", [
+    ('1', 10000, 'C', 'A', -100, -100, -100),
+    ('1', 10914, 'C', 'A', 1, 1, 1),
+    ('1', 10914, 'C', 'CA', 3, 1.5, 4.5),
+    ('1', 10914, 'C', 'CAA', 3, 1.5, 4.5),
+    ('1', 10914, 'CG', 'C', 3, 2, 6),
+    ('1', 10914, 'CGC', 'C', 3, 2.5, 7.5),
+    ('1', 10914, 'CGC', 'CA', 3, 2.5, 7.5),
+    ('1', 10914, 'CGC', 'CAA', 3, 2.5, 7.5),
+])
+def test_np_score_annotator_indels_test_score(
+        chrom, pos, ref, alt, t1, t2, t3):
+
+    score_filename = \
+        "fixtures/TESTCADD/TESTwhole_genome_SNVs.tsv.gz"
+
+    options = Box({
+        'mode': 'replace',
+        "vcf": True,
+        "Graw": "fake_genome_ref_file",
+        "direct": False,
+        "region": None,
+        "scores_file": relative_to_this_test_folder(score_filename)
+    }, default_box=True, default_box_attr=None)
+
+    columns_config = OrderedDict([
+        ('TEST',  "TEST"),
+        ('TEST2', "TEST2"),
+        ('TEST3', "TEST3"),
+    ])
+
+    config = VariantAnnotatorConfig(
+        name="test_annotator",
+        annotator_name="score_annotator.NPScoreAnnotator",
+        options=options,
+        columns_config=columns_config,
+        virtuals=[]
+    )
+
+    score_annotator = NPScoreAnnotator(config)
+    assert score_annotator is not None
+
+    line = {
+        "CHROM": chrom,
+        "POS": pos,
+        "REF": ref,
+        "ALT": alt
+    }
+    score_annotator.line_annotation(line)
+    assert float(line['TEST']) == pytest.approx(t1, 1E-4)
+    assert float(line['TEST2']) == pytest.approx(t2, 1E-4)
+    assert float(line['TEST3']) == pytest.approx(t3, 1E-4)
+
+
+@pytest.mark.parametrize("chrom,pos,ref,alt,t1,t2,t3", [
+    ('1', 10917, 'A', 'T', -100, -100, -100),
+    ('1', 10918, 'G', 'A', 1, 1, 1),
+    ('1', 10918, 'G', 'CA', 1, 1.5, 5.5),
+    ('1', 10918, 'G', 'CA', 1, 1.5, 5.5),
+    ('1', 10918, 'GA', 'C', 1, 2, 4),
+    ('1', 10918, 'GAG', 'C', 1, 2.5, 5.5),
+    ('1', 10918, 'GAG', 'CA', 1, 2.5, 5.5),
+    ('1', 10918, 'GAG', 'CAA', 1, 2.5, 5.5),
+])
+def test_position_score_annotator_indels_test_score(
+        chrom, pos, ref, alt, t1, t2, t3):
+
+    score_filename = \
+        "fixtures/TESTphyloP100way/TESTphyloP100way.bedGraph.gz"
+
+    options = Box({
+        'mode': 'replace',
+        "vcf": True,
+        "Graw": "fake_genome_ref_file",
+        "direct": False,
+        "region": None,
+        "scores_file": relative_to_this_test_folder(score_filename)
+    }, default_box=True, default_box_attr=None)
+
+    columns_config = OrderedDict([
+        ('TEST',  "TEST"),
+        ('TEST2', "TEST2"),
+        ('TEST3', "TEST3"),
+    ])
+
+    config = VariantAnnotatorConfig(
+        name="test_annotator",
+        annotator_name="score_annotator.NPScoreAnnotator",
+        options=options,
+        columns_config=columns_config,
+        virtuals=[]
+    )
+
+    score_annotator = PositionScoreAnnotator(config)
+    assert score_annotator is not None
+
+    line = {
+        "CHROM": chrom,
+        "POS": pos,
+        "REF": ref,
+        "ALT": alt
+    }
+    score_annotator.line_annotation(line)
+    assert float(line['TEST']) == pytest.approx(t1, 1E-4)
+    assert float(line['TEST2']) == pytest.approx(t2, 1E-4)
+    assert float(line['TEST3']) == pytest.approx(t3, 1E-4)

@@ -27,7 +27,9 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         self.score_names = self.config.native_columns
 
         assert all([
-            sn in self.score_file.score_names for sn in self.score_names])
+            sn in self.score_file.score_names for sn in self.score_names]), \
+            (self.score_names, self.score_file.score_names, 
+             self.score_file.filename)
 
     def _init_score_file(self):
         if not self.config.options.scores_file:
@@ -116,6 +118,42 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         self.chr_name = self.score_file.chr_name
         self.pos_begin_name = self.score_file.pos_begin_name
 
+    def _aggregate_substitution(self, variant, scores_df):
+        assert variant.variant_type == VariantType.substitution
+
+        res = {}
+        matched = (scores_df[self.ref_name] == variant.reference) & \
+            (scores_df[self.alt_name] == variant.alternative)
+        matched_df = scores_df[matched]
+        if len(matched_df) == 0:
+            self._scores_not_found(res)
+        else:
+            for score_name in self.score_names:
+                column_name = self.config.columns_config[score_name]
+                res[column_name] = matched_df[score_name].mean()
+        return res
+
+    def _aggregate_indel(self, variant, scores_df):
+        assert variant.variant_type in set([
+            VariantType.insertion, VariantType.deletion,
+            VariantType.complex])
+
+        aggregate = {
+            sn: 'max' for sn in self.score_names
+        }
+
+        aggregate['COUNT'] = 'max'
+        group_df = scores_df.groupby(
+            by=[self.chr_name, self.pos_begin_name]).agg(aggregate)
+        count = group_df['COUNT'].sum()
+        res = {}
+        for score_name in self.score_names:
+            column_name = self.config.columns_config[score_name]
+            total_df = group_df[score_name] * group_df['COUNT']
+            res[column_name] = total_df.sum()/count
+
+        return res
+
     def do_annotate(self, aline, variant):
         assert variant is not None
 
@@ -129,37 +167,21 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
         if variant.variant_type == VariantType.substitution:
 
-            matched = (scores_df[self.ref_name] == variant.reference) & \
-                (scores_df[self.alt_name] == variant.alternative)
-            matched_df = scores_df[matched]
-            if len(matched_df) == 0:
-                self._scores_not_found(aline)
-                return
+            agg = self._aggregate_substitution(variant, scores_df)
+            aline.update(agg)
 
-            for score_name in self.score_names:
-                column_name = self.config.columns_config[score_name]
-                aline[column_name] = matched_df[score_name].mean()
-            return
-
-        if variant.variant_type in set([
+        elif variant.variant_type in set([
                 VariantType.insertion, VariantType.deletion,
                 VariantType.complex]):
-            aggregate = {
-                sn: 'max' for sn in self.score_names
-            }
-            aggregate['COUNT'] = 'max'
-            group_df = scores_df.groupby(
-                by=[self.chr_name, self.pos_begin_name]).agg(aggregate)
-            count = group_df['COUNT'].sum()
 
-            for score_name in self.score_names:
-                column_name = self.config.columns_config[score_name]
-                total_df = group_df[score_name] * group_df['COUNT']
-                aline[column_name] = total_df.sum()/count
+            agg = self._aggregate_indel(variant, scores_df)
+            aline.update(agg)
 
-            return
-
-        self._scores_not_found(aline)
+        else:
+            print("Unexpected variant type: {}, {}".format(
+                variant, variant.variant_type
+            ), file=sys.stderr)
+            self._scores_not_found(aline)
 
 
 class PositionMultiScoreAnnotator(CompositeVariantAnnotator):

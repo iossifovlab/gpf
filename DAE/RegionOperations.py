@@ -119,7 +119,6 @@ def unique_regions(R):
 
 def connected_component(R):
     """This might be the same as collapse"""
-
     import networkx as nx  # noqa
 
     G = nx.Graph()
@@ -248,7 +247,7 @@ def intersection(s1, s2):
                 k += 1
                 continue
 
-    return(intersect)
+    return intersect
 
 
 def union(*r):
