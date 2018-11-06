@@ -19,7 +19,8 @@ import common.config
 from annotation.tools.annotator_base import AnnotatorBase, \
     CompositeVariantAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
-from annotation.tools.file_io import IOType, IOManager, Schema
+from annotation.tools.file_io import IOType, IOManager
+from annotation.tools.schema import Schema
 
 
 class PipelineConfig(VariantAnnotatorConfig):

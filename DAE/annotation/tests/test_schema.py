@@ -1,6 +1,9 @@
 import pytest
-import pyarrow as pa
-from annotation.tools.file_io import Schema
+from annotation.tools.file_io import parquet_enabled
+from annotation.tools.schema import Schema
+if parquet_enabled:
+    import pyarrow as pa
+    from annotation.tools.file_io_parquet import ParquetSchema
 
 
 @pytest.fixture
@@ -15,12 +18,22 @@ def generic_schema():
                              'float': 'col4,col5,col6'})
 
 
+@pytest.mark.skipif(parquet_enabled is False,
+                    reason='pyarrow module not installed')
+@pytest.fixture
+def generic_pq_schema():
+    return ParquetSchema.from_dict({'str': 'col1,col2,col3',
+                                    'float': 'col4,col5,col6'})
+
+
 @pytest.fixture
 def generic_schema_alt():
     return Schema.from_dict({'str': 'col1,col7,col8',
                              'float': 'col11,col12,col6'})
 
 
+@pytest.mark.skipif(parquet_enabled is False,
+                    reason='pyarrow module not installed')
 @pytest.fixture
 def generic_pa_schema():
     return pa.schema([pa.field('col1', pa.string()),
@@ -48,10 +61,14 @@ def test_merge_schemas(generic_schema, generic_schema_alt):
     assert list(schema.columns.keys()) == expected_cols
 
 
-def test_to_arrow(generic_schema, generic_pa_schema):
-    assert generic_schema.to_arrow() == generic_pa_schema
+@pytest.mark.skipif(parquet_enabled is False,
+                    reason='pyarrow module not installed')
+def test_to_arrow(generic_pq_schema, generic_pa_schema):
+    assert generic_pq_schema.to_arrow() == generic_pa_schema
 
 
-def test_from_arrow(generic_schema, generic_pa_schema):
-    schema_from_pa = Schema.from_arrow(generic_pa_schema)
-    assert schema_from_pa.columns == generic_schema.columns
+@pytest.mark.skipif(parquet_enabled is False,
+                    reason='pyarrow module not installed')
+def test_from_arrow(generic_pq_schema, generic_pa_schema):
+    schema_from_pa = ParquetSchema.from_arrow(generic_pa_schema)
+    assert schema_from_pa.columns == generic_pq_schema.columns

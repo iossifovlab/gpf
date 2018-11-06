@@ -3,7 +3,7 @@ from box import Box
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.lift_over_annotator import LiftOverAnnotator
 from annotation.annotation_pipeline import PipelineAnnotator
-from annotation.tools.file_io import Schema
+from annotation.tools.schema import Schema
 
 from .conftest import relative_to_this_test_folder
 

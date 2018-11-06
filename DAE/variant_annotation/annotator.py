@@ -146,7 +146,11 @@ class VariantAnnotator(object):
             for gene in G:
                 for v in G[gene]:
                     effect_details.append(v.create_effect_details())
-                effect_gene.append(gene + ":" + G[gene][0].effect)
+                if gene is not None:
+                    gene_str = str(gene)
+                else:
+                    gene_str = ''
+                effect_gene.append(gene_str + ":" + G[gene][0].effect)
 
         return(effect_type, effect_gene, effect_details)
 

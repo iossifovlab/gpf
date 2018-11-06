@@ -14,7 +14,7 @@ from annotation.tools.annotator_config import VariantAnnotatorConfig
 
 from annotation.tools.score_file_io import DirectAccess, \
     IterativeAccess
-from annotation.tools.file_io import Schema
+from annotation.tools.schema import Schema
 
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):

@@ -1,7 +1,10 @@
 import pytest
 from box import Box
 from annotation.tests.conftest import relative_to_this_test_folder
-from annotation.tools.file_io import TabixReader, ParquetWriter
+from annotation.tools.file_io import TabixReader, parquet_enabled
+
+if parquet_enabled:
+    from annotation.tools.file_io_parquet import ParquetWriter
 
 
 # class Dummy_annotator(object):
@@ -72,6 +75,8 @@ from annotation.tools.file_io import TabixReader, ParquetWriter
 #         'placeholder\tcol3and4willbemissing\t\t\tplaceholder\t42\n')
 
 
+@pytest.mark.skipif(parquet_enabled is False,
+                    reason='pyarrow module not installed')
 def test_column_coercion():
     def recursive_coerce(data):
         if type(data) is list:

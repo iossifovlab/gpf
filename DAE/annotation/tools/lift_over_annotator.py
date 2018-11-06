@@ -9,7 +9,7 @@ import sys
 import os
 from pyliftover import LiftOver
 from annotation.tools.annotator_base import VariantAnnotatorBase
-from annotation.tools.file_io import Schema
+from annotation.tools.schema import Schema
 
 
 class LiftOverAnnotator(VariantAnnotatorBase):

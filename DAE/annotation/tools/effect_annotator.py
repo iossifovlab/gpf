@@ -7,7 +7,7 @@ from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import \
     VariantAnnotator as VariantEffectAnnotator
 from annotation.tools.annotator_base import VariantAnnotatorBase
-from annotation.tools.file_io import Schema
+from annotation.tools.schema import Schema
 
 
 class EffectAnnotator(VariantAnnotatorBase):

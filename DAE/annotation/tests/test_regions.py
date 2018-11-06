@@ -9,7 +9,7 @@ from .conftest import relative_to_this_test_folder
 
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.score_annotator import PositionScoreAnnotator
-from annotation.tools.file_io import Schema
+from annotation.tools.schema import Schema
 
 
 phast_chr1_2 = """CHROM	POS	REF	ALT	RESULT_phastCons100way

@@ -9,7 +9,7 @@ from annotation.tools.annotator_config import LineConfig, \
 from utils.dae_utils import dae2vcf_variant
 from variants.variant import SummaryAllele
 import GenomeAccess
-from annotation.tools.file_io import Schema
+from annotation.tools.file_io_tsv import Schema
 
 
 class AnnotatorBase(object):
