@@ -51,10 +51,14 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
                 self.config.options.scores_config_file)
         self.score_file._setup()
 
+        self.no_score_value = self.score_file.config.noScoreValue
+        if self.no_score_value.lower() in set(['na', 'none']):
+            self.no_score_value = None
+
     def _scores_not_found(self, aline):
         values = {
             self.config.columns_config[score_name]:
-            self.score_file.config.noScoreValue
+            self.no_score_value
             for score_name in self.score_names}
         aline.update(values)
 
@@ -88,13 +92,18 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         super(PositionScoreAnnotator, self).__init__(config)
 
     def do_annotate(self, aline, variant):
-        assert variant is not None
+        if variant is None:
+            self._scores_not_found(aline)
+            return
 
         scores = self._fetch_scores(variant)
 
         if not scores:
             self._scores_not_found(aline)
             return
+
+        counts = scores['COUNT']
+        total_count = sum(counts)
 
         for score_name in self.score_names:
             column_name = self.config.columns_config[score_name]
@@ -103,8 +112,9 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             if len(values) == 1:
                 aline[column_name] = values[0]
             else:
-                aline[column_name] = \
-                    sum([float(v) for v in values]) / len(values)
+                total_sum = sum([
+                    c * float(v) for (c, v) in zip(counts, values)])
+                aline[column_name] = total_sum / total_count
 
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
@@ -155,7 +165,9 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         return res
 
     def do_annotate(self, aline, variant):
-        assert variant is not None
+        if variant is None:
+            self._scores_not_found(aline)
+            return
 
         scores = self._fetch_scores(variant)
 

@@ -16,23 +16,28 @@ class LiftOverAnnotator(VariantAnnotatorBase):
     def __init__(self, config):
         super(LiftOverAnnotator, self).__init__(config)
 
-        assert self.config.options.chain_file
-        assert os.path.exists(self.config.options.chain_file)
-
-        self.chain_file = gzip.open(self.config.options.chain_file, "r")
-        self.lift_over = LiftOver(self.chain_file)
-
         self.chrom = self.config.options.c
         self.pos = self.config.options.p
         if self.config.options.x is not None:
             self.location = self.config.options.x
         else:
+            self.location = None
             assert self.chrom is not None
             assert self.pos is not None
 
         self.columns_config = self.config.columns_config
         assert 'new_x' in self.columns_config or \
             ('new_c' in self.columns_config and 'new_p' in self.columns_config)
+
+        self.lift_over = self.build_lift_over(self.config.options.chain_file)
+
+    @staticmethod
+    def build_lift_over(chain_filename):
+        assert chain_filename is not None
+        assert os.path.exists(chain_filename)
+
+        chain_file = gzip.open(chain_filename, "r")
+        return LiftOver(chain_file)
 
     def do_annotate(self, aline, variant):
         if self.location:
@@ -44,25 +49,27 @@ class LiftOverAnnotator(VariantAnnotatorBase):
             pos = int(aline[self.pos])
 
         # positions = [int(p) - 1 for p in position.split('-')]
-
-        convert_position = self.lift_over.convert_coordinate(chrom, pos)
-        if len(convert_position) == 0:
+        liftover_pos = pos - 1
+        converted_coordinates = self.lift_over.convert_coordinate(
+            chrom, liftover_pos)
+        if len(converted_coordinates) == 0:
             print("position: chrom=", chrom, "; pos=", pos,
+                  "(0-pos=", liftover_pos, ")",
                   "can not be converted into target reference genome",
                   file=sys.stderr)
-            new_c = ''
-            new_p = ''
-            new_x = ''
+            new_c = None
+            new_p = None
+            new_x = None
         else:
-            if len(convert_position) > 1:
+            if len(converted_coordinates) > 1:
                 print(
                     "position: chrom=", chrom, "; pos=", pos,
                     "has more than one corresponding position "
-                    "into target reference genome", convert_position,
+                    "into target reference genome", converted_coordinates,
                     file=sys.stderr)
 
-            new_c = convert_position[0][0]
-            new_p = convert_position[0][1]
+            new_c = converted_coordinates[0][0]
+            new_p = converted_coordinates[0][1] + 1
             new_x = '{}:{}'.format(new_c, new_p)
 
         if 'new_x' in self.columns_config:

@@ -3,12 +3,14 @@ from box import Box
 from collections import OrderedDict
 from annotation.tools.change_coordinate_base import CoordinateBaseAnnotator
 
+
 @pytest.fixture
 def change_coord_base():
     config = Box(OrderedDict([("position","START"), ("to_one_base",False)]),default_box=True, default_box_attr=None)
     config_to1 = Box(OrderedDict([("position","START"), ("to_one_base",True), ("label","new_pos_b1")]), default_box=True, default_box_attr=None)
     
     return (CoordinateBaseAnnotator(config, ["START"]), CoordinateBaseAnnotator(config_to1, ["START"]))
+
 
 def test_line_annotations(change_coord_base):
     line = ["4567890"]

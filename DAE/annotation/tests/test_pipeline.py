@@ -9,7 +9,7 @@ from annotation.annotation_pipeline import PipelineConfig, PipelineAnnotator
 from annotation.tools.annotator_base import VariantAnnotatorBase
 
 
-from .utils import relative_to_this_test_folder
+from .conftest import relative_to_this_test_folder
 
 
 # @pytest.mark.parametrize('data,expected', [

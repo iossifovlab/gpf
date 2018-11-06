@@ -1,5 +1,5 @@
 import pytest
-from .utils import relative_to_this_test_folder
+from .conftest import relative_to_this_test_folder
 from box import Box
 from annotation.tools.annotator_base import AnnotatorBase, \
     CopyAnnotator

@@ -3,7 +3,11 @@ from __future__ import print_function
 import sys
 import os
 import gzip
+# import copy
+
 import pysam
+from box import Box
+
 # import pandas as pd
 # import pyarrow as pa
 # import pyarrow.parquet as pq
@@ -88,8 +92,9 @@ class AbstractFormat(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, opts, mode):
-        self.opts = opts
-        self.options = opts
+        options = Box(opts.to_dict(), default_box=True, default_box_attr=None)
+        self.opts = options
+        self.options = options
 
         if mode != 'r' and mode != 'w':
             print("Unrecognized I/O mode '{}'!".format(mode), file=sys.stderr)
@@ -204,6 +209,9 @@ class TSVReader(TSVFormat):
         self._cleanup()
 
     def _header_read(self):
+        if self.header:
+            return self.header
+
         if self.options.no_header:
             return None
         else:
@@ -262,7 +270,7 @@ class TabixReader(TSVFormat):
         self.region = self.options.region
         self._has_chrom_prefix = None
 
-    def _handle_chrom_prefix(self, data):        
+    def _handle_chrom_prefix(self, data):
         if data is None:
             return data
         if self._has_chrom_prefix and not data.startswith('chr'):
@@ -274,26 +282,36 @@ class TabixReader(TSVFormat):
     def _region_reset(self, region):
         region = self._handle_chrom_prefix(region)
 
-        self.lines_iterator = self.infile.fetch(
-            region=region,
-            parser=pysam.asTuple())
+        try:
+            self.lines_iterator = self.infile.fetch(
+                region=region,
+                parser=pysam.asTuple())
+        except ValueError as ex:
+            print("could not find region: ", region,
+                  ex, file=sys.stderr)
+            self.lines_iterator = None
 
     def _setup(self):
         self.infile = pysam.TabixFile(self.filename)
-        contig_name = self.infile.contigs[0]
+        contig_name = self.infile.contigs[-1]
         self._has_chrom_prefix = contig_name.startswith('chr')
 
         self._region_reset(self.region)
         self.header = self._header_read()
 
     def _header_read(self):
+        if self.header:
+            return self.header
+
         if self.options.no_header:
             return None
+
+        line = self.infile.header
+        line = list(line)
+        if not line:
+            with TSVGzipReader(self.options, self.filename) as tempreader:
+                return tempreader.header
         else:
-            line = self.infile.header
-            line = list(line)
-            if not line:
-                return None
             header_str = line[0]
             if header_str.startswith("#"):
                 header_str = header_str[1:]
@@ -319,6 +337,9 @@ class TabixReader(TSVFormat):
     #     return line
 
     def lines_read_iterator(self):
+        if self.lines_iterator is None:
+            return
+
         for line in self.lines_iterator:
             self._progress_step()
             # print(self.linecount, line)
@@ -327,6 +348,7 @@ class TabixReader(TSVFormat):
 
 
 class TSVWriter(TSVFormat):
+    NA_VALUE = ''
 
     def __init__(self, options, filename=None):
         super(TSVWriter, self).__init__(options, 'w')
@@ -351,7 +373,10 @@ class TSVWriter(TSVFormat):
 
     def line_write(self, line):
         self.outfile.write('\t'.join(
-            [to_str(column) for column in line]))
+            [
+                to_str(val) if val is not None else self.NA_VALUE
+                for val in line
+            ]))
         self.outfile.write('\n')
 
     def line_read(self):

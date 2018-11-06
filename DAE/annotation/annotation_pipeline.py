@@ -94,7 +94,7 @@ class PipelineConfig(VariantAnnotatorConfig):
             columns_config = OrderedDict(section['columns'])
         else:
             columns_config = OrderedDict()
-    
+
         if 'virtuals' not in section:
             virtuals = []
         else:

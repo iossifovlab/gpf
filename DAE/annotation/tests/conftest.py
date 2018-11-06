@@ -1,4 +1,5 @@
 import pytest
+import os
 
 import pandas as pd
 from builtins import str
@@ -6,7 +7,13 @@ from io import StringIO
 
 from box import Box
 from annotation.tools.file_io import IOManager, IOType
-from .utils import relative_to_this_test_folder
+
+
+def relative_to_this_test_folder(path):
+    return os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        path
+    )
 
 
 @pytest.fixture
