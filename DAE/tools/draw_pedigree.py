@@ -107,7 +107,7 @@ def main():
         if layout is None:
             pdf_drawer.add_error_page(
                 family.members,
-                'Invalid coordinates' + " in family " + family.family_id)
+                'Invalid coordinates in family ' + family.family_id)
         else:
             layout_drawer = OffsetLayoutDrawer(layout, 0, 0, show_id)
             pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
