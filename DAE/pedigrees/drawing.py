@@ -35,12 +35,14 @@ class PDFLayoutDrawer(object):
         ax.axis("off")
 
         col_labels =\
-            ["familyId", "individualId", "father", "mother", "sex", "effect"]
+            ["familyId", "individualId", "father", "mother", "sex", "effect",
+             "layout"]
         table_vals = []
 
         for member in family:
             table_vals.append([member.family_id, member.id, member.father,
-                               member.mother, member.sex, member.effect])
+                               member.mother, member.sex, member.effect,
+                               member.layout])
         figure.table = plt.table(
             cellText=table_vals, colLabels=col_labels, loc='center')
 
