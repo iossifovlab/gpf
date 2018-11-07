@@ -185,9 +185,10 @@ class MakefileBuilder(VariantDBConfig):
                 for name in filenames
             ])
             if check:
-                directories.append(self.to_destination(dirpath))
+                target_dir = self.to_destination(dirpath)
+                directories.append(target_dir)
                 command = '{target_dir}:\n\tmkdir -p {target_dir}\n'.format(
-                        target_dir=dirpath)
+                        target_dir=target_dir)
                 self.makefile.append(command)
 
         command = '{output_dir}: {subdir_list}\n'.format(
