@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+import re
+
 from pedigrees.pedigree_reader import PedigreeReader
 from pedigrees.pedigrees import get_argument_parser, FamilyConnections
 from pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
@@ -12,24 +14,30 @@ class LayoutLoader(object):
         self.family_connections = FamilyConnections.from_pedigree(
             family, add_missing_members=False)
 
+    def parse_layout(self, layout):
+        layout_groups = re.search(
+            r'(?P<level>\d):(?P<x>\d*\.?\d+),(?P<y>\d*\.?\d+)', str(layout))
+        if layout_groups:
+            layout_groups = layout_groups.groupdict()
+            layout_groups['level'] = int(layout_groups['level'])
+            layout_groups['x'] = float(layout_groups['x'])
+            layout_groups['y'] = float(layout_groups['y'])
+        return layout_groups
+
     def get_positions_from_family(self):
         positions = {}
         if self.family_connections is None:
-            position = self.family.members[0].layout.split(":")
-            if len(position) == 1:
-                return position[0]
-            else:
-                return ''
+            layout = self.parse_layout(self.family.members[0].layout)
+            if layout is None:
+                return None
         individuals = self.family_connections.get_individuals()
         for individual in individuals:
-            position = individual.member.layout.split(":")
-            if len(position) == 1:
-                return position[0]
-            position[1] = position[1].split(",")
-
-            level = int(position[0])
-            x = float(position[1][0])
-            y = float(position[1][1])
+            layout = self.parse_layout(individual.member.layout)
+            if layout is None:
+                return None
+            level = layout['level']
+            x = layout['x']
+            y = layout['y']
 
             if level not in positions:
                 positions[level] = []
@@ -47,8 +55,8 @@ class LayoutLoader(object):
 
     def load(self):
         positions = self.get_positions_from_family()
-        if isinstance(positions, str):
-            return positions
+        if positions is None:
+            return None
         layout = Layout.get_layout_from_positions(positions)
 
         return layout
@@ -57,8 +65,8 @@ class LayoutLoader(object):
 def draw_family_pedigree(family, show_id=False):
     layout_loader = LayoutLoader(family)
     layout = layout_loader.load()
-    if isinstance(layout, str):
-        return layout + " in family " + family.family_id
+    if layout is None:
+        return 'Invalid coordinates' + " in family " + family.family_id
     else:
         layout_drawer = OffsetLayoutDrawer(layout, 0, 0, show_id)
         return layout_drawer.draw()
@@ -96,10 +104,10 @@ def main():
     for family in sorted(pedigrees, key=lambda x: x.family_id):
         layout_loader = LayoutLoader(family)
         layout = layout_loader.load()
-        if isinstance(layout, str):
+        if layout is None:
             pdf_drawer.add_error_page(
                 family.members,
-                layout + " in family " + family.family_id)
+                'Invalid coordinates' + " in family " + family.family_id)
         else:
             layout_drawer = OffsetLayoutDrawer(layout, 0, 0, show_id)
             pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
