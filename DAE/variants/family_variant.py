@@ -49,6 +49,10 @@ class FamilyDelegate(object):
         people = self.family.get_people_with_role(attribute['role'])
         return [person.get_attr(attribute['source']) for person in people]
 
+    def get_family_members_attribute(self, attribute):
+        people = self.family.members_in_order
+        return [person.get_attr(attribute) for person in people]
+
 
 class FamilyAllele(SummaryAllele, FamilyDelegate):
 
