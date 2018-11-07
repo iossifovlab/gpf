@@ -56,7 +56,7 @@ class VariantDBConfig(object):
                 continue
             for filename in file_list.split("\n"):
                 denovo_files.append(os.path.abspath(filename.strip()))
-        return list(set(denovo_files))
+        return [(study, fname) for fname in list(set(denovo_files))]
 
     @classmethod
     def _collect_transmitted_calls(cls, study):
@@ -70,7 +70,7 @@ class VariantDBConfig(object):
 
         filename = "{}.txt.bgz".format(transmitted_calls.indexfile)
         # assert os.path.exists(filename)
-        return [os.path.abspath(filename)]
+        return [(study, os.path.abspath(filename))]
 
     @classmethod
     def _collect_studies(cls, config):
@@ -84,6 +84,8 @@ class VariantDBConfig(object):
 
             if 'CNV' in study.study.type:
                 continue
+            name = study_name.split('.')[1]
+            study.name = name.replace(' ', '_')
             denovo_files.extend(cls._collect_denovo_calls(study))
             transmitted_files.extend(cls._collect_transmitted_calls(study))
 
@@ -101,7 +103,7 @@ class VariantDBConfig(object):
 
     def _validate(self):
         outside_files = [
-            filename for filename in self.all_variant_files
+            filename for _, filename in self.all_variant_files
             if self.data_dir not in filename]
         if len(outside_files) != 0:
             print(
@@ -176,18 +178,22 @@ class MakefileBuilder(VariantDBConfig):
 
         if variant_files is None:
             variant_files = set([
-                os.path.abspath(name) for name in self.all_variant_files])
+                os.path.abspath(name) for _, name in self.all_variant_files])
         for dirpath, _dirnames, filenames in os.walk(self.data_dir):
             check = any([
                 os.path.join(dirpath, name) in variant_files
                 for name in filenames
             ])
             if check:
-                directories.append(self.to_destination(dirpath))
+                target_dir = self.to_destination(dirpath)
+                directories.append(target_dir)
+                command = '{target_dir}:\n\tmkdir -p {target_dir}\n'.format(
+                        target_dir=target_dir)
+                self.makefile.append(command)
 
-        command = '{output_dir}:\n\tmkdir -p {subdir_list}\n'.format(
+        command = '{output_dir}: {subdir_list}\n'.format(
                 output_dir=self.output_dir, subdir_list=' '.join(directories)
-            )
+        )
         self.makefile.append(command)
 
     COMMAND = (
@@ -202,8 +208,10 @@ class MakefileBuilder(VariantDBConfig):
             self.annotation_config,
             self.genome_file)
 
-        for filename in self.denovo_files:
+        for study, filename in self.denovo_files:
             target = self.escape_target(self.to_destination(filename))
+            logfile_prefix = "{}-{}".format(
+                study.name, os.path.basename(filename))
             command = self.COMMAND.format(
                 target=target,
                 sge_rreq=self.sge_rreq,
@@ -212,7 +220,7 @@ class MakefileBuilder(VariantDBConfig):
                 args=args,
                 job_sufix='',
                 log_prefix=os.path.join(
-                    self.log_dir, os.path.basename(filename))
+                    self.log_dir, logfile_prefix)
             )
             self.makefile.append(command)
             self.all_targets.append(target)
@@ -225,7 +233,8 @@ class MakefileBuilder(VariantDBConfig):
             contigs = [c for c in contigs if c != 'chr']
         return contigs
 
-    def build_transmitted_file_parts(self, source_filename, output_basename):
+    def build_transmitted_file_parts(
+            self, study, source_filename, output_basename):
         parts = []
         contigs = self.transmitted_file_contigs(source_filename)
 
@@ -247,6 +256,8 @@ class MakefileBuilder(VariantDBConfig):
                         begin_pos=region.start,
                         end_pos=region.end,
                     )
+                logfile_prefix = "{}-{}".format(
+                    study.name, os.path.basename(source_filename))
 
                 command = self.COMMAND.format(
                     target=target,
@@ -255,18 +266,18 @@ class MakefileBuilder(VariantDBConfig):
                     output_dir=self.output_dir,
                     args=args,
                     log_prefix=os.path.join(
-                        self.log_dir, os.path.basename(source_filename)),
+                        self.log_dir, logfile_prefix),
                     job_sufix=part_sufix)
                 self.makefile.append(command)
                 parts.append(target)
         return parts
 
-    def build_transmitted_file(self, source_filename):
+    def build_transmitted_file(self, study, source_filename):
         output_basename = self.to_destination(
             source_filename).replace('.bgz', '')
 
         parts = self.build_transmitted_file_parts(
-            source_filename, output_basename)
+            study, source_filename, output_basename)
 
         escaped_output_file = escape_target(output_basename)
         command = '{target}: {parts}\n\tSGE_RREQ="{sge_rreq}"' \
@@ -287,8 +298,8 @@ class MakefileBuilder(VariantDBConfig):
         self.makefile.append(command)
 
     def build_transmitted_files(self):
-        for filename in self.transmitted_files:
-            self.build_transmitted_file(filename)
+        for study, filename in self.transmitted_files:
+            self.build_transmitted_file(study, filename)
 
     def build(self, outfile=sys.stdout):
 
@@ -298,13 +309,12 @@ class MakefileBuilder(VariantDBConfig):
 
         print('SHELL=/bin/bash -o pipefail', file=outfile)
         print('.DELETE_ON_ERROR:\n', file=outfile)
-        print('all:\n', file=outfile)
+        print(" ".join(["all:"] + self.all_targets), file=outfile)
+        print('\n', file=outfile)
 
         for ln in self.makefile:
             print(ln, file=outfile)
             print('\n', file=outfile)
-
-        print(" ".join(["all:"] + self.all_targets), file=outfile)
 
     @staticmethod
     def main(argv):
