@@ -309,13 +309,12 @@ class MakefileBuilder(VariantDBConfig):
 
         print('SHELL=/bin/bash -o pipefail', file=outfile)
         print('.DELETE_ON_ERROR:\n', file=outfile)
-        # print('all:\n', file=outfile)
+        print(" ".join(["all:"] + self.all_targets), file=outfile)
+        print('\n', file=outfile)
 
         for ln in self.makefile:
             print(ln, file=outfile)
             print('\n', file=outfile)
-
-        print(" ".join(["all:"] + self.all_targets), file=outfile)
 
     @staticmethod
     def main(argv):
