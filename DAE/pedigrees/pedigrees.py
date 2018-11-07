@@ -16,7 +16,7 @@ from future.utils import with_metaclass
 
 class PedigreeMember(object):
     def __init__(self, id, family_id, mother, father, sex, effect,
-                 layout=None):
+                 layout=None, generated=False):
         self.id = id
         self.family_id = family_id
         self.mother = mother
@@ -24,6 +24,7 @@ class PedigreeMember(object):
         self.sex = sex
         self.effect = effect
         self.layout = layout
+        self.generated = generated
 
     def has_known_mother(self):
         return self.mother == '0' or self.mother == ''
@@ -99,14 +100,14 @@ class FamilyConnections(object):
                 if member.father not in missing_mother_fathers:
                     missing_mother_fathers[member.father] = PedigreeMember(
                         member.father + ".mother", pedigree.family_id,
-                        "0", "0", "2", "-")
+                        "0", "0", "2", "-", generated=True)
                     new_members.append(missing_mother_fathers[member.father])
                 member.mother = member.father + ".mother"
             elif member.father == "0":
                 if member.mother not in missing_father_mothers:
                     missing_father_mothers[member.mother] = PedigreeMember(
                         member.mother + ".father", pedigree.family_id,
-                        "0", "0", "1", "-")
+                        "0", "0", "1", "-", generated=True)
                     new_members.append(missing_father_mothers[member.mother])
                 member.father = member.mother + ".father"
             else:
@@ -114,11 +115,13 @@ class FamilyConnections(object):
                 father = id_to_individual[member.father]
                 if mother.member is None:
                     mother.member = PedigreeMember(
-                        member.mother, pedigree.family_id, "0", "0", "2", "-")
+                        member.mother, pedigree.family_id, "0", "0", "2", "-",
+                        generated=True)
                     new_members.append(mother.member)
                 if father.member is None:
                     father.member = PedigreeMember(
-                        member.father, pedigree.family_id, "0", "0", "1", "-")
+                        member.father, pedigree.family_id, "0", "0", "1", "-",
+                        generated=True)
                     new_members.append(father.member)
 
         pedigree.add_members(new_members)
