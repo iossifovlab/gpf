@@ -3,6 +3,7 @@ from box import Box
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.lift_over_annotator import LiftOverAnnotator
 from annotation.annotation_pipeline import PipelineAnnotator
+from annotation.tools.schema import Schema
 
 from .conftest import relative_to_this_test_folder
 
@@ -13,6 +14,8 @@ from .conftest import relative_to_this_test_folder
     ("chr1:10000", lambda c, p: [], None),
 ])
 def test_lift_over(mocker, location, lift_over, expected):
+
+    schema = Schema.from_dict({'str': 'location'})
 
     options = Box({
         'mode': 'replace',
@@ -41,7 +44,7 @@ def test_lift_over(mocker, location, lift_over, expected):
             "annotation.tools.lift_over_annotator."
             "LiftOverAnnotator.build_lift_over"):
 
-        annotator = LiftOverAnnotator(config)
+        annotator = LiftOverAnnotator(config, schema)
         assert annotator is not None
 
         annotator.lift_over = mocker.Mock()
@@ -64,6 +67,8 @@ def test_lift_over(mocker, location, lift_over, expected):
 ])
 def test_pipeline_with_liftover(
         mocker, location, lift_over, expected_location):
+    
+    schema = Schema.from_dict({'str': 'location'})
 
     options = Box({
             "default_arguments": None,
@@ -80,7 +85,7 @@ def test_pipeline_with_liftover(
             "LiftOverAnnotator.build_lift_over"):
 
         pipeline = PipelineAnnotator.build(
-            options, filename, defaults={
+            options, filename, schema, defaults={
                 "fixtures_dir": relative_to_this_test_folder("fixtures/")
             })
         assert pipeline is not None

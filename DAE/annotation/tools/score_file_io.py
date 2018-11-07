@@ -12,7 +12,8 @@ from configparser import ConfigParser
 from box import Box
 
 from annotation.tools.annotator_config import LineConfig
-from annotation.tools.file_io import TabixReader
+from annotation.tools.file_io_tsv import TabixReader
+from annotation.tools.schema import Schema
 
 
 def conf_to_dict(path):
@@ -20,9 +21,13 @@ def conf_to_dict(path):
     conf_parser.optionxform = str
     conf_parser.read_file(path)
 
+    assert 'general' in conf_parser
+    assert 'columns' in conf_parser
+    assert 'schema' in conf_parser
     conf_settings = dict(conf_parser.items('general'))
-    conf_settings_cols = {'columns': dict(conf_parser.items('columns'))}
-    conf_settings.update(conf_settings_cols)
+    conf_settings['columns'] = dict(conf_parser.items('columns'))
+    conf_settings['schema'] = \
+        Schema.from_dict(dict(conf_parser.items('schema')))
     return conf_settings
 
 
@@ -39,6 +44,8 @@ class ScoreFile(TabixReader):
         super(ScoreFile, self)._setup()
 
         self.line_config = LineConfig(self.config.header)
+
+        self.schema = self.config.schema
 
         self.chr_name = self.config.columns.chr
         self.pos_begin_name = self.config.columns.pos_begin

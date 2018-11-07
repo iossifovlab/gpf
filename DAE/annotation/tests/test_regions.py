@@ -9,6 +9,7 @@ from .conftest import relative_to_this_test_folder
 
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.score_annotator import PositionScoreAnnotator
+from annotation.tools.schema import Schema
 
 
 phast_chr1_2 = """CHROM	POS	REF	ALT	RESULT_phastCons100way
@@ -71,12 +72,13 @@ def test_regions_parameterized(
         virtuals=[]
     )
 
-    score_annotator = PositionScoreAnnotator(config)
-    assert score_annotator is not None
-
-    captured = capsys.readouterr()
-
     with variants_io("fixtures/input3.tsv.gz", options) as io_manager:
+        score_annotator = PositionScoreAnnotator(config,
+                                                 io_manager.reader.schema)
+        assert score_annotator is not None
+
+        captured = capsys.readouterr()
+
         score_annotator.annotate_file(io_manager)
 
     captured = capsys.readouterr()
@@ -139,12 +141,13 @@ def test_regions_parameterized_missing_scores(
         virtuals=[]
     )
 
-    score_annotator = PositionScoreAnnotator(config)
-    assert score_annotator is not None
-
-    captured = capsys.readouterr()
-
     with variants_io("fixtures/input3.tsv.gz", options) as io_manager:
+        score_annotator = PositionScoreAnnotator(config,
+                                                 io_manager.reader.schema)
+        assert score_annotator is not None
+
+        captured = capsys.readouterr()
+
         score_annotator.annotate_file(io_manager)
 
     captured = capsys.readouterr()
@@ -190,12 +193,13 @@ def test_regions_simple(
         virtuals=[]
     )
 
-    score_annotator = PositionScoreAnnotator(config)
-    assert score_annotator is not None
-
-    captured = capsys.readouterr()
-
     with variants_io("fixtures/input3.tsv.gz", options) as io_manager:
+        score_annotator = PositionScoreAnnotator(config,
+                                                 io_manager.reader.schema)
+        assert score_annotator is not None
+
+        captured = capsys.readouterr()
+
         score_annotator.annotate_file(io_manager)
 
     captured = capsys.readouterr()

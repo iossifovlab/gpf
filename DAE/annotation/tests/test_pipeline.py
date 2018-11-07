@@ -85,8 +85,8 @@ def test_build_pipeline_configuration():
     options = Box({
             "default_arguments": None,
             "vcf": True,
-        }, 
-        default_box=True, 
+        },
+        default_box=True,
         default_box_attr=None)
 
     filename = relative_to_this_test_folder(
@@ -136,7 +136,7 @@ input2_score2_expected = \
 ])
 def test_build_pipeline(
         expected_df, variants_io, capsys, config_file, expected):
-    
+
     options = Box({
             "default_arguments": None,
             "vcf": True,
@@ -146,14 +146,14 @@ def test_build_pipeline(
 
     filename = relative_to_this_test_folder(config_file)
 
-    pipeline = PipelineAnnotator.build(
-        options, filename, defaults={
-            "fixtures_dir": relative_to_this_test_folder("fixtures/")
-        })
-    assert pipeline is not None
-
     captured = capsys.readouterr()
     with variants_io("fixtures/input2.tsv") as io_manager:
+        pipeline = PipelineAnnotator.build(
+            options, filename, io_manager.reader.schema,
+            defaults={
+                "fixtures_dir": relative_to_this_test_folder("fixtures/")
+            })
+        assert pipeline is not None
         pipeline.annotate_file(io_manager)
     captured = capsys.readouterr()
 
@@ -161,7 +161,7 @@ def test_build_pipeline(
     print(captured.out)
 
     cap_df = expected_df(captured.out)
-    
+
     pd.testing.assert_frame_equal(
         cap_df, expected_df(expected),
         check_less_precise=3,
@@ -191,9 +191,8 @@ test	42	test	42	test	42
 test	42	test	42	test	42
 """
 
-
 def test_pipeline_change_variants_position(variants_io, capsys, expected_df):
-    
+
     options = Box({
             "default_arguments": None,
             "vcf": True,
@@ -204,13 +203,14 @@ def test_pipeline_change_variants_position(variants_io, capsys, expected_df):
     filename = relative_to_this_test_folder(
         "fixtures/variant_coordinates_change.conf")
 
-    pipeline = PipelineAnnotator.build(
-        options, filename, defaults={
-            "fixtures_dir": relative_to_this_test_folder("fixtures/")
-        })
-    assert pipeline is not None
-
     with variants_io("fixtures/input2.tsv") as io_manager:
+        pipeline = PipelineAnnotator.build(
+            options, filename, io_manager.reader.schema,
+            defaults={
+                "fixtures_dir": relative_to_this_test_folder("fixtures/")
+            })
+        assert pipeline is not None
+
         pipeline.annotate_file(io_manager)
     captured = capsys.readouterr()
 
@@ -218,7 +218,7 @@ def test_pipeline_change_variants_position(variants_io, capsys, expected_df):
     print(captured.out)
 
     pd.testing.assert_frame_equal(
-        expected_df(captured.out), 
+        expected_df(captured.out),
         expected_df(expected_change_variants_position),
         check_less_precise=3,
         check_names=False)
