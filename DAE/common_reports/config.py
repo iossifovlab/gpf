@@ -7,6 +7,7 @@ from configparser import ConfigParser
 from box import Box
 
 import common.config
+from variants.attributes import Role
 
 
 class CommonReportsConfig(object):
@@ -45,3 +46,7 @@ class CommonReportsConfig(object):
 
     def _studies(self):
         return self._parse_data(self.config.CommonReports.studies)
+
+    def _counters_roles(self):
+        return [Role.from_name(role)
+                for role in self.config.CommonReports.counters_role.split(',')]

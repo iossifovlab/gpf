@@ -88,8 +88,16 @@ class Family(object):
         return index
 
     def get_people_with_role(self, role):
+        if not isinstance(role, Role):
+            role = Role.from_name(role)
         return list(filter(
-            lambda m: m.role == Role.from_name(role), self.members_in_order))
+            lambda m: m.role == role, self.members_in_order))
+
+    def get_people_with_roles(self, roles):
+        if not isinstance(roles[0], Role):
+            roles = [Role.from_name(role) for role in roles]
+        return list(filter(
+            lambda m: m.role in roles, self.members_in_order))
 
     @property
     def members_ids(self):
