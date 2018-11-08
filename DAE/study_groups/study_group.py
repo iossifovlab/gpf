@@ -40,6 +40,19 @@ class StudyGroup(object):
 
         return result
 
+    def combine_dicts(self, first, second):
+        same_families = first.keys() & second.keys()
+        combined_dict = {**first, **second}
+        for sf in same_families:
+            combined_dict[sf] =\
+                first[sf] if len(first[sf]) > len(second[sf]) else second[sf]
+        return combined_dict
+
+    @property
+    def families(self):
+        return functools.reduce(lambda x, y: self.combine_dicts(x, y),
+                                [study.families for study in self.studies])
+
     @property
     def study_names(self):
         return self._study_names
