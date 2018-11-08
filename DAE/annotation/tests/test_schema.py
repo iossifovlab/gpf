@@ -64,11 +64,23 @@ def test_merge_schemas(generic_schema, generic_schema_alt):
 @pytest.mark.skipif(parquet_enabled is False,
                     reason='pyarrow module not installed')
 def test_to_arrow(generic_pq_schema, generic_pa_schema):
-    assert generic_pq_schema.to_arrow() == generic_pa_schema
+    converted_schema = generic_pq_schema.to_arrow()
+    assert [name in generic_pa_schema.names for name in converted_schema.names]
+    for name in converted_schema.names:
+        assert converted_schema.field_by_name(name).type == \
+            generic_pa_schema.field_by_name(name).type
 
 
 @pytest.mark.skipif(parquet_enabled is False,
                     reason='pyarrow module not installed')
 def test_from_arrow(generic_pq_schema, generic_pa_schema):
-    schema_from_pa = ParquetSchema.from_arrow(generic_pa_schema)
-    assert schema_from_pa.columns == generic_pq_schema.columns
+    converted_schema = ParquetSchema.from_arrow(generic_pa_schema)
+    assert [col in generic_pq_schema.columns
+            for col in converted_schema.columns]
+    for col in converted_schema.columns:
+        assert converted_schema.columns[col].type_name == \
+            generic_pq_schema.columns[col].type_name
+        assert converted_schema.columns[col].type_py == \
+            generic_pq_schema.columns[col].type_py
+        assert converted_schema.columns[col].type_pa == \
+            generic_pq_schema.columns[col].type_pa

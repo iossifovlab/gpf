@@ -5,12 +5,13 @@ from box import Box
 class Schema(object):
 
     # New types only need to be added here.
-    type_map = {'str': str,
-                'float': float,
-                'int': int,
-                'list(str)': str,
-                'list(float)': float,
-                'list(int)': int}
+    type_map = OrderedDict([
+                ('str', str),
+                ('float', float),
+                ('int', int),
+                ('list(str)', str),
+                ('list(float)', float),
+                ('list(int)', int)])
 
     def __init__(self):
         self.columns = OrderedDict()
@@ -27,8 +28,10 @@ class Schema(object):
     def from_dict(cls, schema_dict):
         new_schema = Schema()
         assert type(schema_dict) is dict
-        for col_type, col_list in schema_dict.items():
-            assert col_type in new_schema.type_map
+        for col_type in cls.type_map.keys():
+            if col_type not in schema_dict:
+                continue
+            col_list = schema_dict[col_type]
             col_list.replace(' ', '')
             col_list.replace('\t', '')
             col_list.replace('\n', '')
@@ -42,7 +45,6 @@ class Schema(object):
         missing_columns = OrderedDict()
         for col_name, col_type in right.columns.items():
             if col_name in left.columns:
-                # assert left.columns[col_name] == col_type
                 left.columns[col_name] = col_type
             else:
                 missing_columns[col_name] = col_type
