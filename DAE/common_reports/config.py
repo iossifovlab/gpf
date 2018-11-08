@@ -31,11 +31,17 @@ class CommonReportsConfig(object):
         self.config = Box(common.config.to_dict(config), default_box=True,
                           default_box_attr=None)
 
-    def _datasets(self):
-        return self.config.CommonReports.datasets.split(',')
+    def _parse_data(self, data):
+        parsed_data = {}
+        for d in data.split(','):
+            split_data = d.split(':')
+            if len(split_data) == 1:
+                split_data.append('phenotype')
+            parsed_data[split_data[0]] = split_data[1]
+        return parsed_data
 
     def _study_groups(self):
-        return self.config.CommonReports.study_groups.split(',')
+        return self._parse_data(self.config.CommonReports.study_groups)
 
     def _studies(self):
-        return self.config.CommonReports.studies.split(',')
+        return self._parse_data(self.config.CommonReports.studies)
