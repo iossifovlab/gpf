@@ -3,10 +3,14 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
+import pytest
 from django.utils.http import urlencode
 from rest_framework import status
 
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
+
+
+pytestmark = pytest.mark.usefixtures("gene_info_cache_dir", "mock_preloader_gene_info_config")
 
 
 class Test(BaseAuthenticatedUserTest):
@@ -14,7 +18,7 @@ class Test(BaseAuthenticatedUserTest):
     def test_gene_sets_collections(self):
         url = "/api/v3/gene_sets/gene_sets_collections"
         response = self.client.get(url,)
-        self.assertEqual(200, response.status_code)
+        assert status.HTTP_200_OK == response.status_code, repr(response.content)
 
         data = response.data
         self.assertEquals(9, len(data))
@@ -33,11 +37,13 @@ class Test(BaseAuthenticatedUserTest):
             }
         }
         response = self.client.post(url, query, format='json')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
+
+        assert status.HTTP_200_OK == response.status_code, repr(response.content)
+
         result = list(response.streaming_content)
         count = len(result)
         # self.assertEqual(576 + 1, count)
-        self.assertEqual(582, count)
+        assert 582 == count
 
     def test_gene_set_download_lgds_recurrent(self):
         url = "/api/v3/gene_sets/gene_set_download"
@@ -49,7 +55,7 @@ class Test(BaseAuthenticatedUserTest):
             }
         }
         response = self.client.post(url, query, format='json')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        assert status.HTTP_200_OK == response.status_code, repr(response.content)
         result = list(response.streaming_content)
         count = len(result)
         self.assertEqual(44 + 1, count)
@@ -64,7 +70,7 @@ class Test(BaseAuthenticatedUserTest):
             }
         }
         response = self.client.post(url, query, format='json')
-        self.assertEquals(status.HTTP_404_NOT_FOUND, response.status_code)
+        assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
     def test_main_gene_set_not_found(self):
         url = "/api/v3/gene_sets/gene_set_download"
@@ -73,7 +79,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSet": "BadBadName",
         }
         response = self.client.post(url, query, format='json')
-        self.assertEquals(status.HTTP_404_NOT_FOUND, response.status_code)
+        assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
     def test_bad_gene_set_collection_not_found(self):
         url = "/api/v3/gene_sets/gene_set_download"
@@ -82,7 +88,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSet": "BadBadName",
         }
         response = self.client.post(url, query, format='json')
-        self.assertEquals(status.HTTP_404_NOT_FOUND, response.status_code)
+        assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
     def test_get_gene_set_download(self):
         url = "/api/v3/gene_sets/gene_set_download"
@@ -95,7 +101,7 @@ class Test(BaseAuthenticatedUserTest):
         }
         request = "{}?{}".format(url, urlencode(query))
         response = self.client.get(request)
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        assert status.HTTP_200_OK == response.status_code, repr(response.content)
         result = list(response.streaming_content)
         count = len(result)
         # self.assertEqual(576 + 1, count)
@@ -112,7 +118,7 @@ class Test(BaseAuthenticatedUserTest):
         }
         request = "{}?{}".format(url, urlencode(query))
         response = self.client.get(request)
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        assert status.HTTP_200_OK == response.status_code, repr(response.content)
         result = list(response.streaming_content)
         count = len(result)
         # self.assertEqual(546 + 1, count)
@@ -129,7 +135,7 @@ class Test(BaseAuthenticatedUserTest):
         }
         request = "{}?{}".format(url, urlencode(query))
         response = self.client.get(request)
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
+        assert status.HTTP_200_OK == response.status_code, repr(response.content)
         result = list(response.streaming_content)
         count = len(result)
         self.assertEqual(44 + 1, count)
@@ -145,7 +151,7 @@ class Test(BaseAuthenticatedUserTest):
         }
         request = "{}?{}".format(url, urlencode(query))
         response = self.client.get(request)
-        self.assertEquals(status.HTTP_404_NOT_FOUND, response.status_code)
+        assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
     def test_get_main_gene_set_not_found(self):
         url = "/api/v3/gene_sets/gene_set_download"
@@ -155,7 +161,7 @@ class Test(BaseAuthenticatedUserTest):
         }
         request = "{}?{}".format(url, urlencode(query))
         response = self.client.get(request)
-        self.assertEquals(status.HTTP_404_NOT_FOUND, response.status_code)
+        assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
     def test_get_bad_gene_set_collection_not_found(self):
         url = "/api/v3/gene_sets/gene_set_download"
@@ -165,4 +171,4 @@ class Test(BaseAuthenticatedUserTest):
         }
         request = "{}?{}".format(url, urlencode(query))
         response = self.client.get(request)
-        self.assertEquals(status.HTTP_404_NOT_FOUND, response.status_code)
+        assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)

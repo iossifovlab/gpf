@@ -7,7 +7,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from builtins import next
-from builtins import filter
 import os
 import traceback
 import sqlite3
@@ -155,6 +154,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return self.gene_info.getGeneTermAtt(self.gsc_id, att_name)
 
     def load(self):
+        from pprint import pprint
+        pprint(self.cache)
         if len(self.cache) == 0:
             self._pickle_cache()
         return self.get_gene_sets()
@@ -269,6 +270,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def get_gene_set(self, gene_set_id, gene_sets_types={'SD': ['autism']},
                      **kwargs):
+        print(gene_sets_types, kwargs.get('permitted_datasets'))
         gene_sets_types = self._filter_gene_sets_types(
             gene_sets_types,
             kwargs.get('permitted_datasets'))
@@ -446,7 +448,7 @@ class MetaDenovoGeneSetsCollection(DenovoGeneSetsCollection):
     def __init__(self):
         super(MetaDenovoGeneSetsCollection, self).__init__('metadenovo')
 
-    def _generate_cache(self):
+    def _generate_cache(self, _study_group=None):
         raise Exception('MetaDenovoGeneSetsCollections expects to have already'
                         ' generated cache file')
 

@@ -151,7 +151,9 @@ class GeneSetDownloadView(GeneSetsBaseView):
         gene_sets_types = data.get('geneSetsTypes', [])
 
         if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                "unknown gene set collection": gene_sets_collection_id
+            }, status=status.HTTP_404_NOT_FOUND)
 
         gene_set = self.gscs.get_gene_set(
             gene_sets_collection_id,
@@ -160,7 +162,7 @@ class GeneSetDownloadView(GeneSetsBaseView):
             IsDatasetAllowed.permitted_datasets(user)
         )
         if gene_set is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response(    status=status.HTTP_404_NOT_FOUND)
 
         gene_syms = ["{}\r\n".format(s) for s in gene_set['syms']]
         title = '"{}: {}"\r\n'.format(gene_set['name'], gene_set['desc'])
