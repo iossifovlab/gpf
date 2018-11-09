@@ -202,9 +202,15 @@ def family_variants_table(variants, batch_size=1000000):
                         [str(m)
                          for m in allele.variant_in_members])
                     allele_data["variant_in_roles"].append(
-                        [r.value for r in allele.variant_in_roles])
+                        [
+                            r.value if r is not None else None
+                            for r in allele.variant_in_roles
+                        ])
                     allele_data["variant_in_sexes"].append(
-                        [s.value for s in allele.variant_in_sexes])
+                        [
+                            s.value if s is not None else None
+                            for s in allele.variant_in_sexes
+                        ])
 
             if (family_variant_index + 1) % batch_size == 0:
 

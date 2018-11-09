@@ -266,7 +266,7 @@ class RawFamilyVariants(FamiliesBase):
             if allele.is_reference_allele:
                 return False
             person_ids = kwargs['person_ids']
-            if not allele.variant_in_members & set(person_ids):
+            if not set(allele.variant_in_members) & set(person_ids):
                 return False
         if kwargs.get('roles') is not None:
             if allele.is_reference_allele:

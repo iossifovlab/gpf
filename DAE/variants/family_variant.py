@@ -141,8 +141,9 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
                 gt[gt != allele_index] = 0
             else:
                 gt[gt == -1] = 0
-            index = np.nonzero(np.sum(gt, axis=0))
-            self._variant_in_members = set(self.members_ids[index])
+            noindex = np.sum(gt, axis=0) == 0
+            self._variant_in_members = np.copy(self.members_ids)
+            self._variant_in_members[noindex] = None
         return self._variant_in_members
 
     @property
@@ -153,7 +154,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         """
         if self._variant_in_roles is None:
             self._variant_in_roles = [
-                self.family.persons[pid]['role']
+                self.family.persons[pid]['role'] if pid is not None else None
                 for pid in self.variant_in_members
             ]
         return self._variant_in_roles
@@ -165,10 +166,10 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         this family variant.
         """
         if self._variant_in_sexes is None:
-            self._variant_in_sexes = set([
-                self.family.persons[pid]['sex']
+            self._variant_in_sexes = [
+                self.family.persons[pid]['sex'] if pid is not None else None
                 for pid in self.variant_in_members
-            ])
+            ]
         return self._variant_in_sexes
 
     @staticmethod
