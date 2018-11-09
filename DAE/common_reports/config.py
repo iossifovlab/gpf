@@ -50,3 +50,9 @@ class CommonReportsConfig(object):
     def _counters_roles(self):
         return [Role.from_name(role)
                 for role in self.config.CommonReports.counters_role.split(',')]
+
+    def _effect_groups(self):
+        return self.config.CommonReports.effect_groups.split(',')
+
+    def _effect_types(self):
+        return self.config.CommonReports.effect_types.split(',')

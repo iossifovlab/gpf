@@ -1,7 +1,8 @@
 from config import CommonReportsConfig
 from study_groups.study_group_facade import StudyGroupFacade
 from studies.study_facade import StudyFacade
-from variants.attributes import Role, Sex
+from variants.attributes import Role, Sex, Inheritance
+from common.query_base import EffectTypesMixin
 
 
 class CommonReportsGenerator(CommonReportsConfig):
@@ -11,9 +12,13 @@ class CommonReportsGenerator(CommonReportsConfig):
         self.study_groups = self._study_groups()
         self.studies = self._studies()
         self.counters_roles = self._counters_roles()
+        self.effect_groups = self._effect_groups()
+        self.effect_types = self._effect_types()
 
         self.study_group_facade = StudyGroupFacade()
         self.study_facade = StudyFacade()
+
+        self.effect_types_converter = EffectTypesMixin()
 
     def get_people(self, sex, phenotype, phenotype_column, families):
         people = []
