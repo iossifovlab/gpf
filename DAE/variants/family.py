@@ -99,6 +99,11 @@ class Family(object):
         return list(filter(
             lambda m: m.role in roles, self.members_in_order))
 
+    def get_people_with_phenotype(self, phenotype_column, phenotype):
+        return list(filter(
+            lambda m: m.get_attr(phenotype_column) == phenotype,
+            self.members_in_order))
+
     @property
     def members_ids(self):
         return self.ped_df['personId'].values
