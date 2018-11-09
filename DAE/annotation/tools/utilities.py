@@ -41,6 +41,13 @@ class AnnotatorBase(object):
             New columns to be added to the original variants.
         """
 
+    @property
+    @abstractmethod
+    def schema(self):
+        """
+            Schema of the new columns.
+        """
+
     @abstractmethod
     def line_annotations(self, line, new_columns, variant=None):
         """
@@ -55,8 +62,7 @@ def give_column_number(s, header):
     except Exception:
         print(
             "Used parameter: " + s +
-            " does NOT exist in the input file header",
-            header, file=sys.stderr)
+            " does NOT exist in the input file header", file=sys.stderr)
         sys.exit(-1)
 
 
@@ -105,6 +111,7 @@ def main(argument_parser, annotator_factory,
 
     with IOManager(opts, reader_type, writer_type) as io_manager:
         annotator = annotator_factory(opts=opts, header=io_manager.header)
+        io_manager.set_schema(annotator.schema)
         annotator.annotate_file(io_manager)
 
     sys.stderr.write("# PROCESSING DETAILS:\n")

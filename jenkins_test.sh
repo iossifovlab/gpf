@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+export PYTHONDONTWRITEBYTECODE=1
+
 export PATH=${DAE_SOURCE_DIR}/tools:$PATH
 export PATH=${DAE_SOURCE_DIR}/tests:$PATH
 export PYTHONPATH=${DAE_SOURCE_DIR}:$PYTHONPATH

@@ -80,6 +80,7 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
             thrift_connection=self.connection,
             summary_variants=self.config.summary_variants,
             family_alleles=self.config.family_alleles,
+            pedigree=self.config.pedigree,
             **kwargs
         )
         df.genotype = df.genotype.apply(

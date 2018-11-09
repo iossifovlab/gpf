@@ -1,5 +1,5 @@
 import pytest
-from .utils import relative_to_this_test_folder
+from .conftest import relative_to_this_test_folder
 from box import Box
 from annotation.tools.annotator_base import AnnotatorBase, \
     CopyAnnotator
@@ -34,7 +34,7 @@ def test_create_file_io():
         assert len(io.header) == 3
 
 
-def test_annotator_base_simple():
+def test_annotator_base_simple(variants_io1):
     opts = Box({}, default_box=True, default_box_attr=None)
 
     section_config = AnnotatorConfig(
@@ -48,8 +48,9 @@ def test_annotator_base_simple():
         virtuals=[]
     )
 
-    annotator = AnnotatorBase(section_config)
-    assert annotator is not None
+    with variants_io1 as io_manager:
+        annotator = AnnotatorBase(section_config, io_manager.reader.schema)
+        assert annotator is not None
 
 
 def test_copy_annotator_simple(capsys, variants_io1):
@@ -66,11 +67,11 @@ def test_copy_annotator_simple(capsys, variants_io1):
         virtuals=[]
     )
 
-    annotator = CopyAnnotator(section_config)
-    assert annotator is not None
-    capsys.readouterr()
 
     with variants_io1 as io_manager:
+        annotator = CopyAnnotator(section_config, io_manager.reader.schema)
+        assert annotator is not None
+        capsys.readouterr()
         annotator.annotate_file(io_manager)
 
     # print(variants_input.output)

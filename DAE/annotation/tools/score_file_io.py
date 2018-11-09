@@ -12,7 +12,8 @@ from configparser import ConfigParser
 from box import Box
 
 from annotation.tools.annotator_config import LineConfig
-from annotation.tools.file_io import TabixReader
+from annotation.tools.file_io_tsv import TabixReader
+from annotation.tools.schema import Schema
 
 
 def conf_to_dict(path):
@@ -20,9 +21,13 @@ def conf_to_dict(path):
     conf_parser.optionxform = str
     conf_parser.read_file(path)
 
+    assert 'general' in conf_parser
+    assert 'columns' in conf_parser
+    assert 'schema' in conf_parser
     conf_settings = dict(conf_parser.items('general'))
-    conf_settings_cols = {'columns': dict(conf_parser.items('columns'))}
-    conf_settings.update(conf_settings_cols)
+    conf_settings['columns'] = dict(conf_parser.items('columns'))
+    conf_settings['schema'] = \
+        Schema.from_dict(dict(conf_parser.items('schema')))
     return conf_settings
 
 
@@ -33,12 +38,14 @@ class ScoreFile(TabixReader):
 
         self.score_filename = score_filename
         self.config_filename = config_filename
+        self._load_config()
 
     def _setup(self):
         super(ScoreFile, self)._setup()
 
-        self._load_config()
         self.line_config = LineConfig(self.config.header)
+
+        self.schema = self.config.schema
 
         self.chr_name = self.config.columns.chr
         self.pos_begin_name = self.config.columns.pos_begin
@@ -73,6 +80,7 @@ class ScoreFile(TabixReader):
         self.config.columns.score = self.config.columns.score.split(',')
         self.score_names = self.config.columns.score
         assert all([sn in self.header for sn in self.score_names])
+        self.options.update(self.config)
 
     def _fetch(self, chrom, pos_begin, pos_end):
         raise NotImplementedError()
@@ -141,7 +149,7 @@ class NoLine(object):
         return self.score_file.no_score_value
 
 
-class LineBufferAdapter(object):            
+class LineBufferAdapter(object):
 
     def __init__(self, score_file):
         self.score_file = score_file
@@ -200,11 +208,16 @@ class LineBufferAdapter(object):
         if self.chrom == chrom and \
                 self.pos_end >= pos_end:
             return
-
+        if self.score_file.lines_iterator is None:
+            return
+        line = None
         for line in self.score_file.lines_iterator:
             line = LineAdapter(self.score_file, line)
             if line.pos_end >= pos_begin:
                 break
+
+        if not line:
+            return
 
         self.append(line)
 
@@ -241,7 +254,7 @@ class LineBufferAdapter(object):
 
 
 class IterativeAccess(ScoreFile):
-    LONG_JUMP_THRESHOLD = 5000
+    LONG_JUMP_THRESHOLD = 100000
 
     def __init__(self, options, score_filename, score_config_filename=None):
         super(IterativeAccess, self).__init__(
@@ -265,6 +278,9 @@ class IterativeAccess(ScoreFile):
                 pos_begin < self.buffer.pos_begin or \
                 (pos_begin - self.buffer.pos_end) > self.LONG_JUMP_THRESHOLD:
             self._reset(chrom, pos_begin)
+
+        if self.lines_iterator is None:
+            return []
 
         self.buffer.purge(chrom, pos_begin, pos_end)
         self.buffer.fill(chrom, pos_begin, pos_end)

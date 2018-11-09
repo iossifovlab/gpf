@@ -60,12 +60,15 @@ def get_argument_parser():
 
 FREQ_SCORE_CONFIG = '''
 [general]
-noScoreValue=
+noScoreValue=-100
 [columns]
 chr=chr
 pos_begin=position
 score=all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq
 search=variant
+[schema]
+str=chr,position,variant
+float=all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq
 '''
 
 
@@ -87,7 +90,7 @@ class FrequencyAnnotator(ScoreAnnotator):
 
     def line_annotations(self, line, new_columns):
         return super(FrequencyAnnotator, self).line_annotations(
-            line, [self.frequency])[0]
+            line, [self.frequency])
 
 
 if __name__ == "__main__":

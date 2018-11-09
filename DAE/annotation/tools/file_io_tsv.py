@@ -1,0 +1,313 @@
+from __future__ import print_function
+
+import sys
+import os
+import gzip
+
+import pysam
+from abc import ABCMeta, abstractmethod
+from collections import OrderedDict
+from box import Box
+from annotation.tools.schema import Schema
+
+
+def to_str(column_value):
+    if isinstance(column_value, list):
+        return '|'.join(map(to_str, column_value))
+    elif column_value is None:
+        return ''
+    else:
+        return str(column_value)
+
+
+class AbstractFormat(object):
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self, opts):
+        options = Box(opts.to_dict(), default_box=True, default_box_attr=None)
+        self.options = options
+
+        self.linecount = 0
+        self.linecount_threshold = 1000
+        self.header = None
+        self.schema = None
+
+    @abstractmethod
+    def _setup(self):
+        pass
+
+    @abstractmethod
+    def _cleanup(self):
+        pass
+
+    @abstractmethod
+    def lines_read_iterator(self):
+        pass
+
+    @abstractmethod
+    def line_write(self, input_):
+        pass
+
+
+class TSVFormat(AbstractFormat):
+
+    def __init__(self, opts):
+        super(TSVFormat, self).__init__(opts)
+
+    @staticmethod
+    def is_tabix(filename):
+        if not TSVFormat.is_gzip(filename):
+            return False
+        if not os.path.exists("{}.tbi".format(filename)):
+            return False
+        return True
+
+    @staticmethod
+    def is_gzip(filename):
+        try:
+            if filename == '-':
+                return False
+            if not os.path.exists(filename):
+                return False
+
+            with gzip.open(filename, "rt") as infile:
+                infile.readline()
+            return True
+        except Exception:
+            return False
+
+    def _progress_step(self):
+        self.linecount += 1
+        if self.linecount % self.linecount_threshold == 0:
+            print(self.linecount, 'lines read', file=sys.stderr)
+
+    def _progress_done(self):
+        print('Processed', self.linecount, 'lines.', file=sys.stderr)
+
+
+class TSVReader(TSVFormat):
+
+    def __init__(self, options, filename=None):
+        super(TSVReader, self).__init__(options)
+        if filename is None:
+            assert options.infile is not None
+            filename = options.infile
+        self.filename = filename
+        self.schema = None
+
+        if self.options.region is not None:
+            print(
+                "region {} passed to TSVReader({})"
+                " NOT SUPPORTED and ignored".format(
+                    self.options.region, self.filename),
+                file=sys.stderr)
+        self.separator = '\t'
+        if self.options.separator:
+            self.separator = self.options.separator
+
+    def _setup(self):
+        if self.filename == '-':
+            self.infile = sys.stdin
+        else:
+            assert os.path.exists(self.filename)
+            assert not self.is_gzip(self.filename)
+            self.infile = open(self.filename, 'r')
+
+        self.header = self._header_read()
+        self.schema = Schema.from_dict({'str': ','.join(self.header)})
+
+    def _cleanup(self):
+        self._progress_done()
+
+        if self.filename != '-':
+            self.infile.close()
+
+    def __enter__(self):
+        self._setup()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._cleanup()
+
+    def _header_read(self):
+        if self.header:
+            return self.header
+
+        if self.options.no_header:
+            return None
+        else:
+            line = self.infile.readline()
+            header_str = line.strip()
+            if header_str.startswith("#"):
+                header_str = header_str[1:]
+            return header_str.split(self.separator)
+
+    def line_write(self, line):
+        raise NotImplementedError()
+
+    def line_read(self):
+        line = self.infile.readline()
+        line = line.rstrip('\n')
+
+        if not line:
+            return None
+        self._progress_step()
+        return line.rstrip('\n').split(self.separator)
+
+    def lines_read_iterator(self):
+        line = self.line_read()
+        while line:
+            yield line
+            line = self.line_read()
+
+
+class TSVGzipReader(TSVReader):
+
+    def __init__(self, options, filename=None):
+        super(TSVGzipReader, self).__init__(options, filename)
+
+    def _setup(self):
+
+        assert os.path.exists(self.filename)
+        assert self.is_gzip(self.filename)
+        self.infile = gzip.open(self.filename, 'rt')
+
+        self.header = self._header_read()
+        self.schema = Schema.from_dict({'str': ','.join(self.header)})
+
+
+class TabixReader(TSVFormat):
+
+    def __init__(self, options, filename=None):
+        super(TabixReader, self).__init__(options)
+        if filename is None:
+            assert options.infile is not None
+            filename = options.infile
+        self.filename = filename
+
+        assert os.path.exists(self.filename)
+        assert self.is_gzip(self.filename)
+        assert os.path.exists("{}.tbi".format(self.filename))
+        self.separator = '\t'
+        self.region = self.options.region
+        self._has_chrom_prefix = None
+
+    def _handle_chrom_prefix(self, data):
+        if data is None:
+            return data
+        if self._has_chrom_prefix and not data.startswith('chr'):
+            return "chr{}".format(data)
+        if not self._has_chrom_prefix and data.startswith('chr'):
+            return data[3:]
+        return data
+
+    def _region_reset(self, region):
+        region = self._handle_chrom_prefix(region)
+
+        try:
+            self.lines_iterator = self.infile.fetch(
+                region=region,
+                parser=pysam.asTuple())
+        except ValueError as ex:
+            print("could not find region: ", region,
+                  ex, file=sys.stderr)
+            self.lines_iterator = None
+
+    def _setup(self):
+        self.infile = pysam.TabixFile(self.filename)
+        contig_name = self.infile.contigs[-1]
+        self._has_chrom_prefix = contig_name.startswith('chr')
+
+        self._region_reset(self.region)
+        self.header = self._header_read()
+        self.schema = Schema.from_dict({'str': ','.join(self.header)})
+
+    def _header_read(self):
+        if self.header:
+            return self.header
+
+        if self.options.no_header:
+            return None
+
+        line = self.infile.header
+        line = list(line)
+        if not line:
+            with TSVGzipReader(self.options, self.filename) as tempreader:
+                return tempreader.header
+        else:
+            header_str = line[0]
+            if header_str.startswith("#"):
+                header_str = header_str[1:]
+            return header_str.split(self.separator)
+
+    def _cleanup(self):
+        self._progress_done()
+        self.infile.close()
+
+    def __enter__(self):
+        self._setup()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._cleanup()
+
+    def line_write(self, line):
+        raise NotImplementedError()
+
+    # def line_read(self):
+    #     line = next(self.lines_iterator)
+    #     self._progress_step()
+    #     return line
+
+    def lines_read_iterator(self):
+        if self.lines_iterator is None:
+            return
+
+        for line in self.lines_iterator:
+            self._progress_step()
+            # print(self.linecount, line)
+
+            yield line
+
+
+class TSVWriter(TSVFormat):
+    NA_VALUE = ''
+
+    def __init__(self, options, filename=None):
+        super(TSVWriter, self).__init__(options)
+        if filename is None:
+            assert options.outfile is not None
+            filename = options.outfile
+        self.filename = filename
+
+        self.separator = '\t'
+        if self.options.separator:
+            self.separator = self.options.separator
+
+    def _setup(self):
+        if self.filename == '-':
+            self.outfile = sys.stdout
+        else:
+            self.outfile = open(self.filename, 'w')
+
+    def _cleanup(self):
+        if self.filename != '-':
+            self.outfile.close()
+
+    def line_write(self, line):
+        self.outfile.write('\t'.join(
+            [
+                to_str(val) if val is not None else self.NA_VALUE
+                for val in line
+            ]))
+        self.outfile.write('\n')
+
+    def header_write(self, line):
+        self.line_write(line)
+
+    def line_read(self):
+        raise NotImplementedError()
+
+    def lines_read_iterator(self):
+        raise NotImplementedError()

@@ -2,9 +2,27 @@ import pytest
 
 from box import Box
 
-from .utils import relative_to_this_test_folder
+from .conftest import relative_to_this_test_folder
 from annotation.tools.score_file_io import \
     DirectAccess, IterativeAccess, LineAdapter
+
+
+@pytest.mark.parametrize("score_filename,no_header", [
+    ("fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz", True),
+    ("fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz", True),
+])
+def test_score_file_header(score_filename, no_header):
+    score_filename = relative_to_this_test_folder(score_filename)
+    score_config_filename = None
+    options = Box({}, default_box=True, default_box_attr=None)
+
+    with IterativeAccess(
+            options, score_filename, score_config_filename) as score_io:
+        assert score_io is not None
+        if no_header:
+            assert score_io.options.no_header
+        else:
+            assert not score_io.options.no_header
 
 
 def test_iterative_access_simple():
@@ -40,7 +58,7 @@ def test_iterative_line_adapter():
 
         line = LineAdapter(
             score_io, ["1", "10", "20", "1", "10", "20", "30"])
-        
+
         assert line.pos_begin == 10
 
 

@@ -120,9 +120,9 @@ class VariantAnnotator(object):
         if E[0].effect == 'unk_chr':
             return('unk_chr', 'unk_chr', 'unk_chr')
 
-        effect_type = ""
-        effect_gene = ""
-        effect_details = ""
+        effect_type = []
+        effect_gene = []
+        effect_details = []
 
         D = {}
         [D.setdefault(cls.Severity[i.effect], []).append(i) for i in E]
@@ -131,7 +131,7 @@ class VariantAnnotator(object):
 
         for key in sorted(D, key=int, reverse=True):
             if set_worst_effect is False:
-                effect_type = D[key][0].effect
+                effect_type = [D[key][0].effect]
                 set_worst_effect = True
 
             if effect_type == "intergenic":
@@ -145,11 +145,14 @@ class VariantAnnotator(object):
 
             for gene in G:
                 for v in G[gene]:
-                    effect_details += v.create_effect_details() + ";"
-                effect_gene += gene + ":" + G[gene][0].effect + "|"
+                    effect_details.append(v.create_effect_details())
+                if gene is not None:
+                    gene_str = str(gene)
+                else:
+                    gene_str = ''
+                effect_gene.append(gene_str + ":" + G[gene][0].effect)
 
-            effect_details = effect_details[:-1] + "|"
-        return(effect_type, effect_gene[:-1], effect_details[:-1])
+        return(effect_type, effect_gene, effect_details)
 
     @classmethod
     def effect_description(cls, E):

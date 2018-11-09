@@ -57,7 +57,22 @@ class Dataset(object):
     def studies(self):
         return self.study_group.studies
 
+    def transorm_variants_kwargs(self, **kwargs):
+        if 'pedigreeSelector' in kwargs:
+            pedigree_selector_id = kwargs['pedigreeSelector']['id']
+            pedigree_selectors = list(filter(
+                lambda ps: ps['id'] == pedigree_selector_id,
+                self.pedigree_selectors))
+            if pedigree_selectors:
+                pedigree_selector = pedigree_selectors[0]
+                kwargs['pedigreeSelector']['source'] =\
+                    pedigree_selector['source']
+
+        return kwargs
+
     def get_variants(self, **kwargs):
+        kwargs = self.transorm_variants_kwargs(**kwargs)
+
         return self.study_group.get_variants(**kwargs)
 
     @property
