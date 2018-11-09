@@ -6,14 +6,18 @@ Created on Jul 23, 2018
 @author: lubo
 '''
 from __future__ import print_function
+from collections import OrderedDict
 
 import functools
 import multiprocessing
 import os
 import sys
+import time
 
 import pysam
 import argparse
+
+from RegionOperations import Region
 
 from variants.builder import get_genome
 from variants.configure import Configure
@@ -28,9 +32,11 @@ def get_contigs(tabixfilename):
         return tbx.contigs
 
 
-def import_dae_contig(contig, outdir, config):
+def import_transmitted_region(region_spec, outdir, config):
+    region, suffix = region_spec
+    start = time.time()
     try:
-        print("converting contig {} to {}".format(contig, outdir))
+        print("converting contig {} to {}".format(region, outdir))
         print(config)
 
         assert isinstance(config, Configure)
@@ -38,8 +44,8 @@ def import_dae_contig(contig, outdir, config):
         assert os.path.exists(config.dae.toomany_filename)
         assert os.path.exists(config.dae.family_filename)
 
+        region = "{}:{}-{}".format(region.chrom, region.start, region.end)
         genome = get_genome()
-        region = contig
 
         dae = RawDAE(
             config.dae.summary_filename,
@@ -52,14 +58,14 @@ def import_dae_contig(contig, outdir, config):
         dae.load_families()
         df = dae.load_family_variants()
         if len(df) == 0:
-            print("DONE EMTPY contig {}".format(contig))
+            print("DONE EMTPY region {}".format(region))
             return
         summary_filename = os.path.join(
             outdir,
-            "summary_variants_{}.parquet".format(contig))
+            "summary_variants_{}.parquet".format(suffix))
         alleles_filename = os.path.join(
             outdir,
-            "family_alleles_{}.parquet".format(contig))
+            "family_alleles_{}.parquet".format(suffix))
 
         save_summary_variants_to_parquet(
             dae.wrap_summary_variants(df),
@@ -72,8 +78,31 @@ def import_dae_contig(contig, outdir, config):
     except Exception as ex:
         print("unexpected error:", ex)
         traceback.print_exc(file=sys.stdout)
+    end = time.time()
+    print("DONE converting region {}; time elapsed: {} sec".format(
+        region, int(end-start)))
 
-    print("DONE converting contig {}".format(contig))
+
+def build_contig_regions(genome, TRANSMITTED_STEP=10000000):
+    contigs = OrderedDict(genome.get_all_chr_lengths())
+    contig_parts = OrderedDict([
+        (contig, int(size / TRANSMITTED_STEP + 1))
+        for contig, size in contigs.items()
+    ])
+    contig_regions = OrderedDict()
+    for contig, size in contigs.items():
+        regions = []
+        total_parts = contig_parts[contig]
+        step = int(size / total_parts + 1)
+        for index in range(total_parts):
+            begin_pos = index * step
+            end_pos = (index + 1) * step - 1
+            if index + 1 == total_parts:
+                end_pos = size
+            region = Region(contig, begin_pos, end_pos)
+            regions.append(region)
+        contig_regions[contig] = regions
+    return contig_regions
 
 
 def dae_build(argv):
@@ -85,13 +114,10 @@ def dae_build(argv):
         }})
 
     contigs = get_contigs(config.dae.summary_filename)
-    print(contigs)
+    # contigs = ['chr21', 'chr22']
+
     genome = get_genome(genome_file=None)
-    print(genome.allChromosomes)
-
-    chromosomes = set(genome.allChromosomes)
-
-    # contigs = ['21', '22']
+    contig_regions = build_contig_regions(genome)
 
     dae = RawDAE(
         config.dae.summary_filename,
@@ -106,24 +132,26 @@ def dae_build(argv):
         dae.ped_df,
         os.path.join(argv.out, 'pedigree.parquet'))
 
-    build_contigs = []
-    for contig in contigs:
-        if contig not in chromosomes:
+    build_regions = []
+    for contig_index, contig in enumerate(contigs):
+        if contig not in contig_regions:
             continue
-        assert contig in chromosomes, contig
-        print(contig, genome.get_chr_length(contig),
-              "groups=", 1 + genome.get_chr_length(contig) / 100000000)
-        build_contigs.append(contig)
+        assert contig in contig_regions, contig
+        for part, region in enumerate(contig_regions[contig]):
+            suffix = "-{:0>3}-{:0>3}-{}".format(
+                contig_index, part, contig
+            )
+            build_regions.append((region, suffix))
 
-    print("going to build: ", build_contigs)
+    print("going to build: ", len(build_regions))
 
     converter = functools.partial(
-        import_dae_contig,
+        import_transmitted_region,
         config=config,
         outdir=argv.out)
 
     pool = multiprocessing.Pool(processes=argv.processes_count)
-    pool.map(converter, build_contigs)
+    pool.map(converter, build_regions)
 
 
 def denovo_build(argv):
