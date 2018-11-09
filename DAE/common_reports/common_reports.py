@@ -64,13 +64,92 @@ class CommonReportsGenerator(CommonReportsConfig):
 
         return families_report
 
+    def get_effect_with_phenotype(
+            self, data, effect, phenotype, phenotype_column, families_report):
+        people_with_phenotype = []
+        for family in data.families.values():
+            people_with_phenotype +=\
+                [person.person_id for person in
+                    family.get_people_with_phenotype(
+                        phenotype_column, phenotype)]
+
+        variants_query = {
+            'limit': None,
+            'inheritance': 'denovo',
+            'effect_types':
+                self.effect_types_converter.get_effect_types(
+                    effectTypes=effect),
+            'roles': list(map(str, self.counters_roles)),
+            'person_ids': people_with_phenotype
+        }
+        all_variants_query = {
+            'limit': None,
+            'inheritance': 'denovo',
+            'roles': list(map(str, self.counters_roles))
+        }
+        variants = list(data.query_variants(**variants_query))
+        all_variants = list(data.query_variants(**all_variants_query))
+
+        events_people_count = set()
+        for variant in variants:
+            events_people_count.update(variant.variant_in_members)
+
+        total_people = list(filter(
+            lambda pc: pc['phenotype'] == phenotype,
+            families_report['people_counters']))[0]['people_total']
+
+        events_people_percent = len(events_people_count) / total_people\
+            if total_people else 0
+        events_rate_per_child = len(variants) / len(all_variants)\
+            if len(all_variants) else 0
+
+        return {
+            'events_people_count': len(events_people_count),
+            'events_people_percent': events_people_percent,
+            'events_count': len(variants),
+            'events_rate_per_child': events_rate_per_child,
+            'phenotype': phenotype,
+            'people_roles': self.counters_roles
+        }
+
+    def get_effect(
+            self, data, effect, phenotypes, phenotype_column, families_report):
+        row = {}
+
+        row['effect_type'] = effect
+        row['row'] = []
+        for phenotype in phenotypes:
+            row['row'].append(self.get_effect_with_phenotype(
+                data, effect, phenotype, phenotype_column, families_report))
+
+        return row
+
+    def get_denovo_report(self, data, phenotype_column, families_report):
+        denovo_report = {}
+
+        phenotypes = list(data.get_phenotype_values(phenotype_column))
+        effects = self.effect_groups + self.effect_types
+
+        denovo_report['effect_groups'] = self.effect_groups
+        denovo_report['effect_types'] = self.effect_types
+        denovo_report['phenotype'] = phenotypes
+        denovo_report['rows'] = []
+        for effect in effects:
+            denovo_report['rows'].append(self.get_effect(
+                data, effect, phenotypes, phenotype_column, families_report))
+
+        return denovo_report
+
     def get_common_reports(self, data):
         for d, phenotype_column in data.items():
             common_reports = {}
 
             families_report = self.get_families_report(d, phenotype_column)
+            denovo_report = self.get_denovo_report(
+                d, phenotype_column, families_report)
 
             common_reports['families_report'] = families_report
+            common_reports['denovo_report'] = denovo_report
 
             yield common_reports
 
