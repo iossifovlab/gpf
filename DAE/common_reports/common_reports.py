@@ -43,11 +43,12 @@ class CommonReportsGenerator(CommonReportsConfig):
             'people_roles': self.counters_roles
         }
 
-    def get_families_report(self, data):
+    def get_families_report(self, data, phenotype_column):
         families_report = {}
 
         families = data.families
-        phenotypes = data.phenotypes
+        phenotypes = list(data.get_phenotype_values(phenotype_column))
+
         families_report['families_total'] = len(families)
         families_report['people_counters'] = []
         for phenotype in phenotypes:
@@ -62,7 +63,9 @@ class CommonReportsGenerator(CommonReportsConfig):
         for d, phenotype_column in data.items():
             common_reports = {}
 
-            common_reports['families_report'] = self.get_families_report(d)
+            families_report = self.get_families_report(d, phenotype_column)
+
+            common_reports['families_report'] = families_report
 
             yield common_reports
 
