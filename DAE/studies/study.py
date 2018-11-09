@@ -15,7 +15,7 @@ class Study(object):
 
         return self.backend.query_variants(**kwargs)
 
-    def get_phenotype_values(self, pheno_column):
+    def get_phenotype_values(self, pheno_column='phenotype'):
         return set(self.backend.ped_df[pheno_column])
 
     @property

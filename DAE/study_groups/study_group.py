@@ -29,18 +29,18 @@ class StudyGroup(object):
         self._study_types = study_types if len(study_types) != 0 else None
         self._has_study_types = True if len(study_types) != 0 else False
 
-    def get_variants(self, **kwargs):
+    def query_variants(self, **kwargs):
         return itertools.chain(*[
             study.query_variants(**kwargs) for study in self.studies])
 
-    def get_phenotype_values(self, pheno_column):
+    def get_phenotype_values(self, pheno_column='phenotype'):
         result = set()
         for study in self.studies:
             result.update(study.get_phenotype_values(pheno_column))
 
         return result
 
-    def combine_dicts(self, first, second):
+    def combine_families(self, first, second):
         same_families = first.keys() & second.keys()
         combined_dict = {**first, **second}
         for sf in same_families:
@@ -50,7 +50,7 @@ class StudyGroup(object):
 
     @property
     def families(self):
-        return functools.reduce(lambda x, y: self.combine_dicts(x, y),
+        return functools.reduce(lambda x, y: self.combine_families(x, y),
                                 [study.families for study in self.studies])
 
     @property
