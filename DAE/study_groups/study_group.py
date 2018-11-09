@@ -103,7 +103,7 @@ class StudyGroupWrapper(StudyGroup):
     # minParentsCalled
     # ultraRareOnly
     # TMM_ALL
-    def get_variants(self, **kwargs):
+    def query_variants(self, **kwargs):
         print("kwargs in study group:", kwargs)
         limit = None
         if 'limit' in kwargs:
@@ -142,7 +142,7 @@ class StudyGroupWrapper(StudyGroup):
             kwargs['effect_types'] = expand_effect_types(kwargs['effect_types'])
 
         return itertools.islice(
-            super(StudyGroupWrapper, self).get_variants(**kwargs), limit)
+            super(StudyGroupWrapper, self).query_variants(**kwargs), limit)
 
     def _transform_min_max_alt_frequency(self, kwargs):
         min_value = None

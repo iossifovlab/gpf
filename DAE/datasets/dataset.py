@@ -73,7 +73,7 @@ class Dataset(object):
     def get_variants(self, **kwargs):
         kwargs = self.transorm_variants_kwargs(**kwargs)
 
-        return self.study_group.get_variants(**kwargs)
+        return self.study_group.query_variants(**kwargs)
 
     @property
     def study_names(self):
