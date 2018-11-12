@@ -145,10 +145,6 @@ class RawDAE(BaseDAE):
             genome=genome,
             annotator=annotator)
 
-        # if region is not None:
-        #     assert isinstance(region, bytes), \
-        #         '{} != {}'.format(type(region), bytes)
-
         os.path.exists(summary_filename)
         os.path.exists(toomany_filename)
         os.path.exists(family_filename)

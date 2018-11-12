@@ -62,7 +62,12 @@ class Region(object):
             str(self.start) + "," + str(self.stop) + ")"
 
     def __str__(self):
-        return self.chrom + ":" + str(self.start) + "-" + str(self.stop)
+        if self.start is None:
+            return self.chrom
+        elif self.end is None:
+            return "{}:{}".format(self.chrom, self.start)
+        else:
+            return self.chrom + ":" + str(self.start) + "-" + str(self.stop)
 
     def __hash__(self):
         return str(self).__hash__()

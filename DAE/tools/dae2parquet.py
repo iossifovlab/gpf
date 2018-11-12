@@ -78,11 +78,16 @@ def import_transmitted_region(region_spec, outdir, config):
 
 def build_contig_regions(genome, TRANSMITTED_STEP=10000000):
     contigs = OrderedDict(genome.get_all_chr_lengths())
+    contig_regions = OrderedDict()
+    if TRANSMITTED_STEP is None:
+        for contig, _ in contigs.items():
+            contig_regions[contig] = [Region(contig, None, None)]
+        return contig_regions
+
     contig_parts = OrderedDict([
-        (contig, int(size / TRANSMITTED_STEP + 1))
+        (contig, max(int(size / TRANSMITTED_STEP), 1))
         for contig, size in contigs.items()
     ])
-    contig_regions = OrderedDict()
     for contig, size in contigs.items():
         regions = []
         total_parts = contig_parts[contig]
@@ -147,6 +152,131 @@ def dae_build(argv):
     pool.map(converter, build_regions)
 
 
+def dae_build_region(argv):
+    config = Configure.from_dict({
+        "dae": {
+            'summary_filename': argv.summary,
+            'toomany_filename': argv.toomany,
+            'family_filename': argv.families
+        }})
+
+    # contigs = ['chr21', 'chr22']
+    assert argv.region is not None
+    region = argv.region
+
+    assert argv.out is not None
+    if not os.path.exists(argv.out):
+        os.makedirs(argv.out)
+
+    assert os.path.exists(argv.out)
+    outdir = argv.out
+
+    genome = get_genome(genome_file=None)
+
+    dae = RawDAE(
+        config.dae.summary_filename,
+        config.dae.toomany_filename,
+        config.dae.family_filename,
+        region=region,
+        genome=genome,
+        annotator=None)
+
+    dae.load_families()
+    save_ped_df_to_parquet(
+        dae.ped_df,
+        os.path.join(argv.out, 'pedigree.parquet'))
+
+    print("going to build: ", region)
+    summary_filename = os.path.join(outdir, "summary.parquet")
+    family_filename = os.path.join(outdir, "family.parquet")
+
+    start = time.time()
+    save_variants_to_parquet(
+        dae.full_variants_iterator(),
+        summary_filename,
+        family_filename)
+    end = time.time()
+
+    print("DONE region: {} for {} sec".format(region, round(end-start)))
+
+
+def dae_build_make(argv):
+    config = Configure.from_dict({
+        "dae": {
+            'summary_filename': argv.summary,
+            'toomany_filename': argv.toomany,
+            'family_filename': argv.families
+        }})
+
+    contigs = get_contigs(config.dae.summary_filename)
+    # contigs = ['chr21', 'chr22']
+
+    genome = get_genome(genome_file=None)
+    contig_regions = build_contig_regions(genome, argv.len)
+
+    dae = RawDAE(
+        config.dae.summary_filename,
+        config.dae.toomany_filename,
+        config.dae.family_filename,
+        region=None,
+        genome=genome,
+        annotator=None)
+
+    dae.load_families()
+
+    out = argv.out
+
+    makefile = []
+    all_targets = []
+    for contig_index, contig in enumerate(contigs):
+        if contig not in contig_regions:
+            continue
+        assert contig in contig_regions, contig
+        for part, region in enumerate(contig_regions[contig]):
+            suffix = "{:0>3}-{:0>3}-{}".format(
+                contig_index, part, contig
+            )
+            target_dir = os.path.join(out, suffix)
+            command = "{target}:\n\tmkdir -p {target}".format(
+                target=target_dir)
+            makefile.append(command)
+
+            targets = [
+                os.path.join(target_dir, fname) for fname in
+                [
+                    'family.parquet',
+                    # 'pedigree.parquet', 'summary.parquet',
+                ]
+            ]
+
+            all_targets.append(target_dir)
+            all_targets.extend(targets)
+
+            command = "{targets}: " \
+                "{family_filename} {summary_filename} {toomany_filename}\n\t" \
+                "dae2parquet.py region -o {target_dir} --region {region} " \
+                "{family_filename} {summary_filename} {toomany_filename}" \
+                .format(
+                    target_dir=target_dir,
+                    targets=" ".join(targets),
+                    family_filename=dae.family_filename,
+                    summary_filename=dae.summary_filename,
+                    toomany_filename=dae.toomany_filename,
+                    region=str(region)
+                )
+            makefile.append(command)
+
+    outfile = sys.stdout
+
+    print('SHELL=/bin/bash -o pipefail', file=outfile)
+    print('.DELETE_ON_ERROR:\n', file=outfile)
+
+    print("all: {}".format(" ".join(all_targets)), file=outfile)
+    print("\n", file=outfile)
+
+    print("\n\n".join(makefile), file=outfile)
+
+
 def denovo_build(argv):
     config = Configure.from_dict({
         "denovo": {
@@ -200,33 +330,63 @@ def init_parser_denovo(subparsers):
     )
 
 
-def init_parser_dae(subparsers):
-    parser_dae = subparsers.add_parser('dae')
-
-    parser_dae.add_argument(
+def init_transmitted_common(parser):
+    parser.add_argument(
         'families', type=str,
         metavar='<pedigree filename>',
         help='families file in pedigree format'
     )
-    parser_dae.add_argument(
+    parser.add_argument(
         'summary', type=str,
         metavar='<summary filename>',
         help=''
     )
-    parser_dae.add_argument(
+    parser.add_argument(
         'toomany', type=str,
         metavar='<toomany filename>',
         help=''
     )
-    parser_dae.add_argument(
+    parser.add_argument(
         '-o', '--out', type=str, default='./',
         dest='out', metavar='output filepath',
         help='output filepath. If none specified, current directory is used'
     )
+
+
+def init_parser_dae(subparsers):
+    parser_dae = subparsers.add_parser('dae')
+
+    init_transmitted_common(parser_dae)
+
     parser_dae.add_argument(
         '-p', '--processes', type=int, default=4,
         dest='processes_count', metavar='processes count',
         help='number of processes'
+    )
+
+
+def init_parser_region(subparsers):
+    parser_region = subparsers.add_parser('region')
+
+    init_transmitted_common(parser_region)
+
+    parser_region.add_argument(
+        '--region', type=str,
+        dest='region', metavar='region',
+        help='region to convert'
+    )
+
+
+def init_parser_make(subparsers):
+    parser_region = subparsers.add_parser('make')
+
+    init_transmitted_common(parser_region)
+
+    parser_region.add_argument(
+        '--len', type=int,
+        default=None,
+        dest='len', metavar='len',
+        help='split contigs in regions with length <len>'
     )
 
 
@@ -242,6 +402,8 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 
     init_parser_denovo(subparsers)
     init_parser_dae(subparsers)
+    init_parser_region(subparsers)
+    init_parser_make(subparsers)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -254,3 +416,7 @@ if __name__ == "__main__":
         denovo_build(argv)
     elif argv.type == 'dae':
         dae_build(argv)
+    elif argv.type == 'region':
+        dae_build_region(argv)
+    elif argv.type == 'make':
+        dae_build_make(argv)
