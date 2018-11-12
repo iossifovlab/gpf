@@ -23,8 +23,8 @@ from variants.builder import get_genome
 from variants.configure import Configure
 from variants.raw_dae import RawDAE, RawDenovo
 import traceback
-from variants.parquet_io import save_family_variants_to_parquet,\
-    save_ped_df_to_parquet, save_summary_variants_to_parquet
+from variants.parquet_io import save_ped_df_to_parquet, \
+    save_variants_to_parquet
 
 
 def get_contigs(tabixfilename):
@@ -56,10 +56,6 @@ def import_transmitted_region(region_spec, outdir, config):
             annotator=None)
 
         dae.load_families()
-        df = dae.load_family_variants()
-        if len(df) == 0:
-            print("DONE EMTPY region {}".format(region))
-            return
         summary_filename = os.path.join(
             outdir,
             "summary_variants_{}.parquet".format(suffix))
@@ -67,12 +63,9 @@ def import_transmitted_region(region_spec, outdir, config):
             outdir,
             "family_alleles_{}.parquet".format(suffix))
 
-        save_summary_variants_to_parquet(
-            dae.wrap_summary_variants(df),
-            summary_filename)
-
-        save_family_variants_to_parquet(
-            dae.wrap_family_variants(df),
+        save_variants_to_parquet(
+            dae.full_variants_iterator(),
+            summary_filename,
             alleles_filename)
 
     except Exception as ex:
@@ -171,19 +164,20 @@ def denovo_build(argv):
 
     denovo.load_families()
     df = denovo.load_denovo_variants()
+    assert df is not None
 
     parquet_config = Configure.from_prefix_parquet(argv.out)
     save_ped_df_to_parquet(
         denovo.ped_df,
         parquet_config.parquet.pedigree)
 
-    save_summary_variants_to_parquet(
-        denovo.wrap_summary_variants(df),
-        parquet_config.parquet.summary_variants)
+    # save_summary_variants_to_parquet(
+    #     denovo.wrap_summary_variants(df),
+    #     parquet_config.parquet.summary_variants)
 
-    save_family_variants_to_parquet(
-        denovo.wrap_family_variants(df),
-        parquet_config.parquet.family_alleles)
+    # save_family_variants_to_parquet(
+    #     denovo.wrap_family_variants(df),
+    #     parquet_config.parquet.family_alleles)
 
 
 def init_parser_denovo(subparsers):
