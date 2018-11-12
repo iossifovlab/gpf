@@ -8,32 +8,34 @@ from __future__ import unicode_literals
 import pytest
 from variants.parquet_io import family_variants_table,\
     save_ped_df_to_parquet, read_ped_df_from_parquet, \
-    save_family_allele_df_to_parquet,\
-    read_family_allele_df_from_parquet, summary_table
+    summary_table
+# save_family_allele_df_to_parquet,\
+# read_family_allele_df_from_parquet
+
 from variants.tests.common_tests_helpers import assert_annotation_equals
 import os
 import pyarrow.parquet as pq
 import pandas as pd
 
 
-@pytest.mark.skip
-@pytest.mark.parametrize("fixture_name", [
-    "fixtures/effects_trio_multi",
-    "fixtures/effects_trio",
-])
-def test_parquet_variants(variants_vcf, fixture_name, temp_filename):
-    fvars = variants_vcf(fixture_name)
-    variants = fvars.query_variants(
-        return_reference=True,
-        return_unknown=True
-    )
-    for allele_table in family_variants_table(variants):
-        df = allele_table.to_pandas()
-        save_family_allele_df_to_parquet(df, temp_filename)
+# @pytest.mark.skip
+# @pytest.mark.parametrize("fixture_name", [
+#     "fixtures/effects_trio_multi",
+#     "fixtures/effects_trio",
+# ])
+# def test_parquet_variants(variants_vcf, fixture_name, temp_filename):
+#     fvars = variants_vcf(fixture_name)
+#     variants = fvars.query_variants(
+#         return_reference=True,
+#         return_unknown=True
+#     )
+#     for allele_table in family_variants_table(variants):
+#         df = allele_table.to_pandas()
+#         save_family_allele_df_to_parquet(df, temp_filename)
 
-        df1 = read_family_allele_df_from_parquet(temp_filename)
-        assert df1 is not None
-        assert_annotation_equals(df, df1)
+#         df1 = read_family_allele_df_from_parquet(temp_filename)
+#         assert df1 is not None
+#         assert_annotation_equals(df, df1)
 
 
 @pytest.mark.parametrize("fixture_name", [

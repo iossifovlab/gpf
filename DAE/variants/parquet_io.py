@@ -169,7 +169,7 @@ def setup_allele_batch_data():
     }
 
 
-def family_variants_table(variants, batch_size=1000000):
+def family_variants_table(variants, batch_size=100000):
     family_allele_schema = family_allele_parquet_schema()
 
     allele_data = setup_allele_batch_data()
@@ -192,7 +192,7 @@ def family_variants_table(variants, batch_size=1000000):
                 append(
                     np.asarray([
                         i.value for i in allele.inheritance_in_members
-                    ], dtype=np.int64))
+                    ], dtype=np.int8))
             if allele.is_reference_allele:
                 allele_data["variant_in_members"].append(None)
                 allele_data["variant_in_roles"].append(None)
@@ -246,39 +246,39 @@ def save_family_variants_to_parquet(
         allele_writer.close()
 
 
-def family_allele_df_to_batch(f2s_df):
-    schema = family_allele_parquet_schema()
+# def family_allele_df_to_batch(f2s_df):
+#     schema = family_allele_parquet_schema()
 
-    batch_data = []
-    for name in schema.names:
-        assert name in f2s_df
-        data = f2s_df[name].values
-        field = schema.field_by_name(name)
-        batch_data.append(pa.array(data, type=field.type))
+#     batch_data = []
+#     for name in schema.names:
+#         assert name in f2s_df
+#         data = f2s_df[name].values
+#         field = schema.field_by_name(name)
+#         batch_data.append(pa.array(data, type=field.type))
 
-    batch = pa.RecordBatch.from_arrays(
-        batch_data,
-        schema.names)
+#     batch = pa.RecordBatch.from_arrays(
+#         batch_data,
+#         schema.names)
 
-    return batch
-
-
-def family_variants_df(variants):
-    for atable in family_variants_table(variants):
-        return atable.to_pandas()
+#     return batch
 
 
-def save_family_allele_df_to_parquet(f2s_df, filename):
-    batch = family_allele_df_to_batch(f2s_df)
-    table = pa.Table.from_batches([batch])
-    pq.write_table(table, filename)
+# def family_variants_df(variants):
+#     for atable in family_variants_table(variants):
+#         return atable.to_pandas()
 
 
-def read_family_allele_df_from_parquet(filename):
-    schema = family_allele_parquet_schema()
-    table = pq.read_table(filename, columns=schema.names)
-    df = table.to_pandas()
-    return df
+# def save_family_allele_df_to_parquet(f2s_df, filename):
+#     batch = family_allele_df_to_batch(f2s_df)
+#     table = pa.Table.from_batches([batch])
+#     pq.write_table(table, filename)
+
+
+# def read_family_allele_df_from_parquet(filename):
+#     schema = family_allele_parquet_schema()
+#     table = pq.read_table(filename, columns=schema.names)
+#     df = table.to_pandas()
+#     return df
 
 
 def pedigree_parquet_schema():
