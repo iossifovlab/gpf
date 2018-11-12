@@ -157,6 +157,7 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         assert isinstance(annotator, AnnotatorBase)
         self.schema = Schema.merge_schemas(self.schema,
                                            annotator.schema)
+        self.config.virtual_columns.extend(annotator.config.virtual_columns)
         self.annotators.append(annotator)
 
     def line_annotation(self, aline):
@@ -169,7 +170,8 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         output_schema = Schema.merge_schemas(output_schema, self.schema)
         if self.config.virtual_columns:
             for vcol in self.config.virtual_columns:
-                del(output_schema.columns[vcol])
+                if vcol in self.config.output_columns:
+                    del(output_schema.columns[vcol])
         return output_schema
 
 
