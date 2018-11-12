@@ -35,7 +35,6 @@ from variants.parquet_io import save_ped_df_to_parquet,\
     save_summary_variants_to_parquet, \
     save_family_variants_to_parquet
 
-from variants.raw_parquet import ParquetFamilyVariants
 from variants.raw_thrift import ThriftFamilyVariants
 from variants.raw_vcf import RawFamilyVariants, \
     VariantFactory
@@ -275,21 +274,6 @@ def variants_thrift(parquet_variants, testing_thriftserver):
 
 
 @pytest.fixture(scope='session')
-def variants_parquet(parquet_variants):
-    def builder(path):
-        pedigree, summary, allele = parquet_variants(path)
-        config = Configure.from_dict({
-            'parquet': {
-                'pedigree': pedigree,
-                'summary_variants': summary,
-                'family_alleles': allele,
-            }
-        })
-        return ParquetFamilyVariants(config=config)
-    return builder
-
-
-@pytest.fixture(scope='session')
 def parquet_variants(request, variants_vcf):
     dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
 
@@ -336,12 +320,10 @@ def parquet_variants(request, variants_vcf):
 
 @pytest.fixture
 def variants_implementations(
-        variants_vcf, variants_thrift, variants_parquet):
+        variants_vcf, variants_thrift):
     impls = {
-        # "variants_df": variants_df,
         "variants_vcf": variants_vcf,
         "variants_thrift": variants_thrift,
-        "variants_parquet": variants_parquet,
     }
     return impls
 

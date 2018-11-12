@@ -13,7 +13,33 @@ from variants.family import FamiliesBase, Family
 from impala.dbapi import connect
 from variants.thrift_query import thrift_query
 from variants.parquet_io import read_ped_df_from_parquet
-from variants.raw_df import DfFamilyVariantsBase
+from variants.variant import SummaryVariantFactory
+from variants.family_variant import FamilyVariant
+
+
+class DfFamilyVariantsBase(object):
+
+    @staticmethod
+    def wrap_family_variant_multi(families, records):
+        sv = SummaryVariantFactory.summary_variant_from_records(records)
+
+        family_id = records[0]['family_id']
+        assert all([r['family_id'] == family_id for r in records])
+
+        family = families[family_id]
+        gt = records[0]['genotype']
+        gt = gt.reshape([2, len(family)], order='F')
+
+        return FamilyVariant(sv, family, gt)
+
+    @staticmethod
+    def wrap_variants(families, join_df):
+        join_df = join_df.sort_values(
+            by=["chrom", "summary_variant_index", "family_id", "allele_index"])
+        for _name, group in join_df.groupby(
+                by=["chrom", "summary_variant_index", "family_id"]):
+            rec = group.to_dict(orient='records')
+            yield DfFamilyVariantsBase.wrap_family_variant_multi(families, rec)
 
 
 class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
