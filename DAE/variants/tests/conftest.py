@@ -323,10 +323,10 @@ def parquet_variants(request, variants_vcf):
         save_ped_df_to_parquet(fvars.ped_df, pedigree_filename)
 
         save_summary_variants_to_parquet(
-            fvars.query_variants(),
+            fvars.query_variants(return_reference=True, return_unknown=True),
             summary_filename)
         save_family_variants_to_parquet(
-            fvars.query_variants(),
+            fvars.query_variants(return_reference=True, return_unknown=True),
             allele_filename)
 
         return pedigree_filename, summary_filename, allele_filename

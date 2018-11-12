@@ -22,9 +22,6 @@ def count_variants(
         return_reference=reference,
         return_unknown=unknown)
     vs = list(vs)
-    for v in vs:
-        print(v, v.inheritance_in_members)
-
     return len(vs)
 
 

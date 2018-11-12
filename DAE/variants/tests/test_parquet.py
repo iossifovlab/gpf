@@ -16,6 +16,7 @@ import pyarrow.parquet as pq
 import pandas as pd
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/effects_trio_multi",
     "fixtures/effects_trio",

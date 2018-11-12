@@ -38,11 +38,11 @@ stage_one_transformers = {
 
 
 stage_two_transformers = {
-    'effect_types': QueryTreeToSQLListTransformer("effect_gene_types"),
-    'genes': QueryTreeToSQLListTransformer("effect_gene_genes"),
-    'person_ids': QueryTreeToSQLListTransformer("variant_in_members"),
-    'roles': QueryTreeToSQLListTransformer("variant_in_roles"),
-    'sexes': QueryTreeToSQLListTransformer("variant_in_sexes"),
+    'effect_types': QueryTreeToSQLListTransformer("S.effect_gene_types"),
+    'genes': QueryTreeToSQLListTransformer("S.effect_gene_genes"),
+    'person_ids': QueryTreeToSQLListTransformer("F.variant_in_members"),
+    'roles': QueryTreeToSQLListTransformer("F.variant_in_roles"),
+    'sexes': QueryTreeToSQLListTransformer("F.variant_in_sexes"),
     'inheritance': QueryTreeToSQLListTransformer("inheritance_in_members"),
     'variant_type': QueryTreeToSQLTransformer("variant_type"),
     'position': QueryTreeToSQLTransformer("S.position"),
