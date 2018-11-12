@@ -383,3 +383,19 @@ class RawFamilyVariants(FamiliesBase):
                     summary_variant, fam, vcf=vcf)
                 yield v
         return
+
+    def full_variants_iterator(self):
+        sum_df = self.annot_df
+        variants = self.vcf_vars
+        for summary_index, group_df in \
+                sum_df.groupby("summary_variant_index"):
+            vcf = variants[summary_index]
+            summary_variant = self.VF.summary_variant_from_records(
+                group_df.to_dict(orient='records'))
+
+            family_variants = []
+            for fam in list(self.families.values()):
+                v = self.VF.family_variant_from_vcf(
+                    summary_variant, fam, vcf=vcf)
+                family_variants.append(v)
+            yield summary_variant, family_variants

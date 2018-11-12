@@ -32,8 +32,7 @@ from variants.family import Family, FamiliesBase
 from variants.family_variant import FamilyVariant
 
 from variants.parquet_io import save_ped_df_to_parquet,\
-    save_summary_variants_to_parquet, \
-    save_family_variants_to_parquet
+    save_variants_to_parquet
 
 from variants.raw_thrift import ThriftFamilyVariants
 from variants.raw_vcf import RawFamilyVariants, \
@@ -306,11 +305,9 @@ def parquet_variants(request, variants_vcf):
 
         save_ped_df_to_parquet(fvars.ped_df, pedigree_filename)
 
-        save_summary_variants_to_parquet(
-            fvars.query_variants(return_reference=True, return_unknown=True),
-            summary_filename)
-        save_family_variants_to_parquet(
-            fvars.query_variants(return_reference=True, return_unknown=True),
+        save_variants_to_parquet(
+            fvars.full_variants_iterator(),
+            summary_filename,
             allele_filename)
 
         return pedigree_filename, summary_filename, allele_filename

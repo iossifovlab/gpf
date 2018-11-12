@@ -10,61 +10,61 @@ import os
 import engarde.checks as ec
 import numpy as np
 from utils.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
-from variants.parquet_io import save_family_variants_to_parquet,\
-    save_summary_variants_to_parquet
+# from variants.parquet_io import save_family_variants_to_parquet,\
+#     save_summary_variants_to_parquet
 from variants.raw_dae import RawDAE, BaseDAE
 
 
-def test_load_dae_summary(raw_dae, temp_filename):
-    dae = raw_dae("fixtures/transmission")
-    dae.load_families()
+# def test_load_dae_summary(raw_dae, temp_filename):
+#     dae = raw_dae("fixtures/transmission")
+#     dae.load_families()
 
-    assert dae is not None
+#     assert dae is not None
 
-    df = dae.load_summary_variants()
-    assert df is not None
+#     df = dae.load_summary_variants()
+#     assert df is not None
+# #     print(df.dtypes)
+
+#     ec.has_dtypes(
+#         df,
+#         {
+#             'chrom': object,
+#             'position': int,
+#             'reference': object,
+#             'alternative': object,
+#         })
+
+#     df = dae.load_summary_variants()
+#     print(df.head())
 #     print(df.dtypes)
+#     print(df.columns)
 
-    ec.has_dtypes(
-        df,
-        {
-            'chrom': object,
-            'position': int,
-            'reference': object,
-            'alternative': object,
-        })
+#     for v in dae.wrap_summary_variants(df):
+#         print(v)
 
-    df = dae.load_summary_variants()
-    print(df.head())
-    print(df.dtypes)
-    print(df.columns)
-
-    for v in dae.wrap_summary_variants(df):
-        print(v)
-
-    save_summary_variants_to_parquet(
-        dae.wrap_summary_variants(df),
-        temp_filename)
+#     save_summary_variants_to_parquet(
+#         dae.wrap_summary_variants(df),
+#         temp_filename)
 
 
-# @pytest.mark.skip
-def test_load_dae_family(raw_dae, temp_dirname):
-    dae = raw_dae("fixtures/transmission", b"1")
-    dae.load_families()
+# # @pytest.mark.skip
+# def test_load_dae_family(raw_dae, temp_dirname):
+#     dae = raw_dae("fixtures/transmission", b"1")
+#     dae.load_families()
 
-    f2 = dae.families['f2']
-    assert len(f2) == 4
+#     f2 = dae.families['f2']
+#     assert len(f2) == 4
 
-    assert dae is not None
+#     assert dae is not None
 
-    df = dae.load_family_variants()
-    assert df is not None
+#     df = dae.load_family_variants()
+#     assert df is not None
 
-    aname = os.path.join(temp_dirname, "a.parquet")
+#     aname = os.path.join(temp_dirname, "a.parquet")
 
-    save_family_variants_to_parquet(
-        dae.wrap_family_variants(df, return_reference=False),
-        aname, batch_size=5)
+#     save_family_variants_to_parquet(
+#         dae.wrap_family_variants(df, return_reference=False),
+#         aname, batch_size=5)
 
 
 def test_explode_family_genotype():
