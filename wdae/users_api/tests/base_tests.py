@@ -8,12 +8,20 @@ from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
 from datasets_api.models import Dataset
 
+from precompute import register
+
 
 class BaseAuthenticatedUserTest(APITestCase):
 
     @classmethod
     def setUpClass(cls):
         super(BaseAuthenticatedUserTest, cls).setUpClass()
+        dataset_facade = register.get('datasets').get_facade()
+
+        print("datasets in dataset facade: ", dataset_facade.get_all_dataset_ids())
+        for dataset in dataset_facade.get_all_datasets():
+            Dataset.recreate_dataset_perm(dataset.id, [])
+
         Dataset.recreate_dataset_perm('META', [])
         Dataset.recreate_dataset_perm('SD_TEST', [])
         Dataset.recreate_dataset_perm('SD', [])

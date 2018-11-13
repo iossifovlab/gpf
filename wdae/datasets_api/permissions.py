@@ -17,6 +17,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
     @staticmethod
     def user_has_permission(user, dataset_id):
+        print("Dataset for look for:", dataset_id, list(Dataset.objects.all()))
         dataset_object = Dataset.objects.get(dataset_id=dataset_id)
         return user.has_perm('datasets_api.view', dataset_object) or\
             get_anonymous_user().has_perm('datasets_api.view', dataset_object)

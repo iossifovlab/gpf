@@ -34,16 +34,15 @@ def load_dataset(fixtures_folder, dataset_factory, dataset_name):
 
 @pytest.fixture(scope='session')
 def dataset_facade(dataset_factory):
-    return lambda dataset_id: \
+    return lambda dataset_definition: \
         DatasetFacade(
-            dataset_definition=SingleFileDatasetsDefinition(
-                dataset_id, fixtures_dir(None)),
+            dataset_definition=dataset_definition,
             dataset_factory=dataset_factory
         )
 
 
 @pytest.fixture(scope='session')
-def study_group_factory(study_definition):
+def study_groups_factory(study_definition):
     return StudyGroupFactory(
         studies_definition=study_definition, _class=StudyGroupWrapper)
 
@@ -55,17 +54,17 @@ def study_definition():
 
 
 @pytest.fixture(scope='session')
-def basic_study_group_definition(study_definition):
+def basic_study_groups_definition(study_definition):
     return SingleFileStudiesGroupDefinition(
         'study_groups.conf', fixtures_dir('studies')
     )
 
 
 @pytest.fixture(scope='session')
-def dataset_factory(basic_study_group_definition, study_group_factory):
+def dataset_factory(basic_study_groups_definition, study_groups_factory):
     return DatasetFactory(
-        study_group_factory=study_group_factory,
-        study_group_definition=basic_study_group_definition)
+        study_group_factory=study_groups_factory,
+        study_group_definition=basic_study_groups_definition)
 
 
 @pytest.fixture(scope='session')

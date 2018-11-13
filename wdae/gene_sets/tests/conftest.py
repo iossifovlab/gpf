@@ -7,8 +7,10 @@ from DAE import GeneInfoConfig
 from DAE import GeneSetsCollections
 from studies.study_definition import SingleFileStudiesDefinition
 from study_groups.study_group_definition import SingleFileStudiesGroupDefinition
+from datasets.datasets_definition import SingleFileDatasetsDefinition
 # Used by pytest
 from study_groups.tests.conftest import study_group_facade, study_groups_factory
+from datasets.tests.conftest import dataset_facade, dataset_factory
 
 from utils.fixtures import path_to_fixtures as _path_to_fixtures
 
@@ -24,6 +26,15 @@ def mock_property(mocker):
     return result
 
 
+def mock_preload(mocker, mocked_key, func, original):
+    def mock_get(key):
+        print("mock func called!", key)
+        if key == mocked_key: # gene_sets_collections':
+            return func()
+        return original(key)
+    mocker.patch('preloaded.register.get', new=mock_get)
+
+
 @pytest.fixture(scope='session')
 def studies_definition():
     return SingleFileStudiesDefinition(
@@ -32,16 +43,20 @@ def studies_definition():
 
 
 @pytest.fixture(scope='session')
-def basic_groups_definition():
+def basic_study_groups_definition():
     return SingleFileStudiesGroupDefinition(
         path_to_fixtures('studies', 'study_group.conf'))
+
+
+@pytest.fixture(scope='session')
+def dataset_definition():
+    return SingleFileDatasetsDefinition('datasets.conf', path_to_fixtures())
 
 
 @pytest.fixture()
 def mocked_dataset_config(mocker):
     mp = mock_property(mocker)
 
-    print(path_to_fixtures('gene_info.conf'))
     mp('Config.Config.geneInfoDBconfFile', path_to_fixtures('gene_info.conf'))
     mp('Config.Config.geneInfoDBdir', path_to_fixtures())
     mp('Config.Config.daeDir', path_to_fixtures())
@@ -56,9 +71,8 @@ def gene_info_config(mocked_dataset_config):
 
 @pytest.fixture()
 def gscs(study_group_facade, gene_info_config):
-    res = GeneSetsCollections(
+    return GeneSetsCollections(
         study_group_facade=study_group_facade, config=gene_info_config)
-    return res
 
 
 @pytest.fixture()
@@ -66,12 +80,30 @@ def mock_preloader_gene_info_config(mocker, gscs):
     import preloaded.register
     original = preloaded.register.get
 
-    def mock_get(key):
-        print("mock func called!", key)
-        if key == 'gene_sets_collections':
-            return gscs
-        return original(key)
-    mocker.patch('preloaded.register.get', new=mock_get)
+    def mock_func():
+        print("mocking genesets")
+        return gscs
+
+    mock_preload(mocker, 'gene_sets_collections', mock_func, original)
+
+
+@pytest.fixture()
+def mock_preloader_dataset(mocker, dataset_definition, dataset_facade):
+    # import preloaded.register
+    # original = preloaded.register.get
+    ds_factory = dataset_facade(dataset_definition)
+
+    print("inside mocker: ", ds_factory.get_all_dataset_ids())
+
+    mocker.patch(
+        'datasets_api.datasets_preload.DatasetsPreload.get_facade',
+        return_value=ds_factory)
+    #
+    # def mock_func():
+    #     print("mocking dataset")
+    #     return dataset_facade
+    #
+    # mock_preload(mocker, 'datasets', mock_func, original)
 
 
 @pytest.fixture(scope='module')

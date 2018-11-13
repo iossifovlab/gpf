@@ -22,11 +22,11 @@ class DatasetsPreload(Preload, Precompute):
 
     def __init__(self):
         super(DatasetsPreload, self).__init__()
-        self.dataset_facade = DatasetFacade()
+        self._dataset_facade = DatasetFacade()
 
     def precompute(self):
         try:
-            for dataset_id in self.dataset_facade.get_all_dataset_ids():
+            for dataset_id in self._dataset_facade.get_all_dataset_ids():
                 Dataset.recreate_dataset_perm(dataset_id)
         except (OperationalError, ProgrammingError):
             # Database migrations are probably not run yet, ignore exception
@@ -52,7 +52,7 @@ class DatasetsPreload(Preload, Precompute):
             False)
         logger.warn("PRELOAD_ACTIVE is {}".format(preload_active))
         if preload_active:
-            for dataset_id in self.dataset_facade.load_cache():
+            for dataset_id in self._dataset_facade.load_cache():
                 logger.info(dataset_id)
                 # self.factory.get_dataset(dataset_id)
 
@@ -60,4 +60,5 @@ class DatasetsPreload(Preload, Precompute):
         return self
 
     def get_facade(self):
-        return self.dataset_facade
+        print("GET FACADE CALLED")
+        return self._dataset_facade

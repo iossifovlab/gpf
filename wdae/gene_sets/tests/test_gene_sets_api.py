@@ -10,7 +10,9 @@ from rest_framework import status
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
 
 
-pytestmark = pytest.mark.usefixtures("gene_info_cache_dir", "mock_preloader_gene_info_config")
+pytestmark = pytest.mark.usefixtures(
+    "gene_info_cache_dir", "mock_preloader_gene_info_config",
+    "mock_preloader_dataset")
 
 
 class Test(BaseAuthenticatedUserTest):
@@ -33,7 +35,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs",
             "geneSetsTypes": {
-                "SD_TEST": ["autism", "epilepsy"]
+                "f1": ["autism", "epilepsy"]
             }
         }
         response = self.client.post(url, query, format='json')
@@ -51,7 +53,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.Recurrent",
             "geneSetsTypes": {
-                "SD_TEST": ["autism"]
+                "f1": ["autism"]
             }
         }
         response = self.client.post(url, query, format='json')
@@ -66,7 +68,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.BadBad",
             "geneSetsTypes": {
-                "SD_TEST": ["autism"]
+                "f1": ["autism"]
             }
         }
         response = self.client.post(url, query, format='json')
@@ -96,7 +98,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs",
             "geneSetsTypes": {
-                "SD_TEST": ["autism", "epilepsy"]
+                "f1": ["autism", "epilepsy"]
             }
         }
         request = "{}?{}".format(url, urlencode(query))
@@ -113,7 +115,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs",
             "geneSetsTypes": {
-                "SD_TEST": ["autism"]
+                "f1": ["autism"]
             }
         }
         request = "{}?{}".format(url, urlencode(query))
@@ -130,7 +132,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.Recurrent",
             "geneSetsTypes": {
-                "SD_TEST": ["autism"]
+                "f1": ["autism"]
             }
         }
         request = "{}?{}".format(url, urlencode(query))
@@ -146,7 +148,7 @@ class Test(BaseAuthenticatedUserTest):
             "geneSetsCollection": "denovo",
             "geneSet": "LGDs.BadBad",
             "geneSetsTypes": {
-                "SD_TEST": ["autism"]
+                "f1": ["autism"]
             }
         }
         request = "{}?{}".format(url, urlencode(query))

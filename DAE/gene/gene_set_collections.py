@@ -164,8 +164,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         cache_file_path = self.gene_info.getGeneTermAtt(self.gsc_id, 'file')
         print("cache_file_path", cache_file_path)
         if os.path.exists(cache_file_path):
-            infile = open(cache_file_path, 'rb')
-            self.cache = pickle.load(infile)
+            with open(cache_file_path, 'rb') as infile:
+                self.cache = pickle.load(infile)
         else:
             self._generate_cache()
             infile = open(cache_file_path, 'wb')
