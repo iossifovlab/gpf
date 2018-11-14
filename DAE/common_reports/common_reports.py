@@ -137,13 +137,13 @@ class CommonReportsGenerator(CommonReportsConfig):
             'phenotype': pheno
         }
 
-    def get_families_report(self, data, phenotype):
+    def get_families_report(self, query_object, phenotype):
         families_report = {}
 
         phenotype = self.phenotypes[phenotype]
 
-        families = data.families
-        phenotypes = list(data.get_phenotype_values(phenotype['source']))
+        families = query_object.families
+        phenotypes = list(query_object.get_phenotype_values(phenotype['source']))
 
         families_report['families_total'] = len(families)
         families_report['people_counters'] = []
@@ -160,9 +160,9 @@ class CommonReportsGenerator(CommonReportsConfig):
         return families_report
 
     def get_effect_with_phenotype(
-            self, data, effect, phenotype, phenotype_column, families_report):
+            self, query_object, effect, phenotype, phenotype_column, families_report):
         people_with_phenotype = []
-        for family in data.families.values():
+        for family in query_object.families.values():
             people_with_phenotype +=\
                 [person.person_id for person in
                     family.get_people_with_phenotype(
@@ -182,8 +182,8 @@ class CommonReportsGenerator(CommonReportsConfig):
             'inheritance': 'denovo',
             'roles': list(map(str, self.counters_roles))
         }
-        variants = list(data.query_variants(**variants_query))
-        all_variants = list(data.query_variants(**all_variants_query))
+        variants = list(query_object.query_variants(**variants_query))
+        all_variants = list(query_object.query_variants(**all_variants_query))
 
         events_people_count = set()
         for variant in variants:
@@ -208,21 +208,21 @@ class CommonReportsGenerator(CommonReportsConfig):
         }
 
     def get_effect(
-            self, data, effect, phenotypes, phenotype_column, families_report):
+            self, query_object, effect, phenotypes, phenotype_column, families_report):
         row = {}
 
         row['effect_type'] = effect
         row['row'] = []
         for phenotype in phenotypes:
             row['row'].append(self.get_effect_with_phenotype(
-                data, effect, phenotype, phenotype_column, families_report))
+                query_object, effect, phenotype, phenotype_column, families_report))
 
         return row
 
-    def get_denovo_report(self, data, phenotype_column, families_report):
+    def get_denovo_report(self, query_object, phenotype_column, families_report):
         denovo_report = {}
 
-        phenotypes = list(data.get_phenotype_values(phenotype_column))
+        phenotypes = list(query_object.get_phenotype_values(phenotype_column))
         effects = self.effect_groups + self.effect_types
 
         denovo_report['effect_groups'] = self.effect_groups
@@ -231,20 +231,21 @@ class CommonReportsGenerator(CommonReportsConfig):
         denovo_report['rows'] = []
         for effect in effects:
             denovo_report['rows'].append(self.get_effect(
-                data, effect, phenotypes, phenotype_column, families_report))
+                query_object, effect, phenotypes, phenotype_column, families_report))
 
         return denovo_report
 
-    def get_common_reports(self, data):
-        for d, phenotype_column in data.items():
+    def get_common_reports(self, query_object):
+        for qo, phenotype in query_object.items():
             common_reports = {}
 
-            families_report = self.get_families_report(d, phenotype_column)
+            families_report = self.get_families_report(qo, phenotype)
             denovo_report = self.get_denovo_report(
-                d, phenotype_column, families_report)
+                qo, self.phenotypes[phenotype]['source'], families_report)
 
             common_reports['families_report'] = families_report
             common_reports['denovo_report'] = denovo_report
+            common_reports['name'] = qo.name
 
             yield common_reports
 
