@@ -66,8 +66,9 @@ class CommonReportsConfig(object):
         return self._parse_data(self.config.CommonReports.get('studies', ''))
 
     def _counters_roles(self):
-        return [[Role.from_name(role) for role in roles.split(',')]
-                for roles in self.config.CommonReports.counters_role.split(':')]
+        return [
+            [Role.from_name(role) for role in roles.split(',')]
+            for roles in self.config.CommonReports.counters_role.split(':')]
 
     def _effect_groups(self):
         return self.config.CommonReports.effect_groups.split(',')

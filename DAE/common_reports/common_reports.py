@@ -1,10 +1,16 @@
 import pandas as pd
+import json
+import os
 
 from config import CommonReportsConfig
 from study_groups.study_group_facade import StudyGroupFacade
 from studies.study_facade import StudyFacade
 from variants.attributes import Role, Sex, Inheritance
 from common.query_base import EffectTypesMixin
+from studies.default_settings import COMMON_REPORTS_DIR\
+    as studies_common_reports_dir
+from study_groups.default_settings import COMMON_REPORTS_DIR\
+    as study_groups_common_reports_dir
 
 
 class CommonReportsGenerator(CommonReportsConfig):
@@ -51,7 +57,7 @@ class CommonReportsGenerator(CommonReportsConfig):
             'people_unspecified': people_unspecified,
             'people_total': people_total,
             'phenotype': phenotype,
-            'people_roles': counter_roles
+            'people_roles': list(map(str, counter_roles))
         }
 
     def get_families_with_phenotype(self, families, pheno, phenotype):
@@ -211,7 +217,7 @@ class CommonReportsGenerator(CommonReportsConfig):
             'events_count': len(variants),
             'events_rate_per_child': events_rate_per_child,
             'phenotype': phenotype,
-            'people_roles': counter_roles
+            'people_roles': list(map(str, counter_roles))
         }
 
     def get_effect(
@@ -261,9 +267,24 @@ class CommonReportsGenerator(CommonReportsConfig):
 
             yield common_reports
 
+    def save_common_reports(self):
+        studies = {self.study_facade.get_study(s): ph
+                   for s, ph in self.studies.items()}
+        study_groups = {self.study_group_facade.get_study_group(sg): ph
+                        for sg, ph in self.study_groups.items()}
+        for cr in self.get_common_reports(studies):
+            with open(os.path.join(studies_common_reports_dir,
+                      cr['name'] + '.json'), 'w') as crf:
+                json.dump(cr, crf)
+        for cr in self.get_common_reports(study_groups):
+            with open(os.path.join(study_groups_common_reports_dir,
+                      cr['name'] + '.json'), 'w') as crf:
+                json.dump(cr, crf)
+
 
 def main():
     crg = CommonReportsGenerator()
+    crg.save_common_reports()
 
 
 if __name__ == '__main__':
