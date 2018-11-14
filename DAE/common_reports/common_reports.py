@@ -23,24 +23,27 @@ class CommonReportsGenerator(CommonReportsConfig):
 
         self.effect_types_converter = EffectTypesMixin()
 
-    def get_people(self, sex, phenotype, phenotype_column, families):
+    def get_people(
+            self, sex, phenotype, phenotype_column, families, counter_roles):
         people = []
         for family in families.values():
             people_with_role =\
-                family.get_people_with_roles(self.counters_roles)
+                family.get_people_with_roles(counter_roles)
             people += list(filter(
                 lambda pwr: pwr.sex == sex and
                 pwr.get_attr(phenotype_column) == phenotype,
                 people_with_role))
         return people
 
-    def get_people_counters(self, phenotype, phenotype_column, families):
+    def get_people_counters(
+            self, phenotype, phenotype_column, families, counter_roles):
         people_male = len(self.get_people(
-            Sex.male, phenotype, phenotype_column, families))
+            Sex.male, phenotype, phenotype_column, families, counter_roles))
         people_female = len(self.get_people(
-            Sex.female, phenotype, phenotype_column, families))
+            Sex.female, phenotype, phenotype_column, families, counter_roles))
         people_unspecified = len(self.get_people(
-            Sex.unspecified, phenotype, phenotype_column, families))
+            Sex.unspecified, phenotype, phenotype_column, families,
+            counter_roles))
         people_total = people_male + people_female + people_unspecified
         return {
             'people_male': people_male,
@@ -48,7 +51,7 @@ class CommonReportsGenerator(CommonReportsConfig):
             'people_unspecified': people_unspecified,
             'people_total': people_total,
             'phenotype': phenotype,
-            'people_roles': self.counters_roles
+            'people_roles': counter_roles
         }
 
     def get_families_with_phenotype(self, families, pheno, phenotype):
@@ -143,14 +146,17 @@ class CommonReportsGenerator(CommonReportsConfig):
         phenotype = self.phenotypes[phenotype]
 
         families = query_object.families
-        phenotypes = list(query_object.get_phenotype_values(phenotype['source']))
+        phenotypes = list(query_object.get_phenotype_values(
+            phenotype['source']))
 
         families_report['families_total'] = len(families)
         families_report['people_counters'] = []
         families_report['families_counters'] = []
         for pheno in phenotypes:
-            families_report['people_counters'].append(
-                self.get_people_counters(pheno, phenotype['source'], families))
+            for counter_roles in self.counters_roles:
+                families_report['people_counters'].append(
+                    self.get_people_counters(
+                        pheno, phenotype['source'], families, counter_roles))
             families_report['families_counters'].append(
                     self.get_families_counters(pheno, phenotype, families))
         families_report['families_counters'].append(
@@ -160,7 +166,8 @@ class CommonReportsGenerator(CommonReportsConfig):
         return families_report
 
     def get_effect_with_phenotype(
-            self, query_object, effect, phenotype, phenotype_column, families_report):
+            self, query_object, effect, phenotype, phenotype_column,
+            families_report, counter_roles):
         people_with_phenotype = []
         for family in query_object.families.values():
             people_with_phenotype +=\
@@ -174,13 +181,13 @@ class CommonReportsGenerator(CommonReportsConfig):
             'effect_types':
                 self.effect_types_converter.get_effect_types(
                     effectTypes=effect),
-            'roles': list(map(str, self.counters_roles)),
+            'roles': list(map(str, counter_roles)),
             'person_ids': people_with_phenotype
         }
         all_variants_query = {
             'limit': None,
             'inheritance': 'denovo',
-            'roles': list(map(str, self.counters_roles))
+            'roles': list(map(str, counter_roles))
         }
         variants = list(query_object.query_variants(**variants_query))
         all_variants = list(query_object.query_variants(**all_variants_query))
@@ -204,22 +211,26 @@ class CommonReportsGenerator(CommonReportsConfig):
             'events_count': len(variants),
             'events_rate_per_child': events_rate_per_child,
             'phenotype': phenotype,
-            'people_roles': self.counters_roles
+            'people_roles': counter_roles
         }
 
     def get_effect(
-            self, query_object, effect, phenotypes, phenotype_column, families_report):
+            self, query_object, effect, phenotypes, phenotype_column,
+            families_report):
         row = {}
 
         row['effect_type'] = effect
         row['row'] = []
         for phenotype in phenotypes:
-            row['row'].append(self.get_effect_with_phenotype(
-                query_object, effect, phenotype, phenotype_column, families_report))
+            for counter_roles in self.counters_roles:
+                row['row'].append(self.get_effect_with_phenotype(
+                    query_object, effect, phenotype, phenotype_column,
+                    families_report, counter_roles))
 
         return row
 
-    def get_denovo_report(self, query_object, phenotype_column, families_report):
+    def get_denovo_report(
+            self, query_object, phenotype_column, families_report):
         denovo_report = {}
 
         phenotypes = list(query_object.get_phenotype_values(phenotype_column))
@@ -231,7 +242,8 @@ class CommonReportsGenerator(CommonReportsConfig):
         denovo_report['rows'] = []
         for effect in effects:
             denovo_report['rows'].append(self.get_effect(
-                query_object, effect, phenotypes, phenotype_column, families_report))
+                query_object, effect, phenotypes, phenotype_column,
+                families_report))
 
         return denovo_report
 
