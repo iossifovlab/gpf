@@ -14,6 +14,7 @@ class CommonReportsGenerator(CommonReportsConfig):
         self.counters_roles = self._counters_roles()
         self.effect_groups = self._effect_groups()
         self.effect_types = self._effect_types()
+        self.phenotypes = self._phenotypes()
 
         self.study_group_facade = StudyGroupFacade()
         self.study_facade = StudyFacade()
@@ -48,18 +49,19 @@ class CommonReportsGenerator(CommonReportsConfig):
             'people_roles': self.counters_roles
         }
 
-    def get_families_report(self, data, phenotype_column):
+    def get_families_report(self, data, phenotype):
         families_report = {}
 
+        phenotype = self.phenotypes[phenotype]
+
         families = data.families
-        phenotypes = list(data.get_phenotype_values(phenotype_column))
+        phenotypes = list(data.get_phenotype_values(phenotype['source']))
 
         families_report['families_total'] = len(families)
         families_report['people_counters'] = []
-        for phenotype in phenotypes:
+        for pheno in phenotypes:
             families_report['people_counters'].append(
-                self.get_people_counters(
-                    phenotype, phenotype_column, families))
+                self.get_people_counters(pheno, phenotype['source'], families))
         families_report['phenotypes'] = list(phenotypes)
 
         return families_report
