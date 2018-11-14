@@ -123,10 +123,10 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
             mail = send_mail(subject, message, from_email, override)
         else:
             mail = send_mail(subject, message, from_email, [self.email])
-            LOGGER.info("email sent: to:      <" + self.email + ">")
-            LOGGER.info("email sent: from:    <" + from_email + ">")
-            LOGGER.info("email sent: subject: " + subject)
-            LOGGER.info("email sent: message: " + message)
+            LOGGER.info("email sent: to:      <" + str(self.email) + ">")
+            LOGGER.info("email sent: from:    <" + str(from_email) + ">")
+            LOGGER.info("email sent: subject: " + str(subject))
+            LOGGER.info("email sent: message: " + str(message))
 
         return mail
 
