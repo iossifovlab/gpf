@@ -19,3 +19,5 @@ output
 /gpf-html.tar.gz
 .pytest_cache
 metastore_db
+wdae/docs/_build
+.vscode
