@@ -1,3 +1,5 @@
+import pandas as pd
+
 from config import CommonReportsConfig
 from study_groups.study_group_facade import StudyGroupFacade
 from studies.study_facade import StudyFacade
@@ -49,6 +51,92 @@ class CommonReportsGenerator(CommonReportsConfig):
             'people_roles': self.counters_roles
         }
 
+    def get_families_with_phenotype(self, families, pheno, phenotype):
+        if pheno is None:
+            return dict(filter(
+                lambda family:
+                    len(family[1].get_family_phenotypes(phenotype['source']) -
+                        set(phenotype['unaffected']['name'])) > 1,
+                    families.items()))
+        return dict(filter(
+            lambda family:
+                not (family[1].get_family_phenotypes(phenotype['source']) ^
+                     set([pheno, phenotype['unaffected']['name']])),
+                families.items()))
+
+    def families_to_dataframe(self, families, phenotype_column):
+        families_records = []
+        for family in families.values():
+            members = family.members_in_order
+            families_records +=\
+                [(member.family_id, member.sex.name, member.role.name,
+                  member.status, member.layout_position, member.generated,
+                  member.get_attr(phenotype_column)) for member in members]
+        return pd.DataFrame.from_records(
+            families_records,
+            columns=['family_id', 'sex', 'role', 'status', 'layout_position',
+                     'generated', 'phenotype'])
+
+    def compare_families(self, first, second, phenotype_column):
+        families = self.families_to_dataframe(
+            {first.family_id: first, second.family_id: second},
+            phenotype_column)
+
+        grouped_families = families.groupby(
+            ['sex', 'role', 'status', 'generated', 'phenotype'])
+
+        for _, group in grouped_families:
+            if len(group) == 2:
+                continue
+            elif group.size % 2 == 1:
+                return False
+            else:
+                family_group = group.groupby(['family_id'])
+                if group.shape[0] != (len(family_group.groups) * 2):
+                    return False
+
+        return families.shape[0] == (len(grouped_families.groups) * 2)
+
+    def get_member_color(self, member, phenotype):
+        if member.generated:
+            return '#E0E0E0'
+        else:
+            pheno = member.get_attr(phenotype['source'])
+            domain = phenotype['domain'].get(pheno, None)
+            if domain and pheno:
+                return domain['color']
+            else:
+                return phenotype['default']['color']
+
+    def get_families_counters(self, pheno, phenotype, families):
+        families = self.get_families_with_phenotype(families, pheno, phenotype)
+
+        families_counters = {}
+        for family_id, family in families.items():
+            is_family_in_counters = False
+            for unique_family in families_counters.keys():
+                if self.compare_families(
+                        family, unique_family, phenotype['source']):
+                    is_family_in_counters = True
+                    families_counters[unique_family] += 1
+                    break
+            if not is_family_in_counters:
+                families_counters[family] = 1
+
+        return {
+            'counters': [
+                {
+                    'pedigree': [['family', 'person', 'father', 'mother',
+                                  member.sex.short(),
+                                  self.get_member_color(member, phenotype),
+                                  member.layout_position, member.generated]
+                                 for member in family.members_in_order],
+                    'pedigrees_count': counter
+                } for family, counter in families_counters.items()
+            ],
+            'phenotype': pheno
+        }
+
     def get_families_report(self, data, phenotype):
         families_report = {}
 
@@ -59,9 +147,14 @@ class CommonReportsGenerator(CommonReportsConfig):
 
         families_report['families_total'] = len(families)
         families_report['people_counters'] = []
+        families_report['families_counters'] = []
         for pheno in phenotypes:
             families_report['people_counters'].append(
                 self.get_people_counters(pheno, phenotype['source'], families))
+            families_report['families_counters'].append(
+                    self.get_families_counters(pheno, phenotype, families))
+        families_report['families_counters'].append(
+            self.get_families_counters(None, phenotype, families))
         families_report['phenotypes'] = list(phenotypes)
 
         return families_report
