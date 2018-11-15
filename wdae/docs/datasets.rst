@@ -8,8 +8,9 @@ does a dataset belong to.
 
 Adding group to a dataset
 --------------------------
-In the *Datasets* tab, by typing group names in the text bar in the 'Groups with access'
-column, and then clicking 'Add', existing groups can be assigned to datasets.
+In the *Datasets* tab, by typing group names in the text bar in the 
+'Groups with access' column, and then clicking 'Add', existing groups can 
+be assigned to datasets.
 
 .. figure:: imgs/d-img1.png
    :width: 450px

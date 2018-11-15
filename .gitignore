@@ -24,3 +24,4 @@ _build/
 test_data/
 /test_data/
 .vscode/
+wdae/docs/_build

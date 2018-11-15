@@ -3,8 +3,8 @@ Created on Nov 16, 2016
 
 @author: lubo
 '''
-from pheno_tool.genotype_helper import VariantsType as VT
 import pytest
+from pheno_tool.genotype_helper import VariantsType as VT
 
 
 def test_get_variants_denovo(
