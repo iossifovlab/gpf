@@ -100,6 +100,7 @@ class ConfigurableEntityConfig(object):
         default_values['work_dir'] = work_dir
 
         config_parser = CaseSensitiveConfigParser(defaults=default_values)
+        print("READING CONFIG FROM '", config_file, "'")
         config_parser.read(config_file)
 
         config = dict((section, dict(config_parser.items(section)))

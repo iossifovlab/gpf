@@ -58,3 +58,4 @@ class BaseAuthenticatedUserTest(APITestCase):
         self.client.login(email='admin@example.com', password='secret')
         token = Token.objects.get(user__email='admin@example.com')
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+

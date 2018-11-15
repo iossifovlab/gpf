@@ -91,7 +91,11 @@ def three_users_in_a_group(db, three_new_users, empty_group):
 
 
 @pytest.fixture()
-def logged_in_user(active_user):
-    client = APIClient()
+def logged_in_user(client, active_user):
     client.login(email=active_user.email, password='secret')
     return active_user, client
+
+
+@pytest.fixture()
+def client():
+    return APIClient()
