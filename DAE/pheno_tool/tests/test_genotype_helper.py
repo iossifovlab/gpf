@@ -3,6 +3,7 @@ Created on Nov 16, 2016
 
 @author: lubo
 '''
+import pytest
 from pheno_tool.genotype_helper import VariantsType as VT
 
 
@@ -20,6 +21,7 @@ def test_get_variants_denovo(
     assert 137 == len(variants)
 
 
+@pytest.mark.xfail
 def test_get_variants_father_ultra_rare(
         autism_candidates_genes, genotype_helper):
 
@@ -47,6 +49,7 @@ def test_get_variants_father_ultra_rare(
     assert 176 == len(variants)
 
 
+@pytest.mark.xfail
 def test_get_variants_father_rarity(
         autism_candidates_genes, genotype_helper):
 
@@ -175,6 +178,7 @@ def test_get_persons_variants_denovo(
     assert 137 == len(res)
 
 
+@pytest.mark.xfail
 def test_get_person_variants_father_all(
         autism_candidates_genes, genotype_helper):
 
@@ -213,6 +217,7 @@ def test_get_person_variants_father_all(
     assert '13216.fa' in ps3
 
 
+@pytest.mark.xfail
 def test_get_lgds_variants_for_family(
         autism_candidates_genes, genotype_helper):
 

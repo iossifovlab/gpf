@@ -48,6 +48,7 @@ def male_female_result(r):
     return r[Gender.M], r[Gender.F]
 
 
+@pytest.mark.xfail
 def test_tool_present_in_parent_ultra_rare(
         phdb, all_ssc_studies, gene_set):
 

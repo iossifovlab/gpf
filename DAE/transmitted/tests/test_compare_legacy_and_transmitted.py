@@ -26,6 +26,7 @@ import pytest
 #     assert 176 == len(variants)
 
 
+@pytest.mark.xfail
 @pytest.mark.mysql
 def test_compare_father_ultra_rare(autism_candidates_genes):
     transmitted_study = vDB.get_study("w1202s766e611")
@@ -63,6 +64,7 @@ def test_compare_father_ultra_rare(autism_candidates_genes):
     assert len(mvs) == 39
 
 
+@pytest.mark.xfail
 @pytest.mark.mysql
 def test_compare_father_rarity(autism_candidates_genes):
     transmitted_study = vDB.get_study("w1202s766e611")
