@@ -31,10 +31,10 @@ class Schema(object):
         for col_type in cls.type_map.keys():
             if col_type not in schema_dict:
                 continue
-            col_list = schema_dict[col_type]
-            col_list.replace(' ', '')
-            col_list.replace('\t', '')
-            col_list.replace('\n', '')
+            col_list = schema_dict[col_type]\
+                .replace(' ', '')\
+                .replace('\t', '')\
+                .replace('\n', '')
             for col in col_list.split(','):
                 new_schema.columns[col] = cls.produce_type(col_type)
         return new_schema

@@ -48,8 +48,15 @@ class PipelineConfig(VariantAnnotatorConfig):
             virtuals=[]
         )
         result.pipeline_sections = []
+        result.cleanup_columns = []
+
+        if 'cleanup' in configuration:
+            result.cleanup_columns = \
+                result._parse_cleanup_section(configuration['cleanup'])
 
         for section_name, section_config in configuration.items():
+            if section_name == 'cleanup':
+                continue
             section_config = result._parse_config_section(
                 section_name, section_config, options)
             result.pipeline_sections.append(section_config)
@@ -111,6 +118,12 @@ class PipelineConfig(VariantAnnotatorConfig):
             virtuals=virtuals
         )
 
+    @staticmethod
+    def _parse_cleanup_section(section):
+        if 'columns' in section:
+            cleanup_columns = section['columns'].split(',')
+            return cleanup_columns
+
 
 class PipelineAnnotator(CompositeVariantAnnotator):
 
@@ -122,6 +135,10 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         pipeline_config = PipelineConfig.build(options, config_file, defaults)
         assert pipeline_config.pipeline_sections
         assert variants_schema.columns
+
+        for col in pipeline_config.cleanup_columns:
+            if col in variants_schema.columns:
+                del(variants_schema.columns[col])
 
         pipeline = PipelineAnnotator(pipeline_config, variants_schema)
         for section_config in pipeline_config.pipeline_sections:
@@ -140,6 +157,7 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         assert isinstance(annotator, AnnotatorBase)
         self.schema = Schema.merge_schemas(self.schema,
                                            annotator.schema)
+        self.config.virtual_columns.extend(annotator.config.virtual_columns)
         self.annotators.append(annotator)
 
     def line_annotation(self, aline):
@@ -148,10 +166,12 @@ class PipelineAnnotator(CompositeVariantAnnotator):
             annotator.line_annotation(aline)
 
     def get_output_schema(self):
-        output_schema = self.schema
+        output_schema = Schema()
+        output_schema = Schema.merge_schemas(output_schema, self.schema)
         if self.config.virtual_columns:
             for vcol in self.config.virtual_columns:
-                del(output_schema.columns[vcol])
+                if vcol in self.config.output_columns:
+                    del(output_schema.columns[vcol])
         return output_schema
 
 
@@ -170,7 +190,7 @@ def pipeline_main(argv):
     assert options.config is not None
     assert os.path.exists(options.config)
     config_filename = options.config
-        
+
     options = Box({
         k: v for k, v in options._get_kwargs()
     }, default_box=True, default_box_attr=None)
@@ -190,7 +210,7 @@ def pipeline_main(argv):
                                            io_manager.reader.schema)
         assert pipeline is not None
 
-        io_manager.writer.schema = pipeline.get_output_schema()# pipeline.schema
+        io_manager.writer.schema = pipeline.get_output_schema()
         pipeline.annotate_file(io_manager)
 
     print("# PROCESSING DETAILS:", file=sys.stderr)

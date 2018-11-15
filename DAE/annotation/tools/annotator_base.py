@@ -28,7 +28,7 @@ class AnnotatorBase(object):
         if self.config.options.mode == "replace":
             self.mode = "replace"
 
-    def build_ouput_line(self, annotation_line):
+    def build_output_line(self, annotation_line):
         output_columns = self.config.output_columns
         return [
             annotation_line.get(key, '') for key in output_columns
@@ -40,12 +40,9 @@ class AnnotatorBase(object):
         """
         line_config = LineConfig(file_io_manager.header)
         if self.mode == 'replace':
-            output_columns = file_io_manager.header
-            extended = [
-                col for col in self.config.output_columns
-                if col not in output_columns]
-            output_columns.extend(extended)
-            self.config.output_columns = output_columns
+            self.config.output_columns = \
+                [col for col in self.schema.columns
+                 if col not in self.config.virtual_columns]
 
         file_io_manager.header_write(self.config.output_columns)
 
@@ -64,7 +61,7 @@ class AnnotatorBase(object):
                 traceback.print_exc(file=sys.stderr)
 
             file_io_manager.line_write(
-                self.build_ouput_line(annotation_line))
+                self.build_output_line(annotation_line))
 
     def line_annotation(self, annotation_line):
         """
