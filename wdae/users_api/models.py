@@ -120,12 +120,16 @@ class WdaeUser(AbstractBaseUser, PermissionsMixin):
         try:
             override = settings.EMAIL_OVERRIDE
         except Exception:
-            LOGGER.info("exception on email override")
+            LOGGER.debug("no email override; sending email")
             override = None
         if override:
             mail = send_mail(subject, message, from_email, override)
         else:
             mail = send_mail(subject, message, from_email, [self.email])
+            LOGGER.info("email sent: to:      <" + str(self.email) + ">")
+            LOGGER.info("email sent: from:    <" + str(from_email) + ">")
+            LOGGER.info("email sent: subject: " + str(subject))
+            LOGGER.info("email sent: message: " + str(message))
 
         return mail
 
