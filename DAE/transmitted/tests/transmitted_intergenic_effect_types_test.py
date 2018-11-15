@@ -17,6 +17,7 @@ def count(vs):
     return count
 
 
+@pytest.mark.xfail
 @pytest.mark.mysql
 class Test(unittest.TestCase):
 
