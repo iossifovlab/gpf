@@ -263,7 +263,26 @@ class CommonReportsGenerator(CommonReportsConfig):
 
             common_reports['families_report'] = families_report
             common_reports['denovo_report'] = denovo_report
-            common_reports['name'] = qo.name
+            common_reports['study_name'] = qo.name
+            common_reports['phenotype'] = ','.join(
+                [pheno if pheno is not None else phenotype['default']['name']
+                 for pheno in qo.get_phenotype_values(
+                     self.phenotypes[phenotype]['source']]))
+            common_reports['study_type'] =\
+                ','.join(qo.study_types) if qo.study_types else None
+            common_reports['study_year'] =\
+                ','.join(qo.years) if qo.years else None
+            common_reports['pub_med'] =\
+                ','.join(qo.pub_meds) if qo.pub_meds else None
+            common_reports['families'] = len(qo.families)
+            common_reports['number_of_probands'] =\
+                len([family.get_people_with_role(Role.prb)
+                     for family in qo.families.values()])
+            common_reports['number_of_siblings'] =\
+                len([family.get_people_with_role(Role.sib)
+                     for family in qo.families.values()])
+            common_reports['denovo'] = qo.has_denovo
+            common_reports['transmitted'] = qo.has_transmitted
 
             yield common_reports
 
@@ -274,11 +293,11 @@ class CommonReportsGenerator(CommonReportsConfig):
                         for sg, ph in self.study_groups.items()}
         for cr in self.get_common_reports(studies):
             with open(os.path.join(studies_common_reports_dir,
-                      cr['name'] + '.json'), 'w') as crf:
+                      cr['study_name'] + '.json'), 'w') as crf:
                 json.dump(cr, crf)
         for cr in self.get_common_reports(study_groups):
             with open(os.path.join(study_groups_common_reports_dir,
-                      cr['name'] + '.json'), 'w') as crf:
+                      cr['study_name'] + '.json'), 'w') as crf:
                 json.dump(cr, crf)
 
 
