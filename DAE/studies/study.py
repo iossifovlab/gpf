@@ -46,6 +46,10 @@ class Study(object):
     def study_type(self):
         return self.study_config.studyType
 
+    @property
+    def study_types(self):
+        return [self.study_config.studyType]
+
     # FIXME: fill these with real data
 
     @property
@@ -53,5 +57,13 @@ class Study(object):
         return None
 
     @property
+    def years(self):
+        return None
+
+    @property
     def pub_med(self):
+        return None
+
+    @property
+    def pub_meds(self):
         return None

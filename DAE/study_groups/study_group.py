@@ -27,6 +27,12 @@ class StudyGroup(object):
         study_types = set([study.study_type for study in self.studies
                            if study.study_type is not None])
         self._study_types = study_types if len(study_types) != 0 else None
+        years = set([study.year for study in self.studies
+                     if study.year is not None])
+        self._years = years if len(years) != 0 else None
+        pub_meds = set([study.pub_med for study in self.studies
+                        if study.pub_med is not None])
+        self._pub_meds = pub_meds if len(pub_meds) != 0 else None
         self._has_study_types = True if len(study_types) != 0 else False
 
     def query_variants(self, **kwargs):
@@ -80,6 +86,14 @@ class StudyGroup(object):
     @property
     def has_study_types(self):
         return self._has_study_types
+
+    @property
+    def years(self):
+        return self._years
+
+    @property
+    def pub_meds(self):
+        return self._pub_meds
 
 
 class StudyGroupWrapper(StudyGroup):
