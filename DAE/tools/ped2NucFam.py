@@ -275,8 +275,9 @@ def procFamInfo(fname):
             fa, ma = p.fa, p.ma
             # print ids, p, fa, ma
             if fa != '0' or ma != '0':
+                assert fa != '0' and ma != '0', fa + "; " + ma
                 # print 'inside', fa, ma
-                #fa, ma = np2p[fa], np2p[ma]
+                # fa, ma = np2p[fa], np2p[ma]
                 fm[ms] = fama(*[fa, ma])
                 im[n] = fama(*[ids.index(fa), ids.index(ma)])
 
