@@ -163,3 +163,28 @@ def test_cshl_to_vcf_problem():
     assert position2 == position
     assert variant2 == variant
     assert length == 1
+
+
+def test_spark_v3_example():
+    from tools.variantFormat import cshlFormat
+
+    # chrom = 1
+    pos = 762982
+    ref = "CGGGGCGGGGTCTCGGGCA"
+    alt = "C"
+
+    pos1, var1, len1 = vcf2cshl(pos, ref, alt)
+    print(pos1, var1, len1)
+
+    pos1, var1 = cshlFormat(pos, ref, alt)
+    print(pos1, var1, len1)
+
+    pos = 762982
+    ref = "CGGGGCGGGGTCTCGGGCA"
+    alt = "GGGGGCGGGGTCTCGGGCA"
+
+    pos1, var1, len1 = vcf2cshl(pos, ref, alt)
+    print(pos1, var1, len1)
+
+    pos1, var1 = cshlFormat(pos, ref, alt)
+    print(pos1, var1, len1)

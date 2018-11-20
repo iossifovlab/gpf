@@ -1,11 +1,11 @@
 #!/usr/bin/env python
+
 from __future__ import print_function
 from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
 from builtins import str
-import sys, subprocess, optparse
-import commands
+
+import subprocess
+import optparse
 
 
 def main():
@@ -68,28 +68,41 @@ def main():
     else:
         cmd += ' > ' + ox.outputPrefix + '-complex.txt'
 
-    print "executing", cmd
-    status, out = commands.getstatusoutput(cmd)
-    print status, out
-    if status:
+    print("executing", cmd)
+    try:
+        subprocess.check_output(cmd, shell=True)
+    except subprocess.CalledProcessError as ex:
+        status = ex.returncode
+        output = ex.output
+
+        print(status, output)
         raise Exception("FAILURE AT: " + cmd)
+
     # family file
     cmd = ' '.join(['\\mv', ox.outputPrefix + tExt(0) +
                     '-families.txt', ox.outputPrefix + '-families.txt'])
-    print "executing", cmd
+    print("executing", cmd)
 
-    status, out = commands.getstatusoutput(cmd)
-    print status, out
-    if status:
+    try:
+        subprocess.check_output(cmd, shell=True)
+    except subprocess.CalledProcessError as ex:
+        status = ex.returncode
+        output = ex.output
+
+        print(status, output)
         raise Exception("FAILURE AT: " + cmd)
     # HW
     cmd = ' '.join(['hw.py -c', ox.outputPrefix + tExt(0) +
                     '.txt', ox.outputPrefix + tExt(1) + '.txt'])
-    print "executing", cmd
+    print("executing", cmd)
 
-    status, out = commands.getstatusoutput(cmd)
-    print status, out
-    if status:
+    try:
+        subprocess.check_output(cmd, shell=True)
+    except subprocess.CalledProcessError as ex:
+        status = ex.returncode
+        output = ex.output
+
+        print(status, output)
         raise Exception("FAILURE AT: " + cmd)
 
 
