@@ -81,6 +81,7 @@ dependencies:
   - thrift=0.9.3=py27h14c3975_1
   - thrift_sasl=0.3.0=py27_1
   - tk=8.6.7=hc745277_3
+  - toolz
   - tornado=5.0.2=py27_0
   - wheel=0.31.1=py27_0
   - xz=5.2.4=h14c3975_4

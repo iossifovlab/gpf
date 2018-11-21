@@ -18,7 +18,8 @@ from numpy import *
 from scipy import stats
 import numpy.random as rnd
 
-from vrtIOutil import ReaderStat, Writer, tooManyFile, isPseudoAutosomalX
+from vrtIOutil import ReaderStat, Writer, tooManyFile
+from DAE import genomesDB as genomes_db
 
 
 # family based data and mom and dad ordered state
@@ -156,11 +157,19 @@ def pval_count_X(cnt):
     return pv, eCnt
 
 
+par_x_test = genomes_db.get_pars_x_test()
+
+
+def isPseudoAutosomalX(chrom, pos):
+    global par_x_test
+    return par_x_test(chrom, pos)
+
+
 def Rx(xstr, pp, AXY, pos):
     xcnt, di_flag = xMF(xstr, pp)
     cnt = [xcnt[0][n] + xcnt[1][n] for n in range(len(xcnt[0]))]
 
-    if (AXY == 'X') and (not isPseudoAutosomalX(pos)):
+    if (AXY == 'X') and (not isPseudoAutosomalX(AXY, pos)):
         pv, eCnt = pval_count_X(cnt)
     else:
         pv, eCnt = pval_count_autosome(cnt)

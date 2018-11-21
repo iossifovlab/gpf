@@ -35,9 +35,9 @@ def rgns2BedFile(rgns, bedFN):
 
 
 class Region(object):
+
     REGION_REGEXP2 = re.compile(
-        "^(chr)?(\d+|[Xx]):([\d]{1,3}(,?[\d]{3})*)"
-        "(-([\d]{1,3}(,?[\d]{3})*))?$")
+        r"^(chr)?(\d+|[XxYy]):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$")
 
     def __init__(self, chrom=None, start=None, stop=None, chr=None):
 
@@ -73,6 +73,11 @@ class Region(object):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def isin(self, chrom, pos):
+        if chrom == self.chrom and (pos >= self.start) and (pos <= self.stop):
+            return True
+        return False
 
     def len(self):
         return self.stop - self.start + 1

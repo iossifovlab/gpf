@@ -10,12 +10,16 @@ import os
 from cyvcf2 import VCF
 import numpy as np
 from itertools import groupby
-import variantFormat as vrtF
+
 from ped2NucFam import procFamInfo, printFamData
 # import heapq
 import time
 import re
 import toolz
+
+from utils.vcf_utils import cshl_format
+from DAE import genomesDB as genomes_db
+
 # add more data on fam Info
 
 
@@ -90,6 +94,8 @@ class Batch:
 class Family:
     def __init__(self, familyInfo):
         self.familyInfo = familyInfo
+        self.pars_x_check = genomes_db.get_pars_x_test()
+        self.pars_y_check = genomes_db.get_pars_y_test()
 
     def is_mendelian(self, arr):
         if ((arr[2] == arr[0] or arr[3] == arr[0]) and
@@ -150,18 +156,23 @@ class Family:
 
     def is_autosomal_region(self, variant):
         if variant.CHROM == 'chrX':
-            if variant.start >= 10000 and variant.end <= 2781479:
-                return True
-            if variant.start >= 155701382 and variant.end <= 156030895:
-                return True
-            return False
+            return self.pars_x_check(variant.CHROM, variant.POS)
         if variant.CHROM == 'chrY':
-            if variant.start >= 10000 and variant.end <= 2781479:
-                return True
-            if variant.start >= 56887902 and variant.end <= 57217415:
-                return True
-            return False
+            return self.pars_y_check(variant.CHROM, variant.POS)
         return True
+        # if variant.CHROM == 'chrX':
+        #     if variant.start >= 10000 and variant.end <= 2781479:
+        #         return True
+        #     if variant.start >= 155701382 and variant.end <= 156030895:
+        #         return True
+        #     return False
+        # if variant.CHROM == 'chrY':
+        #     if variant.start >= 10000 and variant.end <= 2781479:
+        #         return True
+        #     if variant.start >= 56887902 and variant.end <= 57217415:
+        #         return True
+        #     return False
+        # return True
 
     def is_denovo(self, variant):
         for isChildMale, family in self.families:
@@ -311,7 +322,19 @@ def digitP(x):
     return '{:.4f}'.format(x)
 
 
+def vcf2cshlFormat2(pos, ref, alts):
+    vrt, pxx = list(), list()
+    for alt in alts:
+        p, v, _ = cshl_format(pos, ref, alt)
+
+        pxx.append(p)
+        vrt.append(v)
+
+    return pxx, vrt
+
+
 def main():
+
     start_time = time.time()
     # svip.ped
     # svip-FB-vars.vcf.gz, svip-PL-vars.vcf.gz, svip-JHC-vars.vcf.gz
@@ -471,9 +494,10 @@ def main():
                     if not family.is_denovo(variant['variant'])]
                 allFamilies.extend(families)
 
-                px, vx = vrtF.vcf2cshlFormat2(variant['variant'].POS,
-                                              variant['variant'].REF,
-                                              variant['variant'].ALT)
+                px, vx = vcf2cshlFormat2(
+                    variant['variant'].POS,
+                    variant['variant'].REF,
+                    variant['variant'].ALT)
 
                 for n, (p, v) in enumerate(zip(px, vx)):
                     variants.append((n, p, v, variant, families))
