@@ -257,12 +257,19 @@ class CommonReportsGenerator(CommonReportsConfig):
 
         denovo_report['effect_groups'] = self.effect_groups
         denovo_report['effect_types'] = self.effect_types
-        denovo_report['phenotype'] = phenotypes
-        denovo_report['rows'] = []
-        for effect in effects:
-            denovo_report['rows'].append(self.get_effect(
-                query_object, effect, phenotypes, phenotype_column,
-                families_report))
+        denovo_report['phenotypes'] =\
+            [pheno if pheno is not None else phenotype['default']['name']
+             for pheno in phenotypes]
+        denovo_report['tables'] = []
+        for counter_roles in self.counters_roles:
+            rows = {}
+            rows['rows'] = []
+            rows['roles'] = list(map(str, counter_roles))
+            for effect in effects:
+                rows['rows'].append(self.get_effect(
+                    query_object, effect, phenotypes, phenotype,
+                    families_report, counter_roles))
+            denovo_report['tables'].append(rows)
 
         return denovo_report
 
