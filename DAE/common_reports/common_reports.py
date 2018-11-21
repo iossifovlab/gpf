@@ -42,13 +42,13 @@ class CommonReportsGenerator(CommonReportsConfig):
         return people
 
     def get_people_counters(
-            self, phenotype, phenotype_column, families, counter_roles):
+            self, pheno, phenotype, families, counter_roles):
         people_male = len(self.get_people(
-            Sex.male, phenotype, phenotype_column, families, counter_roles))
+            Sex.male, pheno, phenotype['source'], families, counter_roles))
         people_female = len(self.get_people(
-            Sex.female, phenotype, phenotype_column, families, counter_roles))
+            Sex.female, pheno, phenotype['source'], families, counter_roles))
         people_unspecified = len(self.get_people(
-            Sex.unspecified, phenotype, phenotype_column, families,
+            Sex.unspecified, pheno, phenotype['source'], families,
             counter_roles))
         people_total = people_male + people_female + people_unspecified
         return {
@@ -56,7 +56,8 @@ class CommonReportsGenerator(CommonReportsConfig):
             'people_female': people_female,
             'people_unspecified': people_unspecified,
             'people_total': people_total,
-            'phenotype': phenotype,
+            'phenotype':
+                pheno if pheno is not None else phenotype['default']['name'],
             'people_roles': list(map(str, counter_roles))
         }
 
@@ -65,12 +66,14 @@ class CommonReportsGenerator(CommonReportsConfig):
             return dict(filter(
                 lambda family:
                     len(family[1].get_family_phenotypes(phenotype['source']) -
-                        set(phenotype['unaffected']['name'])) > 1,
+                        set([pheno, phenotype['unaffected']['name']])) >= 1,
                     families.items()))
         return dict(filter(
             lambda family:
-                not (family[1].get_family_phenotypes(phenotype['source']) ^
-                     set([pheno, phenotype['unaffected']['name']])),
+                len(family[1].get_family_phenotypes(
+                    phenotype['source'])) == 1 and
+                list(family[1].get_family_phenotypes(
+                    phenotype['source']))[0] == pheno,
                 families.items()))
 
     def families_to_dataframe(self, families, phenotype_column):
@@ -118,10 +121,11 @@ class CommonReportsGenerator(CommonReportsConfig):
                 return phenotype['default']['color']
 
     def get_families_counters(self, pheno, phenotype, families):
-        families = self.get_families_with_phenotype(families, pheno, phenotype)
+        families_with_phenotype =\
+            self.get_families_with_phenotype(families, pheno, phenotype)
 
         families_counters = {}
-        for family_id, family in families.items():
+        for family_id, family in families_with_phenotype.items():
             is_family_in_counters = False
             for unique_family in families_counters.keys():
                 if self.compare_families(
@@ -143,7 +147,7 @@ class CommonReportsGenerator(CommonReportsConfig):
                     'pedigrees_count': counter
                 } for family, counter in families_counters.items()
             ],
-            'phenotype': pheno
+            'phenotype': pheno if pheno is not None else phenotype['default']
         }
 
     def get_families_report(self, query_object, phenotype):
@@ -158,28 +162,35 @@ class CommonReportsGenerator(CommonReportsConfig):
         families_report['families_total'] = len(families)
         families_report['people_counters'] = []
         families_report['families_counters'] = []
+        for counter_roles in self.counters_roles:
+            people_counters = {}
+            people_counters['counters'] = []
+            people_counters['roles'] = list(map(str, counter_roles))
+            for pheno in phenotypes:
+                people_counters['counters'].append(self.get_people_counters(
+                    pheno, phenotype, families, counter_roles))
+            families_report['people_counters'].append(people_counters)
         for pheno in phenotypes:
-            for counter_roles in self.counters_roles:
-                families_report['people_counters'].append(
-                    self.get_people_counters(
-                        pheno, phenotype['source'], families, counter_roles))
             families_report['families_counters'].append(
                     self.get_families_counters(pheno, phenotype, families))
+
         families_report['families_counters'].append(
             self.get_families_counters(None, phenotype, families))
-        families_report['phenotypes'] = list(phenotypes)
+        families_report['phenotypes'] =\
+            [pheno if pheno is not None else phenotype['default']['name']
+             for pheno in phenotypes]
 
         return families_report
 
     def get_effect_with_phenotype(
-            self, query_object, effect, phenotype, phenotype_column,
+            self, query_object, effect, pheno, phenotype,
             families_report, counter_roles):
         people_with_phenotype = []
         for family in query_object.families.values():
             people_with_phenotype +=\
                 [person.person_id for person in
                     family.get_people_with_phenotype(
-                        phenotype_column, phenotype)]
+                        phenotype['source'], pheno)]
 
         variants_query = {
             'limit': None,
@@ -203,8 +214,9 @@ class CommonReportsGenerator(CommonReportsConfig):
             events_people_count.update(variant.variant_in_members)
 
         total_people = list(filter(
-            lambda pc: pc['phenotype'] == phenotype,
-            families_report['people_counters']))[0]['people_total']
+            lambda pc: pc['phenotype'] == (pheno if pheno is not None else
+                                           phenotype['default']['name']),
+            families_report['people_counters'][0]['counters']))[0]['people_total']
 
         events_people_percent = len(events_people_count) / total_people\
             if total_people else 0
@@ -216,30 +228,30 @@ class CommonReportsGenerator(CommonReportsConfig):
             'events_people_percent': events_people_percent,
             'events_count': len(variants),
             'events_rate_per_child': events_rate_per_child,
-            'phenotype': phenotype,
+            'phenotype':
+                pheno if pheno is not None else phenotype['default']['name'],
             'people_roles': list(map(str, counter_roles))
         }
 
     def get_effect(
-            self, query_object, effect, phenotypes, phenotype_column,
-            families_report):
+            self, query_object, effect, phenotypes, phenotype,
+            families_report, counter_roles):
         row = {}
 
         row['effect_type'] = effect
         row['row'] = []
-        for phenotype in phenotypes:
-            for counter_roles in self.counters_roles:
-                row['row'].append(self.get_effect_with_phenotype(
-                    query_object, effect, phenotype, phenotype_column,
-                    families_report, counter_roles))
+        for pheno in phenotypes:
+            row['row'].append(self.get_effect_with_phenotype(
+                query_object, effect, pheno, phenotype,
+                families_report, counter_roles))
 
         return row
 
     def get_denovo_report(
-            self, query_object, phenotype_column, families_report):
+            self, query_object, phenotype, families_report):
         denovo_report = {}
 
-        phenotypes = list(query_object.get_phenotype_values(phenotype_column))
+        phenotypes = list(query_object.get_phenotype_values(phenotype['source']))
         effects = self.effect_groups + self.effect_types
 
         denovo_report['effect_groups'] = self.effect_groups
@@ -259,15 +271,16 @@ class CommonReportsGenerator(CommonReportsConfig):
 
             families_report = self.get_families_report(qo, phenotype)
             denovo_report = self.get_denovo_report(
-                qo, self.phenotypes[phenotype]['source'], families_report)
+                qo, self.phenotypes[phenotype], families_report)
 
             common_reports['families_report'] = families_report
             common_reports['denovo_report'] = denovo_report
             common_reports['study_name'] = qo.name
             common_reports['phenotype'] = ','.join(
-                [pheno if pheno is not None else phenotype['default']['name']
+                [pheno if pheno is not None else
+                 self.phenotypes[phenotype]['default']['name']
                  for pheno in qo.get_phenotype_values(
-                     self.phenotypes[phenotype]['source']]))
+                     self.phenotypes[phenotype]['source'])])
             common_reports['study_type'] =\
                 ','.join(qo.study_types) if qo.study_types else None
             common_reports['study_year'] =\
