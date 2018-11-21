@@ -139,11 +139,12 @@ class CommonReportsGenerator(CommonReportsConfig):
         return {
             'counters': [
                 {
-                    'pedigree': [['family', 'person', 'father', 'mother',
-                                  member.sex.short(),
-                                  self.get_member_color(member, phenotype),
-                                  member.layout_position, member.generated]
-                                 for member in family.members_in_order],
+                    'pedigree':
+                    [[member.family_id, member.person_id, member.dad,
+                      member.mom, member.sex.short(),
+                      self.get_member_color(member, phenotype),
+                      member.layout_position, member.generated, '', '']
+                     for member in family.members_in_order],
                     'pedigrees_count': counter
                 } for family, counter in families_counters.items()
             ],
