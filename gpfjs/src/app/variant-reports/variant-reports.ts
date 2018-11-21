@@ -3,7 +3,7 @@ import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 export class Study {
 
   static fromJsonArray(json: any[]) {
-    return new Study(json[0], json[1]);
+    return new Study(json['study_name'], json['study_description']);
   }
 
   constructor(
@@ -30,10 +30,10 @@ export class ChildrenCounter {
   static fromJson(json: any) {
     return new ChildrenCounter(
       json['phenotype'],
-      json['children_male'],
-      json['children_female'],
-      json['children_unspecified'],
-      json['children_total'],
+      json['people_male'],
+      json['people_female'],
+      json['people_unspecified'],
+      json['people_total'],
     );
   }
 
@@ -50,8 +50,8 @@ export class PedigreeCounter {
 
   static fromArray(data: any) {
     return new PedigreeCounter(
-      data[0].map(pedigreeData => PedigreeData.fromArray(pedigreeData)),
-      data[1]);
+      data['pedigree'].map(pedigreeData => PedigreeData.fromArray(pedigreeData)),
+      data['pedigrees_count']);
   }
 
   constructor(
@@ -65,7 +65,8 @@ export class FamilyCounter {
   static fromJson(json: any) {
     return new FamilyCounter(
       json['counters'].map(
-        pedigree => PedigreeCounter.fromArray(pedigree)),
+        pedigree => PedigreeCounter.fromArray(pedigree)
+      ),
       json['phenotype']
     );
   }
@@ -81,7 +82,7 @@ export class FamilyReport {
   static fromJson(json: any) {
     return new FamilyReport(
       json['phenotypes'],
-      json['children_counters'].map(
+      json['people_counters'].map(
         childCounter => ChildrenCounter.fromJson(childCounter)),
       json['families_counters'].map(
         familyCounter => FamilyCounter.fromJson(familyCounter)),
@@ -104,9 +105,9 @@ export class DeNovoData {
     return new DeNovoData(
       json['phenotype'],
       json['events_count'],
-      json['events_children_count'],
+      json['events_people_count'],
       json['events_rate_per_child'],
-      json['events_children_percent'],
+      json['events_people_percent'],
     );
   }
 
