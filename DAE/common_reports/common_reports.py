@@ -62,18 +62,19 @@ class CommonReportsGenerator(CommonReportsConfig):
         }
 
     def get_families_with_phenotype(self, families, pheno, phenotype):
-        if pheno is None:
+        unaffected_phenotype = phenotype['unaffected']['name']\
+            if pheno != phenotype['unaffected']['name'] else -1
+        if pheno == -1:
             return dict(filter(
                 lambda family:
                     len(family[1].get_family_phenotypes(phenotype['source']) -
-                        set([pheno, phenotype['unaffected']['name']])) >= 1,
-                    families.items()))
+                        set([unaffected_phenotype])) > 1, families.items()))
         return dict(filter(
             lambda family:
-                len(family[1].get_family_phenotypes(
-                    phenotype['source'])) == 1 and
-                list(family[1].get_family_phenotypes(
-                    phenotype['source']))[0] == pheno,
+                len((family[1].get_family_phenotypes(phenotype['source']) -
+                    set([unaffected_phenotype]))) == 1 and
+                pheno in list(family[1].get_family_phenotypes(
+                    phenotype['source'])),
                 families.items()))
 
     def families_to_dataframe(self, families, phenotype_column):
@@ -176,7 +177,7 @@ class CommonReportsGenerator(CommonReportsConfig):
                     self.get_families_counters(pheno, phenotype, families))
 
         families_report['families_counters'].append(
-            self.get_families_counters(None, phenotype, families))
+            self.get_families_counters(-1, phenotype, families))
         families_report['phenotypes'] =\
             [pheno if pheno is not None else phenotype['default']['name']
              for pheno in phenotypes]
