@@ -312,6 +312,8 @@ class RawFamilyVariants(FamiliesBase):
 
         if kwargs.get("roles") is not None:
             parsed = kwargs['roles']
+            if isinstance(parsed, list):
+                parsed = 'any({})'.format(','.join(parsed))
             if isinstance(parsed, str):
                 parsed = role_query.transform_query_string_to_tree(parsed)
 
