@@ -7,7 +7,7 @@ import { StudiesSummaries } from './studies-summaries';
 
 @Injectable()
 export class StudiesSummariesService {
-    private apiUrl = 'common_reports/studies_summaries';
+    private apiUrl = 'common_reports';
 
     constructor(
       private http: Http
