@@ -46,6 +46,22 @@ export class ChildrenCounter {
   ) {}
 }
 
+export class PeopleCounter {
+
+  static fromJson(json: any) {
+    return new PeopleCounter(
+      json['counters'].map(
+        childCounter => ChildrenCounter.fromJson(childCounter)),
+      json['roles']
+    );
+  }
+
+  constructor(
+    readonly childrenCounters: ChildrenCounter[],
+    readonly roles: string[]
+  ) {}
+}
+
 export class PedigreeCounter {
 
   static fromArray(data: any) {
@@ -83,7 +99,7 @@ export class FamilyReport {
     return new FamilyReport(
       json['phenotypes'],
       json['people_counters'].map(
-        childCounter => ChildrenCounter.fromJson(childCounter)),
+        peopleCounter => PeopleCounter.fromJson(peopleCounter)),
       json['families_counters'].map(
         familyCounter => FamilyCounter.fromJson(familyCounter)),
       json['families_total'],
@@ -92,7 +108,7 @@ export class FamilyReport {
 
   constructor(
     readonly phenotypes: string[],
-    readonly childrenCounters: ChildrenCounter[],
+    readonly peopleCounters: PeopleCounter[],
     readonly familiesCounters: FamilyCounter[],
     readonly familiesTotal: number,
   ) {}
@@ -136,26 +152,40 @@ export class EffectTypeRow {
   ) {}
 }
 
-export class DenovoReport {
+export class EffectTypeTable {
 
   static fromJson(json: any) {
-    if (!json) {
-      return null;
+    return new EffectTypeTable(
+      json['rows'].map(row => EffectTypeRow.fromJson(row)),
+      json['roles']
+      );
     }
-    return new DenovoReport(
-      json['phenotypes'],
-      json['effect_groups'],
-      json['effect_types'],
-      json['rows'].map(row => EffectTypeRow.fromJson(row))
-    );
-  }
 
+    constructor(
+      readonly rows: EffectTypeRow[],
+      readonly roles: string[]
+      ) {}
+    }
 
-  constructor (
-    readonly phenotypes: string[],
-    readonly effectGroups: string[],
-    readonly effectTypes: string[],
-    readonly row: EffectTypeRow[]
+    export class DenovoReport {
+
+      static fromJson(json: any) {
+        if (!json) {
+          return null;
+        }
+        return new DenovoReport(
+          json['tables'].map(table => EffectTypeTable.fromJson(table)),
+          json['phenotypes'],
+          json['effect_groups'],
+          json['effect_types']
+        );
+      }
+
+      constructor (
+        readonly tables: EffectTypeRow[],
+        readonly phenotypes: string[],
+        readonly effectGroups: string[],
+        readonly effectTypes: string[],
   ) {}
 }
 

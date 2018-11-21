@@ -5,7 +5,7 @@ import { Observable, Subject } from 'rxjs';
 
 import { VariantReportsService } from './variant-reports.service';
 import { Studies, Study, VariantReport, ChildrenCounter,
-         FamilyCounter, PedigreeCounter, DenovoReport, DeNovoData
+         FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData
         } from './variant-reports';
 
 export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
@@ -146,14 +146,14 @@ export class VariantReportsComponent implements OnInit {
     return [];
   }
 
-  getEffectTypeOrderByColumOrder(effectTypeName: string, denovoReport: DenovoReport) {
-    let effectType = denovoReport.row
+  getEffectTypeOrderByColumOrder(effectTypeName: string, table: EffectTypeTable, phenotypes: string[]) {
+    let effectType = table.rows
       .find(et => et.effectType === effectTypeName);
 
     if (!effectType) {
       return [];
     }
-    return this.orderByColumnOrder(effectType.data, denovoReport.phenotypes);
+    return this.orderByColumnOrder(effectType.data, phenotypes);
   }
 
   getDownloadLink(variantReport: VariantReport) {
