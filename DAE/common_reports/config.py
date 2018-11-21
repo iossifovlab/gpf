@@ -65,10 +65,12 @@ class CommonReportsConfig(object):
             for roles in self.config.CommonReports.counters_role.split(':')]
 
     def _effect_groups(self):
-        return self.config.CommonReports.effect_groups.split(',')
+        effect_groups = self.config.CommonReports.get('effect_groups', None)
+        return effect_groups.split(',') if effect_groups else []
 
     def _effect_types(self):
-        return self.config.CommonReports.effect_types.split(',')
+        effect_types = self.config.CommonReports.get('effect_types', None)
+        return effect_types.split(',') if effect_types else []
 
     def _phenotype(self, phenotype):
         phenotype = self.config.CommonReports.get(phenotype)
