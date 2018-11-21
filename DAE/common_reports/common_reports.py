@@ -220,11 +220,13 @@ class CommonReportsGenerator(CommonReportsConfig):
         events_people_count = set()
         for variant in variants:
             events_people_count.update(variant.variant_in_members)
-
+        families_report_with_roles = list(filter(
+            lambda fr: fr['roles'] == list(map(str, counter_roles)),
+            families_report['people_counters']))[0]
         total_people = list(filter(
             lambda pc: pc['phenotype'] == (pheno if pheno is not None else
                                            phenotype['default']['name']),
-            families_report['people_counters'][0]['counters']))[0]['people_total']
+            families_report_with_roles['counters']))[0]['people_total']
 
         events_people_percent = len(events_people_count) / total_people\
             if total_people else 0
