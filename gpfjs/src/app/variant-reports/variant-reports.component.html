@@ -90,7 +90,7 @@
         </colgroup>
 
         <tbody>
-          <ng-template ngFor let-pedigreeGroup [ngForOf]="chunkPedigrees(variantReport.familyReport.familiesCounters)">
+          <ng-template ngFor let-pedigreeGroup [ngForOf]="pedigreeGroups">
             <tr>
               <ng-template ngFor let-pedigree [ngForOf]="pedigreeGroup">
                 <td class="centered">

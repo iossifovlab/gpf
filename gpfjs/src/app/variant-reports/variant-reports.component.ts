@@ -22,6 +22,7 @@ export class VariantReportsComponent implements OnInit {
   selectedReport$ = new Subject<Study>();
 
   variantReport$: Observable<VariantReport>;
+  pedigreeGroups: PedigreeCounter[][];
 
   constructor(
     private variantReportsService: VariantReportsService,
@@ -36,6 +37,10 @@ export class VariantReportsComponent implements OnInit {
       .switchMap(study => this.variantReportsService.getVariantReport(study))
       .do(study => this.setSelectedReportParam(study.studyName))
       .share();
+
+    this.variantReport$.take(1).subscribe(params => {
+      this.pedigreeGroups = this.chunkPedigrees(params.familyReport.familiesCounters);
+    });
 
     this.loadReportFromParams();
   }
@@ -74,6 +79,10 @@ export class VariantReportsComponent implements OnInit {
 
   selectReport(study: Study) {
     this.selectedReport$.next(study);
+
+    this.variantReport$.take(1).subscribe(params => {
+      this.pedigreeGroups = this.chunkPedigrees(params.familyReport.familiesCounters);
+    });
   }
 
   orderByColumnOrder(childrenCounters: (ChildrenCounter | DeNovoData)[], columns: string[], strict = false) {
