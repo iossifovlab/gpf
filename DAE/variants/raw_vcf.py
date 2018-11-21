@@ -286,11 +286,6 @@ class RawFamilyVariants(FamiliesBase):
             query = kwargs['inheritance']
             if not query.match(allele.inheritance_in_members):
                 return False
-        if kwargs.get('pedigreeSelector') is not None:
-            pd = kwargs.get('pedigreeSelector')
-            if not any([cv in allele.get_family_members_attribute(pd['source'])
-                        for cv in pd['checkedValues']]):
-                return False
         return True
 
     def filter_variant(self, v, **kwargs):
@@ -304,6 +299,13 @@ class RawFamilyVariants(FamiliesBase):
         if 'filter' in kwargs:
             func = kwargs['filter']
             if not func(v):
+                return False
+        if kwargs.get('pedigreeSelector') is not None:
+            pd = kwargs.get('pedigreeSelector')
+            if len(
+                v.variant_in_members -
+                set([m.person_id for m in v.family.get_people_with_phenotypes(
+                     pd['source'], pd['checkedValues'])])):
                 return False
         return True
 

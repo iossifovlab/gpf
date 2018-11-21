@@ -16,6 +16,9 @@ class ParquetSchema(Schema):
     type_map = {'str': (str, pa.string()),
                 'float': (float, pa.float64()),
                 'int': (int, pa.int32()),
+                'int8': (int, pa.int8()),
+                'int16': (int, pa.int16()),
+                'int64': (int, pa.int64()),
                 'list(str)': (str, pa.list_(pa.string())),
                 'list(float)': (float, pa.list_(pa.float64())),
                 'list(int)': (int, pa.list_(pa.float32()))}
@@ -42,7 +45,7 @@ class ParquetSchema(Schema):
         for col in pq_schema.columns:
             type_name = pq_schema.columns[col].type_name
             pq_schema.columns[col] = \
-                    ParquetSchema.produce_type(type_name)
+                ParquetSchema.produce_type(type_name)
         return pq_schema
 
     @classmethod
@@ -65,6 +68,13 @@ class ParquetSchema(Schema):
                 if col.type == types[1]:
                     new_schema.columns[col.name] = cls.produce_type(type_name)
                     break
+        if len(new_schema.columns) != len(pa_schema):
+            print(("An error occured during conversion of the"
+                   " Parquet file's schema. This is most likely caused"
+                   " by a missing type counterpart in"
+                   " type_map (ParquetSchema class)."),
+                  file=sys.stderr)
+            sys.exit(-1)
         return new_schema
 
     def to_arrow(self):

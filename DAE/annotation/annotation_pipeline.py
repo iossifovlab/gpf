@@ -170,7 +170,7 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         output_schema = Schema.merge_schemas(output_schema, self.schema)
         if self.config.virtual_columns:
             for vcol in self.config.virtual_columns:
-                if vcol in self.config.output_columns:
+                if vcol in output_schema.columns:
                     del(output_schema.columns[vcol])
         return output_schema
 
