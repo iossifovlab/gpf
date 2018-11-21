@@ -2,7 +2,7 @@ import pandas as pd
 import json
 import os
 
-from config import CommonReportsConfig
+from common_reports.config import CommonReportsConfig
 from study_groups.study_group_facade import StudyGroupFacade
 from studies.study_facade import StudyFacade
 from variants.attributes import Role, Sex, Inheritance
@@ -15,8 +15,9 @@ from study_groups.default_settings import COMMON_REPORTS_DIR\
 
 class CommonReportsGenerator(CommonReportsConfig):
 
-    def __init__(self):
-        super(CommonReportsGenerator, self).__init__()
+    def __init__(
+            self, study_facade=None, study_group_facade=None, *args, **kwargs):
+        super(CommonReportsGenerator, self).__init__(*args, **kwargs)
         self.study_groups = self._study_groups()
         self.studies = self._studies()
         self.counters_roles = self._counters_roles()
@@ -24,8 +25,13 @@ class CommonReportsGenerator(CommonReportsConfig):
         self.effect_types = self._effect_types()
         self.phenotypes = self._phenotypes()
 
-        self.study_group_facade = StudyGroupFacade()
-        self.study_facade = StudyFacade()
+        if study_facade is None:
+            study_facade = StudyFacade()
+        if study_group_facade is None:
+            study_group_facade = StudyGroupFacade()
+
+        self.study_facade = study_facade
+        self.study_group_facade = study_group_facade
 
         self.effect_types_converter = EffectTypesMixin()
 
@@ -253,7 +259,8 @@ class CommonReportsGenerator(CommonReportsConfig):
             self, query_object, phenotype, families_report):
         denovo_report = {}
 
-        phenotypes = list(query_object.get_phenotype_values(phenotype['source']))
+        phenotypes =\
+            list(query_object.get_phenotype_values(phenotype['source']))
         effects = self.effect_groups + self.effect_types
 
         denovo_report['effect_groups'] = self.effect_groups

@@ -20,13 +20,7 @@ class CommonReportsConfig(object):
             config = Config()
         self.dae_config = config
 
-        wd = self.dae_config.daeDir
-        data_dir = self.dae_config.data_dir
-
-        config = ConfigParser({
-            'wd': wd,
-            'data': data_dir
-        })
+        config = ConfigParser()
         config.read(self.dae_config.commonReportsConfFile)
 
         self.config = Box(common.config.to_dict(config))
