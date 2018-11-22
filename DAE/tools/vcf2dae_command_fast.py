@@ -4,7 +4,7 @@ from __future__ import print_function
 from __future__ import division
 from builtins import map, zip
 
-import optparse
+import argparse
 import sys
 import os
 from cyvcf2 import VCF
@@ -154,11 +154,11 @@ class Family:
 
         self.parent_indicies = np.array(parent_indicies)
 
-    def is_autosomal_region(self, variant):
-        if variant.CHROM == 'chrX':
-            return self.pars_x_check(variant.CHROM, variant.POS)
-        if variant.CHROM == 'chrY':
-            return self.pars_y_check(variant.CHROM, variant.POS)
+    def is_autosomal_region(self, chrom, variant):
+        if chrom.endswith('X'):
+            return self.pars_x_check(chrom, variant.POS)
+        if chrom.endswith('Y'):
+            return self.pars_y_check(chrom, variant.POS)
         return True
         # if variant.CHROM == 'chrX':
         #     if variant.start >= 10000 and variant.end <= 2781479:
@@ -174,22 +174,23 @@ class Family:
         #     return False
         # return True
 
-    def is_denovo(self, variant):
+    def is_denovo(self, chrom, variant):
         for isChildMale, family in self.families:
             arr = variant.gt_idxs[family]
 
             if isChildMale:
-                if self.is_autosomal_region(variant):
+                if self.is_autosomal_region(chrom, variant):
                     if not self.is_mendelian(arr):
                         return True
-                elif variant.CHROM == 'chrX' and \
+                elif chrom.endswith('X') and \
                         not self.is_mendelian_male_X(arr):
                     return True
-                elif variant.CHROM == 'chrY' and \
+                elif chrom.endswith('Y') and \
                         not self.is_mendelian_male_Y(arr):
                     return True
             else:
-                if variant.CHROM == 'chrY' and not self.is_mendelian(arr):
+                if chrom.endswith('Y') and \
+                        not self.is_mendelian(arr):
                     return True
         return False
 
@@ -339,54 +340,67 @@ def main():
     # svip.ped
     # svip-FB-vars.vcf.gz, svip-PL-vars.vcf.gz, svip-JHC-vars.vcf.gz
     # pfile, dfile = 'data/svip.ped', 'data/svip-FB-vars.vcf.gz'
-    usage = "usage: %prog [options]"
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option(
-        "-p", "--pedFile", dest="pedFile", default="data/svip.ped",
-        metavar="pedFile", 
-        help="pedigree file and family-name should be mother and father "
-        "combination, not PED format")
-    parser.add_option(
-        "-d", "--dataFile", dest="dataFile",
-        default="data/svip-FB-vars.vcf.gz",
-        metavar="dataFile", help="VCF format variant file")
 
-    parser.add_option(
+    parser = argparse.ArgumentParser(
+        description="converts list of VCF files to DAE transmitted varaints")
+
+    parser.add_argument(
+        'pedigree', type=str,
+        metavar='<pedigree filename>',
+        help='families file in pedigree format'
+    )
+    parser.add_argument(
+        'vcf', type=str,
+        metavar='<VCF filename>',
+        help='VCF file to import'
+    )
+
+    parser.add_argument(
         "-x", "--project", dest="project", default="VIP",
-        metavar="project", help="project name [defualt:VIP")
-    parser.add_option(
+        metavar="project", help="project name")
+    parser.add_argument(
         "-l", "--lab", dest="lab", default="SF",
-        metavar="lab", help="lab name [defualt:SF")
+        metavar="lab", help="lab name")
 
-    parser.add_option(
+    parser.add_argument(
         "-o", "--outputPrefix", dest="outputPrefix", default="transmission",
         metavar="outputPrefix", help="prefix of output transmission file")
 
-    parser.add_option(
+    parser.add_argument(
         "-m", "--minPercentOfGenotypeSamples",
         dest="minPercentOfGenotypeSamples", type=float, default=25.,
         metavar="minPercentOfGenotypeSamples",
         help="threshold percentage of gentyped samples to printout "
         "[default: 25]")
-    parser.add_option(
+    parser.add_argument(
         "-t", "--tooManyThresholdFamilies", dest="tooManyThresholdFamilies",
         type=int, default=10,
         metavar="tooManyThresholdFamilies", 
         help="threshold for TOOMANY to printout [defaylt: 10]")
 
-    parser.add_option(
+    parser.add_argument(
         "-s", "--missingInfoAsNone", action="store_true", 
         dest="missingInfoAsNone", default=False,
-        metavar="missingInfoAsNone", 
         help="missing sample Genotype will be filled with 'None' for many "
         "VCF files input")
 
-    parser.add_option(
+    parser.add_argument(
+        "--chr", action="store_true", 
+        dest="prepend_chr", default=False,
+        help="adds prefix to 'chr' to contig names")
+
+    parser.add_argument(
+        "--nochr", action="store_true", 
+        dest="remove_chr", default=False,
+        help="removes prefix to 'chr' from contig names")
+
+    parser.add_argument(
         "-r", "--region", dest="region", default=None,
         metavar="region", help="parse only selected region")
 
-    ox, args = parser.parse_args()
-    pfile, dfile = ox.pedFile, ox.dataFile
+    args = parser.parse_args()
+    pfile = args.pedigree
+    dfile = args.vcf
 
     # missingInfoAsRef = True
     # if ox.missingInfoAsNone:
@@ -403,21 +417,21 @@ def main():
     #               (they have the same order)
     makeFamInfoConv(fInfo, pInfo)
 
-    if os.path.isfile(ox.outputPrefix + '.txt'):
+    if os.path.isfile(args.outputPrefix + '.txt'):
         print(
-            ox.outputPrefix + '.txt: already exist',
+            args.outputPrefix + '.txt: already exist',
             file=sys.stderr)
         exit(1)
 
     # setup to print transmission files
-    OUT = ox.outputPrefix + '.txt'
-    TOOMANY = ox.outputPrefix + '-TOOMANY.txt'
+    OUT = args.outputPrefix + '.txt'
+    TOOMANY = args.outputPrefix + '-TOOMANY.txt'
 
     output_count = 0
     start_region = None
-    if ox.region is not None:
+    if args.region is not None:
         start_region = int(re.match(
-            "chr([0-9X]+):([0-9]+)-([0-9]+)", ox.region).group(2))
+            "chr([0-9X]+):([0-9]+)-([0-9]+)", args.region).group(2))
 
     with open(OUT, 'w') as out, open(TOOMANY, 'w') as outTOOMANY:
         print(
@@ -430,17 +444,17 @@ def main():
                 'chr,position,variant,familyData'.split(',')),
             file=outTOOMANY)
 
-        batches = [Batch(f, fInfo, ox.region) for f in dfile.split(",")]
+        batches = [Batch(f, fInfo, args.region) for f in dfile.split(",")]
         fam = [item for f in batches for item in f.fam]
         fam_count = len(fam)
 
         # # print family Info in a format
-        FAMOUT = ox.outputPrefix + '-families.txt'
+        FAMOUT = args.outputPrefix + '-families.txt'
 
         # FIXME: Do not reduce families because some people are not sequenced
         # printFamData(fInfo, pInfo, proj=ox.project, lab=ox.lab,
         #              listFam=fam, out=open(FAMOUT, 'w'))
-        printFamData(fInfo, pInfo, proj=ox.project, lab=ox.lab,
+        printFamData(fInfo, pInfo, proj=args.project, lab=args.lab,
                      listFam=[], out=open(FAMOUT, 'w'))
 
         def keyfunc(variant):
@@ -451,8 +465,26 @@ def main():
         else:
             batch_stream = toolz.merge_sorted(batches, keyfunc)
 
+        if args.prepend_chr:
+            assert not args.remove_chr
+
+            def contig_fixer(chrom):
+                return "chr{}".format(chrom)
+        elif args.remove_chr:
+
+            def contig_fixer(chrom):
+                if chrom.startswith("chr"):
+                    return chrom[3:]
+                else:
+                    return chrom
+
+        else:
+            def contig_fixer(chrom):
+                return chrom
+
         for key, group in groupby(batch_stream, keyfunc):
             chrom, pos = key
+            chrom = contig_fixer(chrom)
 
             if start_region is not None and start_region > pos:
                 continue
@@ -491,7 +523,7 @@ def main():
                     for family in sorted(
                         interestingFamilies - missingFamilies,
                         key=lambda x: x.familyInfo['newFid'])
-                    if not family.is_denovo(variant['variant'])]
+                    if not family.is_denovo(chrom, variant['variant'])]
                 allFamilies.extend(families)
 
                 px, vx = vcf2cshlFormat2(
@@ -503,7 +535,7 @@ def main():
                     variants.append((n, p, v, variant, families))
 
             pgt = (1 - missingCount / (4 * fam_count)) * 100
-            if pgt < ox.minPercentOfGenotypeSamples:
+            if pgt < args.minPercentOfGenotypeSamples:
                 continue
 
             for key, group in groupby(
@@ -571,7 +603,7 @@ def main():
                         file=out)
                     continue
 
-                if ll >= ox.tooManyThresholdFamilies:
+                if ll >= args.tooManyThresholdFamilies:
                     print(
                         '\t'.join([chrom, str(p), v, 'TOOMANY', str(
                             nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)]),

@@ -73,6 +73,16 @@ def main():
         help="missing sample Genotype will be filled with 'None' for many VCF "
         "files input")
 
+    parser.add_argument(
+        "--chr", action="store_true",
+        dest="prepend_chr", default=False,
+        help="adds prefix to 'chr' to contig names")
+
+    parser.add_argument(
+        "--nochr", action="store_true",
+        dest="remove_chr", default=False,
+        help="removes prefix to 'chr' from contig names")
+
     args = parser.parse_args()
     print(args)
 
@@ -94,9 +104,10 @@ def main():
     # '-x', ox.project, '-l', ox.lab, \
     cmd = ' '.join(
         [
-            'vcf2DAEc_fast.py',
-            '-p', args.pedigree,
-            '-d ', '"' + args.vcf + '"',
+            'vcf2dae_command_fast.py',
+            args.pedigree,
+            '"' + args.vcf + '"',
+
             '-x', args.project,
             '-l', args.lab,
             '-o', temp_dae_prefix,
@@ -106,6 +117,10 @@ def main():
 
     if args.missingInfoAsNone:
         cmd += ' --missingInfoAsNone'
+    if args.prepend_chr:
+        cmd += ' --chr'
+    if args.remove_chr:
+        cmd += ' --nochr'
     run_command(cmd)
 
     # HW
