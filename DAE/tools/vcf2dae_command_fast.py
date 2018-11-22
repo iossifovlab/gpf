@@ -15,7 +15,7 @@ from ped2NucFam import procFamInfo, printFamData
 # import heapq
 import time
 import re
-import toolz
+# import toolz
 
 from utils.vcf_utils import cshl_format, trim_str_back
 from DAE import genomesDB as genomes_db
@@ -463,7 +463,8 @@ def main():
         if len(batches) == 1:
             batch_stream = batches[0]
         else:
-            batch_stream = toolz.merge_sorted(batches, keyfunc)
+            # batch_stream = toolz.merge_sorted(batches, keyfunc)
+            assert False, 'multiple batches not supported at the moment'
 
         if args.prepend_chr:
             assert not args.remove_chr
