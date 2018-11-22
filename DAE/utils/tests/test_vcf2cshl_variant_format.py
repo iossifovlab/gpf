@@ -17,7 +17,7 @@ def test_vcf2cshl_variant_format():
     ps, vs, ls = vcf2cshl(1, 'A', 'AA')
     print(ps, vs)
 
-    assert ps == 2
+    assert ps == 1
     assert vs == 'ins(A)'
     assert ls == 1
 
@@ -53,7 +53,7 @@ def test_vcf2cshl_variant_format2():
     #     print(res)
 
     ps, vs, ls = vcf2cshl(1, 'AA', 'AA')
-    assert ps == 3
+    assert ps == 1
     assert vs == 'complex(->)'
     assert ls == 0
 
@@ -63,7 +63,7 @@ def test_vcf2cshl_variant_format2():
     assert ls == 1
 
     ps, vs, ls = vcf2cshl(1, 'AA', 'AAA')
-    assert ps == 3
+    assert ps == 1
     assert vs == "ins(A)"
     assert ls == 1
 
@@ -100,12 +100,12 @@ def test_vcf2cshl_variant_format3():
     assert ls == 1
 
     ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'AAA')
-    assert ps == 4
+    assert ps == 1
     assert vs == "del(3)"
     assert ls == 3
 
     ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'A')
-    assert ps == 2
+    assert ps == 1
     assert vs == "del(5)"
     assert ls == 5
 
@@ -142,7 +142,7 @@ def test_insert_long():
     ps, vs, ls = vcf2cshl(1, ref, alt)
     print(ps, vs, ls)
 
-    assert ps == 51  # FIXME
+    assert ps == 2  # FIXME
 
 
 def test_cshl_to_vcf_problem():
@@ -150,7 +150,7 @@ def test_cshl_to_vcf_problem():
     position = 242815433
     variant = "sub(G->A)"
 
-    chrom, position1, reference, alternative = \
+    position1, reference, alternative = \
         dae2vcf_variant(chrom, position, variant)
     print(chrom, position, reference, alternative)
     assert chrom == "2"
@@ -176,5 +176,5 @@ def test_spark_v3_problems_check():
     pos1, var1, len1 = vcf2cshl(position, ref, alt)
 
     assert var1 == "ins(GCCCCACCTTCCTCTCCTCCT)"
-    assert pos1 == position + len(ref)
+    assert pos1 == position + 1
 

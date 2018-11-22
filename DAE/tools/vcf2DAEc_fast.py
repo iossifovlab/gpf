@@ -17,7 +17,7 @@ import time
 import re
 import toolz
 
-from utils.vcf_utils import cshl_format
+from utils.vcf_utils import cshl_format, trim_str_back
 from DAE import genomesDB as genomes_db
 
 # add more data on fam Info
@@ -325,7 +325,7 @@ def digitP(x):
 def vcf2cshlFormat2(pos, ref, alts):
     vrt, pxx = list(), list()
     for alt in alts:
-        p, v, _ = cshl_format(pos, ref, alt)
+        p, v, _ = cshl_format(pos, ref, alt, trimmer=trim_str_back)
 
         pxx.append(p)
         vrt.append(v)
