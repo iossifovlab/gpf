@@ -18,11 +18,10 @@ class AnnotatorBase(object):
     `AnnotatorBase` is base class of all `Annotators` and `Preannotators`.
     """
 
-    def __init__(self, config, schema):
+    def __init__(self, config):
         assert isinstance(config, AnnotatorConfig)
 
         self.config = config
-        self.schema = schema
 
         self.mode = "overwrite"
         if self.config.options.mode == "replace":
@@ -34,10 +33,17 @@ class AnnotatorBase(object):
             annotation_line.get(key, '') for key in output_columns
         ]
 
+    def pull_schema(self, schema):
+        for col in self.config.output_columns:
+            schema.create_column(col, 'str')
+
     def annotate_file(self, file_io_manager):
         """
             Method for annotating file from `Annotator`.
         """
+        self.schema = file_io_manager.reader.schema
+        self.pull_schema(self.schema)
+
         line_config = LineConfig(file_io_manager.header)
         if self.mode == 'replace':
             self.config.output_columns = \
@@ -73,12 +79,13 @@ class AnnotatorBase(object):
 
 class CopyAnnotator(AnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(CopyAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(CopyAnnotator, self).__init__(config)
+
+    def pull_schema(self, schema):
         for key, value in self.config.columns_config.items():
-            assert key in self.schema.columns
-            self.schema.columns[value] = \
-                self.schema.columns[key]
+            assert key in schema.columns
+            schema.columns[value] = schema.columns[key]
 
     def line_annotation(self, annotation_line, variant=None):
         data = {}
@@ -177,8 +184,8 @@ class VCFBuilder(VariantBuilder):
 
 class VariantAnnotatorBase(AnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(VariantAnnotatorBase, self).__init__(config, schema)
+    def __init__(self, config):
+        super(VariantAnnotatorBase, self).__init__(config)
 
         assert isinstance(config, VariantAnnotatorConfig)
 
@@ -203,13 +210,12 @@ class VariantAnnotatorBase(AnnotatorBase):
                 'VCF:alt',
             ]
 
+    def pull_schema(self, schema):
         for vcol in self.config.virtual_columns:
             if 'position' in vcol:
-                self.schema.columns[vcol] = \
-                    Schema.produce_type('int')
+                schema.create_column(vcol, 'int')
             else:
-                self.schema.columns[vcol] = \
-                    Schema.produce_type('str')
+                schema.create_column(vcol, 'str')
 
     def line_annotation(self, aline):
         variant = self.variant_builder.build(aline)
@@ -221,8 +227,8 @@ class VariantAnnotatorBase(AnnotatorBase):
 
 class CompositeAnnotator(AnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(CompositeAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(CompositeAnnotator, self).__init__(config)
         self.annotators = []
 
     def add_annotator(self, annotator):
@@ -233,15 +239,15 @@ class CompositeAnnotator(AnnotatorBase):
         for annotator in self.annotators:
             annotator.line_annotation(aline)
 
-    @property
-    def schema(self):
-        raise NotImplementedError()
+    def pull_schema(self, schema):
+        for annotator in self.annotators:
+            annotator.pull_schema(schema)
 
 
 class CompositeVariantAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(CompositeVariantAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(CompositeVariantAnnotator, self).__init__(config)
         self.annotators = []
 
     def add_annotator(self, annotator):
@@ -252,3 +258,7 @@ class CompositeVariantAnnotator(VariantAnnotatorBase):
         variant = self.variant_builder.build(aline)
         for annotator in self.annotators:
             annotator.do_annotate(aline, variant)
+
+    def pull_schema(self, schema):
+        for annotator in self.annotators:
+            annotator.pull_schema(schema)

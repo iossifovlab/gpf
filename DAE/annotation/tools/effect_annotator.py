@@ -12,8 +12,8 @@ from annotation.tools.schema import Schema
 
 class EffectAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(EffectAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(EffectAnnotator, self).__init__(config)
         assert self.config.options.Traw is not None
         assert self.config.options.Graw is not None
         assert os.path.exists(self.config.options.Traw)
@@ -28,16 +28,6 @@ class EffectAnnotator(VariantAnnotatorBase):
         self.effect_details_column = \
             self.config.columns_config.get("effect_details", None)
 
-        if self.effect_type_column:
-            self.schema.columns[self.effect_type_column] = \
-                    Schema.produce_type('list(str)')
-        if self.effect_gene_column:
-            self.schema.columns[self.effect_gene_column] = \
-                    Schema.produce_type('list(str)')
-        if self.effect_details_column:
-            self.schema.columns[self.effect_details_column] = \
-                    Schema.produce_type('list(str)')
-
     def _init_variant_annotation(self):
         genome = GenomeAccess.openRef(self.config.options.Graw)
         gene_models = load_gene_models(self.config.options.Traw)
@@ -45,6 +35,14 @@ class EffectAnnotator(VariantAnnotatorBase):
             self.config.options.prom_len = 0
         self.annotation_helper = VariantEffectAnnotator(
             genome, gene_models, promoter_len=self.config.options.prom_len)
+
+    def pull_schema(self, schema):
+        if self.effect_type_column:
+            schema.create_column(self.effect_type_column, 'list(str)')
+        if self.effect_gene_column:
+            schema.create_column(self.effect_gene_column, 'list(str)')
+        if self.effect_details_column:
+            schema.create_column(self.effect_details_column, 'list(str)')
 
     def do_annotate(self, aline, variant):
         assert variant is not None
