@@ -1,6 +1,4 @@
-from unittest.mock import mock_open, patch
-from unittest import TestCase
-from hamcrest import assert_that, has_entries
+from unittest.mock import patch
 
 
 def assert_common_reports(first, second):
