@@ -1,4 +1,5 @@
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
+import common_reports.common_report
 
 
 def assert_common_reports(first, second):
@@ -31,11 +32,14 @@ def assert_common_reports(first, second):
 
 
 def test_common_reports_generator(common_reports_generator, output):
-    with patch('json.dump') as m_json:
-        common_reports_generator.save_common_reports()
+    with patch(common_reports.common_report.__name__ + '.open',
+               new_callable=mock_open()) as m:
 
-        for common_report_call in m_json.call_args_list:
-            common_report = list(common_report_call)[0][0]
-            common_report_output = output(common_report['study_name'])
+        with patch('json.dump') as m_json:
+            common_reports_generator.save_common_reports()
 
-            assert_common_reports(common_report, common_report_output)
+            for common_report_call in m_json.call_args_list:
+                common_report = list(common_report_call)[0][0]
+                common_report_output = output(common_report['study_name'])
+
+                assert_common_reports(common_report, common_report_output)
