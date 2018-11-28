@@ -246,7 +246,10 @@ class FamilyConnections(object):
         return self.pedigree.members
 
     def add_ranks(self):
-        if len(self.members) > 0:
+        if len(self.id_to_mating_unit) == 0:
+            for member in self.id_to_individual.values():
+                member.rank = 0
+        elif len(self.members) > 0:
             list(self.id_to_individual.values())[0].add_rank(0)
             self._fix_ranks()
 
