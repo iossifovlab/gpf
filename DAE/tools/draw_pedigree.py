@@ -89,6 +89,9 @@ def main():
         "effect": args.effect,
         "layout": args.layout_column
     }
+    if args.generated_column:
+        columns_labels["generated"] = args.generated_column
+
     header = args.no_header_order
     if header:
         header = header.split(',')
