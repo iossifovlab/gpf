@@ -250,7 +250,14 @@ class FamilyConnections(object):
             for member in self.id_to_individual.values():
                 member.rank = 0
         elif len(self.members) > 0:
-            list(self.id_to_individual.values())[0].add_rank(0)
+            is_rank_set = False
+            for member in self.id_to_individual.values():
+                if len(member.mating_units) != 0:
+                    member.add_rank(0)
+                    is_rank_set = True
+                    break
+            if not is_rank_set:
+                list(self.id_to_individual.values())[0].add_rank(0)
             self._fix_ranks()
 
     def _fix_ranks(self):
