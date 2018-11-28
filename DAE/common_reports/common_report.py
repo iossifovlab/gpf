@@ -193,12 +193,12 @@ class CommonReportsGenerator(CommonReportsConfig):
     def get_effect_with_phenotype(
             self, query_object, effect, pheno, phenotype,
             families_report, counter_roles):
-        people_with_phenotype = []
+        people_with_phenotype = set()
         for family in query_object.families.values():
-            people_with_phenotype +=\
-                [person.person_id for person in
-                    family.get_people_with_phenotype(
-                        phenotype['source'], pheno)]
+            people_with_phenotype.update(
+                set([person.person_id for person in
+                     family.get_people_with_phenotype(
+                         phenotype['source'], pheno)]))
 
         variants_query = {
             'limit': None,
@@ -207,7 +207,7 @@ class CommonReportsGenerator(CommonReportsConfig):
                 self.effect_types_converter.get_effect_types(
                     effectTypes=effect),
             'roles': list(map(str, counter_roles)),
-            'person_ids': people_with_phenotype
+            'person_ids': list(people_with_phenotype)
         }
         all_variants_query = {
             'limit': None,
@@ -219,7 +219,8 @@ class CommonReportsGenerator(CommonReportsConfig):
 
         events_people_count = set()
         for variant in variants:
-            events_people_count.update(variant.variant_in_members)
+            events_people_count.update(
+                (set(variant.variant_in_members) & people_with_phenotype))
         families_report_with_roles = list(filter(
             lambda fr: fr['roles'] == list(map(str, counter_roles)),
             families_report['people_counters']))[0]
