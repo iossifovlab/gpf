@@ -285,21 +285,23 @@ class CommonReportsGenerator(CommonReportsConfig):
         return denovo_report
 
     def get_common_reports(self, query_object):
-        for qo, phenotype in query_object.items():
+        for qo, qo_properties in query_object.items():
             common_reports = {}
 
-            families_report = self.get_families_report(qo, phenotype)
+            families_report =\
+                self.get_families_report(qo, qo_properties['phenotype'])
             denovo_report = self.get_denovo_report(
-                qo, self.phenotypes[phenotype], families_report)
+                qo, self.phenotypes[qo_properties['phenotype']],
+                families_report)
 
             common_reports['families_report'] = families_report
             common_reports['denovo_report'] = denovo_report
             common_reports['study_name'] = qo.name
             common_reports['phenotype'] = ','.join(
                 [pheno if pheno is not None else
-                 self.phenotypes[phenotype]['default']['name']
+                 self.phenotypes[qo_properties['phenotype']]['default']['name']
                  for pheno in qo.get_phenotype_values(
-                     self.phenotypes[phenotype]['source'])])
+                     self.phenotypes[qo_properties['phenotype']]['source'])])
             common_reports['study_type'] =\
                 ','.join(qo.study_types) if qo.study_types else None
             common_reports['study_year'] =\
@@ -308,21 +310,24 @@ class CommonReportsGenerator(CommonReportsConfig):
                 ','.join(qo.pub_meds) if qo.pub_meds else None
             common_reports['families'] = len(qo.families)
             common_reports['number_of_probands'] =\
-                len([family.get_people_with_role(Role.prb)
+                sum([len(family.get_people_with_role(Role.prb))
                      for family in qo.families.values()])
             common_reports['number_of_siblings'] =\
-                len([family.get_people_with_role(Role.sib)
+                sum([len(family.get_people_with_role(Role.sib))
                      for family in qo.families.values()])
             common_reports['denovo'] = qo.has_denovo
             common_reports['transmitted'] = qo.has_transmitted
+            common_reports['study_description'] = qo.description
+            common_reports['is_downloadable'] =\
+                qo_properties['is_downloadable']
 
             yield common_reports
 
     def save_common_reports(self):
-        studies = {self.study_facade.get_study(s): ph
-                   for s, ph in self.studies.items()}
-        study_groups = {self.study_group_facade.get_study_group(sg): ph
-                        for sg, ph in self.study_groups.items()}
+        studies = {self.study_facade.get_study(s): s_prop
+                   for s, s_prop in self.studies.items()}
+        study_groups = {self.study_group_facade.get_study_group(sg): sg_prop
+                        for sg, sg_prop in self.study_groups.items()}
         for cr in self.get_common_reports(studies):
             with open(os.path.join(studies_common_reports_dir,
                       cr['study_name'] + '.json'), 'w') as crf:

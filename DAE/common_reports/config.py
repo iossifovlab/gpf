@@ -8,6 +8,8 @@ from box import Box
 
 import common.config
 from variants.attributes import Role
+from configurable_entities.configurable_entity_config import\
+    ConfigurableEntityConfig
 
 
 class CommonReportsConfig(object):
@@ -28,10 +30,23 @@ class CommonReportsConfig(object):
     def _parse_data(self, data):
         parsed_data = {}
         for d in data.split(','):
-            split_data = d.split(':')
-            if len(split_data) == 1:
+            d_properties = self.config.CommonReports.get(d.lower())
+            if d_properties is None:
                 continue
-            parsed_data[split_data[0]] = split_data[1]
+            phenotype = d_properties.get('phenotype', None)
+            is_downloadable = d_properties.get('is_downloadable', None)
+            if phenotype is None:
+                continue
+            if is_downloadable is None:
+                is_downloadable = False
+            else:
+                is_downloadable =\
+                    ConfigurableEntityConfig._str_to_bool(is_downloadable)
+
+            parsed_data[d] = {
+                'phenotype': phenotype,
+                'is_downloadable': is_downloadable
+            }
         return parsed_data
 
     def _parse_domain_info(self, domain):
