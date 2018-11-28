@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from past.utils import old_div
 from builtins import object
 from copy import deepcopy
+import math
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -135,7 +136,8 @@ class OffsetLayoutDrawer(object):
                         facecolor=individual_color, edgecolor="black"))
                     cx = coords[0] + individual.size / 2.0
                     cy = coords[1] + individual.size / 2.0
-                else:
+                elif Sex.from_name_or_value(
+                        individual.individual.member.sex) == Sex.female:
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
                     axes.add_patch(mpatches.Circle(
@@ -143,6 +145,17 @@ class OffsetLayoutDrawer(object):
                         facecolor=individual_color, edgecolor="black"))
                     cx = coords[0]
                     cy = coords[1]
+                else:
+                    size = math.sqrt((individual.size ** 2) / 2)
+                    coords =\
+                        [individual.x + self._x_offset + (individual.size / 2),
+                         individual.y + self._y_offset]
+                    axes.add_patch(mpatches.Rectangle(
+                        coords, size, size,
+                        facecolor=individual_color, edgecolor="black",
+                        angle=45.0))
+                    cx = coords[0]
+                    cy = coords[1] + individual.size / 2.0
 
                 if self.show_id:
                     axes.annotate(individual.individual.member.id, (cx, cy),
