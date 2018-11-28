@@ -25,30 +25,6 @@ class PDFLayoutDrawer(object):
             figure.text(0.5, 0.9, title, horizontalalignment="center")
         self._pages.append(figure)
 
-    def add_error_page(self, family, title=None):
-        figure = self._draw_table(family)
-        if title:
-            figure.text(0.5, 0.9, title, horizontalalignment="center")
-        self._pages.append(figure)
-
-    def _draw_table(self, family):
-        figure, ax = plt.subplots()
-        ax.axis("off")
-
-        col_labels =\
-            ["familyId", "individualId", "father", "mother", "sex", "effect",
-             "layout"]
-        table_vals = []
-
-        for member in family:
-            table_vals.append([member.family_id, member.id, member.father,
-                               member.mother, member.sex, member.effect,
-                               member.layout])
-        figure.table = plt.table(
-            cellText=table_vals, colLabels=col_labels, loc='center')
-
-        return figure
-
     def save_file(self):
         with PdfPages(self._filename) as pdf:
             for page in self._pages:
@@ -58,28 +34,57 @@ class PDFLayoutDrawer(object):
 
 class OffsetLayoutDrawer(object):
 
-    def __init__(self, layout, x_offset, y_offset, show_id=False):
+    def __init__(
+            self, layout, x_offset, y_offset, show_id=False,
+            show_family=False):
         self._x_offset = x_offset
         self._y_offset = y_offset
         self._layout = deepcopy(layout)
         self._horizontal_mirror_layout()
         self.show_id = show_id
+        self.show_family = show_family
 
     def draw(self, figure=None):
         if figure is None:
             figure = plt.figure()
 
-        ax = figure.add_axes((0.35, 0.33, 0.33, 0.33))
+        pedigree_axes_rect = (0.35, 0.33, 0.33, 0.33)
+        if self.show_family:
+            pedigree_axes_rect = (0.35, 0.45, 0.3, 0.45)
+
+        ax_pedigree = figure.add_axes(pedigree_axes_rect)
+        ax_pedigree.axis("off")
+        ax_pedigree.set_aspect(aspect="equal", adjustable="datalim", anchor="C")
+        ax_pedigree.autoscale_view()
+
+        self._draw_lines(ax_pedigree)
+        self._draw_rounded_lines(ax_pedigree)
+
+        self._draw_members(ax_pedigree)
+
+        ax_pedigree.plot()
+
+        if self.show_family:
+            ax_family = figure.add_axes((0.1, 0.1, 0.8, 0.3))
+            ax_family.axis("off")
+            ax_family.set_aspect(
+                aspect="equal", adjustable="datalim", anchor="C")
+            ax_family.autoscale_view()
+
+            family = [member.individual.member
+                      for layer in self._layout.positions for member in layer]
+
+            self._draw_family(ax_family, family)
+
+            ax_family.plot()
+
+        return figure
+
+    def draw_family(self, family):
+        figure, ax = plt.subplots()
         ax.axis("off")
-        ax.set_aspect(aspect="equal", adjustable="datalim", anchor="C")
-        ax.autoscale_view()
 
-        self._draw_lines(ax)
-        self._draw_rounded_lines(ax)
-
-        self._draw_members(ax)
-
-        ax.plot()
+        self._draw_family(figure, family)
 
         return figure
 
@@ -164,6 +169,20 @@ class OffsetLayoutDrawer(object):
                     axes.annotate(individual.individual.member.id, (cx, cy),
                                   color='black', weight='bold', fontsize=6,
                                   ha='center', va='center')
+
+    def _draw_family(self, axes, family):
+        col_labels =\
+            ["familyId", "individualId", "father", "mother", "sex", "effect",
+             "layout"]
+        table_vals = []
+
+        for member in family:
+            table_vals.append(
+                [member.family_id, member.id, member.father, member.mother,
+                 member.sex, member.effect, member.layout])
+
+        axes.table = plt.table(
+            cellText=table_vals, colLabels=col_labels, loc='center')
 
     def _horizontal_mirror_layout(self):
         highest_y = max([i.y for level in self._layout.positions

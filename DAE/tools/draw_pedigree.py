@@ -77,6 +77,9 @@ def main():
     parser.add_argument(
         '--show-id', help='show individual id in pedigree', dest='show_id',
         action='store_true', default=False)
+    parser.add_argument(
+        '--show-family', help='show family info below pedigree',
+        dest='show_family', action='store_true', default=False)
 
     args = parser.parse_args()
 
@@ -98,6 +101,7 @@ def main():
     delimiter = args.delimiter
 
     show_id = args.show_id
+    show_family = args.show_family
 
     pedigrees = PedigreeReader().read_file(
         args.file, columns_labels, header, delimiter)
@@ -108,11 +112,13 @@ def main():
         layout_loader = LayoutLoader(family)
         layout = layout_loader.load()
         if layout is None:
-            pdf_drawer.add_error_page(
-                family.members,
+            layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
+            pdf_drawer.add_page(
+                layout_drawer.draw_family(family.members),
                 'Invalid coordinates in family ' + family.family_id)
         else:
-            layout_drawer = OffsetLayoutDrawer(layout, 0, 0, show_id)
+            layout_drawer = OffsetLayoutDrawer(
+                layout, 0, 0, show_id=show_id, show_family=show_family)
             pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
 
     pdf_drawer.save_file()
