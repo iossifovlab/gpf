@@ -40,9 +40,10 @@ class OffsetLayoutDrawer(object):
         self._x_offset = x_offset
         self._y_offset = y_offset
         self._layout = deepcopy(layout)
-        self._horizontal_mirror_layout()
         self.show_id = show_id
         self.show_family = show_family
+        if self._layout is not None:
+            self._horizontal_mirror_layout()
 
     def draw(self, figure=None):
         if figure is None:
