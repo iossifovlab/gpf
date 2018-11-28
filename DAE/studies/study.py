@@ -23,6 +23,10 @@ class Study(object):
         return self.backend.families
 
     @property
+    def description(self):
+        return self.study_config.description
+
+    @property
     def phenotypes(self):
         return self.study_config.phenotypes
 

@@ -12,9 +12,10 @@ from variants.attributes_query import role_query, variant_type_converter, \
 
 class StudyGroup(object):
 
-    def __init__(self, name, studies):
+    def __init__(self, name, description, studies):
         self.studies = studies
         self.name = name
+        self.description = description
         self.phenotypes = functools.reduce(
             lambda acc, study: acc | study.phenotypes, studies, set())
 
