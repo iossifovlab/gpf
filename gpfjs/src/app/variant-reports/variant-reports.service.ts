@@ -9,8 +9,8 @@ import { environment } from '../../environments/environment';
 @Injectable()
 export class VariantReportsService {
 
-  private studiesUrl = 'common_reports/report_studies';
-  private variantsUrl = 'common_reports/variant_reports/';
+  private studiesUrl = 'common_reports/studies';
+  private variantsUrl = 'common_reports/studies/';
   private downloadUrl = 'common_reports/families_data/';
 
   constructor(

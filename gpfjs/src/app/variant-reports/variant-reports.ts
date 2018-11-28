@@ -3,7 +3,7 @@ import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 export class Study {
 
   static fromJsonArray(json: any[]) {
-    return new Study(json[0], json[1]);
+    return new Study(json['study_name'], json['study_description']);
   }
 
   constructor(
@@ -30,10 +30,10 @@ export class ChildrenCounter {
   static fromJson(json: any) {
     return new ChildrenCounter(
       json['phenotype'],
-      json['children_male'],
-      json['children_female'],
-      json['children_unspecified'],
-      json['children_total'],
+      json['people_male'],
+      json['people_female'],
+      json['people_unspecified'],
+      json['people_total'],
     );
   }
 
@@ -46,12 +46,28 @@ export class ChildrenCounter {
   ) {}
 }
 
+export class PeopleCounter {
+
+  static fromJson(json: any) {
+    return new PeopleCounter(
+      json['counters'].map(
+        childCounter => ChildrenCounter.fromJson(childCounter)),
+      json['roles']
+    );
+  }
+
+  constructor(
+    readonly childrenCounters: ChildrenCounter[],
+    readonly roles: string[]
+  ) {}
+}
+
 export class PedigreeCounter {
 
   static fromArray(data: any) {
     return new PedigreeCounter(
-      data[0].map(pedigreeData => PedigreeData.fromArray(pedigreeData)),
-      data[1]);
+      data['pedigree'].map(pedigreeData => PedigreeData.fromArray(pedigreeData)),
+      data['pedigrees_count']);
   }
 
   constructor(
@@ -65,7 +81,8 @@ export class FamilyCounter {
   static fromJson(json: any) {
     return new FamilyCounter(
       json['counters'].map(
-        pedigree => PedigreeCounter.fromArray(pedigree)),
+        pedigree => PedigreeCounter.fromArray(pedigree)
+      ),
       json['phenotype']
     );
   }
@@ -81,8 +98,8 @@ export class FamilyReport {
   static fromJson(json: any) {
     return new FamilyReport(
       json['phenotypes'],
-      json['children_counters'].map(
-        childCounter => ChildrenCounter.fromJson(childCounter)),
+      json['people_counters'].map(
+        peopleCounter => PeopleCounter.fromJson(peopleCounter)),
       json['families_counters'].map(
         familyCounter => FamilyCounter.fromJson(familyCounter)),
       json['families_total'],
@@ -91,7 +108,7 @@ export class FamilyReport {
 
   constructor(
     readonly phenotypes: string[],
-    readonly childrenCounters: ChildrenCounter[],
+    readonly peopleCounters: PeopleCounter[],
     readonly familiesCounters: FamilyCounter[],
     readonly familiesTotal: number,
   ) {}
@@ -104,9 +121,9 @@ export class DeNovoData {
     return new DeNovoData(
       json['phenotype'],
       json['events_count'],
-      json['events_children_count'],
+      json['events_people_count'],
       json['events_rate_per_child'],
-      json['events_children_percent'],
+      json['events_people_percent'],
     );
   }
 
@@ -135,26 +152,40 @@ export class EffectTypeRow {
   ) {}
 }
 
-export class DenovoReport {
+export class EffectTypeTable {
 
   static fromJson(json: any) {
-    if (!json) {
-      return null;
+    return new EffectTypeTable(
+      json['rows'].map(row => EffectTypeRow.fromJson(row)),
+      json['roles']
+      );
     }
-    return new DenovoReport(
-      json['phenotypes'],
-      json['effect_groups'],
-      json['effect_types'],
-      json['rows'].map(row => EffectTypeRow.fromJson(row))
-    );
-  }
 
+    constructor(
+      readonly rows: EffectTypeRow[],
+      readonly roles: string[]
+      ) {}
+    }
 
-  constructor (
-    readonly phenotypes: string[],
-    readonly effectGroups: string[],
-    readonly effectTypes: string[],
-    readonly row: EffectTypeRow[]
+    export class DenovoReport {
+
+      static fromJson(json: any) {
+        if (!json) {
+          return null;
+        }
+        return new DenovoReport(
+          json['tables'].map(table => EffectTypeTable.fromJson(table)),
+          json['phenotypes'],
+          json['effect_groups'],
+          json['effect_types']
+        );
+      }
+
+      constructor (
+        readonly tables: EffectTypeRow[],
+        readonly phenotypes: string[],
+        readonly effectGroups: string[],
+        readonly effectTypes: string[],
   ) {}
 }
 

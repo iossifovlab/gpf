@@ -5,7 +5,7 @@ import { Observable, Subject } from 'rxjs';
 
 import { VariantReportsService } from './variant-reports.service';
 import { Studies, Study, VariantReport, ChildrenCounter,
-         FamilyCounter, PedigreeCounter, DenovoReport, DeNovoData
+         FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData
         } from './variant-reports';
 
 export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
@@ -22,6 +22,7 @@ export class VariantReportsComponent implements OnInit {
   selectedReport$ = new Subject<Study>();
 
   variantReport$: Observable<VariantReport>;
+  pedigreeGroups: PedigreeCounter[][];
 
   constructor(
     private variantReportsService: VariantReportsService,
@@ -36,6 +37,10 @@ export class VariantReportsComponent implements OnInit {
       .switchMap(study => this.variantReportsService.getVariantReport(study))
       .do(study => this.setSelectedReportParam(study.studyName))
       .share();
+
+    this.variantReport$.take(1).subscribe(params => {
+      this.pedigreeGroups = this.chunkPedigrees(params.familyReport.familiesCounters);
+    });
 
     this.loadReportFromParams();
   }
@@ -74,6 +79,10 @@ export class VariantReportsComponent implements OnInit {
 
   selectReport(study: Study) {
     this.selectedReport$.next(study);
+
+    this.variantReport$.take(1).subscribe(params => {
+      this.pedigreeGroups = this.chunkPedigrees(params.familyReport.familiesCounters);
+    });
   }
 
   orderByColumnOrder(childrenCounters: (ChildrenCounter | DeNovoData)[], columns: string[], strict = false) {
@@ -137,14 +146,14 @@ export class VariantReportsComponent implements OnInit {
     return [];
   }
 
-  getEffectTypeOrderByColumOrder(effectTypeName: string, denovoReport: DenovoReport) {
-    let effectType = denovoReport.row
+  getEffectTypeOrderByColumOrder(effectTypeName: string, table: EffectTypeTable, phenotypes: string[]) {
+    let effectType = table.rows
       .find(et => et.effectType === effectTypeName);
 
     if (!effectType) {
       return [];
     }
-    return this.orderByColumnOrder(effectType.data, denovoReport.phenotypes);
+    return this.orderByColumnOrder(effectType.data, phenotypes);
   }
 
   getDownloadLink(variantReport: VariantReport) {
