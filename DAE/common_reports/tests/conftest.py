@@ -2,6 +2,7 @@ import pytest
 
 import os
 from box import Box
+import json
 
 from common_reports.common_report import CommonReportsGenerator
 from study_groups.study_group_facade import StudyGroupFacade
@@ -13,16 +14,15 @@ from study_groups.study_group_factory import StudyGroupFactory
 from utils.fixtures import path_to_fixtures as _path_to_fixtures
 
 
-def path_to_fixtures(path=None):
-    return _path_to_fixtures('common_reports', path)
+def path_to_fixtures(*args):
+    return _path_to_fixtures('common_reports', *args)
 
 
 @pytest.fixture(scope='session')
 def common_reports_config():
     return Box({
         "commonReportsConfFile":
-            os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         'fixtures/commonReports.conf')
+            path_to_fixtures('commonReports.conf')
     })
 
 
@@ -65,3 +65,14 @@ def common_reports_generator(
         config=common_reports_config)
 
     return common_reports_generator
+
+
+@pytest.fixture(scope='session')
+def output():
+    def get_output(name):
+        with open(path_to_fixtures('output', name + '.json')) as o:
+            output = json.load(o)
+
+        return output
+
+    return get_output

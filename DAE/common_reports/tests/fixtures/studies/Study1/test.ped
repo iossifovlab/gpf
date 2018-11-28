@@ -13,3 +13,6 @@ f5	mom5	0	0	2	1	mom	phenotype1	mom5
 f5	dad5	0	0	1	1	dad	pheno	dad5
 f5	ch5	dad5	mom5	2	2	prb	phenotype1	ch5
 f5	ch5.1	dad5	mom5	2	2	sib	phenotype2	ch5.1
+f6	mom6	0	0	2	1	mom	unaffected	mom6
+f6	dad6	0	0	1	1	dad	unaffected	dad6
+f6	ch6	dad6	mom6	1	2	prb	phenotype1	ch6
