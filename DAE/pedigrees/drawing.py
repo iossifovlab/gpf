@@ -125,8 +125,11 @@ class OffsetLayoutDrawer(object):
                     individual_color = "grey"
                 elif individual.individual.member.effect == "1":
                     individual_color = "white"
-                else:
+                elif individual.individual.member.effect == "2":
                     individual_color = "red"
+                else:
+                    individual_color = "purple"
+
                 if Sex.from_name_or_value(
                         individual.individual.member.sex) == Sex.male:
                     coords = [individual.x + self._x_offset,
