@@ -48,7 +48,7 @@ class StudyGroup(object):
         return result
 
     def combine_families(self, first, second):
-        same_families = first.keys() & second.keys()
+        same_families = set(first.keys()) & set(second.keys())
         combined_dict = {**first, **second}
         for sf in same_families:
             combined_dict[sf] =\
