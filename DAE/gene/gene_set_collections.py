@@ -130,7 +130,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                     'property': standard_criteria_id,
                     'name': segment_arr[0],
                     'value': segment_arr[1].split('.')
-                    if '.' in segment_arr[1] else segment_arr[1]
                 }
                     for segment_arr in segments_arrs]
             )
@@ -243,7 +242,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         else:
             return pedigree_selectors
 
-    def get_gene_sets(self, gene_sets_types={'f1': ['autism']}, **kwargs):
+    def get_gene_sets(self, gene_sets_types={'f1_group': ['autism']}, **kwargs):
         gene_sets_types = self._filter_gene_sets_types(
             gene_sets_types,
             kwargs.get('permitted_datasets', None))
@@ -251,10 +250,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             gene_sets_types,
             kwargs.get('include_datasets_desc', True))
         result = []
-
-        # print()
-        # from pprint import pprint
-        # pprint(self.cache)
 
         for gsn in self.gene_sets_names:
             gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
@@ -270,7 +265,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def get_gene_set(self, gene_set_id, gene_sets_types={'SD': ['autism']},
                      **kwargs):
-        print(gene_sets_types, kwargs.get('permitted_datasets'))
         gene_sets_types = self._filter_gene_sets_types(
             gene_sets_types,
             kwargs.get('permitted_datasets'))

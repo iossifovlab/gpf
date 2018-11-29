@@ -5,9 +5,10 @@ Created on Jul 5, 2017
 '''
 from __future__ import unicode_literals
 from rest_framework import permissions
+
+from datasets_api.datasets_manager import get_datasets_manager
 from datasets_api.models import Dataset
 from guardian.utils import get_anonymous_user
-from preloaded import register
 
 
 class IsDatasetAllowed(permissions.BasePermission):
@@ -17,17 +18,15 @@ class IsDatasetAllowed(permissions.BasePermission):
 
     @staticmethod
     def user_has_permission(user, dataset_id):
-        print("Dataset for look for:", dataset_id, list(Dataset.objects.all()))
         dataset_object = Dataset.objects.get(dataset_id=dataset_id)
         return user.has_perm('datasets_api.view', dataset_object) or\
             get_anonymous_user().has_perm('datasets_api.view', dataset_object)
 
     @staticmethod
     def permitted_datasets(user):
-        dataset_ids = register.get('datasets').get_facade() \
+        dataset_ids = get_datasets_manager().get_dataset_facade() \
             .get_all_dataset_ids()
 
-        print("dataset_ids", dataset_ids)
         return list(filter(
             lambda dataset_id: IsDatasetAllowed.user_has_permission(
                 user, dataset_id),

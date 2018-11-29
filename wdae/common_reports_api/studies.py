@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 from builtins import str
 from DAE import vDB
 from collections import Counter, defaultdict
+
+from datasets_api.datasets_manager import get_datasets_manager
 from helpers.logger import LOGGER
 from precompute.register import Precompute
 import preloaded
@@ -101,7 +103,7 @@ def get_denovo_studies_names():
 
 
 def get_sorted_datasets():
-    datasets = preloaded.register.get('datasets').get_facade() \
+    datasets = get_datasets_manager().get_facade() \
         .get_all_datasets()
     print("DATASETS", datasets)
     return sorted(datasets,

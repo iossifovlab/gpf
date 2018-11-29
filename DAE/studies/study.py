@@ -4,14 +4,16 @@ class Study(object):
         self.name = name
         self.backend = backend
         self.study_config = study_config
+        self._study_type_lowercase = self.study_type.lower()
 
     def query_variants(self, **kwargs):
         study_types_filter = kwargs.get('studyTypes', None)
         if study_types_filter:
-            print("StudyTypes filtered...", study_types_filter, self.study_type)
-            # FIXME: lowercase vs uppercase
-            # if self.study_type not in study_types_filter:
-            #     return []
+            if not isinstance(study_types_filter, list):
+                raise RuntimeError("alabalaa")
+            study_types_filter = [s.lower() for s in study_types_filter]
+            if self._study_type_lowercase not in study_types_filter:
+                return []
 
         return self.backend.query_variants(**kwargs)
 

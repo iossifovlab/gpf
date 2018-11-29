@@ -3,16 +3,9 @@ import os
 import shutil
 
 from DAE import Config
-from DAE import GeneInfoConfig
-from DAE import GeneSetsCollections
+from datasets_api.datasets_manager import get_datasets_manager
 from studies.study_definition import SingleFileStudiesDefinition
 from study_groups.study_group_definition import SingleFileStudiesGroupDefinition
-from datasets.datasets_definition import SingleFileDatasetsDefinition
-from datasets_api.models import Dataset
-# Used by pytest
-from study_groups.tests.conftest import study_group_facade, study_groups_factory
-from datasets.tests.conftest import dataset_facade, dataset_factory
-from users_api.tests.conftest import logged_in_user, active_user
 
 from utils.fixtures import path_to_fixtures as _path_to_fixtures
 
@@ -49,11 +42,6 @@ def basic_study_groups_definition():
         path_to_fixtures('studies', 'study_groups.conf'))
 
 
-@pytest.fixture(scope='session')
-def dataset_definition():
-    return SingleFileDatasetsDefinition('datasets.conf', path_to_fixtures())
-
-
 @pytest.fixture()
 def mocked_dataset_config(mocker):
     mp = mock_property(mocker)
@@ -63,17 +51,6 @@ def mocked_dataset_config(mocker):
     mp('Config.Config.daeDir', path_to_fixtures())
 
     return Config()
-
-
-@pytest.fixture()
-def gene_info_config(mocked_dataset_config):
-    return GeneInfoConfig(config=mocked_dataset_config)
-
-
-@pytest.fixture()
-def gscs(study_group_facade, gene_info_config):
-    return GeneSetsCollections(
-        study_group_facade=study_group_facade, config=gene_info_config)
 
 
 @pytest.fixture()
@@ -87,38 +64,19 @@ def mock_preloader_gene_info_config(mocker, gscs):
     mock_preload(mocker, 'gene_sets_collections', mock_func, original)
 
 
-@pytest.fixture(scope='module')
-def datasets_from_fixtures():
+@pytest.fixture()
+def datasets_from_fixtures(db, settings):
     old_dataset_path = os.environ['DAE_DATA_DIR']
 
     os.environ['DAE_DATA_DIR'] = path_to_fixtures()
 
     print("REPLACING DAE_DATA_DIR")
 
+    get_datasets_manager().reload_dataset_facade()
+
     yield
 
     os.environ['DAE_DATA_DIR'] = old_dataset_path
-    # import preloaded.register
-    # original = preloaded.register.get
-    # ds_factory = dataset_facade(dataset_definition)
-    #
-    # print("inside mocker: ", ds_factory.get_all_dataset_ids())
-    #
-    # mocker.patch(
-    #     'datasets_api.datasets_preload.DatasetsPreload.get_facade',
-    #     return_value=ds_factory)
-
-
-@pytest.fixture()
-def dataset_facade_object(dataset_definition, dataset_facade):
-    print("creating dataset facade object")
-    return dataset_facade(dataset_definition)
-
-
-@pytest.fixture()
-def dataset_permissions(db, dataset_facade_object):
-    for dataset in dataset_facade_object.get_all_datasets():
-        Dataset.recreate_dataset_perm(dataset.id, [])
 
 
 @pytest.fixture(scope='session')

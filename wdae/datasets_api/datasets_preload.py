@@ -22,7 +22,6 @@ class DatasetsPreload(Preload, Precompute):
 
     def __init__(self):
         super(DatasetsPreload, self).__init__()
-        print("CREATING DATASET FACADE")
         self._dataset_facade = DatasetFacade()
 
     def precompute(self):

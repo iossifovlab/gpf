@@ -6,6 +6,8 @@ Created on Apr 29, 2017
 from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from rest_framework.authtoken.models import Token
+
+from datasets_api.datasets_manager import get_datasets_manager
 from datasets_api.models import Dataset
 
 from precompute import register
@@ -15,8 +17,9 @@ class BaseAuthenticatedUserTest(APITestCase):
 
     @classmethod
     def setUpClass(cls):
+        raise RuntimeError("BaseAuthenticatedUserTest should be removed")
         super(BaseAuthenticatedUserTest, cls).setUpClass()
-        dataset_facade = register.get('datasets').get_facade()
+        dataset_facade = get_datasets_manager().get_facade()
 
         print("datasets in dataset facade: ", dataset_facade.get_all_dataset_ids())
         for dataset in dataset_facade.get_all_datasets():
