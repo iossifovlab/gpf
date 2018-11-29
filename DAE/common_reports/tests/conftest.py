@@ -5,6 +5,7 @@ from box import Box
 import json
 
 from common_reports.common_report import CommonReportsGenerator
+from common_reports.config import CommonReportsConfig
 from study_groups.study_group_facade import StudyGroupFacade
 from studies.study_facade import StudyFacade
 from studies.study_definition import SingleFileStudiesDefinition
@@ -20,10 +21,10 @@ def path_to_fixtures(*args):
 
 @pytest.fixture(scope='session')
 def common_reports_config():
-    return Box({
+    return CommonReportsConfig(Box({
         "commonReportsConfFile":
             path_to_fixtures('commonReports.conf')
-    })
+    }))
 
 
 @pytest.fixture(scope='session')

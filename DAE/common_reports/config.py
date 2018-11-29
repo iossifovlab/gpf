@@ -67,23 +67,23 @@ class CommonReportsConfig(object):
 
         return phenotype
 
-    def _study_groups(self):
+    def study_groups(self):
         return self._parse_data(
             self.config.CommonReports.get('study_groups', ''))
 
-    def _studies(self):
+    def studies(self):
         return self._parse_data(self.config.CommonReports.get('studies', ''))
 
-    def _counters_roles(self):
+    def counters_roles(self):
         return [
             [Role.from_name(role) for role in roles.split(',')]
             for roles in self.config.CommonReports.counters_role.split(':')]
 
-    def _effect_groups(self):
+    def effect_groups(self):
         effect_groups = self.config.CommonReports.get('effect_groups', None)
         return effect_groups.split(',') if effect_groups else []
 
-    def _effect_types(self):
+    def effect_types(self):
         effect_types = self.config.CommonReports.get('effect_types', None)
         return effect_types.split(',') if effect_types else []
 
@@ -98,7 +98,7 @@ class CommonReportsConfig(object):
             'source': phenotype.source
         }
 
-    def _phenotypes(self):
+    def phenotypes(self):
         phenotypes = self.config.CommonReports.phenotypes.split(',')
         phenotypes_info = {}
         for phenotype in phenotypes:

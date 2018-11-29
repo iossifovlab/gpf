@@ -13,17 +13,21 @@ from study_groups.default_settings import COMMON_REPORTS_DIR\
     as study_groups_common_reports_dir
 
 
-class CommonReportsGenerator(CommonReportsConfig):
+class CommonReportsGenerator(object):
 
     def __init__(
-            self, study_facade=None, study_group_facade=None, *args, **kwargs):
-        super(CommonReportsGenerator, self).__init__(*args, **kwargs)
-        self.study_groups = self._study_groups()
-        self.studies = self._studies()
-        self.counters_roles = self._counters_roles()
-        self.effect_groups = self._effect_groups()
-        self.effect_types = self._effect_types()
-        self.phenotypes = self._phenotypes()
+            self, config=None, study_facade=None, study_group_facade=None):
+        if config is None:
+            config = CommonReportsConfig()
+
+        self.config = config
+
+        self.study_groups = self.config.study_groups()
+        self.studies = self.config.studies()
+        self.counters_roles = self.config.counters_roles()
+        self.effect_groups = self.config.effect_groups()
+        self.effect_types = self.config.effect_types()
+        self.phenotypes = self.config.phenotypes()
 
         if study_facade is None:
             study_facade = StudyFacade()
