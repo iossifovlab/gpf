@@ -168,7 +168,7 @@ class OffsetLayoutDrawer(object):
 
                 if self.show_id:
                     axes.annotate(individual.individual.member.id, (cx, cy),
-                                  color='black', weight='bold', fontsize=6,
+                                  color='black', weight='bold', fontsize=2,
                                   ha='center', va='center')
 
     def _draw_family(self, axes, family):
