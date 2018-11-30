@@ -216,7 +216,7 @@ class LineBufferAdapter(object):
 
     def fill(self, chrom, pos_begin, pos_end):
         if self.chrom == chrom and \
-                self.pos_end >= pos_end:
+                self.pos_end > pos_end:
             return
         if self.score_file.lines_iterator is None:
             return
