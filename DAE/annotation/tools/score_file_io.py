@@ -33,18 +33,26 @@ def conf_to_dict(path):
 
 class ScoreFile(TabixReader):
 
-    def __init__(self, options, score_filename, config_filename=None):
+    def __init__(
+            self, options, score_filename, config_filename=None,
+            score_config=None):
+
         super(ScoreFile, self).__init__(options, filename=score_filename)
 
         self.score_filename = score_filename
-        self.config_filename = config_filename
-        self._load_config()
+        # self.config_filename = config_filename
+        if score_config is None:
+            self._load_config(config_filename)
+        else:
+            self._setup_config(score_config)
 
     def _setup(self):
         super(ScoreFile, self)._setup()
 
-        self.line_config = LineConfig(self.config.header)
+        assert all([sn in self.header for sn in self.score_names])
+        self.options.update(self.config)
 
+        self.line_config = LineConfig(self.header)
         self.schema = self.config.schema
 
         self.chr_name = self.config.columns.chr
@@ -60,15 +68,19 @@ class ScoreFile(TabixReader):
         self.no_score_value = self.config.noScoreValue
 
     def _load_config(self, config_filename=None):
-        if self.config_filename is None:
-            self.config_filename = "{}.conf".format(self.filename)
-        assert os.path.exists(self.config_filename)
+        if config_filename is None:
+            config_filename = "{}.conf".format(self.filename)
+        assert os.path.exists(config_filename)
 
-        with open(self.config_filename, 'r') as conf_file:
+        with open(config_filename, 'r') as conf_file:
             conf_settings = conf_to_dict(conf_file)
-            self.config = Box(
+            score_config = Box(
                 conf_settings, default_box=True,
                 default_box_attr=None)
+            self._setup_config(score_config)
+
+    def _setup_config(self, score_config):
+        self.config = score_config
 
         if self.config.header is not None:
             self.config.header = self.config.header.split(',')
@@ -79,8 +91,6 @@ class ScoreFile(TabixReader):
 
         self.config.columns.score = self.config.columns.score.split(',')
         self.score_names = self.config.columns.score
-        assert all([sn in self.header for sn in self.score_names])
-        self.options.update(self.config)
 
     def _fetch(self, chrom, pos_begin, pos_end):
         raise NotImplementedError()
@@ -256,9 +266,11 @@ class LineBufferAdapter(object):
 class IterativeAccess(ScoreFile):
     LONG_JUMP_THRESHOLD = 100000
 
-    def __init__(self, options, score_filename, score_config_filename=None):
+    def __init__(self, options, score_filename,
+                 config_filename=None, score_config=None):
         super(IterativeAccess, self).__init__(
-            options, score_filename, score_config_filename)
+            options, score_filename,
+            config_filename=config_filename, score_config=score_config)
 
         self.buffer = LineBufferAdapter(self)
 
@@ -289,9 +301,11 @@ class IterativeAccess(ScoreFile):
 
 class DirectAccess(ScoreFile):
 
-    def __init__(self, options, score_filename, config_filename=None):
+    def __init__(self, options, score_filename, config_filename=None,
+                 score_config=None):
         super(DirectAccess, self).__init__(
-            options, score_filename, config_filename=None)
+            options, score_filename, config_filename=config_filename,
+            score_config=score_config)
 
     def _fetch(self, chrom, pos_begin, pos_end):
         try:
