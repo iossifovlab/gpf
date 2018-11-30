@@ -19,22 +19,22 @@ class StudyGroup(object):
         self.phenotypes = functools.reduce(
             lambda acc, study: acc | study.phenotypes, studies, set())
 
-        self._study_names = ",".join(study.name for study in self.studies)
-        self._has_denovo = any([study.has_denovo for study in self.studies])
-        self._has_transmitted =\
+        self.study_names = ",".join(study.name for study in self.studies)
+        self.has_denovo = any([study.has_denovo for study in self.studies])
+        self.has_transmitted =\
             any([study.has_transmitted for study in self.studies])
-        self._has_complex = any([study.has_complex for study in self.studies])
-        self._has_CNV = any([study.has_CNV for study in self.studies])
+        self.has_complex = any([study.has_complex for study in self.studies])
+        self.has_CNV = any([study.has_CNV for study in self.studies])
         study_types = set([study.study_type for study in self.studies
                            if study.study_type is not None])
-        self._study_types = study_types if len(study_types) != 0 else None
+        self.study_types = study_types if len(study_types) != 0 else None
         years = set([study.year for study in self.studies
                      if study.year is not None])
-        self._years = years if len(years) != 0 else None
+        self.years = years if len(years) != 0 else None
         pub_meds = set([study.pub_med for study in self.studies
                         if study.pub_med is not None])
-        self._pub_meds = pub_meds if len(pub_meds) != 0 else None
-        self._has_study_types = True if len(study_types) != 0 else False
+        self.pub_meds = pub_meds if len(pub_meds) != 0 else None
+        self.has_study_types = True if len(study_types) != 0 else False
 
     def query_variants(self, **kwargs):
         return itertools.chain(*[
@@ -59,42 +59,6 @@ class StudyGroup(object):
     def families(self):
         return functools.reduce(lambda x, y: self.combine_families(x, y),
                                 [study.families for study in self.studies])
-
-    @property
-    def study_names(self):
-        return self._study_names
-
-    @property
-    def has_denovo(self):
-        return self._has_denovo
-
-    @property
-    def has_transmitted(self):
-        return self._has_transmitted
-
-    @property
-    def has_complex(self):
-        return self._has_complex
-
-    @property
-    def has_CNV(self):
-        return self._has_CNV
-
-    @property
-    def study_types(self):
-        return self._study_types
-
-    @property
-    def has_study_types(self):
-        return self._has_study_types
-
-    @property
-    def years(self):
-        return self._years
-
-    @property
-    def pub_meds(self):
-        return self._pub_meds
 
 
 class StudyGroupWrapper(StudyGroup):
