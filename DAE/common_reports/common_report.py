@@ -13,6 +13,461 @@ from study_groups.default_settings import COMMON_REPORTS_DIR\
     as study_groups_common_reports_dir
 
 
+class PeopleCounter(object):
+
+    def __init__(self, families, pheno, phenotype, phenotypes, counter_roles):
+        phenotype_source = phenotype['source']
+        self.people_male = len(self._get_people(
+            families, pheno, phenotype_source, counter_roles, Sex.male))
+        self.people_female = len(self._get_people(
+            families, pheno, phenotype_source, counter_roles, Sex.female))
+        self.people_unspecified = len(self._get_people(
+            families, pheno, phenotype_source, counter_roles, Sex.unspecified))
+        self.people_total =\
+            self.people_male + self.people_female + self.people_unspecified
+        self.phenotype =\
+            pheno if pheno is not None else phenotype['default']['name']
+        self.people_roles = list(map(str, counter_roles))
+
+    def to_dict(self):
+        return {
+            'people_male': self.people_male,
+            'people_female': self.people_female,
+            'people_unspecified': self.people_unspecified,
+            'people_total': self.people_total,
+            'phenotype': self.phenotype,
+            'people_roles': self.people_roles
+        }
+
+    def _get_people(
+            self, families, phenotype, phenotype_column, counter_roles, sex):
+        people = []
+        for family in families.values():
+            people_with_role =\
+                family.get_people_with_roles(counter_roles)
+            people += list(filter(
+                lambda pwr: pwr.sex == sex and
+                pwr.get_attr(phenotype_column) == phenotype,
+                people_with_role))
+        return people
+
+
+class PeopleCounters(object):
+
+    def __init__(self, families, phenotype, phenotypes, counter_roles):
+        self.roles = list(map(str, counter_roles))
+        self.counters =\
+            self._get_counters(families, phenotype, phenotypes, counter_roles)
+
+    def to_dict(self):
+        return {
+            'roles': self.roles,
+            'counters': [c.to_dict() for c in self.counters]
+        }
+
+    def _get_counters(self, families, phenotype, phenotypes, counter_roles):
+        return [PeopleCounter(
+                families, pheno, phenotype, phenotypes, counter_roles)
+                for pheno in phenotypes]
+
+
+class FamilyCounter(object):
+
+    def __init__(self, family, counter, phenotype):
+        self.pedigree = self._get_pedigree(family, phenotype)
+        self.pedigrees_count = counter
+
+    def to_dict(self):
+        return {
+            'pedigree': self.pedigree,
+            'pedigrees_count': self.pedigrees_count
+        }
+
+    def _get_member_color(self, member, phenotype):
+        if member.generated:
+            return '#E0E0E0'
+        else:
+            pheno = member.get_attr(phenotype['source'])
+            domain = phenotype['domain'].get(pheno, None)
+            if domain and pheno:
+                return domain['color']
+            else:
+                return phenotype['default']['color']
+
+    def _get_pedigree(self, family, phenotype):
+        return [[member.family_id, member.person_id, member.dad, member.mom,
+                 member.sex.short(), self._get_member_color(member, phenotype),
+                 member.layout_position, member.generated, '', '']
+                for member in family.members_in_order]
+
+
+class FamiliesCounters(object):
+
+    def __init__(self, families, pheno, phenotype):
+        self.counters = self._get_counters(families, pheno, phenotype)
+        self.phenotype = pheno if pheno is not None else phenotype['default']
+
+    def to_dict(self):
+        return {
+            'counters': [c.to_dict() for c in self.counters],
+            'phenotype': self.phenotype
+        }
+
+    def _get_families_with_phenotype(self, families, pheno, phenotype):
+        unaffected_phenotype = phenotype['unaffected']['name']\
+            if pheno != phenotype['unaffected']['name'] else -1
+        if pheno == -1:
+            return dict(filter(
+                lambda family:
+                    len(family[1].get_family_phenotypes(phenotype['source']) -
+                        set([unaffected_phenotype])) > 1, families.items()))
+        return dict(filter(
+            lambda family:
+                len((family[1].get_family_phenotypes(phenotype['source']) -
+                    set([unaffected_phenotype]))) == 1 and
+                pheno in list(family[1].get_family_phenotypes(
+                    phenotype['source'])),
+                families.items()))
+
+    def _families_to_dataframe(self, families, phenotype_column):
+        families_records = []
+        for family in families.values():
+            members = family.members_in_order
+            families_records +=\
+                [(member.family_id, member.sex.name, member.role.name,
+                  member.status, member.layout_position, member.generated,
+                  member.get_attr(phenotype_column)) for member in members]
+        return pd.DataFrame.from_records(
+            families_records,
+            columns=['family_id', 'sex', 'role', 'status', 'layout_position',
+                     'generated', 'phenotype'])
+
+    def _compare_families(self, first, second, phenotype_column):
+        families = self._families_to_dataframe(
+            {first.family_id: first, second.family_id: second},
+            phenotype_column)
+
+        grouped_families = families.groupby(
+            ['sex', 'role', 'status', 'generated', 'phenotype'])
+
+        for _, group in grouped_families:
+            if len(group) == 2:
+                continue
+            elif group.size % 2 == 1:
+                return False
+            else:
+                family_group = group.groupby(['family_id'])
+                if group.shape[0] != (len(family_group.groups) * 2):
+                    return False
+
+        return families.shape[0] == (len(grouped_families.groups) * 2)
+
+    def _get_families_counters(self, families, pheno, phenotype):
+        families_with_phenotype =\
+            self._get_families_with_phenotype(families, pheno, phenotype)
+
+        families_counters = {}
+        for family_id, family in families_with_phenotype.items():
+            is_family_in_counters = False
+            for unique_family in families_counters.keys():
+                if self._compare_families(
+                        family, unique_family, phenotype['source']):
+                    is_family_in_counters = True
+                    families_counters[unique_family] += 1
+                    break
+            if not is_family_in_counters:
+                families_counters[family] = 1
+
+        return families_counters
+
+    def _get_counters(self, families, pheno, phenotype):
+        families_counters =\
+            self._get_families_counters(families, pheno, phenotype)
+        return [FamilyCounter(family, counter, phenotype)
+                for family, counter in families_counters.items()]
+
+
+class FamiliesReport(object):
+
+    def __init__(self, query_object, phenotype, phenotypes, counters_roles):
+        families = query_object.families
+
+        self.families_total = len(families)
+        self.people_counters = self._get_people_counters(
+            families, phenotype, phenotypes, counters_roles)
+        self.families_counters =\
+            self._get_families_counters(families, phenotype, phenotypes)
+        self.phenotypes = self._get_phenotypes(phenotype, phenotypes)
+
+    def to_dict(self):
+        return {
+            'families_total': self.families_total,
+            'people_counters': [pc.to_dict() for pc in self.people_counters],
+            'families_counters':
+                [fc.to_dict() for fc in self.families_counters],
+            'phenotypes': self.phenotypes
+        }
+
+    def _get_phenotypes(self, phenotype, phenotypes):
+        return [pheno if pheno is not None else phenotype['default']['name']
+                for pheno in phenotypes]
+
+    def _get_people_counters(
+            self, families, phenotype, phenotypes, counters_roles):
+        return [PeopleCounters(families, phenotype, phenotypes, counter_roles)
+                for counter_roles in counters_roles]
+
+    def _get_families_counters(self, families, phenotype, phenotypes):
+        return [FamiliesCounters(families, pheno, phenotype)
+                for pheno in phenotypes + [-1]]
+
+
+class EffectWithPhenotype(object):
+
+    def __init__(
+            self, query_object, pheno, phenotype, families_report, effect,
+            counter_roles):
+            effect_types_converter = EffectTypesMixin()
+
+            people_with_phenotype =\
+                self._people_with_phenotype(query_object, pheno, phenotype)
+
+            variants = self._get_variants(
+                query_object, people_with_phenotype, effect, counter_roles,
+                effect_types_converter)
+            all_variants = self._get_all_variants(query_object, counter_roles)
+
+            families_report_with_roles = self._get_families_report_with_roles(
+                families_report, counter_roles)
+            events_people_count =\
+                self._get_events_people_count(variants, people_with_phenotype)
+            total_people = self._get_total_people(
+                pheno, phenotype, families_report_with_roles)
+
+            self.events_people_count = events_people_count
+            self.events_people_percent =\
+                (self.events_people_count / total_people)\
+                if total_people else 0
+            self.events_count = len(variants)
+            self.events_rate_per_child =\
+                (self.events_count / len(all_variants))\
+                if len(all_variants) else 0
+
+            self.phenotype =\
+                pheno if pheno is not None else phenotype['default']['name']
+            self.people_roles = list(map(str, counter_roles))
+
+    def to_dict(self):
+        return {
+            'events_people_count': self.events_people_count,
+            'events_people_percent': self.events_people_percent,
+            'events_count': self.events_count,
+            'events_rate_per_child': self.events_rate_per_child,
+            'phenotype': self.phenotype,
+            'people_roles': self.people_roles
+        }
+
+    def _people_with_phenotype(self, query_object, pheno, phenotype):
+        people_with_phenotype = set()
+
+        for family in query_object.families.values():
+            family_members_with_phenotype = set(
+                [person.person_id for person in
+                 family.get_people_with_phenotype(phenotype['source'], pheno)])
+            people_with_phenotype.update(family_members_with_phenotype)
+
+        return people_with_phenotype
+
+    def _get_variants(
+            self, query_object, people_with_phenotype, effect, counter_roles,
+            effect_types_converter):
+        variants_query = {
+            'limit': None,
+            'inheritance': 'denovo',
+            'effect_types':
+                effect_types_converter.get_effect_types(effectTypes=effect),
+            'roles': list(map(str, counter_roles)),
+            'person_ids': list(people_with_phenotype)
+        }
+
+        variants = list(query_object.query_variants(**variants_query))
+
+        return variants
+
+    def _get_all_variants(self, query_object, counter_roles):
+        all_variants_query = {
+            'limit': None,
+            'inheritance': 'denovo',
+            'roles': list(map(str, counter_roles))
+        }
+
+        all_variants = list(query_object.query_variants(**all_variants_query))
+
+        return all_variants
+
+    def _get_families_report_with_roles(self, families_report, counter_roles):
+        return list(filter(
+            lambda fr: fr.roles == list(map(str, counter_roles)),
+            families_report.people_counters))[0]
+
+    def _get_events_people_count(self, variants, people_with_phenotype):
+        events_people = set()
+
+        for variant in variants:
+            events_people.update(
+                (set(variant.variant_in_members) & people_with_phenotype))
+
+        return len(events_people)
+
+    def _get_total_people(self, pheno, phenotype, families_report_with_roles):
+        return list(filter(
+            lambda pc: pc.phenotype == (pheno if pheno is not None else
+                                        phenotype['default']['name']),
+            families_report_with_roles.counters))[0].people_total
+
+
+class Effect(object):
+
+    def __init__(
+            self, query_object, phenotype, phenotypes, families_report,
+            effect, counter_roles):
+        self.effect_type = effect
+        self.row = self._get_row(
+            query_object, phenotype, phenotypes, families_report, effect,
+            counter_roles)
+
+    def to_dict(self):
+        return {
+            'effect_type': self.effect_type,
+            'row': [r.to_dict() for r in self.row],
+        }
+
+    def _get_row(
+            self, query_object, phenotype, phenotypes, families_report, effect,
+            counter_roles):
+        return [EffectWithPhenotype(
+            query_object, pheno, phenotype, families_report, effect,
+            counter_roles) for pheno in phenotypes]
+
+
+class DenovoReportTable(object):
+
+    def __init__(
+            self, query_object, phenotype, phenotypes, families_report,
+            effects, counter_roles):
+        self.rows = self._get_rows(
+            query_object, phenotype, phenotypes, families_report, effects,
+            counter_roles)
+        self.roles = list(map(str, counter_roles))
+
+    def to_dict(self):
+        return {
+            'rows': [r.to_dict() for r in self.rows],
+            'roles': self.roles
+        }
+
+    def _get_rows(
+            self, query_object, phenotype, phenotypes, families_report,
+            effects, counter_roles):
+        return [Effect(query_object, phenotype, phenotypes, families_report,
+                       effect, counter_roles) for effect in effects]
+
+
+class DenovoReport(object):
+
+    def __init__(
+            self, query_object, phenotype, phenotypes, families_report,
+            effect_groups, effect_types, counters_roles):
+        effects = effect_groups + effect_types
+
+        self.effect_groups = effect_groups
+        self.effect_types = effect_types
+        self.phenotypes = phenotypes
+        self.tables = self._get_tables(
+            query_object, phenotype, phenotypes, families_report, effects,
+            counters_roles)
+
+    def to_dict(self):
+        return {
+            'effect_groups': self.effect_groups,
+            'effect_types': self.effect_types,
+            'phenotypes': self.phenotypes,
+            'tables': [t.to_dict() for t in self.tables]
+        }
+
+    def _get_tables(
+            self, query_object, phenotype, phenotypes, families_report,
+            effects, counters_roles):
+        return [DenovoReportTable(
+            query_object, phenotype, phenotypes, families_report, effects,
+            counter_roles) for counter_roles in counters_roles]
+
+
+class CommonReport(object):
+
+    def __init__(
+            self, query_object, query_object_properties, phenotypes,
+            counters_roles, effect_groups, effect_types):
+        phenotype = phenotypes[query_object_properties['phenotype']]
+        phenotypes = self._get_query_object_phenotypes(query_object, phenotype)
+
+        self.families_report =\
+            FamiliesReport(query_object, phenotype, phenotypes, counters_roles)
+        self.denovo_report = DenovoReport(
+            query_object, phenotype, phenotypes, self.families_report,
+            effect_groups, effect_types, counters_roles)
+        self.study_name = query_object.name
+        self.phenotype = self._get_phenotype(query_object, phenotype)
+        self.study_type = ','.join(query_object.study_types)\
+            if query_object.study_types else None
+        self.study_year = ','.join(query_object.years)\
+            if query_object.years else None
+        self.pub_med = ','.join(query_object.pub_meds)\
+            if query_object.pub_meds else None
+        self.families = len(query_object.families)
+        self.number_of_probands =\
+            self._get_number_of_people_with_role(query_object, Role.prb)
+        self.number_of_siblings =\
+            self._get_number_of_people_with_role(query_object, Role.sib)
+        self.denovo = query_object.has_denovo
+        self.transmitted = query_object.has_transmitted
+        self.study_description = query_object.description
+        self.is_downloadable = query_object_properties['is_downloadable']
+
+    def to_dict(self):
+        return {
+            'families_report': self.families_report.to_dict(),
+            'denovo_report': self.denovo_report.to_dict(),
+            'study_name': self.study_name,
+            'phenotype': self.phenotype,
+            'study_type': self.study_type,
+            'study_year': self.study_year,
+            'pub_med': self.pub_med,
+            'families': self.families,
+            'number_of_probands': self.number_of_probands,
+            'number_of_siblings': self.number_of_siblings,
+            'denovo': self.denovo,
+            'transmitted': self.transmitted,
+            'study_description': self.study_description,
+            'is_downloadable': self.is_downloadable
+        }
+
+    def _get_query_object_phenotypes(self, query_object, phenotype):
+        return list(query_object.get_phenotype_values(phenotype['source']))
+
+    def _get_phenotype(self, query_object, phenotype):
+        default_phenotype = phenotype['default']['name']
+        phenotype_source = phenotype['source']
+
+        return ','.join(
+            [pheno if pheno is not None else default_phenotype
+             for pheno in query_object.get_phenotype_values(phenotype_source)])
+
+    def _get_number_of_people_with_role(self, query_object, role):
+        return sum([len(family.get_people_with_role(role))
+                    for family in query_object.families.values()])
+
+
 class CommonReportsGenerator(object):
 
     def __init__(
@@ -37,295 +492,11 @@ class CommonReportsGenerator(object):
         self.study_facade = study_facade
         self.study_group_facade = study_group_facade
 
-        self.effect_types_converter = EffectTypesMixin()
-
-    def get_people(
-            self, sex, phenotype, phenotype_column, families, counter_roles):
-        people = []
-        for family in families.values():
-            people_with_role =\
-                family.get_people_with_roles(counter_roles)
-            people += list(filter(
-                lambda pwr: pwr.sex == sex and
-                pwr.get_attr(phenotype_column) == phenotype,
-                people_with_role))
-        return people
-
-    def get_people_counters(
-            self, pheno, phenotype, families, counter_roles):
-        people_male = len(self.get_people(
-            Sex.male, pheno, phenotype['source'], families, counter_roles))
-        people_female = len(self.get_people(
-            Sex.female, pheno, phenotype['source'], families, counter_roles))
-        people_unspecified = len(self.get_people(
-            Sex.unspecified, pheno, phenotype['source'], families,
-            counter_roles))
-        people_total = people_male + people_female + people_unspecified
-        return {
-            'people_male': people_male,
-            'people_female': people_female,
-            'people_unspecified': people_unspecified,
-            'people_total': people_total,
-            'phenotype':
-                pheno if pheno is not None else phenotype['default']['name'],
-            'people_roles': list(map(str, counter_roles))
-        }
-
-    def get_families_with_phenotype(self, families, pheno, phenotype):
-        unaffected_phenotype = phenotype['unaffected']['name']\
-            if pheno != phenotype['unaffected']['name'] else -1
-        if pheno == -1:
-            return dict(filter(
-                lambda family:
-                    len(family[1].get_family_phenotypes(phenotype['source']) -
-                        set([unaffected_phenotype])) > 1, families.items()))
-        return dict(filter(
-            lambda family:
-                len((family[1].get_family_phenotypes(phenotype['source']) -
-                    set([unaffected_phenotype]))) == 1 and
-                pheno in list(family[1].get_family_phenotypes(
-                    phenotype['source'])),
-                families.items()))
-
-    def families_to_dataframe(self, families, phenotype_column):
-        families_records = []
-        for family in families.values():
-            members = family.members_in_order
-            families_records +=\
-                [(member.family_id, member.sex.name, member.role.name,
-                  member.status, member.layout_position, member.generated,
-                  member.get_attr(phenotype_column)) for member in members]
-        return pd.DataFrame.from_records(
-            families_records,
-            columns=['family_id', 'sex', 'role', 'status', 'layout_position',
-                     'generated', 'phenotype'])
-
-    def compare_families(self, first, second, phenotype_column):
-        families = self.families_to_dataframe(
-            {first.family_id: first, second.family_id: second},
-            phenotype_column)
-
-        grouped_families = families.groupby(
-            ['sex', 'role', 'status', 'generated', 'phenotype'])
-
-        for _, group in grouped_families:
-            if len(group) == 2:
-                continue
-            elif group.size % 2 == 1:
-                return False
-            else:
-                family_group = group.groupby(['family_id'])
-                if group.shape[0] != (len(family_group.groups) * 2):
-                    return False
-
-        return families.shape[0] == (len(grouped_families.groups) * 2)
-
-    def get_member_color(self, member, phenotype):
-        if member.generated:
-            return '#E0E0E0'
-        else:
-            pheno = member.get_attr(phenotype['source'])
-            domain = phenotype['domain'].get(pheno, None)
-            if domain and pheno:
-                return domain['color']
-            else:
-                return phenotype['default']['color']
-
-    def get_families_counters(self, pheno, phenotype, families):
-        families_with_phenotype =\
-            self.get_families_with_phenotype(families, pheno, phenotype)
-
-        families_counters = {}
-        for family_id, family in families_with_phenotype.items():
-            is_family_in_counters = False
-            for unique_family in families_counters.keys():
-                if self.compare_families(
-                        family, unique_family, phenotype['source']):
-                    is_family_in_counters = True
-                    families_counters[unique_family] += 1
-                    break
-            if not is_family_in_counters:
-                families_counters[family] = 1
-
-        return {
-            'counters': [
-                {
-                    'pedigree':
-                    [[member.family_id, member.person_id, member.dad,
-                      member.mom, member.sex.short(),
-                      self.get_member_color(member, phenotype),
-                      member.layout_position, member.generated, '', '']
-                     for member in family.members_in_order],
-                    'pedigrees_count': counter
-                } for family, counter in families_counters.items()
-            ],
-            'phenotype': pheno if pheno is not None else phenotype['default']
-        }
-
-    def get_families_report(self, query_object, phenotype):
-        families_report = {}
-
-        phenotype = self.phenotypes[phenotype]
-
-        families = query_object.families
-        phenotypes = list(query_object.get_phenotype_values(
-            phenotype['source']))
-
-        families_report['families_total'] = len(families)
-        families_report['people_counters'] = []
-        families_report['families_counters'] = []
-        for counter_roles in self.counters_roles:
-            people_counters = {}
-            people_counters['counters'] = []
-            people_counters['roles'] = list(map(str, counter_roles))
-            for pheno in phenotypes:
-                people_counters['counters'].append(self.get_people_counters(
-                    pheno, phenotype, families, counter_roles))
-            families_report['people_counters'].append(people_counters)
-        for pheno in phenotypes:
-            families_report['families_counters'].append(
-                    self.get_families_counters(pheno, phenotype, families))
-
-        families_report['families_counters'].append(
-            self.get_families_counters(-1, phenotype, families))
-        families_report['phenotypes'] =\
-            [pheno if pheno is not None else phenotype['default']['name']
-             for pheno in phenotypes]
-
-        return families_report
-
-    def get_effect_with_phenotype(
-            self, query_object, effect, pheno, phenotype,
-            families_report, counter_roles):
-        people_with_phenotype = set()
-        for family in query_object.families.values():
-            people_with_phenotype.update(
-                set([person.person_id for person in
-                     family.get_people_with_phenotype(
-                         phenotype['source'], pheno)]))
-
-        variants_query = {
-            'limit': None,
-            'inheritance': 'denovo',
-            'effect_types':
-                self.effect_types_converter.get_effect_types(
-                    effectTypes=effect),
-            'roles': list(map(str, counter_roles)),
-            'person_ids': list(people_with_phenotype)
-        }
-        all_variants_query = {
-            'limit': None,
-            'inheritance': 'denovo',
-            'roles': list(map(str, counter_roles))
-        }
-        variants = list(query_object.query_variants(**variants_query))
-        all_variants = list(query_object.query_variants(**all_variants_query))
-
-        events_people_count = set()
-        for variant in variants:
-            events_people_count.update(
-                (set(variant.variant_in_members) & people_with_phenotype))
-        families_report_with_roles = list(filter(
-            lambda fr: fr['roles'] == list(map(str, counter_roles)),
-            families_report['people_counters']))[0]
-        total_people = list(filter(
-            lambda pc: pc['phenotype'] == (pheno if pheno is not None else
-                                           phenotype['default']['name']),
-            families_report_with_roles['counters']))[0]['people_total']
-
-        events_people_percent = len(events_people_count) / total_people\
-            if total_people else 0
-        events_rate_per_child = len(variants) / len(all_variants)\
-            if len(all_variants) else 0
-
-        return {
-            'events_people_count': len(events_people_count),
-            'events_people_percent': events_people_percent,
-            'events_count': len(variants),
-            'events_rate_per_child': events_rate_per_child,
-            'phenotype':
-                pheno if pheno is not None else phenotype['default']['name'],
-            'people_roles': list(map(str, counter_roles))
-        }
-
-    def get_effect(
-            self, query_object, effect, phenotypes, phenotype,
-            families_report, counter_roles):
-        row = {}
-
-        row['effect_type'] = effect
-        row['row'] = []
-        for pheno in phenotypes:
-            row['row'].append(self.get_effect_with_phenotype(
-                query_object, effect, pheno, phenotype,
-                families_report, counter_roles))
-
-        return row
-
-    def get_denovo_report(
-            self, query_object, phenotype, families_report):
-        denovo_report = {}
-
-        phenotypes =\
-            list(query_object.get_phenotype_values(phenotype['source']))
-        effects = self.effect_groups + self.effect_types
-
-        denovo_report['effect_groups'] = self.effect_groups
-        denovo_report['effect_types'] = self.effect_types
-        denovo_report['phenotypes'] =\
-            [pheno if pheno is not None else phenotype['default']['name']
-             for pheno in phenotypes]
-        denovo_report['tables'] = []
-        for counter_roles in self.counters_roles:
-            rows = {}
-            rows['rows'] = []
-            rows['roles'] = list(map(str, counter_roles))
-            for effect in effects:
-                rows['rows'].append(self.get_effect(
-                    query_object, effect, phenotypes, phenotype,
-                    families_report, counter_roles))
-            denovo_report['tables'].append(rows)
-
-        return denovo_report
-
     def get_common_reports(self, query_object):
         for qo, qo_properties in query_object.items():
-            common_reports = {}
-
-            families_report =\
-                self.get_families_report(qo, qo_properties['phenotype'])
-            denovo_report = self.get_denovo_report(
-                qo, self.phenotypes[qo_properties['phenotype']],
-                families_report)
-
-            common_reports['families_report'] = families_report
-            common_reports['denovo_report'] = denovo_report
-            common_reports['study_name'] = qo.name
-            common_reports['phenotype'] = ','.join(
-                [pheno if pheno is not None else
-                 self.phenotypes[qo_properties['phenotype']]['default']['name']
-                 for pheno in qo.get_phenotype_values(
-                     self.phenotypes[qo_properties['phenotype']]['source'])])
-            common_reports['study_type'] =\
-                ','.join(qo.study_types) if qo.study_types else None
-            common_reports['study_year'] =\
-                ','.join(qo.years) if qo.years else None
-            common_reports['pub_med'] =\
-                ','.join(qo.pub_meds) if qo.pub_meds else None
-            common_reports['families'] = len(qo.families)
-            common_reports['number_of_probands'] =\
-                sum([len(family.get_people_with_role(Role.prb))
-                     for family in qo.families.values()])
-            common_reports['number_of_siblings'] =\
-                sum([len(family.get_people_with_role(Role.sib))
-                     for family in qo.families.values()])
-            common_reports['denovo'] = qo.has_denovo
-            common_reports['transmitted'] = qo.has_transmitted
-            common_reports['study_description'] = qo.description
-            common_reports['is_downloadable'] =\
-                qo_properties['is_downloadable']
-
-            yield common_reports
+            yield CommonReport(
+                qo, qo_properties, self.phenotypes, self.counters_roles,
+                self.effect_groups, self.effect_types)
 
     def save_common_reports(self):
         studies = {self.study_facade.get_study(s): s_prop
@@ -334,12 +505,12 @@ class CommonReportsGenerator(object):
                         for sg, sg_prop in self.study_groups.items()}
         for cr in self.get_common_reports(studies):
             with open(os.path.join(studies_common_reports_dir,
-                      cr['study_name'] + '.json'), 'w') as crf:
-                json.dump(cr, crf)
+                      cr.study_name + '.json'), 'w') as crf:
+                json.dump(cr.to_dict(), crf)
         for cr in self.get_common_reports(study_groups):
             with open(os.path.join(study_groups_common_reports_dir,
-                      cr['study_name'] + '.json'), 'w') as crf:
-                json.dump(cr, crf)
+                      cr.study_name + '.json'), 'w') as crf:
+                json.dump(cr.to_dict(), crf)
 
 
 def main():
