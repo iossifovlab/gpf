@@ -10,3 +10,8 @@ CONFIG_FILE = os.environ.get(
     "DATA_STUDIES_CONF",
     "studies.conf"
 )
+
+COMMON_REPORTS_DIR = os.environ.get(
+    "DATA_STUDIES_COMMON_REPORTS_DIR",
+    os.path.join(DATA_DIR, "commonReports")
+)
