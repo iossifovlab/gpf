@@ -110,19 +110,19 @@ class FamilyConnections(object):
                         "0", "0", "1", "-", generated=True)
                     new_members.append(missing_father_mothers[member.mother])
                 member.father = member.mother + ".father"
-            else:
-                mother = id_to_individual[member.mother]
-                father = id_to_individual[member.father]
-                if mother.member is None:
-                    mother.member = PedigreeMember(
-                        member.mother, pedigree.family_id, "0", "0", "2", "-",
-                        generated=True)
-                    new_members.append(mother.member)
-                if father.member is None:
-                    father.member = PedigreeMember(
-                        member.father, pedigree.family_id, "0", "0", "1", "-",
-                        generated=True)
-                    new_members.append(father.member)
+
+            mother = id_to_individual[member.mother]
+            father = id_to_individual[member.father]
+            if mother.member is None and mother not in new_members:
+                mother.member = PedigreeMember(
+                    member.mother, pedigree.family_id, "0", "0", "2", "-",
+                    generated=True)
+                new_members.append(mother.member)
+            if father.member is None and father not in new_members:
+                father.member = PedigreeMember(
+                    member.father, pedigree.family_id, "0", "0", "1", "-",
+                    generated=True)
+                new_members.append(father.member)
 
         pedigree.add_members(new_members)
 
