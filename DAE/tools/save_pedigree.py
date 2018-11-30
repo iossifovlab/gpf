@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 import collections
 import csv
+from tqdm import tqdm
 
 from pedigrees.pedigree_reader import PedigreeReader
 from pedigrees.pedigrees import get_argument_parser, FamilyConnections
@@ -137,7 +138,11 @@ def main():
     layout_saver = LayoutSaver(
         args.file, args.output, args.generated_column, args.layout_column)
 
+    progress_bar = tqdm(total=len(pedigrees))
+
     for family in sorted(pedigrees, key=lambda x: x.family_id):
+        progress_bar.update(1)
+
         family_connections = FamilyConnections.from_pedigree(family)
         if family_connections is None:
             layout_saver.writerow_error(family, "Missing members")
@@ -160,6 +165,8 @@ def main():
             # print(family.family_id)
             layout = Layout(individuals_intervals)
             layout_saver.writerow(family, layout)
+
+    progress_bar.close()
 
     layout_saver.save(columns_labels, header, delimiter)
 

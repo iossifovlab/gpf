@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import re
+from tqdm import tqdm
 
 from pedigrees.pedigree_reader import PedigreeReader
 from pedigrees.pedigrees import get_argument_parser, FamilyConnections
@@ -108,7 +109,11 @@ def main():
 
     pdf_drawer = PDFLayoutDrawer(args.output)
 
+    progress_bar = tqdm(total=len(pedigrees))
+
     for family in sorted(pedigrees, key=lambda x: x.family_id):
+        progress_bar.update(1)
+
         layout_loader = LayoutLoader(family)
         layout = layout_loader.load()
         if layout is None:
@@ -120,6 +125,8 @@ def main():
             layout_drawer = OffsetLayoutDrawer(
                 layout, 0, 0, show_id=show_id, show_family=show_family)
             pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
+
+    progress_bar.close()
 
     pdf_drawer.save_file()
 
