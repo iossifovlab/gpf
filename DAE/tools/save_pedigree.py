@@ -31,7 +31,7 @@ class LayoutSaver(object):
         for member in family.members:
             row = {
                 self.fieldname: error,
-                self.generated_column: '' if member.effect != '-' else '1'
+                self.generated_column: '' if member.status != '-' else '1'
             }
 
             key = self._member_key(family.family_id, member.id)
@@ -47,7 +47,7 @@ class LayoutSaver(object):
                     individuals_by_rank[individual_id], position.x,
                     position.y),
                 self.generated_column:
-                    '' if position.individual.member.effect != '-' else '1'
+                    '' if position.individual.member.status != '-' else '1'
             }
 
             key = self._member_key(family.family_id, individual_id)
@@ -108,7 +108,7 @@ class LayoutSaver(object):
                 row[columns_labels["mother"]] = member.mother
                 row[columns_labels["father"]] = member.father
                 row[columns_labels["sex"]] = member.sex
-                row[columns_labels["effect"]] = member.effect
+                row[columns_labels["status"]] = member.status
                 row.update(generated_layout)
 
                 writer.writerow(row)
@@ -124,7 +124,7 @@ def main():
         "father": args.father,
         "mother": args.mother,
         "sex": args.sex,
-        "effect": args.effect,
+        "status": args.status,
         "layout": ""
     }
     header = args.no_header_order

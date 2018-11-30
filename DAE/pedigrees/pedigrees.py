@@ -15,14 +15,14 @@ from future.utils import with_metaclass
 
 
 class PedigreeMember(object):
-    def __init__(self, id, family_id, mother, father, sex, effect,
+    def __init__(self, id, family_id, mother, father, sex, status,
                  layout=None, generated=False):
         self.id = id
         self.family_id = family_id
         self.mother = mother
         self.father = father
         self.sex = sex
-        self.effect = effect
+        self.status = status
         self.layout = layout
         self.generated = generated
 
@@ -436,7 +436,7 @@ def get_argument_parser(description):
         '--sex', help='Specify sex column label. Default to gender.',
         default='gender', action='store')
     parser.add_argument(
-        '--effect', help='Specify effect column label. Default to status.',
+        '--status', help='Specify status column label. Default to status.',
         default='status', action='store')
     parser.add_argument(
         '--no-header-order', help='Comma separated order of columns in header '

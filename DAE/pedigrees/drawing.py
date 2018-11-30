@@ -129,9 +129,9 @@ class OffsetLayoutDrawer(object):
             for individual in level:
                 if individual.individual.member.generated:
                     individual_color = "grey"
-                elif individual.individual.member.effect == "1":
+                elif individual.individual.member.status == "1":
                     individual_color = "white"
-                elif individual.individual.member.effect == "2":
+                elif individual.individual.member.status == "2":
                     individual_color = "red"
                 else:
                     individual_color = "purple"
@@ -173,14 +173,14 @@ class OffsetLayoutDrawer(object):
 
     def _draw_family(self, axes, family):
         col_labels =\
-            ["familyId", "individualId", "father", "mother", "sex", "effect",
+            ["familyId", "individualId", "father", "mother", "sex", "status",
              "layout"]
         table_vals = []
 
         for member in family:
             table_vals.append(
                 [member.family_id, member.id, member.father, member.mother,
-                 member.sex, member.effect, member.layout])
+                 member.sex, member.status, member.layout])
 
         axes.table = plt.table(
             cellText=table_vals, colLabels=col_labels, loc='center')

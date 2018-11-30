@@ -90,7 +90,7 @@ def main():
         "father": args.father,
         "mother": args.mother,
         "sex": args.sex,
-        "effect": args.effect,
+        "status": args.status,
         "layout": args.layout_column
     }
     if args.generated_column:
