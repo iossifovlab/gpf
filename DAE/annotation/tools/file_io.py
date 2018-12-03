@@ -1,33 +1,48 @@
-import sys
-import os
-import gzip
-import pysam
-from abc import ABCMeta, abstractmethod
+from __future__ import print_function
 
-
-def assert_file_exists(filepath):
-    if filepath != '-' and os.path.exists(filepath) is False:
-        sys.stderr.write("The given file '{}' does not exist!\n".format(filepath))
-        sys.exit(-78)
+from annotation.tools.file_io_tsv import TSVFormat, \
+        TSVReader, TSVWriter, TabixReader, TSVGzipReader
+try:
+    parquet_enabled = True
+    from annotation.tools.file_io_parquet import ParquetReader, \
+        ParquetWriter
+except ImportError:
+    parquet_enabled = False
 
 
 class IOType:
     class TSV:
         @staticmethod
         def instance_r(opts):
-            return TSVFormat(opts, 'r')
+            filename = opts.infile
+            if TSVFormat.is_tabix(filename):
+                return TabixReader(opts)
+            if TSVFormat.is_gzip(filename):
+                return TSVGzipReader(opts)
+            return TSVReader(opts)
 
         @staticmethod
         def instance_w(opts):
-            return TSVFormat(opts, 'w')
+            return TSVWriter(opts)
+
+    class Parquet:
+        @staticmethod
+        def instance_r(opts):
+            assert parquet_enabled
+            return ParquetReader(opts)
+
+        @staticmethod
+        def instance_w(opts):
+            assert parquet_enabled
+            return ParquetWriter(opts)
 
 
 class IOManager(object):
 
     def __init__(self, opts, io_type_r, io_type_w):
-        self.opts = opts
-        self.reader = io_type_r.instance_r(self.opts)
-        self.writer = io_type_w.instance_w(self.opts)
+        self.options = opts
+        self.reader = io_type_r.instance_r(self.options)
+        self.writer = io_type_w.instance_w(self.options)
 
     def __enter__(self):
         self.reader._setup()
@@ -38,123 +53,23 @@ class IOManager(object):
         self.reader._cleanup()
         self.writer._cleanup()
 
+    def _setup(self):
+        self.reader._setup()
+        self.writer._setup()
+
+    def _cleanup(self):
+        self.reader._cleanup()
+        self.writer._cleanup()
+
     @property
     def header(self):
         return self.reader.header
 
-    def lines_read(self):
-        line = self.reader.line_read()
-        while line != ['']:
-            yield line
-            line = self.reader.line_read()
+    def header_write(self, input_):
+        self.writer.header_write(input_)
 
-    def line_read(self):
-        return self.reader.line_read()
+    def lines_read_iterator(self):
+        return self.reader.lines_read_iterator()
 
     def line_write(self, input_):
         self.writer.line_write(input_)
-
-
-class AbstractFormat(object):
-
-    __metaclass__ = ABCMeta
-
-    def __init__(self, opts, mode):
-        self.opts = opts
-        if mode != 'r' and mode != 'w':
-            sys.stderr.write("Unrecognized I/O mode '{}'!\n".format(mode))
-            sys.exit(-78)
-        self.mode = mode
-        self.linecount = 0
-        self.linecount_threshold = 1000
-        self.header = None
-
-    @abstractmethod
-    def _setup(self):
-        pass
-
-    @abstractmethod
-    def _cleanup(self):
-        pass
-
-    @abstractmethod
-    def line_read(self):
-        pass
-
-    @abstractmethod
-    def line_write(self, input_):
-        pass
-
-
-class TSVFormat(AbstractFormat):
-
-    def __init__(self, opts, mode):
-        super(TSVFormat, self).__init__(opts, mode)
-
-    def _setup(self):
-        if self.mode == 'r':
-            if self.opts.infile != '-':
-                assert_file_exists(self.opts.infile)
-
-                if hasattr(self.opts, 'region'):
-                    if(self.opts.region is not None):
-                        tabix_file = pysam.TabixFile(self.opts.infile)
-                        try:
-                            self.variantFile = tabix_file.fetch(region=self.opts.region)
-                        except ValueError:
-                            self.variantFile = iter([])
-                    else:
-                        self.variantFile = open(self.opts.infile, 'r')
-                else:
-                    self.variantFile = open(self.opts.infile, 'r')
-            else:
-                self.variantFile = sys.stdin
-            self._header_read()
-
-        else:
-            if self.opts.outfile != '-':
-                self.outfile = open(self.opts.outfile, 'w')
-            else:
-                self.outfile = sys.stdout
-
-    def _cleanup(self):
-        if self.mode == 'r':
-            sys.stderr.write('Processed ' + str(self.linecount) + ' lines.' + '\n')
-            if self.opts.infile != '-' and self.opts.region is None:
-                self.variantFile.close()
-        else:
-            if self.opts.outfile != '-':
-                self.outfile.close()
-
-    def _header_read(self):
-        if not self.opts.no_header:
-            header_str = ""
-            if hasattr(self.opts, 'region'):
-                if(self.opts.region is not None):
-                    with gzip.open(self.opts.infile) as file:
-                        header_str = file.readline()[:-1]
-                else:
-                    header_str = self.variantFile.readline()[:-1]
-            else:
-                header_str = self.variantFile.readline()[:-1]
-            if header_str[0] == '#':
-                header_str = header_str[1:]
-            self.header = header_str.split('\t')
-
-    def line_read(self):
-        if self.mode != 'r':
-            sys.stderr.write('Cannot read in write mode!\n')
-            sys.exit(-78)
-
-        line = next(self.variantFile)
-        self.linecount += 1
-        if self.linecount % self.linecount_threshold == 0:
-            sys.stderr.write(str(self.linecount) + ' lines read\n')
-        return line.rstrip('\n').split('\t')
-
-    def line_write(self, input_):
-        if self.mode != 'w':
-            sys.stderr.write('Cannot write in read mode!\n')
-            sys.exit(-78)
-
-        self.outfile.write('\t'.join(input_) + '\n')

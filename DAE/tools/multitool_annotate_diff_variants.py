@@ -1,4 +1,6 @@
 #!/bin/env python
+from __future__ import print_function
+from __future__ import unicode_literals
 from DAE import genomesDB
 import sys
 import csv
@@ -27,9 +29,9 @@ if __name__ == "__main__":
                 continue
             for adapter_name, result in res:
                 print("--------")
-                print(adapter_name, res)
+                print((adapter_name, res))
                 for effect in result:
-                    print("A", effect.effect_type, effect.effect_details)
+                    print(("A", effect.effect_type, effect.effect_details))
 
                 effects = [effect.effect_type for effect in result]
                 effect_details = [effect.effect_details for effect in result]

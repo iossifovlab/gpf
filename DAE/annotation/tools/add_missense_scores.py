@@ -1,20 +1,21 @@
 #!/usr/bin/env python
-
 import argparse
 import os
 from box import Box
 
-from utilities import AnnotatorBase, assign_values, main
-from annotate_score_base import ScoreAnnotator, conf_to_dict
+from .utilities import AnnotatorBase, assign_values, main
+from .annotate_score_base import ScoreAnnotator, conf_to_dict
+
 
 def get_argument_parser():
     """
     `MissenseScoresAnnotator` options::
 
-        usage: add_missense_scores.py [-h] [-c C] [-p P] [-x X] [-r R] [-a A] [-H]
-                              [--dbnsfp DBNSFP] [--columns COLUMNS] [--direct]
-                              [--reference-genome {hg19,hg38}]
-                              [infile] [outfile]
+        usage: add_missense_scores.py [-h]
+                            [-c C] [-p P] [-x X] [-r R] [-a A] [-H]
+                            [--dbnsfp DBNSFP] [--columns COLUMNS] [--direct]
+                            [--reference-genome {hg19,hg38}]
+                            [infile] [outfile]
 
         Add missense scores from dbSNFP
 
@@ -31,33 +32,46 @@ def get_argument_parser():
           -a A                  alternative column number/name
           -H                    no header in the input file
           --dbnsfp DBNSFP       path to dbNSFP
-          --config CONFIG       path to .conf file for score file, defaults to score name
+          --config CONFIG       path to .conf file for score file, defaults to
+                                score name
           --columns COLUMNS     score columns to include in the output file
-          --direct              read score files using tabix index (default: read
-                                score files iteratively)
-          --labels              comma separated list of the new header entries, defaults to added columns' names  
+          --direct              read score files using tabix index (default:
+                                read score files iteratively)
+          --labels              comma separated list of the new header entries,
+                                defaults to added columns' names
     """
-    
+
     parser = argparse.ArgumentParser(
         description='Add missense scores from dbSNFP')
-    parser.add_argument('-c', help='chromosome column number/name', action='store')
-    parser.add_argument('-p', help='position column number/name', action='store')
-    parser.add_argument('-x', help='location (chr:pos) column number/name', action='store')
-    parser.add_argument('-r', help='reference column number/name', action='store')
-    parser.add_argument('-a', help='alternative column number/name', action='store')
-    parser.add_argument('-H', help='no header in the input file',
-                        default=False,  action='store_true', dest='no_header')
-    parser.add_argument('--dbnsfp', help='path to dbNSFP', action='store')
-    parser.add_argument('--config', help='path to config', action='store')
-    parser.add_argument('--columns',
-                        help='comma separated list of score columns to annotate with',
-                        action='store')
-    parser.add_argument('--direct',
-                        help='read score files using tabix index '
-                        '(default: read score files iteratively)',
-                        default=False, action='store_true')
-    parser.add_argument('--labels', help='comma separated list of the new labels '
-                        'of the added columns, defaults to column names', action='store')
+    parser.add_argument(
+        '-c', help='chromosome column number/name', action='store')
+    parser.add_argument(
+        '-p', help='position column number/name', action='store')
+    parser.add_argument(
+        '-x', help='location (chr:pos) column number/name', action='store')
+    parser.add_argument(
+        '-r', help='reference column number/name', action='store')
+    parser.add_argument(
+        '-a', help='alternative column number/name', action='store')
+    parser.add_argument(
+        '-H', help='no header in the input file',
+        default=False,  action='store_true', dest='no_header')
+    parser.add_argument(
+        '--dbnsfp', help='path to dbNSFP', action='store')
+    parser.add_argument(
+        '--config', help='path to config', action='store')
+    parser.add_argument(
+        '--columns',
+        help='comma separated list of score columns to annotate with',
+        action='store')
+    parser.add_argument(
+        '--direct',
+        help='read score files using tabix index '
+        '(default: read score files iteratively)',
+        default=False, action='store_true')
+    parser.add_argument(
+        '--labels', help='comma separated list of the new labels '
+        'of the added columns, defaults to column names', action='store')
     return parser
 
 
@@ -107,7 +121,8 @@ class MissenseScoresAnnotator(AnnotatorBase):
                 'scores_config_file': score_conf,
                 'labels': self.opts.labels,
             }
-            score_annotator_opts = Box(config, default_box=True, default_box_attr=None)
+            score_annotator_opts = Box(
+                config, default_box=True, default_box_attr=None)
 
             self.annotators[chr] = ScoreAnnotator(
                     score_annotator_opts,

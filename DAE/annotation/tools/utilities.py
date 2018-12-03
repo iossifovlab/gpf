@@ -1,13 +1,15 @@
+from __future__ import print_function
+
+from builtins import str
 import sys
 import time
 import datetime
-import pysam
-import gzip
-from file_io import IOManager, IOType
 from abc import ABCMeta, abstractmethod
 
+from .file_io import IOManager, IOType
 
-class AnnotatorBase():
+
+class AnnotatorBase(object):
     """
     `AnnotatorBase` is base class of all `Annotators` and `Preannotators`.
     """
@@ -39,8 +41,15 @@ class AnnotatorBase():
             New columns to be added to the original variants.
         """
 
+    @property
     @abstractmethod
-    def line_annotations(self, line, new_columns):
+    def schema(self):
+        """
+            Schema of the new columns.
+        """
+
+    @abstractmethod
+    def line_annotations(self, line, new_columns, variant=None):
         """
             Method returning annotations for the given line
             in the order from new_columns parameter.
@@ -50,29 +59,35 @@ class AnnotatorBase():
 def give_column_number(s, header):
     try:
         return len(header) - header[::-1].index(s)
-    except:
-        sys.stderr.write("Used parameter: " + s + " does NOT exist in the input file header\n")
-        sys.exit(-678)
+    except Exception:
+        print(
+            "Used parameter: " + s +
+            " does NOT exist in the input file header", file=sys.stderr)
+        sys.exit(-1)
 
 
 def assign_values(param, header=None):
     if param is None:
-        return(param)
+        return param
     try:
         param = int(param)
-    except:
+    except Exception:
         if header is None:
-            sys.stderr.write("You cannot use column names when the file doesn't have a header (-H option set)!\n")
-            sys.exit(-49)
+            print(
+                "You cannot use column names when the file doesn't have"
+                " a header (-H option set)!", file=sys.stderr)
+            sys.exit(-1)
         param = give_column_number(param, header)
-    return(param)
+    return param
 
 
 def main(argument_parser, annotator_factory,
          start=time.time()):
 
-    argument_parser.add_argument('--region',
-        help='region to annotate (chr:begin-end) (input should be tabix indexed)',
+    argument_parser.add_argument(
+        '--region',
+        help='region to annotate (chr:begin-end) '
+        '(input should be tabix indexed)',
         action='store')
 
     argument_parser.add_argument(
@@ -84,13 +99,25 @@ def main(argument_parser, annotator_factory,
 
     opts = argument_parser.parse_args()
 
-    # Hardcoded to work with tsv files until parquet support is added
-    with IOManager(opts, IOType.TSV, IOType.TSV) as io_manager:
+    # File IO format specification
+    reader_type = IOType.TSV
+    writer_type = IOType.TSV
+    if hasattr(opts, 'read_parquet'):
+        if opts.read_parquet:
+            reader_type = IOType.Parquet
+    if hasattr(opts, 'write_parquet'):
+        if opts.write_parquet:
+            writer_type = IOType.Parquet
+
+    with IOManager(opts, reader_type, writer_type) as io_manager:
         annotator = annotator_factory(opts=opts, header=io_manager.header)
+        io_manager.set_schema(annotator.schema)
         annotator.annotate_file(io_manager)
 
     sys.stderr.write("# PROCESSING DETAILS:\n")
     sys.stderr.write("# " + time.asctime() + "\n")
     sys.stderr.write("# " + " ".join(sys.argv[1:]) + "\n")
 
-    sys.stderr.write("The program was running for [h:m:s]: " + str(datetime.timedelta(seconds=round(time.time()-start, 0))) + "\n")
+    sys.stderr.write(
+        "The program was running for [h:m:s]: " +
+        str(datetime.timedelta(seconds=round(time.time()-start, 0))) + "\n")

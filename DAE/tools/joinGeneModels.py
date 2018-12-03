@@ -4,6 +4,8 @@
 # written by Ewa
 
 
+from __future__ import unicode_literals
+from builtins import zip
 from GeneModelFiles import *
 import os.path
 import optparse

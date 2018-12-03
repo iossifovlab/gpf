@@ -1,11 +1,16 @@
-class ExonMock:
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import chr
+from builtins import range
+from builtins import object
+class ExonMock(object):
     def __init__(self, start, stop, frame):
         self.start = start
         self.stop = stop
         self.frame = frame
 
 
-class TranscriptModelMock:
+class TranscriptModelMock(object):
     def __init__(self, strand, cds_start, cds_end, exons, coding=None,
                  is_coding=True):
         self.strand = strand
@@ -30,18 +35,18 @@ class TranscriptModelMock:
         return self.exons
 
 
-class ReferenceGenomeMock:
+class ReferenceGenomeMock(object):
     def getSequence(self, chromosome, pos, pos_last):
-        print("get", chromosome, pos, pos_last)
+        print(("get", chromosome, pos, pos_last))
         return "".join([chr(i) for i in range(pos, pos_last + 1)])
 
 
-class CodeMock:
+class CodeMock(object):
     startCodons = ["ABC", "DEF"]
     CodonsAaKeys = {}
 
 
-class AnnotatorMock:
+class AnnotatorMock(object):
     def __init__(self, reference_genome):
         self.reference_genome = reference_genome
         self.code = CodeMock()

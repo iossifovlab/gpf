@@ -1,5 +1,13 @@
 #!/bin/env python
 
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 from DAE import *
 from GeneTerms import *  
 from scipy import stats
@@ -7,7 +15,7 @@ import sys
 from itertools import groupby
 from collections import Counter 
 
-class EnrichmentTestRes:
+class EnrichmentTestRes(object):
     pass
 
 def enrichmentTest(testVarGenesDict, geneTerms):
@@ -34,7 +42,7 @@ def enrichmentTest(testVarGenesDict, geneTerms):
         bcgInSet = allRes[s]['BACKGROUND'].cnt
         if bcgInSet == 0:
             bcgInSet = 0.5
-        backProb = float(bcgInSet)/bcgTotal
+        backProb = old_div(float(bcgInSet),bcgTotal)
 
         for tName,gSyms in testVarGenesDict:
             res = allRes[s][tName]    
@@ -44,7 +52,7 @@ def enrichmentTest(testVarGenesDict, geneTerms):
             res.expected = round(backProb*total, 4)
 
     for tName,gSyms in testVarGenesDict:
-        sp = [ (s, trs[tName].pVal) for s,trs in allRes.items() ]
+        sp = [ (s, trs[tName].pVal) for s,trs in list(allRes.items()) ]
         qVals = computeQVals([x[1] for x in sp])
         for a,qVal in zip(sp,qVals):
             allRes[a[0]][tName].qVal = qVal
@@ -56,7 +64,7 @@ def computeQVals(pVals):
     qVals = [ip[1]*len(ss)/(j+1) for j,ip in enumerate(ss)];
     qVals = [q if q<=1.0 else 1.0 for q in qVals]
     prevQVal = qVals[-1]
-    for i in xrange(len(ss)-2,-1,-1):
+    for i in range(len(ss)-2,-1,-1):
         if qVals[i] > prevQVal:
             qVals[i] = prevQVal
         else:
@@ -65,17 +73,17 @@ def computeQVals(pVals):
 
 def printSummaryTable(testVarGenesDict, geneTerms,allRes,totals):
     tTests = [tn for tn,vs in testVarGenesDict if tn != "BACKGROUND"]
-    print "\t\t\tBACKGROUND (UR syn.)\t\t" + "\t\t\t\t\t".join(tTests)
+    print("\t\t\tBACKGROUND (UR syn.)\t\t" + "\t\t\t\t\t".join(tTests))
     bcgTotal = totals['BACKGROUND'];
     hcols = []
     hcols.extend(("setId", "setDesc", "GeneNumber", "Overlap (" + str(bcgTotal) + ")", "proportion"));
     for tTname in tTests:
         hcols.extend(("Overlap (" + str(totals[tTname]) + ")", "Expected", "pVal", "qVal", "lessOrMore"));
-    print "\t".join(hcols)
+    print("\t".join(hcols))
     for s in geneTerms.t2G:
         cols = []
         bcgCnt = allRes[s]['BACKGROUND'].cnt
-        bcgProp = str(round(float(bcgCnt)/bcgTotal,3));
+        bcgProp = str(round(old_div(float(bcgCnt),bcgTotal),3));
         cols.extend((s,geneTerms.tDesc[s],str(len(geneTerms.t2G[s])), str(bcgCnt), bcgProp))
         for tTname in tTests:
             res = allRes[s][tTname]
@@ -99,7 +107,7 @@ def printSummaryTable(testVarGenesDict, geneTerms,allRes,totals):
             else:
                 lessmore = "equal"
             cols.extend((str(res.cnt), expected, pVal, qVal, lessmore))
-        print "\t".join(cols)
+        print("\t".join(cols))
 
 def fltDnv(vs):
     seen = set()
@@ -119,8 +127,8 @@ def fltInh(vs):
 def oneVariantPerRecurrent(vs):
     gnSorted = sorted([[ge['sym'], v] for v in vs for ge in v.requestedGeneEffects ]) 
     sym2Vars = { sym: [ t[1] for t in tpi] for sym, tpi in groupby(gnSorted, key=lambda x: x[0]) }
-    sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in sym2Vars.items() } 
-    return [ [gs] for gs,fn in sym2FN.items() if fn>1 ]
+    sym2FN = { sym: len(set([v.familyId for v in vs])) for sym, vs in list(sym2Vars.items()) } 
+    return [ [gs] for gs,fn in list(sym2FN.items()) if fn>1 ]
 
 
 
@@ -179,11 +187,11 @@ if __name__ == "__main__":
         ['BACKGROUND',                     fltInh(transmStdy.get_transmitted_summary_variants(ultraRareOnly=True, effectTypes="synonymous"))]
     ]
 
-    print >> sys.stderr, "Running the test..."
+    print("Running the test...", file=sys.stderr)
     allRes, totals = enrichmentTest(testVarGenesDict, geneTerms)
 
-    print >> sys.stderr, "Preparing the summary table..."
+    print("Preparing the summary table...", file=sys.stderr)
     printSummaryTable(testVarGenesDict,geneTerms,allRes,totals)
 
-    print >> sys.stderr, "Done!"
+    print("Done!", file=sys.stderr)
     

@@ -1,5 +1,9 @@
-head -n 1 $1-part-01-0 >> $1
-for f in $1-part-*-*; do
+#!/bin/sh
+
+# echo $1
+
+head -n 1 $1
+for f in $@; do
   # echo $f
-  tail -n +2 $f >> $1
+  tail -n +2 $f
 done

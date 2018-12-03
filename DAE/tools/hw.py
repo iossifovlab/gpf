@@ -1,211 +1,224 @@
 #!/usr/bin/env python
 
-import optparse, os, sys, math, gzip
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import zip
+from builtins import map
+from builtins import range
+from past.utils import old_div
+import optparse
+import os
+import sys
+import math
+import gzip
 
-#from pylab import *
+import numpy as np
 from numpy import *
-from scipy.stats import *
-from numpy.random import *
+from scipy import stats
+import numpy.random as rnd
 
-from vrtIOutil import *
+from vrtIOutil import ReaderStat, Writer, tooManyFile
+from DAE import genomesDB as genomes_db
 
-#family based data and mom and dad ordered state
-#pp is even and num of people (count 2, mom and dad, per family)
-#Alt count
-#0 1, and 2 copy state of an alternattive allele
-#not handling Y chromosome
-def xMF( xstr, pp ):
-	terms = xstr.split(';')	#only families which have alternatives
-	cnt = [[0,0,0],[0,0,0]]
 
-	diplo_flag = [True,True]
+# family based data and mom and dad ordered state
+# pp is even and num of people (count 2, mom and dad, per family)
+# Alt count
+# 0 1, and 2 copy state of an alternattive allele
+# not handling Y chromosome
+def xMF(xstr, pp):
+    terms = xstr.split(';')	 # only families which have alternatives
+    cnt = [[0, 0, 0], [0, 0, 0]]
 
-	#print xstr 
-	for x in terms:
-		#print x
-		terms = x.split(':')
-		fmid,bestStS,cntsS = terms[0], terms[1], terms[2]
-		#print bestStS
-		z = [map(int,rs) for rs in bestStS.split('/')]
-	        #print bestStS, z	
-		cnt[0][z[1][0]] += 1	#mom
-		cnt[1][z[1][1]] += 1	#dad
+    diplo_flag = [True, True]
 
-		if( z[0][0] + z[1][0] < 2 ) : diplo_flag[0] = False
-		if( z[0][1] + z[1][1] < 2 ) : diplo_flag[1] = False
+    for x in terms:
+        terms = x.split(':')
+        bestStS = terms[1]
+        z = [list(map(int, rs)) for rs in bestStS.split('/')]
+        cnt[0][z[1][0]] += 1  # mom
+        cnt[1][z[1][1]] += 1  # dad
 
-	cnt[0][0] = pp/2 - cnt[0][1] - cnt[0][2]
-	cnt[1][0] = pp/2 - cnt[1][1] - cnt[1][2]
+        if(z[0][0] + z[1][0] < 2):
+            diplo_flag[0] = False
+        if(z[0][1] + z[1][1] < 2):
+            diplo_flag[1] = False
 
-	return cnt, diplo_flag
+    cnt[0][0] = old_div(pp, 2) - cnt[0][1] - cnt[0][2]
+    cnt[1][0] = old_div(pp, 2) - cnt[1][1] - cnt[1][2]
+
+    return cnt, diplo_flag
+
 
 # ob : observed 2
 # p : frequency
 # s : population size and EVEN number (num of male and female are the same)
 # smpl_size : sample size
-def randomSampling( cnt, genF, smpl_size=10000, flagX=False ):
-	s = sum(cnt)
-	eCnt = s*array(genF)
+def randomSampling(cnt, genF, smpl_size=10000, flagX=False):
+    s = sum(cnt)
+    eCnt = s * np.array(genF)
 
-	T = sum( [1.*(c-e)*(c-e)/e for c,e in zip(cnt,eCnt)] )
+    T = sum([1.*(c-e)*(c-e)/e for c, e in zip(cnt, eCnt)])
 
-	if flagX:
-		p = (1.0*cnt[1] + 2.*cnt[2])/(1.5*s)
-		q = 1. - p
+    if flagX:
+        p = old_div((1.0*cnt[1] + 2.*cnt[2]), (1.5*s))
+        q = 1. - p
 
-		v = multinomial( s/2, [q*q, 2*p*q, p*p], size=smpl_size )
-		w = multinomial( s/2, [q, p, 0], size=smpl_size )
+        v = rnd.multinomial(old_div(s, 2), [q*q, 2*p*q, p*p], size=smpl_size)
+        w = rnd.multinomial(old_div(s, 2), [q, p, 0], size=smpl_size)
 
-		x = v + w
-	else:
-		x = multinomial( s, genF, size=smpl_size )
+        x = v + w
+    else:
+        x = rnd.multinomial(s, genF, size=smpl_size)
 
-	w = (x - eCnt)*(x - eCnt) / (1.*eCnt)
-	n = sum( sum(w,1) > T )
-	
-	pv = (1.*n)/smpl_size
-	#print ','.join( [str(x) for x in cnt] ), ','.join( ['{0:.2f}'.format( x ) for x in eCnt] ), pv
-	return pv
+    w = (x - eCnt)*(x - eCnt) / (1.*eCnt)
+    n = sum(sum(w, 1) > T)
 
-def G_test( cnt, eCnt ):
-	df = len(cnt) - 2
+    pv = old_div((1.*n), smpl_size)
+    return pv
 
-	T = sum([ 2.*c*log(c/e) for c,e in zip(cnt,eCnt) if c != 0])
-	pv = 1. - chi2.cdf( sum(T), df )
 
-	return pv
+def G_test(cnt, eCnt):
+    df = len(cnt) - 2
 
-def Chi2_test( cnt, eCnt ):
-	df = len(cnt) - 2	
+    T = sum([
+        2. * c * np.log(old_div(c, e))
+        for c, e in zip(cnt, eCnt) if c != 0
+    ])
+    pv = 1. - stats.chi2.cdf(sum(T), df)
 
-	T = sum([ (c-e)*(c-e)/e for c,e in zip(cnt,eCnt) if e != 0])
-	pv = 1. - chi2.cdf( sum(T), df )
+    return pv
 
-	return pv
 
-def Chi2_options( cnt, eCnt, genF, X=False ):
-	if sum(array(eCnt)<5) < 1 :
-		return Chi2_test( cnt, eCnt )
+def Chi2_test(cnt, eCnt):
+    df = len(cnt) - 2	
 
-	if (cnt[0] == 0 and eCnt[0] < 1) or (cnt[2] == 0 and eCnt[2] < 1 ):
-		return 1.
+    T = sum([(c-e)*(c-e)/e for c, e in zip(cnt, eCnt) if e != 0])
+    pv = 1. - stats.chi2.cdf(sum(T), df)
 
-	return randomSampling( cnt, genF, flagX=X )
+    return pv
+
+
+def Chi2_options(cnt, eCnt, genF, X=False):
+    if np.sum(np.array(eCnt) < 5) < 1:
+        return Chi2_test(cnt, eCnt)
+
+    if (cnt[0] == 0 and eCnt[0] < 1) or (cnt[2] == 0 and eCnt[2] < 1):
+        return 1.
+
+    return randomSampling(cnt, genF, flagX=X)
+
 
 # global variable
 # defalult is False 
 # add -c to make it True
 chi2_test_flag = True
 
-def Test( cnt, eCnt, genF, X=False ):
-	global chi2_test_flag
-	
-	if chi2_test_flag:
-		pv = Chi2_options( cnt, eCnt, genF, X )
-	else:
-		pv = G_test( cnt, eCnt )
 
-	return pv
+def Test(cnt, eCnt, genF, X=False):
+    global chi2_test_flag
 
-def pval_count_autosome( cnt ):
-	# cnt: [RR, RA, AA]
-	N = sum(cnt)
-	p = (1.0*cnt[1] + 2.*cnt[2])/(2.*N)
+    if chi2_test_flag:
+        pv = Chi2_options(cnt, eCnt, genF, X)
+    else:
+        pv = G_test(cnt, eCnt)
 
-	genF = [(1-p)*(1-p), 2.*(1-p)*p, p*p]
-	eCnt = [ N*x for x in genF]
+    return pv
 
-	pv = Test( cnt, eCnt, genF ) 
 
-	return pv, eCnt
+def pval_count_autosome(cnt):
+    # cnt: [RR, RA, AA]
+    N = sum(cnt)
+    p = old_div((1.0*cnt[1] + 2.*cnt[2]), (2.*N))
 
-def pval_count_X( cnt ):
-	# cnt: [RR, RA, AA]
-	# or   [R, A, '']
-	N = sum(cnt)
-	p = (1.0*cnt[1] + 2.*cnt[2])/(1.5*N)
+    genF = [(1-p)*(1-p), 2.*(1-p)*p, p*p]
+    eCnt = [N*x for x in genF]
 
-	genF = [(1-p)*(1-p)/2.+(1-p)/2., (1-p)*p + p/2., p*p/2.]
-	eCnt = [ N*x for x in genF]
+    pv = Test(cnt, eCnt, genF) 
 
-	pv = Test( cnt, eCnt, genF, True )
+    return pv, eCnt
 
-	return pv, eCnt
 
-def Rx( xstr, pp, AXY, pos ):
-	xcnt, di_flag = xMF( xstr, pp )
-	cnt = [ xcnt[0][n] + xcnt[1][n] for n in xrange(len(xcnt[0]))]
+def pval_count_X(cnt):
+    # cnt: [RR, RA, AA]
+    # or   [R, A, '']
+    N = sum(cnt)
+    p = old_div((1.0*cnt[1] + 2.*cnt[2]), (1.5*N))
 
-	if (AXY == 'X') and (not isPseudoAutosomalX( pos )):
-		pv, eCnt = pval_count_X( cnt )
-	else:
-		pv, eCnt = pval_count_autosome( cnt )
+    genF = [
+        (1-p)*(1-p)/2.+old_div((1-p), 2.),
+        (1-p)*p + old_div(p, 2.), p*p/2.
+    ]
+    eCnt = [N*x for x in genF]
 
-	return pv, cnt, eCnt
+    pv = Test(cnt, eCnt, genF, True)
+
+    return pv, eCnt
+
+
+par_x_test = genomes_db.get_pars_x_test()
+
+
+def isPseudoAutosomalX(chrom, pos):
+    global par_x_test
+    return par_x_test(chrom, pos)
+
+
+def Rx(xstr, pp, AXY, pos):
+    xcnt, di_flag = xMF(xstr, pp)
+    cnt = [xcnt[0][n] + xcnt[1][n] for n in range(len(xcnt[0]))]
+
+    if (AXY == 'X') and (not isPseudoAutosomalX(AXY, pos)):
+        pv, eCnt = pval_count_X(cnt)
+    else:
+        pv, eCnt = pval_count_autosome(cnt)
+
+    return pv, cnt, eCnt
+
 
 def main():
-	usage="usage: %prog options]"
-	parser = optparse.OptionParser( usage=usage )
+    usage = "usage: %prog options]"
+    parser = optparse.OptionParser(usage=usage)
 
-	#parser.add_option("-r", "--refFile", dest="refFile", default='',
-        #          metavar="refFile", help="ref File" )
-	#parser.add_option("-x", "--tooMany", dest="tooMany", default='',
-        #          metavar="tooMany", help="TOOMANY file")
-	#parser.add_option("-o", "--outFile", dest="outFile", default='',
-        #          metavar="outFile", help="output file")
-	parser.add_option("-c", "--chisq", action="store_true", dest="chisq", default=False,
-                  metavar="chisq", help="chisq test, default [G-test]")
+    parser.add_option(
+        "-c", "--chisq", action="store_true", dest="chisq", default=False,
+        metavar="chisq", help="chisq test, default [G-test]")
 
-	ox, args = parser.parse_args()
+    ox, args = parser.parse_args()
 
-	ref = ReaderStat( args[0] )
-	mny = ReaderStat( tooManyFile(args[0]) )	
+    ref = ReaderStat(args[0])
+    mny = ReaderStat(tooManyFile(args[0]))	
 
-	ref.notExistExit()
-	#if not ox.refFile:
-	#	print 'require a ref file'
-	#	exit(1)
+    ref.notExistExit()
 
-	global chi2_test_flag
-	if not ox.chisq:
-		chi2_test_flag = False
-		#print chi2_test_flag
-	
-	#ref = ReaderStat( ox.refFile )
-	#mny = ReaderStat( ox.tooMany )	
+    global chi2_test_flag
+    if not ox.chisq:
+        chi2_test_flag = False
 
-	gzW = Writer( args[1] ) #gzip.open( args[1], 'wb' )
-	#gzW = gzip.open( ox.outFile, 'wb' )
-	gzW.write( ref.head +'\tHW\n' )
+    gzW = Writer(args[1])
+    gzW.write(ref.head + '\tHW\n')
 
-	flag = True;
-	while flag :
-		fi =  ref.getFamilyData()
-		if 'TOOMANY' == fi :
-		   if ref.cID == mny.cID:
-			fi = mny.getFamilyData()
-			#print 'right', ref.cID, mny.cID
-			mny.readLine()
-		   else:
-			print 'wrong', ref.cID, mny.cID
-			exit(1)
+    flag = True
+    while flag:
+        fi = ref.getFamilyData()
+        if 'TOOMANY' == fi:
+            if ref.cID == mny.cID:
+                fi = mny.getFamilyData()
+                mny.readLine()
+            else:
+                print('wrong', ref.cID, mny.cID)
+                exit(1)
 
-		cnt, pcnt = ref.getStat()
+        cnt, pcnt = ref.getStat()
 
-		terms = ref.cID.split(':')
-		pv, cnt, eCnt = Rx( fi, cnt[0], terms[0], int(terms[1])  )
+        terms = ref.cID.split(':')
+        pv, cnt, eCnt = Rx(fi, cnt[0], terms[0], int(terms[1]))
 
-		gzW.write( ref.cLine +'\t{0:.4f}'.format( pv ) +'\n' )
+        gzW.write(ref.cLine + '\t{0:.4f}'.format(pv) + '\n')
 
-		#if pv == 0: pv = 1000
-		#else: pv = abs(-10.*log10(pv))
+        flag = ref.readLine()
 
-		#print ref.cLine +'\t{0:.2f}'.format( pv ) +'\t'+ ','.join( [str(c) for c in cnt] ) \
-		#	+'\t'+ ','.join( ['{0:.1f}'.format( c ) for c in eCnt] ) 
-
-		flag = ref.readLine()
-
-	#gzW.close()
 
 if __name__ == '__main__':
-	main()
+    main()
