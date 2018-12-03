@@ -379,7 +379,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                             phenotype, study_group, search_args):
         affected_people = DenovoGeneSetsCollection \
               ._get_affected_people(study_group, phenotype_column, phenotype)
-        variants = study_group.get_variants(
+        variants = study_group.query_variants(
                 inheritance=Inheritance.denovo.name,
                 status='{} or {}'.format(
                     Status.affected.name, Status.unaffected.name),
