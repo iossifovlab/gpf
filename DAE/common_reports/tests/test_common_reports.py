@@ -1,4 +1,5 @@
 from unittest.mock import patch, mock_open
+
 import common_reports.common_report
 
 
