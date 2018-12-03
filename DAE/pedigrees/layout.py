@@ -5,6 +5,18 @@ from builtins import object
 from past.utils import old_div
 from collections import defaultdict
 from functools import reduce
+import re
+
+
+def layout_parser(layout):
+    layout_groups = re.search(
+        r'(?P<level>\d):(?P<x>\d*\.?\d+),(?P<y>\d*\.?\d+)', str(layout))
+    if layout_groups:
+        layout_groups = layout_groups.groupdict()
+        layout_groups['level'] = int(layout_groups['level'])
+        layout_groups['x'] = float(layout_groups['x'])
+        layout_groups['y'] = float(layout_groups['y'])
+    return layout_groups
 
 
 class IndividualWithCoordinates(object):

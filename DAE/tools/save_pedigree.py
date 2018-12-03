@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 import collections
 import csv
 from tqdm import tqdm
+import multiprocessing
+import functools
 
 from pedigrees.pedigree_reader import PedigreeReader
 from pedigrees.pedigrees import get_argument_parser, FamilyConnections
@@ -54,6 +56,12 @@ class LayoutSaver(object):
 
             self._people_with_layout[key] = row
             self._people[key] = position.individual.member
+
+    def write(self, family, layout):
+        if isinstance(layout, Layout):
+            self.writerow(family, layout)
+        else:
+            self.writerow_error(family, layout)
 
     def save(self, columns_labels, header=None, delimiter="\t"):
         with open(self.input_filename, "r") as input_file, \
@@ -114,6 +122,28 @@ class LayoutSaver(object):
                 writer.writerow(row)
 
 
+def save_pedigree(family):
+    family_connections = FamilyConnections.from_pedigree(family)
+    if family_connections is None:
+        print(family.family_id)
+        print("Missing members")
+        return (family, "Missing members")
+    sandwich_instance = family_connections.create_sandwich_instance()
+    intervals = SandwichSolver.solve(sandwich_instance)
+
+    if intervals is None:
+        print(families[family].family_id)
+        print("No intervals")
+        return (family, "No intervals")
+    if intervals:
+        individuals_intervals = [interval for interval in intervals
+                                 if interval.vertex.is_individual()]
+
+        # print(family.family_id)
+        layout = Layout(individuals_intervals)
+        return (family, layout)
+
+
 def main():
     parser = get_argument_parser("Save PDP.")
     args = parser.parse_args()
@@ -138,35 +168,12 @@ def main():
     layout_saver = LayoutSaver(
         args.file, args.output, args.generated_column, args.layout_column)
 
-    progress_bar = tqdm(total=len(pedigrees))
+    with multiprocessing.Pool(processes=args.processes) as pool:
+        for family_layout in tqdm(pool.imap(
+                save_pedigree, sorted(pedigrees, key=lambda x: x.family_id)),
+                total=len(pedigrees)):
 
-    for family in sorted(pedigrees, key=lambda x: x.family_id):
-        progress_bar.update(1)
-
-        family_connections = FamilyConnections.from_pedigree(family)
-        if family_connections is None:
-            layout_saver.writerow_error(family, "Missing members")
-            print(family.family_id)
-            print("Missing members")
-            continue
-        sandwich_instance = family_connections.create_sandwich_instance()
-        intervals = SandwichSolver.solve(sandwich_instance)
-
-        if intervals is None:
-            layout_saver.writerow_error(family, "No intervals")
-            print(family.family_id)
-            print("No intervals")
-        if intervals:
-            individuals_intervals = filter(
-                lambda interval: interval.vertex.is_individual(),
-                intervals
-            )
-
-            # print(family.family_id)
-            layout = Layout(individuals_intervals)
-            layout_saver.writerow(family, layout)
-
-    progress_bar.close()
+            layout_saver.write(family_layout[0], family_layout[1])
 
     layout_saver.save(columns_labels, header, delimiter)
 

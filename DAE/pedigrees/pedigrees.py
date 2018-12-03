@@ -444,5 +444,9 @@ def get_argument_parser(description):
         'familyId, personId, dadId, momId, gender, status. You can replace '
         'unnecessary column with `_`.', dest='no_header_order', default=None,
         action='store')
+    parser.add_argument(
+        '--processes', type=int, default=4, dest='processes',
+        help='Number of processes', action='store'
+    )
 
     return parser

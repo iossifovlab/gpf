@@ -45,7 +45,7 @@ class OffsetLayoutDrawer(object):
         if self._layout is not None:
             self._horizontal_mirror_layout()
 
-    def draw(self, figure=None):
+    def draw(self, figure=None, title=None):
         if figure is None:
             figure = plt.figure()
 
@@ -79,13 +79,19 @@ class OffsetLayoutDrawer(object):
 
             ax_family.plot()
 
+        if title:
+            self._draw_title(figure, title)
+
         return figure
 
-    def draw_family(self, family):
+    def draw_family(self, family, title=None):
         figure, ax = plt.subplots()
         ax.axis("off")
 
         self._draw_family(figure, family)
+
+        if title:
+            self._draw_title(figure, title)
 
         return figure
 
@@ -184,6 +190,9 @@ class OffsetLayoutDrawer(object):
 
         axes.table = plt.table(
             cellText=table_vals, colLabels=col_labels, loc='center')
+
+    def _draw_title(self, figure, title):
+        figure.text(0.5, 0.9, title, horizontalalignment="center")
 
     def _horizontal_mirror_layout(self):
         highest_y = max([i.y for level in self._layout.positions

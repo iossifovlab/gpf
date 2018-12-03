@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import re
 from tqdm import tqdm
+import multiprocessing
+import functools
 
 from pedigrees.pedigree_reader import PedigreeReader
 from pedigrees.pedigrees import get_argument_parser, FamilyConnections
 from pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
-from pedigrees.layout import Layout, IndividualWithCoordinates
+from pedigrees.layout import Layout, IndividualWithCoordinates, layout_parser
 
 
 class LayoutLoader(object):
@@ -15,25 +17,15 @@ class LayoutLoader(object):
         self.family_connections = FamilyConnections.from_pedigree(
             family, add_missing_members=False)
 
-    def parse_layout(self, layout):
-        layout_groups = re.search(
-            r'(?P<level>\d):(?P<x>\d*\.?\d+),(?P<y>\d*\.?\d+)', str(layout))
-        if layout_groups:
-            layout_groups = layout_groups.groupdict()
-            layout_groups['level'] = int(layout_groups['level'])
-            layout_groups['x'] = float(layout_groups['x'])
-            layout_groups['y'] = float(layout_groups['y'])
-        return layout_groups
-
     def get_positions_from_family(self):
         positions = {}
         if self.family_connections is None:
-            layout = self.parse_layout(self.family.members[0].layout)
+            layout = layout_parser(self.family.members[0].layout)
             if layout is None:
                 return None
         individuals = self.family_connections.get_individuals()
         for individual in individuals:
-            layout = self.parse_layout(individual.member.layout)
+            layout = layout_parser(individual.member.layout)
             if layout is None:
                 return None
             level = layout['level']
@@ -73,6 +65,22 @@ def draw_family_pedigree(family, show_id=False):
         return layout_drawer.draw()
 
 
+def draw_pedigree(show_id, show_family, family):
+    layout_loader = LayoutLoader(family)
+    layout = layout_loader.load()
+    if layout is None:
+        layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
+        draw_layout = layout_drawer.draw_family(
+            family.members,
+            title='Invalid coordinates in family ' + family.family_id)
+        return draw_layout
+    else:
+        layout_drawer = OffsetLayoutDrawer(
+            layout, 0, 0, show_id=show_id, show_family=show_family)
+        draw_layout = layout_drawer.draw(title=family.family_id)
+        return draw_layout
+
+
 def main():
     parser = get_argument_parser("Draw PDP.")
     parser.add_argument(
@@ -109,24 +117,12 @@ def main():
 
     pdf_drawer = PDFLayoutDrawer(args.output)
 
-    progress_bar = tqdm(total=len(pedigrees))
-
-    for family in sorted(pedigrees, key=lambda x: x.family_id):
-        progress_bar.update(1)
-
-        layout_loader = LayoutLoader(family)
-        layout = layout_loader.load()
-        if layout is None:
-            layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
-            pdf_drawer.add_page(
-                layout_drawer.draw_family(family.members),
-                'Invalid coordinates in family ' + family.family_id)
-        else:
-            layout_drawer = OffsetLayoutDrawer(
-                layout, 0, 0, show_id=show_id, show_family=show_family)
-            pdf_drawer.add_page(layout_drawer.draw(), family.family_id)
-
-    progress_bar.close()
+    with multiprocessing.Pool(processes=args.processes) as pool:
+        for figure in tqdm(pool.imap(
+            functools.partial(draw_pedigree, show_id, show_family),
+            sorted(pedigrees, key=lambda x: x.family_id)),
+                total=len(pedigrees)):
+            pdf_drawer.add_page(figure)
 
     pdf_drawer.save_file()
 
