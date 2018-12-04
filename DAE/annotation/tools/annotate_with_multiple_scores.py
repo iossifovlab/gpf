@@ -10,6 +10,7 @@ from box import Box
 
 from .utilities import AnnotatorBase, main
 from .annotate_score_base import ScoreAnnotator
+from .file_io import Schema
 
 
 def get_argument_parser():
@@ -80,6 +81,8 @@ def get_argument_parser():
 
 
 def get_dirs(path):
+    # TODO Improve and fix this method.
+    # Files without extensions will be detected as folders.
     path = os.path.abspath(path)
     return [
         path + '/' + dir_
@@ -87,6 +90,7 @@ def get_dirs(path):
 
 
 def get_files(path):
+    # TODO Improve this method.
     path = os.path.abspath(path)
     return [
         path + '/' + dir_
@@ -97,7 +101,7 @@ def get_score(path):
     conf = [f.split('.') for f in get_files(path) if 'conf' in f.split('.')]
     if not conf:
         sys.stderr.write('Could not find score config file in ' + path + '\n')
-        sys.exit(-64)
+        sys.exit(-1)
     else:
         conf = conf[0]
         conf.remove('conf')
@@ -109,7 +113,7 @@ def assert_tabix(score):
     tabix_files = glob.glob(score_path + '/*.tbi')
     if len(tabix_files) == 0:
         sys.stderr.write('could not find .tbi file for score {}'.format(score))
-        sys.exit(-64)
+        sys.exit(-1)
     return True
 
 
@@ -119,6 +123,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
         super(MultipleScoresAnnotator, self).__init__(opts, header)
         self._init_score_directory()
         self.annotators = {}
+        self.schema_ = Schema()
         if opts.scores is not None:
             self.scores = opts.scores.split(',')
         else:
@@ -128,12 +133,15 @@ class MultipleScoresAnnotator(AnnotatorBase):
         elif self.scores is not None:
             self.header.extend(self.scores)
 
+        for col in self.new_columns:
+            self._init_annotator(col)
+
     def _init_score_directory(self):
         self.scores_directory = self.opts.scores_directory
         if self.scores_directory is None:
             self.scores_directory = os.path.join(os.environ['GFD_DIR'])
 
-    def _annotator_for(self, score):
+    def _init_annotator(self, score):
         if score not in self.annotators:
             score_dir = '{dir}/{score}'.format(
                 dir=self.scores_directory, score=score) 
@@ -164,8 +172,7 @@ class MultipleScoresAnnotator(AnnotatorBase):
                 config, default_box=True, default_box_attr=None)
             self.annotators[score] = ScoreAnnotator(score_annotator_opts,
                                                     list(self.header))
-
-        return self.annotators[score]
+            self.schema_.merge(self.annotators[score].schema)
 
     @property
     def new_columns(self):
@@ -173,6 +180,10 @@ class MultipleScoresAnnotator(AnnotatorBase):
             sys.stderr.write('--scores option is mandatory!\n')
             sys.exit(-12)
         return self.scores
+
+    @property
+    def schema(self):
+        return self.schema_
 
     def line_annotations(self, line, new_cols_order):
         result = []

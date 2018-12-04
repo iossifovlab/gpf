@@ -1,4 +1,4 @@
-from .utils import relative_to_this_test_folder
+from .conftest import relative_to_this_test_folder
 from annotation.annotation_makefile_generator import VariantDBConfig
 
 
@@ -10,4 +10,4 @@ def test_parse_generator_config():
         VariantDBConfig._collect_studies(config)
 
     assert len(transmitted_files) == 4
-    assert len(denovo_files) == 30
+    assert len(denovo_files) == 24

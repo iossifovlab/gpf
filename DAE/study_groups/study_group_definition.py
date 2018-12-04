@@ -31,7 +31,8 @@ class SingleFileStudiesGroupDefinition(StudyGroupsDefinition):
                 _config_file_from_environment()
 
         self.single_file_configurable_entity_definition(
-            config_path, work_dir, StudyGroupConfig, "name")
+            config_path, work_dir, StudyGroupConfig, 'name',
+            StudyGroupConfig.get_default_values())
 
     @staticmethod
     def _config_file_from_environment():

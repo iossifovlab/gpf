@@ -88,8 +88,30 @@ class Family(object):
         return index
 
     def get_people_with_role(self, role):
+        if not isinstance(role, Role):
+            role = Role.from_name(role)
         return list(filter(
-            lambda m: m.role == Role.from_name(role), self.members_in_order))
+            lambda m: m.role == role, self.members_in_order))
+
+    def get_people_with_roles(self, roles):
+        if not isinstance(roles[0], Role):
+            roles = [Role.from_name(role) for role in roles]
+        return list(filter(
+            lambda m: m.role in roles, self.members_in_order))
+
+    def get_people_with_phenotype(self, phenotype_column, phenotype):
+        return list(filter(
+            lambda m: m.get_attr(phenotype_column) == phenotype,
+            self.members_in_order))
+
+    def get_family_phenotypes(self, phenotype_column):
+        return set([member.get_attr(phenotype_column)
+                    for member in self.members_in_order])
+
+    def get_people_with_phenotypes(self, phenotype_column, phenotypes):
+        return list(filter(
+            lambda m: m.get_attr(phenotype_column) in phenotypes,
+            self.members_in_order))
 
     @property
     def members_ids(self):
