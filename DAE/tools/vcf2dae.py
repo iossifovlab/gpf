@@ -37,13 +37,13 @@ def main():
         help='VCF file to import'
     )
 
-    parser.add_argument(
-        "-x", "--project", dest="project",
-        metavar="project", help="project name [defualt:VIP")
-    parser.add_argument(
-        "-l", "--lab", dest="lab",
-        default="cshl",
-        metavar="lab", help="lab name")
+    # parser.add_argument(
+    #     "-x", "--project", dest="project",
+    #     metavar="project", help="project name [defualt:VIP")
+    # parser.add_argument(
+    #     "-l", "--lab", dest="lab",
+    #     default="cshl",
+    #     metavar="lab", help="lab name")
 
     parser.add_argument(
         "-o", "--output-prefix", dest="output_prefix", 
@@ -108,8 +108,8 @@ def main():
             args.pedigree,
             '"' + args.vcf + '"',
 
-            '-x', args.project,
-            '-l', args.lab,
+            # '-x', args.project,
+            # '-l', args.lab,
             '-o', temp_dae_prefix,
             '-m', str(args.minPercentOfGenotypeSamples),
             '-t', str(args.tooManyThresholdFamilies),
