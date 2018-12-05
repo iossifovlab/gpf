@@ -3,11 +3,14 @@ import re
 from tqdm import tqdm
 import multiprocessing
 import functools
+import pandas as pd
 
 from pedigrees.pedigree_reader import PedigreeReader
 from pedigrees.pedigrees import get_argument_parser, FamilyConnections
 from pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from pedigrees.layout import Layout, IndividualWithCoordinates, layout_parser
+from variants.family import FamiliesBase
+from common_reports.common_report import FamiliesReport
 
 
 class LayoutLoader(object):
@@ -116,6 +119,36 @@ def main():
         args.file, columns_labels, header, delimiter)
 
     pdf_drawer = PDFLayoutDrawer(args.output)
+
+    pedigrees_df = pd.concat([pedigree.get_pedigree_dataframe()
+                              for pedigree in pedigrees])
+
+    families = FamiliesBase(pedigrees_df)
+    families.families_build(pedigrees_df)
+
+    phenotype = {
+        'domain': {
+            'affected': {
+                'id': 'affected',
+                'name': 'affected',
+                'color': '#e35252'
+            }
+        },
+        'unaffected': {
+            'id': 'unaffected',
+            'name': 'unaffected',
+            'color': '#ffffff'
+        },
+        'default': {
+            'id': 'unknown',
+            'name': 'unknown',
+            'color': '#aaaaaa'
+        },
+        'source': 'phenotype'
+    }
+    phenotypes = ['affected', 'unaffected', 'unknown']
+    roles = [[None]]
+    families_report = FamiliesReport(families, phenotype, phenotypes, roles)
 
     with multiprocessing.Pool(processes=args.processes) as pool:
         for figure in tqdm(pool.imap(
