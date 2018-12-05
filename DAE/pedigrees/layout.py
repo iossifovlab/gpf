@@ -100,6 +100,8 @@ class Layout(object):
         self._intervals = intervals
         self.lines = []
         self.positions = []
+        self._individuals_by_rank = []
+        self._id_to_position = {}
         if intervals is not None:
             self._individuals_by_rank = self._intervals_by_ranks()
             self._id_to_position = self._generate_simple_layout(

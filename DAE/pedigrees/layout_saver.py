@@ -61,8 +61,9 @@ class LayoutSaver(object):
         with open(self.input_filename, "r") as input_file, \
                 open(self.output_filename, "w") as output_file:
 
-            reader = csv.DictReader(input_file, fieldnames=header,
-                                    delimiter=delimiter)
+            reader = csv.DictReader(
+                input_file, fieldnames=header, delimiter=delimiter,
+                lineterminator='\n')
             fieldnames = list(reader.fieldnames)
 
             assert self.fieldname not in fieldnames, \
