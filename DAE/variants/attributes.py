@@ -62,7 +62,7 @@ class Role(enum.Enum):
 class Sex(enum.Enum):
     male = 1
     female = 2
-    unspecified = 4
+    unspecified = 0
 
     @staticmethod
     def from_name(name):
@@ -70,7 +70,7 @@ class Sex(enum.Enum):
             return Sex.male
         elif name == 'female' or name == 'F' or name == '2':
             return Sex.female
-        elif name == 'unspecified' or name == 'U':
+        elif name == 'unspecified' or name == 'U' or name == '0':
             return Sex.unspecified
         raise ValueError("unexpected sex type: " + name)
 
