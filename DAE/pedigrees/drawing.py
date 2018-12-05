@@ -276,7 +276,8 @@ class OffsetLayoutDrawer(object):
         for member in family:
             table_vals.append(
                 [member.family_id, member.id, member.father, member.mother,
-                 member.sex, member.status, member.layout])
+                 Sex.from_name_or_value(member.sex), member.status,
+                 member.layout])
 
         axes.table = plt.table(
             cellText=table_vals, colLabels=col_labels, loc='center')

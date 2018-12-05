@@ -47,7 +47,7 @@ class PedigreeMember(object):
             "familyId": [self.family_id],
             "personId": [self.id],
             "sampleId": [self.id],
-            "sex": [Sex.from_name(self.sex)],
+            "sex": [Sex.from_name_or_value(self.sex)],
             "role": [Role.unknown],
             "status": [self.status],
             "momId": [self.mother],
