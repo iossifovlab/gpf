@@ -202,5 +202,6 @@ fam1\tmom1\t0\t0\t2\t1\tmother\tError\t
 fam2\tid2\tdad2\tmom2\t1\t2\tprb\t2:100.0,75.0\t
 fam2\tdad2\t0\t0\t1\t1\tfather\t1:50.0,100.0\t1
 fam2\tmom2\t0\t0\t2\t1\tmother\t1:50.0,50.0\t
+fam3\tid3\tdad3\tmom3\t2\t2\tprb\t\t
 fam1\tdad1\t0\t0\t1\t1\t\tError\t1
 """

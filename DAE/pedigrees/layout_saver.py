@@ -83,12 +83,12 @@ class LayoutSaver(object):
                 key = self._member_key(row[columns_labels["family_id"]],
                                        row[columns_labels["id"]])
 
-                member = self._people[key]
-
-                row_copy[columns_labels["mother"]] = member.mother
-                row_copy[columns_labels["father"]] = member.father
-
                 if key in self._people_with_layout:
+                    member = self._people[key]
+
+                    row_copy[columns_labels["mother"]] = member.mother
+                    row_copy[columns_labels["father"]] = member.father
+
                     row_copy.update(self._people_with_layout.pop(key))
                 else:
                     row_copy[self.fieldname] = ""
