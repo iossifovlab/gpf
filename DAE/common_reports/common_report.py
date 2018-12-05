@@ -382,7 +382,7 @@ class DenovoReport(object):
 
         self.effect_groups = effect_groups
         self.effect_types = effect_types
-        self.phenotypes = phenotypes
+        self.phenotypes = self._get_phenotypes(phenotype, phenotypes)
         self.tables = self._get_tables(
             query_object, phenotype, phenotypes, families_report, effects,
             counters_roles)
@@ -394,6 +394,10 @@ class DenovoReport(object):
             'phenotypes': self.phenotypes,
             'tables': [t.to_dict() for t in self.tables]
         }
+
+    def _get_phenotypes(self, phenotype, phenotypes):
+        return [pheno if pheno is not None else phenotype['default']['name']
+                for pheno in phenotypes]
 
     def _get_tables(
             self, query_object, phenotype, phenotypes, families_report,
@@ -417,7 +421,7 @@ class CommonReport(object):
             query_object, phenotype, phenotypes, self.families_report,
             effect_groups, effect_types, counters_roles)
         self.study_name = query_object.name
-        self.phenotype = self._get_phenotype(query_object, phenotype)
+        self.phenotype = self._get_phenotype(phenotype, phenotypes)
         self.study_type = ','.join(query_object.study_types)\
             if query_object.study_types else None
         self.study_year = ','.join(query_object.years)\
@@ -455,13 +459,13 @@ class CommonReport(object):
     def _get_query_object_phenotypes(self, query_object, phenotype):
         return list(query_object.get_phenotype_values(phenotype['source']))
 
-    def _get_phenotype(self, query_object, phenotype):
+    def _get_phenotype(self, phenotype, phenotypes):
         default_phenotype = phenotype['default']['name']
         phenotype_source = phenotype['source']
 
         return ','.join(
             [pheno if pheno is not None else default_phenotype
-             for pheno in query_object.get_phenotype_values(phenotype_source)])
+             for pheno in phenotypes])
 
     def _get_number_of_people_with_role(self, query_object, role):
         return sum([len(family.get_people_with_role(role))

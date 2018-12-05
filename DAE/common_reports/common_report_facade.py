@@ -28,8 +28,8 @@ class CommonReportFacade(object):
         return list(self._common_report_cache.values())
 
     def get_all_common_report_ids(self):
-        return list(self.config._studies().keys()) +\
-            list(self.config._study_groups().keys())
+        return list(self.config.studies().keys()) +\
+            list(self.config.study_groups().keys())
 
     def load_cache(self, common_report_ids=None):
         if common_report_ids is None:
@@ -44,9 +44,9 @@ class CommonReportFacade(object):
                 self._load_common_report_in_cache(common_report_id)
 
     def _load_common_report_in_cache(self, common_report_id):
-        if common_report_id in self.config._studies().keys():
+        if common_report_id in self.config.studies().keys():
             common_reports_dir = studies_common_reports_dir
-        elif common_report_id in self.config._study_groups().keys():
+        elif common_report_id in self.config.study_groups().keys():
             common_reports_dir = study_groups_common_reports_dir
         else:
             return
