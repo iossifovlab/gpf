@@ -9,9 +9,11 @@ import abc
 from collections import defaultdict
 import argparse
 from functools import reduce
+import pandas as pd
 
 from pedigrees.interval_sandwich import SandwichInstance
 from future.utils import with_metaclass
+from variants.attributes import Role, Sex
 
 
 class PedigreeMember(object):
@@ -34,6 +36,26 @@ class PedigreeMember(object):
 
     def has_known_parents(self):
         return self.has_known_father() or self.has_known_mother()
+
+    def get_member_dataframe(self):
+        phenotype = "unknown"
+        if self.status == "1":
+            phenotype = "unaffected"
+        elif self.status == "2":
+            phenotype = "affected"
+        return pd.DataFrame.from_dict({
+            "familyId": [self.family_id],
+            "personId": [self.id],
+            "sampleId": [self.id],
+            "sex": [Sex.from_name(self.sex)],
+            "role": [Role.unknown],
+            "status": [self.status],
+            "momId": [self.mother],
+            "dadId": [self.father],
+            "layout": [self.layout],
+            "generated": [self.generated],
+            "phenotype": [phenotype]
+        })
 
 
 class Pedigree(object):
@@ -60,6 +82,10 @@ class Pedigree(object):
                 [m for m in self._members if m.has_known_parents()]
 
         return self._independent_members
+
+    def get_pedigree_dataframe(self):
+        return pd.concat([member.get_member_dataframe()
+                          for member in self._members])
 
 
 class FamilyConnections(object):
