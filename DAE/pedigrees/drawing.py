@@ -4,6 +4,7 @@ from past.utils import old_div
 from builtins import object
 from copy import deepcopy
 import math
+from itertools import zip_longest
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -25,6 +26,9 @@ class PDFLayoutDrawer(object):
             figure.text(0.5, 0.9, title, horizontalalignment="center")
         self._pages.append(figure)
 
+    def add_pages(self, figures, title=None):
+        self._pages += figures
+
     def save_file(self):
         with PdfPages(self._filename) as pdf:
             for page in self._pages:
@@ -45,23 +49,30 @@ class OffsetLayoutDrawer(object):
         if self._layout is not None:
             self._horizontal_mirror_layout()
 
-    def draw(self, figure=None, title=None):
+    def draw(self, figure=None, ax=None, title=None):
         if figure is None:
             figure = plt.figure()
 
-        pedigree_axes_rect = (0.35, 0.33, 0.33, 0.33)
-        if self.show_family:
-            pedigree_axes_rect = (0.35, 0.45, 0.3, 0.45)
+        if ax is not None:
+            ax_pedigree = ax
+        else:
+            pedigree_axes_rect = (0.35, 0.33, 0.33, 0.33)
+            if self.show_family:
+                pedigree_axes_rect = (0.35, 0.45, 0.3, 0.45)
 
-        ax_pedigree = figure.add_axes(pedigree_axes_rect)
-        ax_pedigree.axis("off")
-        ax_pedigree.set_aspect(aspect="equal", adjustable="datalim", anchor="C")
-        ax_pedigree.autoscale_view()
+            ax_pedigree = figure.add_axes(pedigree_axes_rect)
+            ax_pedigree.axis("off")
+            ax_pedigree.set_aspect(
+                aspect="equal", adjustable="datalim", anchor="C")
+            ax_pedigree.autoscale_view()
 
         self._draw_lines(ax_pedigree)
         self._draw_rounded_lines(ax_pedigree)
 
         self._draw_members(ax_pedigree)
+
+        if ax:
+            return ax_pedigree
 
         ax_pedigree.plot()
 
@@ -94,6 +105,85 @@ class OffsetLayoutDrawer(object):
             self._draw_title(figure, title)
 
         return figure
+
+    def draw_families_report(self, families_report, layout):
+        people_counters = self.draw_people_counters(families_report)
+        families_counters =\
+            self.draw_families_counters(families_report, layout)
+
+        return people_counters + families_counters
+
+    def draw_people_counters(self, families_report):
+        pcf = []
+        for people_counter in families_report.people_counters:
+            figure, ax = plt.subplots()
+            ax.axis("off")
+
+            table_vals = [['Status'], ['People Male'], ['People Female'],
+                          ['People Unspecified'], ['People Total']]
+
+            for phenotype in people_counter.counters:
+                table_vals[0].append(phenotype.phenotype)
+                table_vals[1].append(phenotype.people_male)
+                table_vals[2].append(phenotype.people_female)
+                table_vals[3].append(phenotype.people_unspecified)
+                table_vals[4].append(phenotype.people_total)
+
+            ax.table = plt.table(
+                cellText=table_vals[1:], colLabels=table_vals[0], loc='center')
+
+            ax.plot()
+
+            figure.text(0.1, 0.7, 'Total number of families: ' +
+                        str(families_report.families_total),
+                        horizontalalignment='left')
+
+            self._draw_title(figure, 'People counters')
+
+            pcf.append(figure)
+
+        return pcf
+
+    def draw_families_counters(self, families_report, layout):
+        fcf = []
+        families_counters =\
+            [c for fc in families_report.families_counters
+             for c in fc.counters]
+        for families in zip_longest(*(iter(families_counters),) * 9):
+            figure, ax = plt.subplots(3, 3)
+
+            for row, families_row in\
+                    enumerate(zip_longest(*(iter(families),) * 3)):
+                for col, family in enumerate(families_row):
+                    ax[row][col].axis("off")
+                    ax[row][col].set_aspect(aspect="equal", adjustable="datalim", anchor="C")
+                    ax[row][col].autoscale_view()
+
+                    if family is None:
+                        continue
+                    family_layout = layout[family.pedigree[0][0]]
+
+                    if family_layout is None:
+                        self._draw_title(
+                            ax[row][col], 'Invalid coordinates', x=0.5, y=1.1,
+                            **{'fontsize': 6,
+                               'transform': ax[row][col].transAxes})
+                    else:
+                        layout_drawer = OffsetLayoutDrawer(family_layout, 0, 0)
+                        layout_drawer.draw(ax=ax[row][col])
+                        self._draw_title(
+                            ax[row][col], 'Pedigrees Count: ' +
+                            str(family.pedigrees_count), x=0.5, y=1.1, **{
+                                'fontsize': 6,
+                                'transform': ax[row][col].transAxes})
+
+                    ax[row][col].plot()
+
+            self._draw_title(figure, 'Families counters', x=0.5, y=0.95)
+
+            fcf.append(figure)
+
+        return fcf
 
     def _draw_lines(self, axes):
         for line in self._layout.lines:
@@ -191,8 +281,8 @@ class OffsetLayoutDrawer(object):
         axes.table = plt.table(
             cellText=table_vals, colLabels=col_labels, loc='center')
 
-    def _draw_title(self, figure, title):
-        figure.text(0.5, 0.9, title, horizontalalignment="center")
+    def _draw_title(self, figure, title, x=0.5, y=0.9, **kwargs):
+        figure.text(x, y, title, horizontalalignment="center", **kwargs)
 
     def _horizontal_mirror_layout(self):
         highest_y = max([i.y for level in self._layout.positions

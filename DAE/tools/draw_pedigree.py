@@ -68,9 +68,15 @@ def draw_family_pedigree(family, show_id=False):
         return layout_drawer.draw()
 
 
-def draw_pedigree(show_id, show_family, family):
+def get_layout(family):
     layout_loader = LayoutLoader(family)
     layout = layout_loader.load()
+    return {family.family_id: layout}
+
+
+def draw_pedigree(layouts, show_id, show_family, family):
+    layout = layouts[family.family_id]
+
     if layout is None:
         layout_drawer = OffsetLayoutDrawer(layout, 0, 0)
         draw_layout = layout_drawer.draw_family(
@@ -150,9 +156,20 @@ def main():
     roles = [[None]]
     families_report = FamiliesReport(families, phenotype, phenotypes, roles)
 
+    layouts = {}
+    with multiprocessing.Pool(processes=args.processes) as pool:
+        for layout in tqdm(pool.imap(
+            get_layout, sorted(pedigrees, key=lambda x: x.family_id)),
+                total=len(pedigrees)):
+            layouts.update(layout)
+
+    layout_drawer = OffsetLayoutDrawer(None, 0, 0)
+    draw_layout = layout_drawer.draw_families_report(families_report, layouts)
+    pdf_drawer.add_pages(draw_layout)
+
     with multiprocessing.Pool(processes=args.processes) as pool:
         for figure in tqdm(pool.imap(
-            functools.partial(draw_pedigree, show_id, show_family),
+            functools.partial(draw_pedigree, layouts, show_id, show_family),
             sorted(pedigrees, key=lambda x: x.family_id)),
                 total=len(pedigrees)):
             pdf_drawer.add_page(figure)
