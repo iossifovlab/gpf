@@ -27,6 +27,7 @@ def summary_parquet_schema_flat():
         pa.field("position", pa.int64()),
         pa.field("reference", pa.string()),
         pa.field("alternative", pa.string()),
+        pa.field("bucket_index", pa.int16()),
         pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int16()),
         pa.field("allele_count", pa.int16()),
@@ -55,6 +56,7 @@ def family_allele_parquet_schema():
         pa.field("position", pa.int64()),
         pa.field("family_id", pa.string()),
         pa.field("family_variant_index", pa.int64()),
+        pa.field("bucket_index", pa.int16()),
         pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int8()),
         pa.field("genotype", pa.list_(pa.int8())),
@@ -144,6 +146,7 @@ def setup_allele_batch_data():
         "position": [],
         "family_id": [],
         "family_variant_index": [],
+        "bucket_index": [],
         "summary_variant_index": [],
         "allele_index": [],
         "genotype": [],
@@ -155,12 +158,14 @@ def setup_allele_batch_data():
 
 
 def _family_allele_to_data(
-        allele_data, family_variant, allele, summary_index, index):
+        allele_data, family_variant, allele, 
+        bucket_index, summary_index, index):
     allele_data["chrom"].append(allele.chromosome)
     allele_data["position"].append(allele.position)
     allele_data["family_id"].append(allele.family_id)
     allele_data["family_variant_index"].append(index)
 
+    allele_data["bucket_index"].append(bucket_index)
     allele_data["summary_variant_index"].append(summary_index)
     allele_data["allele_index"].append(allele.allele_index)
     allele_data["genotype"].append(family_variant.gt_flatten())
@@ -190,7 +195,7 @@ def _family_allele_to_data(
             ])
 
 
-def variants_table(variants, batch_size=200000):
+def variants_table(variants, bucket_index=None, batch_size=200000):
     family_allele_schema = family_allele_parquet_schema()
     allele_data = setup_allele_batch_data()
     summary_allele_schema = summary_parquet_schema_flat()
@@ -205,14 +210,15 @@ def variants_table(variants, batch_size=200000):
         summary_variant, family_variants = vs
 
         for sa in summary_variant.alleles:
+            sa.attributes['bucket_index'] = bucket_index
             for name in summary_allele_schema.names:
                 summary_data[name].append(sa.get_attribute(name))
 
         for fv in family_variants:
             for allele in fv.alleles:
                 _family_allele_to_data(
-                    allele_data, fv, allele, 
-                    summary_variant_index, family_variant_index)
+                    allele_data, fv, allele,
+                    bucket_index, summary_variant_index, family_variant_index)
                 family_variant_index += 1
 
         if len(allele_data['chrom']) >= batch_size:
@@ -240,13 +246,15 @@ def variants_table(variants, batch_size=200000):
 
 
 def save_variants_to_parquet(
-        variants, summary_failename, family_filename, batch_size=100000):
+        variants, summary_failename, family_filename,
+        bucket_index=None, batch_size=100000):
     allele_schema = family_allele_parquet_schema()
     allele_writer = pq.ParquetWriter(family_filename, allele_schema)
     summary_schema = summary_parquet_schema_flat()
     summary_writer = pq.ParquetWriter(summary_failename, summary_schema)
     try:
-        for stable, atable in variants_table(variants, batch_size):
+        for stable, atable in variants_table(
+                variants, bucket_index, batch_size):
             assert atable.schema == allele_schema
             assert atable.num_rows > 0
             allele_writer.write_table(atable)

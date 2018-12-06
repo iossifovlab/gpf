@@ -163,6 +163,8 @@ def dae_build_region(argv):
     # contigs = ['chr21', 'chr22']
     assert argv.region is not None
     region = argv.region
+    assert argv.bucket_index is not None
+    bucket_index = argv.bucket_index
 
     assert argv.out is not None
     if not os.path.exists(argv.out):
@@ -194,7 +196,8 @@ def dae_build_region(argv):
     save_variants_to_parquet(
         dae.full_variants_iterator(),
         summary_filename,
-        family_filename)
+        family_filename,
+        bucket_index=bucket_index)
     end = time.time()
 
     print("DONE region: {} for {} sec".format(region, round(end-start)))
@@ -228,12 +231,18 @@ def dae_build_make(argv):
 
     makefile = []
     all_targets = []
+    contig_targets = OrderedDict()
+
     for contig_index, contig in enumerate(contigs):
         if contig not in contig_regions:
             continue
         assert contig in contig_regions, contig
+        assert len(contig_regions) < 100
+        contig_targets[contig] = []
+
         for part, region in enumerate(contig_regions[contig]):
-            suffix = "{:0>3}-{:0>3}-{}".format(
+            bucket_index = contig_index * 100 + part
+            suffix = "{:0>3}_{:0>3}_{}".format(
                 contig_index, part, contig
             )
             target_dir = os.path.join(out, suffix)
@@ -251,14 +260,18 @@ def dae_build_make(argv):
 
             all_targets.append(target_dir)
             all_targets.extend(targets)
+            contig_targets[contig].extend(targets)
 
             command = "{targets}: " \
                 "{family_filename} {summary_filename} {toomany_filename}\n\t" \
-                "dae2parquet.py region -o {target_dir} --region {region} " \
+                "dae2parquet.py region -o {target_dir} " \
+                "--bucket-index {bucket_index} " \
+                "--region {region} " \
                 "{family_filename} {summary_filename} {toomany_filename}" \
                 .format(
                     target_dir=target_dir,
                     targets=" ".join(targets),
+                    bucket_index=bucket_index,
                     family_filename=dae.family_filename,
                     summary_filename=dae.summary_filename,
                     toomany_filename=dae.toomany_filename,
@@ -273,6 +286,10 @@ def dae_build_make(argv):
 
     print("all: {}".format(" ".join(all_targets)), file=outfile)
     print("\n", file=outfile)
+
+    for contig, targets in contig_targets.items():
+        print("{}: {}".format(contig, " ".join(targets)), file=outfile)
+    print("\n", file=outfile)    
 
     print("\n\n".join(makefile), file=outfile)
 
@@ -300,14 +317,6 @@ def denovo_build(argv):
     save_ped_df_to_parquet(
         denovo.ped_df,
         parquet_config.parquet.pedigree)
-
-    # save_summary_variants_to_parquet(
-    #     denovo.wrap_summary_variants(df),
-    #     parquet_config.parquet.summary_variants)
-
-    # save_family_variants_to_parquet(
-    #     denovo.wrap_family_variants(df),
-    #     parquet_config.parquet.family_alleles)
 
 
 def init_parser_denovo(subparsers):
@@ -374,6 +383,12 @@ def init_parser_region(subparsers):
         '--region', type=str,
         dest='region', metavar='region',
         help='region to convert'
+    )
+
+    parser_region.add_argument(
+        '-b', '--bucket-index', type=int, default=None,
+        dest='bucket_index', metavar='bucket index',
+        help='bucket index'
     )
 
 
