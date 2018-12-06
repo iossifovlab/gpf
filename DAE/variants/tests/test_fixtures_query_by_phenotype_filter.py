@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import pytest
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     # "variants_df",
