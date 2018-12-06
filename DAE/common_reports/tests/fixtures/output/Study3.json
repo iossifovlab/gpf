@@ -1,0 +1,389 @@
+{
+    "families_report": {
+        "families_total": 2,
+        "people_counters": [
+            {
+                "counters": [
+                    {
+                        "people_male": 0,
+                        "people_female": 0,
+                        "people_unspecified": 0,
+                        "people_total": 0,
+                        "phenotype": "unaffected",
+                        "people_roles": [
+                            "prb",
+                            "sib"
+                        ]
+                    },
+                    {
+                        "people_male": 0,
+                        "people_female": 1,
+                        "people_unspecified": 0,
+                        "people_total": 1,
+                        "phenotype": "phenotype2",
+                        "people_roles": [
+                            "prb",
+                            "sib"
+                        ]
+                    },
+                    {
+                        "people_male": 0,
+                        "people_female": 2,
+                        "people_unspecified": 0,
+                        "people_total": 2,
+                        "phenotype": "phenotype1",
+                        "people_roles": [
+                            "prb",
+                            "sib"
+                        ]
+                    }
+                ],
+                "roles": [
+                    "prb",
+                    "sib"
+                ]
+            },
+            {
+                "counters": [
+                    {
+                        "people_male": 0,
+                        "people_female": 1,
+                        "people_unspecified": 0,
+                        "people_total": 1,
+                        "phenotype": "unaffected",
+                        "people_roles": [
+                            "mom",
+                            "dad"
+                        ]
+                    },
+                    {
+                        "people_male": 1,
+                        "people_female": 0,
+                        "people_unspecified": 0,
+                        "people_total": 1,
+                        "phenotype": "phenotype2",
+                        "people_roles": [
+                            "mom",
+                            "dad"
+                        ]
+                    },
+                    {
+                        "people_male": 0,
+                        "people_female": 1,
+                        "people_unspecified": 0,
+                        "people_total": 1,
+                        "phenotype": "phenotype1",
+                        "people_roles": [
+                            "mom",
+                            "dad"
+                        ]
+                    }
+                ],
+                "roles": [
+                    "mom",
+                    "dad"
+                ]
+            }
+        ],
+        "families_counters": [
+            {
+                "counters": [],
+                "phenotype": "unaffected"
+            },
+            {
+                "counters": [],
+                "phenotype": "phenotype2"
+            },
+            {
+                "counters": [],
+                "phenotype": "phenotype1"
+            },
+            {
+                "counters": [
+                    {
+                        "pedigree": [
+                            [
+                                "f2",
+                                "mom2",
+                                "0",
+                                "0",
+                                "F",
+                                "#ffffff",
+                                null,
+                                false,
+                                "",
+                                ""
+                            ],
+                            [
+                                "f2",
+                                "dad2",
+                                "0",
+                                "0",
+                                "M",
+                                "#b8008a",
+                                null,
+                                false,
+                                "",
+                                ""
+                            ],
+                            [
+                                "f2",
+                                "ch2",
+                                "dad2",
+                                "mom2",
+                                "F",
+                                "#e35252",
+                                null,
+                                false,
+                                "",
+                                ""
+                            ]
+                        ],
+                        "pedigrees_count": 1
+                    },
+                    {
+                        "pedigree": [
+                            [
+                                "f4",
+                                "mom4",
+                                "0",
+                                "0",
+                                "F",
+                                "#e35252",
+                                null,
+                                false,
+                                "",
+                                ""
+                            ],
+                            [
+                                "f4",
+                                "ch4",
+                                "dad4",
+                                "mom4",
+                                "F",
+                                "#e35252",
+                                null,
+                                false,
+                                "",
+                                ""
+                            ],
+                            [
+                                "f4",
+                                "ch4.1",
+                                "dad4",
+                                "mom4",
+                                "F",
+                                "#b8008a",
+                                null,
+                                false,
+                                "",
+                                ""
+                            ]
+                        ],
+                        "pedigrees_count": 1
+                    }
+                ],
+                "phenotype": -1
+            }
+        ],
+        "phenotypes": [
+            "unaffected",
+            "phenotype2",
+            "phenotype1"
+        ]
+    },
+    "denovo_report": {
+        "effect_groups": [],
+        "effect_types": [
+            "Frame-shift",
+            "Missense"
+        ],
+        "phenotypes": [
+            "unaffected",
+            "phenotype2",
+            "phenotype1"
+        ],
+        "tables": [
+            {
+                "rows": [
+                    {
+                        "effect_type": "Frame-shift",
+                        "row": [
+                            {
+                                "events_people_count": 0,
+                                "events_people_percent": 0,
+                                "events_count": 0,
+                                "events_rate_per_child": 0,
+                                "phenotype": "unaffected",
+                                "people_roles": [
+                                    "prb",
+                                    "sib"
+                                ]
+                            },
+                            {
+                                "events_people_count": 0,
+                                "events_people_percent": 0,
+                                "events_count": 0,
+                                "events_rate_per_child": 0,
+                                "phenotype": "phenotype2",
+                                "people_roles": [
+                                    "prb",
+                                    "sib"
+                                ]
+                            },
+                            {
+                                "events_people_count": 1,
+                                "events_people_percent": 0.5,
+                                "events_count": 1,
+                                "events_rate_per_child": 0.5,
+                                "phenotype": "phenotype1",
+                                "people_roles": [
+                                    "prb",
+                                    "sib"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "effect_type": "Missense",
+                        "row": [
+                            {
+                                "events_people_count": 0,
+                                "events_people_percent": 0,
+                                "events_count": 0,
+                                "events_rate_per_child": 0,
+                                "phenotype": "unaffected",
+                                "people_roles": [
+                                    "prb",
+                                    "sib"
+                                ]
+                            },
+                            {
+                                "events_people_count": 0,
+                                "events_people_percent": 0,
+                                "events_count": 0,
+                                "events_rate_per_child": 0,
+                                "phenotype": "phenotype2",
+                                "people_roles": [
+                                    "prb",
+                                    "sib"
+                                ]
+                            },
+                            {
+                                "events_people_count": 1,
+                                "events_people_percent": 0.5,
+                                "events_count": 1,
+                                "events_rate_per_child": 0.5,
+                                "phenotype": "phenotype1",
+                                "people_roles": [
+                                    "prb",
+                                    "sib"
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "roles": [
+                    "prb",
+                    "sib"
+                ]
+            },
+            {
+                "rows": [
+                    {
+                        "effect_type": "Frame-shift",
+                        "row": [
+                            {
+                                "events_people_count": 0,
+                                "events_people_percent": 0,
+                                "events_count": 0,
+                                "events_rate_per_child": 0,
+                                "phenotype": "unaffected",
+                                "people_roles": [
+                                    "mom",
+                                    "dad"
+                                ]
+                            },
+                            {
+                                "events_people_count": 0,
+                                "events_people_percent": 0,
+                                "events_count": 0,
+                                "events_rate_per_child": 0,
+                                "phenotype": "phenotype2",
+                                "people_roles": [
+                                    "mom",
+                                    "dad"
+                                ]
+                            },
+                            {
+                                "events_people_count": 0,
+                                "events_people_percent": 0,
+                                "events_count": 0,
+                                "events_rate_per_child": 0,
+                                "phenotype": "phenotype1",
+                                "people_roles": [
+                                    "mom",
+                                    "dad"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "effect_type": "Missense",
+                        "row": [
+                            {
+                                "events_people_count": 0,
+                                "events_people_percent": 0,
+                                "events_count": 0,
+                                "events_rate_per_child": 0,
+                                "phenotype": "unaffected",
+                                "people_roles": [
+                                    "mom",
+                                    "dad"
+                                ]
+                            },
+                            {
+                                "events_people_count": 0,
+                                "events_people_percent": 0,
+                                "events_count": 0,
+                                "events_rate_per_child": 0,
+                                "phenotype": "phenotype2",
+                                "people_roles": [
+                                    "mom",
+                                    "dad"
+                                ]
+                            },
+                            {
+                                "events_people_count": 0,
+                                "events_people_percent": 0,
+                                "events_count": 0,
+                                "events_rate_per_child": 0,
+                                "phenotype": "phenotype1",
+                                "people_roles": [
+                                    "mom",
+                                    "dad"
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "roles": [
+                    "mom",
+                    "dad"
+                ]
+            }
+        ]
+    },
+    "study_name": "Study3",
+    "phenotype": "unaffected,phenotype2,phenotype1",
+    "study_type": "WE",
+    "study_year": null,
+    "pub_med": null,
+    "families": 2,
+    "number_of_probands": 2,
+    "number_of_siblings": 1,
+    "denovo": true,
+    "transmitted": false,
+    "study_description": "Study 3",
+    "is_downloadable": true
+}

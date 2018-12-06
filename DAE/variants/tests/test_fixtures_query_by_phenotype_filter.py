@@ -7,18 +7,19 @@ import pytest
     # "variants_df",
     "variants_thrift",
 ])
-@pytest.mark.parametrize("fixture_name,phenotype,count", [
-    ("fixtures/effects_trio_dad", 'autism', 2),
-    ("fixtures/effects_trio_dad", 'unaffected', 2),
-    ("fixtures/effects_trio_dad", 'schizophrenia', 0)
+@pytest.mark.parametrize("fixture_name,phenotypes,count", [
+    ("fixtures/effects_trio_dad", ['autism'], 0),
+    ("fixtures/effects_trio_dad", ['unaffected', 'autism'], 2),
+    ("fixtures/effects_trio_dad", ['unaffected'], 2),
+    ("fixtures/effects_trio_dad", ['schizophrenia'], 0)
 ])
-def test_fixture_query_by_sex(
-        variants_impl, variants, fixture_name, phenotype, count):
+def test_fixture_query_by_phenotype(
+        variants_impl, variants, fixture_name, phenotypes, count):
     vvars = variants_impl(variants)(fixture_name)
     # vvars = variants_df(fixture_name)
     assert vvars is not None
 
     vs = vvars.query_variants(
-        pedigreeSelector={'checkedValues': [phenotype], 'source': 'phenotype'})
+        pedigreeSelector={'checkedValues': phenotypes, 'source': 'phenotype'})
     vs = list(vs)
     assert len(vs) == count

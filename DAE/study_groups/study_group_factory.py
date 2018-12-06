@@ -42,6 +42,7 @@ class StudyGroupFactory(object):
 
         return self._class(
             study_group_config.name,
+            study_group_config.description,
             studies
         )
 

@@ -18,6 +18,7 @@ class StudyConfig(ConfigurableEntityConfig):
         super(StudyConfig, self).__init__(config, *args, **kwargs)
         assert 'prefix' in self
         assert self.study_name
+        assert 'description' in self
         assert self.type
         assert self.type in StudyFactory.STUDY_TYPES.keys()
         assert self.work_dir
@@ -53,4 +54,5 @@ class StudyConfig(ConfigurableEntityConfig):
             'hasCNV': 'no',
             'hasDenovo': 'no',
             'hasTransmitted': 'no',
+            'description': '',
         }

@@ -9,6 +9,7 @@ class StudyGroupConfig(ConfigurableEntityConfig):
         assert self.name
         assert self.enabled
         assert self.studies
+        assert 'description' in self
         self.studies = self.list('studies')
 
     @classmethod
@@ -21,3 +22,9 @@ class StudyGroupConfig(ConfigurableEntityConfig):
             study_group_config['enabled'] = True
 
         return StudyGroupConfig(study_group_config)
+
+    @staticmethod
+    def get_default_values():
+        return {
+            'description': '',
+        }

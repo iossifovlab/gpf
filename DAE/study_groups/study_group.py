@@ -12,61 +12,53 @@ from variants.attributes_query import role_query, variant_type_converter, \
 
 class StudyGroup(object):
 
-    def __init__(self, name, studies):
+    def __init__(self, name, description, studies):
         self.studies = studies
         self.name = name
+        self.description = description
         self.phenotypes = functools.reduce(
             lambda acc, study: acc | study.phenotypes, studies, set())
 
-        self._study_names = ",".join(study.name for study in self.studies)
-        self._has_denovo = any([study.has_denovo for study in self.studies])
-        self._has_transmitted =\
+        self.study_names = ",".join(study.name for study in self.studies)
+        self.has_denovo = any([study.has_denovo for study in self.studies])
+        self.has_transmitted =\
             any([study.has_transmitted for study in self.studies])
-        self._has_complex = any([study.has_complex for study in self.studies])
-        self._has_CNV = any([study.has_CNV for study in self.studies])
+        self.has_complex = any([study.has_complex for study in self.studies])
+        self.has_CNV = any([study.has_CNV for study in self.studies])
         study_types = set([study.study_type for study in self.studies
                            if study.study_type is not None])
-        self._study_types = study_types if len(study_types) != 0 else None
-        self._has_study_types = True if len(study_types) != 0 else False
+        self.study_types = study_types if len(study_types) != 0 else None
+        years = set([study.year for study in self.studies
+                     if study.year is not None])
+        self.years = years if len(years) != 0 else None
+        pub_meds = set([study.pub_med for study in self.studies
+                        if study.pub_med is not None])
+        self.pub_meds = pub_meds if len(pub_meds) != 0 else None
+        self.has_study_types = True if len(study_types) != 0 else False
 
-    def get_variants(self, **kwargs):
+    def query_variants(self, **kwargs):
         return itertools.chain(*[
             study.query_variants(**kwargs) for study in self.studies])
 
-    def get_phenotype_values(self, pheno_column):
+    def get_phenotype_values(self, pheno_column='phenotype'):
         result = set()
         for study in self.studies:
             result.update(study.get_phenotype_values(pheno_column))
 
         return result
 
-    @property
-    def study_names(self):
-        return self._study_names
+    def combine_families(self, first, second):
+        same_families = set(first.keys()) & set(second.keys())
+        combined_dict = {**first, **second}
+        for sf in same_families:
+            combined_dict[sf] =\
+                first[sf] if len(first[sf]) > len(second[sf]) else second[sf]
+        return combined_dict
 
     @property
-    def has_denovo(self):
-        return self._has_denovo
-
-    @property
-    def has_transmitted(self):
-        return self._has_transmitted
-
-    @property
-    def has_complex(self):
-        return self._has_complex
-
-    @property
-    def has_CNV(self):
-        return self._has_CNV
-
-    @property
-    def study_types(self):
-        return self._study_types
-
-    @property
-    def has_study_types(self):
-        return self._has_study_types
+    def families(self):
+        return functools.reduce(lambda x, y: self.combine_families(x, y),
+                                [study.families for study in self.studies])
 
 
 class StudyGroupWrapper(StudyGroup):
@@ -90,7 +82,7 @@ class StudyGroupWrapper(StudyGroup):
     # minParentsCalled
     # ultraRareOnly
     # TMM_ALL
-    def get_variants(self, **kwargs):
+    def query_variants(self, **kwargs):
         print("kwargs in study group:", kwargs)
         limit = None
         if 'limit' in kwargs:
@@ -129,7 +121,7 @@ class StudyGroupWrapper(StudyGroup):
             kwargs['effect_types'] = expand_effect_types(kwargs['effect_types'])
 
         return itertools.islice(
-            super(StudyGroupWrapper, self).get_variants(**kwargs), limit)
+            super(StudyGroupWrapper, self).query_variants(**kwargs), limit)
 
     def _transform_min_max_alt_frequency(self, kwargs):
         min_value = None

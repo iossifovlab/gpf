@@ -86,7 +86,7 @@ Q = """
         S.allele_index = F.allele_index
     LEFT JOIN parquet.`{pedigree}` AS P
     ON
-        P.familyId = F.family_id
+        P.familyId = F.family_id AND array_contains(F.variant_in_members, P.personId)
 """
 
 

@@ -127,10 +127,8 @@ class EffectTypesMixin(object):
         return list(itertools.chain.from_iterable(etl))
 
     def build_effect_types(self, effect_types, safe=True):
-        if isinstance(effect_types, str) or \
-                isinstance(effect_types, str):
-            effect_types = effect_types.replace(',', ' ')
-            effect_types = effect_types.split()
+        if isinstance(effect_types, str):
+            effect_types = effect_types.split(',')
         etl = [et.strip() for et in effect_types]
         etl = self._build_effect_types_groups(etl)
         etl = self._build_effect_types_list(etl)
@@ -141,10 +139,8 @@ class EffectTypesMixin(object):
         return etl
 
     def build_effect_types_naming(self, effect_types, safe=True):
-        if isinstance(effect_types, str) or \
-                isinstance(effect_types, str):
-            effect_types = effect_types.replace(',', ' ')
-            effect_types = effect_types.split()
+        if isinstance(effect_types, str):
+            effect_types = effect_types.split(',')
         assert isinstance(effect_types, list)
         if safe:
             assert all([

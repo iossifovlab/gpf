@@ -1,55 +1,60 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from __future__ import division
-import optparse
+from builtins import map, zip
+
+import argparse
 import sys
 import os
 from cyvcf2 import VCF
 import numpy as np
-from collections import namedtuple, defaultdict, OrderedDict
-from itertools import izip, groupby, imap
-import itertools
-import variantFormat as vrtF
-from ped2NucFam import *
-import vrtIOutil as vIO
-import heapq
+from itertools import groupby
+
+from ped2NucFam import procFamInfo, printFamData
+# import heapq
 import time
 import re
+# import toolz
+
+from utils.vcf_utils import cshl_format, trim_str_back
+from DAE import genomesDB as genomes_db
+
 # add more data on fam Info
 
 
-def merge(key, *iterables):
-    h = []
-    h_append = h.append
+# def merge(key, *iterables):
+#     h = []
+#     h_append = h.append
 
-    _heapify = heapq.heapify
-    _heappop = heapq.heappop
-    _heapreplace = heapq.heapreplace
+#     _heapify = heapq.heapify
+#     _heappop = heapq.heappop
+#     _heapreplace = heapq.heapreplace
 
-    for order, it in enumerate(map(iter, iterables)):
-        try:
-            next = it.next
-            value = next()
-            h_append([key(value), order, value, next])
-        except StopIteration:
-            pass
-    _heapify(h)
-    while len(h) > 1:
-        try:
-            while True:
-                key_value, order, value, next = s = h[0]
-                yield value
-                value = next()
-                s[0] = key(value)
-                s[2] = value
-                _heapreplace(h, s)
-        except StopIteration:
-            _heappop(h)
-    if h:
-        key_value, order, value, next = h[0]
-        yield value
-        for v in next.__self__:
-            yield v
+#     for order, it in enumerate(map(iter, iterables)):
+#         try:
+#             next = it.next
+#             value = next()
+#             h_append([key(value), order, value, next])
+#         except StopIteration:
+#             pass
+#     _heapify(h)
+#     while len(h) > 1:
+#         try:
+#             while True:
+#                 key_value, order, value, next = s = h[0]
+#                 yield value
+#                 value = next()
+#                 s[0] = key(value)
+#                 s[2] = value
+#                 _heapreplace(h, s)
+#         except StopIteration:
+#             _heappop(h)
+#     if h:
+#         key_value, order, value, next = h[0]
+#         yield value
+#         for v in next.__self__:
+#             yield v
 
 
 class Batch:
@@ -69,10 +74,10 @@ class Batch:
             familyInfo = fInfo[familyId]
             family = Family(familyInfo)
 
-            indicies = []
+            # indicies = []
             for personId in familyInfo['ids']:
                 self.individualToFamily[personId] = family
-            
+
             family.set_indicies(individualToIndex)
 
     def __iter__(self):
@@ -82,13 +87,15 @@ class Batch:
                 'variant': x
             }
         if self.region is not None:
-            return imap(add_self, self.vf(self.region).__iter__())
-        return imap(add_self, self.vf.__iter__())
+            return map(add_self, self.vf(self.region).__iter__())
+        return map(add_self, self.vf.__iter__())
 
 
 class Family:
     def __init__(self, familyInfo):
         self.familyInfo = familyInfo
+        self.pars_x_check = genomes_db.get_pars_x_test()
+        self.pars_y_check = genomes_db.get_pars_y_test()
 
     def is_mendelian(self, arr):
         if ((arr[2] == arr[0] or arr[3] == arr[0]) and
@@ -147,35 +154,43 @@ class Family:
 
         self.parent_indicies = np.array(parent_indicies)
 
-    def is_autosomal_region(self, variant):
-        if variant.CHROM == 'chrX':
-            if variant.start >= 10000 and variant.end <= 2781479:
-                return True
-            if variant.start >= 155701382 and variant.end <= 156030895:
-                return True
-            return False
-        if variant.CHROM == 'chrY':
-            if variant.start >= 10000 and variant.end <= 2781479:
-                return True
-            if variant.start >= 56887902 and variant.end <= 57217415:
-                return True
-            return False
+    def is_autosomal_region(self, chrom, variant):
+        if chrom.endswith('X'):
+            return self.pars_x_check(chrom, variant.POS)
+        if chrom.endswith('Y'):
+            return self.pars_y_check(chrom, variant.POS)
         return True
+        # if variant.CHROM == 'chrX':
+        #     if variant.start >= 10000 and variant.end <= 2781479:
+        #         return True
+        #     if variant.start >= 155701382 and variant.end <= 156030895:
+        #         return True
+        #     return False
+        # if variant.CHROM == 'chrY':
+        #     if variant.start >= 10000 and variant.end <= 2781479:
+        #         return True
+        #     if variant.start >= 56887902 and variant.end <= 57217415:
+        #         return True
+        #     return False
+        # return True
 
-    def is_denovo(self, variant):
+    def is_denovo(self, chrom, variant):
         for isChildMale, family in self.families:
             arr = variant.gt_idxs[family]
 
             if isChildMale:
-                if self.is_autosomal_region(variant):
+                if self.is_autosomal_region(chrom, variant):
                     if not self.is_mendelian(arr):
                         return True
-                elif variant.CHROM == 'chrX' and not self.is_mendelian_male_X(arr):
-                        return True
-                elif variant.CHROM == 'chrY' and not self.is_mendelian_male_Y(arr):
-                        return True
+                elif chrom.endswith('X') and \
+                        not self.is_mendelian_male_X(arr):
+                    return True
+                elif chrom.endswith('Y') and \
+                        not self.is_mendelian_male_Y(arr):
+                    return True
             else:
-                if variant.CHROM == 'chrY' and not self.is_mendelian(arr):
+                if chrom.endswith('Y') and \
+                        not self.is_mendelian(arr):
                     return True
         return False
 
@@ -252,7 +267,7 @@ class Family:
 
                 if addSum > 0:
                     additional = True
-        
+
         if additional:
             addCnt = ' '.join(addCnt)
             return "{}/{}/{}".format(refCnt, altCnt, addCnt)
@@ -262,7 +277,7 @@ class Family:
 def makeFamInfoConv(fInfo, pInfo):
     for k, v in fInfo.items():
         lx = len(v['ids'])
-        sx = numpy.zeros((lx,), dtype=numpy.int)
+        sx = np.zeros((lx,), dtype=np.int)
         for n, mx in enumerate(v['newIds']):
             s = pInfo[mx].sex
             if s == '1':
@@ -270,13 +285,13 @@ def makeFamInfoConv(fInfo, pInfo):
         v['isMale'] = sx
 
         cl = len(v['famaIndex'])
-        idxMF = numpy.zeros((cl, 3,), dtype=numpy.int)
-        nC = range(lx)
+        idxMF = np.zeros((cl, 3,), dtype=np.int)
+        nC = list(range(lx))
         for n, (a, b) in enumerate(v['famaIndex'].items()):
             idxMF[n, :] = [a, b.fa, b.ma]
             nC.remove(a)
         v['iFM'] = idxMF
-        v['notChild'] = numpy.array(nC)
+        v['notChild'] = np.array(nC)
 
     # print fInfo
 
@@ -295,7 +310,7 @@ def famInVCF(fInfo, vcf):
             mm.append(sm)
 
         if flag:
-            #print >> sys.stderr, '\t'.join(
+            # print >> sys.stderr, '\t'.join(
             #    ['family',  fid, 'notComplete', 'missing', ','.join(mm)])
             continue
 
@@ -304,47 +319,92 @@ def famInVCF(fInfo, vcf):
     return fam
 
 
-def digitP(x): 
+def digitP(x):
     return '{:.4f}'.format(x)
 
 
+def vcf2cshlFormat2(pos, ref, alts):
+    vrt, pxx = list(), list()
+    for alt in alts:
+        p, v, _ = cshl_format(pos, ref, alt, trimmer=trim_str_back)
+
+        pxx.append(p)
+        vrt.append(v)
+
+    return pxx, vrt
+
+
 def main():
+
     start_time = time.time()
     # svip.ped
-    #svip-FB-vars.vcf.gz, svip-PL-vars.vcf.gz, svip-JHC-vars.vcf.gz
-    #pfile, dfile = 'data/svip.ped', 'data/svip-FB-vars.vcf.gz'
-    usage = "usage: %prog [options]"
-    parser = optparse.OptionParser(usage=usage)
-    parser.add_option("-p", "--pedFile", dest="pedFile", default="data/svip.ped",
-                      metavar="pedFile", help="pedigree file and family-name should be mother and father combination, not PED format")
-    parser.add_option("-d", "--dataFile", dest="dataFile", default="data/svip-FB-vars.vcf.gz",
-                      metavar="dataFile", help="VCF format variant file")
+    # svip-FB-vars.vcf.gz, svip-PL-vars.vcf.gz, svip-JHC-vars.vcf.gz
+    # pfile, dfile = 'data/svip.ped', 'data/svip-FB-vars.vcf.gz'
 
-    parser.add_option("-x", "--project", dest="project", default="VIP",
-                      metavar="project", help="project name [defualt:VIP")
-    parser.add_option("-l", "--lab", dest="lab", default="SF",
-                      metavar="lab", help="lab name [defualt:SF")
+    parser = argparse.ArgumentParser(
+        description="converts list of VCF files to DAE transmitted varaints")
 
-    parser.add_option("-o", "--outputPrefix", dest="outputPrefix", default="transmission",
-                      metavar="outputPrefix", help="prefix of output transmission file")
+    parser.add_argument(
+        'pedigree', type=str,
+        metavar='<pedigree filename>',
+        help='families file in pedigree format'
+    )
+    parser.add_argument(
+        'vcf', type=str,
+        metavar='<VCF filename>',
+        help='VCF file to import'
+    )
 
-    parser.add_option("-m", "--minPercentOfGenotypeSamples", dest="minPercentOfGenotypeSamples", type=float, default=25.,
-                      metavar="minPercentOfGenotypeSamples", help="threshold percentage of gentyped samples to printout [default: 25]")
-    parser.add_option("-t", "--tooManyThresholdFamilies", dest="tooManyThresholdFamilies", type=int, default=10,
-                      metavar="tooManyThresholdFamilies", help="threshold for TOOMANY to printout [defaylt: 10]")
+    parser.add_argument(
+        "-x", "--project", dest="project", default="VIP",
+        metavar="project", help="project name")
+    parser.add_argument(
+        "-l", "--lab", dest="lab", default="SF",
+        metavar="lab", help="lab name")
 
-    parser.add_option("-s", "--missingInfoAsNone", action="store_true", dest="missingInfoAsNone", default=False,
-                      metavar="missingInfoAsNone", help="missing sample Genotype will be filled with 'None' for many VCF files input")
-    
-    parser.add_option("-r", "--region", dest="region", default=None,
-                      metavar="region", help="parse only selected region")
+    parser.add_argument(
+        "-o", "--outputPrefix", dest="outputPrefix", default="transmission",
+        metavar="outputPrefix", help="prefix of output transmission file")
 
-    ox, args = parser.parse_args()
-    pfile, dfile = ox.pedFile, ox.dataFile
+    parser.add_argument(
+        "-m", "--minPercentOfGenotypeSamples",
+        dest="minPercentOfGenotypeSamples", type=float, default=25.,
+        metavar="minPercentOfGenotypeSamples",
+        help="threshold percentage of gentyped samples to printout "
+        "[default: 25]")
+    parser.add_argument(
+        "-t", "--tooManyThresholdFamilies", dest="tooManyThresholdFamilies",
+        type=int, default=10,
+        metavar="tooManyThresholdFamilies", 
+        help="threshold for TOOMANY to printout [defaylt: 10]")
 
-    missingInfoAsRef = True
-    if ox.missingInfoAsNone:
-        missingInfoAsRef = False  # ; print NNN
+    parser.add_argument(
+        "-s", "--missingInfoAsNone", action="store_true", 
+        dest="missingInfoAsNone", default=False,
+        help="missing sample Genotype will be filled with 'None' for many "
+        "VCF files input")
+
+    parser.add_argument(
+        "--chr", action="store_true", 
+        dest="prepend_chr", default=False,
+        help="adds prefix to 'chr' to contig names")
+
+    parser.add_argument(
+        "--nochr", action="store_true", 
+        dest="remove_chr", default=False,
+        help="removes prefix to 'chr' from contig names")
+
+    parser.add_argument(
+        "-r", "--region", dest="region", default=None,
+        metavar="region", help="parse only selected region")
+
+    args = parser.parse_args()
+    pfile = args.pedigree
+    dfile = args.vcf
+
+    # missingInfoAsRef = True
+    # if ox.missingInfoAsNone:
+    #     missingInfoAsRef = False  # ; print NNN
 
     # print famFile
     # fInfo: each fam has mom, dad and child personal ID, old and new Ids
@@ -353,46 +413,79 @@ def main():
     # add more info to fInfo such as
     #    notChild: who is not children
     #    iFM     : fa and ma index for each child in families
-    #    isMale  : sex info in the order of ids and newIds (they have the same order)
+    #    isMale  : sex info in the order of ids and newIds
+    #               (they have the same order)
     makeFamInfoConv(fInfo, pInfo)
 
-    if os.path.isfile(ox.outputPrefix + '.txt'):
-        print >> sys.stderr, ox.outputPrefix + '.txt: already exist'
+    if os.path.isfile(args.outputPrefix + '.txt'):
+        print(
+            args.outputPrefix + '.txt: already exist',
+            file=sys.stderr)
         exit(1)
 
     # setup to print transmission files
-    OUT = ox.outputPrefix + '.txt'
-    TOOMANY = ox.outputPrefix + '-TOOMANY.txt'
+    OUT = args.outputPrefix + '.txt'
+    TOOMANY = args.outputPrefix + '-TOOMANY.txt'
 
     output_count = 0
     start_region = None
-    if ox.region is not None:
-        start_region = int(re.match("chr([0-9X]+):([0-9]+)-([0-9]+)", ox.region).group(2))
+    if args.region is not None:
+        start_region = int(re.match(
+            "chr([0-9X]+):([0-9]+)-([0-9]+)", args.region).group(2))
 
     with open(OUT, 'w') as out, open(TOOMANY, 'w') as outTOOMANY:
-        print >> out, '\t'.join(
-            'chr,position,variant,familyData,all.nParCalled,all.prcntParCalled,all.nAltAlls,all.altFreq'.split(','))
-        print >> outTOOMANY, '\t'.join(
-            'chr,position,variant,familyData'.split(','))
+        print(
+            '\t'.join(
+                'chr,position,variant,familyData,all.nParCalled,'
+                'all.prcntParCalled,all.nAltAlls,all.altFreq'.split(',')),
+            file=out)
+        print(
+            '\t'.join(
+                'chr,position,variant,familyData'.split(',')),
+            file=outTOOMANY)
 
-        batches = [Batch(f, fInfo, ox.region) for f in dfile.split(",")]
+        batches = [Batch(f, fInfo, args.region) for f in dfile.split(",")]
         fam = [item for f in batches for item in f.fam]
         fam_count = len(fam)
 
         # # print family Info in a format
-        FAMOUT = ox.outputPrefix + '-families.txt'
+        FAMOUT = args.outputPrefix + '-families.txt'
 
         # FIXME: Do not reduce families because some people are not sequenced
         # printFamData(fInfo, pInfo, proj=ox.project, lab=ox.lab,
         #              listFam=fam, out=open(FAMOUT, 'w'))
-        printFamData(fInfo, pInfo, proj=ox.project, lab=ox.lab,
+        printFamData(fInfo, pInfo, proj=args.project, lab=args.lab,
                      listFam=[], out=open(FAMOUT, 'w'))
 
         def keyfunc(variant):
             return (variant['variant'].CHROM, variant['variant'].POS)
-    
-        for key, group in groupby(merge(keyfunc, *batches), keyfunc):
+
+        if len(batches) == 1:
+            batch_stream = batches[0]
+        else:
+            # batch_stream = toolz.merge_sorted(batches, keyfunc)
+            assert False, 'multiple batches not supported at the moment'
+
+        if args.prepend_chr:
+            assert not args.remove_chr
+
+            def contig_fixer(chrom):
+                return "chr{}".format(chrom)
+        elif args.remove_chr:
+
+            def contig_fixer(chrom):
+                if chrom.startswith("chr"):
+                    return chrom[3:]
+                else:
+                    return chrom
+
+        else:
+            def contig_fixer(chrom):
+                return chrom
+
+        for key, group in groupby(batch_stream, keyfunc):
             chrom, pos = key
+            chrom = contig_fixer(chrom)
 
             if start_region is not None and start_region > pos:
                 continue
@@ -414,7 +507,8 @@ def main():
                     variant['variant'].gt_types == 1,
                     variant['variant'].gt_types == 3))
 
-                interestingIds = variant['batch'].samples_arr[interestingIndexes]
+                interestingIds = variant['batch'].\
+                    samples_arr[interestingIndexes]
                 interestingFamilies = {individualToFamily[individual]
                                        for individual in interestingIds
                                        if individual in individualToFamily}
@@ -425,24 +519,30 @@ def main():
                                    if individual in individualToFamily}
                 allMissingFamilies |= missingFamilies
 
-                families = [family
-                            for family in sorted(interestingFamilies - missingFamilies,
-                                                 key=lambda(x): x.familyInfo['newFid'])
-                            if not family.is_denovo(variant['variant'])]
+                families = [
+                    family
+                    for family in sorted(
+                        interestingFamilies - missingFamilies,
+                        key=lambda x: x.familyInfo['newFid'])
+                    if not family.is_denovo(chrom, variant['variant'])]
                 allFamilies.extend(families)
 
-                px, vx = vrtF.vcf2cshlFormat2(variant['variant'].POS,
-                                              variant['variant'].REF,
-                                              variant['variant'].ALT)
+                px, vx = vcf2cshlFormat2(
+                    variant['variant'].POS,
+                    variant['variant'].REF,
+                    variant['variant'].ALT)
 
-                for n, (p, v) in enumerate(izip(px, vx)):
+                for n, (p, v) in enumerate(zip(px, vx)):
                     variants.append((n, p, v, variant, families))
 
             pgt = (1 - missingCount / (4 * fam_count)) * 100
-            if pgt < ox.minPercentOfGenotypeSamples:
+            if pgt < args.minPercentOfGenotypeSamples:
                 continue
 
-            for key, group in groupby(sorted(variants, key=lambda x: (x[1], x[2])), lambda x: (x[1], x[2])):
+            for key, group in groupby(
+                    sorted(
+                        variants,
+                        key=lambda x: (x[1], x[2])), lambda x: (x[1], x[2])):
                 p, v = key
 
                 if v.find('*') >= 0:
@@ -457,29 +557,38 @@ def main():
                     for family in families:
                         familyInfo = family.familyInfo
 
-                        if not family.variant_present(variant['variant'], n + 1):
+                        if not family.variant_present(
+                                variant['variant'], n + 1):
                             continue
 
-                        GT = family.generate_gt(variant['variant'], n + 1)
-                        cnt = family.generate_cnt(variant['variant'], n + 1, altsCount)
+                        GT = family.generate_gt(
+                            variant['variant'], n + 1)
+                        cnt = family.generate_cnt(
+                            variant['variant'], n + 1, altsCount)
 
                         cnt_in_parent += family.variant_present_in_parent(
                             variant['variant'], n + 1)
                         output.append((familyInfo['newFid'], GT, cnt))
                 if len(output) < 1:
                     continue
-                
-                l = len(output)
-                strx = ["{}:{}:{}".format(familyId, GT, cnt)
-                        for familyId, GT, cnt in sorted(output, key=lambda x: x[0])]
+
+                ll = len(output)
+                strx = [
+                    "{}:{}:{}".format(familyId, gt, count)
+                    for familyId, gt, count in sorted(
+                        output, key=lambda x: x[0])
+                ]
                 strx = ';'.join(strx)
-                
+
                 # print strx
-                dnv_count = len(allIterestingFamilies - allMissingFamilies) - len(allFamilies)
+                dnv_count = len(allIterestingFamilies - allMissingFamilies) - \
+                    len(allFamilies)
                 count = fam_count - len(allMissingFamilies)
 
                 tAll = 4 * len(allFamilies)
-                tAll += 4 * (fam_count - len(allMissingFamilies) - len(allIterestingFamilies - allMissingFamilies))
+                tAll += 4 * (
+                    fam_count - len(allMissingFamilies) -
+                    len(allIterestingFamilies - allMissingFamilies))
                 nPC = (count - dnv_count) * 2
 
                 nPcntC = (count - dnv_count) / fam_count * 100
@@ -489,25 +598,37 @@ def main():
                 output_count += 1
 
                 if v.startswith('complex'):
-                    print >> sys.stdout, '\t'.join([chrom, str(p), v, strx, str(
-                        nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)])
+                    print(
+                        '\t'.join([chrom, str(p), v, strx, str(
+                            nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)]),
+                        file=out)
                     continue
 
-                if l >= ox.tooManyThresholdFamilies:
-                    print >> out, '\t'.join([chrom, str(p), v, 'TOOMANY', str(
-                        nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)])
-                    print >> outTOOMANY, '\t'.join([chrom, str(p), v, strx])
+                if ll >= args.tooManyThresholdFamilies:
+                    print(
+                        '\t'.join([chrom, str(p), v, 'TOOMANY', str(
+                            nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)]),
+                        file=out)
+                    print(
+                        '\t'.join([chrom, str(p), v, strx]),
+                        file=outTOOMANY)
                 else:
-                    print >> out, '\t'.join([chrom, str(p), v, strx, str(
-                        nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)])
-                
+                    print(
+                        '\t'.join([chrom, str(p), v, strx, str(
+                            nPC), digitP(nPcntC), str(cAlt), digitP(freqAlt)]),
+                        file=out)
+
                 if output_count % 1000 == 0:
-                    sys.stdout.write("\r%d records ok time: %d secs" % (output_count, time.time() - start_time))
+                    sys.stdout.write(
+                        "\n%d records ok time: %d secs" % 
+                        (output_count, time.time() - start_time))
                     sys.stdout.flush()
-    
-    sys.stdout.write("\rDone: %d records ok time: %d secs\n" % (output_count, time.time() - start_time))
+
+    sys.stdout.write(
+        "\nDone: %d records ok time: %d secs\n" %
+        (output_count, time.time() - start_time))
     sys.stdout.flush()
+
 
 if __name__ == "__main__":
     main()
-

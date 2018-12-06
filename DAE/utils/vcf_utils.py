@@ -51,7 +51,7 @@ def reference_genotype(size):
     return np.zeros(shape=(2, size), dtype=GENOTYPE_TYPE)
 
 
-def trim_str(pos, ref, alt):
+def trim_str_front(pos, ref, alt):
     for n, s in enumerate(zip(ref, alt)):
         if s[0] != s[1]:
             break
@@ -85,8 +85,34 @@ def trim_str(pos, ref, alt):
     return pos, r, a
 
 
-def cshl_format(pos, ref, alt):
-    p, r, a = trim_str(pos, ref, alt)
+def trim_str_back(pos, ref, alt):
+    for n, s in enumerate(zip(ref[::-1], alt[::-1])):
+        if s[0] != s[1]:
+            break
+    # not made simple
+    if ref[-(n+1)] == alt[-(n+1)]:
+        r, a = ref[:-(n+1)], alt[:-(n+1)]
+    else:
+        if n == 0:
+            r, a = ref[:], alt[:]
+        else:
+            r, a = ref[:-n], alt[:-n]
+
+    if len(r) == 0 or len(a) == 0:
+        return pos, r, a
+
+    for n, s in enumerate(zip(r, a)):
+        if s[0] != s[1]:
+            break
+
+    if r[n] == a[n]:
+        return pos+n+1, r[n+1:], a[n+1:]
+
+    return pos+n, r[n:], a[n:]
+
+
+def cshl_format(pos, ref, alt, trimmer=trim_str_back):
+    p, r, a = trimmer(pos, ref, alt)
     if len(r) == len(a) and len(r) == 0:
         # print('ref {:s} is the same as alt {:s}'.format(
         #     ref, alt), file=sys.stderr)
@@ -112,3 +138,4 @@ def vcf2cshl(pos, ref, alt):
     vp, vt, vl = cshl_format(pos, ref, alt)
 
     return vp, vt, vl
+
