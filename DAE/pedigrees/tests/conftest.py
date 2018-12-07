@@ -230,8 +230,10 @@ def layout_positions2(member4, member5, member6):
 @pytest.fixture(scope='session')
 def loaded_layout2(layout_positions2):
     layout = Layout()
+
     layout.positions = layout_positions2
     layout.lines =\
-        '[[(71.0,110.5) - (50.0,60.5)], [(60.5,110.5) - (60.5,125.5)], '\
-        '[(110.5,75.0) - (110.5,70.5)]]'
+        ['[(71.0,110.5) - (50.0,60.5)]', '[(60.5,110.5) - (60.5,125.5)]',
+         '[(110.5,75.0) - (110.5,70.5)]']
+
     return layout
