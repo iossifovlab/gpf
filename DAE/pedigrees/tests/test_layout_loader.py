@@ -25,6 +25,4 @@ def test_load(layout_loader1, layout_loader2, loaded_layout2):
     positions2 = layout_loader2.load()
 
     assert positions1 is None
-    assert sorted(list(map(str, positions2.lines))) ==\
-        sorted(loaded_layout2.lines)
     assert_positions(loaded_layout2.positions, positions2.positions)
