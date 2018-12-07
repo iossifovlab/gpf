@@ -4,6 +4,7 @@ from io import StringIO
 import csv
 
 from pedigrees.layout_saver import LayoutSaver
+from pedigrees.layout_loader import LayoutLoader
 from pedigrees.pedigrees import Pedigree, PedigreeMember, Individual
 from pedigrees.layout import IndividualWithCoordinates, Layout
 from utils.fixtures import path_to_fixtures as _path_to_fixtures
@@ -152,7 +153,7 @@ def people2(member4, member5, member6):
 
 
 @pytest.fixture(scope='session')
-def layout1(member4, member5, member6):
+def layout2(member4, member5, member6):
     layout = Layout()
     layout._id_to_position = {
         Individual(member=member4): IndividualWithCoordinates(
@@ -205,3 +206,32 @@ fam2\tmom2\t0\t0\t2\t1\tmother\t1:50.0,50.0\t
 fam3\tid3\tdad3\tmom3\t2\t2\tprb\t\t
 fam1\tdad1\t0\t0\t1\t1\t\tError\t1
 """
+
+
+@pytest.fixture
+def layout_loader1(family1):
+    return LayoutLoader(family1)
+
+
+@pytest.fixture
+def layout_loader2(family2):
+    return LayoutLoader(family2)
+
+
+@pytest.fixture(scope='session')
+def layout_positions2(member4, member5, member6):
+    return [
+        [IndividualWithCoordinates(Individual(member=member6), 50.0, 100.0),
+         IndividualWithCoordinates(Individual(member=member5), 50.0, 50.0)],
+        [IndividualWithCoordinates(Individual(member=member4), 100.0, 75.0)]
+    ]
+
+
+@pytest.fixture(scope='session')
+def loaded_layout2(layout_positions2):
+    layout = Layout()
+    layout.positions = layout_positions2
+    layout.lines =\
+        '[[(71.0,110.5) - (50.0,60.5)], [(60.5,110.5) - (60.5,125.5)], '\
+        '[(110.5,75.0) - (110.5,70.5)]]'
+    return layout

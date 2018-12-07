@@ -22,7 +22,7 @@ def save_pedigree(family):
     intervals = SandwichSolver.solve(sandwich_instance)
 
     if intervals is None:
-        print(families[family].family_id)
+        print(family.family_id)
         print("No intervals")
         return (family, "No intervals")
     if intervals:
