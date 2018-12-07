@@ -5,13 +5,11 @@ Created on Apr 16, 2018
 '''
 from __future__ import print_function
 from __future__ import unicode_literals
-from gene.gene_set_collections import DenovoGeneSetsCollection,\
-    MetaDenovoGeneSetsCollection
 
 import pytest
 
-# pytestmark = pytest.mark.skip('depends on real data')
-pytestmark = pytest.mark.usefixtures("gene_info_cache_dir")
+pytestmark = pytest.mark.skip('removed used interface')
+# pytestmark = pytest.mark.usefixtures("gene_info_cache_dir")
 
 """
 Denovo Gene Sets are configured into 'geneInfo.conf'. There is a section

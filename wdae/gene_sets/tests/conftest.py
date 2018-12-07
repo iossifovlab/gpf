@@ -69,9 +69,7 @@ def datasets_from_fixtures(db, settings):
     old_dataset_path = os.environ['DAE_DATA_DIR']
 
     os.environ['DAE_DATA_DIR'] = path_to_fixtures()
-
     print("REPLACING DAE_DATA_DIR")
-
     get_datasets_manager().reload_dataset_facade()
 
     yield
@@ -81,6 +79,11 @@ def datasets_from_fixtures(db, settings):
 
 @pytest.fixture(scope='session')
 def gene_info_cache_dir():
+    fixtures_dir = path_to_fixtures()
+    module_dir = os.path.dirname(fixtures_dir)
+    if not os.path.exists(module_dir):
+        raise EnvironmentError(
+            'Module "{}" does not exist..'.format(module_dir))
     cache_dir = path_to_fixtures('geneInfo', 'cache')
     shutil.rmtree(cache_dir, ignore_errors=True)
     assert not os.path.exists(cache_dir)

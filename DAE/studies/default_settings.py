@@ -12,7 +12,7 @@ def get_config():
     }
     result["COMMON_REPORTS_DIR"] = os.environ.get(
         "DATA_STUDIES_COMMON_REPORTS_DIR",
-        result.get('DATA_DIR'), "commonReports")
+        os.path.join(result.get('DATA_DIR'), "commonReports"))
 
     return result
 
