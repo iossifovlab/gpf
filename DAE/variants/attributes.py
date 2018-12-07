@@ -29,6 +29,7 @@ class Role(enum.Enum):
 
     maternal_half_sibling = 30
     paternal_half_sibling = 31
+    half_sibling = 32
 
     maternal_aunt = 50
     maternal_uncle = 51
