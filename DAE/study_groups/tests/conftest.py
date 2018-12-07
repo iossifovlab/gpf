@@ -18,7 +18,7 @@ def create_study_groups_definition():
 
 
 @pytest.fixture(scope='session')
-def basic_groups_definition(create_study_groups_definition):
+def basic_study_groups_definition(create_study_groups_definition):
     return create_study_groups_definition('basic.conf')
 
 
@@ -38,8 +38,8 @@ def study_groups_factory(studies_definition):
 
 
 @pytest.fixture(scope='session')
-def study_group_facade(basic_groups_definition, study_groups_factory):
+def study_group_facade(basic_study_groups_definition, study_groups_factory):
     return StudyGroupFacade(
-        study_group_definition=basic_groups_definition,
+        study_group_definition=basic_study_groups_definition,
         study_group_factory=study_groups_factory
     )

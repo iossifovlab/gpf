@@ -2,10 +2,8 @@ import os
 import json
 
 from common_reports.config import CommonReportsConfig
-from studies.default_settings import COMMON_REPORTS_DIR\
-    as studies_common_reports_dir
-from study_groups.default_settings import COMMON_REPORTS_DIR\
-    as study_groups_common_reports_dir
+from studies.default_settings import get_config as get_studies_config
+from study_groups.default_settings import get_config as get_study_groups_config
 
 
 class CommonReportFacade(object):
@@ -45,17 +43,17 @@ class CommonReportFacade(object):
 
     def _load_common_report_in_cache(self, common_report_id):
         if common_report_id in self.config.studies().keys():
-            common_reports_dir = studies_common_reports_dir
+            common_reports_dir = get_studies_config().get('COMMON_REPORTS_DIR')
         elif common_report_id in self.config.study_groups().keys():
-            common_reports_dir = study_groups_common_reports_dir
+            common_reports_dir = get_study_groups_config()\
+                .get('COMMON_REPORTS_DIR')
         else:
             return
 
-        common_report = None
         with open(os.path.join(
                 common_reports_dir, common_report_id + '.json'), 'r') as crf:
             common_report = json.load(crf)
-        if not common_report:
+        if common_report is None:
             return
 
         self._common_report_cache[common_report_id] = common_report

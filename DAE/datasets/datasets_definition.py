@@ -1,4 +1,5 @@
 import abc
+import os
 
 from configurable_entities.configurable_entity_definition import\
     ConfigurableEntityDefinition
@@ -20,8 +21,8 @@ class DatasetsDefinition(ConfigurableEntityDefinition):
 
     @staticmethod
     def _work_dir_from_environment():
-        from datasets.default_settings import DATA_DIR
-        return DATA_DIR
+        from datasets.default_settings import get_config
+        return get_config().get('DATA_DIR')
 
 
 class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
@@ -31,10 +32,13 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
     def __init__(self, datasets_dir=None, work_dir=None):
         super(DirectoryEnabledDatasetsDefinition, self).__init__()
         if datasets_dir is None:
-            from datasets.default_settings import DATA_DATASETS_DIR
-            datasets_dir = DATA_DATASETS_DIR
+            from datasets.default_settings import get_config
+            datasets_dir = get_config().get('DATA_DATASETS_DIR')
+            print("DATASETS DIR:", datasets_dir)
+            print("real ds dir", os.environ['DAE_DATA_DIR'])
         if work_dir is None:
             work_dir = DatasetsDefinition._work_dir_from_environment()
+
 
         self.directory_enabled_configurable_entity_definition(
             datasets_dir, DatasetConfig, work_dir, 'dataset_id',

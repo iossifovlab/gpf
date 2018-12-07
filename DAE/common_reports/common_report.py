@@ -7,10 +7,8 @@ from study_groups.study_group_facade import StudyGroupFacade
 from studies.study_facade import StudyFacade
 from variants.attributes import Role, Sex, Inheritance
 from common.query_base import EffectTypesMixin
-from studies.default_settings import COMMON_REPORTS_DIR\
-    as studies_common_reports_dir
-from study_groups.default_settings import COMMON_REPORTS_DIR\
-    as study_groups_common_reports_dir
+from studies.default_settings import get_config as get_studies_config
+from study_groups.default_settings import get_config as get_study_groups_config
 
 
 class PeopleCounter(object):
@@ -461,7 +459,6 @@ class CommonReport(object):
 
     def _get_phenotype(self, phenotype, phenotypes):
         default_phenotype = phenotype['default']['name']
-        phenotype_source = phenotype['source']
 
         return ','.join(
             [pheno if pheno is not None else default_phenotype
@@ -507,6 +504,10 @@ class CommonReportsGenerator(object):
                    for s, s_prop in self.studies.items()}
         study_groups = {self.study_group_facade.get_study_group(sg): sg_prop
                         for sg, sg_prop in self.study_groups.items()}
+        studies_common_reports_dir = get_studies_config() \
+            .get('COMMON_REPORTS_DIR')
+        study_groups_common_reports_dir = get_study_groups_config() \
+            .get('COMMON_REPORTS_DIR')
         for cr in self.get_common_reports(studies):
             with open(os.path.join(studies_common_reports_dir,
                       cr.study_name + '.json'), 'w') as crf:

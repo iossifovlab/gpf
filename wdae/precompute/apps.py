@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class WdaePrecomputeConfig(AppConfig):
     name = "precompute"
+    loaded = False
 
     def _split_class_name(self, cls_name):
         spl = cls_name.split('.')
@@ -61,7 +62,9 @@ class WdaePrecomputeConfig(AppConfig):
 
     def ready(self):
         logger.warn("WdaePrecomputeConfig.read() started...")
-        AppConfig.ready(self)
-        self._check_pheno_browser_api_cache()
-        self._load_preloaded()
-        self._load_precomputed()
+        super(WdaePrecomputeConfig, self).ready()
+        if not self.loaded:
+            self._check_pheno_browser_api_cache()
+            self._load_preloaded()
+            self._load_precomputed()
+            self.loaded = True

@@ -5,12 +5,11 @@ Created on Apr 16, 2018
 '''
 from __future__ import print_function
 from __future__ import unicode_literals
-from gene.gene_set_collections import DenovoGeneSetsCollection,\
-    MetaDenovoGeneSetsCollection
 
 import pytest
 
-pytestmark = pytest.mark.skip('depends on real data')
+pytestmark = pytest.mark.skip('removed used interface')
+# pytestmark = pytest.mark.usefixtures("gene_info_cache_dir")
 
 """
 Denovo Gene Sets are configured into 'geneInfo.conf'. There is a section
@@ -58,30 +57,26 @@ geneSetsNames=LGDs,LGDs.Male,LGDs.Female,LGDs.Recurrent,LGDs.Single,LGDs.Triple,
 """
 
 
-def test_example2_denovo_gene_sets():
-    gsc = DenovoGeneSetsCollection()
-    gsc.load()
+def test_example2_denovo_gene_sets(gscs):
+    # gsc = DenovoGeneSetsCollection()
+    # gsc.load()
+    denovo = gscs.get_gene_sets_collection('denovo')
 
-    print(gsc.get_dataset_phenotypes('SD'))
-    print(gsc.get_dataset_phenotypes('TESTdenovo_db'))
-
-    denovo_sets = gsc.get_denovo_sets({
-        'SD': ['autism'],
-        'TESTdenovo_db': ['autism']})
+    denovo_sets = denovo.get_denovo_sets({
+        'f1_group': ['autism']})
     assert denovo_sets
     print(list(denovo_sets.keys()))
 
-    print(denovo_sets['LGDs.Recurrent'])
-    print(denovo_sets['LGDs.Triple'])
+    print(denovo_sets['Synonymous'])
+    # print(denovo_sets['LGDs.Triple'])
 
-    denovo_sets2 = gsc.get_denovo_sets({
-        'SD': None,
-        'TESTdenovo_db': None})
-    assert len(denovo_sets['LGDs.Recurrent']) <= \
-        len(denovo_sets2['LGDs.Recurrent'])
+    denovo_sets2 = denovo.get_denovo_sets({
+        'f1_group': None})
+    assert len(denovo_sets['Synonymous']) <= \
+        len(denovo_sets2['Synonymous'])
 
-    assert denovo_sets['LGDs.Recurrent'].issubset(
-        denovo_sets2['LGDs.Recurrent'])
+    assert denovo_sets['Synonymous'].issubset(
+        denovo_sets2['Synonymous'])
 
 
 # def test_example3_meta_denovo_gene_sets():
