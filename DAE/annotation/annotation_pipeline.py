@@ -9,6 +9,7 @@ import time
 import datetime
 import re
 import argparse
+import subprocess
 
 from box import Box
 from ast import literal_eval
@@ -125,6 +126,27 @@ class PipelineConfig(VariantAnnotatorConfig):
             return cleanup_columns
 
 
+def run_tabix(filename):
+    def run_command(cmd):
+        print("executing", cmd)
+        try:
+            subprocess.check_output(cmd, shell=True)
+        except subprocess.CalledProcessError as ex:
+            status = ex.returncode
+            output = ex.output
+
+            print(status, output)
+            raise Exception("FAILURE AT: " + cmd)
+
+    cmd = "bgzip -c {filename} > {filename}.bgz".format(
+        filename=filename)
+    run_command(cmd)
+
+    cmd = "tabix -s 1 -b 2 -e 2 -S 1 -f {filename}.bgz".format(
+        filename=filename)
+    run_command(cmd)
+
+
 class PipelineAnnotator(CompositeVariantAnnotator):
 
     def __init__(self, config, schema):
@@ -186,6 +208,11 @@ def pipeline_main(argv):
     for name, args in VariantAnnotatorConfig.cli_options():
         parser.add_argument(name, **args)
 
+    parser.add_argument(
+        '--tabix', help='runs bgzip and tabix on the annotated files',
+        required=True, action='store_true', default=False
+    )
+
     options = parser.parse_args()
     assert options.config is not None
     assert os.path.exists(options.config)
@@ -221,6 +248,9 @@ def pipeline_main(argv):
         "The program was running for [h:m:s]:",
         str(datetime.timedelta(seconds=round(time.time()-start, 0))),
         file=sys.stderr)
+
+    if options.tabix:
+        run_tabix(options.outfile)
 
 
 if __name__ == '__main__':
