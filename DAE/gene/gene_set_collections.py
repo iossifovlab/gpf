@@ -393,12 +393,10 @@ class GeneSetsCollections(object):
             config = GeneInfoConfig()
 
         self.config = config
-        self.cache = self.config.config.get("cache", "file")
         self.study_group_facade = study_group_facade
         self.gene_sets_collections = {}
-        self.gene_sets_collections_desc = None
 
-    def get_gene_sets_collections(self, permitted_study_groups=None):
+    def get_collections_descriptions(self, permitted_study_groups=None):
         gene_sets_collections_desc = []
         for gsc_id in self.config.gene_info.getGeneTermIds():
             label = self.config.gene_info.getGeneTermAtt(gsc_id, "webLabel")
@@ -423,17 +421,22 @@ class GeneSetsCollections(object):
     def has_gene_sets_collection(self, gsc_id):
         return any([
             gsc['name'] == gsc_id
-            for gsc in self.get_gene_sets_collections()
+            for gsc in self.get_collections_descriptions()
         ])
+
+    def _load_gene_sets_collection(self, gene_sets_collection_id):
+        if gene_sets_collection_id == 'denovo':
+            gsc = DenovoGeneSetsCollection(
+                study_group_facade=self.study_group_facade)
+        else:
+            gsc = GeneSetsCollection(gene_sets_collection_id)
+        gsc.load()
+
+        return gsc
 
     def get_gene_sets_collection(self, gene_sets_collection_id):
         if gene_sets_collection_id not in self.gene_sets_collections:
-            if gene_sets_collection_id == 'denovo':
-                gsc = DenovoGeneSetsCollection(
-                    study_group_facade=self.study_group_facade)
-            else:
-                gsc = GeneSetsCollection(gene_sets_collection_id)
-            gsc.load()
+            gsc = self._load_gene_sets_collection(gene_sets_collection_id)
             self.gene_sets_collections[gene_sets_collection_id] = gsc
 
         return self.gene_sets_collections.get(gene_sets_collection_id, None)

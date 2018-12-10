@@ -16,7 +16,7 @@ def test_denovo_gene_sets_exist(gscs):
 
 
 def test_get_all_gene_sets(gscs):
-    gene_sets_collections = gscs.get_gene_sets_collections()
+    gene_sets_collections = gscs.get_collections_descriptions()
     assert len(gene_sets_collections) != 0
 
 
