@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import object
 from ..gene_codes import NuclearCode
 from .adapters.annovar import AnnovarVariantAnnotation
 from .adapters.old import OldVariantAnnotation
@@ -5,7 +7,7 @@ from .adapters.current import CurrentVariantAnnotation
 from .adapters.jannovar import JannovarVariantAnnotation
 
 
-class MultiVariantAnnotator:
+class MultiVariantAnnotator(object):
     def __init__(self, reference_genome, gene_models,
                  code=NuclearCode(), promoter_len=0):
         self.reference_genome = reference_genome

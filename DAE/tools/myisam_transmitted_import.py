@@ -9,7 +9,11 @@ tables into MySQL.
 @author:     lubo
 @contact:    lchorbadjiev@setelis.com
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
 
+from builtins import str
+from builtins import object
 import sys
 import os
 
@@ -94,7 +98,7 @@ class Tools(object):
         res = self.get_study_conf()
 
         args_db_conf = get_db_args(self.args)
-        for k, v in args_db_conf.items():
+        for k, v in list(args_db_conf.items()):
             if v is not None:
                 res[k] = v
 
@@ -272,7 +276,7 @@ USAGE
     except KeyboardInterrupt:
         # handle keyboard interrupt
         return 0
-    except Exception, e:
+    except Exception as e:
         import traceback
         traceback.print_exc()
 

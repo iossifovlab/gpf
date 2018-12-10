@@ -1,11 +1,16 @@
+from __future__ import unicode_literals
+from builtins import str
+from builtins import next
+from builtins import range
+from builtins import object
 import csv
 import pysam
 import gzip
 import os
 
 
-class MissenseScoresDB:
-    chromosomes = map(lambda x: str(x), range(1, 23)) + ['X', 'Y']
+class MissenseScoresDB(object):
+    chromosomes = [str(x) for x in range(1, 23)] + ['X', 'Y']
     columns = {}
 
     def __init__(self, path=None):
@@ -15,14 +20,14 @@ class MissenseScoresDB:
 
         with gzip.open(self.path.format(self.chromosomes[0]), 'rb') as f:
             reader = csv.reader(f, delimiter='\t')
-            for i, column in enumerate(reader.next()):
+            for i, column in enumerate(next(reader)):
                 self.columns[i] = column
 
         self.tbxs = {chromosome: pysam.Tabixfile(self.path.format(chromosome))
                      for chromosome in self.chromosomes}
 
     def get_field_names(self):
-        return self.columns.values()
+        return list(self.columns.values())
 
     def get_missense_score(self, variant):
         if variant.chromosome in self.tbxs:

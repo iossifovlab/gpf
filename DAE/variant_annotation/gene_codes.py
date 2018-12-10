@@ -1,4 +1,6 @@
-class NuclearCode:
+from __future__ import unicode_literals
+from builtins import object
+class NuclearCode(object):
 
     stopCodons = ['TAG', 'TAA', 'TGA']
     startCodons = ['ATG']
@@ -27,4 +29,4 @@ class NuclearCode:
         'Pro': ['CCG', 'CCA', 'CCT', 'CCC']
     }
 
-    CodonsAaKeys = CodonsAa.keys()
+    CodonsAaKeys = list(CodonsAa.keys())

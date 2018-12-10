@@ -1,7 +1,9 @@
+from __future__ import unicode_literals
+from builtins import object
 from ..effect import Effect
 
 
-class PromoterEffectChecker:
+class PromoterEffectChecker(object):
     def create_effect(self, transcript_model):
         return Effect("promoter", transcript_model)
 

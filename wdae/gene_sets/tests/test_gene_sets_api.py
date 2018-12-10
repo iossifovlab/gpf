@@ -52,7 +52,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         result = list(response.streaming_content)
         count = len(result)
-        self.assertEqual(44 + 1, count)
+        self.assertEqual(45 + 1, count)
 
     def test_denovo_gene_set_not_found(self):
         url = "/api/v3/gene_sets/gene_set_download"
@@ -132,7 +132,7 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEquals(status.HTTP_200_OK, response.status_code)
         result = list(response.streaming_content)
         count = len(result)
-        self.assertEqual(44 + 1, count)
+        self.assertEqual(45 + 1, count)
 
     def test_get_denovo_gene_set_not_found(self):
         url = "/api/v3/gene_sets/gene_set_download"

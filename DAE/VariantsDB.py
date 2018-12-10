@@ -814,6 +814,7 @@ class VariantsDB:
         sts = []
 
         for name in definition.split(","):
+            name = name.strip()
             if name in self._studies:
                 sts.append(self._studies[name])
             if name in self._studyGroups:

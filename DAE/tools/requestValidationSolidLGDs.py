@@ -1,4 +1,7 @@
 #!/bin/env python
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import str
 from DAE import *
 import getpass
 import sys
@@ -36,7 +39,7 @@ for vv in vDB.get_validation_variants():
     validated[k].append(vv) 
 
 nRequested = defaultdict(int)
-print "\t".join("familyId location variant bestSt who why".split() + optionalAtts)
+print("\t".join("familyId location variant bestSt who why".split() + optionalAtts))
 stdy = vDB.get_study(studyName)
 for v in stdy.get_denovo_variants(effectTypes="LGDs"):
     k = ":".join((v.familyId,v.location,v.variant))
@@ -44,7 +47,7 @@ for v in stdy.get_denovo_variants(effectTypes="LGDs"):
         continue
     if k in maskedVariants:
         continue
-    print "\t".join([v.familyId,v.location,v.variant,mat2Str(v.bestSt),getpass.getuser(), "Test Solid LGDs"] + \
-            [str(v.atts[a]) for a in optionalAtts])
+    print("\t".join([v.familyId,v.location,v.variant,mat2Str(v.bestSt),getpass.getuser(), "Test Solid LGDs"] + \
+            [str(v.atts[a]) for a in optionalAtts]))
     nRequested[v.inChS] += 1
-print >>sys.stderr, "nRequested:", nRequested
+print("nRequested:", nRequested, file=sys.stderr)
