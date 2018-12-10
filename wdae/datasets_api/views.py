@@ -19,9 +19,9 @@ from DAE import StatusMixin
 class DatasetView(APIView):
 
     def __init__(self):
-        assert self.datasets is not None
+        # assert self.datasets is not None
 
-        self.datasets_facade = get_datasets_manager().get_facade()
+        self.datasets_facade = get_datasets_manager().get_dataset_facade()
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset['id'])
