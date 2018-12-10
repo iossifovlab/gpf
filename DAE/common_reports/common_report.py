@@ -5,7 +5,7 @@ import os
 from common_reports.config import CommonReportsConfig
 from study_groups.study_group_facade import StudyGroupFacade
 from studies.study_facade import StudyFacade
-from variants.attributes import Role, Sex, Inheritance
+from variants.attributes import Role, Sex
 from common.query_base import EffectTypesMixin
 from studies.default_settings import COMMON_REPORTS_DIR\
     as studies_common_reports_dir
@@ -143,6 +143,9 @@ class FamiliesCounters(object):
                      'generated', 'phenotype'])
 
     def _compare_families(self, first, second, phenotype_column):
+        if len(first) != len(second):
+            return False
+
         families = self._families_to_dataframe(
             {first.family_id: first, second.family_id: second},
             phenotype_column)
@@ -151,16 +154,15 @@ class FamiliesCounters(object):
             ['sex', 'role', 'status', 'generated', 'phenotype'])
 
         for _, group in grouped_families:
-            if len(group) == 2:
-                continue
-            elif group.size % 2 == 1:
-                return False
-            else:
-                family_group = group.groupby(['family_id'])
-                if group.shape[0] != (len(family_group.groups) * 2):
+            family_group = group.groupby(['family_id'])
+            if len(family_group.groups) == 2:
+                if len(family_group.groups[first.family_id]) !=\
+                        len(family_group.groups[second.family_id]):
                     return False
+            else:
+                return False
 
-        return families.shape[0] == (len(grouped_families.groups) * 2)
+        return True
 
     def _get_families_counters(self, families, pheno, phenotype):
         families_with_phenotype =\
