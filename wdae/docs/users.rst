@@ -1,16 +1,17 @@
 Users
-=====
+-----
 
 
 Actions towards users
-----------------------
++++++++++++++++++++++
+
 
 Every user is represented by a row on the table shown in the *Users* category 
 on the *Management* tab. The delete user, remove/reset password actions can be 
 seen in the *Actions* column for every user in question.
 
 .. figure:: imgs/u-img1.png
-   :scale: 80%
+   :width: 100px
    :alt: Interface for actions on users
    :align: center
    
@@ -19,26 +20,30 @@ seen in the *Actions* column for every user in question.
 .. _reset-password:
 
 Reset password
-++++++++++++++
+^^^^^^^^^^^^^^
+
 Clicking on the middle icon in the *Actions* column, resets the password of the 
 user shown on the current row. This button will send the user in question an 
 email with a corresponding link, obligating them to choose a new password for 
 their account.
 
 Remove password
-++++++++++++++++
+^^^^^^^^^^^^^^^
+
 Clicking on the utmost left icon in the *Actions* column, removes the password 
 of the user shown on the current row. After completing this action, in order 
 for the user in question to acquire a new password, clicking on the 
 :ref:`reset-password` button will be necessary.
 
 Delete user
-++++++++++++
+^^^^^^^^^^^
+
 Clicking on the utmost right 'X' icon in the *Actions* column, deletes the user 
 shown on the current row.
 
 Create user
-+++++++++++++++
+^^^^^^^^^^^
+
 Admins can create new users and associate them with groups.
 The Create user button is located on the top right corner of the Users page.
 
@@ -71,11 +76,13 @@ for more.
    
    Has password checkbox
 
+
 Whether a user has a password or not can be seen in the 'Has password' column,
 where a tick symbol indicates 'yes' and empty cell 'no'.
 
 Edit user
-++++++++++++
+^^^^^^^^^
+
 Any user's email or default groups cannot be changed but the *Name* of the 
 user can. Clicking on any user's email address will lead to a page, where their 
 user name can be changed.
@@ -91,10 +98,11 @@ Clicking *Submit* will remember the new changes.
 
 
 Actions towards groups
------------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 Search groups
-+++++++++++++
+^^^^^^^^^^^^^
+
 The search bar for groups is located on the upper left in the *Users* category 
 in the *Management* tab.
 
@@ -107,7 +115,8 @@ in the *Management* tab.
 
 
 Add/Remove group from a user
-++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Only admins can assign or remove groups.
 Interacting with users is achieved via the *Users* category in the *Management* 
 tab from the menu.
@@ -142,7 +151,7 @@ or removed by clicking the 'X' in the same menu option.
 
 
 Remove group from user - shortcut
-++++++++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Next to every user's groups, an 'X' symbol can be found. By clicking it, the 
 selected group will be removed from the user.
@@ -158,7 +167,7 @@ Default groups cannot be removed.
 
 
 Add/Remove groups from multiple users at once
-+++++++++++++++++++++++++++++++++++++++++++++
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. figure:: imgs/u-img10.png
    :scale: 80%
