@@ -60,7 +60,7 @@ def test_denovo_get_gene_sets_sd_unaffected(gscs):
     assert gene_sets is not None
     assert len(gene_sets) == 17
     gs = gene_sets[0]
-    assert gs['count'] == 221
+    assert gs['count'] == 222
     assert gs['name'] == 'LGDs'
 
 
@@ -82,7 +82,7 @@ def test_denovo_sd_lgds_recurrent(gscs):
     gs = denovo.get_gene_set(
         'LGDs.Recurrent', gene_sets_types={'SD_TEST': ['autism']})
     assert gs is not None
-    assert gs['count'] == 44
+    assert gs['count'] == 45
 
 
 def test_denovo_sd_lgds_single(gscs):
@@ -92,7 +92,7 @@ def test_denovo_sd_lgds_single(gscs):
     assert gs is not None
     # FIXME: changed after rennotation
     # assert gs['count'] == 501
-    assert gs['count'] == 507
+    assert gs['count'] == 506
 
 
 def test_denovo_get_gene_set_sd_ssc_lgds_autism(gscs):

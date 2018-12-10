@@ -122,8 +122,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 [{
                     'property': standard_criteria_id,
                     'name': segment_arr[0],
-                    'value': segment_arr[1].split('.')
-                    if '.' in segment_arr[1] else segment_arr[1]
+                    'value': segment_arr[1].split('.') if '.' in segment_arr[1] else segment_arr[1] 
                 }
                     for segment_arr in segments_arrs]
             )

@@ -1,6 +1,9 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import subprocess
 from ..simple_effect import SimpleEffect
-from base import BaseAdapter
+from .base import BaseAdapter
 
 
 class JannovarVariantAnnotation(BaseAdapter):
@@ -29,7 +32,7 @@ class JannovarVariantAnnotation(BaseAdapter):
 
         input_str = "chr{0}:{1}{2}>{3}".format(variant.chromosome, pos,
                                                ref, alt)
-        print("j", input_str)
+        print(("j", input_str))
         p = subprocess.Popen(
             ["java", "-jar",
              "jannovar-cli/target/jannovar-cli-0.23-SNAPSHOT.jar",

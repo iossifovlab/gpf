@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import unicode_literals
 import argparse
 import sys
 import time
@@ -7,7 +8,10 @@ import datetime
 from os.path import exists
 import pandas as pd
 import numpy as np
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()
+from configparser import ConfigParser
+from builtins import object, str
 from box import Box
 import matplotlib.pyplot as plt
 
@@ -218,7 +222,7 @@ def main():
 
     opts = get_argument_parser().parse_args()
 
-    config = ConfigParser.SafeConfigParser()
+    config = ConfigParser()
     config.optionxform = str
     config.read(opts.config)
     config = Box(common.config.to_dict(config),

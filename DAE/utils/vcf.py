@@ -6,7 +6,6 @@ Created on Mar 5, 2018
 from __future__ import print_function
 
 import numpy as np
-from itertools import izip
 
 
 def samples_to_alleles_index(samples):
@@ -19,11 +18,11 @@ def mat2str(mat, col_sep="", row_sep="/"):
         col_sep.join(
             [str(n) if n >= 0 else "?" for n in mat[i, :]]
         )
-        for i in xrange(mat.shape[0])])
+        for i in range(mat.shape[0])])
 
 
 def trim_str(pos, ref, alt):
-    for n, s in enumerate(izip(ref, alt)):
+    for n, s in enumerate(zip(ref, alt)):
         if s[0] != s[1]:
             break
 
@@ -39,7 +38,7 @@ def trim_str(pos, ref, alt):
     if len(ref) == 0 or len(alt) == 0:
         return pos, ref, alt
 
-    for n, s in enumerate(izip(ref[::-1], alt[::-1])):
+    for n, s in enumerate(zip(ref[::-1], alt[::-1])):
         if s[0] != s[1]:
             break
     # not made simple

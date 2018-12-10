@@ -4,6 +4,7 @@
 pheno2DAE -- prepares a DAE pheno DB cache
 
 '''
+from __future__ import unicode_literals
 
 import sys
 import os
@@ -251,7 +252,7 @@ USAGE
         return 0
     except KeyboardInterrupt:
         return 0
-    except Exception, e:
+    except Exception as e:
         traceback.print_exc()
 
         indent = len(program_name) * " "

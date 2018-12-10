@@ -1,19 +1,21 @@
 #!/bin/env python
 
-import ConfigParser
+from __future__ import print_function
+
+from ConfigParser import ConfigParser
 import gzip
 import sys
 from collections import defaultdict
 from GeneTerms import *
 
-class GeneInfo:
+class GeneInfo(object):
     pass
 
-class Region:
+class Region(object):
     def len(self):
         return self.end-self.beg
 
-class GenesMap:
+class GenesMap(object):
     def __init__(self):
         self.chrs = defaultdict(list)
     def _addGeneRgn(self,g,rgn):
@@ -45,13 +47,14 @@ def mergeIntervals(intsP):
     r.append((beg,end))
     return r
 
-class GeneInfoDB:
+class GeneInfoDB(object):
     def __init__(self, confFile, wd, data_dir):
-        self.config = ConfigParser.SafeConfigParser({
+        self.config = ConfigParser({
             'wd':wd, 
             'data': data_dir
-        });
-        self.config.read(confFile)
+        })
+        with open(confFile, "r") as infile:
+            self.config.readfp(infile)
 
         self.geneInfoF = self.config.get('GeneInfo', 'geneInfoFile')
         # self._parseNCBIGeneInfo()
@@ -164,7 +167,7 @@ class GeneInfoDB:
         self._geneRgnsMap = GenesMap()
   
         strChrN = 0
-        for gSymRaw, chrs in bf.items():
+        for gSymRaw, chrs in list(bf.items()):
 
             if not gSymRaw in rawIdNS:
                 # print >>sys.stderr, "AAAA:", gSymRaw
@@ -188,7 +191,7 @@ class GeneInfoDB:
         self._geneRgnsMap._index()
 
     def _loadGenePropertyFile(self,fpropName):
-        print "loading", fpropName
+        print("loading", fpropName)
         fpropFN = self.config.get('GeneInfo', "fprop." + fpropName + ".file")
         fpropIdNS = self.config.get('GeneInfo', "fprop." + fpropName + ".idNS")
         if not fpropIdNS in self.nsTokens:
@@ -246,7 +249,7 @@ class GeneInfoDB:
                 self._addNSTokenToGeneInfo("sym",gi.sym,gi);
                 for s in gi.syns:
                     self._addNSTokenToGeneInfo("syns",s,gi);
-        print >>sys.stderr, "loaded ", len(self._genes), "genes"
+        print("loaded ", len(self._genes), "genes", file=sys.stderr)
 
     def _addNSTokenToGeneInfo(self, ns, token, gi):
         if not ns in  self._nsTokens:
@@ -283,12 +286,12 @@ class GeneInfoDB:
 
 if __name__ == "__main__":
     import os
-    print "hi";
+    print("hi");
     wd = os.environ['DAE_DB_DIR']
 
     d = GeneInfoDB(wd + "/geneInfo.conf", wd)
 
     geneSyms = ["POGZ", "TP53"]
-    print d.getCleanGeneIds("sym", *geneSyms)
+    print(d.getCleanGeneIds("sym", *geneSyms))
 
-    print len(d.geneRgns)
+    print(len(d.geneRgns))

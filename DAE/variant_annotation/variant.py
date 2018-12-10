@@ -1,10 +1,13 @@
+from __future__ import unicode_literals
+from builtins import range
+from builtins import object
 import re
 
 
-class Variant:
-    def __init__(self, chr=None, position=None, loc=None, var=None, ref=None,
+class Variant(object):
+    def __init__(self, chrom=None, position=None, loc=None, var=None, ref=None,
                  alt=None, length=None, seq=None, typ=None):
-        self.set_position(chr, position, loc)
+        self.set_position(chrom, position, loc)
         self.set_ref_alt(var, ref, alt, length, seq, typ)
 
         self.ref_position_last = self.position + len(self.reference)
