@@ -30,3 +30,5 @@ test_data/
 .vscode/
 .idea/
 *.temp
+wdae/docs/_build
+gpf-dist.tar.gz

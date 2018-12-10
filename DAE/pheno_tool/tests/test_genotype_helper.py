@@ -7,6 +7,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from pheno_tool.genotype_helper import VariantsType as VT
 import pytest
+from pheno_tool.genotype_helper import VariantsType as VT
 
 
 def test_get_variants_denovo(

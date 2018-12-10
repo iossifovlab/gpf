@@ -15,7 +15,8 @@ class GenomicValues(object):
         assert self.filename is not None
 
         df = pd.read_csv(self.filename)
-        assert self.name in df.columns
+        assert self.name in df.columns, \
+            "{} not found in {}".format(self.name, df.columns)
 
         self.df = df[[self.genomic_values_col, self.name]].copy()
 

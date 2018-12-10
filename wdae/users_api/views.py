@@ -149,13 +149,31 @@ def register(request):
                             status=status.HTTP_409_CONFLICT)
 
         preexisting_user.register_preexisting_user(request.data.get('name'))
+        LOGGER.info(log_filter(
+            request, "registration succeded; "
+            "email: '" + str(email) + "'; researcher id: '" + 
+            str(researcher_id) + "'"
+        ))
         return Response({}, status=status.HTTP_201_CREATED)
     except IntegrityError:
+        LOGGER.error(log_filter(
+            request, "Registration failed: IntegrityError; "
+            "email: '" + str(email) + "'; researcher id: '" + 
+            str(researcher_id) + "'"
+        ))
         return Response({}, status=status.HTTP_400_BAD_REQUEST)
     except user_model.DoesNotExist:
+        LOGGER.error(log_filter(
+            request, "Registration failed: Email or Researcher Id not found; "
+            "email: '" + str(email) + "'; researcher id: '" + 
+            str(researcher_id) + "'"
+        ))
         return Response({'error_msg': 'Email or Researcher Id not found'},
                         status=status.HTTP_404_NOT_FOUND)
     except KeyError:
+        LOGGER.error(log_filter(
+            request, "Registration failed: KeyError; " + str(request.data)
+        ))
         return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
 
