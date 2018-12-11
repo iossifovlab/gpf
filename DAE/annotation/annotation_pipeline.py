@@ -21,7 +21,6 @@ from annotation.tools.annotator_base import AnnotatorBase, \
     CompositeVariantAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.file_io import IOType, IOManager
-from annotation.tools.schema import Schema
 
 
 class PipelineConfig(VariantAnnotatorConfig):
@@ -157,10 +156,6 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         pipeline_config = PipelineConfig.build(options, config_file, defaults)
         assert pipeline_config.pipeline_sections
 
-        # for col in pipeline_config.cleanup_columns:
-        #     if col in variants_schema.columns:
-        #         del(variants_schema.columns[col])
-
         pipeline = PipelineAnnotator(pipeline_config)
         for section_config in pipeline_config.pipeline_sections:
             annotator = VariantAnnotatorConfig.instantiate(
@@ -184,13 +179,13 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         for annotator in self.annotators:
             annotator.line_annotation(aline)
 
-    def get_output_schema(self):
-        output_schema = Schema()
-        self.pull_schema(output_schema)
+    def collect_annotator_schema(self, schema):
+        super(PipelineAnnotator, self).collect_annotator_schema(schema)
         if self.config.virtual_columns:
             for vcol in self.config.virtual_columns:
-                output_schema.remove_column(vcol)
-        return output_schema
+                schema.remove_column(vcol)
+        for col in self.config.cleanup_columns:
+            schema.remove_column(col)
 
 
 def pipeline_main(argv):
@@ -232,9 +227,7 @@ def pipeline_main(argv):
         pipeline = PipelineAnnotator.build(options, config_filename)
         assert pipeline is not None
 
-        io_manager.writer.schema = \
-                Schema.merge_schemas(io_manager.reader.schema,
-                pipeline.get_output_schema())
+        pipeline.collect_annotator_schema(io_manager.writer.schema)
         pipeline.annotate_file(io_manager)
 
     print("# PROCESSING DETAILS:", file=sys.stderr)
