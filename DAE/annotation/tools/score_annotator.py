@@ -14,7 +14,6 @@ from annotation.tools.annotator_config import VariantAnnotatorConfig
 
 from annotation.tools.score_file_io import DirectAccess, \
     IterativeAccess
-from annotation.tools.schema import Schema
 
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):
@@ -56,7 +55,8 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         if self.no_score_value.lower() in set(['na', 'none']):
             self.no_score_value = None
 
-    def pull_schema(self, schema):
+    def collect_annotator_schema(self, schema):
+        super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
         for native, output in self.config.columns_config.items():
             schema.columns[output] = self.score_file.schema.columns[native]
 

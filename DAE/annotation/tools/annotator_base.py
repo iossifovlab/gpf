@@ -9,7 +9,6 @@ from annotation.tools.annotator_config import LineConfig, \
 from utils.dae_utils import dae2vcf_variant
 from variants.variant import SummaryAllele
 import GenomeAccess
-from annotation.tools.file_io_tsv import Schema
 
 
 class AnnotatorBase(object):
@@ -33,16 +32,15 @@ class AnnotatorBase(object):
             annotation_line.get(key, '') for key in output_columns
         ]
 
-    def pull_schema(self, schema):
-        for col in self.config.output_columns:
-            schema.create_column(col, 'str')
+    def collect_annotator_schema(self, schema):
+        raise NotImplementedError()
 
     def annotate_file(self, file_io_manager):
         """
             Method for annotating file from `Annotator`.
         """
         self.schema = file_io_manager.reader.schema
-        self.pull_schema(self.schema)
+        self.collect_annotator_schema(self.schema)
 
         line_config = LineConfig(file_io_manager.header)
         if self.mode == 'replace':
@@ -82,7 +80,7 @@ class CopyAnnotator(AnnotatorBase):
     def __init__(self, config):
         super(CopyAnnotator, self).__init__(config)
 
-    def pull_schema(self, schema):
+    def collect_annotator_schema(self, schema):
         for key, value in self.config.columns_config.items():
             assert key in schema.columns
             schema.columns[value] = schema.columns[key]
@@ -210,7 +208,7 @@ class VariantAnnotatorBase(AnnotatorBase):
                 'VCF:alt',
             ]
 
-    def pull_schema(self, schema):
+    def collect_annotator_schema(self, schema):
         for vcol in self.config.virtual_columns:
             if 'position' in vcol:
                 schema.create_column(vcol, 'int')
@@ -239,9 +237,9 @@ class CompositeAnnotator(AnnotatorBase):
         for annotator in self.annotators:
             annotator.line_annotation(aline)
 
-    def pull_schema(self, schema):
+    def collect_annotator_schema(self, schema):
         for annotator in self.annotators:
-            annotator.pull_schema(schema)
+            annotator.collect_annotator_schema(schema)
 
 
 class CompositeVariantAnnotator(VariantAnnotatorBase):
@@ -259,6 +257,7 @@ class CompositeVariantAnnotator(VariantAnnotatorBase):
         for annotator in self.annotators:
             annotator.do_annotate(aline, variant)
 
-    def pull_schema(self, schema):
+    def collect_annotator_schema(self, schema):
+        super(CompositeVariantAnnotator, self).collect_annotator_schema(schema)
         for annotator in self.annotators:
-            annotator.pull_schema(schema)
+            annotator.collect_annotator_schema(schema)

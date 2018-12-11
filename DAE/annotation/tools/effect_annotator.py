@@ -7,7 +7,6 @@ from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import \
     VariantAnnotator as VariantEffectAnnotator
 from annotation.tools.annotator_base import VariantAnnotatorBase
-from annotation.tools.schema import Schema
 
 
 class EffectAnnotator(VariantAnnotatorBase):
@@ -36,7 +35,8 @@ class EffectAnnotator(VariantAnnotatorBase):
         self.annotation_helper = VariantEffectAnnotator(
             genome, gene_models, promoter_len=self.config.options.prom_len)
 
-    def pull_schema(self, schema):
+    def collect_annotator_schema(self, schema):
+        super(EffectAnnotator, self).collect_annotator_schema(schema)
         if self.effect_type_column:
             schema.create_column(self.effect_type_column, 'list(str)')
         if self.effect_gene_column:
