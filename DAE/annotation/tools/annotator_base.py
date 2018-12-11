@@ -41,6 +41,7 @@ class AnnotatorBase(object):
         """
         self.schema = file_io_manager.reader.schema
         self.collect_annotator_schema(self.schema)
+        file_io_manager.writer.schema = self.schema
 
         line_config = LineConfig(file_io_manager.header)
         if self.mode == 'replace':

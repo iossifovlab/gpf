@@ -226,8 +226,6 @@ def pipeline_main(argv):
     with IOManager(options, reader_type, writer_type) as io_manager:
         pipeline = PipelineAnnotator.build(options, config_filename)
         assert pipeline is not None
-
-        pipeline.collect_annotator_schema(io_manager.writer.schema)
         pipeline.annotate_file(io_manager)
 
     print("# PROCESSING DETAILS:", file=sys.stderr)
