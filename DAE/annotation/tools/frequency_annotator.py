@@ -28,8 +28,9 @@ class FrequencyAnnotator(VariantAnnotatorBase):
         assert self.config.options.freq
         assert self.config.columns_config['output']
 
-        self.freq_cols = self.config.options.freq.split(',')
-        self.output_cols = self.config.columns_config['output'].split(',')
+        self.freq_cols = self.config.options.freq.replace(' ', '').split(',')
+        self.output_cols = self.config.columns_config['output'].replace(' ', '').split(',')
+        self.config.output_columns = self.output_cols
         assert len(self.freq_cols) == len(self.output_cols)
 
         self._init_freq_file()
@@ -59,12 +60,12 @@ class FrequencyAnnotator(VariantAnnotatorBase):
                 "columns": {
                     "chr": "chr",
                     "pos_begin": "position",
-                    "score": self.config.options.freq,
+                    "score": ','.join(self.freq_cols),
                 },
                 "schema": Schema.from_dict({
                     "str": "chr,variant",
                     "int": "position",
-                    "float": self.config.options.freq,
+                    "float": ','.join(self.freq_cols),
                 })
             },
             default_box=True,
