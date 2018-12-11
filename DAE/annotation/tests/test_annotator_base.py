@@ -67,7 +67,6 @@ def test_copy_annotator_simple(capsys, variants_io1):
         virtuals=[]
     )
 
-
     with variants_io1 as io_manager:
         annotator = CopyAnnotator(section_config, io_manager.reader.schema)
         assert annotator is not None
@@ -80,4 +79,3 @@ def test_copy_annotator_simple(capsys, variants_io1):
     print(captured.out)
     print(captured.err)
     assert captured.err == "Processed 4 lines.\n"
-

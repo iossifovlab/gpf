@@ -37,13 +37,13 @@ def main():
         help='VCF file to import'
     )
 
-    parser.add_argument(
-        "-x", "--project", dest="project",
-        metavar="project", help="project name [defualt:VIP")
-    parser.add_argument(
-        "-l", "--lab", dest="lab",
-        default="cshl",
-        metavar="lab", help="lab name")
+    # parser.add_argument(
+    #     "-x", "--project", dest="project",
+    #     metavar="project", help="project name [defualt:VIP")
+    # parser.add_argument(
+    #     "-l", "--lab", dest="lab",
+    #     default="cshl",
+    #     metavar="lab", help="lab name")
 
     parser.add_argument(
         "-o", "--output-prefix", dest="output_prefix", 
@@ -83,6 +83,11 @@ def main():
         dest="remove_chr", default=False,
         help="removes prefix to 'chr' from contig names")
 
+    parser.add_argument(
+        "--tabix", action="store_true",
+        dest="tabix", default=False,
+        help="bgzip and tabix result file")
+
     args = parser.parse_args()
     print(args)
 
@@ -108,8 +113,8 @@ def main():
             args.pedigree,
             '"' + args.vcf + '"',
 
-            '-x', args.project,
-            '-l', args.lab,
+            # '-x', args.project,
+            # '-l', args.lab,
             '-o', temp_dae_prefix,
             '-m', str(args.minPercentOfGenotypeSamples),
             '-t', str(args.tooManyThresholdFamilies),
@@ -146,6 +151,23 @@ def main():
         dae_too_fullname
     ])
     run_command(cmd)
+
+    if args.tabix:
+        cmd = "bgzip -c {filename} > {filename}.bgz".format(
+            filename=dae_fullname)
+        run_command(cmd)
+
+        cmd = "bgzip -c {filename} > {filename}.bgz".format(
+            filename=dae_too_fullname)
+        run_command(cmd)
+
+        cmd = "tabix -s 1 -b 2 -e 2 -S 1 -f {filename}.bgz".format(
+            filename=dae_fullname)
+        run_command(cmd)
+
+        cmd = "tabix -s 1 -b 2 -e 2 -S 1 -f {filename}.bgz".format(
+            filename=dae_too_fullname)
+        run_command(cmd)
 
 
 if __name__ == "__main__":

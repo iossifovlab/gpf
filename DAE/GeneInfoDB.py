@@ -3,6 +3,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import object
+from builtins import str
 from future import standard_library
 standard_library.install_aliases()
 from configparser import ConfigParser
@@ -11,8 +12,10 @@ import sys
 from collections import defaultdict
 from GeneTerms import *
 
+
 class GeneInfo(object):
     pass
+
 
 class Region(object):
     def len(self):
@@ -31,7 +34,8 @@ class GenesMap(object):
         if chr not in self.chrs:
             return []
         return [x[1] for x in self.chrs[chr] if x[0].beg < e and b < x[0].end ]
-    
+
+
 def mergeIntervals(intsP):
     if len(intsP)<2:
         return intsP
@@ -50,12 +54,13 @@ def mergeIntervals(intsP):
     r.append((beg,end))
     return r
 
+
 class GeneInfoDB(object):
     def __init__(self, confFile, wd, data_dir):
         self.config = ConfigParser({
-            'wd':wd, 
+            'wd':wd,
             'data': data_dir
-        });
+        })
         self.config.read(confFile)
 
         self.geneInfoF = self.config.get('GeneInfo', 'geneInfoFile')
@@ -112,7 +117,7 @@ class GeneInfoDB(object):
         return self._geneRgnsMap
 
     def getGeneTermIds(self):
-        return [sn[10:] for sn in self.config.sections() if sn.startswith('geneTerms.')]
+        return [str(sn[10:]) for sn in self.config.sections() if sn.startswith('geneTerms.')]
 
     def getGeneTermAtt(self,id,attName):
         if self.config.has_option('geneTerms.' + id,attName):

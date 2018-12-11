@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-export PYTHONDONTWRITEBYTECODE=1
-
 export PATH=${DAE_SOURCE_DIR}/tools:$PATH
 export PATH=${DAE_SOURCE_DIR}/tests:$PATH
 export PYTHONPATH=${DAE_SOURCE_DIR}:$PYTHONPATH
@@ -41,4 +39,6 @@ py.test -s --runslow --withspark -v --cov-config coveragerc \
     DAE/annotation/tests \
     DAE/studies/tests \
     DAE/study_groups/tests \
-    DAE/datasets/tests
+    DAE/datasets/tests \
+    DAE/gene/tests \
+    DAE/common_reports/tests

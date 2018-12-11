@@ -14,7 +14,10 @@ from GeneTerms import loadGeneTerm
 # import phenoDB
 from Sfari import SfariCollection
 from GenomesDB import GenomesDB
+from gene.config import GeneInfoConfig
+from gene.gene_set_collections import GeneSetsCollections
 from common.query_base import StatusMixin
+
 
 from Config import *
 from pheno.pheno_factory import PhenoFactory

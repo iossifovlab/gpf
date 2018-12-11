@@ -73,7 +73,7 @@ class Dataset(object):
     def get_variants(self, **kwargs):
         kwargs = self.transorm_variants_kwargs(**kwargs)
 
-        return self.study_group.get_variants(**kwargs)
+        return self.study_group.query_variants(**kwargs)
 
     @property
     def study_names(self):
@@ -92,7 +92,7 @@ class Dataset(object):
 
     def get_legend(self, *args, **kwargs):
         if 'pedigreeSelector' not in kwargs:
-            legend = self.legend.values()[0] if self.legend else []
+            legend = list(self.legend.values())[0] if self.legend else []
         else:
             legend = self.legend.get(kwargs['pedigreeSelector']['id'], [])
         legend += self._get_legend_default_values()

@@ -16,11 +16,11 @@ def query_base(request):
 
 
 def test_build_effect_types(query_base):
-    effect_types = "Frame-shift,Nonsense,Splice-site"
+    effect_types = "Frame-shift,Nonsense,Splice-site,Non coding"
 
     res = query_base.build_effect_types(effect_types)
     assert res is not None
-    assert ['frame-shift', 'nonsense', 'splice-site'] == res
+    assert ['frame-shift', 'nonsense', 'splice-site', 'non-coding'] == res
 
 
 def test_build_effect_types_lgds(query_base):
@@ -75,6 +75,7 @@ def test_build_effect_types_naming(query_base):
         (['noStart'], ['noStart']),
         (['Synonymous'], ['Synonymous']),
         (['Intron'], ['Intron']),
+        ('non-coding', ["Non coding"])
     ]
 
     for effect_types, should_become in effect_types_arguments:

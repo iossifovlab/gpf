@@ -11,20 +11,20 @@ from variants.variant import SummaryAllele
 ])
 def test_dae2vcf(mocker, variant, check_pos, check_ref, check_alt):
 
-        genome = mocker.Mock()
-        genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
+    genome = mocker.Mock()
+    genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
 
-        pos, ref, alt = dae2vcf_variant(
-            'chr1', 150013938, variant, genome
-        )
+    pos, ref, alt = dae2vcf_variant(
+        'chr1', 150013938, variant, genome
+    )
 
-        assert pos == check_pos
-        assert ref == check_ref
-        assert alt == check_alt
+    assert pos == check_pos
+    assert ref == check_ref
+    assert alt == check_alt
 
-        summary = SummaryAllele('chr1', pos, ref, alt)
-        assert summary is not None
+    summary = SummaryAllele('chr1', pos, ref, alt)
+    assert summary is not None
 
-        assert summary.details.cshl_position == check_pos
-        assert summary.details.cshl_location == "chr1:{}".format(check_pos)
-        assert summary.details.cshl_variant == variant
+    assert summary.details.cshl_position == check_pos
+    assert summary.details.cshl_location == "chr1:{}".format(check_pos)
+    assert summary.details.cshl_variant == variant

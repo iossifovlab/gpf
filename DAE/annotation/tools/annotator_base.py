@@ -61,7 +61,7 @@ class AnnotatorBase(object):
             annotation_line = line_config.build(line)
             try:
                 self.line_annotation(annotation_line)
-            except Exception as ex:
+            except Exception:
                 print("Problems annotating line:", line, file=sys.stderr)
                 print(annotation_line, file=sys.stderr)
                 traceback.print_exc(file=sys.stderr)

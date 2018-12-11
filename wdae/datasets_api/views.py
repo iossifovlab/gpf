@@ -8,6 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from guardian.shortcuts import get_groups_with_perms
+
+from datasets_api.datasets_manager import get_datasets_manager
 from datasets_api.models import Dataset
 from groups_api.serializers import GroupSerializer
 import preloaded
@@ -17,11 +19,9 @@ from DAE import StatusMixin
 class DatasetView(APIView):
 
     def __init__(self):
-        register = preloaded.register
-        self.datasets = register.get('datasets')
-        assert self.datasets is not None
+        # assert self.datasets is not None
 
-        self.datasets_facade = self.datasets.get_facade()
+        self.datasets_facade = get_datasets_manager().get_dataset_facade()
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset['id'])
