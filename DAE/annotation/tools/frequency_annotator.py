@@ -22,11 +22,10 @@ from annotation.tools.schema import Schema
 
 class FrequencyAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(FrequencyAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(FrequencyAnnotator, self).__init__(config)
 
         self._init_freq_file()
-        self._init_schema()
 
         assert len(self.config.native_columns) >= 1
         self.score_names = self.config.native_columns
@@ -82,10 +81,11 @@ class FrequencyAnnotator(VariantAnnotatorBase):
 
         self.no_score_value = None
 
-    def _init_schema(self):
+    def collect_annotator_schema(self, schema):
+        super(FrequencyAnnotator, self).collect_annotator_schema(schema)
         for native, output in self.config.columns_config.items():
-            self.schema.columns[output] = \
-                    self.freq_file.schema.columns[native]
+            schema.columns[output] = \
+                self.freq_file.schema.columns[native]
 
     def _freq_not_found(self, aline):
         aline[self.freq_output] = self.no_score_value
