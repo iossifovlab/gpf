@@ -25,14 +25,20 @@ class FrequencyAnnotator(VariantAnnotatorBase):
     def __init__(self, config):
         super(FrequencyAnnotator, self).__init__(config)
 
+        assert self.config.options.freq
+        assert self.config.columns_config['output']
+
+        self.freq_cols = self.config.options.freq.replace(' ', '').split(',')
+        self.output_cols = (self.config.columns_config['output']
+                            .replace(' ', '').split(','))
+        self.config.output_columns = self.output_cols
+        assert len(self.freq_cols) == len(self.output_cols)
+
         self._init_freq_file()
 
-        assert len(self.config.native_columns) >= 1
-        self.score_names = self.config.native_columns
-        self.freq_column = self.config.options.freq
-        self.freq_output = self.config.columns_config['freq']
-        assert self.freq_column in self.freq_file.header, \
-            "{} not in {}".format(self.freq_column, self.freq_file.header)
+        for freq_col in self.freq_cols:
+            assert freq_col in self.freq_file.header, \
+                "{} not in {}".format(freq_col, self.freq_file.header)
         assert 'variant' in self.freq_file.header, \
             "'variant' not in {}".format(self.freq_file.header)
 
@@ -54,12 +60,12 @@ class FrequencyAnnotator(VariantAnnotatorBase):
                 "columns": {
                     "chr": "chr",
                     "pos_begin": "position",
-                    "score": self.config.options.freq,
+                    "score": ','.join(self.freq_cols),
                 },
                 "schema": Schema.from_dict({
                     "str": "chr,variant",
                     "int": "position",
-                    "float": "freq",
+                    "float": ','.join(self.freq_cols),
                 })
             },
             default_box=True,
@@ -83,12 +89,13 @@ class FrequencyAnnotator(VariantAnnotatorBase):
 
     def collect_annotator_schema(self, schema):
         super(FrequencyAnnotator, self).collect_annotator_schema(schema)
-        for native, output in self.config.columns_config.items():
-            schema.columns[output] = \
-                self.freq_file.schema.columns[native]
+        for index, freq_col in enumerate(self.freq_cols):
+            schema.columns[self.output_cols[index]] = \
+                    self.freq_file.schema.columns[freq_col]
 
     def _freq_not_found(self, aline):
-        aline[self.freq_output] = self.no_score_value
+        for output_col in self.output_cols:
+            aline[output_col] = self.no_score_value
 
     def do_annotate(self, aline, variant):
         if variant is None:
@@ -105,8 +112,9 @@ class FrequencyAnnotator(VariantAnnotatorBase):
 
         for index, score_variant in enumerate(scores['variant']):
             if score_variant == variant:
-                values = scores[self.freq_column]
-                aline[self.freq_output] = values[index]
+                for output_index, freq_col in enumerate(self.freq_cols):
+                    values = scores[freq_col]
+                    aline[self.output_cols[output_index]] = values[index]
 
 
 # class TMFile:
