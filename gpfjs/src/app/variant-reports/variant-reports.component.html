@@ -137,7 +137,7 @@
               <th>{{ effectType }}</th>
               <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, table, variantReport.denovoReport.phenotypes)">
                 <div>
-                  {{ effectTypeData.eventsCount }}, {{ effectTypeData.eventsRatePerChild }}
+                  {{ effectTypeData.eventsCount }}, {{ effectTypeData.eventsRatePerChild | number }}
                 </div>
                 <div>
                   ({{ effectTypeData.eventsChildrenCount }}, {{ effectTypeData.eventsChildrenPercent | percent }})
