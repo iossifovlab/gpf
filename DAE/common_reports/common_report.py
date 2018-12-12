@@ -517,12 +517,3 @@ class CommonReportsGenerator(object):
             with open(os.path.join(study_groups_common_reports_dir,
                       cr.study_name + '.json'), 'w') as crf:
                 json.dump(cr.to_dict(), crf)
-
-
-def main():
-    crg = CommonReportsGenerator()
-    crg.save_common_reports()
-
-
-if __name__ == '__main__':
-    main()
