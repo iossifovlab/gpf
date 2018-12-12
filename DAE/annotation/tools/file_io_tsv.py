@@ -6,7 +6,6 @@ import gzip
 
 import pysam
 from abc import ABCMeta, abstractmethod
-from collections import OrderedDict
 from box import Box
 from annotation.tools.schema import Schema
 
@@ -135,7 +134,11 @@ class TSVReader(TSVFormat):
             return self.header
 
         if self.options.no_header:
-            return None
+            line = self.infile.readline()
+            self.infile.seek(0)
+            return [str(index) for index, col
+                    in enumerate(line.strip()
+                                 .split(self.separator))]
         else:
             line = self.infile.readline()
             header_str = line.strip()
@@ -226,9 +229,6 @@ class TabixReader(TSVFormat):
     def _header_read(self):
         if self.header:
             return self.header
-
-        if self.options.no_header:
-            return None
 
         line = self.infile.header
         line = list(line)

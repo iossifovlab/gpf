@@ -10,17 +10,17 @@ from annotation.tools.file_io import TSVReader, TSVGzipReader, \
 
 from .conftest import relative_to_this_test_folder
 
+
 @pytest.mark.parametrize("filename,header,no_header,linecount", [
     ('fixtures/input3.tsv.gz',
      ['CHROM', 'POS', 'REF', 'ALT'], None, 18),
     ('fixtures/TEST3phyloP100way/TEST3phyloP100way.bedGraph.gz',
-     None, True, 18),
+     ['0', '1', '2', '3'], True, 18),
     ('fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz',
-     None, True, 14),
+     ['0', '1', '2', '3'], True, 14),
     ('fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz',
-     None, True, 54),
+     ['0', '1', '2', '3', '4', '5'], True, 54),
 ])
-@pytest.mark.skip("No header breaks the Schema initialization")
 def test_tsv_gzip_reader(filename, header, no_header, linecount):
     infilename = relative_to_this_test_folder(filename)
     os.path.exists(infilename)
@@ -77,37 +77,36 @@ def test_tsv_reader(filename, header, linecount):
     ('fixtures/input3.tsv.gz',
      ['CHROM', 'POS', 'REF', 'ALT'], None, "2:20002-20005", 4),
     ('fixtures/TEST3phyloP100way/TEST3phyloP100way.bedGraph.gz',
-     None, True, None, 18),
+     ['0', '1', '2', '3'], True, None, 18),
     ('fixtures/TEST3phyloP100way/TEST3phyloP100way.bedGraph.gz',
-     None, True, "1:20002-20004", 3),
+     ['0', '1', '2', '3'], True, "1:20002-20004", 3),
     ('fixtures/TEST3phyloP100way/TEST3phyloP100way.bedGraph.gz',
-     None, True, "2:20002-20005", 4),
+     ['0', '1', '2', '3'], True, "2:20002-20005", 4),
     ('fixtures/TEST3phyloP100way/TEST3phyloP100way.bedGraph.gz',
-     None, True, "chr1:20002-20004", 3),
+     ['0', '1', '2', '3'], True, "chr1:20002-20004", 3),
     ('fixtures/TEST3phyloP100way/TEST3phyloP100way.bedGraph.gz',
-     None, True, "chr2:20002-20005", 4),
+     ['0', '1', '2', '3'], True, "chr2:20002-20005", 4),
     ('fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz',
-     None, True, None, 14),
+     ['0', '1', '2', '3'], True, None, 14),
     ('fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz',
-     None, True, "1:20002-20004", 3),
+     ['0', '1', '2', '3'], True, "1:20002-20004", 3),
     ('fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz',
-     None, True, "2:20002-20005", 3),
+     ['0', '1', '2', '3'], True, "2:20002-20005", 3),
     ('fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz',
-     None, True, "chr1:20002-20004", 3),
+     ['0', '1', '2', '3'], True, "chr1:20002-20004", 3),
     ('fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz',
-     None, True, "chr2:20002-20005", 3),
+     ['0', '1', '2', '3'], True, "chr2:20002-20005", 3),
     ('fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz',
-     None, True, None, 54),
+     ['0', '1', '2', '3', '4', '5'], True, None, 54),
     ('fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz',
-     None, True, "1:20002-20004", 9),
+     ['0', '1', '2', '3', '4', '5'], True, "1:20002-20004", 9),
     ('fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz',
-     None, True, "2:20002-20005", 12),
+     ['0', '1', '2', '3', '4', '5'], True, "2:20002-20005", 12),
     ('fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz',
-     None, True, "chr1:20002-20004", 9),
+     ['0', '1', '2', '3', '4', '5'], True, "chr1:20002-20004", 9),
     ('fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz',
-     None, True, "chr2:20002-20005", 12),
+     ['0', '1', '2', '3', '4', '5'], True, "chr2:20002-20005", 12),
 ])
-@pytest.mark.skip("No header breaks the Schema initialization")
 def test_tabix_reader(filename, header, no_header, region, linecount):
     infilename = relative_to_this_test_folder(filename)
     os.path.exists(infilename)

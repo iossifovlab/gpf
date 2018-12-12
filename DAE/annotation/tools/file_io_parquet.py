@@ -8,20 +8,23 @@ import pyarrow.parquet as pq
 from box import Box
 from annotation.tools.schema import Schema
 from annotation.tools.file_io_tsv import AbstractFormat
+from collections import OrderedDict
 
 
 class ParquetSchema(Schema):
 
     # New types only need to be added here.
-    type_map = {'str': (str, pa.string()),
-                'float': (float, pa.float64()),
-                'int': (int, pa.int32()),
-                'int8': (int, pa.int8()),
-                'int16': (int, pa.int16()),
-                'int64': (int, pa.int64()),
-                'list(str)': (str, pa.list_(pa.string())),
-                'list(float)': (float, pa.list_(pa.float64())),
-                'list(int)': (int, pa.list_(pa.float32()))}
+    type_map = OrderedDict([
+                ('str', (str, pa.string())),
+                ('float', (float, pa.float64())),
+                ('int', (int, pa.uint32())),
+                ('int8', (int, pa.int8())),
+                ('int16', (int, pa.int16())),
+                ('int32', (int, pa.int32())),
+                ('int64', (int, pa.int64())),
+                ('list(str)', (str, pa.list_(pa.string()))),
+                ('list(float)', (float, pa.list_(pa.float64()))),
+                ('list(int)', (int, pa.list_(pa.uint32())))])
 
     def __init__(self):
         super(ParquetSchema, self).__init__()
@@ -35,17 +38,19 @@ class ParquetSchema(Schema):
                    default_box=True,
                    default_box_attr=None)
 
+    def create_column(self, col_name, col_type):
+        if col_name not in self.columns:
+            self.columns[col_name] = ParquetSchema.produce_type(col_type)
+
     @classmethod
     def convert(cls, schema):
         if isinstance(schema, ParquetSchema):
             return schema
         assert isinstance(schema, Schema)
         pq_schema = ParquetSchema()
-        pq_schema.columns = schema.columns
-        for col in pq_schema.columns:
-            type_name = pq_schema.columns[col].type_name
-            pq_schema.columns[col] = \
-                ParquetSchema.produce_type(type_name)
+        for col_name, col_type in schema.columns.items():
+            pq_schema.columns[col_name] = \
+                ParquetSchema.produce_type(col_type.type_name)
         return pq_schema
 
     @classmethod
@@ -219,15 +224,17 @@ class ParquetWriter(AbstractFormat):
 
         for col_name, col_data in self.column_buffer.items():
             col_type = self.schema.columns[col_name].type_py
+            pa_type = self.schema.columns[col_name].type_pa
             col = pa.column(col_name,
                             pa.array(self.coerce_column(col_name,
                                                         col_data,
-                                                        col_type)))
+                                                        col_type),
+                                     type=pa_type))
             buffer_table.append(col)
 
         self.pq_writer.write_table(pa.Table.from_arrays(
-                                     buffer_table,
-                                     schema=self.schema.to_arrow()))
+                                   buffer_table,
+                                   schema=self.schema.to_arrow()))
 
         for col in self.column_buffer.keys():
             self.column_buffer[col] = []

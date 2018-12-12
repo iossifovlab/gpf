@@ -62,8 +62,7 @@ def test_variant_score_annotator_simple(
     print(type(config.options))
 
     with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = PositionScoreAnnotator(config,
-                                                 io_manager.reader.schema)
+        score_annotator = PositionScoreAnnotator(config)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -109,8 +108,7 @@ def test_variant_multi_score_annotator_simple(
     print(type(config.options))
 
     with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = PositionMultiScoreAnnotator(config,
-                                                      io_manager.reader.schema)
+        score_annotator = PositionMultiScoreAnnotator(config)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -158,8 +156,7 @@ def test_variant_multi_score_annotator_multi(
     print(type(config.options))
 
     with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = PositionMultiScoreAnnotator(config,
-                                                      io_manager.reader.schema)
+        score_annotator = PositionMultiScoreAnnotator(config)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -216,8 +213,7 @@ def test_variant_score_annotator_cadd(
     print(type(config.options))
 
     with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = NPScoreAnnotator(config,
-                                           io_manager.reader.schema)
+        score_annotator = NPScoreAnnotator(config)
         assert score_annotator is not None
 
         captured = capsys.readouterr()

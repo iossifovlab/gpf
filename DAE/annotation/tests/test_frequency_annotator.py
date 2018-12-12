@@ -78,10 +78,7 @@ def test_frequency_annotator(mocker, variants_io, expected_df, capsys):
         )
 
         with variants_io("fixtures/freq_test_1.tsv") as io_manager:
-            freq_annotator = FrequencyAnnotator(
-                config,
-                io_manager.reader.schema
-            )
+            freq_annotator = FrequencyAnnotator(config)
             assert freq_annotator is not None
 
             captured = capsys.readouterr()

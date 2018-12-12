@@ -22,19 +22,19 @@ from annotation.tools.schema import Schema
 
 class FrequencyAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(FrequencyAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(FrequencyAnnotator, self).__init__(config)
 
         assert self.config.options.freq
         assert self.config.columns_config['output']
 
         self.freq_cols = self.config.options.freq.replace(' ', '').split(',')
-        self.output_cols = self.config.columns_config['output'].replace(' ', '').split(',')
+        self.output_cols = (self.config.columns_config['output']
+                            .replace(' ', '').split(','))
         self.config.output_columns = self.output_cols
         assert len(self.freq_cols) == len(self.output_cols)
 
         self._init_freq_file()
-        self._init_schema()
 
         for freq_col in self.freq_cols:
             assert freq_col in self.freq_file.header, \
@@ -87,9 +87,10 @@ class FrequencyAnnotator(VariantAnnotatorBase):
 
         self.no_score_value = None
 
-    def _init_schema(self):
+    def collect_annotator_schema(self, schema):
+        super(FrequencyAnnotator, self).collect_annotator_schema(schema)
         for index, freq_col in enumerate(self.freq_cols):
-            self.schema.columns[self.output_cols[index]] = \
+            schema.columns[self.output_cols[index]] = \
                     self.freq_file.schema.columns[freq_col]
 
     def _freq_not_found(self, aline):

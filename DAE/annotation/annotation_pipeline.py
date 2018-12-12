@@ -21,7 +21,6 @@ from annotation.tools.annotator_base import AnnotatorBase, \
     CompositeVariantAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.file_io import IOType, IOManager
-from annotation.tools.schema import Schema
 
 
 class PipelineConfig(VariantAnnotatorConfig):
@@ -149,23 +148,18 @@ def run_tabix(filename):
 
 class PipelineAnnotator(CompositeVariantAnnotator):
 
-    def __init__(self, config, schema):
-        super(PipelineAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(PipelineAnnotator, self).__init__(config)
 
     @staticmethod
-    def build(options, config_file, variants_schema, defaults={}):
+    def build(options, config_file, defaults={}):
         pipeline_config = PipelineConfig.build(options, config_file, defaults)
         assert pipeline_config.pipeline_sections
-        assert variants_schema.columns
 
-        for col in pipeline_config.cleanup_columns:
-            if col in variants_schema.columns:
-                del(variants_schema.columns[col])
-
-        pipeline = PipelineAnnotator(pipeline_config, variants_schema)
+        pipeline = PipelineAnnotator(pipeline_config)
         for section_config in pipeline_config.pipeline_sections:
             annotator = VariantAnnotatorConfig.instantiate(
-                section_config, pipeline.schema
+                section_config
             )
             pipeline.add_annotator(annotator)
             output_columns = [
@@ -177,8 +171,6 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
     def add_annotator(self, annotator):
         assert isinstance(annotator, AnnotatorBase)
-        self.schema = Schema.merge_schemas(self.schema,
-                                           annotator.schema)
         self.config.virtual_columns.extend(annotator.config.virtual_columns)
         self.annotators.append(annotator)
 
@@ -187,14 +179,13 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         for annotator in self.annotators:
             annotator.line_annotation(aline)
 
-    def get_output_schema(self):
-        output_schema = Schema()
-        output_schema = Schema.merge_schemas(output_schema, self.schema)
+    def collect_annotator_schema(self, schema):
+        super(PipelineAnnotator, self).collect_annotator_schema(schema)
         if self.config.virtual_columns:
             for vcol in self.config.virtual_columns:
-                if vcol in output_schema.columns:
-                    del(output_schema.columns[vcol])
-        return output_schema
+                schema.remove_column(vcol)
+        for col in self.config.cleanup_columns:
+            schema.remove_column(col)
 
 
 def pipeline_main(argv):
@@ -233,11 +224,8 @@ def pipeline_main(argv):
     start = time.time()
 
     with IOManager(options, reader_type, writer_type) as io_manager:
-        pipeline = PipelineAnnotator.build(options, config_filename,
-                                           io_manager.reader.schema)
+        pipeline = PipelineAnnotator.build(options, config_filename)
         assert pipeline is not None
-
-        io_manager.writer.schema = pipeline.get_output_schema()
         pipeline.annotate_file(io_manager)
 
     print("# PROCESSING DETAILS:", file=sys.stderr)

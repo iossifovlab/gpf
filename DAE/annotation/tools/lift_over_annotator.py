@@ -14,8 +14,8 @@ from annotation.tools.schema import Schema
 
 class LiftOverAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(LiftOverAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(LiftOverAnnotator, self).__init__(config)
 
         self.chrom = self.config.options.c
         self.pos = self.config.options.p
@@ -32,12 +32,14 @@ class LiftOverAnnotator(VariantAnnotatorBase):
 
         self.lift_over = self.build_lift_over(self.config.options.chain_file)
 
+    def collect_annotator_schema(self, schema):
+        super(LiftOverAnnotator, self).collect_annotator_schema(schema)
         for key, value in self.columns_config.items():
             if key == 'new_x' or key == 'new_c':
-                self.schema.columns[value] = \
+                schema.columns[value] = \
                     Schema.produce_type('str')
             elif key == 'new_p':
-                self.schema.columns[value] = \
+                schema.columns[value] = \
                     Schema.produce_type('str')
 
     @staticmethod

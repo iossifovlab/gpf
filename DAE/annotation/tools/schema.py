@@ -24,6 +24,14 @@ class Schema(object):
                    default_box=True,
                    default_box_attr=None)
 
+    def create_column(self, col_name, col_type):
+        if col_name not in self.columns:
+            self.columns[col_name] = Schema.produce_type(col_type)
+
+    def remove_column(self, col_name):
+        if col_name in self.columns:
+            del(self.columns[col_name])
+
     @classmethod
     def from_dict(cls, schema_dict):
         new_schema = Schema()
@@ -36,7 +44,7 @@ class Schema(object):
                 .replace('\t', '')\
                 .replace('\n', '')
             for col in col_list.split(','):
-                new_schema.columns[col] = cls.produce_type(col_type)
+                new_schema.create_column(col, col_type)
         return new_schema
 
     @staticmethod

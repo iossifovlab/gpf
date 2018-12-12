@@ -158,7 +158,7 @@ def test_build_pipeline(
     captured = capsys.readouterr()
     with variants_io("fixtures/input2.tsv") as io_manager:
         pipeline = PipelineAnnotator.build(
-            options, filename, io_manager.reader.schema,
+            options, filename,
             defaults={
                 "fixtures_dir": relative_to_this_test_folder("fixtures/")
             })
@@ -215,7 +215,7 @@ def test_pipeline_change_variants_position(variants_io, capsys, expected_df):
 
     with variants_io("fixtures/input2.tsv") as io_manager:
         pipeline = PipelineAnnotator.build(
-            options, filename, io_manager.reader.schema,
+            options, filename,
             defaults={
                 "fixtures_dir": relative_to_this_test_folder("fixtures/")
             })
@@ -252,7 +252,7 @@ def test_cleanup_section(expected_df, variants_io, capsys):
     captured = capsys.readouterr()
     with variants_io("fixtures/input2.tsv") as io_manager:
         pipeline = PipelineAnnotator.build(
-            options, filename, io_manager.reader.schema,
+            options, filename,
             defaults={
                 "fixtures_dir": relative_to_this_test_folder("fixtures/")
             })
