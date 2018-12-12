@@ -3,368 +3,352 @@
         "families_total": 6,
         "people_counters": [
             {
+                "roles": [
+                    "prb",
+                    "sib"
+                ],
+                "phenotypes": [
+                    "pheno",
+                    "phenotype2",
+                    "phenotype1",
+                    "unaffected"
+                ],
                 "counters": [
                     {
                         "people_male": 0,
                         "people_female": 0,
                         "people_unspecified": 0,
                         "people_total": 0,
-                        "phenotype": "pheno",
-                        "people_roles": [
-                            "prb",
-                            "sib"
-                        ]
+                        "phenotype": "pheno"
                     },
                     {
                         "people_male": 0,
                         "people_female": 2,
                         "people_unspecified": 0,
                         "people_total": 2,
-                        "phenotype": "phenotype2",
-                        "people_roles": [
-                            "prb",
-                            "sib"
-                        ]
+                        "phenotype": "phenotype2"
                     },
                     {
                         "people_male": 1,
                         "people_female": 5,
                         "people_unspecified": 0,
                         "people_total": 6,
-                        "phenotype": "phenotype1",
-                        "people_roles": [
-                            "prb",
-                            "sib"
-                        ]
+                        "phenotype": "phenotype1"
                     },
                     {
                         "people_male": 0,
                         "people_female": 0,
                         "people_unspecified": 0,
                         "people_total": 0,
-                        "phenotype": "unaffected",
-                        "people_roles": [
-                            "prb",
-                            "sib"
-                        ]
+                        "phenotype": "unaffected"
                     }
-                ],
-                "roles": [
-                    "prb",
-                    "sib"
                 ]
             },
             {
+                "roles": [
+                    "mom",
+                    "dad"
+                ],
+                "phenotypes": [
+                    "pheno",
+                    "phenotype2",
+                    "phenotype1",
+                    "unaffected"
+                ],
                 "counters": [
                     {
                         "people_male": 2,
                         "people_female": 0,
                         "people_unspecified": 0,
                         "people_total": 2,
-                        "phenotype": "pheno",
-                        "people_roles": [
-                            "mom",
-                            "dad"
-                        ]
+                        "phenotype": "pheno"
                     },
                     {
                         "people_male": 1,
                         "people_female": 0,
                         "people_unspecified": 0,
                         "people_total": 1,
-                        "phenotype": "phenotype2",
-                        "people_roles": [
-                            "mom",
-                            "dad"
-                        ]
+                        "phenotype": "phenotype2"
                     },
                     {
                         "people_male": 0,
                         "people_female": 2,
                         "people_unspecified": 0,
                         "people_total": 2,
-                        "phenotype": "phenotype1",
-                        "people_roles": [
-                            "mom",
-                            "dad"
-                        ]
+                        "phenotype": "phenotype1"
                     },
                     {
                         "people_male": 3,
                         "people_female": 4,
                         "people_unspecified": 0,
                         "people_total": 7,
-                        "phenotype": "unaffected",
-                        "people_roles": [
-                            "mom",
-                            "dad"
-                        ]
+                        "phenotype": "unaffected"
                     }
-                ],
-                "roles": [
-                    "mom",
-                    "dad"
                 ]
             }
         ],
         "families_counters": [
-            {
-                "counters": [],
-                "phenotype": "pheno"
-            },
-            {
-                "counters": [],
-                "phenotype": "phenotype2"
-            },
-            {
+                {
+                "phenotypes": [
+                    "pheno",
+                    "phenotype2",
+                    "phenotype1",
+                    "unaffected"
+                ],
                 "counters": [
                     {
-                        "pedigree": [
-                            [
-                                "f1",
-                                "mom1",
-                                "0",
-                                "0",
-                                "F",
-                                "#ffffff",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f1",
-                                "dad1",
-                                "0",
-                                "0",
-                                "M",
-                                "#ffffff",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f1",
-                                "ch1",
-                                "dad1",
-                                "mom1",
-                                "F",
-                                "#e35252",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ]
-                        ],
-                        "pedigrees_count": 2
+                        "counters": [],
+                        "phenotype": "pheno"
                     },
                     {
-                        "pedigree": [
-                            [
-                                "f6",
-                                "mom6",
-                                "0",
-                                "0",
-                                "F",
-                                "#ffffff",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f6",
-                                "dad6",
-                                "0",
-                                "0",
-                                "M",
-                                "#ffffff",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f6",
-                                "ch6",
-                                "dad6",
-                                "mom6",
-                                "M",
-                                "#e35252",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ]
+                        "counters": [],
+                        "phenotype": "phenotype2"
+                    },
+                    {
+                        "counters": [
+                            {
+                                "pedigree": [
+                                    [
+                                        "f1",
+                                        "mom1",
+                                        "0",
+                                        "0",
+                                        "F",
+                                        "#ffffff",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f1",
+                                        "dad1",
+                                        "0",
+                                        "0",
+                                        "M",
+                                        "#ffffff",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f1",
+                                        "ch1",
+                                        "dad1",
+                                        "mom1",
+                                        "F",
+                                        "#e35252",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ]
+                                ],
+                                "pedigrees_count": 2
+                            },
+                            {
+                                "pedigree": [
+                                    [
+                                        "f6",
+                                        "mom6",
+                                        "0",
+                                        "0",
+                                        "F",
+                                        "#ffffff",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f6",
+                                        "dad6",
+                                        "0",
+                                        "0",
+                                        "M",
+                                        "#ffffff",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f6",
+                                        "ch6",
+                                        "dad6",
+                                        "mom6",
+                                        "M",
+                                        "#e35252",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ]
+                                ],
+                                "pedigrees_count": 1
+                            }
                         ],
-                        "pedigrees_count": 1
+                        "phenotype": "phenotype1"
+                    },
+                    {
+                        "counters": [],
+                        "phenotype": "unaffected"
+                    },
+                    {
+                        "counters": [
+                            {
+                                "pedigree": [
+                                    [
+                                        "f4",
+                                        "mom4",
+                                        "0",
+                                        "0",
+                                        "F",
+                                        "#e35252",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f4",
+                                        "ch4",
+                                        "dad4",
+                                        "mom4",
+                                        "F",
+                                        "#e35252",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f4",
+                                        "ch4.1",
+                                        "dad4",
+                                        "mom4",
+                                        "F",
+                                        "#b8008a",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f4",
+                                        "dad4",
+                                        "0",
+                                        "0",
+                                        "M",
+                                        "#E0E0E0",
+                                        null,
+                                        true,
+                                        "",
+                                        ""
+                                    ]
+                                ],
+                                "pedigrees_count": 1
+                            },
+                            {
+                                "pedigree": [
+                                    [
+                                        "f5",
+                                        "mom5",
+                                        "0",
+                                        "0",
+                                        "F",
+                                        "#e35252",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f5",
+                                        "dad5",
+                                        "0",
+                                        "0",
+                                        "M",
+                                        "#aaaaaa",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f5",
+                                        "ch5",
+                                        "dad5",
+                                        "mom5",
+                                        "F",
+                                        "#e35252",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f5",
+                                        "ch5.1",
+                                        "dad5",
+                                        "mom5",
+                                        "F",
+                                        "#b8008a",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ]
+                                ],
+                                "pedigrees_count": 1
+                            },
+                            {
+                                "pedigree": [
+                                    [
+                                        "f2",
+                                        "mom2",
+                                        "0",
+                                        "0",
+                                        "F",
+                                        "#ffffff",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f2",
+                                        "dad2",
+                                        "0",
+                                        "0",
+                                        "M",
+                                        "#b8008a",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ],
+                                    [
+                                        "f2",
+                                        "ch2",
+                                        "dad2",
+                                        "mom2",
+                                        "F",
+                                        "#e35252",
+                                        null,
+                                        false,
+                                        "",
+                                        ""
+                                    ]
+                                ],
+                                "pedigrees_count": 1
+                            }
+                        ],
+                        "phenotype": -1
                     }
-                ],
-                "phenotype": "phenotype1"
-            },
-            {
-                "counters": [],
-                "phenotype": "unaffected"
-            },
-            {
-                "counters": [
-                    {
-                        "pedigree": [
-                            [
-                                "f4",
-                                "mom4",
-                                "0",
-                                "0",
-                                "F",
-                                "#e35252",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f4",
-                                "ch4",
-                                "dad4",
-                                "mom4",
-                                "F",
-                                "#e35252",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f4",
-                                "ch4.1",
-                                "dad4",
-                                "mom4",
-                                "F",
-                                "#b8008a",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f4",
-                                "dad4",
-                                "0",
-                                "0",
-                                "M",
-                                "#E0E0E0",
-                                null,
-                                true,
-                                "",
-                                ""
-                            ]
-                        ],
-                        "pedigrees_count": 1
-                    },
-                    {
-                        "pedigree": [
-                            [
-                                "f5",
-                                "mom5",
-                                "0",
-                                "0",
-                                "F",
-                                "#e35252",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f5",
-                                "dad5",
-                                "0",
-                                "0",
-                                "M",
-                                "#aaaaaa",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f5",
-                                "ch5",
-                                "dad5",
-                                "mom5",
-                                "F",
-                                "#e35252",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f5",
-                                "ch5.1",
-                                "dad5",
-                                "mom5",
-                                "F",
-                                "#b8008a",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ]
-                        ],
-                        "pedigrees_count": 1
-                    },
-                    {
-                        "pedigree": [
-                            [
-                                "f2",
-                                "mom2",
-                                "0",
-                                "0",
-                                "F",
-                                "#ffffff",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f2",
-                                "dad2",
-                                "0",
-                                "0",
-                                "M",
-                                "#b8008a",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ],
-                            [
-                                "f2",
-                                "ch2",
-                                "dad2",
-                                "mom2",
-                                "F",
-                                "#e35252",
-                                null,
-                                false,
-                                "",
-                                ""
-                            ]
-                        ],
-                        "pedigrees_count": 1
-                    }
-                ],
-                "phenotype": -1
+                ]
             }
-        ],
-        "phenotypes": [
-            "pheno",
-            "phenotype2",
-            "phenotype1",
-            "unaffected"
         ]
     },
     "denovo_report": {
@@ -372,12 +356,6 @@
         "effect_types": [
             "Frame-shift",
             "Missense"
-        ],
-        "phenotypes": [
-            "pheno",
-            "phenotype2",
-            "phenotype1",
-            "unaffected"
         ],
         "tables": [
             {
@@ -484,6 +462,12 @@
                 "roles": [
                     "prb",
                     "sib"
+                ],
+                "phenotypes": [
+                    "pheno",
+                    "phenotype2",
+                    "phenotype1",
+                    "unaffected"
                 ]
             },
             {
@@ -590,12 +574,18 @@
                 "roles": [
                     "mom",
                     "dad"
+                ],
+                "phenotypes": [
+                    "pheno",
+                    "phenotype2",
+                    "phenotype1",
+                    "unaffected"
                 ]
             }
         ]
     },
     "study_name": "StudyGroup",
-    "phenotype": "pheno,phenotype2,phenotype1,unaffected",
+    "phenotype": "[pheno, phenotype2, phenotype1, unaffected]",
     "study_type": "WE",
     "study_year": null,
     "pub_med": null,
