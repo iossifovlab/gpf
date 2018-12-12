@@ -40,18 +40,19 @@ class OffsetLayoutDrawer(object):
 
     def __init__(
             self, layout, x_offset, y_offset, show_id=False,
-            show_family=False):
+            show_family=False, figsize=(7, 10)):
         self._x_offset = x_offset
         self._y_offset = y_offset
         self._layout = deepcopy(layout)
         self.show_id = show_id
         self.show_family = show_family
+        self.figsize = figsize
         if self._layout is not None:
             self._horizontal_mirror_layout()
 
     def draw(self, figure=None, ax=None, title=None):
         if figure is None:
-            figure = plt.figure()
+            figure = plt.figure(figsize=self.figsize)
 
         if ax is not None:
             ax_pedigree = ax
@@ -96,7 +97,7 @@ class OffsetLayoutDrawer(object):
         return figure
 
     def draw_family(self, family, title=None):
-        figure, ax = plt.subplots()
+        figure, ax = plt.subplots(figsize=self.figsize)
         ax.axis("off")
 
         self._draw_family(figure, family)
@@ -116,7 +117,7 @@ class OffsetLayoutDrawer(object):
     def draw_people_counters(self, families_report):
         pcf = []
         for people_counter in families_report.people_counters:
-            figure, ax = plt.subplots()
+            figure, ax = plt.subplots(figsize=self.figsize)
             ax.axis("off")
 
             table_vals = [['Status'], ['People Male'], ['People Female'],
@@ -150,13 +151,14 @@ class OffsetLayoutDrawer(object):
             [c for fc in families_report.families_counters
              for c in fc.counters]
         for families in zip_longest(*(iter(families_counters),) * 9):
-            figure, ax = plt.subplots(3, 3)
+            figure, ax = plt.subplots(3, 3, figsize=self.figsize)
 
             for row, families_row in\
                     enumerate(zip_longest(*(iter(families),) * 3)):
                 for col, family in enumerate(families_row):
                     ax[row][col].axis("off")
-                    ax[row][col].set_aspect(aspect="equal", adjustable="datalim", anchor="C")
+                    ax[row][col].set_aspect(
+                        aspect="equal", adjustable="datalim", anchor="C")
                     ax[row][col].autoscale_view()
 
                     if family is None:
