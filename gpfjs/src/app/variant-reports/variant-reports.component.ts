@@ -22,7 +22,7 @@ export class VariantReportsComponent implements OnInit {
   selectedReport$ = new Subject<Study>();
 
   variantReport$: Observable<VariantReport>;
-  pedigreeGroups: PedigreeCounter[][];
+  pedigreeTables: any[];
 
   constructor(
     private variantReportsService: VariantReportsService,
@@ -39,7 +39,13 @@ export class VariantReportsComponent implements OnInit {
       .share();
 
     this.variantReport$.take(1).subscribe(params => {
-      this.pedigreeGroups = this.chunkPedigrees(params.familyReport.familiesCounters);
+      this.pedigreeTables = params.familyReport.familiesCounters.map(
+        familiesCounters => {
+          return {
+            'pedigrees': this.chunkPedigrees(familiesCounters.familyCounter),
+            'phenotypes': familiesCounters.phenotypes
+          };
+        });
     });
 
     this.loadReportFromParams();
@@ -81,7 +87,13 @@ export class VariantReportsComponent implements OnInit {
     this.selectedReport$.next(study);
 
     this.variantReport$.take(1).subscribe(params => {
-      this.pedigreeGroups = this.chunkPedigrees(params.familyReport.familiesCounters);
+      this.pedigreeTables = params.familyReport.familiesCounters.map(
+        familiesCounters => {
+          return {
+            'pedigrees': this.chunkPedigrees(familiesCounters.familyCounter),
+            'phenotypes': familiesCounters.phenotypes
+          };
+        });
     });
   }
 
