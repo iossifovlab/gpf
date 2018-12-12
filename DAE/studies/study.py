@@ -15,7 +15,27 @@ class Study(object):
             if self._study_type_lowercase not in study_types_filter:
                 return []
 
+        kwargs = self.add_people_with_phenotype(kwargs)
+
         return self.backend.query_variants(**kwargs)
+
+    def add_people_with_phenotype(self, kwargs):
+        people_with_phenotype = set()
+        if 'pedigreeSelector' in kwargs and\
+                kwargs['pedigreeSelector'] is not None:
+            pedigree_selector = kwargs.pop('pedigreeSelector')
+
+            for family in self.families.values():
+                family_members_with_phenotype = set(
+                    [person.person_id for person in
+                        family.get_people_with_phenotypes(
+                            pedigree_selector['source'],
+                            pedigree_selector['checkedValues'])])
+                people_with_phenotype.update(family_members_with_phenotype)
+
+            kwargs['person_ids'] = list(people_with_phenotype)
+
+        return kwargs
 
     def get_phenotype_values(self, pheno_column='phenotype'):
         return set(self.backend.ped_df[pheno_column])

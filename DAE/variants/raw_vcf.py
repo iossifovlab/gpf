@@ -300,13 +300,6 @@ class RawFamilyVariants(FamiliesBase):
             func = kwargs['filter']
             if not func(v):
                 return False
-        if kwargs.get('pedigreeSelector') is not None:
-            pd = kwargs.get('pedigreeSelector')
-            if len(
-                v.variant_in_members -
-                set([m.person_id for m in v.family.get_people_with_phenotypes(
-                     pd['source'], pd['checkedValues'])])):
-                return False
         return True
 
     def query_variants(self, **kwargs):
