@@ -71,7 +71,7 @@ def common_reports_generator(
 @pytest.fixture(scope='session')
 def output():
     def get_output(name):
-        with open(path_to_fixtures('output', name + '.json')) as o:
+        with open(path_to_fixtures('expected_output', name + '.json')) as o:
             output = json.load(o)
 
         return output

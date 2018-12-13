@@ -11,3 +11,9 @@ f4	ch4.1	dad4	mom4	2	2	prb	phenotype1	ch4.1
 f4	ch4.2	dad4	mom4	2	2	sib	phenotype1	ch4.2
 f4	ch4.3	dad4	mom4	2	2	sib	phenotype1	ch4.3
 f4	ch4.4	dad4	mom4	2	2	sib	phenotype1	ch4.4
+f6	mom6	0	0	2	1	mom	unaffected	mom6
+f6	dad6	0	0	1	1	dad	unaffected	dad6
+f6	ch6.1	dad6	mom6	2	2	prb	phenotype1	ch6.1
+f6	ch6.2	dad6	mom6	2	2	sib	phenotype1	ch6.2
+f6	ch6.3	dad6	mom6	1	2	sib	phenotype1	ch6.3
+f6	ch6.4	dad6	mom6	1	2	sib	phenotype1	ch6.4
