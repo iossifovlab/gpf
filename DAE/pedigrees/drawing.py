@@ -168,16 +168,14 @@ class OffsetLayoutDrawer(object):
                     if family_layout is None:
                         self._draw_title(
                             ax[row][col], 'Invalid coordinates', x=0.5, y=1.1,
-                            fontsize=6,
-                               transform=ax[row][col].transAxes)
+                            fontsize=6, transform=ax[row][col].transAxes)
                     else:
                         layout_drawer = OffsetLayoutDrawer(family_layout, 0, 0)
                         layout_drawer.draw(ax=ax[row][col])
                         self._draw_title(
                             ax[row][col], 'Pedigrees Count: ' +
                             str(family.pedigrees_count), x=0.5, y=1.1,
-                                fontsize=6,
-                                transform=ax[row][col].transAxes)
+                            fontsize=6, transform=ax[row][col].transAxes)
 
                     ax[row][col].plot()
 
