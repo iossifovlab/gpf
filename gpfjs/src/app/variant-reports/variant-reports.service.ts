@@ -33,7 +33,10 @@ export class VariantReportsService {
     let url = `${this.variantsUrl}${study.name}`;
     return this.http
       .get(url, options)
-      .map(response => VariantReport.fromJson(response.json()))
+      .map(response => {
+        console.log(VariantReport.fromJson(response.json()))
+        return VariantReport.fromJson(response.json())
+      })
       .catch(error => {
         console.log(error);
         return Observable.of(null as VariantReport);
