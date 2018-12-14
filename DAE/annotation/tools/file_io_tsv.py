@@ -19,6 +19,59 @@ def to_str(column_value):
         return str(column_value)
 
 
+class RegionHelper(object):
+
+    def __init__(self, region_string):
+        self.chrom_start, self.pos_start, self.pos_end = \
+                 RegionHelper.parse_region_string(region_string)
+
+    @staticmethod
+    def parse_region_string(region):
+        region = region.split(':')
+        assert len(region) == 2
+        pos_start = region[1].split('-')[0]
+        pos_end = None
+        if '-' in region:
+            pos_end = region[1].split('-')[1]
+        try:
+            pos_start = int(pos_start)
+            if pos_end is not None:
+                pos_end = int(pos_end)
+            return (RegionHelper.strip_chrom(region[0]),
+                    pos_start,
+                    pos_end)
+        except ValueError:
+            sys.exit(-1)
+
+    @staticmethod
+    def strip_chrom(chrom):
+        stripped = chrom.replace('chr', '')
+        if stripped == 'X':
+            return 23
+        elif stripped == 'Y':
+            return 24
+        else:
+            try:
+                return int(stripped)
+            except ValueError:
+                sys.exit(-1)
+
+    def contains(self, chrom, pos):
+        try:
+            chrom = RegionHelper.strip_chrom(chrom)
+            pos = int(pos)
+        except ValueError:
+            sys.exit(-1)
+
+        if chrom >= self.chrom_start and pos >= self.pos_start:
+            if self.pos_end is not None:
+                if pos <= self.pos_end:
+                    return True
+                return False
+            return True
+        return False
+
+
 class AbstractFormat(object):
 
     __metaclass__ = ABCMeta
@@ -236,6 +289,12 @@ class TabixReader(TSVFormat):
 
         self._region_reset(self.region)
         self.header = self._header_read()
+        self.header_enum = {col_name: index
+                            for index, col_name in enumerate(self.header)}
+        if self.options.vcf and self.options.region:
+            self.region_helper = RegionHelper(self.options.region)
+        else:
+            self.region_helper = None
         self.schema = Schema.from_dict({'str': ','.join(self.header)})
 
     def _header_read(self):
@@ -267,18 +326,18 @@ class TabixReader(TSVFormat):
     def line_write(self, line):
         raise NotImplementedError()
 
-    # def line_read(self):
-    #     line = next(self.lines_iterator)
-    #     self._progress_step()
-    #     return line
-
     def lines_read_iterator(self):
         if self.lines_iterator is None:
             return
 
         for line in self.lines_iterator:
             self._progress_step()
-            # print(self.linecount, line)
+
+            if self.region_helper is not None:
+                if not self.region_helper \
+                   .contains(line[self.header_enum[self.options.c]],
+                             line[self.header_enum[self.options.p]]):
+                    continue
 
             yield line
 
