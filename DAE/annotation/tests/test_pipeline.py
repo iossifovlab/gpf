@@ -85,6 +85,7 @@ def test_build_pipeline_configuration():
     options = Box({
             "default_arguments": None,
             "vcf": True,
+            "mode": "overwrite",
         },
         default_box=True,
         default_box_attr=None)
@@ -149,6 +150,7 @@ def test_build_pipeline(
     options = Box({
             "default_arguments": None,
             "vcf": True,
+            "mode": "overwrite",
         },
         default_box=True,
         default_box_attr=None)
@@ -206,6 +208,7 @@ def test_pipeline_change_variants_position(variants_io, capsys, expected_df):
     options = Box({
             "default_arguments": None,
             "vcf": True,
+            "mode": "overwrite",
         },
         default_box=True,
         default_box_attr=None)

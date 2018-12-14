@@ -43,6 +43,7 @@ def test_variant_score_annotator_simple(
         "vcf": True,
         "Graw": "fake_genome_ref_file",
         "direct": direct,
+        "mode": "overwrite",
         "scores_file": relative_to_this_test_folder(
             "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
     }, default_box=True, default_box_attr=None)
@@ -89,6 +90,7 @@ def test_variant_multi_score_annotator_simple(
         "vcf": True,
         "Graw": "fake_genome_ref_file",
         "direct": direct,
+        "mode": "overwrite",
         "scores_directory": relative_to_this_test_folder(
             "fixtures/")
     }, default_box=True, default_box_attr=None)
@@ -136,6 +138,7 @@ def test_variant_multi_score_annotator_multi(
         "vcf": True,
         "Graw": "fake_genome_ref_file",
         "direct": direct,
+        "mode": "overwrite",
         "scores_directory": relative_to_this_test_folder(
             "fixtures/")
     }, default_box=True, default_box_attr=None)
@@ -192,6 +195,7 @@ def test_variant_score_annotator_cadd(
         "vcf": True,
         "Graw": "fake_genome_ref_file",
         "direct": direct,
+        "mode": "overwrite",
         "scores_file": relative_to_this_test_folder(
             "fixtures/TESTCADD/TESTwhole_genome_SNVs.tsv.gz"),
         "search_columns": "VCF:ref,VCF:alt",
