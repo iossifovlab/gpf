@@ -1,7 +1,8 @@
 import pytest
 from box import Box
 from annotation.tests.conftest import relative_to_this_test_folder
-from annotation.tools.file_io import TabixReader, parquet_enabled
+from annotation.tools.file_io import TSVGzipReader, \
+        TabixReader, parquet_enabled
 
 if parquet_enabled:
     from annotation.tools.file_io_parquet import ParquetWriter
@@ -195,3 +196,37 @@ def test_tabix_chrom_prefix(
         for _line in reader.lines_read_iterator():
             count += 1
         assert count == total_count
+
+
+def test_tabix_region_strictness():
+    # long_variant.vcf.gz has 6 variants before
+    # the region 4:47788570 and 1 that is before it,
+    # but overlaps it due to its length. We wish to omit
+    # all 7 variants.
+
+    filename = relative_to_this_test_folder('fixtures/long_variant.vcf.gz')
+
+    options = Box({
+        'vcf': True,
+        'c': 'CHROM',
+        'p': 'POS',
+        'r': 'REF',
+        'a': 'ALT',
+        'region': '4:47788570',
+    }, default_box=True, default_box_attr=None)
+
+    with TSVGzipReader(options, filename) as reader:
+        assert reader is not None
+
+        all_line_count = 0
+        for _line in reader.lines_read_iterator():
+            all_line_count += 1
+
+    with TabixReader(options, filename) as reader:
+        assert reader is not None
+
+        count = 0
+        for _line in reader.lines_read_iterator():
+            print(_line)
+            count += 1
+        assert (all_line_count - count) == 7
