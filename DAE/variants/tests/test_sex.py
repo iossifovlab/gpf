@@ -20,7 +20,7 @@ def test_sex_attribute():
     assert Sex.from_name('F') == Sex.female
     assert Sex.from_name('female') == Sex.female
 
-    assert Sex.from_value(4) == Sex.unspecified
+    assert Sex.from_value(0) == Sex.unspecified
     assert Sex.from_name('U') == Sex.unspecified
     assert Sex.from_name('unspecified') == Sex.unspecified
 
