@@ -148,8 +148,8 @@ class OffsetLayoutDrawer(object):
     def draw_families_counters(self, families_report, layout):
         fcf = []
         families_counters =\
-            [c for fc in families_report.families_counters
-             for c in fc.counters]
+            [counter for fc in families_report.families_counters
+             for c in fc.counters for counter in c.counters]
         for families in zip_longest(*(iter(families_counters),) * 9):
             figure, ax = plt.subplots(3, 3, figsize=self.figsize)
 

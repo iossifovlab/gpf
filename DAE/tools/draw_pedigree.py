@@ -89,7 +89,7 @@ def main():
     families = FamiliesBase(pedigrees_df)
     families.families_build(pedigrees_df)
 
-    phenotype = {
+    phenotype_info = [{
         'domain': {
             'affected': {
                 'id': 'affected',
@@ -108,10 +108,11 @@ def main():
             'color': '#aaaaaa'
         },
         'source': 'phenotype'
-    }
-    phenotypes = ['affected', 'unaffected', 'unknown']
+    }]
+    phenotypes = [['affected', 'unaffected', 'unknown']]
     roles = [[None]]
-    families_report = FamiliesReport(families, phenotype, phenotypes, roles)
+    families_report =\
+        FamiliesReport(families, phenotype_info, phenotypes, roles)
 
     layouts = {}
     with multiprocessing.Pool(processes=args.processes) as pool:
