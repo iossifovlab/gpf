@@ -71,9 +71,9 @@ class LayoutSaver(object):
             #         self.fieldname, self.input_filename)
 
             if self.fieldname not in fieldnames:
-                fieldnames += self.fieldname
+                fieldnames.append(self.fieldname)
             if self.generated_column not in fieldnames:
-                fieldnames += self.generated_column
+                fieldnames.append(self.generated_column)
 
             writer = csv.DictWriter(output_file, fieldnames, delimiter='\t')
 
