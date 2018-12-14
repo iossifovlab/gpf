@@ -5,7 +5,8 @@ import { Observable, Subject } from 'rxjs';
 
 import { VariantReportsService } from './variant-reports.service';
 import { Studies, Study, VariantReport, ChildrenCounter,
-         FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData
+         FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData,
+         PedigreeTable
         } from './variant-reports';
 
 export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
@@ -22,7 +23,7 @@ export class VariantReportsComponent implements OnInit {
   selectedReport$ = new Subject<Study>();
 
   variantReport$: Observable<VariantReport>;
-  pedigreeTables: any[];
+  pedigreeTables: PedigreeTable[];
 
   constructor(
     private variantReportsService: VariantReportsService,
@@ -40,12 +41,11 @@ export class VariantReportsComponent implements OnInit {
 
     this.variantReport$.take(1).subscribe(params => {
       this.pedigreeTables = params.familyReport.familiesCounters.map(
-        familiesCounters => {
-          return {
-            'pedigrees': this.chunkPedigrees(familiesCounters.familyCounter),
-            'phenotypes': familiesCounters.phenotypes
-          };
-        });
+        familiesCounters => new PedigreeTable(
+            this.chunkPedigrees(familiesCounters.familyCounter),
+            familiesCounters.phenotypes
+          )
+        );
     });
 
     this.loadReportFromParams();

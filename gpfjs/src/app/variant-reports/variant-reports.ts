@@ -229,3 +229,12 @@ export class VariantReport {
   ) {}
 
 }
+
+export class PedigreeTable {
+
+  constructor(
+    readonly pedigrees: PedigreeCounter[][],
+    readonly phenotypes: string[]
+  ) {}
+
+}
