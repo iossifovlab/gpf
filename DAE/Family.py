@@ -33,7 +33,7 @@ class Person(object):
 
     @property
     def layout_position(self):
-        return self.atts.get("layoutCoords", None)
+        return self.atts.get("layout", None)
 
     @property
     def is_child(self):
