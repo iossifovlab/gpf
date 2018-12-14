@@ -585,7 +585,7 @@
         ]
     },
     "study_name": "StudyGroup",
-    "phenotype": "[pheno, phenotype2, phenotype1, unaffected]",
+    "phenotype": ["pheno", "phenotype2", "phenotype1", "unaffected"],
     "study_type": "WE",
     "study_year": null,
     "pub_med": null,

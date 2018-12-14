@@ -33,7 +33,7 @@ class CommonReportsConfig(object):
             d_properties = self.config.CommonReports.get(d.lower())
             if d_properties is None:
                 continue
-            phenotypes = d_properties.get('phenotypes', None)
+            phenotypes = d_properties.get('peoplegroups', None)
             is_downloadable = d_properties.get('is_downloadable', None)
             if phenotypes is None:
                 continue
@@ -99,7 +99,7 @@ class CommonReportsConfig(object):
         }
 
     def phenotypes(self):
-        phenotypes = self.config.CommonReports.phenotypes.split(',')
+        phenotypes = self.config.CommonReports.peoplegroups.split(',')
         phenotypes_info = {}
         for phenotype in phenotypes:
             phenotypes_info[phenotype] = self._phenotype(phenotype)

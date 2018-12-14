@@ -524,14 +524,10 @@ class CommonReport(object):
         ]
 
     def _get_phenotype(self, phenotypes_info, phenotypes):
-        for phenotype_info in phenotypes_info:
-            default_phenotype = phenotype_info['default']['name']
+            default_phenotype = phenotypes_info[0]['default']['name']
 
-            return ', '.join(
-                ['[' + ', '.join(
-                    [pheno if pheno is not None else default_phenotype
-                     for pheno in phenotype]) + ']'
-                 for phenotype in phenotypes])
+            return [pheno if pheno is not None else default_phenotype
+                    for pheno in phenotypes[0]]
 
     def _get_number_of_people_with_role(self, query_object, role):
         return sum([len(family.get_people_with_role(role))

@@ -4,8 +4,8 @@ import common_reports.common_report
 
 
 def assert_common_reports(first, second):
-    first['phenotype'] = sorted(first['phenotype'][1:-1].split(', '))
-    second['phenotype'] = sorted(second['phenotype'][1:-1].split(', '))
+    first['phenotype'].sort()
+    second['phenotype'].sort()
 
     for el in range(len(first['families_report']['people_counters'])):
         first['families_report']['people_counters'][el]['phenotypes'].sort()
