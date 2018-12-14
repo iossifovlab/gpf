@@ -49,7 +49,7 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         return LiftOver(chain_file)
 
     def do_annotate(self, aline, variant):
-        if self.location:
+        if self.location in aline:
             location = aline[self.location]
             chrom, pos = location.split(":")
             pos = int(pos)

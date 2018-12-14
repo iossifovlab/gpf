@@ -57,6 +57,7 @@ def test_frequency_annotator(mocker, variants_io, expected_df, capsys):
             "vcf": True,
             "Graw": "fake_genome_ref_file",
             "direct": False,
+            "mode": "overwrite",
             "freq_file": relative_to_this_test_folder(
                 "fixtures/TESTFreq/test_freq.tsv.gz"),
             "freq": "all.altFreq",
