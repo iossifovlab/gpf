@@ -38,7 +38,7 @@ def studies_definition():
 
 
 @pytest.fixture(scope='session')
-def basic_groups_definition():
+def basic_study_groups_definition():
     return SingleFileStudiesGroupDefinition(
         path_to_fixtures('studies', 'study_group.conf'))
 

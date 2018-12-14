@@ -46,10 +46,10 @@ class AnnotatorConfig(object):
         return clazz
 
     @staticmethod
-    def instantiate(section_config, schema):
+    def instantiate(section_config):
         clazz = AnnotatorConfig._name_to_class(section_config.annotator_name)
         assert clazz is not None
-        return clazz(section_config, schema)
+        return clazz(section_config)
 
     @staticmethod
     def cli_options():

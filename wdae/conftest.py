@@ -47,8 +47,12 @@ def user(db, user_model):
 def admin_user(db, user_model):
     u = user_model.objects.create_superuser('admin@example.com', 'secret')
     u.save()
+
     admin_group, _ = Group.objects.get_or_create(name=WdaeUser.SUPERUSER_GROUP)
+    any_dataset_group, _ = Group.objects.get_or_create(name='any_dataset')
+
     u.groups.add(admin_group)
+    u.groups.add(any_dataset_group)
 
     return u
 

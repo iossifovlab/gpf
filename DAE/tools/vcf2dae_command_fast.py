@@ -355,12 +355,12 @@ def main():
         help='VCF file to import'
     )
 
-    parser.add_argument(
-        "-x", "--project", dest="project", default="VIP",
-        metavar="project", help="project name")
-    parser.add_argument(
-        "-l", "--lab", dest="lab", default="SF",
-        metavar="lab", help="lab name")
+    # parser.add_argument(
+    #     "-x", "--project", dest="project", default="VIP",
+    #     metavar="project", help="project name")
+    # parser.add_argument(
+    #     "-l", "--lab", dest="lab", default="SF",
+    #     metavar="lab", help="lab name")
 
     parser.add_argument(
         "-o", "--outputPrefix", dest="outputPrefix", default="transmission",
@@ -454,8 +454,10 @@ def main():
         # FIXME: Do not reduce families because some people are not sequenced
         # printFamData(fInfo, pInfo, proj=ox.project, lab=ox.lab,
         #              listFam=fam, out=open(FAMOUT, 'w'))
-        printFamData(fInfo, pInfo, proj=args.project, lab=args.lab,
-                     listFam=[], out=open(FAMOUT, 'w'))
+        printFamData(
+            fInfo, pInfo, 
+            # proj=args.project, lab=args.lab,
+            listFam=[], out=open(FAMOUT, 'w'))
 
         def keyfunc(variant):
             return (variant['variant'].CHROM, variant['variant'].POS)

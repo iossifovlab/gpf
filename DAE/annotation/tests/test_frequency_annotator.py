@@ -37,11 +37,11 @@ from annotation.tools.annotator_config import VariantAnnotatorConfig
 #     print(captured.out)
 
 
-exptected_result_freq = \
-    """RESULT_FREQ
-0.1
-0.5
-0.7
+expected_result_freq = \
+    """RESULT_FREQ\tRESULT_FREQ_2
+0.1\t0.8
+0.5\t1.2
+0.7\t1.4
 """
 
 
@@ -59,14 +59,14 @@ def test_frequency_annotator(mocker, variants_io, expected_df, capsys):
             "direct": False,
             "freq_file": relative_to_this_test_folder(
                 "fixtures/TESTFreq/test_freq.tsv.gz"),
-            "freq": "all.altFreq",
+            "freq": "all.altFreq, all.altFreq2",
             # "c": "CSHL:chr",
             # "p": "CSHL:position",
             # "v": "CSHL:variant",
         }, default_box=True, default_box_attr=None)
 
         columns_config = {
-            'freq': "RESULT_FREQ",
+            'output': "RESULT_FREQ,RESULT_FREQ_2",
         }
 
         config = VariantAnnotatorConfig(
@@ -78,10 +78,7 @@ def test_frequency_annotator(mocker, variants_io, expected_df, capsys):
         )
 
         with variants_io("fixtures/freq_test_1.tsv") as io_manager:
-            freq_annotator = FrequencyAnnotator(
-                config,
-                io_manager.reader.schema
-            )
+            freq_annotator = FrequencyAnnotator(config)
             assert freq_annotator is not None
 
             captured = capsys.readouterr()
@@ -94,5 +91,5 @@ def test_frequency_annotator(mocker, variants_io, expected_df, capsys):
 
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
-        expected_df(exptected_result_freq),
+        expected_df(expected_result_freq),
         check_less_precise=3)

@@ -10,7 +10,7 @@ class StudyGroupsDefinition(ConfigurableEntityDefinition):
 
     @property
     def study_group_ids(self):
-        return self.configurable_entity_ids()
+        return self.configurable_entity_ids
 
     def get_study_group_config(self, study_group_id):
         return self.get_configurable_entity_config(study_group_id)
@@ -36,10 +36,10 @@ class SingleFileStudiesGroupDefinition(StudyGroupsDefinition):
 
     @staticmethod
     def _config_file_from_environment():
-        from study_groups.default_settings import CONFIG_FILE
-        return CONFIG_FILE
+        from study_groups.default_settings import get_config
+        return get_config().get("CONFIG_FILE")
 
     @staticmethod
     def _work_dir_from_environment():
-        from study_groups.default_settings import DATA_DIR
-        return DATA_DIR
+        from study_groups.default_settings import get_config
+        return get_config().get("DATA_DIR")

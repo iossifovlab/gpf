@@ -30,7 +30,7 @@ class Dataset(models.Model):
         groups = datasetObject.default_groups
         if authorized_groups is not None:
             groups += authorized_groups
-        LOGGER.error("recreating groups: {}".format(groups))
+        LOGGER.info("recreating groups: {}".format(groups))
         for group_name in set(groups):
             group, _created = Group.objects.get_or_create(name=group_name)
             assign_perm('view', group, datasetObject)

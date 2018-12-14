@@ -49,7 +49,7 @@ def test_annotator_base_simple(variants_io1):
     )
 
     with variants_io1 as io_manager:
-        annotator = AnnotatorBase(section_config, io_manager.reader.schema)
+        annotator = AnnotatorBase(section_config)
         assert annotator is not None
 
 
@@ -68,7 +68,7 @@ def test_copy_annotator_simple(capsys, variants_io1):
     )
 
     with variants_io1 as io_manager:
-        annotator = CopyAnnotator(section_config, io_manager.reader.schema)
+        annotator = CopyAnnotator(section_config)
         assert annotator is not None
         capsys.readouterr()
         annotator.annotate_file(io_manager)

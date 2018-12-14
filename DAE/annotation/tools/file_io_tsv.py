@@ -6,7 +6,6 @@ import gzip
 
 import pysam
 from abc import ABCMeta, abstractmethod
-from collections import OrderedDict
 from box import Box
 from annotation.tools.schema import Schema
 
@@ -114,8 +113,17 @@ class TSVReader(TSVFormat):
             assert not self.is_gzip(self.filename)
             self.infile = open(self.filename, 'r')
 
+        if self.options.vcf:
+            self._skip_metalines()
+
         self.header = self._header_read()
         self.schema = Schema.from_dict({'str': ','.join(self.header)})
+
+    def _skip_metalines(self):
+        seek_pos = self.infile.tell()
+        while self.infile.readline().startswith('##'):
+            seek_pos = self.infile.tell()
+        self.infile.seek(seek_pos)
 
     def _cleanup(self):
         self._progress_done()
@@ -135,7 +143,11 @@ class TSVReader(TSVFormat):
             return self.header
 
         if self.options.no_header:
-            return None
+            line = self.infile.readline()
+            self.infile.seek(0)
+            return [str(index) for index, col
+                    in enumerate(line.strip()
+                                 .split(self.separator))]
         else:
             line = self.infile.readline()
             header_str = line.strip()
@@ -172,6 +184,9 @@ class TSVGzipReader(TSVReader):
         assert os.path.exists(self.filename)
         assert self.is_gzip(self.filename)
         self.infile = gzip.open(self.filename, 'rt')
+
+        if self.options.vcf:
+            self._skip_metalines()
 
         self.header = self._header_read()
         self.schema = Schema.from_dict({'str': ','.join(self.header)})
@@ -227,16 +242,13 @@ class TabixReader(TSVFormat):
         if self.header:
             return self.header
 
-        if self.options.no_header:
-            return None
-
         line = self.infile.header
         line = list(line)
         if not line:
             with TSVGzipReader(self.options, self.filename) as tempreader:
                 return tempreader.header
         else:
-            header_str = line[0]
+            header_str = line[-1]
             if header_str.startswith("#"):
                 header_str = header_str[1:]
             return header_str.split(self.separator)
