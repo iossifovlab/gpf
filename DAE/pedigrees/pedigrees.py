@@ -438,8 +438,9 @@ def get_argument_parser(description):
         "--output", metavar="o", help="the output filename file",
         default="output.pdf")
     parser.add_argument(
-        "--layout-column", metavar="l", default="layoutCoords",
-        help="layout column name to be used when saving the layout")
+        "--layout-column", metavar="l", default="layout",
+        help="layout column name to be used when saving the layout. "
+        "Default to layout.")
     parser.add_argument(
         "--generated-column", metavar="m", default="generated",
         help="generated column name to be used when generate person")

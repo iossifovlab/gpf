@@ -45,5 +45,5 @@ class PedigreeReader(object):
             "mother": "momId",
             "sex": "gender",
             "status": "status",
-            "layout": "layoutCoords"
+            "layout": "layout"
         }
