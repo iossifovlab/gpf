@@ -16,6 +16,8 @@ class VCFInfoExtractor(AnnotatorBase):
             annotation_line[output_col] = None
             if info_key not in info:
                 continue
-            val_beg_index = info.index(info_key) + len(info_key) + 1
+            val_beg_index = info.index(info_key) + len(info_key)
             val_end_index = info.find(';', val_beg_index)
-            annotation_line[output_col] = info[val_beg_index:val_end_index]
+            if val_end_index == -1:
+                val_end_index = len(info)
+            annotation_line[output_col] = info[val_beg_index+1:val_end_index]
