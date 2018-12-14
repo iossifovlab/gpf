@@ -16,6 +16,8 @@ class Study(object):
                 return []
 
         kwargs = self.add_people_with_phenotype(kwargs)
+        if 'person_ids' in kwargs and len(kwargs['person_ids']) == 0:
+            return []
 
         return self.backend.query_variants(**kwargs)
 
@@ -32,6 +34,9 @@ class Study(object):
                             pedigree_selector['source'],
                             pedigree_selector['checkedValues'])])
                 people_with_phenotype.update(family_members_with_phenotype)
+
+            if 'person_ids' in kwargs:
+                people_with_phenotype.intersection(kwargs['person_ids'])
 
             kwargs['person_ids'] = list(people_with_phenotype)
 
