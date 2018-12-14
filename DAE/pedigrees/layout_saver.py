@@ -66,14 +66,16 @@ class LayoutSaver(object):
                 lineterminator='\n')
             fieldnames = list(reader.fieldnames)
 
-            assert self.fieldname not in fieldnames, \
-                "{} already in file {}".format(
-                    self.fieldname, self.input_filename)
+            # assert self.fieldname not in fieldnames, \
+            #     "{} already in file {}".format(
+            #         self.fieldname, self.input_filename)
 
-            writer = csv.DictWriter(
-                output_file,
-                reader.fieldnames + [self.fieldname, self.generated_column],
-                delimiter='\t')
+            if self.fieldname not in fieldnames:
+                fieldnames += self.fieldname
+            if self.generated_column not in fieldnames:
+                fieldnames += self.generated_column
+
+            writer = csv.DictWriter(output_file, fieldnames, delimiter='\t')
 
             writer.writeheader()
 
@@ -98,9 +100,7 @@ class LayoutSaver(object):
 
             for generated_id, generated_layout in\
                     self._people_with_layout.items():
-                row = {fieldname: ''
-                       for fieldname in
-                       fieldnames + [self.fieldname, self.generated_column]}
+                row = {fieldname: '' for fieldname in fieldnames}
 
                 family_id, person_id = generated_id.split(";")
                 key = self._member_key(family_id, person_id)
