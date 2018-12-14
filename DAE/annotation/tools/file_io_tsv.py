@@ -113,8 +113,17 @@ class TSVReader(TSVFormat):
             assert not self.is_gzip(self.filename)
             self.infile = open(self.filename, 'r')
 
+        if self.options.vcf:
+            self._skip_metalines()
+
         self.header = self._header_read()
         self.schema = Schema.from_dict({'str': ','.join(self.header)})
+
+    def _skip_metalines(self):
+        seek_pos = self.infile.tell()
+        while self.infile.readline().startswith('##'):
+            seek_pos = self.infile.tell()
+        self.infile.seek(seek_pos)
 
     def _cleanup(self):
         self._progress_done()
@@ -176,6 +185,9 @@ class TSVGzipReader(TSVReader):
         assert self.is_gzip(self.filename)
         self.infile = gzip.open(self.filename, 'rt')
 
+        if self.options.vcf:
+            self._skip_metalines()
+
         self.header = self._header_read()
         self.schema = Schema.from_dict({'str': ','.join(self.header)})
 
@@ -236,7 +248,7 @@ class TabixReader(TSVFormat):
             with TSVGzipReader(self.options, self.filename) as tempreader:
                 return tempreader.header
         else:
-            header_str = line[0]
+            header_str = line[-1]
             if header_str.startswith("#"):
                 header_str = header_str[1:]
             return header_str.split(self.separator)
