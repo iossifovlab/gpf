@@ -120,6 +120,7 @@ class TSVReader(TSVFormat):
         self.schema = Schema.from_dict({'str': ','.join(self.header)})
 
     def _skip_metalines(self):
+        seek_pos = self.infile.tell()
         while self.infile.readline().startswith('##'):
             seek_pos = self.infile.tell()
         self.infile.seek(seek_pos)
