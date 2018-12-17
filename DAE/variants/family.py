@@ -123,9 +123,9 @@ class Family(object):
 
 class FamiliesBase(object):
 
-    def __init__(self, ped_df=None, families={}):
+    def __init__(self, ped_df=None):
         self.ped_df = ped_df
-        self.families = families
+        self.families = {}
         self.family_ids = []
 
     def families_build(self, ped_df, family_class=Family):

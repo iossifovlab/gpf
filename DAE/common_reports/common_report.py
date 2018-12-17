@@ -251,7 +251,8 @@ class EffectWithPhenotype(object):
             self, query_object, phenotype_info, phenotype, families_report,
             effect, counter_roles):
             effect_types_converter = EffectTypesMixin()
-            families_base = FamiliesBase(families=query_object.families)
+            families_base = FamiliesBase()
+            families_base.families = query_object.families
 
             people_with_phenotype = self._people_with_phenotype(
                 query_object, phenotype_info, phenotype)
