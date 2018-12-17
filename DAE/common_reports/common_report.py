@@ -9,6 +9,7 @@ from variants.attributes import Role, Sex
 from common.query_base import EffectTypesMixin
 from studies.default_settings import get_config as get_studies_config
 from study_groups.default_settings import get_config as get_study_groups_config
+from variants.family import FamiliesBase
 
 
 class PeopleCounter(object):
@@ -250,9 +251,13 @@ class EffectWithPhenotype(object):
             self, query_object, phenotype_info, phenotype, families_report,
             effect, counter_roles):
             effect_types_converter = EffectTypesMixin()
+            families_base = FamiliesBase(families=query_object.families)
 
             people_with_phenotype = self._people_with_phenotype(
                 query_object, phenotype_info, phenotype)
+            people_with_parents = families_base.persons_with_parents()
+            people_with_parents_ids =\
+                families_base.persons_id(people_with_parents)
 
             variants = self._get_variants(
                 query_object, people_with_phenotype, effect, counter_roles,

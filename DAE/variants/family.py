@@ -45,6 +45,9 @@ class Person(object):
     def has_parent(self):
         return self.has_dad() or self.has_mom()
 
+    def has_attr(self, item):
+        return item in self.atts
+
     def get_attr(self, item):
         return self.atts.get(item)
 
@@ -120,9 +123,9 @@ class Family(object):
 
 class FamiliesBase(object):
 
-    def __init__(self, ped_df=None):
+    def __init__(self, ped_df=None, families={}):
         self.ped_df = ped_df
-        self.families = {}
+        self.families = families
         self.family_ids = []
 
     def families_build(self, ped_df, family_class=Family):
@@ -153,8 +156,23 @@ class FamiliesBase(object):
                     person.append(p)
         return person
 
+    def persons_with_parents(self):
+        person = []
+        for fam in list(self.families.values()):
+            for p in fam.members_in_order:
+                if p.has_attr('with_parents'):
+                    with_parents = p.get_attr('with_parents')
+                    if with_parents == '1':
+                        person.append(p)
+                elif p.has_parent():
+                    person.append(p)
+        return person
+
     def persons_index(self, persons):
         return sorted([p.index for p in persons])
+
+    def persons_id(self, persons):
+        return sorted([p.person_id for p in persons])
 
     @staticmethod
     def load_simple_family_file(infile, sep="\t"):
