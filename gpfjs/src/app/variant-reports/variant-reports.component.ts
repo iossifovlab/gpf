@@ -111,7 +111,6 @@ export class VariantReportsComponent implements OnInit {
   }
 
   set selectedPeopleCounter(peopleCounter: PeopleCounter) {
-    console.log(peopleCounter)
     this.currentPeopleCounter = peopleCounter;
   }
 

@@ -165,7 +165,7 @@
           <table class="table table-bordered table-hover table-sm table-centered">
             <thead>
               <th>Phenotype</th>
-              <th *ngFor="let column of denovoReport.columns">
+              <th *ngFor="let column of selectedDenovoReport.columns">
                 {{ column }}
               </th>
             </thead>
@@ -174,7 +174,7 @@
                 *ngFor="let effectType of getRows(variantReport.denovoReport.effectGroups, variantReport.denovoReport.effectTypes)"
                 [ngClass]="{ 'table-active' : (variantReport.denovoReport.effectGroups.indexOf(effectType) !== -1) }">
                 <th>{{ effectType }}</th>
-                <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, denovoReport, denovoReport.columns)">
+                <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, selectedDenovoReport, selectedDenovoReport.columns)">
                   <div>
                     {{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}
                   </div>
