@@ -28,46 +28,56 @@
       <h5>Total number of families: {{ variantReport.familyReport.familiesTotal }} <span *ngIf="variantReport.isDownloadable">(<a [href]="getDownloadLink(variantReport)" download>Download</a>)</span></h5>
     </div>
   </div>
+  
+  <div class="col-12 mb-1">
+    <h5>Families by number of:</h5>
+  </div>
 
-  <ng-template ngFor let-peopleCounter [ngForOf]="variantReport.familyReport.peopleCounters">
+  <div class="col-sm-3" class="variants-report-selector">
+    <select class="form-control"
+      [(ngModel)]="selectedPeopleCounter"
+       required>
+      <option *ngFor="let peopleCounter of variantReport.familyReport.peopleCounters" [ngValue]="peopleCounter">
+        {{ peopleCounter.groupName }}
+      </option>
+    </select>
+  </div>
+
+  <ng-template [ngIf]="selectedPeopleCounter">
     <div class="row mb-3">
-      <div class="col-12 mb-1">
-        <h5>Families by number of {{ peopleCounter.roles.join('/') }} roles</h5>
-      </div>
-
       <div class="col-12">
         <table class="table table-bordered table-hover table-sm table-centered">
           <thead>
-            <th>Phenotype</th>
-            <th *ngFor="let column of peopleCounter.phenotypes">
+            <th>Group</th>
+            <th *ngFor="let column of selectedPeopleCounter.columns">
               {{ column }}
             </th>
           </thead>
           <tbody>
             <tr>
               <th>Male</th>
-              <td *ngFor="let childrenCounter of orderByColumnOrder(peopleCounter.childrenCounters, peopleCounter.phenotypes)">
+              <td *ngFor="let childrenCounter of orderByColumnOrder(selectedPeopleCounter.childrenCounters, selectedPeopleCounter.columns)">
                 {{ childrenCounter.childrenMale }}
               </td>
             </tr>
 
             <tr>
               <th>Female</th>
-              <td *ngFor="let childrenCounter of orderByColumnOrder(peopleCounter.childrenCounters, peopleCounter.phenotypes)">
+              <td *ngFor="let childrenCounter of orderByColumnOrder(selectedPeopleCounter.childrenCounters, selectedPeopleCounter.columns)">
                 {{ childrenCounter.childrenFemale }}
               </td>
             </tr>
 
             <tr>
               <th>Unspecified</th>
-              <td *ngFor="let childrenCounter of orderByColumnOrder(peopleCounter.childrenCounters, peopleCounter.phenotypes)">
+              <td *ngFor="let childrenCounter of orderByColumnOrder(selectedPeopleCounter.childrenCounters, selectedPeopleCounter.columns)">
                 {{ childrenCounter.childrenUnspecified }}
               </td>
             </tr>
 
             <tr>
               <th>Total</th>
-              <td *ngFor="let childrenCounter of orderByColumnOrder(peopleCounter.childrenCounters, peopleCounter.phenotypes)">
+              <td *ngFor="let childrenCounter of orderByColumnOrder(selectedPeopleCounter.childrenCounters, selectedPeopleCounter.columns)">
                 {{ childrenCounter.childrenTotal }}
               </td>
             </tr>
@@ -78,10 +88,22 @@
     </div>
   </ng-template>
 
+  <div class="col-12 mb-1">
+    <h5>Families by pedigree of:</h5>
+  </div>
 
-  <ng-template ngFor let-pedigreeGroups [ngForOf]="pedigreeTables">
+  <div class="col-sm-3" class="variants-report-selector">
+    <select class="form-control"
+      [(ngModel)]="selectedPedigreeTable"
+        required>
+      <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
+        {{ pedigreeTable.groupName }}
+      </option>
+    </select>
+  </div>
+
+  <ng-template [ngIf]="selectedPedigreeTable">
     <div class="row mb-3">
-      <div class="col-12 mb-1"><h5>Families by pedigree of {{ pedigreeGroups.phenotypes.join('/') }} phenotypes</h5></div>
 
       <div class="col-12">
 
@@ -94,7 +116,7 @@
           </colgroup>
 
           <tbody>
-            <ng-template ngFor let-pedigreeGroup [ngForOf]="pedigreeGroups.pedigrees">
+            <ng-template ngFor let-pedigreeGroup [ngForOf]="selectedPedigreeTable.pedigrees">
               <tr>
                 <ng-template ngFor let-pedigree [ngForOf]="pedigreeGroup">
                   <td class="centered">
@@ -119,16 +141,27 @@
   </ng-template>
 
   <div *ngIf="variantReport.denovoReport" class="row mb-3">
-    <ng-template ngFor let-table [ngForOf]="variantReport.denovoReport.tables">
-      <div class="col-12 mb-1">
-        <h5>De Novo Variants of {{ table.roles.join('/') }} roles</h5>
-        <h5><small class="text-muted">Legend: "number of observed events", "observed rate per child" ("number of children with events", "percent of children with events")</small></h5>
-      </div>
+    <div class="col-12 mb-1">
+      <h5>De Novo Variants of:</h5>
+      <h5><small class="text-muted">Legend: "number of observed events", "observed rate per child" ("number of children with events", "percent of children with events")</small></h5>
+    </div>
+
+    <div class="col-sm-3" class="variants-report-selector">
+      <select class="form-control"
+        [(ngModel)]="selectedDenovoReport"
+          required>
+        <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
+          {{ denovoReport.groupName }}
+        </option>
+      </select>
+    </div>
+
+    <ng-template [ngIf]="selectedDenovoReport">
       <div class="col-12">
         <table class="table table-bordered table-hover table-sm table-centered">
           <thead>
             <th>Phenotype</th>
-            <th *ngFor="let column of table.phenotypes">
+            <th *ngFor="let column of denovoReport.columns">
               {{ column }}
             </th>
           </thead>
@@ -137,12 +170,12 @@
               *ngFor="let effectType of getRows(variantReport.denovoReport.effectGroups, variantReport.denovoReport.effectTypes)"
               [ngClass]="{ 'table-active' : (variantReport.denovoReport.effectGroups.indexOf(effectType) !== -1) }">
               <th>{{ effectType }}</th>
-              <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, table, table.phenotypes)">
+              <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, denovoReport, denovoReport.columns)">
                 <div>
-                  {{ effectTypeData.eventsCount }}, {{ effectTypeData.eventsRatePerChild | number }}
+                  {{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}
                 </div>
                 <div>
-                  ({{ effectTypeData.eventsChildrenCount }}, {{ effectTypeData.eventsChildrenPercent | percent }})
+                  ({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})
                 </div>
               </td>
             </tr>

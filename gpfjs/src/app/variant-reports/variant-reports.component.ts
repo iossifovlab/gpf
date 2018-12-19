@@ -6,7 +6,7 @@ import { Observable, Subject } from 'rxjs';
 import { VariantReportsService } from './variant-reports.service';
 import { Studies, Study, VariantReport, ChildrenCounter,
          FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData,
-         PedigreeTable
+         PedigreeTable, PeopleCounter
         } from './variant-reports';
 
 export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
@@ -21,6 +21,10 @@ export class VariantReportsComponent implements OnInit {
 
   reports$: Observable<Studies>;
   selectedReport$ = new Subject<Study>();
+
+  peopleCounter: PeopleCounter;
+  pedigreeTable: PedigreeTable;
+  denovoReport: EffectTypeTable;
 
   variantReport$: Observable<VariantReport>;
   pedigreeTables: PedigreeTable[];
@@ -43,7 +47,7 @@ export class VariantReportsComponent implements OnInit {
       this.pedigreeTables = params.familyReport.familiesCounters.map(
         familiesCounters => new PedigreeTable(
             this.chunkPedigrees(familiesCounters.familyCounter),
-            familiesCounters.phenotypes
+            familiesCounters.phenotypes, familiesCounters.groupName
           )
         );
     });
@@ -91,20 +95,46 @@ export class VariantReportsComponent implements OnInit {
         familiesCounters => {
           return {
             'pedigrees': this.chunkPedigrees(familiesCounters.familyCounter),
-            'phenotypes': familiesCounters.phenotypes
+            'phenotypes': familiesCounters.phenotypes,
+            'groupName': familiesCounters.groupName
           };
         });
     });
   }
 
+  set selectedPeopleCounter(peopleCounter: PeopleCounter) {
+    this.peopleCounter = peopleCounter;
+  }
+
+  get selectedPeopleCounter() {
+    return this.peopleCounter;
+  }
+
+  set selectedPedigreeTable(pedigreeTable: PedigreeTable) {
+    this.pedigreeTable = pedigreeTable;
+  }
+
+  get selectedPedigreeTable() {
+    return this.pedigreeTable;
+  }
+
+  set selectedDenovoReport(denovoReport: EffectTypeTable) {
+    this.denovoReport = denovoReport;
+  }
+
+  get selectedDenovoReport() {
+    return this.denovoReport;
+  }
+
   orderByColumnOrder(childrenCounters: (ChildrenCounter | DeNovoData)[], columns: string[], strict = false) {
+    console.log(columns);
     let columnsLookup = new Map<string, number>(
       columns.map((value, index): [string, number] => [value, index])
     );
 
     let filteredChildrenCounters = childrenCounters
       .filter(
-        childCounters => columnsLookup.has(childCounters.phenotype));
+        childCounters => columnsLookup.has(childCounters.column));
 
     if (strict && filteredChildrenCounters.length !== columns.length) {
       return [];
@@ -112,8 +142,8 @@ export class VariantReportsComponent implements OnInit {
 
     return filteredChildrenCounters.sort(
       (child1, child2) => {
-        let index1 = columnsLookup.get(child1.phenotype);
-        let index2 = columnsLookup.get(child2.phenotype);
+        let index1 = columnsLookup.get(child1.column);
+        let index2 = columnsLookup.get(child2.column);
         return index1 - index2;
       }
     );
