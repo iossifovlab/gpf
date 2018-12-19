@@ -37,6 +37,7 @@
     <select class="form-control"
       [(ngModel)]="selectedPeopleCounter"
        required>
+      <option value="" selected="selected"></option>
       <option *ngFor="let peopleCounter of variantReport.familyReport.peopleCounters" [ngValue]="peopleCounter">
         {{ peopleCounter.groupName }}
       </option>
@@ -96,6 +97,7 @@
     <select class="form-control"
       [(ngModel)]="selectedPedigreeTable"
         required>
+      <option value="" selected="selected"></option>
       <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
         {{ pedigreeTable.groupName }}
       </option>
@@ -140,7 +142,7 @@
     </div>
   </ng-template>
 
-  <div *ngIf="variantReport.denovoReport" class="row mb-3">
+  <div *ngIf="variantReport.denovoReport">
     <div class="col-12 mb-1">
       <h5>De Novo Variants of:</h5>
       <h5><small class="text-muted">Legend: "number of observed events", "observed rate per child" ("number of children with events", "percent of children with events")</small></h5>
@@ -150,6 +152,7 @@
       <select class="form-control"
         [(ngModel)]="selectedDenovoReport"
           required>
+        <option value="" selected="selected"></option>
         <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
           {{ denovoReport.groupName }}
         </option>
@@ -157,31 +160,33 @@
     </div>
 
     <ng-template [ngIf]="selectedDenovoReport">
-      <div class="col-12">
-        <table class="table table-bordered table-hover table-sm table-centered">
-          <thead>
-            <th>Phenotype</th>
-            <th *ngFor="let column of denovoReport.columns">
-              {{ column }}
-            </th>
-          </thead>
-          <tbody>
-            <tr
-              *ngFor="let effectType of getRows(variantReport.denovoReport.effectGroups, variantReport.denovoReport.effectTypes)"
-              [ngClass]="{ 'table-active' : (variantReport.denovoReport.effectGroups.indexOf(effectType) !== -1) }">
-              <th>{{ effectType }}</th>
-              <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, denovoReport, denovoReport.columns)">
-                <div>
-                  {{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}
-                </div>
-                <div>
-                  ({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})
-                </div>
-              </td>
-            </tr>
+      <div class="row mb-3">
+        <div class="col-12">
+          <table class="table table-bordered table-hover table-sm table-centered">
+            <thead>
+              <th>Phenotype</th>
+              <th *ngFor="let column of denovoReport.columns">
+                {{ column }}
+              </th>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let effectType of getRows(variantReport.denovoReport.effectGroups, variantReport.denovoReport.effectTypes)"
+                [ngClass]="{ 'table-active' : (variantReport.denovoReport.effectGroups.indexOf(effectType) !== -1) }">
+                <th>{{ effectType }}</th>
+                <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, denovoReport, denovoReport.columns)">
+                  <div>
+                    {{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}
+                  </div>
+                  <div>
+                    ({{ effectTypeData.numberOfChildrenWithEvent }}, {{ effectTypeData.percentOfChildrenWithEvents | percent }})
+                  </div>
+                </td>
+              </tr>
 
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
     </ng-template>
   </div>

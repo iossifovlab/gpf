@@ -22,9 +22,9 @@ export class VariantReportsComponent implements OnInit {
   reports$: Observable<Studies>;
   selectedReport$ = new Subject<Study>();
 
-  peopleCounter: PeopleCounter;
-  pedigreeTable: PedigreeTable;
-  denovoReport: EffectTypeTable;
+  currentPeopleCounter: PeopleCounter;
+  currentPedigreeTable: PedigreeTable;
+  currentDenovoReport: EffectTypeTable;
 
   variantReport$: Observable<VariantReport>;
   pedigreeTables: PedigreeTable[];
@@ -50,6 +50,10 @@ export class VariantReportsComponent implements OnInit {
             familiesCounters.phenotypes, familiesCounters.groupName
           )
         );
+
+      this.currentPeopleCounter = undefined;
+      this.currentPedigreeTable = undefined;
+      this.currentDenovoReport = undefined;
     });
 
     this.loadReportFromParams();
@@ -99,35 +103,39 @@ export class VariantReportsComponent implements OnInit {
             'groupName': familiesCounters.groupName
           };
         });
+
+      this.currentPeopleCounter = undefined;
+      this.currentPedigreeTable = undefined;
+      this.currentDenovoReport = undefined;
     });
   }
 
   set selectedPeopleCounter(peopleCounter: PeopleCounter) {
-    this.peopleCounter = peopleCounter;
+    console.log(peopleCounter)
+    this.currentPeopleCounter = peopleCounter;
   }
 
   get selectedPeopleCounter() {
-    return this.peopleCounter;
+    return this.currentPeopleCounter;
   }
 
   set selectedPedigreeTable(pedigreeTable: PedigreeTable) {
-    this.pedigreeTable = pedigreeTable;
+    this.currentPedigreeTable = pedigreeTable;
   }
 
   get selectedPedigreeTable() {
-    return this.pedigreeTable;
+    return this.currentPedigreeTable;
   }
 
   set selectedDenovoReport(denovoReport: EffectTypeTable) {
-    this.denovoReport = denovoReport;
+    this.currentDenovoReport = denovoReport;
   }
 
   get selectedDenovoReport() {
-    return this.denovoReport;
+    return this.currentDenovoReport;
   }
 
   orderByColumnOrder(childrenCounters: (ChildrenCounter | DeNovoData)[], columns: string[], strict = false) {
-    console.log(columns);
     let columnsLookup = new Map<string, number>(
       columns.map((value, index): [string, number] => [value, index])
     );
