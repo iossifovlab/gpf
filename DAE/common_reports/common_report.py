@@ -552,7 +552,8 @@ class Filter(object):
     def __init__(self, column, value, column_value=None):
         self.column = column
         self.value = value
-        self.column_value = value if column_value is None else value
+        self.column_value =\
+            column_value if column_value is not None else value
 
     def get_column(self):
         return str(self.column_value)
@@ -600,10 +601,11 @@ class FilterObjects(object):
 
                 filter = []
                 for el_value in el_values:
-                    if phenotypes_info.has_phenotype_info(el) and el is None:
+                    if phenotypes_info.has_phenotype_info(el) and\
+                            el_value is None:
                         phenotype_info = phenotypes_info.get_phenotype_info(el)
-                        filter.append(Filter(
-                            el_column, el_value, phenotype_info.default))
+                        filter.append(Filter(el_column, el_value,
+                                             phenotype_info.default['name']))
                     else:
                         filter.append(Filter(el_column, el_value))
                 filters.append(filter)
