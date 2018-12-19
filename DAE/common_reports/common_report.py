@@ -265,8 +265,7 @@ class EffectWithFilter(object):
         self.observed_rate_per_child = self.number_of_observed_events /\
             len(people_with_parents_ids)
         self.percent_of_children_with_events =\
-            (self.number_of_children_with_event /
-                len(people_with_parents_ids)) * 100
+            self.number_of_children_with_event / len(people_with_parents_ids)
 
         self.column = filter_object.get_column()
 
