@@ -47,15 +47,18 @@ class PeopleCounter(object):
 
         return people
 
+    def is_empty(self):
+        return True if self.people_total == 0 else False
+
 
 class PeopleCounters(object):
 
     def __init__(self, families, filter_object):
-        self.group_name = filter_object.name
-        self.columns = filter_object.get_columns()
-
         self.counters =\
             self._get_counters(families, filter_object)
+
+        self.group_name = filter_object.name
+        self.columns = self._get_columns(self.counters)
 
     def to_dict(self):
         return {
@@ -65,8 +68,15 @@ class PeopleCounters(object):
         }
 
     def _get_counters(self, families, filter_object):
-        return [PeopleCounter(families, filters)
-                for filters in filter_object.filter_objects]
+        people_counters = [PeopleCounter(families, filters)
+                           for filters in filter_object.filter_objects]
+
+        return list(filter(
+            lambda people_counter: not people_counter.is_empty(),
+            people_counters))
+
+    def _get_columns(self, people_counters):
+        return [people_counter.column for people_counter in people_counters]
 
 
 class FamilyCounter(object):
