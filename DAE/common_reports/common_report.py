@@ -549,9 +549,13 @@ class PhenotypesInfo(object):
 
 class Filter(object):
 
-    def __init__(self, column, value):
+    def __init__(self, column, value, column_value=None):
         self.column = column
         self.value = value
+        self.column_value = value if column_value is None else value
+
+    def get_column(self):
+        return str(self.column_value)
 
 
 class FilterObject(object):
@@ -563,7 +567,7 @@ class FilterObject(object):
         self.filters.append(column, value)
 
     def get_column(self):
-        return ' and '.join([str(filter.value) for filter in self.filters])
+        return ' and '.join([filter.get_column() for filter in self.filters])
 
     @staticmethod
     def from_list(filters):
@@ -596,7 +600,12 @@ class FilterObjects(object):
 
                 filter = []
                 for el_value in el_values:
-                    filter.append(Filter(el_column, el_value))
+                    if phenotypes_info.has_phenotype_info(el) and el is None:
+                        phenotype_info = phenotypes_info.get_phenotype_info(el)
+                        filter.append(Filter(
+                            el_column, el_value, phenotype_info.default))
+                    else:
+                        filter.append(Filter(el_column, el_value))
                 filters.append(filter)
 
             filter_objects.append(FilterObjects(name, FilterObject.from_list(
