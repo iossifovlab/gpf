@@ -45,6 +45,9 @@ class Study(object):
     def get_phenotype_values(self, pheno_column='phenotype'):
         return set(self.backend.ped_df[pheno_column])
 
+    def get_column_values(self, column):
+        return set(self.backend.ped_df[column])
+
     @property
     def families(self):
         return self.backend.families

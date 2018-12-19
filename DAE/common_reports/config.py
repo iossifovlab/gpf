@@ -1,15 +1,15 @@
 from __future__ import unicode_literals
 from builtins import object
 from Config import Config
-from future import standard_library
-standard_library.install_aliases()
 from configparser import ConfigParser
 from box import Box
 
 import common.config
-from variants.attributes import Role
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
+
+from future import standard_library
+standard_library.install_aliases()
 
 
 class CommonReportsConfig(object):
@@ -35,7 +35,8 @@ class CommonReportsConfig(object):
                 continue
             phenotypes = d_properties.get('peoplegroups', None)
             is_downloadable = d_properties.get('is_downloadable', None)
-            if phenotypes is None:
+            groups = d_properties.get('groups', None)
+            if phenotypes is None or groups is None:
                 continue
             if is_downloadable is None:
                 is_downloadable = False
@@ -45,6 +46,9 @@ class CommonReportsConfig(object):
 
             parsed_data[d] = {
                 'phenotype_groups': phenotypes.split(','),
+                'groups': {group.split(':')[1].strip():
+                           group.split(':')[0].strip().split(',')
+                           for group in groups.split('|')},
                 'is_downloadable': is_downloadable
             }
         return parsed_data
@@ -73,11 +77,6 @@ class CommonReportsConfig(object):
 
     def studies(self):
         return self._parse_data(self.config.CommonReports.get('studies', ''))
-
-    def counters_roles(self):
-        return [
-            [Role.from_name(role) for role in roles.split(',')]
-            for roles in self.config.CommonReports.counters_role.split(':')]
 
     def effect_groups(self):
         effect_groups = self.config.CommonReports.get('effect_groups', None)
