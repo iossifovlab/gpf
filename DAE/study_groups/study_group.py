@@ -9,7 +9,7 @@ from RegionOperations import Region
 from variants.attributes import Role
 from datasets.helpers import expand_effect_types
 from variants.attributes_query import role_query, variant_type_converter, \
-    sex_converter, AndNode, NotNode, OrNode, EqualsNode, ContainsNode
+    sex_converter, AndNode, NotNode, OrNode, ContainsNode
 
 
 class StudyGroup(object):
@@ -46,6 +46,14 @@ class StudyGroup(object):
         result = set()
         for study in self.studies:
             result.update(study.get_phenotype_values(pheno_column))
+
+        return result
+
+    def get_column_values(self, column):
+        result = set()
+
+        for study in self.studies:
+            result.update(study.get_column_values(column))
 
         return result
 
@@ -120,7 +128,8 @@ class StudyGroupWrapper(StudyGroup):
             kwargs['variant_type'] = OrNode(variant_types)
 
         if 'effect_types' in kwargs:
-            kwargs['effect_types'] = expand_effect_types(kwargs['effect_types'])
+            kwargs['effect_types'] =\
+                expand_effect_types(kwargs['effect_types'])
 
         return itertools.islice(
             super(StudyGroupWrapper, self).query_variants(**kwargs), limit)

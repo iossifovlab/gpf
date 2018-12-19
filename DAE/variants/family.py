@@ -107,14 +107,18 @@ class Family(object):
             lambda m: m.get_attr(phenotype_column) == phenotype,
             self.members_in_order))
 
-    def get_family_phenotypes(self, phenotype_column):
-        return set([member.get_attr(phenotype_column)
-                    for member in self.members_in_order])
-
     def get_people_with_phenotypes(self, phenotype_column, phenotypes):
         return list(filter(
             lambda m: m.get_attr(phenotype_column) in phenotypes,
             self.members_in_order))
+
+    def get_people_with_property(self, column, value):
+        return list(filter(lambda m: m.get_attr(column) == value,
+                           self.members_in_order))
+
+    def get_family_phenotypes(self, phenotype_column):
+        return set([member.get_attr(phenotype_column)
+                    for member in self.members_in_order])
 
     @property
     def members_ids(self):

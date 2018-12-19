@@ -1,6 +1,7 @@
 import pandas as pd
 import json
 import os
+import itertools
 
 from common_reports.config import CommonReportsConfig
 from study_groups.study_group_facade import StudyGroupFacade
@@ -553,7 +554,7 @@ class CommonReportsGenerator(object):
 
 class PhenotypeInfo(object):
 
-    def __init__(self, query_object, phenotype_info):
+    def __init__(self, query_object, phenotype_info, phenotype_group):
         self.name = phenotype_info['name']
         self.domain = phenotype_info['domain']
         self.unaffected = phenotype_info['unaffected']
@@ -561,6 +562,8 @@ class PhenotypeInfo(object):
         self.source = phenotype_info['source']
 
         self.phenotypes = self._get_phenotypes(query_object)
+
+        self.phenotype_group = phenotype_group
 
     def _get_phenotypes(self, query_object):
         return list(query_object.get_phenotype_values(self.source))
@@ -581,9 +584,80 @@ class PhenotypesInfo(object):
     def _get_phenotypes_info(
             self, query_object, query_object_properties, phenotypes_info):
         return [
-            PhenotypeInfo(query_object, phenotypes_info[phenotype_group])
+            PhenotypeInfo(query_object, phenotypes_info[phenotype_group],
+                          phenotype_group)
             for phenotype_group in query_object_properties['phenotype_groups']
         ]
 
     def get_first_phenotype_info(self):
         return self.phenotypes_info[0]
+
+    def has_phenotype_info(self, phenotype_group):
+        return True if len(list(filter(
+            lambda phenotype_info:
+            phenotype_info.phenotype_group == phenotype_group,
+            self.phenotypes_info))) else False
+
+    def get_phenotype_info(self, phenotype_group):
+        return list(filter(
+            lambda phenotype_info:
+            phenotype_info.phenotype_group == phenotype_group,
+            self.phenotypes_info))[0]
+
+
+class Filter(object):
+
+    def __init__(self, column, value):
+        self.column = column
+        self.value = value
+
+
+class FilterObject(object):
+
+    def __init__(self, filters=[]):
+        self.filters = filters
+
+    def add_filter(self, column, value):
+        self.filters.append(column, value)
+
+    def get_column(self):
+        return ' and '.join([str(filter.value) for filter in self.filters])
+
+    @staticmethod
+    def from_list(filters):
+        return [FilterObject(list(filter)) for filter in filters]
+
+
+class FilterObjects(object):
+
+    def __init__(self, name, filter_objects=[]):
+        self.name = name
+        self.filter_objects = filter_objects
+
+    def get_columns(self):
+        return [filter_object.get_column()
+                for filter_object in self.filter_objects]
+
+    @staticmethod
+    def get_filter_objects(query_object, phenotypes_info, groups):
+        filter_objects = []
+        for name, group in groups.items():
+            filters = []
+            for el in group:
+                if phenotypes_info.has_phenotype_info(el):
+                    phenotype_info = phenotypes_info.get_phenotype_info(el)
+                    el_column = phenotype_info.source
+                    el_values = phenotype_info.phenotypes
+                else:
+                    el_column = el
+                    el_values = query_object.get_column_values(el)
+
+                filter = []
+                for el_value in el_values:
+                    filter.append(Filter(el_column, el_value))
+                filters.append(filter)
+
+            filter_objects.append(FilterObjects(name, FilterObject.from_list(
+                list(itertools.product(*filters)))))
+
+        return filter_objects
