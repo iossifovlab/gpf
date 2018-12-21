@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import json
 import os
 import itertools
@@ -330,6 +331,12 @@ class EffectWithFilter(object):
 
         return len(children_with_event)
 
+    def is_empty(self):
+        return True if self.number_of_observed_events == 0 and\
+            self.number_of_children_with_event == 0 and\
+            self.observed_rate_per_child == 0 and\
+            self.percent_of_children_with_events == 0 else False
+
 
 class Effect(object):
 
@@ -348,6 +355,13 @@ class Effect(object):
         return [EffectWithFilter(query_object, filter_object, effect)
                 for filter_object in filter_objects.filter_objects]
 
+    def get_empty(self):
+        return [value.is_empty() for value in self.row]
+
+    def remove_elements(self, indexes):
+        for index in sorted(indexes, reverse=True):
+            self.row.pop(index)
+
 
 class DenovoReportTable(object):
 
@@ -364,9 +378,27 @@ class DenovoReportTable(object):
             'columns': self.columns
         }
 
+    def _remove_empty_columns(self, indexes):
+        for index in sorted(indexes, reverse=True):
+            self.columns.pop(index)
+
     def _get_rows(self, query_object, effects, filter_object):
-        return [Effect(query_object, effect, filter_object)
-                for effect in effects]
+        effect_rows = [Effect(query_object, effect, filter_object)
+                       for effect in effects]
+
+        effect_rows_empty_columns = list(map(
+            all, np.array([effect_row.get_empty()
+                           for effect_row in effect_rows]).T))
+
+        effect_rows_empty_columns_index =\
+            list(np.where(effect_rows_empty_columns)[0])
+
+        self._remove_empty_columns(effect_rows_empty_columns_index)
+
+        for effect_row in effect_rows:
+            effect_row.remove_elements(effect_rows_empty_columns_index)
+
+        return effect_rows
 
 
 class DenovoReport(object):
