@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { Observable, Subject } from 'rxjs';
@@ -6,7 +6,7 @@ import { Observable, Subject } from 'rxjs';
 import { VariantReportsService } from './variant-reports.service';
 import { Studies, Study, VariantReport, ChildrenCounter,
          FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData,
-         PedigreeTable, PeopleCounter
+         PedigreeTable, PeopleCounter, Legend
         } from './variant-reports';
 
 export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
@@ -17,7 +17,11 @@ export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
   styleUrls: ['./variant-reports.component.css']
 })
 export class VariantReportsComponent implements OnInit {
-
+  @ViewChild('families_pedigree') familiesPedigree: ElementRef;
+  @ViewChild('legend') legend: ElementRef;
+  familiesPedigreeTop: number;
+  familiesPedigreeBottom: number;
+  legendTop: number;
 
   reports$: Observable<Studies>;
   selectedReport$ = new Subject<Study>();
@@ -47,7 +51,8 @@ export class VariantReportsComponent implements OnInit {
       this.pedigreeTables = params.familyReport.familiesCounters.map(
         familiesCounters => new PedigreeTable(
             this.chunkPedigrees(familiesCounters.familyCounter),
-            familiesCounters.phenotypes, familiesCounters.groupName
+            familiesCounters.phenotypes, familiesCounters.groupName,
+            familiesCounters.legend
           )
         );
 
@@ -57,6 +62,18 @@ export class VariantReportsComponent implements OnInit {
     });
 
     this.loadReportFromParams();
+  }
+  @HostListener('window:scroll', ['$event'])
+  @HostListener('click', ['$event'])
+  onWindowScroll(event) {
+    if (this.familiesPedigree && this.familiesPedigree.nativeElement) {
+      this.familiesPedigreeTop = this.familiesPedigree.nativeElement.getBoundingClientRect().top;
+      this.familiesPedigreeBottom = this.familiesPedigree.nativeElement.getBoundingClientRect().bottom;
+    }
+
+    if (this.legend && this.legend.nativeElement) {
+      this.legendTop = this.legend.nativeElement.getBoundingClientRect().top;
+    }
   }
 
   private setSelectedReportParam(studyName) {
@@ -100,7 +117,8 @@ export class VariantReportsComponent implements OnInit {
           return {
             'pedigrees': this.chunkPedigrees(familiesCounters.familyCounter),
             'phenotypes': familiesCounters.phenotypes,
-            'groupName': familiesCounters.groupName
+            'groupName': familiesCounters.groupName,
+            'legend': familiesCounters.legend
           };
         });
 

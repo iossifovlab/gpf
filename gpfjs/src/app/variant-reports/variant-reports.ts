@@ -103,14 +103,16 @@ export class FamilyCounters {
         family_counter => FamilyCounter.fromJson(family_counter)
       ),
       json['group_name'],
-      json['phenotypes']
+      json['phenotypes'],
+      Legend.fromList(json['legend'])
     );
   }
 
   constructor(
     readonly familyCounter: FamilyCounter[],
     readonly groupName: string,
-    readonly phenotypes: string[]
+    readonly phenotypes: string[],
+    readonly legend: Legend
   ) {}
 }
 
@@ -237,7 +239,38 @@ export class PedigreeTable {
   constructor(
     readonly pedigrees: PedigreeCounter[][],
     readonly phenotypes: string[],
-    readonly groupName: string
+    readonly groupName: string,
+    readonly legend: Legend
   ) {}
 
+}
+
+export class LegendItem {
+
+  static fromJson(json: any) {
+    return new LegendItem(
+      json['id'],
+      json['name'],
+      json['color']
+    );
+  }
+
+  constructor(
+    readonly id: string,
+    readonly name: string,
+    readonly color: string
+  ) {}
+}
+
+export class Legend {
+
+  static fromList(list: any[]) {
+    return new Legend(
+      list.map(legendItem => LegendItem.fromJson(legendItem))
+    );
+  }
+
+  constructor(
+    readonly legendItems: LegendItem[]
+  ) {}
 }

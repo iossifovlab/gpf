@@ -105,7 +105,7 @@
   </div>
 
   <ng-template [ngIf]="selectedPedigreeTable">
-    <div class="row mb-3">
+    <div class="row mb-3" #families_pedigree>
 
       <div class="col-12">
 
@@ -138,6 +138,14 @@
 
         </table>
 
+      </div>
+    </div>
+
+    <div style="position: fixed; bottom: 100px; right: 100px; background-color: white; text-align: left; border: 1px solid #dddddd; padding: 5px"
+    [style.visibility] = "((familiesPedigreeTop - legendTop) < 0 && (familiesPedigreeBottom - legendTop) > 0) ? 'visible' : 'hidden'" #legend>
+      <div *ngFor="let legendItem of selectedPedigreeTable.legend.legendItems">
+        <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
+        {{ legendItem.name }}
       </div>
     </div>
   </ng-template>
