@@ -113,8 +113,9 @@ class FamilyCounter(object):
 
 class FamiliesCounter(object):
 
-    def __init__(self, families, phenotype_info, phenotype):
-        self.counters = self._get_counters(families, phenotype_info, phenotype)
+    def __init__(self, families, phenotype_info, phenotype, draw_all_families):
+        self.counters = self._get_counters(
+            families, phenotype_info, phenotype, draw_all_families)
         self.phenotype =\
             phenotype if phenotype is not None else phenotype_info.default
 
@@ -194,19 +195,25 @@ class FamiliesCounter(object):
 
         return families_counters
 
-    def _get_counters(self, families, phenotype_info, phenotype):
-        families_counters =\
-            self._get_families_counters(families, phenotype_info, phenotype)
+    def _get_counters(
+            self, families, phenotype_info, phenotype, draw_all_families):
+        if draw_all_families:
+            families_counters =\
+                {family: family_id for family_id, family in families.items()}
+        else:
+            families_counters = self._get_families_counters(
+                families, phenotype_info, phenotype)
         return [FamilyCounter(family, counter, phenotype_info)
                 for family, counter in families_counters.items()]
 
 
 class FamiliesCounters(object):
 
-    def __init__(self, families, phenotype_info):
+    def __init__(self, families, phenotype_info, draw_all_families):
         self.group_name = phenotype_info.name
         self.phenotypes = phenotype_info.get_phenotypes()
-        self.counters = self._get_counters(families, phenotype_info)
+        self.counters =\
+            self._get_counters(families, phenotype_info, draw_all_families)
 
     def to_dict(self):
         return {
@@ -215,21 +222,24 @@ class FamiliesCounters(object):
             'counters': [counter.to_dict() for counter in self.counters]
         }
 
-    def _get_counters(self, families, phenotype_info):
-        return [FamiliesCounter(families, phenotype_info, phenotype)
+    def _get_counters(self, families, phenotype_info, draw_all_families):
+        return [FamiliesCounter(
+            families, phenotype_info, phenotype, draw_all_families)
                 for phenotype in phenotype_info.phenotypes + [-1]]
 
 
 class FamiliesReport(object):
 
-    def __init__(self, query_object, phenotypes_info, filter_objects):
+    def __init__(
+            self, query_object, phenotypes_info, filter_objects,
+            draw_all_families):
         families = query_object.families
 
         self.families_total = len(families)
         self.people_counters =\
             self._get_people_counters(families, filter_objects)
-        self.families_counters =\
-            self._get_families_counters(families, phenotypes_info)
+        self.families_counters = self._get_families_counters(
+            families, phenotypes_info, draw_all_families)
 
     def to_dict(self):
         return {
@@ -245,9 +255,10 @@ class FamiliesReport(object):
             for filter_object in filter_objects
         ]
 
-    def _get_families_counters(self, families, phenotypes_info):
+    def _get_families_counters(
+            self, families, phenotypes_info, draw_all_families):
         return [
-            FamiliesCounters(families, phenotype_info)
+            FamiliesCounters(families, phenotype_info, draw_all_families)
             for phenotype_info in phenotypes_info.phenotypes_info
         ]
 
@@ -435,8 +446,9 @@ class CommonReport(object):
         filter_objects = FilterObjects.get_filter_objects(
             query_object, phenotypes_info, query_object_properties['groups'])
 
-        self.families_report =\
-            FamiliesReport(query_object, phenotypes_info, filter_objects)
+        self.families_report = FamiliesReport(
+            query_object, phenotypes_info, filter_objects,
+            query_object_properties['draw_all_families'])
         self.denovo_report = DenovoReport(
             query_object, effect_groups, effect_types, filter_objects)
         self.study_name = query_object.name

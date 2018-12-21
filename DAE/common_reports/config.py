@@ -34,21 +34,23 @@ class CommonReportsConfig(object):
             if d_properties is None:
                 continue
             phenotypes = d_properties.get('peoplegroups', None)
-            is_downloadable = d_properties.get('is_downloadable', None)
             groups = d_properties.get('groups', None)
+            draw_all_families = d_properties.get('draw_all_families', 'false')
+            is_downloadable = d_properties.get('is_downloadable', 'false')
+
             if phenotypes is None or groups is None:
                 continue
-            if is_downloadable is None:
-                is_downloadable = False
-            else:
-                is_downloadable =\
-                    ConfigurableEntityConfig._str_to_bool(is_downloadable)
+            draw_all_families =\
+                ConfigurableEntityConfig._str_to_bool(draw_all_families)
+            is_downloadable =\
+                ConfigurableEntityConfig._str_to_bool(is_downloadable)
 
             parsed_data[d] = {
                 'phenotype_groups': phenotypes.split(','),
                 'groups': {group.split(':')[1].strip():
                            group.split(':')[0].strip().split(',')
                            for group in groups.split('|')},
+                'draw_all_families': draw_all_families,
                 'is_downloadable': is_downloadable
             }
         return parsed_data
