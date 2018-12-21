@@ -36,10 +36,15 @@ class CommonReportsConfig(object):
             phenotypes = d_properties.get('peoplegroups', None)
             groups = d_properties.get('groups', None)
             draw_all_families = d_properties.get('draw_all_families', 'false')
+            count_of_families_for_show_id =\
+                d_properties.get('count_of_families_for_show_id', None)
             is_downloadable = d_properties.get('is_downloadable', 'false')
 
             if phenotypes is None or groups is None:
                 continue
+            if count_of_families_for_show_id is not None:
+                count_of_families_for_show_id =\
+                    int(count_of_families_for_show_id)
             draw_all_families =\
                 ConfigurableEntityConfig._str_to_bool(draw_all_families)
             is_downloadable =\
@@ -51,6 +56,7 @@ class CommonReportsConfig(object):
                            group.split(':')[0].strip().split(',')
                            for group in groups.split('|')},
                 'draw_all_families': draw_all_families,
+                'families_count_show_id': count_of_families_for_show_id,
                 'is_downloadable': is_downloadable
             }
         return parsed_data

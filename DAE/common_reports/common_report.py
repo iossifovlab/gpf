@@ -113,9 +113,12 @@ class FamilyCounter(object):
 
 class FamiliesCounter(object):
 
-    def __init__(self, families, phenotype_info, phenotype, draw_all_families):
+    def __init__(
+            self, families, phenotype_info, phenotype, draw_all_families,
+            families_count_show_id):
         self.counters = self._get_counters(
-            families, phenotype_info, phenotype, draw_all_families)
+            families, phenotype_info, phenotype, draw_all_families,
+            families_count_show_id)
         self.phenotype =\
             phenotype if phenotype is not None else phenotype_info.default
 
@@ -188,32 +191,45 @@ class FamiliesCounter(object):
                 if self._compare_families(
                         family, unique_family, phenotype_info.source):
                     is_family_in_counters = True
-                    families_counters[unique_family] += 1
+                    families_counters[unique_family].append(family_id)
                     break
             if not is_family_in_counters:
-                families_counters[family] = 1
+                families_counters[family] = [family_id]
 
         return families_counters
 
     def _get_counters(
-            self, families, phenotype_info, phenotype, draw_all_families):
+            self, families, phenotype_info, phenotype, draw_all_families,
+            families_count_show_id):
         if draw_all_families:
             families_counters =\
                 {family: family_id for family_id, family in families.items()}
         else:
             families_counters = self._get_families_counters(
                 families, phenotype_info, phenotype)
+
+            families_counters = {
+                family: (
+                    ', '.join(family_ids)
+                    if families_count_show_id is not None and
+                    families_count_show_id >= len(family_ids)
+                    else len(family_ids))
+                for family, family_ids in families_counters.items()
+            }
         return [FamilyCounter(family, counter, phenotype_info)
                 for family, counter in families_counters.items()]
 
 
 class FamiliesCounters(object):
 
-    def __init__(self, families, phenotype_info, draw_all_families):
+    def __init__(
+            self, families, phenotype_info, draw_all_families,
+            families_count_show_id):
         self.group_name = phenotype_info.name
         self.phenotypes = phenotype_info.get_phenotypes()
-        self.counters =\
-            self._get_counters(families, phenotype_info, draw_all_families)
+        self.counters = self._get_counters(
+            families, phenotype_info, draw_all_families,
+            families_count_show_id)
         self.legend = self._get_legend(phenotype_info)
 
     def to_dict(self):
@@ -224,9 +240,12 @@ class FamiliesCounters(object):
             'legend': self.legend
         }
 
-    def _get_counters(self, families, phenotype_info, draw_all_families):
+    def _get_counters(
+            self, families, phenotype_info, draw_all_families,
+            families_count_show_id):
         return [FamiliesCounter(
-            families, phenotype_info, phenotype, draw_all_families)
+            families, phenotype_info, phenotype, draw_all_families,
+            families_count_show_id)
                 for phenotype in phenotype_info.phenotypes + [-1]]
 
     def _get_legend(self, phenotype_info):
@@ -239,14 +258,15 @@ class FamiliesReport(object):
 
     def __init__(
             self, query_object, phenotypes_info, filter_objects,
-            draw_all_families):
+            draw_all_families, families_count_show_id):
         families = query_object.families
 
         self.families_total = len(families)
         self.people_counters =\
             self._get_people_counters(families, filter_objects)
         self.families_counters = self._get_families_counters(
-            families, phenotypes_info, draw_all_families)
+            families, phenotypes_info, draw_all_families,
+            families_count_show_id)
 
     def to_dict(self):
         return {
@@ -263,9 +283,11 @@ class FamiliesReport(object):
         ]
 
     def _get_families_counters(
-            self, families, phenotypes_info, draw_all_families):
+            self, families, phenotypes_info, draw_all_families,
+            families_count_show_id):
         return [
-            FamiliesCounters(families, phenotype_info, draw_all_families)
+            FamiliesCounters(families, phenotype_info, draw_all_families,
+                             families_count_show_id)
             for phenotype_info in phenotypes_info.phenotypes_info
         ]
 
@@ -455,7 +477,8 @@ class CommonReport(object):
 
         self.families_report = FamiliesReport(
             query_object, phenotypes_info, filter_objects,
-            query_object_properties['draw_all_families'])
+            query_object_properties['draw_all_families'],
+            query_object_properties['families_count_show_id'])
         self.denovo_report = DenovoReport(
             query_object, effect_groups, effect_types, filter_objects)
         self.study_name = query_object.name
