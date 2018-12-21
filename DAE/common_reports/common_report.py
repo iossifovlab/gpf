@@ -214,18 +214,25 @@ class FamiliesCounters(object):
         self.phenotypes = phenotype_info.get_phenotypes()
         self.counters =\
             self._get_counters(families, phenotype_info, draw_all_families)
+        self.legend = self._get_legend(phenotype_info)
 
     def to_dict(self):
         return {
             'group_name': self.group_name,
             'phenotypes': self.phenotypes,
-            'counters': [counter.to_dict() for counter in self.counters]
+            'counters': [counter.to_dict() for counter in self.counters],
+            'legend': self.legend
         }
 
     def _get_counters(self, families, phenotype_info, draw_all_families):
         return [FamiliesCounter(
             families, phenotype_info, phenotype, draw_all_families)
                 for phenotype in phenotype_info.phenotypes + [-1]]
+
+    def _get_legend(self, phenotype_info):
+        return list(phenotype_info.domain.values()) +\
+            [phenotype_info.default] +\
+            [phenotype_info.missing_person_info]
 
 
 class FamiliesReport(object):
@@ -568,6 +575,14 @@ class PhenotypeInfo(object):
             phenotype if phenotype is not None else self.default['name']
             for phenotype in self.phenotypes
         ]
+
+    @property
+    def missing_person_info(self):
+        return {
+            'id': 'missing-person',
+            'name': 'missing-person',
+            'color': '#E0E0E0'
+        }
 
 
 class PhenotypesInfo(object):
