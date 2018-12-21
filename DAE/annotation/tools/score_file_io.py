@@ -40,7 +40,8 @@ class ScoreFile(TabixReader):
         super(ScoreFile, self).__init__(options, filename=score_filename)
 
         self.score_filename = score_filename
-        # self.config_filename = config_filename
+        self.no_score_value = 'na'
+
         if score_config is None:
             self._load_config(config_filename)
         else:
@@ -149,14 +150,14 @@ class LineAdapter(object):
 
 
 class NoLine(object):
-    def __init__(self, score_file):
-        self.score_file = score_file
+    def __init__(self, no_score_value):
+        self.no_score_value = no_score_value
         self.pos_begin = -1
         self.pos_end = -1
         self.chrom = None
 
     def __getitem__(self, index):
-        return self.score_file.no_score_value
+        return self.no_score_value
 
 
 class LineBufferAdapter(object):
@@ -164,7 +165,7 @@ class LineBufferAdapter(object):
     def __init__(self, score_file):
         self.score_file = score_file
         self.buffer = []
-        self.no_line = NoLine(score_file)
+        self.no_line = NoLine(score_file.no_score_value)
 
     def __len__(self):
         return len(self.buffer)
@@ -241,15 +242,11 @@ class LineBufferAdapter(object):
 
     @staticmethod
     def regions_intersect(b1, e1, b2, e2):
-        if b1 >= b2 and b1 <= e2:
-            return True
-        if e1 >= b2 and e1 <= e2:
-            return True
-        if b2 >= b1 and b2 <= e1:
-            return True
-        if e2 >= b1 and e2 <= e1:
-            return True
-        return False
+        assert b1 <= e1
+        assert b2 <= e2
+        if e2 < b1 or b2 > e1:
+            return False
+        return True
 
     def select_lines(self, chrom, pos_begin, pos_end):
         result = []
