@@ -84,14 +84,12 @@ export class FamilyCounter {
     return new FamilyCounter(
       json['counters'].map(
         pedigree => PedigreeCounter.fromArray(pedigree)
-      ),
-      json['phenotype']
+      )
     );
   }
 
   constructor(
     readonly pedigreeCounters: PedigreeCounter[],
-    readonly phenotype: string
   ) {}
 }
 
