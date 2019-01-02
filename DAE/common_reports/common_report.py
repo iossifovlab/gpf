@@ -3,6 +3,7 @@ import numpy as np
 import json
 import os
 import itertools
+from collections import defaultdict
 
 from common_reports.config import CommonReportsConfig
 from study_groups.study_group_facade import StudyGroupFacade
@@ -114,36 +115,16 @@ class FamilyCounter(object):
 class FamiliesCounter(object):
 
     def __init__(
-            self, families, phenotype_info, phenotype, draw_all_families,
+            self, families, phenotype_info, draw_all_families,
             families_count_show_id):
         self.counters = self._get_counters(
-            families, phenotype_info, phenotype, draw_all_families,
+            families, phenotype_info, draw_all_families,
             families_count_show_id)
-        self.phenotype =\
-            phenotype if phenotype is not None else phenotype_info.default
 
     def to_dict(self):
         return {
             'counters': [c.to_dict() for c in self.counters],
-            'phenotype': self.phenotype
         }
-
-    def _get_families_with_phenotype(
-            self, families, phenotype_info, phenotype):
-        unaffected_phenotype = phenotype_info.unaffected['name']\
-            if phenotype != phenotype_info.unaffected['name'] else -1
-        if phenotype == -1:
-            return dict(filter(lambda family: len(
-                    family[1].get_family_phenotypes(phenotype_info.source) -
-                    set([unaffected_phenotype])
-                ) > 1, families.items()))
-        return dict(filter(
-            lambda family: (len(
-                (family[1].get_family_phenotypes(phenotype_info.source) -
-                 set([unaffected_phenotype]))
-                ) == 1) and (phenotype in list(
-                    family[1].get_family_phenotypes(phenotype_info.source)
-                )), families.items()))
 
     def _families_to_dataframe(self, families, phenotype_column):
         families_records = []
@@ -180,33 +161,33 @@ class FamiliesCounter(object):
 
         return True
 
-    def _get_families_counters(self, families, phenotype_info, phenotype):
-        families_with_phenotype = self._get_families_with_phenotype(
-            families, phenotype_info, phenotype)
-
+    def _get_families_counters(self, families, phenotype_info):
         families_counters = {}
-        for family_id, family in families_with_phenotype.items():
+        for family in families:
             is_family_in_counters = False
             for unique_family in families_counters.keys():
                 if self._compare_families(
                         family, unique_family, phenotype_info.source):
                     is_family_in_counters = True
-                    families_counters[unique_family].append(family_id)
+                    families_counters[unique_family].append(family.family_id)
                     break
             if not is_family_in_counters:
-                families_counters[family] = [family_id]
+                families_counters[family] = [family.family_id]
 
         return families_counters
 
     def _get_counters(
-            self, families, phenotype_info, phenotype, draw_all_families,
+            self, families, phenotype_info, draw_all_families,
             families_count_show_id):
         if draw_all_families:
             families_counters =\
                 {family: family_id for family_id, family in families.items()}
         else:
             families_counters = self._get_families_counters(
-                families, phenotype_info, phenotype)
+                families, phenotype_info)
+
+            families_counters = dict(sorted(
+                families_counters.items(), key=lambda fc: len(fc[1])))
 
             families_counters = {
                 family: (
@@ -240,13 +221,33 @@ class FamiliesCounters(object):
             'legend': self.legend
         }
 
+    def _get_families_groups(self, families, phenotype_info):
+        families_groups = defaultdict(list)
+
+        for family in families.values():
+            family_phenotypes =\
+                frozenset(family.get_family_phenotypes(phenotype_info.source))
+            family_phenotypes -= {phenotype_info.unaffected['name']}
+
+            families_groups[family_phenotypes].append(family)
+
+        families_groups_keys = sorted(list(families_groups.keys()), key=len)
+        families_groups =\
+            [families_groups[key] for key in families_groups_keys]
+
+        return families_groups
+
     def _get_counters(
             self, families, phenotype_info, draw_all_families,
             families_count_show_id):
+
+        families_groups =\
+            self._get_families_groups(families, phenotype_info)
+
         return [FamiliesCounter(
-            families, phenotype_info, phenotype, draw_all_families,
+            families, phenotype_info, draw_all_families,
             families_count_show_id)
-                for phenotype in phenotype_info.phenotypes + [-1]]
+                for families in families_groups]
 
     def _get_legend(self, phenotype_info):
         return list(phenotype_info.domain.values()) +\
