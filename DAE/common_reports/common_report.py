@@ -259,7 +259,7 @@ class FamiliesReport(object):
 
     def __init__(
             self, query_object, phenotypes_info, filter_objects,
-            draw_all_families, families_count_show_id):
+            draw_all_families=False, families_count_show_id=False):
         families = query_object.families
 
         self.families_total = len(families)
@@ -580,14 +580,17 @@ class CommonReportsGenerator(object):
 
 class PhenotypeInfo(object):
 
-    def __init__(self, query_object, phenotype_info, phenotype_group):
+    def __init__(
+            self, phenotype_info, phenotype_group, query_object=None,
+            phenotypes=None):
         self.name = phenotype_info['name']
         self.domain = phenotype_info['domain']
         self.unaffected = phenotype_info['unaffected']
         self.default = phenotype_info['default']
         self.source = phenotype_info['source']
 
-        self.phenotypes = self._get_phenotypes(query_object)
+        self.phenotypes = self._get_phenotypes(query_object)\
+            if phenotypes is None else phenotypes
 
         self.phenotype_group = phenotype_group
 
@@ -618,8 +621,8 @@ class PhenotypesInfo(object):
     def _get_phenotypes_info(
             self, query_object, query_object_properties, phenotypes_info):
         return [
-            PhenotypeInfo(query_object, phenotypes_info[phenotype_group],
-                          phenotype_group)
+            PhenotypeInfo(phenotypes_info[phenotype_group], phenotype_group,
+                          query_object=query_object)
             for phenotype_group in query_object_properties['phenotype_groups']
         ]
 
@@ -657,7 +660,7 @@ class FilterObject(object):
         self.filters = filters
 
     def add_filter(self, column, value):
-        self.filters.append(column, value)
+        self.filters.append(Filter(column, value))
 
     def get_column(self):
         return ' and '.join([filter.get_column() for filter in self.filters])
@@ -672,6 +675,9 @@ class FilterObjects(object):
     def __init__(self, name, filter_objects=[]):
         self.name = name
         self.filter_objects = filter_objects
+
+    def add_filter_object(self, filter_object):
+        self.filter_objects.append(filter_object)
 
     def get_columns(self):
         return [filter_object.get_column()
