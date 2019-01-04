@@ -2,7 +2,7 @@ import pytest
 from box import Box
 from annotation.tests.conftest import relative_to_this_test_folder
 from annotation.tools.file_io import TSVGzipReader, \
-        TabixReader, parquet_enabled
+        TabixReaderVariants, parquet_enabled
 
 if parquet_enabled:
     from annotation.tools.file_io_parquet import ParquetWriter
@@ -143,7 +143,7 @@ def test_tabix_reader_header(filename):
 
     options = Box({}, default_box=True, default_box_attr=None)
 
-    with TabixReader(options, filename) as reader:
+    with TabixReaderVariants(options, filename) as reader:
         assert reader is not None
         assert reader.header is not None
 
@@ -185,7 +185,7 @@ def test_tabix_chrom_prefix(
         "region": region,
     }, default_box=True, default_box_attr=None)
 
-    with TabixReader(options, filename) as reader:
+    with TabixReaderVariants(options, filename) as reader:
         assert reader is not None
         assert reader.header is not None
 
@@ -222,7 +222,7 @@ def test_tabix_region_strictness():
         for _line in reader.lines_read_iterator():
             all_line_count += 1
 
-    with TabixReader(options, filename) as reader:
+    with TabixReaderVariants(options, filename) as reader:
         assert reader is not None
 
         count = 0

@@ -21,55 +21,52 @@ def to_str(column_value):
 
 class RegionHelper(object):
 
-    def __init__(self, region_string):
-        self.chrom_start, self.pos_start, self.pos_end = \
-                 RegionHelper.parse_region_string(region_string)
+    def __init__(self, region_string, pos_index):
+        self.pos_start, self.pos_end = \
+            RegionHelper.parse_region_string(region_string)
+        self.pos_index = pos_index
 
     @staticmethod
     def parse_region_string(region):
         region = region.split(':')
         assert len(region) == 2
-        pos_start = region[1].split('-')[0]
+
+        pos_start = None
         pos_end = None
-        if '-' in region:
+        if '-' in region[1]:
+            pos_start = region[1].split('-')[0]
             pos_end = region[1].split('-')[1]
+        else:
+            pos_start = region[1]
+
         try:
             pos_start = int(pos_start)
-            if pos_end is not None:
+            if pos_end:
                 pos_end = int(pos_end)
-            return (RegionHelper.strip_chrom(region[0]),
-                    pos_start,
+            return (pos_start,
                     pos_end)
         except ValueError:
             sys.exit(-1)
 
-    @staticmethod
-    def strip_chrom(chrom):
-        stripped = chrom.replace('chr', '')
-        if stripped == 'X':
-            return 23
-        elif stripped == 'Y':
-            return 24
-        else:
-            try:
-                return int(stripped)
-            except ValueError:
-                sys.exit(-1)
-
-    def contains(self, chrom, pos):
+    def contains(self, line):
         try:
-            chrom = RegionHelper.strip_chrom(chrom)
-            pos = int(pos)
+            pos = int(line[self.pos_index])
         except ValueError:
             sys.exit(-1)
 
-        if chrom >= self.chrom_start and pos >= self.pos_start:
-            if self.pos_end is not None:
-                if pos <= self.pos_end:
-                    return True
-                return False
-            return True
-        return False
+        if self.pos_end:
+            if pos >= self.pos_start and pos <= self.pos_end:
+                return True
+            return False
+        else:
+            if pos >= self.pos_start:
+                return True
+            return False
+
+
+class NoRegionHelper(object):
+    def contains(self, pos):
+        return True
 
 
 class AbstractFormat(object):
@@ -289,12 +286,6 @@ class TabixReader(TSVFormat):
 
         self._region_reset(self.region)
         self.header = self._header_read()
-        self.header_enum = {col_name: index
-                            for index, col_name in enumerate(self.header)}
-        if self.options.vcf and self.options.region:
-            self.region_helper = RegionHelper(self.options.region)
-        else:
-            self.region_helper = None
         self.schema = Schema.from_dict({'str': ','.join(self.header)})
 
     def _header_read(self):
@@ -332,14 +323,33 @@ class TabixReader(TSVFormat):
 
         for line in self.lines_iterator:
             self._progress_step()
-
-            if self.region_helper is not None:
-                if not self.region_helper \
-                   .contains(line[self.header_enum[self.options.c]],
-                             line[self.header_enum[self.options.p]]):
-                    continue
-
             yield line
+
+
+class TabixReaderVariants(TabixReader):
+
+    def __init__(self, options, filename=None):
+        super(TabixReaderVariants, self).__init__(options, filename)
+
+    def _setup(self):
+        super(TabixReaderVariants, self)._setup()
+
+        if self.options.vcf and self.options.region:
+                pos_index = self.header.index(self.options.p)
+                self.region_helper = RegionHelper(self.options.region,
+                                                  pos_index)
+        else:
+            self.region_helper = NoRegionHelper()
+
+    def lines_read_iterator(self):
+        if self.lines_iterator is None:
+            return
+
+        for line in self.lines_iterator:
+            self._progress_step()
+
+            if self.region_helper.contains(line):
+                yield line
 
 
 class TSVWriter(TSVFormat):
