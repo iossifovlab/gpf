@@ -187,7 +187,8 @@ class FamiliesCounter(object):
                 families, phenotype_info)
 
             families_counters = dict(sorted(
-                families_counters.items(), key=lambda fc: len(fc[1])))
+                families_counters.items(), key=lambda fc: len(fc[1]),
+                reverse=True))
 
             families_counters = {
                 family: (
