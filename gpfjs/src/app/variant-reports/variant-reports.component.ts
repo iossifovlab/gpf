@@ -6,7 +6,7 @@ import { Observable, Subject } from 'rxjs';
 import { VariantReportsService } from './variant-reports.service';
 import { Studies, Study, VariantReport, ChildrenCounter,
          FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData,
-         PedigreeTable, PeopleCounter, Legend
+         PedigreeTable, PeopleCounter
         } from './variant-reports';
 
 export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
@@ -56,9 +56,9 @@ export class VariantReportsComponent implements OnInit {
           )
         );
 
-      this.currentPeopleCounter = undefined;
-      this.currentPedigreeTable = undefined;
-      this.currentDenovoReport = undefined;
+      this.currentPeopleCounter = params.familyReport.peopleCounters[0];
+      this.currentPedigreeTable = this.pedigreeTables[0];
+      this.currentDenovoReport = params.denovoReport.tables[0];
     });
 
     this.loadReportFromParams();
@@ -122,9 +122,9 @@ export class VariantReportsComponent implements OnInit {
           };
         });
 
-      this.currentPeopleCounter = undefined;
-      this.currentPedigreeTable = undefined;
-      this.currentDenovoReport = undefined;
+      this.currentPeopleCounter = params.familyReport.peopleCounters[0];
+      this.currentPedigreeTable = this.pedigreeTables[0];
+      this.currentDenovoReport = params.denovoReport.tables[0];
     });
   }
 

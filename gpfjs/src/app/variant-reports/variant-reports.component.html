@@ -34,9 +34,7 @@
   </div>
 
   <div class="col-sm-3" class="variants-report-selector">
-    <select class="form-control"
-      [(ngModel)]="selectedPeopleCounter"
-       required>
+    <select class="form-control" [(ngModel)]="selectedPeopleCounter">
       <option value="" selected="selected"></option>
       <option *ngFor="let peopleCounter of variantReport.familyReport.peopleCounters" [ngValue]="peopleCounter">
         {{ peopleCounter.groupName }}
@@ -94,9 +92,7 @@
   </div>
 
   <div class="col-sm-3" class="variants-report-selector">
-    <select class="form-control"
-      [(ngModel)]="selectedPedigreeTable"
-        required>
+    <select class="form-control" [(ngModel)]="selectedPedigreeTable">
       <option value="" selected="selected"></option>
       <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
         {{ pedigreeTable.groupName }}
@@ -157,9 +153,7 @@
     </div>
 
     <div class="col-sm-3" class="variants-report-selector">
-      <select class="form-control"
-        [(ngModel)]="selectedDenovoReport"
-          required>
+      <select class="form-control" [(ngModel)]="selectedDenovoReport">
         <option value="" selected="selected"></option>
         <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
           {{ denovoReport.groupName }}
