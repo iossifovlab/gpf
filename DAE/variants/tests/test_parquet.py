@@ -6,17 +6,18 @@ Created on Mar 7, 2018
 from __future__ import print_function
 from __future__ import unicode_literals
 import pytest
+import os
+
 from variants.parquet_io import save_ped_df_to_parquet, \
-    read_ped_df_from_parquet, variants_table
+    read_ped_df_from_parquet, variants_table, save_variants_to_parquet
+from variants.configure import Configure
+
 # summary_table, variants_table
 # save_family_allele_df_to_parquet,\
 # read_family_allele_df_from_parquet
 # family_variants_table,\
 
-from variants.tests.common_tests_helpers import assert_annotation_equals
-import os
-import pyarrow.parquet as pq
-import pandas as pd
+# from variants.tests.common_tests_helpers import assert_annotation_equals
 
 
 # @pytest.mark.skip
@@ -46,29 +47,55 @@ import pandas as pd
 def test_parquet_variants(variants_vcf, fixture_name, temp_filename):
     fvars = variants_vcf(fixture_name)
     variants = fvars.full_variants_iterator()
-    for stable, ftable in variants_table(variants):
-        assert stable is not None
-        assert ftable is not None
-
+    for st, et, ft, mt in variants_table(variants, batch_size=2):
+        assert st is not None
+        assert et is not None
+        assert ft is not None
+        assert mt is not None
 
 
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/effects_trio_multi",
     "fixtures/effects_trio",
 ])
-def test_parquet_pedigree(variants_vcf, fixture_name, temp_filename):
+def test_parquet_variants_save(variants_vcf, fixture_name, temp_dirname):
     fvars = variants_vcf(fixture_name)
+    variants = fvars.full_variants_iterator()
+    conf = Configure.from_prefix_parquet(temp_dirname).parquet
+    print(conf)
 
-    ped_df = fvars.ped_df
-    print(ped_df.head())
+    save_variants_to_parquet(
+        variants,
+        summary_filename=conf.summary_variant,
+        effect_gene_filename=conf.effect_gene_variant,
+        family_filename=conf.family_variant,
+        member_filename=conf.member_variant,
+        batch_size=2
+    )
 
-    save_ped_df_to_parquet(ped_df, temp_filename)
+    assert os.path.exists(conf.summary_variant)
+    assert os.path.exists(conf.effect_gene_variant)
+    assert os.path.exists(conf.family_variant)
+    assert os.path.exists(conf.member_variant)
 
-    ped_df1 = read_ped_df_from_parquet(temp_filename)
-    assert ped_df1 is not None
-    print(ped_df1.head())
 
-    assert_annotation_equals(ped_df, ped_df1)
+# @pytest.mark.parametrize("fixture_name", [
+#     "fixtures/effects_trio_multi",
+#     "fixtures/effects_trio",
+# ])
+# def test_parquet_pedigree(variants_vcf, fixture_name, temp_filename):
+#     fvars = variants_vcf(fixture_name)
+
+#     ped_df = fvars.ped_df
+#     print(ped_df.head())
+
+#     save_ped_df_to_parquet(ped_df, temp_filename)
+
+#     ped_df1 = read_ped_df_from_parquet(temp_filename)
+#     assert ped_df1 is not None
+#     print(ped_df1.head())
+
+#     assert_annotation_equals(ped_df, ped_df1)
 
 
 # @pytest.mark.skip

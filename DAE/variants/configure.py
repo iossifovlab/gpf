@@ -86,18 +86,34 @@ class Configure(ConfigBox):
             prefix, "summary.parquet")
         family_filename = os.path.join(
             prefix, "family.parquet")
-        allele_filename = os.path.join(
-            prefix, "allele.parquet")
+        member_filename = os.path.join(
+            prefix, "member.parquet")
+        effect_gene_filename = os.path.join(
+            prefix, "effect_gene.parquet")
         pedigree_filename = os.path.join(
             prefix, "pedigree.parquet")
 
         conf = {
             'parquet': {
-                'summary_variants': summary_filename,
-                'family_variants': family_filename,
-                'family_alleles': allele_filename,
+                'summary_variant': summary_filename,
+                'family_variant': family_filename,
+                'member_variant': member_filename,
+                'effect_gene_variant': effect_gene_filename,
                 'pedigree': pedigree_filename
             }
         }
 
         return Configure(conf)
+
+    @staticmethod
+    def parquet_prefix_exists(prefix):
+        if not os.path.exists(prefix) or not os.path.isdir(prefix):
+            return False
+        conf = Configure.from_prefix_parquet(prefix).parquet
+        print(conf)
+        
+        return os.path.exists(conf.summary_variant) and \
+            os.path.exists(conf.family_variant) and \
+            os.path.exists(conf.member_variant) and \
+            os.path.exists(conf.effect_gene_variant) and \
+            os.path.exists(conf.pedigree)
