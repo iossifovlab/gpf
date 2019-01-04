@@ -13,6 +13,7 @@ from utils.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
 #     save_summary_variants_to_parquet
 from variants.raw_dae import RawDAE, BaseDAE
 from variants.parquet_io import save_variants_to_parquet
+from variants.configure import Configure
 
 
 def test_dae_full_variants_iterator(raw_dae, temp_dirname):
@@ -24,17 +25,19 @@ def test_dae_full_variants_iterator(raw_dae, temp_dirname):
     for sv, fvs in dae.full_variants_iterator():
         print(sv, fvs)
 
-    summary_filename = os.path.join(temp_dirname, "summary.parquet")
-    family_filename = os.path.join(temp_dirname, "family.parquet")
+    conf = Configure.from_prefix_parquet(temp_dirname).parquet
 
     save_variants_to_parquet(
         dae.full_variants_iterator(),
-        summary_filename,
-        family_filename
+        summary_filename=conf.summary_variant,
+        family_filename=conf.family_variant,
+        effect_gene_filename=conf.effect_gene_variant,
+        member_filename=conf.member_variant,
+        batch_size=2
     )
 
-    assert os.path.exists(summary_filename)
-    assert os.path.exists(family_filename)
+    assert os.path.exists(conf.summary_variant)
+    assert os.path.exists(conf.family_variant)
 
 
 def test_explode_family_genotype():

@@ -52,14 +52,14 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         super(ThriftFamilyVariants, self).__init__()
 
         if prefix and not config:
-            config = Configure.from_prefix_parquet(prefix)
+            config = Configure.from_prefix_parquet(prefix).parquet
 
         assert config is not None
 
-        self.config = config.parquet
+        self.config = config
         assert os.path.exists(self.config.pedigree)
-        assert os.path.exists(self.config.summary_variants)
-        assert os.path.exists(self.config.family_alleles)
+        assert os.path.exists(self.config.summary_variant)
+        assert os.path.exists(self.config.family_variant)
 
         if not thrift_connection:
             thrift_connection = ThriftFamilyVariants.get_thrift_connection(
@@ -104,8 +104,8 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
         df = thrift_query(
             thrift_connection=self.connection,
-            summary_variants=self.config.summary_variants,
-            family_alleles=self.config.family_alleles,
+            summary_variants=self.config.summary_variant,
+            family_alleles=self.config.family_variant,
             **kwargs
         )
         df.genotype = df.genotype.apply(

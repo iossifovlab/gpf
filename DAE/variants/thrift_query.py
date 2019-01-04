@@ -81,7 +81,7 @@ Q = """
     FROM parquet.`{family_alleles}` AS F
     LEFT JOIN parquet.`{summary_variants}` AS S
     ON
-        S.chrom = F.chrom AND
+        S.bucket_index = F.bucket_index AND
         S.summary_variant_index = F.summary_variant_index AND
         S.allele_index = F.allele_index
 """

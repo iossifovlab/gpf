@@ -58,21 +58,22 @@ def import_vcf_contig(config, contig):
     if fvars.is_empty():
         print("empty contig {} done".format(contig), file=sys.stderr)
         return
+    raise NotImplementedError()
+    
+    # summary_filename = os.path.join(
+    #     config.output,
+    #     "summary_variants_{}.parquet".format(contig))
+    # allele_filename = os.path.join(
+    #     config.output,
+    #     "family_alleles_{}.parquet".format(contig))
 
-    summary_filename = os.path.join(
-        config.output,
-        "summary_variants_{}.parquet".format(contig))
-    allele_filename = os.path.join(
-        config.output,
-        "family_alleles_{}.parquet".format(contig))
-
-    save_summary_variants_to_parquet(
-        fvars.query_variants(),
-        summary_filename)
-    save_family_variants_to_parquet(
-        fvars.query_variants(),
-        allele_filename)
-    print("contig {} done".format(contig), file=sys.stderr)
+    # save_summary_variants_to_parquet(
+    #     fvars.query_variants(),
+    #     summary_filename)
+    # save_family_variants_to_parquet(
+    #     fvars.query_variants(),
+    #     allele_filename)
+    # print("contig {} done".format(contig), file=sys.stderr)
 
 
 def import_pedigree(config):

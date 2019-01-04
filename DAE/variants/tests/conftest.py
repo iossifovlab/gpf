@@ -240,34 +240,12 @@ def variants_vcf(composite_annotator):
     return builder
 
 
-# @pytest.fixture(scope='session')
-# def variants_df(variants_vcf):
-#     def builder(path):
-#         fvars = variants_vcf(path)
-#         summary_df = fvars.annot_df
-#         ped_df = fvars.ped_df
-#         allele_df = family_variants_df(
-#             fvars.query_variants(
-#                 return_reference=True,
-#                 return_unknown=True
-#             ))
-#         return DfFamilyVariants(ped_df, summary_df, allele_df)
-#     return builder
-
-
 @pytest.fixture(scope='session')
 def variants_thrift(parquet_variants, testing_thriftserver):
     def builder(path):
-        pedigree, summary, allele = parquet_variants(path)
-        config = Configure.from_dict({
-            'parquet': {
-                'pedigree': pedigree,
-                'summary_variants': summary,
-                'family_alleles': allele,
-            }
-        })
+        parquet_conf = parquet_variants(path)
         return ThriftFamilyVariants(
-            config=config,
+            config=parquet_conf,
             thrift_connection=testing_thriftserver)
     return builder
 
@@ -284,33 +262,29 @@ def parquet_variants(request, variants_vcf):
         print("path:", path, os.path.basename(path))
         basename = os.path.basename(path)
         fulldirname = os.path.join(dirname, basename)
-        summary_filename = os.path.join(
-            fulldirname, "summary.parquet")
-        allele_filename = os.path.join(
-            fulldirname, "allele.parquet")
-        pedigree_filename = os.path.join(
-            fulldirname, "pedigree.parquet")
 
-        if os.path.exists(summary_filename) and \
-                os.path.exists(allele_filename) and \
-                os.path.exists(pedigree_filename):
-            return pedigree_filename, summary_filename, allele_filename
+        if Configure.parquet_prefix_exists(fulldirname):
+            return Configure.from_prefix_parquet(fulldirname).parquet
 
         if not os.path.exists(fulldirname):
             os.mkdir(fulldirname)
+        conf = Configure.from_prefix_parquet(fulldirname).parquet
 
         fvars = variants_vcf(path)
 
         assert not fvars.is_empty()
 
-        save_ped_df_to_parquet(fvars.ped_df, pedigree_filename)
+        save_ped_df_to_parquet(fvars.ped_df, conf.pedigree)
 
         save_variants_to_parquet(
             fvars.full_variants_iterator(),
-            summary_filename,
-            allele_filename)
+            summary_filename=conf.summary_variant,
+            family_filename=conf.family_variant,
+            effect_gene_filename=conf.effect_gene_variant,
+            member_filename=conf.member_variant,
+            batch_size=2)
 
-        return pedigree_filename, summary_filename, allele_filename
+        return conf
 
     return builder
 
