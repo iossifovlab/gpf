@@ -14,7 +14,6 @@ class CleanupAnnotator(AnnotatorBase):
             schema.remove_column(column)
 
     def line_annotation(self, annotation_line):
-        if self.config.options.hard:
-            for column in self.cleanup_columns:
-                if column in annotation_line:
-                    del(annotation_line[column])
+        for column in self.cleanup_columns:
+            if column in annotation_line:
+                del(annotation_line[column])
