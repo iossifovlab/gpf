@@ -201,7 +201,8 @@ def pipeline_main(argv):
         parser.add_argument(name, **args)
 
     parser.add_argument(
-        '--notabix', help='skip running bgzip and tabix on the annotated files',
+        '--notabix',
+        help='skip running bgzip and tabix on the annotated files',
         action='store_true', default=False
     )
 
