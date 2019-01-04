@@ -202,7 +202,7 @@ export class EffectTypeTable {
       }
 
       constructor (
-        readonly tables: EffectTypeRow[],
+        readonly tables: EffectTypeTable[],
         readonly effectGroups: string[],
         readonly effectTypes: string[],
   ) {}
