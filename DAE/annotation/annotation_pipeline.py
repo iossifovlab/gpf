@@ -9,6 +9,7 @@ import time
 import datetime
 import re
 import argparse
+import subprocess
 
 from box import Box
 from ast import literal_eval
@@ -20,7 +21,6 @@ from annotation.tools.annotator_base import AnnotatorBase, \
     CompositeVariantAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.file_io import IOType, IOManager
-from annotation.tools.schema import Schema
 
 
 class PipelineConfig(VariantAnnotatorConfig):
@@ -125,25 +125,41 @@ class PipelineConfig(VariantAnnotatorConfig):
             return cleanup_columns
 
 
+def run_tabix(filename):
+    def run_command(cmd):
+        print("executing", cmd)
+        try:
+            subprocess.check_output(cmd, shell=True)
+        except subprocess.CalledProcessError as ex:
+            status = ex.returncode
+            output = ex.output
+
+            print(status, output)
+            raise Exception("FAILURE AT: " + cmd)
+
+    cmd = "bgzip -c {filename} > {filename}.bgz".format(
+        filename=filename)
+    run_command(cmd)
+
+    cmd = "tabix -s 1 -b 2 -e 2 -S 1 -f {filename}.bgz".format(
+        filename=filename)
+    run_command(cmd)
+
+
 class PipelineAnnotator(CompositeVariantAnnotator):
 
-    def __init__(self, config, schema):
-        super(PipelineAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(PipelineAnnotator, self).__init__(config)
 
     @staticmethod
-    def build(options, config_file, variants_schema, defaults={}):
+    def build(options, config_file, defaults={}):
         pipeline_config = PipelineConfig.build(options, config_file, defaults)
         assert pipeline_config.pipeline_sections
-        assert variants_schema.columns
 
-        for col in pipeline_config.cleanup_columns:
-            if col in variants_schema.columns:
-                del(variants_schema.columns[col])
-
-        pipeline = PipelineAnnotator(pipeline_config, variants_schema)
+        pipeline = PipelineAnnotator(pipeline_config)
         for section_config in pipeline_config.pipeline_sections:
             annotator = VariantAnnotatorConfig.instantiate(
-                section_config, pipeline.schema
+                section_config
             )
             pipeline.add_annotator(annotator)
             output_columns = [
@@ -155,8 +171,6 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
     def add_annotator(self, annotator):
         assert isinstance(annotator, AnnotatorBase)
-        self.schema = Schema.merge_schemas(self.schema,
-                                           annotator.schema)
         self.config.virtual_columns.extend(annotator.config.virtual_columns)
         self.annotators.append(annotator)
 
@@ -165,14 +179,13 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         for annotator in self.annotators:
             annotator.line_annotation(aline)
 
-    def get_output_schema(self):
-        output_schema = Schema()
-        output_schema = Schema.merge_schemas(output_schema, self.schema)
+    def collect_annotator_schema(self, schema):
+        super(PipelineAnnotator, self).collect_annotator_schema(schema)
         if self.config.virtual_columns:
             for vcol in self.config.virtual_columns:
-                if vcol in output_schema.columns:
-                    del(output_schema.columns[vcol])
-        return output_schema
+                schema.remove_column(vcol)
+        for col in self.config.cleanup_columns:
+            schema.remove_column(col)
 
 
 def pipeline_main(argv):
@@ -180,16 +193,28 @@ def pipeline_main(argv):
     parser = argparse.ArgumentParser(
         description=desc, conflict_handler='resolve')
     parser.add_argument(
-        '--config', help='config file location',
-        required=True, action='store')
+        '--config', help='config file location; default is "annotation.conf" '
+        'in the instance data directory $DAE_DB_DIR',
+        action='store')
 
     for name, args in VariantAnnotatorConfig.cli_options():
         parser.add_argument(name, **args)
 
+    parser.add_argument(
+        '--notabix', help='skip running bgzip and tabix on the annotated files',
+        action='store_true', default=False
+    )
+
     options = parser.parse_args()
-    assert options.config is not None
-    assert os.path.exists(options.config)
-    config_filename = options.config
+    if options.config is not None:
+        config_filename = options.config
+    else:
+        dae_db_dir = os.environ.get("DAE_DB_DIR", None)
+        assert dae_db_dir is not None
+
+        config_filename = os.path.join(dae_db_dir, "annotation.conf")
+
+    assert os.path.exists(config_filename), config_filename
 
     options = Box({
         k: v for k, v in options._get_kwargs()
@@ -206,11 +231,8 @@ def pipeline_main(argv):
     start = time.time()
 
     with IOManager(options, reader_type, writer_type) as io_manager:
-        pipeline = PipelineAnnotator.build(options, config_filename,
-                                           io_manager.reader.schema)
+        pipeline = PipelineAnnotator.build(options, config_filename)
         assert pipeline is not None
-
-        io_manager.writer.schema = pipeline.get_output_schema()
         pipeline.annotate_file(io_manager)
 
     print("# PROCESSING DETAILS:", file=sys.stderr)
@@ -221,6 +243,9 @@ def pipeline_main(argv):
         "The program was running for [h:m:s]:",
         str(datetime.timedelta(seconds=round(time.time()-start, 0))),
         file=sys.stderr)
+
+    if not options.notabix:
+        run_tabix(options.outfile)
 
 
 if __name__ == '__main__':

@@ -31,7 +31,7 @@ class DatasetFactory(object):
             raise ValueError(
                 "Unknown study group: {}, known study groups: [{}]".format(
                     dataset_config.study_group,
-                    ",".join(self.study_group_definition.study_group_ids()))
+                    ",".join(self.study_group_definition.study_group_ids))
             )
 
         study_group = \

@@ -15,6 +15,7 @@ from django.http.response import StreamingHttpResponse
 import itertools
 from django.utils.http import urlencode
 
+from datasets_api.datasets_manager import get_datasets_manager
 from preloaded import register
 from datasets_api.permissions import IsDatasetAllowed
 from users_api.authentication import SessionAuthenticationWithoutCSRF
@@ -26,24 +27,14 @@ class GeneSetsBaseView(views.APIView):
 
     def __init__(self):
         self.gscs = register.get('gene_sets_collections')
-        self.dataset_facade = register.get('datasets').get_facade()
+        self.dataset_facade = get_datasets_manager().get_dataset_facade()
+        print("datasets loaded in view")
 
-
-class GeneSetsCollectionsView(GeneSetsBaseView):
-
-    def __init__(self):
-        super(GeneSetsCollectionsView, self).__init__()
-
-    def get(self, request):
-        permitted_datasets = IsDatasetAllowed.permitted_datasets(request.user)
-        permitted_study_groups = [
+    def datasets_to_study_groups(self, datasets):
+        return [
             self.dataset_facade.get_dataset(dataset).study_group.name
-            for dataset in permitted_datasets
+            for dataset in datasets
         ]
-        gene_sets_collections = deepcopy(self.gscs.get_gene_sets_collections(
-            permitted_study_groups))
-        self.study_groups_to_datasets(gene_sets_collections)
-        return Response(gene_sets_collections, status=status.HTTP_200_OK)
 
     def study_groups_to_datasets(self, gene_sets_collections):
         for gene_sets in gene_sets_collections:
@@ -63,6 +54,21 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
                 datasetMap['phenotypes'] = dataset.get_legend()
 
 
+class GeneSetsCollectionsView(GeneSetsBaseView):
+
+    def __init__(self):
+        super(GeneSetsCollectionsView, self).__init__()
+
+    def get(self, request):
+        permitted_datasets = IsDatasetAllowed.permitted_datasets(request.user)
+        permitted_study_groups = \
+            self.datasets_to_study_groups(permitted_datasets)
+        gene_sets_collections = deepcopy(self.gscs.get_gene_sets_collections(
+            permitted_study_groups))
+        self.study_groups_to_datasets(gene_sets_collections)
+        return Response(gene_sets_collections, status=status.HTTP_200_OK)
+
+
 class GeneSetsView(GeneSetsBaseView):
     """
         {
@@ -74,7 +80,6 @@ class GeneSetsView(GeneSetsBaseView):
         "limit": 100
         }
     """
-
     def __init__(self):
         super(GeneSetsView, self).__init__()
 
@@ -143,23 +148,39 @@ class GeneSetDownloadView(GeneSetsBaseView):
     def post(self, request):
         return self._build_response(request.data, request.user)
 
+    def datasets_to_study_groups_types(self, gene_sets_types):
+        result = {}
+        for dataset_id, values in gene_sets_types.items():
+            study_group_id = self.datasets_to_study_groups([dataset_id])[0]
+            result[study_group_id] = values
+
+        return result
+
     def _build_response(self, data, user):
         if 'geneSetsCollection' not in data or 'geneSet' not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data['geneSetsCollection']
         gene_set_id = data['geneSet']
-        gene_sets_types = data.get('geneSetsTypes', [])
+        gene_sets_types = data.get('geneSetsTypes', {})
+
+        gene_sets_types = self.datasets_to_study_groups_types(gene_sets_types)
+        permitted_datasets = IsDatasetAllowed.permitted_datasets(user)
+        permitted_study_groups = self.datasets_to_study_groups(
+            permitted_datasets)
 
         if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
-            return Response(status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                "unknown gene set collection": gene_sets_collection_id
+            }, status=status.HTTP_404_NOT_FOUND)
 
         gene_set = self.gscs.get_gene_set(
             gene_sets_collection_id,
             gene_set_id,
             gene_sets_types,
-            IsDatasetAllowed.permitted_datasets(user)
+            permitted_study_groups
         )
         if gene_set is None:
+            print("GENE SET NOT FOUND", permitted_study_groups)
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         gene_syms = ["{}\r\n".format(s) for s in gene_set['syms']]

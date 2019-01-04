@@ -84,9 +84,6 @@ Q = """
         S.chrom = F.chrom AND
         S.summary_variant_index = F.summary_variant_index AND
         S.allele_index = F.allele_index
-    LEFT JOIN parquet.`{pedigree}` AS P
-    ON
-        P.familyId = F.family_id AND array_contains(F.variant_in_members, P.personId)
 """
 
 
@@ -99,11 +96,6 @@ def region_transformer(r):
 def regions_transformer(rs):
     assert all([isinstance(r, Region) for r in rs])
     return " OR ".join([region_transformer(r) for r in rs])
-
-
-def pedigree_selector_transformer(pd):
-    return " OR ".join(["(`{}` = '{}')".format(
-        pd['source'], cv) for cv in pd['checkedValues']])
 
 
 def query_parts(queries, **kwargs):
@@ -149,13 +141,12 @@ VARIANT_QUERIES = [
 
 def thrift_query(
         thrift_connection,
-        summary_variants, family_alleles, pedigree,
+        summary_variants, family_alleles,
         limit=2000, **kwargs):
 
     final_query = Q.format(
         summary_variants=summary_variants,
         family_alleles=family_alleles,
-        pedigree=pedigree,
     )
 
     variant_queries = []
@@ -165,11 +156,6 @@ def thrift_query(
 
     variant_queries.extend(
         query_parts(VARIANT_QUERIES, **kwargs))
-
-    if 'pedigreeSelector' in kwargs and kwargs['pedigreeSelector'] is not None:
-        pedigree_selector = kwargs.pop('pedigreeSelector')
-        variant_queries.append(
-            pedigree_selector_transformer(pedigree_selector))
 
     return_reference = kwargs.get("return_reference", False)
     if not return_reference:

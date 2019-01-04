@@ -319,7 +319,7 @@ def pedState2(ped):
     return sex, role
 
 
-def printFamData(fInfo, pInfo, proj='VIP', lab='SF',
+def printFamData(fInfo, pInfo, # proj='VIP', lab='SF',
                  listFam=[], out=sys.stdout):
     flag = False
     for k, v in fInfo.items():
@@ -329,13 +329,13 @@ def printFamData(fInfo, pInfo, proj='VIP', lab='SF',
     if flag:
         print(
             '\t'.join(
-                'familyId,personId,Project,Lab,role,'
+                'familyId,personId,role,'
                 'gender,sampleId'.split(',')),
             file=out)
     else:
         print(
             '\t'.join(
-                'familyId,personId,Project,Lab,role,gender'.split(',')),
+                'familyId,personId,role,gender'.split(',')),
             file=out)
 
     for k, v in sorted(fInfo.items()):
@@ -353,11 +353,11 @@ def printFamData(fInfo, pInfo, proj='VIP', lab='SF',
             if nm[0] != om[0]:
                 s = om[0]
             print(
-                '\t'.join([nf, nm[0], proj, lab, 'mom', sex, s]),
+                '\t'.join([nf, nm[0], 'mom', sex, s]),
                 file=out)
         else:
             print(
-                '\t'.join([nf, nm[0], proj, lab, 'mom', sex]),
+                '\t'.join([nf, nm[0], 'mom', sex]),
                 file=out)
 
         xp = pInfo[nm[1]]
@@ -368,11 +368,11 @@ def printFamData(fInfo, pInfo, proj='VIP', lab='SF',
                 s = om[1]
 
             print(
-                '\t'.join([nf, nm[1], proj, lab, 'dad', sex, s]),
+                '\t'.join([nf, nm[1], 'dad', sex, s]),
                 file=out)
         else:
             print(
-                '\t'.join([nf, nm[1], proj, lab, 'dad', sex]),
+                '\t'.join([nf, nm[1], 'dad', sex]),
                 file=out)
 
         for o, n in zip(om[2:], nm[2:]):
@@ -386,11 +386,11 @@ def printFamData(fInfo, pInfo, proj='VIP', lab='SF',
             sex, role = pedState2(pInfo[n])
             if flag:
                 print(
-                    '\t'.join([nf, n, proj, lab, role, sex, s]),
+                    '\t'.join([nf, n, role, sex, s]),
                     file=out)
             else:
                 print(
-                    '\t'.join([nf, n, proj, lab, role, sex]),
+                    '\t'.join([nf, n, role, sex]),
                     file=out)
 
 

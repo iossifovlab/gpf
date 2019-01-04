@@ -1,11 +1,10 @@
 import os
 
-DATA_DIR = os.environ.get(
-    "DAE_DATA_DIR",
-    '.'
-)
 
-DATA_DATASETS_DIR = os.environ.get(
-    "DATA_DATASETS_DIR",
-    "{}/datasets".format(DATA_DIR)
-)
+def get_config():
+    data_dir = os.environ.get("DAE_DATA_DIR", ".")
+    return {
+        "DATA_DIR": data_dir,
+        "DATA_DATASETS_DIR": os.environ.get(
+            "DATA_DATASETS_DIR", "{}/datasets".format(data_dir))
+    }

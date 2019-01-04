@@ -33,15 +33,16 @@ class SingleFileStudiesDefinition(StudyDefinition):
                 _config_file_from_environment()
 
         self.single_file_configurable_entity_definition(
-            config_file, work_dir, StudyConfig, 'study_name',
+            config_file, work_dir, StudyConfig, "study_name",
             StudyConfig.get_default_values())
 
     @staticmethod
     def _work_dir_from_environment():
-        from studies.default_settings import DATA_DIR
-        return DATA_DIR
+
+        from studies.default_settings import get_config
+        return get_config().get("DATA_DIR")
 
     @staticmethod
     def _config_file_from_environment():
-        from studies.default_settings import CONFIG_FILE
-        return CONFIG_FILE
+        from studies.default_settings import get_config
+        return get_config().get("CONFIG_FILE")

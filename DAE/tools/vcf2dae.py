@@ -37,13 +37,13 @@ def main():
         help='VCF file to import'
     )
 
-    parser.add_argument(
-        "-x", "--project", dest="project",
-        metavar="project", help="project name [defualt:VIP")
-    parser.add_argument(
-        "-l", "--lab", dest="lab",
-        default="cshl",
-        metavar="lab", help="lab name")
+    # parser.add_argument(
+    #     "-x", "--project", dest="project",
+    #     metavar="project", help="project name [defualt:VIP")
+    # parser.add_argument(
+    #     "-l", "--lab", dest="lab",
+    #     default="cshl",
+    #     metavar="lab", help="lab name")
 
     parser.add_argument(
         "-o", "--output-prefix", dest="output_prefix", 
@@ -83,33 +83,50 @@ def main():
         dest="remove_chr", default=False,
         help="removes prefix to 'chr' from contig names")
 
+    parser.add_argument(
+        "--notabix", action="store_true",
+        dest="notabix", default=False,
+        help="skips bgzip and tabix result file")
+
+    parser.add_argument(
+        "--noannotation", action="store_true",
+        dest="noannotation", default=False,
+        help="skips default annotation of variants")
+
     args = parser.parse_args()
     print(args)
 
-    tempdir = tempfile.mkdtemp(dir=args.work_dir)
-    dae_prefix = os.path.join(args.work_dir, args.output_prefix)
+    output_prefix = args.output_prefix
+    work_dir = os.path.dirname(output_prefix)
+    output_prefix = os.path.basename(output_prefix)
 
-    dae_name = "{}.txt".format(args.output_prefix)
-    dae_too_name = "{}-TOOMANY.txt".format(args.output_prefix)
+    if args.work_dir is not None and args.work_dir != '.':
+        work_dir = args.work_dir
 
-    dae_fullname = os.path.join(args.work_dir, dae_name)
-    dae_too_fullname = os.path.join(args.work_dir, dae_too_name)
+    tempdir = tempfile.mkdtemp(dir=work_dir)
+    dae_prefix = os.path.join(work_dir, output_prefix)
+
+    dae_name = "{}.txt".format(output_prefix)
+    dae_too_name = "{}-TOOMANY.txt".format(output_prefix)
+
+    dae_fullname = os.path.join(work_dir, dae_name)
+    dae_too_fullname = os.path.join(work_dir, dae_too_name)
 
     temp_dae_name = os.path.join(tempdir, dae_name)
     temp_dae_too_name = os.path.join(tempdir, dae_too_name)
-    temp_dae_prefix = os.path.join(tempdir, args.output_prefix)
-
+    temp_dae_prefix = os.path.join(tempdir, output_prefix)
     # main procedure
     # cmd = ' '.join( ['vcf2DAEc.py', '-p', ox.pedFile, '-d', ox.dataFile,
     # '-x', ox.project, '-l', ox.lab, \
+
     cmd = ' '.join(
         [
             'vcf2dae_command_fast.py',
             args.pedigree,
             '"' + args.vcf + '"',
 
-            '-x', args.project,
-            '-l', args.lab,
+            # '-x', args.project,
+            # '-l', args.lab,
             '-o', temp_dae_prefix,
             '-m', str(args.minPercentOfGenotypeSamples),
             '-t', str(args.tooManyThresholdFamilies),
@@ -124,12 +141,16 @@ def main():
     run_command(cmd)
 
     # HW
-    cmd = ' '.join([
-        'hw.py',
-        '-c', temp_dae_name,
-        dae_fullname
-    ])
+    cmd = "mv {} {}".format(temp_dae_name, os.path.join(tempdir, "no_hw.txt"))
     run_command(cmd)
+    cmd = "hw.py -c {} {}".format(os.path.join(tempdir, "no_hw.txt"), temp_dae_name)
+    run_command(cmd)
+
+    # cmd = ' '.join([
+    #     'hw.py',
+    #     '-c', temp_dae_name,
+    #     dae_fullname
+    # ])
 
     # family file
     cmd = ' '.join([
@@ -146,6 +167,39 @@ def main():
         dae_too_fullname
     ])
     run_command(cmd)
+
+    if args.noannotation:
+        cmd = "mv {} {}".format(
+            temp_dae_name, dae_fullname
+        )
+    else:
+        cmd = "annotation_pipeline.py {} {}".format(
+            temp_dae_name, dae_fullname
+        )
+    run_command(cmd)
+
+    if not args.notabix:
+        cmd = "bgzip -c {filename} > {filename}.bgz".format(
+            filename=dae_fullname)
+        run_command(cmd)
+        cmd = "rm -f {filename}".format(filename=dae_fullname)
+        run_command(cmd)
+
+        cmd = "bgzip -c {filename} > {filename}.bgz".format(
+            filename=dae_too_fullname)
+        run_command(cmd)
+        cmd = "rm -f {filename}".format(filename=dae_too_fullname)
+        run_command(cmd)
+
+        cmd = "tabix -s 1 -b 2 -e 2 -S 1 -f {filename}.bgz".format(
+            filename=dae_fullname)
+        run_command(cmd)
+
+        cmd = "tabix -s 1 -b 2 -e 2 -S 1 -f {filename}.bgz".format(
+            filename=dae_too_fullname)
+        run_command(cmd)
+        cmd = "rm -rf {}".format(tempdir)
+        run_command(cmd)
 
 
 if __name__ == "__main__":

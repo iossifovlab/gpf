@@ -13,8 +13,6 @@ class StudyFactory(object):
     }
 
     def __init__(self, thrift_connection=None):
-        if thrift_connection is None:
-            thrift_connection = ThriftFamilyVariants.get_thrift_connection()
         self.thrift_connection = thrift_connection
 
     def make_study(self, study_config):
@@ -26,6 +24,9 @@ class StudyFactory(object):
 
         study_type_constructor = self.STUDY_TYPES[study_config.type]
         if study_type_constructor == self.STUDY_TYPES["thrift"]:
+            if self.thrift_connection is None:
+                self.thrift_connection = \
+                    ThriftFamilyVariants.get_thrift_connection()
             study_type_constructor = partial(
                 study_type_constructor, thrift_connection=self.thrift_connection
             )
