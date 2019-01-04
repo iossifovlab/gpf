@@ -32,3 +32,4 @@ test_data/
 *.temp
 wdae/docs/_build
 gpf-dist.tar.gz
+test-eff.txt

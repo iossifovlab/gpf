@@ -346,8 +346,9 @@ class EffectWithPhenotype(object):
         events_people = set()
 
         for variant in variants:
-            events_people.update(
-                (set(variant.variant_in_members) & people_with_phenotype))
+            for va in variant.alt_alleles:
+                events_people.update(
+                    (set(va.variant_in_members) & people_with_phenotype))
 
         return len(events_people)
 
