@@ -14,7 +14,6 @@ SIMPLE_ARG_NODE = "simple_arg"
 ALL_NODES = (AND_NODE, OR_NODE, NOT_NODE, ALL_NODE, ANY_NODE, EQ_NODE)
 
 
-
 def token(value):
     return Token("STRING", value)
 

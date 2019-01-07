@@ -54,10 +54,6 @@ stage_two_transformers = {
 
 Q = """
     SELECT
-        F.family_variant_index,
-        F.family_id,
-        F.genotype,
-
         S.chrom,
         S.position,
         S.reference,
@@ -76,10 +72,14 @@ Q = """
         S.af_parents_called_count,
         S.af_parents_called_percent,
         S.af_allele_count,
-        S.af_allele_freq
+        S.af_allele_freq,
 
-    FROM parquet.`{family_alleles}` AS F
-    LEFT JOIN parquet.`{summary_variants}` AS S
+        F.family_variant_index,
+        F.family_id,
+        F.genotype,
+
+    FROM parquet.`{family_variant}` AS F
+    LEFT JOIN parquet.`{summary_variant}` AS S
     ON
         S.bucket_index = F.bucket_index AND
         S.summary_variant_index = F.summary_variant_index AND
@@ -141,12 +141,12 @@ VARIANT_QUERIES = [
 
 def thrift_query(
         thrift_connection,
-        summary_variants, family_alleles,
+        summary_variant, family_variant,
         limit=2000, **kwargs):
 
     final_query = Q.format(
-        summary_variants=summary_variants,
-        family_alleles=family_alleles,
+        summary_variant=summary_variant,
+        family_variant=family_variant,
     )
 
     variant_queries = []
@@ -179,3 +179,177 @@ def thrift_query(
     cursor = thrift_connection.cursor()
     cursor.execute(final_query)
     return as_pandas(cursor)
+
+
+class ThriftQueryBuilder(object):
+    Q = "'"
+
+    def __init__(self, query, tables, db='parquet'):
+        self.query = query
+        self.query_keys = set(query.keys())
+        self.tables = tables
+        self.db = 'parquet'
+
+    def has_gene_effects(self):
+        return 'effect_types' in self.query or 'genes' in self.query
+
+    def has_members(self):
+        members_kw = set(['roles', 'sexes', 'person_ids', 'inheritance'])
+        return len(members_kw & self.query_keys()) > 0
+
+    def _build_effect_type_where(self):
+        assert self.query['effect_types']
+        assert isinstance(self.query['effect_types'], list)
+        where = [
+            ' {q}{ef}{q} '.format(q=self.Q, ef=ef)
+            for ef in self.query['effect_types']]
+        where = ' E.effect_type in ( {} ) '.format(','.join(where))
+        return where
+
+    def _build_genes_where(self):
+        assert self.query['genes']
+        assert isinstance(self.query['genes'], list) or \
+            isinstance(self.query['genes'], set)
+        where = [
+            ' {q}{sym}{q} '.format(q=self.Q, sym=sym.upper())
+            for sym in self.query['genes']]
+        where = ' E.effect_gene in ( {} ) '.format(','.join(where))
+        return where
+
+    def _build_gene_effects_where(self):
+        assert self.has_gene_effects()
+        where = []
+        if 'effect_types' in self.query:
+            where.append(self._build_effect_type_where())
+
+        if 'genes' in self.query:
+            where.append(self._build_genes_where())
+
+        w = ' AND '.join(where)
+        return w
+
+    def _build_regions_where(self):
+        assert 'regions' in self.query
+        assert isinstance(self.query['regions'], list)
+        where = []
+        for region in self.query['regions']:
+            assert isinstance(region, Region)
+            where.append(
+               "(S.chrom = {q}{chrom}{q} AND S.position >= {start} AND "
+               "S.position <= {stop})"
+               .format(
+                    q=self.Q, chrom=region.chrom, start=region.start, 
+                    stop=region.stop)
+            )
+        return ' OR '.join(where)
+
+    def _build_summary_where(self):
+        where = []
+        if 'regions' in self.query:
+            where.append(self._build_regions_where())
+        if self.has_gene_effects():
+            where.append(self._build_gene_effects_where())
+
+        if not where:
+            return None
+        return ' \n\t\tAND '.join(['( {} )'.format(w) for w in where])
+
+    def query_summary_subquery(self):
+        where = self._build_summary_where()
+        if where is None:
+            return None
+        join_effect_gene = ""
+        if self.has_gene_effects():
+            join_effect_gene = """
+                LEFT JOIN
+                    {db}.`{effect_gene_variant}` AS S
+                ON
+                    E.bucket_index = S.bucket_index
+                    AND E.summary_variant_index = S.summary_variant_index
+                    AND E.allele_index = S.allele_index
+            """.format(
+                db=self.db,
+                effect_gene_variant=self.tables['effect_gene_variant']
+            )
+
+        q = """
+        SELECT
+            DISTINCT S.bucket_index, S.summary_variant_index
+        FROM
+            {db}.`{summary_variant}` AS S
+        {join_effect_gene}
+        WHERE
+            {where}
+        DISTRIBUTE BY
+            S.bucket_index, S.summary_index
+        """.format(
+            join_effect_gene=join_effect_gene,
+            db=self.db,
+            summary_variant=self.tables['summary_variant'],
+            where=where
+        )
+        return q
+
+    Q = """
+        SELECT
+            S.chrom,
+            S.position,
+            S.reference,
+            S.alternative,
+            S.summary_variant_index,
+            S.allele_index,
+            S.allele_count,
+            S.variant_type,
+            S.cshl_variant,
+            S.cshl_position,
+            S.effect_type,
+            S.effect_gene_genes,
+            S.effect_gene_types,
+            S.effect_details_transcript_ids,
+            S.effect_details_details,
+            S.af_parents_called_count,
+            S.af_parents_called_percent,
+            S.af_allele_count,
+            S.af_allele_freq,
+
+            F.family_variant_index,
+            F.family_id,
+            F.genotype,
+
+        FROM {db}.`{family_variant}` AS F
+        LEFT JOIN {db}.`{summary_variant}` AS S
+        ON
+            S.bucket_index = F.bucket_index AND
+            S.summary_variant_index = F.summary_variant_index AND
+            S.allele_index = F.allele_index
+        {where}
+    """
+
+    def build(self):
+        where_parts = []
+        summary_query = self.query_summary_subquery()
+        if summary_query is not None:
+            w = """
+            (S.bucket_index, S.summary_variant_index) IN (
+                {summary_query}
+            )
+            """.format(summary_query=summary_query)
+            where_parts.append(w)
+
+        where = ""
+        if where_parts:
+            where = """
+            WHERE
+                {where}
+            """.format(
+                where=' AND '.join([
+                    '( {} )'.format(p) for p in where
+                ])
+            )
+        query = self.Q.format(
+            db=self.db,
+            summary_variant=self.tables['summary_variant'],
+            family_variant=self.tables['family_variant'],
+            where=where
+        )
+        return query

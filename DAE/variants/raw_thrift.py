@@ -104,8 +104,8 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
         df = thrift_query(
             thrift_connection=self.connection,
-            summary_variants=self.config.summary_variant,
-            family_alleles=self.config.family_variant,
+            summary_variant=self.config.summary_variant,
+            family_variant=self.config.family_variant,
             **kwargs
         )
         df.genotype = df.genotype.apply(
