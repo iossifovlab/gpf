@@ -71,7 +71,7 @@ def or_node(children):
 
 
 def not_node(children):
-    #assert len(children) == 1
+    # assert len(children) == 1
     return tree(NOT_NODE, children)
 
 

@@ -355,7 +355,7 @@ class QueryTreeToSQLTransformer(BaseTreeTransformer):
 
     def NotNode(self, children):
         assert len(children) == 1
-        return "NOT " + children[0]
+        return "NOT (" + children[0] + ")"
 
     def AndNode(self, children):
         return "(" + reduce((lambda x, y: x + " AND " + y), children) + ")"

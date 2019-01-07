@@ -215,7 +215,7 @@ class ThriftQueryBuilderBase(object):
         return self.query.get('effect_types') or self.query.get('genes')
 
     def has_members(self):
-        members_kw = set(['roles', 'sexes', 'person_ids', 'inheritance'])
+        members_kw = set(['roles', 'person_ids', 'inheritance'])
         return len(members_kw & self.query_keys()) > 0
 
     def _build_where(self, where_parts):
@@ -231,7 +231,7 @@ class ThriftQueryBuilderBase(object):
         assert self.query[attr_name] is not None
         assert isinstance(self.query[attr_name], list) or \
             isinstance(self.query[attr_name], set)
-        
+
         query = self.query[attr_name]
         if not query:
             where = ' {column_name} IS NULL'.format(
@@ -240,7 +240,9 @@ class ThriftQueryBuilderBase(object):
             return where
         else:
             values = [
-                ' {q}{val}{q} '.format(q=self.QUOTE, val=val)
+                ' {q}{val}{q} '.format(
+                    q=self.QUOTE,
+                    val=val.replace("'", "\\'"))
                 for val in query]
 
             where = ' {column_name} in ( {values} ) '.format(
@@ -381,14 +383,6 @@ class MemberSubQueryBuilder(ThriftQueryBuilderBase):
         transformer = QueryTreeToSQLTransformer('M.member_role')
         return transformer.transform(parsed)
 
-    def _build_sexes_where(self):
-        assert self.query.get('sexes')
-        assert isinstance(self.query['sexes'], str)
-        parsed = sex_query.transform_query_string_to_tree(
-                    self.query['sexes'])
-        transformer = QueryTreeToSQLTransformer('M.member_sex')
-        return transformer.transform(parsed)
-
     def _build_inheritance_where(self):
         assert self.query.get('inheritance')
         assert isinstance(self.query['inheritance'], str)
@@ -409,10 +403,6 @@ class MemberSubQueryBuilder(ThriftQueryBuilderBase):
         if self.query.get('roles'):
             where_parts.append(
                 self._build_roles_where()
-            )
-        if self.query.get('sexes'):
-            where_parts.append(
-                self._build_sexes_where()
             )
         if self.query.get('inheritance'):
             where_parts.append(
@@ -474,6 +464,14 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
         self.summary_query_builder = SummarySubQueryBuilder(query, tables, db)
         self.member_query_builder = MemberSubQueryBuilder(query, tables, db)
 
+    def _build_sexes_where(self):
+        assert self.query.get('sexes')
+        assert isinstance(self.query['sexes'], str)
+        parsed = sex_query.transform_query_string_to_tree(
+                    self.query['sexes'])
+        transformer = QueryTreeToSQLListTransformer('F.variant_in_sexes')
+        return transformer.transform(parsed)
+
     def build(self):
         print(self.query)
 
@@ -489,9 +487,15 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
 
         join_member_variant = ""
         member_where = self.member_query_builder.build_where()
-        if member_where is not None:
+        print("member_where", member_where)
+        if member_where:
             where_parts.extend(member_where)
             join_member_variant = self.member_query_builder.build_join()
+
+        if self.query.get('sexes'):
+            where_parts.append(
+                self._build_sexes_where()
+            )
 
         if not self.query.get('return_reference'):
             where_parts.append("F.allele_index > 0")
