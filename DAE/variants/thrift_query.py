@@ -193,8 +193,12 @@ def thrift_query1(thrift_connection, tables, query, db='parquet', limit=2000):
     return as_pandas(cursor) 
 
 
-class ThriftQueryBuilder(object):
+class ThriftQueryBuilderBase(object):
     QUOTE = "'"
+    WHERE = """
+        WHERE
+            {where}
+    """
 
     def __init__(self, query, tables, db='parquet'):
 
@@ -210,24 +214,62 @@ class ThriftQueryBuilder(object):
         members_kw = set(['roles', 'sexes', 'person_ids', 'inheritance'])
         return len(members_kw & self.query_keys()) > 0
 
-    def _build_effect_type_where(self):
-        assert self.query['effect_types']
-        assert isinstance(self.query['effect_types'], list)
-        where = [
-            ' {q}{ef}{q} '.format(q=self.QUOTE, ef=ef)
-            for ef in self.query['effect_types']]
-        where = ' E.effect_type in ( {} ) '.format(','.join(where))
+    def _build_where(self, where_parts):
+        if not where_parts:
+            return ""
+        return self.WHERE.format(
+            where=' AND '.join([
+                '( {} )'.format(p) for p in where_parts
+            ])
+        )
+
+    def _build_iterable_string_attr_where(self, attr_name, column_name):
+        assert self.query[attr_name]
+        assert isinstance(self.query[attr_name], list) or \
+            isinstance(self.query[attr_name], set)
+        values = [
+            ' {q}{val}{q} '.format(q=self.QUOTE, val=val)
+            for val in self.query[attr_name]]
+
+        where = ' {column_name} in ( {values} ) '.format(
+            column_name=column_name,
+            values=','.join(values))
         return where
 
+
+class SummarySubQueryBuilder(ThriftQueryBuilderBase):
+    Q = """
+        SELECT
+            DISTINCT S.bucket_index, S.summary_variant_index, S.allele_index
+        FROM
+            {db}.`{summary_variant}` AS S
+        {join_effect_gene}
+        WHERE
+            {where}
+        DISTRIBUTE BY
+            S.bucket_index, S.summary_variant_index
+    """
+    EFFECT_GENE_JOIN = """
+        LEFT JOIN
+            {db}.`{effect_gene_variant}` AS E
+        ON
+            E.bucket_index = S.bucket_index
+            AND E.summary_variant_index = S.summary_variant_index
+            AND E.allele_index = S.allele_index
+    """
+
+    def __init__(self, query, tables, db='parquet'):
+        super(SummarySubQueryBuilder, self).__init__(query, tables, db)
+
+    def _build_effect_type_where(self):
+        return self._build_iterable_string_attr_where(
+            'effect_types', 'E.effect_type'
+        )
+
     def _build_genes_where(self):
-        assert self.query['genes']
-        assert isinstance(self.query['genes'], list) or \
-            isinstance(self.query['genes'], set)
-        where = [
-            ' {q}{sym}{q} '.format(q=self.QUOTE, sym=sym.upper())
-            for sym in self.query['genes']]
-        where = ' E.effect_gene in ( {} ) '.format(','.join(where))
-        return where
+        return self._build_iterable_string_attr_where(
+            'genes', 'E.effect_gene'
+        )
 
     def _build_gene_effects_where(self):
         assert self.has_gene_effects()
@@ -267,41 +309,62 @@ class ThriftQueryBuilder(object):
             return None
         return ' \n\tAND '.join(['( {} )'.format(w) for w in where])
 
-    def query_summary_subquery(self):
+    def build(self):
         where = self._build_summary_where()
         if where is None:
             return None
         join_effect_gene = ""
         if self.has_gene_effects():
-            join_effect_gene = """
-        LEFT JOIN
-            {db}.`{effect_gene_variant}` AS E
-        ON
-            E.bucket_index = S.bucket_index
-            AND E.summary_variant_index = S.summary_variant_index
-            AND E.allele_index = S.allele_index
-            """.format(
+            join_effect_gene = self.EFFECT_GENE_JOIN.format(
                 db=self.db,
                 effect_gene_variant=self.tables['effect_gene_variant']
             )
 
-        q = """
-        SELECT
-            DISTINCT S.bucket_index, S.summary_variant_index, S.allele_index
-        FROM
-            {db}.`{summary_variant}` AS S
-        {join_effect_gene}
-        WHERE
-            {where}
-        DISTRIBUTE BY
-            S.bucket_index, S.summary_variant_index
-        """.format(
+        q = self.Q.format(
             join_effect_gene=join_effect_gene,
             db=self.db,
             summary_variant=self.tables['summary_variant'],
             where=where
         )
         return q
+
+
+class MemberSubQueryBuilder(ThriftQueryBuilderBase):
+
+    def __init__(self, query, tables, db='parquet'):
+        super(MemberSubQueryBuilder, self).__init__(query, tables, db)
+        self.summary_query_builder = SummarySubQueryBuilder(query, tables, db)
+
+    MEMBER_JOIN = """
+        LEFT JOIN {db}.`{member_variant}` AS M
+        ON
+            F.bucket_index = M.bucket_index AND
+            F.summary_variant_index = M.summary_variant_index AND
+            F.allele_index = M.allele_index AND
+            F.family_variant_index = M.family_variant_index
+    """
+
+    def _build_person_ids_where(self):
+        return self._build_iterable_string_attr_where(
+            'person_ids', 'M.member_variant'
+        )
+    
+    def build_where(self):
+        where_parts = []
+        if self.query.get('person_ids'):
+            where_parts.append(
+                self._build_person_ids_where()
+            )
+        return where_parts
+    
+    def build_join(self):
+        return self.MEMBER_JOIN.format(
+            db=self.db,
+            member_variant=self.tables['member_variant']
+        )
+
+
+class ThriftQueryBuilder(ThriftQueryBuilderBase):
 
     Q = """
         SELECT
@@ -341,32 +404,15 @@ class ThriftQueryBuilder(object):
         DISTRIBUTE BY
             S.bucket_index, S.summary_variant_index
     """
-    W = """
-        WHERE
-            {where}
-    """
 
-    def _build_where(self, where_parts):
-        if not where_parts:
-            return ""
-        return self.W.format(
-            where=' AND '.join([
-                '( {} )'.format(p) for p in where_parts
-            ])
-        )
-
-    JOIN_MEMBER = """
-        LEFT JOIN {db}.`{member_variant}` AS M
-        ON
-            F.bucket_index = M.bucket_index AND
-            F.summary_variant_index = M.summary_variant_index AND
-            F.allele_index = M.allele_index AND
-            F.family_variant_index = M.family_variant_index
-    """
+    def __init__(self, query, tables, db='parquet'):
+        super(ThriftQueryBuilder, self).__init__(query, tables, db)
+        self.summary_query_builder = SummarySubQueryBuilder(query, tables, db)
+        self.member_query_builder = MemberSubQueryBuilder(query, tables, db)
 
     def build(self):
         where_parts = []
-        summary_query = self.query_summary_subquery()
+        summary_query = self.summary_query_builder.build()
         if summary_query is not None:
             w = """
             (S.bucket_index, S.summary_variant_index, S.allele_index) IN (
@@ -376,13 +422,10 @@ class ThriftQueryBuilder(object):
             where_parts.append(w)
 
         join_member_variant = ""
-        member_query = self.query_member_subquery()
-        if member_query is not None:
-            where_parts.append(member_query)
-            join_member_variant = self.JOIN_MEMBER.format(
-                db=self.db,
-                member_variant=self.tables['member_variant']
-            )
+        member_where = self.member_query_builder.build_where()
+        if member_where is not None:
+            where_parts.extend(member_where)
+            join_member_variant = self.member_query_builder.build_join()
 
         query = self.Q.format(
             db=self.db,
@@ -392,6 +435,3 @@ class ThriftQueryBuilder(object):
             where=self._build_where(where_parts)
         )
         return query
-
-    def query_member_subquery(self):
-        pass
