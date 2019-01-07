@@ -228,17 +228,25 @@ class ThriftQueryBuilderBase(object):
         )
 
     def _build_iterable_string_attr_where(self, attr_name, column_name):
-        assert self.query[attr_name]
+        assert self.query[attr_name] is not None
         assert isinstance(self.query[attr_name], list) or \
             isinstance(self.query[attr_name], set)
-        values = [
-            ' {q}{val}{q} '.format(q=self.QUOTE, val=val)
-            for val in self.query[attr_name]]
+        
+        query = self.query[attr_name]
+        if not query:
+            where = ' {column_name} IS NULL'.format(
+                column_name=column_name
+            )
+            return where
+        else:
+            values = [
+                ' {q}{val}{q} '.format(q=self.QUOTE, val=val)
+                for val in query]
 
-        where = ' {column_name} in ( {values} ) '.format(
-            column_name=column_name,
-            values=','.join(values))
-        return where
+            where = ' {column_name} in ( {values} ) '.format(
+                column_name=column_name,
+                values=','.join(values))
+            return where
 
 
 class SummarySubQueryBuilder(ThriftQueryBuilderBase):
@@ -486,7 +494,12 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
             join_member_variant = self.member_query_builder.build_join()
 
         if not self.query.get('return_reference'):
-            where_parts.append("S.allele_index > 0")
+            where_parts.append("F.allele_index > 0")
+
+        if 'family_ids' in self.query:
+            where_parts.append(self._build_iterable_string_attr_where(
+                'family_ids', 'F.family_id'
+            ))
 
         query = self.Q.format(
             db=self.db,

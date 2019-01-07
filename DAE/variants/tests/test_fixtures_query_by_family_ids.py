@@ -11,7 +11,7 @@ from RegionOperations import Region
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_thrift",
+    "variants_thrift",
 ])
 @pytest.mark.parametrize("fixture_name,regions,family_ids,count", [
 
