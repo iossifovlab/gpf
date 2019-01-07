@@ -328,9 +328,9 @@ class QueryTreeToSQLTransformer(BaseTreeTransformer):
 
     def token_converter(self, arg):
         if isinstance(arg, enum.Enum):
-            return "'" + str(arg.value).replace("'", "\\'") + "'"
+            return str(arg.value)
         else:
-            return "'" + str(arg).replace("'", "\\'") + "'"
+            return str(arg)
 
     def LessThanNode(self, arg):
         return self.column_name + " > " + self.token_converter(arg)

@@ -10,6 +10,10 @@ from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
     roles_converter, sex_converter, \
     inheritance_converter, variant_type_converter,\
     StringListQueryToTreeTransformer
+from variants.attributes_query import role_query, sex_query, \
+    inheritance_query,\
+    variant_type_query
+
 from RegionOperations import Region
 
 q = """
@@ -298,12 +302,22 @@ class SummarySubQueryBuilder(ThriftQueryBuilderBase):
             )
         return ' OR '.join(where)
 
+    def _build_variant_type_where(self):
+        assert self.query.get('variant_type')
+        assert isinstance(self.query['variant_type'], str)
+        parsed = variant_type_query.transform_query_string_to_tree(
+                    self.query['variant_type'])
+        transformer = QueryTreeToSQLTransformer('S.variant_type')
+        return transformer.transform(parsed)
+
     def _build_summary_where(self):
         where = []
         if self.query.get('regions'):
             where.append(self._build_regions_where())
         if self.has_gene_effects():
             where.append(self._build_gene_effects_where())
+        if self.query.get('variant_type'):
+            where.append(self._build_variant_type_where())
 
         if not where:
             return None
