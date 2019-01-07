@@ -73,6 +73,9 @@ def count_variants(variants, regions, inheritance, effect_types):
         return_reference=True,
         return_unknown=True)
     vs = list(vs)
+    for v in vs:
+        for a in v.alleles:
+            print(a, a.inheritance_in_members, a.variant_in_members, a.effects)
     return len(vs)
 
 
@@ -201,8 +204,7 @@ def test_f1_cannonical_omission(
 
 
 @pytest.mark.parametrize("variants", [
-    "variants_vcf",
-    # "variants_df",
+    # "variants_vcf",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [
@@ -211,7 +213,8 @@ def test_f1_cannonical_omission(
     ([Region("1", 906092, 906092)], "denovo", None, 0),
     ([Region("1", 906092, 906092)], "omission", ["synonymous"], 1),
     ([Region("1", 906092, 906092)], "omission", ["missense"], 1),
-    ([Region("1", 906092, 906092)], "not omission", ["missense"], 0),
+    ([Region("1", 906092, 906092)], 
+     "not omission and not mendelian and not unknown", ["missense"], 0),
     ([Region("1", 906092, 906092)], "not omission", None, 1),
 ])
 def test_f1_non_cannonical_omission(

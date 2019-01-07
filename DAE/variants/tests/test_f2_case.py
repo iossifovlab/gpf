@@ -24,7 +24,7 @@ def count_variants(
     vs = list(vs)
     for v in vs:
         for a in v.alleles:
-            print(a, a.inheritance_in_members)
+            print(a, a.inheritance_in_members, a.variant_in_members)
     return len(vs)
 
 
@@ -114,7 +114,8 @@ def test_f2_canonical_denovo(
     ([Region("1", 905966, 905966)],
      "denovo", False, False, 0),  # find denovo
     ([Region("1", 905966, 905966)],
-     "not denovo and not omission and not unknown", False, False, 0),
+     "not denovo and not omission and not unknown and not mendelian",
+     False, False, 0),
     ([Region("1", 905966, 905966)],
      None, True, True, 1),  # find all
     ([Region("1", 905966, 905966)],
@@ -139,7 +140,8 @@ def test_f2_canonical_omission(
     ([Region("1", 906092, 906092)],
      "denovo", False, False, 0),  # find denovo
     ([Region("1", 906092, 906092)],
-     "not denovo and not omission and not missing", False, False, 0),
+     "not denovo and not omission and not unknown and not mendelian",
+     False, False, 0),
     ([Region("1", 906092, 906092)],
      None, True, True, 1),  # find all
     ([Region("1", 906092, 906092)],
