@@ -243,23 +243,25 @@ class ThriftQueryBuilderBase(object):
 
 class SummarySubQueryBuilder(ThriftQueryBuilderBase):
     Q = """
-        SELECT
-            DISTINCT S.bucket_index, S.summary_variant_index, S.allele_index
-        FROM
-            {db}.`{summary_variant}` AS S
-        {join_effect_gene}
-        WHERE
-            {where}
-        DISTRIBUTE BY
-            S.bucket_index, S.summary_variant_index
+                    SELECT
+                        DISTINCT S.bucket_index,
+                            S.summary_variant_index,
+                            S.allele_index
+                    FROM
+                        {db}.`{summary_variant}` AS S
+                    {join_effect_gene}
+                    WHERE
+                        {where}
+                    DISTRIBUTE BY
+                        S.bucket_index, S.summary_variant_index
     """
     EFFECT_GENE_JOIN = """
-        LEFT JOIN
-            {db}.`{effect_gene_variant}` AS E
-        ON
-            E.bucket_index = S.bucket_index
-            AND E.summary_variant_index = S.summary_variant_index
-            AND E.allele_index = S.allele_index
+                    LEFT JOIN
+                        {db}.`{effect_gene_variant}` AS E
+                    ON
+                        E.bucket_index = S.bucket_index
+                        AND E.summary_variant_index = S.summary_variant_index
+                        AND E.allele_index = S.allele_index
     """
 
     def __init__(self, query, tables, db='parquet'):
@@ -352,25 +354,65 @@ class MemberSubQueryBuilder(ThriftQueryBuilderBase):
     MEMBER_JOIN = """
         LEFT JOIN {db}.`{member_variant}` AS M
         ON
-            F.bucket_index = M.bucket_index AND
-            F.summary_variant_index = M.summary_variant_index AND
-            F.allele_index = M.allele_index AND
-            F.family_variant_index = M.family_variant_index
+            F.bucket_index = M.bucket_index
+            AND F.summary_variant_index = M.summary_variant_index
+            AND F.allele_index = M.allele_index
+            AND F.family_variant_index = M.family_variant_index
     """
 
     def _build_person_ids_where(self):
         return self._build_iterable_string_attr_where(
             'person_ids', 'M.member_variant'
         )
-    
+
+    def _build_roles_where(self):
+        assert self.query.get('roles')
+        assert isinstance(self.query['roles'], str)
+        parsed = role_query.transform_query_string_to_tree(
+                    self.query['roles'])
+        transformer = QueryTreeToSQLTransformer('M.member_role')
+        return transformer.transform(parsed)
+
+    def _build_sexes_where(self):
+        assert self.query.get('sexes')
+        assert isinstance(self.query['sexes'], str)
+        parsed = sex_query.transform_query_string_to_tree(
+                    self.query['sexes'])
+        transformer = QueryTreeToSQLTransformer('M.member_sex')
+        return transformer.transform(parsed)
+
+    def _build_inheritance_where(self):
+        assert self.query.get('inheritance')
+        assert isinstance(self.query['inheritance'], str)
+        parsed = inheritance_query.transform_query_string_to_tree(
+                    self.query['inheritance'])
+        transformer = QueryTreeToSQLTransformer('M.member_inheritance')
+        where = transformer.transform(parsed)
+        if where is not None and not self.query.get('return_reference'):
+            where += " AND M.allele_index > 0"
+        return where
+
     def build_where(self):
         where_parts = []
         if self.query.get('person_ids'):
             where_parts.append(
                 self._build_person_ids_where()
             )
+        if self.query.get('roles'):
+            where_parts.append(
+                self._build_roles_where()
+            )
+        if self.query.get('sexes'):
+            where_parts.append(
+                self._build_sexes_where()
+            )
+        if self.query.get('inheritance'):
+            where_parts.append(
+                self._build_inheritance_where()
+            )
+
         return where_parts
-    
+
     def build_join(self):
         return self.MEMBER_JOIN.format(
             db=self.db,
@@ -425,13 +467,15 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
         self.member_query_builder = MemberSubQueryBuilder(query, tables, db)
 
     def build(self):
+        print(self.query)
+
         where_parts = []
         summary_query = self.summary_query_builder.build()
         if summary_query is not None:
             w = """
-            (S.bucket_index, S.summary_variant_index, S.allele_index) IN (
-                {summary_query}
-            )
+                (S.bucket_index, S.summary_variant_index, S.allele_index) IN (
+                    {summary_query}
+                )
             """.format(summary_query=summary_query)
             where_parts.append(w)
 
@@ -440,6 +484,9 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
         if member_where is not None:
             where_parts.extend(member_where)
             join_member_variant = self.member_query_builder.build_join()
+
+        if not self.query.get('return_reference'):
+            where_parts.append("S.allele_index > 0")
 
         query = self.Q.format(
             db=self.db,

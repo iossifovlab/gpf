@@ -22,12 +22,14 @@ def count_variants(
         return_reference=reference,
         return_unknown=unknown)
     vs = list(vs)
+    for v in vs:
+        for a in v.alleles:
+            print(a, a.inheritance_in_members)
     return len(vs)
 
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
@@ -53,7 +55,6 @@ def test_f2_all_unknown(
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
@@ -79,7 +80,6 @@ def test_f2_reference_and_unknown(
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
@@ -88,7 +88,8 @@ def test_f2_reference_and_unknown(
     ([Region("1", 905957, 905957)],
      "denovo", False, False, 1),  # find denovo
     ([Region("1", 905957, 905957)],
-     "not denovo and not omission and not unknown", False, False, 0),
+     "not denovo and not omission and not unknown and not missing", 
+     False, False, 0),
     ([Region("1", 905957, 905957)],
      None, True, True, 1),  # find all
     ([Region("1", 905957, 905957)],
@@ -100,13 +101,11 @@ def test_f2_canonical_denovo(
 
     c = count_variants(
         variants_impl(variants), regions, inheritance, reference, unknown)
-    # fixture_name="fixtures/f1_test_canonical_denovo")
     assert c == count
 
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
@@ -132,7 +131,6 @@ def test_f2_canonical_omission(
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
@@ -158,7 +156,6 @@ def test_f2_non_canonical_omission(
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("regions,inheritance,reference, unknown, count", [
