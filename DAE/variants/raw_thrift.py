@@ -11,7 +11,7 @@ import numpy as np
 from variants.configure import Configure
 from variants.family import FamiliesBase, Family
 from impala.dbapi import connect
-from variants.thrift_query import thrift_query
+from variants.thrift_query import thrift_query1
 from variants.parquet_io import read_ped_df_from_parquet
 from variants.variant import SummaryVariantFactory
 from variants.family_variant import FamilyVariant
@@ -85,29 +85,29 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         return thrift_connection
 
     def query_variants(self, **kwargs):
-        if kwargs.get("effect_types") is not None:
-            effect_types = kwargs.get("effect_types")
-            if isinstance(effect_types, list):
-                effect_types = "any({})".format(",".join(effect_types))
-                kwargs["effect_types"] = effect_types
-        if kwargs.get("genes") is not None:
-            genes = kwargs.get("genes")
-            if isinstance(genes, list):
-                genes = "any({})".format(",".join(genes))
-                kwargs["genes"] = genes
+        # if kwargs.get("effect_types") is not None:
+        #     effect_types = kwargs.get("effect_types")
+        #     if isinstance(effect_types, list):
+        #         effect_types = "any({})".format(",".join(effect_types))
+        #         kwargs["effect_types"] = effect_types
+        # if kwargs.get("genes") is not None:
+        #     genes = kwargs.get("genes")
+        #     if isinstance(genes, list):
+        #         genes = "any({})".format(",".join(genes))
+        #         kwargs["genes"] = genes
 
-        if kwargs.get("person_ids") is not None:
-            query = kwargs.get("person_ids")
-            if isinstance(query, list):
-                query = "any({})".format(",".join(query))
-                kwargs["person_ids"] = query
+        # if kwargs.get("person_ids") is not None:
+        #     query = kwargs.get("person_ids")
+        #     if isinstance(query, list):
+        #         query = "any({})".format(",".join(query))
+        #         kwargs["person_ids"] = query
 
-        df = thrift_query(
+        df = thrift_query1(
             thrift_connection=self.connection,
-            summary_variant=self.config.summary_variant,
-            family_variant=self.config.family_variant,
-            **kwargs
+            tables=self.config,
+            query=kwargs
         )
+        
         df.genotype = df.genotype.apply(
             lambda v: np.fromstring(v.strip("[]"), dtype=np.int8, sep=','))
 

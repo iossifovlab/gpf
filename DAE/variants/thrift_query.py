@@ -76,7 +76,7 @@ Q = """
 
         F.family_variant_index,
         F.family_id,
-        F.genotype,
+        F.genotype
 
     FROM parquet.`{family_variant}` AS F
     LEFT JOIN parquet.`{summary_variant}` AS S
@@ -181,17 +181,30 @@ def thrift_query(
     return as_pandas(cursor)
 
 
+def thrift_query1(thrift_connection, tables, query, db='parquet', limit=2000):
+    builder = ThriftQueryBuilder(query, tables=tables, db=db)
+    sql_query = builder.build()
+
+    if limit is not None:
+        sql_query += "\n\tLIMIT {}".format(limit)
+    print("FINAL QUERY", sql_query)
+    cursor = thrift_connection.cursor()
+    cursor.execute(sql_query)
+    return as_pandas(cursor) 
+
+
 class ThriftQueryBuilder(object):
-    Q = "'"
+    QUOTE = "'"
 
     def __init__(self, query, tables, db='parquet'):
-        self.query = query
+
+        self.query = {k: v for k, v in query.items() if v is not None}
         self.query_keys = set(query.keys())
         self.tables = tables
         self.db = 'parquet'
 
     def has_gene_effects(self):
-        return 'effect_types' in self.query or 'genes' in self.query
+        return self.query.get('effect_types') or self.query.get('genes')
 
     def has_members(self):
         members_kw = set(['roles', 'sexes', 'person_ids', 'inheritance'])
@@ -201,7 +214,7 @@ class ThriftQueryBuilder(object):
         assert self.query['effect_types']
         assert isinstance(self.query['effect_types'], list)
         where = [
-            ' {q}{ef}{q} '.format(q=self.Q, ef=ef)
+            ' {q}{ef}{q} '.format(q=self.QUOTE, ef=ef)
             for ef in self.query['effect_types']]
         where = ' E.effect_type in ( {} ) '.format(','.join(where))
         return where
@@ -211,7 +224,7 @@ class ThriftQueryBuilder(object):
         assert isinstance(self.query['genes'], list) or \
             isinstance(self.query['genes'], set)
         where = [
-            ' {q}{sym}{q} '.format(q=self.Q, sym=sym.upper())
+            ' {q}{sym}{q} '.format(q=self.QUOTE, sym=sym.upper())
             for sym in self.query['genes']]
         where = ' E.effect_gene in ( {} ) '.format(','.join(where))
         return where
@@ -238,21 +251,21 @@ class ThriftQueryBuilder(object):
                "(S.chrom = {q}{chrom}{q} AND S.position >= {start} AND "
                "S.position <= {stop})"
                .format(
-                    q=self.Q, chrom=region.chrom, start=region.start, 
+                    q=self.QUOTE, chrom=region.chrom, start=region.start, 
                     stop=region.stop)
             )
         return ' OR '.join(where)
 
     def _build_summary_where(self):
         where = []
-        if 'regions' in self.query:
+        if self.query.get('regions'):
             where.append(self._build_regions_where())
         if self.has_gene_effects():
             where.append(self._build_gene_effects_where())
 
         if not where:
             return None
-        return ' \n\t\tAND '.join(['( {} )'.format(w) for w in where])
+        return ' \n\tAND '.join(['( {} )'.format(w) for w in where])
 
     def query_summary_subquery(self):
         where = self._build_summary_where()
@@ -261,12 +274,12 @@ class ThriftQueryBuilder(object):
         join_effect_gene = ""
         if self.has_gene_effects():
             join_effect_gene = """
-                LEFT JOIN
-                    {db}.`{effect_gene_variant}` AS S
-                ON
-                    E.bucket_index = S.bucket_index
-                    AND E.summary_variant_index = S.summary_variant_index
-                    AND E.allele_index = S.allele_index
+        LEFT JOIN
+            {db}.`{effect_gene_variant}` AS E
+        ON
+            E.bucket_index = S.bucket_index
+            AND E.summary_variant_index = S.summary_variant_index
+            AND E.allele_index = S.allele_index
             """.format(
                 db=self.db,
                 effect_gene_variant=self.tables['effect_gene_variant']
@@ -274,14 +287,14 @@ class ThriftQueryBuilder(object):
 
         q = """
         SELECT
-            DISTINCT S.bucket_index, S.summary_variant_index
+            DISTINCT S.bucket_index, S.summary_variant_index, S.allele_index
         FROM
             {db}.`{summary_variant}` AS S
         {join_effect_gene}
         WHERE
             {where}
         DISTRIBUTE BY
-            S.bucket_index, S.summary_index
+            S.bucket_index, S.summary_variant_index
         """.format(
             join_effect_gene=join_effect_gene,
             db=self.db,
@@ -296,6 +309,7 @@ class ThriftQueryBuilder(object):
             S.position,
             S.reference,
             S.alternative,
+            S.bucket_index,
             S.summary_variant_index,
             S.allele_index,
             S.allele_count,
@@ -314,15 +328,40 @@ class ThriftQueryBuilder(object):
 
             F.family_variant_index,
             F.family_id,
-            F.genotype,
+            F.genotype
 
         FROM {db}.`{family_variant}` AS F
+        {join_member_variant}
         LEFT JOIN {db}.`{summary_variant}` AS S
         ON
             S.bucket_index = F.bucket_index AND
             S.summary_variant_index = F.summary_variant_index AND
             S.allele_index = F.allele_index
         {where}
+        DISTRIBUTE BY
+            S.bucket_index, S.summary_variant_index
+    """
+    W = """
+        WHERE
+            {where}
+    """
+
+    def _build_where(self, where_parts):
+        if not where_parts:
+            return ""
+        return self.W.format(
+            where=' AND '.join([
+                '( {} )'.format(p) for p in where_parts
+            ])
+        )
+
+    JOIN_MEMBER = """
+        LEFT JOIN {db}.`{member_variant}` AS M
+        ON
+            F.bucket_index = M.bucket_index AND
+            F.summary_variant_index = M.summary_variant_index AND
+            F.allele_index = M.allele_index AND
+            F.family_variant_index = M.family_variant_index
     """
 
     def build(self):
@@ -330,26 +369,29 @@ class ThriftQueryBuilder(object):
         summary_query = self.query_summary_subquery()
         if summary_query is not None:
             w = """
-            (S.bucket_index, S.summary_variant_index) IN (
+            (S.bucket_index, S.summary_variant_index, S.allele_index) IN (
                 {summary_query}
             )
             """.format(summary_query=summary_query)
             where_parts.append(w)
 
-        where = ""
-        if where_parts:
-            where = """
-            WHERE
-                {where}
-            """.format(
-                where=' AND '.join([
-                    '( {} )'.format(p) for p in where
-                ])
+        join_member_variant = ""
+        member_query = self.query_member_subquery()
+        if member_query is not None:
+            where_parts.append(member_query)
+            join_member_variant = self.JOIN_MEMBER.format(
+                db=self.db,
+                member_variant=self.tables['member_variant']
             )
+
         query = self.Q.format(
             db=self.db,
             summary_variant=self.tables['summary_variant'],
             family_variant=self.tables['family_variant'],
-            where=where
+            join_member_variant=join_member_variant,
+            where=self._build_where(where_parts)
         )
         return query
+
+    def query_member_subquery(self):
+        pass
