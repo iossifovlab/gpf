@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import pandas as pd
 import json
 import os
