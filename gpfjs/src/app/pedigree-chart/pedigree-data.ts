@@ -194,8 +194,59 @@ export class Line {
     public startX: number,
     public startY: number,
     public endX: number,
-    public endY: number
+    public endY: number,
+    public curved: boolean = false,
+    public curvedBaseHeight: number = NaN
   ) { }
+
+  get path() {
+    return 'M' + this.curveP0[0].toString() + ',' + this.curveP0[1].toString() +
+      ' C' + this.curveP1[0].toString() + ',' + this.inverseCurveP1[1].toString() + ' ' +
+      this.curveP2[0].toString() + ',' + this.curveP2[1].toString() + ' ' +
+      this.curveP3[0].toString() + ',' + this.curveP3[1].toString();
+  }
+
+  get curveP0() {
+    return [this.startX, this.startY];
+  }
+
+  get curveP1() {
+    return [this.startX + 10, this.startY + this.curvedBaseHeight * 3.0];
+  }
+
+  get curveP2() {
+    return [this.endX, this.endY];
+  }
+
+  get curveP3() {
+    return [this.endX, this.endY];
+  }
+
+  get inverseCurveP1() {
+    return [this.startX + 10, this.startY - this.curvedBaseHeight * 3.0];
+  }
+
+  get inverseCurveP2() {
+    return [this.endX, this.endY];
+  }
+
+  curveYAt(t: number) {
+    let one_minus_t = 1.0 - t;
+
+    return (one_minus_t ** 3) * this.curveP0[1] +
+        3 * (one_minus_t ** 2) * t * this.curveP1[1] +
+        3 * one_minus_t * (t ** 2) * this.curveP2[1] +
+        (t ** 3) * this.curveP3[1];
+  }
+
+  inverseCurveYAt(t: number) {
+    let one_minus_t = 1.0 - t;
+
+    return (one_minus_t ** 3) * this.curveP0[1] +
+        3 * (one_minus_t ** 2) * t * this.inverseCurveP1[1] +
+        3 * one_minus_t * (t ** 2) * this.inverseCurveP2[1] +
+        (t ** 3) * this.curveP3[1];
+  }
 }
 
 export class SameLevelGroup {
