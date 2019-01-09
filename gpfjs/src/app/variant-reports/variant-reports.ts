@@ -27,11 +27,11 @@ export class Studies {
 
 export class ChildrenCounter {
 
-  static fromJson(json: any, column: string) {
+  static fromJson(json: any, row: string) {
     return new ChildrenCounter(
-      json['row'],
-      column,
-      json[column]
+      row,
+      json['column'],
+      json[row]
     );
   }
 
@@ -44,26 +44,25 @@ export class ChildrenCounter {
 
 export class GroupCounter {
 
-  static fromJson(json: any, columns: string[]) {
+  static fromJson(json: any, rows: string[]) {
     return new GroupCounter(
-      json['row'],
-      columns.map(column => ChildrenCounter.fromJson(json, column))
+      json['column'],
+      rows.map(row => ChildrenCounter.fromJson(json, row))
     );
   }
 
   constructor(
-    readonly row: string,
+    readonly column: string,
     readonly childrenCounters: ChildrenCounter[]
   ) {}
 }
 
 export class PeopleCounter {
-  columnsValue: string[];
 
   static fromJson(json: any) {
     return new PeopleCounter(
       json['counters'].map(
-        childCounter => GroupCounter.fromJson(childCounter, json['columns'])),
+        childCounter => GroupCounter.fromJson(childCounter, json['rows'])),
       json['group_name'],
       json['rows'],
       json['columns']
@@ -75,15 +74,13 @@ export class PeopleCounter {
     readonly groupName: string,
     readonly rows: string[],
     readonly columns: string[]
-    ) {
-      this.columnsValue = this.columns.map(column => PeopleSex[column]);
-    }
+    ) {}
 
   getChildrenCounter(column: string, row: string) {
     let columnGroupCounter = this.groupCounters.filter(
-      groupCounter => groupCounter.row === row)[0];
+      groupCounter => groupCounter.column === column)[0];
     let rowChildrenCounter = columnGroupCounter.childrenCounters.filter(
-      childrenCounter => childrenCounter.column === column)[0];
+      childrenCounter => childrenCounter.row === row)[0];
 
     return rowChildrenCounter;
   }
@@ -298,7 +295,7 @@ export class Legend {
   ) {}
 }
 
-enum PeopleSex {
+export enum PeopleSex {
   people_male = 'Male',
   people_female = 'Female',
   people_unspecified = 'Unspecified',

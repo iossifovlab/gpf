@@ -48,14 +48,14 @@
         <table class="table table-bordered table-hover table-sm table-centered">
           <thead>
             <th>Group</th>
-            <th *ngFor="let column of selectedPeopleCounter.columnsValue">
+            <th *ngFor="let column of selectedPeopleCounter.columns">
               {{ column }}
             </th>
           </thead>
           <tbody>
             <tr *ngFor="let row of selectedPeopleCounter.rows">
               <th>
-                {{ row }}
+                {{ getPeopleSexValue(row) }}
               </th>
               <td *ngFor="let column of selectedPeopleCounter.columns">
                 {{ selectedPeopleCounter.getChildrenCounter(column, row).children }}

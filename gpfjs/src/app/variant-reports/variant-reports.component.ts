@@ -5,7 +5,8 @@ import { Observable, Subject } from 'rxjs';
 
 import { VariantReportsService } from './variant-reports.service';
 import { Studies, Study, VariantReport, FamilyCounter, PedigreeCounter,
-         EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
+         EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter,
+         PeopleSex
         } from './variant-reports';
 
 export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
@@ -149,6 +150,10 @@ export class VariantReportsComponent implements OnInit {
 
   get selectedDenovoReport() {
     return this.currentDenovoReport;
+  }
+
+  getPeopleSexValue(peopleSex: string) {
+    return PeopleSex[peopleSex];
   }
 
   orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false) {
