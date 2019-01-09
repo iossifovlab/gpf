@@ -26,12 +26,12 @@ class PeopleCounter(object):
             len(self._get_people(families, filter_object, Sex.unspecified))
         self.people_total =\
             self.people_male + self.people_female + self.people_unspecified
-        self.row = filter_object.get_column()
+        self.column = filter_object.get_column()
 
-    def to_dict(self, columns):
+    def to_dict(self, rows):
         people_counter_dict =\
-            {column: getattr(self, column) for column in columns}
-        people_counter_dict['row'] = self.row
+            {row: getattr(self, row) for row in rows}
+        people_counter_dict['column'] = self.column
         return people_counter_dict
 
     def _get_people(self, families, filter_object, sex):
@@ -68,7 +68,7 @@ class PeopleCounters(object):
             'group_name': self.group_name,
             'rows': self.rows,
             'columns': self.columns,
-            'counters': [c.to_dict(self.columns) for c in self.counters],
+            'counters': [c.to_dict(self.rows) for c in self.counters],
         }
 
     def _get_counters(self, families, filter_object):
@@ -79,18 +79,18 @@ class PeopleCounters(object):
             lambda people_counter: not people_counter.is_empty(),
             people_counters))
 
-    def _get_rows(self, people_counters):
-        return [people_counter.row for people_counter in people_counters]
+    def _get_columns(self, people_counters):
+        return [people_counter.column for people_counter in people_counters]
 
-    def _is_column_empty(self, column, people_counters):
-        return all([people_counter.is_empty_field(column)
+    def _is_row_empty(self, row, people_counters):
+        return all([people_counter.is_empty_field(row)
                     for people_counter in people_counters])
 
-    def _get_columns(self, people_counters):
-        columns = ['people_male', 'people_female',
-                   'people_unspecified', 'people_total']
-        return [column for column in columns
-                if not self._is_column_empty(column, people_counters)]
+    def _get_rows(self, people_counters):
+        rows = ['people_male', 'people_female',
+                'people_unspecified', 'people_total']
+        return [row for row in rows
+                if not self._is_row_empty(row, people_counters)]
 
 
 class FamilyCounter(object):
