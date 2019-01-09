@@ -125,7 +125,7 @@ class OffsetLayoutDrawer(object):
                 ['People Female'], ['People Unspecified'], ['People Total']]
 
             for phenotype in people_counter.counters:
-                table_vals[0].append(phenotype.column)
+                table_vals[0].append(phenotype.row)
                 table_vals[1].append(phenotype.people_male)
                 table_vals[2].append(phenotype.people_female)
                 table_vals[3].append(phenotype.people_unspecified)
