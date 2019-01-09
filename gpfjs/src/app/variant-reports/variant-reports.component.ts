@@ -4,9 +4,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
 
 import { VariantReportsService } from './variant-reports.service';
-import { Studies, Study, VariantReport, ChildrenCounter,
-         FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData,
-         PedigreeTable, PeopleCounter
+import { Studies, Study, VariantReport, FamilyCounter, PedigreeCounter,
+         EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter
         } from './variant-reports';
 
 export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
@@ -152,7 +151,7 @@ export class VariantReportsComponent implements OnInit {
     return this.currentDenovoReport;
   }
 
-  orderByColumnOrder(childrenCounters: (ChildrenCounter | DeNovoData)[], columns: string[], strict = false) {
+  orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false) {
     let columnsLookup = new Map<string, number>(
       columns.map((value, index): [string, number] => [value, index])
     );

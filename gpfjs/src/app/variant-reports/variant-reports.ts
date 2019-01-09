@@ -27,22 +27,33 @@ export class Studies {
 
 export class ChildrenCounter {
 
-  static fromJson(json: any) {
+  static fromJson(json: any, column: string) {
     return new ChildrenCounter(
-      json['column'],
-      json['people_male'],
-      json['people_female'],
-      json['people_unspecified'],
-      json['people_total'],
+      json['row'],
+      column,
+      json[column]
     );
   }
 
   constructor(
+    readonly row: string,
     readonly column: string,
-    readonly childrenMale: number,
-    readonly childrenFemale: number,
-    readonly childrenUnspecified: number,
-    readonly childrenTotal: number,
+    readonly children: number,
+  ) {}
+}
+
+export class GroupCounter {
+
+  static fromJson(json: any, columns: string[]) {
+    return new GroupCounter(
+      json['row'],
+      columns.map(column => ChildrenCounter.fromJson(json, column))
+    );
+  }
+
+  constructor(
+    readonly row: string,
+    readonly childrenCounters: ChildrenCounter[]
   ) {}
 }
 
@@ -51,17 +62,28 @@ export class PeopleCounter {
   static fromJson(json: any) {
     return new PeopleCounter(
       json['counters'].map(
-        childCounter => ChildrenCounter.fromJson(childCounter)),
+        childCounter => GroupCounter.fromJson(childCounter, json['columns'])),
       json['group_name'],
+      json['rows'],
       json['columns']
     );
   }
 
   constructor(
-    readonly childrenCounters: ChildrenCounter[],
+    readonly groupCounters: GroupCounter[],
     readonly groupName: string,
+    readonly rows: string[],
     readonly columns: string[]
     ) {}
+
+  getChildrenCounter(column: string, row: string) {
+    let columnGroupCounter = this.groupCounters.filter(
+      groupCounter => groupCounter.row === row)[0];
+    let rowChildrenCounter = columnGroupCounter.childrenCounters.filter(
+      childrenCounter => childrenCounter.column === column)[0];
+
+    return rowChildrenCounter;
+  }
 }
 
 export class PedigreeCounter {

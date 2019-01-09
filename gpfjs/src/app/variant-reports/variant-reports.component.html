@@ -53,31 +53,12 @@
             </th>
           </thead>
           <tbody>
-            <tr>
-              <th>Male</th>
-              <td *ngFor="let childrenCounter of orderByColumnOrder(selectedPeopleCounter.childrenCounters, selectedPeopleCounter.columns)">
-                {{ childrenCounter.childrenMale }}
-              </td>
-            </tr>
-
-            <tr>
-              <th>Female</th>
-              <td *ngFor="let childrenCounter of orderByColumnOrder(selectedPeopleCounter.childrenCounters, selectedPeopleCounter.columns)">
-                {{ childrenCounter.childrenFemale }}
-              </td>
-            </tr>
-
-            <tr>
-              <th>Unspecified</th>
-              <td *ngFor="let childrenCounter of orderByColumnOrder(selectedPeopleCounter.childrenCounters, selectedPeopleCounter.columns)">
-                {{ childrenCounter.childrenUnspecified }}
-              </td>
-            </tr>
-
-            <tr>
-              <th>Total</th>
-              <td *ngFor="let childrenCounter of orderByColumnOrder(selectedPeopleCounter.childrenCounters, selectedPeopleCounter.columns)">
-                {{ childrenCounter.childrenTotal }}
+            <tr *ngFor="let row of selectedPeopleCounter.rows">
+              <th>
+                {{ row }}
+              </th>
+              <td *ngFor="let column of selectedPeopleCounter.columns">
+                {{ selectedPeopleCounter.getChildrenCounter(column, row).children }}
               </td>
             </tr>
 
