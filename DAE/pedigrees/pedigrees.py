@@ -9,20 +9,22 @@ import abc
 from collections import defaultdict
 import argparse
 from functools import reduce
+import pandas as pd
 
 from pedigrees.interval_sandwich import SandwichInstance
 from future.utils import with_metaclass
+from variants.attributes import Role, Sex
 
 
 class PedigreeMember(object):
-    def __init__(self, id, family_id, mother, father, sex, effect,
+    def __init__(self, id, family_id, mother, father, sex, status,
                  layout=None, generated=False):
         self.id = id
         self.family_id = family_id
         self.mother = mother
         self.father = father
         self.sex = sex
-        self.effect = effect
+        self.status = status
         self.layout = layout
         self.generated = generated
 
@@ -34,6 +36,26 @@ class PedigreeMember(object):
 
     def has_known_parents(self):
         return self.has_known_father() or self.has_known_mother()
+
+    def get_member_dataframe(self):
+        phenotype = "unknown"
+        if self.status == "1":
+            phenotype = "unaffected"
+        elif self.status == "2":
+            phenotype = "affected"
+        return pd.DataFrame.from_dict({
+            "familyId": [self.family_id],
+            "personId": [self.id],
+            "sampleId": [self.id],
+            "sex": [Sex.from_name_or_value(self.sex)],
+            "role": [Role.unknown],
+            "status": [self.status],
+            "momId": [self.mother],
+            "dadId": [self.father],
+            "layout": [self.layout],
+            "generated": [self.generated],
+            "phenotype": [phenotype]
+        })
 
 
 class Pedigree(object):
@@ -60,6 +82,10 @@ class Pedigree(object):
                 [m for m in self._members if m.has_known_parents()]
 
         return self._independent_members
+
+    def get_pedigree_dataframe(self):
+        return pd.concat([member.get_member_dataframe()
+                          for member in self._members])
 
 
 class FamilyConnections(object):
@@ -110,19 +136,19 @@ class FamilyConnections(object):
                         "0", "0", "1", "-", generated=True)
                     new_members.append(missing_father_mothers[member.mother])
                 member.father = member.mother + ".father"
-            else:
-                mother = id_to_individual[member.mother]
-                father = id_to_individual[member.father]
-                if mother.member is None:
-                    mother.member = PedigreeMember(
-                        member.mother, pedigree.family_id, "0", "0", "2", "-",
-                        generated=True)
-                    new_members.append(mother.member)
-                if father.member is None:
-                    father.member = PedigreeMember(
-                        member.father, pedigree.family_id, "0", "0", "1", "-",
-                        generated=True)
-                    new_members.append(father.member)
+
+            mother = id_to_individual[member.mother]
+            father = id_to_individual[member.father]
+            if mother.member is None and mother not in new_members:
+                mother.member = PedigreeMember(
+                    member.mother, pedigree.family_id, "0", "0", "2", "-",
+                    generated=True)
+                new_members.append(mother.member)
+            if father.member is None and father not in new_members:
+                father.member = PedigreeMember(
+                    member.father, pedigree.family_id, "0", "0", "1", "-",
+                    generated=True)
+                new_members.append(father.member)
 
         pedigree.add_members(new_members)
 
@@ -246,8 +272,18 @@ class FamilyConnections(object):
         return self.pedigree.members
 
     def add_ranks(self):
-        if len(self.members) > 0:
-            list(self.id_to_individual.values())[0].add_rank(0)
+        if len(self.id_to_mating_unit) == 0:
+            for member in self.id_to_individual.values():
+                member.rank = 0
+        elif len(self.members) > 0:
+            is_rank_set = False
+            for member in self.id_to_individual.values():
+                if len(member.mating_units) != 0:
+                    member.add_rank(0)
+                    is_rank_set = True
+                    break
+            if not is_rank_set:
+                list(self.id_to_individual.values())[0].add_rank(0)
             self._fix_ranks()
 
     def _fix_ranks(self):
@@ -402,8 +438,9 @@ def get_argument_parser(description):
         "--output", metavar="o", help="the output filename file",
         default="output.pdf")
     parser.add_argument(
-        "--layout-column", metavar="l", default="layoutCoords",
-        help="layout column name to be used when saving the layout")
+        "--layout-column", metavar="l", default="layout",
+        help="layout column name to be used when saving the layout. "
+        "Default to layout.")
     parser.add_argument(
         "--generated-column", metavar="m", default="generated",
         help="generated column name to be used when generate person")
@@ -426,7 +463,7 @@ def get_argument_parser(description):
         '--sex', help='Specify sex column label. Default to gender.',
         default='gender', action='store')
     parser.add_argument(
-        '--effect', help='Specify effect column label. Default to status.',
+        '--status', help='Specify status column label. Default to status.',
         default='status', action='store')
     parser.add_argument(
         '--no-header-order', help='Comma separated order of columns in header '
@@ -434,5 +471,9 @@ def get_argument_parser(description):
         'familyId, personId, dadId, momId, gender, status. You can replace '
         'unnecessary column with `_`.', dest='no_header_order', default=None,
         action='store')
+    parser.add_argument(
+        '--processes', type=int, default=4, dest='processes',
+        help='Number of processes', action='store'
+    )
 
     return parser

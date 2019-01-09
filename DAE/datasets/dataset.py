@@ -95,9 +95,8 @@ class Dataset(object):
             legend = list(self.legend.values())[0] if self.legend else []
         else:
             legend = self.legend.get(kwargs['pedigreeSelector']['id'], [])
-        legend += self._get_legend_default_values()
 
-        return legend
+        return legend + self._get_legend_default_values()
 
     @property
     def order(self):

@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 
 import json
 from builtins import next
+from builtins import str
 import os
 import traceback
 from itertools import chain, product
@@ -395,7 +396,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         affected_people = DenovoGeneSetsCollection \
             ._get_affected_people(study_group, phenotype_column, phenotype)
         variants = study_group.query_variants(
-                inheritance=Inheritance.denovo.name,
+                inheritance=str(Inheritance.denovo.name),
                 status='{} or {}'.format(
                     Status.affected.name, Status.unaffected.name),
                 person_ids=list(affected_people),

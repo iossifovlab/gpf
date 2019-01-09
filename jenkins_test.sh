@@ -33,6 +33,8 @@ py.test -s --runslow --withspark -v --cov-config coveragerc \
     --cov studies \
     --cov study_groups \
     --cov datasets \
+    --cov common_reports \
+    --cov pedigrees \
     DAE/common/tests/ \
     DAE/variants/tests/ \
     DAE/variant_annotation/tests \
@@ -40,5 +42,6 @@ py.test -s --runslow --withspark -v --cov-config coveragerc \
     DAE/studies/tests \
     DAE/study_groups/tests \
     DAE/datasets/tests \
-    DAE/gene/tests \
-    DAE/common_reports/tests
+    DAE/common_reports/tests \
+    DAE/pedigrees/tests \
+    DAE/gene/tests

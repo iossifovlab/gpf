@@ -46,10 +46,10 @@ class AnnotatorConfig(object):
         return clazz
 
     @staticmethod
-    def instantiate(section_config, schema):
+    def instantiate(section_config):
         clazz = AnnotatorConfig._name_to_class(section_config.annotator_name)
         assert clazz is not None
-        return clazz(section_config, schema)
+        return clazz(section_config)
 
     @staticmethod
     def cli_options():
@@ -67,13 +67,18 @@ class AnnotatorConfig(object):
                 'help': 'path to output file; defaults to stdout'
             }),
             ('--mode', {
-                'help': 'annotator mode; available modes are `overwrite`'
+                'help': 'annotator mode; available modes are '
                 '`replace` and `append`',
-                'default': 'overwrite',
+                'default': '"replace"',
                 'action': 'store'
             }),
             ('--direct', {
                 'help': 'use direct access to score files',
+                'default': True,
+                'action': 'store_true'
+            }),
+            ('--sequential', {
+                'help': 'use sequential access to score files',
                 'default': False,
                 'action': 'store_true'
             }),

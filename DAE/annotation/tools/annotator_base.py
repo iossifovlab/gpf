@@ -9,7 +9,6 @@ from annotation.tools.annotator_config import LineConfig, \
 from utils.dae_utils import dae2vcf_variant
 from variants.variant import SummaryAllele
 import GenomeAccess
-from annotation.tools.file_io_tsv import Schema
 
 
 class AnnotatorBase(object):
@@ -18,15 +17,18 @@ class AnnotatorBase(object):
     `AnnotatorBase` is base class of all `Annotators` and `Preannotators`.
     """
 
-    def __init__(self, config, schema):
+    def __init__(self, config):
         assert isinstance(config, AnnotatorConfig)
 
         self.config = config
-        self.schema = schema
 
-        self.mode = "overwrite"
+        self.mode = "replace"
         if self.config.options.mode == "replace":
             self.mode = "replace"
+        elif self.config.options.mode == "append":
+            self.mode = "append"
+        elif self.config.options.mode == "overwrite":
+            self.mode = "overwrite"
 
     def build_output_line(self, annotation_line):
         output_columns = self.config.output_columns
@@ -34,10 +36,17 @@ class AnnotatorBase(object):
             annotation_line.get(key, '') for key in output_columns
         ]
 
+    def collect_annotator_schema(self, schema):
+        raise NotImplementedError()
+
     def annotate_file(self, file_io_manager):
         """
             Method for annotating file from `Annotator`.
         """
+        self.schema = file_io_manager.reader.schema
+        self.collect_annotator_schema(self.schema)
+        file_io_manager.writer.schema = self.schema
+
         line_config = LineConfig(file_io_manager.header)
         if self.mode == 'replace':
             self.config.output_columns = \
@@ -73,12 +82,13 @@ class AnnotatorBase(object):
 
 class CopyAnnotator(AnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(CopyAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(CopyAnnotator, self).__init__(config)
+
+    def collect_annotator_schema(self, schema):
         for key, value in self.config.columns_config.items():
-            assert key in self.schema.columns
-            self.schema.columns[value] = \
-                self.schema.columns[key]
+            assert key in schema.columns
+            schema.columns[value] = schema.columns[key]
 
     def line_annotation(self, annotation_line, variant=None):
         data = {}
@@ -132,15 +142,23 @@ class DAEBuilder(VariantBuilder):
         self.chrom = self.config.options.c
         self.position = self.config.options.p
         self.location = self.config.options.x
+        if self.variant is None:
+            self.variant = "variant"
+        if self.location is None:
+            self.location = "location"
+        if self.chrom is None:
+            self.chrom = "chr"
+        if self.position is None:
+            self.position = "position"
 
     def build_variant(self, aline):
         variant = aline[self.variant]
-        if self.location:
+        if self.location in aline:
             location = aline[self.location]
             chrom, position = location.split(':')
-        else:
-            assert self.chrom is not None
-            assert self.position is not None
+        else:   
+            assert self.chrom in aline
+            assert self.position in aline
             chrom = aline[self.chrom]
             position = aline[self.position]
 
@@ -177,8 +195,8 @@ class VCFBuilder(VariantBuilder):
 
 class VariantAnnotatorBase(AnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(VariantAnnotatorBase, self).__init__(config, schema)
+    def __init__(self, config):
+        super(VariantAnnotatorBase, self).__init__(config)
 
         assert isinstance(config, VariantAnnotatorConfig)
 
@@ -203,13 +221,12 @@ class VariantAnnotatorBase(AnnotatorBase):
                 'VCF:alt',
             ]
 
+    def collect_annotator_schema(self, schema):
         for vcol in self.config.virtual_columns:
             if 'position' in vcol:
-                self.schema.columns[vcol] = \
-                    Schema.produce_type('int')
+                schema.create_column(vcol, 'int')
             else:
-                self.schema.columns[vcol] = \
-                    Schema.produce_type('str')
+                schema.create_column(vcol, 'str')
 
     def line_annotation(self, aline):
         variant = self.variant_builder.build(aline)
@@ -221,8 +238,8 @@ class VariantAnnotatorBase(AnnotatorBase):
 
 class CompositeAnnotator(AnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(CompositeAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(CompositeAnnotator, self).__init__(config)
         self.annotators = []
 
     def add_annotator(self, annotator):
@@ -233,15 +250,15 @@ class CompositeAnnotator(AnnotatorBase):
         for annotator in self.annotators:
             annotator.line_annotation(aline)
 
-    @property
-    def schema(self):
-        raise NotImplementedError()
+    def collect_annotator_schema(self, schema):
+        for annotator in self.annotators:
+            annotator.collect_annotator_schema(schema)
 
 
 class CompositeVariantAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(CompositeVariantAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(CompositeVariantAnnotator, self).__init__(config)
         self.annotators = []
 
     def add_annotator(self, annotator):
@@ -252,3 +269,8 @@ class CompositeVariantAnnotator(VariantAnnotatorBase):
         variant = self.variant_builder.build(aline)
         for annotator in self.annotators:
             annotator.do_annotate(aline, variant)
+
+    def collect_annotator_schema(self, schema):
+        super(CompositeVariantAnnotator, self).collect_annotator_schema(schema)
+        for annotator in self.annotators:
+            annotator.collect_annotator_schema(schema)

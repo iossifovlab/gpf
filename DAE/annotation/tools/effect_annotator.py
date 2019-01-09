@@ -7,17 +7,12 @@ from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import \
     VariantAnnotator as VariantEffectAnnotator
 from annotation.tools.annotator_base import VariantAnnotatorBase
-from annotation.tools.schema import Schema
 
 
 class EffectAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(EffectAnnotator, self).__init__(config, schema)
-        assert self.config.options.Traw is not None
-        assert self.config.options.Graw is not None
-        assert os.path.exists(self.config.options.Traw)
-        assert os.path.exists(self.config.options.Graw)
+    def __init__(self, config):
+        super(EffectAnnotator, self).__init__(config)
 
         self._init_variant_annotation()
 
@@ -28,23 +23,42 @@ class EffectAnnotator(VariantAnnotatorBase):
         self.effect_details_column = \
             self.config.columns_config.get("effect_details", None)
 
-        if self.effect_type_column:
-            self.schema.columns[self.effect_type_column] = \
-                    Schema.produce_type('list(str)')
-        if self.effect_gene_column:
-            self.schema.columns[self.effect_gene_column] = \
-                    Schema.produce_type('list(str)')
-        if self.effect_details_column:
-            self.schema.columns[self.effect_details_column] = \
-                    Schema.produce_type('list(str)')
-
     def _init_variant_annotation(self):
-        genome = GenomeAccess.openRef(self.config.options.Graw)
-        gene_models = load_gene_models(self.config.options.Traw)
+        genome = None
+        if self.config.options.Graw is None:
+            from DAE import genomesDB as genomes_db
+            genome = genomes_db.get_genome()
+        else:
+            assert self.config.options.Graw is not None
+            assert os.path.exists(self.config.options.Graw)
+            genome = GenomeAccess.openRef(self.config.options.Graw)
+        
+        assert genome is not None
+
+        # assert self.config.options.Graw is not None
+        # assert os.path.exists(self.config.options.Graw)
+        gene_models = None
+        if self.config.options.Traw is None:
+            from DAE import genomesDB as genomes_db
+            gene_models = genomes_db.get_gene_models()
+        else:
+            assert os.path.exists(self.config.options.Traw)
+            gene_models = load_gene_models(self.config.options.Traw)
+        assert gene_models is not None
+
         if self.config.options.prom_len is None:
             self.config.options.prom_len = 0
         self.annotation_helper = VariantEffectAnnotator(
             genome, gene_models, promoter_len=self.config.options.prom_len)
+
+    def collect_annotator_schema(self, schema):
+        super(EffectAnnotator, self).collect_annotator_schema(schema)
+        if self.effect_type_column:
+            schema.create_column(self.effect_type_column, 'list(str)')
+        if self.effect_gene_column:
+            schema.create_column(self.effect_gene_column, 'list(str)')
+        if self.effect_details_column:
+            schema.create_column(self.effect_details_column, 'list(str)')
 
     def do_annotate(self, aline, variant):
         assert variant is not None
@@ -61,7 +75,7 @@ class EffectAnnotator(VariantAnnotatorBase):
             aline[self.effect_gene_column] = effect_gene
             aline[self.effect_details_column] = effect_details
 
-        except ValueError as e:
+        except ValueError:
             pass
             # aline.columns[self.effect_type_column] = None
             # aline.columns[self.effect_gene_column] = None

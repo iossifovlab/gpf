@@ -21,7 +21,6 @@ class Region(object):
     def len(self):
         return self.end-self.beg
 
-
 class GenesMap(object):
     def __init__(self):
         self.chrs = defaultdict(list)

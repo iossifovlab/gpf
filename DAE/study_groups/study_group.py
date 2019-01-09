@@ -54,7 +54,9 @@ class StudyGroup(object):
 
     def combine_families(self, first, second):
         same_families = set(first.keys()) & set(second.keys())
-        combined_dict = {**first, **second}
+        combined_dict = {}
+        combined_dict.update(first)
+        combined_dict.update(second)
         for sf in same_families:
             combined_dict[sf] =\
                 first[sf] if len(first[sf]) > len(second[sf]) else second[sf]
