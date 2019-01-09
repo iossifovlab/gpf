@@ -77,6 +77,7 @@ def test_multi_alt_allele_effects(variants_impl, variants, effect, count):
     (None, ['synonymous'], ["PLEKHN1"], 1),
     (None, ['missense', 'frame-shift'], ["PLEKHN1"], 1),
     (None, ['synonymous', 'frame-shift'], ["PLEKHN1"], 2),
+    (None, ['synonymous', 'frame-shift', "3'UTR", "5'UTR"], ["PLEKHN1"], 2),
 ])
 def test_single_alt_allele_genes(
         variants_impl, variants, regions, effects, genes, count):
