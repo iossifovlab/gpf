@@ -1,3 +1,4 @@
+import re
 from annotation.tools.annotator_base import AnnotatorBase
 
 
@@ -14,9 +15,10 @@ class VCFInfoExtractor(AnnotatorBase):
         info = annotation_line['INFO']
         for info_key, output_col in self.config.columns_config.items():
             annotation_line[output_col] = None
-            if info_key not in info:
+            match = re.search(r'\b({})\b'.format(info_key), info)
+            if match is None:
                 continue
-            val_beg_index = info.index(info_key) + len(info_key)
+            val_beg_index = match.start() + len(info_key)
             val_end_index = info.find(';', val_beg_index)
             if val_end_index == -1:
                 val_end_index = len(info)

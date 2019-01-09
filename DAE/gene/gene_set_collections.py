@@ -7,6 +7,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from builtins import next
+from builtins import str
 import os
 import traceback
 import sqlite3
@@ -360,7 +361,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         affected_people = DenovoGeneSetsCollection \
               ._get_affected_people(study_group, phenotype_column, phenotype)
         variants = study_group.query_variants(
-                inheritance=Inheritance.denovo.name,
+                inheritance=str(Inheritance.denovo.name),
                 status='{} or {}'.format(
                     Status.affected.name, Status.unaffected.name),
                 person_ids=list(affected_people),
