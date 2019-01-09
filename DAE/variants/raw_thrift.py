@@ -107,7 +107,7 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
             tables=self.config,
             query=kwargs
         )
-        
+
         df.genotype = df.genotype.apply(
             lambda v: np.fromstring(v.strip("[]"), dtype=np.int8, sep=','))
 

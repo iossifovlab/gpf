@@ -2,187 +2,15 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from builtins import str
-import collections
 
 from impala.util import as_pandas
-from variants.attributes_query import StringQueryToTreeTransformerWrapper,\
-    QueryTreeToSQLTransformer, QueryTreeToSQLListTransformer, \
-    roles_converter, sex_converter, \
-    inheritance_converter, variant_type_converter,\
-    StringListQueryToTreeTransformer
+from variants.attributes_query import \
+    QueryTreeToSQLTransformer, QueryTreeToSQLListTransformer
 from variants.attributes_query import role_query, sex_query, \
     inheritance_query,\
     variant_type_query
 
 from RegionOperations import Region
-
-q = """
-    SELECT * FROM parquet.`/data-raw-dev/pspark/family01` AS A
-    INNER JOIN parquet.`/data-raw-dev/pspark/summary01` AS B
-    ON
-    A.chrom = B.chrom AND
-    A.position = B.position AND
-    A.alternative = B.alternative
-    WHERE
-"""
-
-
-stage_one_transformers = {
-    'roles': StringQueryToTreeTransformerWrapper(
-        token_converter=roles_converter),
-    'sexes': StringQueryToTreeTransformerWrapper(
-        token_converter=sex_converter),
-    'inheritance': StringQueryToTreeTransformerWrapper(
-        token_converter=inheritance_converter),
-    'variant_type': StringQueryToTreeTransformerWrapper(
-        token_converter=variant_type_converter),
-    'family_ids': StringListQueryToTreeTransformer(),
-    'person_ids': StringQueryToTreeTransformerWrapper(),
-}
-
-
-stage_two_transformers = {
-    'effect_types': QueryTreeToSQLListTransformer("S.effect_gene_types"),
-    'genes': QueryTreeToSQLListTransformer("S.effect_gene_genes"),
-    'person_ids': QueryTreeToSQLListTransformer("F.variant_in_members"),
-    'roles': QueryTreeToSQLListTransformer("F.variant_in_roles"),
-    'sexes': QueryTreeToSQLListTransformer("F.variant_in_sexes"),
-    'inheritance': QueryTreeToSQLListTransformer("inheritance_in_members"),
-    'variant_type': QueryTreeToSQLTransformer("variant_type"),
-    'position': QueryTreeToSQLTransformer("S.position"),
-    'chrom': QueryTreeToSQLTransformer("S.chrom"),
-    'alternative': QueryTreeToSQLTransformer("S.alternative"),
-    'family_ids': QueryTreeToSQLListTransformer('F.family_id'),
-}
-
-
-Q = """
-    SELECT
-        S.chrom,
-        S.position,
-        S.reference,
-        S.alternative,
-        S.summary_variant_index,
-        S.allele_index,
-        S.allele_count,
-        S.variant_type,
-        S.cshl_variant,
-        S.cshl_position,
-        S.effect_type,
-        S.effect_gene_genes,
-        S.effect_gene_types,
-        S.effect_details_transcript_ids,
-        S.effect_details_details,
-        S.af_parents_called_count,
-        S.af_parents_called_percent,
-        S.af_allele_count,
-        S.af_allele_freq,
-
-        F.family_variant_index,
-        F.family_id,
-        F.genotype
-
-    FROM parquet.`{family_variant}` AS F
-    LEFT JOIN parquet.`{summary_variant}` AS S
-    ON
-        S.bucket_index = F.bucket_index AND
-        S.summary_variant_index = F.summary_variant_index AND
-        S.allele_index = F.allele_index
-"""
-
-
-def region_transformer(r):
-    assert isinstance(r, Region)
-    return "(S.chrom = {} AND S.position >= {} AND S.position <= {})".format(
-        r.chr, r.start, r.stop)
-
-
-def regions_transformer(rs):
-    assert all([isinstance(r, Region) for r in rs])
-    return " OR ".join([region_transformer(r) for r in rs])
-
-
-def query_parts(queries, **kwargs):
-    result = []
-    for key, arg in list(kwargs.items()):
-        if arg is None:
-            continue
-        if key not in queries:
-            continue
-
-        stage_one = stage_one_transformers.get(
-            key, StringQueryToTreeTransformerWrapper())
-        stage_two = stage_two_transformers.get(
-            key, QueryTreeToSQLTransformer(key))
-
-        print("arg", key, type(arg), arg, isinstance(arg, str))
-
-        if isinstance(arg, collections.Iterable) and not isinstance(arg, str):
-            arg = 'any({})'.format(','.join(arg))
-
-        if isinstance(arg, str):
-            result.append(
-                stage_two.transform(stage_one.parse_and_transform(arg))
-            )
-            # result.append()
-        else:
-            result.append(stage_two.transform(arg))
-    return result
-
-
-VARIANT_QUERIES = [
-    # 'regions',
-    'family_ids',
-    'effect_types',
-    'genes',
-    'variant_type',
-    'person_ids',
-    'roles',
-    'sexes',
-    'inheritance',
-]
-
-
-def thrift_query(
-        thrift_connection,
-        summary_variant, family_variant,
-        limit=2000, **kwargs):
-
-    final_query = Q.format(
-        summary_variant=summary_variant,
-        family_variant=family_variant,
-    )
-
-    variant_queries = []
-    if 'regions' in kwargs and kwargs['regions'] is not None:
-        regions = kwargs.pop('regions')
-        variant_queries.append(regions_transformer(regions))
-
-    variant_queries.extend(
-        query_parts(VARIANT_QUERIES, **kwargs))
-
-    return_reference = kwargs.get("return_reference", False)
-    if not return_reference:
-        aq = "F.allele_index > 0"
-        variant_queries.append(aq)
-
-    if variant_queries:
-        print(variant_queries)
-        final_query += "\nWHERE\n{}".format(
-            ' AND '.join(["({})".format(q) for q in variant_queries])
-        )
-
-    if limit is not None:
-        final_query += "\nLIMIT {}".format(limit)
-
-    # print()
-    # print()
-    # print()
-    # print()
-    print("FINAL QUERY", final_query)
-    cursor = thrift_connection.cursor()
-    cursor.execute(final_query)
-    return as_pandas(cursor)
 
 
 def thrift_query1(thrift_connection, tables, query, db='parquet', limit=2000):
@@ -194,7 +22,7 @@ def thrift_query1(thrift_connection, tables, query, db='parquet', limit=2000):
     print("FINAL QUERY", sql_query)
     cursor = thrift_connection.cursor()
     cursor.execute(sql_query)
-    return as_pandas(cursor) 
+    return as_pandas(cursor)
 
 
 class ThriftQueryBuilderBase(object):
@@ -310,7 +138,7 @@ class SummarySubQueryBuilder(ThriftQueryBuilderBase):
                "(S.chrom = {q}{chrom}{q} AND S.position >= {start} AND "
                "S.position <= {stop})"
                .format(
-                    q=self.QUOTE, chrom=region.chrom, start=region.start, 
+                    q=self.QUOTE, chrom=region.chrom, start=region.start,
                     stop=region.stop)
             )
         return ' OR '.join(where)
@@ -376,38 +204,11 @@ class MemberSubQueryBuilder(ThriftQueryBuilderBase):
             'person_ids', 'M.member_variant'
         )
 
-    def _build_roles_where(self):
-        assert self.query.get('roles')
-        assert isinstance(self.query['roles'], str)
-        parsed = role_query.transform_query_string_to_tree(
-                    self.query['roles'])
-        transformer = QueryTreeToSQLTransformer('M.member_role')
-        return transformer.transform(parsed)
-
-    def _build_inheritance_where(self):
-        assert self.query.get('inheritance')
-        assert isinstance(self.query['inheritance'], str)
-        parsed = inheritance_query.transform_query_string_to_tree(
-                    self.query['inheritance'])
-        transformer = QueryTreeToSQLTransformer('M.member_inheritance')
-        where = transformer.transform(parsed)
-        if where is not None and not self.query.get('return_reference'):
-            where += " AND M.allele_index > 0"
-        return where
-
     def build_where(self):
         where_parts = []
         if self.query.get('person_ids'):
             where_parts.append(
                 self._build_person_ids_where()
-            )
-        if self.query.get('roles'):
-            where_parts.append(
-                self._build_roles_where()
-            )
-        if self.query.get('inheritance'):
-            where_parts.append(
-                self._build_inheritance_where()
             )
 
         return where_parts
@@ -465,13 +266,26 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
         self.summary_query_builder = SummarySubQueryBuilder(query, tables, db)
         self.member_query_builder = MemberSubQueryBuilder(query, tables, db)
 
-    def _build_sexes_where(self):
-        assert self.query.get('sexes')
-        assert isinstance(self.query['sexes'], str)
-        parsed = sex_query.transform_query_string_to_tree(
-                    self.query['sexes'])
-        transformer = QueryTreeToSQLListTransformer('F.variant_in_sexes')
+    def _build_complex_where_with_array_attr(
+            self, attr_name, column_name, attr_transformer):
+        assert self.query[attr_name] is not None
+        assert isinstance(self.query[attr_name], str)
+        parsed = attr_transformer.transform_query_string_to_tree(
+                    self.query[attr_name])
+        transformer = QueryTreeToSQLListTransformer(column_name)
         return transformer.transform(parsed)
+
+    def _build_sexes_where(self):
+        return self._build_complex_where_with_array_attr(
+            'sexes', 'F.variant_in_sexes', sex_query)
+
+    def _build_roles_where(self):
+        return self._build_complex_where_with_array_attr(
+            'roles', 'F.variant_in_roles', role_query)
+
+    def _build_inheritance_where(self):
+        return self._build_complex_where_with_array_attr(
+            'inheritance', 'F.inheritance_in_members', inheritance_query)
 
     def build(self):
         print(self.query)
@@ -495,6 +309,16 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
         if self.query.get('sexes'):
             where_parts.append(
                 self._build_sexes_where()
+            )
+
+        if self.query.get('roles'):
+            where_parts.append(
+                self._build_roles_where()
+            )
+
+        if self.query.get('inheritance'):
+            where_parts.append(
+                self._build_inheritance_where()
             )
 
         if not self.query.get('return_reference'):

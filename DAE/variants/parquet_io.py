@@ -68,7 +68,7 @@ def batch_from_data_dict(data, schema):
         assert name in data
         column = data[name]
         field = schema.field_by_name(name)
-        batch_data.append(pa.array(column, type=field.type))   
+        batch_data.append(pa.array(column, type=field.type))
     batch = pa.RecordBatch.from_arrays(batch_data, schema.names)
     return batch
 
