@@ -6,12 +6,12 @@ Created on Feb 16, 2017
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import json
 from builtins import next
 import os
 import traceback
 from itertools import chain, product
 from collections import OrderedDict
-import pickle
 import logging
 
 from gene.config import GeneInfoConfig
@@ -146,30 +146,64 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _get_att_list(self, att_name):
         return self.gene_info.getGeneTermAttList(self.collection_id, att_name)
 
-    def load(self):
+    def load(self, build_cache=False):
         from pprint import pprint
         pprint(self.cache)
         if len(self.cache) == 0:
-            self._load_cache_from_pickle()
+            self._load_cache_from_pickle(build_cache=build_cache)
         return self.get_gene_sets()
 
-    def _load_cache_from_pickle(self):
-        cache_file_path = self.gene_info.getGeneTermAtt(self.collection_id, 'file')
-        print('cache_file_path', cache_file_path)
-        if os.path.exists(cache_file_path):
-            with open(cache_file_path, 'rb') as infile:
-                self.cache = pickle.load(infile)
-        else:
-            # raise RuntimeError('denovo datasets cache not loaded')
-            self.build_cache()
-            infile = open(cache_file_path, 'wb')
-            pickle.dump(self.cache, infile, protocol=2)
+    def _load_cache_from_pickle(self, build_cache=False):
+        study_groups = self._get_study_groups()
+        for study_group in study_groups:
+            cache_dir = study_group.gene_sets_cache_file()
+            if not os.path.exists(cache_dir):
+                if not build_cache:
+                    raise EnvironmentError(
+                        "Denovo gene sets caches dir '{}' "
+                        "does not exists".format(cache_dir))
+                else:
+                    self.build_cache([study_group.name])
 
-    def build_cache(self, study_groups=None):
-        self.cache = {}
-        for study_group in self._get_study_groups(study_groups):
-            self.cache[study_group.name] = self._generate_gene_sets_for(study_group)
-        return self.cache
+            self.cache[study_group.name] = self._load_cache(study_group)
+
+    def build_cache(self, study_group_ids=None):
+        for study_group in self._get_study_groups(study_group_ids):
+            study_group_cache = self._generate_gene_sets_for(study_group)
+            print("calculated cache: ", study_group_cache)
+            self._save_cache(study_group, study_group_cache)
+
+    def _load_cache(self, study_group):
+        cache_dir = study_group.gene_sets_cache_file()
+        with open(cache_dir, "r") as f:
+            result = json.load(f)
+
+        # change all list to sets so after loading from json
+        result = self._convert_cache_innermost_types(result, list, set)
+
+        return result
+
+    def _save_cache(self, study_group, study_group_cache):
+        # change all sets to lists so they can be saved in json
+        cache = self._convert_cache_innermost_types(
+            study_group_cache, set, list)
+
+        cache_dir = study_group.gene_sets_cache_file()
+        with open(cache_dir, "w") as f:
+            json.dump(cache, f)
+
+    def _convert_cache_innermost_types(self, cache, from_type, to_type):
+        if isinstance(cache, from_type):
+            return to_type(cache)
+        assert isinstance(cache, dict), \
+            "expected type 'dict', got '{}'".format(type(cache))
+
+        res = {}
+        for key, value in cache.items():
+            res[key] = self._convert_cache_innermost_types(
+                value, from_type, to_type)
+
+        return res
 
     def _generate_gene_sets_for(self, study_group):
         pedigree_selector = self.study_group_pedigree_selectors[
@@ -201,12 +235,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         return innermost_cache
 
-    def _get_study_groups(self, study_groups=None):
-        if study_groups is None:
-            study_groups = self.study_group_pedigree_selectors.keys()
+    def _get_study_groups(self, study_groups_ids=None):
+        if study_groups_ids is None:
+            study_groups_ids = self.study_group_pedigree_selectors.keys()
         return [
             self.study_group_facade.get_study_group(study_group_id)
-            for study_group_id in study_groups
+            for study_group_id in study_groups_ids
         ]
 
     def get_gene_sets_types_legend(self, permitted_study_groups=None):
@@ -427,27 +461,29 @@ class GeneSetsCollections(object):
             for gsc in self.get_collections_descriptions()
         ])
 
-    def _load_gene_sets_collection(self, gene_sets_collection_id):
+    def _load_gene_sets_collection(self, gene_sets_collection_id, load=True):
         if gene_sets_collection_id == 'denovo':
             gsc = DenovoGeneSetsCollection(
                 gene_sets_collection_id,
                 study_group_facade=self.study_group_facade)
         else:
             gsc = GeneSetsCollection(gene_sets_collection_id)
-        gsc.load()
+
+        if load:
+            gsc.load()
 
         return gsc
 
-    def get_gene_sets_collection(self, gene_sets_collection_id):
+    def get_gene_sets_collection(self, gene_sets_collection_id, load=True):
         if gene_sets_collection_id not in self.gene_sets_collections:
-            gsc = self._load_gene_sets_collection(gene_sets_collection_id)
+            gsc = self._load_gene_sets_collection(gene_sets_collection_id, load)
             self.gene_sets_collections[gene_sets_collection_id] = gsc
 
         return self.gene_sets_collections.get(gene_sets_collection_id, None)
 
     def get_gene_sets(self, gene_sets_collection_id, gene_sets_types=[],
-                      permitted_datasets=None):
-        gsc = self.get_gene_sets_collection(gene_sets_collection_id)
+                      permitted_datasets=None, load=True):
+        gsc = self.get_gene_sets_collection(gene_sets_collection_id, load)
         if gsc is None:
             return None
 

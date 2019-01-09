@@ -61,20 +61,37 @@ def gene_info_config(mocked_dataset_config):
 
 @pytest.fixture()
 def gscs(study_group_facade, gene_info_config):
-    res = GeneSetsCollections(
+    return GeneSetsCollections(
         study_group_facade=study_group_facade, config=gene_info_config)
-    return res
 
 
 @pytest.fixture(scope='module')
 def gene_info_cache_dir():
     cache_dir = path_to_fixtures('geneInfo', 'cache')
-    shutil.rmtree(cache_dir, ignore_errors=True)
-    assert not os.path.exists(cache_dir)
+    assert not os.path.exists(cache_dir), \
+        'Cache dir "{}"already  exists..'.format(cache_dir)
     os.makedirs(cache_dir)
+
+    env_key = 'DATA_STUDY_GROUPS_DENOVO_GENE_SETS_DIR'
+    old_env = os.getenv(env_key, None)
+
+    os.environ[env_key] = \
+        path_to_fixtures('geneInfo', 'cache')
 
     yield
 
     shutil.rmtree(cache_dir)
 
+    if old_env is None:
+        os.unsetenv(env_key)
+    else:
+        os.putenv(env_key, old_env)
 
+
+@pytest.fixture()
+def calc_gene_sets(gscs):
+    denovo_gene_sets = gscs.get_gene_sets_collection('denovo', load=False)
+
+    denovo_gene_sets.load(build_cache=True)
+
+    print("PRECALCULATION COMPLETE")
