@@ -19,13 +19,13 @@
 }
 
 .variants-report-content {
-    width: 100%;
-    padding: 30px;
+  width: 100%;
+  padding: 30px;
 }
 
 .variants-report-selector {
-    width: 20%;
-    padding: 20px;
+  width: 20%;
+  padding: 20px;
 }
 
 .pedigree-icon {
@@ -36,4 +36,19 @@
   width: 15px;
   height: 15px;
   border: 0.1px solid #aaaaaa;
+}
+
+div.vertical {
+  position: relative;
+  height: 210px;
+  width: auto;
+  margin-left: 0;
+  padding-right: 2px;
+  writing-mode: tb-rl;
+  filter: flipv fliph;
+}
+
+th.vertical {
+  padding-bottom: 10px;
+  vertical-align: bottom;
 }
