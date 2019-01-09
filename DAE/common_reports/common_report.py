@@ -26,16 +26,13 @@ class PeopleCounter(object):
             len(self._get_people(families, filter_object, Sex.unspecified))
         self.people_total =\
             self.people_male + self.people_female + self.people_unspecified
-        self.column = filter_object.get_column()
+        self.row = filter_object.get_column()
 
-    def to_dict(self):
-        return {
-            'people_male': self.people_male,
-            'people_female': self.people_female,
-            'people_unspecified': self.people_unspecified,
-            'people_total': self.people_total,
-            'column': self.column,
-        }
+    def to_dict(self, columns):
+        people_counter_dict =\
+            {column: getattr(self, column) for column in columns}
+        people_counter_dict['row'] = self.row
+        return people_counter_dict
 
     def _get_people(self, families, filter_object, sex):
         people = []
@@ -52,6 +49,9 @@ class PeopleCounter(object):
     def is_empty(self):
         return True if self.people_total == 0 else False
 
+    def is_empty_field(self, field):
+        return True if getattr(self, field) == 0 else False
+
 
 class PeopleCounters(object):
 
@@ -60,13 +60,15 @@ class PeopleCounters(object):
             self._get_counters(families, filter_object)
 
         self.group_name = filter_object.name
+        self.rows = self._get_rows(self.counters)
         self.columns = self._get_columns(self.counters)
 
     def to_dict(self):
         return {
             'group_name': self.group_name,
+            'rows': self.rows,
             'columns': self.columns,
-            'counters': [c.to_dict() for c in self.counters],
+            'counters': [c.to_dict(self.columns) for c in self.counters],
         }
 
     def _get_counters(self, families, filter_object):
@@ -77,8 +79,18 @@ class PeopleCounters(object):
             lambda people_counter: not people_counter.is_empty(),
             people_counters))
 
+    def _get_rows(self, people_counters):
+        return [people_counter.row for people_counter in people_counters]
+
+    def _is_column_empty(self, column, people_counters):
+        return all([people_counter.is_empty_field(column)
+                    for people_counter in people_counters])
+
     def _get_columns(self, people_counters):
-        return [people_counter.column for people_counter in people_counters]
+        columns = ['people_male', 'people_female',
+                   'people_unspecified', 'people_total']
+        return [column for column in columns
+                if not self._is_column_empty(column, people_counters)]
 
 
 class FamilyCounter(object):
@@ -397,6 +409,9 @@ class Effect(object):
         return [EffectWithFilter(query_object, filter_object, effect)
                 for filter_object in filter_objects.filter_objects]
 
+    def is_row_empty(self):
+        return all([value.is_empty() for value in self.row])
+
     def get_empty(self):
         return [value.is_empty() for value in self.row]
 
@@ -407,9 +422,15 @@ class Effect(object):
 
 class DenovoReportTable(object):
 
-    def __init__(self, query_object, effects, filter_object):
+    def __init__(
+            self, query_object, effect_groups, effect_types, filter_object):
+        effects = effect_groups + effect_types
+
         self.group_name = filter_object.name
         self.columns = filter_object.get_columns()
+
+        self.effect_groups = effect_groups
+        self.effect_types = effect_types
 
         self.rows = self._get_rows(query_object, effects, filter_object)
 
@@ -417,12 +438,33 @@ class DenovoReportTable(object):
         return {
             'rows': [r.to_dict() for r in self.rows],
             'group_name': self.group_name,
-            'columns': self.columns
+            'columns': self.columns,
+            'effect_groups': self.effect_groups,
+            'effect_types': self.effect_types
         }
+
+    def contain_row(self, row):
+        return
 
     def _remove_empty_columns(self, indexes):
         for index in sorted(indexes, reverse=True):
             self.columns.pop(index)
+
+    def _remove_empty_rows(self, effect_rows):
+        for effect_row in effect_rows:
+            if effect_row.is_row_empty():
+                try:
+                    self.effect_groups.remove(effect_row.effect_type)
+                except ValueError:
+                    pass
+                try:
+                    self.effect_types.remove(effect_row.effect_type)
+                except ValueError:
+                    pass
+
+        return list(filter(
+            lambda effect_row: not effect_row.is_row_empty(),
+            effect_rows))
 
     def _get_rows(self, query_object, effects, filter_object):
         effect_rows = [Effect(query_object, effect, filter_object)
@@ -440,6 +482,8 @@ class DenovoReportTable(object):
         for effect_row in effect_rows:
             effect_row.remove_elements(effect_rows_empty_columns_index)
 
+        effect_rows = self._remove_empty_rows(effect_rows)
+
         return effect_rows
 
 
@@ -447,22 +491,18 @@ class DenovoReport(object):
 
     def __init__(
             self, query_object, effect_groups, effect_types, filter_objects):
-        effects = effect_groups + effect_types
-
-        self.effect_groups = effect_groups
-        self.effect_types = effect_types
         self.tables = self._get_tables(
-            query_object, effects, filter_objects)
+            query_object, effect_groups, effect_types, filter_objects)
 
     def to_dict(self):
         return {
-            'effect_groups': self.effect_groups,
-            'effect_types': self.effect_types,
             'tables': [t.to_dict() for t in self.tables]
         }
 
-    def _get_tables(self, query_object, effects, filter_objects):
-        return [DenovoReportTable(query_object, effects, filter_object)
+    def _get_tables(
+            self, query_object, effect_groups, effect_types, filter_objects):
+        return [DenovoReportTable(
+            query_object, effect_groups, effect_types, filter_object)
                 for filter_object in filter_objects]
 
 
