@@ -38,6 +38,7 @@ class DfFamilyVariantsBase(object):
             by=["chrom", "summary_variant_index", "family_id", "allele_index"])
         for _name, group in join_df.groupby(
                 by=["chrom", "summary_variant_index", "family_id"]):
+            print(group)
             rec = group.to_dict(orient='records')
             yield DfFamilyVariantsBase.wrap_family_variant_multi(families, rec)
 

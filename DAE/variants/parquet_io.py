@@ -164,23 +164,21 @@ def _family_allele_to_data(
                 i.value for i in fa.inheritance_in_members
             ], dtype=np.int8))
 
+    family_data["variant_in_members"].append(
+        [str(m)
+            for m in fa.variant_in_members])
+
     if fa.is_reference_allele:
-        family_data["variant_in_members"].append(None)
         family_data["variant_in_roles"].append(None)
         family_data["variant_in_sexes"].append(None)
     else:
-        family_data["variant_in_members"].append(
-            [str(m)
-                for m in fa.variant_in_members])
         family_data["variant_in_roles"].append(
             [
-                r.value if r is not None else None
-                for r in fa.variant_in_roles
+                r.value for r in set(fa.variant_in_roles) if r is not None
             ])
         family_data["variant_in_sexes"].append(
             [
-                s.value if s is not None else None
-                for s in fa.variant_in_sexes
+                s.value for s in set(fa.variant_in_sexes) if s is not None
             ])
 
     assert len(fa.inheritance_in_members) == len(fa.members_ids)

@@ -6,9 +6,6 @@ Created on Jul 3, 2018
 from __future__ import unicode_literals
 import pytest
 
-
-# "array contains with null can't handle not"
-@pytest.mark.xfail
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_thrift",
