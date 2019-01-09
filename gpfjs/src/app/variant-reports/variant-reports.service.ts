@@ -34,8 +34,7 @@ export class VariantReportsService {
     return this.http
       .get(url, options)
       .map(response => {
-        console.log(VariantReport.fromJson(response.json()))
-        return VariantReport.fromJson(response.json())
+        return VariantReport.fromJson(response.json());
       })
       .catch(error => {
         console.log(error);

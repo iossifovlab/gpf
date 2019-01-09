@@ -635,10 +635,6 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
 
     let lineY = individuals[0].yCenter - horizontalYOffset;
 
-    if (individuals[0].individual.pedigreeData.pedigreeIdentifier === '14970') {
-      console.log(individuals);
-    }
-
     for (let i = 0; i < individuals.length; i++) {
       let current = individuals[i];
       if (current.individual.parents) {
