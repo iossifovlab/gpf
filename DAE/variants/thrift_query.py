@@ -212,7 +212,8 @@ class ThriftQueryBuilderBase(object):
         self.db = 'parquet'
 
     def has_gene_effects(self):
-        return self.query.get('effect_types') or self.query.get('genes')
+        return self.query.get('effect_types') is not None \
+            or self.query.get('genes') is not None
 
     def has_members(self):
         members_kw = set(['roles', 'person_ids', 'inheritance'])
@@ -487,7 +488,6 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
 
         join_member_variant = ""
         member_where = self.member_query_builder.build_where()
-        print("member_where", member_where)
         if member_where:
             where_parts.extend(member_where)
             join_member_variant = self.member_query_builder.build_join()
