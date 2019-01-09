@@ -48,7 +48,7 @@
         <table class="table table-bordered table-hover table-sm table-centered">
           <thead>
             <th>Group</th>
-            <th *ngFor="let column of selectedPeopleCounter.columns">
+            <th *ngFor="let column of selectedPeopleCounter.columnsValue">
               {{ column }}
             </th>
           </thead>
@@ -154,8 +154,8 @@
             </thead>
             <tbody>
               <tr
-                *ngFor="let effectType of getRows(variantReport.denovoReport.effectGroups, variantReport.denovoReport.effectTypes)"
-                [ngClass]="{ 'table-active' : (variantReport.denovoReport.effectGroups.indexOf(effectType) !== -1) }">
+                *ngFor="let effectType of getRows(selectedDenovoReport.effectGroups, selectedDenovoReport.effectTypes)"
+                [ngClass]="{ 'table-active' : (selectedDenovoReport.effectGroups.indexOf(effectType) !== -1) }">
                 <th>{{ effectType }}</th>
                 <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, selectedDenovoReport, selectedDenovoReport.columns)">
                   <div>

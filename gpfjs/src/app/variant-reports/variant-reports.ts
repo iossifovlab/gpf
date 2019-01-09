@@ -58,6 +58,7 @@ export class GroupCounter {
 }
 
 export class PeopleCounter {
+  columnsValue: string[];
 
   static fromJson(json: any) {
     return new PeopleCounter(
@@ -74,7 +75,9 @@ export class PeopleCounter {
     readonly groupName: string,
     readonly rows: string[],
     readonly columns: string[]
-    ) {}
+    ) {
+      this.columnsValue = this.columns.map(column => PeopleSex[column]);
+    }
 
   getChildrenCounter(column: string, row: string) {
     let columnGroupCounter = this.groupCounters.filter(
@@ -199,14 +202,18 @@ export class EffectTypeTable {
     return new EffectTypeTable(
       json['rows'].map(row => EffectTypeRow.fromJson(row)),
       json['group_name'],
-      json['columns']
+      json['columns'],
+      json['effect_groups'],
+      json['effect_types']
       );
     }
 
     constructor(
       readonly rows: EffectTypeRow[],
       readonly groupName: string,
-      readonly columns: string[]
+      readonly columns: string[],
+      readonly effectGroups: string[],
+      readonly effectTypes: string[]
       ) {}
     }
 
@@ -217,16 +224,12 @@ export class EffectTypeTable {
           return null;
         }
         return new DenovoReport(
-          json['tables'].map(table => EffectTypeTable.fromJson(table)),
-          json['effect_groups'],
-          json['effect_types']
+          json['tables'].map(table => EffectTypeTable.fromJson(table))
         );
       }
 
       constructor (
-        readonly tables: EffectTypeTable[],
-        readonly effectGroups: string[],
-        readonly effectTypes: string[],
+        readonly tables: EffectTypeTable[]
   ) {}
 }
 
@@ -293,4 +296,11 @@ export class Legend {
   constructor(
     readonly legendItems: LegendItem[]
   ) {}
+}
+
+enum PeopleSex {
+  people_male = 'Male',
+  people_female = 'Female',
+  people_unspecified = 'Unspecified',
+  people_total = 'Total'
 }
