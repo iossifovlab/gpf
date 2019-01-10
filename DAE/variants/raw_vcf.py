@@ -374,8 +374,8 @@ class RawFamilyVariants(FamiliesBase):
                 annot_df.groupby("summary_variant_index"):
             vcf = variants[summary_index]
             summary_variant = self.VF.summary_variant_from_records(
-                group_df.to_dict(orient='records'))
-
+                group_df.to_dict(orient='records'),
+                frequency_type='transmitted')
             for fam in list(self.families.values()):
                 v = self.VF.family_variant_from_vcf(
                     summary_variant, fam, vcf=vcf)

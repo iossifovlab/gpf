@@ -44,6 +44,7 @@ def summary_parquet_schema():
         pa.field("af_parents_called_percent", pa.float64()),
         pa.field("af_allele_count", pa.int32()),
         pa.field("af_allele_freq", pa.float64()),
+        pa.field("frequency_type", pa.string()),
         # pa.field("ultra_rare", pa.bool_()),
     ]
 
