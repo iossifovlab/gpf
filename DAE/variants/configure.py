@@ -79,19 +79,25 @@ class Configure(ConfigBox):
 
     @staticmethod
     def from_prefix_parquet(prefix):
-        assert os.path.exists(prefix)
-        assert os.path.isdir(prefix)
+        if os.path.exists(prefix) and os.path.isdir(prefix):
+            dirname = prefix
+            fileprefix = ""
+        else:
+            dirname, fileprefix = os.path.split(prefix)
+
+        assert os.path.exists(dirname)
+        assert os.path.isdir(dirname)
 
         summary_filename = os.path.join(
-            prefix, "summary.parquet")
+            dirname, "{}summary.parquet".format(fileprefix))
         family_filename = os.path.join(
-            prefix, "family.parquet")
+            dirname, "{}family.parquet".format(fileprefix))
         member_filename = os.path.join(
-            prefix, "member.parquet")
+            dirname, "{}member.parquet".format(fileprefix))
         effect_gene_filename = os.path.join(
-            prefix, "effect_gene.parquet")
+            dirname, "{}effect_gene.parquet".format(fileprefix))
         pedigree_filename = os.path.join(
-            prefix, "pedigree.parquet")
+            dirname, "{}pedigree.parquet".format(fileprefix))
 
         conf = {
             'parquet': {

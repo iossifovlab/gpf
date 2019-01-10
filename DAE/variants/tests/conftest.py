@@ -259,7 +259,6 @@ def parquet_variants(request, variants_vcf):
     request.addfinalizer(fin)
 
     def builder(path):
-        print("path:", path, os.path.basename(path))
         basename = os.path.basename(path)
         fulldirname = os.path.join(dirname, basename)
 
