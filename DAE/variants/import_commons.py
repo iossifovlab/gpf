@@ -51,14 +51,11 @@ def contigs_makefile_generate(
         contig_targets[contig] = []
 
         for part, region in enumerate(build_contigs[contig]):
-            bucket_index = contig_index * 100 + part
+            bucket_index = (contig_index + 1) * 100 + part
             suffix = "{:0>3}_{:0>3}_{}_".format(
                 contig_index, part, contig
             )
             target_prefix = os.path.join(output_prefix, suffix)
-            # command = "{target}:\n\tmkdir -p {target}".format(
-            #     target=target_dir)
-            # makefile.append(command)
 
             parquet = Configure.from_prefix_parquet(target_prefix).parquet
 

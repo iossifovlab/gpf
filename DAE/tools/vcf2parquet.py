@@ -9,6 +9,7 @@ from __future__ import print_function
 
 import os
 import sys
+import time
 import argparse
 
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
@@ -91,6 +92,9 @@ def import_vcf(argv):
 
     save_ped_df_to_parquet(fvars.ped_df, parquet_config.pedigree)
 
+    print("going to build: ", argv.region)
+    start = time.time()
+
     save_variants_to_parquet(
         fvars.full_variants_iterator(),
         summary_filename=parquet_config.summary_variant,
@@ -98,6 +102,10 @@ def import_vcf(argv):
         effect_gene_filename=parquet_config.effect_gene_variant,
         member_filename=parquet_config.member_variant,
         bucket_index=argv.bucket_index)
+    end = time.time()
+
+    print("DONE region: {} for {} sec".format(
+        argv.region, round(end-start)))
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):
