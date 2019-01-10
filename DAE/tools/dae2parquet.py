@@ -109,10 +109,25 @@ def denovo_build(argv):
     df = denovo.load_denovo_variants()
     assert df is not None
 
-    parquet_config = Configure.from_prefix_parquet(argv.out)
+    assert argv.out is not None
+    parquet_config = Configure.from_prefix_parquet(argv.out).parquet
     save_ped_df_to_parquet(
         denovo.ped_df,
-        parquet_config.parquet.pedigree)
+        parquet_config.pedigree)
+
+    print("going to build: ", config.denovo)
+    start = time.time()
+    save_variants_to_parquet(
+        denovo.full_variants_iterator(),
+        summary_filename=parquet_config.summary_variant,
+        family_filename=parquet_config.family_variant,
+        effect_gene_filename=parquet_config.effect_gene_variant,
+        member_filename=parquet_config.member_variant,
+        bucket_index=argv.bucket_index)
+    end = time.time()
+
+    print("DONE region: {} for {} sec".format(
+        config.denovo, round(end-start)))
 
 
 def init_parser_denovo(subparsers):
@@ -132,6 +147,12 @@ def init_parser_denovo(subparsers):
         '-o', '--out', type=str, default='./',
         dest='out', metavar='output filepath',
         help='output filepath. If none specified, current directory is used'
+    )
+    parser_denovo.add_argument(
+        '-b', '--bucket-index', type=int,
+        default=0,
+        dest='bucket_index', metavar='bucket index',
+        help='bucket index'
     )
 
 
@@ -177,7 +198,7 @@ def init_parser_dae(subparsers):
     )
 
     parser_dae.add_argument(
-        '-b', '--bucket-index', type=int, 
+        '-b', '--bucket-index', type=int,
         default=1,
         dest='bucket_index', metavar='bucket index',
         help='bucket index'

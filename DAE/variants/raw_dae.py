@@ -142,7 +142,7 @@ class BaseDAE(FamiliesBase):
 class RawDAE(BaseDAE):
 
     def __init__(self, summary_filename, toomany_filename, family_filename,
-                 region=None, genome=None, annotator=None, 
+                 region=None, genome=None, annotator=None,
                  frequency_type='transmitted'):
         super(RawDAE, self).__init__(
             family_filename=family_filename,
@@ -332,12 +332,15 @@ class RawDenovo(BaseDAE):
     def explode_family_genotype(best_st, col_sep="", row_sep="/"):
         return best2gt(str2mat(best_st, col_sep=col_sep, row_sep=row_sep))
 
-    def wrap_family_variants(self, df):
+    def full_variants_iterator(self, return_reference=False):
+
+        df = self.load_denovo_variants()
 
         for index, row in df.iterrows():
             row['summary_variant_index'] = index
             try:
                 summary_variant = self.summary_variant_from_dae_record(row)
+
                 gt = self.explode_family_genotype(
                     row['family_data'], col_sep=" ")
                 family_id = row['familyId']
@@ -350,7 +353,7 @@ class RawDenovo(BaseDAE):
                 family_variant = FamilyVariant(
                     summary_variant, family, gt)
 
-                yield family_variant
+                yield summary_variant, [family_variant]
             except Exception as ex:
                 print("unexpected error:", ex)
                 print("error in handling:", row, index)
