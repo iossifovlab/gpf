@@ -193,8 +193,8 @@ def _family_allele_to_data(
         return v.value
 
     for member_index, member_id in enumerate(fa.members_ids):
-        if fa.variant_in_members[member_index] is None:
-            continue
+        # if fa.variant_in_members[member_index] is None:
+        #     continue
 
         member_data["bucket_index"].append(bucket_index)
         member_data["summary_variant_index"].append(summary_index)
