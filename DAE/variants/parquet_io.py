@@ -118,14 +118,14 @@ def member_parquet_schema():
         pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int8()),
         pa.field("family_variant_index", pa.int64()),
-        pa.field("family_id", pa.string()),
-        pa.field("member_index", pa.int8()),
-        pa.field("member_id", pa.string()),
+        # pa.field("family_id", pa.string()),
+        # pa.field("member_index", pa.int8()),
+        # pa.field("member_id", pa.string()),
 
-        pa.field("member_inheritance", pa.int8()),
+        # pa.field("member_inheritance", pa.int8()),
         pa.field("member_variant", pa.string()),
-        pa.field("member_role", pa.int8()),
-        pa.field("member_sex", pa.int8()),
+        # pa.field("member_role", pa.int8()),
+        # pa.field("member_sex", pa.int8()),
     ]
     return pa.schema(fields)
 
@@ -193,24 +193,27 @@ def _family_allele_to_data(
         return v.value
 
     for member_index, member_id in enumerate(fa.members_ids):
+        if fa.variant_in_members[member_index] is None:
+            continue
+
         member_data["bucket_index"].append(bucket_index)
         member_data["summary_variant_index"].append(summary_index)
         member_data["allele_index"].append(fa.allele_index)
         member_data["family_variant_index"].append(family_index)
-        member_data["member_index"].append(member_index)
+        # member_data["member_index"].append(member_index)
 
-        member_data["family_id"].append(fa.family_id)
-        member_data["member_id"].append(member_id)
-        member_data["member_inheritance"].append(
-            fa.inheritance_in_members[member_index].value)
+        # member_data["family_id"].append(fa.family_id)
+        # member_data["member_id"].append(member_id)
+        # member_data["member_inheritance"].append(
+        #     fa.inheritance_in_members[member_index].value)
         member_data["member_variant"].append(
             fa.variant_in_members[member_index])
-        member_data["member_role"].append(
-            value_or_none(fa.variant_in_roles[member_index])
-        )
-        member_data["member_sex"].append(
-            value_or_none(fa.variant_in_sexes[member_index])
-        )
+        # member_data["member_role"].append(
+        #     value_or_none(fa.variant_in_roles[member_index])
+        # )
+        # member_data["member_sex"].append(
+        #     value_or_none(fa.variant_in_sexes[member_index])
+        # )
 
 
 def variants_table(variants, bucket_index=1, batch_size=200000):
