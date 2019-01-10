@@ -91,6 +91,7 @@ class VariantFactory(SummaryVariantFactory):
 class RawFamilyVariants(FamiliesBase):
 
     def __init__(self, config=None, prefix=None, annotator=None, region=None,
+                 frequency_type='transmitted',
                  variant_factory=VariantFactory):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
@@ -103,6 +104,7 @@ class RawFamilyVariants(FamiliesBase):
 
         self.VF = variant_factory
         self.prefix = prefix
+        self.frequency_type = frequency_type
         self._load(annotator, region)
 
     def is_empty(self):
@@ -375,7 +377,7 @@ class RawFamilyVariants(FamiliesBase):
             vcf = variants[summary_index]
             summary_variant = self.VF.summary_variant_from_records(
                 group_df.to_dict(orient='records'),
-                frequency_type='transmitted')
+                frequency_type=self.frequency_type)
             for fam in list(self.families.values()):
                 v = self.VF.family_variant_from_vcf(
                     summary_variant, fam, vcf=vcf)
@@ -389,7 +391,8 @@ class RawFamilyVariants(FamiliesBase):
                 sum_df.groupby("summary_variant_index"):
             vcf = variants[summary_index]
             summary_variant = self.VF.summary_variant_from_records(
-                group_df.to_dict(orient='records'))
+                group_df.to_dict(orient='records'),
+                frequency_type=self.frequency_type)
 
             family_variants = []
             for fam in list(self.families.values()):

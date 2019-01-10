@@ -25,6 +25,8 @@ from variants.raw_dae import RawDAE, RawDenovo
 import traceback
 from variants.parquet_io import save_ped_df_to_parquet, \
     save_variants_to_parquet
+from variants.import_commons import build_contig_regions, \
+    contigs_makefile_generate
 
 
 def get_contigs(tabixfilename):
@@ -74,33 +76,6 @@ def import_transmitted_region(region_spec, outdir, config):
     end = time.time()
     print("DONE converting region {}; time elapsed: {} sec".format(
         region, int(end-start)))
-
-
-def build_contig_regions(genome, TRANSMITTED_STEP=10000000):
-    contigs = OrderedDict(genome.get_all_chr_lengths())
-    contig_regions = OrderedDict()
-    if TRANSMITTED_STEP is None:
-        for contig, _ in contigs.items():
-            contig_regions[contig] = [Region(contig, None, None)]
-        return contig_regions
-
-    contig_parts = OrderedDict([
-        (contig, max(int(size / TRANSMITTED_STEP), 1))
-        for contig, size in contigs.items()
-    ])
-    for contig, size in contigs.items():
-        regions = []
-        total_parts = contig_parts[contig]
-        step = int(size / total_parts + 1)
-        for index in range(total_parts):
-            begin_pos = index * step
-            end_pos = (index + 1) * step - 1
-            if index + 1 == total_parts:
-                end_pos = size
-            region = Region(contig, begin_pos, end_pos)
-            regions.append(region)
-        contig_regions[contig] = regions
-    return contig_regions
 
 
 def dae_build(argv):
@@ -161,17 +136,9 @@ def dae_build_region(argv):
         }})
 
     # contigs = ['chr21', 'chr22']
-    assert argv.region is not None
-    region = argv.region
-    assert argv.bucket_index is not None
-    bucket_index = argv.bucket_index
 
     assert argv.out is not None
-    if not os.path.exists(argv.out):
-        os.makedirs(argv.out)
-
-    assert os.path.exists(argv.out)
-    outdir = argv.out
+    parquet_config = Configure.from_prefix_parquet(argv.out).parquet
 
     genome = get_genome(genome_file=None)
 
@@ -179,119 +146,49 @@ def dae_build_region(argv):
         config.dae.summary_filename,
         config.dae.toomany_filename,
         config.dae.family_filename,
-        region=region,
+        region=argv.region,
         genome=genome,
         annotator=None)
 
     dae.load_families()
+
     save_ped_df_to_parquet(
         dae.ped_df,
-        os.path.join(argv.out, 'pedigree.parquet'))
+        parquet_config.pedigree)
 
-    print("going to build: ", region)
-    summary_filename = os.path.join(outdir, "summary.parquet")
-    family_filename = os.path.join(outdir, "family.parquet")
+    print("going to build: ", argv.region)
 
     start = time.time()
     save_variants_to_parquet(
         dae.full_variants_iterator(),
-        summary_filename,
-        family_filename,
-        bucket_index=bucket_index)
+        summary_filename=parquet_config.summary_variant,
+        family_filename=parquet_config.family_variant,
+        effect_gene_filename=parquet_config.effect_gene_variant,
+        member_filename=parquet_config.member_variant,
+        bucket_index=argv.bucket_index)
     end = time.time()
 
-    print("DONE region: {} for {} sec".format(region, round(end-start)))
+    print("DONE region: {} for {} sec".format(
+        argv.region, round(end-start)))
 
 
-def dae_build_make(argv):
-    config = Configure.from_dict({
-        "dae": {
-            'summary_filename': argv.summary,
-            'toomany_filename': argv.toomany,
-            'family_filename': argv.families
-        }})
+def dae_build_makefile(argv):
 
-    contigs = get_contigs(config.dae.summary_filename)
-    # contigs = ['chr21', 'chr22']
-
+    data_contigs = get_contigs(argv.summary)
+    # data_contigs = ['chr21', 'chr22']
     genome = get_genome(genome_file=None)
-    contig_regions = build_contig_regions(genome, argv.len)
+    build_contigs = build_contig_regions(genome, argv.len)
 
-    dae = RawDAE(
-        config.dae.summary_filename,
-        config.dae.toomany_filename,
-        config.dae.family_filename,
-        region=None,
-        genome=genome,
-        annotator=None)
-
-    dae.load_families()
-
-    out = argv.out
-
-    makefile = []
-    all_targets = []
-    contig_targets = OrderedDict()
-
-    for contig_index, contig in enumerate(contigs):
-        if contig not in contig_regions:
-            continue
-        assert contig in contig_regions, contig
-        assert len(contig_regions) < 100
-        contig_targets[contig] = []
-
-        for part, region in enumerate(contig_regions[contig]):
-            bucket_index = contig_index * 100 + part
-            suffix = "{:0>3}_{:0>3}_{}".format(
-                contig_index, part, contig
-            )
-            target_dir = os.path.join(out, suffix)
-            command = "{target}:\n\tmkdir -p {target}".format(
-                target=target_dir)
-            makefile.append(command)
-
-            targets = [
-                os.path.join(target_dir, fname) for fname in
-                [
-                    'family.parquet',
-                    # 'pedigree.parquet', 'summary.parquet',
-                ]
-            ]
-
-            all_targets.append(target_dir)
-            all_targets.extend(targets)
-            contig_targets[contig].extend(targets)
-
-            command = "{targets}: " \
-                "{family_filename} {summary_filename} {toomany_filename}\n\t" \
-                "dae2parquet.py region -o {target_dir} " \
-                "--bucket-index {bucket_index} " \
-                "--region {region} " \
-                "{family_filename} {summary_filename} {toomany_filename}" \
-                .format(
-                    target_dir=target_dir,
-                    targets=" ".join(targets),
-                    bucket_index=bucket_index,
-                    family_filename=dae.family_filename,
-                    summary_filename=dae.summary_filename,
-                    toomany_filename=dae.toomany_filename,
-                    region=str(region)
-                )
-            makefile.append(command)
-
-    outfile = sys.stdout
-
-    print('SHELL=/bin/bash -o pipefail', file=outfile)
-    print('.DELETE_ON_ERROR:\n', file=outfile)
-
-    print("all: {}".format(" ".join(all_targets)), file=outfile)
-    print("\n", file=outfile)
-
-    for contig, targets in contig_targets.items():
-        print("{}: {}".format(contig, " ".join(targets)), file=outfile)
-    print("\n", file=outfile)    
-
-    print("\n\n".join(makefile), file=outfile)
+    contigs_makefile_generate(
+        build_contigs,
+        data_contigs,
+        argv.out,
+        'dae2parquet.py region',
+        "{family_filename} {summary_filename} {toomany_filename}".format(
+            family_filename=argv.families, 
+            summary_filename=argv.summary, 
+            toomany_filename=argv.toomany)
+    )
 
 
 def denovo_build(argv):
@@ -434,4 +331,4 @@ if __name__ == "__main__":
     elif argv.type == 'region':
         dae_build_region(argv)
     elif argv.type == 'make':
-        dae_build_make(argv)
+        dae_build_makefile(argv)

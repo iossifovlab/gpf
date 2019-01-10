@@ -21,7 +21,8 @@ from variants.parquet_io import save_variants_to_parquet, \
 from variants.raw_vcf import RawFamilyVariants
 from cyvcf2 import VCF
 
-from variants.import_commons import build_contig_regions, vcf_makefile_generate
+from variants.import_commons import build_contig_regions, \
+    contigs_makefile_generate
 
 # import multiprocessing
 # import functools
@@ -95,7 +96,8 @@ def import_vcf(argv):
         summary_filename=parquet_config.summary_variant,
         family_filename=parquet_config.family_variant,
         effect_gene_filename=parquet_config.effect_gene_variant,
-        member_filename=parquet_config.member_variant)
+        member_filename=parquet_config.member_variant,
+        bucket_index=argv.bucket_index)
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):
@@ -175,7 +177,7 @@ def makefile_generate(argv):
     data_contigs = get_contigs(vcf_filename)
     build_contigs = build_contig_regions(genome, argv.len)
 
-    vcf_makefile_generate(
+    contigs_makefile_generate(
         build_contigs,
         data_contigs,
         argv.output,

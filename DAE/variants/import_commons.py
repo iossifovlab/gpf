@@ -34,7 +34,7 @@ def build_contig_regions(genome, TRANSMITTED_STEP=10000000):
     return contig_regions
 
 
-def vcf_makefile_generate(
+def contigs_makefile_generate(
         build_contigs, data_contigs, output_prefix,
         import_command, import_sources,
         outfile=sys.stdout):
