@@ -171,7 +171,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def build_cache(self, study_group_ids=None):
         for study_group in self._get_study_groups(study_group_ids):
             study_group_cache = self._generate_gene_sets_for(study_group)
-            print("calculated cache: ", study_group_cache)
             self._save_cache(study_group, study_group_cache)
 
     def _load_cache(self, study_group):
@@ -191,7 +190,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         cache_dir = study_group.gene_sets_cache_file()
         with open(cache_dir, "w") as f:
-            json.dump(cache, f)
+            json.dump(
+                cache, f, sort_keys=True, indent=4, separators=(',', ': '))
 
     def _convert_cache_innermost_types(self, cache, from_type, to_type):
         if isinstance(cache, from_type):
@@ -402,9 +402,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 person_ids=list(affected_people),
                 **search_args)
 
+        # variants = list(variants)
+        # print("Variants count:", len(variants))
+
         for variant in variants:
             family_id = variant.family_id
-            for allele in variant.matched_alleles:
+            for allele in variant.alt_alleles:
                 effect = allele.summary_allele.effect
                 for gene in effect.genes:
                     cache.setdefault(gene.symbol, set()).add(family_id)
