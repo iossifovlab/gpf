@@ -79,7 +79,6 @@ class AbstractFormat(object):
 
         self.linecount = 0
         self.linecount_threshold = 1000
-        self.header = None
         self.schema = None
 
     @abstractmethod
@@ -144,6 +143,7 @@ class TSVReader(TSVFormat):
             filename = options.infile
         self.filename = filename
         self.schema = None
+        self.seek_pos = 0
 
         if self.options.region is not None:
             print(
@@ -166,14 +166,13 @@ class TSVReader(TSVFormat):
         if self.options.vcf:
             self._skip_metalines()
 
-        self.header = self._header_read()
-        self.schema = Schema.from_dict({'str': ','.join(self.header)})
+        self.schema = Schema.from_dict({'str': ','.join(self._header_read())})
 
     def _skip_metalines(self):
-        seek_pos = self.infile.tell()
+        self.seek_pos = self.infile.tell()
         while self.infile.readline().startswith('##'):
-            seek_pos = self.infile.tell()
-        self.infile.seek(seek_pos)
+            self.seek_pos = self.infile.tell()
+        self.infile.seek(self.seek_pos)
 
     def _cleanup(self):
         self._progress_done()
@@ -189,12 +188,12 @@ class TSVReader(TSVFormat):
         self._cleanup()
 
     def _header_read(self):
-        if self.header:
-            return self.header
+        if self.schema:
+            return self.schema.col_names
 
         if self.options.no_header:
             line = self.infile.readline()
-            self.infile.seek(0)
+            self.infile.seek(self.seek_pos)
             return [str(index) for index, col
                     in enumerate(line.strip()
                                  .split(self.separator))]
@@ -209,13 +208,12 @@ class TSVReader(TSVFormat):
         raise NotImplementedError()
 
     def line_read(self):
-        line = self.infile.readline()
-        line = line.rstrip('\n')
+        line = self.infile.readline().rstrip('\n')
 
         if not line:
             return None
         self._progress_step()
-        return line.rstrip('\n').split(self.separator)
+        return line.split(self.separator)
 
     def lines_read_iterator(self):
         line = self.line_read()
@@ -238,8 +236,7 @@ class TSVGzipReader(TSVReader):
         if self.options.vcf:
             self._skip_metalines()
 
-        self.header = self._header_read()
-        self.schema = Schema.from_dict({'str': ','.join(self.header)})
+        self.schema = Schema.from_dict({'str': ','.join(self._header_read())})
 
 
 class TabixReader(TSVFormat):
@@ -285,18 +282,16 @@ class TabixReader(TSVFormat):
         self._has_chrom_prefix = contig_name.startswith('chr')
 
         self._region_reset(self.region)
-        self.header = self._header_read()
-        self.schema = Schema.from_dict({'str': ','.join(self.header)})
+        self.schema = Schema.from_dict({'str': ','.join(self._header_read())})
 
     def _header_read(self):
-        if self.header:
-            return self.header
+        if self.schema:
+            return self.schema.col_names
 
-        line = self.infile.header
-        line = list(line)
+        line = list(self.infile.header)
         if not line:
             with TSVGzipReader(self.options, self.filename) as tempreader:
-                return tempreader.header
+                return tempreader.schema.col_names
         else:
             header_str = line[-1]
             if header_str.startswith("#"):
@@ -335,7 +330,7 @@ class TabixReaderVariants(TabixReader):
         super(TabixReaderVariants, self)._setup()
 
         if self.options.vcf and self.options.region:
-                pos_index = self.header.index(self.options.p)
+                pos_index = self.schema.col_names.index(self.options.p)
                 self.region_helper = RegionHelper(self.options.region,
                                                   pos_index)
         else:
@@ -386,9 +381,6 @@ class TSVWriter(TSVFormat):
 
     def header_write(self, line):
         self.line_write(line)
-
-    def line_read(self):
-        raise NotImplementedError()
 
     def lines_read_iterator(self):
         raise NotImplementedError()

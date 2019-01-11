@@ -63,7 +63,7 @@ class IOManager(object):
 
     @property
     def header(self):
-        return self.reader.header
+        return self.reader.schema.col_names
 
     def header_write(self, input_):
         self.writer.header_write(input_)

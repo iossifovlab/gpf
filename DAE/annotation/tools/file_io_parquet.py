@@ -111,7 +111,6 @@ class ParquetReader(AbstractFormat):
         assert os.path.exists(self.options.infile)
         self.pqfile = pq.ParquetFile(self.options.infile)
         self.schema = ParquetSchema.from_parquet(self.pqfile.schema)
-        self.header = list(self.schema.columns.keys())
         self.row_group_count = self.pqfile.num_row_groups
         self._read_row_group()
 
@@ -210,9 +209,7 @@ class ParquetWriter(AbstractFormat):
             sys.exit(-1)
 
     def header_write(self, header):
-        self.header = header
-        for col in self.header:
-            self.column_buffer[col.replace('#', '')] = []
+        pass
 
     def _write_buffer(self):
         buffer_table = []
@@ -244,7 +241,7 @@ class ParquetWriter(AbstractFormat):
         if self.buffer_line == self.buffer_size:
             self._write_buffer()
         for col in range(0, len(line)):
-            self.column_buffer[self.header[col]].append(line[col])
+            self.column_buffer[self.schema.col_names[col]].append(line[col])
         self.linecount += 1
         self.buffer_line += 1
 

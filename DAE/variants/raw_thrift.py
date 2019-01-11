@@ -11,9 +11,35 @@ import numpy as np
 from variants.configure import Configure
 from variants.family import FamiliesBase, Family
 from impala.dbapi import connect
-from variants.thrift_query import thrift_query
+from variants.thrift_query import thrift_query1
 from variants.parquet_io import read_ped_df_from_parquet
-from variants.raw_df import DfFamilyVariantsBase
+from variants.variant import SummaryVariantFactory
+from variants.family_variant import FamilyVariant
+
+
+class DfFamilyVariantsBase(object):
+
+    @staticmethod
+    def wrap_family_variant_multi(families, records):
+        sv = SummaryVariantFactory.summary_variant_from_records(records)
+
+        family_id = records[0]['family_id']
+        assert all([r['family_id'] == family_id for r in records])
+
+        family = families[family_id]
+        gt = records[0]['genotype']
+        gt = gt.reshape([2, len(family)], order='F')
+
+        return FamilyVariant(sv, family, gt)
+
+    @staticmethod
+    def wrap_variants(families, join_df):
+        join_df = join_df.sort_values(
+            by=["chrom", "summary_variant_index", "family_id", "allele_index"])
+        for _name, group in join_df.groupby(
+                by=["chrom", "summary_variant_index", "family_id"]):
+            rec = group.to_dict(orient='records')
+            yield DfFamilyVariantsBase.wrap_family_variant_multi(families, rec)
 
 
 class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
@@ -26,14 +52,14 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         super(ThriftFamilyVariants, self).__init__()
 
         if prefix and not config:
-            config = Configure.from_prefix_parquet(prefix)
+            config = Configure.from_prefix_parquet(prefix).parquet
 
         assert config is not None
 
-        self.config = config.parquet
+        self.config = config
         assert os.path.exists(self.config.pedigree)
-        assert os.path.exists(self.config.summary_variants)
-        assert os.path.exists(self.config.family_alleles)
+        assert os.path.exists(self.config.summary_variant)
+        assert os.path.exists(self.config.family_variant)
 
         if not thrift_connection:
             thrift_connection = ThriftFamilyVariants.get_thrift_connection(
@@ -59,30 +85,29 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         return thrift_connection
 
     def query_variants(self, **kwargs):
-        if kwargs.get("effect_types") is not None:
-            effect_types = kwargs.get("effect_types")
-            if isinstance(effect_types, list):
-                effect_types = "any({})".format(",".join(effect_types))
-                kwargs["effect_types"] = effect_types
-        if kwargs.get("genes") is not None:
-            genes = kwargs.get("genes")
-            if isinstance(genes, list):
-                genes = "any({})".format(",".join(genes))
-                kwargs["genes"] = genes
+        # if kwargs.get("effect_types") is not None:
+        #     effect_types = kwargs.get("effect_types")
+        #     if isinstance(effect_types, list):
+        #         effect_types = "any({})".format(",".join(effect_types))
+        #         kwargs["effect_types"] = effect_types
+        # if kwargs.get("genes") is not None:
+        #     genes = kwargs.get("genes")
+        #     if isinstance(genes, list):
+        #         genes = "any({})".format(",".join(genes))
+        #         kwargs["genes"] = genes
 
-        if kwargs.get("person_ids") is not None:
-            query = kwargs.get("person_ids")
-            if isinstance(query, list):
-                query = "any({})".format(",".join(query))
-                kwargs["person_ids"] = query
+        # if kwargs.get("person_ids") is not None:
+        #     query = kwargs.get("person_ids")
+        #     if isinstance(query, list):
+        #         query = "any({})".format(",".join(query))
+        #         kwargs["person_ids"] = query
 
-        df = thrift_query(
+        df = thrift_query1(
             thrift_connection=self.connection,
-            summary_variants=self.config.summary_variants,
-            family_alleles=self.config.family_alleles,
-            pedigree=self.config.pedigree,
-            **kwargs
+            tables=self.config,
+            query=kwargs
         )
+
         df.genotype = df.genotype.apply(
             lambda v: np.fromstring(v.strip("[]"), dtype=np.int8, sep=','))
 

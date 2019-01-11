@@ -32,8 +32,8 @@ def test_tsv_gzip_reader(filename, header, no_header, linecount):
 
     with TSVGzipReader(options, filename=infilename) as reader:
         assert reader is not None
-        print(reader.header)
-        assert reader.header == header
+        print(reader.schema.col_names)
+        assert reader.schema.col_names == header
 
         for line in reader.lines_read_iterator():
             print(line)
@@ -57,8 +57,8 @@ def test_tsv_reader(filename, header, linecount):
 
     with TSVReader(options, filename=infilename) as reader:
         assert reader is not None
-        print(reader.header)
-        assert reader.header == header
+        print(reader.schema.col_names)
+        assert reader.schema.col_names == header
 
         for line in reader.lines_read_iterator():
             print(line)
@@ -118,8 +118,8 @@ def test_tabix_reader(filename, header, no_header, region, linecount):
 
     with TabixReaderVariants(options, filename=infilename) as reader:
         assert reader is not None
-        print(reader.header)
-        assert reader.header == header
+        print(reader.schema.col_names)
+        assert reader.schema.col_names == header
 
         for line in reader.lines_read_iterator():
             print(line)
@@ -140,8 +140,8 @@ def test_tabix_reader_simple():
 
     with TabixReaderVariants(options, filename=infilename) as reader:
         assert reader is not None
-        print(reader.header)
-        assert reader.header == header
+        print(reader.schema.col_names)
+        assert reader.schema.col_names == header
 
         for line in reader.lines_read_iterator():
             print(line)

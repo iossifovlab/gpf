@@ -26,7 +26,9 @@ def test_vcf_info_extractor(capsys, vcf_io):
          '4\t11.324234\t\ttest3\n'
          '\t13.324234\t10.453e+10\t\n')
 
-    opts = Box({}, default_box=True, default_box_attr=None)
+    opts = Box({
+        "mode": "overwrite",
+    }, default_box=True, default_box_attr=None)
 
     section_config = AnnotatorConfig(
         name="vcf info extract test",

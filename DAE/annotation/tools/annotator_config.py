@@ -67,13 +67,18 @@ class AnnotatorConfig(object):
                 'help': 'path to output file; defaults to stdout'
             }),
             ('--mode', {
-                'help': 'annotator mode; available modes are `overwrite`'
+                'help': 'annotator mode; available modes are '
                 '`replace` and `append`',
-                'default': 'overwrite',
+                'default': '"replace"',
                 'action': 'store'
             }),
             ('--direct', {
                 'help': 'use direct access to score files',
+                'default': True,
+                'action': 'store_true'
+            }),
+            ('--sequential', {
+                'help': 'use sequential access to score files',
                 'default': False,
                 'action': 'store_true'
             }),

@@ -79,25 +79,47 @@ class Configure(ConfigBox):
 
     @staticmethod
     def from_prefix_parquet(prefix):
-        assert os.path.exists(prefix)
-        assert os.path.isdir(prefix)
+        if os.path.exists(prefix) and os.path.isdir(prefix):
+            dirname = prefix
+            fileprefix = ""
+        else:
+            dirname, fileprefix = os.path.split(prefix)
+
+        assert os.path.exists(dirname)
+        assert os.path.isdir(dirname)
 
         summary_filename = os.path.join(
-            prefix, "summary.parquet")
+            dirname, "{}summary.parquet".format(fileprefix))
         family_filename = os.path.join(
-            prefix, "family.parquet")
-        allele_filename = os.path.join(
-            prefix, "allele.parquet")
+            dirname, "{}family.parquet".format(fileprefix))
+        member_filename = os.path.join(
+            dirname, "{}member.parquet".format(fileprefix))
+        effect_gene_filename = os.path.join(
+            dirname, "{}effect_gene.parquet".format(fileprefix))
         pedigree_filename = os.path.join(
-            prefix, "pedigree.parquet")
+            dirname, "{}pedigree.parquet".format(fileprefix))
 
         conf = {
             'parquet': {
-                'summary_variants': summary_filename,
-                'family_variants': family_filename,
-                'family_alleles': allele_filename,
+                'summary_variant': summary_filename,
+                'family_variant': family_filename,
+                'member_variant': member_filename,
+                'effect_gene_variant': effect_gene_filename,
                 'pedigree': pedigree_filename
             }
         }
 
         return Configure(conf)
+
+    @staticmethod
+    def parquet_prefix_exists(prefix):
+        if not os.path.exists(prefix) or not os.path.isdir(prefix):
+            return False
+        conf = Configure.from_prefix_parquet(prefix).parquet
+        print(conf)
+        
+        return os.path.exists(conf.summary_variant) and \
+            os.path.exists(conf.family_variant) and \
+            os.path.exists(conf.member_variant) and \
+            os.path.exists(conf.effect_gene_variant) and \
+            os.path.exists(conf.pedigree)

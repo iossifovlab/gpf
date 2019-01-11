@@ -34,7 +34,6 @@ def test_reference_variant_single_allele(
     print(v)
 
     print("best_st:", mat2str(v.best_st))
-    print("inherit:", v.inheritance_in_members)
     print("freq:   ", v.frequencies)
     print("effects:", v.effects)
     print("alleles:", v.alleles)

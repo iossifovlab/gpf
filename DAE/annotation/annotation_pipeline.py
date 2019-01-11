@@ -48,15 +48,8 @@ class PipelineConfig(VariantAnnotatorConfig):
             virtuals=[]
         )
         result.pipeline_sections = []
-        result.cleanup_columns = []
-
-        if 'cleanup' in configuration:
-            result.cleanup_columns = \
-                result._parse_cleanup_section(configuration['cleanup'])
 
         for section_name, section_config in configuration.items():
-            if section_name == 'cleanup':
-                continue
             section_config = result._parse_config_section(
                 section_name, section_config, options)
             result.pipeline_sections.append(section_config)
@@ -118,12 +111,6 @@ class PipelineConfig(VariantAnnotatorConfig):
             virtuals=virtuals
         )
 
-    @staticmethod
-    def _parse_cleanup_section(section):
-        if 'columns' in section:
-            cleanup_columns = section['columns'].split(',')
-            return cleanup_columns
-
 
 def run_tabix(filename):
     def run_command(cmd):
@@ -184,8 +171,6 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         if self.config.virtual_columns:
             for vcol in self.config.virtual_columns:
                 schema.remove_column(vcol)
-        for col in self.config.cleanup_columns:
-            schema.remove_column(col)
 
 
 def pipeline_main(argv):
@@ -193,21 +178,29 @@ def pipeline_main(argv):
     parser = argparse.ArgumentParser(
         description=desc, conflict_handler='resolve')
     parser.add_argument(
-        '--config', help='config file location',
-        required=True, action='store')
+        '--config', help='config file location; default is "annotation.conf" '
+        'in the instance data directory $DAE_DB_DIR',
+        action='store')
 
     for name, args in VariantAnnotatorConfig.cli_options():
         parser.add_argument(name, **args)
 
     parser.add_argument(
-        '--tabix', help='runs bgzip and tabix on the annotated files',
-        required=True, action='store_true', default=False
+        '--notabix',
+        help='skip running bgzip and tabix on the annotated files',
+        action='store_true', default=False
     )
 
     options = parser.parse_args()
-    assert options.config is not None
-    assert os.path.exists(options.config)
-    config_filename = options.config
+    if options.config is not None:
+        config_filename = options.config
+    else:
+        dae_db_dir = os.environ.get("DAE_DB_DIR", None)
+        assert dae_db_dir is not None
+
+        config_filename = os.path.join(dae_db_dir, "annotation.conf")
+
+    assert os.path.exists(config_filename), config_filename
 
     options = Box({
         k: v for k, v in options._get_kwargs()
@@ -237,7 +230,7 @@ def pipeline_main(argv):
         str(datetime.timedelta(seconds=round(time.time()-start, 0))),
         file=sys.stderr)
 
-    if options.tabix:
+    if not options.notabix:
         run_tabix(options.outfile)
 
 

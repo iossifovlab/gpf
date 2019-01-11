@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import sys
 import traceback
+from copy import deepcopy
 
 from annotation.tools.annotator_config import LineConfig, \
     AnnotatorConfig, \
@@ -22,9 +23,13 @@ class AnnotatorBase(object):
 
         self.config = config
 
-        self.mode = "overwrite"
+        self.mode = "replace"
         if self.config.options.mode == "replace":
             self.mode = "replace"
+        elif self.config.options.mode == "append":
+            self.mode = "append"
+        elif self.config.options.mode == "overwrite":
+            self.mode = "overwrite"
 
     def build_output_line(self, annotation_line):
         output_columns = self.config.output_columns
@@ -39,7 +44,7 @@ class AnnotatorBase(object):
         """
             Method for annotating file from `Annotator`.
         """
-        self.schema = file_io_manager.reader.schema
+        self.schema = deepcopy(file_io_manager.reader.schema)
         self.collect_annotator_schema(self.schema)
         file_io_manager.writer.schema = self.schema
 
@@ -138,15 +143,23 @@ class DAEBuilder(VariantBuilder):
         self.chrom = self.config.options.c
         self.position = self.config.options.p
         self.location = self.config.options.x
+        if self.variant is None:
+            self.variant = "variant"
+        if self.location is None:
+            self.location = "location"
+        if self.chrom is None:
+            self.chrom = "chr"
+        if self.position is None:
+            self.position = "position"
 
     def build_variant(self, aline):
         variant = aline[self.variant]
-        if self.location:
+        if self.location in aline:
             location = aline[self.location]
             chrom, position = location.split(':')
         else:
-            assert self.chrom is not None
-            assert self.position is not None
+            assert self.chrom in aline
+            assert self.position in aline
             chrom = aline[self.chrom]
             position = aline[self.position]
 
