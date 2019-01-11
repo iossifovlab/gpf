@@ -445,9 +445,6 @@ class DenovoReportTable(object):
             'effect_types': self.effect_types
         }
 
-    def contain_row(self, row):
-        return
-
     def _remove_empty_columns(self, indexes):
         for index in sorted(indexes, reverse=True):
             self.columns.pop(index)
