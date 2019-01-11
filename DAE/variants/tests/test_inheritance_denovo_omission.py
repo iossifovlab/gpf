@@ -12,7 +12,6 @@ def test_inheritance_trio_denovo_omissions(variants_vcf):
     vs = list(fvars.query_variants())
 
     for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance_in_members)
         for a in v.alleles:
             print(">>>", a, a.inheritance_in_members)
             assert len(a.inheritance_in_members) == 3
@@ -25,7 +24,6 @@ def test_inheritance_trio(variants_vcf):
     vs = list(fvars.query_variants())
 
     for v in vs:
-        # print(v, mat2str(v.best_st), v.inheritance_in_members)
         for a in v.alt_alleles:
             print(">>>", a, a.inheritance_in_members)
             assert len(a.inheritance_in_members) == 3

@@ -38,6 +38,8 @@ class Schema(object):
         assert type(schema_dict) is dict
         for col_type in cls.type_map.keys():
             if col_type not in schema_dict:
+                # TODO Should this skip the faulty col_type
+                # or exit with an error? (or just print out an error?)
                 continue
             col_list = schema_dict[col_type]\
                 .replace(' ', '')\
@@ -59,6 +61,10 @@ class Schema(object):
         merged_schema.columns.update(left.columns)
         merged_schema.columns.update(missing_columns)
         return merged_schema
+
+    @property
+    def col_names(self):
+        return list(self.columns.keys())
 
     def __str__(self):
         ret_str = ""

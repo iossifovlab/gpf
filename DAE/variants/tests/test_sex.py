@@ -6,7 +6,7 @@ Created on Feb 23, 2018
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from variants.attributes import Sex, SexQuery
+from variants.attributes import Sex
 import pytest
 
 
@@ -33,23 +33,3 @@ def test_bad_sex_value():
 def test_bad_sex_name():
     with pytest.raises(ValueError):
         Sex.from_name("gaga")
-
-
-def test_seq_query_simple():
-    q = SexQuery.parse('male or female')
-
-    assert q is not None
-    assert q.match([Sex.male])
-    assert q.match([Sex.female])
-    assert q.match([Sex.male, Sex.female])
-    assert not q.match([Sex.unspecified])
-
-
-def test_seq_query_complex():
-    q = SexQuery.parse('male and not female')
-
-    assert q is not None
-    assert q.match([Sex.male])
-    assert not q.match([Sex.female])
-    assert not q.match([Sex.male, Sex.female])
-    assert not q.match([Sex.unspecified])

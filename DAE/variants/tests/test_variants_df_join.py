@@ -11,9 +11,9 @@ import pytest
 pytestmark = pytest.mark.xfail
 
 
-def test_fix_broken_trios2_11602_variants(variants_df):
+def test_fix_broken_trios2_11602_variants(variants_thrift):
 
-    dfvars = variants_df("fixtures/trios2_11602")
+    dfvars = variants_thrift("fixtures/trios2_11602")
     assert dfvars is not None
 
     vs = dfvars.query_variants()
@@ -31,9 +31,9 @@ def test_fix_broken_trios2_11602_variants(variants_df):
     assert v1.alternative is None
 
 
-def test_fix_broken_trios2_11605_variants(variants_df):
+def test_fix_broken_trios2_11605_variants(variants_thrift):
 
-    dfvars = variants_df("fixtures/trios2_11605")
+    dfvars = variants_thrift("fixtures/trios2_11605")
     assert dfvars is not None
 
     vs = dfvars.query_variants()
@@ -51,9 +51,9 @@ def test_fix_broken_trios2_11605_variants(variants_df):
     assert v1.alternative == "G,A"
 
 
-def test_inspect_broken_trios2_11602_variants(variants_vcf):
+def test_inspect_broken_trios2_11602_variants(variants_thrift):
 
-    dfvars = variants_vcf("fixtures/trios2_11602")
+    dfvars = variants_thrift("fixtures/trios2_11602")
     assert dfvars is not None
 
     vs = dfvars.query_variants(
