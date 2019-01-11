@@ -14,7 +14,6 @@ SIMPLE_ARG_NODE = "simple_arg"
 ALL_NODES = (AND_NODE, OR_NODE, NOT_NODE, ALL_NODE, ANY_NODE, EQ_NODE)
 
 
-
 def token(value):
     return Token("STRING", value)
 
@@ -72,7 +71,7 @@ def or_node(children):
 
 
 def not_node(children):
-    #assert len(children) == 1
+    # assert len(children) == 1
     return tree(NOT_NODE, children)
 
 

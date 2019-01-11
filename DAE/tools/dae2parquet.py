@@ -6,11 +6,8 @@ Created on Jul 23, 2018
 @author: lubo
 '''
 from __future__ import print_function
-
-import functools
-import multiprocessing
-import os
 import sys
+import time
 
 import pysam
 import argparse
@@ -18,9 +15,11 @@ import argparse
 from variants.builder import get_genome
 from variants.configure import Configure
 from variants.raw_dae import RawDAE, RawDenovo
-import traceback
-from variants.parquet_io import save_family_variants_to_parquet,\
-    save_ped_df_to_parquet, save_summary_variants_to_parquet
+
+from variants.parquet_io import save_ped_df_to_parquet, \
+    save_variants_to_parquet
+from variants.import_commons import build_contig_regions, \
+    contigs_makefile_generate
 
 
 def get_contigs(tabixfilename):
@@ -28,55 +27,7 @@ def get_contigs(tabixfilename):
         return tbx.contigs
 
 
-def import_dae_contig(contig, outdir, config):
-    try:
-        print("converting contig {} to {}".format(contig, outdir))
-        print(config)
-
-        assert isinstance(config, Configure)
-        assert os.path.exists(config.dae.summary_filename)
-        assert os.path.exists(config.dae.toomany_filename)
-        assert os.path.exists(config.dae.family_filename)
-
-        genome = get_genome()
-        region = contig
-
-        dae = RawDAE(
-            config.dae.summary_filename,
-            config.dae.toomany_filename,
-            config.dae.family_filename,
-            region=region,
-            genome=genome,
-            annotator=None)
-
-        dae.load_families()
-        df = dae.load_family_variants()
-        if len(df) == 0:
-            print("DONE EMTPY contig {}".format(contig))
-            return
-        summary_filename = os.path.join(
-            outdir,
-            "summary_variants_{}.parquet".format(contig))
-        alleles_filename = os.path.join(
-            outdir,
-            "family_alleles_{}.parquet".format(contig))
-
-        save_summary_variants_to_parquet(
-            dae.wrap_summary_variants(df),
-            summary_filename)
-
-        save_family_variants_to_parquet(
-            dae.wrap_family_variants(df),
-            alleles_filename)
-
-    except Exception as ex:
-        print("unexpected error:", ex)
-        traceback.print_exc(file=sys.stdout)
-
-    print("DONE converting contig {}".format(contig))
-
-
-def dae_build(argv):
+def dae_build_region(argv):
     config = Configure.from_dict({
         "dae": {
             'summary_filename': argv.summary,
@@ -84,46 +35,59 @@ def dae_build(argv):
             'family_filename': argv.families
         }})
 
-    contigs = get_contigs(config.dae.summary_filename)
-    print(contigs)
+    # contigs = ['chr21', 'chr22']
+
+    assert argv.out is not None
+    parquet_config = Configure.from_prefix_parquet(argv.out).parquet
+
     genome = get_genome(genome_file=None)
-    print(genome.allChromosomes)
-
-    chromosomes = set(genome.allChromosomes)
-
-    # contigs = ['21', '22']
 
     dae = RawDAE(
         config.dae.summary_filename,
         config.dae.toomany_filename,
         config.dae.family_filename,
-        region=None,
+        region=argv.region,
         genome=genome,
         annotator=None)
 
     dae.load_families()
+
     save_ped_df_to_parquet(
         dae.ped_df,
-        os.path.join(argv.out, 'pedigree.parquet'))
+        parquet_config.pedigree)
 
-    build_contigs = []
-    for contig in contigs:
-        if contig not in chromosomes:
-            continue
-        assert contig in chromosomes, contig
-        print(contig, genome.get_chr_length(contig),
-              "groups=", 1 + genome.get_chr_length(contig) / 100000000)
-        build_contigs.append(contig)
+    print("going to build: ", argv.region)
+    start = time.time()
+    save_variants_to_parquet(
+        dae.full_variants_iterator(),
+        summary_filename=parquet_config.summary_variant,
+        family_filename=parquet_config.family_variant,
+        effect_gene_filename=parquet_config.effect_gene_variant,
+        member_filename=parquet_config.member_variant,
+        bucket_index=argv.bucket_index)
+    end = time.time()
 
-    print("going to build: ", build_contigs)
+    print("DONE region: {} for {} sec".format(
+        argv.region, round(end-start)))
 
-    converter = functools.partial(
-        import_dae_contig,
-        config=config,
-        outdir=argv.out)
 
-    pool = multiprocessing.Pool(processes=argv.processes_count)
-    pool.map(converter, build_contigs)
+def dae_build_makefile(argv):
+
+    data_contigs = get_contigs(argv.summary)
+    # data_contigs = ['chr21', 'chr22']
+    genome = get_genome(genome_file=None)
+    build_contigs = build_contig_regions(genome, argv.len)
+
+    contigs_makefile_generate(
+        build_contigs,
+        data_contigs,
+        argv.out,
+        'dae2parquet.py dae',
+        "{family_filename} {summary_filename} {toomany_filename}".format(
+            family_filename=argv.families,
+            summary_filename=argv.summary,
+            toomany_filename=argv.toomany)
+    )
 
 
 def denovo_build(argv):
@@ -143,19 +107,27 @@ def denovo_build(argv):
 
     denovo.load_families()
     df = denovo.load_denovo_variants()
+    assert df is not None
 
-    parquet_config = Configure.from_prefix_parquet(argv.out)
+    assert argv.out is not None
+    parquet_config = Configure.from_prefix_parquet(argv.out).parquet
     save_ped_df_to_parquet(
         denovo.ped_df,
-        parquet_config.parquet.pedigree)
+        parquet_config.pedigree)
 
-    save_summary_variants_to_parquet(
-        denovo.wrap_summary_variants(df),
-        parquet_config.parquet.summary_variants)
+    print("going to build: ", config.denovo)
+    start = time.time()
+    save_variants_to_parquet(
+        denovo.full_variants_iterator(),
+        summary_filename=parquet_config.summary_variant,
+        family_filename=parquet_config.family_variant,
+        effect_gene_filename=parquet_config.effect_gene_variant,
+        member_filename=parquet_config.member_variant,
+        bucket_index=argv.bucket_index)
+    end = time.time()
 
-    save_family_variants_to_parquet(
-        denovo.wrap_family_variants(df),
-        parquet_config.parquet.family_alleles)
+    print("DONE region: {} for {} sec".format(
+        config.denovo, round(end-start)))
 
 
 def init_parser_denovo(subparsers):
@@ -176,35 +148,73 @@ def init_parser_denovo(subparsers):
         dest='out', metavar='output filepath',
         help='output filepath. If none specified, current directory is used'
     )
+    parser_denovo.add_argument(
+        '-b', '--bucket-index', type=int,
+        default=0,
+        dest='bucket_index', metavar='bucket index',
+        help='bucket index'
+    )
+
+
+def init_transmitted_common(parser):
+    parser.add_argument(
+        'families', type=str,
+        metavar='<pedigree filename>',
+        help='families file in pedigree format'
+    )
+    parser.add_argument(
+        'summary', type=str,
+        metavar='<summary filename>',
+        help=''
+    )
+    parser.add_argument(
+        'toomany', type=str,
+        metavar='<toomany filename>',
+        help=''
+    )
+    parser.add_argument(
+        '-o', '--out', type=str, default='./',
+        dest='out', metavar='output filepath',
+        help='output filepath. If none specified, current directory is used'
+    )
 
 
 def init_parser_dae(subparsers):
     parser_dae = subparsers.add_parser('dae')
 
-    parser_dae.add_argument(
-        'families', type=str,
-        metavar='<pedigree filename>',
-        help='families file in pedigree format'
-    )
-    parser_dae.add_argument(
-        'summary', type=str,
-        metavar='<summary filename>',
-        help=''
-    )
-    parser_dae.add_argument(
-        'toomany', type=str,
-        metavar='<toomany filename>',
-        help=''
-    )
-    parser_dae.add_argument(
-        '-o', '--out', type=str, default='./',
-        dest='out', metavar='output filepath',
-        help='output filepath. If none specified, current directory is used'
-    )
+    init_transmitted_common(parser_dae)
+
     parser_dae.add_argument(
         '-p', '--processes', type=int, default=4,
         dest='processes_count', metavar='processes count',
         help='number of processes'
+    )
+
+    parser_dae.add_argument(
+        '--region', type=str,
+        dest='region', metavar='region',
+        default=None,
+        help='region to convert'
+    )
+
+    parser_dae.add_argument(
+        '-b', '--bucket-index', type=int,
+        default=1,
+        dest='bucket_index', metavar='bucket index',
+        help='bucket index'
+    )
+
+
+def init_parser_make(subparsers):
+    parser_region = subparsers.add_parser('make')
+
+    init_transmitted_common(parser_region)
+
+    parser_region.add_argument(
+        '--len', type=int,
+        default=None,
+        dest='len', metavar='len',
+        help='split contigs in regions with length <len>'
     )
 
 
@@ -220,6 +230,7 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 
     init_parser_denovo(subparsers)
     init_parser_dae(subparsers)
+    init_parser_make(subparsers)
 
     parser_args = parser.parse_args(argv)
     return parser_args
@@ -231,4 +242,6 @@ if __name__ == "__main__":
     if argv.type == 'denovo':
         denovo_build(argv)
     elif argv.type == 'dae':
-        dae_build(argv)
+        dae_build_region(argv)
+    elif argv.type == 'make':
+        dae_build_makefile(argv)

@@ -16,8 +16,8 @@ from cyvcf2 import VCF
 import numpy as np
 import pandas as pd
 
-from variants.parquet_io import save_summary_to_parquet,\
-    read_summary_from_parquet
+# from variants.parquet_io import save_summary_to_parquet,\
+#     read_summary_from_parquet
 
 
 def save_annotation_to_csv(annot_df, filename, sep="\t"):
@@ -115,6 +115,7 @@ class RawVariantsLoader(object):
     @classmethod
     def load_annotation_file(cls, filename, sep='\t', storage='csv'):
         assert os.path.exists(filename)
+        assert storage == 'csv'
         if storage == 'csv':
             with open(filename, 'r') as infile:
                 annot_df = pd.read_csv(
@@ -140,20 +141,20 @@ class RawVariantsLoader(object):
                 annot_df[col] = annot_df[col].astype(object). \
                     where(pd.notnull(annot_df[col]), None)
             return annot_df
-        elif storage == 'parquet':
-            annot_df = read_summary_from_parquet(filename)
-            return annot_df
+        # elif storage == 'parquet':
+        #     annot_df = read_summary_from_parquet(filename)
+        #     return annot_df
         else:
             raise ValueError("unexpected input format: {}".format(storage))
 
     @classmethod
     def save_annotation_file(cls, annot_df, filename, sep='\t', storage='csv'):
-
+        assert storage == 'csv'
         if storage == 'csv':
             save_annotation_to_csv(annot_df, filename, sep)
-        elif storage == 'parquet':
-            save_summary_to_parquet(annot_df, filename)
-            # vars_df.to_parquet(filename, engine='pyarrow')
+        # elif storage == 'parquet':
+        #     save_summary_to_parquet(annot_df, filename)
+        #     # vars_df.to_parquet(filename, engine='pyarrow')
         else:
             raise ValueError("unexpected output format: {}".format(storage))
 
