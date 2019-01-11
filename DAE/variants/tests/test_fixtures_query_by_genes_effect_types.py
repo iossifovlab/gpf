@@ -11,7 +11,6 @@ from RegionOperations import Region
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("regions,effect,count", [
@@ -35,7 +34,6 @@ def test_single_alt_allele_effects(
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
     "variants_thrift",
 ])
 def test_no_missense_effects(variants_impl, variants):
@@ -47,7 +45,6 @@ def test_no_missense_effects(variants_impl, variants):
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("effect,count", [
@@ -67,7 +64,6 @@ def test_multi_alt_allele_effects(variants_impl, variants, effect, count):
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("regions,effects,genes,count", [
@@ -81,8 +77,31 @@ def test_multi_alt_allele_effects(variants_impl, variants, effect, count):
     (None, ['synonymous'], ["PLEKHN1"], 1),
     (None, ['missense', 'frame-shift'], ["PLEKHN1"], 1),
     (None, ['synonymous', 'frame-shift'], ["PLEKHN1"], 2),
+    (None, ['synonymous', 'frame-shift', "3'UTR", "5'UTR"], ["PLEKHN1"], 2),
 ])
 def test_single_alt_allele_genes(
+        variants_impl, variants, regions, effects, genes, count):
+    fvars = variants_impl(variants)("fixtures/effects_trio")
+    vs = list(fvars.query_variants(
+        regions=regions,
+        effect_types=effects,
+        genes=genes,
+    ))
+    for v in vs:
+        print(v.effects)
+    assert len(vs) == count
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_vcf",
+    "variants_thrift",
+])
+@pytest.mark.parametrize("regions,effects,genes,count", [
+    (None, None, None, 10),
+    (None, None, [], 0),
+    (None, [], None, 0),
+])
+def test_empty_lists(
         variants_impl, variants, regions, effects, genes, count):
     fvars = variants_impl(variants)("fixtures/effects_trio")
     vs = list(fvars.query_variants(

@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 from builtins import str
 import gzip
 import os
-import re
 import sys
 import traceback
 from contextlib import closing
@@ -24,19 +23,18 @@ from variants.family_variant import FamilyVariant
 from variants.variant import SummaryVariantFactory, SummaryVariant
 from utils.vcf_utils import best2gt, str2mat, \
     reference_genotype
+from utils.dae_utils import dae2vcf_variant
 
 
 class BaseDAE(FamiliesBase):
-    SUB_RE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
-    INS_RE = re.compile('^ins\(([ACGT]+)\)$')
-    DEL_RE = re.compile('^del\((\d+)\)$')
 
     def __init__(self, family_filename,
+                 frequency_type,
                  genome=None, annotator=None):
         super(BaseDAE, self).__init__()
 
         assert genome is not None
-
+        self.frequency_type = frequency_type
         self.family_filename = family_filename
 
         self.genome = genome
@@ -48,26 +46,10 @@ class BaseDAE(FamiliesBase):
         self.families_build(self.ped_df, Family)
 
     def dae2vcf_variant(self, chrom, position, dae_variant):
-        match = self.SUB_RE.match(dae_variant)
-        if match:
-            return chrom, position, match.group(1), match.group(2)
-
-        match = self.INS_RE.match(dae_variant)
-        if match:
-            alt_suffix = match.group(1)
-            reference = self.genome.getSequence(
-                chrom, position - 1, position - 1)
-            return chrom, position - 1, reference, reference + alt_suffix
-
-        match = self.DEL_RE.match(dae_variant)
-        if match:
-            count = int(match.group(1))
-            reference = self.genome.getSequence(
-                chrom, position - 1, position + count - 1)
-            return chrom, position - 1, reference, reference[0]
-
-        raise NotImplementedError('weird variant: {} at {}:{}'.format(
-            dae_variant, chrom, position))
+        position, reference, alternative = dae2vcf_variant(
+            chrom, position, dae_variant, self.genome
+        )
+        return chrom, position, reference, alternative
 
     @staticmethod
     def split_gene_effects(data, sep="|"):
@@ -78,6 +60,18 @@ class BaseDAE(FamiliesBase):
         genes = [str(ge[0]) for ge in res]
         effects = [str(ge[1]) for ge in res]
         return genes, effects
+
+    @staticmethod
+    def _rename_columns(columns):
+        if '#chr' in columns:
+            columns[columns.index('#chr')] = 'chrom'
+        if 'chr' in columns:
+            columns[columns.index('chr')] = 'chrom'
+        if 'position' in columns:
+            columns[columns.index('position')] = 'cshl_position'
+        if 'variant' in columns:
+            columns[columns.index('variant')] = 'cshl_variant'
+        return columns
 
     def summary_variant_from_dae_record(self, rec):
         parents_called = int(rec.get('all.nParCalled', 0))
@@ -106,6 +100,7 @@ class BaseDAE(FamiliesBase):
                 float(rec.get('all.prcntParCalled', 0.0)),
             'af_allele_count': ref_allele_count,
             'af_allele_freq': ref_allele_prcnt,
+            'frequency_type': self.frequency_type,
         }
         ref_allele = SummaryVariantFactory.summary_allele_from_record(ref)
 
@@ -132,22 +127,12 @@ class BaseDAE(FamiliesBase):
                 float(rec.get('all.prcntParCalled', 0.0)),
             'af_allele_count': int(rec.get('all.nAltAlls', 0)),
             'af_allele_freq': float(rec.get('all.altFreq', 0.0)),
+            'frequency_type': self.frequency_type,
         }
         alt_allele = SummaryVariantFactory.summary_allele_from_record(alt)
         assert alt_allele is not None
 
         return SummaryVariant([ref_allele, alt_allele])
-
-    def wrap_summary_variants(self, df):
-        for index, row in df.iterrows():
-            row['summary_variant_index'] = index
-            try:
-                summary_variant = self.summary_variant_from_dae_record(row)
-                yield summary_variant
-            except Exception as ex:
-                print("unexpected error:", ex)
-                print("error in handling:", row, index)
-                traceback.print_exc(file=sys.stdout)
 
     def get_reference_genotype(self, family):
         assert family is not None
@@ -157,15 +142,13 @@ class BaseDAE(FamiliesBase):
 class RawDAE(BaseDAE):
 
     def __init__(self, summary_filename, toomany_filename, family_filename,
-                 region=None, genome=None, annotator=None):
+                 region=None, genome=None, annotator=None,
+                 frequency_type='transmitted'):
         super(RawDAE, self).__init__(
             family_filename=family_filename,
+            frequency_type=frequency_type,
             genome=genome,
             annotator=annotator)
-
-        if region is not None:
-            assert isinstance(region, bytes), \
-                '{} != {}'.format(type(region), bytes)
 
         os.path.exists(summary_filename)
         os.path.exists(toomany_filename)
@@ -183,73 +166,6 @@ class RawDAE(BaseDAE):
         return column_names
 
     @staticmethod
-    def load_region(filename, region):
-        column_names = RawDAE.load_column_names(filename)
-        print(filename, type(filename))
-        print(region, type(region))
-
-        # using a context manager because of
-        # https://stackoverflow.com/a/25968716/2316754
-        with closing(pysam.Tabixfile(filename)) as tbf:
-            infile = tbf.fetch(
-                region=region,
-                parser=pysam.asTuple())
-
-            df = pd.DataFrame.from_records(
-                data=infile, columns=column_names)
-
-        df['position'] = df['position'].apply(int)
-
-        return df
-
-    @staticmethod
-    def load_all(filename):
-        with gzip.open(filename) as infile:
-            df = pd.read_csv(
-                infile,
-                dtype={
-                    'chr': np.str,
-                    '#chr': np.str,
-                    'position': int,
-                },
-                sep='\t')
-        return df
-
-    def augment_cshl_variant(self, df):
-        result = []
-
-        for index, row in df.iterrows():
-            try:
-                chrom, position, reference, alternative = self.dae2vcf_variant(
-                    row['chrom'], row['cshl_position'], row['cshl_variant'])
-                result.append({
-                    "chrom": chrom,
-                    "position": position,
-                    "reference": reference,
-                    "alternative": alternative})
-            except Exception as ex:
-                print("unexpected error:", ex)
-                print("error in handling:", row, index)
-                traceback.print_exc(file=sys.stdout)
-                result.append({
-                    "chrom": chrom,
-                    "position": row['cshl_position'],
-                    "reference": None,
-                    "alternative": None})
-
-        aug_df = pd.DataFrame.from_records(
-            data=result,
-            columns=["chrom", "position", "reference", "alternative"])
-
-        assert len(aug_df.index) == len(df.index)  # FIXME:
-
-        df['position'] = aug_df['position'].astype(np.int64)
-        df['reference'] = aug_df['reference']
-        df['alternative'] = aug_df['alternative']
-
-        return df
-
-    @staticmethod
     def explode_family_genotypes(family_data, col_sep="", row_sep="/"):
         res = {
             fid: bs for [fid, bs] in [
@@ -261,19 +177,56 @@ class RawDAE(BaseDAE):
         }
         return res
 
-    def wrap_family_variants(self, df, return_reference=False):
-        df['all.nParCalled'] = df['all.nParCalled'].apply(int)
-        df['all.nAltAlls'] = df['all.nAltAlls'].apply(int)
-        df['all.prcntParCalled'] = df['all.prcntParCalled'].apply(float)
-        df['all.altFreq'] = df['all.altFreq'].apply(float)
+    def load_toomany_columns(self):
+        columns = RawDAE.load_column_names(self.toomany_filename)
+        return self._rename_columns(columns)
 
-        for index, row in df.iterrows():
-            row['summary_variant_index'] = index
-            try:
-                summary_variant = self.summary_variant_from_dae_record(row)
-                family_genotypes = self.explode_family_genotypes(
-                    row['family_data'])
+    def load_summary_columns(self):
+        summary_columns = RawDAE.load_column_names(self.summary_filename)
+        return self._rename_columns(summary_columns)
 
+    def full_variants_iterator(self, return_reference=False):
+        summary_columns = self.load_summary_columns()
+        toomany_columns = self.load_toomany_columns()
+
+        # using a context manager because of
+        # https://stackoverflow.com/a/25968716/2316754
+        with closing(pysam.Tabixfile(self.summary_filename)) as sum_tbf, \
+                closing(pysam.Tabixfile(self.toomany_filename)) as too_tbf:
+            summary_iterator = sum_tbf.fetch(
+                region=self.region,
+                parser=pysam.asTuple())
+            toomany_iterator = too_tbf.fetch(
+                region=self.region,
+                parser=pysam.asTuple())
+
+            for summary_index, summary_line in enumerate(summary_iterator):
+                rec = dict(zip(summary_columns, summary_line))
+                rec['cshl_position'] = int(rec['cshl_position'])
+                chrom, position, reference, alternative = self.dae2vcf_variant(
+                    rec['chrom'], rec['cshl_position'], rec['cshl_variant']
+                )
+                rec['chrom'] = chrom
+                rec['position'] = position
+                rec['reference'] = reference
+                rec['alternative'] = alternative
+                rec['all.nParCalled'] = int(rec['all.nParCalled'])
+                rec['all.nAltAlls'] = int(rec['all.nAltAlls'])
+                rec['all.prcntParCalled'] = float(rec['all.prcntParCalled'])
+                rec['all.altFreq'] = float(rec['all.altFreq'])
+                rec['summary_variant_index'] = summary_index
+
+                summary_variant = self.summary_variant_from_dae_record(rec)
+                family_data = rec['familyData']
+                if family_data == 'TOOMANY':
+                    toomany_line = next(toomany_iterator)
+                    toomany_rec = dict(zip(toomany_columns, toomany_line))
+                    family_data = toomany_rec['familyData']
+
+                    assert rec['cshl_position'] == \
+                        int(toomany_rec['cshl_position'])
+                family_genotypes = self.explode_family_genotypes(family_data)
+                family_variants = []
                 for family_id in self.family_ids:
                     family = self.families.get(family_id)
                     assert family is not None
@@ -286,60 +239,9 @@ class RawDAE(BaseDAE):
 
                     assert len(family) == gt.shape[1], family.family_id
 
-                    family_variant = FamilyVariant(
-                        summary_variant, family, gt)
-
-                    yield family_variant
-            except Exception as ex:
-                print("unexpected error:", ex)
-                print("error in handling:", row, index)
-                traceback.print_exc(file=sys.stdout)
-
-    def load_variants(self, filename):
-        if self.region:
-            df = self.load_region(filename, self.region)
-        else:
-            df = self.load_all(filename)
-
-        df = df.rename(columns={
-            "position": "cshl_position",
-            "variant": "cshl_variant",
-            "chr": "chrom",
-            "#chr": "chrom",
-        })
-        return df
-
-    def load_summary_variants(self):
-        df = self.load_variants(self.summary_filename)
-
-        df = self.augment_cshl_variant(df)
-        return df
-
-    def merge_family_data(self, df):
-        def choose_family_data(row):
-            if row['familyData'] == "TOOMANY":
-                return row['familyDataToomany']
-            return row['familyData']
-        family_data = df.apply(choose_family_data, axis=1,
-                               result_type='reduce')
-        df['family_data'] = family_data
-        df = df.drop(columns=["familyData", "familyDataToomany"])
-        return df
-
-    def load_family_variants(self):
-        summary_df = self.load_variants(self.summary_filename)
-        df = self.load_variants(self.toomany_filename)
-
-        vars_df = pd.merge(
-            summary_df, df, how="left",
-            on=["chrom", "cshl_position", "cshl_variant"],
-            suffixes=("", "Toomany"),
-            validate="one_to_one")
-
-        vars_df = self.merge_family_data(vars_df)
-        vars_df = self.augment_cshl_variant(vars_df)
-
-        return vars_df
+                    family_variants.append(
+                        FamilyVariant(summary_variant, family, gt))
+                yield summary_variant, family_variants
 
 
 class RawDenovo(BaseDAE):
@@ -347,6 +249,7 @@ class RawDenovo(BaseDAE):
                  genome=None, annotator=None):
         super(RawDenovo, self).__init__(
             family_filename=family_filename,
+            frequency_type='denovo',
             genome=genome,
             annotator=annotator
         )
@@ -429,12 +332,15 @@ class RawDenovo(BaseDAE):
     def explode_family_genotype(best_st, col_sep="", row_sep="/"):
         return best2gt(str2mat(best_st, col_sep=col_sep, row_sep=row_sep))
 
-    def wrap_family_variants(self, df):
+    def full_variants_iterator(self, return_reference=False):
+
+        df = self.load_denovo_variants()
 
         for index, row in df.iterrows():
             row['summary_variant_index'] = index
             try:
                 summary_variant = self.summary_variant_from_dae_record(row)
+
                 gt = self.explode_family_genotype(
                     row['family_data'], col_sep=" ")
                 family_id = row['familyId']
@@ -447,7 +353,7 @@ class RawDenovo(BaseDAE):
                 family_variant = FamilyVariant(
                     summary_variant, family, gt)
 
-                yield family_variant
+                yield summary_variant, [family_variant]
             except Exception as ex:
                 print("unexpected error:", ex)
                 print("error in handling:", row, index)

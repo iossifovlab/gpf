@@ -49,11 +49,14 @@ class ScoreFile(TabixReader):
     def _setup(self):
         super(ScoreFile, self)._setup()
 
-        assert all([sn in self.header for sn in self.score_names])
+        self.schema = Schema()
+        for col in self.config.header:
+            assert col in self.config.schema.columns
+            self.schema.columns[col] = self.config.schema.columns[col]
+        assert all([sn in self.schema.col_names for sn in self.score_names])
         self.options.update(self.config)
 
-        self.line_config = LineConfig(self.header)
-        self.schema = self.config.schema
+        self.line_config = LineConfig(self.schema.col_names)
 
         self.chr_name = self.config.columns.chr
         self.pos_begin_name = self.config.columns.pos_begin
@@ -61,9 +64,9 @@ class ScoreFile(TabixReader):
         self.ref_name = self.config.columns.ref
         self.alt_name = self.config.columns.alt
 
-        self.chr_index = self.header.index(self.chr_name)
-        self.pos_begin_index = self.header.index(self.pos_begin_name)
-        self.pos_end_index = self.header.index(self.pos_end_name)
+        self.chr_index = self.schema.col_names.index(self.chr_name)
+        self.pos_begin_index = self.schema.col_names.index(self.pos_begin_name)
+        self.pos_end_index = self.schema.col_names.index(self.pos_end_name)
 
         self.no_score_value = self.config.noScoreValue
 
@@ -82,9 +85,13 @@ class ScoreFile(TabixReader):
     def _setup_config(self, score_config):
         self.config = score_config
 
-        if self.config.header is not None:
+        if self.config.header:
             self.config.header = self.config.header.split(',')
-            self.header = self.config.header
+        else:
+            print('ERROR: Missing header in score {} config.'
+                  .format(self.filename),
+                  file=sys.stderr)
+            sys.exit(-1)
 
         if self.config.columns.pos_end is None:
             self.config.columns.pos_end = self.config.columns.pos_begin
@@ -116,7 +123,7 @@ class ScoreFile(TabixReader):
                 max(line.pos_begin, pos_begin) + 1
             assert count >= 1
             result["COUNT"].append(count)
-            for index, column in enumerate(self.header):
+            for index, column in enumerate(self.schema.col_names):
                 result[column].append(line[index])
         return result
 

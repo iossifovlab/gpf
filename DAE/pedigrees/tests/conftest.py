@@ -1,6 +1,7 @@
 import pytest
 
 from io import StringIO
+import six
 import csv
 
 from pedigrees.layout_saver import LayoutSaver
@@ -26,7 +27,7 @@ def output_filename():
 
 @pytest.fixture(scope='session')
 def output():
-    return StringIO()
+    return six.StringIO()
 
 
 @pytest.fixture(scope='session')
@@ -189,9 +190,10 @@ def header():
 
 
 @pytest.fixture(scope='session')
-def dict_reader(output, header, layout_column, generated_column):
+def dict_writer(output, header, layout_column, generated_column):
+    dict_header = header + [layout_column, generated_column]
     return csv.DictWriter(
-        output, header + [layout_column, generated_column], delimiter='\t',
+        output, dict_header, delimiter='\t',
         lineterminator='\n')
 
 

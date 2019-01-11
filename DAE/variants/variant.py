@@ -383,7 +383,10 @@ class SummaryVariant(VariantBase):
 class SummaryVariantFactory(object):
 
     @staticmethod
-    def summary_allele_from_record(record):
+    def summary_allele_from_record(
+            record, frequency_type='transmitted'):
+        record['frequency_type'] = 'transmitted'
+
         if not isinstance(record['effect_type'], str):
             effects = None
         else:
@@ -406,13 +409,15 @@ class SummaryVariantFactory(object):
             attributes=record)
 
     @staticmethod
-    def summary_variant_from_records(records):
+    def summary_variant_from_records(records, frequency_type='transmitted'):
         assert len(records) > 0
 
         alleles = []
         for record in records:
             sa = SummaryVariantFactory.\
-                summary_allele_from_record(record)
+                summary_allele_from_record(
+                    record,
+                    frequency_type)
             alleles.append(sa)
 
         return SummaryVariant(alleles)
