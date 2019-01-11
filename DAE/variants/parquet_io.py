@@ -193,27 +193,15 @@ def _family_allele_to_data(
         return v.value
 
     for member_index, member_id in enumerate(fa.members_ids):
-        # if fa.variant_in_members[member_index] is None:
-        #     continue
+        if fa.variant_in_members[member_index] is None:
+            continue
 
         member_data["bucket_index"].append(bucket_index)
         member_data["summary_variant_index"].append(summary_index)
         member_data["allele_index"].append(fa.allele_index)
         member_data["family_variant_index"].append(family_index)
-        # member_data["member_index"].append(member_index)
-
-        # member_data["family_id"].append(fa.family_id)
-        # member_data["member_id"].append(member_id)
-        # member_data["member_inheritance"].append(
-        #     fa.inheritance_in_members[member_index].value)
         member_data["member_variant"].append(
             fa.variant_in_members[member_index])
-        # member_data["member_role"].append(
-        #     value_or_none(fa.variant_in_roles[member_index])
-        # )
-        # member_data["member_sex"].append(
-        #     value_or_none(fa.variant_in_sexes[member_index])
-        # )
 
 
 def variants_table(variants, bucket_index=1, batch_size=200000):
@@ -323,17 +311,17 @@ def save_variants_to_parquet(
         for stable, etable, ftable, mtable in variants_table(
                 variants, bucket_index, batch_size):
             assert ftable.schema == family_schema
-            assert ftable.num_rows > 0
+            # assert ftable.num_rows > 0
             family_writer.write_table(ftable)
             assert mtable.schema == member_schema
-            assert mtable.num_rows > 0
+            # assert mtable.num_rows > 0
             member_writer.write_table(mtable)
 
             assert stable.schema == summary_schema
-            assert stable.num_rows > 0
+            # assert stable.num_rows > 0
             summary_writer.write_table(stable)
             assert etable.schema == effect_gene_schema
-            assert etable.num_rows > 0
+            # assert etable.num_rows > 0
             effect_gene_writer.write_table(etable)
 
     except Exception as ex:
