@@ -141,19 +141,20 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
                 gt[gt != allele_index] = 0
             else:
                 gt[gt == -1] = 0
-            index = np.nonzero(np.sum(gt, axis=0))
-            self._variant_in_members = set(self.members_ids[index])
+            noindex = np.sum(gt, axis=0) == 0
+            self._variant_in_members = np.copy(self.members_ids)
+            self._variant_in_members[noindex] = None
         return self._variant_in_members
 
     @property
     def variant_in_roles(self):
         """
-        Returns set of sexes of the members of the family that are affected by
-        this family variant.
+        Returns list of roles (or 'None') of the members of the family that are
+        affected by this family variant.
         """
         if self._variant_in_roles is None:
             self._variant_in_roles = [
-                self.family.persons[pid]['role']
+                self.family.persons[pid]['role'] if pid is not None else None
                 for pid in self.variant_in_members
             ]
         return self._variant_in_roles
@@ -161,14 +162,14 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
     @property
     def variant_in_sexes(self):
         """
-        Returns set of roles of the members of the family that are affected by
-        this family variant.
+        Returns list of sexes (or 'None') of the members of the family that are
+        affected by this family variant.
         """
         if self._variant_in_sexes is None:
-            self._variant_in_sexes = set([
-                self.family.persons[pid]['sex']
+            self._variant_in_sexes = [
+                self.family.persons[pid]['sex'] if pid is not None else None
                 for pid in self.variant_in_members
-            ])
+            ]
         return self._variant_in_sexes
 
     @staticmethod
@@ -339,23 +340,24 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         """
         return np.all(self.gt == -1)
 
-    @property
-    def inheritance_in_members(self):
-        if self._inheritance_in_members is None:
-            self._inheritance_in_members = set()
-            for allele in self.alleles:
-                self._inheritance_in_members = self._inheritance_in_members | \
-                    set(allele.inheritance_in_members)
-        return self._inheritance_in_members
+    # @property
+    # def inheritance_in_members(self):
+    #     if self._inheritance_in_members is None:
+    #         self._inheritance_in_members = set()
+    #         for allele in self.alleles:
+    #             self._inheritance_in_members = \
+    #                 self._inheritance_in_members | \
+    #                 set(allele.inheritance_in_members)
+    #     return self._inheritance_in_members
 
-    @property
-    def variant_in_members(self):
-        if self._variant_in_members is None:
-            self._variant_in_members = set()
-            for allele in self.alt_alleles:
-                self._variant_in_members = self._variant_in_members | \
-                    allele.variant_in_members
-        return self._variant_in_members
+    # @property
+    # def variant_in_members(self):
+    #     if self._variant_in_members is None:
+    #         self._variant_in_members = set()
+    #         for allele in self.alt_alleles:
+    #             self._variant_in_members = self._variant_in_members | \
+    #                 allele.variant_in_members
+    #     return self._variant_in_members
 
     def __repr__(self):
         if not self.alternative:

@@ -11,10 +11,7 @@ from RegionOperations import Region
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
-    # FIXME: Thrift does not expect objects of type 'Region'
-    # "variants_thrift",
-    "variants_parquet",
+    "variants_thrift",
 ])
 @pytest.mark.parametrize("fixture_name,regions,family_ids,count", [
 

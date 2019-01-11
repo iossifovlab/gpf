@@ -7,64 +7,37 @@ from __future__ import print_function
 
 import os
 
-import engarde.checks as ec
 import numpy as np
 from utils.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
-from variants.parquet_io import save_family_variants_to_parquet,\
-    save_summary_variants_to_parquet
+# from variants.parquet_io import save_family_variants_to_parquet,\
+#     save_summary_variants_to_parquet
 from variants.raw_dae import RawDAE, BaseDAE
+from variants.parquet_io import save_variants_to_parquet
+from variants.configure import Configure
 
 
-def test_load_dae_summary(raw_dae, temp_filename):
+def test_dae_full_variants_iterator(raw_dae, temp_dirname):
     dae = raw_dae("fixtures/transmission")
     dae.load_families()
 
     assert dae is not None
 
-    df = dae.load_summary_variants()
-    assert df is not None
-#     print(df.dtypes)
+    for sv, fvs in dae.full_variants_iterator():
+        print(sv, fvs)
 
-    ec.has_dtypes(
-        df,
-        {
-            'chrom': object,
-            'position': int,
-            'reference': object,
-            'alternative': object,
-        })
+    conf = Configure.from_prefix_parquet(temp_dirname).parquet
 
-    df = dae.load_summary_variants()
-    print(df.head())
-    print(df.dtypes)
-    print(df.columns)
+    save_variants_to_parquet(
+        dae.full_variants_iterator(),
+        summary_filename=conf.summary_variant,
+        family_filename=conf.family_variant,
+        effect_gene_filename=conf.effect_gene_variant,
+        member_filename=conf.member_variant,
+        batch_size=2
+    )
 
-    for v in dae.wrap_summary_variants(df):
-        print(v)
-
-    save_summary_variants_to_parquet(
-        dae.wrap_summary_variants(df),
-        temp_filename)
-
-
-# @pytest.mark.skip
-def test_load_dae_family(raw_dae, temp_dirname):
-    dae = raw_dae("fixtures/transmission", b"1")
-    dae.load_families()
-
-    f2 = dae.families['f2']
-    assert len(f2) == 4
-
-    assert dae is not None
-
-    df = dae.load_family_variants()
-    assert df is not None
-
-    aname = os.path.join(temp_dirname, "a.parquet")
-
-    save_family_variants_to_parquet(
-        dae.wrap_family_variants(df, return_reference=False),
-        aname, batch_size=5)
+    assert os.path.exists(conf.summary_variant)
+    assert os.path.exists(conf.family_variant)
 
 
 def test_explode_family_genotype():
@@ -100,9 +73,10 @@ def test_load_denovo(raw_denovo):
     assert df is not None
     print(df.head())
 
-    vs = denovo.wrap_family_variants(df)
-    for v in vs:
-        print(v, mat2str(v.best_st))
+    vs = denovo.full_variants_iterator()
+    for sv, fvs in vs:
+        for v in fvs:
+            print(v, mat2str(v.best_st))
 
 
 def test_load_denovo_families(raw_denovo):
