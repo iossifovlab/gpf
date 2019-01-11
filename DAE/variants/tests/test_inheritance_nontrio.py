@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 import pytest
 from RegionOperations import Region
 from variants.attributes import Inheritance
-from utils.vcf_utils import mat2str
 
 
 @pytest.mark.parametrize("region,count,inheritance", [
@@ -27,10 +26,9 @@ def test_inheritance_nontrio(variants_vcf, region, count, inheritance):
         family_ids=['f1'],
         return_reference=True,
         return_unknown=True))
-    for v in vs:
-        print(v, v.inheritance_in_members)
 
     assert len(vs) == count
     for v in vs:
-        print(v, mat2str(v.best_st), v.inheritance_in_members)
-        assert inheritance in v.inheritance_in_members
+        for aa in v.alt_alleles:
+            print(aa.inheritance_in_members)
+            assert set(aa.inheritance_in_members) == set([Inheritance.unknown])

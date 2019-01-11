@@ -11,10 +11,10 @@ INS_RE = re.compile(r'^ins\(([NACGT]+)\)$')
 DEL_RE = re.compile(r'^del\((\d+)\)$')
 
 
-def dae2vcf_variant(chrom, position, var, GA=None):
-    if GA is None:
+def dae2vcf_variant(chrom, position, var, genome=None):
+    if genome is None:
         from DAE import genomesDB
-        GA = genomesDB.get_genome()
+        genome = genomesDB.get_genome()
 
     match = SUB_COMPLEX_RE.match(var)
     if match:
@@ -23,13 +23,14 @@ def dae2vcf_variant(chrom, position, var, GA=None):
     match = INS_RE.match(var)
     if match:
         alt_suffix = match.group(1)
-        reference = GA.getSequence(chrom, position - 1, position - 1)
+        reference = genome.getSequence(chrom, position - 1, position - 1)
         return position - 1, reference, reference + alt_suffix
 
     match = DEL_RE.match(var)
     if match:
         count = int(match.group(1))
-        reference = GA.getSequence(chrom, position - 1, position + count - 1)
+        reference = genome.getSequence(
+            chrom, position - 1, position + count - 1)
         assert len(reference) == count + 1, reference
         return position - 1, reference, reference[0]
 
