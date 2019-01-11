@@ -27,14 +27,13 @@ def summary_parquet_schema():
         pa.field("position", pa.int64()),
         pa.field("reference", pa.string()),
         pa.field("alternative", pa.string()),
-        pa.field("bucket_index", pa.int16()),
+        pa.field("bucket_index", pa.int32()),
         pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int16()),
         pa.field("allele_count", pa.int16()),
         pa.field("variant_type", pa.int8()),
         pa.field("cshl_variant", pa.string()),
         pa.field("cshl_position", pa.int64()),
-        # pa.field("cshl_length", pa.int32()),
         pa.field("effect_type", pa.string()),
         pa.field("effect_gene_genes", pa.list_(pa.string())),
         pa.field("effect_gene_types", pa.list_(pa.string())),
@@ -45,7 +44,6 @@ def summary_parquet_schema():
         pa.field("af_allele_count", pa.int32()),
         pa.field("af_allele_freq", pa.float64()),
         pa.field("frequency_type", pa.string()),
-        # pa.field("ultra_rare", pa.bool_()),
     ]
 
     return pa.schema(fields)
@@ -53,7 +51,7 @@ def summary_parquet_schema():
 
 def effect_gene_parquet_schema():
     fields = [
-        pa.field("bucket_index", pa.int16()),
+        pa.field("bucket_index", pa.int32()),
         pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int16()),
         pa.field("effect_gene_index", pa.int8()),
@@ -65,7 +63,7 @@ def effect_gene_parquet_schema():
 
 def family_parquet_schema():
     fields = [
-        pa.field("bucket_index", pa.int16()),
+        pa.field("bucket_index", pa.int32()),
         pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int8()),
         pa.field("family_variant_index", pa.int64()),
@@ -81,7 +79,7 @@ def family_parquet_schema():
 
 def member_parquet_schema():
     fields = [
-        pa.field("bucket_index", pa.int16()),
+        pa.field("bucket_index", pa.int32()),
         pa.field("summary_variant_index", pa.int64()),
         pa.field("allele_index", pa.int8()),
         pa.field("family_variant_index", pa.int64()),
@@ -142,14 +140,15 @@ class ParquetData(object):
 
 def _family_allele_to_data(
         family_data, member_data, fv, fa,
-        bucket_index, summary_index, family_index):
-
-    family_data.data_append("family_id", fa.family_id)
-    family_data.data_append("family_variant_index", family_index)
+        bucket_index, summary_index, family_variant_index):
 
     family_data.data_append("bucket_index", bucket_index)
     family_data.data_append("summary_variant_index", summary_index)
     family_data.data_append("allele_index", fa.allele_index)
+    family_data.data_append("family_variant_index", family_variant_index)
+
+    family_data.data_append("family_id", fa.family_id)
+
     family_data.data_append("genotype", fv.gt_flatten())
     family_data.data_append_enum_array(
         "inheritance_in_members",
@@ -176,7 +175,7 @@ def _family_allele_to_data(
         member_data.data_append("bucket_index", bucket_index)
         member_data.data_append("summary_variant_index", summary_index)
         member_data.data_append("allele_index", fa.allele_index)
-        member_data.data_append("family_variant_index", family_index)
+        member_data.data_append("family_variant_index", family_variant_index)
         member_data.data_append(
             "member_variant",
             fa.variant_in_members[member_index])
@@ -190,8 +189,8 @@ def variants_table(variants, bucket_index=1, batch_size=200000):
 
     family_variant_index = 0
 
-    for summary_variant_index, vs in enumerate(variants):
-        summary_variant, family_variants = vs
+    for summary_variant_index, (summary_variant, family_variants) in \
+            enumerate(variants):
 
         for sa in summary_variant.alleles:
             sa.attributes['bucket_index'] = bucket_index
