@@ -48,15 +48,8 @@ class PipelineConfig(VariantAnnotatorConfig):
             virtuals=[]
         )
         result.pipeline_sections = []
-        result.cleanup_columns = []
-
-        if 'cleanup' in configuration:
-            result.cleanup_columns = \
-                result._parse_cleanup_section(configuration['cleanup'])
 
         for section_name, section_config in configuration.items():
-            if section_name == 'cleanup':
-                continue
             section_config = result._parse_config_section(
                 section_name, section_config, options)
             result.pipeline_sections.append(section_config)
@@ -118,12 +111,6 @@ class PipelineConfig(VariantAnnotatorConfig):
             virtuals=virtuals
         )
 
-    @staticmethod
-    def _parse_cleanup_section(section):
-        if 'columns' in section:
-            cleanup_columns = section['columns'].split(',')
-            return cleanup_columns
-
 
 def run_tabix(filename):
     def run_command(cmd):
@@ -184,8 +171,6 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         if self.config.virtual_columns:
             for vcol in self.config.virtual_columns:
                 schema.remove_column(vcol)
-        for col in self.config.cleanup_columns:
-            schema.remove_column(col)
 
 
 def pipeline_main(argv):
