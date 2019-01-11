@@ -73,9 +73,10 @@ def test_load_denovo(raw_denovo):
     assert df is not None
     print(df.head())
 
-    vs = denovo.wrap_family_variants(df)
-    for v in vs:
-        print(v, mat2str(v.best_st))
+    vs = denovo.full_variants_iterator()
+    for sv, fvs in vs:
+        for v in fvs:
+            print(v, mat2str(v.best_st))
 
 
 def test_load_denovo_families(raw_denovo):
