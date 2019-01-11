@@ -63,39 +63,6 @@ def effect_gene_parquet_schema():
     return pa.schema(fields)
 
 
-def batch_from_data_dict(data, schema):
-    batch_data = []
-    for name in schema.names:
-        assert name in data
-        column = data[name]
-        field = schema.field_by_name(name)
-        batch_data.append(pa.array(column, type=field.type))
-    batch = pa.RecordBatch.from_arrays(batch_data, schema.names)
-    return batch
-
-
-def table_from_data_dict(data, schema):
-    batch = batch_from_data_dict(data, schema)
-    return pa.Table.from_batches([batch])
-
-
-def summary_batch(sum_df):
-    schema = summary_parquet_schema()
-
-    batch_data = []
-    for name in schema.names:
-        assert name in sum_df, name
-        data = sum_df[name].values
-        field = schema.field_by_name(name)
-        batch_data.append(pa.array(data, type=field.type))
-
-    batch = pa.RecordBatch.from_arrays(
-        batch_data,
-        schema.names)
-
-    return batch
-
-
 def family_parquet_schema():
     fields = [
         pa.field("bucket_index", pa.int16()),
@@ -130,97 +97,96 @@ def member_parquet_schema():
     return pa.schema(fields)
 
 
-def setup_family_batch_data():
-    return {
-        "chrom": [],
-        "position": [],
-        "family_id": [],
-        "family_variant_index": [],
-        "bucket_index": [],
-        "summary_variant_index": [],
-        "allele_index": [],
-        "genotype": [],
-        "inheritance_in_members": [],
-        "variant_in_members": [],
-        "variant_in_roles": [],
-        "variant_in_sexes": [],
-    }
+class ParquetData(object):
+
+    def __init__(self, schema):
+        self.schema = schema
+        self.data_reset()
+
+    def data_reset(self):
+        self.data = {
+            name: [] for name in self.schema.names
+        }
+
+    def data_append(self, attr_name, value):
+        self.data[attr_name].append(value)
+
+    def data_append_enum_array(self, attr_name, value, dtype=np.int8):
+        self.data[attr_name].append(
+            np.asarray(
+                [v.value for v in value if v is not None], 
+                dtype=dtype))
+
+    def data_append_str_array(self, attr_name, value):
+        self.data[attr_name].append(
+            [str(v) for v in value if v is not None])
+
+    def build_batch(self):
+        batch_data = []
+        for name in self.schema.names:
+            assert name in self.data
+            column = self.data[name]
+            field = self.schema.field_by_name(name)
+            batch_data.append(pa.array(column, type=field.type))
+        batch = pa.RecordBatch.from_arrays(batch_data, self.schema.names)
+        return batch
+
+    def build_table(self):
+        batch = self.build_batch()
+        self.data_reset()
+        return pa.Table.from_batches([batch])
+
+    def __len__(self):
+        return len(self.data['summary_variant_index'])
 
 
 def _family_allele_to_data(
         family_data, member_data, fv, fa,
         bucket_index, summary_index, family_index):
-    family_data["chrom"].append(fa.chromosome)
-    family_data["position"].append(fa.position)
-    family_data["family_id"].append(fa.family_id)
-    family_data["family_variant_index"].append(family_index)
 
-    family_data["bucket_index"].append(bucket_index)
-    family_data["summary_variant_index"].append(summary_index)
-    family_data["allele_index"].append(fa.allele_index)
-    family_data["genotype"].append(fv.gt_flatten())
-    family_data["inheritance_in_members"].\
-        append(
-            np.asarray([
-                i.value for i in fa.inheritance_in_members
-            ], dtype=np.int8))
+    family_data.data_append("family_id", fa.family_id)
+    family_data.data_append("family_variant_index", family_index)
 
-    family_data["variant_in_members"].append(
-        [str(m)
-            for m in fa.variant_in_members])
-
-    if fa.is_reference_allele:
-        family_data["variant_in_roles"].append(None)
-        family_data["variant_in_sexes"].append(None)
-    else:
-        family_data["variant_in_roles"].append(
-            [
-                r.value for r in set(fa.variant_in_roles) if r is not None
-            ])
-        family_data["variant_in_sexes"].append(
-            [
-                s.value for s in set(fa.variant_in_sexes) if s is not None
-            ])
+    family_data.data_append("bucket_index", bucket_index)
+    family_data.data_append("summary_variant_index", summary_index)
+    family_data.data_append("allele_index", fa.allele_index)
+    family_data.data_append("genotype", fv.gt_flatten())
+    family_data.data_append_enum_array(
+        "inheritance_in_members",
+        set(fa.inheritance_in_members))
+    family_data.data_append_str_array(
+        "variant_in_members",
+        fa.variant_in_members)
+    family_data.data_append_enum_array(
+        "variant_in_roles",
+        set(fa.variant_in_roles))
+    family_data.data_append_enum_array(
+        "variant_in_sexes",
+        set(fa.variant_in_sexes))
 
     assert len(fa.inheritance_in_members) == len(fa.members_ids)
     assert len(fa.variant_in_members) == len(fa.members_ids)
     assert len(fa.variant_in_roles) == len(fa.members_ids)
     assert len(fa.variant_in_sexes) == len(fa.members_ids)
 
-    def value_or_none(v):
-        if v is None:
-            return None
-        return v.value
-
     for member_index, member_id in enumerate(fa.members_ids):
         if fa.variant_in_members[member_index] is None:
             continue
 
-        member_data["bucket_index"].append(bucket_index)
-        member_data["summary_variant_index"].append(summary_index)
-        member_data["allele_index"].append(fa.allele_index)
-        member_data["family_variant_index"].append(family_index)
-        member_data["member_variant"].append(
+        member_data.data_append("bucket_index", bucket_index)
+        member_data.data_append("summary_variant_index", summary_index)
+        member_data.data_append("allele_index", fa.allele_index)
+        member_data.data_append("family_variant_index", family_index)
+        member_data.data_append(
+            "member_variant",
             fa.variant_in_members[member_index])
 
 
 def variants_table(variants, bucket_index=1, batch_size=200000):
-    family_schema = family_parquet_schema()
-    family_data = setup_family_batch_data()
-    member_schema = member_parquet_schema()
-    member_data = {
-        name: [] for name in member_schema.names
-    }
-
-    summary_schema = summary_parquet_schema()
-    summary_data = {
-        name: [] for name in summary_schema.names
-    }
-
-    effect_gene_schema = effect_gene_parquet_schema()
-    effect_gene_data = {
-        name: [] for name in effect_gene_schema.names
-    }
+    family_data = ParquetData(family_parquet_schema())
+    member_data = ParquetData(member_parquet_schema())
+    summary_data = ParquetData(summary_parquet_schema())
+    effect_gene_data = ParquetData(effect_gene_parquet_schema())
 
     family_variant_index = 0
 
@@ -229,19 +195,22 @@ def variants_table(variants, bucket_index=1, batch_size=200000):
 
         for sa in summary_variant.alleles:
             sa.attributes['bucket_index'] = bucket_index
-            for name in summary_schema.names:
-                summary_data[name].append(sa.get_attribute(name))
+            for name in summary_data.schema.names:
+                summary_data.data_append(name, sa.get_attribute(name))
             if sa.is_reference_allele:
                 continue
             for effect_gene_index, effect_gene in enumerate(sa.effects.genes):
-                effect_gene_data["bucket_index"].append(bucket_index)
-                effect_gene_data["summary_variant_index"].append(
-                    summary_variant_index)
-                effect_gene_data["allele_index"].append(sa.allele_index)
-                effect_gene_data["effect_gene_index"].append(
-                    effect_gene_index)
-                effect_gene_data["effect_type"].append(effect_gene.effect)
-                effect_gene_data["effect_gene"].append(effect_gene.symbol)
+
+                effect_gene_data.data_append("bucket_index", bucket_index)
+                effect_gene_data.data_append(
+                    "summary_variant_index", summary_variant_index)
+                effect_gene_data.data_append("allele_index", sa.allele_index)
+                effect_gene_data.data_append(
+                    "effect_gene_index", effect_gene_index)
+                effect_gene_data.data_append(
+                    "effect_type", effect_gene.effect)
+                effect_gene_data.data_append(
+                    "effect_gene", effect_gene.symbol)
 
         for fv in family_variants:
             for allele in fv.alleles:
@@ -250,45 +219,20 @@ def variants_table(variants, bucket_index=1, batch_size=200000):
                     bucket_index, summary_variant_index, family_variant_index)
                 family_variant_index += 1
 
-        if len(family_data['chrom']) >= batch_size:
+        if len(family_data) >= batch_size:
 
-            family_table = table_from_data_dict(
-                family_data, family_schema)
-            member_table = table_from_data_dict(
-                member_data, member_schema
-            )
-            summary_table = table_from_data_dict(
-                summary_data, summary_schema
-            )
-            effect_gene_table = table_from_data_dict(
-                effect_gene_data, effect_gene_schema
-            )
-            effect_gene_data = {
-                name: [] for name in effect_gene_schema.names
-            }
-
-            summary_data = {
-                name: [] for name in summary_schema.names
-            }
-            family_data = setup_family_batch_data()
-            member_data = {
-                name: [] for name in member_schema.names
-            }
+            family_table = family_data.build_table()
+            member_table = member_data.build_table()
+            summary_table = summary_data.build_table()
+            effect_gene_table = effect_gene_data.build_table()
 
             yield summary_table, effect_gene_table, family_table, member_table
 
-    if len(family_data['chrom']) > 0:
-        family_table = table_from_data_dict(
-            family_data, family_schema)
-        member_table = table_from_data_dict(
-            member_data, member_schema
-        )
-        summary_table = table_from_data_dict(
-            summary_data, summary_schema
-        )
-        effect_gene_table = table_from_data_dict(
-            effect_gene_data, effect_gene_schema
-        )
+    if len(family_data) > 0:
+        family_table = family_data.build_table()
+        member_table = member_data.build_table()
+        summary_table = summary_data.build_table()
+        effect_gene_table = effect_gene_data.build_table()
 
         yield summary_table, effect_gene_table, family_table, member_table
 
