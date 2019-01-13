@@ -8,37 +8,15 @@ from annotation.tools.dbnsfp_annotator import dbNSFPAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 
 expected_result_dbNSFP = \
-    """RESULT_dbNSFP
-0.5
-0.6
-0.7
-0.8
-0.9
-1.0
-1.5
-1.6
-1.7
-1.8
-1.9
-2.0
-15.5
-15.6
-15.7
-15.8
-15.9
-16.0
-22.5
-22.6
-22.7
-22.8
-22.9
-23.0
-23.5
-23.6
-23.7
-23.8
-23.9
-24.0
+    """RESULT_dbNSFP\tRESULT_dbNSFP_2
+0.5\t1.5
+0.6500000059604645\t1.6500000357627869
+15.5\t16.5
+15.75\t16.75
+22.5\t23.5
+22.65000057220459\t23.65000057220459
+23.5\t24.5
+23.8\t24.8
 """
 
 
@@ -51,18 +29,19 @@ def test_dbNSFP_annotator(mocker, variants_io, expected_df, capsys):
         genome_mock.return_value = genome
 
         options = Box({
-            "vcf": False,
+            "vcf": True,
             "Graw": "fake_genome_ref_file",
             "direct": False,
             "mode": "overwrite",
             "dbNSFP_path": relative_to_this_test_folder(
                 "fixtures/TESTdbNSFP/"),
-            "dbNSFP_filename": "test_missense_chr{}.tsv.gz",
+            "dbNSFP_filename": "test_missense_chr*.tsv.gz",
             "dbNSFP_config": "test_missense_config.conf"
         }, default_box=True, default_box_attr=None)
 
         columns_config = {
-            'score': "RESULT_dbNSFP",
+            'score': 'RESULT_dbNSFP',
+            'score2': 'RESULT_dbNSFP_2'
         }
 
         config = VariantAnnotatorConfig(
