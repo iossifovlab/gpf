@@ -6,6 +6,7 @@ import json
 import os
 import itertools
 from collections import defaultdict
+from copy import deepcopy
 
 from common_reports.config import CommonReportsConfig
 from study_groups.study_group_facade import StudyGroupFacade
@@ -501,7 +502,8 @@ class DenovoReport(object):
     def _get_tables(
             self, query_object, effect_groups, effect_types, filter_objects):
         return [DenovoReportTable(
-            query_object, effect_groups, effect_types, filter_object)
+            query_object, deepcopy(effect_groups), deepcopy(effect_types),
+            filter_object)
                 for filter_object in filter_objects]
 
 
