@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import sys
 
@@ -47,7 +49,7 @@ def contigs_makefile_generate(
         if contig not in build_contigs:
             continue
         assert contig in build_contigs, contig
-        assert len(build_contigs) < 100
+        # assert len(build_contigs) < 5000, len(build_contigs)
         contig_targets[contig] = []
 
         for part, region in enumerate(build_contigs[contig]):

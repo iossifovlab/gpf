@@ -32,7 +32,7 @@ from variants.family import Family, FamiliesBase
 from variants.family_variant import FamilyVariant
 
 from variants.parquet_io import save_ped_df_to_parquet,\
-    save_variants_to_parquet
+    VariantsParquetWriter
 
 from variants.raw_thrift import ThriftFamilyVariants
 from variants.raw_vcf import RawFamilyVariants, \
@@ -275,8 +275,9 @@ def parquet_variants(request, variants_vcf):
 
         save_ped_df_to_parquet(fvars.ped_df, conf.pedigree)
 
-        save_variants_to_parquet(
-            fvars.full_variants_iterator(),
+        variants_builder = VariantsParquetWriter(
+            fvars.full_variants_iterator())
+        variants_builder.save_variants_to_parquet(
             summary_filename=conf.summary_variant,
             family_filename=conf.family_variant,
             effect_gene_filename=conf.effect_gene_variant,
