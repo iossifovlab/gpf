@@ -196,7 +196,7 @@ class FamiliesCounter(object):
             families_count_show_id):
         if draw_all_families:
             families_counters =\
-                {family: family_id for family_id, family in families.items()}
+                {family: family.family_id for family in families}
         else:
             families_counters = self._get_families_counters(
                 families, phenotype_info)
