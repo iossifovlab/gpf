@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import sys
 import traceback
+from copy import deepcopy
 
 from annotation.tools.annotator_config import LineConfig, \
     AnnotatorConfig, \
@@ -43,7 +44,7 @@ class AnnotatorBase(object):
         """
             Method for annotating file from `Annotator`.
         """
-        self.schema = file_io_manager.reader.schema
+        self.schema = deepcopy(file_io_manager.reader.schema)
         self.collect_annotator_schema(self.schema)
         file_io_manager.writer.schema = self.schema
 
@@ -156,7 +157,7 @@ class DAEBuilder(VariantBuilder):
         if self.location in aline:
             location = aline[self.location]
             chrom, position = location.split(':')
-        else:   
+        else:
             assert self.chrom in aline
             assert self.position in aline
             chrom = aline[self.chrom]

@@ -382,9 +382,10 @@ class EffectWithFilter(object):
         children_with_event = set()
 
         for variant in variants:
-            children_with_event.update(
-                (set(variant.variant_in_members) & people_with_filter &
-                 people_with_parents))
+            for va in variant.alt_alleles:
+                children_with_event.update(
+                    (set(va.variant_in_members) & people_with_filter &
+                     people_with_parents))
 
         return len(children_with_event)
 

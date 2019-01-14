@@ -4,11 +4,8 @@ from __future__ import print_function
 import os
 import sys
 
-from box import Box
-
 from annotation.tools.annotator_base import VariantAnnotatorBase
 from annotation.tools import score_file_io
-from annotation.tools.schema import Schema
 
 # chrInd = {}
 # # faiFN="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b37_phiX174/
@@ -37,10 +34,11 @@ class FrequencyAnnotator(VariantAnnotatorBase):
         self._init_freq_file()
 
         for freq_col in self.freq_cols:
-            assert freq_col in self.freq_file.header, \
-                "{} not in {}".format(freq_col, self.freq_file.header)
-        assert 'variant' in self.freq_file.header, \
-            "'variant' not in {}".format(self.freq_file.header)
+            assert freq_col in self.freq_file.schema.col_names, \
+                "{} not in {}".format(freq_col,
+                                      self.freq_file.schema.col_names)
+        assert 'variant' in self.freq_file.schema.col_names, \
+            "'variant' not in {}".format(self.freq_file.schema.col_names)
 
     def _init_freq_file(self):
         if not self.config.options.freq_file:
@@ -56,33 +54,18 @@ class FrequencyAnnotator(VariantAnnotatorBase):
 
         assert self.config.options.freq is not None
 
-        score_config = Box({
-                "columns": {
-                    "chr": "chr",
-                    "pos_begin": "position",
-                    "score": ','.join(self.freq_cols),
-                },
-                "schema": Schema.from_dict({
-                    "str": "chr,variant",
-                    "int": "position",
-                    "float": ','.join(self.freq_cols),
-                })
-            },
-            default_box=True,
-            default_box_attr=None)
-
         if self.config.options.direct:
             self.freq_file = score_file_io.DirectAccess(
                 self.config.options,
                 freq_filename,
                 config_filename=None,
-                score_config=score_config)
+                score_config=None)
         else:
             self.freq_file = score_file_io.IterativeAccess(
                 self.config.options,
                 freq_filename,
                 config_filename=None,
-                score_config=score_config)
+                score_config=None)
         self.freq_file._setup()
 
         self.no_score_value = None

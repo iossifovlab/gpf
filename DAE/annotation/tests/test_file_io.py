@@ -144,9 +144,9 @@ def test_tabix_reader_header(filename):
 
     with TabixReader(options, filename) as reader:
         assert reader is not None
-        assert reader.header is not None
+        assert reader.schema.col_names is not None
 
-        assert len(reader.header) == 4
+        assert len(reader.schema.col_names) == 4
 
 
 @pytest.mark.parametrize(
@@ -186,7 +186,7 @@ def test_tabix_chrom_prefix(
 
     with TabixReader(options, filename) as reader:
         assert reader is not None
-        assert reader.header is not None
+        assert reader.schema.col_names is not None
 
         assert reader._has_chrom_prefix == has_prefix
         assert reader._handle_chrom_prefix(region) == check_region

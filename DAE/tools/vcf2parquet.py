@@ -9,6 +9,7 @@ from __future__ import print_function
 
 import os
 import sys
+import time
 import argparse
 
 from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
@@ -16,13 +17,16 @@ from variants.annotate_composite import AnnotatorComposite
 from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
 from variants.builder import get_genome, get_gene_models
 from variants.configure import Configure
-from variants.parquet_io import save_family_variants_to_parquet, \
-    save_summary_variants_to_parquet, \
+from variants.parquet_io import save_variants_to_parquet, \
     save_ped_df_to_parquet
 from variants.raw_vcf import RawFamilyVariants
 from cyvcf2 import VCF
-import multiprocessing
-import functools
+
+from variants.import_commons import build_contig_regions, \
+    contigs_makefile_generate
+
+# import multiprocessing
+# import functools
 
 
 def get_contigs(vcf_filename):
@@ -31,7 +35,8 @@ def get_contigs(vcf_filename):
 
 
 def create_vcf_variants(
-        config, region=None, genome_file=None, gene_models_file=None):
+        config, region=None, 
+        genome_file=None, gene_models_file=None):
 
     genome = get_genome(genome_file=genome_file)
     gene_models = get_gene_models(gene_models_file=gene_models_file)
@@ -50,31 +55,6 @@ def create_vcf_variants(
     return fvars
 
 
-def import_vcf_contig(config, contig):
-    # region = "{}:1-100000".format(contig)
-    region = contig
-    fvars = create_vcf_variants(config, region)
-
-    if fvars.is_empty():
-        print("empty contig {} done".format(contig), file=sys.stderr)
-        return
-
-    summary_filename = os.path.join(
-        config.output,
-        "summary_variants_{}.parquet".format(contig))
-    allele_filename = os.path.join(
-        config.output,
-        "family_alleles_{}.parquet".format(contig))
-
-    save_summary_variants_to_parquet(
-        fvars.query_variants(),
-        summary_filename)
-    save_family_variants_to_parquet(
-        fvars.query_variants(),
-        allele_filename)
-    print("contig {} done".format(contig), file=sys.stderr)
-
-
 def import_pedigree(config):
     pedigree_filename = os.path.join(
         config.output,
@@ -88,47 +68,64 @@ def import_pedigree(config):
 def import_vcf(argv):
     assert os.path.exists(argv.vcf)
     assert os.path.exists(argv.pedigree)
-    assert os.path.exists(argv.out)
-    assert os.path.isdir(argv.out)
 
     vcf_filename = argv.vcf
     ped_filename = argv.pedigree
 
-    config = Configure.from_dict({
+    vcf_config = Configure.from_dict({
             'vcf': {
                 'pedigree': ped_filename,
                 'vcf': vcf_filename,
                 'annotation': None,
             },
-            'output': argv.out,
         })
 
-    contigs = get_contigs(vcf_filename)
-    genome = get_genome(genome_file=None)
+    region = argv.region
+    fvars = create_vcf_variants(vcf_config, region)
 
-    chromosomes = set(genome.allChromosomes)
-    contigs_to_process = []
-    for contig in contigs:
-        if contig not in chromosomes:
-            continue
-        assert contig in chromosomes, contig
+    if fvars.is_empty():
+        print("empty contig {} done".format(region), file=sys.stderr)
+        return
 
-        print(contig, genome.get_chr_length(contig),
-              "groups=", 1 + genome.get_chr_length(contig) / 100000000)
-        contigs_to_process.append(contig)
+    parquet_config = Configure.from_prefix_parquet(argv.output).parquet
+    print("converting into ", parquet_config)
 
-    import_pedigree(config)
+    save_ped_df_to_parquet(fvars.ped_df, parquet_config.pedigree)
 
-    pool = multiprocessing.Pool(processes=argv.processes_count)
-    pool.map(
-        functools.partial(import_vcf_contig, config),
-        contigs_to_process)
+    print("going to build: ", argv.region)
+    start = time.time()
+
+    save_variants_to_parquet(
+        fvars.full_variants_iterator(),
+        summary_filename=parquet_config.summary_variant,
+        family_filename=parquet_config.family_variant,
+        effect_gene_filename=parquet_config.effect_gene_variant,
+        member_filename=parquet_config.member_variant,
+        bucket_index=argv.bucket_index)
+    end = time.time()
+
+    print("DONE region: {} for {} sec".format(
+        argv.region, round(end-start)))
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description='Convert VCF file to parquet')
 
+    subparsers = parser.add_subparsers(
+        dest='type',
+        title='subcommands',
+        description='choose what type of data to convert',
+        help='vcf import or make generation for vcf import')
+
+    parse_vcf_arguments(subparsers)
+    parser_make_arguments(subparsers)
+
+    parser_args = parser.parse_args(argv)
+    return parser_args
+
+
+def parser_common_arguments(parser):
     parser.add_argument(
         'pedigree', type=str,
         metavar='<pedigree filename>',
@@ -140,19 +137,61 @@ def parse_cli_arguments(argv=sys.argv[1:]):
         help='VCF file to import'
     )
     parser.add_argument(
-        '-o', '--out', type=str, default='./',
-        dest='out', metavar='output filepath',
-        help='output filepath. If none specified, current directory is used'
+        '-o', '--out', type=str, default='.',
+        dest='output', metavar='<output filepath prefix>',
+        help='output filepath prefix. '
+        'If none specified, current directory is used'
     )
+
+
+def parse_vcf_arguments(subparsers):
+    parser = subparsers.add_parser('vcf')
+    parser_common_arguments(parser)
+
     parser.add_argument(
-        '-p', '--processes', type=int, default=4,
-        dest='processes_count', metavar='processes count',
-        help='number of processes'
+        '--region', type=str,
+        dest='region', metavar='region',
+        default=None,
+        help='region to convert'
     )
 
-    parser_args = parser.parse_args(argv)
-    return parser_args
+    parser.add_argument(
+        '-b', '--bucket-index', type=int, default=1,
+        dest='bucket_index', metavar='bucket index',
+        help='bucket index'
+    )
 
+
+def parser_make_arguments(subparsers):
+    parser = subparsers.add_parser('make')
+    parser_common_arguments(parser)
+
+    parser.add_argument(
+        '--len', type=int,
+        default=None,
+        dest='len', metavar='len',
+        help='split contigs in regions with length <len>'
+    )
+
+
+def makefile_generate(argv):
+    assert os.path.exists(argv.vcf)
+    assert os.path.exists(argv.pedigree)
+
+    vcf_filename = argv.vcf
+    ped_filename = argv.pedigree
+
+    genome = get_genome(genome_file=None)
+    data_contigs = get_contigs(vcf_filename)
+    build_contigs = build_contig_regions(genome, argv.len)
+
+    contigs_makefile_generate(
+        build_contigs,
+        data_contigs,
+        argv.output,
+        "vcf2parquet.py vcf",
+        "{} {}".format(ped_filename, vcf_filename)
+    )
 
 # def reindex(argv):
 #     for contig in SPARK_CONTIGS:
@@ -167,7 +206,8 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 
 if __name__ == "__main__":
     argv = parse_cli_arguments(sys.argv[1:])
-    print(argv)
 
-    import_vcf(argv)
-    # reindex(sys.argv)
+    if argv.type == 'vcf':
+        import_vcf(argv)
+    elif argv.type == 'make':
+        makefile_generate(argv)
