@@ -1,6 +1,5 @@
 import pytest
 
-import os
 from box import Box
 import json
 
