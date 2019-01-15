@@ -176,7 +176,7 @@ class FamiliesCounter(object):
 
         return True
 
-    def _get_families_counters(self, families, phenotype_info):
+    def _get_unique_families_counters(self, families, phenotype_info):
         families_counters = {}
         for family in families:
             is_family_in_counters = False
@@ -191,28 +191,38 @@ class FamiliesCounter(object):
 
         return families_counters
 
+    def _get_all_families_counters(self, families):
+        return {family: family.family_id for family in families}
+
+    def _get_sorted_families_counters(
+            self, families, phenotype_info, families_count_show_id):
+        families_counters = self._get_unique_families_counters(
+            families, phenotype_info)
+
+        families_counters = dict(sorted(
+            families_counters.items(), key=lambda fc: len(fc[1]),
+            reverse=True))
+
+        families_counters = {
+            family: (
+                ', '.join(family_ids)
+                if families_count_show_id is not None and
+                families_count_show_id >= len(family_ids)
+                else len(family_ids))
+            for family, family_ids in families_counters.items()
+        }
+
+        return families_counters
+
     def _get_counters(
             self, families, phenotype_info, draw_all_families,
             families_count_show_id):
         if draw_all_families:
-            families_counters =\
-                {family: family.family_id for family in families}
+            families_counters = self._get_all_families_counters(families)
         else:
-            families_counters = self._get_families_counters(
-                families, phenotype_info)
+            families_counters = self._get_sorted_families_counters(
+                families, phenotype_info, families_count_show_id)
 
-            families_counters = dict(sorted(
-                families_counters.items(), key=lambda fc: len(fc[1]),
-                reverse=True))
-
-            families_counters = {
-                family: (
-                    ', '.join(family_ids)
-                    if families_count_show_id is not None and
-                    families_count_show_id >= len(family_ids)
-                    else len(family_ids))
-                for family, family_ids in families_counters.items()
-            }
         return [FamilyCounter(family, counter, phenotype_info)
                 for family, counter in families_counters.items()]
 

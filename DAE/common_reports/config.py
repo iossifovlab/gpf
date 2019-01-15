@@ -1,6 +1,6 @@
+from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()
-from __future__ import unicode_literals
 
 from builtins import object
 from Config import Config
