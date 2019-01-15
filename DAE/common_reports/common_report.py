@@ -5,7 +5,7 @@ import numpy as np
 import json
 import os
 import itertools
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from copy import deepcopy
 
 from common_reports.config import CommonReportsConfig
@@ -199,7 +199,7 @@ class FamiliesCounter(object):
         families_counters = self._get_unique_families_counters(
             families, phenotype_info)
 
-        families_counters = dict(sorted(
+        families_counters = OrderedDict(sorted(
             families_counters.items(), key=lambda fc: len(fc[1]),
             reverse=True))
 
