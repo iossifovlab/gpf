@@ -50,10 +50,10 @@ class PeopleCounter(object):
         return people
 
     def is_empty(self):
-        return True if self.people_total == 0 else False
+        return self.people_total == 0
 
     def is_empty_field(self, field):
-        return True if getattr(self, field) == 0 else False
+        return getattr(self, field) == 0
 
 
 class PeopleCounters(object):
@@ -390,10 +390,10 @@ class EffectWithFilter(object):
         return len(children_with_event)
 
     def is_empty(self):
-        return True if self.number_of_observed_events == 0 and\
+        return self.number_of_observed_events == 0 and\
             self.number_of_children_with_event == 0 and\
             self.observed_rate_per_child == 0 and\
-            self.percent_of_children_with_events == 0 else False
+            self.percent_of_children_with_events == 0
 
 
 class Effect(object):
@@ -673,10 +673,10 @@ class PhenotypesInfo(object):
         return self.phenotypes_info[0]
 
     def has_phenotype_info(self, phenotype_group):
-        return True if len(list(filter(
+        return len(list(filter(
             lambda phenotype_info:
             phenotype_info.phenotype_group == phenotype_group,
-            self.phenotypes_info))) else False
+            self.phenotypes_info))) != 0
 
     def get_phenotype_info(self, phenotype_group):
         return list(filter(
