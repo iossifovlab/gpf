@@ -1,4 +1,7 @@
+from future import standard_library
+standard_library.install_aliases()
 from __future__ import unicode_literals
+
 from builtins import object
 from Config import Config
 from configparser import ConfigParser
@@ -7,9 +10,6 @@ from box import Box
 import common.config
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
-
-from future import standard_library
-standard_library.install_aliases()
 
 
 class CommonReportsConfig(object):
