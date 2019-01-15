@@ -16,5 +16,8 @@ def get_config():
     result["COMMON_REPORTS_DIR"] = os.environ.get(
         "DATA_STUDY_GROUPS_COMMON_REPORTS_DIR",
         os.path.join(result.get("DATA_DIR"), "commonReports"))
+    result["DENOVO_GENE_SETS_DIR"] = os.environ.get(
+        "DATA_STUDY_GROUPS_DENOVO_GENE_SETS_DIR",
+        os.path.join(result.get("DATA_DIR"), "gene_sets"))
 
     return result

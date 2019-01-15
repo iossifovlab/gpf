@@ -269,8 +269,9 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
     def _build_complex_where_with_array_attr(
             self, attr_name, column_name, attr_transformer):
         assert self.query[attr_name] is not None
-        assert isinstance(self.query[attr_name], str)
-        parsed = attr_transformer.transform_query_string_to_tree(
+        parsed = self.query[attr_name]
+        if isinstance(self.query[attr_name], str):
+            parsed = attr_transformer.transform_query_string_to_tree(
                     self.query[attr_name])
         transformer = QueryTreeToSQLListTransformer(column_name)
         return transformer.transform(parsed)
@@ -288,7 +289,7 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
             'inheritance', 'F.inheritance_in_members', inheritance_query)
 
     def build(self):
-        print(self.query)
+        # print(self.query)
 
         where_parts = []
         summary_query = self.summary_query_builder.build()

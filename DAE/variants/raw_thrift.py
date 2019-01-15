@@ -57,9 +57,11 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         assert config is not None
 
         self.config = config
-        assert os.path.exists(self.config.pedigree)
-        assert os.path.exists(self.config.summary_variant)
-        assert os.path.exists(self.config.family_variant)
+        assert os.path.exists(self.config.pedigree), self.config.pedigree
+        assert os.path.exists(self.config.summary_variant), \
+            self.config.summary_variant
+        assert os.path.exists(self.config.family_variant), \
+            self.config.family_variant
 
         if not thrift_connection:
             thrift_connection = ThriftFamilyVariants.get_thrift_connection(
