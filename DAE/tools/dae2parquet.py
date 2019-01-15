@@ -17,7 +17,7 @@ from variants.configure import Configure
 from variants.raw_dae import RawDAE, RawDenovo
 
 from variants.parquet_io import save_ped_df_to_parquet, \
-    save_variants_to_parquet
+    VariantsParquetWriter
 from variants.import_commons import build_contig_regions, \
     contigs_makefile_generate
 
@@ -58,8 +58,8 @@ def dae_build_region(argv):
 
     print("going to build: ", argv.region)
     start = time.time()
-    save_variants_to_parquet(
-        dae.full_variants_iterator(),
+    variants_writer = VariantsParquetWriter(dae.full_variants_iterator())
+    variants_writer.save_variants_to_parquet(
         summary_filename=parquet_config.summary_variant,
         family_filename=parquet_config.family_variant,
         effect_gene_filename=parquet_config.effect_gene_variant,
@@ -72,9 +72,7 @@ def dae_build_region(argv):
 
 
 def dae_build_makefile(argv):
-
     data_contigs = get_contigs(argv.summary)
-    # data_contigs = ['chr21', 'chr22']
     genome = get_genome(genome_file=None)
     build_contigs = build_contig_regions(genome, argv.len)
 
@@ -117,8 +115,9 @@ def denovo_build(argv):
 
     print("going to build: ", config.denovo)
     start = time.time()
-    save_variants_to_parquet(
-        denovo.full_variants_iterator(),
+
+    variants_writer = VariantsParquetWriter(denovo.full_variants_iterator())
+    variants_writer.save_variants_to_parquet(
         summary_filename=parquet_config.summary_variant,
         family_filename=parquet_config.family_variant,
         effect_gene_filename=parquet_config.effect_gene_variant,

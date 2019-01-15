@@ -6,7 +6,7 @@ import pytest
 from box import Box
 
 from annotation.tools.file_io import TSVReader, TSVGzipReader, \
-    TabixReader
+    TabixReaderVariants
 
 from .conftest import relative_to_this_test_folder
 
@@ -116,7 +116,7 @@ def test_tabix_reader(filename, header, no_header, region, linecount):
         'no_header': no_header,
     }, default_box=True, default_box_attr=None)
 
-    with TabixReader(options, filename=infilename) as reader:
+    with TabixReaderVariants(options, filename=infilename) as reader:
         assert reader is not None
         print(reader.schema.col_names)
         assert reader.schema.col_names == header
@@ -138,7 +138,7 @@ def test_tabix_reader_simple():
         'region': region,
     }, default_box=True, default_box_attr=None)
 
-    with TabixReader(options, filename=infilename) as reader:
+    with TabixReaderVariants(options, filename=infilename) as reader:
         assert reader is not None
         print(reader.schema.col_names)
         assert reader.schema.col_names == header

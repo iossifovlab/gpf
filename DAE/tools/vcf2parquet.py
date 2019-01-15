@@ -17,7 +17,7 @@ from variants.annotate_composite import AnnotatorComposite
 from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
 from variants.builder import get_genome, get_gene_models
 from variants.configure import Configure
-from variants.parquet_io import save_variants_to_parquet, \
+from variants.parquet_io import VariantsParquetWriter, \
     save_ped_df_to_parquet
 from variants.raw_vcf import RawFamilyVariants
 from cyvcf2 import VCF
@@ -95,8 +95,8 @@ def import_vcf(argv):
     print("going to build: ", argv.region)
     start = time.time()
 
-    save_variants_to_parquet(
-        fvars.full_variants_iterator(),
+    variants_writer = VariantsParquetWriter(fvars.full_variants_iterator())
+    variants_writer.save_variants_to_parquet(
         summary_filename=parquet_config.summary_variant,
         family_filename=parquet_config.family_variant,
         effect_gene_filename=parquet_config.effect_gene_variant,
