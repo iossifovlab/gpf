@@ -14,10 +14,6 @@ class EffectAnnotator(VariantAnnotatorBase):
 
     def __init__(self, config, schema):
         super(EffectAnnotator, self).__init__(config, schema)
-        assert self.config.options.Traw is not None
-        assert self.config.options.Graw is not None
-        assert os.path.exists(self.config.options.Traw)
-        assert os.path.exists(self.config.options.Graw)
 
         self._init_variant_annotation()
 
@@ -39,8 +35,28 @@ class EffectAnnotator(VariantAnnotatorBase):
                     Schema.produce_type('list(str)')
 
     def _init_variant_annotation(self):
-        genome = GenomeAccess.openRef(self.config.options.Graw)
-        gene_models = load_gene_models(self.config.options.Traw)
+        genome = None
+        if self.config.options.Graw is None:
+            from DAE import genomesDB as genomes_db
+            genome = genomes_db.get_genome()
+        else:
+            assert self.config.options.Graw is not None
+            assert os.path.exists(self.config.options.Graw)
+            genome = GenomeAccess.openRef(self.config.options.Graw)
+        
+        assert genome is not None
+
+        # assert self.config.options.Graw is not None
+        # assert os.path.exists(self.config.options.Graw)
+        gene_models = None
+        if self.config.options.Traw is None:
+            from DAE import genomesDB as genomes_db
+            gene_models = genomes_db.get_gene_models()
+        else:
+            assert os.path.exists(self.config.options.Traw)
+            gene_models = load_gene_models(self.config.options.Traw)
+        assert gene_models is not None
+
         if self.config.options.prom_len is None:
             self.config.options.prom_len = 0
         self.annotation_helper = VariantEffectAnnotator(
