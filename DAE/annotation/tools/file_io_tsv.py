@@ -19,6 +19,56 @@ def to_str(column_value):
         return str(column_value)
 
 
+class RegionHelper(object):
+
+    def __init__(self, region_string, pos_index):
+        self.pos_start, self.pos_end = \
+            RegionHelper.parse_region_string(region_string)
+        self.pos_index = pos_index
+
+    @staticmethod
+    def parse_region_string(region):
+        region = region.split(':')
+        assert len(region) == 2
+
+        pos_start = None
+        pos_end = None
+        if '-' in region[1]:
+            pos_start = region[1].split('-')[0]
+            pos_end = region[1].split('-')[1]
+        else:
+            pos_start = region[1]
+
+        try:
+            pos_start = int(pos_start)
+            if pos_end:
+                pos_end = int(pos_end)
+            return (pos_start,
+                    pos_end)
+        except ValueError:
+            sys.exit(-1)
+
+    def contains(self, line):
+        try:
+            pos = int(line[self.pos_index])
+        except ValueError:
+            sys.exit(-1)
+
+        if self.pos_end:
+            if pos >= self.pos_start and pos <= self.pos_end:
+                return True
+            return False
+        else:
+            if pos >= self.pos_start:
+                return True
+            return False
+
+
+class NoRegionHelper(object):
+    def contains(self, pos):
+        return True
+
+
 class AbstractFormat(object):
 
     __metaclass__ = ABCMeta
@@ -269,6 +319,32 @@ class TabixReader(TSVFormat):
         for line in self.lines_iterator:
             self._progress_step()
             yield line
+
+
+class TabixReaderVariants(TabixReader):
+
+    def __init__(self, options, filename=None):
+        super(TabixReaderVariants, self).__init__(options, filename)
+
+    def _setup(self):
+        super(TabixReaderVariants, self)._setup()
+
+        if self.options.vcf and self.options.region:
+                pos_index = self.schema.col_names.index(self.options.p)
+                self.region_helper = RegionHelper(self.options.region,
+                                                  pos_index)
+        else:
+            self.region_helper = NoRegionHelper()
+
+    def lines_read_iterator(self):
+        if self.lines_iterator is None:
+            return
+
+        for line in self.lines_iterator:
+            self._progress_step()
+
+            if self.region_helper.contains(line):
+                yield line
 
 
 class TSVWriter(TSVFormat):

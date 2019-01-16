@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import os
+
 from builtins import str
 
 import itertools
@@ -9,7 +11,8 @@ from RegionOperations import Region
 from variants.attributes import Role
 from datasets.helpers import expand_effect_types
 from variants.attributes_query import role_query, variant_type_converter, \
-    sex_converter, AndNode, NotNode, OrNode, ContainsNode
+    sex_converter, AndNode, NotNode, OrNode, EqualsNode, ContainsNode
+from study_groups.default_settings import get_config as get_study_groups_config
 
 
 class StudyGroup(object):
@@ -67,6 +70,13 @@ class StudyGroup(object):
                 first[sf] if len(first[sf]) > len(second[sf]) else second[sf]
         return combined_dict
 
+    def gene_sets_cache_file(self):
+        study_groups_config = get_study_groups_config()
+        caches_dir = study_groups_config["DENOVO_GENE_SETS_DIR"]
+        cache_filename = '{}.json'.format(self.name)
+
+        return os.path.join(caches_dir, cache_filename)
+
     @property
     def families(self):
         return functools.reduce(lambda x, y: self.combine_families(x, y),
@@ -95,7 +105,7 @@ class StudyGroupWrapper(StudyGroup):
     # ultraRareOnly
     # TMM_ALL
     def query_variants(self, **kwargs):
-        print("kwargs in study group:", kwargs)
+        # print("kwargs in study group:", kwargs)
         limit = None
         if 'limit' in kwargs:
             limit = kwargs['limit']

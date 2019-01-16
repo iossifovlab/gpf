@@ -9,10 +9,8 @@ import os
 
 import numpy as np
 from utils.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
-# from variants.parquet_io import save_family_variants_to_parquet,\
-#     save_summary_variants_to_parquet
 from variants.raw_dae import RawDAE, BaseDAE
-from variants.parquet_io import save_variants_to_parquet
+from variants.parquet_io import VariantsParquetWriter
 from variants.configure import Configure
 
 
@@ -26,9 +24,8 @@ def test_dae_full_variants_iterator(raw_dae, temp_dirname):
         print(sv, fvs)
 
     conf = Configure.from_prefix_parquet(temp_dirname).parquet
-
-    save_variants_to_parquet(
-        dae.full_variants_iterator(),
+    variants_writer = VariantsParquetWriter(dae.full_variants_iterator())
+    variants_writer.save_variants_to_parquet(
         summary_filename=conf.summary_variant,
         family_filename=conf.family_variant,
         effect_gene_filename=conf.effect_gene_variant,

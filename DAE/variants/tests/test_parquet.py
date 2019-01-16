@@ -8,8 +8,7 @@ from __future__ import unicode_literals
 import pytest
 import os
 
-from variants.parquet_io import save_ped_df_to_parquet, \
-    read_ped_df_from_parquet, variants_table, save_variants_to_parquet
+from variants.parquet_io import VariantsParquetWriter
 from variants.configure import Configure
 
 # summary_table, variants_table
@@ -47,7 +46,9 @@ from variants.configure import Configure
 def test_parquet_variants(variants_vcf, fixture_name, temp_filename):
     fvars = variants_vcf(fixture_name)
     variants = fvars.full_variants_iterator()
-    for st, et, ft, mt in variants_table(variants, batch_size=2):
+    variants_writer = VariantsParquetWriter(variants)
+
+    for st, et, ft, mt in variants_writer.variants_table(batch_size=2):
         assert st is not None
         assert et is not None
         assert ft is not None
@@ -63,9 +64,9 @@ def test_parquet_variants_save(variants_vcf, fixture_name, temp_dirname):
     variants = fvars.full_variants_iterator()
     conf = Configure.from_prefix_parquet(temp_dirname).parquet
     print(conf)
+    variants_writer = VariantsParquetWriter(variants)
 
-    save_variants_to_parquet(
-        variants,
+    variants_writer.save_variants_to_parquet(
         summary_filename=conf.summary_variant,
         effect_gene_filename=conf.effect_gene_variant,
         family_filename=conf.family_variant,
