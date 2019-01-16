@@ -36,11 +36,11 @@ How to create new user?
 +++++++++++++++++++++++
 
 .. figure:: imgs/add-remove-group-num.png
-   :width: 450px
-   :alt: Interface for sotring groups
+   :scale: 50
+   :alt: Interface for editing user groups
    :align: center
    
-   Interface for sotring groups
+   Interface for editing user groups
 
 
 How to specify permissions for given user?
