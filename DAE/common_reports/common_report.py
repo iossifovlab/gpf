@@ -33,7 +33,7 @@ class PeopleCounter(object):
 
     def to_dict(self, rows):
         people_counter_dict =\
-            {row: getattr(self, row) for row in rows}
+            OrderedDict([(row, getattr(self, row)) for row in rows])
         people_counter_dict['column'] = self.column
         return people_counter_dict
 
@@ -67,12 +67,12 @@ class PeopleCounters(object):
         self.columns = self._get_columns(self.counters)
 
     def to_dict(self):
-        return {
-            'group_name': self.group_name,
-            'rows': self.rows,
-            'columns': self.columns,
-            'counters': [c.to_dict(self.rows) for c in self.counters],
-        }
+        return OrderedDict([
+            ('group_name', self.group_name),
+            ('columns', self.columns),
+            ('rows', self.rows),
+            ('counters', [c.to_dict(self.rows) for c in self.counters])
+        ])
 
     def _get_counters(self, families, filter_object):
         people_counters = [PeopleCounter(families, filters)
@@ -103,10 +103,10 @@ class FamilyCounter(object):
         self.pedigrees_count = counter
 
     def to_dict(self):
-        return {
-            'pedigree': self.pedigree,
-            'pedigrees_count': self.pedigrees_count
-        }
+        return OrderedDict([
+            ('pedigree', self.pedigree),
+            ('pedigrees_count', self.pedigrees_count)
+        ])
 
     def _get_member_color(self, member, phenotype_info):
         if member.generated:
@@ -137,9 +137,9 @@ class FamiliesCounter(object):
             families_count_show_id)
 
     def to_dict(self):
-        return {
-            'counters': [c.to_dict() for c in self.counters],
-        }
+        return OrderedDict([
+            ('counters', [c.to_dict() for c in self.counters])
+        ])
 
     def _families_to_dataframe(self, families, phenotype_column):
         families_records = []
@@ -159,7 +159,8 @@ class FamiliesCounter(object):
             return False
 
         families = self._families_to_dataframe(
-            {first.family_id: first, second.family_id: second},
+            OrderedDict([(first.family_id, first),
+                         (second.family_id, second)]),
             phenotype_column)
 
         grouped_families = families.groupby(
@@ -177,7 +178,7 @@ class FamiliesCounter(object):
         return True
 
     def _get_unique_families_counters(self, families, phenotype_info):
-        families_counters = {}
+        families_counters = OrderedDict()
         for family in families:
             is_family_in_counters = False
             for unique_family in families_counters.keys():
@@ -192,7 +193,7 @@ class FamiliesCounter(object):
         return families_counters
 
     def _get_all_families_counters(self, families):
-        return {family: family.family_id for family in families}
+        return OrderedDict([(family, family.family_id) for family in families])
 
     def _get_sorted_families_counters(
             self, families, phenotype_info, families_count_show_id):
@@ -203,14 +204,14 @@ class FamiliesCounter(object):
             families_counters.items(), key=lambda fc: len(fc[1]),
             reverse=True))
 
-        families_counters = {
-            family: (
+        families_counters = OrderedDict([
+            (family, (
                 ', '.join(family_ids)
                 if families_count_show_id is not None and
                 families_count_show_id >= len(family_ids)
-                else len(family_ids))
+                else len(family_ids)))
             for family, family_ids in families_counters.items()
-        }
+        ])
 
         return families_counters
 
@@ -240,12 +241,12 @@ class FamiliesCounters(object):
         self.legend = self._get_legend(phenotype_info)
 
     def to_dict(self):
-        return {
-            'group_name': self.group_name,
-            'phenotypes': self.phenotypes,
-            'counters': [counter.to_dict() for counter in self.counters],
-            'legend': self.legend
-        }
+        return OrderedDict([
+            ('group_name', self.group_name),
+            ('phenotypes', self.phenotypes),
+            ('counters', [counter.to_dict() for counter in self.counters]),
+            ('legend', self.legend)
+        ])
 
     def _get_families_groups(self, families, phenotype_info):
         families_groups = defaultdict(list)
@@ -296,12 +297,12 @@ class FamiliesReport(object):
             families_count_show_id)
 
     def to_dict(self):
-        return {
-            'families_total': self.families_total,
-            'people_counters': [pc.to_dict() for pc in self.people_counters],
-            'families_counters':
-                [fc.to_dict() for fc in self.families_counters]
-        }
+        return OrderedDict([
+            ('families_total', self.families_total),
+            ('people_counters', [pc.to_dict() for pc in self.people_counters]),
+            ('families_counters',
+             [fc.to_dict() for fc in self.families_counters])
+        ])
 
     def _get_people_counters(self, families, filter_objects):
         return [
@@ -340,23 +341,24 @@ class EffectWithFilter(object):
         self.number_of_children_with_event =\
             self._get_number_of_children_with_event(
                 variants, people_with_filter, people_with_parents_ids)
-        self.observed_rate_per_child = self.number_of_observed_events /\
-            len(people_with_parents_ids)
+        self.observed_rate_per_child = float(self.number_of_observed_events) /\
+            float(len(people_with_parents_ids))
         self.percent_of_children_with_events =\
-            self.number_of_children_with_event / len(people_with_parents_ids)
+            float(self.number_of_children_with_event) /\
+            float(len(people_with_parents_ids))
 
         self.column = filter_object.get_column()
 
     def to_dict(self):
-        return {
-            'number_of_observed_events': self.number_of_observed_events,
-            'number_of_children_with_event':
-                self.number_of_children_with_event,
-            'observed_rate_per_child': self.observed_rate_per_child,
-            'percent_of_children_with_events':
-                self.percent_of_children_with_events,
-            'column': self.column
-        }
+        return OrderedDict([
+            ('number_of_observed_events', self.number_of_observed_events),
+            ('number_of_children_with_event',
+             self.number_of_children_with_event),
+            ('observed_rate_per_child', self.observed_rate_per_child),
+            ('percent_of_children_with_events',
+             self.percent_of_children_with_events),
+            ('column', self.column)
+        ])
 
     def _people_with_filter(self, query_object, filter_object):
         people_with_filter = set()
@@ -414,10 +416,10 @@ class Effect(object):
         self.row = self._get_row(query_object, effect, filter_objects)
 
     def to_dict(self):
-        return {
-            'effect_type': self.effect_type,
-            'row': [r.to_dict() for r in self.row],
-        }
+        return OrderedDict([
+            ('effect_type', self.effect_type),
+            ('row', [r.to_dict() for r in self.row])
+        ])
 
     def _get_row(self, query_object, effect, filter_objects):
         return [EffectWithFilter(query_object, filter_object, effect)
@@ -449,13 +451,13 @@ class DenovoReportTable(object):
         self.rows = self._get_rows(query_object, effects, filter_object)
 
     def to_dict(self):
-        return {
-            'rows': [r.to_dict() for r in self.rows],
-            'group_name': self.group_name,
-            'columns': self.columns,
-            'effect_groups': self.effect_groups,
-            'effect_types': self.effect_types
-        }
+        return OrderedDict([
+            ('rows', [r.to_dict() for r in self.rows]),
+            ('group_name', self.group_name),
+            ('columns', self.columns),
+            ('effect_groups', self.effect_groups),
+            ('effect_types', self.effect_types),
+        ])
 
     def _remove_empty_columns(self, indexes):
         for index in sorted(indexes, reverse=True):
@@ -506,9 +508,9 @@ class DenovoReport(object):
             query_object, effect_groups, effect_types, filter_objects)
 
     def to_dict(self):
-        return {
-            'tables': [t.to_dict() for t in self.tables]
-        }
+        return OrderedDict([
+            ('tables', [t.to_dict() for t in self.tables])
+        ])
 
     def _get_tables(
             self, query_object, effect_groups, effect_types, filter_objects):
@@ -554,22 +556,22 @@ class CommonReport(object):
         self.is_downloadable = query_object_properties['is_downloadable']
 
     def to_dict(self):
-        return {
-            'families_report': self.families_report.to_dict(),
-            'denovo_report': self.denovo_report.to_dict(),
-            'study_name': self.study_name,
-            'phenotype': self.phenotype,
-            'study_type': self.study_type,
-            'study_year': self.study_year,
-            'pub_med': self.pub_med,
-            'families': self.families,
-            'number_of_probands': self.number_of_probands,
-            'number_of_siblings': self.number_of_siblings,
-            'denovo': self.denovo,
-            'transmitted': self.transmitted,
-            'study_description': self.study_description,
-            'is_downloadable': self.is_downloadable
-        }
+        return OrderedDict([
+            ('families_report', self.families_report.to_dict()),
+            ('denovo_report', self.denovo_report.to_dict()),
+            ('study_name', self.study_name),
+            ('phenotype', self.phenotype),
+            ('study_type', self.study_type),
+            ('study_year', self.study_year),
+            ('pub_med', self.pub_med),
+            ('families', self.families),
+            ('number_of_probands', self.number_of_probands),
+            ('number_of_siblings', self.number_of_siblings),
+            ('denovo', self.denovo),
+            ('transmitted', self.transmitted),
+            ('study_description', self.study_description),
+            ('is_downloadable', self.is_downloadable)
+        ])
 
     def _get_phenotype(self, phenotypes_info):
         phenotype_info = phenotypes_info.get_first_phenotype_info()
@@ -613,10 +615,11 @@ class CommonReportsGenerator(object):
                 self.effect_types)
 
     def save_common_reports(self):
-        studies = {self.study_facade.get_study(s): s_prop
-                   for s, s_prop in self.studies.items()}
-        study_groups = {self.study_group_facade.get_study_group(sg): sg_prop
-                        for sg, sg_prop in self.study_groups.items()}
+        studies = OrderedDict([(self.study_facade.get_study(s), s_prop)
+                               for s, s_prop in self.studies.items()])
+        study_groups = OrderedDict([
+            (self.study_group_facade.get_study_group(sg), sg_prop)
+            for sg, sg_prop in self.study_groups.items()])
         studies_common_reports_dir = get_studies_config() \
             .get('COMMON_REPORTS_DIR')
         study_groups_common_reports_dir = get_study_groups_config() \
@@ -658,11 +661,11 @@ class PhenotypeInfo(object):
 
     @property
     def missing_person_info(self):
-        return {
-            'id': 'missing-person',
-            'name': 'missing-person',
-            'color': '#E0E0E0'
-        }
+        return OrderedDict([
+            ('id', 'missing-person'),
+            ('name', 'missing-person'),
+            ('color', '#E0E0E0')
+        ])
 
 
 class PhenotypesInfo(object):

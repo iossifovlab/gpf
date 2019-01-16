@@ -6,6 +6,7 @@ from builtins import object
 from Config import Config
 from configparser import ConfigParser
 from box import Box
+from collections import OrderedDict
 
 import common.config
 from configurable_entities.configurable_entity_config import\
@@ -28,7 +29,7 @@ class CommonReportsConfig(object):
         self.config = Box(common.config.to_dict(config))
 
     def _parse_data(self, data):
-        parsed_data = {}
+        parsed_data = OrderedDict()
         for d in data.split(','):
             d_properties = self.config.CommonReports.get(d.lower())
             if d_properties is None:
@@ -50,28 +51,29 @@ class CommonReportsConfig(object):
             is_downloadable =\
                 ConfigurableEntityConfig._str_to_bool(is_downloadable)
 
-            parsed_data[d] = {
-                'phenotype_groups': phenotypes.split(','),
-                'groups': {group.split(':')[1].strip():
-                           group.split(':')[0].strip().split(',')
-                           for group in groups.split('|')},
-                'draw_all_families': draw_all_families,
-                'families_count_show_id': count_of_families_for_show_id,
-                'is_downloadable': is_downloadable
-            }
+            parsed_data[d] = OrderedDict([
+                ('phenotype_groups', phenotypes.split(',')),
+                ('groups', OrderedDict([
+                    (group.split(':')[1].strip(),
+                     group.split(':')[0].strip().split(','))
+                    for group in groups.split('|')])),
+                ('draw_all_families', draw_all_families),
+                ('families_count_show_id', count_of_families_for_show_id),
+                ('is_downloadable', is_downloadable),
+            ])
         return parsed_data
 
     def _parse_domain_info(self, domain):
         id, name, color = domain.split(':')
 
-        return {
-            'id': id.strip(),
-            'name': name.strip(),
-            'color': color.strip()
-        }
+        return OrderedDict([
+            ('id', id.strip()),
+            ('name', name.strip()),
+            ('color', color.strip())
+        ])
 
     def _parse_phenotype_domain(self, phenotype_domain):
-        phenotype = {}
+        phenotype = OrderedDict()
 
         for domain in phenotype_domain.split(','):
             domain_info = self._parse_domain_info(domain)
@@ -97,17 +99,18 @@ class CommonReportsConfig(object):
     def _phenotype(self, phenotype):
         phenotype = self.config.CommonReports.get(phenotype)
 
-        return {
-            'name': phenotype.name,
-            'domain': self._parse_phenotype_domain(phenotype.domain),
-            'unaffected': self._parse_domain_info(phenotype.unaffected),
-            'default': self._parse_domain_info(phenotype.default),
-            'source': phenotype.source
-        }
+        return OrderedDict([
+            ('name', phenotype.get('name')),
+            ('domain', self._parse_phenotype_domain(phenotype.get('domain'))),
+            ('unaffected',
+             self._parse_domain_info(phenotype.get('unaffected'))),
+            ('default', self._parse_domain_info(phenotype.get('default'))),
+            ('source', phenotype.get('source'))
+        ])
 
     def phenotypes(self):
         phenotypes = self.config.CommonReports.peoplegroups.split(',')
-        phenotypes_info = {}
+        phenotypes_info = OrderedDict()
         for phenotype in phenotypes:
             phenotypes_info[phenotype] = self._phenotype(phenotype)
 
