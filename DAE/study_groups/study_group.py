@@ -52,6 +52,14 @@ class StudyGroup(object):
 
         return result
 
+    def get_column_values(self, column):
+        result = set()
+
+        for study in self.studies:
+            result.update(study.get_column_values(column))
+
+        return result
+
     def combine_families(self, first, second):
         same_families = set(first.keys()) & set(second.keys())
         combined_dict = {}
@@ -132,7 +140,8 @@ class StudyGroupWrapper(StudyGroup):
             kwargs['variant_type'] = OrNode(variant_types)
 
         if 'effect_types' in kwargs:
-            kwargs['effect_types'] = expand_effect_types(kwargs['effect_types'])
+            kwargs['effect_types'] =\
+                expand_effect_types(kwargs['effect_types'])
 
         return itertools.islice(
             super(StudyGroupWrapper, self).query_variants(**kwargs), limit)

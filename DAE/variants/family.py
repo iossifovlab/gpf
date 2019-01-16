@@ -45,6 +45,9 @@ class Person(object):
     def has_parent(self):
         return self.has_dad() or self.has_mom()
 
+    def has_attr(self, item):
+        return item in self.atts
+
     def get_attr(self, item):
         return self.atts.get(item)
 
@@ -104,14 +107,18 @@ class Family(object):
             lambda m: m.get_attr(phenotype_column) == phenotype,
             self.members_in_order))
 
-    def get_family_phenotypes(self, phenotype_column):
-        return set([member.get_attr(phenotype_column)
-                    for member in self.members_in_order])
-
     def get_people_with_phenotypes(self, phenotype_column, phenotypes):
         return list(filter(
             lambda m: m.get_attr(phenotype_column) in phenotypes,
             self.members_in_order))
+
+    def get_people_with_property(self, column, value):
+        return list(filter(lambda m: m.get_attr(column) == value,
+                           self.members_in_order))
+
+    def get_family_phenotypes(self, phenotype_column):
+        return set([member.get_attr(phenotype_column)
+                    for member in self.members_in_order])
 
     @property
     def members_ids(self):
@@ -153,8 +160,23 @@ class FamiliesBase(object):
                     person.append(p)
         return person
 
+    def persons_with_parents(self):
+        person = []
+        for fam in list(self.families.values()):
+            for p in fam.members_in_order:
+                if p.has_attr('with_parents'):
+                    with_parents = p.get_attr('with_parents')
+                    if with_parents == '1':
+                        person.append(p)
+                elif p.has_parent():
+                    person.append(p)
+        return person
+
     def persons_index(self, persons):
         return sorted([p.index for p in persons])
+
+    def persons_id(self, persons):
+        return sorted([p.person_id for p in persons])
 
     @staticmethod
     def load_simple_family_file(infile, sep="\t"):
