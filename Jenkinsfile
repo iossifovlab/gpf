@@ -73,6 +73,9 @@ pipeline {
         )
         archive 'gpf-html.tar.gz'
         fingerprint 'gpf-html.tar.gz'
+        archive 'gpf-user-html.tar.gz'
+        fingerprint 'gpf-user-html.tar.gz'
+
         sh '''
             echo $HOME
             echo $WORKSPACE
