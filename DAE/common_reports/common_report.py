@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from __future__ import division
 
 import pandas as pd
 import numpy as np
@@ -341,11 +342,10 @@ class EffectWithFilter(object):
         self.number_of_children_with_event =\
             self._get_number_of_children_with_event(
                 variants, people_with_filter, people_with_parents_ids)
-        self.observed_rate_per_child = float(self.number_of_observed_events) /\
-            float(len(people_with_parents_ids))
+        self.observed_rate_per_child = self.number_of_observed_events /\
+            len(people_with_parents_ids)
         self.percent_of_children_with_events =\
-            float(self.number_of_children_with_event) /\
-            float(len(people_with_parents_ids))
+            self.number_of_children_with_event / len(people_with_parents_ids)
 
         self.column = filter_object.get_column()
 
