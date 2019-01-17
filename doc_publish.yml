@@ -1,12 +1,43 @@
 ---
-- name: deploy seqpipe source
+- name: deploy gpf user docs
   hosts: all
   tasks:
-    - name: delete old documentation directory
-      file: path={{ doc_publish_dir }}/html state=absent
 
-    - name: copy DAE html documentation
-      synchronize: >
-        src='gpf/DAE/docs/_build/html' 
-        dest={{ doc_publish_dir }}/
-        recursive=yes
+  - name: copy gpf-user-html.tar.gz
+    copy: src=gpf-user-html.tar.gz dest="{{ base_path }}/gpf-user-html.tar.gz"
+
+  - name: clean user docs directory
+    file: path={{ base_path }}/gpf_user_docs state=absent
+
+  - name: ensure user docs directory exists
+    file: path={{ base_path }}/gpf_user_docs state=directory
+
+  - name: unarchive gpf-user-html.tar.gz
+    unarchive: |
+      src={{ base_path }}/gpf-user-html.tar.gz dest={{ base_path }}/gpf_user_docs
+      remote_src=yes
+
+  - name: clean gpf-user-html.tar.gz
+    file: path={{ base_path }}/gpf-user-html.tar.gz state=absent
+
+
+- name: deploy gpf api docs
+  hosts: all
+  tasks:
+
+  - name: copy gpf-html.tar.gz
+    copy: src=gpf-html.tar.gz dest="{{ base_path }}/gpf-html.tar.gz"
+
+  - name: clean API docs directory
+    file: path={{ base_path }}/gpf_api_docs state=absent
+
+  - name: ensure API docs directory exists
+    file: path={{ base_path }}/gpf_api_docs state=directory
+
+  - name: unarchive gpf-html.tar.gz
+    unarchive: |
+      src={{ base_path }}/gpf-html.tar.gz dest={{ base_path }}/gpf_api_docs
+      remote_src=yes
+
+  - name: clean gpf-html.tar.gz
+    file: path={{ base_path }}/gpf-html.tar.gz state=absent

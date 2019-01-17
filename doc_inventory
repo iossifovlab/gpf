@@ -1,6 +1,13 @@
-[internal]
-nemo ansible_ssh_host=nemo.local ansible_ssh_user=jenkins
+# [internal]
+# nemo ansible_ssh_host=nemo.local ansible_ssh_user=jenkins
 
-[internal:vars]
-doc_publish_dir="/var/lib/jenkins/jobs/seqpipe/jobs/gpf-documentation"
-html_publish_dir="{{doc_publish_dir}}/html"
+# [internal:vars]
+# doc_publish_dir="/var/lib/jenkins/jobs/seqpipe/jobs/gpf-documentation"
+# html_publish_dir="{{doc_publish_dir}}/html"
+
+
+[iossifovlab]
+iossifovlab.com ansible_ssh_host=iossifovlab.com  ansible_ssh_port=2022 ansible_ssh_user=lubo
+
+[iossifovlab:vars]
+base_path="/home/lubo/sites"

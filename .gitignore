@@ -2,3 +2,6 @@ userdocs/.vscode
 userdocs/_build
 .pytest_cache
 .vscode
+*.retry
+gpf-html.tar.gz
+gpf-user-html.tar.gz
