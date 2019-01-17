@@ -1,4 +1,4 @@
-docs/.vscode
-docs/_build
+userdocs/.vscode
+userdocs/_build
 .pytest_cache
 .vscode
