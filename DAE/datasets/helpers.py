@@ -5,8 +5,6 @@ import itertools
 import functools
 import logging
 
-from pheno.common import Status
-
 LOGGER = logging.getLogger(__name__)
 
 DEFAULT_COLUMN_TITLES = {
@@ -222,15 +220,19 @@ def transform_variants_to_lists(
 
 
 def get_person_color(member, pedigree_selectors, selected_pedigree_selector):
-    pedigree_selector_id = selected_pedigree_selector.get('id', None)
-    if pedigree_selector_id:
-        selected_pedigree_selectors = list(filter(
-            lambda ps: ps.id == pedigree_selector_id, pedigree_selectors))[0]
-    else:
-        selected_pedigree_selectors = pedigree_selectors[0]
     if member.generated:
         return '#E0E0E0'
     else:
+        if len(pedigree_selectors) == 0:
+            return '#FFFFFF'
+        pedigree_selector_id = selected_pedigree_selector.get('id', None)
+        if pedigree_selector_id:
+            selected_pedigree_selectors = list(filter(
+                lambda ps: ps.id == pedigree_selector_id,
+                pedigree_selectors))[0]
+        else:
+            selected_pedigree_selectors = pedigree_selectors[0]
+
         people_group_attribute =\
             member.get_attr(selected_pedigree_selectors['source'])
         domain = list(filter(lambda d: d['name'] == people_group_attribute,
