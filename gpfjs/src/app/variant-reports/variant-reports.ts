@@ -27,22 +27,33 @@ export class Studies {
 
 export class ChildrenCounter {
 
-  static fromJson(json: any) {
+  static fromJson(json: any, row: string) {
     return new ChildrenCounter(
-      json['phenotype'],
-      json['people_male'],
-      json['people_female'],
-      json['people_unspecified'],
-      json['people_total'],
+      row,
+      json['column'],
+      json[row]
     );
   }
 
   constructor(
-    readonly phenotype: string,
-    readonly childrenMale: number,
-    readonly childrenFemale: number,
-    readonly childrenUnspecified: number,
-    readonly childrenTotal: number,
+    readonly row: string,
+    readonly column: string,
+    readonly children: number,
+  ) {}
+}
+
+export class GroupCounter {
+
+  static fromJson(json: any, rows: string[]) {
+    return new GroupCounter(
+      json['column'],
+      rows.map(row => ChildrenCounter.fromJson(json, row))
+    );
+  }
+
+  constructor(
+    readonly column: string,
+    readonly childrenCounters: ChildrenCounter[]
   ) {}
 }
 
@@ -51,17 +62,28 @@ export class PeopleCounter {
   static fromJson(json: any) {
     return new PeopleCounter(
       json['counters'].map(
-        childCounter => ChildrenCounter.fromJson(childCounter)),
-      json['roles'],
-      json['phenotypes']
+        childCounter => GroupCounter.fromJson(childCounter, json['rows'])),
+      json['group_name'],
+      json['rows'],
+      json['columns']
     );
   }
 
   constructor(
-    readonly childrenCounters: ChildrenCounter[],
-    readonly roles: string[],
-    readonly phenotypes: string[]
+    readonly groupCounters: GroupCounter[],
+    readonly groupName: string,
+    readonly rows: string[],
+    readonly columns: string[]
     ) {}
+
+  getChildrenCounter(column: string, row: string) {
+    let columnGroupCounter = this.groupCounters.filter(
+      groupCounter => groupCounter.column === column)[0];
+    let rowChildrenCounter = columnGroupCounter.childrenCounters.filter(
+      childrenCounter => childrenCounter.row === row)[0];
+
+    return rowChildrenCounter;
+  }
 }
 
 export class PedigreeCounter {
@@ -84,14 +106,12 @@ export class FamilyCounter {
     return new FamilyCounter(
       json['counters'].map(
         pedigree => PedigreeCounter.fromArray(pedigree)
-      ),
-      json['phenotype']
+      )
     );
   }
 
   constructor(
     readonly pedigreeCounters: PedigreeCounter[],
-    readonly phenotype: string
   ) {}
 }
 
@@ -102,13 +122,17 @@ export class FamilyCounters {
       json['counters'].map(
         family_counter => FamilyCounter.fromJson(family_counter)
       ),
-      json['phenotypes']
+      json['group_name'],
+      json['phenotypes'],
+      Legend.fromList(json['legend'])
     );
   }
 
   constructor(
     readonly familyCounter: FamilyCounter[],
-    readonly phenotypes: string[]
+    readonly groupName: string,
+    readonly phenotypes: string[],
+    readonly legend: Legend
   ) {}
 }
 
@@ -136,20 +160,20 @@ export class DeNovoData {
 
   static fromJson(json: any) {
     return new DeNovoData(
-      json['phenotype'],
-      json['events_count'],
-      json['events_people_count'],
-      json['events_rate_per_child'],
-      json['events_people_percent'],
+      json['column'],
+      json['number_of_observed_events'],
+      json['number_of_children_with_event'],
+      json['observed_rate_per_child'],
+      json['percent_of_children_with_events'],
     );
   }
 
   constructor(
-    readonly phenotype: string,
-    readonly eventsCount: number,
-    readonly eventsChildrenCount: number,
-    readonly eventsRatePerChild: number,
-    readonly eventsChildrenPercent: number,
+    readonly column: string,
+    readonly numberOfObservedEvents: number,
+    readonly numberOfChildrenWithEvent: number,
+    readonly observedRatePerChild: number,
+    readonly percentOfChildrenWithEvents: number,
   ) {}
 }
 
@@ -174,15 +198,19 @@ export class EffectTypeTable {
   static fromJson(json: any) {
     return new EffectTypeTable(
       json['rows'].map(row => EffectTypeRow.fromJson(row)),
-      json['roles'],
-      json['phenotypes']
+      json['group_name'],
+      json['columns'],
+      json['effect_groups'],
+      json['effect_types']
       );
     }
 
     constructor(
       readonly rows: EffectTypeRow[],
-      readonly roles: string[],
-      readonly phenotypes: string[]
+      readonly groupName: string,
+      readonly columns: string[],
+      readonly effectGroups: string[],
+      readonly effectTypes: string[]
       ) {}
     }
 
@@ -193,16 +221,12 @@ export class EffectTypeTable {
           return null;
         }
         return new DenovoReport(
-          json['tables'].map(table => EffectTypeTable.fromJson(table)),
-          json['effect_groups'],
-          json['effect_types']
+          json['tables'].map(table => EffectTypeTable.fromJson(table))
         );
       }
 
       constructor (
-        readonly tables: EffectTypeRow[],
-        readonly effectGroups: string[],
-        readonly effectTypes: string[],
+        readonly tables: EffectTypeTable[]
   ) {}
 }
 
@@ -234,7 +258,46 @@ export class PedigreeTable {
 
   constructor(
     readonly pedigrees: PedigreeCounter[][],
-    readonly phenotypes: string[]
+    readonly phenotypes: string[],
+    readonly groupName: string,
+    readonly legend: Legend
   ) {}
 
+}
+
+export class LegendItem {
+
+  static fromJson(json: any) {
+    return new LegendItem(
+      json['id'],
+      json['name'],
+      json['color']
+    );
+  }
+
+  constructor(
+    readonly id: string,
+    readonly name: string,
+    readonly color: string
+  ) {}
+}
+
+export class Legend {
+
+  static fromList(list: any[]) {
+    return new Legend(
+      list.map(legendItem => LegendItem.fromJson(legendItem))
+    );
+  }
+
+  constructor(
+    readonly legendItems: LegendItem[]
+  ) {}
+}
+
+export enum PeopleSex {
+  people_male = 'Male',
+  people_female = 'Female',
+  people_unspecified = 'Unspecified',
+  people_total = 'Total'
 }

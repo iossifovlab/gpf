@@ -4,12 +4,20 @@
 <div #wrapper class="clickable" width="100%" height="100%"
 	[ngClass]="{'fullscreen': maximized}"
 	(click)="toggleMaximize()">
-	<svg [attr.height.px]="height" [attr.width.px]="width" [attr.transform]="getScaleString()" transform-origin="top left">
-		<svg:line *ngFor="let line of lines"
-			[attr.x1]=line.startX
-			[attr.y1]=line.startY
-			[attr.x2]=line.endX
-			[attr.y2]=line.endY
+	<svg [attr.width.px]="width"
+		[attr.transform]="getScaleString()" [attr.viewBox]="getViewBox()"
+		transform-origin="top left">
+		<svg:line *ngFor="let straightLine of straightLines"
+			[attr.x1]=straightLine.startX
+			[attr.y1]=straightLine.startY
+			[attr.x2]=straightLine.endX
+			[attr.y2]=straightLine.endY
+			stroke="black"
+			stroke-width="1" />
+
+		<svg:path *ngFor="let curveLine of curveLines"
+			[attr.d]=curveLine.path
+			fill="none"
 			stroke="black"
 			stroke-width="1" />
 

@@ -141,6 +141,14 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
     });
   }
 
+  get straightLines() {
+    return this.lines.filter(line => !line.curved);
+  }
+
+  get curveLines() {
+    return this.lines.filter(line => line.curved);
+  }
+
   scaleSvg() {
     if (!this.element) {
       return;
@@ -177,6 +185,19 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
 
   getScaleString() {
     return `scale(${this.scale})`;
+  }
+
+  getViewBox() {
+    let sortedCurveLines = this.curveLines.sort(curveLine => curveLine.inverseCurveP1[1]);
+
+    if (sortedCurveLines.length !== 0) {
+      let minY = sortedCurveLines[0].inverseCurveP1[1];
+      if (minY < 0) {
+        return '0 ' + minY.toString() + ' ' + this.width.toString() + ' ' + (this.height + (-minY)).toString();
+      }
+    }
+
+    return '0 0 ' + this.width + ' ' + this.height;
   }
 
   private loadPositions(family: PedigreeData[]) {
@@ -610,6 +631,7 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
 
   private generateLines(individuals: IndividualWithPosition[], horizontalYOffset = 15) {
     let lines = new Array<Line>();
+    let connections = new Array<Set<Individual>>();
 
     let lineY = individuals[0].yCenter - horizontalYOffset;
 
@@ -619,13 +641,29 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
         lines.push(new Line(current.xCenter, current.yCenter, current.xCenter, lineY));
       }
       if (i + 1 < individuals.length) {
-        let other = individuals[i + 1];
+        for (let j = i + 1; j < individuals.length; j++) {
+          let other = individuals[j];
+          let areNextToEachother = ((i + 1) === j);
 
-        if (current.individual.areMates(other.individual)) {
-          let middleX = (current.xCenter + other.xCenter) / 2;
-          lines.push(new Line(current.xCenter, current.yCenter,
-            other.xCenter, other.yCenter));
-          lines.push(new Line(middleX, current.yCenter, middleX, individuals[0].yCenter + horizontalYOffset));
+          if (current.individual.areMates(other.individual) &&
+              !connections.includes(new Set([current.individual, other.individual]))) {
+            let middleX = (current.xCenter + other.xCenter) / 2;
+            if (areNextToEachother) {
+              lines.push(new Line(current.xCenter, current.yCenter,
+                other.xCenter, other.yCenter));
+              lines.push(new Line(middleX, current.yCenter, middleX, individuals[0].yCenter + horizontalYOffset));
+            } else {
+              let line = new Line(current.xCenter, current.yCenter,
+                other.xCenter, other.yCenter, true, horizontalYOffset);
+
+                let percentX = (middleX - current.xCenter) / (other.xCenter - current.xCenter);
+                let centerY = line.inverseCurveYAt(percentX);
+
+              lines.push(line);
+              lines.push(new Line(middleX, centerY, middleX, individuals[0].yCenter + horizontalYOffset));
+            }
+            connections.push(new Set([current.individual, other.individual]));
+          }
         }
       }
     }

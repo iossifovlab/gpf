@@ -1,12 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
 import { Observable, Subject } from 'rxjs';
 
 import { VariantReportsService } from './variant-reports.service';
-import { Studies, Study, VariantReport, ChildrenCounter,
-         FamilyCounter, PedigreeCounter, EffectTypeTable, DeNovoData,
-         PedigreeTable
+import { Studies, Study, VariantReport, FamilyCounter, PedigreeCounter,
+         EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter,
+         PeopleSex
         } from './variant-reports';
 
 export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
@@ -17,10 +17,18 @@ export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
   styleUrls: ['./variant-reports.component.css']
 })
 export class VariantReportsComponent implements OnInit {
-
+  @ViewChild('families_pedigree') familiesPedigree: ElementRef;
+  @ViewChild('legend') legend: ElementRef;
+  familiesPedigreeTop: number;
+  familiesPedigreeBottom: number;
+  legendTop: number;
 
   reports$: Observable<Studies>;
   selectedReport$ = new Subject<Study>();
+
+  currentPeopleCounter: PeopleCounter;
+  currentPedigreeTable: PedigreeTable;
+  currentDenovoReport: EffectTypeTable;
 
   variantReport$: Observable<VariantReport>;
   pedigreeTables: PedigreeTable[];
@@ -43,12 +51,29 @@ export class VariantReportsComponent implements OnInit {
       this.pedigreeTables = params.familyReport.familiesCounters.map(
         familiesCounters => new PedigreeTable(
             this.chunkPedigrees(familiesCounters.familyCounter),
-            familiesCounters.phenotypes
+            familiesCounters.phenotypes, familiesCounters.groupName,
+            familiesCounters.legend
           )
         );
+
+      this.currentPeopleCounter = params.familyReport.peopleCounters[0];
+      this.currentPedigreeTable = this.pedigreeTables[0];
+      this.currentDenovoReport = params.denovoReport.tables[0];
     });
 
     this.loadReportFromParams();
+  }
+  @HostListener('window:scroll', ['$event'])
+  @HostListener('click', ['$event'])
+  onWindowScroll(event) {
+    if (this.familiesPedigree && this.familiesPedigree.nativeElement) {
+      this.familiesPedigreeTop = this.familiesPedigree.nativeElement.getBoundingClientRect().top;
+      this.familiesPedigreeBottom = this.familiesPedigree.nativeElement.getBoundingClientRect().bottom;
+    }
+
+    if (this.legend && this.legend.nativeElement) {
+      this.legendTop = this.legend.nativeElement.getBoundingClientRect().top;
+    }
   }
 
   private setSelectedReportParam(studyName) {
@@ -91,20 +116,30 @@ export class VariantReportsComponent implements OnInit {
         familiesCounters => {
           return {
             'pedigrees': this.chunkPedigrees(familiesCounters.familyCounter),
-            'phenotypes': familiesCounters.phenotypes
+            'phenotypes': familiesCounters.phenotypes,
+            'groupName': familiesCounters.groupName,
+            'legend': familiesCounters.legend
           };
         });
+
+      this.currentPeopleCounter = params.familyReport.peopleCounters[0];
+      this.currentPedigreeTable = this.pedigreeTables[0];
+      this.currentDenovoReport = params.denovoReport.tables[0];
     });
   }
 
-  orderByColumnOrder(childrenCounters: (ChildrenCounter | DeNovoData)[], columns: string[], strict = false) {
+  getPeopleSexValue(peopleSex: string) {
+    return PeopleSex[peopleSex];
+  }
+
+  orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false) {
     let columnsLookup = new Map<string, number>(
       columns.map((value, index): [string, number] => [value, index])
     );
 
     let filteredChildrenCounters = childrenCounters
       .filter(
-        childCounters => columnsLookup.has(childCounters.phenotype));
+        childCounters => columnsLookup.has(childCounters.column));
 
     if (strict && filteredChildrenCounters.length !== columns.length) {
       return [];
@@ -112,8 +147,8 @@ export class VariantReportsComponent implements OnInit {
 
     return filteredChildrenCounters.sort(
       (child1, child2) => {
-        let index1 = columnsLookup.get(child1.phenotype);
-        let index2 = columnsLookup.get(child2.phenotype);
+        let index1 = columnsLookup.get(child1.column);
+        let index2 = columnsLookup.get(child2.column);
         return index1 - index2;
       }
     );
