@@ -223,3 +223,8 @@ dummy:
 	$(SPHINXBUILD) -b dummy $(ALLSPHINXOPTS) $(BUILDDIR)/dummy
 	@echo
 	@echo "Build finished. Dummy builder generates no files."
+
+.PHONY: deploy
+
+deploy:
+	rsync -avzPL -e "ssh -p 2022" _build/html/ lubo@iossifovlab.com:sites/gpf_users_docs/
