@@ -15,7 +15,7 @@ import GenomeAccess
 class AnnotatorBase(object):
 
     """
-    `AnnotatorBase` is base class of all `Annotators` and `Preannotators`.
+    `AnnotatorBase` is base class of all `Annotators`.
     """
 
     def __init__(self, config):

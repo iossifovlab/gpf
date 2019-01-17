@@ -26,7 +26,7 @@ class ConfigurableEntityConfig(object):
 
     def __init__(self, config, *args, **kwargs):
         super(ConfigurableEntityConfig, self).__init__(*args, **kwargs)
-        self.config = ConfigBox(config)
+        self.config = ConfigBox(config, camel_killer_box=True)
 
     def bool(self, item, default=None):
         return self.config.bool(item, default=default)
@@ -93,6 +93,7 @@ class ConfigurableEntityConfig(object):
 
     @classmethod
     def get_config(cls, config_file, work_dir, default_values={}):
+
         if not os.path.exists(config_file):
             config_file = os.path.join(work_dir, config_file)
         assert os.path.exists(config_file), config_file

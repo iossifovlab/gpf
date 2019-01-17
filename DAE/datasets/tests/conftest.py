@@ -7,7 +7,8 @@ from datasets.dataset_factory import DatasetFactory
 from datasets.datasets_definition import SingleFileDatasetsDefinition
 from studies.study_definition import SingleFileStudiesDefinition
 from study_groups.study_group import StudyGroupWrapper
-from study_groups.study_group_definition import SingleFileStudiesGroupDefinition
+from study_groups.study_group_definition import \
+    SingleFileStudiesGroupDefinition
 from study_groups.study_group_factory import StudyGroupFactory
 
 

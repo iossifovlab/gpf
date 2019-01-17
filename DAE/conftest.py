@@ -6,8 +6,6 @@ Created on Nov 23, 2016
 from __future__ import unicode_literals
 import pytest
 
-import DAE
-
 
 def pytest_addoption(parser):
     parser.addoption("--runslow", action="store_true", default=False,
@@ -72,8 +70,8 @@ def pytest_collection_modifyitems(config, items):
 #     return datasets_factory.get_dataset('VIP')
 #
 #
-# @pytest.fixture(scope='session')
 # def sd(request,  datasets_factory):
+# @pytest.fixture(scope='session')
 #     return datasets_factory.get_dataset('SD')
 #
 #
@@ -82,18 +80,18 @@ def pytest_collection_modifyitems(config, items):
 #     return datasets_factory.get_dataset('denovo_db')
 
 
-@pytest.fixture(scope='session')
-def ssc_pheno():
-    pf = DAE.pheno
-    db = pf.get_pheno_db('ssc')
-    return db
+# @pytest.fixture(scope='session')
+# def ssc_pheno():
+#     pf = DAE.pheno
+#     db = pf.get_pheno_db('ssc')
+#     return db
 
 
-@pytest.fixture(scope='session')
-def vip_pheno():
-    pf = DAE.pheno
-    db = pf.get_pheno_db('vip')
-    return db
+# @pytest.fixture(scope='session')
+# def vip_pheno():
+#     pf = DAE.pheno
+#     db = pf.get_pheno_db('vip')
+#     return db
 
 
 # @pytest.fixture(scope='session')

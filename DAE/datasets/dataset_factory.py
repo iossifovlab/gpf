@@ -2,7 +2,8 @@ import logging
 
 from datasets.dataset import Dataset
 from datasets.dataset_config import DatasetConfig
-from study_groups.study_group_definition import SingleFileStudiesGroupDefinition
+from study_groups.study_group_definition import \
+    SingleFileStudiesGroupDefinition
 from study_groups.study_group_factory import StudyGroupFactory
 
 
@@ -12,7 +13,7 @@ LOGGER = logging.getLogger(__name__)
 class DatasetFactory(object):
 
     def __init__(self, study_group_factory=None,
-            study_group_definition=None):
+                 study_group_definition=None):
         if study_group_definition is None:
             study_group_definition = SingleFileStudiesGroupDefinition()
         if study_group_factory is None:

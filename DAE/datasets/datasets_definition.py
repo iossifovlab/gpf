@@ -39,7 +39,6 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
         if work_dir is None:
             work_dir = DatasetsDefinition._work_dir_from_environment()
 
-
         self.directory_enabled_configurable_entity_definition(
             datasets_dir, DatasetConfig, work_dir, 'dataset_id',
             DatasetConfig.get_default_values())

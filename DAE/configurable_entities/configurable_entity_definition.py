@@ -76,7 +76,9 @@ class ConfigurableEntityDefinition(object):
 
             entity_config = configurable_entity_config.from_config(
                 config[section], section)
+
             if entity_config is not None:
+                entity_config['section_name'] = section
                 result.append(entity_config)
 
         return result

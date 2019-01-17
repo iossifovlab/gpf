@@ -56,10 +56,9 @@ def mergeIntervals(intsP):
 
 
 class GeneInfoDB(object):
-    def __init__(self, confFile, wd, data_dir):
+    def __init__(self, confFile, wd):
         self.config = ConfigParser({
-            'wd':wd,
-            'data': data_dir
+            'wd': wd,
         })
         self.config.read(confFile)
 

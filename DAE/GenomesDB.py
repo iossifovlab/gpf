@@ -34,7 +34,7 @@ gmDB.....
 
 
 class GenomesDB(object):
-    def __init__(self, daeDir, confFile=None, data_dir=None):
+    def __init__(self, daeDir, confFile=None,):
 
         self.daeDir = daeDir
         if not confFile:
@@ -42,7 +42,6 @@ class GenomesDB(object):
 
         self.config = ConfigParser({
             'wd': daeDir,
-            'data': data_dir
         })
         self.config.optionxform = lambda x: x
         with open(confFile, 'r', encoding="utf-8") as infile:
