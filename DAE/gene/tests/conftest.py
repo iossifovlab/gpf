@@ -9,14 +9,16 @@ import shutil
 
 import pytest
 
-from Config import Config
 from gene.config import GeneInfoConfig
 from gene.gene_set_collections import GeneSetsCollections
 from studies.study_definition import SingleFileStudiesDefinition
-from study_groups.study_group_definition import SingleFileStudiesGroupDefinition
+from study_groups.study_group_definition import \
+    SingleFileStudiesGroupDefinition
 from utils.fixtures import path_to_fixtures as _path_to_fixtures
 # Used by pytest
-from study_groups.tests.conftest import study_group_facade, study_groups_factory
+from study_groups.tests.conftest import study_group_facade, \
+    study_groups_factory
+from configurable_entities.configuration import DAEConfig
 
 
 def path_to_fixtures(*args):
@@ -47,11 +49,17 @@ def basic_study_groups_definition():
 def mocked_dataset_config(mocker):
     mp = mock_property(mocker)
 
-    mp('Config.Config.geneInfoDBconfFile', path_to_fixtures('gene_info.conf'))
-    mp('Config.Config.geneInfoDBdir', path_to_fixtures())
-    mp('Config.Config.daeDir', path_to_fixtures())
+    mp(
+        'configurable_entities.configuration.DAEConfig.gene_info_conf',
+        path_to_fixtures('gene_info.conf'))
+    mp(
+        'configurable_entities.configuration.DAEConfig.gene_info_dir',
+        path_to_fixtures())
+    # mp(
+    #     'configurable_entities.configuration.DAEConfig.dae_data_dir',
+    #     path_to_fixtures())
 
-    return Config()
+    return DAEConfig()
 
 
 @pytest.fixture()
@@ -59,7 +67,7 @@ def gene_info_config(mocked_dataset_config):
     return GeneInfoConfig(config=mocked_dataset_config)
 
 
-@pytest.fixture()
+@pytest.fixture
 def gscs(study_group_facade, gene_info_config):
     return GeneSetsCollections(
         study_group_facade=study_group_facade, config=gene_info_config)

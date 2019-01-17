@@ -88,7 +88,7 @@ class DAEConfig(object):
         if dae_data_dir is None:
             dae_data_dir = os.environ.get('DAE_DB_DIR', None)
         print(dae_data_dir)
-        self.dae_data_dir = os.path.abspath(dae_data_dir)
+        self._dae_data_dir = os.path.abspath(dae_data_dir)
         self.dae_conf_filename = dae_conf_filename
 
         filename = os.path.join(self.dae_data_dir, self.dae_conf_filename)
@@ -102,6 +102,10 @@ class DAEConfig(object):
         if section_name not in self.sections.get_all_section_names():
             return None
         return self.sections.get_section_config(section_name).get(attr_name)
+
+    @property
+    def dae_data_dir(self):
+        return self._dae_data_dir
 
     def pheno_section(self):
         return self.sections.get_section_config(self.PHENO_SECTION)

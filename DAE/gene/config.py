@@ -28,7 +28,7 @@ class GeneInfoConfig(object):
             'wd': wd,
         })
         with open(self.dae_config.gene_info_conf, "r") as infile:
-            self.config.readfp(infile)
+            self.config.read_file(infile)
 
         self.gene_info = GeneInfoDB(
             self.dae_config.gene_info_conf,
