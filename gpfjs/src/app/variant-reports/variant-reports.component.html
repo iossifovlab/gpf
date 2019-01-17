@@ -34,7 +34,7 @@
   </div>
 
   <div class="col-sm-3" class="variants-report-selector">
-    <select class="form-control" [(ngModel)]="selectedPeopleCounter">
+    <select class="form-control" [(ngModel)]="this.currentPeopleCounter">
       <option value="" selected="selected"></option>
       <option *ngFor="let peopleCounter of variantReport.familyReport.peopleCounters" [ngValue]="peopleCounter">
         {{ peopleCounter.groupName }}
@@ -42,23 +42,23 @@
     </select>
   </div>
 
-  <ng-template [ngIf]="selectedPeopleCounter">
+  <ng-template [ngIf]="this.currentPeopleCounter">
     <div class="row mb-3">
       <div class="col-12">
         <table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
           <thead>
             <th>Group</th>
-            <th class="vertical" *ngFor="let column of selectedPeopleCounter.columns">
+            <th class="vertical" *ngFor="let column of this.currentPeopleCounter.columns">
               <div class="vertical">{{ column }}</div>
             </th>
           </thead>
           <tbody>
-            <tr *ngFor="let row of selectedPeopleCounter.rows">
+            <tr *ngFor="let row of this.currentPeopleCounter.rows">
               <th>
                 {{ getPeopleSexValue(row) }}
               </th>
-              <td *ngFor="let column of selectedPeopleCounter.columns">
-                {{ selectedPeopleCounter.getChildrenCounter(column, row).children }}
+              <td *ngFor="let column of this.currentPeopleCounter.columns">
+                {{ this.currentPeopleCounter.getChildrenCounter(column, row).children }}
               </td>
             </tr>
 
@@ -73,7 +73,7 @@
   </div>
 
   <div class="col-sm-3" class="variants-report-selector">
-    <select class="form-control" [(ngModel)]="selectedPedigreeTable">
+    <select class="form-control" [(ngModel)]="this.currentPedigreeTable">
       <option value="" selected="selected"></option>
       <option *ngFor="let pedigreeTable of pedigreeTables" [ngValue]="pedigreeTable">
         {{ pedigreeTable.groupName }}
@@ -81,7 +81,7 @@
     </select>
   </div>
 
-  <ng-template [ngIf]="selectedPedigreeTable">
+  <ng-template [ngIf]="this.currentPedigreeTable">
     <div class="row mb-3" #families_pedigree>
 
       <div class="col-12">
@@ -95,7 +95,7 @@
           </colgroup>
 
           <tbody>
-            <ng-template ngFor let-pedigreeGroup [ngForOf]="selectedPedigreeTable.pedigrees">
+            <ng-template ngFor let-pedigreeGroup [ngForOf]="this.currentPedigreeTable.pedigrees">
               <tr>
                 <ng-template ngFor let-pedigree [ngForOf]="pedigreeGroup">
                   <td class="centered">
@@ -120,7 +120,7 @@
 
     <div style="position: fixed; bottom: 100px; right: 100px; background-color: white; text-align: left; border: 1px solid #dddddd; padding: 5px"
     [style.visibility] = "((familiesPedigreeTop - legendTop) < 0 && (familiesPedigreeBottom - legendTop) > 0) ? 'visible' : 'hidden'" #legend>
-      <div *ngFor="let legendItem of selectedPedigreeTable.legend.legendItems">
+      <div *ngFor="let legendItem of this.currentPedigreeTable.legend.legendItems">
         <span class="pedigree-icon" [style.background-color]="legendItem.color"></span>
         {{ legendItem.name }}
       </div>
@@ -134,7 +134,7 @@
     </div>
 
     <div class="col-sm-3" class="variants-report-selector">
-      <select class="form-control" [(ngModel)]="selectedDenovoReport">
+      <select class="form-control" [(ngModel)]="this.currentDenovoReport">
         <option value="" selected="selected"></option>
         <option *ngFor="let denovoReport of variantReport.denovoReport.tables" [ngValue]="denovoReport">
           {{ denovoReport.groupName }}
@@ -142,22 +142,22 @@
       </select>
     </div>
 
-    <ng-template [ngIf]="selectedDenovoReport">
+    <ng-template [ngIf]="this.currentDenovoReport">
       <div class="row mb-3">
         <div class="col-12">
           <table class="table table-bordered table-hover table-sm table-centered">
             <thead>
               <th>Phenotype</th>
-              <th *ngFor="let column of selectedDenovoReport.columns">
+              <th *ngFor="let column of this.currentDenovoReport.columns">
                 {{ column }}
               </th>
             </thead>
             <tbody>
               <tr
-                *ngFor="let effectType of getRows(selectedDenovoReport.effectGroups, selectedDenovoReport.effectTypes)"
-                [ngClass]="{ 'table-active' : (selectedDenovoReport.effectGroups.indexOf(effectType) !== -1) }">
+                *ngFor="let effectType of getRows(this.currentDenovoReport.effectGroups, this.currentDenovoReport.effectTypes)"
+                [ngClass]="{ 'table-active' : (this.currentDenovoReport.effectGroups.indexOf(effectType) !== -1) }">
                 <th>{{ effectType }}</th>
-                <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, selectedDenovoReport, selectedDenovoReport.columns)">
+                <td *ngFor="let effectTypeData of getEffectTypeOrderByColumOrder(effectType, this.currentDenovoReport, this.currentDenovoReport.columns)">
                   <div>
                     {{ effectTypeData.numberOfObservedEvents }}, {{ effectTypeData.observedRatePerChild | number }}
                   </div>

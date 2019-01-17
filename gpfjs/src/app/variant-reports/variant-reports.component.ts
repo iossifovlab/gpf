@@ -128,30 +128,6 @@ export class VariantReportsComponent implements OnInit {
     });
   }
 
-  set selectedPeopleCounter(peopleCounter: PeopleCounter) {
-    this.currentPeopleCounter = peopleCounter;
-  }
-
-  get selectedPeopleCounter() {
-    return this.currentPeopleCounter;
-  }
-
-  set selectedPedigreeTable(pedigreeTable: PedigreeTable) {
-    this.currentPedigreeTable = pedigreeTable;
-  }
-
-  get selectedPedigreeTable() {
-    return this.currentPedigreeTable;
-  }
-
-  set selectedDenovoReport(denovoReport: EffectTypeTable) {
-    this.currentDenovoReport = denovoReport;
-  }
-
-  get selectedDenovoReport() {
-    return this.currentDenovoReport;
-  }
-
   getPeopleSexValue(peopleSex: string) {
     return PeopleSex[peopleSex];
   }
