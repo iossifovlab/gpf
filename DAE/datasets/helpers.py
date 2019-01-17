@@ -223,8 +223,11 @@ def transform_variants_to_lists(
 
 def get_person_color(member, pedigree_selectors, selected_pedigree_selector):
     pedigree_selector_id = selected_pedigree_selector.get('id', None)
-    selected_pedigree_selectors = list(filter(
-        lambda ps: ps.id == pedigree_selector_id, pedigree_selectors))[0]
+    if pedigree_selector_id:
+        selected_pedigree_selectors = list(filter(
+            lambda ps: ps.id == pedigree_selector_id, pedigree_selectors))[0]
+    else:
+        selected_pedigree_selectors = pedigree_selectors[0]
     if member.generated:
         return '#E0E0E0'
     else:
