@@ -102,8 +102,8 @@ def normalRefCopyNumber(location, gender):
                 return 1
             elif gender == 'U':
                 LOGGER.warn(
-                    'unspecified gender when calculating normal number of allels '
-                    'in chr%s',
+                    'unspecified gender when calculating normal number of '
+                    'allels in chr%s',
                     location
                 )
                 return 1
@@ -209,8 +209,8 @@ def transform_variants_to_lists(
             for attr in pedigree_attrs:
                 try:
                     if attr['source'] in SPECIAL_ATTRS:
-                        row_variant.\
-                            append(SPECIAL_ATTRS[attr['source']](v, aa))
+                        row_variant.append(
+                            SPECIAL_ATTRS[attr['source']](v, alt_allele))
                     else:
                         row_variant.append(get_people_group_attribute(v, attr))
                 except (AttributeError, KeyError) as e:
