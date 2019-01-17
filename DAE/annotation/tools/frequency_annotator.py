@@ -37,8 +37,10 @@ class FrequencyAnnotator(VariantAnnotatorBase):
             assert freq_col in self.freq_file.schema.col_names, \
                 "{} not in {}".format(freq_col,
                                       self.freq_file.schema.col_names)
-        assert 'variant' in self.freq_file.schema.col_names, \
-            "'variant' not in {}".format(self.freq_file.schema.col_names)
+
+        assert self.variant_col_name in self.freq_file.schema.col_names, \
+            "'{}' not in {}".format(self.variant_col_name,
+                                    self.freq_file.schema.col_names)
 
     def _init_freq_file(self):
         if not self.config.options.freq_file:
@@ -68,7 +70,9 @@ class FrequencyAnnotator(VariantAnnotatorBase):
                 score_config=None)
         self.freq_file._setup()
 
-        self.no_score_value = None
+        self.no_score_value = self.freq_file.no_score_value
+        self.variant_col_name = self.freq_file.config.columns.variant
+        assert self.variant_col_name
 
     def collect_annotator_schema(self, schema):
         super(FrequencyAnnotator, self).collect_annotator_schema(schema)
@@ -93,7 +97,7 @@ class FrequencyAnnotator(VariantAnnotatorBase):
             return
         variant = variant.details.cshl_variant
 
-        for index, score_variant in enumerate(scores['variant']):
+        for index, score_variant in enumerate(scores[self.variant_col_name]):
             if score_variant == variant:
                 for output_index, freq_col in enumerate(self.freq_cols):
                     values = scores[freq_col]
