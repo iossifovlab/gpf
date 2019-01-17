@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 from builtins import object
 import numpy as np
 import pandas as pd
-from variants.attributes import Role, Sex
+from variants.attributes import Role, Sex, Status
 
 
 class Person(object):
@@ -227,8 +227,9 @@ class FamiliesBase(object):
             skipinitialspace=True,
             converters={
                 'role': lambda r: Role.from_name(r),
-                'sex': lambda s: Sex.from_value(s),
-                'gender': lambda s: Sex.from_value(s),
+                'sex': lambda s: Sex.from_name_or_value(s),
+                'gender': lambda s: Sex.from_name_or_value(s),
+                'status': lambda s: Status.from_name(s),
                 'layout': lambda lc: lc.split(':')[-1],
                 'generated': lambda g: True if g == '1.0' else False,
             },
