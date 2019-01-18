@@ -269,7 +269,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             return ";".join(["{}:{}".format(d, ",".join(p))
                              for d, p in gene_sets_types.items()])
 
-        pedigree_selectors = ', '.join(set(chain(*list(gene_sets_types.values()))))
+        pedigree_selectors = ', '.join(
+            set(chain(*list(gene_sets_types.values()))))
         if include_datasets_desc:
             return '{}::{}'.format(
                 ', '.join(set(gene_sets_types.keys())),
@@ -277,7 +278,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         else:
             return pedigree_selectors
 
-    def get_gene_sets(self, gene_sets_types={'f1_group': ['autism']}, **kwargs):
+    def get_gene_sets(
+            self, gene_sets_types={'f1_group': ['autism']}, **kwargs):
         gene_sets_types = self._filter_gene_sets_types(
             gene_sets_types,
             kwargs.get('permitted_datasets', None))
@@ -336,7 +338,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             for pedigree_selector_value in pedigree_selector_values:
                 # print("criterias", criterias)
                 # print("recurrency_criterias", recurrency_criterias)
-                # print("standard_criterias", standard_criterias, dataset_id, pedigree_selector_value)
+                # print("standard_criterias", standard_criterias, dataset_id, 
+                #       pedigree_selector_value)
                 ds_pedigree_genes_families = self._get_gene_families(
                     self.cache,
                     {dataset_id, pedigree_selector_value} | standard_criterias)
@@ -419,7 +422,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         affected_person_ids = set()
         for study in study_group.studies:
             pedigree_df = study.backend.ped_df
-            people_ids = pedigree_df[pedigree_df[phenotype_column] == phenotype]
+            people_ids = pedigree_df[
+                pedigree_df[phenotype_column] == phenotype]
             affected_person_ids.update(people_ids['personId'])
 
         return affected_person_ids
@@ -480,7 +484,8 @@ class GeneSetsCollections(object):
 
     def get_gene_sets_collection(self, gene_sets_collection_id, load=True):
         if gene_sets_collection_id not in self.gene_sets_collections:
-            gsc = self._load_gene_sets_collection(gene_sets_collection_id, load)
+            gsc = self._load_gene_sets_collection(
+                gene_sets_collection_id, load)
             self.gene_sets_collections[gene_sets_collection_id] = gsc
 
         return self.gene_sets_collections.get(gene_sets_collection_id, None)

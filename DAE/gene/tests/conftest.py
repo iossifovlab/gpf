@@ -16,8 +16,7 @@ from study_groups.study_group_definition import \
     SingleFileStudiesGroupDefinition
 from utils.fixtures import path_to_fixtures as _path_to_fixtures
 # Used by pytest
-from study_groups.tests.conftest import study_group_facade, \
-    study_groups_factory
+from study_groups.tests.conftest import study_group_facade, study_groups_factory  # noqa
 from configurable_entities.configuration import DAEConfig
 
 
@@ -67,7 +66,7 @@ def gene_info_config(mocked_dataset_config):
     return GeneInfoConfig(config=mocked_dataset_config)
 
 
-@pytest.fixture
+@pytest.fixture  # noqa
 def gscs(study_group_facade, gene_info_config):
     return GeneSetsCollections(
         study_group_facade=study_group_facade, config=gene_info_config)

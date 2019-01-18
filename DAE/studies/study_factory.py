@@ -28,10 +28,11 @@ class StudyFactory(object):
                 self.thrift_connection = \
                     ThriftFamilyVariants.get_thrift_connection()
             study_type_constructor = partial(
-                study_type_constructor, thrift_connection=self.thrift_connection
+                study_type_constructor,
+                thrift_connection=self.thrift_connection
             )
 
         variants = study_type_constructor(
             prefix=study_config.prefix)
 
-        return Study(study_config.study_name, variants, study_config)
+        return Study(study_config.name, variants, study_config)

@@ -26,23 +26,34 @@ class SingleFileStudiesDefinition(StudyDefinition):
 
     def __init__(self, config_file=None, work_dir=None):
         super(SingleFileStudiesDefinition, self).__init__()
-        if work_dir is None:
-            work_dir = SingleFileStudiesDefinition._work_dir_from_environment()
-        if config_file is None:
-            config_file = SingleFileStudiesDefinition.\
-                _config_file_from_environment()
+        assert work_dir is not None
+        assert config_file is not None
 
         self.single_file_configurable_entity_definition(
             config_file, work_dir, StudyConfig, "study_name",
             StudyConfig.get_default_values())
 
-    @staticmethod
-    def _work_dir_from_environment():
+    # @staticmethod
+    # def _work_dir_from_environment():
 
-        from studies.default_settings import get_config
-        return get_config().get("DATA_DIR")
+    #     from studies.default_settings import get_config
+    #     return get_config().get("DATA_DIR")
 
-    @staticmethod
-    def _config_file_from_environment():
-        from studies.default_settings import get_config
-        return get_config().get("CONFIG_FILE")
+    # @staticmethod
+    # def _config_file_from_environment():
+    #     from studies.default_settings import get_config
+    #     return get_config().get("CONFIG_FILE")
+
+
+class DirectoryEnabledStudiesDefinition(StudyDefinition):
+
+    ENABLED_DIR = '.'
+
+    def __init__(self, studies_dir, work_dir):
+        super(DirectoryEnabledStudiesDefinition, self).__init__()
+        assert studies_dir is not None
+        assert work_dir is not None
+
+        self.directory_enabled_configurable_entity_definition(
+            studies_dir, StudyConfig, work_dir, 'dataset_id',
+            StudyConfig.get_default_values())
