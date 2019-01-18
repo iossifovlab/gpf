@@ -1,5 +1,6 @@
 from os import listdir
 import os.path
+import re
 from annotation.tools.score_annotator import NPScoreAnnotator
 
 
@@ -25,20 +26,35 @@ class dbNSFPAnnotator(NPScoreAnnotator):
     def _init_score_file(self):
         if self.current_chr:
             self.config.options.scores_file = os.path.join(
-                    self.config.options.dbNSFP_path,
-                    self.config.options.dbNSFP_filename.format(self.current_chr))
+                self.config.options.dbNSFP_path,
+                self.config.options.dbNSFP_filename.format(self.current_chr))
             assert self.config.options.scores_file in self.dbNSFP_files
         super(dbNSFPAnnotator, self)._init_score_file()
 
+    @staticmethod
+    def _wildcard_to_regex(wildcard):
+        assert wildcard
+        if wildcard[0] != '*':
+            wildcard = r'^{}'.format(wildcard)
+        if wildcard[-1] != '*':
+            wildcard = r'{}\Z'.format(wildcard)
+        return wildcard.split('*')
+
+    @staticmethod
+    def _search_wildcard(inp, wildcard):
+        wildcards = dbNSFPAnnotator._wildcard_to_regex(wildcard)
+        for regex_token in wildcards:
+            if re.compile(regex_token).search(inp) is None:
+                return False
+        return True
+
     def _get_dbNSFP_files(self, path, wildcard):
         files = []
-        wildcard = wildcard.split('*')
-        for f in listdir(path):
-            if not os.path.isfile(os.path.join(path, f)):
+        for file_ in listdir(path):
+            if not os.path.isfile(os.path.join(path, file_)):
                 continue
-            if f[:len(wildcard[0])] == wildcard[0] and \
-               f[len(f)-len(wildcard[1]):] == wildcard[1]:
-                    files.append(os.path.join(path, f))
+            if dbNSFPAnnotator._search_wildcard(file_, wildcard):
+                files.append(os.path.join(path, file_))
         return files
 
     def do_annotate(self, aline, variant):

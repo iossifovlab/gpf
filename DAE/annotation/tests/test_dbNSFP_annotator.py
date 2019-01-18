@@ -10,11 +10,11 @@ from annotation.tools.annotator_config import VariantAnnotatorConfig
 expected_result_dbNSFP = \
     """RESULT_dbNSFP\tRESULT_dbNSFP_2
 0.5\t1.5
-0.6500000059604645\t1.6500000357627869
+0.65\t1.65
 15.5\t16.5
 15.75\t16.75
 22.5\t23.5
-22.65000057220459\t23.65000057220459
+22.65\t23.65
 23.5\t24.5
 23.8\t24.8
 """
