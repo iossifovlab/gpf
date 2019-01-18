@@ -6,11 +6,65 @@ class Study(object):
         self.study_config = study_config
         self._study_type_lowercase = self.study_type.lower()
 
+        genotype_browser = study_config.genotypeBrowser
+
+        preview_columns = []
+        download_columns = []
+        pedigree_columns = {}
+        pheno_columns = {}
+
+        pedigree_selectors = []
+
+        if genotype_browser:
+            preview_columns = genotype_browser['previewColumns']
+            download_columns = genotype_browser['downloadColumns']
+            if genotype_browser['pedigreeColumns']:
+                pedigree_columns =\
+                    [s for pc in genotype_browser['pedigreeColumns']
+                     for s in pc['slots']]
+            if genotype_browser['phenoColumns']:
+                pheno_columns = [s for pc in genotype_browser['phenoColumns']
+                                 for s in pc['slots']]
+
+        if study_config.pedigreeSelectors:
+            pedigree_selectors = study_config.pedigreeSelectors
+
+        self.study_config = study_config
+
+        self.name = name
+        self.id = study_config.id
+        self.preview_columns = preview_columns
+        self.download_columns = download_columns
+        self.pedigree_columns = pedigree_columns
+        self.pheno_columns = pheno_columns
+
+        self.pedigree_selectors = pedigree_selectors
+
+        if len(self.study_config.pedigreeSelectors) != 0:
+            self.legend = {ps['id']: ps['domain'] + [ps['default']]
+                           for ps in self.study_config.pedigreeSelectors}
+        else:
+            self.legend = {}
+
+    def _transorm_variants_kwargs(self, **kwargs):
+        if 'pedigreeSelector' in kwargs:
+            pedigree_selector_id = kwargs['pedigreeSelector']['id']
+            pedigree_selectors = list(filter(
+                lambda ps: ps['id'] == pedigree_selector_id,
+                self.pedigree_selectors))
+            if pedigree_selectors:
+                pedigree_selector = pedigree_selectors[0]
+                kwargs['pedigreeSelector']['source'] =\
+                    pedigree_selector['source']
+
+        return kwargs
+
     def query_variants(self, **kwargs):
+        kwargs = self._transorm_variants_kwargs(**kwargs)
+
         study_types_filter = kwargs.get('studyTypes', None)
         if study_types_filter:
-            if not isinstance(study_types_filter, list):
-                raise RuntimeError("alabalaa")
+            assert isinstance(study_types_filter, list)
             study_types_filter = [s.lower() for s in study_types_filter]
             if self._study_type_lowercase not in study_types_filter:
                 return []
@@ -44,6 +98,15 @@ class Study(object):
 
     def get_phenotype_values(self, pheno_column='phenotype'):
         return set(self.backend.ped_df[pheno_column])
+
+    @staticmethod
+    def _get_description_keys():
+        return [
+            'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
+            'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
+            'enrichmentTool', 'genotypeBrowser', 'pedigreeSelectors',
+            'studyTypes', 'studies'
+        ]
 
     @property
     def families(self):
@@ -98,3 +161,4 @@ class Study(object):
     @property
     def pub_meds(self):
         return None
+

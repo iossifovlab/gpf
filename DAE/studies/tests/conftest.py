@@ -3,6 +3,7 @@ import pytest
 
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
+from studies.study_wrapper import StudyWrapper
 
 
 def fixtures_dir():
@@ -21,7 +22,7 @@ def study_configs(study_definition):
 
 
 @pytest.fixture(scope='session')
-def study_definition():
+def study_definitions():
     return DirectoryEnabledStudiesDefinition(
         studies_dir=studies_dir(),
         work_dir=fixtures_dir())
@@ -33,6 +34,74 @@ def study_factory():
 
 
 @pytest.fixture(scope='session')
-def test_study(study_factory, study_definition):
+def test_study(study_factory, study_definitions):
     return study_factory.make_study(
-        study_definition.get_study_config('quads_f1'))
+        study_definitions.get_study_config('quads_f1'))
+
+
+def load_study(study_factory, study_definitions, study_name):
+    config = study_definitions.get_study_config(study_name)
+
+    result = study_factory.make_study(config)
+    assert result is not None
+    return result
+
+
+@pytest.fixture(scope='session')
+def inheritance_trio(study_factory, study_definitions):
+    return load_study(study_factory, study_definitions, 'inheritance_trio')
+
+
+@pytest.fixture(scope='session')
+def quads_f1(study_factory, study_definitions):
+    return load_study(study_factory, study_definitions, 'quads_f1')
+
+
+@pytest.fixture(scope='session')
+def quads_variant_types(study_factory, study_definitions):
+    return load_study(study_factory, study_definitions, 'quads_variant_types')
+
+
+@pytest.fixture(scope='session')
+def quads_two_families(study_factory, study_definitions):
+    return load_study(study_factory, study_definitions, 'quads_two_families')
+
+
+@pytest.fixture(scope='session')
+def quads_in_child(study_factory, study_definitions):
+    return load_study(study_factory, study_definitions, 'quads_in_child')
+
+
+@pytest.fixture(scope='session')
+def quads_in_parent(study_factory, study_definitions):
+    return load_study(study_factory, study_definitions, 'quads_in_parent')
+
+
+@pytest.fixture(scope='session')
+def inheritance_trio_wrapper(inheritance_trio):
+    return StudyWrapper(inheritance_trio)
+
+
+@pytest.fixture(scope='session')
+def quads_f1_wrapper(quads_f1):
+    return StudyWrapper(quads_f1)
+
+
+@pytest.fixture(scope='session')
+def quads_variant_types_wrapper(quads_variant_types):
+    return StudyWrapper(quads_variant_types)
+
+
+@pytest.fixture(scope='session')
+def quads_two_families_wrapper(quads_two_families):
+    return StudyWrapper(quads_two_families)
+
+
+@pytest.fixture(scope='session')
+def quads_in_child_wrapper(quads_in_child):
+    return StudyWrapper(quads_in_child)
+
+
+@pytest.fixture(scope='session')
+def quads_in_parent_wrapper(quads_in_parent):
+    return StudyWrapper(quads_in_parent)

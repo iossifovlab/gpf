@@ -1,6 +1,6 @@
-import os
+# import os
 
-ALL_STUDIES = {'test', 'test_enabled_true', 'autism_and_epilepsy'}
+# ALL_STUDIES = {'test', 'test_enabled_true', 'autism_and_epilepsy'}
 
 
 # def get_study(study_configs, study_name):
@@ -39,6 +39,6 @@ ALL_STUDIES = {'test', 'test_enabled_true', 'autism_and_epilepsy'}
 
 #     assert study.phenotypes == {'autism', 'epilepsy'}
 
-def test_study_config_simple(study_definition):
-    print(study_definition)
-    print(study_definition.get_all_study_names())
+def test_study_config_simple(study_definitions):
+    print(study_definitions)
+    print(study_definitions.get_all_study_names())
