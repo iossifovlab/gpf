@@ -3,11 +3,30 @@ GPF Genotype Browser Columns
 ============================
 
 
-Preview and Download Columns
-----------------------------
+Preview columns
+---------------
+
+
+
+========  ========  ===========
+Column    Field     Description
+========  ========  ===========
+family    familyId  .. image:: imgs/genomic_scores/phyloP100.png
+                       
+\         study    
+variant   vocation
+\         variant
+========  ========  ===========
+
+
+
 
 Download columns
-::::::::::::::::
+----------------
+
+Genomic Scores
+----------------
+
 
 family id
 .........
