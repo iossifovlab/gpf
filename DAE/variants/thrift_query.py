@@ -145,9 +145,10 @@ class SummarySubQueryBuilder(ThriftQueryBuilderBase):
 
     def _build_variant_type_where(self):
         assert self.query.get('variant_type')
-        assert isinstance(self.query['variant_type'], str)
-        parsed = variant_type_query.transform_query_string_to_tree(
-                    self.query['variant_type'])
+        parsed = self.query['variant_type']
+        if isinstance(self.query['variant_type'], str):
+            parsed = variant_type_query.transform_query_string_to_tree(
+                        self.query['variant_type'])
         transformer = QueryTreeToSQLTransformer('S.variant_type')
         return transformer.transform(parsed)
 
