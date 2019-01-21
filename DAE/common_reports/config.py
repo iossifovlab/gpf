@@ -1,13 +1,14 @@
 from __future__ import unicode_literals
-from builtins import object
-from Config import Config
 from future import standard_library
 standard_library.install_aliases()
+
+from builtins import object
+from Config import Config
 from configparser import ConfigParser
 from box import Box
+from collections import OrderedDict
 
 import common.config
-from variants.attributes import Role
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
 
@@ -23,43 +24,57 @@ class CommonReportsConfig(object):
         self.dae_config = config
 
         config = ConfigParser()
-        config.read(self.dae_config.commonReportsConfFile)
+        with open(self.dae_config.commonReportsConfFile, 'r') as f:
+            config.read_file(f)
 
         self.config = Box(common.config.to_dict(config))
 
     def _parse_data(self, data):
-        parsed_data = {}
+        parsed_data = OrderedDict()
         for d in data.split(','):
             d_properties = self.config.CommonReports.get(d.lower())
             if d_properties is None:
                 continue
             phenotypes = d_properties.get('peoplegroups', None)
-            is_downloadable = d_properties.get('is_downloadable', None)
-            if phenotypes is None:
-                continue
-            if is_downloadable is None:
-                is_downloadable = False
-            else:
-                is_downloadable =\
-                    ConfigurableEntityConfig._str_to_bool(is_downloadable)
+            groups = d_properties.get('groups', None)
+            draw_all_families = d_properties.get('draw_all_families', 'false')
+            count_of_families_for_show_id =\
+                d_properties.get('count_of_families_for_show_id', None)
+            is_downloadable = d_properties.get('is_downloadable', 'false')
 
-            parsed_data[d] = {
-                'phenotype_groups': phenotypes.split(','),
-                'is_downloadable': is_downloadable
-            }
+            if phenotypes is None or groups is None:
+                continue
+            if count_of_families_for_show_id is not None:
+                count_of_families_for_show_id =\
+                    int(count_of_families_for_show_id)
+            draw_all_families =\
+                ConfigurableEntityConfig._str_to_bool(draw_all_families)
+            is_downloadable =\
+                ConfigurableEntityConfig._str_to_bool(is_downloadable)
+
+            parsed_data[d] = OrderedDict([
+                ('phenotype_groups', phenotypes.split(',')),
+                ('groups', OrderedDict([
+                    (group.split(':')[1].strip(),
+                     group.split(':')[0].strip().split(','))
+                    for group in groups.split('|')])),
+                ('draw_all_families', draw_all_families),
+                ('families_count_show_id', count_of_families_for_show_id),
+                ('is_downloadable', is_downloadable),
+            ])
         return parsed_data
 
     def _parse_domain_info(self, domain):
         id, name, color = domain.split(':')
 
-        return {
-            'id': id.strip(),
-            'name': name.strip(),
-            'color': color.strip()
-        }
+        return OrderedDict([
+            ('id', id.strip()),
+            ('name', name.strip()),
+            ('color', color.strip())
+        ])
 
     def _parse_phenotype_domain(self, phenotype_domain):
-        phenotype = {}
+        phenotype = OrderedDict()
 
         for domain in phenotype_domain.split(','):
             domain_info = self._parse_domain_info(domain)
@@ -74,11 +89,6 @@ class CommonReportsConfig(object):
     def studies(self):
         return self._parse_data(self.config.CommonReports.get('studies', ''))
 
-    def counters_roles(self):
-        return [
-            [Role.from_name(role) for role in roles.split(',')]
-            for roles in self.config.CommonReports.counters_role.split(':')]
-
     def effect_groups(self):
         effect_groups = self.config.CommonReports.get('effect_groups', None)
         return effect_groups.split(',') if effect_groups else []
@@ -90,17 +100,18 @@ class CommonReportsConfig(object):
     def _phenotype(self, phenotype):
         phenotype = self.config.CommonReports.get(phenotype)
 
-        return {
-            'name': phenotype.name,
-            'domain': self._parse_phenotype_domain(phenotype.domain),
-            'unaffected': self._parse_domain_info(phenotype.unaffected),
-            'default': self._parse_domain_info(phenotype.default),
-            'source': phenotype.source
-        }
+        return OrderedDict([
+            ('name', phenotype.get('name')),
+            ('domain', self._parse_phenotype_domain(phenotype.get('domain'))),
+            ('unaffected',
+             self._parse_domain_info(phenotype.get('unaffected'))),
+            ('default', self._parse_domain_info(phenotype.get('default'))),
+            ('source', phenotype.get('source'))
+        ])
 
     def phenotypes(self):
         phenotypes = self.config.CommonReports.peoplegroups.split(',')
-        phenotypes_info = {}
+        phenotypes_info = OrderedDict()
         for phenotype in phenotypes:
             phenotypes_info[phenotype] = self._phenotype(phenotype)
 

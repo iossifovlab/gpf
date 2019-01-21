@@ -93,6 +93,62 @@ class Sex(enum.Enum):
         return self.name[0].upper()
 
 
+class Status(enum.Enum):
+    unaffected = 1
+    affected = 2
+    unspecified = 0
+
+    @staticmethod
+    def from_name(name):
+        if name == 'unaffected' or name == '1':
+            return Status.unaffected
+        elif name == 'affected' or name == '2':
+            return Status.affected
+        elif name == 'unspecified' or name == '-' or name == '0':
+            return Status.unspecified
+        raise ValueError("unexpected status type: " + name)
+
+    @staticmethod
+    def from_value(val):
+        return Status(int(val))
+
+    @classmethod
+    def from_name_or_value(cls, name_or_value):
+        try:
+            return cls.from_name(name_or_value)
+        except ValueError:
+            return cls.from_value(name_or_value)
+
+    def __repr__(self):
+        return self.name
+
+    def __str__(self):
+        return self.name
+
+    def short(self):
+        return self.name[0].upper()
+
+    def __ge__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value >= other.value
+        return NotImplemented
+
+    def __gt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+
+    def __le__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value <= other.value
+        return NotImplemented
+
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
+
+
 class Inheritance(enum.Enum):
     reference = 1
     mendelian = 2

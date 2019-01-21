@@ -41,10 +41,13 @@ class StudyBase(object):
         self.study_types = [self.study_type]
 
         self.year = self.study_config.year
-        self.years = [self.year] if self.year is not None else []
+        self.years = [self.year] if self.year is not None else None
         self.pub_med = self.study_config.pub_med
-        self.pub_meds = [self.pub_med] if self.pub_med is not None else []
+        self.pub_meds = [self.pub_med] if self.pub_med is not None else None
 
+        print(self.pub_med, self.pub_meds)
+        print(self.year, self.years)
+    
         self.preview_columns = preview_columns
         self.download_columns = download_columns
         self.pedigree_columns = pedigree_columns
@@ -138,6 +141,9 @@ class StudyBase(object):
     @property
     def order(self):
         return 0
+
+    def get_column_values(self, column):
+        return set(self.backend.ped_df[column])
 
     @property
     def families(self):

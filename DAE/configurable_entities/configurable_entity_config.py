@@ -102,7 +102,8 @@ class ConfigurableEntityConfig(object):
 
         config_parser = CaseSensitiveConfigParser(defaults=default_values)
         print("READING CONFIG FROM '", config_file, "'")
-        config_parser.read(config_file)
+        with open(config_file, 'r') as f:
+            config_parser.read_file(f)
 
         config = dict((section, dict(config_parser.items(section)))
                       for section in config_parser.sections())

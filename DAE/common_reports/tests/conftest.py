@@ -1,8 +1,9 @@
 import pytest
-
 import os
+
 from box import Box
 import json
+from collections import OrderedDict
 
 from common_reports.common_report import CommonReportsGenerator
 from common_reports.config import CommonReportsConfig
@@ -117,7 +118,7 @@ def output():
             name + '.json'
         )
         with open(output_filename) as o:
-            output = json.load(o)
+            output = json.load(o, object_pairs_hook=OrderedDict)
 
         return output
 

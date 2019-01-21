@@ -17,7 +17,7 @@ import pandas as pd
 
 # from tqdm import tqdm
 
-from variants.attributes import Role, Sex
+from variants.attributes import Role, Sex, Status
 
 
 class ParquetData(object):
@@ -290,6 +290,7 @@ def save_ped_df_to_parquet(ped_df, filename):
     ped_df = ped_df.copy()
     ped_df.role = ped_df.role.apply(lambda r: r.value)
     ped_df.sex = ped_df.sex.apply(lambda s: s.value)
+    ped_df.status = ped_df.status.apply(lambda s: s.value)
 
     table = pa.Table.from_pandas(ped_df, schema=pedigree_parquet_schema())
     pq.write_table(table, filename)
@@ -299,6 +300,7 @@ def read_ped_df_from_parquet(filename):
     ped_df = pd.read_parquet(filename, engine="pyarrow")
     ped_df.role = ped_df.role.apply(lambda v: Role(v))
     ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
+    ped_df.status = ped_df.status.apply(lambda v: Status(v))
     if 'layout' in ped_df:
         ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
 
