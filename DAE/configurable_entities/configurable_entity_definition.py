@@ -52,12 +52,10 @@ class ConfigurableEntityDefinition(object):
         self.configs = {conf[config_key]: conf for conf in configs}
 
     def _collect_config_paths(self, dirname):
-        print(dirname, os.listdir(dirname))
         config_paths = []
         for path in os.listdir(dirname):
             p = os.path.join(dirname, path)
             if os.path.isdir(p):
-                print('cheking subdir: ', p)
                 subpaths = self._collect_config_paths(p)
                 config_paths.extend(subpaths)
             elif path.endswith('.conf'):

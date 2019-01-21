@@ -3,7 +3,11 @@ import pytest
 
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
+from studies.study_facade import StudyFacade
 from studies.study_wrapper import StudyWrapper
+from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
+from studies.dataset_factory import DatasetFactory
+from studies.dataset_facade import DatasetFacade
 
 
 def fixtures_dir():
@@ -14,6 +18,11 @@ def fixtures_dir():
 def studies_dir():
     return os.path.abspath(
         os.path.join(os.path.dirname(__file__), 'fixtures/studies'))
+
+
+def datasets_dir():
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), 'fixtures/datasets'))
 
 
 @pytest.fixture(scope='session')
@@ -31,6 +40,12 @@ def study_definitions():
 @pytest.fixture(scope='session')
 def study_factory():
     return StudyFactory()
+
+
+@pytest.fixture(scope='session')
+def study_facade(study_factory, study_definitions):
+    return StudyFacade(
+        study_factory=study_factory, study_definition=study_definitions)
 
 
 @pytest.fixture(scope='session')
@@ -105,3 +120,29 @@ def quads_in_child_wrapper(quads_in_child):
 @pytest.fixture(scope='session')
 def quads_in_parent_wrapper(quads_in_parent):
     return StudyWrapper(quads_in_parent)
+
+
+@pytest.fixture(scope='session')
+def dataset_definitions():
+    return DirectoryEnabledDatasetsDefinition(
+        datasets_dir=datasets_dir(),
+        work_dir=fixtures_dir())
+
+
+@pytest.fixture(scope='session')
+def dataset_factory(study_facade):
+    return DatasetFactory(study_facade=study_facade)
+
+
+def load_dataset(dataset_factory, dataset_definitions, dataset_name):
+    config = dataset_definitions.get_dataset_config(dataset_name)
+
+    result = dataset_factory.make_dataset(config)
+    assert result is not None
+    return result
+
+
+@pytest.fixture(scope='session')
+def inheritance_trio_dataset(dataset_factory, dataset_definitions):
+    return load_dataset(
+        dataset_factory, dataset_definitions, 'inheritance_trio')

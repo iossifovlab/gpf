@@ -1,16 +1,13 @@
-[study]
+[dataset]
 
-prefix = quads_two_families
-
-type = vcf
-phenotypes = autism
-
-study_name = QUADS_TWO_FAMILIES
-study_id = quads_two_families
+dataset_name = QUADS_TWO_FAMILIES
+dataset_id = quads_two_families
 
 description = QUADS TWO FAMILIES
 
 data_dir = %(work_dir)s/
+
+study_group = quads_two_families
 
 phenotypeGenotypeTool = no
 phenotypeBrowser=yes

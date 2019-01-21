@@ -1,11 +1,8 @@
-import os
-
-from configurable_entities.configurable_entity_config import\
+from configurable_entities.configurable_entity_config import \
     ConfigurableEntityConfig
-from studies.study_factory import StudyFactory
 
 
-class StudyConfig(ConfigurableEntityConfig):
+class DatasetConfig(ConfigurableEntityConfig):
 
     NEW_KEYS_NAMES = {
         'phenoGenoTool': 'phenotypeGenotypeTool',
@@ -19,6 +16,7 @@ class StudyConfig(ConfigurableEntityConfig):
             'genotypeBrowser.downloadColumns'
     }
     SPLIT_STR_LISTS = (
+        'studies',
         'authorizedGroups', 'phenoDB',
         'genotypeBrowser.phenoFilters',
         'genotypeBrowser.baseColumns',
@@ -32,13 +30,7 @@ class StudyConfig(ConfigurableEntityConfig):
         'genotypeBrowser.genotype.columns',
         'genotypeBrowser.peopleGroup.columns'
     )
-
-    SPLIT_STR_SETS = (
-        'phenotypes',
-    )
-
     CAST_TO_BOOL = (
-        'hasComplex', 'hasCNV', 'hasDenovo', 'hasTransmitted',
         'phenotypeBrowser', 'phenotypeGenotypeTool', 'enrichmentTool',
         'genotypeBrowser', 'genotypeBrowser.genesBlockShowAll',
         'genotypeBrowser.hasPresentInParent', 'genotypeBrowser.hasComplex',
@@ -49,29 +41,17 @@ class StudyConfig(ConfigurableEntityConfig):
         'genotypeBrowser.hasTransmitted',
     )
     ELEMENTS_TO_COPY = {
-        'study_id': 'id', 'study_name': 'name'
+        'dataset_id': 'id', 'dataset_name': 'name'
     }
 
     def __init__(self, config, *args, **kwargs):
-        super(StudyConfig, self).__init__(config, *args, **kwargs)
-
-        assert 'prefix' in self
-        # assert self.study_name
-
-        assert self.type
-        assert self.type in StudyFactory.STUDY_TYPES.keys()
-        assert self.work_dir
-        assert self.phenotypes
-        assert 'studyType' in self
-        assert 'hasComplex' in self
-        assert 'hasCNV' in self
-        assert 'hasDenovo' in self
-        assert 'hasTransmitted' in self
-        self.make_vcf_prefix_absolute_path()
-
+        super(DatasetConfig, self).__init__(config, *args, **kwargs)
+        assert self.dataset_id
+        assert self.dataset_name
         assert self.id
         assert self.name
         assert 'description' in self
+        assert self.studies
         assert self.data_dir
         assert 'phenotypeBrowser' in self
         assert 'phenotypeGenotypeTool' in self
@@ -108,6 +88,8 @@ class StudyConfig(ConfigurableEntityConfig):
             assert pedigree['default']
             assert pedigree['source']
             assert pedigree['values']
+
+        print("studies", self.studies)
 
     @staticmethod
     def _split_section(section):
@@ -371,10 +353,6 @@ class StudyConfig(ConfigurableEntityConfig):
 
     @classmethod
     def from_config(cls, config_section, section=None):
-        if 'enabled' in config_section:
-            if config_section['enabled'] == 'false':
-                return None
-
         dataset_config = config_section
 
         dataset_config['pedigreeSelectors'] =\
@@ -393,23 +371,14 @@ class StudyConfig(ConfigurableEntityConfig):
         dataset_config = cls._combine_dict_options(dataset_config)
 
         dataset_config['authorizedGroups'] = dataset_config.get(
-            'authorizedGroups', [dataset_config['id']])
+            'authorizedGroups', [dataset_config['dataset_id']])
 
-        # cls.add_default_config_key_from_section(
-        #       config_section, section, 'study_name')
-        # return StudyConfig(config_section)
-
-        return StudyConfig(dataset_config)
+        return DatasetConfig(dataset_config)
 
     @staticmethod
     def get_default_values():
         return {
-            'studyType': None,
-            'hasComplex': 'no',
-            'hasCNV': 'no',
-            'hasDenovo': 'no',
-            'hasTransmitted': 'no',
-
+            'studies': None,
             'phenoDB': None,
             'description': None,
             'genotypeBrowser.genesBlockShowAll': 'yes',
@@ -436,9 +405,3 @@ class StudyConfig(ConfigurableEntityConfig):
             'phenotypeBrowser': False,
             'phenotypeGenotypeTool': False,
         }
-
-    def make_vcf_prefix_absolute_path(self):
-        if not os.path.isabs(self.prefix):
-            self.prefix = os.path.abspath(
-                os.path.join(self.work_dir, self.id, self.prefix))
-

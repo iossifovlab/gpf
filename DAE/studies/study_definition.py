@@ -33,17 +33,6 @@ class SingleFileStudiesDefinition(StudyDefinition):
             config_file, work_dir, StudyConfig, "study_name",
             StudyConfig.get_default_values())
 
-    # @staticmethod
-    # def _work_dir_from_environment():
-
-    #     from studies.default_settings import get_config
-    #     return get_config().get("DATA_DIR")
-
-    # @staticmethod
-    # def _config_file_from_environment():
-    #     from studies.default_settings import get_config
-    #     return get_config().get("CONFIG_FILE")
-
 
 class DirectoryEnabledStudiesDefinition(StudyDefinition):
 
@@ -55,5 +44,5 @@ class DirectoryEnabledStudiesDefinition(StudyDefinition):
         assert work_dir is not None
 
         self.directory_enabled_configurable_entity_definition(
-            studies_dir, StudyConfig, work_dir, 'dataset_id',
+            studies_dir, StudyConfig, work_dir, 'id',
             StudyConfig.get_default_values())
