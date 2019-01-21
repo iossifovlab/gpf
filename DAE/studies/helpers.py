@@ -4,6 +4,8 @@ from builtins import str
 import itertools
 import functools
 import logging
+from utils.vcf_utils import mat2str
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -50,11 +52,6 @@ def merge_dicts(*dicts):
 
 def ge2str(gs):
     return "|".join(g.symbol + ":" + g.effects for g in gs.genes)
-
-
-def mat2str(mat, col_sep=" ", row_sep="/"):
-    return row_sep.join([col_sep.join([str(n) for n in mat[i, :]])
-                        for i in range(mat.shape[0])])
 
 
 def gene_effect_get_worst_effect(gs):

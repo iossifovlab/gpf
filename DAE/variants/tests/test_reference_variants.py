@@ -7,7 +7,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import pytest
-from datasets.helpers import mat2str
+from utils.vcf_utils import mat2str
 
 
 @pytest.mark.parametrize("variants", [
