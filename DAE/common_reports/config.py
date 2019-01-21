@@ -24,7 +24,8 @@ class CommonReportsConfig(object):
         self.dae_config = config
 
         config = ConfigParser()
-        config.read(self.dae_config.commonReportsConfFile)
+        with open(self.dae_config.commonReportsConfFile, 'r') as f:
+            config.read_file(f)
 
         self.config = Box(common.config.to_dict(config))
 
