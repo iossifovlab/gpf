@@ -56,4 +56,4 @@ class DatasetFacade(object):
             return
 
         self._dataset_cache[dataset_id] = \
-            self.dataset_factory.get_dataset(conf)
+            self.dataset_factory.make_dataset(conf)

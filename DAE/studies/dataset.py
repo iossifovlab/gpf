@@ -72,12 +72,15 @@ class Dataset(StudyBase):
         return combined_dict
 
     # FIXME:
-    # def gene_sets_cache_file(self):
-    #     study_groups_config = get_study_groups_config()
-    #     caches_dir = study_groups_config["DENOVO_GENE_SETS_DIR"]
-    #     cache_filename = '{}.json'.format(self.name)
+    def gene_sets_cache_file(self):
+        cache_filename = '{}.json'.format(self.name)
+        return cache_filename
 
-    #     return os.path.join(caches_dir, cache_filename)
+        # study_groups_config = get_study_groups_config()
+        # caches_dir = study_groups_config["DENOVO_GENE_SETS_DIR"]
+        # cache_filename = '{}.json'.format(self.name)
+
+        # return os.path.join(caches_dir, cache_filename)
 
     @property
     def families(self):
