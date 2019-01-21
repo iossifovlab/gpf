@@ -145,3 +145,63 @@ def load_dataset(dataset_factory, dataset_definitions, dataset_name):
 def inheritance_trio_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
         dataset_factory, dataset_definitions, 'inheritance_trio')
+
+
+@pytest.fixture(scope='session')
+def inheritance_trio_dataset_wrapper(inheritance_trio_dataset):
+    return StudyWrapper(inheritance_trio_dataset)
+
+
+@pytest.fixture(scope='session')
+def quads_two_families_dataset(dataset_factory, dataset_definitions):
+    return load_dataset(
+        dataset_factory, dataset_definitions, 'quads_two_families')
+
+
+@pytest.fixture(scope='session')
+def quads_two_families_dataset_wrapper(quads_two_families_dataset):
+    return StudyWrapper(quads_two_families_dataset)
+
+
+@pytest.fixture(scope='session')
+def quads_f1_dataset(dataset_factory, dataset_definitions):
+    return load_dataset(
+        dataset_factory, dataset_definitions, 'quads_f1')
+
+
+@pytest.fixture(scope='session')
+def quads_f1_dataset_wrapper(quads_f1_dataset):
+    return StudyWrapper(quads_f1_dataset)
+
+
+@pytest.fixture(scope='session')
+def quads_variant_types_dataset(dataset_factory, dataset_definitions):
+    return load_dataset(
+        dataset_factory, dataset_definitions, 'quads_variant_types')
+
+
+@pytest.fixture(scope='session')
+def quads_variant_types_dataset_wrapper(quads_variant_types_dataset):
+    return StudyWrapper(quads_variant_types_dataset)
+
+
+@pytest.fixture(scope='session')
+def quads_in_child_dataset(dataset_factory, dataset_definitions):
+    return load_dataset(
+        dataset_factory, dataset_definitions, 'quads_in_child')
+
+
+@pytest.fixture(scope='session')
+def quads_in_child_dataset_wrapper(quads_in_child_dataset):
+    return StudyWrapper(quads_in_child_dataset)
+
+
+@pytest.fixture(scope='session')
+def quads_in_parent_dataset(dataset_factory, dataset_definitions):
+    return load_dataset(
+        dataset_factory, dataset_definitions, 'quads_in_parent')
+
+
+@pytest.fixture(scope='session')
+def quads_in_parent_dataset_wrapper(quads_in_parent_dataset):
+    return StudyWrapper(quads_in_parent_dataset)

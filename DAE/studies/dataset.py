@@ -1,111 +1,83 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import itertools
+import functools
 
-class Dataset(object):
+from studies.study import StudyBase
+
+
+class Dataset(StudyBase):
 
     def __init__(
             self, name, studies, dataset_config):
-        super(Dataset, self).__init__()
-        genotype_browser = dataset_config.genotypeBrowser
-
-        preview_columns = []
-        download_columns = []
-        pedigree_columns = {}
-        pheno_columns = {}
-
-        pedigree_selectors = []
-
-        if genotype_browser:
-            preview_columns = genotype_browser['previewColumns']
-            download_columns = genotype_browser['downloadColumns']
-            if genotype_browser['pedigreeColumns']:
-                pedigree_columns =\
-                    [s for pc in genotype_browser['pedigreeColumns']
-                     for s in pc['slots']]
-            if genotype_browser['phenoColumns']:
-                pheno_columns = [s for pc in genotype_browser['phenoColumns']
-                                 for s in pc['slots']]
-
-        if dataset_config.pedigreeSelectors:
-            pedigree_selectors = dataset_config.pedigreeSelectors
-
-        self.name = name
+        super(Dataset, self).__init__(name, dataset_config)
         self.studies = studies
 
         self.dataset_config = dataset_config
 
-        self.name = name
-        self.preview_columns = preview_columns
-        self.download_columns = download_columns
-        self.pedigree_columns = pedigree_columns
-        self.pheno_columns = pheno_columns
+        self.phenotypes = functools.reduce(
+            lambda acc, study: acc | study.phenotypes, studies, set())
 
-        self.pedigree_selectors = pedigree_selectors
+        self.study_names = ",".join(study.name for study in self.studies)
+        self.has_denovo = any([study.has_denovo for study in self.studies])
+        self.has_transmitted =\
+            any([study.has_transmitted for study in self.studies])
+        self.has_complex = any([study.has_complex for study in self.studies])
+        self.has_cnv = any([study.has_cnv for study in self.studies])
+        study_types = set([study.study_type for study in self.studies
+                           if study.study_type is not None])
+        self.study_types = study_types if len(study_types) != 0 else None
+        years = set([study.year for study in self.studies
+                     if study.year is not None])
+        self.year = years if len(years) != 0 else None
+        pub_meds = set([study.pub_med for study in self.studies
+                        if study.pub_med is not None])
+        self.pub_med = pub_meds if len(pub_meds) != 0 else None
+        self.has_study_types = True if len(study_types) != 0 else False
 
-        if len(self.dataset_config.pedigreeSelectors) != 0:
-            self.legend = {ps['id']: ps['domain'] + [ps['default']]
-                           for ps in self.dataset_config.pedigreeSelectors}
-        else:
-            self.legend = {}
+    # def get_variants(self, **kwargs):
+    #     kwargs = self.transorm_variants_kwargs(**kwargs)
 
-    @property
-    def id(self):
-        return self.dataset_config.id
-
-    def transorm_variants_kwargs(self, **kwargs):
-        if 'pedigreeSelector' in kwargs:
-            pedigree_selector_id = kwargs['pedigreeSelector']['id']
-            pedigree_selectors = list(filter(
-                lambda ps: ps['id'] == pedigree_selector_id,
-                self.pedigree_selectors))
-            if pedigree_selectors:
-                pedigree_selector = pedigree_selectors[0]
-                kwargs['pedigreeSelector']['source'] =\
-                    pedigree_selector['source']
-
-        return kwargs
-
-    def get_variants(self, **kwargs):
-        kwargs = self.transorm_variants_kwargs(**kwargs)
-
-        return self.study_group.query_variants(**kwargs)
-
-    @property
-    def study_names(self):
-        return self.study_group.study_names
+    #     return self.study_group.query_variants(**kwargs)
 
     # FIXME: fill these with real values
     def get_column_labels(self):
         return ['']
 
-    def _get_legend_default_values(self):
-        return [{
-            'color': '#E0E0E0',
-            'id': 'missing-person',
-            'name': 'missing-person'
-        }]
+    def query_variants(self, **kwargs):
+        return itertools.chain(*[
+            study.query_variants(**kwargs) for study in self.studies])
 
-    def get_legend(self, *args, **kwargs):
-        if 'pedigreeSelector' not in kwargs:
-            legend = list(self.legend.values())[0] if self.legend else []
-        else:
-            legend = self.legend.get(kwargs['pedigreeSelector']['id'], [])
+    def get_phenotype_values(self, pheno_column='phenotype'):
+        result = set()
+        for study in self.studies:
+            result.update(study.get_phenotype_values(pheno_column))
 
-        return legend + self._get_legend_default_values()
+        return result
+
+    def combine_families(self, first, second):
+        same_families = set(first.keys()) & set(second.keys())
+        combined_dict = {}
+        combined_dict.update(first)
+        combined_dict.update(second)
+        for sf in same_families:
+            combined_dict[sf] =\
+                first[sf] if len(first[sf]) > len(second[sf]) else second[sf]
+        return combined_dict
+
+    # FIXME:
+    # def gene_sets_cache_file(self):
+    #     study_groups_config = get_study_groups_config()
+    #     caches_dir = study_groups_config["DENOVO_GENE_SETS_DIR"]
+    #     cache_filename = '{}.json'.format(self.name)
+
+    #     return os.path.join(caches_dir, cache_filename)
 
     @property
-    def order(self):
-        return 0
-
-    @staticmethod
-    def _get_dataset_description_keys():
-        return [
-            'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
-            'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
-            'enrichmentTool', 'genotypeBrowser', 'pedigreeSelectors',
-            'studyTypes', 'studies'
-        ]
+    def families(self):
+        return functools.reduce(lambda x, y: self.combine_families(x, y),
+                                [study.families for study in self.studies])
 
     def _get_study_group_config_options(self, dataset_config):
         dataset_config['studyTypes'] = self.study_group.study_types

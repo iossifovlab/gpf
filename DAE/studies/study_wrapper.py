@@ -2,7 +2,7 @@ import itertools
 
 from RegionOperations import Region
 from variants.attributes import Role
-from datasets.helpers import expand_effect_types
+from studies.helpers import expand_effect_types
 from variants.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, ContainsNode
 

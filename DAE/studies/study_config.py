@@ -356,8 +356,16 @@ class StudyConfigBase(ConfigurableEntityConfig):
     @classmethod
     def get_default_values(cls):
         return {
-            'phenoDB': None,
             'description': None,
+            'year': None,
+            'pubMed': None,
+            'hasDenovo': 'yes',
+            'hasTransmitted': 'yes',
+            'hasComplex': 'yes',
+            'hasCNV': 'yes',
+            'studyType': 'WE',
+            'phenotypes': None,
+            'phenoDB': None,
             'genotypeBrowser.genesBlockShowAll': 'yes',
             'genotypeBrowser.hasFamilyFilters': 'yes',
             'genotypeBrowser.hasStudyFilters': 'yes',

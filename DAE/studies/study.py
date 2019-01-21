@@ -1,10 +1,9 @@
-class Study(object):
 
-    def __init__(self, name, backend, study_config):
+class StudyBase(object):
+
+    def __init__(self, name, study_config):
         self.name = name
-        self.backend = backend
         self.study_config = study_config
-        self._study_type_lowercase = self.study_type.lower()
 
         genotype_browser = study_config.genotypeBrowser
 
@@ -33,6 +32,15 @@ class Study(object):
 
         self.name = name
         self.id = study_config.id
+        self.phenotypes = self.study_config.phenotypes
+        self.has_denovo = self.study_config.has_denovo
+        self.has_transmitted = self.study_config.has_transmitted
+        self.has_complex = self.study_config.has_complex
+        self.has_cnv = self.study_config.has_cnv
+        self.study_type = self.study_config.study_type
+        self.year = self.study_config.year
+        self.pub_med = self.study_config.pub_med
+
         self.preview_columns = preview_columns
         self.download_columns = download_columns
         self.pedigree_columns = pedigree_columns
@@ -46,28 +54,28 @@ class Study(object):
         else:
             self.legend = {}
 
-    def _transorm_variants_kwargs(self, **kwargs):
-        if 'pedigreeSelector' in kwargs:
-            pedigree_selector_id = kwargs['pedigreeSelector']['id']
-            pedigree_selectors = list(filter(
-                lambda ps: ps['id'] == pedigree_selector_id,
-                self.pedigree_selectors))
-            if pedigree_selectors:
-                pedigree_selector = pedigree_selectors[0]
-                kwargs['pedigreeSelector']['source'] =\
-                    pedigree_selector['source']
+    # def _transform_variants_kwargs(self, **kwargs):
+    #     if 'pedigreeSelector' in kwargs:
+    #         pedigree_selector_id = kwargs['pedigreeSelector']['id']
+    #         pedigree_selectors = list(filter(
+    #             lambda ps: ps['id'] == pedigree_selector_id,
+    #             self.pedigree_selectors))
+    #         if pedigree_selectors:
+    #             pedigree_selector = pedigree_selectors[0]
+    #             kwargs['pedigreeSelector']['source'] =\
+    #                 pedigree_selector['source']
 
-        return kwargs
+    #     return kwargs
 
     def query_variants(self, **kwargs):
-        kwargs = self._transorm_variants_kwargs(**kwargs)
+        # kwargs = self._transform_variants_kwargs(**kwargs)
 
-        study_types_filter = kwargs.get('studyTypes', None)
-        if study_types_filter:
-            assert isinstance(study_types_filter, list)
-            study_types_filter = [s.lower() for s in study_types_filter]
-            if self._study_type_lowercase not in study_types_filter:
-                return []
+        # study_types_filter = kwargs.get('studyTypes', None)
+        # if study_types_filter:
+        #     assert isinstance(study_types_filter, list)
+        #     study_types_filter = [s.lower() for s in study_types_filter]
+        #     if self._study_type_lowercase not in study_types_filter:
+        #         return []
 
         kwargs = self.add_people_with_phenotype(kwargs)
         if 'person_ids' in kwargs and len(kwargs['person_ids']) == 0:
@@ -99,6 +107,21 @@ class Study(object):
     def get_phenotype_values(self, pheno_column='phenotype'):
         return set(self.backend.ped_df[pheno_column])
 
+    def _get_legend_default_values(self):
+        return [{
+            'color': '#E0E0E0',
+            'id': 'missing-person',
+            'name': 'missing-person'
+        }]
+
+    def get_legend(self, *args, **kwargs):
+        if 'pedigreeSelector' not in kwargs:
+            legend = list(self.legend.values())[0] if self.legend else []
+        else:
+            legend = self.legend.get(kwargs['pedigreeSelector']['id'], [])
+
+        return legend + self._get_legend_default_values()
+
     @staticmethod
     def _get_description_keys():
         return [
@@ -109,6 +132,10 @@ class Study(object):
         ]
 
     @property
+    def order(self):
+        return 0
+
+    @property
     def families(self):
         return self.backend.families
 
@@ -116,49 +143,14 @@ class Study(object):
     def description(self):
         return self.study_config.description
 
-    @property
-    def phenotypes(self):
-        return self.study_config.phenotypes
-
-    @property
-    def has_denovo(self):
-        return self.study_config.hasDenovo
-
-    @property
-    def has_transmitted(self):
-        return self.study_config.hasTransmitted
-
-    @property
-    def has_complex(self):
-        return self.study_config.hasComplex
-
-    @property
-    def has_CNV(self):
-        return self.study_config.hasCNV
-
-    @property
-    def study_type(self):
-        return self.study_config.studyType
-
-    @property
-    def study_types(self):
-        return [self.study_config.studyType]
-
     # FIXME: fill these with real data
 
-    @property
-    def year(self):
-        return None
 
-    @property
-    def years(self):
-        return None
+class Study(StudyBase):
 
-    @property
-    def pub_med(self):
-        return None
+    def __init__(self, name, backend, study_config):
+        super(Study, self).__init__(name, study_config)
 
-    @property
-    def pub_meds(self):
-        return None
+        self.backend = backend
+        self._study_type_lowercase = self.study_type.lower()
 

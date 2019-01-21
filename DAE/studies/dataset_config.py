@@ -14,6 +14,8 @@ class DatasetConfig(StudyConfigBase):
     def __init__(self, config, *args, **kwargs):
         super(DatasetConfig, self).__init__(config, *args, **kwargs)
 
+        assert self.studies
+
     @classmethod
     def from_config(cls, config_section, section_name):
         if 'enabled' in config_section:
