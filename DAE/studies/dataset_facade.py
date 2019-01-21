@@ -1,18 +1,12 @@
-from studies.dataset_factory import DatasetFactory
-from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 
 
 class DatasetFacade(object):
 
     _dataset_cache = {}
 
-    def __init__(self, dataset_definition=None, dataset_factory=None):
-        if dataset_definition is None:
-            dataset_definition = DirectoryEnabledDatasetsDefinition()
-        if dataset_factory is None:
-            dataset_factory = DatasetFactory()
+    def __init__(self, dataset_definitions, dataset_factory):
 
-        self.dataset_definition = dataset_definition
+        self.dataset_definition = dataset_definitions
         self.dataset_factory = dataset_factory
 
     def get_dataset(self, dataset_id):
@@ -23,12 +17,12 @@ class DatasetFacade(object):
 
         return self._dataset_cache[dataset_id]
 
-    def get_dataset_by_study_group(self, study_group_id):
-        for dataset_config in self.get_all_dataset_configs():
-            if dataset_config.study_group == study_group_id:
-                return self.get_dataset(dataset_config.id)
+    # def get_dataset_by_study_group(self, study_group_id):
+    #     for dataset_config in self.get_all_dataset_configs():
+    #         if dataset_config.study_group == study_group_id:
+    #             return self.get_dataset(dataset_config.id)
 
-        return None
+    #     return None
 
     def get_all_datasets(self):
         self.load_cache()

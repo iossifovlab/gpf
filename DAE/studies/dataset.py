@@ -28,12 +28,17 @@ class Dataset(StudyBase):
         study_types = set([study.study_type for study in self.studies
                            if study.study_type is not None])
         self.study_types = study_types if len(study_types) != 0 else None
+        self.study_type = ','.join(study_types) \
+            if len(study_types) != 0 else None
         years = set([study.year for study in self.studies
                      if study.year is not None])
-        self.year = years if len(years) != 0 else None
+        self.years = years if len(years) != 0 else []
+        self.year = ','.join(self.years)
         pub_meds = set([study.pub_med for study in self.studies
                         if study.pub_med is not None])
-        self.pub_med = pub_meds if len(pub_meds) != 0 else None
+        self.pub_meds = pub_meds if len(pub_meds) != 0 else []
+        self.pub_med = ','.join(self.pub_meds)
+        
         self.has_study_types = True if len(study_types) != 0 else False
 
     # def get_variants(self, **kwargs):

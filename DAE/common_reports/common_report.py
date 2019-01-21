@@ -4,13 +4,8 @@ import pandas as pd
 import json
 import os
 
-from common_reports.config import CommonReportsConfig
-from study_groups.study_group_facade import StudyGroupFacade
-from studies.study_facade import StudyFacade
 from variants.attributes import Role, Sex
 from common.query_base import EffectTypesMixin
-from studies.default_settings import get_config as get_studies_config
-from study_groups.default_settings import get_config as get_study_groups_config
 
 
 class PeopleCounter(object):
@@ -538,9 +533,10 @@ class CommonReport(object):
 class CommonReportsGenerator(object):
 
     def __init__(
-            self, config=None, study_facade=None, study_group_facade=None):
-        if config is None:
-            config = CommonReportsConfig()
+            self, config, study_facade, dataset_facade):
+        assert config is not None
+        assert study_facade is not None
+        assert dataset_facade is not None
 
         self.config = config
 
@@ -551,13 +547,8 @@ class CommonReportsGenerator(object):
         self.effect_types = self.config.effect_types()
         self.phenotypes_info = self.config.phenotypes()
 
-        if study_facade is None:
-            study_facade = StudyFacade()
-        if study_group_facade is None:
-            study_group_facade = StudyGroupFacade()
-
         self.study_facade = study_facade
-        self.study_group_facade = study_group_facade
+        self.study_group_facade = dataset_facade
 
     def get_common_reports(self, query_object):
         for qo, qo_properties in query_object.items():
@@ -566,19 +557,21 @@ class CommonReportsGenerator(object):
                 self.effect_groups, self.effect_types)
 
     def save_common_reports(self):
-        studies = {self.study_facade.get_study(s): s_prop
-                   for s, s_prop in self.studies.items()}
-        study_groups = {self.study_group_facade.get_study_group(sg): sg_prop
-                        for sg, sg_prop in self.study_groups.items()}
-        studies_common_reports_dir = get_studies_config() \
-            .get('COMMON_REPORTS_DIR')
-        study_groups_common_reports_dir = get_study_groups_config() \
-            .get('COMMON_REPORTS_DIR')
+        studies = {
+            self.study_facade.get_study(s): s_prop
+            for s, s_prop in self.studies.items()
+        }
+        datasets = {
+            self.dataset_facade.get_study_group(sg): sg_prop
+            for sg, sg_prop in self.study_groups.items()
+        }
+        studies_common_reports_dir = '.'
+        study_groups_common_reports_dir = '.'
         for cr in self.get_common_reports(studies):
             with open(os.path.join(studies_common_reports_dir,
                       cr.study_name + '.json'), 'w') as crf:
                 json.dump(cr.to_dict(), crf)
-        for cr in self.get_common_reports(study_groups):
+        for cr in self.get_common_reports(datasets):
             with open(os.path.join(study_groups_common_reports_dir,
                       cr.study_name + '.json'), 'w') as crf:
                 json.dump(cr.to_dict(), crf)

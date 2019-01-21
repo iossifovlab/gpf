@@ -38,8 +38,12 @@ class StudyBase(object):
         self.has_complex = self.study_config.has_complex
         self.has_cnv = self.study_config.has_cnv
         self.study_type = self.study_config.study_type
+        self.study_types = [self.study_type]
+
         self.year = self.study_config.year
+        self.years = [self.year] if self.year is not None else []
         self.pub_med = self.study_config.pub_med
+        self.pub_meds = [self.pub_med] if self.pub_med is not None else []
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns

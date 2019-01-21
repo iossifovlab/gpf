@@ -56,7 +56,7 @@ class StudyConfigBase(ConfigurableEntityConfig):
         assert self.id
         assert self.name
         assert 'description' in self
-        assert self.data_dir
+        # assert self.data_dir
         assert 'phenotypeBrowser' in self
         assert 'phenotypeGenotypeTool' in self
         assert self.authorizedGroups
