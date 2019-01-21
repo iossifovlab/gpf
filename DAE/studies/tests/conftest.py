@@ -7,7 +7,6 @@ from studies.study_facade import StudyFacade
 from studies.study_wrapper import StudyWrapper
 from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
-from studies.dataset_facade import DatasetFacade
 
 
 def fixtures_dir():
