@@ -100,13 +100,18 @@ class ConfigurableEntityConfig(object):
 
         default_values['work_dir'] = work_dir
 
-        config_parser = CaseSensitiveConfigParser(defaults=default_values)
+        config_parser = CaseSensitiveConfigParser(
+            defaults=default_values,
+            allow_no_value=True,
+            strict=True)
+
         print("READING CONFIG FROM '", config_file, "'")
         with open(config_file, 'r') as f:
             config_parser.read_file(f)
 
-        config = dict((section, dict(config_parser.items(section)))
-                      for section in config_parser.sections())
+        config = dict(
+            (section, dict(config_parser.items(section, raw=True)))
+            for section in config_parser.sections())
 
         for section in config.keys():
             config[section] = cls._change_keys_names(config[section])
@@ -147,6 +152,8 @@ class ConfigurableEntityConfig(object):
         if str_option is not None and str_option != '':
             return [el.strip() for el in str_option.split(',')]
         elif str_option == '':
+            return []
+        else:
             return []
 
     @classmethod

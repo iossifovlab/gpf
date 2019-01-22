@@ -42,3 +42,10 @@
 def test_study_config_simple(study_definitions):
     print(study_definitions)
     print(study_definitions.get_all_study_names())
+
+
+def test_study_config_year(study_definitions):
+    study_config = study_definitions.get_study_config('inheritance_trio')
+    assert study_config is not None
+    print([study_config.year])
+    assert study_config.year is None

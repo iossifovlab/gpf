@@ -445,7 +445,7 @@ class StudyConfig(StudyConfigBase):
     def get_default_values(cls):
         defaults = super(StudyConfig, cls).get_default_values()
         defaults.update({
-            'studyType': None,
+            'studyType': 'WE',
             'hasComplex': 'no',
             'hasCNV': 'no',
             'hasDenovo': 'no',
