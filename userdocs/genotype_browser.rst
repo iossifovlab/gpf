@@ -76,31 +76,32 @@ count               The observed number of reads supporting the different
                     allele in the mother, there were 8 reads supporting the
                     alternative in the proband, and there was 1 read with a
                     non-­‐reference allele in the unaffected sibling.
+
+alt alleles         Count of alternative alleles found in the study
+
+parents called      Count of independent parents tested for this variant
+
+worst effect type   The most severe effect the variant has on genes.
+
+genes               The list of gene affected by the variant and the most
+                    severe effect for every gene. The format is
+                    <gene 1>:<effect on gene 1>|<gene 2>:<effect on gene 2>|.
+
+all effects
+
+effect details      Details of variant effects on each affected isoform.
+                    The format is: <isoform 1 of gene 1>; <isoform 2 or gene 1>|<isoform 1 of gene 2>; <isoform 2 of gene 2>|...
+                    The amino acid change and the position of the amino acid
+                    within the protein are shown.
+
+
 =================== ===========================================================
 
 
 
-Genomic Scores
+Gene Weights
 ----------------
 
-
-alt alleles
-...........
-
-parents called
-..............
-
-worst effect type
-.................
-
-genes
-.....
-
-all effects
-...........
-
-effect details
-..............
 
 LGD rank
 ........
@@ -111,130 +112,100 @@ RVIS rank
 pLI rank
 ........
 
-phyloP100
-.........
 
-Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phyloP100way/.
-Conservation scoring by phyloP (phylogenetic p-values) from the
-PHAST package (http://compgen.bscb.cornell.edu/phast/) for multiple
-alignments of 99 vertebrate genomes to the human genome.
+Genomic Scores
+----------------
 
-.. figure:: imgs/genomic_scores/phyloP100.png
-   :scale: 50
-   :alt: phyloP100
-   :align: center
+======================= ===========================================================
+Field                   Description
+======================= ===========================================================
+phyloP100               Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phyloP100way/.
+                        Conservation scoring by phyloP (phylogenetic p-values) from the
+                        PHAST package (http://compgen.bscb.cornell.edu/phast/) for multiple
+                        alignments of 99 vertebrate genomes to the human genome.
 
-   phyloP100
-
-
-phyloP46_vertebrates
-....................
-
-Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phyloP46way/.
-Conservation scoring by phyloP (phylogenetic p-values) from the
-PHAST package (http://compgen.bscb.cornell.edu/phast/) for multiple
-alignments of 45 vertebrate genomes to the human genome, plus alternate
-sets of scores for the primate species and the placental mammal species
-in the alignments.
-
-.. figure:: imgs/genomic_scores/phyloP46_vertebrates.png
-   :scale: 50
-   :alt: phyloP46_vertebrates
-   :align: center
-
-   phyloP46_vertebrates
+                        .. image:: imgs/genomic_scores/phyloP100.png
+                            :scale: 30
+                            :alt: phyloP100
+                            :align: center
 
 
-phyloP46_placentals
-...................
+phyloP46_vertebrates    Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phyloP46way/.
+                        Conservation scoring by phyloP (phylogenetic p-values) from the
+                        PHAST package (http://compgen.bscb.cornell.edu/phast/) for multiple
+                        alignments of 45 vertebrate genomes to the human genome, plus alternate
+                        sets of scores for the primate species and the placental mammal species
+                        in the alignments.
 
-Alternate set of phyloP46_vertebrates scores for the placental mammal
-subset of species in the alignments.
+                        .. image:: imgs/genomic_scores/phyloP46_vertebrates.png
+                            :scale: 30
+                            :alt: phyloP46_vertebrates
+                            :align: center
 
-.. figure:: imgs/genomic_scores/phyloP46_placentals.png
-   :scale: 50
-   :alt: phyloP46_placentals
-   :align: center
+phyloP46_placentals     Alternate set of phyloP46_vertebrates scores for the placental mammal
+                        subset of species in the alignments.
 
-   phyloP46_placentals
+                        .. image:: imgs/genomic_scores/phyloP46_placentals.png
+                            :scale: 30
+                            :alt: phyloP46_placentals
+                            :align: center
 
+phyloP46_primates       Alternate set of phyloP46_vertebrates scores for the primates subset species
+                        in the alignments.
 
-phyloP46_primates
-.................
+                        .. image:: imgs/genomic_scores/phyloP46_primates.png
+                            :scale: 30
+                            :alt: phyloP46_primates
+                            :align: center
 
-Alternate set of phyloP46_vertebrates scores for the primates subset species
-in the alignments.
+phastCons100            Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phastCons100way/.
+                        Compressed phastCons scores for multiple alignments of 99 vertebrate
+                        genomes to the human genome. PhastCons is a program for identifying
+                        evolutionarily conserved elements in a multiple alignment, given a
+                        phylogenetic tree.
 
-.. figure:: imgs/genomic_scores/phyloP46_primates.png
-   :scale: 50
-   :alt: phyloP46_primates
-   :align: center
+                        .. image:: imgs/genomic_scores/phastCons100.png
+                            :scale: 30
+                            :alt: phastCons100
+                            :align: center
 
-   phyloP46_primates
+phastCons46_vertebrates Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phastCons46way/.
+                        Compressed phastCons scores for multiple alignments of 45 vertebrate genomes
+                        to the human genome, plus an alternate set of scores for the primates subset
+                        of species in the alignments, and an alternate set of scores for the placental
+                        mammal subset of species in the alignments. PhastCons is a program for
+                        identifying evolutionarily conserved elements in a multiple alignment,
+                        given a phylogenetic tree.
 
+                        .. image:: imgs/genomic_scores/phastCons46_vertebrates.png
+                            :scale: 30
+                            :alt: phastCons46_vertebrates
+                            :align: center
 
-phastCons100
-............
+phastCons46_placentals  Alternate set of phastCons46_vertebrates scores for the placental mammal subset
+                        of species in the alignments.
 
-Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phastCons100way/.
-Compressed phastCons scores for multiple alignments of 99 vertebrate
-genomes to the human genome. PhastCons is a program for identifying
-evolutionarily conserved elements in a multiple alignment, given a
-phylogenetic tree.
+                        .. image:: imgs/genomic_scores/phastCons46_placentals.png
+                            :scale: 30
+                            :alt: phastCons46_placentals
+                            :align: center
 
-.. figure:: imgs/genomic_scores/phastCons100.png
-   :scale: 50
-   :alt: phastCons100
-   :align: center
+phastCons46_primates    Alternate set of phastCons46_vertebrates scores for the primates subset of
+                        species in the alignments.
 
-   phastCons100
-
-
-phastCons46_vertebrates
-.......................
-
-Link: http://hgdownload.cse.ucsc.edu/goldenpath/hg19/phastCons46way/.
-Compressed phastCons scores for multiple alignments of 45 vertebrate genomes
-to the human genome, plus an alternate set of scores for the primates subset
-of species in the alignments, and an alternate set of scores for the placental
-mammal subset of species in the alignments. PhastCons is a program for
-identifying evolutionarily conserved elements in a multiple alignment,
-given a phylogenetic tree.
-
-.. figure:: imgs/genomic_scores/phastCons46_vertebrates.png
-   :scale: 50
-   :alt: phastCons46_vertebrates
-   :align: center
-
-   phastCons46_vertebrates
-
-
-phastCons46_placentals
-......................
-
-Alternate set of phastCons46_vertebrates scores for the placental mammal subset
-of species in the alignments.
-
-.. figure:: imgs/genomic_scores/phastCons46_placentals.png
-   :scale: 50
-   :alt: phastCons46_placentals
-   :align: center
-
-   phastCons46_placentals
+                        .. image:: imgs/genomic_scores/phastCons46_primates.png
+                            :scale: 30
+                            :alt: phastCons46_primates
+                            :align: center
 
 
-phastCons46_primates
-....................
 
-Alternate set of phastCons46_vertebrates scores for the primates subset of
-species in the alignments.
+======================= ===========================================================
 
-.. figure:: imgs/genomic_scores/phastCons46_primates.png
-   :scale: 50
-   :alt: phastCons46_primates
-   :align: center
 
-   phastCons46_primates
+
+
+
 
 
 CADD_raw
