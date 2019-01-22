@@ -77,7 +77,7 @@ count               The observed number of reads supporting the different
                     alternative in the proband, and there was 1 read with a
                     non-­‐reference allele in the unaffected sibling.
 
-alt alleles         Count of alternative alleles found in the study
+alt alleles
 
 parents called      Count of independent parents tested for this variant
 
