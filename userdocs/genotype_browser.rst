@@ -116,6 +116,7 @@ pLI rank
 Genomic Scores
 ----------------
 
+
 ======================= ===========================================================
 Field                   Description
 ======================= ===========================================================
@@ -198,93 +199,62 @@ phastCons46_primates    Alternate set of phastCons46_vertebrates scores for the 
                             :alt: phastCons46_primates
                             :align: center
 
+CADD_raw                Link: https://cadd.gs.washington.edu/download ; Higher values of raw
+                        scores have relative meaning that a variant is more likely to be simulated
+                        (or "not observed") and therefore more likely to have deleterious effects.
+                        Scaled scores are PHRED-like (-10*log10(rank/total)) scaled C-score ranking
+                        a variant relative to all possible substitutions of the
+                        human genome (8.6x10^9).
+
+                        .. image:: imgs/genomic_scores/CADD_raw_gs.png
+                            :scale: 30
+                            :alt: CADD raw
+                            :align: center
+
+CADD_phred              Link: https://cadd.gs.washington.edu/download ; Higher values of raw scores
+                        have relative meaning that a variant is more likely to be simulated
+                        (or "not observed") and therefore more likely to have deleterious effects.
+                        Scaled scores are PHRED-like (-10*log10(rank/total)) scaled C-score ranking
+                        a variant relative to all possible substitutions of the
+                        human genome (8.6x10^9).
+
+                        .. image:: imgs/genomic_scores/CADD_phred_gs.png
+                            :scale: 30
+                            :alt: CADD phred
+                            :align: center
+
+Linsight                Linsight scores for prediction of deleterious noncoding variants
+
+                        .. image:: imgs/genomic_scores/Linsight.png
+                            :scale: 30
+                            :alt: Linsight
+                            :align: center
+
+
+FitCons i6 merged       Link: http://compgen.cshl.edu/fitCons/0downloads/tracks/i6/scores/.
+                        Indicates the fraction of genomic positions evincing a particular pattern
+                        (or "fingerprint") of functional assay results, that are under selective
+                        pressure. Score ranges from 0.0 to 1.0. A lower score indicates higher
+                        confidence.
+
+                        .. image:: imgs/genomic_scores/FitCons-i6-merged.png
+                            :scale: 30
+                            :alt: FitCons-i6-merged
+                            :align: center
+
+
+Brain Angular Gyrus     FitCons2 Scores for E067-Brain Angular Gyrus score-Roadmap 
+                        Epigenomics DHS regions
+
+                        .. image:: imgs/genomic_scores/FitCons2_E067.png
+                            :scale: 30
+                            :alt: FitCons2 E067-Brain Angular Gyrus
+                            :align: center
 
 
 ======================= ===========================================================
 
 
-
-
-
-
-
-CADD_raw
-........
-
-Link: https://cadd.gs.washington.edu/download ; Higher values of raw
-scores have relative meaning that a variant is more likely to be simulated
-(or "not observed") and therefore more likely to have deleterious effects.
-Scaled scores are PHRED-like (-10*log10(rank/total)) scaled C-score ranking
-a variant relative to all possible substitutions of the
-human genome (8.6x10^9).
-
-.. figure:: imgs/genomic_scores/CADD_raw_gs.png
-   :scale: 50
-   :alt: CADD raw
-   :align: center
-
-   CADD raw
-
-
-CADD_phred
-..........
-
-Link: https://cadd.gs.washington.edu/download ; Higher values of raw scores
-have relative meaning that a variant is more likely to be simulated
-(or "not observed") and therefore more likely to have deleterious effects.
-Scaled scores are PHRED-like (-10*log10(rank/total)) scaled C-score ranking
-a variant relative to all possible substitutions of the
-human genome (8.6x10^9).
-
-.. figure:: imgs/genomic_scores/CADD_phred_gs.png
-   :scale: 50
-   :alt: CADD phred
-   :align: center
-
-   CADD phred
-
-
-Linsight
-........
-
-Linsight scores for prediction of deleterious noncoding variants
-
-.. figure:: imgs/genomic_scores/Linsight.png
-   :scale: 50
-   :alt: Linsight
-   :align: center
-
-   Linsight
-
-
-FitCons i6 merged
-.................
-
-Link: http://compgen.cshl.edu/fitCons/0downloads/tracks/i6/scores/.
-Indicates the fraction of genomic positions evincing a particular pattern
-(or "fingerprint") of functional assay results, that are under selective
-pressure. Score ranges from 0.0 to 1.0. A lower score indicates higher
-confidence.
-
-.. figure:: imgs/genomic_scores/FitCons-i6-merged.png
-   :scale: 50
-   :alt: FitCons-i6-merged
-   :align: center
-
-   FitCons i6 merged
-
-
-FitCons2 Brain Angular Gyrus
-............................
-
-Scores for E067-Brain Angular Gyrus score-Roadmap Epigenomics DHS regions
-
-.. figure:: imgs/genomic_scores/FitCons2_E067.png
-   :scale: 50
-   :alt: FitCons2 E067-Brain Angular Gyrus
-   :align: center
-
-   FitCons2 E067-Brain Angular Gyrus
 
 
 FitCons2 Brain Anterior Caudate
