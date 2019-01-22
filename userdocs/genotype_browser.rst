@@ -11,11 +11,15 @@ Preview columns
 ========  ========  ===========
 Column    Field     Description
 ========  ========  ===========
-family    familyId  .. image:: imgs/genomic_scores/phyloP100.png
-                       
-\         study    
-variant   vocation
-\         variant
+family    familyId  Family	ID	
+\         study     Study name
+variant   location  The	position of	the variant in a 1-­‐based coordinate
+                    system of hg19 reference assembly.
+\         variant   Description of the variant: sub(R-­‐>A) stands for 
+                    substitution of the reference allele R to an alternative 
+                    allele A; ins(seq) stands for insertion of the provided 
+                    sequence (“seq”), and del(N) stands for deletions of 
+                    N nucleotides
 ========  ========  ===========
 
 
@@ -24,39 +28,61 @@ variant   vocation
 Download columns
 ----------------
 
+=================== ===========================================================
+Field               Description
+=================== ===========================================================
+familyId            Family ID
+
+study               Study name
+
+phenotype           Study phenotype
+
+location            The position of the variant in a 1-­‐based coordinate
+                    system of hg19 reference assembly.
+
+variant             Description of the variant: sub(R-­‐>A) stands for
+                    substitution of the reference allele R to an alternative
+                    allele A; ins(seq) stands for insertion of the provided
+                    sequence (“seq”), and del(N) stands for deletions of
+                    N nucleotides
+
+family genotype     The best state according to the Multinomial Model
+                    (Experimental Procedures). The format of the column is
+                    "momR dadR autR sibR/momA dadA autA sibA" where
+                    (for example) momR stands for the number of copies of the
+                    reference allele in the mother’s genotype and autA stands
+                    for the number of
+                    copies of the alternative allele in the genotype of the
+                    affected child.
+
+family structure
+
+from parent         Shows the parental haplotypes giving rise to de novo
+                    variants
+                    when they could be identified.
+
+in child            Shows the affected status and gender of the child in
+                    which the
+                    de novo variant was observed. The two children are listed
+                    when
+                    the de novo variant is shared by both.
+
+count               The observed number of reads supporting the different
+                    alleles at a given location. The format is
+                    <reference allele counts>/<alternative allele counts>/<other allele counts>
+                    and the order of individuals is <mom> <dad> <proband> and
+                    <sibling>. For example, "10 12 5 20/1 0 8 0/0 0 0 1"
+                    indicates that there were 10 reads supporting the reference
+                    allele in the mother, there were 8 reads supporting the
+                    alternative in the proband, and there was 1 read with a
+                    non-­‐reference allele in the unaffected sibling.
+=================== ===========================================================
+
+
+
 Genomic Scores
 ----------------
 
-
-family id
-.........
-
-study
-.....
-
-phenotype
-.........
-
-location
-........
-
-variant
-........
-
-family genotype
-...............
-
-family structure
-................
-
-from parent
-...........
-
-in child
-........
-
-count
-.....
 
 alt alleles
 ...........
