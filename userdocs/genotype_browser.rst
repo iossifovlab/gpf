@@ -11,14 +11,14 @@ Preview columns
 ========  ========  ===========
 Column    Field     Description
 ========  ========  ===========
-family    familyId  Family	ID	
+family    familyId  Family	ID
 \         study     Study name
 variant   location  The	position of	the variant in a 1-­‐based coordinate
                     system of hg19 reference assembly.
-\         variant   Description of the variant: sub(R-­‐>A) stands for 
-                    substitution of the reference allele R to an alternative 
-                    allele A; ins(seq) stands for insertion of the provided 
-                    sequence (“seq”), and del(N) stands for deletions of 
+\         variant   Description of the variant: sub(R-­‐>A) stands for
+                    substitution of the reference allele R to an alternative
+                    allele A; ins(seq) stands for insertion of the provided
+                    sequence (“seq”), and del(N) stands for deletions of
                     N nucleotides
 ========  ========  ===========
 
