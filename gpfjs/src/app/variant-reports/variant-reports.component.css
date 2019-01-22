@@ -38,17 +38,18 @@
   border: 0.1px solid #aaaaaa;
 }
 
-div.vertical {
+th.rotate > div {
   position: relative;
   height: 210px;
   width: auto;
-  margin-left: 0;
-  padding-right: 2px;
+  margin-right: 0;
+  padding-left: 2px;
   writing-mode: tb-rl;
   filter: flipv fliph;
+  transform: rotate(180deg);
 }
 
-th.vertical {
+th.rotate {
   padding-bottom: 10px;
   vertical-align: bottom;
 }

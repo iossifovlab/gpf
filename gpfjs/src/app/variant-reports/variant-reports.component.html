@@ -48,8 +48,8 @@
         <table class="table table-bordered table-hover table-sm table-centered table-header-rotate">
           <thead>
             <th>Group</th>
-            <th class="vertical" *ngFor="let column of this.currentPeopleCounter.columns">
-              <div class="vertical">{{ column }}</div>
+            <th class="rotate" *ngFor="let column of this.currentPeopleCounter.columns">
+              <div>{{ column }}</div>
             </th>
           </thead>
           <tbody>
@@ -148,8 +148,8 @@
           <table class="table table-bordered table-hover table-sm table-centered">
             <thead>
               <th>Phenotype</th>
-              <th *ngFor="let column of this.currentDenovoReport.columns">
-                {{ column }}
+              <th class="rotate" *ngFor="let column of this.currentDenovoReport.columns">
+                <div>{{ column }}</div>
               </th>
             </thead>
             <tbody>
