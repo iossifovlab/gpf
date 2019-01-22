@@ -17,6 +17,8 @@ def thrift_query1(thrift_connection, tables, query, db='parquet', limit=2000):
     builder = ThriftQueryBuilder(query, tables=tables, db=db)
     sql_query = builder.build()
 
+    if 'limit' in query:
+        limit = query['limit']
     if limit is not None:
         sql_query += "\n\tLIMIT {}".format(limit)
     print("FINAL QUERY", sql_query)
