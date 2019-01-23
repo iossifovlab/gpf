@@ -12,6 +12,44 @@ class StudyWrapper(object):
     def __init__(self, study, *args, **kwargs):
         super(StudyWrapper, self).__init__(*args, **kwargs)
         self.study = study
+        self._init_wdae_config()
+
+    def _init_wdae_config(self):
+        genotype_browser = self.config.genotypeBrowser
+
+        preview_columns = []
+        download_columns = []
+        pedigree_columns = {}
+        pheno_columns = {}
+
+        pedigree_selectors = []
+
+        if genotype_browser:
+            preview_columns = genotype_browser['previewColumns']
+            download_columns = genotype_browser['downloadColumns']
+            if genotype_browser['pedigreeColumns']:
+                pedigree_columns =\
+                    [s for pc in genotype_browser['pedigreeColumns']
+                     for s in pc['slots']]
+            if genotype_browser['phenoColumns']:
+                pheno_columns = [s for pc in genotype_browser['phenoColumns']
+                                 for s in pc['slots']]
+
+        if self.config.pedigreeSelectors:
+            pedigree_selectors = self.config.pedigreeSelectors
+
+        self.preview_columns = preview_columns
+        self.download_columns = download_columns
+        self.pedigree_columns = pedigree_columns
+        self.pheno_columns = pheno_columns
+
+        self.pedigree_selectors = pedigree_selectors
+
+        if len(self.config.pedigreeSelectors) != 0:
+            self.legend = {ps['id']: ps['domain'] + [ps['default']]
+                           for ps in self.config.pedigreeSelectors}
+        else:
+            self.legend = {}
 
     def __getattr__(self, name):
         return getattr(self.study, name)
@@ -34,6 +72,8 @@ class StudyWrapper(object):
     # TMM_ALL
     def query_variants(self, **kwargs):
         # print("kwargs in study group:", kwargs)
+        kwargs = self._add_people_with_phenotype(kwargs)
+
         limit = None
         if 'limit' in kwargs:
             limit = kwargs['limit']
@@ -74,6 +114,27 @@ class StudyWrapper(object):
         return itertools.islice(
             self.study.query_variants(**kwargs),
             limit)
+
+    def _add_people_with_phenotype(self, kwargs):
+        people_with_phenotype = set()
+        if 'pedigreeSelector' in kwargs and\
+                kwargs['pedigreeSelector'] is not None:
+            pedigree_selector = kwargs.pop('pedigreeSelector')
+
+            for family in self.families.values():
+                family_members_with_phenotype = set(
+                    [person.person_id for person in
+                        family.get_people_with_phenotypes(
+                            pedigree_selector['source'],
+                            pedigree_selector['checkedValues'])])
+                people_with_phenotype.update(family_members_with_phenotype)
+
+            if 'person_ids' in kwargs:
+                people_with_phenotype.intersection(kwargs['person_ids'])
+
+            kwargs['person_ids'] = list(people_with_phenotype)
+
+        return kwargs
 
     def _transform_min_max_alt_frequency(self, kwargs):
         min_value = None
@@ -206,3 +267,18 @@ class StudyWrapper(object):
             kwargs['roles'] = AndNode([original_roles, roles_query])
         else:
             kwargs['roles'] = roles_query
+
+    def _get_legend_default_values(self):
+        return [{
+            'color': '#E0E0E0',
+            'id': 'missing-person',
+            'name': 'missing-person'
+        }]
+
+    def get_legend(self, *args, **kwargs):
+        if 'pedigreeSelector' not in kwargs:
+            legend = list(self.legend.values())[0] if self.legend else []
+        else:
+            legend = self.legend.get(kwargs['pedigreeSelector']['id'], [])
+
+        return legend + self._get_legend_default_values()

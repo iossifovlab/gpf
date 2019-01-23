@@ -169,7 +169,7 @@ def test_query_present_in_parent(option, count, quads_in_parent_wrapper):
         (100, 0),
     ]
 )
-def test_quary_min_alt_frequency(option, count, quads_in_child_wrapper):
+def test_query_min_alt_frequency(option, count, quads_in_child_wrapper):
     variants = list(quads_in_child_wrapper.query_variants(
         minAltFrequencyPercent=option))
 
@@ -186,7 +186,7 @@ def test_quary_min_alt_frequency(option, count, quads_in_child_wrapper):
         (100, 4),
     ]
 )
-def test_quary_max_alt_frequency(option, count, quads_in_child_wrapper):
+def test_query_max_alt_frequency(option, count, quads_in_child_wrapper):
     variants = list(quads_in_child_wrapper.query_variants(
         maxAltFrequencyPercent=option))
 
@@ -205,7 +205,7 @@ def test_quary_max_alt_frequency(option, count, quads_in_child_wrapper):
         (100, 100, 0),
     ]
 )
-def test_quary_min_max_alt_frequency(
+def test_query_min_max_alt_frequency(
         minFreq, maxFreq, count, quads_in_child_wrapper):
     variants = list(quads_in_child_wrapper.query_variants(
         minAltFrequencyPercent=minFreq,

@@ -405,7 +405,6 @@ class StudyConfig(StudyConfigBase):
         # assert self.study_name
 
         assert self.type
-        assert self.type in StudyFactory.STUDY_TYPES.keys()
         assert self.work_dir
         assert self.phenotypes
         assert 'studyType' in self

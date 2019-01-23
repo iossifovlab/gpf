@@ -746,7 +746,7 @@ class FilterObjects(object):
                     el_values = phenotype_info.phenotypes
                 else:
                     el_column = el
-                    el_values = query_object.get_column_values(el)
+                    el_values = query_object.get_pedigree_values(el)
 
                 filter = []
                 for el_value in el_values:

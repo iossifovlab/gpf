@@ -40,7 +40,7 @@ class Dataset(StudyBase):
         self.pub_meds = pub_meds if len(pub_meds) != 0 else None
         self.pub_med = ','.join(self.pub_meds) \
             if self.pub_meds is not None else None
-        
+
         self.has_study_types = True if len(study_types) != 0 else False
 
     # def get_variants(self, **kwargs):
@@ -89,10 +89,10 @@ class Dataset(StudyBase):
         return functools.reduce(lambda x, y: self.combine_families(x, y),
                                 [study.families for study in self.studies])
 
-    def get_column_values(self, column):
+    def get_pedigree_values(self, column):
         return functools.reduce(
             lambda x, y: x | y,
-            [st.get_column_values(column) for st in self.studies], set())
+            [st.get_pedigree_values(column) for st in self.studies], set())
 
     def _get_study_group_config_options(self, dataset_config):
         dataset_config['studyTypes'] = self.study_group.study_types
