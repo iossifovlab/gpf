@@ -27,4 +27,4 @@ def change_environment(env_props):
         if old_env[env_key] is None:
             os.unsetenv(env_key)
         else:
-            os.putenv(env_key, old_env[env_key])
+            os.environ[env_key] = old_env[env_key]

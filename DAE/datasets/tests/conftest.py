@@ -33,13 +33,6 @@ def load_dataset(fixtures_folder, dataset_factory, dataset_name):
     return result
 
 
-def mock_property(mocker):
-    def result(property, mock_value):
-        file_mock = mocker.patch(property, new_callable=mocker.PropertyMock)
-        file_mock.return_value = mock_value
-    return result
-
-
 @pytest.fixture(scope='session')
 def dataset_facade(dataset_factory):
     return lambda dataset_definition: \
@@ -69,7 +62,7 @@ def basic_study_groups_definition(study_definition):
 
 
 @pytest.fixture(scope='session')
-def dataset_factory(pheno_conf_path, basic_study_groups_definition, study_groups_factory):
+def dataset_factory(basic_study_groups_definition, study_groups_factory):
     return DatasetFactory(
         study_group_factory=study_groups_factory,
         study_group_definition=basic_study_groups_definition)
@@ -113,7 +106,7 @@ def quads_in_parent(datasets_folder, dataset_factory):
     return load_dataset(datasets_folder, dataset_factory, 'quads_in_parent')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def pheno_conf_path():
     new_envs = {
         'DAE_DB_DIR': fixtures_dir()
