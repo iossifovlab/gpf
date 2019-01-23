@@ -23,14 +23,24 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
 
     ENABLED_DIR = '.'
 
-    def __init__(self, datasets_dir, work_dir):
+    def __init__(self, study_facade, datasets_dir, work_dir):
         super(DirectoryEnabledDatasetsDefinition, self).__init__()
         assert datasets_dir is not None
         assert work_dir is not None
+        self.study_facade = study_facade
 
         self.directory_enabled_configurable_entity_definition(
             datasets_dir, DatasetConfig, work_dir, 'id',
             DatasetConfig.get_default_values())
+        self._fill_studies_configs()
+
+    def _fill_studies_configs(self):
+        for dataset_config in self.configs.values():
+            studies_configs = []
+            for study_id in dataset_config.studies:
+                study_config = self.study_facade.get_study_config(study_id)
+                studies_configs.append(study_config)
+            dataset_config.studies_configs = studies_configs
 
 
 # class SingleFileDatasetsDefinition(DatasetsDefinition):

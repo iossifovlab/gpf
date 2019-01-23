@@ -6,7 +6,7 @@ from itertools import chain
 class ConfigurableEntityDefinition(object):
     __metaclass__ = abc.ABCMeta
 
-    configs = {}
+    # configs = {}
 
     @property
     def configurable_entity_ids(self):

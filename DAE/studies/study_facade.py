@@ -35,6 +35,9 @@ class StudyFacade(object):
     def get_all_study_configs(self):
         return self.study_definition.get_all_study_configs()
 
+    def get_study_config(self, study_id):
+        return self.study_definition.get_study_config(study_id)
+
     def load_cache(self, study_ids=None):
         if study_ids is None:
             study_ids = set(self.get_all_study_ids())

@@ -55,8 +55,9 @@ def study_facade(study_factory, study_definitions):
 
 
 @pytest.fixture(scope='session')
-def dataset_definitions():
+def dataset_definitions(study_facade):
     return DirectoryEnabledDatasetsDefinition(
+        study_facade,
         datasets_dir=datasets_dir(),
         work_dir=fixtures_dir())
 

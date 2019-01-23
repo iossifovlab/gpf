@@ -121,10 +121,16 @@ def quads_in_parent_wrapper(quads_in_parent):
 
 
 @pytest.fixture(scope='session')
-def dataset_definitions():
+def dataset_definitions(study_facade):
     return DirectoryEnabledDatasetsDefinition(
+        study_facade,
         datasets_dir=datasets_dir(),
         work_dir=fixtures_dir())
+
+
+@pytest.fixture(scope='session')
+def quads_composite_dataset_config(dataset_definitions):
+    return dataset_definitions.get_dataset_config('quads_composite')
 
 
 @pytest.fixture(scope='session')

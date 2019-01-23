@@ -58,42 +58,42 @@ class StudyConfigBase(ConfigurableEntityConfig):
         assert self.name
         assert 'description' in self
         assert self.work_dir
-        assert 'phenotypeBrowser' in self
-        assert 'phenotypeGenotypeTool' in self
-        assert self.authorizedGroups
-        assert 'phenoDB' in self
-        assert 'enrichmentTool' in self
+        # assert 'phenotypeBrowser' in self
+        # assert 'phenotypeGenotypeTool' in self
+        # assert self.authorizedGroups
+        # assert 'phenoDB' in self
+        # assert 'enrichmentTool' in self
 
-        enrichmentTool = dict(self)['enrichmentTool']
-        if enrichmentTool:
-            assert enrichmentTool['studyTypes']
-            assert enrichmentTool['selector']
-        assert 'genotypeBrowser' in self
-        genotypeBrowser = dict(self)['genotypeBrowser']
-        if genotypeBrowser:
-            assert 'genesBlockShowAll' in genotypeBrowser
-            assert 'hasFamilyFilters' in genotypeBrowser
-            assert 'hasStudyFilters' in genotypeBrowser
-            assert 'hasPresentInChild' in genotypeBrowser
-            assert 'hasPresentInParent' in genotypeBrowser
-            assert 'hasPedigreeSelector' in genotypeBrowser
-            assert genotypeBrowser['mainForm']
-            assert 'phenoColumns' in genotypeBrowser
-            assert 'familyStudyFilters' in genotypeBrowser
-            assert 'phenoFilters' in genotypeBrowser
-            assert 'pedigreeColumns' in genotypeBrowser
-            assert genotypeBrowser['previewColumns']
-            assert genotypeBrowser['downloadColumns']
-            assert 'genotypeColumns' in genotypeBrowser
-        assert 'pedigreeSelectors' in self
-        pedigree_selectors = self['pedigreeSelectors']
-        for pedigree in pedigree_selectors:
-            assert pedigree['name']
-            assert pedigree['id']
-            assert pedigree['domain']
-            assert pedigree['default']
-            assert pedigree['source']
-            assert pedigree['values']
+        # enrichmentTool = dict(self)['enrichmentTool']
+        # if enrichmentTool:
+        #     assert enrichmentTool['studyTypes']
+        #     assert enrichmentTool['selector']
+        # assert 'genotypeBrowser' in self
+        # genotypeBrowser = dict(self)['genotypeBrowser']
+        # if genotypeBrowser:
+        #     assert 'genesBlockShowAll' in genotypeBrowser
+        #     assert 'hasFamilyFilters' in genotypeBrowser
+        #     assert 'hasStudyFilters' in genotypeBrowser
+        #     assert 'hasPresentInChild' in genotypeBrowser
+        #     assert 'hasPresentInParent' in genotypeBrowser
+        #     assert 'hasPedigreeSelector' in genotypeBrowser
+        #     assert genotypeBrowser['mainForm']
+        #     assert 'phenoColumns' in genotypeBrowser
+        #     assert 'familyStudyFilters' in genotypeBrowser
+        #     assert 'phenoFilters' in genotypeBrowser
+        #     assert 'pedigreeColumns' in genotypeBrowser
+        #     assert genotypeBrowser['previewColumns']
+        #     assert genotypeBrowser['downloadColumns']
+        #     assert 'genotypeColumns' in genotypeBrowser
+        # assert 'pedigreeSelectors' in self
+        # pedigree_selectors = self['pedigreeSelectors']
+        # for pedigree in pedigree_selectors:
+        #     assert pedigree['name']
+        #     assert pedigree['id']
+        #     assert pedigree['domain']
+        #     assert pedigree['default']
+        #     assert pedigree['source']
+        #     assert pedigree['values']
 
     @staticmethod
     def _split_section(section):
@@ -359,38 +359,6 @@ class StudyConfigBase(ConfigurableEntityConfig):
     def get_default_values(cls):
         return {
             'description': None,
-            'year': None,
-            'pubMed': None,
-            'hasDenovo': 'yes',
-            'hasTransmitted': 'yes',
-            'hasComplex': 'yes',
-            'hasCNV': 'yes',
-            'studyType': 'WE',
-            'phenotypes': None,
-            'phenoDB': None,
-            'genotypeBrowser.genesBlockShowAll': 'yes',
-            'genotypeBrowser.hasFamilyFilters': 'yes',
-            'genotypeBrowser.hasStudyFilters': 'yes',
-            'genotypeBrowser.phenoFilters': '',
-            'genotypeBrowser.hasPresentInChild': 'yes',
-            'genotypeBrowser.hasPresentInParent': 'yes',
-            'genotypeBrowser.hasPedigreeSelector': 'no',
-            'genotypeBrowser.mainForm': 'default',
-            'genotypeBrowser.pheno.columns': None,
-            'genotypeBrowser.familyFilters': None,
-            'genotypeBrowser.genotype.baseColumns':
-                'family,phenotype,variant,best,fromparent,inchild,genotype,'
-                'effect,count,geneeffect,effectdetails,weights,freq',
-            'genotypeBrowser.basePreviewColumns':
-                'family,variant,genotype,effect,weights,freq,studyName,'
-                'location,pedigree,inChS,fromParentS,effects,'
-                'requestedGeneEffects,genes,worstEffect',
-            'genotypeBrowser.baseDownloadColumns':
-                'family,phenotype,variant,best,fromparent,inchild,effect,'
-                'count,geneeffect,effectdetails,weights,freq',
-            'phenoFilters': '',
-            'phenotypeBrowser': False,
-            'phenotypeGenotypeTool': False,
         }
 
 
@@ -452,9 +420,37 @@ class StudyConfig(StudyConfigBase):
         defaults = super(StudyConfig, cls).get_default_values()
         defaults.update({
             'studyType': 'WE',
+            'year': None,
+            'pubMed': None,
+            'hasDenovo': 'yes',
+            'hasTransmitted': 'no',
             'hasComplex': 'no',
             'hasCNV': 'no',
-            'hasDenovo': 'no',
-            'hasTransmitted': 'no',
+            'studyType': 'WE',
+            'phenotypes': None,
+            'phenoDB': None,
+            'genotypeBrowser.genesBlockShowAll': 'yes',
+            'genotypeBrowser.hasFamilyFilters': 'yes',
+            'genotypeBrowser.hasStudyFilters': 'yes',
+            'genotypeBrowser.phenoFilters': '',
+            'genotypeBrowser.hasPresentInChild': 'yes',
+            'genotypeBrowser.hasPresentInParent': 'yes',
+            'genotypeBrowser.hasPedigreeSelector': 'no',
+            'genotypeBrowser.mainForm': 'default',
+            'genotypeBrowser.pheno.columns': None,
+            'genotypeBrowser.familyFilters': None,
+            'genotypeBrowser.genotype.baseColumns':
+                'family,phenotype,variant,best,fromparent,inchild,genotype,'
+                'effect,count,geneeffect,effectdetails,weights,freq',
+            'genotypeBrowser.basePreviewColumns':
+                'family,variant,genotype,effect,weights,freq,studyName,'
+                'location,pedigree,inChS,fromParentS,effects,'
+                'requestedGeneEffects,genes,worstEffect',
+            'genotypeBrowser.baseDownloadColumns':
+                'family,phenotype,variant,best,fromparent,inchild,effect,'
+                'count,geneeffect,effectdetails,weights,freq',
+            'phenoFilters': '',
+            'phenotypeBrowser': False,
+            'phenotypeGenotypeTool': False,            
         })
         return defaults
