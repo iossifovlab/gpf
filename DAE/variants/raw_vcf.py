@@ -325,7 +325,6 @@ class RawFamilyVariants(FamiliesBase):
 
         if kwargs.get('inheritance') is not None:
             parsed = kwargs['inheritance']
-            print('inheritance', parsed, type(parsed), isinstance(parsed, str))
             if isinstance(parsed, str):
                 parsed = inheritance_query.transform_query_string_to_tree(
                     parsed)

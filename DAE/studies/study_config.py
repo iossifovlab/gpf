@@ -2,7 +2,6 @@ import os
 
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
-from studies.study_factory import StudyFactory
 
 
 class StudyConfigBase(ConfigurableEntityConfig):
@@ -14,13 +13,15 @@ class StudyConfigBase(ConfigurableEntityConfig):
     CONCAT_OPTIONS = {
         'genotypeBrowser.genotype.baseColumns':
             'genotypeBrowser.genotype.columns',
-        'genotypeBrowser.basePreviewColumns': 'genotypeBrowser.previewColumns',
+        'genotypeBrowser.basePreviewColumns':
+            'genotypeBrowser.previewColumns',
         'genotypeBrowser.baseDownloadColumns':
             'genotypeBrowser.downloadColumns'
     }
 
     SPLIT_STR_LISTS = [
-        'authorizedGroups', 'phenoDB',
+        'authorizedGroups',
+        # 'phenoDB',
         'genotypeBrowser.phenoFilters',
         'genotypeBrowser.baseColumns',
         'genotypeBrowser.basePreviewColumns',
@@ -56,12 +57,13 @@ class StudyConfigBase(ConfigurableEntityConfig):
         assert self.id
         assert self.name
         assert 'description' in self
-        # assert self.data_dir
+        assert self.work_dir
         assert 'phenotypeBrowser' in self
         assert 'phenotypeGenotypeTool' in self
         assert self.authorizedGroups
         assert 'phenoDB' in self
         assert 'enrichmentTool' in self
+
         enrichmentTool = dict(self)['enrichmentTool']
         if enrichmentTool:
             assert enrichmentTool['studyTypes']
@@ -395,7 +397,7 @@ class StudyConfigBase(ConfigurableEntityConfig):
 class StudyConfig(StudyConfigBase):
 
     ELEMENTS_TO_COPY = {
-        'study_id': 'id', 'study_name': 'name'
+        # 'study_id': 'id', 'study_name': 'name'
     }
 
     def __init__(self, config, *args, **kwargs):
@@ -412,10 +414,15 @@ class StudyConfig(StudyConfigBase):
         assert 'hasCNV' in self
         assert 'hasDenovo' in self
         assert 'hasTransmitted' in self
-        self.make_vcf_prefix_absolute_path()
+        self.make_prefix_absolute_path()
+
+    def make_prefix_absolute_path(self):
+        if not os.path.isabs(self.prefix):
+            self.prefix = os.path.abspath(
+                os.path.join(self.work_dir, self.id, self.prefix))
 
     @classmethod
-    def from_config(cls, config_section, section=None):
+    def from_config(cls, config_section):
         if 'enabled' in config_section:
             if config_section['enabled'] == 'false':
                 return None
@@ -451,9 +458,3 @@ class StudyConfig(StudyConfigBase):
             'hasTransmitted': 'no',
         })
         return defaults
-
-    def make_vcf_prefix_absolute_path(self):
-        if not os.path.isabs(self.prefix):
-            self.prefix = os.path.abspath(
-                os.path.join(self.work_dir, self.id, self.prefix))
-

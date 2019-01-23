@@ -29,7 +29,7 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
         assert work_dir is not None
 
         self.directory_enabled_configurable_entity_definition(
-            datasets_dir, DatasetConfig, work_dir, 'dataset_id',
+            datasets_dir, DatasetConfig, work_dir, 'id',
             DatasetConfig.get_default_values())
 
 

@@ -4,7 +4,7 @@ from studies.study_config import StudyConfigBase
 class DatasetConfig(StudyConfigBase):
 
     ELEMENTS_TO_COPY = {
-        'dataset_id': 'id', 'dataset_name': 'name'
+        # 'dataset_id': 'id', 'dataset_name': 'name'
     }
 
     SPLIT_STR_LISTS = StudyConfigBase.SPLIT_STR_LISTS + [
@@ -17,7 +17,7 @@ class DatasetConfig(StudyConfigBase):
         assert self.studies
 
     @classmethod
-    def from_config(cls, config_section, section_name):
+    def from_config(cls, config_section):
         if 'enabled' in config_section:
             if config_section['enabled'] == 'false':
                 return None
@@ -41,4 +41,3 @@ class DatasetConfig(StudyConfigBase):
             'authorizedGroups', [config_section['id']])
 
         return DatasetConfig(config_section)
-

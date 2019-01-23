@@ -1,9 +1,11 @@
-def test_can_get_test_study(test_study):
-    assert test_study is not None
 
 
-def test_can_get_all_variants(test_study):
-    variants = test_study.query_variants()
+def test_can_get_test_study(quads_f1):
+    assert quads_f1 is not None
+
+
+def test_can_get_all_variants(quads_f1):
+    variants = quads_f1.query_variants()
     variants = list(variants)
 
     assert len(variants) == 2

@@ -48,9 +48,8 @@ def study_facade(study_factory, study_definitions):
 
 
 @pytest.fixture(scope='session')
-def test_study(study_factory, study_definitions):
-    return study_factory.make_study(
-        study_definitions.get_study_config('quads_f1'))
+def quads_f1_config(study_definitions):
+    return study_definitions.get_study_config('quads_f1')
 
 
 def load_study(study_factory, study_definitions, study_name):

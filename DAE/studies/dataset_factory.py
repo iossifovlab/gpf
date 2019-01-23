@@ -32,7 +32,7 @@ class DatasetFactory(object):
         assert studies
 
         return Dataset(
-            dataset_config.dataset_name,
+            dataset_config.name,
             studies,
             dataset_config
         )

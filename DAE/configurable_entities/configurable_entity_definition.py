@@ -87,7 +87,7 @@ class ConfigurableEntityDefinition(object):
         for section in config.keys():
 
             entity_config = configurable_entity_config.from_config(
-                config[section], section)
+                config[section])
 
             if entity_config is not None:
                 entity_config['section_name'] = section
