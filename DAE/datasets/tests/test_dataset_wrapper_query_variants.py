@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
-from builtins import str
 
 import pytest
+
+pytestmark = pytest.mark.usefixtures("pheno_conf_path")
 
 
 def test_query_all_variants(inheritance_trio_wrapper):

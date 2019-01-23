@@ -4,6 +4,7 @@ Created on Nov 23, 2016
 @author: lubo
 '''
 from __future__ import unicode_literals
+
 import pytest
 
 import DAE
@@ -52,55 +53,3 @@ def pytest_collection_modifyitems(config, items):
             if "spark" in item.keywords:
                 item.add_marker(skip_spark)
 
-
-# @pytest.fixture(scope='session')
-# def datasets_config(request):
-#     return DatasetsConfig()
-
-
-# @pytest.fixture(scope='session')
-# def datasets_factory(request, datasets_config):
-#     return DatasetsFactory(datasets_config)
-
-# @pytest.fixture(scope='session')
-# def ssc(request, datasets_factory):
-#     return datasets_factory.get_dataset('SSC')
-#
-#
-# @pytest.fixture(scope='session')
-# def vip(request,  datasets_factory):
-#     return datasets_factory.get_dataset('VIP')
-#
-#
-# @pytest.fixture(scope='session')
-# def sd(request,  datasets_factory):
-#     return datasets_factory.get_dataset('SD')
-#
-#
-# @pytest.fixture(scope='session')
-# def denovodb(request,  datasets_factory):
-#     return datasets_factory.get_dataset('denovo_db')
-
-
-@pytest.fixture(scope='session')
-def ssc_pheno():
-    pf = DAE.pheno
-    db = pf.get_pheno_db('ssc')
-    return db
-
-
-@pytest.fixture(scope='session')
-def vip_pheno():
-    pf = DAE.pheno
-    db = pf.get_pheno_db('vip')
-    return db
-
-
-# @pytest.fixture(scope='session')
-# def spark(request,  datasets_factory):
-#     return datasets_factory.get_dataset('SPARK')
-#
-#
-# @pytest.fixture(scope='session')
-# def agre(request,  datasets_factory):
-#     return datasets_factory.get_dataset('AGRE_WG')

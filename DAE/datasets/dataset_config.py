@@ -16,7 +16,7 @@ class DatasetConfig(ConfigurableEntityConfig):
             'genotypeBrowser.downloadColumns'
     }
     SPLIT_STR_LISTS = (
-        'authorizedGroups', 'phenoDB',
+        'authorizedGroups',
         'genotypeBrowser.phenoFilters',
         'genotypeBrowser.baseColumns',
         'genotypeBrowser.basePreviewColumns',

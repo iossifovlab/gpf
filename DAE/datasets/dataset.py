@@ -1,6 +1,8 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from pheno.pheno_factory import PhenoFactory
+
 
 class Dataset(object):
 
@@ -43,11 +45,19 @@ class Dataset(object):
 
         self.pedigree_selectors = pedigree_selectors
 
+        self.pheno_db = None
+        if self.pheno_db_name:
+            self.pheno_db = PhenoFactory().get_pheno_db(self.pheno_db_name)
+
         if len(self.dataset_config.pedigreeSelectors) != 0:
             self.legend = {ps['id']: ps['domain'] + [ps['default']]
                            for ps in self.dataset_config.pedigreeSelectors}
         else:
             self.legend = {}
+
+    @property
+    def pheno_db_name(self):
+        return self.dataset_config.phenoDB
 
     @property
     def id(self):
