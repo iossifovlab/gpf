@@ -48,4 +48,4 @@ def test_study_config_year(study_definitions):
     study_config = study_definitions.get_study_config('inheritance_trio')
     assert study_config is not None
     print([study_config.year])
-    assert study_config.year is None
+    assert study_config.year == ''

@@ -99,6 +99,7 @@ class ConfigurableEntityConfig(object):
         assert os.path.exists(config_file), config_file
 
         default_values['work_dir'] = work_dir
+        default_values['wd'] = work_dir
 
         config_parser = CaseSensitiveConfigParser(
             defaults=default_values,
@@ -110,7 +111,7 @@ class ConfigurableEntityConfig(object):
             config_parser.read_file(f)
 
         config = dict(
-            (section, dict(config_parser.items(section, raw=True)))
+            (section, dict(config_parser.items(section)))  # , raw=True)))
             for section in config_parser.sections())
 
         for section in config.keys():
