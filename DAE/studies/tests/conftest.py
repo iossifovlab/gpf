@@ -134,6 +134,11 @@ def quads_composite_dataset_config(dataset_definitions):
 
 
 @pytest.fixture(scope='session')
+def composite_dataset_config(dataset_definitions):
+    return dataset_definitions.get_dataset_config('composite_dataset')
+
+
+@pytest.fixture(scope='session')
 def dataset_factory(study_facade):
     return DatasetFactory(study_facade=study_facade)
 

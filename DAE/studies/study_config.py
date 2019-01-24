@@ -140,19 +140,18 @@ class StudyConfigBase(ConfigurableEntityConfig):
         return options
 
     @classmethod
-    def _get_pedigree(cls, pedigree_type, pedigree_options, dataset_config):
+    def _get_pedigree(cls, pedigree_type, pedigree_options, study_config):
         pedigree = {}
 
-        pedigree['name'] = dataset_config.pop(pedigree_type + '.name', None)
-        pedigree['source'] = dataset_config.get(pedigree_type + '.source',
-                                                None)
+        pedigree['name'] = study_config.pop(pedigree_type + '.name', None)
+        pedigree['source'] = study_config.get(pedigree_type + '.source', None)
         _, pedigree['id'] = cls._split_section(pedigree_type)
         pedigree['default'] =\
             cls._pedigree_selectors_split_dict(
-                dataset_config.pop(pedigree_type + '.default'))
+                study_config.pop(pedigree_type + '.default'))
         pedigree['domain'] =\
             cls._split_dict_lists(
-                dataset_config.pop(pedigree_type + '.domain'))
+                study_config.pop(pedigree_type + '.domain'))
         pedigree['values'] =\
             cls._get_values(pedigree['domain'])
 
@@ -397,6 +396,8 @@ class StudyConfig(StudyConfigBase):
 
         config_section['pedigreeSelectors'] =\
             cls._get_pedigree_selectors(config_section, 'peopleGroup')
+        config_section['peopleGroup'] = config_section['pedigreeSelectors']
+
         config_section['genotypeBrowser.pedigreeColumns'] =\
             cls._get_pedigree_selector_columns(
                 config_section, 'genotypeBrowser', 'peopleGroup')

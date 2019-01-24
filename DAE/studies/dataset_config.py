@@ -17,13 +17,18 @@ def _boolean_and_attribute(studies_configs, option_name):
 
 
 def _boolean_or_attribute(studies_configs, option_name):
-    print([st.id for st in studies_configs], option_name)
-    print([getattr(st, option_name) for st in studies_configs])
-
     return functools.reduce(
         lambda acc, st: acc or getattr(st, option_name),
         studies_configs,
         False)
+
+
+def _same_value_attribute(studies_configs, option_name):
+    res = getattr(studies_configs[0], option_name)
+    for check_config in studies_configs[1:]:
+        check = getattr(check_config, option_name)
+        assert res == check, "{} == {}".format(res, check)
+    return res
 
 
 class DatasetConfig(StudyConfigBase):
@@ -46,6 +51,20 @@ class DatasetConfig(StudyConfigBase):
 
         'has_transmitted': _boolean_or_attribute,
         'has_denovo': _boolean_or_attribute,
+
+        'people_group': _same_value_attribute,
+        'peopleGroup': _same_value_attribute,
+        'pedigree_selectors': _same_value_attribute,
+        'pedigreeSelectors': _same_value_attribute,
+
+        'genotypeBrowser': _same_value_attribute,
+        'genotype_browser': _same_value_attribute,
+
+        'enrichmentTool': _same_value_attribute,
+        'enrichment_tool': _same_value_attribute,
+
+        'authorizedGroups': _same_value_attribute,
+        'authorized_groups': _same_value_attribute,
     }
 
     def __init__(self, config, *args, **kwargs):
@@ -60,41 +79,43 @@ class DatasetConfig(StudyConfigBase):
             if config_section['enabled'] == 'false':
                 return None
 
-        config_section['pedigreeSelectors'] =\
-            cls._get_pedigree_selectors(config_section, 'peopleGroup')
-        config_section['genotypeBrowser.pedigreeColumns'] =\
-            cls._get_pedigree_selector_columns(
-                config_section, 'genotypeBrowser', 'peopleGroup')
-        config_section['genotypeBrowser.phenoFilters'] =\
-            cls._get_genotype_browser_pheno_filters(config_section)
-        config_section['genotypeBrowser.phenoColumns'] =\
-            cls._get_genotype_browser_pheno_columns(config_section)
-        config_section['genotypeBrowser.genotypeColumns'] =\
-            cls._get_genotype_browser_genotype_columns(config_section) + \
-            config_section['genotypeBrowser.pedigreeColumns'] + \
-            config_section['genotypeBrowser.phenoColumns']
-        config_section = cls._combine_dict_options(config_section)
+        # config_section['pedigreeSelectors'] =\
+        #     cls._get_pedigree_selectors(config_section, 'peopleGroup')
+        # config_section['peopleGroup'] = config_section['pedigreeSelectors']
 
-        config_section['authorizedGroups'] = config_section.get(
-            'authorizedGroups', [config_section['id']])
+        # config_section['genotypeBrowser.pedigreeColumns'] =\
+        #     cls._get_pedigree_selector_columns(
+        #         config_section, 'genotypeBrowser', 'peopleGroup')
+        # config_section['genotypeBrowser.phenoFilters'] =\
+        #     cls._get_genotype_browser_pheno_filters(config_section)
+        # config_section['genotypeBrowser.phenoColumns'] =\
+        #     cls._get_genotype_browser_pheno_columns(config_section)
+        # config_section['genotypeBrowser.genotypeColumns'] =\
+        #     cls._get_genotype_browser_genotype_columns(config_section) + \
+        #     config_section['genotypeBrowser.pedigreeColumns'] + \
+        #     config_section['genotypeBrowser.phenoColumns']
+        # config_section = cls._combine_dict_options(config_section)
+
+        # config_section['authorizedGroups'] = config_section.get(
+        #     'authorizedGroups', [config_section['id']])
 
         return DatasetConfig(config_section)
 
     def __getattr__(self, option_name):
-        if option_name in self:
+        try:
             return super(DatasetConfig, self).__getattr__(option_name)
-        return self._combine_studies_attributes(option_name)
+        except AttributeError:
+            return self._combine_studies_attributes(option_name)
 
     def __getitem__(self, option_name):
-        if option_name in self:
+        try:
             return super(DatasetConfig, self).__getitem__(option_name)
-        return self._combine_studies_attributes(option_name)
+        except Exception:
+            return self._combine_studies_attributes(option_name)
 
     def _combine_studies_attributes(self, option_name):
         assert len(self.studies) == len(self.studies_configs)
         assert all([st.id in self.studies for st in self.studies_configs])
-        print(self.studies_configs)
-
         assert all([
             (option_name in st) or hasattr(st, option_name)
             for st in self.studies_configs

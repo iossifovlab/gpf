@@ -194,7 +194,6 @@ class ConfigurableEntityConfig(object):
 
     @classmethod
     def _copy_elements(cls, config):
-        print(config)
         for old, new in cls.ELEMENTS_TO_COPY.items():
             config[new] = config[old]
 

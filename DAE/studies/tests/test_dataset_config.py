@@ -1,4 +1,5 @@
 import pytest
+from pprint import pprint
 
 
 def test_dataset_definitions_simple(dataset_definitions):
@@ -43,6 +44,52 @@ def test_dataset_quads_composite_attr(
     assert quads_composite_dataset_config is not None
     config = quads_composite_dataset_config
 
-    print(config.phenotype_genotype_tool)
-    print(config.phenotype_browser)
     assert getattr(config, option_name) == expected_value
+
+
+def test_composite_dataset_config_people_group(composite_dataset_config):
+    assert composite_dataset_config is not None
+
+    assert composite_dataset_config.people_group is not None
+    people_group = composite_dataset_config.people_group
+
+    assert len(people_group) == 1
+    pg = people_group[0]
+
+    assert pg.name == 'Phenotype'
+
+
+def test_composite_dataset_config_genotype_browser(composite_dataset_config):
+    assert composite_dataset_config is not None
+
+    assert composite_dataset_config.genotype_browser is not None
+    genotype_browser = composite_dataset_config.genotype_browser
+
+    download_columns = genotype_browser.download_columns
+    assert download_columns.to_list() == \
+        ['family', 'phenotype', 'variant', 'best', 'fromparent', 
+         'inchild', 'effect', 'count', 'geneeffect', 'effectdetails', 
+         'weights', 'freq']
+
+
+def test_composite_dataset_config_enrichment_tool(composite_dataset_config):
+    assert composite_dataset_config is not None
+
+    assert composite_dataset_config.enrichment_tool is not None
+
+    enrichment_tool = composite_dataset_config.enrichment_tool
+
+    assert enrichment_tool.selector == 'phenotype'
+    assert enrichment_tool.study_types == 'WE'
+
+
+def test_composite_dataset_config_authorized_groups(composite_dataset_config):
+    assert composite_dataset_config is not None
+
+    assert composite_dataset_config['authorizedGroups'] is not None
+    assert composite_dataset_config['authorizedGroups'].to_list() == \
+        ['any_user']
+
+    assert composite_dataset_config.authorized_groups is not None
+    assert composite_dataset_config.authorized_groups.to_list() == \
+        ['any_user']
