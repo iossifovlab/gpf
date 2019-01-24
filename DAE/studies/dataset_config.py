@@ -31,6 +31,20 @@ def _same_value_attribute(studies_configs, option_name):
     return res
 
 
+def _list_extend_attribute(studies_configs, option_name):
+    return functools.reduce(
+        lambda acc, st: acc + getattr(st, option_name),
+        studies_configs,
+        [])
+
+
+def _strings_join_attribute(studies_configs, option_name):
+    res = filter(
+        lambda r: r != '',
+        [getattr(st, option_name) for st in studies_configs])
+    return ','.join(res)
+
+
 class DatasetConfig(StudyConfigBase):
 
     SPLIT_STR_LISTS = StudyConfigBase.SPLIT_STR_LISTS + [
@@ -65,6 +79,13 @@ class DatasetConfig(StudyConfigBase):
 
         'authorizedGroups': _same_value_attribute,
         'authorized_groups': _same_value_attribute,
+
+        'years': _list_extend_attribute,
+        'pub_meds': _list_extend_attribute,
+        'study_types': _set_union_attribute,
+
+        'year': _strings_join_attribute,
+        'pub_med': _strings_join_attribute,
     }
 
     def __init__(self, config, *args, **kwargs):

@@ -1,5 +1,4 @@
 import pytest
-from pprint import pprint
 
 
 def test_dataset_definitions_simple(dataset_definitions):
@@ -15,6 +14,10 @@ def test_dataset_definitions_simple(dataset_definitions):
 
     ("phenotypeGenotypeTool", True),
     ("phenotypeBrowser", False),
+    ("year", ""),
+    ("years", []),
+    ("pub_med", ""),
+    ("pub_meds", [])
 ])
 def test_dataset_quads_composite_dict(
         quads_composite_dataset_config, option_name, expected_value):
@@ -37,6 +40,10 @@ def test_dataset_quads_composite_dict(
 
     ("phenotype_genotype_tool", True),
     ("phenotype_browser", False),
+    ("year", ""),
+    ("years", []),
+    ("pub_med", ""),
+    ("pub_meds", [])
 ])
 def test_dataset_quads_composite_attr(
         quads_composite_dataset_config, option_name, expected_value):

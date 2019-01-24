@@ -48,4 +48,5 @@ def test_common_reports_generator(mocker, common_reports_generator, output):
         for common_report_call in json.dump.call_args_list:
             common_report = list(common_report_call)[0][0]
             common_report_output = output(common_report['study_name'])
+
             assert_common_reports(common_report, common_report_output)

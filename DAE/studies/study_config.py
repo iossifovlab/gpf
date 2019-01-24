@@ -55,6 +55,8 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
     def get_default_values(cls):
         return {
             'description': None,
+            'order': 0,
+
             'genotypeBrowser.genotype.columns':
                 'family,phenotype,variant,best,fromparent,inchild,genotype,'
                 'effect,count,geneeffect,effectdetails,weights,freq',
@@ -91,6 +93,18 @@ class StudyConfig(StudyConfigBase):
             self.prefix = os.path.abspath(
                 os.path.join(self.work_dir, self.id, self.prefix))
 
+    @property
+    def years(self):
+        return [self.year] if self.year else []
+
+    @property
+    def pub_meds(self):
+        return [self.pub_med] if self.pub_med else []
+
+    @property
+    def study_types(self):
+        return {self.study_type} if self.study_type else set()
+
     @classmethod
     def from_config(cls, config_section):
         if 'enabled' in config_section:
@@ -109,8 +123,8 @@ class StudyConfig(StudyConfigBase):
         defaults = super(StudyConfig, cls).get_default_values()
         defaults.update({
             'studyType': 'WE',
-            'year': None,
-            'pubMed': None,
+            'year': '',
+            'pubMed': '',
             'hasDenovo': 'yes',
             'hasTransmitted': 'no',
             'hasComplex': 'no',

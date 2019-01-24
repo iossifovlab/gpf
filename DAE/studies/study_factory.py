@@ -35,4 +35,4 @@ class StudyFactory(object):
         variants = study_type_constructor(
             prefix=study_config.prefix)
 
-        return Study(study_config.name, variants, study_config)
+        return Study(study_config, variants)

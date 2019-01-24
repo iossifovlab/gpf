@@ -9,44 +9,10 @@ from studies.study import StudyBase
 
 class Dataset(StudyBase):
 
-    def __init__(
-            self, name, studies, dataset_config):
-        super(Dataset, self).__init__(name, dataset_config)
+    def __init__(self, dataset_config, studies):
+        super(Dataset, self).__init__(dataset_config)
         self.studies = studies
-
-        self.dataset_config = dataset_config
-
-        self.phenotypes = functools.reduce(
-            lambda acc, study: acc | study.phenotypes, studies, set())
-
         self.study_names = ",".join(study.name for study in self.studies)
-        self.has_denovo = any([study.has_denovo for study in self.studies])
-        self.has_transmitted =\
-            any([study.has_transmitted for study in self.studies])
-        self.has_complex = any([study.has_complex for study in self.studies])
-        self.has_cnv = any([study.has_cnv for study in self.studies])
-        study_types = set([study.study_type for study in self.studies
-                           if study.study_type is not None])
-        self.study_types = study_types if len(study_types) != 0 else None
-        self.study_type = ','.join(study_types) \
-            if len(study_types) != 0 else None
-        years = set([study.year for study in self.studies
-                     if study.year is not None])
-        self.years = years if len(years) != 0 else None
-        self.year = ','.join(self.years) if self.years is not None else None
-
-        pub_meds = set([study.pub_med for study in self.studies
-                        if study.pub_med is not None])
-        self.pub_meds = pub_meds if len(pub_meds) != 0 else None
-        self.pub_med = ','.join(self.pub_meds) \
-            if self.pub_meds is not None else None
-
-        self.has_study_types = True if len(study_types) != 0 else False
-
-    # def get_variants(self, **kwargs):
-    #     kwargs = self.transorm_variants_kwargs(**kwargs)
-
-    #     return self.study_group.query_variants(**kwargs)
 
     # FIXME: fill these with real values
     def get_column_labels(self):

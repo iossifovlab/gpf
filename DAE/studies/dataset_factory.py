@@ -32,9 +32,8 @@ class DatasetFactory(object):
         assert studies
 
         return Dataset(
-            dataset_config.name,
-            studies,
-            dataset_config
+            dataset_config,
+            studies
         )
 
     def get_study_facade(self):

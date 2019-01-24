@@ -537,10 +537,9 @@ class CommonReport(object):
         self.phenotype = self._get_phenotype(phenotypes_info)
         self.study_type = ','.join(query_object.study_types)\
             if query_object.study_types else None
-        self.study_year = ','.join(query_object.years)\
-            if query_object.years else None
-        self.pub_med = ','.join(query_object.pub_meds)\
-            if query_object.pub_meds else None
+        self.study_year = query_object.year
+        self.pub_med = query_object.pub_med
+
         self.families = len(query_object.families)
         self.number_of_probands =\
             self._get_number_of_people_with_role(query_object, Role.prb)
