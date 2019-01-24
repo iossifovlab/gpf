@@ -9,14 +9,12 @@ class StudyConfigBase(ConfigurableEntityConfig):
     NEW_KEYS_NAMES = {
         'phenoGenoTool': 'phenotypeGenotypeTool',
         'genotypeBrowser.familyFilters': 'genotypeBrowser.familyStudyFilters',
-    }
-    CONCAT_OPTIONS = {
-        'genotypeBrowser.genotype.baseColumns':
-            'genotypeBrowser.genotype.columns',
-        'genotypeBrowser.basePreviewColumns':
-            'genotypeBrowser.previewColumns',
-        'genotypeBrowser.baseDownloadColumns':
-            'genotypeBrowser.downloadColumns'
+        # 'genotypeBrowser.genotype.baseColumns':
+        #     'genotypeBrowser.genotype.columns',
+        # 'genotypeBrowser.basePreviewColumns':
+        #     'genotypeBrowser.previewColumns',
+        # 'genotypeBrowser.baseDownloadColumns':
+        #     'genotypeBrowser.downloadColumns'
     }
 
     SPLIT_STR_LISTS = [
@@ -105,9 +103,9 @@ class StudyConfigBase(ConfigurableEntityConfig):
         return (section_type, section_name)
 
     @staticmethod
-    def _combine_dict_options(dataset_config):
-        dict_options_keys = [
-            'enrichmentTool', 'genotypeBrowser']
+    def _combine_dict_options(
+        dataset_config, dict_options_keys=[
+            'enrichmentTool', 'genotypeBrowser']):
 
         for key in dict_options_keys:
             if dataset_config.get(key, True):
@@ -120,7 +118,8 @@ class StudyConfigBase(ConfigurableEntityConfig):
                             dataset_config.get(k)
                 for k in keys_to_remove:
                     dataset_config.pop(k)
-                dataset_config[key] = dict_options
+                if dict_options:
+                    dataset_config[key] = dict_options
 
         return dataset_config
 
@@ -355,9 +354,66 @@ class StudyConfigBase(ConfigurableEntityConfig):
         return result
 
     @classmethod
+    def _fill_wdae_people_group_config(cls, config_section):
+        people_group =\
+            cls._get_pedigree_selectors(config_section, 'peopleGroup')
+        if people_group:
+            config_section['pedigreeSelectors'] = people_group
+            config_section['peopleGroup'] = config_section['pedigreeSelectors']
+
+    @classmethod
+    def _fill_wdae_genotype_browser_config(cls, config_section):
+        config_section['genotypeBrowser.pedigreeColumns'] =\
+            cls._get_pedigree_selector_columns(
+                config_section, 'genotypeBrowser', 'peopleGroup')
+        config_section['genotypeBrowser.phenoFilters'] =\
+            cls._get_genotype_browser_pheno_filters(config_section)
+        config_section['genotypeBrowser.phenoColumns'] =\
+            cls._get_genotype_browser_pheno_columns(config_section)
+        config_section['genotypeBrowser.genotypeColumns'] =\
+            cls._get_genotype_browser_genotype_columns(config_section) + \
+            config_section['genotypeBrowser.pedigreeColumns'] + \
+            config_section['genotypeBrowser.phenoColumns']
+        config_section = cls._combine_dict_options(
+            config_section,
+            dict_options_keys=['genotypeBrowser'])
+
+        genotype_browser = config_section['genotypeBrowser']
+        if not genotype_browser:
+            config_section['genotypeBrowser'] = False
+            return
+
+        for key, value in genotype_browser.items():
+            if value:
+                return
+        config_section['genotypeBrowser'] = False
+
+    @classmethod
+    def _fill_wdae_enrichment_tool_config(cls, config_section):
+        config_section = cls._combine_dict_options(
+            config_section,
+            dict_options_keys=['enrichmentTool'])
+
+    @classmethod
+    def _fill_wdae_config(cls, config_section):
+        cls._fill_wdae_people_group_config(config_section)
+        cls._fill_wdae_genotype_browser_config(config_section)
+        cls._fill_wdae_enrichment_tool_config(config_section)
+
+    @classmethod
     def get_default_values(cls):
         return {
             'description': None,
+            'genotypeBrowser.genotype.columns':
+                'family,phenotype,variant,best,fromparent,inchild,genotype,'
+                'effect,count,geneeffect,effectdetails,weights,freq',
+            'genotypeBrowser.previewColumns':
+                'family,variant,genotype,effect,weights,freq,studyName,'
+                'location,pedigree,inChS,fromParentS,effects,'
+                'requestedGeneEffects,genes,worstEffect',
+            'genotypeBrowser.downloadColumns':
+                'family,phenotype,variant,best,fromparent,inchild,effect,'
+                'count,geneeffect,effectdetails,weights,freq',
         }
 
 
@@ -394,22 +450,7 @@ class StudyConfig(StudyConfigBase):
             if config_section['enabled'] == 'false':
                 return None
 
-        config_section['pedigreeSelectors'] =\
-            cls._get_pedigree_selectors(config_section, 'peopleGroup')
-        config_section['peopleGroup'] = config_section['pedigreeSelectors']
-
-        config_section['genotypeBrowser.pedigreeColumns'] =\
-            cls._get_pedigree_selector_columns(
-                config_section, 'genotypeBrowser', 'peopleGroup')
-        config_section['genotypeBrowser.phenoFilters'] =\
-            cls._get_genotype_browser_pheno_filters(config_section)
-        config_section['genotypeBrowser.phenoColumns'] =\
-            cls._get_genotype_browser_pheno_columns(config_section)
-        config_section['genotypeBrowser.genotypeColumns'] =\
-            cls._get_genotype_browser_genotype_columns(config_section) + \
-            config_section['genotypeBrowser.pedigreeColumns'] + \
-            config_section['genotypeBrowser.phenoColumns']
-        config_section = cls._combine_dict_options(config_section)
+        cls._fill_wdae_config(config_section)
 
         config_section['authorizedGroups'] = config_section.get(
             'authorizedGroups', [config_section['id']])
@@ -440,16 +481,6 @@ class StudyConfig(StudyConfigBase):
             'genotypeBrowser.mainForm': 'default',
             'genotypeBrowser.pheno.columns': None,
             'genotypeBrowser.familyFilters': None,
-            'genotypeBrowser.genotype.baseColumns':
-                'family,phenotype,variant,best,fromparent,inchild,genotype,'
-                'effect,count,geneeffect,effectdetails,weights,freq',
-            'genotypeBrowser.basePreviewColumns':
-                'family,variant,genotype,effect,weights,freq,studyName,'
-                'location,pedigree,inChS,fromParentS,effects,'
-                'requestedGeneEffects,genes,worstEffect',
-            'genotypeBrowser.baseDownloadColumns':
-                'family,phenotype,variant,best,fromparent,inchild,effect,'
-                'count,geneeffect,effectdetails,weights,freq',
             'phenoFilters': '',
             'phenotypeBrowser': False,
             'phenotypeGenotypeTool': False,            

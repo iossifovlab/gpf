@@ -186,10 +186,11 @@ class ConfigurableEntityConfig(object):
     @classmethod
     def _concat_two_options(cls, config):
         for first, second in cls.CONCAT_OPTIONS.items():
-            config[second] =\
+            res =\
                 ','.join(filter(None, [config.pop(first, None),
                                        config.pop(second, None)]))
-
+            if res:
+                config[second] = res
         return config
 
     @classmethod

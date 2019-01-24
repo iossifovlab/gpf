@@ -35,8 +35,8 @@ class StudyWrapper(object):
                 pheno_columns = [s for pc in genotype_browser['phenoColumns']
                                  for s in pc['slots']]
 
-        if self.config.pedigreeSelectors:
-            pedigree_selectors = self.config.pedigreeSelectors
+        if 'pedigreeSelectors' in self.config:
+            pedigree_selectors = self.config.pedigree_selectors
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
@@ -45,9 +45,11 @@ class StudyWrapper(object):
 
         self.pedigree_selectors = pedigree_selectors
 
-        if len(self.config.pedigreeSelectors) != 0:
-            self.legend = {ps['id']: ps['domain'] + [ps['default']]
-                           for ps in self.config.pedigreeSelectors}
+        if len(self.pedigree_selectors) != 0:
+            self.legend = {
+                ps['id']: ps['domain'] + [ps['default']]
+                for ps in self.pedigree_selectors
+            }
         else:
             self.legend = {}
 

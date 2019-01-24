@@ -78,26 +78,7 @@ class DatasetConfig(StudyConfigBase):
         if 'enabled' in config_section:
             if config_section['enabled'] == 'false':
                 return None
-
-        # config_section['pedigreeSelectors'] =\
-        #     cls._get_pedigree_selectors(config_section, 'peopleGroup')
-        # config_section['peopleGroup'] = config_section['pedigreeSelectors']
-
-        # config_section['genotypeBrowser.pedigreeColumns'] =\
-        #     cls._get_pedigree_selector_columns(
-        #         config_section, 'genotypeBrowser', 'peopleGroup')
-        # config_section['genotypeBrowser.phenoFilters'] =\
-        #     cls._get_genotype_browser_pheno_filters(config_section)
-        # config_section['genotypeBrowser.phenoColumns'] =\
-        #     cls._get_genotype_browser_pheno_columns(config_section)
-        # config_section['genotypeBrowser.genotypeColumns'] =\
-        #     cls._get_genotype_browser_genotype_columns(config_section) + \
-        #     config_section['genotypeBrowser.pedigreeColumns'] + \
-        #     config_section['genotypeBrowser.phenoColumns']
-        # config_section = cls._combine_dict_options(config_section)
-
-        # config_section['authorizedGroups'] = config_section.get(
-        #     'authorizedGroups', [config_section['id']])
+        cls._fill_wdae_config(config_section)
 
         return DatasetConfig(config_section)
 
