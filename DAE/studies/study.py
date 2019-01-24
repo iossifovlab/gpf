@@ -26,15 +26,6 @@ class StudyBase(object):
     def get_phenotype_values(self, pheno_column='phenotype'):
         return set(self.backend.ped_df[pheno_column])
 
-    @staticmethod
-    def _get_description_keys():
-        return [
-            'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
-            'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
-            'enrichmentTool', 'genotypeBrowser', 'pedigreeSelectors',
-            'studyTypes', 'studies'
-        ]
-
     @property
     def order(self):
         return self.config.order

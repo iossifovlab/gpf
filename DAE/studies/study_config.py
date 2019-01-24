@@ -105,6 +105,14 @@ class StudyConfig(StudyConfigBase):
     def study_types(self):
         return {self.study_type} if self.study_type else set()
 
+    @property
+    def ids(self):
+        return [self.id]
+    
+    @property
+    def names(self):
+        return [self.name]
+
     @classmethod
     def from_config(cls, config_section):
         if 'enabled' in config_section:

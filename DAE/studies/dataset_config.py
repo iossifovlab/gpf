@@ -82,6 +82,9 @@ class DatasetConfig(StudyConfigBase):
 
         'years': _list_extend_attribute,
         'pub_meds': _list_extend_attribute,
+        'names': _list_extend_attribute,
+        'ids': _list_extend_attribute,
+
         'study_types': _set_union_attribute,
 
         'year': _strings_join_attribute,

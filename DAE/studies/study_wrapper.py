@@ -284,3 +284,37 @@ class StudyWrapper(object):
             legend = self.legend.get(kwargs['pedigreeSelector']['id'], [])
 
         return legend + self._get_legend_default_values()
+
+    def _get_dataset_config_options(self, config):
+        config['studyTypes'] = self.config.study_types
+        config['genotypeBrowser']['hasStudyTypes'] =\
+            self.config.has_study_types
+        config['genotypeBrowser']['hasComplex'] =\
+            self.config.has_complex
+        config['genotypeBrowser']['hasCNV'] =\
+            self.config.has_CNV
+        config['genotypeBrowser']['hasDenovo'] =\
+            self.config.has_denovo
+        config['genotypeBrowser']['hasTransmitted'] =\
+            self.config.has_transmitted
+        config['studies'] =\
+            self.config.names
+
+        return config
+
+    @staticmethod
+    def _get_description_keys():
+        return [
+            'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
+            'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
+            'enrichmentTool', 'genotypeBrowser', 'pedigreeSelectors',
+            'studyTypes', 'studies'
+        ]
+
+    def get_dataset_description(self):
+        keys = self._get_dataset_description_keys()
+        config = self.config.to_dict()
+
+        config = self._get_dataset_config_options(config)
+
+        return {key: config[key] for key in keys}
