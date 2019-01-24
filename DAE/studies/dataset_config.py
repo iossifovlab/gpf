@@ -79,7 +79,6 @@ class DatasetConfig(StudyConfigBase):
             if config_section['enabled'] == 'false':
                 return None
         cls._fill_wdae_config(config_section)
-
         return DatasetConfig(config_section)
 
     def __getattr__(self, option_name):
