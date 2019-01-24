@@ -645,7 +645,7 @@ class PhenotypeInfo(object):
         self.phenotype_group = phenotype_group
 
     def _get_phenotypes(self, query_object):
-        return list(query_object.get_phenotype_values(self.source))
+        return list(query_object.get_pedigree_values(self.source))
 
     def get_phenotypes(self):
         return [

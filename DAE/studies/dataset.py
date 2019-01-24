@@ -39,13 +39,6 @@ class Dataset(StudyBase):
             lambda x, y: x | y,
             [st.get_pedigree_values(column) for st in self.studies], set())
 
-    def get_phenotype_values(self, pheno_column='phenotype'):
-        result = set()
-        for study in self.studies:
-            result.update(study.get_phenotype_values(pheno_column))
-
-        return result
-
     # FIXME:
     def gene_sets_cache_file(self):
         cache_filename = '{}.json'.format(self.name)

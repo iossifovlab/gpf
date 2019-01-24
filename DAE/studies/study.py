@@ -19,22 +19,16 @@ class StudyBase(object):
         self.study_types = self.config.study_types
         self.years = self.config.years
         self.pub_meds = self.config.pub_meds
-
-    def query_variants(self, **kwargs):
-        return self.backend.query_variants(**kwargs)
-
-    def get_phenotype_values(self, pheno_column='phenotype'):
-        return set(self.backend.ped_df[pheno_column])
-
-    @property
-    def order(self):
-        return self.config.order
-
-    def get_pedigree_values(self, column):
-        raise NotImplementedError()
+        self.order = self.config.order
 
     @property
     def families(self):
+        raise NotImplementedError()
+
+    def query_variants(self, **kwargs):
+        raise NotImplementedError()
+
+    def get_pedigree_values(self, column):
         raise NotImplementedError()
 
 
@@ -45,9 +39,12 @@ class Study(StudyBase):
 
         self.backend = backend
 
-    def get_pedigree_values(self, column):
-        return set(self.backend.ped_df[column])
-
     @property
     def families(self):
         return self.backend.families
+
+    def query_variants(self, **kwargs):
+        return self.backend.query_variants(**kwargs)
+
+    def get_pedigree_values(self, column):
+        return set(self.backend.ped_df[column])

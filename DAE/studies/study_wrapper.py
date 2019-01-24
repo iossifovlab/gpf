@@ -285,6 +285,7 @@ class StudyWrapper(object):
 
         return legend + self._get_legend_default_values()
 
+    # FIXME:
     def _get_dataset_config_options(self, config):
         config['studyTypes'] = self.config.study_types
         config['genotypeBrowser']['hasStudyTypes'] =\
@@ -311,6 +312,7 @@ class StudyWrapper(object):
             'studyTypes', 'studies'
         ]
 
+    # FIXME:
     def get_dataset_description(self):
         keys = self._get_dataset_description_keys()
         config = self.config.to_dict()
