@@ -60,7 +60,16 @@ class EffectAnnotator(VariantAnnotatorBase):
         if self.effect_details_column:
             schema.create_column(self.effect_details_column, 'list(str)')
 
+    def _not_found(self, aline):
+            aline[self.effect_type_column] = ''
+            aline[self.effect_gene_column] = ''
+            aline[self.effect_details_column] = ''
+
     def do_annotate(self, aline, variant):
+        if variant is None:
+            self._not_found(aline)
+            return
+
         assert variant is not None
 
         try:

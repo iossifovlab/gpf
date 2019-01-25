@@ -187,6 +187,8 @@ class VCFBuilder(VariantBuilder):
 
         if chrom is None or position is None:
             return None
+        if not alt:
+            return None
 
         summary = SummaryAllele(
             chrom, int(position), ref, alt

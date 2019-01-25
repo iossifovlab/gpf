@@ -159,7 +159,7 @@ class TSVReader(TSVFormat):
         if self.filename == '-':
             self.infile = sys.stdin
         else:
-            assert os.path.exists(self.filename)
+            assert os.path.exists(self.filename), self.filename
             assert not self.is_gzip(self.filename)
             self.infile = open(self.filename, 'r')
 
