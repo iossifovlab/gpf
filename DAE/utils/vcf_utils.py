@@ -141,4 +141,3 @@ def vcf2cshl(pos, ref, alt):
     vp, vt, vl = cshl_format(pos, ref, alt)
 
     return vp, vt, vl
-
