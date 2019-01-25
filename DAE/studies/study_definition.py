@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import abc
 
 from configurable_entities.configurable_entity_definition import\
