@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import os
 
 from configurable_entities.configurable_entity_config import\
@@ -108,7 +110,7 @@ class StudyConfig(StudyConfigBase):
     @property
     def ids(self):
         return [self.id]
-    
+
     @property
     def names(self):
         return [self.name]
@@ -152,6 +154,6 @@ class StudyConfig(StudyConfigBase):
             'genotypeBrowser.familyFilters': None,
             'phenoFilters': '',
             'phenotypeBrowser': False,
-            'phenotypeGenotypeTool': False,            
+            'phenotypeGenotypeTool': False,
         })
         return defaults
