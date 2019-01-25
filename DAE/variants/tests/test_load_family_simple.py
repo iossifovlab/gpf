@@ -3,14 +3,14 @@ Created on Jul 23, 2018
 
 @author: lubo
 '''
-from __future__ import print_function
-from __future__ import unicode_literals
-import os
+from __future__ import print_function, unicode_literals, absolute_import
 
+import os
 import pytest
 
-from variants.tests.common_tests_helpers import relative_to_this_test_folder
-from variants.family import FamiliesBase, Family
+from ..family import FamiliesBase, Family
+
+from .conftests import relative_to_this_test_folder
 
 
 @pytest.mark.parametrize("fixture_name", [

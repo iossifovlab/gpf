@@ -1,8 +1,8 @@
 from functools import partial
 
 from studies.study import Study
-from variants.raw_thrift import ThriftFamilyVariants
-from variants.raw_vcf import RawFamilyVariants
+from backends.raw_thrift import ThriftFamilyVariants
+from backends.raw_vcf import RawFamilyVariants
 
 
 class StudyFactory(object):
