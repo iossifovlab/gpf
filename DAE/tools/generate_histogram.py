@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 from __future__ import unicode_literals
+
+from future import standard_library
+standard_library.install_aliases()  # noqa
+
 import argparse
 import sys
 import time
@@ -8,8 +12,7 @@ import datetime
 from os.path import exists
 import pandas as pd
 import numpy as np
-from future import standard_library
-standard_library.install_aliases()
+
 from configparser import ConfigParser
 from builtins import object, str
 from box import Box

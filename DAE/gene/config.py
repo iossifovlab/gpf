@@ -6,10 +6,11 @@ Created on Feb 16, 2017
 from __future__ import unicode_literals
 from builtins import object
 from future import standard_library
+standard_library.install_aliases()  # noqa
+
 from configparser import ConfigParser
 from GeneInfoDB import GeneInfoDB
 from configurable_entities.configuration import DAEConfig
-standard_library.install_aliases()
 
 
 class GeneInfoConfig(object):

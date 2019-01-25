@@ -6,7 +6,8 @@ Created on Nov 7, 2016
 from __future__ import unicode_literals
 from builtins import object
 from future import standard_library
-standard_library.install_aliases()
+standard_library.install_aliases()  # noqa
+
 from configparser import ConfigParser
 from collections import Counter
 from DAE import Config
