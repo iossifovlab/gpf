@@ -4,8 +4,7 @@ from __future__ import absolute_import
 import os
 import GenomeAccess
 from GeneModelFiles import load_gene_models
-from variant_annotation.annotator import \
-    VariantAnnotator as VariantEffectAnnotator
+from variant_annotation.annotator import VariantAnnotator
 from annotation.tools.annotator_base import VariantAnnotatorBase
 
 
@@ -48,7 +47,7 @@ class EffectAnnotator(VariantAnnotatorBase):
 
         if self.config.options.prom_len is None:
             self.config.options.prom_len = 0
-        self.annotation_helper = VariantEffectAnnotator(
+        self.annotation_helper = VariantAnnotator(
             genome, gene_models, promoter_len=self.config.options.prom_len)
 
     def collect_annotator_schema(self, schema):

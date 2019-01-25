@@ -15,16 +15,17 @@ class ParquetSchema(Schema):
 
     # New types only need to be added here.
     type_map = OrderedDict([
-                ('str', (str, pa.string())),
-                ('float', (float, pa.float64())),
-                ('int', (int, pa.uint32())),
-                ('int8', (int, pa.int8())),
-                ('int16', (int, pa.int16())),
-                ('int32', (int, pa.int32())),
-                ('int64', (int, pa.int64())),
-                ('list(str)', (str, pa.list_(pa.string()))),
-                ('list(float)', (float, pa.list_(pa.float64()))),
-                ('list(int)', (int, pa.list_(pa.uint32())))])
+        ('str', (str, pa.string())),
+        ('float', (float, pa.float64())),
+        ('int', (int, pa.uint32())),
+        ('int8', (int, pa.int8())),
+        ('int16', (int, pa.int16())),
+        ('int32', (int, pa.int32())),
+        ('int64', (int, pa.int64())),
+        ('list(str)', (str, pa.list_(pa.string()))),
+        ('list(float)', (float, pa.list_(pa.float64()))),
+        ('list(int)', (int, pa.list_(pa.uint32())))
+    ])
 
     def __init__(self):
         super(ParquetSchema, self).__init__()
