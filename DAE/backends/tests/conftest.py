@@ -17,6 +17,10 @@ import time
 
 import pytest
 
+import logging
+
+from pyspark.sql import SparkSession
+
 from variants.family import Family, FamiliesBase
 from variants.family_variant import FamilyVariant
 from variants.variant import SummaryAllele, SummaryVariant
@@ -28,13 +32,7 @@ from ..attributes_query import \
 from ..configure import Configure
 
 from ..vcf.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
-from ..vcf.annotate_composite import AnnotatorComposite
 from ..vcf.annotate_variant_details import VcfVariantDetailsAnnotator
-from ..vcf.annotate_variant_effects import \
-    VcfVariantEffectsAnnotator
-
-from ..vcf.raw_vcf import RawFamilyVariants, VariantFactory
-
 
 from ..thrift.parquet_io import save_ped_df_to_parquet,\
     VariantsParquetWriter
@@ -43,10 +41,6 @@ from ..thrift.raw_thrift import ThriftFamilyVariants
 from ..thrift.raw_dae import RawDAE, RawDenovo
 
 from .common_tests_helpers import relative_to_this_test_folder
-
-import logging
-
-from pyspark.sql import SparkSession
 
 
 def quiet_py4j():
@@ -214,30 +208,30 @@ def raw_denovo(config_denovo, default_genome):
     return builder
 
 
+# @pytest.fixture(scope='session')
+# def composite_annotator(
+#         variant_details_annotator, allele_freq_annotator,
+#         default_genome, default_gene_models):
+
+#     effect_annotator = VcfVariantEffectsAnnotator(
+#         genome=default_genome, gene_models=default_gene_models)
+
+#     return AnnotatorComposite(annotators=[
+#         variant_details_annotator,
+#         effect_annotator,
+#         allele_freq_annotator,
+#     ])
+
+
 @pytest.fixture(scope='session')
-def composite_annotator(
-        variant_details_annotator, allele_freq_annotator,
-        default_genome, default_gene_models):
-
-    effect_annotator = VcfVariantEffectsAnnotator(
-        genome=default_genome, gene_models=default_gene_models)
-
-    return AnnotatorComposite(annotators=[
-        variant_details_annotator,
-        effect_annotator,
-        allele_freq_annotator,
-    ])
-
-
-@pytest.fixture(scope='session')
-def variants_vcf(composite_annotator):
+def variants_vcf(default_genome, default_gene_models):
     def builder(path):
+        from ..vcf.builder import variants_builder
 
-        a_data = relative_to_this_test_folder(path)
-        a_conf = Configure.from_prefix_vcf(a_data)
-        fvars = RawFamilyVariants(
-            a_conf, annotator=composite_annotator,
-            variant_factory=VariantFactory)
+        a_path = relative_to_this_test_folder(path)
+        fvars = variants_builder(
+            a_path, genome=default_genome, gene_models=default_gene_models,
+            force_reannotate=True)
         return fvars
     return builder
 

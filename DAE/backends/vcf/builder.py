@@ -37,16 +37,21 @@ def get_gene_models(gene_models_file=None):
         return genomesDB.get_gene_models()  # @UndefinedVariable
 
 
-def variants_builder(prefix, genome_file=None, gene_models_file=None):
-    conf = Configure.from_prefix_vcf(prefix)
-    print(conf)
+def variants_builder(
+        prefix, genome_file=None, gene_models_file=None,
+        genome=None, gene_models=None,
+        force_reannotate=False):
 
-    if os.path.exists(conf.vcf.annotation):
+    conf = Configure.from_prefix_vcf(prefix)
+
+    if os.path.exists(conf.vcf.annotation) and not force_reannotate:
         fvars = RawFamilyVariants(conf)
         return fvars
 
-    genome = get_genome(genome_file)
-    gene_models = get_gene_models(gene_models_file)
+    if genome is None:
+        genome = get_genome(genome_file)
+    if gene_models is None:
+        gene_models = get_gene_models(gene_models_file)
 
     effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
     freq_annotator = VcfAlleleFrequencyAnnotator()
