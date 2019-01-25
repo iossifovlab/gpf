@@ -1,6 +1,6 @@
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function, absolute_import
 from future import standard_library
-standard_library.install_aliases()
+standard_library.install_aliases()  # noqa
 
 from builtins import object
 from Config import Config

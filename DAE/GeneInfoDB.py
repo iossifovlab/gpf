@@ -1,17 +1,17 @@
 #!/bin/env python
 
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals, absolute_import
+
 from builtins import object
 from builtins import str
+from future import standard_library
+standard_library.install_aliases()  # noqa
+
 from configparser import ConfigParser
 import gzip
 import sys
 from collections import defaultdict
 from GeneTerms import loadGeneTerm
-
-from future import standard_library
-standard_library.install_aliases()
 
 
 class GeneInfo(object):
