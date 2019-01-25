@@ -9,6 +9,7 @@ import pytest
 from RegionOperations import Region
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize("region,worst_effect", [
     (Region('1', 878109, 878109), ("missense", "missense")),
     (Region('1', 901921, 901921), ("synonymous", "missense")),
@@ -31,6 +32,7 @@ def test_serialize_deserialize_worst_effect(
         assert worst_effect[1] == effect_annotator.worst_effect(effects2)
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize("region,worst_effect", [
     (Region('1', 878109, 878109), ("missense", "missense")),
     (Region('1', 901921, 901921), ("synonymous", "missense")),
@@ -54,6 +56,7 @@ def test_serialize_deserialize_gene_effect(
         assert worst_effect[1] == effect_annotator.worst_effect(effects2)
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize("region,worst_effect", [
     (Region('1', 878109, 878109), ("missense", "missense")),
     (Region('1', 901921, 901921), ("synonymous", "missense")),

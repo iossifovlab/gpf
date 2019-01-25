@@ -96,12 +96,6 @@ def default_gene_models():
 
 
 @pytest.fixture(scope='session')
-def effect_annotator(default_genome, default_gene_models):
-    return VcfVariantEffectsAnnotator(
-        genome=default_genome, gene_models=default_gene_models)
-
-
-@pytest.fixture(scope='session')
 def allele_freq_annotator():
     return VcfAlleleFrequencyAnnotator()
 
@@ -109,17 +103,6 @@ def allele_freq_annotator():
 @pytest.fixture(scope='session')
 def variant_details_annotator():
     return VcfVariantDetailsAnnotator()
-
-
-@pytest.fixture(scope='session')
-def composite_annotator(
-        variant_details_annotator, effect_annotator, allele_freq_annotator):
-
-    return AnnotatorComposite(annotators=[
-        variant_details_annotator,
-        effect_annotator,
-        allele_freq_annotator,
-    ])
 
 
 @pytest.fixture(scope='session')
@@ -232,8 +215,24 @@ def raw_denovo(config_denovo, default_genome):
 
 
 @pytest.fixture(scope='session')
+def composite_annotator(
+        variant_details_annotator, allele_freq_annotator,
+        default_genome, default_gene_models):
+
+    effect_annotator = VcfVariantEffectsAnnotator(
+        genome=default_genome, gene_models=default_gene_models)
+
+    return AnnotatorComposite(annotators=[
+        variant_details_annotator,
+        effect_annotator,
+        allele_freq_annotator,
+    ])
+
+
+@pytest.fixture(scope='session')
 def variants_vcf(composite_annotator):
     def builder(path):
+
         a_data = relative_to_this_test_folder(path)
         a_conf = Configure.from_prefix_vcf(a_data)
         fvars = RawFamilyVariants(
