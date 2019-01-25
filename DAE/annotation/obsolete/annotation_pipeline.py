@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals, absolute_import
+
+from future import standard_library
+standard_library.install_aliases()  # noqa
 
 import sys
 import glob
 import argparse
-# from future import standard_library
-# standard_library.install_aliases()
 
 from builtins import object
 

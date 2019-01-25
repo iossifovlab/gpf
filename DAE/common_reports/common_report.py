@@ -9,14 +9,10 @@ import itertools
 from collections import defaultdict, OrderedDict
 from copy import deepcopy
 
-from common_reports.config import CommonReportsConfig
-from study_groups.study_group_facade import StudyGroupFacade
-from studies.study_facade import StudyFacade
 from variants.attributes import Role, Sex
-from common.query_base import EffectTypesMixin
-from studies.default_settings import get_config as get_studies_config
-from study_groups.default_settings import get_config as get_study_groups_config
 from variants.family import FamiliesBase
+
+from common.query_base import EffectTypesMixin
 
 
 class PeopleCounter(object):
@@ -541,10 +537,9 @@ class CommonReport(object):
         self.phenotype = self._get_phenotype(phenotypes_info)
         self.study_type = ','.join(query_object.study_types)\
             if query_object.study_types else None
-        self.study_year = ','.join(query_object.years)\
-            if query_object.years else None
-        self.pub_med = ','.join(query_object.pub_meds)\
-            if query_object.pub_meds else None
+        self.study_year = query_object.year
+        self.pub_med = query_object.pub_med
+
         self.families = len(query_object.families)
         self.number_of_probands =\
             self._get_number_of_people_with_role(query_object, Role.prb)
@@ -588,9 +583,10 @@ class CommonReport(object):
 class CommonReportsGenerator(object):
 
     def __init__(
-            self, config=None, study_facade=None, study_group_facade=None):
-        if config is None:
-            config = CommonReportsConfig()
+            self, config, study_facade, dataset_facade):
+        assert config is not None
+        assert study_facade is not None
+        assert dataset_facade is not None
 
         self.config = config
 
@@ -600,13 +596,8 @@ class CommonReportsGenerator(object):
         self.effect_types = self.config.effect_types()
         self.phenotypes_info = self.config.phenotypes()
 
-        if study_facade is None:
-            study_facade = StudyFacade()
-        if study_group_facade is None:
-            study_group_facade = StudyGroupFacade()
-
         self.study_facade = study_facade
-        self.study_group_facade = study_group_facade
+        self.dataset_facade = dataset_facade
 
     def get_common_reports(self, query_object):
         for qo, qo_properties in query_object.items():
@@ -615,20 +606,23 @@ class CommonReportsGenerator(object):
                 self.effect_types)
 
     def save_common_reports(self):
-        studies = OrderedDict([(self.study_facade.get_study(s), s_prop)
-                               for s, s_prop in self.studies.items()])
-        study_groups = OrderedDict([
-            (self.study_group_facade.get_study_group(sg), sg_prop)
-            for sg, sg_prop in self.study_groups.items()])
-        studies_common_reports_dir = get_studies_config() \
-            .get('COMMON_REPORTS_DIR')
-        study_groups_common_reports_dir = get_study_groups_config() \
-            .get('COMMON_REPORTS_DIR')
+        studies = OrderedDict([
+            (self.study_facade.get_study(s), s_prop)
+            for s, s_prop in self.studies.items()
+        ])
+        datasets = OrderedDict([
+            (self.dataset_facade.get_dataset(sg), sg_prop)
+            for sg, sg_prop in self.study_groups.items()
+        ])
+        print(len(studies), len(datasets))
+    
+        studies_common_reports_dir = '.'
+        study_groups_common_reports_dir = '.'
         for cr in self.get_common_reports(studies):
             with open(os.path.join(studies_common_reports_dir,
                       cr.study_name + '.json'), 'w') as crf:
                 json.dump(cr.to_dict(), crf)
-        for cr in self.get_common_reports(study_groups):
+        for cr in self.get_common_reports(datasets):
             with open(os.path.join(study_groups_common_reports_dir,
                       cr.study_name + '.json'), 'w') as crf:
                 json.dump(cr.to_dict(), crf)
@@ -651,7 +645,7 @@ class PhenotypeInfo(object):
         self.phenotype_group = phenotype_group
 
     def _get_phenotypes(self, query_object):
-        return list(query_object.get_phenotype_values(self.source))
+        return list(query_object.get_pedigree_values(self.source))
 
     def get_phenotypes(self):
         return [
@@ -751,7 +745,7 @@ class FilterObjects(object):
                     el_values = phenotype_info.phenotypes
                 else:
                     el_column = el
-                    el_values = query_object.get_column_values(el)
+                    el_values = query_object.get_pedigree_values(el)
 
                 filter = []
                 for el_value in el_values:

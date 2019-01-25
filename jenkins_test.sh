@@ -40,8 +40,9 @@ py.test -s --runslow --withspark -v --cov-config coveragerc \
     DAE/variant_annotation/tests \
     DAE/annotation/tests \
     DAE/studies/tests \
-    DAE/study_groups/tests \
-    DAE/datasets/tests \
     DAE/common_reports/tests \
     DAE/pedigrees/tests \
     DAE/gene/tests
+
+    # DAE/study_groups/tests \
+    # DAE/datasets/tests \
