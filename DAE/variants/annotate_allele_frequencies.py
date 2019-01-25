@@ -63,7 +63,8 @@ class VcfAlleleFrequencyAnnotator(AnnotatorBase):
         n_alleles = np.sum(gt == allele_index)
         allele_freq = 0.0
         if n_parents_called > 0:
-            allele_freq = old_div((100.0 * n_alleles), (2.0 * n_parents_called))
+            allele_freq = old_div(
+                (100.0 * n_alleles), (2.0 * n_parents_called))
 
         return n_parents_called, percent_parents_called, \
             n_alleles, allele_freq
