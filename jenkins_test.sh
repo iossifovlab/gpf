@@ -40,7 +40,7 @@ py.test --runslow --withspark -v --cov-config coveragerc \
     DAE/variants/tests/ \
     DAE/variant_annotation/tests \
     DAE/annotation/tests \
-    DEA/backends/tests \
+    DAE/backends/tests \
     DAE/studies/tests \
     DAE/common_reports/tests \
     DAE/pedigrees/tests \
