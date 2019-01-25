@@ -9,7 +9,8 @@ import os
 
 from GeneModelFiles import load_gene_models
 
-from .configure import Configure
+from ..configure import Configure
+
 from .raw_vcf import RawFamilyVariants
 from .annotate_variant_effects import VcfVariantEffectsAnnotator
 from .annotate_allele_frequencies import VcfAlleleFrequencyAnnotator

@@ -9,7 +9,8 @@ import shutil
 import os
 
 from ..configure import Configure
-from ..builder import variants_builder as VB
+
+from ..vcf.builder import variants_builder as VB
 
 from .conftest import relative_to_this_test_folder
 import sys

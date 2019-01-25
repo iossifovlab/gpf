@@ -18,8 +18,8 @@ from variants.variant import SummaryVariantFactory
 from variants.family_variant import FamilyVariant, FamilyAllele
 
 from .loader import RawVariantsLoader
-from .configure import Configure
-from .attributes_query import role_query, sex_query, \
+from ..configure import Configure
+from ..attributes_query import role_query, sex_query, \
     inheritance_query,\
     variant_type_query
 

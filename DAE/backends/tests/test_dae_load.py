@@ -9,9 +9,11 @@ import os
 
 import numpy as np
 from utils.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
-from ..raw_dae import RawDAE, BaseDAE
-from ..parquet_io import VariantsParquetWriter
+
 from ..configure import Configure
+
+from ..thrift.parquet_io import VariantsParquetWriter
+from ..thrift.raw_dae import RawDAE, BaseDAE
 
 
 def test_dae_full_variants_iterator(raw_dae, temp_dirname):

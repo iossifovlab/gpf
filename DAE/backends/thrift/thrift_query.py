@@ -3,13 +3,15 @@ from __future__ import print_function, unicode_literals, absolute_import
 from builtins import str
 
 from impala.util import as_pandas
-from .attributes_query import \
-    QueryTreeToSQLTransformer, QueryTreeToSQLListTransformer
-from .attributes_query import role_query, sex_query, \
-    inheritance_query,\
-    variant_type_query
 
 from RegionOperations import Region
+
+from ..attributes_query import \
+    QueryTreeToSQLTransformer, \
+    QueryTreeToSQLListTransformer, \
+    role_query, sex_query, \
+    inheritance_query,\
+    variant_type_query
 
 
 def thrift_query1(thrift_connection, tables, query, db='parquet', limit=2000):

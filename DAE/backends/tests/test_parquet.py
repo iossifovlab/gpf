@@ -8,8 +8,9 @@ from __future__ import print_function, unicode_literals, absolute_import
 import pytest
 import os
 
-from ..parquet_io import VariantsParquetWriter
 from ..configure import Configure
+
+from ..thrift.parquet_io import VariantsParquetWriter
 
 # summary_table, variants_table
 # save_family_allele_df_to_parquet,\

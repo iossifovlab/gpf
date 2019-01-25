@@ -21,25 +21,28 @@ from variants.family import Family, FamiliesBase
 from variants.family_variant import FamilyVariant
 from variants.variant import SummaryAllele, SummaryVariant
 
-from ..annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
-from ..annotate_composite import AnnotatorComposite
-from ..annotate_variant_details import VcfVariantDetailsAnnotator
-from ..annotate_variant_effects import \
-    VcfVariantEffectsAnnotator
 from ..attributes_query import PARSER as attributes_query_parser, \
     QueryTransformerMatcher
 from ..attributes_query import \
     parser_with_ambiguity as attributes_query_parser_with_ambiguity
 from ..configure import Configure
 
-from ..parquet_io import save_ped_df_to_parquet,\
+from ..vcf.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
+from ..vcf.annotate_composite import AnnotatorComposite
+from ..vcf.annotate_variant_details import VcfVariantDetailsAnnotator
+from ..vcf.annotate_variant_effects import \
+    VcfVariantEffectsAnnotator
+
+from ..vcf.raw_vcf import RawFamilyVariants, VariantFactory
+
+
+from ..thrift.parquet_io import save_ped_df_to_parquet,\
     VariantsParquetWriter
 
-from ..raw_thrift import ThriftFamilyVariants
-from ..raw_vcf import RawFamilyVariants, \
-    VariantFactory
+from ..thrift.raw_thrift import ThriftFamilyVariants
+from ..thrift.raw_dae import RawDAE, RawDenovo
+
 from .common_tests_helpers import relative_to_this_test_folder
-from ..raw_dae import RawDAE, RawDenovo
 
 import logging
 

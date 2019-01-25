@@ -1,5 +1,5 @@
 from RegionOperations import Region
-from ..thrift_query import ThriftQueryBuilder
+from ..thrift.thrift_query import ThriftQueryBuilder
 
 
 def test_simple_summary_subquery(parquet_variants):

@@ -13,7 +13,7 @@ from variants.family import FamiliesBase, Family
 from variants.variant import SummaryVariantFactory
 from variants.family_variant import FamilyVariant
 
-from .configure import Configure
+from ..configure import Configure
 from .thrift_query import thrift_query1
 from .parquet_io import read_ped_df_from_parquet
 

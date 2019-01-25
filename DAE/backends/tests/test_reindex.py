@@ -1,7 +1,7 @@
 from __future__ import print_function, unicode_literals, absolute_import
 
 from pyspark.sql import Row
-from ..reindex import collect_summary_index_max, \
+from ..thrift.reindex import collect_summary_index_max, \
     summary_index_shift, \
     shift_variants
 

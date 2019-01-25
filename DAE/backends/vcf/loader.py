@@ -89,7 +89,7 @@ class RawVariantsLoader(object):
                 self.config.annotation, storage=storage)
         else:
             # TODO: add test for this
-            from variants.builder import variants_builder
+            from .builder import variants_builder
             variants_builder(self.config.prefix)
             return self.load_annotation_file(
                 self.config.annotation, storage=storage)
