@@ -49,6 +49,7 @@ def test_annotator_base_simple():
     )
 
     annotator = AnnotatorBase(section_config)
+    assert annotator is not None
 
 
 def test_copy_annotator_simple(capsys, variants_io1):
