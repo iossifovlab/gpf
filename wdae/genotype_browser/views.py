@@ -14,7 +14,7 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
 
-from datasets.dataset_factory import DatasetFactory
+# from datasets.dataset_factory import DatasetFactory
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 from helpers.logger import log_filter
@@ -26,8 +26,8 @@ from rest_framework.exceptions import NotAuthenticated
 import json
 from query_variants import join_line, generate_web_response, generate_response
 from datasets_api.permissions import IsDatasetAllowed
-from datasets.metadataset import MetaDataset
-from datasets.helpers import get_variants_web_preview
+# from datasets.metadataset import MetaDataset
+# from datasets.helpers import get_variants_web_preview
 import logging
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
