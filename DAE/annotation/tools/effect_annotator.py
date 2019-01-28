@@ -2,25 +2,35 @@
 
 from __future__ import absolute_import
 import os
+from collections import OrderedDict
+
 import GenomeAccess
 from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import VariantAnnotator
 from annotation.tools.annotator_base import VariantAnnotatorBase
 
 
-class EffectAnnotator(VariantAnnotatorBase):
+class EffectAnnotatorBase(VariantAnnotatorBase):
+    COLUMNS_SCHEMA = [
+        ('effect_type', 'list(str)'),
+        ('effect_gene', 'list(str)'),
+        ('effect_details', 'list(str)'),
+    ]
 
     def __init__(self, config):
-        super(EffectAnnotator, self).__init__(config)
+        super(EffectAnnotatorBase, self).__init__(config)
 
         self._init_variant_annotation()
+        self.columns = OrderedDict()
+        for col_name, col_type in self.COLUMNS_SCHEMA:
+            self.columns[col_name] = \
+                self.config.columns_config.get(col_name, None)
 
-        self.effect_type_column = \
-            self.config.columns_config.get("effect_type", None)
-        self.effect_gene_column = \
-            self.config.columns_config.get("effect_gene", None)
-        self.effect_details_column = \
-            self.config.columns_config.get("effect_details", None)
+    def collect_annotator_schema(self, schema):
+        super(EffectAnnotatorBase, self).collect_annotator_schema(schema)
+        for col_name, col_type in self.COLUMNS_SCHEMA:
+            if self.columns.get(col_name, None):
+                schema.create_column(col_name, col_type)
 
     def _init_variant_annotation(self):
         genome = None
@@ -50,19 +60,25 @@ class EffectAnnotator(VariantAnnotatorBase):
         self.annotation_helper = VariantAnnotator(
             genome, gene_models, promoter_len=self.config.options.prom_len)
 
-    def collect_annotator_schema(self, schema):
-        super(EffectAnnotator, self).collect_annotator_schema(schema)
-        if self.effect_type_column:
-            schema.create_column(self.effect_type_column, 'list(str)')
-        if self.effect_gene_column:
-            schema.create_column(self.effect_gene_column, 'list(str)')
-        if self.effect_details_column:
-            schema.create_column(self.effect_details_column, 'list(str)')
-
     def _not_found(self, aline):
-            aline[self.effect_type_column] = ''
-            aline[self.effect_gene_column] = ''
-            aline[self.effect_details_column] = ''
+        for col_name, col_conf in self.columns.items():
+            if col_conf:
+                aline[col_conf] = ''
+
+    def do_annotate(self, aline, variant):
+        raise NotImplementedError()
+
+
+class EffectAnnotator(EffectAnnotatorBase):
+
+    COLUMNS_SCHEMA = [
+        ('effect_type', 'list(str)'),
+        ('effect_gene', 'list(str)'),
+        ('effect_details', 'list(str)'),
+    ]
+
+    def __init__(self, config):
+        super(EffectAnnotator, self).__init__(config)
 
     def do_annotate(self, aline, variant):
         if variant is None:
@@ -79,12 +95,10 @@ class EffectAnnotator(VariantAnnotatorBase):
                 alt=variant.alternative)
             effect_type, effect_gene, effect_details = \
                 self.annotation_helper.effect_description1(effects)
-            aline[self.effect_type_column] = effect_type
-            aline[self.effect_gene_column] = effect_gene
-            aline[self.effect_details_column] = effect_details
+
+            aline[self.columns['effect_type']] = effect_type
+            aline[self.columns['effect_gene']] = effect_gene
+            aline[self.columns['effect_details']] = effect_details
 
         except ValueError:
             pass
-            # aline.columns[self.effect_type_column] = None
-            # aline.columns[self.effect_gene_column] = None
-            # aline.columns[self.effect_details_column] = None

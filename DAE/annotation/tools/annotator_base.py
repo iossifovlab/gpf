@@ -85,7 +85,7 @@ class AnnotatorBase(object):
 
             self.line_annotation(line)
             result.append(line)
-        
+
         res_df = pd.DataFrame.from_records(result)
         return res_df
 
