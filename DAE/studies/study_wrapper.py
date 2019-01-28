@@ -291,18 +291,20 @@ class StudyWrapper(object):
     # FIXME:
     def _get_dataset_config_options(self, config):
         config['studyTypes'] = self.config.study_types
-        config['genotypeBrowser']['hasStudyTypes'] =\
-            self.config.has_study_types
-        config['genotypeBrowser']['hasComplex'] =\
-            self.config.has_complex
-        config['genotypeBrowser']['hasCNV'] =\
-            self.config.has_CNV
-        config['genotypeBrowser']['hasDenovo'] =\
-            self.config.has_denovo
-        config['genotypeBrowser']['hasTransmitted'] =\
-            self.config.has_transmitted
-        config['studies'] =\
-            self.config.names
+        # config['studies'] = self.config.names
+
+        print(self.config.genotype_browser)
+
+        # config['genotypeBrowser']['hasStudyTypes'] =\
+        #     self.config.has_study_types
+        # config['genotypeBrowser']['hasComplex'] =\
+        #     self.config.has_complex
+        # config['genotypeBrowser']['hasCNV'] =\
+        #     self.config.has_CNV
+        # config['genotypeBrowser']['hasDenovo'] =\
+        #     self.config.has_denovo
+        # config['genotypeBrowser']['hasTransmitted'] =\
+        #     self.config.has_transmitted
 
         return config
 
@@ -317,9 +319,9 @@ class StudyWrapper(object):
 
     # FIXME:
     def get_dataset_description(self):
-        keys = self._get_dataset_description_keys()
+        keys = self._get_description_keys()
         config = self.config.to_dict()
 
         config = self._get_dataset_config_options(config)
 
-        return {key: config[key] for key in keys}
+        return {key: config.get(key, None) for key in keys}

@@ -13,7 +13,7 @@ from datasets_api.datasets_manager import get_datasets_manager
 from datasets_api.models import Dataset
 from groups_api.serializers import GroupSerializer
 import preloaded
-# from DAE import StatusMixin
+from common.query_base import StatusMixin
 
 
 class DatasetView(APIView):
@@ -37,14 +37,14 @@ class DatasetView(APIView):
 
         return dataset
 
-    def augment_status_filter(selfs, dataset):
+    def augment_status_filter(self, dataset):
         dataset['statusFilter'] = list(StatusMixin.AFFECTED_MAPPING.keys())
         return dataset
 
     def get(self, request, dataset_id=None):
         user = request.user
         if dataset_id is None:
-            datasets = self.datasets_facade.get_all_datasets()
+            datasets = self.datasets_facade.get_all_datasets_wrapper()
             res = list(dataset.get_dataset_description()
                        for dataset in datasets)
 
@@ -53,7 +53,7 @@ class DatasetView(APIView):
             res = [self.augment_status_filter(ds) for ds in res]
             return Response({'data': res})
         else:
-            dataset = self.datasets_facade.get_dataset(dataset_id)
+            dataset = self.datasets_facade.get_dataset_wrapper(dataset_id)
             if dataset:
                 res = dataset.get_dataset_description()
                 res = self.augment_accessibility(res, user)

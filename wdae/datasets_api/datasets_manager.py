@@ -30,6 +30,7 @@ class DatasetsManager(object):
         dataset_definitions = DirectoryEnabledDatasetsDefinition(
             study_facade, os.path.join(config_file, 'datasets'), work_dir)
         dataset_factory = DatasetFactory(study_facade)
+
         self.facade =\
             DatasetFacade(dataset_definitions, dataset_factory)
         # self.facade = DatasetFacade(
