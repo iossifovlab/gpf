@@ -66,7 +66,7 @@ class AnnotatorBase(object):
                 file_io_manager.line_write(line)
                 continue
             annotation_line = line_config.build(line)
-            print(annotation_line)
+            # print(annotation_line)
 
             try:
                 self.line_annotation(annotation_line)
