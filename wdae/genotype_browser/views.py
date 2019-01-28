@@ -7,14 +7,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from builtins import map
 from builtins import str
-import itertools
-import pprint
 
 from rest_framework import views, status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
 
-# from datasets.dataset_factory import DatasetFactory
+from datasets_api.datasets_manager import get_datasets_manager
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 from helpers.logger import log_filter
@@ -24,10 +22,9 @@ import traceback
 import preloaded
 from rest_framework.exceptions import NotAuthenticated
 import json
-from query_variants import join_line, generate_web_response, generate_response
+from query_variants import join_line, generate_response
 from datasets_api.permissions import IsDatasetAllowed
-# from datasets.metadataset import MetaDataset
-# from datasets.helpers import get_variants_web_preview
+from studies.helpers import get_variants_web_preview
 import logging
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
@@ -40,10 +37,10 @@ class QueryBaseView(views.APIView):
 
     datasets_cache = {}
 
-    def get_dataset(self, dataset_id):
+    def get_dataset_wrapper(self, dataset_id):
         if dataset_id not in self.datasets_cache:
             self.datasets_cache[dataset_id] =\
-                self.dataset_facade.get_dataset(dataset_id)
+                self.dataset_facade.get_dataset_wrapper(dataset_id)
 
         return self.datasets_cache[dataset_id]
 
@@ -51,8 +48,8 @@ class QueryBaseView(views.APIView):
         self.datasets = preloaded.register.get('datasets')
         assert self.datasets is not None
 
-        self.dataset_facade = self.datasets.get_facade()
-        self.dataset_factory = DatasetFactory()
+        self.dataset_facade = get_datasets_manager().get_dataset_facade()
+        self.dataset_factory = get_datasets_manager().get_dataset_factory()
 
 
 class QueryPreviewView(QueryBaseView):
@@ -95,18 +92,18 @@ class QueryPreviewView(QueryBaseView):
             dataset_id = data['datasetId']
             self.check_object_permissions(request, dataset_id)
 
-            if dataset_id == MetaDataset.ID:
-                dataset_ids = self.dataset_facade.get_all_dataset_ids()
-                dataset_ids.remove(MetaDataset.ID)
-                data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids
-                                       if IsDatasetAllowed.user_has_permission(
-                                            request.user, dataset_id)]
+            # if dataset_id == MetaDataset.ID:
+            #     dataset_ids = self.dataset_facade.get_all_dataset_ids()
+            #     dataset_ids.remove(MetaDataset.ID)
+            #     data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids
+            #                            if IsDatasetAllowed.user_has_permission(
+            #                                 request.user, dataset_id)]
 
-            dataset = self.get_dataset(dataset_id)
+            dataset = self.get_dataset_wrapper(dataset_id)
             # LOGGER.info("dataset " + str(dataset))
 
             response = get_variants_web_preview(
-                    dataset.get_variants(safe=True, **data),
+                    dataset.query_variants(safe=True, **data),
                     dataset.pedigree_selectors,
                     data.get('pedigreeSelector', {}),
                     dataset.preview_columns,
@@ -171,7 +168,7 @@ class QueryDownloadView(QueryBaseView):
                 data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids if IsDatasetAllowed.user_has_permission(
                         user, dataset_id)]
 
-            dataset = self.get_dataset(data['datasetId'])
+            dataset = self.get_dataset_wrapper(data['datasetId'])
 
             columns = dataset.download_columns
             try:
