@@ -14,10 +14,10 @@ from annotation.tools.annotator_base import VariantAnnotatorBase
 
 class EffectAnnotatorBase(VariantAnnotatorBase):
 
-    def __init__(self, config):
+    def __init__(self, config, **kwargs):
         super(EffectAnnotatorBase, self).__init__(config)
 
-        self._init_variant_annotation()
+        self._init_effect_annotator(**kwargs)
         self.columns = OrderedDict()
         for col_name, col_type in self.COLUMNS_SCHEMA:
             self.columns[col_name] = \
@@ -29,32 +29,38 @@ class EffectAnnotatorBase(VariantAnnotatorBase):
             if self.columns.get(col_name, None):
                 schema.create_column(col_name, col_type)
 
-    def _init_variant_annotation(self):
-        genome = None
-        if self.config.options.Graw is None:
-            from DAE import genomesDB as genomes_db
-            genome = genomes_db.get_genome()
-        else:
-            assert self.config.options.Graw is not None
-            assert os.path.exists(self.config.options.Graw)
-            genome = GenomeAccess.openRef(self.config.options.Graw)
+    def _init_effect_annotator(
+            self, genome_file=None, gene_models_file=None,
+            genome=None, gene_models=None):
+
+        if genome is None:
+            if self.config.options.Graw is None and genome_file is None:
+                from DAE import genomesDB as genomes_db
+                genome = genomes_db.get_genome()
+            else:
+                if genome_file is None:
+                    assert self.config.options.Graw is not None
+                    genome_file = self.config.options.Graw
+                assert os.path.exists(genome_file)
+                genome = GenomeAccess.openRef(genome_file)
 
         assert genome is not None
 
-        # assert self.config.options.Graw is not None
-        # assert os.path.exists(self.config.options.Graw)
-        gene_models = None
-        if self.config.options.Traw is None:
-            from DAE import genomesDB as genomes_db
-            gene_models = genomes_db.get_gene_models()
-        else:
-            assert os.path.exists(self.config.options.Traw)
-            gene_models = load_gene_models(self.config.options.Traw)
+        if gene_models is None:
+            if self.config.options.Traw is None and gene_models_file is None:
+                from DAE import genomesDB as genomes_db
+                gene_models = genomes_db.get_gene_models()
+            else:
+                if gene_models_file is None:
+                    gene_models_file = self.config.options.Traw
+                assert os.path.exists(gene_models_file)
+                gene_models = load_gene_models(gene_models_file)
+
         assert gene_models is not None
 
         if self.config.options.prom_len is None:
             self.config.options.prom_len = 0
-        self.annotation_helper = VariantAnnotator(
+        self.effect_annotator = VariantAnnotator(
             genome, gene_models, promoter_len=self.config.options.prom_len)
 
     def _not_found(self, aline):
@@ -74,8 +80,8 @@ class EffectAnnotator(EffectAnnotatorBase):
         ('effect_details', 'list(str)'),
     ]
 
-    def __init__(self, config):
-        super(EffectAnnotator, self).__init__(config)
+    def __init__(self, config, **kwargs):
+        super(EffectAnnotator, self).__init__(config, **kwargs)
 
     def do_annotate(self, aline, variant):
         if variant is None:
@@ -85,13 +91,13 @@ class EffectAnnotator(EffectAnnotatorBase):
         assert variant is not None
 
         try:
-            effects = self.annotation_helper.do_annotate_variant(
+            effects = self.effect_annotator.do_annotate_variant(
                 chrom=variant.chromosome,
                 position=variant.position,
                 ref=variant.reference,
                 alt=variant.alternative)
             effect_type, effect_gene, effect_details = \
-                self.annotation_helper.effect_description1(effects)
+                self.effect_annotator.effect_description1(effects)
 
             aline[self.columns['effect_type']] = effect_type
             aline[self.columns['effect_gene']] = effect_gene
@@ -113,8 +119,8 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
         ('effect_details', 'list(str)'),
     ]
 
-    def __init__(self, config):
-        super(VariantEffectAnnotator, self).__init__(config)
+    def __init__(self, config, **kwargs):
+        super(VariantEffectAnnotator, self).__init__(config, **kwargs)
 
     def do_annotate(self, aline, variant):
         if variant is None:
@@ -123,7 +129,7 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
 
         assert variant is not None
 
-        effects = self.annotation_helper.do_annotate_variant(
+        effects = self.effect_annotator.do_annotate_variant(
             chrom=variant.chromosome,
             position=variant.position,
             ref=variant.reference,

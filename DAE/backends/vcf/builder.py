@@ -7,15 +7,18 @@ from __future__ import print_function, unicode_literals, absolute_import
 
 import os
 
+from box import Box
+
 from GeneModelFiles import load_gene_models
 
 from ..configure import Configure
 
 from .raw_vcf import RawFamilyVariants
-from .annotate_variant_effects import VcfVariantEffectsAnnotator
 from .annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
-from .annotate_composite import AnnotatorComposite
 from .loader import RawVariantsLoader
+
+from annotation.tools.annotator_config import VariantAnnotatorConfig
+from annotation.tools.effect_annotator import VariantEffectAnnotator
 
 
 def get_genome(genome_file=None):
@@ -37,6 +40,46 @@ def get_gene_models(gene_models_file=None):
         return genomesDB.get_gene_models()  # @UndefinedVariable
 
 
+def effect_annotator_builder(
+        genome_file=None, gene_models_file=None,
+        genome=None, gene_models=None,):
+    options = Box({
+        "vcf": True,
+        "direct": False,
+        'r': 'reference',
+        'a': 'alternative',
+        'c': 'chrom',
+        'p': 'position',
+    }, default_box=True, default_box_attr=None)
+
+    columns_config = {
+        'effect_type': 'effect_type',
+        'effect_genes': 'effect_genes',
+        'effect_gene_genes': 'effect_gene_genes',
+        'effect_gene_types': 'effect_gene_types',
+        'effect_details': 'effect_details',
+        'effect_details_transcript_ids': 'effect_details_transcript_ids',
+        'effect_details_details': 'effect_details_details'
+    }
+
+    config = VariantAnnotatorConfig(
+        name="test_annotator",
+        annotator_name="effect_annotator.VariantEffectAnnotator",
+        options=options,
+        columns_config=columns_config,
+        virtuals=[]
+    )
+
+    annotator = VariantEffectAnnotator(
+        config,
+        genome_file=genome_file, genome=genome,
+        gene_models_file=gene_models_file, gene_models=gene_models)
+
+    assert annotator is not None
+
+    return annotator
+
+
 def variants_builder(
         prefix, genome_file=None, gene_models_file=None,
         genome=None, gene_models=None,
@@ -53,14 +96,15 @@ def variants_builder(
     if gene_models is None:
         gene_models = get_gene_models(gene_models_file)
 
-    effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
+    # effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
     freq_annotator = VcfAlleleFrequencyAnnotator()
+    effect_annotator = effect_annotator_builder(
+        genome_file=genome_file, genome=genome,
+        gene_models_file=gene_models_file, gene_models=gene_models)
 
-    annotator = AnnotatorComposite(annotators=[
-        effect_annotator,
-        freq_annotator
-    ])
-    fvars = RawFamilyVariants(conf, annotator=annotator)
+    fvars = RawFamilyVariants(conf, annotator=freq_annotator)
+    fvars.annot_df = effect_annotator.annotate_df(fvars.annot_df)
+
     RawVariantsLoader.save_annotation_file(fvars.annot_df, conf.vcf.annotation)
 
     return fvars

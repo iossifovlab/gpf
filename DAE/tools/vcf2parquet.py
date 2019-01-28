@@ -12,17 +12,18 @@ import sys
 import time
 import argparse
 
-from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
-from variants.annotate_composite import AnnotatorComposite
-from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
-from variants.builder import get_genome, get_gene_models
-from variants.configure import Configure
-from variants.parquet_io import VariantsParquetWriter, \
+from backends.vcf.annotate_allele_frequencies import \
+    VcfAlleleFrequencyAnnotator
+from backends.vcf.annotate_composite import AnnotatorComposite
+from backends.vcf.annotate_variant_effects import VcfVariantEffectsAnnotator
+from backends.vcf.builder import get_genome, get_gene_models
+from backends.configure import Configure
+from backends.thrift.parquet_io import VariantsParquetWriter, \
     save_ped_df_to_parquet
-from variants.raw_vcf import RawFamilyVariants
+from backends.vcf.raw_vcf import RawFamilyVariants
 from cyvcf2 import VCF
 
-from variants.import_commons import build_contig_regions, \
+from backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 
 # import multiprocessing
