@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import
 import os
+import itertools
+
 from collections import OrderedDict
 
 import GenomeAccess
@@ -11,11 +13,6 @@ from annotation.tools.annotator_base import VariantAnnotatorBase
 
 
 class EffectAnnotatorBase(VariantAnnotatorBase):
-    COLUMNS_SCHEMA = [
-        ('effect_type', 'list(str)'),
-        ('effect_gene', 'list(str)'),
-        ('effect_details', 'list(str)'),
-    ]
 
     def __init__(self, config):
         super(EffectAnnotatorBase, self).__init__(config)
@@ -102,3 +99,119 @@ class EffectAnnotator(EffectAnnotatorBase):
 
         except ValueError:
             pass
+
+
+class VariantEffectAnnotator(EffectAnnotatorBase):
+
+    COLUMNS_SCHEMA = [
+        ('effect_type', 'str'),
+        ('effect_gene_genes', 'list(str)'),
+        ('effect_gene_types', 'list(str)'),
+        ('effect_genes', 'list(str)'),
+        ('effect_details_transcript_ids', 'list(str)'),
+        ('effect_details_details', 'list(str)'),
+        ('effect_details', 'list(str)'),
+    ]
+
+    def __init__(self, config):
+        super(VariantEffectAnnotator, self).__init__(config)
+
+    def do_annotate(self, aline, variant):
+        if variant is None:
+            self._not_found(aline)
+            return
+
+        assert variant is not None
+
+        effects = self.annotation_helper.do_annotate_variant(
+            chrom=variant.chromosome,
+            position=variant.position,
+            ref=variant.reference,
+            alt=variant.alternative)
+
+        r = self.wrap_effects(effects)
+
+        print(self.columns)
+
+        aline[self.columns['effect_type']] = r[0]
+        aline[self.columns['effect_gene_genes']] = r[1]
+        aline[self.columns['effect_gene_types']] = r[2]
+        aline[self.columns['effect_genes']] = [
+            "{}:{}".format(g, e) for g, e in zip(r[1], r[2])
+        ]
+        aline[self.columns['effect_details_transcript_ids']] = r[3]
+        aline[self.columns['effect_details_details']] = r[4]
+        aline[self.columns['effect_details']] = [
+            "{}:{}".format(t, d) for t, d in zip(r[3], r[4])
+        ]
+
+    def wrap_effects(self, effects):
+        return self.effect_simplify(effects)
+
+    @classmethod
+    def effect_severity(cls, effect):
+        return - VariantAnnotator.Severity[effect.effect]
+
+    @classmethod
+    def sort_effects(cls, effects):
+        sorted_effects = sorted(
+            effects,
+            key=lambda v: cls.effect_severity(v))
+        return sorted_effects
+
+    @classmethod
+    def worst_effect(cls, effects):
+        sorted_effects = cls.sort_effects(effects)
+        return sorted_effects[0].effect
+
+    @classmethod
+    def gene_effect(cls, effects):
+        sorted_effects = cls.sort_effects(effects)
+        worst_effect = sorted_effects[0].effect
+        if worst_effect == 'intergenic':
+            return [[u'intergenic'], [u'intergenic']]
+        if worst_effect == 'no-mutation':
+            return [[u'no-mutation'], [u'no-mutation']]
+
+        result = []
+        for _severity, severity_effects in itertools.groupby(
+                sorted_effects, cls.effect_severity):
+            for gene, gene_effects in itertools.groupby(
+                    severity_effects, lambda e: e.gene):
+                result.append((gene, next(gene_effects).effect))
+
+        return [
+            [str(r[0]) for r in result],
+            [str(r[1]) for r in result]
+        ]
+
+    @classmethod
+    def transcript_effect(cls, effects):
+        worst_effect = cls.worst_effect(effects)
+        if worst_effect == 'intergenic':
+            return ([u'intergenic'], [u'intergenic'])
+        if worst_effect == 'no-mutation':
+            return ([u'no-mutation'], [u'no-mutation'])
+
+        result = {}
+        for effect in effects:
+            result[effect.transcript_id] = effect.create_effect_details()
+        return (
+            [str(r) for r in list(result.keys())],
+            [str(r) for r in list(result.values())]
+        )
+
+    @classmethod
+    def effect_simplify(cls, effects):
+        if effects[0].effect == 'unk_chr':
+            return (u'unk_chr',
+                    [u'unk_chr'], [u'unk_chr'],
+                    [u'unk_chr'], [u'unk_chr'])
+
+        gene_effect = cls.gene_effect(effects)
+        transcript_effect = cls.transcript_effect(effects)
+        return (
+            cls.worst_effect(effects),
+            gene_effect[0], gene_effect[1],
+            transcript_effect[0], transcript_effect[1]
+        )
