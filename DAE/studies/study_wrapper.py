@@ -124,14 +124,17 @@ class StudyWrapper(object):
         people_with_phenotype = set()
         if 'pedigreeSelector' in kwargs and\
                 kwargs['pedigreeSelector'] is not None:
-            pedigree_selector = kwargs.pop('pedigreeSelector')
+            pedigree_selector_query = kwargs.pop('pedigreeSelector')
+
+            pedigree_selector = self.get_pedigree_selector(
+                pedigree_selector_query['id'])
 
             for family in self.families.values():
                 family_members_with_phenotype = set(
                     [person.person_id for person in
                         family.get_people_with_phenotypes(
                             pedigree_selector['source'],
-                            pedigree_selector['checkedValues'])])
+                            pedigree_selector_query['checkedValues'])])
                 people_with_phenotype.update(family_members_with_phenotype)
 
             if 'person_ids' in kwargs:
@@ -287,6 +290,13 @@ class StudyWrapper(object):
             legend = self.legend.get(kwargs['pedigreeSelector']['id'], [])
 
         return legend + self._get_legend_default_values()
+
+    def get_pedigree_selector(self, pedigree_selector_id):
+        pedigree_selector_with_id = list(filter(
+            lambda pedigree_selector: pedigree_selector.get('id') ==
+            pedigree_selector_id, self.pedigree_selectors))
+
+        return pedigree_selector_with_id[0] if pedigree_selector_with_id else {}
 
     # FIXME:
     def _get_dataset_config_options(self, config):
