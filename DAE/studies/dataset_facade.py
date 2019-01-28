@@ -31,7 +31,7 @@ class DatasetFacade(object):
 
     def get_all_dataset_ids(self):
         return [
-            conf.dataset_id
+            conf.id
             for conf in self.dataset_definition.get_all_dataset_configs()
         ]
 
