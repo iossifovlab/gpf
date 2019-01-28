@@ -83,7 +83,22 @@ class Dataset(object):
     def get_variants(self, **kwargs):
         kwargs = self.transorm_variants_kwargs(**kwargs)
 
-        return self.study_group.query_variants(**kwargs)
+        for variant in self.study_group.query_variants(**kwargs):
+
+            yield self._add_pheno_columns(variant)
+
+    def _add_pheno_columns(self, variant):
+        pheno_values = {}
+        for pheno_column in self.pheno_columns:
+            pheno_value = self.pheno_db.get_measure_values(
+                pheno_column.source,
+                family_ids=[variant.family.family_id],
+                roles=[pheno_column.role])
+            pheno_values[pheno_column.name] = ','.join(
+                map(str, pheno_value.values()))
+
+        for allele in variant.matched_alleles:
+            allele.update_attributes(pheno_values)
 
     @property
     def study_names(self):

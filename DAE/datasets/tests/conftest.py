@@ -33,7 +33,7 @@ def load_dataset(fixtures_folder, dataset_factory, dataset_name):
     return result
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def dataset_facade(dataset_factory):
     return lambda dataset_definition: \
         DatasetFacade(
@@ -42,33 +42,33 @@ def dataset_facade(dataset_factory):
         )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def study_groups_factory(study_definition):
     return StudyGroupFactory(
         studies_definition=study_definition, _class=StudyGroupWrapper)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def study_definition():
     return SingleFileStudiesDefinition(
         'studies.conf', fixtures_dir('studies'))
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def basic_study_groups_definition(study_definition):
     return SingleFileStudiesGroupDefinition(
         'study_groups.conf', fixtures_dir('studies')
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def dataset_factory(basic_study_groups_definition, study_groups_factory):
     return DatasetFactory(
         study_group_factory=study_groups_factory,
         study_group_definition=basic_study_groups_definition)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def datasets_folder():
     return os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
@@ -76,32 +76,32 @@ def datasets_folder():
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def inheritance_trio_wrapper(datasets_folder, dataset_factory):
     return load_dataset(datasets_folder, dataset_factory, 'inheritance_trio')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_f1_wrapper(datasets_folder, dataset_factory):
     return load_dataset(datasets_folder, dataset_factory, 'quads_f1')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_variant_types_wrapper(datasets_folder, dataset_factory):
     return load_dataset(datasets_folder, dataset_factory, 'quads_variant_types')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_two_families_wrapper(datasets_folder, dataset_factory):
     return load_dataset(datasets_folder, dataset_factory, 'quads_two_families')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_in_child(datasets_folder, dataset_factory):
     return load_dataset(datasets_folder, dataset_factory, 'quads_in_child')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_in_parent(datasets_folder, dataset_factory):
     return load_dataset(datasets_folder, dataset_factory, 'quads_in_parent')
 

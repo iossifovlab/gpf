@@ -290,6 +290,7 @@ class DatasetConfig(ConfigurableEntityConfig):
     def _get_genotype_browser_pheno_columns(cls, dataset_config):
         result = []
         columns = dataset_config.pop('genotypeBrowser.pheno.columns', None)
+        print("pheno columns loaded", columns)
         if not columns:
             return []
 
