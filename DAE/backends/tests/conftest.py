@@ -32,7 +32,6 @@ from ..attributes_query import \
 from ..configure import Configure
 
 from ..vcf.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
-from ..vcf.annotate_variant_details import VcfVariantDetailsAnnotator
 
 from ..thrift.parquet_io import save_ped_df_to_parquet,\
     VariantsParquetWriter
@@ -92,11 +91,6 @@ def default_gene_models():
 @pytest.fixture(scope='session')
 def allele_freq_annotator():
     return VcfAlleleFrequencyAnnotator()
-
-
-@pytest.fixture(scope='session')
-def variant_details_annotator():
-    return VcfVariantDetailsAnnotator()
 
 
 @pytest.fixture(scope='session')

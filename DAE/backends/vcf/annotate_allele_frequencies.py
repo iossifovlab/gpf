@@ -6,13 +6,48 @@ Created on Mar 5, 2018
 from __future__ import print_function, absolute_import, unicode_literals
 
 from __future__ import division
+from builtins import object
 from past.utils import old_div
+
+import pandas as pd
 import numpy as np
-from .annotate_composite import AnnotatorBase
+
+
 from .raw_vcf import samples_to_alleles_index
 
 
-class VcfAlleleFrequencyAnnotator(AnnotatorBase):
+class VcfAnnotatorBase(object):
+
+    def setup(self, family_variants):
+        pass
+
+    def columns(self):
+        return self.COLUMNS
+
+    def annotate_variant(self, vcf_variant):
+        raise NotImplementedError()
+
+    def annotate_variant_allele(self, allele):
+        raise NotImplementedError()
+
+    def annotate(self, annot_df):
+        columns = [
+            pd.Series(index=annot_df.index, dtype=np.object_)
+            for _ in self.columns()
+        ]
+
+        for index, allele in enumerate(annot_df.to_dict(orient='records')):
+            res = self.annotate_variant_allele(allele)
+            for col, _ in enumerate(self.columns()):
+                columns[col].iloc[index] = res[col]
+
+        for col, name in enumerate(self.columns()):
+            annot_df[name] = columns[col]
+
+        return annot_df
+
+
+class VcfAlleleFrequencyAnnotator(VcfAnnotatorBase):
     COLUMNS = [
         'af_parents_called_count',
         'af_parents_called_percent',
