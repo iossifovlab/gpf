@@ -12,16 +12,17 @@ from guardian.shortcuts import get_groups_with_perms
 from datasets_api.datasets_manager import get_datasets_manager
 from datasets_api.models import Dataset
 from groups_api.serializers import GroupSerializer
-import preloaded
 from common.query_base import StatusMixin
 
 
 class DatasetView(APIView):
 
-    def __init__(self):
+    def __init__(self, datasets_facade=None):
         # assert self.datasets is not None
 
-        self.datasets_facade = get_datasets_manager().get_dataset_facade()
+        if datasets_facade is None:
+            datasets_facade = get_datasets_manager().get_dataset_facade()
+        self.datasets_facade = datasets_facade
 
     def augment_accessibility(self, dataset, user):
         dataset_object = Dataset.objects.get(dataset_id=dataset['id'])

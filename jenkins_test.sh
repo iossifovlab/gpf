@@ -42,7 +42,8 @@ py.test -s --runslow --withspark -v --cov-config coveragerc \
     DAE/studies/tests \
     DAE/common_reports/tests \
     DAE/pedigrees/tests \
-    DAE/gene/tests
+    DAE/gene/tests \
+    wdae/datasets_api/tests
 
     # DAE/study_groups/tests \
     # DAE/datasets/tests \
