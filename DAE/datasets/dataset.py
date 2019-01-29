@@ -100,6 +100,8 @@ class Dataset(object):
         for allele in variant.matched_alleles:
             allele.update_attributes(pheno_values)
 
+        return variant
+
     @property
     def study_names(self):
         return self.study_group.study_names
