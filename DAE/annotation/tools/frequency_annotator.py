@@ -54,6 +54,8 @@ class FrequencyAnnotator(VariantAnnotatorBase):
             freq_filename = os.path.abspath(freq_filename)
         assert os.path.exists(freq_filename), freq_filename
 
+        self.freq_filename = freq_filename.split('/')[-1]
+
         assert self.config.options.freq is not None
 
         if self.config.options.direct:
@@ -71,6 +73,9 @@ class FrequencyAnnotator(VariantAnnotatorBase):
         self.freq_file._setup()
 
         self.no_score_value = self.freq_file.no_score_value
+        if self.no_score_value.lower() in set(['na', 'none']):
+            self.no_score_value = None
+
         self.variant_col_name = self.freq_file.config.columns.variant
         assert self.variant_col_name
 
@@ -97,11 +102,17 @@ class FrequencyAnnotator(VariantAnnotatorBase):
             return
         variant = variant.details.cshl_variant
 
+        found = False
         for index, score_variant in enumerate(scores[self.variant_col_name]):
             if score_variant == variant:
+                found = True
                 for output_index, freq_col in enumerate(self.freq_cols):
                     values = scores[freq_col]
                     aline[self.output_cols[output_index]] = values[index]
+        if not found:
+            print('#{}# frequency score not found for variant {}:{} {}'.
+                  format(self.freq_filename,
+                         str(chrom), str(pos), str(variant)))
 
 
 # class TMFile:
