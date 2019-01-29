@@ -1,3 +1,5 @@
+from builtins import str
+
 import pytest
 from variants.attributes import Role
 
@@ -22,10 +24,10 @@ def test_all_alleles_have_pheno_values(quads_f1_wrapper):
 
 
 @pytest.mark.parametrize("roles,type,value", [
-    (Role.prb.name, "Continuous", '3.14'),
-    (Role.prb.name, "Categorical", 'option2'),
-    (Role.prb.name, "Ordinal", '5.0'),
-    (Role.prb.name, "Raw", 'somevalue'),
+    (str(Role.prb.name), "Continuous", '3.14'),
+    (str(Role.prb.name), "Categorical", 'option2'),
+    (str(Role.prb.name), "Ordinal", '5.0'),
+    (str(Role.prb.name), "Raw", 'somevalue'),
 ])
 def test_alleles_have_pheno_values(roles, type, value, quads_f1_wrapper):
     for variant in quads_f1_wrapper.get_variants(roles=roles):
