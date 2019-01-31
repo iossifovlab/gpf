@@ -28,12 +28,12 @@ from utils.dae_utils import dae2vcf_variant
 class BaseDAE(FamiliesBase):
 
     def __init__(self, family_filename,
-                 frequency_type,
+                 transmission_type,
                  genome=None, annotator=None):
         super(BaseDAE, self).__init__()
 
         assert genome is not None
-        self.frequency_type = frequency_type
+        self.transmission_type = transmission_type
         self.family_filename = family_filename
 
         self.genome = genome
@@ -99,7 +99,7 @@ class BaseDAE(FamiliesBase):
                 float(rec.get('all.prcntParCalled', 0.0)),
             'af_allele_count': ref_allele_count,
             'af_allele_freq': ref_allele_prcnt,
-            'frequency_type': self.frequency_type,
+            'transmission_type': self.transmission_type,
         }
         ref_allele = SummaryVariantFactory.summary_allele_from_record(ref)
 
@@ -126,7 +126,7 @@ class BaseDAE(FamiliesBase):
                 float(rec.get('all.prcntParCalled', 0.0)),
             'af_allele_count': int(rec.get('all.nAltAlls', 0)),
             'af_allele_freq': float(rec.get('all.altFreq', 0.0)),
-            'frequency_type': self.frequency_type,
+            'transmission_type': self.transmission_type,
         }
         alt_allele = SummaryVariantFactory.summary_allele_from_record(alt)
         assert alt_allele is not None
@@ -142,10 +142,10 @@ class RawDAE(BaseDAE):
 
     def __init__(self, summary_filename, toomany_filename, family_filename,
                  region=None, genome=None, annotator=None,
-                 frequency_type='transmitted'):
+                 transmission_type='transmitted'):
         super(RawDAE, self).__init__(
             family_filename=family_filename,
-            frequency_type=frequency_type,
+            transmission_type=transmission_type,
             genome=genome,
             annotator=annotator)
 
@@ -248,7 +248,7 @@ class RawDenovo(BaseDAE):
                  genome=None, annotator=None):
         super(RawDenovo, self).__init__(
             family_filename=family_filename,
-            frequency_type='denovo',
+            transmission_type='denovo',
             genome=genome,
             annotator=annotator
         )

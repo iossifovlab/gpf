@@ -89,7 +89,7 @@ class VariantsParquetWriter(object):
         pa.field("af_parents_called_percent", pa.float64()),
         pa.field("af_allele_count", pa.int32()),
         pa.field("af_allele_freq", pa.float64()),
-        pa.field("frequency_type", pa.string()),
+        pa.field("transmission_type", pa.string()),
     ])
 
     EFFECT_GENE_SCHEMA = pa.schema([
@@ -123,7 +123,7 @@ class VariantsParquetWriter(object):
         pa.field("member_variant", pa.string()),
     ])
 
-    def __init__(self, full_variants_iterator):
+    def __init__(self, full_variants_iterator, annotation_schema=None):
         self.full_variants_iterator = full_variants_iterator
 
         self.summary_data = ParquetData(self.SUMMARY_SCHEMA)
@@ -177,7 +177,7 @@ class VariantsParquetWriter(object):
                 "member_variant",
                 fa.variant_in_members[member_index])
 
-    def variants_table(self, bucket_index=1, batch_size=200000):
+    def variants_table(self, bucket_index=0, batch_size=200000):
         family_variant_index = 0
 
         for summary_variant_index, (summary_variant, family_variants) in \
