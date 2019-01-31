@@ -64,7 +64,6 @@ class GeneInfoDB(object):
         self.config = ConfigParser({
             'wd': wd,
         })
-        print("config read from ", confFile, wd)
 
         self.config.read(confFile)
         self.geneInfoF = self.config.get('GeneInfo', 'geneInfoFile')

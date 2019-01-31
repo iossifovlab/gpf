@@ -22,6 +22,8 @@ from annotation.tools.annotator_base import AnnotatorBase, \
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.file_io import IOType, IOManager
 
+from configurable_entities.configuration import DAEConfig
+
 
 class PipelineConfig(VariantAnnotatorConfig):
 
@@ -174,31 +176,37 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
 
 def pipeline_main(argv):
+    dae_config = DAEConfig()
+
     desc = "Program to annotate variants combining multiple annotating tools"
     parser = argparse.ArgumentParser(
-        description=desc, conflict_handler='resolve')
+        description=desc, conflict_handler='resolve',
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
     parser.add_argument(
         '--config', help='config file location; default is "annotation.conf" '
-        'in the instance data directory $DAE_DB_DIR',
+        'in the instance data directory $DAE_DB_DIR [default: %(default)s]',
+        default=dae_config.annotation_conf,
         action='store')
 
-    for name, args in VariantAnnotatorConfig.cli_options():
+    for name, args in VariantAnnotatorConfig.cli_options(dae_config):
         parser.add_argument(name, **args)
 
     parser.add_argument(
         '--notabix',
-        help='skip running bgzip and tabix on the annotated files',
+        help='skip running bgzip and tabix on the annotated files '
+        '[default: %(default)s]',
         action='store_true', default=False
     )
 
     options = parser.parse_args()
     if options.config is not None:
         config_filename = options.config
-    else:
-        dae_db_dir = os.environ.get("DAE_DB_DIR", None)
-        assert dae_db_dir is not None
+    # else:
+    #     dae_db_dir = os.environ.get("DAE_DB_DIR", None)
+    #     assert dae_db_dir is not None
 
-        config_filename = os.path.join(dae_db_dir, "annotation.conf")
+    #     config_filename = os.path.join(dae_db_dir, "annotation.conf")
 
     assert os.path.exists(config_filename), config_filename
 

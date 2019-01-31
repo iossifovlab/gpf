@@ -82,13 +82,11 @@ class DAEConfig(object):
     GENOMIC_SCORES_SECTION = 'genomicScoresDB'
     GENOMES_SECTION = 'genomesDB'
     COMMON_REPORTS_SECTION = 'commonReports'
-    ANNOTATION_SECTION = 'annotaiton'
+    ANNOTATION_SECTION = 'annotation'
 
     def __init__(self, dae_data_dir=None, dae_conf_filename="DAE.conf"):
-        print(dae_data_dir)
         if dae_data_dir is None:
             dae_data_dir = os.environ.get('DAE_DB_DIR', None)
-        print(dae_data_dir)
         self._dae_data_dir = os.path.abspath(dae_data_dir)
         self.dae_conf_filename = dae_conf_filename
 
@@ -97,7 +95,6 @@ class DAEConfig(object):
             filename, work_dir=self.dae_data_dir
         )
         assert self.sections is not None
-        print(self.sections)
 
     def _get_config_value(self, section_name, attr_name):
         if section_name not in self.sections.get_all_section_names():
