@@ -55,26 +55,6 @@ class AnnotatorConfig(object):
     @staticmethod
     def cli_options(dae_config):
         return [
-            ('infile', {
-                'nargs': '?',
-                'action': 'store',
-                'default': '-',
-                'help': 'path to input file; defaults to stdin '
-                '[default: %(default)s]'
-            }),
-            ('outfile', {
-                'nargs': '?',
-                'action': 'store',
-                'default': '-',
-                'help': 'path to output file; defaults to stdout '
-                '[default: %(default)s]'
-            }),
-            ('--mode', {
-                'help': 'annotator mode; available modes are '
-                '`replace` and `append` [default: %(default)s]',
-                'default': '"replace"',
-                'action': 'store'
-            }),
             ('--direct', {
                 'help': 'use direct access to score files '
                 '[default: %(default)s]',
@@ -87,22 +67,6 @@ class AnnotatorConfig(object):
                 'default': False,
                 'action': 'store_true'
             }),
-            ('--region', {
-                'help': 'work only in the specified region '
-                '[default: %(default)s]',
-                'default': None,
-                'action': 'store'
-            }),
-            ('--read-parquet', {
-                'help': 'read from a parquet file [default: %(default)s]',
-                'action': 'store_true',
-                'default': False,
-            }),
-            ('--write-parquet', {
-                'help': 'write to a parquet file [default: %(default)s]',
-                'action': 'store_true',
-                'default': False,
-            })
         ]
 
 

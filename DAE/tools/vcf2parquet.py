@@ -12,6 +12,8 @@ import sys
 import time
 import argparse
 
+from configurable_entities.configuration import DAEConfig
+
 from backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
 # from backends.vcf.builder import get_genome, get_gene_models
@@ -24,6 +26,7 @@ from cyvcf2 import VCF
 from backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 from backends.vcf.builder import get_genome
+from backends.thrift.import_tools import annotation_pipeline_cli_options
 
 # import multiprocessing
 # import functools
@@ -97,9 +100,11 @@ def import_vcf(argv):
         argv.region, round(end-start)))
 
 
-def parse_cli_arguments(argv=sys.argv[1:]):
+def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
-        description='Convert VCF file to parquet')
+        description='Convert VCF file to parquet',
+        conflict_handler='resolve',
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
     subparsers = parser.add_subparsers(
         dest='type',
@@ -107,14 +112,19 @@ def parse_cli_arguments(argv=sys.argv[1:]):
         description='choose what type of data to convert',
         help='vcf import or make generation for vcf import')
 
-    parse_vcf_arguments(subparsers)
-    parser_make_arguments(subparsers)
+    parse_vcf_arguments(dae_config, subparsers)
+    parser_make_arguments(dae_config, subparsers)
 
     parser_args = parser.parse_args(argv)
     return parser_args
 
 
-def parser_common_arguments(parser):
+def parser_common_arguments(dae_config, parser):
+    options = annotation_pipeline_cli_options(dae_config)
+
+    for name, args in options:
+        parser.add_argument(name, **args)
+
     parser.add_argument(
         'pedigree', type=str,
         metavar='<pedigree filename>',
@@ -129,37 +139,38 @@ def parser_common_arguments(parser):
         '-o', '--out', type=str, default='.',
         dest='output', metavar='<output filepath prefix>',
         help='output filepath prefix. '
-        'If none specified, current directory is used'
+        'If none specified, current directory is used [default: %(default)s]'
     )
 
 
-def parse_vcf_arguments(subparsers):
+def parse_vcf_arguments(dae_config, subparsers):
     parser = subparsers.add_parser('vcf')
-    parser_common_arguments(parser)
+    parser_common_arguments(dae_config, parser)
 
     parser.add_argument(
         '--region', type=str,
         dest='region', metavar='region',
         default=None,
-        help='region to convert'
+        help='region to convert [default: %(default)s]'
     )
 
     parser.add_argument(
         '-b', '--bucket-index', type=int, default=1,
         dest='bucket_index', metavar='bucket index',
-        help='bucket index'
+        help='bucket index [default: %(default)s]'
     )
 
 
-def parser_make_arguments(subparsers):
+def parser_make_arguments(dae_config, subparsers):
     parser = subparsers.add_parser('make')
-    parser_common_arguments(parser)
+    parser_common_arguments(dae_config, parser)
 
     parser.add_argument(
         '--len', type=int,
         default=None,
         dest='len', metavar='len',
-        help='split contigs in regions with length <len>'
+        help='split contigs in regions with length <len> '
+        '[default: %(default)s]'
     )
 
 
@@ -194,7 +205,8 @@ def makefile_generate(argv):
 
 
 if __name__ == "__main__":
-    argv = parse_cli_arguments(sys.argv[1:])
+    dae_config = DAEConfig()
+    argv = parse_cli_arguments(dae_config, sys.argv[1:])
 
     if argv.type == 'vcf':
         import_vcf(argv)

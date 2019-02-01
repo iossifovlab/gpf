@@ -1,7 +1,14 @@
 import sys
 import time
+import os
+
+from box import Box
+
+from DAE import genomesDB
 
 from annotation.tools.file_io_parquet import ParquetSchema
+from annotation.tools.annotator_config import AnnotatorConfig
+from annotation.annotation_pipeline import PipelineAnnotator
 
 from backends.configure import Configure
 from backends.thrift.parquet_io import VariantsParquetWriter, \
@@ -42,3 +49,49 @@ def variants_iterator_to_parquet(
 
     print("DONE: {} for {:.2f} sec".format(parquet_prefix, end-start),
           file=sys.stderr)
+
+
+def construct_import_annotation_pipeline(dae_config, argv):
+    if argv.config is not None:
+        config_filename = argv.config
+    else:
+        config_filename = dae_config.annotation_conf
+
+    assert os.path.exists(config_filename), config_filename
+
+    options = {
+        k: v for k, v in argv._get_kwargs()
+    }
+    options.update({
+        "vcf": True,
+        'c': 'chrom',
+        'p': 'position',
+        'r': 'reference',
+        'a': 'alternative',
+    })
+    options = Box(options, default_box=True, default_box_attr=None)
+    print(options)
+
+    pipeline = PipelineAnnotator.build(options, config_filename)
+    return pipeline
+
+
+def annotation_pipeline_cli_options(dae_config):
+    options = []
+    options.extend([
+        ('--config', {
+            'help': 'config file location; default is "annotation.conf" '
+            'in the instance data directory $DAE_DB_DIR '
+            '[default: %(default)s]',
+            'default': dae_config.annotation_conf,
+            'action': 'store'
+        }),
+        ('--Graw', {
+            'help': 'genome file location [default: %(default)s]',
+            'default': genomesDB.get_genome_file(),
+        }),
+    ])
+    options.extend(
+        AnnotatorConfig.cli_options(dae_config)
+    )
+    return options

@@ -113,6 +113,20 @@ class PipelineConfig(VariantAnnotatorConfig):
             virtuals=virtuals
         )
 
+    @staticmethod
+    def cli_options(dae_config):
+        options = [
+            ('--config', {
+                'help': 'config file location; default is "annotation.conf" '
+                'in the instance data directory $DAE_DB_DIR '
+                '[default: %(default)s]',
+                'default': dae_config.annotation_conf,
+                'action': 'store'
+            }),
+        ]
+        options.extend(VariantAnnotatorConfig.cli_options(dae_config))
+        return options
+
 
 def run_tabix(filename):
     def run_command(cmd):
@@ -175,6 +189,55 @@ class PipelineAnnotator(CompositeVariantAnnotator):
                 schema.remove_column(vcol)
 
 
+def main_cli_options(dae_config):
+    options = PipelineConfig.cli_options(dae_config)
+    options.extend([
+            ('infile', {
+                'nargs': '?',
+                'action': 'store',
+                'default': '-',
+                'help': 'path to input file; defaults to stdin '
+                '[default: %(default)s]'
+            }),
+            ('outfile', {
+                'nargs': '?',
+                'action': 'store',
+                'default': '-',
+                'help': 'path to output file; defaults to stdout '
+                '[default: %(default)s]'
+            }),
+            ('--region', {
+                'help': 'work only in the specified region '
+                '[default: %(default)s]',
+                'default': None,
+                'action': 'store'
+            }),
+            ('--read-parquet', {
+                'help': 'read from a parquet file [default: %(default)s]',
+                'action': 'store_true',
+                'default': False,
+            }),
+            ('--write-parquet', {
+                'help': 'write to a parquet file [default: %(default)s]',
+                'action': 'store_true',
+                'default': False,
+            }),
+            ('--notabix', {
+                'help': 'skip running bgzip and tabix on the annotated files '
+                '[default: %(default)s]',
+                'default': False,
+                'action': 'store_true',
+            }),
+            ('--mode', {
+                'help': 'annotator mode; available modes are '
+                '`replace` and `append` [default: %(default)s]',
+                'default': '"replace"',
+                'action': 'store'
+            }),
+    ])
+    return options
+
+
 def pipeline_main(argv):
     dae_config = DAEConfig()
 
@@ -183,30 +246,14 @@ def pipeline_main(argv):
         description=desc, conflict_handler='resolve',
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument(
-        '--config', help='config file location; default is "annotation.conf" '
-        'in the instance data directory $DAE_DB_DIR [default: %(default)s]',
-        default=dae_config.annotation_conf,
-        action='store')
-
-    for name, args in VariantAnnotatorConfig.cli_options(dae_config):
+    for name, args in main_cli_options(dae_config):
         parser.add_argument(name, **args)
-
-    parser.add_argument(
-        '--notabix',
-        help='skip running bgzip and tabix on the annotated files '
-        '[default: %(default)s]',
-        action='store_true', default=False
-    )
 
     options = parser.parse_args()
     if options.config is not None:
         config_filename = options.config
-    # else:
-    #     dae_db_dir = os.environ.get("DAE_DB_DIR", None)
-    #     assert dae_db_dir is not None
-
-    #     config_filename = os.path.join(dae_db_dir, "annotation.conf")
+    else:
+        config_filename = dae_config.annotation_conf
 
     assert os.path.exists(config_filename), config_filename
 
