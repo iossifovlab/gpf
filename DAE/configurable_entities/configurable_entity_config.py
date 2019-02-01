@@ -1,5 +1,6 @@
 import os
 import sys
+# import traceback
 
 from configparser import ConfigParser
 from box import ConfigBox
@@ -109,6 +110,10 @@ class ConfigurableEntityConfig(object):
             strict=True)
 
         print("READING CONFIG FROM '", config_file, "'", file=sys.stderr)
+        # print("traceback: ---------------------------------------------")
+        # traceback.print_stack(file=sys.stderr)
+        # print("traceback: ---------------------------------------------")
+
         with open(config_file, 'r') as f:
             config_parser.read_file(f)
 
