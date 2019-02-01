@@ -127,11 +127,14 @@ class VariantsParquetWriter(object):
     def __init__(self, full_variants_iterator, annotation_schema=None):
         self.full_variants_iterator = full_variants_iterator
 
-        base_schema = ParquetSchema.from_arrow(self.SUMMARY_SCHEMA)
-        summary_schema = ParquetSchema.merge_schemas(
-            base_schema, annotation_schema)
+        if annotation_schema is not None:
+            base_schema = ParquetSchema.from_arrow(self.SUMMARY_SCHEMA)
+            summary_schema = ParquetSchema.merge_schemas(
+                base_schema, annotation_schema).to_arrow()
+        else:
+            summary_schema = self.SUMMARY_SCHEMA
 
-        self.summary_data = ParquetData(summary_schema.to_arrow())
+        self.summary_data = ParquetData(summary_schema)
 
         self.effect_gene_data = ParquetData(self.EFFECT_GENE_SCHEMA)
 
