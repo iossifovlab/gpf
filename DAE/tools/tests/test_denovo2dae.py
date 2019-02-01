@@ -1,7 +1,7 @@
 import os
 import pytest
 import pandas as pd
-from tools.denovo2DAE import denovo2DAE, parse_cli_arguments
+from tools.denovo2dae import denovo2DAE, parse_cli_arguments
 
 pytestmark = pytest.mark.skip
 

@@ -137,8 +137,6 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
 
         r = self.wrap_effects(effects)
 
-        print(self.columns)
-
         aline[self.columns['effect_type']] = r[0]
         aline[self.columns['effect_gene_genes']] = r[1]
         aline[self.columns['effect_gene_types']] = r[2]
