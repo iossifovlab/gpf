@@ -4,8 +4,6 @@ import os
 
 from box import Box
 
-from DAE import genomesDB
-
 from annotation.tools.file_io_parquet import ParquetSchema
 from annotation.tools.annotator_config import AnnotatorConfig
 from annotation.annotation_pipeline import PipelineAnnotator
@@ -18,7 +16,7 @@ from backends.thrift.parquet_io import VariantsParquetWriter, \
 def variants_iterator_to_parquet(
         fvars, parquet_prefix, bucket_index=0, annotation_pipeline=None):
     if fvars.is_empty():
-        print("empty contig {} done".format(parquet_prefix), file=sys.stderr)
+        print("empty bucket {} done".format(parquet_prefix), file=sys.stderr)
         return
 
     if annotation_pipeline is not None:
@@ -51,9 +49,9 @@ def variants_iterator_to_parquet(
           file=sys.stderr)
 
 
-def construct_import_annotation_pipeline(dae_config, argv):
-    if argv.config is not None:
-        config_filename = argv.config
+def construct_import_annotation_pipeline(dae_config, argv, defaults={}):
+    if argv.annotation is not None:
+        config_filename = argv.annotation
     else:
         config_filename = dae_config.annotation_conf
 
@@ -72,23 +70,20 @@ def construct_import_annotation_pipeline(dae_config, argv):
     options = Box(options, default_box=True, default_box_attr=None)
     print(options)
 
-    pipeline = PipelineAnnotator.build(options, config_filename)
+    pipeline = PipelineAnnotator.build(
+        options, config_filename, defaults=defaults)
     return pipeline
 
 
 def annotation_pipeline_cli_options(dae_config):
     options = []
     options.extend([
-        ('--config', {
+        ('--annotation', {
             'help': 'config file location; default is "annotation.conf" '
             'in the instance data directory $DAE_DB_DIR '
             '[default: %(default)s]',
             'default': dae_config.annotation_conf,
             'action': 'store'
-        }),
-        ('--Graw', {
-            'help': 'genome file location [default: %(default)s]',
-            'default': genomesDB.get_genome_file(),
         }),
     ])
     options.extend(
