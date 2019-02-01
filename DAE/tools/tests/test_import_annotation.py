@@ -6,6 +6,8 @@ import pandas as pd
 from box import Box
 
 from annotation.annotation_pipeline import PipelineAnnotator
+from annotation.tools.file_io_parquet import ParquetReader
+
 from backends.configure import Configure
 from backends.vcf.raw_vcf import RawFamilyVariants
 from backends.vcf.annotate_allele_frequencies import \
@@ -107,10 +109,37 @@ def test_variants_iterator_to_parquet(annotation_pipeline_df, temp_dirname):
 
     parquet_prefix = os.path.join(temp_dirname, "effects_trio_")
     print(parquet_prefix)
-    print(fvars.annot_df)
+    parquet_config = Configure.from_prefix_parquet(parquet_prefix)
 
     variants_iterator_to_parquet(
         fvars,
         parquet_prefix,
         annotation_pipeline=annotation_pipeline_df,
     )
+
+    parquet_summary = parquet_config.parquet.summary_variant
+    options = Box({
+        'infile': parquet_summary,
+    }, default_box=True, default_box_attr=None)
+
+    summary = ParquetReader(options)
+    summary._setup()
+    summary._cleanup()
+
+    # print(summary.schema)
+    schema = summary.schema
+    print(schema['score0'])
+
+    assert schema['score0'].type_name == 'float'
+    assert schema['score2'].type_name == 'float'
+    assert schema['score4'].type_name == 'float'
+
+    # print(schema['effect_gene_genes'])
+    assert schema['effect_gene_genes'].type_name == 'list(str)'
+    assert schema['effect_gene_types'].type_name == 'list(str)'
+    assert schema['effect_details_transcript_ids'].type_name == 'list(str)'
+    assert schema['effect_details_details'].type_name == 'list(str)'
+
+    assert schema['effect_genes'].type_name == 'list(str)'
+    assert schema['effect_details'].type_name == 'list(str)'
+

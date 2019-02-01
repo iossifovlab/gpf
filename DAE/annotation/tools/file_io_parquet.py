@@ -116,6 +116,7 @@ class ParquetReader(AbstractFormat):
         self._read_row_group()
 
     def _cleanup(self):
+        # self.pqfile.close()
         print('Read', self.linecount, 'lines.', file=sys.stderr)
 
     def _read_row_group(self):

@@ -1,6 +1,8 @@
 import sys
 import time
 
+from annotation.tools.file_io_parquet import ParquetSchema
+
 from backends.configure import Configure
 from backends.thrift.parquet_io import VariantsParquetWriter, \
     save_ped_df_to_parquet
@@ -23,7 +25,13 @@ def variants_iterator_to_parquet(
     print("going to build: ", parquet_prefix, file=sys.stderr)
     start = time.time()
 
-    variants_writer = VariantsParquetWriter(fvars.full_variants_iterator())
+    annotation_schema = ParquetSchema()
+    annotation_pipeline.collect_annotator_schema(annotation_schema)
+
+    variants_writer = VariantsParquetWriter(
+        fvars.full_variants_iterator(),
+        annotation_schema=annotation_schema)
+
     variants_writer.save_variants_to_parquet(
         summary_filename=parquet_config.summary_variant,
         family_filename=parquet_config.family_variant,

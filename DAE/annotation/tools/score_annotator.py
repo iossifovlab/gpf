@@ -117,7 +117,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             values = scores[score_name]
             assert len(values) > 0
             if len(values) == 1:
-                aline[column_name] = values[0]
+                aline[column_name] = float(values[0])
             else:
                 total_sum = sum([
                     c * float(v) for (c, v) in zip(counts, values)])
