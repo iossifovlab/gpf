@@ -148,7 +148,7 @@ def parser_make_arguments(dae_config, subparsers):
     )
 
 
-def makefile_generate(argv):
+def makefile_generate(dae_config, argv):
     assert os.path.exists(argv.vcf)
     assert os.path.exists(argv.pedigree)
 
@@ -173,6 +173,6 @@ if __name__ == "__main__":
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
 
     if argv.type == 'vcf':
-        import_vcf(dae_config, argv)
+        import_vcf(dae_config, argv, defaults=dae_config.annotation_defaults)
     elif argv.type == 'make':
-        makefile_generate(argv)
+        makefile_generate(dae_config, argv)

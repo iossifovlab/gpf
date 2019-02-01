@@ -131,7 +131,8 @@ class TSVFormat(AbstractFormat):
             print(self.linecount, 'lines read', file=sys.stderr)
 
     def _progress_done(self):
-        print('Processed', self.linecount, 'lines.', file=sys.stderr)
+        pass
+        # print('Processed', self.linecount, 'lines.', file=sys.stderr)
 
 
 class TSVReader(TSVFormat):
