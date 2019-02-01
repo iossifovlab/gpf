@@ -25,9 +25,17 @@ def test_pipeline_schema():
             "fixtures_dir": relative_to_this_test_folder("fixtures/")
         })
     assert pipeline is not None
-    print("pipeline annotators:", len(pipeline.annotators))
+    # print("pipeline annotators:", len(pipeline.annotators))
 
     schema = ParquetSchema()
-
     pipeline.collect_annotator_schema(schema)
     print(schema)
+
+    assert 'phastCons100way' in schema
+    assert 'RawScore' in schema
+    assert 'PHRED' in schema
+
+    # print(schema['PHRED'])
+    assert schema['phastCons100way'].type_name == 'float'
+    assert schema['RawScore'].type_name == 'float'
+    assert schema['PHRED'].type_name == 'float'
