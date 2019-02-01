@@ -14,9 +14,7 @@ import argparse
 
 from backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
-from backends.vcf.annotate_composite import AnnotatorComposite
-from backends.vcf.annotate_variant_effects import VcfVariantEffectsAnnotator
-from backends.vcf.builder import get_genome, get_gene_models
+# from backends.vcf.builder import get_genome, get_gene_models
 from backends.configure import Configure
 from backends.thrift.parquet_io import VariantsParquetWriter, \
     save_ped_df_to_parquet
@@ -25,6 +23,7 @@ from cyvcf2 import VCF
 
 from backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
+from backends.vcf.builder import get_genome
 
 # import multiprocessing
 # import functools
@@ -35,23 +34,12 @@ def get_contigs(vcf_filename):
     return vcf.seqnames
 
 
-def create_vcf_variants(
-        config, region=None, 
-        genome_file=None, gene_models_file=None):
+def create_vcf_variants(config, region=None):
 
-    genome = get_genome(genome_file=genome_file)
-    gene_models = get_gene_models(gene_models_file=gene_models_file)
-
-    effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
     freq_annotator = VcfAlleleFrequencyAnnotator()
 
-    annotator = AnnotatorComposite(annotators=[
-        effect_annotator,
-        freq_annotator
-    ])
-
     fvars = RawFamilyVariants(
-        config=config, annotator=annotator,
+        config=config, annotator=freq_annotator,
         region=region)
     return fvars
 

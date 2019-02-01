@@ -1,5 +1,9 @@
 import os
 import pytest
+
+import shutil
+import tempfile
+
 from tools.denovo2dae import parse_cli_arguments, denovo2DAE, export
 from tools.tests.test_denovo2dae import path
 # from DAE import pheno
@@ -17,6 +21,17 @@ def relative_to_this_test_folder(path):
         os.path.dirname(os.path.realpath(__file__)),
         path
     )
+
+
+@pytest.fixture
+def temp_dirname(request):
+    dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
+
+    def fin():
+        shutil.rmtree(dirname)
+
+    # request.addfinalizer(fin)
+    return dirname
 
 
 @pytest.fixture

@@ -81,8 +81,6 @@ class AnnotatorBase(object):
     def annotate_df(self, df):
         result = []
         for line in df.to_dict(orient='records'):
-            print(line)
-
             self.line_annotation(line)
             result.append(line)
 
