@@ -30,8 +30,8 @@ def vcfVarFormat(loc, var):
 
     mD = delRE.match(var)
     if mD:
-        l = int(mD.group(1))
-        rfS = GA.getSequence(chr, pos-1, pos+l-1)
+        ln = int(mD.group(1))
+        rfS = GA.getSequence(chr, pos - 1, pos + ln - 1)
         return chr, pos-1, rfS, rfS[0]
 
     raise Exception('weird variant:' + var)
