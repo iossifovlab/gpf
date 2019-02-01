@@ -39,3 +39,12 @@ def test_pipeline_schema():
     assert schema['phastCons100way'].type_name == 'float'
     assert schema['RawScore'].type_name == 'float'
     assert schema['PHRED'].type_name == 'float'
+
+    # print(schema['effect_gene_genes'])
+    assert schema['effect_gene_genes'].type_name == 'list(str)'
+    assert schema['effect_gene_types'].type_name == 'list(str)'
+    assert schema['effect_details_transcript_ids'].type_name == 'list(str)'
+    assert schema['effect_details_details'].type_name == 'list(str)'
+
+    assert schema['effect_genes'].type_name == 'list(str)'
+    assert schema['effect_details'].type_name == 'list(str)'
