@@ -8,6 +8,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 from builtins import str
 import sys
 import traceback
+import time
 
 import numpy as np
 import pyarrow as pa
@@ -140,6 +141,7 @@ class VariantsParquetWriter(object):
 
         self.family_data = ParquetData(self.FAMILY_SCHEMA)
         self.member_data = ParquetData(self.MEMBER_SCHEMA)
+        self.start = time.time()
 
     def _family_allele_to_data(
             self, fv, fa,
@@ -186,7 +188,7 @@ class VariantsParquetWriter(object):
                 "member_variant",
                 fa.variant_in_members[member_index])
 
-    def variants_table(self, bucket_index=0, batch_size=200000):
+    def variants_table(self, bucket_index=0, batch_size=100000):
         family_variant_index = 0
 
         for summary_variant_index, (summary_variant, family_variants) in \
@@ -222,8 +224,13 @@ class VariantsParquetWriter(object):
                         family_variant_index)
                     family_variant_index += 1
 
-            if len(self.family_data) >= batch_size:
+            if family_variant_index % 1000 == 0:
+                elapsed = time.time() - self.start
+                print("{} family variants imported for {:.2f} sec".format(
+                        family_variant_index, elapsed),
+                      file=sys.stderr)
 
+            if len(self.family_data) >= batch_size:
                 family_table = self.family_data.build_table()
                 member_table = self.member_data.build_table()
                 summary_table = self.summary_data.build_table()
@@ -240,6 +247,11 @@ class VariantsParquetWriter(object):
 
             yield summary_table, effect_gene_table, \
                 family_table, member_table
+
+        elapsed = time.time() - self.start
+        print("DONE: {} family variants imported for {:.2f} sec".format(
+                family_variant_index, elapsed),
+              file=sys.stderr)
 
     def save_variants_to_parquet(
             self,

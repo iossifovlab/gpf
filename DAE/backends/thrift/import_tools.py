@@ -40,5 +40,5 @@ def variants_iterator_to_parquet(
         bucket_index=bucket_index)
     end = time.time()
 
-    print("DONE: {} for {} sec".format(parquet_prefix, round(end-start)),
+    print("DONE: {} for {:.2f} sec".format(parquet_prefix, end-start),
           file=sys.stderr)
