@@ -14,7 +14,8 @@ from django.http.response import StreamingHttpResponse
 from preloaded import register
 import numpy as np
 from users_api.authentication import SessionAuthenticationWithoutCSRF
-from query_variants import join_line
+# from query_variants import join_line
+from helpers.dae_query import join_line
 import itertools
 
 

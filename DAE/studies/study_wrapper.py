@@ -312,10 +312,6 @@ class StudyWrapper(object):
         #     self.config.has_complex
         # config['genotypeBrowser']['hasCNV'] =\
         #     self.config.has_CNV
-        # config['genotypeBrowser']['hasDenovo'] =\
-        #     self.config.has_denovo
-        # config['genotypeBrowser']['hasTransmitted'] =\
-        #     self.config.has_transmitted
 
         return config
 
