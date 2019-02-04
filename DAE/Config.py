@@ -33,7 +33,7 @@ class Config(object):
         self._phenoDBconfFile = self._daeConfig.get('phenoDB', 'confFile')
         self._phenoDBdir = self._daeConfig.get('phenoDB', 'dir')
 
-        self._sfariDBdir = self._daeConfig.get('sfariDB', 'dir')
+        # self._sfariDBdir = self._daeConfig.get('sfariDB', 'dir')
 
         self._geneInfoDBdir = self._daeConfig.get('geneInfoDB', 'dir')
         self._geneInfoDBconfFile = self._daeConfig.get(
