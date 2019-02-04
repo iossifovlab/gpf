@@ -1,4 +1,3 @@
-import pytest
 import os
 
 import pandas as pd
@@ -7,7 +6,7 @@ from box import Box
 
 from configurable_entities.configuration import DAEConfig
 
-from annotation.annotation_pipeline import PipelineAnnotator
+# from annotation.annotation_pipeline import PipelineAnnotator
 from annotation.tools.file_io_parquet import ParquetReader
 
 from backends.configure import Configure
@@ -21,60 +20,14 @@ from tools.vcf2parquet import parse_cli_arguments, import_vcf
 from .conftest import relative_to_this_test_folder
 
 
-@pytest.fixture(scope='session')
-def annotation_pipeline():
-    filename = relative_to_this_test_folder(
-        "thrift_import/import_annotation.conf")
-
-    options = Box({
-            "default_arguments": None,
-            "vcf": True,
-            # "mode": "overwrite",
-        },
-        default_box=True,
-        default_box_attr=None)
-
-    pipeline = PipelineAnnotator.build(
-        options, filename,
-        defaults={
-            "fixtures_dir": relative_to_this_test_folder("thrift_import/")
-        })
-    return pipeline
-
-
-@pytest.fixture(scope='session')
-def annotation_pipeline_df():
-    filename = relative_to_this_test_folder(
-        "thrift_import/import_annotation.conf")
-
-    options = Box({
-            "default_arguments": None,
-            "vcf": True,
-            'c': 'chrom',
-            'p': 'position',
-            'r': 'reference',
-            'a': 'alternative',
-            # "mode": "overwrite",
-        },
-        default_box=True,
-        default_box_attr=None)
-
-    pipeline = PipelineAnnotator.build(
-        options, filename,
-        defaults={
-            "fixtures_dir": relative_to_this_test_folder("thrift_import/")
-        })
-    return pipeline
-
-
 def test_annotation_pipeline(
-        annotation_pipeline, vcf_variants_io, capsys, result_df):
+        annotation_pipeline_vcf, vcf_variants_io, capsys, result_df):
 
-    assert annotation_pipeline is not None
+    assert annotation_pipeline_vcf is not None
 
     captured = capsys.readouterr()
     with vcf_variants_io("thrift_import/effects_trio.vcf.gz") as io_manager:
-        annotation_pipeline.annotate_file(io_manager)
+        annotation_pipeline_vcf.annotate_file(io_manager)
     captured = capsys.readouterr()
 
     df = result_df(captured.out)
@@ -100,7 +53,8 @@ def test_annotation_pipeline(
     )
 
 
-def test_variants_iterator_to_parquet(annotation_pipeline_df, temp_dirname):
+def test_variants_iterator_to_parquet(
+        annotation_pipeline_internal, temp_dirname):
     vcf_prefix = relative_to_this_test_folder('thrift_import/effects_trio')
     print(vcf_prefix)
     vcf_config = Configure.from_prefix_vcf(vcf_prefix)
@@ -118,7 +72,7 @@ def test_variants_iterator_to_parquet(annotation_pipeline_df, temp_dirname):
     variants_iterator_to_parquet(
         fvars,
         parquet_prefix,
-        annotation_pipeline=annotation_pipeline_df,
+        annotation_pipeline=annotation_pipeline_internal,
     )
 
     parquet_summary = parquet_config.parquet.summary_variant
