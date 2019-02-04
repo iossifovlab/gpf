@@ -84,7 +84,7 @@ class StudyConfig(StudyConfigBase):
         assert 'prefix' in self
         assert self.name
 
-        assert self.type
+        assert self.file_format
         assert self.work_dir
         assert self.phenotypes
         assert 'studyType' in self

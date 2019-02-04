@@ -2,207 +2,220 @@
 
 from __future__ import absolute_import
 import os
+import itertools
+
+from collections import OrderedDict
+
 import GenomeAccess
 from GeneModelFiles import load_gene_models
-from variant_annotation.annotator import \
-    VariantAnnotator as VariantEffectAnnotator
+from variant_annotation.annotator import VariantAnnotator
 from annotation.tools.annotator_base import VariantAnnotatorBase
 
 
-class EffectAnnotator(VariantAnnotatorBase):
+class EffectAnnotatorBase(VariantAnnotatorBase):
 
-    def __init__(self, config):
-        super(EffectAnnotator, self).__init__(config)
+    def __init__(self, config, **kwargs):
+        super(EffectAnnotatorBase, self).__init__(config)
 
-        self._init_variant_annotation()
+        self._init_effect_annotator(**kwargs)
+        self.columns = OrderedDict()
+        for col_name, col_type in self.COLUMNS_SCHEMA:
+            self.columns[col_name] = \
+                self.config.columns_config.get(col_name, None)
 
-        self.effect_type_column = \
-            self.config.columns_config.get("effect_type", None)
-        self.effect_gene_column = \
-            self.config.columns_config.get("effect_gene", None)
-        self.effect_details_column = \
-            self.config.columns_config.get("effect_details", None)
+    def collect_annotator_schema(self, schema):
+        super(EffectAnnotatorBase, self).collect_annotator_schema(schema)
+        for col_name, col_type in self.COLUMNS_SCHEMA:
+            if self.columns.get(col_name, None):
+                schema.create_column(col_name, col_type)
 
-    def _init_variant_annotation(self):
-        genome = None
-        if self.config.options.Graw is None:
-            from DAE import genomesDB as genomes_db
-            genome = genomes_db.get_genome()
-        else:
-            assert self.config.options.Graw is not None
-            assert os.path.exists(self.config.options.Graw)
-            genome = GenomeAccess.openRef(self.config.options.Graw)
-        
+    def _init_effect_annotator(
+            self, genome_file=None, gene_models_file=None,
+            genome=None, gene_models=None):
+
+        if genome is None:
+            if self.config.options.Graw is None and genome_file is None:
+                from DAE import genomesDB as genomes_db
+                genome = genomes_db.get_genome()
+            else:
+                if genome_file is None:
+                    assert self.config.options.Graw is not None
+                    genome_file = self.config.options.Graw
+                assert os.path.exists(genome_file)
+                genome = GenomeAccess.openRef(genome_file)
+
         assert genome is not None
 
-        # assert self.config.options.Graw is not None
-        # assert os.path.exists(self.config.options.Graw)
-        gene_models = None
-        if self.config.options.Traw is None:
-            from DAE import genomesDB as genomes_db
-            gene_models = genomes_db.get_gene_models()
-        else:
-            assert os.path.exists(self.config.options.Traw)
-            gene_models = load_gene_models(self.config.options.Traw)
+        if gene_models is None:
+            if self.config.options.Traw is None and gene_models_file is None:
+                from DAE import genomesDB as genomes_db
+                gene_models = genomes_db.get_gene_models()
+            else:
+                if gene_models_file is None:
+                    gene_models_file = self.config.options.Traw
+                assert os.path.exists(gene_models_file)
+                gene_models = load_gene_models(gene_models_file)
+
         assert gene_models is not None
 
         if self.config.options.prom_len is None:
             self.config.options.prom_len = 0
-        self.annotation_helper = VariantEffectAnnotator(
+        self.effect_annotator = VariantAnnotator(
             genome, gene_models, promoter_len=self.config.options.prom_len)
 
-    def collect_annotator_schema(self, schema):
-        super(EffectAnnotator, self).collect_annotator_schema(schema)
-        if self.effect_type_column:
-            schema.create_column(self.effect_type_column, 'list(str)')
-        if self.effect_gene_column:
-            schema.create_column(self.effect_gene_column, 'list(str)')
-        if self.effect_details_column:
-            schema.create_column(self.effect_details_column, 'list(str)')
+    def _not_found(self, aline):
+        for col_name, col_conf in self.columns.items():
+            if col_conf:
+                aline[col_conf] = ''
 
     def do_annotate(self, aline, variant):
+        raise NotImplementedError()
+
+
+class EffectAnnotator(EffectAnnotatorBase):
+
+    COLUMNS_SCHEMA = [
+        ('effect_type', 'list(str)'),
+        ('effect_gene', 'list(str)'),
+        ('effect_details', 'list(str)'),
+    ]
+
+    def __init__(self, config, **kwargs):
+        super(EffectAnnotator, self).__init__(config, **kwargs)
+
+    def do_annotate(self, aline, variant):
+        if variant is None:
+            self._not_found(aline)
+            return
+
         assert variant is not None
 
         try:
-            effects = self.annotation_helper.do_annotate_variant(
+            effects = self.effect_annotator.do_annotate_variant(
                 chrom=variant.chromosome,
                 position=variant.position,
                 ref=variant.reference,
                 alt=variant.alternative)
             effect_type, effect_gene, effect_details = \
-                self.annotation_helper.effect_description1(effects)
-            aline[self.effect_type_column] = effect_type
-            aline[self.effect_gene_column] = effect_gene
-            aline[self.effect_details_column] = effect_details
+                self.effect_annotator.effect_description1(effects)
+
+            aline[self.columns['effect_type']] = effect_type
+            aline[self.columns['effect_gene']] = effect_gene
+            aline[self.columns['effect_details']] = effect_details
 
         except ValueError:
             pass
-            # aline.columns[self.effect_type_column] = None
-            # aline.columns[self.effect_gene_column] = None
-            # aline.columns[self.effect_details_column] = None
 
 
-# class ColumnOrderAction(argparse.Action):
+class VariantEffectAnnotator(EffectAnnotatorBase):
 
-#     def __call__(self, parser, namespace, values, option_string=None):
-#         setattr(namespace, self.dest, values)
-#         if not hasattr(namespace, 'order'):
-#             namespace.order = []
-#         namespace.order.append(self.dest)
+    COLUMNS_SCHEMA = [
+        ('effect_type', 'str'),
+        ('effect_gene_genes', 'list(str)'),
+        ('effect_gene_types', 'list(str)'),
+        ('effect_genes', 'list(str)'),
+        ('effect_details_transcript_ids', 'list(str)'),
+        ('effect_details_details', 'list(str)'),
+        ('effect_details', 'list(str)'),
+    ]
 
+    def __init__(self, config, **kwargs):
+        super(VariantEffectAnnotator, self).__init__(config, **kwargs)
 
-# def get_argument_parser():
-#     """
-#     EffectAnnotator options::
+    def do_annotate(self, aline, variant):
+        if variant is None:
+            self._not_found(aline)
+            return
 
-#         usage: annotate_variants.py [-h] [-c C] [-p P] [-x X] [-v V] [-a A]
-#                             [-r R] [-t T] [-q Q] [-l L] [-P PROM_LEN] [-H]
-#                             [-T T] [--Traw TRAW] [--TrawFormat TRAWFORMAT]
-#                             [-G G] [--Graw GRAW] [-I I]
-#                             [--effect-type EFFECT_TYPE]
-#                             [--effect-gene EFFECT_GENE]
-#                             [--effect-details EFFECT_DETAILS]
-#                             [infile] [outfile]
+        assert variant is not None
 
-#         Program to annotate variants (substitutions & indels & cnvs)
+        effects = self.effect_annotator.do_annotate_variant(
+            chrom=variant.chromosome,
+            position=variant.position,
+            ref=variant.reference,
+            alt=variant.alternative)
 
-#         positional arguments:
-#           infile                path to input file; defaults to stdin
-#           outfile               path to output file; defaults to stdout
+        r = self.wrap_effects(effects)
 
-#         optional arguments:
-#           -h, --help            show this help message and exit
-#           -c C                  chromosome column number/name
-#           -p P                  position column number/name
-#           -x X                  location (chr:pos) column number/name
-#           -v V                  variant column number/name
-#           -a A                  alternative allele (FOR SUBSTITUTIONS ONLY)
-#                                 column number/name
-#           -r R                  reference allele (FOR SUBSTITUTIONS ONLY)
-#                                 column number/name
-#           -t T                  type of mutation column number/name
-#           -q Q                  seq column number/name
-#           -l L                  length column number/name
-#           -P PROM_LEN           promoter length
-#           -H                    no header in the input file
-#           -T T                  gene models ID <RefSeq, CCDS, knownGene>
-#           --Traw TRAW           outside gene models file path
-#           --TrawFormat TRAWFORMAT
-#                                 outside gene models format (refseq, ccds,
-#                                 knowngene)
-#           -G G                  genome ID
-#                                 <GATK_ResourceBundle_5777_b37_phiX174, hg19>
-#           --Graw GRAW           outside genome file
-#           -I I                  geneIDs mapping file; use None for no gene
-#                                 name mapping
-#           --effect-type EFFECT_TYPE
-#                                 name to use for effect type column
-#           --effect-gene EFFECT_GENE
-#                                 name to use for effect gene column
-#           --effect-details EFFECT_DETAILS
-#                                 name to use for effect details column
+        aline[self.columns['effect_type']] = r[0]
+        aline[self.columns['effect_gene_genes']] = r[1]
+        aline[self.columns['effect_gene_types']] = r[2]
+        aline[self.columns['effect_genes']] = [
+            "{}:{}".format(g, e) for g, e in zip(r[1], r[2])
+        ]
+        aline[self.columns['effect_details_transcript_ids']] = r[3]
+        aline[self.columns['effect_details_details']] = r[4]
+        aline[self.columns['effect_details']] = [
+            "{}:{}".format(t, d) for t, d in zip(r[3], r[4])
+        ]
 
-#     """
-#     desc = """Program to annotate variants (substitutions & indels & cnvs)"""
-#     parser = argparse.ArgumentParser(description=desc)
-#     parser.add_argument(
-#         '-c', help='chromosome column number/name', action='store')
-#     parser.add_argument(
-#         '-p', help='position column number/name', action='store')
-#     parser.add_argument(
-#         '-x', help='location (chr:pos) column number/name', action='store')
-#     parser.add_argument(
-#         '-v', help='variant column number/name', action='store')
-#     parser.add_argument(
-#         '-a', help='alternative allele column number/name', action='store')
-#     parser.add_argument(
-#         '-r', help='reference allele column number/name', action='store')
-#     parser.add_argument(
-#         '-t', help='type of mutation column number/name', action='store')
-#     parser.add_argument(
-#         '-q', help='seq column number/name', action='store')
-#     parser.add_argument(
-#         '-l', help='length column number/name', action='store')
+    def wrap_effects(self, effects):
+        return self.effect_simplify(effects)
 
-#     parser.add_argument(
-#         '-P', help='promoter length', default=0,
-#         action='store', type=int, dest="prom_len")
-#     parser.add_argument(
-#         '-H', help='no header in the input file',
-#         default=False,  action='store_true', dest='no_header')
+    @classmethod
+    def effect_severity(cls, effect):
+        return - VariantAnnotator.Severity[effect.effect]
 
-#     parser.add_argument(
-#         '-T', help='gene models ID <RefSeq, CCDS, knownGene>',
-#         type=str, action='store')
-#     parser.add_argument(
-#         '--Traw', help='outside gene models file path',
-#         type=str, action='store')
-#     parser.add_argument(
-#         '--TrawFormat',
-#         help='outside gene models format (refseq, ccds, knowngene)',
-#         type=str, action='store')
+    @classmethod
+    def sort_effects(cls, effects):
+        sorted_effects = sorted(
+            effects,
+            key=lambda v: cls.effect_severity(v))
+        return sorted_effects
 
-#     parser.add_argument(
-#         '-G', help='genome ID <GATK_ResourceBundle_5777_b37_phiX174, hg19> ',
-#         type=str, action='store')
-#     parser.add_argument(
-#         '--Graw', help='outside genome file', type=str, action='store')
+    @classmethod
+    def worst_effect(cls, effects):
+        sorted_effects = cls.sort_effects(effects)
+        return sorted_effects[0].effect
 
-#     parser.add_argument(
-#         '-I', help='geneIDs mapping file; use None for no gene name mapping',
-#         default="default", type=str, action='store')
+    @classmethod
+    def gene_effect(cls, effects):
+        sorted_effects = cls.sort_effects(effects)
+        worst_effect = sorted_effects[0].effect
+        if worst_effect == 'intergenic':
+            return [[u'intergenic'], [u'intergenic']]
+        if worst_effect == 'no-mutation':
+            return [[u'no-mutation'], [u'no-mutation']]
 
-#     parser.add_argument(
-#         '--effect-type', help='name to use for effect type column',
-#         type=str, action=ColumnOrderAction)
-#     parser.add_argument(
-#         '--effect-gene', help='name to use for effect gene column',
-#         type=str, action=ColumnOrderAction)
-#     parser.add_argument(
-#         '--effect-details', help='name to use for effect details column',
-#         type=str, action=ColumnOrderAction)
+        result = []
+        for _severity, severity_effects in itertools.groupby(
+                sorted_effects, cls.effect_severity):
+            for gene, gene_effects in itertools.groupby(
+                    severity_effects, lambda e: e.gene):
+                result.append((gene, next(gene_effects).effect))
 
-#     return parser
+        return [
+            [str(r[0]) for r in result],
+            [str(r[1]) for r in result]
+        ]
 
-# if __name__ == "__main__":
-#     main(get_argument_parser(), EffectAnnotator)
+    @classmethod
+    def transcript_effect(cls, effects):
+        worst_effect = cls.worst_effect(effects)
+        if worst_effect == 'intergenic':
+            return ([u'intergenic'], [u'intergenic'])
+        if worst_effect == 'no-mutation':
+            return ([u'no-mutation'], [u'no-mutation'])
+
+        result = {}
+        for effect in effects:
+            result[effect.transcript_id] = effect.create_effect_details()
+        return (
+            [str(r) for r in list(result.keys())],
+            [str(r) for r in list(result.values())]
+        )
+
+    @classmethod
+    def effect_simplify(cls, effects):
+        if effects[0].effect == 'unk_chr':
+            return (u'unk_chr',
+                    [u'unk_chr'], [u'unk_chr'],
+                    [u'unk_chr'], [u'unk_chr'])
+
+        gene_effect = cls.gene_effect(effects)
+        transcript_effect = cls.transcript_effect(effects)
+        return (
+            cls.worst_effect(effects),
+            gene_effect[0], gene_effect[1],
+            transcript_effect[0], transcript_effect[1]
+        )

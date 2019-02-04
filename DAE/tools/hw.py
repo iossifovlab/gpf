@@ -8,17 +8,13 @@ from builtins import map
 from builtins import range
 from past.utils import old_div
 import optparse
-import os
-import sys
-import math
-import gzip
 
 import numpy as np
-from numpy import *
+# from numpy import *
 from scipy import stats
 import numpy.random as rnd
 
-from vrtIOutil import ReaderStat, Writer, tooManyFile
+from .vrtIOutil import ReaderStat, Writer, tooManyFile
 from DAE import genomesDB as genomes_db
 
 

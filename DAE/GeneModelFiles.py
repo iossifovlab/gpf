@@ -506,7 +506,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
             self._utrModels[chrom][
                 (transcription_start + 1,
                  int(transcription_end))].append(tm)
-        except KeyError as e:
+        except KeyError:
             if e.args[0] == chrom:
                 self._utrModels[chrom] = OrderedDict()
             self._utrModels[chrom][

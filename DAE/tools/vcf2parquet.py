@@ -9,21 +9,22 @@ from __future__ import print_function
 
 import os
 import sys
-import time
 import argparse
 
-from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
-from variants.annotate_composite import AnnotatorComposite
-from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
-from variants.builder import get_genome, get_gene_models
-from variants.configure import Configure
-from variants.parquet_io import VariantsParquetWriter, \
-    save_ped_df_to_parquet
-from variants.raw_vcf import RawFamilyVariants
+from configurable_entities.configuration import DAEConfig
+
+from backends.vcf.annotate_allele_frequencies import \
+    VcfAlleleFrequencyAnnotator
+
+from backends.configure import Configure
+from backends.vcf.raw_vcf import RawFamilyVariants
 from cyvcf2 import VCF
 
-from variants.import_commons import build_contig_regions, \
+from backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
+from backends.vcf.builder import get_genome
+from backends.thrift.import_tools import annotation_pipeline_cli_options, \
+    construct_import_annotation_pipeline, variants_iterator_to_parquet
 
 # import multiprocessing
 # import functools
@@ -34,38 +35,17 @@ def get_contigs(vcf_filename):
     return vcf.seqnames
 
 
-def create_vcf_variants(
-        config, region=None, 
-        genome_file=None, gene_models_file=None):
+def create_vcf_variants(config, region=None):
 
-    genome = get_genome(genome_file=genome_file)
-    gene_models = get_gene_models(gene_models_file=gene_models_file)
-
-    effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
     freq_annotator = VcfAlleleFrequencyAnnotator()
 
-    annotator = AnnotatorComposite(annotators=[
-        effect_annotator,
-        freq_annotator
-    ])
-
     fvars = RawFamilyVariants(
-        config=config, annotator=annotator,
+        config=config, annotator=freq_annotator,
         region=region)
     return fvars
 
 
-def import_pedigree(config):
-    pedigree_filename = os.path.join(
-        config.output,
-        "pedigree.parquet",
-    )
-    region = "1:1-100000"
-    fvars = create_vcf_variants(config, region)
-    save_ped_df_to_parquet(fvars.ped_df, pedigree_filename)
-
-
-def import_vcf(argv):
+def import_vcf(dae_config, argv, defaults={}):
     assert os.path.exists(argv.vcf)
     assert os.path.exists(argv.pedigree)
 
@@ -83,34 +63,22 @@ def import_vcf(argv):
     region = argv.region
     fvars = create_vcf_variants(vcf_config, region)
 
-    if fvars.is_empty():
-        print("empty contig {} done".format(region), file=sys.stderr)
-        return
+    annotation_pipeline = construct_import_annotation_pipeline(
+        dae_config, argv, defaults=defaults)
 
-    parquet_config = Configure.from_prefix_parquet(argv.output).parquet
-    print("converting into ", parquet_config)
-
-    save_ped_df_to_parquet(fvars.ped_df, parquet_config.pedigree)
-
-    print("going to build: ", argv.region)
-    start = time.time()
-
-    variants_writer = VariantsParquetWriter(fvars.full_variants_iterator())
-    variants_writer.save_variants_to_parquet(
-        summary_filename=parquet_config.summary_variant,
-        family_filename=parquet_config.family_variant,
-        effect_gene_filename=parquet_config.effect_gene_variant,
-        member_filename=parquet_config.member_variant,
-        bucket_index=argv.bucket_index)
-    end = time.time()
-
-    print("DONE region: {} for {} sec".format(
-        argv.region, round(end-start)))
+    variants_iterator_to_parquet(
+        fvars,
+        argv.output,
+        argv.bucket_index,
+        annotation_pipeline
+    )
 
 
-def parse_cli_arguments(argv=sys.argv[1:]):
+def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
-        description='Convert VCF file to parquet')
+        description='Convert VCF file to parquet',
+        conflict_handler='resolve',
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
     subparsers = parser.add_subparsers(
         dest='type',
@@ -118,14 +86,19 @@ def parse_cli_arguments(argv=sys.argv[1:]):
         description='choose what type of data to convert',
         help='vcf import or make generation for vcf import')
 
-    parse_vcf_arguments(subparsers)
-    parser_make_arguments(subparsers)
+    parse_vcf_arguments(dae_config, subparsers)
+    parser_make_arguments(dae_config, subparsers)
 
     parser_args = parser.parse_args(argv)
     return parser_args
 
 
-def parser_common_arguments(parser):
+def parser_common_arguments(dae_config, parser):
+    options = annotation_pipeline_cli_options(dae_config)
+
+    for name, args in options:
+        parser.add_argument(name, **args)
+
     parser.add_argument(
         'pedigree', type=str,
         metavar='<pedigree filename>',
@@ -140,41 +113,42 @@ def parser_common_arguments(parser):
         '-o', '--out', type=str, default='.',
         dest='output', metavar='<output filepath prefix>',
         help='output filepath prefix. '
-        'If none specified, current directory is used'
+        'If none specified, current directory is used [default: %(default)s]'
     )
 
 
-def parse_vcf_arguments(subparsers):
+def parse_vcf_arguments(dae_config, subparsers):
     parser = subparsers.add_parser('vcf')
-    parser_common_arguments(parser)
+    parser_common_arguments(dae_config, parser)
 
     parser.add_argument(
         '--region', type=str,
         dest='region', metavar='region',
         default=None,
-        help='region to convert'
+        help='region to convert [default: %(default)s]'
     )
 
     parser.add_argument(
         '-b', '--bucket-index', type=int, default=1,
         dest='bucket_index', metavar='bucket index',
-        help='bucket index'
+        help='bucket index [default: %(default)s]'
     )
 
 
-def parser_make_arguments(subparsers):
+def parser_make_arguments(dae_config, subparsers):
     parser = subparsers.add_parser('make')
-    parser_common_arguments(parser)
+    parser_common_arguments(dae_config, parser)
 
     parser.add_argument(
         '--len', type=int,
         default=None,
         dest='len', metavar='len',
-        help='split contigs in regions with length <len>'
+        help='split contigs in regions with length <len> '
+        '[default: %(default)s]'
     )
 
 
-def makefile_generate(argv):
+def makefile_generate(dae_config, argv):
     assert os.path.exists(argv.vcf)
     assert os.path.exists(argv.pedigree)
 
@@ -193,21 +167,12 @@ def makefile_generate(argv):
         "{} {}".format(ped_filename, vcf_filename)
     )
 
-# def reindex(argv):
-#     for contig in SPARK_CONTIGS:
-#         filename = "spark_summary_{}.parquet".format(contig)
-#         # filename = "spark_variants_{}.parquet".format(contig)
-#         parquet_file = pq.ParquetFile(filename)
-#         print(filename)
-#         print(parquet_file.metadata)
-#         print("row_groups:", parquet_file.num_row_groups)
-#         print(parquet_file.schema)
-
 
 if __name__ == "__main__":
-    argv = parse_cli_arguments(sys.argv[1:])
+    dae_config = DAEConfig()
+    argv = parse_cli_arguments(dae_config, sys.argv[1:])
 
     if argv.type == 'vcf':
-        import_vcf(argv)
+        import_vcf(dae_config, argv, defaults=dae_config.annotation_defaults)
     elif argv.type == 'make':
-        makefile_generate(argv)
+        makefile_generate(dae_config, argv)

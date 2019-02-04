@@ -63,7 +63,6 @@ def get_effect_types_set(s):
     Groups = {
         'LGDs': LOF,
         'LoF': LOF,
-        'nonsynonymous': nonsyn,
         'introns': ['intron', "non-coding-intron", "5'UTR-intron",
                     "3'UTR-intron"],
         'UTRs': ["3'UTR", "5'UTR", "5'UTR-intron", "3'UTR-intron"],

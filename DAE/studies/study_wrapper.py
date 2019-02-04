@@ -1,4 +1,5 @@
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function, absolute_import
+
 from builtins import str
 
 import itertools
@@ -6,7 +7,7 @@ import itertools
 from RegionOperations import Region
 from variants.attributes import Role
 from studies.helpers import expand_effect_types
-from variants.attributes_query import role_query, variant_type_converter, \
+from backends.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, ContainsNode
 
 

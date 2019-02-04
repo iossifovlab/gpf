@@ -12,13 +12,13 @@ import time
 import pysam
 import argparse
 
-from variants.builder import get_genome
-from variants.configure import Configure
-from variants.raw_dae import RawDAE, RawDenovo
+from backends.vcf.builder import get_genome
+from backends.configure import Configure
+from backends.thrift.raw_dae import RawDAE, RawDenovo
 
-from variants.parquet_io import save_ped_df_to_parquet, \
+from backends.thrift.parquet_io import save_ped_df_to_parquet, \
     VariantsParquetWriter
-from variants.import_commons import build_contig_regions, \
+from backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 
 
