@@ -1,8 +1,10 @@
+from studies.study_wrapper import StudyWrapper
 
 
 class DatasetFacade(object):
 
     _dataset_cache = {}
+    _dataset_wrapper_cache = {}
 
     def __init__(self, dataset_definitions, dataset_factory):
 
@@ -17,6 +19,14 @@ class DatasetFacade(object):
 
         return self._dataset_cache[dataset_id]
 
+    def get_dataset_wrapper(self, dataset_id):
+        self.load_cache({dataset_id})
+
+        if dataset_id not in self._dataset_wrapper_cache:
+            return None
+
+        return self._dataset_wrapper_cache[dataset_id]
+
     # def get_dataset_by_study_group(self, study_group_id):
     #     for dataset_config in self.get_all_dataset_configs():
     #         if dataset_config.study_group == study_group_id:
@@ -29,9 +39,14 @@ class DatasetFacade(object):
 
         return list(self._dataset_cache.values())
 
+    def get_all_datasets_wrapper(self):
+        self.load_cache()
+
+        return list(self._dataset_wrapper_cache.values())
+
     def get_all_dataset_ids(self):
         return [
-            conf.dataset_id
+            conf.id
             for conf in self.dataset_definition.get_all_dataset_configs()
         ]
 
@@ -55,5 +70,7 @@ class DatasetFacade(object):
         if not conf:
             return
 
-        self._dataset_cache[dataset_id] = \
-            self.dataset_factory.make_dataset(conf)
+        dataset = self.dataset_factory.make_dataset(conf)
+        self._dataset_cache[dataset_id] = dataset
+        self._dataset_wrapper_cache[dataset_id] = StudyWrapper(dataset)
+            

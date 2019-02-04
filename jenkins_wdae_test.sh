@@ -5,8 +5,9 @@ export PATH=${DAE_SOURCE_DIR}/tests:$PATH
 export PYTHONPATH=${DAE_SOURCE_DIR}:$PYTHONPATH
 export PYTHONPATH=${DAE_SOURCE_DIR}/tools:$PYTHONPATH
 
-py.test --traceconfig -v --cov-config coveragerc \
-    --junitxml=coverage/dae-junit.xml \
+
+py.test -v --cov-config coveragerc \
+    --junitxml=coverage/wdae-junit.xml \
     --cov-report html:coverage/coverage.html \
     --cov-report xml:coverage/coverage.xml \
     --cov-append \
@@ -16,6 +17,7 @@ py.test --traceconfig -v --cov-config coveragerc \
     --cov family_counters_api \
     --cov gene_sets \
     --cov gene_weights \
+    --cov genomic_scores_api \
     --cov genotype_browser \
     --cov groups_api \
     --cov helpers \
@@ -26,21 +28,15 @@ py.test --traceconfig -v --cov-config coveragerc \
     --cov preloaded \
     --cov tools \
     --cov users_api \
-    --cov common \
-    --cov variant_annotation \
     --cov annotation \
-    --cov variants \
-    --cov studies \
-    --cov study_groups \
+    --cov annotation_pipeline \
+    --cov common \
     --cov datasets \
-    --cov common_reports \
-    --cov pedigrees \
-    DAE/common/tests/ \
-    DAE/variants/tests/ \
-    DAE/variant_annotation/tests \
-    DAE/annotation/tests \
-    DAE/studies/tests \
-    DAE/common_reports/tests \
-    DAE/pedigrees/tests \
-    DAE/gene/tests
-
+    --cov enrichment_tool \
+    --cov gene \
+    --cov pheno \
+    --cov pheno_browser \
+    --cov pheno_tool \
+    --cov transmitted \
+    --cov utils \
+    wdae/datasets_api/tests

@@ -20,7 +20,7 @@ import os
 from scipy import stats
 import zlib
 
-from DAE import vDB, genomesDB
+# from DAE import vDB, genomesDB
 from enrichment_tool.config import BackgroundConfig
 import numpy as np
 import pandas as pd
