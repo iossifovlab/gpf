@@ -36,6 +36,7 @@ py.test --traceconfig -v --cov-config coveragerc \
     --cov datasets \
     --cov common_reports \
     --cov pedigrees \
+    DAE/tests/ \
     DAE/common/tests/ \
     DAE/variants/tests/ \
     DAE/variant_annotation/tests \
