@@ -16,7 +16,8 @@ import numpy as np
 from configparser import ConfigParser
 from builtins import object, str
 from box import Box
-import matplotlib.pyplot as plt
+import matplotlib as mpl; mpl.use('PS')  # noqa
+import matplotlib.pyplot as plt; plt.ioff()  # noqa
 
 import common.config
 
