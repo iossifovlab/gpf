@@ -70,9 +70,9 @@ class GenerateScoresHistograms(object):
                 chunk[score_column], errors='coerce')
             min_chunk = chunk[score_column].min()
             max_chunk = chunk[score_column].max()
-            if min_chunk < min_value or min_value is None:
+            if min_value is None or min_chunk < min_value:
                 min_value = min_chunk
-            if max_chunk > max_value or max_value is None:
+            if max_value is None or max_chunk > max_value:
                 max_value = max_chunk
 
         if self.round_pos is not None:
