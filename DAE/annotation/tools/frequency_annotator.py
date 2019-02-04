@@ -99,8 +99,10 @@ class FrequencyAnnotator(VariantAnnotatorBase):
                 found = True
                 for output_index, freq_col in enumerate(self.freq_cols):
                     values = scores[freq_col]
-                    aline[self.output_cols[output_index]] = values[index]
+                    aline[self.output_cols[output_index]] = \
+                        float(values[index])  # FIXME:
         if not found:
-            print('#{}# frequency score not found for variant {}:{} {}'.
+            print('FREQ: {} frequency score not found for variant {}:{} {}'.
                   format(self.freq_filename,
-                         str(chrom), str(pos), str(variant)))
+                         str(chrom), str(pos), str(variant)),
+                  file=sys.stderr)
