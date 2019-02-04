@@ -10,7 +10,7 @@ from collections import Counter
 
 from scipy.stats.stats import ttest_ind
 
-from VariantsDB import Person
+# from VariantsDB import Person
 import numpy as np
 import pandas as pd
 from pheno_tool.genotype_helper import GenotypeHelper

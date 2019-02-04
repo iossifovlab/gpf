@@ -22,11 +22,12 @@ import traceback
 import preloaded
 from rest_framework.exceptions import NotAuthenticated
 import json
-from query_variants import join_line, generate_response
+# from query_variants import join_line, generate_response
 from datasets_api.permissions import IsDatasetAllowed
 from studies.helpers import get_variants_web_preview
 import logging
 from gene_sets.expand_gene_set_decorator import expand_gene_set
+from helpers.dae_query import join_line, generate_response
 
 logger = logging.getLogger(__name__)
 
