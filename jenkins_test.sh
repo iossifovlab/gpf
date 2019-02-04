@@ -5,7 +5,7 @@ export PATH=${DAE_SOURCE_DIR}/tests:$PATH
 export PYTHONPATH=${DAE_SOURCE_DIR}:$PYTHONPATH
 export PYTHONPATH=${DAE_SOURCE_DIR}/tools:$PYTHONPATH
 
-py.test -s --runslow --withspark -v --cov-config coveragerc \
+py.test --traceconfig -v --cov-config coveragerc \
     --junitxml=coverage/dae-junit.xml \
     --cov-report html:coverage/coverage.html \
     --cov-report xml:coverage/coverage.xml \
