@@ -17,16 +17,14 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         'hasComplex', 'hasCNV', 'hasDenovo', 'hasTransmitted',
         'phenotypeBrowser', 'phenotypeGenotypeTool', 'enrichmentTool',
         'genotypeBrowser', 'genotypeBrowser.genesBlockShowAll',
-        'genotypeBrowser.hasPresentInParent', 
+        'genotypeBrowser.hasPresentInParent',
         'genotypeBrowser.hasComplex',
-        'genotypeBrowser.hasPresentInChild', 
-        'genotypeBrowser.hasDenovo',
-        'genotypeBrowser.hasPedigreeSelector', 
+        'genotypeBrowser.hasPresentInChild',
+        'genotypeBrowser.hasPedigreeSelector',
         'genotypeBrowser.hasCNV',
         'genotypeBrowser.hasFamilyFilters',
         'genotypeBrowser.hasStudyTypes',
         'genotypeBrowser.hasStudyFilters',
-        'genotypeBrowser.hasTransmitted',
     )
 
     SPLIT_STR_LISTS = [
@@ -60,6 +58,22 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
     @classmethod
     def get_default_values(cls):
         return {
+            'phenoDB': None,
+            'genotypeBrowser.hasCNV': 'no',
+            'genotypeBrowser.hasComplex': 'no',
+            'genotypeBrowser.genesBlockShowAll': 'yes',
+            'genotypeBrowser.hasFamilyFilters': 'yes',
+            'genotypeBrowser.hasStudyFilters': 'yes',
+            'genotypeBrowser.phenoFilters': '',
+            'genotypeBrowser.hasPresentInChild': 'yes',
+            'genotypeBrowser.hasPresentInParent': 'yes',
+            'genotypeBrowser.hasPedigreeSelector': 'no',
+            'genotypeBrowser.pheno.columns': None,
+            'genotypeBrowser.familyFilters': None,
+            'phenoFilters': '',
+            'phenotypeBrowser': False,
+            'phenotypeGenotypeTool': False,
+
             'description': None,
             'order': 0,
 
@@ -145,19 +159,5 @@ class StudyConfig(StudyConfigBase):
             'hasCNV': 'no',
             'studyType': 'WE',
             'phenotypes': None,
-            'phenoDB': None,
-            'genotypeBrowser.genesBlockShowAll': 'yes',
-            'genotypeBrowser.hasFamilyFilters': 'yes',
-            'genotypeBrowser.hasStudyFilters': 'yes',
-            'genotypeBrowser.phenoFilters': '',
-            'genotypeBrowser.hasPresentInChild': 'yes',
-            'genotypeBrowser.hasPresentInParent': 'yes',
-            'genotypeBrowser.hasPedigreeSelector': 'no',
-            'genotypeBrowser.mainForm': 'default',
-            'genotypeBrowser.pheno.columns': None,
-            'genotypeBrowser.familyFilters': None,
-            'phenoFilters': '',
-            'phenotypeBrowser': False,
-            'phenotypeGenotypeTool': False,
         })
         return defaults
