@@ -9,6 +9,7 @@ from studies.study_facade import StudyFacade
 from studies.study_wrapper import StudyWrapper
 from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
+from studies.dataset_facade import DatasetFacade
 
 
 def fixtures_dir():
@@ -128,6 +129,11 @@ def dataset_definitions(study_facade):
         study_facade,
         datasets_dir=datasets_dir(),
         work_dir=fixtures_dir())
+
+
+@pytest.fixture(scope='session')
+def dataset_facade(dataset_definitions, dataset_factory):
+    return DatasetFacade(dataset_definitions, dataset_factory)
 
 
 @pytest.fixture(scope='session')

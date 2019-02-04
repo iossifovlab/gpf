@@ -123,7 +123,8 @@ class DatasetConfig(StudyConfigBase):
         assert all([
             (option_name in st) or hasattr(st, option_name)
             for st in self.studies_configs
-        ])
+        ]), option_name
+
         if option_name not in self.COMPOSITE_ATTRIBUTES:
             return None
 

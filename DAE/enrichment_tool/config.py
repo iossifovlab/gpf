@@ -10,7 +10,7 @@ standard_library.install_aliases()  # noqa
 
 from configparser import ConfigParser
 from collections import Counter
-from DAE import Config
+from Config import Config
 
 
 class BackgroundConfig(object):

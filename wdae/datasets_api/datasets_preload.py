@@ -6,8 +6,13 @@ Created on Feb 17, 2017
 from __future__ import absolute_import
 from __future__ import unicode_literals
 from django.conf import settings
+import os
 
-from datasets.dataset_facade import DatasetFacade
+from studies.dataset_facade import DatasetFacade
+from studies.dataset_factory import DatasetFactory
+from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
+from studies.study_facade import StudyFacade
+from studies.study_definition import DirectoryEnabledStudiesDefinition
 from preloaded.register import Preload
 from datasets_api.models import Dataset
 from django.db.utils import OperationalError, ProgrammingError
@@ -22,7 +27,17 @@ class DatasetsPreload(Preload, Precompute):
 
     def __init__(self):
         super(DatasetsPreload, self).__init__()
-        self._dataset_facade = DatasetFacade()
+        work_dir = os.environ.get("DAE_DB_DIR")
+        config_file = os.environ.get("DAE_DATA_DIR")
+        study_definition = DirectoryEnabledStudiesDefinition(
+            os.path.join(config_file, 'studies'), work_dir)
+        study_facade = StudyFacade(study_definition)
+
+        dataset_definitions = DirectoryEnabledDatasetsDefinition(
+            study_facade, os.path.join(config_file, 'datasets'), work_dir)
+        dataset_factory = DatasetFactory(study_facade)
+        self._dataset_facade =\
+            DatasetFacade(dataset_definitions, dataset_factory)
 
     def precompute(self):
         try:
