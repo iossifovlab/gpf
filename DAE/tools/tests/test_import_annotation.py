@@ -82,7 +82,7 @@ def test_annotation_pipeline(
 
     pd.testing.assert_series_equal(
         df['score0'],
-        df['POS'],
+        df['POS']/1.0,
         check_less_precise=1,
         check_names=False,
     )

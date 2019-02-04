@@ -5,7 +5,6 @@ from __future__ import unicode_literals
 from builtins import str
 from builtins import range
 import numpy as np
-import sys
 
 
 def getDims(inp):
@@ -26,25 +25,25 @@ def checkConsistency(inp):
     return True
 
 
-def possiblePersonPhasingR(inp, L, P, p, l, cPh, posPhs, seenHet):
-    if l == L:
+def possiblePersonPhasingR(inp, L, P, p, ll, cPh, posPhs, seenHet):
+    if ll == L:
         posPhs.append(cPh)
         return
-    if inp[l][0, p] == 0:
-        cPh[:, l] = 1
-        possiblePersonPhasingR(inp, L, P, p, l+1, cPh, posPhs, seenHet)
-    elif inp[l][1, p] == 0:
-        cPh[:, l] = 0
-        possiblePersonPhasingR(inp, L, P, p, l+1, cPh, posPhs, seenHet)
+    if inp[ll][0, p] == 0:
+        cPh[:, ll] = 1
+        possiblePersonPhasingR(inp, L, P, p, ll+1, cPh, posPhs, seenHet)
+    elif inp[ll][1, p] == 0:
+        cPh[:, ll] = 0
+        possiblePersonPhasingR(inp, L, P, p, ll+1, cPh, posPhs, seenHet)
     elif seenHet:
-        cPh[:, l] = [0, 1]
-        possiblePersonPhasingR(inp, L, P, p, l+1, cPh, posPhs, True)
+        cPh[:, ll] = [0, 1]
+        possiblePersonPhasingR(inp, L, P, p, ll+1, cPh, posPhs, True)
         cPhB = np.array(cPh)
-        cPhB[:, l] = [1, 0]
-        possiblePersonPhasingR(inp, L, P, p, l+1, cPhB, posPhs, True)
+        cPhB[:, ll] = [1, 0]
+        possiblePersonPhasingR(inp, L, P, p, ll+1, cPhB, posPhs, True)
     else:
-        cPh[:, l] = [0, 1]
-        possiblePersonPhasingR(inp, L, P, p, l+1, cPh, posPhs, True)
+        cPh[:, ll] = [0, 1]
+        possiblePersonPhasingR(inp, L, P, p, ll+1, cPh, posPhs, True)
 
 
 def possiblePersonPhasing(inp, L, P, nCpies, p):
@@ -55,11 +54,11 @@ def possiblePersonPhasing(inp, L, P, nCpies, p):
 
 
 def phase(inp):
-    L,P,nCpies = getDims(inp)
-    # print >>sys.stderr, "inp:", inp 
-    # print >>sys.stderr, "L:", L 
-    # print >>sys.stderr, "P:", P 
-    # print >>sys.stderr, "nCpies:", nCpies 
+    L, P, nCpies = getDims(inp)
+    # print >>sys.stderr, "inp:", inp
+    # print >>sys.stderr, "L:", L
+    # print >>sys.stderr, "P:", P
+    # print >>sys.stderr, "nCpies:", nCpies
     # print >>sys.stderr, "phase called with L: %d, P, %d" % (L,P)
 
     chSts = set()
@@ -90,19 +89,20 @@ def phase(inp):
 
     return posFamilyPhs
 
+
 if __name__ == "__main__":
     print("hi")
 
     inpR = [
-        [[1,2,2,1],
-         [1,0,0,1]],
-        [[1,2,1,2],
-         [1,0,1,0]],
+        [[1, 2, 2, 1],
+         [1, 0, 0, 1]],
+        [[1, 2, 1, 2],
+         [1, 0, 1, 0]],
 
     ]
     inp = [np.array(x) for x in inpR]
     print("inp", inp)
-    L,P,nCpies = getDims(inp)
+    L, P, nCpies = getDims(inp)
     print("L:", L)
     print("P:", P)
     print("nCpies:", nCpies)
@@ -115,16 +115,16 @@ if __name__ == "__main__":
         print("dad")
         print(pfphs[1]) 
 
-    for ph in possiblePersonPhasing(inp,L,P,nCpies,0): print("oo", ph)
+    for ph in possiblePersonPhasing(inp, L, P, nCpies, 0):
+        print("oo", ph)
 
-    
     print(posFamilyPhs)
 
-    L,P,nCpies = getDims(inp)
+    L, P, nCpies = getDims(inp)
     print(L, P, nCpies)
 
     checkConsistency(inp)
     print("hurrey")
 
-    for ph in possiblePersonPhasing(inp,L,P,nCpies,1): print(ph)
-    
+    for ph in possiblePersonPhasing(inp, L, P, nCpies, 1):
+        print(ph)
