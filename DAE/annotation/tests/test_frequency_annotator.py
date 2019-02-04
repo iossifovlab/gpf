@@ -41,7 +41,6 @@ expected_result_freq = \
     """RESULT_FREQ\tRESULT_FREQ_2
 0.1\t0.8
 0.5\t1.2
-#test_freq.tsv.gz# frequency score not found for variant 1:20001 sub(A->T)
 \t
 0.7\t1.4
 """
