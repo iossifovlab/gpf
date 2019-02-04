@@ -62,7 +62,7 @@ export class StudyFiltersBlockComponent extends QueryStateWithErrorsProvider imp
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    this.studies = changes.dataset.currentValue.studies.split(',');
+    this.studies = changes.dataset.currentValue.studies;
   }
 
   getState() {

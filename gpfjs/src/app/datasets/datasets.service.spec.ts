@@ -29,13 +29,10 @@ const mockDatasetResponse: Dataset = {
   phenotypeBrowser: true,
 
   genotypeBrowser: {
-    hasDenovo: true,
     hasCNV: false,
     hasAdvancedFamilyFilters: false,
-    hasTransmitted: true,
     hasPedigreeSelector: true,
     hasStudyTypes: false,
-    mainForm: 'vip'
   },
   pedigreeSelectors: [
     {
