@@ -4,7 +4,6 @@ from __future__ import division
 import pandas as pd
 import numpy as np
 import json
-import os
 import itertools
 from collections import defaultdict, OrderedDict
 from copy import deepcopy
@@ -215,7 +214,7 @@ class FamiliesCounter(object):
     def _get_counters(
             self, families, phenotype_info, draw_all_families,
             families_count_show_id):
-        if draw_all_families:
+        if draw_all_families is True:
             families_counters = self._get_all_families_counters(families)
         else:
             families_counters = self._get_sorted_families_counters(
@@ -582,50 +581,27 @@ class CommonReport(object):
 
 class CommonReportsGenerator(object):
 
-    def __init__(
-            self, config, study_facade, dataset_facade):
-        assert config is not None
-        assert study_facade is not None
-        assert dataset_facade is not None
+    def __init__(self, configs):
+        assert configs is not None
 
-        self.config = config
-
-        self.study_groups = self.config.study_groups()
-        self.studies = self.config.studies()
-        self.effect_groups = self.config.effect_groups()
-        self.effect_types = self.config.effect_types()
-        self.phenotypes_info = self.config.phenotypes()
-
-        self.study_facade = study_facade
-        self.dataset_facade = dataset_facade
-
-    def get_common_reports(self, query_object):
-        for qo, qo_properties in query_object.items():
-            yield CommonReport(
-                qo, qo_properties, self.phenotypes_info, self.effect_groups,
-                self.effect_types)
+        self.configs = configs
 
     def save_common_reports(self):
-        studies = OrderedDict([
-            (self.study_facade.get_study(s), s_prop)
-            for s, s_prop in self.studies.items()
-        ])
-        datasets = OrderedDict([
-            (self.dataset_facade.get_dataset(sg), sg_prop)
-            for sg, sg_prop in self.study_groups.items()
-        ])
-        print(len(studies), len(datasets))
-    
-        studies_common_reports_dir = '.'
-        study_groups_common_reports_dir = '.'
-        for cr in self.get_common_reports(studies):
-            with open(os.path.join(studies_common_reports_dir,
-                      cr.study_name + '.json'), 'w') as crf:
-                json.dump(cr.to_dict(), crf)
-        for cr in self.get_common_reports(datasets):
-            with open(os.path.join(study_groups_common_reports_dir,
-                      cr.study_name + '.json'), 'w') as crf:
-                json.dump(cr.to_dict(), crf)
+        for config in self.configs.common_reports_configs:
+            query_object = config.query_object
+            phenotypes_info = config.phenotypes_info
+            filter = config.filter
+            effect_groups = config.effect_groups
+            effect_types = config.effect_types
+
+            path = config.path
+
+            common_report = CommonReport(
+                query_object, filter, phenotypes_info, effect_groups,
+                effect_types)
+
+            with open(path, 'w+') as crf:
+                json.dump(common_report.to_dict(), crf)
 
 
 class PhenotypeInfo(object):

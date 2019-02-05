@@ -3,12 +3,11 @@ from __future__ import unicode_literals
 import pytest
 import os
 
-from box import Box
 import json
 from collections import OrderedDict
 
 from common_reports.common_report import CommonReportsGenerator
-from common_reports.config import CommonReportsConfig
+from common_reports.config import CommonReportsConfigs
 
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
@@ -85,30 +84,17 @@ def load_dataset(dataset_factory, dataset_definitions, dataset_name):
 
 
 @pytest.fixture(scope='session')
-def study_group_facade(dataset_definitions, dataset_factory):
-    return DatasetFacade(
-        dataset_definitions=dataset_definitions,
-        dataset_factory=dataset_factory
-    )
+def common_reports_config(study_facade, dataset_facade):
+    common_reports_config = CommonReportsConfigs()
+    common_reports_config.scan_directory(studies_dir(), study_facade)
+    common_reports_config.scan_directory(datasets_dir(), dataset_facade)
+
+    return common_reports_config
 
 
 @pytest.fixture(scope='session')
-def common_reports_config():
-    return CommonReportsConfig(Box({
-        "commonReportsConfFile":
-            os.path.join(
-                fixtures_dir(),
-                'commonReports.conf')
-    }))
-
-
-@pytest.fixture(scope='session')
-def common_reports_generator(
-        common_reports_config, study_facade, dataset_facade):
-    common_reports_generator = CommonReportsGenerator(
-        config=common_reports_config,
-        study_facade=study_facade, dataset_facade=dataset_facade,
-    )
+def common_reports_generator(common_reports_config):
+    common_reports_generator = CommonReportsGenerator(common_reports_config)
 
     return common_reports_generator
 

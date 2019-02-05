@@ -18,6 +18,10 @@ class DatasetsDefinition(ConfigurableEntityDefinition):
     def get_all_dataset_configs(self):
         return self.get_all_configurable_entity_configs()
 
+    @staticmethod
+    def get_skip_sections():
+        return ['commonReport']
+
 
 class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
 
@@ -31,7 +35,8 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
 
         self.directory_enabled_configurable_entity_definition(
             datasets_dir, DatasetConfig, work_dir, 'id',
-            DatasetConfig.get_default_values())
+            DatasetConfig.get_default_values(),
+            DatasetsDefinition.get_skip_sections())
         self._fill_studies_configs()
 
     def _fill_studies_configs(self):
@@ -52,4 +57,5 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
 
 #         self.single_file_configurable_entity_definition(
 #             config_path, work_dir, DatasetConfig, 'dataset_id',
-#             DatasetConfig.get_default_values())
+#             DatasetConfig.get_default_values(),
+#             DatasetsDefinition.get_skip_sections())
