@@ -24,8 +24,6 @@ class DatasetsPreload(Preload, Precompute):
 
     def __init__(self):
         super(DatasetsPreload, self).__init__()
-        datasets_facade = get_datasets_manager().get_dataset_facade()
-        self._dataset_facade = datasets_facade
 
     def precompute(self):
         try:
@@ -49,6 +47,9 @@ class DatasetsPreload(Preload, Precompute):
         return True
 
     def load(self):
+        datasets_facade = get_datasets_manager().get_dataset_facade()
+        self._dataset_facade = datasets_facade
+
         preload_active = getattr(
             settings,
             "PRELOAD_ACTIVE",
@@ -61,6 +62,3 @@ class DatasetsPreload(Preload, Precompute):
 
     def get(self):
         return self
-
-    def get_facade(self):
-        return self._dataset_facade
