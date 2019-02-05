@@ -29,7 +29,7 @@ class ConfigurableEntityDefinition(object):
 
     def directory_enabled_configurable_entity_definition(
             self, configurable_entities_dir, configurable_entity_config,
-            work_dir, config_key, default_values={}):
+            work_dir, config_key, default_values={}, skip_sections=[]):
         assert isinstance(configurable_entities_dir, str),\
             type(configurable_entities_dir)
         assert os.path.exists(configurable_entities_dir),\
@@ -42,24 +42,26 @@ class ConfigurableEntityDefinition(object):
         assert os.path.isdir(enabled_dir), enabled_dir
 
         configs = []
-        config_paths = self._collect_config_paths(enabled_dir)
+        config_paths =\
+            ConfigurableEntityDefinition._collect_config_paths(enabled_dir)
 
         for config_path in config_paths:
 
             configs.append(ConfigurableEntityDefinition.list_from_config(
                 config_path, enabled_dir, configurable_entity_config,
-                default_values))
+                default_values, skip_sections))
 
         configs = list(chain.from_iterable(configs))
 
         self.configs = {conf[config_key]: conf for conf in configs}
 
-    def _collect_config_paths(self, dirname):
+    @classmethod
+    def _collect_config_paths(cls, dirname):
         config_paths = []
         for path in os.listdir(dirname):
             p = os.path.join(dirname, path)
             if os.path.isdir(p):
-                subpaths = self._collect_config_paths(p)
+                subpaths = cls._collect_config_paths(p)
                 config_paths.extend(subpaths)
             elif path.endswith('.conf'):
                 config_paths.append(
@@ -69,11 +71,12 @@ class ConfigurableEntityDefinition(object):
 
     def single_file_configurable_entity_definition(
             self, config_path, work_dir, configurable_entity_config,
-            config_key, default_values={}):
+            config_key, default_values={}, skip_sections=[]):
         self.config_path = config_path
 
         configs = ConfigurableEntityDefinition.list_from_config(
-            config_path, work_dir, configurable_entity_config, default_values)
+            config_path, work_dir, configurable_entity_config, default_values,
+            skip_sections)
 
         self.configs = {
             config[config_key]: config
@@ -81,13 +84,16 @@ class ConfigurableEntityDefinition(object):
         }
 
     @classmethod
-    def list_from_config(cls, config_file, work_dir,
-                         configurable_entity_config, default_values={}):
+    def list_from_config(
+            cls, config_file, work_dir, configurable_entity_config,
+            default_values={}, skip_sections=[]):
         config = configurable_entity_config.get_config(
             config_file, work_dir, default_values)
 
         result = list()
         for section in config.keys():
+            if section in skip_sections:
+                continue
 
             entity_config = configurable_entity_config.from_config(
                 config[section])

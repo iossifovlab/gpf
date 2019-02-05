@@ -50,9 +50,6 @@ class Config(object):
         self._enrichmentConfFile = self._daeConfig.get(
             'enrichment', 'confFile')
 
-        self._commonReportsConfFile = self._daeConfig.get(
-            'commonReports', 'confFile')
-
     @property
     def daeDir(self):
         return self._daeDir

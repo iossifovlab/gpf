@@ -52,8 +52,11 @@ class DatasetsManager(object):
         return self.dataset_factory
 
 
-datasets_manager = DatasetsManager()
+_datasets_manager = None
 
 
 def get_datasets_manager():
-    return datasets_manager
+    global _datasets_manager
+    if _datasets_manager is None:
+        _datasets_manager = DatasetsManager()
+    return _datasets_manager

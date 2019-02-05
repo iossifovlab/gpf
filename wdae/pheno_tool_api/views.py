@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 from rest_framework import status
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from rest_framework.exceptions import NotAuthenticated
-import preloaded
 import traceback
 from pheno_tool.tool import PhenoTool
 from pheno_tool_api.genotype_helper import GenotypeHelper
@@ -18,6 +17,8 @@ import logging
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 from functools import reduce
 
+from datasets_api.datasets_manager import get_datasets_manager 
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,11 +27,8 @@ class PhenoToolView(APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
-        register = preloaded.register
-        self.datasets = register.get('datasets')
-        assert self.datasets is not None
-
-        self.dataset_facade = self.datasets.get_facade()
+        datasets_facade = get_datasets_manager().get_dataset_facade()
+        self._dataset_facade = datasets_facade
 
     @classmethod
     def get_result_by_gender(cls, result, gender):
