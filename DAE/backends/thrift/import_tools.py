@@ -50,8 +50,8 @@ def variants_iterator_to_parquet(
 
 
 def construct_import_annotation_pipeline(dae_config, argv, defaults={}):
-    if argv.annotation is not None:
-        config_filename = argv.annotation
+    if argv.annotation_config is not None:
+        config_filename = argv.annotation_config
     else:
         config_filename = dae_config.annotation_conf
 
@@ -82,7 +82,8 @@ def annotation_pipeline_cli_options(dae_config):
             'in the instance data directory $DAE_DB_DIR '
             '[default: %(default)s]',
             'default': dae_config.annotation_conf,
-            'action': 'store'
+            'action': 'store',
+            'dest': 'annotation_config',
         }),
     ])
     options.extend(

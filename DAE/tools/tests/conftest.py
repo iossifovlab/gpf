@@ -1,14 +1,8 @@
 import os
 import pytest
 
-import shutil
-import tempfile
-
 from box import Box
 from annotation.tools.file_io import IOManager, IOType
-import pandas as pd
-from builtins import str
-from io import StringIO
 
 
 def relative_to_this_test_folder(path):
@@ -16,17 +10,6 @@ def relative_to_this_test_folder(path):
         os.path.dirname(os.path.realpath(__file__)),
         path
     )
-
-
-@pytest.fixture
-def temp_dirname(request):
-    dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
-
-    def fin():
-        shutil.rmtree(dirname)
-
-    request.addfinalizer(fin)
-    return dirname
 
 
 @pytest.fixture
@@ -43,13 +26,4 @@ def vcf_variants_io(request):
         io_options = Box(io_options, default_box=True, default_box_attr=None)
         io_manager = IOManager(io_options, IOType.TSV, IOType.TSV)
         return io_manager
-    return build
-
-
-@pytest.fixture
-def result_df():
-    def build(data):
-        infile = StringIO(str(data))
-        df = pd.read_csv(infile, sep="\t")
-        return df
     return build

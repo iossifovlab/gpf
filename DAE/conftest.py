@@ -2,12 +2,16 @@ import os
 import pytest
 import shutil
 import tempfile
+import pandas as pd
+from io import StringIO
 
 from box import Box
 
 from annotation.annotation_pipeline import PipelineAnnotator
-from backends.thrift.raw_dae import RawDAE, RawDenovo
+
 from backends.configure import Configure
+from backends.thrift.raw_dae import RawDAE, RawDenovo
+from backends.vcf.raw_vcf import RawFamilyVariants
 
 
 def relative_to_this_test_folder(path):
@@ -15,6 +19,15 @@ def relative_to_this_test_folder(path):
         os.path.dirname(os.path.realpath(__file__)),
         path
     )
+
+
+@pytest.fixture
+def result_df():
+    def build(data):
+        infile = StringIO(str(data))
+        df = pd.read_csv(infile, sep="\t")
+        return df
+    return build
 
 
 @pytest.fixture
@@ -147,3 +160,23 @@ def dae_transmitted(
     denovo.load_simple_families()
 
     return denovo
+
+
+@pytest.fixture
+def vcf_import_config():
+    fullpath = relative_to_this_test_folder(
+        "tests/fixtures/vcf_import/effects_trio"
+    )
+    config = Configure.from_prefix_vcf(fullpath)
+    return config.vcf
+
+
+@pytest.fixture
+def vcf_import(
+        vcf_import_config, default_genome, annotation_pipeline_internal):
+    fvars = RawFamilyVariants(
+        prefix=vcf_import_config.prefix,
+        genome=default_genome,
+        annotator=annotation_pipeline_internal)
+
+    return fvars

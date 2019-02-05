@@ -148,7 +148,7 @@ def parser_make_arguments(dae_config, subparsers):
     )
 
 
-def makefile_generate(dae_config, argv):
+def generate_makefile(dae_config, argv):
     assert os.path.exists(argv.vcf)
     assert os.path.exists(argv.pedigree)
 
@@ -164,6 +164,7 @@ def makefile_generate(dae_config, argv):
         data_contigs,
         argv.output,
         "vcf2parquet.py vcf",
+        argv.annotation_config,
         "{} {}".format(ped_filename, vcf_filename)
     )
 
@@ -175,4 +176,4 @@ if __name__ == "__main__":
     if argv.type == 'vcf':
         import_vcf(dae_config, argv, defaults=dae_config.annotation_defaults)
     elif argv.type == 'make':
-        makefile_generate(dae_config, argv)
+        generate_makefile(dae_config, argv)

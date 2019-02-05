@@ -69,7 +69,7 @@ def dae_build_transmitted(dae_config, argv, defaults={}):
     )
 
 
-def dae_build_makefile(argv):
+def dae_build_makefile(dae_config, argv):
     data_contigs = get_contigs(argv.summary)
     genome = get_genome(genome_file=None)
     build_contigs = build_contig_regions(genome, argv.len)
@@ -77,8 +77,9 @@ def dae_build_makefile(argv):
     contigs_makefile_generate(
         build_contigs,
         data_contigs,
-        argv.out,
+        argv.output,
         'dae2parquet.py dae',
+        argv.annotation_config,
         "{family_filename} {summary_filename} {toomany_filename}".format(
             family_filename=argv.families,
             summary_filename=argv.summary,
@@ -201,7 +202,7 @@ def init_parser_make(dae_config, subparsers):
     init_transmitted_common(dae_config, parser)
 
     parser.add_argument(
-        '--len', type=int,
+        '-l', '--len', type=int,
         default=None,
         dest='len', metavar='len',
         help='split contigs in regions with length <len>'

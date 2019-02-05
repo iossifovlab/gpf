@@ -38,7 +38,9 @@ def build_contig_regions(genome, TRANSMITTED_STEP=10000000):
 
 def contigs_makefile_generate(
         build_contigs, data_contigs, output_prefix,
-        import_command, import_sources,
+        import_command,
+        annotation_config,
+        import_sources,
         outfile=sys.stdout):
 
     makefile = []
@@ -73,6 +75,8 @@ def contigs_makefile_generate(
                 "{import_command} -o {target_prefix} " \
                 "--bucket-index {bucket_index} " \
                 "--region {region} " \
+                "--sequential " \
+                "--annotation {annotation_config} " \
                 "{import_sources}" \
                 .format(
                     import_command=import_command,
@@ -80,7 +84,8 @@ def contigs_makefile_generate(
                     targets=" ".join(targets),
                     bucket_index=bucket_index,
                     import_sources=import_sources,
-                    region=str(region)
+                    region=str(region),
+                    annotation_config=annotation_config,
                 )
             makefile.append(command)
 

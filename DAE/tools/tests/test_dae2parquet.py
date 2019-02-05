@@ -2,7 +2,8 @@ from box import Box
 
 from configurable_entities.configuration import DAEConfig
 from tools.dae2parquet import parse_cli_arguments, dae_build_denovo, \
-    dae_build_transmitted
+    dae_build_transmitted, dae_build_makefile
+
 from backends.configure import Configure
 from annotation.tools.file_io_parquet import ParquetReader
 
@@ -108,3 +109,29 @@ def test_dae2parquet_transmitted(
 
     assert schema['effect_genes'].type_name == 'list(str)'
     assert schema['effect_details'].type_name == 'list(str)'
+
+
+def test_dae2parquet_make(
+        dae_transmitted_config, annotation_pipeline_configname, 
+        annotation_scores_dirname,
+        temp_dirname):
+
+    argv = [
+        'make',
+        '--annotation', annotation_pipeline_configname,
+        '-o', temp_dirname,
+        '-f', 'simple',
+        '-l', '100000000',
+        dae_transmitted_config.family_filename,
+        dae_transmitted_config.summary_filename,
+        dae_transmitted_config.toomany_filename,
+    ]
+    dae_config = DAEConfig()
+
+    argv = parse_cli_arguments(dae_config, argv)
+
+    assert argv is not None
+    assert argv.type == 'make'
+
+    dae_build_makefile(
+        dae_config, argv)
