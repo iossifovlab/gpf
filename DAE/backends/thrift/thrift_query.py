@@ -310,7 +310,6 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
         ]
 
     def build(self):
-        # print(self.query)
 
         where_parts = []
         summary_query = self.summary_query_builder.build()
