@@ -23,6 +23,17 @@ py.test --traceconfig -v --cov-config coveragerc \
     --cov variant_annotation \
     --cov variants \
     DAE/tests/ \
+    DAE/annotation/tests \
+    DAE/backends/tests \
+    DAE/common/tests/ \
+    DAE/common_reports/tests \
+    DAE/configurable_entities/tests \
+    DAE/gene/tests \
+    DAE/pedigrees/tests \
+    DAE/studies/tests \
+    DAE/tools/tests \
+    DAE/utils/tests \
+    DAE/variant_annotation/tests \
     DAE/variants/tests/ && \
 py.test -v --cov-config coveragerc \
     --junitxml=coverage/wdae-junit.xml \
@@ -58,15 +69,3 @@ py.test -v --cov-config coveragerc \
     --cov preloaded \
     --cov users_api \
     wdae/datasets_api/tests
-
-    # DAE/annotation/tests \
-    # DAE/backends/tests \
-    # DAE/common/tests/ \
-    # DAE/common_reports/tests \
-    # DAE/configurable_entities/tests \
-    # DAE/gene/tests \
-    # DAE/pedigrees/tests \
-    # DAE/studies/tests \
-    # DAE/tools/tests \
-    # DAE/utils/tests \
-    # DAE/variant_annotation/tests \
