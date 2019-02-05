@@ -35,3 +35,5 @@ gpf-dist.tar.gz
 test-eff.txt
 DAE/*.json
 .coverage*
+coverage/
+tmp/
