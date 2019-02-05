@@ -29,7 +29,7 @@ class BaseDAE(FamiliesBase):
 
     def __init__(self, family_filename,
                  transmission_type,
-                 genome=None, annotator=None):
+                 genome, annotator):
         super(BaseDAE, self).__init__()
 
         assert genome is not None
@@ -39,7 +39,15 @@ class BaseDAE(FamiliesBase):
         self.genome = genome
         self.annotator = annotator
 
-    def load_families(self):
+    def is_empty(self):
+        return False
+
+    def load_pedigree_families(self):
+        self.ped_df = FamiliesBase.load_pedigree_file(
+            self.family_filename)
+        self.families_build(self.ped_df, Family)
+
+    def load_simple_families(self):
         self.ped_df = FamiliesBase.load_simple_family_file(
             self.family_filename)
         self.families_build(self.ped_df, Family)
@@ -128,6 +136,9 @@ class BaseDAE(FamiliesBase):
             'af_allele_freq': float(rec.get('all.altFreq', 0.0)),
             'transmission_type': self.transmission_type,
         }
+        if self.annotator:
+            self.annotator.line_annotation(alt)
+
         alt_allele = SummaryVariantFactory.summary_allele_from_record(alt)
         assert alt_allele is not None
 
@@ -245,7 +256,8 @@ class RawDAE(BaseDAE):
 
 class RawDenovo(BaseDAE):
     def __init__(self, denovo_filename, family_filename,
-                 genome=None, annotator=None):
+                 genome=None,
+                 annotator=None):
         super(RawDenovo, self).__init__(
             family_filename=family_filename,
             transmission_type='denovo',
@@ -262,7 +274,6 @@ class RawDenovo(BaseDAE):
         self.family_filename = family_filename
 
         self.genome = genome
-        self.annotator = annotator
 
     def split_location(self, location):
         chrom, position = location.split(":")

@@ -199,6 +199,7 @@ class FamiliesBase(object):
         fam_df['status'] = pd.Series(
             index=fam_df.index, data=1)
         fam_df.loc[fam_df.role == Role.prb, 'status'] = 2
+        fam_df['status'] = fam_df.status.apply(lambda s: Status.from_value(s))
 
         fam_df['momId'] = pd.Series(
             index=fam_df.index, data='0')

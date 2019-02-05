@@ -117,8 +117,8 @@ class GenerateScoresHistograms(object):
         histogram.to_csv(output_file, index=False)
 
         histogram.dropna(inplace=True)
-        bins = histogram['scores'].values
-        bars = map(int, histogram[score].values)
+        bins = list(histogram['scores'].values)
+        bars = list(map(int, histogram[score].values))
         fig, ax = plt.subplots()
         plt.yscale(yscale)
         ax.bar(bins, bars, width=0.01)

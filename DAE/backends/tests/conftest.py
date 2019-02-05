@@ -75,20 +75,6 @@ def spark_context(spark):
 
 
 @pytest.fixture(scope='session')
-def default_genome():
-    from DAE import genomesDB
-    genome = genomesDB.get_genome()  # @UndefinedVariable
-    return genome
-
-
-@pytest.fixture(scope='session')
-def default_gene_models():
-    from DAE import genomesDB
-    gene_models = genomesDB.get_gene_models()  # @UndefinedVariable
-    return gene_models
-
-
-@pytest.fixture(scope='session')
 def allele_freq_annotator():
     return VcfAlleleFrequencyAnnotator()
 

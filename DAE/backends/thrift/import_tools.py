@@ -19,8 +19,8 @@ def variants_iterator_to_parquet(
         print("empty bucket {} done".format(parquet_prefix), file=sys.stderr)
         return
 
-    if annotation_pipeline is not None:
-        fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
+    # if annotation_pipeline is not None:
+    #     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
     parquet_config = Configure.from_prefix_parquet(parquet_prefix).parquet
     print("converting into ", parquet_config, file=sys.stderr)
