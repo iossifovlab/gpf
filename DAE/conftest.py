@@ -210,4 +210,4 @@ def fixture_select(vcf_import_raw, vcf_import_thrift):
             return vcf_import_raw
         else:
             raise ValueError(fixture_name)
-
+    return build

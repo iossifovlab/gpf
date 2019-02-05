@@ -172,12 +172,9 @@ class StudyWrapper(object):
 
         value = 'af_allele_freq'
         if 'real_attr_filter' not in kwargs:
-            kwargs['real_attr_filter'] = {}
+            kwargs['real_attr_filter'] = []
 
-        if value not in kwargs['real_attr_filter']:
-            kwargs['real_attr_filter'][value] = []
-
-        kwargs['real_attr_filter'][value].append(value_range)
+        kwargs['real_attr_filter'].append((value, value_range))
 
     def _transform_present_in_child(self, kwargs):
         roles_query = []
@@ -297,7 +294,8 @@ class StudyWrapper(object):
             lambda pedigree_selector: pedigree_selector.get('id') ==
             pedigree_selector_id, self.pedigree_selectors))
 
-        return pedigree_selector_with_id[0] if pedigree_selector_with_id else {}
+        return pedigree_selector_with_id[0] \
+            if pedigree_selector_with_id else {}
 
     # FIXME:
     def _get_dataset_config_options(self, config):
