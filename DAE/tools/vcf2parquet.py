@@ -66,6 +66,8 @@ def import_vcf(dae_config, argv, defaults={}):
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, argv, defaults=defaults)
 
+    fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
+
     variants_iterator_to_parquet(
         fvars,
         argv.output,
