@@ -42,7 +42,8 @@ class ConfigurableEntityDefinition(object):
         assert os.path.isdir(enabled_dir), enabled_dir
 
         configs = []
-        config_paths = self._collect_config_paths(enabled_dir)
+        config_paths =\
+            ConfigurableEntityDefinition._collect_config_paths(enabled_dir)
 
         for config_path in config_paths:
 
@@ -54,12 +55,13 @@ class ConfigurableEntityDefinition(object):
 
         self.configs = {conf[config_key]: conf for conf in configs}
 
-    def _collect_config_paths(self, dirname):
+    @classmethod
+    def _collect_config_paths(cls, dirname):
         config_paths = []
         for path in os.listdir(dirname):
             p = os.path.join(dirname, path)
             if os.path.isdir(p):
-                subpaths = self._collect_config_paths(p)
+                subpaths = cls._collect_config_paths(p)
                 config_paths.extend(subpaths)
             elif path.endswith('.conf'):
                 config_paths.append(
@@ -88,6 +90,8 @@ class ConfigurableEntityDefinition(object):
 
         result = list()
         for section in config.keys():
+            if section == 'commonReport':
+                continue
 
             entity_config = configurable_entity_config.from_config(
                 config[section])
