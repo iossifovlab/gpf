@@ -126,18 +126,24 @@ def dae_denovo(
 
 
 @pytest.fixture
-def dae_transmitted(default_genome, annotation_pipeline_internal):
-        fullpath = relative_to_this_test_folder(
-            "tests/fixtures/dae_transmitted/transmission"
-        )
-        config = Configure.from_prefix_dae(fullpath)
-        denovo = RawDAE(
-            config.dae.summary_filename,
-            config.dae.toomany_filename,
-            config.dae.family_filename,
-            region=None,
-            genome=default_genome,
-            annotator=annotation_pipeline_internal)
-        denovo.load_simple_families()
+def dae_transmitted_config():
+    fullpath = relative_to_this_test_folder(
+        "tests/fixtures/dae_transmitted/transmission"
+    )
+    config = Configure.from_prefix_dae(fullpath)
+    return config.dae
 
-        return denovo
+
+@pytest.fixture
+def dae_transmitted(
+        dae_transmitted_config, default_genome, annotation_pipeline_internal):
+    denovo = RawDAE(
+        dae_transmitted_config.summary_filename,
+        dae_transmitted_config.toomany_filename,
+        dae_transmitted_config.family_filename,
+        region=None,
+        genome=default_genome,
+        annotator=annotation_pipeline_internal)
+    denovo.load_simple_families()
+
+    return denovo

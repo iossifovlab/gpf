@@ -29,7 +29,7 @@ def get_contigs(tabixfilename):
         return tbx.contigs
 
 
-def dae_build_region(dae_config, argv, defaults={}):
+def dae_build_transmitted(dae_config, argv, defaults={}):
     config = Configure.from_dict({
         "dae": {
             'summary_filename': argv.summary,
@@ -49,7 +49,14 @@ def dae_build_region(dae_config, argv, defaults={}):
         region=argv.region,
         genome=genome)
 
-    fvars.load_families()
+    if argv.family_format == 'simple':
+        fvars.load_simple_families()
+    elif argv.family_format == 'pedigree':
+        fvars.load_pedigree_families()
+    else:
+        raise ValueError("unexpected family format: {}".format(
+            argv.family_format
+        ))
 
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, argv, defaults=defaults)
@@ -228,7 +235,7 @@ if __name__ == "__main__":
         dae_build_denovo(
             dae_config, argv, defaults=dae_config.annotation_defaults)
     elif argv.type == 'dae':
-        dae_build_region(
+        dae_build_transmitted(
             dae_config, argv, defaults=dae_config.annotation_defaults)
     elif argv.type == 'make':
         dae_build_makefile(dae_config, argv)
