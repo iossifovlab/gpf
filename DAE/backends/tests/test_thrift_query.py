@@ -12,7 +12,8 @@ def test_simple_summary_subquery(parquet_variants):
         'regions': [Region('1', 865582, 865691), Region('2', 20001, 20010)]
     }
 
-    builder = ThriftQueryBuilder(query=query, tables=parquet)
+    builder = ThriftQueryBuilder(
+        query=query, summary_schema={}, tables=parquet)
     assert builder is not None
     print(builder.build())
 
@@ -25,6 +26,7 @@ def test_simple_summary_subquery_regions_only(parquet_variants):
         'regions': [Region('1', 865582, 865691), Region('2', 20001, 20010)]
     }
 
-    builder = ThriftQueryBuilder(query=query, tables=parquet)
+    builder = ThriftQueryBuilder(
+        query=query, summary_schema={}, tables=parquet)
     assert builder is not None
     print(builder.build())

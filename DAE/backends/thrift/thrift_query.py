@@ -2,7 +2,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 
 from builtins import str
 
-from impala.util import as_pandas
+# from impala.util import as_pandas
 
 from RegionOperations import Region
 
@@ -14,18 +14,19 @@ from ..attributes_query import \
     variant_type_query
 
 
-def thrift_query1(thrift_connection, tables, query, db='parquet', limit=2000):
-    builder = ThriftQueryBuilder(query, tables=tables, db=db)
-    sql_query = builder.build()
+# def thrift_query1(thrift_connection, tables, query, db='parquet',
+#                   limit=2000):
+#     builder = ThriftQueryBuilder(query, tables=tables, db=db)
+#     sql_query = builder.build()
 
-    if 'limit' in query:
-        limit = query['limit']
-    if limit is not None:
-        sql_query += "\n\tLIMIT {}".format(limit)
-    print("FINAL QUERY", sql_query)
-    cursor = thrift_connection.cursor()
-    cursor.execute(sql_query)
-    return as_pandas(cursor)
+#     if 'limit' in query:
+#         limit = query['limit']
+#     if limit is not None:
+#         sql_query += "\n\tLIMIT {}".format(limit)
+#     print("FINAL QUERY", sql_query)
+#     cursor = thrift_connection.cursor()
+#     cursor.execute(sql_query)
+#     return as_pandas(cursor)
 
 
 class ThriftQueryBuilderBase(object):
@@ -35,9 +36,10 @@ class ThriftQueryBuilderBase(object):
             {where}
     """
 
-    def __init__(self, query, tables, db='parquet'):
+    def __init__(self, query, summary_schema, tables, db='parquet'):
 
         self.query = {k: v for k, v in query.items() if v is not None}
+        self.summary_schema = summary_schema
         self.query_keys = set(query.keys())
         self.tables = tables
         self.db = 'parquet'
@@ -106,8 +108,9 @@ class SummarySubQueryBuilder(ThriftQueryBuilderBase):
                         AND E.allele_index = S.allele_index
     """
 
-    def __init__(self, query, tables, db='parquet'):
-        super(SummarySubQueryBuilder, self).__init__(query, tables, db)
+    def __init__(self, query, summary_schema, tables, db='parquet'):
+        super(SummarySubQueryBuilder, self).__init__(
+            query, summary_schema, tables, db)
 
     def _build_effect_type_where(self):
         return self._build_iterable_string_attr_where(
@@ -155,6 +158,26 @@ class SummarySubQueryBuilder(ThriftQueryBuilderBase):
         transformer = QueryTreeToSQLTransformer('S.variant_type')
         return transformer.transform(parsed)
 
+    def _build_real_attr_where(self):
+        assert self.query.get("real_attr_filter")
+        real_attr_filter = self.query['real_attr_filter']
+        query = []
+        for attr_name, attr_range in real_attr_filter:
+            assert attr_name in self.summary_schema
+            assert self.summary_schema[attr_name] == 'double'
+            left, right = attr_range
+            if left is None:
+                assert right is not None
+                query.append("({} <= {})".format(attr_name, right))
+            elif right is None:
+                assert left is not None
+                query.append("({} >= {})".format(attr_name, left))
+            else:
+                query.append(
+                    "({attr} >= {left} AND {attr} <= {right})".format(
+                        attr=attr_name, left=left, right=right))
+        return ' AND '.join(query)
+
     def _build_summary_where(self):
         where = []
         if self.query.get('regions'):
@@ -163,7 +186,8 @@ class SummarySubQueryBuilder(ThriftQueryBuilderBase):
             where.append(self._build_gene_effects_where())
         if self.query.get('variant_type'):
             where.append(self._build_variant_type_where())
-
+        if self.query.get('real_attr_filter'):
+            where.append(self._build_real_attr_where())
         if not where:
             return None
         return ' \n\tAND '.join(['( {} )'.format(w) for w in where])
@@ -190,9 +214,11 @@ class SummarySubQueryBuilder(ThriftQueryBuilderBase):
 
 class MemberSubQueryBuilder(ThriftQueryBuilderBase):
 
-    def __init__(self, query, tables, db='parquet'):
-        super(MemberSubQueryBuilder, self).__init__(query, tables, db)
-        self.summary_query_builder = SummarySubQueryBuilder(query, tables, db)
+    def __init__(self, query, summary_schema, tables, db='parquet'):
+        super(MemberSubQueryBuilder, self).__init__(
+            query, summary_schema, tables, db)
+        self.summary_query_builder = SummarySubQueryBuilder(
+            query, summary_schema, tables, db)
 
     MEMBER_JOIN = """
         LEFT JOIN {db}.`{member_variant}` AS M
@@ -265,10 +291,13 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
             S.bucket_index, S.summary_variant_index
     """
 
-    def __init__(self, query, tables, db='parquet'):
-        super(ThriftQueryBuilder, self).__init__(query, tables, db)
-        self.summary_query_builder = SummarySubQueryBuilder(query, tables, db)
-        self.member_query_builder = MemberSubQueryBuilder(query, tables, db)
+    def __init__(self, query, summary_schema, tables, db='parquet'):
+        super(ThriftQueryBuilder, self).__init__(
+            query, summary_schema, tables, db)
+        self.summary_query_builder = SummarySubQueryBuilder(
+            query, summary_schema, tables, db)
+        self.member_query_builder = MemberSubQueryBuilder(
+            query, summary_schema, tables, db)
 
     def _build_complex_where_with_array_attr(
             self, attr_name, column_name, attr_transformer):

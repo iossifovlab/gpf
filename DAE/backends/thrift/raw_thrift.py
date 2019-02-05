@@ -15,7 +15,7 @@ from variants.variant import SummaryVariantFactory
 from variants.family_variant import FamilyVariant
 
 from ..configure import Configure
-from .thrift_query import thrift_query1, ThriftQueryBuilder
+from .thrift_query import ThriftQueryBuilder
 from .parquet_io import read_ped_df_from_parquet
 
 
@@ -73,11 +73,11 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         assert self.connection is not None
         self.ped_df = read_ped_df_from_parquet(self.config.pedigree)
         self.families_build(self.ped_df, family_class=Family)
-        self._sumary_schema = None
+        self._summary_schema = None
 
     @property
     def summary_schema(self):
-        if not self._sumary_schema:
+        if not self._summary_schema:
             query = ThriftQueryBuilder.summary_schema_query(
                 tables=self.config)
             with self.connection.cursor() as cursor:
@@ -85,10 +85,10 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
                 cursor.execute(query[1])
                 df = as_pandas(cursor)
             records = df[['col_name', 'data_type']].to_records()
-            self._sumary_schema = {
+            self._summary_schema = {
                 col_name: col_type for (_, col_name, col_type) in records
             }
-        return self._sumary_schema
+        return self._summary_schema
 
     @staticmethod
     def get_thrift_connection(thrift_host=None, thrift_port=None):
@@ -105,11 +105,19 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         return thrift_connection
 
     def query_variants(self, **kwargs):
-        df = thrift_query1(
-            thrift_connection=self.connection,
-            tables=self.config,
-            query=kwargs
-        )
+        builder = ThriftQueryBuilder(
+            kwargs, summary_schema=self.summary_schema,
+            tables=self.config, db='parquet')
+        sql_query = builder.build()
+
+        if kwargs.get('limit'):
+            limit = kwargs['limit']
+            sql_query += "\n\tLIMIT {}".format(limit)
+
+        print("FINAL QUERY", sql_query)
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql_query)
+            df = as_pandas(cursor)
 
         df.genotype = df.genotype.apply(
             lambda v: np.fromstring(v.strip("[]"), dtype=np.int8, sep=','))

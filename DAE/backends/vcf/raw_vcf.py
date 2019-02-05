@@ -204,18 +204,25 @@ class RawFamilyVariants(FamiliesBase):
 
     @staticmethod
     def filter_real_attr(va, real_attr_filter):
-        for key, ranges in list(real_attr_filter.items()):
+        result = []
+        for key, ranges in real_attr_filter:
             if not va.has_attribute(key):
                 return False
 
             val = va.get_attribute(key)
             if val is None:
                 continue
-            result = [
-                (val >= rmin) and (val <= rmax) for (rmin, rmax) in ranges
-            ]
-            if any(result):
-                return True
+            rmin, rmax = ranges
+            if rmin is None:
+                result.append(val <= rmax)
+            elif rmax is None:
+                result.append(val >= rmin)
+            else:
+                result.append(
+                    (val >= rmin) and (val <= rmax)
+                )
+        if all(result):
+            return True
 
         return False
 
@@ -368,6 +375,11 @@ class RawFamilyVariants(FamiliesBase):
                 v.set_matched_alleles(alleles_matched)
                 yield v
 
+    def wrap_summary_variant(self, records):
+        return self.VF.summary_variant_from_records(
+            records,
+            transmission_type=self.transmission_type)
+
     def wrap_variants(self, annot_df):
         if annot_df is None:
             return
@@ -376,9 +388,8 @@ class RawFamilyVariants(FamiliesBase):
         for summary_index, group_df in \
                 annot_df.groupby("summary_variant_index"):
             vcf = variants[summary_index]
-            summary_variant = self.VF.summary_variant_from_records(
-                group_df.to_dict(orient='records'),
-                transmission_type=self.transmission_type)
+            summary_variant = self.wrap_summary_variant(
+                group_df.to_dict(orient='records'))
             for fam in list(self.families.values()):
                 v = self.VF.family_variant_from_vcf(
                     summary_variant, fam, vcf=vcf)
@@ -391,9 +402,8 @@ class RawFamilyVariants(FamiliesBase):
         for summary_index, group_df in \
                 sum_df.groupby("summary_variant_index"):
             vcf = variants[summary_index]
-            summary_variant = self.VF.summary_variant_from_records(
-                group_df.to_dict(orient='records'),
-                transmission_type=self.transmission_type)
+            summary_variant = self.wrap_summary_variant(
+                group_df.to_dict(orient='records'))
 
             family_variants = []
             for fam in list(self.families.values()):

@@ -11,7 +11,12 @@ from annotation.annotation_pipeline import PipelineAnnotator
 
 from backends.configure import Configure
 from backends.thrift.raw_dae import RawDAE, RawDenovo
+from backends.thrift.import_tools import variants_iterator_to_parquet
+from backends.thrift.raw_thrift import ThriftFamilyVariants
+
 from backends.vcf.raw_vcf import RawFamilyVariants
+from backends.vcf.annotate_allele_frequencies import \
+    VcfAlleleFrequencyAnnotator
 
 
 def relative_to_this_test_folder(path):
@@ -172,11 +177,37 @@ def vcf_import_config():
 
 
 @pytest.fixture
-def vcf_import(
+def vcf_import_raw(
         vcf_import_config, default_genome, annotation_pipeline_internal):
+    freq_annotator = VcfAlleleFrequencyAnnotator()
+
     fvars = RawFamilyVariants(
         prefix=vcf_import_config.prefix,
-        genome=default_genome,
-        annotator=annotation_pipeline_internal)
+        annotator=freq_annotator)
+    fvars.annot_df = annotation_pipeline_internal.annotate_df(fvars.annot_df)
 
     return fvars
+
+
+@pytest.fixture
+def vcf_import_thrift(
+        vcf_import_raw, annotation_pipeline_internal, temp_dirname):
+    variants_iterator_to_parquet(
+        vcf_import_raw,
+        temp_dirname,
+        annotation_pipeline=annotation_pipeline_internal
+    )
+    fvars = ThriftFamilyVariants(prefix=temp_dirname)
+    return fvars
+
+
+@pytest.fixture
+def fixture_select(vcf_import_raw, vcf_import_thrift):
+    def build(fixture_name):
+        if fixture_name == 'vcf_import_thift':
+            return vcf_import_thrift
+        elif fixture_name == 'vcf_import_raw':
+            return vcf_import_raw
+        else:
+            raise ValueError(fixture_name)
+
