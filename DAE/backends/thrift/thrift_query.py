@@ -292,6 +292,23 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
         return self._build_complex_where_with_array_attr(
             'inheritance', 'F.inheritance_in_members', inheritance_query)
 
+    @staticmethod
+    def summary_schema_query(tables, db='parquet'):
+        query = """
+            CREATE TEMPORARY VIEW parquetTable
+            USING org.apache.spark.sql.parquet
+            OPTIONS (
+                path "{summary_variant}"
+            )
+        """.format(
+            db=db,
+            summary_variant=tables['summary_variant'],
+        )
+        return [
+            query,
+            "DESCRIBE EXTENDED parquetTable"
+        ]
+
     def build(self):
         # print(self.query)
 

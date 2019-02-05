@@ -8,13 +8,14 @@ import os
 import numpy as np
 
 from impala.dbapi import connect
+from impala.util import as_pandas
 
 from variants.family import FamiliesBase, Family
 from variants.variant import SummaryVariantFactory
 from variants.family_variant import FamilyVariant
 
 from ..configure import Configure
-from .thrift_query import thrift_query1
+from .thrift_query import thrift_query1, ThriftQueryBuilder
 from .parquet_io import read_ped_df_from_parquet
 
 
@@ -72,6 +73,22 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         assert self.connection is not None
         self.ped_df = read_ped_df_from_parquet(self.config.pedigree)
         self.families_build(self.ped_df, family_class=Family)
+        self._sumary_schema = None
+
+    @property
+    def summary_schema(self):
+        if not self._sumary_schema:
+            query = ThriftQueryBuilder.summary_schema_query(
+                tables=self.config)
+            with self.connection.cursor() as cursor:
+                cursor.execute(query[0])
+                cursor.execute(query[1])
+                df = as_pandas(cursor)
+            records = df[['col_name', 'data_type']].to_records()
+            self._sumary_schema = {
+                col_name: col_type for (_, col_name, col_type) in records
+            }
+        return self._sumary_schema
 
     @staticmethod
     def get_thrift_connection(thrift_host=None, thrift_port=None):
@@ -88,23 +105,6 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         return thrift_connection
 
     def query_variants(self, **kwargs):
-        # if kwargs.get("effect_types") is not None:
-        #     effect_types = kwargs.get("effect_types")
-        #     if isinstance(effect_types, list):
-        #         effect_types = "any({})".format(",".join(effect_types))
-        #         kwargs["effect_types"] = effect_types
-        # if kwargs.get("genes") is not None:
-        #     genes = kwargs.get("genes")
-        #     if isinstance(genes, list):
-        #         genes = "any({})".format(",".join(genes))
-        #         kwargs["genes"] = genes
-
-        # if kwargs.get("person_ids") is not None:
-        #     query = kwargs.get("person_ids")
-        #     if isinstance(query, list):
-        #         query = "any({})".format(",".join(query))
-        #         kwargs["person_ids"] = query
-
         df = thrift_query1(
             thrift_connection=self.connection,
             tables=self.config,
