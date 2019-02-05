@@ -11,6 +11,18 @@ py.test -v --cov-config coveragerc \
     --cov-report html:coverage/coverage.html \
     --cov-report xml:coverage/coverage.xml \
     --cov-append \
+    --cov annotation \
+    --cov backends \
+    --cov common \
+    --cov common_reports \
+    --cov configurable_entities \
+    --cov gene \
+    --cov pedigrees \
+    --cov studies \
+    --cov tools \
+    --cov utils \
+    --cov variant_annotation \
+    --cov variants \
     --cov common_reports_api \
     --cov datasets_api \
     --cov enrichment_api \
@@ -26,17 +38,5 @@ py.test -v --cov-config coveragerc \
     --cov pheno_tool_api \
     --cov precompute \
     --cov preloaded \
-    --cov tools \
     --cov users_api \
-    --cov annotation \
-    --cov annotation_pipeline \
-    --cov common \
-    --cov datasets \
-    --cov enrichment_tool \
-    --cov gene \
-    --cov pheno \
-    --cov pheno_browser \
-    --cov pheno_tool \
-    --cov transmitted \
-    --cov utils \
     wdae/datasets_api/tests

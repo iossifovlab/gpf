@@ -9,41 +9,29 @@ py.test --traceconfig -v --cov-config coveragerc \
     --junitxml=coverage/dae-junit.xml \
     --cov-report html:coverage/coverage.html \
     --cov-report xml:coverage/coverage.xml \
-    --cov-append \
-    --cov common_reports_api \
-    --cov datasets_api \
-    --cov enrichment_api \
-    --cov family_counters_api \
-    --cov gene_sets \
-    --cov gene_weights \
-    --cov genotype_browser \
-    --cov groups_api \
-    --cov helpers \
-    --cov measures_api \
-    --cov pheno_browser_api \
-    --cov pheno_tool_api \
-    --cov precompute \
-    --cov preloaded \
-    --cov tools \
-    --cov users_api \
-    --cov common \
-    --cov variant_annotation \
     --cov annotation \
-    --cov variants \
     --cov backends \
-    --cov studies \
-    --cov study_groups \
-    --cov datasets \
+    --cov common \
     --cov common_reports \
+    --cov configurable_entities \
+    --cov gene \
     --cov pedigrees \
+    --cov studies \
+    --cov tools \
+    --cov utils \
+    --cov variant_annotation \
+    --cov variants \
     DAE/tests/ \
-    DAE/common/tests/ \
-    DAE/variants/tests/ \
-    DAE/variant_annotation/tests \
     DAE/annotation/tests \
     DAE/backends/tests \
-    DAE/studies/tests \
+    DAE/common/tests/ \
     DAE/common_reports/tests \
+    DAE/configurable_entities/tests \
+    DAE/gene/tests \
     DAE/pedigrees/tests \
-    DAE/gene/tests
+    DAE/studies/tests \
+    DAE/tools/tests \
+    DAE/utils/tests \
+    DAE/variant_annotation/tests \
+    DAE/variants/tests/
 
