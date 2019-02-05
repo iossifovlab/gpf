@@ -42,3 +42,17 @@ def test_dae2parquet_denovo(
     # print(summary.schema)
     schema = summary.schema
     print(schema['score0'])
+
+    assert schema['score0'].type_name == 'float'
+    assert schema['score2'].type_name == 'float'
+    assert schema['score4'].type_name == 'float'
+
+    # print(schema['effect_gene_genes'])
+    assert schema['effect_gene_genes'].type_name == 'list(str)'
+    assert schema['effect_gene_types'].type_name == 'list(str)'
+    assert schema['effect_details_transcript_ids'].type_name == 'list(str)'
+    assert schema['effect_details_details'].type_name == 'list(str)'
+
+    assert schema['effect_genes'].type_name == 'list(str)'
+    assert schema['effect_details'].type_name == 'list(str)'
+

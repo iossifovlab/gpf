@@ -126,7 +126,7 @@ def dae_denovo(
 
 
 @pytest.fixture
-def dae_transmitted(default_genome, annotation_pipeline):
+def dae_transmitted(default_genome, annotation_pipeline_internal):
         fullpath = relative_to_this_test_folder(
             "tests/fixtures/dae_transmitted/transmission"
         )
