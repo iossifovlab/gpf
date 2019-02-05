@@ -22,8 +22,8 @@ class CommonReportsConfig(ConfigurableEntityConfig):
     CAST_TO_BOOL = ('draw_all_families', 'is_downloadable', 'enabled')
 
     def __init__(
-            self, id, config, phenotypes_info, filter, query_object, path, *args,
-            **kwargs):
+            self, id, config, phenotypes_info, filter, query_object, path,
+            *args, **kwargs):
         super(CommonReportsConfig, self).__init__(config, *args, **kwargs)
 
         self.id = id
