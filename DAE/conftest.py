@@ -58,7 +58,7 @@ def annotation_pipeline_vcf():
     pipeline = PipelineAnnotator.build(
         options, filename,
         defaults={
-            "fixtures_dir": relative_to_this_test_folder(
+            "scores_dirname": relative_to_this_test_folder(
                 "tests/fixtures/annotation_pipeline/")
         })
     return pipeline
@@ -83,7 +83,7 @@ def annotation_pipeline_internal():
     pipeline = PipelineAnnotator.build(
         options, filename,
         defaults={
-            "fixtures_dir": relative_to_this_test_folder(
+            "scores_dirname": relative_to_this_test_folder(
                 "tests/fixtures/annotation_pipeline/")
         })
     return pipeline
