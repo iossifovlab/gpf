@@ -1,3 +1,6 @@
+
+from builtins import str
+
 import os
 import pytest
 import shutil

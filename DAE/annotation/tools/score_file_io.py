@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-
+# from builtins import str
+import six
 import sys
 import os
 
@@ -317,6 +318,8 @@ class DirectAccess(ScoreFile):
     def _fetch(self, chrom, pos_begin, pos_end):
         try:
             result = []
+            chrom = str(chrom)
+
             for line in self.infile.fetch(
                     chrom, pos_begin-1, pos_end, parser=pysam.asTuple()):
                 line = LineAdapter(self, line)
