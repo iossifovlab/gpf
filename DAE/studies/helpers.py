@@ -151,7 +151,7 @@ def variant_count_v3(bs, c, location=None, gender=None, denovo_parent=None):
 
 STANDARD_ATTRS = {
     "family": "family_id",
-    "location": "location",
+    "location": "cshl_location",
     "variant": "cshl_variant",
 }
 
