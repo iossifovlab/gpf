@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import pytest
 import pandas as pd
-from io import StringIO
+from six import StringIO
 
 from tools.generate_histogram import GenerateScoresHistograms
 
@@ -162,6 +162,7 @@ def generate_histograms_with_start_end(
 
 def test_generate_histogram(mocker, generate_histograms, expected_output):
     generate_histograms.generate_scores_histograms()
+    print(output)
 
     assert output[0].getvalue() == expected_output[0]
     assert output[1].getvalue() == expected_output[1]
@@ -182,6 +183,8 @@ def test_generate_histogram_with_start_end(
         expected_output_with_start_end):
     generate_histograms_with_start_end.generate_scores_histograms(
         start='start', end='end')
+
+    print(output_with_start_end)
 
     assert output_with_start_end[0].getvalue() ==\
         expected_output_with_start_end[0]
