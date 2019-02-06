@@ -27,7 +27,7 @@ class EffectAnnotatorBase(VariantAnnotatorBase):
         super(EffectAnnotatorBase, self).collect_annotator_schema(schema)
         for col_name, col_type in self.COLUMNS_SCHEMA:
             if self.columns.get(col_name, None):
-                schema.create_column(col_name, col_type)
+                schema.create_column(self.columns[col_name], col_type)
 
     def _init_effect_annotator(
             self, genome_file=None, gene_models_file=None,
@@ -138,6 +138,7 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
         r = self.wrap_effects(effects)
 
         aline[self.columns['effect_type']] = r[0]
+
         aline[self.columns['effect_gene_genes']] = r[1]
         aline[self.columns['effect_gene_types']] = r[2]
         aline[self.columns['effect_genes']] = [

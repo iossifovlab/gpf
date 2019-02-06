@@ -93,16 +93,10 @@ class FrequencyAnnotator(VariantAnnotatorBase):
             return
         variant = variant.details.cshl_variant
 
-        found = False
         for index, score_variant in enumerate(scores[self.variant_col_name]):
             if score_variant == variant:
-                found = True
                 for output_index, freq_col in enumerate(self.freq_cols):
                     values = scores[freq_col]
+                    # FIXME: this conversion should come from schema
                     aline[self.output_cols[output_index]] = \
-                        float(values[index])  # FIXME:
-        if not found:
-            print('FREQ: {} frequency score not found for variant {}:{} {}'.
-                  format(self.freq_filename,
-                         str(chrom), str(pos), str(variant)),
-                  file=sys.stderr)
+                        float(values[index])
