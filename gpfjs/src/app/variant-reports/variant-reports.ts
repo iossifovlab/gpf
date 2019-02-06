@@ -3,11 +3,12 @@ import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 export class Study {
 
   static fromJsonArray(json: any[]) {
-    return new Study(json['study_name'], json['study_description']);
+    return new Study(json['study_name'], json['id'], json['study_description']);
   }
 
   constructor(
     readonly name: string,
+    readonly id: string,
     readonly description: string
   ) {}
 }

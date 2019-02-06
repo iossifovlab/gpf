@@ -30,7 +30,7 @@ export class VariantReportsService {
 
   getVariantReport(study: Study) {
     let options = new RequestOptions({ withCredentials: true });
-    let url = `${this.variantsUrl}${study.name}`;
+    let url = `${this.variantsUrl}${study.id}`;
     return this.http
       .get(url, options)
       .map(response => {
