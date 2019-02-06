@@ -1,0 +1,3 @@
+familyId	location	variant	vcfVariant	inChild	fromParent	familyDescription	CSHL	YALE	UW	IossifovWE2012	EichlerWE2012	StateWE2012	EichlerTG2012	bestState	effectType	effectGene	effectDetails	SSC-freq	EVS-freq	E65-freq
+13590	15:80137554	ins(A)	15:80137553:T:TA	prbM		pMsM	strong:valid			yes				2 2 1 2/0 0 1 0	noEnd	MTHFS:noEnd|ST20-MTHFS:noEnd|MTHFS:non-coding	147;204;180|2365			
+12969	12:116418554	ins(C)	12:116418553:A:AC	prbM		pMsM	strong:valid			yes				2 2 1 2/0 0 1 0	splice-site	MED13L:splice-site	1789/2211			
