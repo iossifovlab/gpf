@@ -14,6 +14,7 @@ class Scores(GenomicValues):
 
         self.config = config
         self.genomic_values_col = 'scores'
+        assert self.section_name in self.config, [self.section_name, self.config]
 
         self.desc = self.config[self.section_name].desc
         self.bins = int(self.config[self.section_name].bins)
