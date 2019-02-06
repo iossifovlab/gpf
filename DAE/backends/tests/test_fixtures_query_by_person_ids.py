@@ -26,6 +26,10 @@ import pytest
     ("fixtures/trios2", ['ch2'], 2),
     ("fixtures/trios2", ['mom2', 'ch2'], 8),
     ("fixtures/trios2", ['mom1', 'dad1'], 9),
+    ("fixtures/generated_people", None, 2),
+    ("fixtures/generated_people", ['prb1'], 1),
+    ("fixtures/generated_people", ['prb2'], 1),
+    ("fixtures/generated_people", ['prb1', 'prb2'], 2),
 ])
 def test_fixture_query_by_person_ids(
         variants_impl, variants, fixture_name, person_ids, count):
