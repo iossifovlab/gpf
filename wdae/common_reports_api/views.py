@@ -72,8 +72,10 @@ class VariantReportsView(APIView):
     def get_studies_info(self, common_reports):
         return [
             {
+                'id': common_report.get(
+                    'id', common_report.get('study_name', '')),
                 'study_name': common_report.get('study_name', ''),
-                'study_description': common_report.get('study_description', ''),
+                'study_description': common_report.get('study_description', '')
             } for common_report in common_reports
         ]
 

@@ -71,9 +71,6 @@ class CommonReportFacade(object):
         else:
             return
 
-        if common_report is None:
-            return
-
         common_reports_path = common_report.path
 
         if not os.path.exists(common_reports_path):
@@ -83,5 +80,7 @@ class CommonReportFacade(object):
             common_report = json.load(crf)
         if common_report is None:
             return
+
+        common_report['id'] = common_report_id
 
         self._common_report_cache[common_report_id] = common_report
