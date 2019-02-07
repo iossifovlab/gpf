@@ -12,13 +12,13 @@ from tools.vcf2parquet import parse_cli_arguments, import_vcf, \
 
 
 def test_vcf2parquet_vcf(
-        vcf_import_config, annotation_pipeline_configname,
+        vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname,
         temp_dirname):
 
     argv = [
         'vcf',
-        '--annotation', annotation_pipeline_configname,
+        '--annotation', annotation_pipeline_config,
         '-o', temp_dirname,
         vcf_import_config.pedigree,
         vcf_import_config.vcf
@@ -59,13 +59,13 @@ def test_vcf2parquet_vcf(
 
 
 def test_vcf2parquet_make(
-        vcf_import_config, annotation_pipeline_configname, 
+        vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname,
         temp_dirname):
 
     argv = [
         'make',
-        '--annotation', annotation_pipeline_configname,
+        '--annotation', annotation_pipeline_config,
         '-o', temp_dirname,
         vcf_import_config.pedigree,
         vcf_import_config.vcf

@@ -12,6 +12,8 @@ from io import StringIO
 
 from box import Box
 
+from configurable_entities.configuration import DAEConfig
+
 from annotation.annotation_pipeline import PipelineAnnotator
 
 from backends.configure import Configure
@@ -68,10 +70,16 @@ def temp_filename(request):
 
 
 @pytest.fixture(scope='session')
-def annotation_pipeline_configname():
+def annotation_pipeline_config():
     filename = relative_to_this_test_folder(
         "tests/fixtures/annotation_pipeline/import_annotation.conf")
     return filename
+
+
+@pytest.fixture(scope='session')
+def annotation_pipeline_default_config():
+    dae_config = DAEConfig()
+    return dae_config.annotation_conf
 
 
 @pytest.fixture(scope='session')
@@ -223,18 +231,24 @@ def vcf_import_thrift(
 
 
 @pytest.fixture
-def fixture_select(vcf_import_raw, vcf_import_thrift):
+def fixture_select(
+        vcf_import_raw, vcf_import_thrift,
+        annotation_pipeline_config, annotation_pipeline_default_config):
     def build(fixture_name):
         if fixture_name == 'vcf_import_thift':
             return vcf_import_thrift
         elif fixture_name == 'vcf_import_raw':
             return vcf_import_raw
+        elif fixture_name == 'annotation_pipeline_config':
+            return annotation_pipeline_config
+        elif fixture_name == 'annotation_pipeline_default_config':
+            return annotation_pipeline_default_config
         else:
             raise ValueError(fixture_name)
     return build
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def dae_iossifov2014_config():
     fullpath = relative_to_this_test_folder(
         "tests/fixtures/dae_iossifov2014/iossifov2014"
