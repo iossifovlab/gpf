@@ -35,4 +35,3 @@ def test_alleles_have_pheno_values(roles, type, value, quads_f1_wrapper):
         for allele in variant.matched_alleles:
             assert allele[type] is not None
             assert allele[type] == value
-
