@@ -13,30 +13,32 @@ from configurable_entities.configurable_entity_definition import\
     ConfigurableEntityDefinition
 
 
-class CommonReportsConfig(ConfigurableEntityConfig):
+class CommonReportsConfig(object):
     """
     Helper class for accessing DAE and commonReports configuration.
     """
 
-    SPLIT_STR_LISTS = ('peopleGroups', 'effect_groups', 'effect_types')
-    CAST_TO_BOOL = ('draw_all_families', 'is_downloadable', 'enabled')
-
     def __init__(
             self, id, config, phenotypes_info, filter, query_object, path,
             *args, **kwargs):
-        super(CommonReportsConfig, self).__init__(config, *args, **kwargs)
+        self.config = config
 
         self.id = id
 
         self.phenotypes_info = phenotypes_info
         self.filter = filter
-        self.effect_groups =\
-            self.config.commonReport.get('effect_groups', [])
+        self.effect_groups = self.config.commonReport.get('effect_groups', [])
         self.effect_types = self.config.commonReport.get('effect_types', [])
 
         self.query_object = query_object
 
         self.path = path
+
+
+class CommonReportsParseConfig(ConfigurableEntityConfig):
+
+    SPLIT_STR_LISTS = ('peopleGroups', 'effect_groups', 'effect_types')
+    CAST_TO_BOOL = ('draw_all_families', 'is_downloadable', 'enabled')
 
     @staticmethod
     def _parse_domain_info(domain):
@@ -149,7 +151,7 @@ class CommonReportsConfigs(object):
             ConfigurableEntityDefinition._collect_config_paths(directory)
 
         for config_file in config_files:
-            config = CommonReportsConfig.from_config(config_file, facade)
+            config = CommonReportsParseConfig.from_config(config_file, facade)
 
             if config:
                 self.common_reports_configs.append(config)
