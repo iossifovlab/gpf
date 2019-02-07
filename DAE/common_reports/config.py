@@ -19,14 +19,14 @@ class CommonReportsConfig(object):
     """
 
     def __init__(
-            self, id, config, phenotypes_info, filter, query_object, path,
+            self, id, config, phenotypes_info, filter_info, query_object, path,
             *args, **kwargs):
         self.config = config
 
         self.id = id
 
         self.phenotypes_info = phenotypes_info
-        self.filter = filter
+        self.filter_info = filter_info
         self.effect_groups = self.config.commonReport.get('effect_groups', [])
         self.effect_types = self.config.commonReport.get('effect_types', [])
 
@@ -130,15 +130,15 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
             query_object = facade.get_dataset_wrapper(id)
 
         phenotypes_info = cls._parse_phenotypes(config)
-        filter = cls._parse_data(config)
-        if filter is None:
+        filter_info = cls._parse_data(config)
+        if filter_info is None:
             return None
 
         path = os.path.join(
             os.path.split(config_file)[0], 'commonReport/' + id + '.json')
 
         return CommonReportsConfig(
-            id, config, phenotypes_info, filter, query_object, path)
+            id, config, phenotypes_info, filter_info, query_object, path)
 
 
 class CommonReportsConfigs(object):
