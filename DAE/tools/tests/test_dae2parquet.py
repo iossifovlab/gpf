@@ -182,7 +182,7 @@ def dae_iossifov2014_thrift(
 
 @pytest.mark.parametrize("annotation_config", [
     'annotation_pipeline_config',
-    'annotation_pipeline_default_config'
+    # 'annotation_pipeline_default_config'
 ])
 @pytest.mark.parametrize("region,cshl_location,effect_type", [
     (Region('15', 80137553, 80137553), '15:80137554', 'noEnd'),
