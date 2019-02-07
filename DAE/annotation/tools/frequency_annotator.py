@@ -98,5 +98,17 @@ class FrequencyAnnotator(VariantAnnotatorBase):
                 for output_index, freq_col in enumerate(self.freq_cols):
                     values = scores[freq_col]
                     # FIXME: this conversion should come from schema
-                    aline[self.output_cols[output_index]] = \
-                        float(values[index])
+                    try:
+                        val = values[index]
+                        if val in set(['', ' ']):
+                            aline[self.output_cols[output_index]] = \
+                                self.no_score_value
+                        else:
+                            aline[self.output_cols[output_index]] = \
+                                float(values[index])
+                    except ValueError as ex:
+                        print(
+                            "problem with: ", self.output_cols[output_index],
+                            chrom, pos, [values[index]],
+                            file=sys.stderr)
+                        raise ex
