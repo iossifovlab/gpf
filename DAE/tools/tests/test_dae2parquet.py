@@ -175,12 +175,22 @@ def dae_iossifov2014_thrift(
     return parquet_thrift(parquet_config)
 
 
-@pytest.mark.parametrize("region,chrom,pos,cshl_location,effect_type", [
-    (Region('15', 80137553, 80137554), '15', 80137553, '15:80137554', 'noEnd'),
+@pytest.mark.parametrize("region,cshl_location,effect_type", [
+    (Region('15', 80137553, 80137553), '15:80137554', 'noEnd'),
+    (Region('12', 116418553, 116418553), '12:116418554', 'splice-site'),
+    (Region('3', 56627767, 56627767), '3:56627768', 'splice-site'),
+    (Region('3', 195475903, 195475903), '3:195475904', 'splice-site'),
+    (Region('21', 38877891, 38877891), '21:38877892', 'splice-site'),
+    (Region('15', 43694048, 43694048), '15:43694049', 'splice-site'),
+    (Region('12', 93792632, 93792632), '12:93792633', 'splice-site'),
+    (Region('4', 83276456, 83276456), '4:83276456', 'splice-site'),
+    (Region('3', 195966607, 195966607), '3:195966608', 'splice-site'),
+    (Region('3', 97611837, 97611837), '3:97611838', 'splice-site'),
+
 ])
 def test_dae2parquet_iossifov2014_variant_coordinates(
         dae_iossifov2014_thrift,
-        region, chrom, pos, cshl_location, effect_type):
+        region, cshl_location, effect_type):
 
     assert dae_iossifov2014_thrift is not None
     fvars = dae_iossifov2014_thrift
@@ -195,9 +205,9 @@ def test_dae2parquet_iossifov2014_variant_coordinates(
     v = vs[0]
     assert len(v.alt_alleles) == 1
     aa = v.alt_alleles[0]
+    pprint(aa.attributes)
 
-    assert aa.chromosome == chrom
-    assert aa.position == pos
+    assert aa.chromosome == region.chrom
+    assert aa.position == region.start
     assert aa.cshl_location == cshl_location
     assert aa.effect.worst == effect_type
-    pprint(aa.attributes)

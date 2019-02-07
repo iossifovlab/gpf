@@ -10,5 +10,4 @@ familyId	location	variant	vcfVariant	inChild	fromParent	familyDescription	CSHL	Y
 13943	12:93792633	ins(T)	12:93792632:G:GT	prbM		pMsM			strong:valid					2 2 1 2/0 0 1 0	intron	NUDT4:intron|NUDT4P2:non-coding-intron|NUDT4P1:non-coding-intron	4/4[2];4/4[2]|4/4[2];4/4[2]			
 11041	4:83276456	sub(C->T)	4:83276456:C:T	prbM		pMsM		strong						2 2 1 2/0 0 1 0	3'UTR-intron	HNRNPD:3'UTR-intron	1/1[1];1/1[1];1/1[1];1/1[1]			
 13922	3:195966608	del(4)	3:195966607:CTAGA:C	prbF		pFsM		strong						2 2 1 2/0 0 1 0	intron	PCYT1A:intron	6/7[2]			0.00
-12507	3:195475904	del(35)	3:195475903:ATCTGAAGTAAGCCTTCAGCGTGCTCACGTTCACTG:A	sibF		pMsF		strong:valid						2 2 2 1/0 0 0 1	frame-shift	MUC4:frame-shift	5291/5412;1004/1125;1055/1176			0.08
 14500	3:97611838	del(4)	3:97611837:TGTGA:T	prbM		pMsF			strong:valid					2 2 1 2/0 0 1 0	intron	CRYBG3:intron	11/21[1]			0.00

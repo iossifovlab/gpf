@@ -37,7 +37,7 @@ def rgns2BedFile(rgns, bedFN):
 class Region(object):
 
     REGION_REGEXP2 = re.compile(
-        r"^(chr)?(\d+|[XxYy]):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$")
+        r"^(chr)?(\d+|[XxYy]):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$")  # noqa
 
     def __init__(self, chrom=None, start=None, stop=None, chr=None):
 
