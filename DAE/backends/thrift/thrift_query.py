@@ -254,26 +254,7 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
 
     Q = """
         SELECT
-            S.chrom,
-            S.position,
-            S.reference,
-            S.alternative,
-            S.bucket_index,
-            S.summary_variant_index,
-            S.allele_index,
-            S.allele_count,
-            S.variant_type,
-            S.cshl_variant,
-            S.cshl_position,
-            S.effect_type,
-            S.effect_gene_genes,
-            S.effect_gene_types,
-            S.effect_details_transcript_ids,
-            S.effect_details_details,
-            S.af_parents_called_count,
-            S.af_parents_called_percent,
-            S.af_allele_count,
-            S.af_allele_freq,
+            S.*,
 
             F.family_variant_index,
             F.family_id,

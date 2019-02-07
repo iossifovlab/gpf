@@ -8,12 +8,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 # make sure env variables are set correctly
 import findspark; findspark.init()  # noqa this needs to be the first import
 
-from builtins import range
 from io import StringIO
-import os
-import shutil
-import tempfile
-import time
 
 import pytest
 
@@ -33,10 +28,6 @@ from ..configure import Configure
 
 from ..vcf.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 
-from ..thrift.parquet_io import save_ped_df_to_parquet,\
-    VariantsParquetWriter
-
-from ..thrift.raw_thrift import ThriftFamilyVariants
 from ..thrift.raw_dae import RawDAE, RawDenovo
 
 from .common_tests_helpers import relative_to_this_test_folder
@@ -77,69 +68,6 @@ def spark_context(spark):
 @pytest.fixture(scope='session')
 def allele_freq_annotator():
     return VcfAlleleFrequencyAnnotator()
-
-
-@pytest.fixture(scope='session')
-def testing_thriftserver(request):
-    from impala.dbapi import connect
-
-    spark_home = os.environ.get("SPARK_HOME")
-    assert spark_home is not None
-
-    thrift_host = os.getenv("THRIFTSERVER_HOST", "127.0.0.1")
-    thrift_port = int(os.getenv("THRIFTSERVER_PORT", 10000))
-
-    def thrift_connect(retries=200):
-        for count in range(retries + 1):
-            try:
-                time.sleep(2.0)
-                print("trying to connect to thrift server: try={}".format(
-                    count + 1))
-                conn = connect(host=thrift_host, port=thrift_port,
-                               auth_mechanism='PLAIN')
-                return conn
-            except Exception as ex:
-                print("connect to thriftserver failed:", ex)
-        return None
-
-    conn = thrift_connect(3)
-    if conn is not None:
-        return conn
-
-    start_cmd = "{}/sbin/start-thriftserver.sh " \
-        "--hiveconf hive.server2.thrift.port={}".format(
-            spark_home, thrift_port)
-
-    print("starting thrift command: ", start_cmd)
-    os.system(start_cmd)
-
-    return thrift_connect()
-
-
-@pytest.fixture
-def temp_dirname(request):
-    dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
-
-    def fin():
-        shutil.rmtree(dirname)
-
-    request.addfinalizer(fin)
-    return dirname
-
-
-@pytest.fixture
-def temp_filename(request):
-    dirname = tempfile.mkdtemp(suffix='_eff', prefix='variants_')
-
-    def fin():
-        shutil.rmtree(dirname)
-
-    request.addfinalizer(fin)
-    output = os.path.join(
-        dirname,
-        'annotation.tmp'
-    )
-    return output
 
 
 @pytest.fixture(scope='session')
@@ -201,68 +129,6 @@ def raw_denovo(config_denovo, default_genome):
 #         effect_annotator,
 #         allele_freq_annotator,
 #     ])
-
-
-@pytest.fixture(scope='session')
-def variants_vcf(default_genome, default_gene_models):
-    def builder(path):
-        from ..vcf.builder import variants_builder
-
-        a_path = relative_to_this_test_folder(path)
-        fvars = variants_builder(
-            a_path, genome=default_genome, gene_models=default_gene_models,
-            force_reannotate=True)
-        return fvars
-    return builder
-
-
-@pytest.fixture(scope='session')
-def variants_thrift(parquet_variants, testing_thriftserver):
-    def builder(path):
-        parquet_conf = parquet_variants(path)
-        return ThriftFamilyVariants(
-            config=parquet_conf,
-            thrift_connection=testing_thriftserver)
-    return builder
-
-
-@pytest.fixture(scope='session')
-def parquet_variants(request, variants_vcf):
-    dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
-
-    def fin():
-        shutil.rmtree(dirname)
-    request.addfinalizer(fin)
-
-    def builder(path):
-        basename = os.path.basename(path)
-        fulldirname = os.path.join(dirname, basename)
-
-        if Configure.parquet_prefix_exists(fulldirname):
-            return Configure.from_prefix_parquet(fulldirname).parquet
-
-        if not os.path.exists(fulldirname):
-            os.mkdir(fulldirname)
-        conf = Configure.from_prefix_parquet(fulldirname).parquet
-
-        fvars = variants_vcf(path)
-
-        assert not fvars.is_empty()
-
-        save_ped_df_to_parquet(fvars.ped_df, conf.pedigree)
-
-        variants_builder = VariantsParquetWriter(
-            fvars.full_variants_iterator())
-        variants_builder.save_variants_to_parquet(
-            summary_filename=conf.summary_variant,
-            family_filename=conf.family_variant,
-            effect_gene_filename=conf.effect_gene_variant,
-            member_filename=conf.member_variant,
-            batch_size=2)
-
-        return conf
-
-    return builder
 
 
 @pytest.fixture
