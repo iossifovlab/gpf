@@ -84,7 +84,7 @@ class AsyncSSCTest(object):
     params = {
         "denovoStudies": "ALL SSC",
         "effectTypes": "Frame-shift,Intergenic,Intron,Missense,"
-        "Non coding,Non-frame-shift,Nonsense,Splice-site,"
+        "Non coding,No-frame-shift,Nonsense,Splice-site,"
         "Synonymous,noEnd,noStart,3'UTR,5'UTR,CNV+,CNV-,3'-UTR,5'-UTR",
         "families": "familyIds",
         "familyIds": "11110",

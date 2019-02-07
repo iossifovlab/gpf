@@ -12,7 +12,7 @@ class Test(unittest.TestCase):
     def test_unicode_unbreakable_space(self):
         data = {
             # @IgnorePep8
-            u'effectTypes': u'Nonsense,Frame-shift,Splice-site,Missense,Non-frame-shift,noStart,noEnd',
+            u'effectTypes': u'Nonsense,Frame-shift,Splice-site,Missense,No-frame-shift,noStart,noEnd',
             u'gender': u'male,female',
             u'gene_set_phenotype': u'',
             u'geneRegion': u'',
