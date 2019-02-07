@@ -55,16 +55,11 @@ def effect_annotator():
 def variant_effect_annotator():
     options = Box({
         "direct": False,
-
         "vcf": True,
         'r': 'reference',
         'a': 'alternative',
         'c': 'chrom',
         'p': 'position',
-
-        # "c": "CSHL:chr",
-        # "p": "CSHL:position",
-        # "v": "CSHL:variant",
     }, default_box=True, default_box_attr=None)
 
     columns_config = {
@@ -107,7 +102,7 @@ def test_effect_annotator(effect_annotator, variants_io, capsys):
     print(effect_annotator.schema)
 
 
-def test_effect_annotator_df(effect_annotator):
+def test_effect_annotator_df(variant_effect_annotator):
     df = pd.read_csv(
         relative_to_this_test_folder("fixtures/effects_trio_multi-eff.txt"),
         dtype={
@@ -125,43 +120,18 @@ def test_effect_annotator_df(effect_annotator):
         'effect_details_details'
     ]
     df[columns] = df[columns].fillna('')
-    # print(df)
-    print(Schema.from_df(df))
-
-    res_df = effect_annotator.annotate_df(df)
-    print(res_df[[
-        'effect_type', 'effectType',
-        'effect_gene_types', 'effect_gene_genes', 'effectGene'
+    print(df[[
+        'effect_type',
+        'effect_gene_types', 'effect_gene_genes',
     ]])
 
-    assert list(res_df.effect_type.values) == \
-        [el[0] if el != '' else '' for el in res_df['effectType'].values]
+    res_df = variant_effect_annotator.annotate_df(df)
+    print(res_df[[
+        'effect_type',
+        'effect_gene_types', 'effect_gene_genes',
+    ]])
 
-    print(
-        list(zip(
-            res_df['effect_gene_genes'].values,
-            res_df['effect_gene_types'].values
-            ))
-    )
-
-    print(
-        [
-            '{}:{}'.format(eg, et) if eg != '' else ''
-            for eg, et in zip(
-                res_df['effect_gene_genes'].values,
-                res_df['effect_gene_types'].values
-            )
-        ]
-    )
-    assert \
-        [el[0] if el != '' else '' for el in res_df['effectGene'].values] == \
-        [
-            '{}:{}'.format(eg, et) if eg != '' else ''
-            for eg, et in zip(
-                res_df['effect_gene_genes'].values,
-                res_df['effect_gene_types'].values
-            )
-        ]
+    assert list(res_df.effect_type.values) == list(df['effect_type'].values)
 
 
 def test_schema_experiment():

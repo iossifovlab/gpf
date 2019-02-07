@@ -11,6 +11,9 @@ import findspark; findspark.init()  # noqa this needs to be the first import
 from io import StringIO
 
 import pytest
+import os
+import shutil
+import tempfile
 
 import logging
 
@@ -29,6 +32,9 @@ from ..configure import Configure
 from ..vcf.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 
 from ..thrift.raw_dae import RawDAE, RawDenovo
+from backends.thrift.parquet_io import save_ped_df_to_parquet, \
+    VariantsParquetWriter
+from backends.thrift.raw_thrift import ThriftFamilyVariants
 
 from .common_tests_helpers import relative_to_this_test_folder
 
@@ -199,3 +205,65 @@ def transformer_matcher():
 @pytest.fixture()
 def transformer_matcher_class():
     return QueryTransformerMatcher
+
+
+@pytest.fixture(scope='session')
+def variants_vcf(default_genome, default_gene_models):
+    def builder(path):
+        from backends.vcf.builder import variants_builder
+
+        a_path = relative_to_this_test_folder(path)
+        fvars = variants_builder(
+            a_path, genome=default_genome, gene_models=default_gene_models,
+            force_reannotate=True)
+        return fvars
+    return builder
+
+
+@pytest.fixture(scope='session')
+def variants_thrift(parquet_variants, testing_thriftserver):
+    def builder(path):
+        parquet_conf = parquet_variants(path)
+        return ThriftFamilyVariants(
+            config=parquet_conf,
+            thrift_connection=testing_thriftserver)
+    return builder
+
+
+@pytest.fixture(scope='session')
+def parquet_variants(request, variants_vcf):
+    dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
+
+    def fin():
+        shutil.rmtree(dirname)
+    request.addfinalizer(fin)
+
+    def builder(path):
+        basename = os.path.basename(path)
+        fulldirname = os.path.join(dirname, basename)
+
+        if Configure.parquet_prefix_exists(fulldirname):
+            return Configure.from_prefix_parquet(fulldirname).parquet
+
+        if not os.path.exists(fulldirname):
+            os.mkdir(fulldirname)
+        conf = Configure.from_prefix_parquet(fulldirname).parquet
+
+        fvars = variants_vcf(path)
+
+        assert not fvars.is_empty()
+
+        save_ped_df_to_parquet(fvars.ped_df, conf.pedigree)
+
+        variants_builder = VariantsParquetWriter(
+            fvars.full_variants_iterator())
+        variants_builder.save_variants_to_parquet(
+            summary_filename=conf.summary_variant,
+            family_filename=conf.family_variant,
+            effect_gene_filename=conf.effect_gene_variant,
+            member_filename=conf.member_variant,
+            batch_size=2)
+
+        return conf
+
+    return builder
