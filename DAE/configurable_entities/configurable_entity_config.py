@@ -6,6 +6,7 @@ import sys
 
 from configparser import ConfigParser
 from box import ConfigBox
+from collections import OrderedDict
 
 
 class CaseSensitiveConfigParser(ConfigParser):
@@ -119,8 +120,8 @@ class ConfigurableEntityConfig(object):
         with open(config_file, 'r') as f:
             config_parser.read_file(f)
 
-        config = dict(
-            (section, dict(config_parser.items(section)))  # , raw=True)))
+        config = OrderedDict(
+            (section, OrderedDict(config_parser.items(section)))  # , raw=True)))
             for section in config_parser.sections())
 
         for section in config.keys():
