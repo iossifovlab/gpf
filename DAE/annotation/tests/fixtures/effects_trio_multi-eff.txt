@@ -1,0 +1,10 @@
+chrom	position	reference	alternative	summary_variant_index	allele_index	allele_count	effect_type	effect_gene_genes	effect_gene_types	effect_details_transcript_ids	effect_details_details	af_parents_called_count	af_parents_called_percent	af_allele_count	af_allele_freq
+1	878109	C		0	0	3						2	100	2	50
+1	878109	C	G	0	1	3	missense	SAMD11	missense	NM_152486_1	412/681(Pro->Arg)	2	100	1	25
+1	878109	C	T	0	2	3	missense	SAMD11	missense	NM_152486_1	412/681(Pro->Leu)	2	100	1	25
+1	901921	G		1	0	3						2	100	2	50
+1	901921	G	A	1	1	3	synonymous	PLEKHN1	synonymous	NM_001160184_1!NM_032129_1	4/576!4/611	2	100	1	25
+1	901921	G	C	1	2	3	missense	PLEKHN1	missense	NM_001160184_1!NM_032129_1	4/576(Ser->Arg)!4/611(Ser->Arg)	2	100	1	25
+1	905956	CGGCTCGGAAGG		2	0	3						2	100	2	50
+1	905956	CGGCTCGGAAGG	C	2	1	3	frame-shift	PLEKHN1	frame-shift	NM_001160184_1!NM_032129_1	129/576!129/611	2	100	1	25
+1	905956	CGGCTCGGAAGG	TGGCTCGGAAGG	2	2	3	missense	PLEKHN1	missense	NM_001160184_1!NM_032129_1	129/576(His,Gly,Ser,Glu,Gly->Leu,Ala,Arg,Lys,Gly)!129/611(His,Gly,Ser,Glu,Gly->Leu,Ala,Arg,Lys,Gly)	2	100	1	25

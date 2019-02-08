@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from annotation.tools.file_io_tsv import TSVFormat, \
-        TSVReader, TSVWriter, TabixReader, TSVGzipReader
+        TSVReader, TSVWriter, TabixReaderVariants, TSVGzipReader
 try:
     parquet_enabled = True
     from annotation.tools.file_io_parquet import ParquetReader, \
@@ -16,7 +16,7 @@ class IOType:
         def instance_r(opts):
             filename = opts.infile
             if TSVFormat.is_tabix(filename):
-                return TabixReader(opts)
+                return TabixReaderVariants(opts)
             if TSVFormat.is_gzip(filename):
                 return TSVGzipReader(opts)
             return TSVReader(opts)
@@ -63,7 +63,7 @@ class IOManager(object):
 
     @property
     def header(self):
-        return self.reader.header
+        return self.reader.schema.col_names
 
     def header_write(self, input_):
         self.writer.header_write(input_)

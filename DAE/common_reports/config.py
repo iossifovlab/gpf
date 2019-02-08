@@ -1,15 +1,16 @@
-from __future__ import unicode_literals
-from builtins import object
-from Config import Config
+from __future__ import unicode_literals, print_function, absolute_import
 from future import standard_library
-standard_library.install_aliases()
-from configparser import ConfigParser
-from box import Box
+standard_library.install_aliases()  # noqa
 
-import common.config
-from variants.attributes import Role
+from builtins import object
+import os
+from box import Box
+from collections import OrderedDict
+
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
+from configurable_entities.configurable_entity_definition import\
+    ConfigurableEntityDefinition
 
 
 class CommonReportsConfig(object):
@@ -17,91 +18,140 @@ class CommonReportsConfig(object):
     Helper class for accessing DAE and commonReports configuration.
     """
 
-    def __init__(self, config=None):
-        if config is None:
-            config = Config()
-        self.dae_config = config
+    def __init__(
+            self, id, config, phenotypes_info, filter_info, query_object, path,
+            *args, **kwargs):
+        self.config = config
 
-        config = ConfigParser()
-        config.read(self.dae_config.commonReportsConfFile)
+        self.id = id
 
-        self.config = Box(common.config.to_dict(config))
+        self.phenotypes_info = phenotypes_info
+        self.filter_info = filter_info
+        self.effect_groups = self.config.commonReport.get('effect_groups', [])
+        self.effect_types = self.config.commonReport.get('effect_types', [])
 
-    def _parse_data(self, data):
-        parsed_data = {}
-        for d in data.split(','):
-            d_properties = self.config.CommonReports.get(d.lower())
-            if d_properties is None:
-                continue
-            phenotypes = d_properties.get('peoplegroups', None)
-            is_downloadable = d_properties.get('is_downloadable', None)
-            if phenotypes is None:
-                continue
-            if is_downloadable is None:
-                is_downloadable = False
-            else:
-                is_downloadable =\
-                    ConfigurableEntityConfig._str_to_bool(is_downloadable)
+        self.query_object = query_object
 
-            parsed_data[d] = {
-                'phenotype_groups': phenotypes.split(','),
-                'is_downloadable': is_downloadable
-            }
-        return parsed_data
+        self.path = path
 
-    def _parse_domain_info(self, domain):
+
+class CommonReportsParseConfig(ConfigurableEntityConfig):
+
+    SPLIT_STR_LISTS = ('peopleGroups', 'effect_groups', 'effect_types')
+    CAST_TO_BOOL = ('draw_all_families', 'is_downloadable', 'enabled')
+
+    @staticmethod
+    def _parse_domain_info(domain):
         id, name, color = domain.split(':')
 
-        return {
-            'id': id.strip(),
-            'name': name.strip(),
-            'color': color.strip()
-        }
+        return OrderedDict([
+            ('id', id.strip()),
+            ('name', name.strip()),
+            ('color', color.strip())
+        ])
 
-    def _parse_phenotype_domain(self, phenotype_domain):
-        phenotype = {}
+    @classmethod
+    def _parse_phenotype_domain(cls, phenotype_domain):
+        phenotype = OrderedDict()
 
         for domain in phenotype_domain.split(','):
-            domain_info = self._parse_domain_info(domain)
+            domain_info = cls._parse_domain_info(domain)
             phenotype[domain_info['id']] = domain_info
 
         return phenotype
 
-    def study_groups(self):
-        return self._parse_data(
-            self.config.CommonReports.get('study_groups', ''))
+    @classmethod
+    def _parse_phenotype(cls, config, phenotype):
+        return OrderedDict([
+            ('name', config.commonReport.get(phenotype + '.name')),
+            ('domain', cls._parse_phenotype_domain(
+                config.commonReport.get(phenotype + '.domain'))),
+            ('unaffected', cls._parse_domain_info(
+                config.commonReport.get(phenotype + '.unaffected'))),
+            ('default', cls._parse_domain_info(
+                config.commonReport.get(phenotype + '.default'))),
+            ('source', config.commonReport.get(phenotype + '.source'))
+        ])
 
-    def studies(self):
-        return self._parse_data(self.config.CommonReports.get('studies', ''))
-
-    def counters_roles(self):
-        return [
-            [Role.from_name(role) for role in roles.split(',')]
-            for roles in self.config.CommonReports.counters_role.split(':')]
-
-    def effect_groups(self):
-        effect_groups = self.config.CommonReports.get('effect_groups', None)
-        return effect_groups.split(',') if effect_groups else []
-
-    def effect_types(self):
-        effect_types = self.config.CommonReports.get('effect_types', None)
-        return effect_types.split(',') if effect_types else []
-
-    def _phenotype(self, phenotype):
-        phenotype = self.config.CommonReports.get(phenotype)
-
-        return {
-            'name': phenotype.name,
-            'domain': self._parse_phenotype_domain(phenotype.domain),
-            'unaffected': self._parse_domain_info(phenotype.unaffected),
-            'default': self._parse_domain_info(phenotype.default),
-            'source': phenotype.source
-        }
-
-    def phenotypes(self):
-        phenotypes = self.config.CommonReports.peoplegroups.split(',')
-        phenotypes_info = {}
+    @classmethod
+    def _parse_phenotypes(cls, config):
+        phenotypes = config.commonReport.peopleGroups
+        phenotypes_info = OrderedDict()
         for phenotype in phenotypes:
-            phenotypes_info[phenotype] = self._phenotype(phenotype)
+            pheno = 'peopleGroup.' + phenotype
+            phenotypes_info[phenotype] =\
+                cls._parse_phenotype(config, pheno)
 
         return phenotypes_info
+
+    @staticmethod
+    def _parse_data(config):
+        phenotypes = config.commonReport.get('peopleGroups', None)
+        groups = config.commonReport.get('groups', None)
+        draw_all_families =\
+            config.commonReport.get('draw_all_families', False)
+        count_of_families_for_show_id =\
+            config.commonReport.get('count_of_families_for_show_id', None)
+        is_downloadable = config.commonReport.get('is_downloadable', False)
+
+        if phenotypes is None or groups is None:
+            return None
+        if count_of_families_for_show_id is not None:
+            count_of_families_for_show_id =\
+                int(count_of_families_for_show_id)
+
+        return OrderedDict([
+            ('phenotype_groups', phenotypes),
+            ('groups', OrderedDict([
+                (group.split(':')[1].strip(),
+                    group.split(':')[0].strip().split(','))
+                for group in groups.split('|')])),
+            ('draw_all_families', draw_all_families),
+            ('families_count_show_id', count_of_families_for_show_id),
+            ('is_downloadable', is_downloadable),
+        ])
+
+    @classmethod
+    def from_config(cls, config_file, facade):
+        config = Box(cls.get_config(config_file, ''))
+
+        if 'commonReport' not in config or\
+                config.commonReport.get('enabled', True) is False:
+            return None
+
+        id = ''
+        for key in config.keys():
+            if 'id' in config[key]:
+                id = config[key].id
+
+        try:
+            query_object = facade.get_study_wrapper(id)
+        except (KeyError, AttributeError):
+            query_object = facade.get_dataset_wrapper(id)
+
+        phenotypes_info = cls._parse_phenotypes(config)
+        filter_info = cls._parse_data(config)
+        if filter_info is None:
+            return None
+
+        path = os.path.join(
+            os.path.split(config_file)[0], 'commonReport/' + id + '.json')
+
+        return CommonReportsConfig(
+            id, config, phenotypes_info, filter_info, query_object, path)
+
+
+class CommonReportsConfigs(object):
+
+    def __init__(self):
+        self.common_reports_configs = []
+
+    def scan_directory(self, directory, facade):
+        config_files =\
+            ConfigurableEntityDefinition._collect_config_paths(directory)
+
+        for config_file in config_files:
+            config = CommonReportsParseConfig.from_config(config_file, facade)
+
+            if config:
+                self.common_reports_configs.append(config)

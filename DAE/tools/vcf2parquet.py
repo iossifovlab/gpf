@@ -11,18 +11,23 @@ import os
 import sys
 import argparse
 
-from variants.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
-from variants.annotate_composite import AnnotatorComposite
-from variants.annotate_variant_effects import VcfVariantEffectsAnnotator
-from variants.builder import get_genome, get_gene_models
-from variants.configure import Configure
-from variants.parquet_io import save_family_variants_to_parquet, \
-    save_summary_variants_to_parquet, \
-    save_ped_df_to_parquet
-from variants.raw_vcf import RawFamilyVariants
+from configurable_entities.configuration import DAEConfig
+
+from backends.vcf.annotate_allele_frequencies import \
+    VcfAlleleFrequencyAnnotator
+
+from backends.configure import Configure
+from backends.vcf.raw_vcf import RawFamilyVariants
 from cyvcf2 import VCF
-import multiprocessing
-import functools
+
+from backends.import_commons import build_contig_regions, \
+    contigs_makefile_generate
+from backends.vcf.builder import get_genome
+from backends.thrift.import_tools import annotation_pipeline_cli_options, \
+    construct_import_annotation_pipeline, variants_iterator_to_parquet
+
+# import multiprocessing
+# import functools
 
 
 def get_contigs(vcf_filename):
@@ -30,104 +35,71 @@ def get_contigs(vcf_filename):
     return vcf.seqnames
 
 
-def create_vcf_variants(
-        config, region=None, genome_file=None, gene_models_file=None):
+def create_vcf_variants(config, region=None):
 
-    genome = get_genome(genome_file=genome_file)
-    gene_models = get_gene_models(gene_models_file=gene_models_file)
-
-    effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
     freq_annotator = VcfAlleleFrequencyAnnotator()
 
-    annotator = AnnotatorComposite(annotators=[
-        effect_annotator,
-        freq_annotator
-    ])
-
     fvars = RawFamilyVariants(
-        config=config, annotator=annotator,
+        config=config, annotator=freq_annotator,
         region=region)
     return fvars
 
 
-def import_vcf_contig(config, contig):
-    # region = "{}:1-100000".format(contig)
-    region = contig
-    fvars = create_vcf_variants(config, region)
-
-    if fvars.is_empty():
-        print("empty contig {} done".format(contig), file=sys.stderr)
-        return
-
-    summary_filename = os.path.join(
-        config.output,
-        "summary_variants_{}.parquet".format(contig))
-    allele_filename = os.path.join(
-        config.output,
-        "family_alleles_{}.parquet".format(contig))
-
-    save_summary_variants_to_parquet(
-        fvars.query_variants(),
-        summary_filename)
-    save_family_variants_to_parquet(
-        fvars.query_variants(),
-        allele_filename)
-    print("contig {} done".format(contig), file=sys.stderr)
-
-
-def import_pedigree(config):
-    pedigree_filename = os.path.join(
-        config.output,
-        "pedigree.parquet",
-    )
-    region = "1:1-100000"
-    fvars = create_vcf_variants(config, region)
-    save_ped_df_to_parquet(fvars.ped_df, pedigree_filename)
-
-
-def import_vcf(argv):
+def import_vcf(dae_config, argv, defaults={}):
     assert os.path.exists(argv.vcf)
     assert os.path.exists(argv.pedigree)
-    assert os.path.exists(argv.out)
-    assert os.path.isdir(argv.out)
 
     vcf_filename = argv.vcf
     ped_filename = argv.pedigree
 
-    config = Configure.from_dict({
+    vcf_config = Configure.from_dict({
             'vcf': {
                 'pedigree': ped_filename,
                 'vcf': vcf_filename,
                 'annotation': None,
             },
-            'output': argv.out,
         })
 
-    contigs = get_contigs(vcf_filename)
-    genome = get_genome(genome_file=None)
+    region = argv.region
+    fvars = create_vcf_variants(vcf_config, region)
 
-    chromosomes = set(genome.allChromosomes)
-    contigs_to_process = []
-    for contig in contigs:
-        if contig not in chromosomes:
-            continue
-        assert contig in chromosomes, contig
+    annotation_pipeline = construct_import_annotation_pipeline(
+        dae_config, argv, defaults=defaults)
 
-        print(contig, genome.get_chr_length(contig),
-              "groups=", 1 + genome.get_chr_length(contig) / 100000000)
-        contigs_to_process.append(contig)
+    fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
-    import_pedigree(config)
-
-    pool = multiprocessing.Pool(processes=argv.processes_count)
-    pool.map(
-        functools.partial(import_vcf_contig, config),
-        contigs_to_process)
+    variants_iterator_to_parquet(
+        fvars,
+        argv.output,
+        argv.bucket_index,
+        annotation_pipeline
+    )
 
 
-def parse_cli_arguments(argv=sys.argv[1:]):
+def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
-        description='Convert VCF file to parquet')
+        description='Convert VCF file to parquet',
+        conflict_handler='resolve',
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    subparsers = parser.add_subparsers(
+        dest='type',
+        title='subcommands',
+        description='choose what type of data to convert',
+        help='vcf import or make generation for vcf import')
+
+    parse_vcf_arguments(dae_config, subparsers)
+    parser_make_arguments(dae_config, subparsers)
+
+    parser_args = parser.parse_args(argv)
+    return parser_args
+
+
+def parser_common_arguments(dae_config, parser):
+    options = annotation_pipeline_cli_options(dae_config)
+
+    for name, args in options:
+        parser.add_argument(name, **args)
 
     parser.add_argument(
         'pedigree', type=str,
@@ -140,34 +112,70 @@ def parse_cli_arguments(argv=sys.argv[1:]):
         help='VCF file to import'
     )
     parser.add_argument(
-        '-o', '--out', type=str, default='./',
-        dest='out', metavar='output filepath',
-        help='output filepath. If none specified, current directory is used'
+        '-o', '--out', type=str, default='.',
+        dest='output', metavar='<output filepath prefix>',
+        help='output filepath prefix. '
+        'If none specified, current directory is used [default: %(default)s]'
     )
+
+
+def parse_vcf_arguments(dae_config, subparsers):
+    parser = subparsers.add_parser('vcf')
+    parser_common_arguments(dae_config, parser)
+
     parser.add_argument(
-        '-p', '--processes', type=int, default=4,
-        dest='processes_count', metavar='processes count',
-        help='number of processes'
+        '--region', type=str,
+        dest='region', metavar='region',
+        default=None,
+        help='region to convert [default: %(default)s]'
     )
 
-    parser_args = parser.parse_args(argv)
-    return parser_args
+    parser.add_argument(
+        '-b', '--bucket-index', type=int, default=1,
+        dest='bucket_index', metavar='bucket index',
+        help='bucket index [default: %(default)s]'
+    )
 
 
-# def reindex(argv):
-#     for contig in SPARK_CONTIGS:
-#         filename = "spark_summary_{}.parquet".format(contig)
-#         # filename = "spark_variants_{}.parquet".format(contig)
-#         parquet_file = pq.ParquetFile(filename)
-#         print(filename)
-#         print(parquet_file.metadata)
-#         print("row_groups:", parquet_file.num_row_groups)
-#         print(parquet_file.schema)
+def parser_make_arguments(dae_config, subparsers):
+    parser = subparsers.add_parser('make')
+    parser_common_arguments(dae_config, parser)
+
+    parser.add_argument(
+        '--len', type=int,
+        default=None,
+        dest='len', metavar='len',
+        help='split contigs in regions with length <len> '
+        '[default: %(default)s]'
+    )
+
+
+def generate_makefile(dae_config, argv):
+    assert os.path.exists(argv.vcf)
+    assert os.path.exists(argv.pedigree)
+
+    vcf_filename = argv.vcf
+    ped_filename = argv.pedigree
+
+    genome = get_genome(genome_file=None)
+    data_contigs = get_contigs(vcf_filename)
+    build_contigs = build_contig_regions(genome, argv.len)
+
+    contigs_makefile_generate(
+        build_contigs,
+        data_contigs,
+        argv.output,
+        "vcf2parquet.py vcf",
+        argv.annotation_config,
+        "{} {}".format(ped_filename, vcf_filename)
+    )
 
 
 if __name__ == "__main__":
-    argv = parse_cli_arguments(sys.argv[1:])
-    print(argv)
+    dae_config = DAEConfig()
+    argv = parse_cli_arguments(dae_config, sys.argv[1:])
 
-    import_vcf(argv)
-    # reindex(sys.argv)
+    if argv.type == 'vcf':
+        import_vcf(dae_config, argv, defaults=dae_config.annotation_defaults)
+    elif argv.type == 'make':
+        generate_makefile(dae_config, argv)

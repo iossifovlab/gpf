@@ -15,16 +15,17 @@ class ParquetSchema(Schema):
 
     # New types only need to be added here.
     type_map = OrderedDict([
-                ('str', (str, pa.string())),
-                ('float', (float, pa.float64())),
-                ('int', (int, pa.uint32())),
-                ('int8', (int, pa.int8())),
-                ('int16', (int, pa.int16())),
-                ('int32', (int, pa.int32())),
-                ('int64', (int, pa.int64())),
-                ('list(str)', (str, pa.list_(pa.string()))),
-                ('list(float)', (float, pa.list_(pa.float64()))),
-                ('list(int)', (int, pa.list_(pa.uint32())))])
+        ('str', (str, pa.string())),
+        ('float', (float, pa.float64())),
+        ('int', (int, pa.uint32())),
+        ('int8', (int, pa.int8())),
+        ('int16', (int, pa.int16())),
+        ('int32', (int, pa.int32())),
+        ('int64', (int, pa.int64())),
+        ('list(str)', (str, pa.list_(pa.string()))),
+        ('list(float)', (float, pa.list_(pa.float64()))),
+        ('list(int)', (int, pa.list_(pa.uint32())))
+    ])
 
     def __init__(self):
         super(ParquetSchema, self).__init__()
@@ -111,11 +112,11 @@ class ParquetReader(AbstractFormat):
         assert os.path.exists(self.options.infile)
         self.pqfile = pq.ParquetFile(self.options.infile)
         self.schema = ParquetSchema.from_parquet(self.pqfile.schema)
-        self.header = list(self.schema.columns.keys())
         self.row_group_count = self.pqfile.num_row_groups
         self._read_row_group()
 
     def _cleanup(self):
+        # self.pqfile.close()
         print('Read', self.linecount, 'lines.', file=sys.stderr)
 
     def _read_row_group(self):
@@ -210,9 +211,7 @@ class ParquetWriter(AbstractFormat):
             sys.exit(-1)
 
     def header_write(self, header):
-        self.header = header
-        for col in self.header:
-            self.column_buffer[col.replace('#', '')] = []
+        pass
 
     def _write_buffer(self):
         buffer_table = []
@@ -244,7 +243,7 @@ class ParquetWriter(AbstractFormat):
         if self.buffer_line == self.buffer_size:
             self._write_buffer()
         for col in range(0, len(line)):
-            self.column_buffer[self.header[col]].append(line[col])
+            self.column_buffer[self.schema.col_names[col]].append(line[col])
         self.linecount += 1
         self.buffer_line += 1
 

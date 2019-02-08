@@ -6,7 +6,7 @@ Created on Feb 27, 2017
 from __future__ import unicode_literals
 import pytest
 
-pytestmark = pytest.mark.usefixtures("gene_info_cache_dir")
+pytestmark = pytest.mark.usefixtures("gene_info_cache_dir", "calc_gene_sets")
 
 
 def name_in_gene_sets(gene_sets, name):
@@ -46,7 +46,8 @@ def test_f1_autism_get_gene_sets(gscs):
 def test_f1_unaffected_get_gene_sets(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
 
-    gene_sets = denovo.get_gene_sets(gene_sets_types={'f1_group': ['unaffected']})
+    gene_sets = denovo.get_gene_sets(
+        gene_sets_types={'f1_group': ['unaffected']})
 
     assert gene_sets
 
@@ -59,7 +60,8 @@ def test_f1_unaffected_get_gene_sets(gscs):
 def test_f1_single_get_gene_sets(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
 
-    gene_sets = denovo.get_gene_sets(gene_sets_types={'f1_group': ['unaffected']})
+    gene_sets = denovo.get_gene_sets(
+        gene_sets_types={'f1_group': ['unaffected']})
 
     assert gene_sets
 
@@ -71,7 +73,8 @@ def test_f1_single_get_gene_sets(gscs):
 def test_synonymous_recurrency_get_gene_sets(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
 
-    gene_sets = denovo.get_gene_sets(gene_sets_types={'f2_group': ['autism']})
+    gene_sets = denovo.get_gene_sets(
+        gene_sets_types={'f2_group': ['autism']})
 
     assert gene_sets
 
@@ -84,7 +87,8 @@ def test_synonymous_recurrency_get_gene_sets(gscs):
 def test_missense_recurrency_get_gene_sets(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
 
-    gene_sets = denovo.get_gene_sets(gene_sets_types={'f2_group': ['unaffected']})
+    gene_sets = denovo.get_gene_sets(
+        gene_sets_types={'f2_group': ['unaffected']})
 
     assert gene_sets
 
@@ -110,7 +114,8 @@ def test_synonymous_triple_get_gene_sets(gscs):
 def test_missense_triple_get_gene_sets(gscs):
     denovo = gscs.get_gene_sets_collection('denovo')
 
-    gene_sets = denovo.get_gene_sets(gene_sets_types={'f3_group': ['unaffected']})
+    gene_sets = denovo.get_gene_sets(
+        gene_sets_types={'f3_group': ['unaffected']})
 
     assert gene_sets
 

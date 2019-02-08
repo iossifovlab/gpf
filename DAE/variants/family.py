@@ -9,7 +9,7 @@ from __future__ import unicode_literals
 from builtins import object
 import numpy as np
 import pandas as pd
-from variants.attributes import Role, Sex
+from variants.attributes import Role, Sex, Status
 
 
 class Person(object):
@@ -44,6 +44,9 @@ class Person(object):
 
     def has_parent(self):
         return self.has_dad() or self.has_mom()
+
+    def has_attr(self, item):
+        return item in self.atts
 
     def get_attr(self, item):
         return self.atts.get(item)
@@ -104,14 +107,18 @@ class Family(object):
             lambda m: m.get_attr(phenotype_column) == phenotype,
             self.members_in_order))
 
-    def get_family_phenotypes(self, phenotype_column):
-        return set([member.get_attr(phenotype_column)
-                    for member in self.members_in_order])
-
     def get_people_with_phenotypes(self, phenotype_column, phenotypes):
         return list(filter(
             lambda m: m.get_attr(phenotype_column) in phenotypes,
             self.members_in_order))
+
+    def get_people_with_property(self, column, value):
+        return list(filter(lambda m: m.get_attr(column) == value,
+                           self.members_in_order))
+
+    def get_family_phenotypes(self, phenotype_column):
+        return set([member.get_attr(phenotype_column)
+                    for member in self.members_in_order])
 
     @property
     def members_ids(self):
@@ -153,8 +160,23 @@ class FamiliesBase(object):
                     person.append(p)
         return person
 
+    def persons_with_parents(self):
+        person = []
+        for fam in list(self.families.values()):
+            for p in fam.members_in_order:
+                if p.has_attr('with_parents'):
+                    with_parents = p.get_attr('with_parents')
+                    if with_parents == '1':
+                        person.append(p)
+                elif p.has_parent():
+                    person.append(p)
+        return person
+
     def persons_index(self, persons):
         return sorted([p.index for p in persons])
+
+    def persons_id(self, persons):
+        return sorted([p.person_id for p in persons])
 
     @staticmethod
     def load_simple_family_file(infile, sep="\t"):
@@ -177,6 +199,7 @@ class FamiliesBase(object):
         fam_df['status'] = pd.Series(
             index=fam_df.index, data=1)
         fam_df.loc[fam_df.role == Role.prb, 'status'] = 2
+        fam_df['status'] = fam_df.status.apply(lambda s: Status.from_value(s))
 
         fam_df['momId'] = pd.Series(
             index=fam_df.index, data='0')
@@ -205,8 +228,9 @@ class FamiliesBase(object):
             skipinitialspace=True,
             converters={
                 'role': lambda r: Role.from_name(r),
-                'sex': lambda s: Sex.from_value(s),
-                'gender': lambda s: Sex.from_value(s),
+                'sex': lambda s: Sex.from_name_or_value(s),
+                'gender': lambda s: Sex.from_name_or_value(s),
+                'status': lambda s: Status.from_name(s),
                 'layout': lambda lc: lc.split(':')[-1],
                 'generated': lambda g: True if g == '1.0' else False,
             },

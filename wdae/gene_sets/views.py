@@ -63,7 +63,7 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
         permitted_datasets = IsDatasetAllowed.permitted_datasets(request.user)
         permitted_study_groups = \
             self.datasets_to_study_groups(permitted_datasets)
-        gene_sets_collections = deepcopy(self.gscs.get_gene_sets_collections(
+        gene_sets_collections = deepcopy(self.gscs.get_collections_descriptions(
             permitted_study_groups))
         self.study_groups_to_datasets(gene_sets_collections)
         return Response(gene_sets_collections, status=status.HTTP_200_OK)

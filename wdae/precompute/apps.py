@@ -9,9 +9,9 @@ from django.apps import AppConfig
 from django.conf import settings
 
 from importlib import import_module
-from DAE import pheno
-from pheno_browser_api.common import PhenoBrowserCommon
-from common.progress import red_print
+# from DAE import pheno
+# from pheno_browser_api.common import PhenoBrowserCommon
+# from common.progress import red_print
 import logging
 
 
@@ -50,15 +50,16 @@ class WdaePrecomputeConfig(AppConfig):
         logger.warn("PRELOADING DONE!!!")
 
     def _check_pheno_browser_api_cache(self):
-        pheno_db_names = pheno.get_pheno_db_names()
-        for dbname in pheno_db_names:
-            if PhenoBrowserCommon.should_recompute(dbname):
-                red_print(
-                    ">>> WARNING: "
-                    "phenotype DB <{}> browser cache needs recomputing"
-                    " Please call: ./manage.py pheno_browser_cache".format(
-                        dbname)
-                )
+        # pheno_db_names = pheno.get_pheno_db_names()
+        # for dbname in pheno_db_names:
+        #     if PhenoBrowserCommon.should_recompute(dbname):
+        #         red_print(
+        #             ">>> WARNING: "
+        #             "phenotype DB <{}> browser cache needs recomputing"
+        #             " Please call: ./manage.py pheno_browser_cache".format(
+        #                 dbname)
+        #         )
+        pass
 
     def ready(self):
         logger.warn("WdaePrecomputeConfig.read() started...")

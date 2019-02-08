@@ -9,7 +9,7 @@ import os
 
 from django.conf import settings
 
-from DAE import pheno
+# from DAE import pheno
 from precompute.filehash import sha256sum
 
 

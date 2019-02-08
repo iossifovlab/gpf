@@ -1,6 +1,12 @@
-from box import ConfigBox
+from __future__ import print_function
+
 import os
+import sys
+# import traceback
+
 from configparser import ConfigParser
+from box import ConfigBox
+from collections import OrderedDict
 
 
 class CaseSensitiveConfigParser(ConfigParser):
@@ -26,7 +32,7 @@ class ConfigurableEntityConfig(object):
 
     def __init__(self, config, *args, **kwargs):
         super(ConfigurableEntityConfig, self).__init__(*args, **kwargs)
-        self.config = ConfigBox(config)
+        self.config = ConfigBox(config, camel_killer_box=True)
 
     def bool(self, item, default=None):
         return self.config.bool(item, default=default)
@@ -93,18 +99,30 @@ class ConfigurableEntityConfig(object):
 
     @classmethod
     def get_config(cls, config_file, work_dir, default_values={}):
+
         if not os.path.exists(config_file):
             config_file = os.path.join(work_dir, config_file)
         assert os.path.exists(config_file), config_file
 
         default_values['work_dir'] = work_dir
+        default_values['wd'] = work_dir
 
-        config_parser = CaseSensitiveConfigParser(defaults=default_values)
-        print("READING CONFIG FROM '", config_file, "'")
-        config_parser.read(config_file)
+        config_parser = CaseSensitiveConfigParser(
+            defaults=default_values,
+            allow_no_value=True,
+            strict=True)
 
-        config = dict((section, dict(config_parser.items(section)))
-                      for section in config_parser.sections())
+        print("READING CONFIG FROM '", config_file, "'", file=sys.stderr)
+        # print("traceback: ---------------------------------------------")
+        # traceback.print_stack(file=sys.stderr)
+        # print("traceback: ---------------------------------------------")
+
+        with open(config_file, 'r') as f:
+            config_parser.read_file(f)
+
+        config = OrderedDict(
+            (section, OrderedDict(config_parser.items(section)))  # , raw=True)))
+            for section in config_parser.sections())
 
         for section in config.keys():
             config[section] = cls._change_keys_names(config[section])
@@ -146,6 +164,8 @@ class ConfigurableEntityConfig(object):
             return [el.strip() for el in str_option.split(',')]
         elif str_option == '':
             return []
+        else:
+            return []
 
     @classmethod
     def _split_str_lists(cls, config):
@@ -176,10 +196,11 @@ class ConfigurableEntityConfig(object):
     @classmethod
     def _concat_two_options(cls, config):
         for first, second in cls.CONCAT_OPTIONS.items():
-            config[second] =\
+            res =\
                 ','.join(filter(None, [config.pop(first, None),
                                        config.pop(second, None)]))
-
+            if res:
+                config[second] = res
         return config
 
     @classmethod

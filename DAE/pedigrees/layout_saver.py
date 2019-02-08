@@ -1,9 +1,10 @@
-#!/usr/bin/env python
 from __future__ import print_function
 from __future__ import absolute_import
-from __future__ import unicode_literals
+from builtins import open
+from builtins import str
 import collections
 import csv
+
 
 from pedigrees.layout import Layout
 
@@ -64,7 +65,8 @@ class LayoutSaver(object):
             reader = csv.DictReader(
                 input_file, fieldnames=header, delimiter=delimiter,
                 lineterminator='\n')
-            fieldnames = list(reader.fieldnames)
+            fieldnames = list(str(field) for field in reader.fieldnames)
+            # print(fieldnames, type(fieldnames[0]))
 
             # assert self.fieldname not in fieldnames, \
             #     "{} already in file {}".format(
@@ -75,7 +77,7 @@ class LayoutSaver(object):
             if self.generated_column not in fieldnames:
                 fieldnames.append(self.generated_column)
 
-            writer = csv.DictWriter(output_file, fieldnames, delimiter='\t')
+            writer = csv.DictWriter(output_file, fieldnames, delimiter="\t")
 
             writer.writeheader()
 

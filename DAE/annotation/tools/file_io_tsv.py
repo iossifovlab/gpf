@@ -19,6 +19,56 @@ def to_str(column_value):
         return str(column_value)
 
 
+class RegionHelper(object):
+
+    def __init__(self, region_string, pos_index):
+        self.pos_start, self.pos_end = \
+            RegionHelper.parse_region_string(region_string)
+        self.pos_index = pos_index
+
+    @staticmethod
+    def parse_region_string(region):
+        region = region.split(':')
+        assert len(region) == 2
+
+        pos_start = None
+        pos_end = None
+        if '-' in region[1]:
+            pos_start = region[1].split('-')[0]
+            pos_end = region[1].split('-')[1]
+        else:
+            pos_start = region[1]
+
+        try:
+            pos_start = int(pos_start)
+            if pos_end:
+                pos_end = int(pos_end)
+            return (pos_start,
+                    pos_end)
+        except ValueError:
+            sys.exit(-1)
+
+    def contains(self, line):
+        try:
+            pos = int(line[self.pos_index])
+        except ValueError:
+            sys.exit(-1)
+
+        if self.pos_end:
+            if pos >= self.pos_start and pos <= self.pos_end:
+                return True
+            return False
+        else:
+            if pos >= self.pos_start:
+                return True
+            return False
+
+
+class NoRegionHelper(object):
+    def contains(self, pos):
+        return True
+
+
 class AbstractFormat(object):
 
     __metaclass__ = ABCMeta
@@ -29,7 +79,6 @@ class AbstractFormat(object):
 
         self.linecount = 0
         self.linecount_threshold = 1000
-        self.header = None
         self.schema = None
 
     @abstractmethod
@@ -82,7 +131,8 @@ class TSVFormat(AbstractFormat):
             print(self.linecount, 'lines read', file=sys.stderr)
 
     def _progress_done(self):
-        print('Processed', self.linecount, 'lines.', file=sys.stderr)
+        pass
+        # print('Processed', self.linecount, 'lines.', file=sys.stderr)
 
 
 class TSVReader(TSVFormat):
@@ -94,6 +144,7 @@ class TSVReader(TSVFormat):
             filename = options.infile
         self.filename = filename
         self.schema = None
+        self.seek_pos = 0
 
         if self.options.region is not None:
             print(
@@ -109,21 +160,20 @@ class TSVReader(TSVFormat):
         if self.filename == '-':
             self.infile = sys.stdin
         else:
-            assert os.path.exists(self.filename)
+            assert os.path.exists(self.filename), self.filename
             assert not self.is_gzip(self.filename)
             self.infile = open(self.filename, 'r')
 
         if self.options.vcf:
             self._skip_metalines()
 
-        self.header = self._header_read()
-        self.schema = Schema.from_dict({'str': ','.join(self.header)})
+        self.schema = Schema.from_dict({'str': ','.join(self._header_read())})
 
     def _skip_metalines(self):
-        seek_pos = self.infile.tell()
+        self.seek_pos = self.infile.tell()
         while self.infile.readline().startswith('##'):
-            seek_pos = self.infile.tell()
-        self.infile.seek(seek_pos)
+            self.seek_pos = self.infile.tell()
+        self.infile.seek(self.seek_pos)
 
     def _cleanup(self):
         self._progress_done()
@@ -139,12 +189,12 @@ class TSVReader(TSVFormat):
         self._cleanup()
 
     def _header_read(self):
-        if self.header:
-            return self.header
+        if self.schema:
+            return self.schema.col_names
 
         if self.options.no_header:
             line = self.infile.readline()
-            self.infile.seek(0)
+            self.infile.seek(self.seek_pos)
             return [str(index) for index, col
                     in enumerate(line.strip()
                                  .split(self.separator))]
@@ -159,13 +209,12 @@ class TSVReader(TSVFormat):
         raise NotImplementedError()
 
     def line_read(self):
-        line = self.infile.readline()
-        line = line.rstrip('\n')
+        line = self.infile.readline().rstrip('\n')
 
         if not line:
             return None
         self._progress_step()
-        return line.rstrip('\n').split(self.separator)
+        return line.split(self.separator)
 
     def lines_read_iterator(self):
         line = self.line_read()
@@ -188,8 +237,7 @@ class TSVGzipReader(TSVReader):
         if self.options.vcf:
             self._skip_metalines()
 
-        self.header = self._header_read()
-        self.schema = Schema.from_dict({'str': ','.join(self.header)})
+        self.schema = Schema.from_dict({'str': ','.join(self._header_read())})
 
 
 class TabixReader(TSVFormat):
@@ -235,18 +283,16 @@ class TabixReader(TSVFormat):
         self._has_chrom_prefix = contig_name.startswith('chr')
 
         self._region_reset(self.region)
-        self.header = self._header_read()
-        self.schema = Schema.from_dict({'str': ','.join(self.header)})
+        self.schema = Schema.from_dict({'str': ','.join(self._header_read())})
 
     def _header_read(self):
-        if self.header:
-            return self.header
+        if self.schema:
+            return self.schema.col_names
 
-        line = self.infile.header
-        line = list(line)
+        line = list(self.infile.header)
         if not line:
             with TSVGzipReader(self.options, self.filename) as tempreader:
-                return tempreader.header
+                return tempreader.schema.col_names
         else:
             header_str = line[-1]
             if header_str.startswith("#"):
@@ -267,10 +313,29 @@ class TabixReader(TSVFormat):
     def line_write(self, line):
         raise NotImplementedError()
 
-    # def line_read(self):
-    #     line = next(self.lines_iterator)
-    #     self._progress_step()
-    #     return line
+    def lines_read_iterator(self):
+        if self.lines_iterator is None:
+            return
+
+        for line in self.lines_iterator:
+            self._progress_step()
+            yield line
+
+
+class TabixReaderVariants(TabixReader):
+
+    def __init__(self, options, filename=None):
+        super(TabixReaderVariants, self).__init__(options, filename)
+
+    def _setup(self):
+        super(TabixReaderVariants, self)._setup()
+
+        if self.options.vcf and self.options.region:
+                pos_index = self.schema.col_names.index(self.options.p)
+                self.region_helper = RegionHelper(self.options.region,
+                                                  pos_index)
+        else:
+            self.region_helper = NoRegionHelper()
 
     def lines_read_iterator(self):
         if self.lines_iterator is None:
@@ -278,9 +343,9 @@ class TabixReader(TSVFormat):
 
         for line in self.lines_iterator:
             self._progress_step()
-            # print(self.linecount, line)
 
-            yield line
+            if self.region_helper.contains(line):
+                yield line
 
 
 class TSVWriter(TSVFormat):
@@ -317,9 +382,6 @@ class TSVWriter(TSVFormat):
 
     def header_write(self, line):
         self.line_write(line)
-
-    def line_read(self):
-        raise NotImplementedError()
 
     def lines_read_iterator(self):
         raise NotImplementedError()

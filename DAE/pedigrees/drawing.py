@@ -120,11 +120,12 @@ class OffsetLayoutDrawer(object):
             figure, ax = plt.subplots(figsize=self.figsize)
             ax.axis("off")
 
-            table_vals = [['Status'], ['People Male'], ['People Female'],
-                          ['People Unspecified'], ['People Total']]
+            table_vals = [
+                [people_counter.group_name], ['People Male'],
+                ['People Female'], ['People Unspecified'], ['People Total']]
 
             for phenotype in people_counter.counters:
-                table_vals[0].append(phenotype.phenotype)
+                table_vals[0].append(phenotype.column)
                 table_vals[1].append(phenotype.people_male)
                 table_vals[2].append(phenotype.people_female)
                 table_vals[3].append(phenotype.people_unspecified)

@@ -5,17 +5,60 @@ export PATH=${DAE_SOURCE_DIR}/tests:$PATH
 export PYTHONPATH=${DAE_SOURCE_DIR}:$PYTHONPATH
 export PYTHONPATH=${DAE_SOURCE_DIR}/tools:$PYTHONPATH
 
-py.test -s --runslow --withspark -v --cov-config coveragerc \
+rm -rf coverage/ && mkdir coverage && \
+py.test --traceconfig -v --cov-config coveragerc \
     --junitxml=coverage/dae-junit.xml \
     --cov-report html:coverage/coverage.html \
     --cov-report xml:coverage/coverage.xml \
+    --cov annotation \
+    --cov backends \
+    --cov common \
+    --cov common_reports \
+    --cov configurable_entities \
+    --cov gene \
+    --cov pedigrees \
+    --cov studies \
+    --cov tools \
+    --cov utils \
+    --cov variant_annotation \
+    --cov variants \
+    DAE/tests/ \
+    DAE/annotation/tests \
+    DAE/backends/tests \
+    DAE/common/tests/ \
+    DAE/common_reports/tests \
+    DAE/configurable_entities/tests \
+    DAE/gene/tests \
+    DAE/pedigrees/tests \
+    DAE/studies/tests \
+    DAE/tools/tests \
+    DAE/utils/tests \
+    DAE/variant_annotation/tests \
+    DAE/variants/tests/ && \
+py.test -v --cov-config coveragerc \
+    --junitxml=coverage/wdae-junit.xml \
     --cov-append \
+    --cov-report html:coverage/coverage.html \
+    --cov-report xml:coverage/coverage.xml \
+    --cov annotation \
+    --cov backends \
+    --cov common \
+    --cov common_reports \
+    --cov configurable_entities \
+    --cov gene \
+    --cov pedigrees \
+    --cov studies \
+    --cov tools \
+    --cov utils \
+    --cov variant_annotation \
+    --cov variants \
     --cov common_reports_api \
     --cov datasets_api \
     --cov enrichment_api \
     --cov family_counters_api \
     --cov gene_sets \
     --cov gene_weights \
+    --cov genomic_scores_api \
     --cov genotype_browser \
     --cov groups_api \
     --cov helpers \
@@ -24,24 +67,5 @@ py.test -s --runslow --withspark -v --cov-config coveragerc \
     --cov pheno_tool_api \
     --cov precompute \
     --cov preloaded \
-    --cov tools \
     --cov users_api \
-    --cov common \
-    --cov variant_annotation \
-    --cov annotation \
-    --cov variants \
-    --cov studies \
-    --cov study_groups \
-    --cov datasets \
-    --cov common_reports \
-    --cov pedigrees \
-    DAE/common/tests/ \
-    DAE/variants/tests/ \
-    DAE/variant_annotation/tests \
-    DAE/annotation/tests \
-    DAE/studies/tests \
-    DAE/study_groups/tests \
-    DAE/datasets/tests \
-    DAE/common_reports/tests \
-    DAE/pedigrees/tests \
-    DAE/gene/tests
+    wdae/datasets_api/tests

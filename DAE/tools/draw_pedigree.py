@@ -6,13 +6,15 @@ from tqdm import tqdm
 import multiprocessing
 import functools
 import pandas as pd
+from box import Box
 
 from pedigrees.pedigree_reader import PedigreeReader
 from pedigrees.pedigrees import get_argument_parser
 from pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from pedigrees.layout_loader import LayoutLoader
 from variants.family import FamiliesBase
-from common_reports.common_report import FamiliesReport
+from common_reports.common_report import FamiliesReport, FilterObjects,\
+    FilterObject, PhenotypeInfo
 
 
 def draw_family_pedigree(family, show_id=False):
@@ -45,6 +47,62 @@ def draw_pedigree(layouts, show_id, show_family, family):
             layout, 0, 0, show_id=show_id, show_family=show_family)
         draw_layout = layout_drawer.draw(title=family.family_id)
         return draw_layout
+
+
+def get_families_report(pedigrees):
+    pedigrees_df = pd.concat([pedigree.get_pedigree_dataframe()
+                              for pedigree in pedigrees])
+
+    families = FamiliesBase(pedigrees_df)
+    families.families_build(pedigrees_df)
+
+    phenotype_info = {
+        'domain': {
+            'affected': {
+                'id': 'affected',
+                'name': 'affected',
+                'color': '#e35252'
+            }
+        },
+        'unaffected': {
+            'id': 'unaffected',
+            'name': 'unaffected',
+            'color': '#ffffff'
+        },
+        'default': {
+            'id': 'unknown',
+            'name': 'unknown',
+            'color': '#aaaaaa'
+        },
+        'source': 'phenotype',
+        'name': 'Phenotype'
+    }
+
+    phenotypes = ['affected', 'unaffected', 'unknown']
+
+    phenotype_info = PhenotypeInfo(
+        phenotype_info, 'Phenotype', phenotypes=phenotypes)
+
+    phenotypes_info = Box({'phenotypes_info': [phenotype_info]})
+
+    filters_objects = []
+
+    filter_objects = FilterObjects('Status')
+    filter_object1 = FilterObject([])
+    filter_object1.add_filter('phenotype', 'unaffected')
+    filter_objects.add_filter_object(filter_object1)
+    filter_object2 = FilterObject([])
+    filter_object2.add_filter('phenotype', 'affected')
+    filter_objects.add_filter_object(filter_object2)
+    filter_object3 = FilterObject([])
+    filter_object3.add_filter('phenotype', 'unknown')
+    filter_objects.add_filter_object(filter_object3)
+    filters_objects.append(filter_objects)
+
+    families_report = FamiliesReport(
+        families, phenotypes_info, filters_objects)
+
+    return families_report
 
 
 def main():
@@ -83,36 +141,7 @@ def main():
 
     pdf_drawer = PDFLayoutDrawer(args.output)
 
-    pedigrees_df = pd.concat([pedigree.get_pedigree_dataframe()
-                              for pedigree in pedigrees])
-
-    families = FamiliesBase(pedigrees_df)
-    families.families_build(pedigrees_df)
-
-    phenotype_info = [{
-        'domain': {
-            'affected': {
-                'id': 'affected',
-                'name': 'affected',
-                'color': '#e35252'
-            }
-        },
-        'unaffected': {
-            'id': 'unaffected',
-            'name': 'unaffected',
-            'color': '#ffffff'
-        },
-        'default': {
-            'id': 'unknown',
-            'name': 'unknown',
-            'color': '#aaaaaa'
-        },
-        'source': 'phenotype'
-    }]
-    phenotypes = [['affected', 'unaffected', 'unknown']]
-    roles = [[None]]
-    families_report =\
-        FamiliesReport(families, phenotype_info, phenotypes, roles)
+    families_report = get_families_report(pedigrees)
 
     layouts = {}
     with multiprocessing.Pool(processes=args.processes) as pool:

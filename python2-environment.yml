@@ -86,6 +86,7 @@ dependencies:
   - wheel=0.31.1=py27_0
   - xz=5.2.4=h14c3975_4
   - zlib=1.2.11=ha838bed_2
+  - networkx=2.2=py27_1
   - pip:
     - asn1crypto==0.24.0
     - bcrypt==3.1.4

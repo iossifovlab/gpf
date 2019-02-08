@@ -1,5 +1,4 @@
-from unittest.mock import patch
-
+from builtins import open
 from pedigrees.layout_saver import LayoutSaver
 import pedigrees.layout_saver
 
@@ -30,24 +29,36 @@ def test_write(
     layout_saver.write(family1, error_message)
     layout_saver.write(family2, layout2)
 
-    assert layout_saver._people_with_layout ==\
-        {**people_with_layout, **people_with_layout_error}
-    assert layout_saver._people == {**people1, **people2}
+    expected_layout = people_with_layout.copy()
+    expected_layout.update(people_with_layout_error)
 
+    assert layout_saver._people_with_layout == expected_layout
 
+    expected_people = people1.copy()
+    expected_people.update(people2)
+
+    assert layout_saver._people == expected_people
+
+# FIXME: this test should probably be rewritten to use and captured stdout
+#  instead of trying to mock `open`
 def test_save(
         layout_saver, family1, family2, layout2, error_message,
-        columns_labels, input_filename, output_filename, output, dict_reader,
-        test_output):
+        columns_labels, input_filename, output_filename, output, dict_writer,
+        test_output, mocker):
 
     layout_saver.write(family1, error_message)
     layout_saver.write(family2, layout2)
 
-    with patch(pedigrees.layout_saver.__name__ + '.open') as o:
-        o.side_effect = lambda name, *args: open(name, *args)\
-            if name != output_filename else name
-        with patch('csv.DictWriter') as dw:
-            dw.side_effect = lambda *args, **kwargs: dict_reader
+    new_open = lambda name, *args, **kwargs: \
+        open(name, *args, **kwargs) if name != output_filename else name
+
+    with mocker.patch(
+            pedigrees.layout_saver.__name__ + '.open', side_effect=new_open):
+        # o.
+        with mocker.patch(
+                'csv.DictWriter',
+                side_effect=lambda *args, **kwargs: dict_writer):
+            # dw.
 
             layout_saver.save(columns_labels)
 

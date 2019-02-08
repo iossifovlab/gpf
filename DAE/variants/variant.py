@@ -224,6 +224,13 @@ class SummaryAllele(VariantBase):
             return None
 
     @property
+    def cshl_location(self):
+        if self.details is not None:
+            return self.details.cshl_location
+        else:
+            return None
+
+    @property
     def variant_type(self):
         if self.details is not None:
             return self.details.variant_type
@@ -383,8 +390,10 @@ class SummaryVariant(VariantBase):
 class SummaryVariantFactory(object):
 
     @staticmethod
-    def summary_allele_from_record(record):
-        if not isinstance(record['effect_type'], str):
+    def summary_allele_from_record(
+            record, transmission_type='transmitted'):
+        record['transmission_type'] = 'transmitted'
+        if record['effect_type'] is None:
             effects = None
         else:
             effects = Effect.from_effects(
@@ -406,13 +415,15 @@ class SummaryVariantFactory(object):
             attributes=record)
 
     @staticmethod
-    def summary_variant_from_records(records):
+    def summary_variant_from_records(records, transmission_type='transmitted'):
         assert len(records) > 0
 
         alleles = []
         for record in records:
             sa = SummaryVariantFactory.\
-                summary_allele_from_record(record)
+                summary_allele_from_record(
+                    record,
+                    transmission_type=transmission_type)
             alleles.append(sa)
 
         return SummaryVariant(alleles)

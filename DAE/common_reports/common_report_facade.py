@@ -1,16 +1,38 @@
 import os
 import json
 
-from common_reports.config import CommonReportsConfig
-from studies.default_settings import get_config as get_studies_config
-from study_groups.default_settings import get_config as get_study_groups_config
+from common_reports.config import CommonReportsConfigs
+
+from studies.dataset_facade import DatasetFacade
+from studies.dataset_factory import DatasetFactory
+from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
+from studies.study_facade import StudyFacade
+from studies.study_definition import DirectoryEnabledStudiesDefinition
 
 
 class CommonReportFacade(object):
     _common_report_cache = {}
 
     def __init__(self):
-        self.config = CommonReportsConfig()
+        work_dir = os.environ.get("DAE_DB_DIR")
+        config_file = os.environ.get("DAE_DATA_DIR")
+        studies_dir = os.path.join(config_file, 'studies')
+        datasets_dir = os.path.join(config_file, 'datasets')
+
+        study_definition = DirectoryEnabledStudiesDefinition(
+            studies_dir, work_dir)
+        study_facade = StudyFacade(study_definition)
+
+        dataset_definitions = DirectoryEnabledDatasetsDefinition(
+            study_facade, datasets_dir, work_dir)
+        dataset_factory = DatasetFactory(study_facade)
+
+        dataset_facade =\
+            DatasetFacade(dataset_definitions, dataset_factory)
+
+        self.configs = CommonReportsConfigs()
+        self.configs.scan_directory(studies_dir, study_facade)
+        self.configs.scan_directory(datasets_dir, dataset_facade)
 
     def get_common_report(self, common_report_id):
         self.load_cache({common_report_id})
@@ -26,8 +48,7 @@ class CommonReportFacade(object):
         return list(self._common_report_cache.values())
 
     def get_all_common_report_ids(self):
-        return list(self.config.studies().keys()) +\
-            list(self.config.study_groups().keys())
+        return [crc.id for crc in self.configs.common_reports_configs]
 
     def load_cache(self, common_report_ids=None):
         if common_report_ids is None:
@@ -42,18 +63,24 @@ class CommonReportFacade(object):
                 self._load_common_report_in_cache(common_report_id)
 
     def _load_common_report_in_cache(self, common_report_id):
-        if common_report_id in self.config.studies().keys():
-            common_reports_dir = get_studies_config().get('COMMON_REPORTS_DIR')
-        elif common_report_id in self.config.study_groups().keys():
-            common_reports_dir = get_study_groups_config()\
-                .get('COMMON_REPORTS_DIR')
+        common_reports = list(filter(
+            lambda config: config.id == common_report_id,
+            self.configs.common_reports_configs))
+        if len(common_reports) > 0:
+            common_report = common_reports[0]
         else:
             return
 
-        with open(os.path.join(
-                common_reports_dir, common_report_id + '.json'), 'r') as crf:
+        common_reports_path = common_report.path
+
+        if not os.path.exists(common_reports_path):
+            return
+
+        with open(common_reports_path, 'r') as crf:
             common_report = json.load(crf)
         if common_report is None:
             return
+
+        common_report['id'] = common_report_id
 
         self._common_report_cache[common_report_id] = common_report

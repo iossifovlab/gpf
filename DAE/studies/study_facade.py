@@ -1,3 +1,4 @@
+from studies.study_wrapper import StudyWrapper
 from studies.study_factory import StudyFactory
 from studies.study_definition import SingleFileStudiesDefinition
 
@@ -5,6 +6,7 @@ from studies.study_definition import SingleFileStudiesDefinition
 class StudyFacade(object):
 
     _study_cache = {}
+    _study_wrapper_cache = {}
 
     def __init__(self, study_definition=None, study_factory=None):
         if study_definition is None:
@@ -20,10 +22,23 @@ class StudyFacade(object):
 
         return self._study_cache[study_id]
 
+    def get_study_wrapper(self, study_id):
+        self.load_cache({study_id})
+
+        if study_id not in self._study_wrapper_cache:
+            return None
+
+        return self._study_wrapper_cache[study_id]
+
     def get_all_studies(self):
         self.load_cache()
 
         return list(self._study_cache.values())
+
+    def get_all_studies_wrapper(self):
+        self.load_cache()
+
+        return list(self._study_wrapper_cache.values())
 
     def get_all_study_ids(self):
         return [
@@ -34,6 +49,9 @@ class StudyFacade(object):
 
     def get_all_study_configs(self):
         return self.study_definition.get_all_study_configs()
+
+    def get_study_config(self, study_id):
+        return self.study_definition.get_study_config(study_id)
 
     def load_cache(self, study_ids=None):
         if study_ids is None:
@@ -52,5 +70,6 @@ class StudyFacade(object):
         if not conf:
             return
 
-        self._study_cache[study_id] = \
-            self.study_factory.make_study(conf)
+        study = self.study_factory.make_study(conf)
+        self._study_cache[study_id] = study
+        self._study_wrapper_cache[study_id] = StudyWrapper(study)

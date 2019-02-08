@@ -1,9 +1,0 @@
-#!/bin/bash 
-
-mkFile=$1
-
-qmkArgs="-cwd -v PF,PATH,PERL5LIB,LD_LIBRARY_PATH,T94_PROJECT_DIR,T94_PIPELINE_DIR,T94_BIN_DIR,MATLABPATH,CLASSPATH,PYTHONPATH,DAE_DB_DIR,PHENO_DB_DIR,PHENO_DB_PREFIX -inherit"
-
-mkArgs="-f ${mkFile} -S -j 30 "
-
-qmake  $qmkArgs -- $mkArgs

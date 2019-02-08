@@ -1,100 +1,50 @@
-class Study(object):
 
-    def __init__(self, name, backend, study_config):
-        self.name = name
-        self.backend = backend
-        self.study_config = study_config
-        self._study_type_lowercase = self.study_type.lower()
+class StudyBase(object):
+
+    def __init__(self, config):
+        self.config = config
+
+        self.id = self.config.id
+        self.name = self.config.name
+        self.phenotypes = self.config.phenotypes
+        self.has_denovo = self.config.has_denovo
+        self.has_transmitted = self.config.has_transmitted
+        self.has_complex = self.config.has_complex
+        self.has_cnv = self.config.has_cnv
+        self.study_type = self.config.study_type
+        self.year = self.config.year
+        self.pub_med = self.config.pub_med
+        self.description = self.config.description
+
+        self.study_types = self.config.study_types
+        self.years = self.config.years
+        self.pub_meds = self.config.pub_meds
+        self.order = self.config.order
+
+    @property
+    def families(self):
+        raise NotImplementedError()
 
     def query_variants(self, **kwargs):
-        study_types_filter = kwargs.get('studyTypes', None)
-        if study_types_filter:
-            if not isinstance(study_types_filter, list):
-                raise RuntimeError("alabalaa")
-            study_types_filter = [s.lower() for s in study_types_filter]
-            if self._study_type_lowercase not in study_types_filter:
-                return []
+        raise NotImplementedError()
 
-        kwargs = self.add_people_with_phenotype(kwargs)
-        if 'person_ids' in kwargs and len(kwargs['person_ids']) == 0:
-            return []
+    def get_pedigree_values(self, column):
+        raise NotImplementedError()
 
-        return self.backend.query_variants(**kwargs)
 
-    def add_people_with_phenotype(self, kwargs):
-        people_with_phenotype = set()
-        if 'pedigreeSelector' in kwargs and\
-                kwargs['pedigreeSelector'] is not None:
-            pedigree_selector = kwargs.pop('pedigreeSelector')
+class Study(StudyBase):
 
-            for family in self.families.values():
-                family_members_with_phenotype = set(
-                    [person.person_id for person in
-                        family.get_people_with_phenotypes(
-                            pedigree_selector['source'],
-                            pedigree_selector['checkedValues'])])
-                people_with_phenotype.update(family_members_with_phenotype)
+    def __init__(self, config, backend):
+        super(Study, self).__init__(config)
 
-            if 'person_ids' in kwargs:
-                people_with_phenotype.intersection(kwargs['person_ids'])
-
-            kwargs['person_ids'] = list(people_with_phenotype)
-
-        return kwargs
-
-    def get_phenotype_values(self, pheno_column='phenotype'):
-        return set(self.backend.ped_df[pheno_column])
+        self.backend = backend
 
     @property
     def families(self):
         return self.backend.families
 
-    @property
-    def description(self):
-        return self.study_config.description
+    def query_variants(self, **kwargs):
+        return self.backend.query_variants(**kwargs)
 
-    @property
-    def phenotypes(self):
-        return self.study_config.phenotypes
-
-    @property
-    def has_denovo(self):
-        return self.study_config.hasDenovo
-
-    @property
-    def has_transmitted(self):
-        return self.study_config.hasTransmitted
-
-    @property
-    def has_complex(self):
-        return self.study_config.hasComplex
-
-    @property
-    def has_CNV(self):
-        return self.study_config.hasCNV
-
-    @property
-    def study_type(self):
-        return self.study_config.studyType
-
-    @property
-    def study_types(self):
-        return [self.study_config.studyType]
-
-    # FIXME: fill these with real data
-
-    @property
-    def year(self):
-        return None
-
-    @property
-    def years(self):
-        return None
-
-    @property
-    def pub_med(self):
-        return None
-
-    @property
-    def pub_meds(self):
-        return None
+    def get_pedigree_values(self, column):
+        return set(self.backend.ped_df[column])

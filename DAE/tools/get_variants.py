@@ -159,13 +159,13 @@ def combine_gene_syms(data):
         else:
             return gene_sets.union(gene_syms)
 
+
 if __name__ == "__main__":
 
     print(sys.argv, file=sys.stderr)
     try:
         args_dict = parse_cli_arguments(sys.argv[1:])
         generator = get_variants(args_dict)
-
 
         for l in generator:
             sys.stdout.write(join_line(l, '\t'))

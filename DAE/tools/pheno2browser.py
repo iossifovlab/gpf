@@ -4,10 +4,11 @@
 pheno2browser -- prepares a DAE pheno browser data
 
 '''
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import print_function, unicode_literals, absolute_import
+
 from future import standard_library
-standard_library.install_aliases()
+standard_library.install_aliases()  # noqa
+
 import sys
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter

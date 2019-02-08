@@ -3,6 +3,10 @@ from __future__ import print_function
 import sys
 import traceback
 
+import pandas as pd
+
+from copy import deepcopy
+
 from annotation.tools.annotator_config import LineConfig, \
     AnnotatorConfig, \
     VariantAnnotatorConfig
@@ -14,7 +18,7 @@ import GenomeAccess
 class AnnotatorBase(object):
 
     """
-    `AnnotatorBase` is base class of all `Annotators` and `Preannotators`.
+    `AnnotatorBase` is base class of all `Annotators`.
     """
 
     def __init__(self, config):
@@ -43,7 +47,7 @@ class AnnotatorBase(object):
         """
             Method for annotating file from `Annotator`.
         """
-        self.schema = file_io_manager.reader.schema
+        self.schema = deepcopy(file_io_manager.reader.schema)
         self.collect_annotator_schema(self.schema)
         file_io_manager.writer.schema = self.schema
 
@@ -62,6 +66,8 @@ class AnnotatorBase(object):
                 file_io_manager.line_write(line)
                 continue
             annotation_line = line_config.build(line)
+            # print(annotation_line)
+
             try:
                 self.line_annotation(annotation_line)
             except Exception:
@@ -71,6 +77,15 @@ class AnnotatorBase(object):
 
             file_io_manager.line_write(
                 self.build_output_line(annotation_line))
+
+    def annotate_df(self, df):
+        result = []
+        for line in df.to_dict(orient='records'):
+            self.line_annotation(line)
+            result.append(line)
+
+        res_df = pd.DataFrame.from_records(result)
+        return res_df
 
     def line_annotation(self, annotation_line):
         """
@@ -156,7 +171,7 @@ class DAEBuilder(VariantBuilder):
         if self.location in aline:
             location = aline[self.location]
             chrom, position = location.split(':')
-        else:   
+        else:
             assert self.chrom in aline
             assert self.position in aline
             chrom = aline[self.chrom]
@@ -185,6 +200,8 @@ class VCFBuilder(VariantBuilder):
         alt = aline[self.alt]
 
         if chrom is None or position is None:
+            return None
+        if not alt:
             return None
 
         summary = SummaryAllele(

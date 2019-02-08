@@ -86,6 +86,9 @@ def trim_str_front(pos, ref, alt):
 
 
 def trim_str_back(pos, ref, alt):
+    assert alt
+    assert ref
+
     for n, s in enumerate(zip(ref[::-1], alt[::-1])):
         if s[0] != s[1]:
             break
@@ -138,4 +141,3 @@ def vcf2cshl(pos, ref, alt):
     vp, vt, vl = cshl_format(pos, ref, alt)
 
     return vp, vt, vl
-

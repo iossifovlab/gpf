@@ -1,4 +1,4 @@
-from unittest.mock import patch, mock_open
+import json
 
 import common_reports.common_report
 
@@ -8,42 +8,45 @@ def assert_common_reports(first, second):
     second['phenotype'].sort()
 
     for el in range(len(first['families_report']['people_counters'])):
-        first['families_report']['people_counters'][el]['phenotypes'].sort()
-        second['families_report']['people_counters'][el]['phenotypes'].sort()
+        first['families_report']['people_counters'][el]['columns'].sort()
+        second['families_report']['people_counters'][el]['columns'].sort()
         first['families_report']['people_counters'][el]['counters'].sort(
-            key=lambda counters: str(counters['phenotype']))
+            key=lambda counters: str(counters['column']))
         second['families_report']['people_counters'][el]['counters'].sort(
-            key=lambda counters: str(counters['phenotype']))
+            key=lambda counters: str(counters['column']))
     for el in range(len(first['families_report']['families_counters'])):
         first['families_report']['families_counters'][el]['phenotypes'].sort()
         second['families_report']['families_counters'][el]['phenotypes'].sort()
         first['families_report']['families_counters'][el]['counters'].sort(
-            key=lambda families_counters: str(families_counters['phenotype']))
+            key=lambda families_counters: len(families_counters))
         second['families_report']['families_counters'][el]['counters'].sort(
-            key=lambda families_counters: str(families_counters['phenotype']))
+            key=lambda families_counters: len(families_counters))
 
     for rows_el in range(len(first['denovo_report']['tables'])):
-        first['denovo_report']['tables'][rows_el]['phenotypes'].sort()
-        second['denovo_report']['tables'][rows_el]['phenotypes'].sort()
+        first['denovo_report']['tables'][rows_el]['columns'].sort()
+        second['denovo_report']['tables'][rows_el]['columns'].sort()
         for row_el in\
                 range(len(first['denovo_report']['tables'][rows_el]['rows'])):
             first['denovo_report']['tables'][rows_el]['rows'][row_el]['row']\
-                .sort(key=lambda row: str(row['phenotype']))
+                .sort(key=lambda row: str(row['column']))
             second['denovo_report']['tables'][rows_el]['rows'][row_el]['row']\
-                .sort(key=lambda row: str(row['phenotype']))
+                .sort(key=lambda row: str(row['column']))
 
     assert first == second
 
 
-def test_common_reports_generator(common_reports_generator, output):
-    with patch(common_reports.common_report.__name__ + '.open',
-               new_callable=mock_open()):
+def test_common_reports_generator(mocker, common_reports_generator, output):
+    with mocker.patch(common_reports.common_report.__name__ + '.open',
+                      new_callable=mocker.mock_open()):
 
-        with patch('json.dump') as m_json:
-            common_reports_generator.save_common_reports()
-            assert m_json.assert_any_call
-            for common_report_call in m_json.call_args_list:
-                common_report = list(common_report_call)[0][0]
-                common_report_output = output(common_report['study_name'])
+        mocker.patch('json.dump')
 
-                assert_common_reports(common_report, common_report_output)
+        common_reports_generator.save_common_reports()
+
+        assert json.dump.call_count == 4
+
+        for common_report_call in json.dump.call_args_list:
+            common_report = list(common_report_call)[0][0]
+            common_report_output = output(common_report['study_name'])
+
+            assert_common_reports(common_report, common_report_output)
