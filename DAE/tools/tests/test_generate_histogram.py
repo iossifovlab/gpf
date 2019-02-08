@@ -5,6 +5,8 @@ from six import StringIO
 
 from tools.generate_histogram import GenerateScoresHistograms
 
+pytestmark = pytest.mark.xfail
+
 
 class MyStringIO(StringIO):
 
