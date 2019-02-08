@@ -26,35 +26,30 @@ class BigWigLineAdapter(LineAdapter):
 
 class BigWigFile(ScoreFile):
 
-    def __init__(self, score_filename):
+    def __init__(self, score_filename, config_filename=None):
         assert os.path.exists(score_filename)
-        self.bwfile = pyBigWig.open(score_filename)
         self.filename = score_filename
-
-    def _init_chrom_prefix(self):
-        chr_sample = list(self.bwfile.chroms().keys())[0]
-        self._has_chrom_prefix = 'chr' in chr_sample
-
-    def _handle_chrom_prefix(self, chrom):
-        return super(BigWigFile, self)._handle_chrom_prefix(chrom)
+        self.bwfile = pyBigWig.open(score_filename)
+        assert self.bwfile
+        self._load_config(config_filename)
 
     def _setup(self):
-        score_name = os.path.basename(self.filename)
-        score_name = score_name[:score_name.index('.')]
-        self.header = ['chrom', 'pos_begin', 'pos_end', score_name]
-        self.score_names = [score_name]
-        self.no_score_value = 'na'
-        self.schema = Schema.from_dict({
-            'str': 'chrom',
-            'int': 'pos_begin, pos_end',
-            'float': score_name})
-        self._init_chrom_prefix()
+        self.header = ['chrom', 'pos_begin', 'pos_end', self.score_names[0]]
+        self.schema = Schema()
+        self.schema.create_column('chrom', 'str')
+        self.schema.create_column('pos_begin', 'int')
+        self.schema.create_column('pos_end', 'int')
+        self.schema.create_column(self.score_names[0], 'float')
 
-    def _load_config(self, config_filename=None):
-        raise NotImplementedError()
+    def _cleanup(self):
+        self.bwfile.close()
 
     def _setup_config(self, score_config):
-        raise NotImplementedError()
+        self.config = score_config
+        assert self.config.format.lower() == 'bigwig'
+        self.score_names = [self.config.columns.score]
+        self.no_score_value = self.config.noScoreValue
+        self._has_chrom_prefix = self.config.chr_prefix
 
     def _fetch(self, chrom, pos_begin, pos_end):
         result = []

@@ -40,7 +40,9 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         assert os.path.exists(scores_filename), scores_filename
 
         if self.config.options.bigwig:
-            self.score_file = BigWigFile(scores_filename)
+            self.score_file = BigWigFile(
+                scores_filename,
+                self.config.options.scores_config_file)
         elif self.config.options.direct:
             self.score_file = DirectAccess(
                 self.config.options,
