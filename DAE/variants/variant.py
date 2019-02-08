@@ -224,6 +224,13 @@ class SummaryAllele(VariantBase):
             return None
 
     @property
+    def cshl_location(self):
+        if self.details is not None:
+            return self.details.cshl_location
+        else:
+            return None
+
+    @property
     def variant_type(self):
         if self.details is not None:
             return self.details.variant_type

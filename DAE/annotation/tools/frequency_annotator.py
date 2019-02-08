@@ -48,7 +48,17 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
 
             variant_index = scores[self.variant_col_name].index(variant)
             for native, output in self.config.columns_config.items():
-                aline[output] = float(scores[native][variant_index])
+                # FIXME: this conversion should come from schema
+                val = scores[native][variant_index]
+                try:
+                    if val in set(['', ' ']):
+                        aline[output] = self.no_score_value
+                    else:
+                        aline[output] = float(val)
+                except ValueError as ex:
+                    print("problem with: ", output, chrom, pos, [val],
+                          file=sys.stderr)
+                    raise ex
         else:
             print('{}: frequency score not found for variant {}:{} {}'.
                   format(self.score_file.filename,

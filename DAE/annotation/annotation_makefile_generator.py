@@ -198,7 +198,7 @@ class MakefileBuilder(VariantDBConfig):
 
     COMMAND = (
         '{target}: {output_dir} {input_file}\n\t(SGE_RREQ="{sge_rreq}" time'
-        ' annotation_pipeline.py {args}'
+        ' annotation_pipeline.py --notabix {args}'
         ' "{input_file}" "$@"'
         ' 2> "{log_prefix}-err{job_sufix}.txt")'
         ' 2> "{log_prefix}-time{job_sufix}.txt"\n')
@@ -247,7 +247,7 @@ class MakefileBuilder(VariantDBConfig):
                         region_index=region_index,
                         contig=contig)
                 target = self.escape_target(output_basename + part_sufix)
-                args = '--mode=replace --config {config} -c chr -p position' \
+                args = '--mode=replace --config {config} --sequential -c chr -p position' \
                     ' --Graw {genome_file}' \
                     ' --region={chr}:{begin_pos}-{end_pos}'.format(
                         config=self.annotation_config,

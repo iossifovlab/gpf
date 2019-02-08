@@ -98,12 +98,15 @@ class GenerateScoresHistograms(object):
         elif xscale == 'log':
             bins = []
             min_range = range[0]
+            max_range = range[1]
             if range[0] == 0.0:
+                step = float(max_range - min_range)/bin_num
+                min_range = step / bin_num
                 bins = [0.0]
-                min_range += 1
                 bin_num -= 1
+            print(min_range, max_range)
             bins = bins + list(np.logspace(np.log10(min_range),
-                                           np.log10(range[1]),
+                                           np.log10(max_range),
                                            bin_num))
         bars = np.zeros(len(bins) - 1)
         bins = np.array(bins)

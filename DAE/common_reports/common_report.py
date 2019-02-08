@@ -518,18 +518,18 @@ class DenovoReport(object):
 class CommonReport(object):
 
     def __init__(
-            self, query_object, query_object_properties, phenotypes_info,
-            effect_groups, effect_types):
+            self, query_object, filter_info, phenotypes_info, effect_groups,
+            effect_types):
         phenotypes_info = PhenotypesInfo(
-            query_object, query_object_properties, phenotypes_info)
+            query_object, filter_info, phenotypes_info)
 
         filter_objects = FilterObjects.get_filter_objects(
-            query_object, phenotypes_info, query_object_properties['groups'])
+            query_object, phenotypes_info, filter_info['groups'])
 
         self.families_report = FamiliesReport(
             query_object, phenotypes_info, filter_objects,
-            query_object_properties['draw_all_families'],
-            query_object_properties['families_count_show_id'])
+            filter_info['draw_all_families'],
+            filter_info['families_count_show_id'])
         self.denovo_report = DenovoReport(
             query_object, effect_groups, effect_types, filter_objects)
         self.study_name = query_object.name
@@ -547,7 +547,7 @@ class CommonReport(object):
         self.denovo = query_object.has_denovo
         self.transmitted = query_object.has_transmitted
         self.study_description = query_object.description
-        self.is_downloadable = query_object_properties['is_downloadable']
+        self.is_downloadable = filter_info['is_downloadable']
 
     def to_dict(self):
         return OrderedDict([
@@ -590,14 +590,14 @@ class CommonReportsGenerator(object):
         for config in self.configs.common_reports_configs:
             query_object = config.query_object
             phenotypes_info = config.phenotypes_info
-            filter = config.filter
+            filter_info = config.filter_info
             effect_groups = config.effect_groups
             effect_types = config.effect_types
 
             path = config.path
 
             common_report = CommonReport(
-                query_object, filter, phenotypes_info, effect_groups,
+                query_object, filter_info, phenotypes_info, effect_groups,
                 effect_types)
 
             with open(path, 'w+') as crf:
@@ -640,16 +640,16 @@ class PhenotypeInfo(object):
 
 class PhenotypesInfo(object):
 
-    def __init__(self, query_object, query_object_properties, phenotypes_info):
+    def __init__(self, query_object, filter_info, phenotypes_info):
         self.phenotypes_info = self._get_phenotypes_info(
-            query_object, query_object_properties, phenotypes_info)
+            query_object, filter_info, phenotypes_info)
 
     def _get_phenotypes_info(
-            self, query_object, query_object_properties, phenotypes_info):
+            self, query_object, filter_info, phenotypes_info):
         return [
             PhenotypeInfo(phenotypes_info[phenotype_group], phenotype_group,
                           query_object=query_object)
-            for phenotype_group in query_object_properties['phenotype_groups']
+            for phenotype_group in filter_info['phenotype_groups']
         ]
 
     def get_first_phenotype_info(self):

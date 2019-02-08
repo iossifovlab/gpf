@@ -151,7 +151,7 @@ def variant_count_v3(bs, c, location=None, gender=None, denovo_parent=None):
 
 STANDARD_ATTRS = {
     "family": "family_id",
-    "location": "location",
+    "location": "cshl_location",
     "variant": "cshl_variant",
 }
 
@@ -310,7 +310,7 @@ EFFECT_TYPES_MAPPING = {
     "Frame-shift": ["frame-shift"],
     "Splice-site": ["splice-site"],
     "Missense": ["missense"],
-    "Non-frame-shift": ["no-frame-shift"],
+    "No-frame-shift": ["no-frame-shift"],
     "No-frame-shift-newStop": ["no-frame-shift-newStop"],
     "noStart": ["noStart"],
     "noEnd": ["noEnd"],
@@ -331,7 +331,7 @@ EFFECT_GROUPS = {
         "Frame-shift",
         "Splice-site",
         "Missense",
-        "Non-frame-shift",
+        "No-frame-shift",
         "noStart",
         "noEnd",
         "Synonymous",
@@ -358,7 +358,7 @@ EFFECT_GROUPS = {
         "Frame-shift",
         "Splice-site",
         "Missense",
-        "Non-frame-shift",
+        "No-frame-shift",
         "noStart",
         "noEnd",
     ],

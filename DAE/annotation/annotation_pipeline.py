@@ -80,7 +80,7 @@ class PipelineConfig(VariantAnnotatorConfig):
     @staticmethod
     def _parse_config_section(section_name, section, options):
         # section = Box(section, default_box=True, default_box_attr=None)
-        assert 'annotator' in section
+        assert 'annotator' in section, [section_name, section]
 
         annotator_name = section['annotator']
         options = dict(options.to_dict())
@@ -271,9 +271,11 @@ def pipeline_main(argv):
 
     start = time.time()
 
+    pipeline = PipelineAnnotator.build(
+        options, config_filename, defaults=dae_config.annotation_defaults)
+    assert pipeline is not None
+
     with IOManager(options, reader_type, writer_type) as io_manager:
-        pipeline = PipelineAnnotator.build(options, config_filename)
-        assert pipeline is not None
         pipeline.annotate_file(io_manager)
 
     print("# PROCESSING DETAILS:", file=sys.stderr)

@@ -223,7 +223,8 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
         return filenames[0]
 
     def _build_annotator_for(self, score_name):
-        assert os.path.exists(self.config.options.scores_directory)
+        assert os.path.exists(self.config.options.scores_directory), \
+            self.config.options.scores_directory
 
         score_filename = self._get_score_file(score_name)
         options = Box(

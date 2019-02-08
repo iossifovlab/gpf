@@ -1,0 +1,13 @@
+familyId	location	variant	vcfVariant	inChild	fromParent	familyDescription	CSHL	YALE	UW	IossifovWE2012	EichlerWE2012	StateWE2012	EichlerTG2012	bestState	effectType	effectGene	effectDetails	SSC-freq	EVS-freq	E65-freq
+13590	15:80137554	ins(A)	15:80137553:T:TA	prbM		pMsM	strong:valid			yes				2 2 1 2/0 0 1 0	noEnd	MTHFS:noEnd|ST20-MTHFS:noEnd|MTHFS:non-coding	147;204;180|2365			
+12969	12:116418554	ins(C)	12:116418553:A:AC	prbM		pMsM	strong:valid			yes				2 2 1 2/0 0 1 0	splice-site	MED13L:splice-site	1789/2211			
+
+13060	3:56627768	del(4)	3:56627767:AAAGT:A	prbM		pM	not called:valid							2 2 1/0 0 1	frame-shift	CCDC66:frame-shift|CCDC66:non-coding	440/948;406/914|3117			0.00
+12507	3:195475904	del(35)	3:195475903:ATCTGAAGTAAGCCTTCAGCGTGCTCACGTTCACTG:A	sibF		pMsF		strong:valid						2 2 2 1/0 0 0 1	frame-shift	MUC4:frame-shift	5291/5412;1004/1125;1055/1176			0.08
+13256	21:38877892	del(15)	21:38877891:AGGTCTGTGCTGCTGC:A	prbM		pMsF	strong:valid							2 2 1 2/0 0 1 0	frame-shift	DYRK1A:frame-shift	516/584;507/754;516/763;516/529			
+
+13537	15:43694049	del(4)	15:43694048:TGTAA:T	prbM		pMsM	strong:valid			yes				2 2 1 2/0 0 1 0	intron	TUBGCP4:intron|RNU6-28P:non-coding-intron	15/17[1]|4/4[10630]			
+13943	12:93792633	ins(T)	12:93792632:G:GT	prbM		pMsM			strong:valid					2 2 1 2/0 0 1 0	intron	NUDT4:intron|NUDT4P2:non-coding-intron|NUDT4P1:non-coding-intron	4/4[2];4/4[2]|4/4[2];4/4[2]			
+11041	4:83276456	sub(C->T)	4:83276456:C:T	prbM		pMsM		strong						2 2 1 2/0 0 1 0	3'UTR-intron	HNRNPD:3'UTR-intron	1/1[1];1/1[1];1/1[1];1/1[1]			
+13922	3:195966608	del(4)	3:195966607:CTAGA:C	prbF		pFsM		strong						2 2 1 2/0 0 1 0	intron	PCYT1A:intron	6/7[2]			0.00
+14500	3:97611838	del(4)	3:97611837:TGTGA:T	prbM		pMsF			strong:valid					2 2 1 2/0 0 1 0	intron	CRYBG3:intron	11/21[1]			0.00

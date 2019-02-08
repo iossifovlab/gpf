@@ -358,7 +358,8 @@ class RawDenovo(BaseDAE):
                 family = self.families.get(family_id)
                 assert family is not None
 
-                assert len(family) == gt.shape[1], family.family_id
+                assert len(family) == gt.shape[1], \
+                    (family.family_id, len(family), gt.shape)
 
                 family_variant = FamilyVariant(
                     summary_variant, family, gt)
