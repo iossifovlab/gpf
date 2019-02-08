@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 import os
 import pyBigWig
@@ -8,20 +10,27 @@ from annotation.tools.schema import Schema
 
 class BigWigLineAdapter(LineAdapter):
 
-    def __init__(self, line):
-        self.line = list(line)
+    def __init__(self, chromosome, line):
+        self.chromosome = chromosome
+        self.line = line
 
     @property
     def pos_begin(self):
-        return self.line[1] + 1
+        return self.line[0] + 1
 
     @property
     def pos_end(self):
-        return self.line[2]
+        return self.line[1]
 
     @property
     def chrom(self):
-        return self.line[0]
+        return self.chromosome
+
+    def __getitem__(self, index):
+        if index == 0:
+            return self.chromosome
+        else:
+            return self.line[index - 1]
 
 
 class BigWigFile(ScoreFile):
@@ -57,7 +66,7 @@ class BigWigFile(ScoreFile):
             score_values = self.bwfile.intervals(chrom, pos_begin - 1, pos_end)
             if score_values:
                 for line in score_values:
-                    result.append(BigWigLineAdapter([chrom, *line]))
+                    result.append(BigWigLineAdapter(chrom, line))
         except RuntimeError:
             print('No scores found for interval {}:{}-{}!'
                   .format(chrom, pos_begin, pos_end),

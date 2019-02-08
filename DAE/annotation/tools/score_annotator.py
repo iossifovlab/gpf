@@ -13,7 +13,11 @@ from annotation.tools.annotator_base import VariantAnnotatorBase, \
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 
 from annotation.tools.score_file_io import DirectAccess, IterativeAccess
-from annotation.tools.score_file_io_bigwig import BigWigFile
+try:
+    bigwig_enabled = True
+    from annotation.tools.score_file_io_bigwig import BigWigFile
+except ImportError:
+    bigwig_enabled = False
 
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):
@@ -40,6 +44,11 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         assert os.path.exists(scores_filename), scores_filename
 
         if self.config.options.bigwig:
+            if not bigwig_enabled:
+                print("bigWig IO is not supported.",
+                      "Please install the pyBigWig module first.",
+                      file=sys.stderr)
+                sys.exit(1)
             self.score_file = BigWigFile(
                 scores_filename,
                 self.config.options.scores_config_file)

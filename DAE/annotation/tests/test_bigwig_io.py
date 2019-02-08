@@ -2,10 +2,16 @@ import pytest
 
 
 from .conftest import relative_to_this_test_folder
-from annotation.tools.score_file_io_bigwig import \
-    BigWigFile, BigWigLineAdapter
+try:
+    bigwig_enabled = True
+    from annotation.tools.score_file_io_bigwig import \
+        BigWigFile, BigWigLineAdapter
+except ImportError:
+    bigwig_enabled = False
 
 
+@pytest.mark.skipif(bigwig_enabled is False,
+                    reason='pyBigWig module is not installed')
 def test_bigwig_header():
     score_filename = relative_to_this_test_folder(
         "fixtures/TESTbigwig/TEST_bigwig_score.bw")
@@ -17,6 +23,8 @@ def test_bigwig_header():
                                     'TEST_bigwig_score']
 
 
+@pytest.mark.skipif(bigwig_enabled is False,
+                    reason='pyBigWig module is not installed')
 def test_bigwig_access_simple():
     score_filename = relative_to_this_test_folder(
         "fixtures/TESTbigwig/TEST_bigwig_score.bw")
@@ -44,8 +52,10 @@ def test_bigwig_access_simple():
             pytest.approx(22.7, 1E-3)
 
 
+@pytest.mark.skipif(bigwig_enabled is False,
+                    reason='pyBigWig module is not installed')
 def test_bigwig_line_adapter():
-    bwline = BigWigLineAdapter(['chr1', 0, 1, 0.1234])
+    bwline = BigWigLineAdapter('chr1', [0, 1, 0.1234])
     assert bwline.chrom == 'chr1'
     assert bwline.pos_begin == 1
     assert bwline.pos_end == 1
