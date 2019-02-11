@@ -20,7 +20,7 @@ from variants.attributes import VariantType
     ("1:874816:CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT:"
      "CCCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT"
      "CCCCTCATCACCTCCCCAGCCACGGTGAGGACCCACCCTGGCATGATCT",
-     VariantType.insertion, 874817),
+     VariantType.insertion, 874866),
 
 ])
 def test_variant_details(variant, variant_type, position):

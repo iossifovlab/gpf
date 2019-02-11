@@ -137,7 +137,7 @@ def cshl_format(pos, ref, alt, trimmer=trim_str_front):
     return p, 'complex(' + r + '->' + a + ')', max(len(r), len(a))
 
 
-def vcf2cshl(pos, ref, alt):
-    vp, vt, vl = cshl_format(pos, ref, alt)
+def vcf2cshl(pos, ref, alt, trimmer=trim_str_front):
+    vp, vt, vl = cshl_format(pos, ref, alt, trimmer=trimmer)
 
     return vp, vt, vl
