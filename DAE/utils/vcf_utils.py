@@ -114,7 +114,7 @@ def trim_str_back(pos, ref, alt):
     return pos+n, r[n:], a[n:]
 
 
-def cshl_format(pos, ref, alt, trimmer=trim_str_back):
+def cshl_format(pos, ref, alt, trimmer=trim_str_front):
     p, r, a = trimmer(pos, ref, alt)
     if len(r) == len(a) and len(r) == 0:
         # print('ref {:s} is the same as alt {:s}'.format(

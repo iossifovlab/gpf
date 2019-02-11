@@ -195,7 +195,8 @@ def dae_iossifov2014_thrift(
     (Region('4', 83276456, 83276456), '4:83276456', 'splice-site'),
     (Region('3', 195966607, 195966607), '3:195966608', 'splice-site'),
     (Region('3', 97611837, 97611837), '3:97611838', 'splice-site'),
-
+    (Region('15', 31776803, 31776803), '15:31776804', 'no-frame-shift'),
+    (Region('3', 151176416, 151176416), '3:151176417', 'no-frame-shift'),
 ])
 def test_dae2parquet_iossifov2014_variant_coordinates(
         dae_iossifov2014_thrift, fixture_select,
@@ -210,7 +211,7 @@ def test_dae2parquet_iossifov2014_variant_coordinates(
         regions=[region]
     )
     vs = list(vs)
-
+    print(vs)
     assert len(vs) == 1
     v = vs[0]
     assert len(v.alt_alleles) == 1
