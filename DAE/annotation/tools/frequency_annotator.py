@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import sys
+from os.path import basename
 from annotation.tools.score_annotator import VariantScoreAnnotatorBase
 
 
@@ -12,6 +13,7 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
     def _init_score_file(self):
         super(FrequencyAnnotator, self)._init_score_file()
 
+        self.score_filename_base = basename(self.score_file.filename)
         self.variant_col_name = self.score_file.config.columns.variant
         assert self.variant_col_name
         assert self.variant_col_name in self.score_file.schema.col_names, \
@@ -42,7 +44,7 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
         if variant_occurrences > 0:
             if variant_occurrences > 1:
                 print('WARNING {}: multiple variant occurrences of {}:{} {}'.
-                      format(self.score_file.filename,
+                      format(self.score_filename_base,
                              str(chrom), str(pos), str(variant)),
                       file=sys.stderr)
 
@@ -61,6 +63,6 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
                     raise ex
         else:
             print('{}: frequency score not found for variant {}:{} {}'.
-                  format(self.score_file.filename,
+                  format(self.score_filename_base,
                          str(chrom), str(pos), str(variant)),
                   file=sys.stderr)
