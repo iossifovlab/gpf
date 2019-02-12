@@ -50,23 +50,27 @@ class GenerateScoresHistograms(object):
 
     def __init__(
             self, input_files, score_histograms_info, round_pos=None,
-            chunk_size=None):
+            chunk_size=None, start=None, end=None):
         self.genomic_score_files = input_files
         self.score_histograms_info = score_histograms_info
         self.round_pos = round_pos
         self.chunk_size = chunk_size
+        self.start = start
+        self.end = end
 
-    def get_length(self, data, start, end):
-        if start is not None and end is not None:
-            data[start] = pd.to_numeric(data[start], errors='coerce')
-            data[end] = pd.to_numeric(data[end], errors='coerce')
-            data['length'] = data[end] - data[start]
+    def get_variant_length(self, data):
+        if self.start is not None and self.end is not None:
+            data[self.start] = pd.to_numeric(data[self.start], errors='coerce')
+            data[self.end] = pd.to_numeric(data[self.end], errors='coerce')
+            data['length'] = data[self.end] - data[self.start]
             data['length'] += 1
-            data = data.drop(columns=[start, end], axis=1)
+            data = data.drop(columns=[self.start, self.end], axis=1)
+        else:
+            data['length'] = 1
 
         return data
 
-    def get_bars_and_bins(self, histogram_info):
+    def get_empty_bars_and_bins(self, histogram_info):
         bin_num = histogram_info.bin_num
 
         if histogram_info.xscale == 'linear':
@@ -91,6 +95,59 @@ class GenerateScoresHistograms(object):
 
         return bars, bins
 
+    def fill_bars(self, histogram_info, values, bars, bins):
+        for s, l in zip(values[histogram_info.score_column], values['length']):
+            if s < histogram_info.bin_range[0] or\
+                    s > histogram_info.bin_range[1]:
+                continue
+            idx = (np.abs(bins - s)).argmin()
+            if idx == histogram_info.bin_num - 1:
+                idx -= 1
+            bars[idx] += l
+
+        return bars
+
+    def get_bars_and_bins_with_chunking(self, histogram_info, use_columns):
+        if not histogram_info.bin_range:
+            histogram_info.set_bin_range_from_files(
+                self.genomic_score_files, self.chunk_size, self.round_pos)
+        bars, bins = self.get_empty_bars_and_bins(histogram_info)
+
+        for genomic_score_file in self.genomic_score_files:
+            for chunk in pd.read_csv(
+                genomic_score_file, usecols=use_columns, sep='\t',
+                    header=histogram_info.header, chunksize=self.chunk_size,
+                    low_memory=True):
+                chunk = self.get_variant_length(chunk)
+                chunk[histogram_info.score_column] = pd.to_numeric(
+                    chunk[histogram_info.score_column],
+                    errors='coerce')
+
+                bars = self.fill_bars(histogram_info, chunk, bars, bins)
+
+        return (bars, bins)
+
+    def get_bars_and_bins_without_chunking(self, histogram_info, use_columns):
+        values = pd.DataFrame(columns=[histogram_info.score_column])
+
+        for genomic_score_file in self.genomic_score_files:
+            v = pd.read_csv(
+                genomic_score_file, usecols=use_columns, sep='\t',
+                header=histogram_info.header)
+            v = self.get_variant_length(v)
+            v[histogram_info.score_column] = pd.to_numeric(
+                v[histogram_info.score_column], errors='coerce')
+            v = pd.DataFrame(v)
+            values = pd.concat([values, v])
+
+        if not histogram_info.bin_range:
+            histogram_info.set_bin_range_from_values(values, self.round_pos)
+        bars, bins = self.get_empty_bars_and_bins(histogram_info)
+
+        bars = self.fill_bars(histogram_info, values, bars, bins)
+
+        return (bars, bins)
+
     def save_histogram(self, bars, bins, histogram_info):
         scores = pd.Series(bins, name='scores')
         data = pd.Series(bars, name=histogram_info.score)
@@ -105,85 +162,18 @@ class GenerateScoresHistograms(object):
         ax.bar(bins, bars, width=0.01)
         plt.savefig(histogram_info.output_file + '.png')
 
-    def generate_scores_histograms(self, start=None, end=None):
+    def generate_scores_histograms(self):
         for histogram_info in self.score_histograms_info:
-            values = pd.DataFrame(columns=[histogram_info.score])
+            use_columns = [histogram_info.score_column]
+            if self.start is not None and self.end is not None:
+                use_columns.extend([self.start, self.end])
 
-            for genomic_score_file in self.genomic_score_files:
-                use_columns = [histogram_info.score_column]
-                if start is not None and end is not None:
-                    use_columns.extend([start, end])
-
-                if self.chunk_size is not None:
-                    if not histogram_info.bin_range:
-                        histogram_info.set_bin_range_from_file(
-                            genomic_score_file, self.chunk_size,
-                            self.round_pos)
-
-                    bars, bins = self.get_bars_and_bins(histogram_info)
-                    for chunk in pd.read_csv(
-                        genomic_score_file, usecols=use_columns, sep='\t',
-                            header=histogram_info.header,
-                            chunksize=self.chunk_size, low_memory=True):
-                        chunk = self.get_length(chunk, start, end)
-                        chunk[histogram_info.score_column] = pd.to_numeric(
-                            chunk[histogram_info.score_column],
-                            errors='coerce')
-                        if 'length' in chunk:
-                            for s, l in zip(chunk[histogram_info.score_column],
-                                            chunk['length']):
-                                if s < histogram_info.bin_range[0] or\
-                                        s > histogram_info.bin_range[1]:
-                                    continue
-                                idx = (np.abs(bins - s)).argmin()
-                                if idx == histogram_info.bin_num - 1:
-                                    idx -= 1
-                                bars[idx] += l
-                        else:
-                            for s in chunk[histogram_info.score_column]:
-                                if s < histogram_info.bin_range[0] or\
-                                        s > histogram_info.bin_range[1]:
-                                    continue
-                                idx = (np.abs(bins - s)).argmin()
-                                if idx == histogram_info.bin_num - 1:
-                                    idx -= 1
-                                bars[idx] += 1
-                else:
-                    v = pd.read_csv(genomic_score_file, usecols=use_columns,
-                                    sep='\t', header=histogram_info.header)
-                    v = self.get_length(v, start, end)
-                    v = v.rename(
-                        {histogram_info.score_column: histogram_info.score},
-                        axis='columns')
-                    v[histogram_info.score] = pd.to_numeric(
-                        v[histogram_info.score], errors='coerce')
-                    v = pd.DataFrame(v)
-                    values = pd.concat([values, v])
-
-            if self.chunk_size is None:
-                if not histogram_info.bin_range:
-                    histogram_info.set_bin_range_from_values(
-                        values, self.round_pos)
-
-                bars, bins = self.get_bars_and_bins(histogram_info)
-
-                if start is not None and end is not None:
-                    for s, l in zip(
-                            values[histogram_info.score], values['length']):
-                        if s < histogram_info.bin_range[0] or\
-                                s > histogram_info.bin_range[1]:
-                            continue
-                        idx = (np.abs(bins - s)).argmin()
-                        if idx == histogram_info.bin_num - 1:
-                            idx -= 1
-                        bars[idx] += l
-                else:
-                    bars = None
-
-            if bars is None:
-                bars, bins = np.histogram(
-                    values[histogram_info.score].values, bins=bins,
-                    bin_range=histogram_info.bin_range)
+            if self.chunk_size:
+                bars, bins = self.get_bars_and_bins_with_chunking(
+                    histogram_info, use_columns)
+            else:
+                bars, bins = self.get_bars_and_bins_without_chunking(
+                    histogram_info, use_columns)
 
             self.save_histogram(bars, bins, histogram_info)
 
@@ -205,38 +195,39 @@ class ScoreHistogramInfo(object):
 
         self.header = 'infer' if type(self.score_column) is not int else None
 
-    def set_bin_range_from_file(self, filename, chunk_size, round_pos):
-        min_value = None
-        max_value = None
-
-        for chunk in pd.read_csv(
-            filename, usecols=[self.score_column], sep='\t',
-                header=self.header, chunksize=chunk_size,
-                low_memory=True):
-            chunk[self.score_column] = pd.to_numeric(
-                chunk[self.score_column], errors='coerce')
-            min_chunk = chunk[self.score_column].min()
-            max_chunk = chunk[self.score_column].max()
-            if min_value is None or min_chunk < min_value:
-                min_value = min_chunk
-            if max_value is None or max_chunk > max_value:
-                max_value = max_chunk
-
+    def set_bin_range(self, min_value, max_value, round_pos):
         if round_pos is not None:
             min_value = np.around(min_value, round_pos)
             max_value = np.around(max_value, round_pos)
 
         self.bin_range = [min_value, max_value]
 
-    def set_bin_range_from_values(self, values, round_pos):
-        if round_pos is None:
-            min_value = values[self.score].min()
-            max_value = values[self.score].max()
-        else:
-            min_value = np.around(values[self.score].min(), round_pos)
-            max_value = np.around(values[self.score].max(), round_pos)
+    def set_bin_range_from_files(self, filenames, chunk_size, round_pos):
+        min_value = None
+        max_value = None
 
-        self.bin_range = [min_value, max_value]
+        for filename in filenames:
+            for chunk in pd.read_csv(
+                filename, usecols=[self.score_column], sep='\t',
+                    header=self.header, chunksize=chunk_size,
+                    low_memory=True):
+                chunk[self.score_column] = pd.to_numeric(
+                    chunk[self.score_column], errors='coerce')
+                min_chunk = chunk[self.score_column].min()
+                max_chunk = chunk[self.score_column].max()
+
+                if min_value is None or min_chunk < min_value:
+                    min_value = min_chunk
+                if max_value is None or max_chunk > max_value:
+                    max_value = max_chunk
+
+        self.set_bin_range(min_value, max_value, round_pos)
+
+    def set_bin_range_from_values(self, values, round_pos):
+        min_value = values[self.score].min()
+        max_value = values[self.score].max()
+
+        self.set_bin_range(min_value, max_value, round_pos)
 
 
 def main():
@@ -301,8 +292,8 @@ def main():
             sys.exit(-78)
 
     gsh = GenerateScoresHistograms(
-        input_files, score_histograms_info, round_pos, chunk_size)
-    gsh.generate_scores_histograms(start, end)
+        input_files, score_histograms_info, round_pos, chunk_size, start, end)
+    gsh.generate_scores_histograms()
 
     sys.stderr.write(
         "The program was running for [h:m:s]: " + str(datetime.timedelta(
