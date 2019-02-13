@@ -519,9 +519,9 @@ class GeneModels(AbstractClassDoNotInstantiate):
         self._Alternative_names = OrderedDict()
         if gene_mapping_file is not None:
             if gene_mapping_file.endswith(".gz"):
-                dict_file = gzip.open(gene_mapping_file)
+                dict_file = gzip.open(gene_mapping_file, 'rt')
             else:
-                dict_file = open(gene_mapping_file)
+                dict_file = open(gene_mapping_file, 'rt')
             dict_file.readline()
             self._Alternative_names = \
                 dict([(line.split()[0], line.split()[1])
@@ -531,7 +531,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
         if location is None:
             location = self.location
 
-        geneModelFile = gzip.open(location, 'rb')
+        geneModelFile = gzip.open(location, 'rt')
 
         for line in geneModelFile:
             if line[0] == "#":
@@ -544,9 +544,9 @@ class GeneModels(AbstractClassDoNotInstantiate):
 
     def save(self, outputFile, gzipped=True):
         if gzipped:
-            f = gzip.open(outputFile + ".gz", 'wb')
+            f = gzip.open(outputFile + ".gz", 'wt')
         else:
-            f = open(outputFile, 'wb')
+            f = open(outputFile, 'wt')
 
         f.write("\t".join(
             "chr trID gene strand tsBeg txEnd cdsStart cdsEnd "
