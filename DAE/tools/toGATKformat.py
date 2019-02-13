@@ -37,7 +37,8 @@ gmDB = load_gene_models(
     fromGMFile, gene_mapping_file=opts.gm_names, format=opts.gm_format)
 if opts.chr_names is not None:
     gmDB.relabel_chromosomes(opts.chr_names)
-else:
-    gmDB.relabel_chromosomes()
+
+# else:
+#     gmDB.relabel_chromosomes()
 # save_dicts(gmDB, outputFile = toGMFile)
 gmDB.save(toGMFile)

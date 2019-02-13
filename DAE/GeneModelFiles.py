@@ -14,8 +14,6 @@ from RegionOperations import Region, \
     collapse_noChr
 import gzip
 import pickle
-import os.path
-import os
 import sys
 from collections import defaultdict, \
     namedtuple, OrderedDict
@@ -349,14 +347,16 @@ class GeneModels(AbstractClassDoNotInstantiate):
                     gene = self._Alternative_names[line[12]]
                 except Exception:
                     gene = line[12]
-                trName = line[1] + "_1"
+                trId = line[1]
+                trName = trId + "_1"
 
             else:
                 try:
                     gene = self._Alternative_names[line[1]]
                 except Exception:
                     gene = line[1]
-                trName = line[1] + "_1"
+                trId = line[1]
+                trName = trId + "_1"
 
             Frame = list(map(int, line[-1].split(',')[:-1]))
 
@@ -367,14 +367,15 @@ class GeneModels(AbstractClassDoNotInstantiate):
                 gene = self._Alternative_names[line[0]]
             except Exception:
                 gene = line[0]
-            trName = line[0] + "_1"
+            trId = line[0]
+            trName = trId + "_1"
 
         k = 1
         while True:
             try:
                 self.transcriptModels[trName]
                 k += 1
-                trName = line[1] + "_" + str(k)
+                trName = trId + "_" + str(k)
             except Exception:
                 break
 
@@ -458,6 +459,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
         tm = TranscriptModel()
         tm.gene = gene
         tm.trID = trName
+        tm.trOrigId = trId
         tm.chr = chrom
         tm.strand = strand
         tm.tx = (transcription_start + 1, int(transcription_end))
@@ -549,7 +551,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
             f = open(outputFile, 'wt')
 
         f.write("\t".join(
-            "chr trID gene strand tsBeg txEnd cdsStart cdsEnd "
+            "chr trID trOrigId gene strand tsBeg txEnd cdsStart cdsEnd "
             "exonStarts exonEnds exonFrames atts".split())+"\n")
 
         for tmId, tm in sorted(self.transcriptModels.items()):
@@ -563,6 +565,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
             cs = [
                 tm.chr,
                 tm.trID,
+                tm.trOrigId,
                 tm.gene,
                 tm.strand,
                 tm.tx[0],
@@ -572,7 +575,7 @@ class GeneModels(AbstractClassDoNotInstantiate):
                 eStarts,
                 eEnds,
                 eFrames,
-                add_atts
+                add_atts,
             ]
             f.write("\t".join([
                 str(x) if x is not None else "" for x in cs]) + "\n")
@@ -581,12 +584,27 @@ class GeneModels(AbstractClassDoNotInstantiate):
     def load(self, inFile):
         self.location = inFile
         f = gzip.open(inFile, mode='rt')
-        f.readline()
+        line = f.readline()
+        cs = line[:-1].split('\t')
+
+        if len(cs) == 13:
+            def parse_line(cs):
+                assert len(cs) == 13
+                return cs
+        elif len(cs) == 12:
+            def parse_line(cs):
+                line = cs[:]
+                line.insert(2, cs[1])
+                assert len(line) == 13
+                return line
+        else:
+            raise ValueError("unxpected gene model format")
+
         for line in f:
             line = str(line)
             cs = line[:-1].split('\t')
-            chr, trID, gene, strand, txB, txE, cdsB, cdsE, eStarts, \
-                eEnds, eFrames, add_attrs = cs
+            chrom, trID, trOrigId, gene, strand, txB, txE, cdsB, cdsE, \
+                eStarts, eEnds, eFrames, add_attrs = parse_line(cs)
 
             exons = []
             for frm, sr, sp in zip(*[
@@ -602,7 +620,8 @@ class GeneModels(AbstractClassDoNotInstantiate):
             tm = TranscriptModel()
             tm.gene = gene
             tm.trID = trID
-            tm.chr = chr
+            tm.trOrigId = trOrigId
+            tm.chr = chrom
             tm.strand = strand
             tm.tx = (int(txB), int(txE))
             tm.cds = (int(cdsB), int(cdsE))
@@ -884,14 +903,14 @@ def load_gene_models(
     if not format:
         if file_name.endswith("refGene.txt.gz"):
             format = 'refseq'
-        elif file_name.endswith("ccdsGene.txt.gz"):
-            format = 'ccds'
-        elif file_name.endswith("knownGene.txt.gz"):
-            format = 'knowngene'
-        elif file_name.endswith(".dump"):
-            format = 'pickled'
-        elif file_name.endswith("mitomap.txt"):
-            format = 'mito'
+        # elif file_name.endswith("ccdsGene.txt.gz"):
+        #     format = 'ccds'
+        # elif file_name.endswith("knownGene.txt.gz"):
+        #     format = 'knowngene'
+        # elif file_name.endswith(".dump"):
+        #     format = 'pickled'
+        # elif file_name.endswith("mitomap.txt"):
+        #     format = 'mito'
         else:
             format = 'default'
 
@@ -904,30 +923,31 @@ def load_gene_models(
             gene_mapping_file = None
         gm.location = file_name
         gm._create_gene_model_dict(file_name, gene_mapping_file)
-    elif format.lower() == "ccds":
-        gm = Ccds()
-        gm._utrModels = OrderedDict()
-        gm.transcriptModels = OrderedDict()
-        gm._geneModels = OrderedDict()
-        if gene_mapping_file == "default":
-            gene_mapping_file = os.path.dirname(file_name) + \
-                "/ccdsId2Sym.txt.gz"
-        gm.location = file_name
-        gm._create_gene_model_dict(file_name, gene_mapping_file)
-    elif format.lower() == "knowngene":
-        gm = KnownGene()
-        gm._utrModels = OrderedDict()
-        gm.transcriptModels = OrderedDict()
-        gm._geneModels = OrderedDict()
-        if gene_mapping_file == "default":
-            gene_mapping_file = os.path.dirname(file_name) + "/kgId2Sym.txt.gz"
-        gm.location = file_name
-        gm._create_gene_model_dict(file_name, gene_mapping_file)
-    elif format.lower() == "pickled":
-        return(load_pickled_dicts(file_name))
-    elif format.lower() == "mito":
-        gm = MitoModel()
-        gm._create_gene_model_dict(file_name)
+    # elif format.lower() == "ccds":
+    #     gm = Ccds()
+    #     gm._utrModels = OrderedDict()
+    #     gm.transcriptModels = OrderedDict()
+    #     gm._geneModels = OrderedDict()
+    #     if gene_mapping_file == "default":
+    #         gene_mapping_file = os.path.dirname(file_name) + \
+    #             "/ccdsId2Sym.txt.gz"
+    #     gm.location = file_name
+    #     gm._create_gene_model_dict(file_name, gene_mapping_file)
+    # elif format.lower() == "knowngene":
+    #     gm = KnownGene()
+    #     gm._utrModels = OrderedDict()
+    #     gm.transcriptModels = OrderedDict()
+    #     gm._geneModels = OrderedDict()
+    #     if gene_mapping_file == "default":
+    #         gene_mapping_file = os.path.dirname(file_name) + \
+    #               "/kgId2Sym.txt.gz"
+    #     gm.location = file_name
+    #     gm._create_gene_model_dict(file_name, gene_mapping_file)
+    # elif format.lower() == "pickled":
+    #     return(load_pickled_dicts(file_name))
+    # elif format.lower() == "mito":
+    #     gm = MitoModel()
+    #     gm._create_gene_model_dict(file_name)
     elif format.lower() == "default":
         gm = GeneModels()
         gm.load(file_name)
