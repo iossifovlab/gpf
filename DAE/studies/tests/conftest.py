@@ -223,3 +223,14 @@ def quads_in_parent_dataset(dataset_factory, dataset_definitions):
 @pytest.fixture(scope='session')
 def quads_in_parent_dataset_wrapper(quads_in_parent_dataset):
     return StudyWrapper(quads_in_parent_dataset)
+
+
+@pytest.fixture(scope='session')
+def composite_dataset(dataset_factory, dataset_definitions):
+    return load_dataset(
+        dataset_factory, dataset_definitions, 'composite_dataset')
+
+
+@pytest.fixture(scope='session')
+def composite_dataset_wrapper(composite_dataset):
+    return StudyWrapper(composite_dataset)
