@@ -7,7 +7,8 @@ from builtins import str
 from builtins import range
 from builtins import object
 from future import standard_library
-standard_library.install_aliases()
+standard_library.install_aliases()  # noqa
+
 from configparser import ConfigParser
 import os
 import sys

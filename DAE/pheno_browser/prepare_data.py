@@ -8,22 +8,21 @@ from __future__ import unicode_literals
 from builtins import str
 from builtins import object
 import os
-import matplotlib as mpl
+import matplotlib as mpl; mpl.use('PS')  # noqa
 import numpy as np
 
 from pheno.pheno_db import Measure
-mpl.use('PS')
-import matplotlib.pyplot as plt  # @IgnorePep8
-plt.ioff()
 
-from pheno_browser.db import DbManager  # @IgnorePep8
-from pheno.common import Role, MeasureType  # @IgnorePep8
+import matplotlib.pyplot as plt; plt.ioff()  # noqa
 
-from pheno_browser.graphs import draw_linregres  # @IgnorePep8
-from pheno_browser.graphs import draw_measure_violinplot  # @IgnorePep8
-from pheno_browser.graphs import draw_categorical_violin_distribution  # @IgnorePep8
-from pheno_browser.graphs import draw_ordinal_violin_distribution  # @IgnorePep8
-from common.progress import progress, progress_nl  # @IgnorePep8
+from pheno_browser.db import DbManager
+from pheno.common import Role, MeasureType
+
+from pheno_browser.graphs import draw_linregres
+from pheno_browser.graphs import draw_measure_violinplot
+from pheno_browser.graphs import draw_categorical_violin_distribution
+from pheno_browser.graphs import draw_ordinal_violin_distribution
+from common.progress import progress, progress_nl
 
 
 class PreparePhenoBrowserBase(object):

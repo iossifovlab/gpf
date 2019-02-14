@@ -18,7 +18,7 @@ import logging
 from gene.config import GeneInfoConfig
 from GeneTerms import loadGeneTerm
 from pheno.common import Status
-from study_groups.study_group_facade import StudyGroupFacade
+# from studies.dataset_facade import DatasetFacade
 from variants.attributes import Inheritance
 
 LOGGER = logging.getLogger(__name__)
@@ -97,13 +97,12 @@ class GeneSetsCollection(GeneInfoConfig):
 
 class DenovoGeneSetsCollection(GeneInfoConfig):
 
-    def __init__(self, collection_id, study_group_facade=None):
+    def __init__(self, collection_id, dataset_facade):
         super(DenovoGeneSetsCollection, self).__init__()
-        if study_group_facade is None:
-            study_group_facade = StudyGroupFacade()
+
+        self.dataset_facade = dataset_facade
 
         self.collection_id = collection_id
-        self.study_group_facade = study_group_facade
         self.cache = {}
         self._read_config()
 
@@ -209,7 +208,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _generate_gene_sets_for(self, study_group):
         pedigree_selector = self.study_group_pedigree_selectors[
             study_group.name]['source']
-        pedigree_selector_values = study_group.get_phenotype_values(
+        pedigree_selector_values = study_group.get_pedigree_values(
             pedigree_selector)
 
         cache = {value: {} for value in pedigree_selector_values}
@@ -240,7 +239,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         if study_groups_ids is None:
             study_groups_ids = self.study_group_pedigree_selectors.keys()
         return [
-            self.study_group_facade.get_study_group(study_group_id)
+            self.dataset_facade.get_dataset(study_group_id)
             for study_group_id in study_groups_ids
         ]
 
@@ -269,7 +268,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             return ";".join(["{}:{}".format(d, ",".join(p))
                              for d, p in gene_sets_types.items()])
 
-        pedigree_selectors = ', '.join(set(chain(*list(gene_sets_types.values()))))
+        pedigree_selectors = ', '.join(
+            set(chain(*list(gene_sets_types.values()))))
         if include_datasets_desc:
             return '{}::{}'.format(
                 ', '.join(set(gene_sets_types.keys())),
@@ -277,7 +277,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         else:
             return pedigree_selectors
 
-    def get_gene_sets(self, gene_sets_types={'f1_group': ['autism']}, **kwargs):
+    def get_gene_sets(
+            self, gene_sets_types={'f1_group': ['autism']}, **kwargs):
         gene_sets_types = self._filter_gene_sets_types(
             gene_sets_types,
             kwargs.get('permitted_datasets', None))
@@ -336,7 +337,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             for pedigree_selector_value in pedigree_selector_values:
                 # print("criterias", criterias)
                 # print("recurrency_criterias", recurrency_criterias)
-                # print("standard_criterias", standard_criterias, dataset_id, pedigree_selector_value)
+                # print("standard_criterias", standard_criterias, dataset_id, 
+                #       pedigree_selector_value)
                 ds_pedigree_genes_families = self._get_gene_families(
                     self.cache,
                     {dataset_id, pedigree_selector_value} | standard_criterias)
@@ -419,22 +421,21 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         affected_person_ids = set()
         for study in study_group.studies:
             pedigree_df = study.backend.ped_df
-            people_ids = pedigree_df[pedigree_df[phenotype_column] == phenotype]
-            affected_person_ids.update(people_ids['personId'])
+            people_ids = pedigree_df[
+                pedigree_df[phenotype_column] == phenotype]
+            affected_person_ids.update(people_ids['person_id'])
 
         return affected_person_ids
 
 
 class GeneSetsCollections(object):
 
-    def __init__(self, study_group_facade=None, config=None):
-        if study_group_facade is None:
-            study_group_facade = StudyGroupFacade()
+    def __init__(self, dataset_facade, config=None):
         if config is None:
             config = GeneInfoConfig()
 
         self.config = config
-        self.study_group_facade = study_group_facade
+        self.dataset_facade = dataset_facade
         self.gene_sets_collections = {}
 
     def get_collections_descriptions(self, permitted_study_groups=None):
@@ -469,7 +470,7 @@ class GeneSetsCollections(object):
         if gene_sets_collection_id == 'denovo':
             gsc = DenovoGeneSetsCollection(
                 gene_sets_collection_id,
-                study_group_facade=self.study_group_facade)
+                dataset_facade=self.dataset_facade)
         else:
             gsc = GeneSetsCollection(gene_sets_collection_id)
 
@@ -480,7 +481,8 @@ class GeneSetsCollections(object):
 
     def get_gene_sets_collection(self, gene_sets_collection_id, load=True):
         if gene_sets_collection_id not in self.gene_sets_collections:
-            gsc = self._load_gene_sets_collection(gene_sets_collection_id, load)
+            gsc = self._load_gene_sets_collection(
+                gene_sets_collection_id, load)
             self.gene_sets_collections[gene_sets_collection_id] = gsc
 
         return self.gene_sets_collections.get(gene_sets_collection_id, None)

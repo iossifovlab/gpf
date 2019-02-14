@@ -33,3 +33,7 @@ test_data/
 wdae/docs/_build
 gpf-dist.tar.gz
 test-eff.txt
+DAE/*.json
+.coverage*
+coverage/
+tmp/

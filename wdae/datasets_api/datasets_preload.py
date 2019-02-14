@@ -5,14 +5,16 @@ Created on Feb 17, 2017
 '''
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from django.conf import settings
-
-from datasets.dataset_facade import DatasetFacade
-from preloaded.register import Preload
-from datasets_api.models import Dataset
-from django.db.utils import OperationalError, ProgrammingError
-from precompute.register import Precompute
 import logging
+
+from django.conf import settings
+from django.db.utils import OperationalError, ProgrammingError
+
+from preloaded.register import Preload
+from precompute.register import Precompute
+
+from datasets_api.models import Dataset
+from datasets_api.datasets_manager import get_datasets_manager
 
 
 logger = logging.getLogger(__name__)
@@ -22,7 +24,6 @@ class DatasetsPreload(Preload, Precompute):
 
     def __init__(self):
         super(DatasetsPreload, self).__init__()
-        self._dataset_facade = DatasetFacade()
 
     def precompute(self):
         try:
@@ -46,6 +47,9 @@ class DatasetsPreload(Preload, Precompute):
         return True
 
     def load(self):
+        datasets_facade = get_datasets_manager().get_dataset_facade()
+        self._dataset_facade = datasets_facade
+
         preload_active = getattr(
             settings,
             "PRELOAD_ACTIVE",
@@ -58,6 +62,3 @@ class DatasetsPreload(Preload, Precompute):
 
     def get(self):
         return self
-
-    def get_facade(self):
-        return self._dataset_facade

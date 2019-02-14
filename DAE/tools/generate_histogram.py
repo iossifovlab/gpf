@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
 from __future__ import unicode_literals
+
+from future import standard_library
+standard_library.install_aliases()  # noqa
+
 import argparse
 import sys
 import time
@@ -8,12 +12,12 @@ import datetime
 from os.path import exists
 import pandas as pd
 import numpy as np
-from future import standard_library
-standard_library.install_aliases()
+
 from configparser import ConfigParser
 from builtins import object, str
 from box import Box
-import matplotlib.pyplot as plt
+import matplotlib as mpl; mpl.use('PS')  # noqa
+import matplotlib.pyplot as plt; plt.ioff()  # noqa
 
 import common.config
 
@@ -67,9 +71,9 @@ class GenerateScoresHistograms(object):
                 chunk[score_column], errors='coerce')
             min_chunk = chunk[score_column].min()
             max_chunk = chunk[score_column].max()
-            if min_chunk < min_value or min_value is None:
+            if min_value is None or min_chunk < min_value:
                 min_value = min_chunk
-            if max_chunk > max_value or max_value is None:
+            if max_value is None or max_chunk > max_value:
                 max_value = max_chunk
 
         if self.round_pos is not None:
@@ -94,12 +98,15 @@ class GenerateScoresHistograms(object):
         elif xscale == 'log':
             bins = []
             min_range = range[0]
+            max_range = range[1]
             if range[0] == 0.0:
+                step = float(max_range - min_range)/bin_num
+                min_range = step / bin_num
                 bins = [0.0]
-                min_range += 1
                 bin_num -= 1
+            print(min_range, max_range)
             bins = bins + list(np.logspace(np.log10(min_range),
-                                           np.log10(range[1]),
+                                           np.log10(max_range),
                                            bin_num))
         bars = np.zeros(len(bins) - 1)
         bins = np.array(bins)
@@ -113,8 +120,8 @@ class GenerateScoresHistograms(object):
         histogram.to_csv(output_file, index=False)
 
         histogram.dropna(inplace=True)
-        bins = histogram['scores'].values
-        bars = map(int, histogram[score].values)
+        bins = list(histogram['scores'].values)
+        bars = list(map(int, histogram[score].values))
         fig, ax = plt.subplots()
         plt.yscale(yscale)
         ax.bar(bins, bars, width=0.01)

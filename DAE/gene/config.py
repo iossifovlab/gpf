@@ -5,11 +5,12 @@ Created on Feb 16, 2017
 '''
 from __future__ import unicode_literals
 from builtins import object
-from Config import Config
 from future import standard_library
-standard_library.install_aliases()
+standard_library.install_aliases()  # noqa
+
 from configparser import ConfigParser
 from GeneInfoDB import GeneInfoDB
+from configurable_entities.configuration import DAEConfig
 
 
 class GeneInfoConfig(object):
@@ -19,21 +20,17 @@ class GeneInfoConfig(object):
 
     def __init__(self, config=None):
         if config is None:
-            config = Config()
+            config = DAEConfig()
         self.dae_config = config
 
-        wd = self.dae_config.daeDir
-        data_dir = self.dae_config.data_dir
+        wd = self.dae_config.dae_data_dir
 
         self.config = ConfigParser({
             'wd': wd,
-            'data': data_dir
         })
-        with open(self.dae_config.geneInfoDBconfFile, "r") as infile:
-            self.config.readfp(infile)
-        
-        # self.config.read(self.dae_config.geneInfoDBconfFile)
+        with open(self.dae_config.gene_info_conf, "r") as infile:
+            self.config.read_file(infile)
+
         self.gene_info = GeneInfoDB(
-            self.dae_config.geneInfoDBconfFile,
-            self.dae_config.daeDir,
-            self.dae_config.data_dir)
+            self.dae_config.gene_info_conf,
+            self.dae_config.dae_data_dir)

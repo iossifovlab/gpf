@@ -4,13 +4,13 @@ Created on Nov 7, 2016
 @author: lubo
 '''
 from __future__ import division
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 # from __future__ import unicode_literals
 from future import standard_library
-standard_library.install_aliases()
+standard_library.install_aliases()  # noqa
+
 from builtins import next
 from builtins import zip
-from builtins import str
 from past.utils import old_div
 import pickle
 import io
@@ -20,7 +20,7 @@ import os
 from scipy import stats
 import zlib
 
-from DAE import vDB, genomesDB
+# from DAE import vDB, genomesDB
 from enrichment_tool.config import BackgroundConfig
 import numpy as np
 import pandas as pd

@@ -3,16 +3,13 @@ Created on Jul 4, 2013
 
 @author: leotta
 '''
-from __future__ import unicode_literals
-from builtins import object
-import os
+from __future__ import unicode_literals, print_function, absolute_import
 from future import standard_library
+standard_library.install_aliases()  # noqa
 
-standard_library.install_aliases()
+import os
+from builtins import object
 from configparser import ConfigParser
-
-
-# adds exceptions for error handling
 
 
 class Config(object):
@@ -36,7 +33,7 @@ class Config(object):
         self._phenoDBconfFile = self._daeConfig.get('phenoDB', 'confFile')
         self._phenoDBdir = self._daeConfig.get('phenoDB', 'dir')
 
-        self._sfariDBdir = self._daeConfig.get('sfariDB', 'dir')
+        # self._sfariDBdir = self._daeConfig.get('sfariDB', 'dir')
 
         self._geneInfoDBdir = self._daeConfig.get('geneInfoDB', 'dir')
         self._geneInfoDBconfFile = self._daeConfig.get(
@@ -52,9 +49,6 @@ class Config(object):
 
         self._enrichmentConfFile = self._daeConfig.get(
             'enrichment', 'confFile')
-
-        self._commonReportsConfFile = self._daeConfig.get(
-            'commonReports', 'confFile')
 
     @property
     def daeDir(self):

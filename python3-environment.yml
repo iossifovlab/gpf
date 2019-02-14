@@ -88,5 +88,6 @@ dependencies:
     - findspark
     - tqdm==4.24.0
     - engarde==0.4.0
+    - hgvs==1.2.5.post1
 prefix: /home/sasho/anaconda3/envs/dae-python3
 

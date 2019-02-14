@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-
+# from builtins import str
 import sys
 import os
 
@@ -51,7 +51,9 @@ class ScoreFile(TabixReader):
 
         self.schema = Schema()
         for col in self.config.header:
-            assert col in self.config.schema.columns
+            assert col in self.config.schema.columns, [
+                self.score_filename, col, self.config.schema.columns,  
+            ]
             self.schema.columns[col] = self.config.schema.columns[col]
         assert all([sn in self.schema.col_names for sn in self.score_names])
         self.options.update(self.config)
@@ -317,6 +319,8 @@ class DirectAccess(ScoreFile):
     def _fetch(self, chrom, pos_begin, pos_end):
         try:
             result = []
+            chrom = str(chrom)
+
             for line in self.infile.fetch(
                     chrom, pos_begin-1, pos_end, parser=pysam.asTuple()):
                 line = LineAdapter(self, line)

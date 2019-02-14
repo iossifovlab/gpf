@@ -5,14 +5,14 @@ Created on Nov 21, 2016
 '''
 from __future__ import unicode_literals
 from builtins import object
-from query_variants import dae_query_variants, PRESENT_IN_CHILD_TYPES,\
-    PRESENT_IN_PARENT_TYPES
+# from query_variants import dae_query_variants, PRESENT_IN_CHILD_TYPES,\
+#     PRESENT_IN_PARENT_TYPES
 import itertools
 import pandas as pd
 from collections import Counter
 from Variant import variantInMembers
 from VariantAnnotation import get_effect_types
-from query_prepare import build_effect_types_list
+# from query_prepare import build_effect_types_list
 import logging
 
 LOGGER = logging.getLogger(__name__)

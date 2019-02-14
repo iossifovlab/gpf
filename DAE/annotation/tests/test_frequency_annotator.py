@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 import pandas as pd
 
@@ -41,6 +41,7 @@ expected_result_freq = \
     """RESULT_FREQ\tRESULT_FREQ_2
 0.1\t0.8
 0.5\t1.2
+\t
 0.7\t1.4
 """
 

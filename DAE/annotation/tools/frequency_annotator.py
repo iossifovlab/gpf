@@ -7,15 +7,6 @@ import sys
 from annotation.tools.annotator_base import VariantAnnotatorBase
 from annotation.tools import score_file_io
 
-# chrInd = {}
-# # faiFN="/data/unsafe/autism/genomes/GATK_ResourceBundle_5777_b37_phiX174/
-#       chrAll.fa.fai"
-# faiFN = genomesDB.get_genome().genomicIndexFile
-# FAIF = open(faiFN)
-# chrName = [ln.split("\t")[0] for ln in FAIF]
-# FAIF.close()
-# chrInd = {chN: chI for chI, chN in enumerate(chrName)}
-
 
 class FrequencyAnnotator(VariantAnnotatorBase):
 
@@ -54,6 +45,8 @@ class FrequencyAnnotator(VariantAnnotatorBase):
             freq_filename = os.path.abspath(freq_filename)
         assert os.path.exists(freq_filename), freq_filename
 
+        self.freq_filename = freq_filename.split('/')[-1]
+
         assert self.config.options.freq is not None
 
         if self.config.options.direct:
@@ -71,6 +64,9 @@ class FrequencyAnnotator(VariantAnnotatorBase):
         self.freq_file._setup()
 
         self.no_score_value = self.freq_file.no_score_value
+        if self.no_score_value.lower() in set(['na', 'none']):
+            self.no_score_value = None
+
         self.variant_col_name = self.freq_file.config.columns.variant
         assert self.variant_col_name
 
@@ -101,173 +97,18 @@ class FrequencyAnnotator(VariantAnnotatorBase):
             if score_variant == variant:
                 for output_index, freq_col in enumerate(self.freq_cols):
                     values = scores[freq_col]
-                    aline[self.output_cols[output_index]] = values[index]
-
-
-# class TMFile:
-#     def __init__(self, fN):
-#         self.fN = fN
-#         self.F = gzip.open(self.fN, 'rt')
-#         self.hdrL = self.F.readline().strip()
-#         self.hdrCs = self.hdrL.split("\t")
-
-#         self.chrCI = self.hdrCs.index("chr")
-#         self.posCI = self.hdrCs.index("position")
-#         self.varCI = self.hdrCs.index("variant")
-
-#     def lines(self):
-#         for ln in self.F:
-#             if ln[0] == '#':
-#                 continue
-#             cs = ln.strip("\n\r").split('\t')
-
-#             ch = cs[self.chrCI]
-#             pos = int(cs[self.posCI])
-#             chI = chrInd[ch]
-#             vr = cs[self.varCI]
-#             key = (chI, pos, vr)
-
-#             yield (key, cs)
-
-#     def close(self):
-#         self.F.close()
-
-
-# class DNVFile:
-#     def __init__(self, fN):
-#         self.fN = fN
-#         self.F = open(self.fN)
-#         self.hdrL = self.F.readline().strip()
-#         self.hdrCs = self.hdrL.split("\t")
-
-#         self.locCI = self.hdrCs.index("location")
-#         self.varCI = self.hdrCs.index("variant")
-
-#     def lines(self):
-#         for ln in self.F:
-#             if ln[0] == '#':
-#                 continue
-#             cs = ln.strip("\n\r").split('\t')
-
-#             ch, pos = cs[self.locCI].split(":")
-#             pos = int(pos)
-#             chI = chrInd[ch]
-#             vr = cs[self.varCI]
-#             key = (chI, pos, vr)
-
-#             yield (key, cs)
-
-#     def close(self):
-#         self.F.close()
-
-
-# def openFile(fN):
-#     if fN.endswith(".txt.bgz"):
-#         return TMFile(fN)
-#     else:
-#         return DNVFile(fN)
-
-
-# class IterativeAccess:
-#     def __init__(self, fN, clmnN):
-#         self.fN = fN
-#         self.clmnN = clmnN
-#         self.tmf = TMFile(fN)
-#         self.tmfLines = self.tmf.lines()
-#         self.clmnI = self.tmf.hdrCs.index(self.clmnN)
-#         self.currKey = (-1, 0, 0)
-
-#     def getV(self, k):
-#         if self.currKey < k:
-#             for self.currKey, self.currCs in self.tmfLines:
-#                 if self.currKey >= k:
-#                     break
-#             if self.currKey < k:
-#                 self.currKey = (100000, 0, 0)
-
-#         if self.currKey == k:
-#             return self.currCs[self.clmnI]
-#         return
-
-#     def close(self):
-#         self.tmf.close()
-
-
-# class DirectAccess:
-#     def __init__(self, fN, clmnN):
-#         self.fN = fN
-#         self.clmnN = clmnN
-#         tmf = TMFile(fN)
-#         self.clmnI = tmf.hdrCs.index(self.clmnN)
-#         self.varI = tmf.varCI
-#         tmf.close()
-#         self.F = pysam.Tabixfile(self.fN)
-
-#     def getV(self, k):
-#         chI, pos, vr = k
-#         ch = chrName[chI]
-
-#         try:
-#             for l in self.F.fetch(ch, pos-1, pos):
-#                 cs = l.strip("\n\r").split("\t")
-#                 if vr != cs[self.varI]:
-#                     continue
-#                 return cs[self.clmnI]
-#         except ValueError:
-#             pass
-#         return
-
-#     def close(self):
-#         self.F.close()
-
-
-# if __name__ == "__main__":
-#     tFN = "/home/iossifov/work/T115/data-dev/bbbb/" \
-#         "IossifovWE2014/Supplement-T2-eventsTable-annot.txt"
-#     if len(sys.argv) > 1:
-#         tFN = sys.argv[1]
-
-#     accessMode = "direct"
-#     if len(sys.argv) > 2:
-#         accessMode = sys.argv[2]
-
-#     freqAttFN = vDB._config.get("DEFAULT", "wd") + "/freqAtts.txt"
-#     if len(sys.argv) > 3:
-#         freqAttFN = sys.argv[3]
-
-#     modeConstructor = {
-#         "direct": DirectAccess,
-#         "iterative": IterativeAccess
-#     }
-
-#     tF = openFile(tFN)
-
-#     outHdr = list(tF.hdrCs)
-#     freqAttF = open(freqAttFN)
-
-#     fFS = []
-#     for l in freqAttF:
-#         ffN, tAN, fAT = l.strip().split("\t")
-#         try:
-#             tANI = tF.hdrCs.index(tAN)
-#         except ValueError:
-#             tANI = -1
-#             outHdr.append(tAN)
-
-#         AF = modeConstructor[accessMode](
-#             vDB._config.get("DEFAULT", "studyDir") + "/" + ffN,
-#             fAT)
-#         fFS.append((AF, tANI))
-
-#     print("\t".join(outHdr))
-
-#     for tk, tcs in tF.lines():
-#         for AF, tANI in fFS:
-#             v = AF.getV(tk)
-#             if not v:
-#                 v = ""
-#             if tANI == -1:
-#                 tcs.append(v)
-#             else:
-#                 tcs[tANI] = v
-#         print("\t".join(tcs))
+                    # FIXME: this conversion should come from schema
+                    try:
+                        val = values[index]
+                        if val in set(['', ' ']):
+                            aline[self.output_cols[output_index]] = \
+                                self.no_score_value
+                        else:
+                            aline[self.output_cols[output_index]] = \
+                                float(values[index])
+                    except ValueError as ex:
+                        print(
+                            "problem with: ", self.output_cols[output_index],
+                            chrom, pos, [values[index]],
+                            file=sys.stderr)
+                        raise ex

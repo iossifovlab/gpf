@@ -49,6 +49,14 @@ class Schema(object):
                 new_schema.create_column(col, col_type)
         return new_schema
 
+    @classmethod
+    def from_df(cls, df):
+        schema_dict = dict(zip(
+            df.columns,
+            [dt.name for dt in df.dtypes]
+        ))
+        print(schema_dict)
+
     @staticmethod
     def merge_schemas(left, right):
         merged_schema = Schema()
@@ -71,3 +79,9 @@ class Schema(object):
         for col, col_type in self.columns.items():
             ret_str += '{} -> [{}]\n'.format(col, col_type.type_py)
         return ret_str
+
+    def __contains__(self, key):
+        return self.columns.__contains__(key)
+
+    def __getitem__(self, key):
+        return self.columns.__getitem__(key)
