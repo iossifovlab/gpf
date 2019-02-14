@@ -23,10 +23,6 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
     def collect_annotator_schema(self, schema):
         super(FrequencyAnnotator, self).collect_annotator_schema(schema)
 
-    def _freq_not_found(self, aline):
-        for output_col in self.output_cols:
-            aline[output_col] = self.no_score_value
-
     def do_annotate(self, aline, variant):
         if variant is None:
             self._scores_not_found(aline)
