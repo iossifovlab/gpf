@@ -300,6 +300,7 @@ class StudyWrapper(object):
     # FIXME:
     def _get_dataset_config_options(self, config):
         config['studyTypes'] = self.config.study_types
+        config['description'] = self.study.description
         # config['studies'] = self.config.names
 
         print(self.config.genotype_browser)

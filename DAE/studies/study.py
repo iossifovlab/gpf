@@ -1,3 +1,5 @@
+import os.path
+
 
 class StudyBase(object):
 
@@ -14,7 +16,12 @@ class StudyBase(object):
         self.study_type = self.config.study_type
         self.year = self.config.year
         self.pub_med = self.config.pub_med
-        self.description = self.config.description
+
+        if os.path.exists(self.config.description):
+            with open(self.config.description) as desc:
+                self.description = desc.read()
+        else:
+            self.description = self.config.description
 
         self.study_types = self.config.study_types
         self.years = self.config.years
