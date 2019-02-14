@@ -144,7 +144,10 @@ class GenerateScoresHistograms(object):
             histogram_info.set_bin_range_from_values(values, self.round_pos)
         bars, bins = self.get_empty_bars_and_bins(histogram_info)
 
-        bars = self.fill_bars(histogram_info, values, bars, bins)
+        # bars = self.fill_bars(histogram_info, values, bars, bins)
+        bars, bins = np.histogram(
+            values[histogram_info.score_column].values, bins=bins,
+            range=histogram_info.bin_range)
 
         return (bars, bins)
 
