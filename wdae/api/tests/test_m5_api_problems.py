@@ -121,7 +121,7 @@ class PhenotypeFilterTests(APITestCase):
             "denovoStudies": "ALL WHOLE EXOME",
             "phenoType": "autism,schizophrenia,unaffected",
             "effectTypes": "Nonsense,Frame-shift,Splice-site,"
-            "Missense,Non-frame-shift,noStart,noEnd,"
+            "Missense,No-frame-shift,noStart,noEnd,"
             "Synonymous,Non coding,Intron,Intergenic,3'-UTR,5'-UTR"
         }
 
@@ -142,7 +142,7 @@ class PhenotypeFilterTests(APITestCase):
             "variantTypes=sub&variantTypes=ins&variantTypes=del&" \
             "effectTypes=Nonsense&effectTypes=Frame-shift&" \
             "effectTypes=Splice-site&effectTypes=Missense&" \
-            "effectTypes=Non-frame-shift&effectTypes=noStart&" \
+            "effectTypes=No-frame-shift&effectTypes=noStart&" \
             "effectTypes=noEnd&effectTypes=Synonymous&" \
             "effectTypes=Non+coding&effectTypes=Intron&" \
             "effectTypes=Intergenic&effectTypes=3%27-UTR&" \

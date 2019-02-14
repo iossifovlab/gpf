@@ -66,7 +66,7 @@ class Test(BaseAuthenticatedUserTest):
                 'Frame-shift',
                 'Splice-site',
                 'Missense',
-                'Non-frame-shift',
+                'No-frame-shift',
                 'noStart',
                 'noEnd',
                 'Synonymous',
