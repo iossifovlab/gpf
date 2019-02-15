@@ -97,7 +97,7 @@ class EffectFactory(object):
         ef = cls.create_effect(effect_name)
         ef.gene = transcript_model.gene
         ef.strand = transcript_model.strand
-        ef.transcript_id = transcript_model.trID
+        ef.transcript_id = transcript_model.trOrigId
         return ef
 
     @classmethod
