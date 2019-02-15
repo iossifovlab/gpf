@@ -423,7 +423,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             pedigree_df = study.backend.ped_df
             people_ids = pedigree_df[
                 pedigree_df[phenotype_column] == phenotype]
-            affected_person_ids.update(people_ids['personId'])
+            affected_person_ids.update(people_ids['person_id'])
 
         return affected_person_ids
 

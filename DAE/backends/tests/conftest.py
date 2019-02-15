@@ -166,7 +166,7 @@ def fam1():
     ped_df = FamiliesBase.load_pedigree_file(
         StringIO(PED1), sep=",")
 
-    family = Family("f1", ped_df)
+    family = Family.from_df("f1", ped_df)
     assert len(family.trios) == 1
     return family
 
