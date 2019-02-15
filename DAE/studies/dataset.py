@@ -15,13 +15,8 @@ class Dataset(StudyBase):
         self.study_names = ",".join(study.name for study in self.studies)
 
     def query_variants(self, **kwargs):
-        if 'studyFilters' in kwargs:
-            return itertools.chain(*[
-                study.query_variants(**kwargs) for study in self.studies
-                if study.name in kwargs['studyFilters']])
-        else:
-            return itertools.chain(*[
-                study.query_variants(**kwargs) for study in self.studies])
+        return itertools.chain(*[
+            study.query_variants(**kwargs) for study in self.studies])
 
     @property
     def families(self):
