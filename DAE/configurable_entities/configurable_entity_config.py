@@ -98,7 +98,8 @@ class ConfigurableEntityConfig(object):
         return self.config.to_dict()
 
     @classmethod
-    def get_config(cls, config_file, work_dir, default_values={}):
+    def get_config(
+            cls, config_file, work_dir, default_values={}, skip_parsing=False):
 
         if not os.path.exists(config_file):
             config_file = os.path.join(work_dir, config_file)
@@ -124,13 +125,14 @@ class ConfigurableEntityConfig(object):
             (section, OrderedDict(config_parser.items(section)))  # , raw=True)))
             for section in config_parser.sections())
 
-        for section in config.keys():
-            config[section] = cls._change_keys_names(config[section])
-            config[section] = cls._concat_two_options(config[section])
-            config[section] = cls._split_str_lists(config[section])
-            config[section] = cls._split_str_sets(config[section])
-            config[section] = cls._cast_to_bool(config[section])
-            config[section] = cls._copy_elements(config[section])
+        if not skip_parsing:
+            for section in config.keys():
+                config[section] = cls._change_keys_names(config[section])
+                config[section] = cls._concat_two_options(config[section])
+                config[section] = cls._split_str_lists(config[section])
+                config[section] = cls._split_str_sets(config[section])
+                config[section] = cls._cast_to_bool(config[section])
+                config[section] = cls._copy_elements(config[section])
 
         return config
 
