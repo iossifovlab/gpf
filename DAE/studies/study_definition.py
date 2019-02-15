@@ -37,7 +37,7 @@ class SingleFileStudiesDefinition(StudyDefinition):
 
         self.single_file_configurable_entity_definition(
             config_file, work_dir, StudyConfig, "study_name",
-            StudyConfig.get_default_values(),
+            StudyConfig.get_default_values(work_dir),
             StudyDefinition.get_skip_sections())
 
 
@@ -52,5 +52,5 @@ class DirectoryEnabledStudiesDefinition(StudyDefinition):
 
         self.directory_enabled_configurable_entity_definition(
             studies_dir, StudyConfig, work_dir, 'id',
-            StudyConfig.get_default_values(),
+            StudyConfig.get_default_values(work_dir),
             StudyDefinition.get_skip_sections())

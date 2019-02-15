@@ -131,3 +131,10 @@ class DatasetConfig(StudyConfigBase):
 
         combiner = self.COMPOSITE_ATTRIBUTES[option_name]
         return combiner(self.studies_configs, option_name)
+
+    @classmethod
+    def get_default_values(cls, work_dir):
+        defaults = super(DatasetConfig, cls).get_default_values(
+            work_dir, sections=['common', 'dataset'])
+
+        return defaults

@@ -5,6 +5,7 @@ import os
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
 from .study_wdae_config import StudyWdaeMixin
+from configurable_entities.configuration import DAEConfig
 
 
 class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
@@ -56,38 +57,18 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         assert self.work_dir
 
     @classmethod
-    def get_default_values(cls):
-        return {
-            'phenoDB': None,
-            'genotypeBrowser.hasCNV': 'no',
-            'genotypeBrowser.hasComplex': 'no',
-            'genotypeBrowser.genesBlockShowAll': 'yes',
-            'genotypeBrowser.hasFamilyFilters': 'yes',
-            'genotypeBrowser.hasStudyFilters': 'yes',
-            'genotypeBrowser.phenoFilters': '',
-            'genotypeBrowser.hasPresentInChild': 'yes',
-            'genotypeBrowser.hasPresentInParent': 'yes',
-            'genotypeBrowser.hasPedigreeSelector': 'no',
-            'genotypeBrowser.pheno.columns': None,
-            'genotypeBrowser.familyFilters': None,
-            'phenoFilters': '',
-            'phenotypeBrowser': False,
-            'phenotypeGenotypeTool': False,
+    def get_default_values(cls, work_dir, sections=['common']):
+        dae_config = DAEConfig()
 
-            'description': None,
-            'order': 0,
+        default_values = super(StudyConfigBase, cls).get_config(
+            dae_config.default_configuration_conf, work_dir, skip_parsing=True)
 
-            'genotypeBrowser.genotype.columns':
-                'family,phenotype,variant,best,fromparent,inchild,genotype,'
-                'effect,count,geneeffect,effectdetails,weights,freq',
-            'genotypeBrowser.previewColumns':
-                'family,variant,genotype,effect,weights,freq,studyName,'
-                'location,pedigree,inChS,fromParentS,effects,'
-                'requestedGeneEffects,genes,worstEffect',
-            'genotypeBrowser.downloadColumns':
-                'family,phenotype,variant,best,fromparent,inchild,effect,'
-                'count,geneeffect,effectdetails,weights,freq',
-        }
+        defaults = {}
+        for section in sections:
+            if section in default_values:
+                defaults.update(default_values[section])
+
+        return defaults
 
 
 class StudyConfig(StudyConfigBase):
@@ -147,17 +128,8 @@ class StudyConfig(StudyConfigBase):
         return StudyConfig(config_section)
 
     @classmethod
-    def get_default_values(cls):
-        defaults = super(StudyConfig, cls).get_default_values()
-        defaults.update({
-            'studyType': 'WE',
-            'year': '',
-            'pubMed': '',
-            'hasDenovo': 'yes',
-            'hasTransmitted': 'no',
-            'hasComplex': 'no',
-            'hasCNV': 'no',
-            'studyType': 'WE',
-            'phenotypes': None,
-        })
+    def get_default_values(cls, work_dir):
+        defaults = super(StudyConfig, cls).get_default_values(
+            work_dir, sections=['common', 'study'])
+
         return defaults
