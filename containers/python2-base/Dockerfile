@@ -3,7 +3,7 @@ FROM continuumio/miniconda
 RUN mkdir /data && mkdir /spark-home && mkdir /code
 
 RUN apt-get update --fix-missing && \ 
-	apt-get install -y default-libmysqlclient-dev gcc libgl1-mesa-glx openjdk-8-jre-headless procps && \
+	apt-get install -y default-libmysqlclient-dev gcc libgl1-mesa-glx openjdk-8-jre-headless procps vim && \
 	apt-get clean
 
 COPY python2-environment.yml /code
