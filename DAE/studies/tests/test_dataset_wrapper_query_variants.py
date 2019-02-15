@@ -224,3 +224,20 @@ def test_query_min_max_alt_frequency(
         maxAltFrequencyPercent=maxFreq))
 
     assert len(variants) == count
+
+
+def test_query_study_filter(composite_dataset_wrapper):
+
+    all_variants = list(composite_dataset_wrapper.
+                        query_variants(studyFilters=[]))
+    assert len(all_variants) == 16
+
+    inh_trio_variants = list(composite_dataset_wrapper.
+                             query_variants(studyFilters=[
+                                            {'studyName': 'TRIO'}]))
+    assert len(inh_trio_variants) == 14
+
+    quads_f1_variants = list(composite_dataset_wrapper.
+                             query_variants(studyFilters=[
+                                            {'studyName': 'QUADS_F1'}]))
+    assert len(quads_f1_variants) == 2

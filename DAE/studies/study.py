@@ -44,7 +44,11 @@ class Study(StudyBase):
         return self.backend.families
 
     def query_variants(self, **kwargs):
-        return self.backend.query_variants(**kwargs)
+        if 'studyFilters' in kwargs and \
+                self.name not in kwargs['studyFilters']:
+            return []
+        else:
+            return self.backend.query_variants(**kwargs)
 
     def get_pedigree_values(self, column):
         return set(self.backend.ped_df[column])

@@ -117,6 +117,12 @@ class StudyWrapper(object):
             kwargs['effect_types'] = expand_effect_types(
                 kwargs['effect_types'])
 
+        if 'studyFilters' in kwargs:
+            if kwargs['studyFilters']:
+                kwargs['studyFilters'] = [sf['studyName'] for sf in kwargs['studyFilters']]
+            else:
+                del(kwargs['studyFilters'])
+
         return itertools.islice(
             self.study.query_variants(**kwargs),
             limit)
