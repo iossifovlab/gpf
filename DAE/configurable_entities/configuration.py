@@ -81,7 +81,6 @@ class DAEConfig(object):
     GENE_INFO_SECTION = 'geneInfoDB'
     GENOMIC_SCORES_SECTION = 'genomicScoresDB'
     GENOMES_SECTION = 'genomesDB'
-    COMMON_REPORTS_SECTION = 'commonReports'
     ANNOTATION_SECTION = 'annotation'
 
     def __init__(self, dae_data_dir=None, dae_conf_filename="DAE.conf"):
@@ -184,16 +183,3 @@ class DAEConfig(object):
     def genomes_conf(self):
         return self._get_config_value(
             self.GENOMES_SECTION, self.CONF_FILE)
-
-    def common_reports_section(self):
-        return self.sections.get_section_config(self.COMMON_REPORTS_SECTION)
-
-    @property
-    def common_reports_dir(self):
-        return self._get_config_value(
-            self.COMMON_REPORTS_SECTION, self.DIR_NAME)
-
-    @property
-    def common_reports_conf(self):
-        return self._get_config_value(
-            self.COMMON_REPORTS_SECTION, self.CONF_FILE)
