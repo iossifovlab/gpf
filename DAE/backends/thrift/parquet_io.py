@@ -170,7 +170,7 @@ class VariantsParquetWriter(object):
             set(fa.variant_in_sexes))
 
         assert len(fa.inheritance_in_members) == len(fa.members_ids)
-        assert len(fa.variant_in_members) == len(fa.members_ids)
+        assert len(fa.variant_in_members) == len(fa.mself._init_phenoembers_ids)
         assert len(fa.variant_in_roles) == len(fa.members_ids)
         assert len(fa.variant_in_sexes) == len(fa.members_ids)
 
@@ -324,4 +324,11 @@ def read_ped_df_from_parquet(filename):
     if 'layout' in ped_df:
         ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
 
+    ped_df.rename(columns={
+        'personId': 'person_id',
+        'familyId': 'family_id',
+        'momId': 'mom_id',
+        'dadId': 'dad_id',
+        'sampleId': 'sample_id',
+    }, inplace=True)
     return ped_df
