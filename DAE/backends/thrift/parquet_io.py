@@ -170,7 +170,7 @@ class VariantsParquetWriter(object):
             set(fa.variant_in_sexes))
 
         assert len(fa.inheritance_in_members) == len(fa.members_ids)
-        assert len(fa.variant_in_members) == len(fa.mself._init_phenoembers_ids)
+        assert len(fa.variant_in_members) == len(fa.members_ids)
         assert len(fa.variant_in_roles) == len(fa.members_ids)
         assert len(fa.variant_in_sexes) == len(fa.members_ids)
 
