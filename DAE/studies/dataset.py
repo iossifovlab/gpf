@@ -17,11 +17,12 @@ class Dataset(StudyBase):
         self.studies = studies
         self.study_names = ",".join(study.name for study in self.studies)
 
-        self.pheno_db = None
-        self.pheno_filter_builder = None
         self._init_pheno()
 
     def _init_pheno(self):
+        self.pheno_db = None
+        self.pheno_filter_builder = None
+
         self.pheno_filters_in_config = set()
         pheno_db = self.config.phenoDB
         if pheno_db:
@@ -36,9 +37,8 @@ class Dataset(StudyBase):
                 self.pheno_filter_builder = PhenoFilterBuilder(self.pheno_db)
 
     @staticmethod
-    def _get_pheno_filter_key(pheno_filter):
-        print("pheno_filter", pheno_filter)
-        return '{}.{}'.format(pheno_filter['role'], pheno_filter['measure'])
+    def _get_pheno_filter_key(pheno_filter, measure_key='measure'):
+        return '{}.{}'.format(pheno_filter['role'], pheno_filter[measure_key])
 
     def query_variants(self, **kwargs):
         pheno_filter_args = kwargs.pop('phenoFilters', None)
@@ -78,15 +78,16 @@ class Dataset(StudyBase):
         if self.pheno_db is None:
             return variant
         pheno_values = {}
-        print("phenoColumns", self.config.genotypeBrowser.phenoColumns)
+
         for pheno_column in self.config.genotypeBrowser.phenoColumns:
-            print("pheno column", pheno_column)
             for slot in pheno_column.slots:
                 pheno_value = self.pheno_db.get_measure_values(
                     slot.source,
                     family_ids=[variant.family.family_id],
                     roles=[slot.role])
-                pheno_values[slot.name] = ','.join(
+                key = self._get_pheno_filter_key(
+                    slot, measure_key='source')
+                pheno_values[key] = ','.join(
                     map(str, pheno_value.values()))
 
         for allele in variant.matched_alleles:
