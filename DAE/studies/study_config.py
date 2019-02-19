@@ -142,7 +142,7 @@ class StudyConfig(StudyConfigBase):
         cls._fill_wdae_config(config_section)
 
         config_section['authorizedGroups'] = config_section.get(
-            'authorizedGroups', [config_section['id']])
+            'authorizedGroups', [config_section.get('id', '')])
 
         return StudyConfig(config_section)
 
