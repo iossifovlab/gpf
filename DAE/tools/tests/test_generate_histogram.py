@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import pytest
+import numpy as np
 import pandas as pd
 from six import StringIO
 
@@ -241,3 +242,70 @@ def test_generate_histogram_with_start_end(
         expected_output_with_start_end[1]
     # assert output_with_start_end[2].getvalue() ==\
     #     expected_output_with_start_end[2]
+
+
+@pytest.fixture
+def values():
+    return pd.DataFrame({'SCORE': [1, 2, 3, 4, 4, 5, 6],
+                         'length': [1, 1, 1, 1, 1, 1, 1],
+                         'start': [1, 2, 3, 4, 5, 6, 7],
+                         'end': [1, 3, 3, 6, 10, 6, 7]})
+
+
+@pytest.fixture
+def bins():
+    return np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+
+
+@pytest.fixture
+def bars(bins):
+    return np.zeros(len(bins) - 1)
+
+
+@pytest.fixture
+def expected_bars():
+    return np.array([1.0, 1.0, 1.0, 2.0, 2.0])
+
+
+@pytest.fixture
+def length():
+    return np.array([1, 2, 1, 3, 6, 1, 1])
+
+
+def test_get_variant_length(generate_histograms, values, length):
+    generate_histograms.start = 'start'
+    generate_histograms.end = 'end'
+
+    variant_length = generate_histograms.get_variant_length(values)['length']
+
+    assert np.array_equal(variant_length, length)
+
+
+def test_get_empty_bars_and_bins(
+        generate_histograms, histogram_info_1, bars, bins):
+    histogram_info_1.bin_range = (1.0, 6.0)
+
+    empty_bars, empty_bins =\
+        generate_histograms.get_empty_bars_and_bins(histogram_info_1)
+
+    assert np.array_equal(empty_bars, bars)
+    assert np.array_equal(empty_bins, bins)
+
+
+def test_fill_bars(
+        generate_histograms, histogram_info_1, values, bars, bins,
+        expected_bars):
+    histogram_info_1.bin_range = (1.0, 6.0)
+
+    fill_bars = generate_histograms.fill_bars(
+        histogram_info_1, values, bars, bins)
+
+    assert np.array_equal(fill_bars, expected_bars)
+
+
+def test_np_histogram(values, bars, bins, expected_bars):
+    fill_bars, fill_bins = np.histogram(
+        values['SCORE'].values, bins=bins, range=(1.0, 6.0))
+
+    assert np.array_equal(fill_bars, expected_bars)
+    assert np.array_equal(fill_bins, bins)
