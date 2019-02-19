@@ -324,4 +324,11 @@ def read_ped_df_from_parquet(filename):
     if 'layout' in ped_df:
         ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
 
+    ped_df.rename(columns={
+        'personId': 'person_id',
+        'familyId': 'family_id',
+        'momId': 'mom_id',
+        'dadId': 'dad_id',
+        'sampleId': 'sample_id',
+    }, inplace=True)
     return ped_df
