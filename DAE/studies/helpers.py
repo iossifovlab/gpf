@@ -6,6 +6,8 @@ import functools
 import logging
 from utils.vcf_utils import mat2str
 
+from common.query_base import EffectTypesMixin
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -258,79 +260,15 @@ def expand_effect_types(effect_types):
     effects = []
     for effect in effect_types:
         effect_lower = effect.lower()
-        if effect_lower in EFFECT_GROUPS:
-            effects += EFFECT_GROUPS[effect_lower]
+        if effect_lower in EffectTypesMixin.EFFECT_GROUPS:
+            effects += EffectTypesMixin.EFFECT_GROUPS[effect_lower]
         else:
             effects.append(effect)
 
     result = []
     for effect in effects:
-        if effect not in EFFECT_TYPES_MAPPING:
+        if effect not in EffectTypesMixin.EFFECT_TYPES_MAPPING:
             result.append(effect)
         else:
-            result += EFFECT_TYPES_MAPPING[effect]
+            result += EffectTypesMixin.EFFECT_TYPES_MAPPING[effect]
     return result
-
-
-EFFECT_TYPES_MAPPING = {
-    "Nonsense": ["nonsense"],
-    "Frame-shift": ["frame-shift"],
-    "Splice-site": ["splice-site"],
-    "Missense": ["missense"],
-    "No-frame-shift": ["no-frame-shift"],
-    "No-frame-shift-newStop": ["no-frame-shift-newStop"],
-    "noStart": ["noStart"],
-    "noEnd": ["noEnd"],
-    "Synonymous": ["synonymous"],
-    "Non coding": ["non-coding"],
-    "Intron": ["intron"],
-    "Intergenic": ["intergenic"],
-    "3'-UTR": ["3'UTR", "3'UTR-intron"],
-    "5'-UTR": ["5'UTR", "5'UTR-intron"],
-    "CNV": ["CNV+", "CNV-"],
-    "CNV+": ["CNV+"],
-    "CNV-": ["CNV-"],
-}
-
-EFFECT_GROUPS = {
-    "coding": [
-        "Nonsense",
-        "Frame-shift",
-        "Splice-site",
-        "Missense",
-        "No-frame-shift",
-        "noStart",
-        "noEnd",
-        "Synonymous",
-    ],
-    "noncoding": [
-        "Non coding",
-        "Intron",
-        "Intergenic",
-        "3'-UTR",
-        "5'-UTR",
-    ],
-    "cnv": [
-        "CNV+",
-        "CNV-"
-    ],
-    "lgds": [
-        "Frame-shift",
-        "Nonsense",
-        "Splice-site",
-        "No-frame-shift-newStop",
-    ],
-    "nonsynonymous": [
-        "Nonsense",
-        "Frame-shift",
-        "Splice-site",
-        "Missense",
-        "No-frame-shift",
-        "noStart",
-        "noEnd",
-    ],
-    "utrs": [
-        "3'-UTR",
-        "5'-UTR",
-    ]
-}
