@@ -150,7 +150,7 @@ class FamiliesBase(object):
 
     def families_build_from_simple(self, fam_df, family_class=Family):
         for family_id, fam in fam_df.groupby(by='family_id'):
-            family = family_class(family_id, fam)
+            family = family_class.from_df(family_id, fam_df)
             self.families[family_id] = family
 
     def families_query_by_person(self, person_ids):

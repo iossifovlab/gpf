@@ -331,4 +331,5 @@ def read_ped_df_from_parquet(filename):
         'dadId': 'dad_id',
         'sampleId': 'sample_id',
     }, inplace=True)
+
     return ped_df

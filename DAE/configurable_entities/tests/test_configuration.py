@@ -80,10 +80,8 @@ def test_dae_config_simple(fixturedir, dae_config):
     assert dae_config.genomic_scores_conf == \
         os.path.join(fixturedir, "genomicScores.conf")
 
-    assert dae_config.common_reports_dir == \
-        os.path.join(fixturedir, "commonReports")
-    assert dae_config.common_reports_conf == \
-        os.path.join(fixturedir, "commonReports.conf")
+    assert dae_config.default_configuration_conf == \
+        os.path.join(fixturedir, "defaultConfiguration.conf")
 
 
 def test_dae_config_genomic_scores_dirs(dae_config):
