@@ -336,6 +336,9 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return cls._get_gene_families(cache[next_key], criterias - {next_key})
 
     def _gene_sets_for(self, dataset):
+        assert dataset['id'] in self.datasets_pedigree_selectors, \
+            [dataset['id'], self.datasets_pedigree_selectors]
+
         pedigree_selector = self.datasets_pedigree_selectors[
             dataset['id']]['source']
         pedigree_selector_values = map(

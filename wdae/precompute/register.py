@@ -66,6 +66,8 @@ class PrecomputeRegister(object):
             self.store.store(key, data)
 
     def get(self, key):
+        assert key in self.reg, \
+            [key, list(self.reg.keys())]
         precompute = self.reg[key]
         if not precompute.is_precomputed():
             self._load_or_compute(key, precompute)
