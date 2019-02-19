@@ -36,6 +36,17 @@ FILTER_QUERY_BOGUS = {
     }
 }
 
+FILTER_QUERY_ORDINAL = {
+    "id": "Ordinal",
+    "measureType": "ordinal",
+    "role": "prb",
+    "measure": "instrument1.ordinal",
+    "selection": {
+        "min": 1,
+        "max": 5
+    }
+}
+
 
 @pytest.mark.parametrize("pheno_query", [
     [FILTER_QUERY_CATEGORICAL],
@@ -66,7 +77,16 @@ def test_query_with_pheno_filters_and_people_ids_filter(
 def test_query_with_bogus_pheno_filters_raises(quads_f1_dataset_wrapper):
     pheno_query = [FILTER_QUERY_BOGUS]
 
-    with pytest.raises(AssertionError):
-        variants = quads_f1_dataset_wrapper \
-            .query_variants(phenoFilters=pheno_query, people_ids=['mom1'])
-        variants = list(variants)
+    variants = quads_f1_dataset_wrapper \
+        .query_variants(phenoFilters=pheno_query, people_ids=['mom1'])
+    variants = list(variants)
+    assert len(variants) == 0
+
+
+def test_query_with_query_not_in_config(quads_f1_dataset_wrapper):
+    pheno_query = [FILTER_QUERY_ORDINAL]
+    variants = quads_f1_dataset_wrapper \
+        .query_variants(phenoFilters=pheno_query)
+    variants = list(variants)
+
+    assert len(variants) == 0

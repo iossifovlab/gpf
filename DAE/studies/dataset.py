@@ -17,18 +17,30 @@ class Dataset(StudyBase):
         self.studies = studies
         self.study_names = ",".join(study.name for study in self.studies)
 
-        self.pheno_db = None
-        self.pheno_filter_builder = None
         self._init_pheno()
 
     def _init_pheno(self):
+        self.pheno_db = None
+        self.pheno_filter_builder = None
+
+        self.pheno_filters_in_config = set()
         pheno_db = self.config.phenoDB
         if pheno_db:
             self.pheno_db = PhenoFactory().get_pheno_db(pheno_db)
 
             pheno_filters = self.config.genotypeBrowser.phenoFilters
+            print(pheno_filters)
+            self.pheno_filters_in_config = {
+                self._get_pheno_filter_key(pf.measureFilter) for pf in pheno_filters
+                if pf['measureFilter']['filterType']  == 'single'
+            }
+
             if pheno_filters:
                 self.pheno_filter_builder = PhenoFilterBuilder(self.pheno_db)
+
+    @staticmethod
+    def _get_pheno_filter_key(pheno_filter, measure_key='measure'):
+        return '{}.{}'.format(pheno_filter['role'], pheno_filter[measure_key])
 
     def query_variants(self, **kwargs):
         pheno_filter_args = kwargs.pop('phenoFilters', None)
@@ -36,7 +48,9 @@ class Dataset(StudyBase):
         if pheno_filter_args:
             assert isinstance(pheno_filter_args, list)
             assert self.pheno_db
-            assert self.pheno_filter_builder
+            # assert self.pheno_filter_builder
+
+            pheno_filter_args = self._filter_pheno_args(pheno_filter_args)
 
             people_ids_to_query = self._transform_pheno_filters_to_people_ids(
                 pheno_filter_args)
@@ -54,19 +68,28 @@ class Dataset(StudyBase):
             variant = self._add_pheno_columns(variant)
             yield variant
 
+    def _filter_pheno_args(self, pheno_filters):
+        result = []
+        for pheno_filter in pheno_filters:
+            pheno_filter_key = self._get_pheno_filter_key(pheno_filter)
+            if pheno_filter_key in self.pheno_filters_in_config:
+                result.append(pheno_filter)
+        return result
+
     def _add_pheno_columns(self, variant):
         if self.pheno_db is None:
             return variant
         pheno_values = {}
-        print("phenoColumns", self.config.genotypeBrowser.phenoColumns)
+
         for pheno_column in self.config.genotypeBrowser.phenoColumns:
-            print("pheno column", pheno_column)
             for slot in pheno_column.slots:
                 pheno_value = self.pheno_db.get_measure_values(
                     slot.source,
                     family_ids=[variant.family.family_id],
                     roles=[slot.role])
-                pheno_values[slot.name] = ','.join(
+                key = self._get_pheno_filter_key(
+                    slot, measure_key='source')
+                pheno_values[key] = ','.join(
                     map(str, pheno_value.values()))
 
         for allele in variant.matched_alleles:
