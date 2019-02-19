@@ -119,7 +119,8 @@ class StudyWrapper(object):
 
         if 'studyFilters' in kwargs:
             if kwargs['studyFilters']:
-                kwargs['studyFilters'] = [sf['studyName'] for sf in kwargs['studyFilters']]
+                kwargs['studyFilters'] =\
+                    [sf['studyName'] for sf in kwargs['studyFilters']]
             else:
                 del(kwargs['studyFilters'])
 

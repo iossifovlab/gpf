@@ -30,7 +30,6 @@ class Dataset(StudyBase):
             if pheno_filters:
                 self.pheno_filter_builder = PhenoFilterBuilder(self.pheno_db)
 
-
     def query_variants(self, **kwargs):
         pheno_filter_args = kwargs.pop('phenoFilters', None)
 
