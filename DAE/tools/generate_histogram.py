@@ -138,7 +138,7 @@ class GenerateScoresHistograms(object):
             v[histogram_info.score_column] = pd.to_numeric(
                 v[histogram_info.score_column], errors='coerce')
             v = pd.DataFrame(v)
-            values = pd.concat([values, v])
+            values = pd.concat([values, v], sort=True)
 
         if not histogram_info.bin_range:
             histogram_info.set_bin_range_from_values(values, self.round_pos)
@@ -154,7 +154,7 @@ class GenerateScoresHistograms(object):
     def save_histogram(self, bars, bins, histogram_info):
         scores = pd.Series(bins, name='scores')
         data = pd.Series(bars, name=histogram_info.score)
-        histogram = pd.concat([data, scores], axis=1)
+        histogram = pd.concat([data, scores], axis=1, sort=True)
         histogram.to_csv(histogram_info.output_file, index=False)
 
         histogram.dropna(inplace=True)
