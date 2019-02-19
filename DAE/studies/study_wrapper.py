@@ -29,8 +29,8 @@ class StudyWrapper(object):
         pedigree_selectors = []
 
         if genotype_browser:
-            preview_columns = genotype_browser['previewColumns']
-            download_columns = genotype_browser['downloadColumns']
+            preview_columns = genotype_browser['previewColumnsSlots']
+            download_columns = genotype_browser['downloadColumnsSlots']
             if genotype_browser['pedigreeColumns']:
                 pedigree_columns =\
                     [s for pc in genotype_browser['pedigreeColumns']

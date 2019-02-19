@@ -8,39 +8,6 @@ from utils.vcf_utils import mat2str
 
 LOGGER = logging.getLogger(__name__)
 
-DEFAULT_COLUMN_TITLES = {
-    'familyId': 'family id',
-    'location': 'location',
-    'variant': 'variant',
-    'bestSt': 'family genotype',
-    'fromParentS': 'from parent',
-    'inChS': 'in child',
-    'effectType': 'worst effect type',
-    'worstEffect': 'worst requested effect',
-    'genes': 'genes',
-    'geneEffect': 'all effects',
-    'requestedGeneEffects': 'requested effects',
-    'popType': 'population type',
-    'effectDetails': 'effect details',
-    'all.altFreq': 'alternative allele frequency',
-    'all.nAltAlls': 'number of alternative alleles',
-    'all.nParCalled': 'number of genotyped parents',
-    '_par_races_': 'parent races',
-    '_ch_prof_': 'children description',
-    '_prb_viq_': 'proband verbal iq',
-    '_prb_nviq_': 'proband non-verbal iq',
-    'studyName': 'study',
-    '_phenotype_': 'study phenotype',
-    'counts': 'count',
-    'valstatus': 'validation status',
-    '_pedigree_': '_pedigree_',
-    'phenoInChs': 'phenoInChs',
-    'dataset': 'dataset',
-    'SSCfreq': 'SSCfreq',
-    'EVSfreq': 'EVSfreq',
-    'E65freq': 'E65freq',
-}
-
 
 def merge_dicts(*dicts):
     result = {}

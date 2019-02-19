@@ -262,6 +262,28 @@ class StudyWdaeMixin(object):
             result.append(column)
         return result
 
+    @staticmethod
+    def _get_genotype_browser_column_slots(genotype_columns, columns):
+        column_slots = []
+        for column in columns:
+            genotype_column = list(filter(
+                lambda genotype_column: genotype_column['id'] == column,
+                genotype_columns
+            ))
+
+            if len(genotype_column) == 0:
+                continue
+            gc = genotype_column[0]
+
+            if gc['source'] is not None:
+                column_slots.append(gc['source'])
+            else:
+                for slot in gc['slots']:
+                    if slot['source'] is not None:
+                        column_slots.append(slot['source'])
+
+        return column_slots
+
     @classmethod
     def _fill_wdae_people_group_config(cls, config_section):
         people_group =\
@@ -283,6 +305,15 @@ class StudyWdaeMixin(object):
             cls._get_genotype_browser_genotype_columns(config_section) + \
             config_section['genotypeBrowser.pedigreeColumns'] + \
             config_section['genotypeBrowser.phenoColumns']
+        config_section['genotypeBrowser.previewColumnsSlots'] =\
+            cls._get_genotype_browser_column_slots(
+                config_section['genotypeBrowser.genotypeColumns'],
+                config_section['genotypeBrowser.previewColumns'])
+        config_section['genotypeBrowser.downloadColumnsSlots'] =\
+            cls._get_genotype_browser_column_slots(
+                config_section['genotypeBrowser.genotypeColumns'],
+                config_section['genotypeBrowser.downloadColumns'])
+
         config_section = cls._combine_dict_options(
             config_section,
             dict_options_keys=['genotypeBrowser'])
