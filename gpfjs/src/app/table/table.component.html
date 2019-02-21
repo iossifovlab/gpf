@@ -1,6 +1,6 @@
 <div #table style="width: 100%; display: table; border-collapse: collapse;">
     <gpf-table-view-header
-        [style.visibility] = "showFloatingHeader() ? 'hidden' : 'visible'"
+        [style.visibility] = "showFloatingHeader ? 'hidden' : 'visible'"
         style="display: table-header-group"
         [columns]="columnsChildren"
         [(sortingInfo)]="sortingInfo">
@@ -33,7 +33,7 @@
 </div>
 
 <div style="display: table; border-collapse: collapse; position: fixed; top: 0px;  background-color: white;"
-  [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
+  [style.visibility] = "showFloatingHeader ? 'visible' : 'hidden'">
     <gpf-table-view-header
         [columns]="columnsChildren"
         [(sortingInfo)]="sortingInfo">
@@ -42,7 +42,7 @@
 
 
 <div style="position: fixed; bottom: 100px; right: 100px; background-color: white;"
-  [style.visibility] = "showFloatingHeader() ? 'visible' : 'hidden'">
+  [style.visibility] = "showFloatingHeader ? 'visible' : 'hidden'">
     <ng-template *ngIf="legend?.templateRef" [ngTemplateOutlet]="legend.templateRef">
     </ng-template>
 </div>
