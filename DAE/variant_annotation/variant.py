@@ -69,26 +69,26 @@ class Variant(object):
 
     def set_ref_alt_from_variant(self, var):
         if var.startswith("complex"):
-            a = re.match('.*\((.*)->(.*)\)', var)
+            a = re.match('.*\\((.*)->(.*)\\)', var)
             self.reference = a.group(1).upper()
             self.alternate = a.group(2).upper()
             return
 
         t = var[0].upper()
         if t == "S":
-            a = re.match('.*\((.*)->(.*)\)', var)
+            a = re.match('.*\\((.*)->(.*)\\)', var)
             self.reference = a.group(1).upper()
             self.alternate = a.group(2).upper()
             return
 
         if t == "D":
-            a = re.match('.*\((.*)\)', var)
+            a = re.match('.*\\((.*)\\)', var)
             self.reference = "0" * int(a.group(1))
             self.alternate = ""
             return
 
         if t == "I":
-            a = re.match('.*\((.*)\)', var)
+            a = re.match('.*\\((.*)\\)', var)
             self.reference = ""
             self.alternate = re.sub('[0-9]+', '', a.group(1).upper())
             return

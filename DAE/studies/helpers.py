@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from builtins import str
 
+import math
 import itertools
 import functools
 import logging
@@ -168,7 +169,14 @@ def transform_variants_to_lists(
                         row_variant.append(generate_pedigree(
                             v, pedigree_selectors, selected_pedigree_selector))
                     else:
-                        row_variant.append(str(getattr(v, attr, '')))
+                        attribute =\
+                            v.alt_alleles[alt_allele].get_attribute(attr, '')
+                        if not isinstance(attribute, str):
+                            if attribute is None or math.isnan(attribute):
+                                attribute = ''
+                            elif math.isinf(attribute):
+                                attribute = 'inf'
+                        row_variant.append(attribute)
                 except (AttributeError, KeyError):
                     # print(attr, type(e), e)
                     row_variant.append('')

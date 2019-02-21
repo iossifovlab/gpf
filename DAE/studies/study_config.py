@@ -68,6 +68,9 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
             if section in default_values:
                 defaults.update(default_values[section])
 
+        for default_key in defaults.keys():
+            defaults[default_key] = defaults[default_key].replace('%', '%%')
+
         return defaults
 
 
