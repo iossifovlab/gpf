@@ -57,6 +57,7 @@ export class EffecttypesComponent extends QueryStateWithErrorsProvider implement
     this.effectTypesButtons.set('ALL', ALL);
     this.effectTypesButtons.set('NONE', []);
     this.effectTypesButtons.set('LGDS', LGDS);
+    this.effectTypesButtons.set('CODING', CODING);
     this.effectTypesButtons.set('NONSYNONYMOUS', NONSYNONYMOUS);
     this.effectTypesButtons.set('UTRS', UTRS);
   }

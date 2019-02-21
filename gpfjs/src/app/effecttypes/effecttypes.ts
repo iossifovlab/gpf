@@ -11,6 +11,7 @@ export const ALL: string[] = [
   'Nonsense',
   'Frame-shift',
   'Splice-site',
+  'No-frame-shift-newStop',
   'Missense',
   'No-frame-shift',
   'noStart',
@@ -29,6 +30,7 @@ export const CODING: string[] = [
   'Nonsense',
   'Frame-shift',
   'Splice-site',
+  'No-frame-shift-newStop',
   'Missense',
   'No-frame-shift',
   'noStart',
@@ -53,12 +55,14 @@ export const LGDS: string[] = [
   'Nonsense',
   'Frame-shift',
   'Splice-site',
+  'No-frame-shift-newStop',
 ];
 
 export const NONSYNONYMOUS: string[] = [
   'Nonsense',
   'Frame-shift',
   'Splice-site',
+  'No-frame-shift-newStop',
   'Missense',
   'No-frame-shift',
   'noStart',
