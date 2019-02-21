@@ -216,8 +216,8 @@ def generate_pedigree(variant, pedigree_selectors, selected_pedigree_selector):
         result.append([
             variant.family_id,
             member.person_id,
-            member.mom if member.has_mom() else '',
-            member.dad if member.has_dad() else '',
+            member.mom_id,
+            member.dad_id,
             member.sex.short(),
             get_person_color(
                 member, pedigree_selectors, selected_pedigree_selector),
