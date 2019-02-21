@@ -31,8 +31,9 @@ class Dataset(StudyBase):
             pheno_filters = self.config.genotypeBrowser.phenoFilters
             print(pheno_filters)
             self.pheno_filters_in_config = {
-                self._get_pheno_filter_key(pf.measureFilter) for pf in pheno_filters
-                if pf['measureFilter']['filterType']  == 'single'
+                self._get_pheno_filter_key(pf.measureFilter) 
+                for pf in pheno_filters
+                if pf['measureFilter']['filterType'] == 'single'
             }
 
             if pheno_filters:
