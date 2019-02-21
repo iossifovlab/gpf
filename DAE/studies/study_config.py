@@ -58,7 +58,7 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
 
     @classmethod
     def get_default_values(cls, work_dir, sections=['common']):
-        dae_config = DAEConfig()
+        dae_config = DAEConfig(dae_data_dir=work_dir)
 
         default_values = super(StudyConfigBase, cls).get_config(
             dae_config.default_configuration_conf, work_dir, skip_parsing=True)
