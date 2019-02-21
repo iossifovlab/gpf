@@ -37,3 +37,4 @@ DAE/*.json
 .coverage*
 coverage/
 tmp/
+DAE/pyflakes.report
