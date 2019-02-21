@@ -148,7 +148,7 @@ class EffectTypesMixin(object):
         if safe:
             assert all([
                 et in self.EFFECT_TYPES or
-                et in list(self.EFFECT_TYPES_MAPPING.keys()) 
+                et in list(self.EFFECT_TYPES_MAPPING.keys())
                 for et in effect_types])
         return [
             self.EFFECT_TYPES_UI_NAMING.get(et, et) for et in effect_types
@@ -408,10 +408,10 @@ class GeneSymsMixin(object):
 
 
 class RegionsMixin(object):
-    REGION_REGEXP1 = re.compile("([1-9,X][0-9]?):(\d+)-(\d+)")
+    REGION_REGEXP1 = re.compile("([1-9,X][0-9]?):(\\d+)-(\\d+)")
     REGION_REGEXP2 = re.compile(
-        "^(chr)?(\d+|[Xx]):([\d]{1,3}(,?[\d]{3})*)"
-        "(-([\d]{1,3}(,?[\d]{3})*))?$")
+        "^(chr)?(\\d+|[Xx]):([\\d]{1,3}(,?[\\d]{3})*)"
+        "(-([\\d]{1,3}(,?[\\d]{3})*))?$")
 
     @classmethod
     def get_regions(cls, **kwargs):

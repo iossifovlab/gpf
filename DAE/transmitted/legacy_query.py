@@ -154,6 +154,7 @@ class TransmissionLegacy(TransmissionConfig):
                 try:
                     if self.CHROMOSOME_PREFIX not in reg:
                         reg = self.CHROMOSOME_PREFIX + reg
+                    reg = reg.encode("utf8")
                     f = tbf.fetch(reg)
                     for v in self.filter_transmitted_variants(
                             f, colNms,
