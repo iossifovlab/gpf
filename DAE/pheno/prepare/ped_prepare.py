@@ -18,7 +18,6 @@ from collections import defaultdict, OrderedDict
 from pheno.prepare.measure_classifier import MeasureClassifier,\
     convert_to_string, convert_to_numeric, ClassifierReport
 from multiprocessing import Pool
-from numpy.testing.utils import measure
 import traceback
 
 
@@ -212,13 +211,13 @@ class PreparePersons(PrepareBase):
 class Task(PrepareCommon):
 
     def run(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def done(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def __next__(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def __call__(self):
         return self.run()
@@ -282,7 +281,7 @@ class ClassifyMeasureTask(Task):
             self.measure.measure_type = classifier.classify(
                 self.classifier_report)
             self.build_meta_measure()
-        except Exception as _ex:
+        except Exception:
             print("problem processing measure: {}".format(
                 self.measure.measure_id))
             traceback.print_exc()

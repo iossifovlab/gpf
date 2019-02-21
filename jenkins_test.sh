@@ -17,6 +17,7 @@ py.test --traceconfig -v --cov-config coveragerc \
     --cov configurable_entities \
     --cov gene \
     --cov pedigrees \
+    --cov pheno \
     --cov studies \
     --cov tools \
     --cov utils \
@@ -30,6 +31,7 @@ py.test --traceconfig -v --cov-config coveragerc \
     DAE/configurable_entities/tests \
     DAE/gene/tests \
     DAE/pedigrees/tests \
+    DAE/pheno/tests \
     DAE/studies/tests \
     DAE/tools/tests \
     DAE/utils/tests \
@@ -47,6 +49,7 @@ py.test -v --cov-config coveragerc \
     --cov configurable_entities \
     --cov gene \
     --cov pedigrees \
+    --cov pheno \
     --cov studies \
     --cov tools \
     --cov utils \
