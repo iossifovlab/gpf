@@ -31,6 +31,8 @@ export class GpfTableComponent {
   private drawOutsideVisibleCount = 5;
   private tableTopPosition = 0;
 
+  showFloatingHeader: boolean;
+
   @HostListener('window:scroll', ['$event'])
   onWindowScroll(event) {
     this.tableTopPosition = this.tableViewChild.nativeElement.getBoundingClientRect().top;
@@ -41,6 +43,8 @@ export class GpfTableComponent {
       this.lastRowHeight = this.rowViewChildren.last.nativeElement
         .getBoundingClientRect().height;
     }
+
+    this.showFloatingHeader = this.tableTop();
   }
 
   constructor(
@@ -57,7 +61,7 @@ export class GpfTableComponent {
     return this.previousSortingInfo;
   }
 
-  showFloatingHeader(): boolean {
+  tableTop(): boolean {
     return this.tableViewChild.nativeElement.getBoundingClientRect().top < 0;
   }
 
