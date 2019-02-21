@@ -10,9 +10,8 @@ from annotation.tools.annotator_config import VariantAnnotatorConfig
 
 
 expected_warnings = \
-    """test_freq.tsv.gz: frequency score not found for variant 1:20001 sub(A->T)
-WARNING test_freq.tsv.gz: multiple variant occurrences of 1:20002 sub(C->A)
-"""
+    "WARNING test_freq.tsv.gz: " \
+    "multiple variant occurrences of 1:20002 sub(C->A)\n"
 
 
 expected_result_freq = \

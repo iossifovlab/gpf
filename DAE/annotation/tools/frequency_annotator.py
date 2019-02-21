@@ -57,8 +57,8 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
                     print("problem with: ", output, chrom, pos, [val],
                           file=sys.stderr)
                     raise ex
-        else:
-            print('{}: frequency score not found for variant {}:{} {}'.
-                  format(self.score_filename_base,
-                         str(chrom), str(pos), str(variant)),
-                  file=sys.stderr)
+        # else:
+        #     print('{}: frequency score not found for variant {}:{} {}'.
+        #           format(self.score_filename_base,
+        #                  str(chrom), str(pos), str(variant)),
+        #           file=sys.stderr)
