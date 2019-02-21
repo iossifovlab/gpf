@@ -7,8 +7,8 @@
     </gpf-pedigree-chart>
 </div>
  <span *ngIf="field == 'location'">
-   <a target="_blank" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr{{value}}">{{ formattedValue() }}</a>
+   <a target="_blank" href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&amp;position=chr{{value}}">{{ formattedValue }}</a>
  </span>
  <span *ngIf="field != 'pedigree' && field != 'location'">
-    {{ formattedValue() }}
+    {{ formattedValue }}
  </span>
