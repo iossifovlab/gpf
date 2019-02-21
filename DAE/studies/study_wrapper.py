@@ -29,8 +29,8 @@ class StudyWrapper(object):
         pedigree_selectors = []
 
         if genotype_browser:
-            preview_columns = genotype_browser['previewColumns']
-            download_columns = genotype_browser['downloadColumns']
+            preview_columns = genotype_browser['previewColumnsSlots']
+            download_columns = genotype_browser['downloadColumnsSlots']
             if genotype_browser['pedigreeColumns']:
                 pedigree_columns =\
                     [s for pc in genotype_browser['pedigreeColumns']
@@ -116,6 +116,13 @@ class StudyWrapper(object):
         if 'effect_types' in kwargs:
             kwargs['effect_types'] = expand_effect_types(
                 kwargs['effect_types'])
+
+        if 'studyFilters' in kwargs:
+            if kwargs['studyFilters']:
+                kwargs['studyFilters'] =\
+                    [sf['studyName'] for sf in kwargs['studyFilters']]
+            else:
+                del(kwargs['studyFilters'])
 
         return itertools.islice(
             self.study.query_variants(**kwargs),
@@ -300,6 +307,7 @@ class StudyWrapper(object):
     # FIXME:
     def _get_dataset_config_options(self, config):
         config['studyTypes'] = self.config.study_types
+        config['description'] = self.study.description
         # config['studies'] = self.config.names
 
         print(self.config.genotype_browser)

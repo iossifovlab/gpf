@@ -35,7 +35,7 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
 
         self.directory_enabled_configurable_entity_definition(
             datasets_dir, DatasetConfig, work_dir, 'id',
-            DatasetConfig.get_default_values(),
+            DatasetConfig.get_default_values(work_dir),
             DatasetsDefinition.get_skip_sections())
         self._fill_studies_configs()
 

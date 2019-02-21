@@ -270,8 +270,12 @@ UNLOCK TABLES;
             column_names = fh.readline().rstrip().split('\t')
             column_names = [cn.strip("#") for cn in column_names]
 
-            assert score_names is None or all(
-                [sc in column_names for sc in score_names])
+            if score_names:
+                for sc in score_names:
+                    assert sc in column_names, sc
+
+            # assert score_names is None or all(
+            #     [sc in column_names for sc in score_names])
             create_table_sql = self.create_table_statement(score_names)
             values_sql = self.values_statement(score_names)
 

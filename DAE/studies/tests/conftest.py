@@ -10,6 +10,7 @@ from studies.study_wrapper import StudyWrapper
 from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
+from utils.fixtures import change_environment
 
 
 def fixtures_dir():
@@ -27,30 +28,30 @@ def datasets_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures/datasets'))
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def study_configs(study_definition):
     return list(study_definition.configs.values())
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def study_definitions():
     return DirectoryEnabledStudiesDefinition(
         studies_dir=studies_dir(),
         work_dir=fixtures_dir())
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def study_factory():
     return StudyFactory()
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def study_facade(study_factory, study_definitions):
     return StudyFacade(
         study_factory=study_factory, study_definition=study_definitions)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_f1_config(study_definitions):
     return study_definitions.get_study_config('quads_f1')
 
@@ -63,67 +64,67 @@ def load_study(study_factory, study_definitions, study_name):
     return result
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def inheritance_trio(study_factory, study_definitions):
     return load_study(study_factory, study_definitions, 'inheritance_trio')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_f1(study_factory, study_definitions):
     return load_study(study_factory, study_definitions, 'quads_f1')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_variant_types(study_factory, study_definitions):
     return load_study(study_factory, study_definitions, 'quads_variant_types')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_two_families(study_factory, study_definitions):
     return load_study(study_factory, study_definitions, 'quads_two_families')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_in_child(study_factory, study_definitions):
     return load_study(study_factory, study_definitions, 'quads_in_child')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_in_parent(study_factory, study_definitions):
     return load_study(study_factory, study_definitions, 'quads_in_parent')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def inheritance_trio_wrapper(inheritance_trio):
     return StudyWrapper(inheritance_trio)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_f1_wrapper(quads_f1):
     return StudyWrapper(quads_f1)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_variant_types_wrapper(quads_variant_types):
     return StudyWrapper(quads_variant_types)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_two_families_wrapper(quads_two_families):
     return StudyWrapper(quads_two_families)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_in_child_wrapper(quads_in_child):
     return StudyWrapper(quads_in_child)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_in_parent_wrapper(quads_in_parent):
     return StudyWrapper(quads_in_parent)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def dataset_definitions(study_facade):
     return DirectoryEnabledDatasetsDefinition(
         study_facade,
@@ -131,95 +132,117 @@ def dataset_definitions(study_facade):
         work_dir=fixtures_dir())
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def dataset_facade(dataset_definitions, dataset_factory):
     return DatasetFacade(dataset_definitions, dataset_factory)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_composite_dataset_config(dataset_definitions):
     return dataset_definitions.get_dataset_config('quads_composite')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def composite_dataset_config(dataset_definitions):
     return dataset_definitions.get_dataset_config('composite_dataset')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def dataset_factory(study_facade):
     return DatasetFactory(study_facade=study_facade)
 
 
 def load_dataset(dataset_factory, dataset_definitions, dataset_name):
     config = dataset_definitions.get_dataset_config(dataset_name)
+    assert config is not None, dataset_name
 
     result = dataset_factory.make_dataset(config)
     assert result is not None
     return result
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def inheritance_trio_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
         dataset_factory, dataset_definitions, 'inheritance_trio')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def inheritance_trio_dataset_wrapper(inheritance_trio_dataset):
     return StudyWrapper(inheritance_trio_dataset)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_two_families_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
         dataset_factory, dataset_definitions, 'quads_two_families')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_two_families_dataset_wrapper(quads_two_families_dataset):
     return StudyWrapper(quads_two_families_dataset)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_f1_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
         dataset_factory, dataset_definitions, 'quads_f1')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_f1_dataset_wrapper(quads_f1_dataset):
     return StudyWrapper(quads_f1_dataset)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_variant_types_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
         dataset_factory, dataset_definitions, 'quads_variant_types')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_variant_types_dataset_wrapper(quads_variant_types_dataset):
     return StudyWrapper(quads_variant_types_dataset)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_in_child_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
         dataset_factory, dataset_definitions, 'quads_in_child')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_in_child_dataset_wrapper(quads_in_child_dataset):
     return StudyWrapper(quads_in_child_dataset)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_in_parent_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
         dataset_factory, dataset_definitions, 'quads_in_parent')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='module')
 def quads_in_parent_dataset_wrapper(quads_in_parent_dataset):
     return StudyWrapper(quads_in_parent_dataset)
+
+
+@pytest.fixture(scope='module')
+def composite_dataset(dataset_factory, dataset_definitions):
+    return load_dataset(
+        dataset_factory, dataset_definitions, 'composite_dataset')
+
+
+@pytest.fixture(scope='module')
+def composite_dataset_wrapper(composite_dataset):
+    return StudyWrapper(composite_dataset)
+  
+  
+@pytest.fixture(scope='module')
+def pheno_conf_path():
+    new_envs = {
+        'DAE_DB_DIR': fixtures_dir()
+    }
+
+    for val in change_environment(new_envs):
+        yield val

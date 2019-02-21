@@ -16,6 +16,7 @@ from studies.study_facade import StudyFacade
 from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
+from utils.fixtures import change_environment
 
 from gene.config import GeneInfoConfig
 from gene.gene_set_collections import GeneSetsCollections
@@ -129,20 +130,15 @@ def gene_info_cache_dir():
         'Cache dir "{}"already  exists..'.format(cache_dir)
     os.makedirs(cache_dir)
 
-    env_key = 'DATA_STUDY_GROUPS_DENOVO_GENE_SETS_DIR'
-    old_env = os.getenv(env_key, None)
+    new_envs = {
+        'DATA_STUDY_GROUPS_DENOVO_GENE_SETS_DIR':
+            path_to_fixtures('geneInfo', 'cache')
+    }
 
-    os.environ[env_key] = \
-        path_to_fixtures('geneInfo', 'cache')
-
-    yield
+    for val in change_environment(new_envs):
+        yield val
 
     shutil.rmtree(cache_dir)
-
-    if old_env is None:
-        os.unsetenv(env_key)
-    else:
-        os.putenv(env_key, old_env)
 
 
 @pytest.fixture()

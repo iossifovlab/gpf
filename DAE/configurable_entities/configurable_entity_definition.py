@@ -50,7 +50,6 @@ class ConfigurableEntityDefinition(object):
             configs.append(ConfigurableEntityDefinition.list_from_config(
                 config_path, enabled_dir, configurable_entity_config,
                 default_values, skip_sections))
-
         configs = list(chain.from_iterable(configs))
 
         self.configs = {conf[config_key]: conf for conf in configs}
@@ -89,7 +88,6 @@ class ConfigurableEntityDefinition(object):
             default_values={}, skip_sections=[]):
         config = configurable_entity_config.get_config(
             config_file, work_dir, default_values)
-
         result = list()
         for section in config.keys():
             if section in skip_sections:

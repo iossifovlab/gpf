@@ -44,3 +44,4 @@ def test_query_sexes_variants(sexes, count, quads_f1_wrapper):
     variants = list(quads_f1_wrapper.query_variants(sexes=sexes))
 
     assert len(variants) == count
+pytestmark = pytest.mark.usefixtures("pheno_conf_path")

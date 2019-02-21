@@ -1,8 +1,3 @@
-'''
-Created on Feb 16, 2017
-
-@author: lubo
-'''
 from __future__ import print_function
 from __future__ import unicode_literals
 
@@ -337,7 +332,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             for pedigree_selector_value in pedigree_selector_values:
                 # print("criterias", criterias)
                 # print("recurrency_criterias", recurrency_criterias)
-                # print("standard_criterias", standard_criterias, dataset_id, 
+                # print("standard_criterias", standard_criterias, dataset_id,
                 #       pedigree_selector_value)
                 ds_pedigree_genes_families = self._get_gene_families(
                     self.cache,
@@ -423,7 +418,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             pedigree_df = study.backend.ped_df
             people_ids = pedigree_df[
                 pedigree_df[phenotype_column] == phenotype]
-            affected_person_ids.update(people_ids['personId'])
+            affected_person_ids.update(people_ids['person_id'])
 
         return affected_person_ids
 

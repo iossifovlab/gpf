@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 
 import pytest
 
+pytestmark = pytest.mark.usefixtures("pheno_conf_path")
+
 
 def test_query_all_variants(inheritance_trio_wrapper):
     variants = list(inheritance_trio_wrapper.query_variants())
@@ -212,3 +214,29 @@ def test_query_min_max_alt_frequency(
         maxAltFrequencyPercent=maxFreq))
 
     assert len(variants) == count
+
+
+def test_query_with_matching_study_filter(inheritance_trio_wrapper):
+    variants = list(inheritance_trio_wrapper.
+                    query_variants(studyFilters=[{'studyName': 'TRIO'}]))
+
+    assert len(variants) == 14
+
+
+def test_query_with_mismatching_study_filter(inheritance_trio_wrapper):
+    variants = list(inheritance_trio_wrapper.
+                    query_variants(studyFilters=[{'studyName': 'QUADS_F1'}]))
+
+    assert len(variants) == 0
+
+
+def test_query_with_multiple_study_filters(inheritance_trio_wrapper):
+    variants = list(inheritance_trio_wrapper.
+                    query_variants(studyFilters=[{'studyName': 'QUADS_F1'},
+                                                 {'studyName': 'TRIO'}]))
+    assert len(variants) == 14
+
+    variants = list(inheritance_trio_wrapper.
+                    query_variants(studyFilters=[{'studyName': 'QUADS_F1'},
+                                                 {'studyName': 'TEST_NAME'}]))
+    assert len(variants) == 0

@@ -1,45 +1,15 @@
 from __future__ import unicode_literals
 from builtins import str
 
+import math
 import itertools
 import functools
 import logging
 from utils.vcf_utils import mat2str
 
-LOGGER = logging.getLogger(__name__)
+from common.query_base import EffectTypesMixin
 
-DEFAULT_COLUMN_TITLES = {
-    'familyId': 'family id',
-    'location': 'location',
-    'variant': 'variant',
-    'bestSt': 'family genotype',
-    'fromParentS': 'from parent',
-    'inChS': 'in child',
-    'effectType': 'worst effect type',
-    'worstEffect': 'worst requested effect',
-    'genes': 'genes',
-    'geneEffect': 'all effects',
-    'requestedGeneEffects': 'requested effects',
-    'popType': 'population type',
-    'effectDetails': 'effect details',
-    'all.altFreq': 'alternative allele frequency',
-    'all.nAltAlls': 'number of alternative alleles',
-    'all.nParCalled': 'number of genotyped parents',
-    '_par_races_': 'parent races',
-    '_ch_prof_': 'children description',
-    '_prb_viq_': 'proband verbal iq',
-    '_prb_nviq_': 'proband non-verbal iq',
-    'studyName': 'study',
-    '_phenotype_': 'study phenotype',
-    'counts': 'count',
-    'valstatus': 'validation status',
-    '_pedigree_': '_pedigree_',
-    'phenoInChs': 'phenoInChs',
-    'dataset': 'dataset',
-    'SSCfreq': 'SSCfreq',
-    'EVSfreq': 'EVSfreq',
-    'E65freq': 'E65freq',
-}
+LOGGER = logging.getLogger(__name__)
 
 
 def merge_dicts(*dicts):
@@ -199,7 +169,14 @@ def transform_variants_to_lists(
                         row_variant.append(generate_pedigree(
                             v, pedigree_selectors, selected_pedigree_selector))
                     else:
-                        row_variant.append(str(getattr(v, attr, '')))
+                        attribute =\
+                            v.alt_alleles[alt_allele].get_attribute(attr, '')
+                        if not isinstance(attribute, str):
+                            if attribute is None or math.isnan(attribute):
+                                attribute = ''
+                            elif math.isinf(attribute):
+                                attribute = 'inf'
+                        row_variant.append(attribute)
                 except (AttributeError, KeyError):
                     # print(attr, type(e), e)
                     row_variant.append('')
@@ -291,79 +268,15 @@ def expand_effect_types(effect_types):
     effects = []
     for effect in effect_types:
         effect_lower = effect.lower()
-        if effect_lower in EFFECT_GROUPS:
-            effects += EFFECT_GROUPS[effect_lower]
+        if effect_lower in EffectTypesMixin.EFFECT_GROUPS:
+            effects += EffectTypesMixin.EFFECT_GROUPS[effect_lower]
         else:
             effects.append(effect)
 
     result = []
     for effect in effects:
-        if effect not in EFFECT_TYPES_MAPPING:
+        if effect not in EffectTypesMixin.EFFECT_TYPES_MAPPING:
             result.append(effect)
         else:
-            result += EFFECT_TYPES_MAPPING[effect]
+            result += EffectTypesMixin.EFFECT_TYPES_MAPPING[effect]
     return result
-
-
-EFFECT_TYPES_MAPPING = {
-    "Nonsense": ["nonsense"],
-    "Frame-shift": ["frame-shift"],
-    "Splice-site": ["splice-site"],
-    "Missense": ["missense"],
-    "No-frame-shift": ["no-frame-shift"],
-    "No-frame-shift-newStop": ["no-frame-shift-newStop"],
-    "noStart": ["noStart"],
-    "noEnd": ["noEnd"],
-    "Synonymous": ["synonymous"],
-    "Non coding": ["non-coding"],
-    "Intron": ["intron"],
-    "Intergenic": ["intergenic"],
-    "3'-UTR": ["3'UTR", "3'UTR-intron"],
-    "5'-UTR": ["5'UTR", "5'UTR-intron"],
-    "CNV": ["CNV+", "CNV-"],
-    "CNV+": ["CNV+"],
-    "CNV-": ["CNV-"],
-}
-
-EFFECT_GROUPS = {
-    "coding": [
-        "Nonsense",
-        "Frame-shift",
-        "Splice-site",
-        "Missense",
-        "No-frame-shift",
-        "noStart",
-        "noEnd",
-        "Synonymous",
-    ],
-    "noncoding": [
-        "Non coding",
-        "Intron",
-        "Intergenic",
-        "3'-UTR",
-        "5'-UTR",
-    ],
-    "cnv": [
-        "CNV+",
-        "CNV-"
-    ],
-    "lgds": [
-        "Frame-shift",
-        "Nonsense",
-        "Splice-site",
-        "No-frame-shift-newStop",
-    ],
-    "nonsynonymous": [
-        "Nonsense",
-        "Frame-shift",
-        "Splice-site",
-        "Missense",
-        "No-frame-shift",
-        "noStart",
-        "noEnd",
-    ],
-    "utrs": [
-        "3'-UTR",
-        "5'-UTR",
-    ]
-}

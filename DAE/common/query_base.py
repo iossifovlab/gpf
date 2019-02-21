@@ -48,7 +48,7 @@ class EffectTypesMixin(object):
         "noEnd": ["noEnd"],
         "Synonymous": ["synonymous"],
         "Non coding": ["non-coding"],
-        "Intron": ["intron"],
+        "Intron": ["intron", "non-coding-intron"],
         "Intergenic": ["intergenic"],
         "3'-UTR": ["3'UTR", "3'UTR-intron"],
         "5'-UTR": ["5'UTR", "5'UTR-intron"],
@@ -67,12 +67,14 @@ class EffectTypesMixin(object):
         "synonymous": "Synonymous",
         "non-coding": "Non coding",
         "intron": "Intron",
+        "non-coding-intron": "Intron",
     }
     EFFECT_GROUPS = {
         "coding": [
             "Nonsense",
             "Frame-shift",
             "Splice-site",
+            "No-frame-shift-newStop",
             "Missense",
             "No-frame-shift",
             "noStart",
@@ -100,6 +102,7 @@ class EffectTypesMixin(object):
             "Nonsense",
             "Frame-shift",
             "Splice-site",
+            "No-frame-shift-newStop",
             "Missense",
             "No-frame-shift",
             "noStart",
@@ -145,7 +148,8 @@ class EffectTypesMixin(object):
         if safe:
             assert all([
                 et in self.EFFECT_TYPES or
-                et in list(self.EFFECT_TYPES_MAPPING.keys()) for et in effect_types])
+                et in list(self.EFFECT_TYPES_MAPPING.keys())
+                for et in effect_types])
         return [
             self.EFFECT_TYPES_UI_NAMING.get(et, et) for et in effect_types
         ]
@@ -404,10 +408,10 @@ class GeneSymsMixin(object):
 
 
 class RegionsMixin(object):
-    REGION_REGEXP1 = re.compile("([1-9,X][0-9]?):(\d+)-(\d+)")
+    REGION_REGEXP1 = re.compile("([1-9,X][0-9]?):(\\d+)-(\\d+)")
     REGION_REGEXP2 = re.compile(
-        "^(chr)?(\d+|[Xx]):([\d]{1,3}(,?[\d]{3})*)"
-        "(-([\d]{1,3}(,?[\d]{3})*))?$")
+        "^(chr)?(\\d+|[Xx]):([\\d]{1,3}(,?[\\d]{3})*)"
+        "(-([\\d]{1,3}(,?[\\d]{3})*))?$")
 
     @classmethod
     def get_regions(cls, **kwargs):

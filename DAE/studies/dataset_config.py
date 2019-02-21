@@ -1,5 +1,6 @@
 import functools
 from studies.study_config import StudyConfigBase
+import traceback
 
 
 def _set_union_attribute(studies_configs, option_name):
@@ -118,15 +119,22 @@ class DatasetConfig(StudyConfigBase):
             return self._combine_studies_attributes(option_name)
 
     def _combine_studies_attributes(self, option_name):
-        assert len(self.studies) == len(self.studies_configs)
-        assert all([st.id in self.studies for st in self.studies_configs])
-        assert all([
-            (option_name in st) or hasattr(st, option_name)
-            for st in self.studies_configs
-        ]), option_name
+        # assert len(self.studies) == len(self.studies_configs)
+        # assert all([st.id in self.studies for st in self.studies_configs])
+        # assert all([
+        #     (option_name in st) or hasattr(st, option_name)
+        #     for st in self.studies_configs
+        # ]), option_name
 
         if option_name not in self.COMPOSITE_ATTRIBUTES:
             return None
 
         combiner = self.COMPOSITE_ATTRIBUTES[option_name]
         return combiner(self.studies_configs, option_name)
+
+    @classmethod
+    def get_default_values(cls, work_dir):
+        defaults = super(DatasetConfig, cls).get_default_values(
+            work_dir, sections=['common', 'dataset'])
+
+        return defaults

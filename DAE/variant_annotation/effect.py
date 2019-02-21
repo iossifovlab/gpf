@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 from builtins import str
 from builtins import object
+
+
 class Effect(object):
     gene = None
     transcript_id = None
@@ -95,7 +97,7 @@ class EffectFactory(object):
         ef = cls.create_effect(effect_name)
         ef.gene = transcript_model.gene
         ef.strand = transcript_model.strand
-        ef.transcript_id = transcript_model.trID
+        ef.transcript_id = transcript_model.trOrigId
         return ef
 
     @classmethod
@@ -121,6 +123,7 @@ class EffectFactory(object):
     @classmethod
     def create_effect_with_aa_change(cls, effect_name, request):
         ef = cls.create_effect_with_prot_pos(effect_name, request)
+        # ef.prot_pos, _ = request.get_protein_position()
 
         ref_aa, alt_aa = request.get_amino_acids()
         ef.aa_change = "{}->{}".format(
