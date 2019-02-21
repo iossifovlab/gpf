@@ -275,12 +275,12 @@ class StudyWdaeMixin(object):
                 continue
             gc = genotype_column[0]
 
-            if gc['source'] is not None:
+            if 'source' in gc and gc['source'] is not None:
                 column_slots.append(gc['source'])
-            else:
-                for slot in gc['slots']:
-                    if slot['source'] is not None:
-                        column_slots.append(slot['source'])
+
+            for slot in gc['slots']:
+                if slot['source'] is not None:
+                    column_slots.append(slot['source'])
 
         return column_slots
 
