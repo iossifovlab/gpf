@@ -3,15 +3,15 @@
 from __future__ import absolute_import, print_function
 import os
 import itertools
-import sys
-import traceback
+# import sys
+# import traceback
 
 from collections import OrderedDict
 
 import GenomeAccess
 from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import VariantAnnotator
-from variant_annotation.effect_to_hgvs import EffectToHGVS
+# from variant_annotation.effect_to_hgvs import EffectToHGVS
 
 from annotation.tools.annotator_base import VariantAnnotatorBase
 
@@ -111,7 +111,7 @@ class EffectAnnotator(EffectAnnotatorBase):
             pass
 
 
-class VariantEffectAnnotator(EffectAnnotatorBase, EffectToHGVS):
+class VariantEffectAnnotator(EffectAnnotatorBase):
 
     COLUMNS_SCHEMA = [
         ('effect_type', 'str'),
@@ -122,7 +122,7 @@ class VariantEffectAnnotator(EffectAnnotatorBase, EffectToHGVS):
         ('effect_details_genes', 'list(str)'),
         ('effect_details_details', 'list(str)'),
         ('effect_details', 'list(str)'),
-        ('effect_details_hgvs', 'list(str)')
+        # ('effect_details_hgvs', 'list(str)')
     ]
 
     def __init__(self, config, **kwargs):
@@ -156,7 +156,7 @@ class VariantEffectAnnotator(EffectAnnotatorBase, EffectToHGVS):
         aline[self.columns['effect_details']] = [
             "{}:{}:{}".format(t, g, d) for t, g, d in zip(r[3], r[4], r[5])
         ]
-        aline[self.columns['effect_details_hgvs']] = r[6]
+        # aline[self.columns['effect_details_hgvs']] = r[6]
 
     def wrap_effects(self, effects):
         return self.effect_simplify(effects)
@@ -213,22 +213,22 @@ class VariantEffectAnnotator(EffectAnnotatorBase, EffectToHGVS):
         transcripts = []
         genes = []
         details = []
-        hgvs = []
+        # hgvs = []
         for effect in effects:
             transcripts.append(effect.transcript_id)
             genes.append(effect.gene)
             details.append(effect.create_effect_details())
-            try:
-                hgvs.append(cls.effect_to_HGVS(effect))
-            except Exception:
-                hgvs.append('')
-                print(
-                    "Problems calculating hgvs:",
-                    transcripts[-1], genes[-1], details[-1],
-                    file=sys.stderr)
-                traceback.print_exc(file=sys.stderr)
+            # try:
+            #     hgvs.append(cls.effect_to_HGVS(effect))
+            # except Exception:
+            #     hgvs.append('')
+            #     print(
+            #         "Problems calculating hgvs:",
+            #         transcripts[-1], genes[-1], details[-1],
+            #         file=sys.stderr)
+            #     traceback.print_exc(file=sys.stderr)
 
-        return (transcripts, genes, details, hgvs)
+        return (transcripts, genes, details)
 
     @classmethod
     def effect_simplify(cls, effects):
@@ -243,5 +243,5 @@ class VariantEffectAnnotator(EffectAnnotatorBase, EffectToHGVS):
             cls.worst_effect(effects),
             gene_effect[0], gene_effect[1],
             transcript_effect[0], transcript_effect[1],
-            transcript_effect[2], transcript_effect[3]
+            transcript_effect[2],
         )

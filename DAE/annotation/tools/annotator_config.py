@@ -83,7 +83,8 @@ class VariantAnnotatorConfig(AnnotatorConfig):
 
     def _setup_defaults(self):
         if self.options.vcf:
-            assert self.options.v is None
+            assert not self.options.v, \
+                [self.name, self.annotator_name, self.options.v]
 
             if self.options.c is None:
                 self.options.c = 'CHROM'

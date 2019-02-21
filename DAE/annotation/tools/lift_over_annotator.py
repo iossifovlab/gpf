@@ -19,7 +19,7 @@ class LiftOverAnnotator(VariantAnnotatorBase):
 
         self.chrom = self.config.options.c
         self.pos = self.config.options.p
-        if self.config.options.x is not None:
+        if not self.config.options.vcf:
             self.location = self.config.options.x
         else:
             self.location = None
@@ -51,7 +51,7 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         return LiftOver(chain_file)
 
     def do_annotate(self, aline, variant):
-        if self.location in aline:
+        if self.location and self.location in aline:
             location = aline[self.location]
             chrom, pos = location.split(":")
             pos = int(pos)
