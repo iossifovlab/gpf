@@ -1,4 +1,4 @@
-import { Input, Component, OnInit, ChangeDetectionStrategy, HostListener,  AfterViewInit, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Input, Component, OnInit, ChangeDetectionStrategy,  AfterViewInit, ViewChild, ChangeDetectorRef, OnDestroy } from '@angular/core';
 
 import { Observable, BehaviorSubject, Subject, Subscription } from 'rxjs';
 import { difference } from '../utils/sets-helper';
@@ -21,7 +21,7 @@ type OrderedIndividuals = Array<Individual>;
   styleUrls: ['./pedigree-chart.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class PedigreeChartComponent implements OnInit, AfterViewInit {
+export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy {
 
   pedigreeDataWithLayout: IndividualWithPosition[];
   lines: Line[];
@@ -45,14 +45,10 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
     this.family$.next(data);
   }
 
-  @Input()
-  parent_width;
-
-  @Input()
-  parent_height;
-
   private family$ = new BehaviorSubject<PedigreeData[]>(null);
   levels$: Observable<Array<OrderedIndividuals>>;
+
+  private resizeElement: any = null;
 
   constructor(
     private perfectlyDrawablePedigreeService: PerfectlyDrawablePedigreeService,
@@ -82,7 +78,7 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
           this.positionedIndividuals = this.loadPositions(family);
           return Observable.of<void>(null);
         }
-        
+
         return Observable
           .of(this.perfectlyDrawablePedigreeService.isPDP(family))
           .map(([, intervals]) => intervals)
@@ -96,7 +92,7 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
             }
             let start = Date.now();
             this.optimizeDrawing(this.positionedIndividuals);
-            
+
             console.warn("drawing optimizing", Date.now() - start, "ms");
           });
       });
@@ -128,11 +124,17 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
       this.maximizeSubscription.unsubscribe();
       this.maximizeSubscription = null;
     }
+
+    if (this.resizeElement) {
+      this.resizeService.removeResizeEventListener(this.resizeElement);
+      this.resizeElement = null;
+    }
   }
 
   ngAfterViewInit() {
+    this.resizeElement = this.element.nativeElement;
     // console.log(this.element);
-    this.resizeService.addResizeEventListener(this.element.nativeElement, (elem) => {
+    this.resizeService.addResizeEventListener(this.resizeElement, (elem) => {
         this.scaleSvg();
     });
     setTimeout(() => {
@@ -164,9 +166,6 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
       this.scale = 1.0;
     } else if (this.width && this.height) {
       this.scale = Math.min(1.0, width / this.width, height / this.height);
-      if (this.parent_width && this.parent_height) {
-        this.scale = Math.min(this.scale, this.parent_height / height, this.parent_width / width);
-      }
     } else {
       return;
     }
@@ -234,7 +233,7 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit {
         return acc;
       }, [] as IndividualWithPosition[][])
       .sort((arr1, arr2) => arr1[0].yCenter - arr2[0].yCenter);
-    
+
       // for (let line of individuals) {
       //   line = line.sort((i1, i2) => i1.xCenter '(window:resize)': 'onResize($event)'- i2.xCenter);
       // }

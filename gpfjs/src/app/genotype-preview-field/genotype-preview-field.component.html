@@ -1,9 +1,7 @@
-<div #wrapper *ngIf="field == 'pedigree'" style="max-height: 93px; height: 93px; overflow: hidden">
-    <gpf-pedigree-chart
+<div *ngIf="field == 'pedigree'" style="max-height: 93px; height: 93px; overflow: hidden;">
+    <gpf-pedigree-chart style="width: 100%; height: 100%; display: block;"
       *ngIf="value"
-      [family]="value"
-      [parent_width]="wrapper?.getBoundingClientRect()?.width"
-      [parent_height]="wrapper?.getBoundingClientRect()?.height">
+      [family]="value">
     </gpf-pedigree-chart>
 </div>
  <span *ngIf="field == 'location'">
