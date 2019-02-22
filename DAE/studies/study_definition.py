@@ -12,7 +12,7 @@ class StudyDefinition(ConfigurableEntityDefinition):
 
     @property
     def study_ids(self):
-        return self.configurable_entity_ids()
+        return self.configurable_entity_ids
 
     def get_study_config(self, study_id):
         return self.get_configurable_entity_config(study_id)

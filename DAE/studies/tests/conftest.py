@@ -10,7 +10,10 @@ from studies.study_wrapper import StudyWrapper
 from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
+from studies.factory import VariantsDb
+
 from utils.fixtures import change_environment
+from configurable_entities.configuration import DAEConfig
 
 
 def fixtures_dir():
@@ -236,8 +239,8 @@ def composite_dataset(dataset_factory, dataset_definitions):
 @pytest.fixture(scope='module')
 def composite_dataset_wrapper(composite_dataset):
     return StudyWrapper(composite_dataset)
-  
-  
+
+
 @pytest.fixture(scope='module')
 def pheno_conf_path():
     new_envs = {
@@ -246,3 +249,15 @@ def pheno_conf_path():
 
     for val in change_environment(new_envs):
         yield val
+
+
+@pytest.fixture(scope='module')
+def dae_config_fixture():
+    dae_config = DAEConfig(fixtures_dir())
+    return dae_config
+
+
+@pytest.fixture(scope='module')
+def variants_db_fixture(dae_config_fixture):
+    vdb = VariantsDb(dae_config_fixture)
+    return vdb

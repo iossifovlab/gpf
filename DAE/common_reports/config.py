@@ -125,7 +125,7 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
                 id = config[key].id
 
         try:
-            query_object = facade.get_study_wrapper(id)
+            query_object = facade.get_study_wdae_wrapper(id)
         except (KeyError, AttributeError):
             query_object = facade.get_dataset_wrapper(id)
 
