@@ -26,7 +26,10 @@ export class GeneWeights {
     readonly domain: number[],
     xScale: string,
     yScale: string
-  ) { 
+  ) {
+    if (bins.length === (bars.length + 1)) {
+      bars.push(0);
+    }
     this.logScaleX = xScale === 'log';
     this.logScaleY = yScale === 'log';
 
