@@ -154,8 +154,8 @@
                                     [
                                         "f1",
                                         "mom1",
-                                        "0",
-                                        "0",
+                                        "",
+                                        "",
                                         "F",
                                         "#ffffff",
                                         null,
@@ -166,8 +166,8 @@
                                     [
                                         "f1",
                                         "dad1",
-                                        "0",
-                                        "0",
+                                        "",
+                                        "",
                                         "M",
                                         "#ffffff",
                                         null,
@@ -195,8 +195,8 @@
                                     [
                                         "f6",
                                         "mom6",
-                                        "0",
-                                        "0",
+                                        "",
+                                        "",
                                         "F",
                                         "#ffffff",
                                         null,
@@ -207,8 +207,8 @@
                                     [
                                         "f6",
                                         "dad6",
-                                        "0",
-                                        "0",
+                                        "",
+                                        "",
                                         "M",
                                         "#ffffff",
                                         null,
@@ -240,8 +240,8 @@
                                     [
                                         "f4",
                                         "mom4",
-                                        "0",
-                                        "0",
+                                        "",
+                                        "",
                                         "F",
                                         "#e35252",
                                         null,
@@ -276,8 +276,8 @@
                                     [
                                         "f4",
                                         "dad4",
-                                        "0",
-                                        "0",
+                                        "",
+                                        "",
                                         "M",
                                         "#E0E0E0",
                                         null,
@@ -293,8 +293,8 @@
                                     [
                                         "f5",
                                         "mom5",
-                                        "0",
-                                        "0",
+                                        "",
+                                        "",
                                         "F",
                                         "#e35252",
                                         null,
@@ -305,8 +305,8 @@
                                     [
                                         "f5",
                                         "dad5",
-                                        "0",
-                                        "0",
+                                        "",
+                                        "",
                                         "M",
                                         "#aaaaaa",
                                         null,
@@ -387,26 +387,18 @@
                         "effect_type": "Missense",
                         "row": [
                             {
-                                "number_of_observed_events": 3,
-                                "number_of_children_with_event": 3,
-                                "observed_rate_per_child": 0.42857142857142855,
-                                "percent_of_children_with_events": 0.42857142857142855,
+                                "number_of_observed_events": 2,
+                                "number_of_children_with_event": 2,
+                                "observed_rate_per_child": 0.4,
+                                "percent_of_children_with_events": 0.4,
                                 "column": "prb"
-                            },
-                            {
-                                "number_of_observed_events": 1,
-                                "number_of_children_with_event": 1,
-                                "observed_rate_per_child": 0.14285714285714285,
-                                "percent_of_children_with_events": 0.14285714285714285,
-                                "column": "sib"
                             }
                         ]
                     }
                 ],
                 "group_name": "Role",
                 "columns": [
-                    "prb",
-                    "sib"
+                    "prb"
                 ],
                 "effect_groups": [],
                 "effect_types": [
@@ -419,26 +411,18 @@
                         "effect_type": "Missense",
                         "row": [
                             {
-                                "number_of_observed_events": 3,
-                                "number_of_children_with_event": 3,
-                                "observed_rate_per_child": 0.42857142857142855,
-                                "percent_of_children_with_events": 0.42857142857142855,
+                                "number_of_observed_events": 2,
+                                "number_of_children_with_event": 2,
+                                "observed_rate_per_child": 0.4,
+                                "percent_of_children_with_events": 0.4,
                                 "column": "phenotype1"
-                            },
-                            {
-                                "number_of_observed_events": 1,
-                                "number_of_children_with_event": 1,
-                                "observed_rate_per_child": 0.14285714285714285,
-                                "percent_of_children_with_events": 0.14285714285714285,
-                                "column": "phenotype2"
                             }
                         ]
                     }
                 ],
                 "group_name": "Diagnosis",
                 "columns": [
-                    "phenotype1",
-                    "phenotype2"
+                    "phenotype1"
                 ],
                 "effect_groups": [],
                 "effect_types": [
@@ -451,26 +435,18 @@
                         "effect_type": "Missense",
                         "row": [
                             {
-                                "number_of_observed_events": 3,
-                                "number_of_children_with_event": 3,
-                                "observed_rate_per_child": 0.42857142857142855,
-                                "percent_of_children_with_events": 0.42857142857142855,
+                                "number_of_observed_events": 2,
+                                "number_of_children_with_event": 2,
+                                "observed_rate_per_child": 0.4,
+                                "percent_of_children_with_events": 0.4,
                                 "column": "prb and phenotype1"
-                            },
-                            {
-                                "number_of_observed_events": 1,
-                                "number_of_children_with_event": 1,
-                                "observed_rate_per_child": 0.14285714285714285,
-                                "percent_of_children_with_events": 0.14285714285714285,
-                                "column": "sib and phenotype2"
                             }
                         ]
                     }
                 ],
                 "group_name": "Role and Diagnosis",
                 "columns": [
-                    "prb and phenotype1",
-                    "sib and phenotype2"
+                    "prb and phenotype1"
                 ],
                 "effect_groups": [],
                 "effect_types": [

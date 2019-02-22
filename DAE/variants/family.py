@@ -36,6 +36,14 @@ class Person(object):
         return "Person({} ({}); {}; {})".format(
             self.person_id, self.family_id, self.role, self.sex)
 
+    @property
+    def dad_id(self):
+        return self.dad.person_id if self.has_dad() else ''
+
+    @property
+    def mom_id(self):
+        return self.mom.person_id if self.has_mom() else ''
+
     def has_mom(self):
         return not (self.mom is None or self.mom == '0')
 
@@ -44,6 +52,10 @@ class Person(object):
 
     def has_parent(self):
         return self.has_dad() or self.has_mom()
+
+    def has_generated_parent(self):
+        return ((self.has_dad() and self.dad.generated) or
+                (self.has_mom() and self.mom.generated))
 
     def has_attr(self, item):
         return item in self.atts
@@ -57,8 +69,8 @@ class Family(object):
     def _build_trios(self, persons):
         trios = {}
         for pid, p in list(persons.items()):
-            if p['mom_id'] in persons and p['dad_id'] in persons:
-                trios[pid] = [pid, p['mom_id'], p['dad_id']]
+            if p.mom_id in persons and p.dad_id in persons:
+                trios[pid] = [pid, p.mom_id, p.dad_id]
         return trios
 
     def _build_persons(self, ped_df):
@@ -66,9 +78,19 @@ class Family(object):
         members = []
         for index, person in enumerate(ped_df.to_dict(orient="records")):
             person['index'] = index
-            persons[person['person_id']] = person
-            members.append(Person(person))
+            person_object = Person(person)
+
+            persons[person['person_id']] = person_object
+            members.append(person_object)
+
+        self._connect_children_with_parents(persons, members)
+
         return persons, members
+
+    def _connect_children_with_parents(self, persons, members):
+        for member in members:
+            member.mom = persons.get(member.mom, None)
+            member.dad = persons.get(member.dad, None)
 
     @classmethod
     def from_df(cls, family_id, ped_df):
@@ -76,7 +98,8 @@ class Family(object):
         family.ped_df = ped_df
         assert np.all(ped_df['family_id'].isin(set([family_id])).values)
 
-        family.persons, family.members_in_order = family._build_persons(family.ped_df)
+        family.persons, family.members_in_order =\
+            family._build_persons(family.ped_df)
         family.trios = family._build_trios(family.persons)
 
         return family
@@ -96,7 +119,7 @@ class Family(object):
     def members_index(self, person_ids):
         index = []
         for pid in person_ids:
-            index.append(self.persons[pid]['index'])
+            index.append(self.persons[pid].index)
         return index
 
     def get_people_with_role(self, role):
@@ -177,7 +200,7 @@ class FamiliesBase(object):
                     with_parents = p.get_attr('with_parents')
                     if with_parents == '1':
                         person.append(p)
-                elif p.has_parent():
+                elif p.has_parent() and (not p.has_generated_parent()):
                     person.append(p)
         return person
 
