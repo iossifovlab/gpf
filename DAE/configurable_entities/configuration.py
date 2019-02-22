@@ -43,36 +43,6 @@ class ConfigSectionDefinition(ConfigurableEntityDefinition):
         return self.get_all_configurable_entity_names()
 
 
-class AnnotatorConfig(ConfigurableEntityConfig):
-    def __init__(self, config, *args, **kwargs):
-        super(AnnotatorConfig, self).__init__(config, *args, **kwargs)
-
-    @classmethod
-    def from_config(cls, config_section, section=None):
-        section_config = config_section
-        return AnnotatorConfig(section_config)
-
-
-class AnnotatorDefinition(ConfigurableEntityDefinition):
-
-    def __init__(self, config_path, work_dir):
-        super(AnnotatorDefinition, self).__init__()
-
-        self.single_file_configurable_entity_definition(
-            config_path, work_dir, ConfigSectionConfig, 'section_name',
-            {'wd': work_dir, 'work_dir': work_dir})
-
-    @property
-    def annotation_ids(self):
-        return self.configurable_entity_ids()
-
-    def get_annotator_config(self, section_id):
-        return self.get_configurable_entity_config(section_id)
-
-    def get_all_annotator_configs(self):
-        return self.get_all_configurable_entity_configs()
-
-
 class DAEConfig(object):
 
     DIR_NAME = 'dir'
