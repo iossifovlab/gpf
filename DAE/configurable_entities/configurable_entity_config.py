@@ -115,7 +115,7 @@ class ConfigurableEntityConfig(object):
             allow_no_value=True,
             strict=True)
 
-        print("READING CONFIG FROM '", config_file, "'", file=sys.stderr)
+        # print("READING CONFIG FROM '", config_file, "'", file=sys.stderr)
         # print("traceback: ---------------------------------------------")
         # traceback.print_stack(file=sys.stderr)
         # print("traceback: ---------------------------------------------")
