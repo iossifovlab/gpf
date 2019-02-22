@@ -45,8 +45,8 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         assert os.path.exists(scores_filename), scores_filename
 
         if self.config.options.scores_config_file:
-            score_format = peek_conf_key(self.config.options.scores_config_file,
-                                         'format') or 'tsv'
+            score_format = (peek_conf_key(self.config.options.scores_config_file,
+                                         'format') or 'tsv').lower()
             assert score_format in ['tsv', 'bigwig'], \
                 (score_format, self.config.options.scores_config_file)
         else:

@@ -11,6 +11,12 @@ from .conftest import relative_to_this_test_folder
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.score_annotator import PositionScoreAnnotator, \
     PositionMultiScoreAnnotator, NPScoreAnnotator
+try:
+    bigwig_enabled = True
+    from annotation.tools.score_file_io_bigwig import \
+        BigWigFile
+except ImportError:
+    bigwig_enabled = False
 
 
 input2_phast_exptected = \
@@ -232,3 +238,35 @@ def test_variant_score_annotator_cadd(
         expected_df(captured.out),
         expected_df(input2_cadd_expected),
         check_less_precise=3)
+
+
+@pytest.mark.skipif(bigwig_enabled is False,
+                    reason='pyBigWig module is not installed')
+def test_variant_score_annotator_bigwig(capsys):
+    options = Box({
+        "vcf": True,
+        "Graw": "fake_genome_ref_file",
+        "mode": "overwrite",
+        "scores_file": relative_to_this_test_folder(
+            "fixtures/TESTbigwig/TEST_bigwig_score.bw"),
+        "scores_config_file": relative_to_this_test_folder(
+            "fixtures/TESTbigwig/TEST_bigwig_score.bw.conf")
+    }, default_box=True, default_box_attr=None)
+
+    columns_config = {
+        'TEST_bigwig_score': "RESULT_bigwig_score",
+    }
+
+    config = VariantAnnotatorConfig(
+        name="test_bigwig_annotator",
+        annotator_name="score_annotator.VariantScoreAnnotator",
+        options=options,
+        columns_config=columns_config,
+        virtuals=[]
+    )
+    print(config.options)
+    print(type(config.options))
+
+    score_annotator = PositionScoreAnnotator(config)
+    assert score_annotator is not None
+    assert isinstance(score_annotator.score_file, BigWigFile)
