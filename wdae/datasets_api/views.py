@@ -54,7 +54,7 @@ class DatasetView(APIView):
             res = [self.augment_status_filter(ds) for ds in res]
             return Response({'data': res})
         else:
-            dataset = self.datasets_facade.get_dataset_wrapper(dataset_id)
+            dataset = self.datasets_facade.get_dataset_wdae_wrapper(dataset_id)
             if dataset:
                 res = dataset.get_dataset_description()
                 res = self.augment_accessibility(res, user)

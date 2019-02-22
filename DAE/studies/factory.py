@@ -2,6 +2,9 @@
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
 from studies.study_facade import StudyFacade
+from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
+from studies.dataset_factory import DatasetFactory
+from studies.dataset_facade import DatasetFacade
 
 
 class VariantsDb(object):
@@ -18,6 +21,14 @@ class VariantsDb(object):
         self.study_facade = StudyFacade(
             self.studies_definitions, study_factory)
 
+        self.datasets_definitions = DirectoryEnabledDatasetsDefinition(
+            self.study_facade,
+            datasets_dir=dae_config.datasets_dir,
+            work_dir=dae_config.dae_data_dir)
+        dataset_factory = DatasetFactory(study_facade=self.study_facade)
+        self.dataset_facade = DatasetFacade(
+            self.datasets_definitions, dataset_factory)
+
     def get_studies_ids(self):
         return self.studies_definitions.study_ids
 
@@ -32,3 +43,18 @@ class VariantsDb(object):
 
     def get_study_wdae_wrapper(self, study_id):
         return self.study_facade.get_study_wdae_wrapper(study_id)
+
+    def get_datasets_ids(self):
+        return self.datasets_definitions.dataset_ids
+
+    def get_datasets_names(self):
+        return self.datasets_definitions.get_all_dataset_names()
+
+    def get_dataset_config(self, study_id):
+        return self.datasets_definitions.get_dataset_config(study_id)
+
+    def get_dataset(self, study_id):
+        return self.dataset_facade.get_dataset(study_id)
+
+    def get_dataset_wdae_wrapper(self, study_id):
+        return self.dataset_facade.get_dataset_wdae_wrapper(study_id)

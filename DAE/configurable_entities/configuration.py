@@ -48,6 +48,7 @@ class DAEConfig(object):
     DIR_NAME = 'dir'
     CONF_FILE = 'confFile'
     STUDIES_SECTION = 'studiesDB'
+    DATASETS_SECTION = 'datasetsDB'
     PHENO_SECTION = 'phenoDB'
     GENE_INFO_SECTION = 'geneInfoDB'
     GENOMIC_SCORES_SECTION = 'genomicScoresDB'
@@ -86,6 +87,17 @@ class DAEConfig(object):
     @property
     def studies_conf(self):
         return self._get_config_value(self.STUDIES_SECTION, self.CONF_FILE)
+
+    def datasets_section(self):
+        return self.sections.get_section_config(self.DATASETS_SECTION)
+
+    @property
+    def datasets_dir(self):
+        return self._get_config_value(self.DATASETS_SECTION, self.DIR_NAME)
+
+    @property
+    def datasets_conf(self):
+        return self._get_config_value(self.DATASETS_SECTION, self.CONF_FILE)
 
     def pheno_section(self):
         return self.sections.get_section_config(self.PHENO_SECTION)
