@@ -50,11 +50,11 @@ class VariantsDb(object):
     def get_datasets_names(self):
         return self.datasets_definitions.get_all_dataset_names()
 
-    def get_dataset_config(self, study_id):
-        return self.datasets_definitions.get_dataset_config(study_id)
+    def get_dataset_config(self, dataset_id):
+        return self.datasets_definitions.get_dataset_config(dataset_id)
 
-    def get_dataset(self, study_id):
-        return self.dataset_facade.get_dataset(study_id)
+    def get_dataset(self, dataset_id):
+        return self.dataset_facade.get_dataset(dataset_id)
 
-    def get_dataset_wdae_wrapper(self, study_id):
-        return self.dataset_facade.get_dataset_wdae_wrapper(study_id)
+    def get_dataset_wdae_wrapper(self, dataset_id):
+        return self.dataset_facade.get_dataset_wdae_wrapper(dataset_id)
