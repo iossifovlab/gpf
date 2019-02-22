@@ -137,20 +137,21 @@ export class HistogramComponent implements OnInit, OnChanges {
 
   get xLabelsWithDefaultValue() {
     if (this.xLabels === undefined) {
-        if (this.bins.length < 10) {
-            return this.bins.slice(0, -1);
-        } else {
-            if (!this.logScaleX) {
-                return d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10);
-            }
-            let domainMin = this.bins[0] === 0.0 ? this.bins[1] : this.bins[0];
-            let domainMax = this.bins[this.bins.length - 1];
-
-            let magnitudeMin = Math.abs(Math.log10(domainMin));
-            let magnitudeMax = Math.abs(Math.log10(domainMax));
-            let count = Math.min(10, Math.floor(Math.abs(magnitudeMax - magnitudeMin)));
-            return d3.scaleLog().domain([domainMin, domainMax]).ticks(count);
+      if (this.bins.length < 10) {
+        return this.bins.slice(0, -1);
+      } else {
+        if (!this.logScaleX) {
+          return d3.ticks(this.bins[0], this.bins[this.bins.length - 1], 10);
         }
+        let domainMin = this.bins[0] === 0.0 ? this.bins[1] : this.bins[0];
+        let domainMax = this.bins[this.bins.length - 1];
+
+        let magnitudeMin = Math.log10(domainMin);
+        let magnitudeMax = Math.log10(domainMax);
+        let count = Math.min(10, Math.floor(Math.abs(magnitudeMax - magnitudeMin)));
+
+        return d3.scaleLog().domain([domainMin, domainMax]).ticks(count);
+      }
     }
     return this.xLabels;
   }
