@@ -73,4 +73,3 @@ class DatasetFacade(object):
         dataset = self.dataset_factory.make_dataset(conf)
         self._dataset_cache[dataset_id] = dataset
         self._dataset_wrapper_cache[dataset_id] = StudyWrapper(dataset)
-            
