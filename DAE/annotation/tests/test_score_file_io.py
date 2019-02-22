@@ -4,7 +4,37 @@ from box import Box
 
 from .conftest import relative_to_this_test_folder
 from annotation.tools.score_file_io import \
-    DirectAccess, IterativeAccess, LineAdapter
+    DirectAccess, IterativeAccess, LineAdapter, LineBufferAdapter
+
+
+def test_regions_intersecting():
+    regions = [
+        # subset
+        ((10918, 11018), (10958, 11018)),
+        # overlap
+        ((10918, 11018), (10958, 11058)),
+        # overlap single
+        ((10918, 11018), (11018, 11058))
+    ]
+    for region_pair in regions:
+        assert LineBufferAdapter.regions_intersect(*region_pair[0],
+                                                   *region_pair[1])
+        assert LineBufferAdapter.regions_intersect(*region_pair[1],
+                                                   *region_pair[0])
+
+
+def test_regions_non_intersecting():
+    regions = [
+        # tangent
+        ((10918, 11018), (11019, 11059)),
+        # gapped
+        ((10918, 11018), (12918, 13018))
+    ]
+    for region_pair in regions:
+        assert not LineBufferAdapter.regions_intersect(*region_pair[0],
+                                                       *region_pair[1])
+        assert not LineBufferAdapter.regions_intersect(*region_pair[1],
+                                                       *region_pair[0])
 
 
 @pytest.mark.parametrize("score_filename,no_header", [
