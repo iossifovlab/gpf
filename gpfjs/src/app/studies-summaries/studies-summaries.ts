@@ -9,7 +9,7 @@ export class StudySummary {
       ['study name', 'studyName'],
       ['PubMed', 'pubMed'],
       ['transmitted', 'transmitted'],
-      ['phenotype', 'phenotype'],
+      ['phenotype', 'formattedPhenotype'],
       ['denovo', 'denovo'],
       ['study type', 'studyType'],
     ]);
@@ -27,6 +27,7 @@ export class StudySummary {
       json['phenotype'],
       json['denovo'],
       json['study type'],
+      json['phenotype'].join(', ')
     );
   }
 
@@ -46,9 +47,10 @@ export class StudySummary {
     readonly studyName: string,
     readonly pubMed: string,
     readonly transmitted: boolean,
-    readonly phenotype: string,
+    readonly phenotype: string[],
     readonly denovo: boolean,
-    readonly studyType: string
+    readonly studyType: string,
+    readonly formattedPhenotype: string
   ) {}
 
 }
