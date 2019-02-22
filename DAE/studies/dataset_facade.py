@@ -19,7 +19,7 @@ class DatasetFacade(object):
 
         return self._dataset_cache[dataset_id]
 
-    def get_dataset_wrapper(self, dataset_id):
+    def get_dataset_wdae_wrapper(self, dataset_id):
         self.load_cache({dataset_id})
 
         if dataset_id not in self._dataset_wrapper_cache:
@@ -73,4 +73,3 @@ class DatasetFacade(object):
         dataset = self.dataset_factory.make_dataset(conf)
         self._dataset_cache[dataset_id] = dataset
         self._dataset_wrapper_cache[dataset_id] = StudyWrapper(dataset)
-            

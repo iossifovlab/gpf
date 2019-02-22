@@ -43,40 +43,12 @@ class ConfigSectionDefinition(ConfigurableEntityDefinition):
         return self.get_all_configurable_entity_names()
 
 
-class AnnotatorConfig(ConfigurableEntityConfig):
-    def __init__(self, config, *args, **kwargs):
-        super(AnnotatorConfig, self).__init__(config, *args, **kwargs)
-
-    @classmethod
-    def from_config(cls, config_section, section=None):
-        section_config = config_section
-        return AnnotatorConfig(section_config)
-
-
-class AnnotatorDefinition(ConfigurableEntityDefinition):
-
-    def __init__(self, config_path, work_dir):
-        super(AnnotatorDefinition, self).__init__()
-
-        self.single_file_configurable_entity_definition(
-            config_path, work_dir, ConfigSectionConfig, 'section_name',
-            {'wd': work_dir, 'work_dir': work_dir})
-
-    @property
-    def annotation_ids(self):
-        return self.configurable_entity_ids()
-
-    def get_annotator_config(self, section_id):
-        return self.get_configurable_entity_config(section_id)
-
-    def get_all_annotator_configs(self):
-        return self.get_all_configurable_entity_configs()
-
-
 class DAEConfig(object):
 
     DIR_NAME = 'dir'
     CONF_FILE = 'confFile'
+    STUDIES_SECTION = 'studiesDB'
+    DATASETS_SECTION = 'datasetsDB'
     PHENO_SECTION = 'phenoDB'
     GENE_INFO_SECTION = 'geneInfoDB'
     GENOMIC_SCORES_SECTION = 'genomicScoresDB'
@@ -104,6 +76,28 @@ class DAEConfig(object):
     @property
     def dae_data_dir(self):
         return self._dae_data_dir
+
+    def studies_section(self):
+        return self.sections.get_section_config(self.STUDIES_SECTION)
+
+    @property
+    def studies_dir(self):
+        return self._get_config_value(self.STUDIES_SECTION, self.DIR_NAME)
+
+    @property
+    def studies_conf(self):
+        return self._get_config_value(self.STUDIES_SECTION, self.CONF_FILE)
+
+    def datasets_section(self):
+        return self.sections.get_section_config(self.DATASETS_SECTION)
+
+    @property
+    def datasets_dir(self):
+        return self._get_config_value(self.DATASETS_SECTION, self.DIR_NAME)
+
+    @property
+    def datasets_conf(self):
+        return self._get_config_value(self.DATASETS_SECTION, self.CONF_FILE)
 
     def pheno_section(self):
         return self.sections.get_section_config(self.PHENO_SECTION)

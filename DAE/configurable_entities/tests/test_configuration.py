@@ -2,7 +2,7 @@ import os
 import pytest
 
 from configurable_entities.configuration import ConfigSectionDefinition, \
-    AnnotatorDefinition, DAEConfig
+    DAEConfig
 
 
 def relative_to_this_test_folder(path):
@@ -44,15 +44,6 @@ def test_configuration_sections_simple(fixturedir):
 
     assert gene_info.conf_file is not None
     assert "geneInfo.conf" in gene_info.conf_file
-
-
-def test_annotation_config_simple(fixturedir):
-
-    annotators = AnnotatorDefinition(
-        "annotation.conf", work_dir=fixturedir
-    )
-    assert annotators is not None
-    print(annotators.get_all_annotator_configs())
 
 
 def test_dae_config_simple(fixturedir, dae_config):

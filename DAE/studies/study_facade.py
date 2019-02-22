@@ -19,10 +19,12 @@ class StudyFacade(object):
 
     def get_study(self, study_id):
         self.load_cache({study_id})
+        if study_id not in self._study_cache:
+            return None
 
         return self._study_cache[study_id]
 
-    def get_study_wrapper(self, study_id):
+    def get_study_wdae_wrapper(self, study_id):
         self.load_cache({study_id})
 
         if study_id not in self._study_wrapper_cache:

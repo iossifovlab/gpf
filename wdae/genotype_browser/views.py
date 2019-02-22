@@ -38,10 +38,10 @@ class QueryBaseView(views.APIView):
 
     datasets_cache = {}
 
-    def get_dataset_wrapper(self, dataset_id):
+    def get_dataset_wdae_wrapper(self, dataset_id):
         if dataset_id not in self.datasets_cache:
             self.datasets_cache[dataset_id] =\
-                self.dataset_facade.get_dataset_wrapper(dataset_id)
+                self.dataset_facade.get_dataset_wdae_wrapper(dataset_id)
 
         return self.datasets_cache[dataset_id]
 
@@ -100,7 +100,7 @@ class QueryPreviewView(QueryBaseView):
             #                            if IsDatasetAllowed.user_has_permission(
             #                                 request.user, dataset_id)]
 
-            dataset = self.get_dataset_wrapper(dataset_id)
+            dataset = self.get_dataset_wdae_wrapper(dataset_id)
             # LOGGER.info("dataset " + str(dataset))
 
             response = get_variants_web_preview(
@@ -169,7 +169,7 @@ class QueryDownloadView(QueryBaseView):
                 data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids if IsDatasetAllowed.user_has_permission(
                         user, dataset_id)]
 
-            dataset = self.get_dataset_wrapper(data['datasetId'])
+            dataset = self.get_dataset_wdae_wrapper(data['datasetId'])
 
             columns = dataset.download_columns
             try:

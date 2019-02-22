@@ -4,7 +4,7 @@ import argparse
 import gzip
 from collections import OrderedDict
 from csv import DictReader
-from multiprocessing import Pool, Lock
+from multiprocessing import Pool
 from functools import partial
 
 from pedigrees.pedigree_reader import PedigreeReader
@@ -206,7 +206,8 @@ def main():
     parser.add_argument(
         'pedigree',
         help='pedigree file of the families for which to generate variants')
-    parser.add_argument('--output', help='output vcf file', default='output.vcf')
+    parser.add_argument(
+        '--output', help='output vcf file', default='output.vcf')
 
     args = parser.parse_args()
 
@@ -221,7 +222,6 @@ def main():
     writer.open()
 
     variants_count = generator.generate(writer)
-
 
     writer.close()
 
