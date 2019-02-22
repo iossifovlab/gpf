@@ -154,7 +154,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         """
         if self._variant_in_roles is None:
             self._variant_in_roles = [
-                self.family.persons[pid]['role'] if pid is not None else None
+                self.family.persons[pid].role if pid is not None else None
                 for pid in self.variant_in_members
             ]
         return self._variant_in_roles
@@ -167,7 +167,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         """
         if self._variant_in_sexes is None:
             self._variant_in_sexes = [
-                self.family.persons[pid]['sex'] if pid is not None else None
+                self.family.persons[pid].sex if pid is not None else None
                 for pid in self.variant_in_members
             ]
         return self._variant_in_sexes

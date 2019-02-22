@@ -116,8 +116,8 @@ class FamilyCounter(object):
                 return phenotype_info.default['color']
 
     def _get_pedigree(self, family, phenotype_info):
-        return [[member.family_id, member.person_id, member.dad, member.mom,
-                 member.sex.short(), self._get_member_color(
+        return [[member.family_id, member.person_id, member.dad_id,
+                 member.mom_id, member.sex.short(), self._get_member_color(
                      member, phenotype_info),
                  member.layout_position, member.generated, '', '']
                 for member in family.members_in_order]
@@ -337,10 +337,12 @@ class EffectWithFilter(object):
         self.number_of_children_with_event =\
             self._get_number_of_children_with_event(
                 variants, people_with_filter, people_with_parents_ids)
-        self.observed_rate_per_child = self.number_of_observed_events /\
-            len(people_with_parents_ids)
+        self.observed_rate_per_child =\
+            self.number_of_observed_events / len(people_with_parents_ids)\
+            if len(people_with_parents_ids) != 0 else 0
         self.percent_of_children_with_events =\
-            self.number_of_children_with_event / len(people_with_parents_ids)
+            self.number_of_children_with_event / len(people_with_parents_ids)\
+            if len(people_with_parents_ids) != 0 else 0
 
         self.column = filter_object.get_column()
 
