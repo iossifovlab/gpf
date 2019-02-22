@@ -38,3 +38,4 @@ DAE/*.json
 coverage/
 tmp/
 DAE/pyflakes.report
+test_data
