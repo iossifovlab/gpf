@@ -21,14 +21,23 @@ def conf_to_dict(path):
     conf_parser.optionxform = str
     conf_parser.read_file(path)
 
-    assert 'general' in conf_parser
-    assert 'columns' in conf_parser
-    assert 'schema' in conf_parser
+    assert all(sec in conf_parser for sec in ['general', 'columns', 'schema'])
     conf_settings = dict(conf_parser.items('general'))
     conf_settings['columns'] = dict(conf_parser.items('columns'))
     conf_settings['schema'] = \
         Schema.from_dict(dict(conf_parser.items('schema')))
     return conf_settings
+
+
+def peek_conf_key(conf_path, key, section='general'):
+    conf_path = os.path.abspath(conf_path)
+    assert os.path.exists(conf_path), conf_path
+    with open(conf_path, 'r') as conf:
+        conf_parser = ConfigParser()
+        conf_parser.optionxform = str
+        conf_parser.read_file(conf)
+        val = conf_parser[section].get(key, None)
+    return val
 
 
 class ScoreFile(TabixReader):
@@ -53,7 +62,7 @@ class ScoreFile(TabixReader):
         self.schema = Schema()
         for col in self.config.header:
             assert col in self.config.schema.columns, [
-                self.score_filename, col, self.config.schema.columns,  
+                self.score_filename, col, self.config.schema.columns,
             ]
             self.schema.columns[col] = self.config.schema.columns[col]
         assert all([sn in self.schema.col_names for sn in self.score_names])
