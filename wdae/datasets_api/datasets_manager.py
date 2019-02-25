@@ -18,21 +18,20 @@ class DatasetsManager(object):
         if dae_config is None:
             dae_config = DAEConfig()
         self.dae_config = dae_config
-        self.vdb = VariantsDb(self.dae_config)
-        self.facade = None
+        self.vdb = None
 
     def reload_dataset(self):
-        self.facade = self.vdb.dataset_facade
+        self.vdb = VariantsDb(self.dae_config)
 
-        for dataset_id in self.facade.get_all_dataset_ids():
+        for dataset_id in self.vdb.get_datasets_ids():
             Dataset.recreate_dataset_perm(dataset_id, [])
 
     def get_dataset_facade(self):
-        if self.facade is None:
+        if self.vdb is None:
             self.reload_dataset()
-            assert self.facade is not None
+            assert self.vdb is not None
 
-        return self.facade
+        return self.vdb.dataset_facade
 
 
 _datasets_manager = None
