@@ -606,7 +606,7 @@ def transform_variants_to_lists(variants, attrs, sep='\t'):
                 elif attr in v.atts:
                     val = v.atts[attr]
                     if not isinstance(val, list):
-                        val = str(val).replace(sep, ';').replace("'", "\\'")
+                        val = str(val).replace(sep, ';').replace("'", "\'")
                     row_variant.append(val if val and val != 'False' and
                                 val != 'None' else "")
                 else:
