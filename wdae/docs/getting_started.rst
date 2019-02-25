@@ -124,6 +124,13 @@ Download Apache Spark distribution and unarchive it:
     wget -c https://www-us.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
     tar zxvf spark-2.4.0-bin-hadoop2.7.tgz
 
+Start Apache Spark Thrift server:
+
+.. code-block:: bash
+
+    cd spark-2.4.0-bin-hadoop2.7/sbin
+    ./start-thriftserver.sh
+
 
 Get Startup Data Instance
 +++++++++++++++++++++++++

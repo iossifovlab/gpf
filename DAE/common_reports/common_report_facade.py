@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 import os
 import json
 
+from configurable_entities.configuration import DAEConfig
+
 from common_reports.config import CommonReportsConfigs
 
 from studies.dataset_facade import DatasetFacade
@@ -15,11 +17,12 @@ from studies.study_definition import DirectoryEnabledStudiesDefinition
 class CommonReportFacade(object):
     _common_report_cache = {}
 
-    def __init__(self):
-        work_dir = os.environ.get("DAE_DB_DIR")
-        config_file = os.environ.get("DAE_DATA_DIR")
-        studies_dir = os.path.join(config_file, 'studies')
-        datasets_dir = os.path.join(config_file, 'datasets')
+    def __init__(self, dae_config=None):
+        if dae_config is None:
+            dae_config = DAEConfig()
+        work_dir = dae_config.dae_data_dir
+        studies_dir = dae_config.studies_dir
+        datasets_dir = dae_config.datasets_dir
 
         study_definition = DirectoryEnabledStudiesDefinition(
             studies_dir, work_dir)

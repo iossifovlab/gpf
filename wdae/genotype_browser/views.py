@@ -50,7 +50,7 @@ class QueryBaseView(views.APIView):
         assert self.datasets is not None
 
         self.dataset_facade = get_datasets_manager().get_dataset_facade()
-        self.dataset_factory = get_datasets_manager().get_dataset_factory()
+        # self.dataset_factory = get_datasets_manager().get_dataset_factory()
 
 
 class QueryPreviewView(QueryBaseView):
@@ -163,11 +163,11 @@ class QueryDownloadView(QueryBaseView):
         try:
             self.check_object_permissions(request, data['datasetId'])
 
-            if data['datasetId'] == MetaDataset.ID:
-                dataset_ids = self.dataset_facade.get_all_dataset_ids()
-                dataset_ids.remove(MetaDataset.ID)
-                data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids if IsDatasetAllowed.user_has_permission(
-                        user, dataset_id)]
+            # if data['datasetId'] == MetaDataset.ID:
+            #     dataset_ids = self.dataset_facade.get_all_dataset_ids()
+            #     dataset_ids.remove(MetaDataset.ID)
+            #     data['dataset_ids'] = [dataset_id for dataset_id in dataset_ids if IsDatasetAllowed.user_has_permission(
+            #             user, dataset_id)]
 
             dataset = self.get_dataset_wdae_wrapper(data['datasetId'])
 
