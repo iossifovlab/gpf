@@ -39,6 +39,7 @@ class EffectTypesMixin(object):
         "Splice-site": ["splice-site"],
         "Missense": ["missense"],
         "No-frame-shift": ["no-frame-shift"],
+        "Non-frame-shift": ["no-frame-shift"],
         "No-frame-shift-newStop": ["no-frame-shift-newStop"],
         "noStart": ["noStart"],
         "noEnd": ["noEnd"],
@@ -132,7 +133,7 @@ class EffectTypesMixin(object):
         etl = self._build_effect_types_groups(etl)
         etl = self._build_effect_types_list(etl)
         if safe:
-            assert all([et in self.EFFECT_TYPES for et in etl])
+            assert all([et in self.EFFECT_TYPES for et in etl]), etl
         else:
             etl = [et for et in etl if et in self.EFFECT_TYPES]
         return etl
