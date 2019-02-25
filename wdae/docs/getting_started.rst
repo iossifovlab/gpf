@@ -172,8 +172,39 @@ Start GPF Web UI
 Initial Setup of GPF Web UI
 +++++++++++++++++++++++++++
 
+Initial setup of GPF Web UI requires several steps:
+
+* Inital setup of the local database to serve GFP Web UI. Since GPF Web UI is
+    an Django application, it uses ``sqlite3`` for development purposes.
+    To setup it go into ``gpf/wdae`` directory and run migrations:
+
+    .. code-block:: bash
+
+        cd gpf/wdae
+        ./manage.py migrate
+
+* Next step is to create development users. To this end from inside
+    ``gpf/wdae`` directory run ``create_dev_users.sh``:
+
+    .. code-block:: bash
+
+        ./create_dev_users.sh
+
+    This scripts creates two users for development purposes that are
+    ``admin@iossifovlab.com`` and ``researche@iossifovlab.com`` that have
+    password ``secret``.
+
+
 Start GPF Web UI
 ++++++++++++++++
+
+To start the GPF Web UI you need to run Django development server. To this end
+enter into ``gpf/wdae`` directory and run:
+
+    .. code-block:: bash
+
+        ./manage.py runserver 0.0.0.0:8000
+
 
 Import a Demo Dataset
 #####################
