@@ -96,25 +96,8 @@ def mock_property(mocker):
 
 
 @pytest.fixture()
-def mocked_dataset_config(mocker):
-    mp = mock_property(mocker)
-
-    mp(
-        'configurable_entities.configuration.DAEConfig.gene_info_conf',
-        path_to_fixtures('gene_info.conf'))
-    mp(
-        'configurable_entities.configuration.DAEConfig.gene_info_dir',
-        path_to_fixtures())
-    # mp(
-    #     'configurable_entities.configuration.DAEConfig.dae_data_dir',
-    #     path_to_fixtures())
-
-    return DAEConfig()
-
-
-@pytest.fixture()
-def gene_info_config(mocked_dataset_config):
-    return GeneInfoConfig(config=mocked_dataset_config)
+def gene_info_config():
+    return GeneInfoConfig()
 
 
 @pytest.fixture  # noqa
@@ -132,7 +115,9 @@ def gene_info_cache_dir():
 
     new_envs = {
         'DATA_STUDY_GROUPS_DENOVO_GENE_SETS_DIR':
-            path_to_fixtures('geneInfo', 'cache')
+            path_to_fixtures('geneInfo', 'cache'),
+        'DAE_DB_DIR':
+            path_to_fixtures()
     }
 
     for val in change_environment(new_envs):
