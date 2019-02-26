@@ -12,6 +12,7 @@ Contents:
 .. toctree::
    :maxdepth: 3
 
+   getting_started
    genotype_browser
    user_management
    groups
