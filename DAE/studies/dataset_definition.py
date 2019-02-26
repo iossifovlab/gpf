@@ -10,7 +10,7 @@ class DatasetsDefinition(ConfigurableEntityDefinition):
 
     @property
     def dataset_ids(self):
-        return self.configurable_entity_ids()
+        return self.configurable_entity_ids
 
     def get_dataset_config(self, dataset_id):
         return self.get_configurable_entity_config(dataset_id)

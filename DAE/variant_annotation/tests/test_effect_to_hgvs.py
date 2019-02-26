@@ -1,6 +1,6 @@
 import pytest
 from variant_annotation.annotator import VariantAnnotator
-from variant_annotation.effect_to_hgvs import EffectToHGVS
+# from variant_annotation.effect_to_hgvs import EffectToHGVS
 
 
 @pytest.fixture(scope="session")
@@ -16,6 +16,7 @@ def gene_models(request):
     return genomesDB.get_gene_models()
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize("location,variant", [
     ('1:899319', 'del(2)'),
     ('4:69202842', 'ins(AT)'),

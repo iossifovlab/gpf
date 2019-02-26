@@ -25,9 +25,9 @@ class VariantsDb(object):
             self.study_facade,
             datasets_dir=dae_config.datasets_dir,
             work_dir=dae_config.dae_data_dir)
-        dataset_factory = DatasetFactory(study_facade=self.study_facade)
+        self.dataset_factory = DatasetFactory(study_facade=self.study_facade)
         self.dataset_facade = DatasetFacade(
-            self.datasets_definitions, dataset_factory)
+            self.datasets_definitions, self.dataset_factory)
 
     def get_studies_ids(self):
         return self.studies_definitions.study_ids

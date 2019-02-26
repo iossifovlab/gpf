@@ -11,7 +11,7 @@ Quick start guide
    :scale: 50
    :alt: Management menu
    :align: center
-   
+
    Management menu
 
 
@@ -19,17 +19,17 @@ Quick start guide
    :scale: 50
    :alt: User management menu
    :align: center
-   
+
    User management menu
 
 .. figure:: imgs/03-users-list.png
    :scale: 50
    :alt: User list table
    :align: center
-   
-   Users list: 1 - create new user button; 2 - the name of 
+
+   Users list: 1 - create new user button; 2 - the name of
    the user if specified; 3 - user email; 4 - list of groups
-   the user belongs to; 5 - 
+   the user belongs to; 5 -
 
 
 How to create new user?
@@ -39,7 +39,7 @@ How to create new user?
    :width: 450px
    :alt: Interface for sotring groups
    :align: center
-   
+
    Interface for sotring groups
 
 
