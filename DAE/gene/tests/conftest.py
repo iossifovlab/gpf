@@ -47,10 +47,11 @@ def study_configs(study_definition):
 
 
 @pytest.fixture(scope='session')
-def study_definitions():
+def study_definitions(dae_config_fixture):
     return DirectoryEnabledStudiesDefinition(
         studies_dir=studies_dir(),
-        work_dir=fixtures_dir())
+        work_dir=fixtures_dir(),
+        default_conf=dae_config_fixture.default_configuration_conf)
 
 
 @pytest.fixture(scope='session')
@@ -65,11 +66,12 @@ def study_facade(study_factory, study_definitions):
 
 
 @pytest.fixture(scope='session')
-def dataset_definitions(study_facade):
+def dataset_definitions(study_facade, dae_config_fixture):
     return DirectoryEnabledDatasetsDefinition(
         study_facade,
         datasets_dir=datasets_dir(),
-        work_dir=fixtures_dir())
+        work_dir=fixtures_dir(),
+        default_conf=dae_config_fixture.default_configuration_conf)
 
 
 @pytest.fixture(scope='session')
@@ -133,3 +135,9 @@ def calc_gene_sets(gscs):
     denovo_gene_sets.load(build_cache=True)
 
     print("PRECALCULATION COMPLETE")
+
+
+@pytest.fixture(scope='session')
+def dae_config_fixture():
+    dae_config = DAEConfig(fixtures_dir())
+    return dae_config

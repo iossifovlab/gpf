@@ -37,10 +37,11 @@ def study_configs(study_definition):
 
 
 @pytest.fixture(scope='module')
-def study_definitions():
+def study_definitions(dae_config_fixture):
     return DirectoryEnabledStudiesDefinition(
         studies_dir=studies_dir(),
-        work_dir=fixtures_dir())
+        work_dir=fixtures_dir(),
+        default_conf=dae_config_fixture.default_configuration_conf)
 
 
 @pytest.fixture(scope='module')
@@ -128,11 +129,12 @@ def quads_in_parent_wrapper(quads_in_parent):
 
 
 @pytest.fixture(scope='module')
-def dataset_definitions(study_facade):
+def dataset_definitions(study_facade, dae_config_fixture):
     return DirectoryEnabledDatasetsDefinition(
         study_facade,
         datasets_dir=datasets_dir(),
-        work_dir=fixtures_dir())
+        work_dir=fixtures_dir(),
+        default_conf=dae_config_fixture.default_configuration_conf)
 
 
 @pytest.fixture(scope='module')
