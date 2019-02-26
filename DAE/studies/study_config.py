@@ -5,7 +5,7 @@ import os
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
 from .study_wdae_config import StudyWdaeMixin
-from configurable_entities.configuration import DAEConfig
+from common_reports.config import CommonReportsParseConfig
 
 
 class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
@@ -48,30 +48,17 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         'genotypeBrowser.familyFilters': 'genotypeBrowser.familyStudyFilters',
     }
 
-    def __init__(self, config, *args, **kwargs):
-        super(StudyConfigBase, self).__init__(config, *args, **kwargs)
+    def __init__(self, study_config, config, *args, **kwargs):
+        super(StudyConfigBase, self).__init__(study_config, *args, **kwargs)
 
         assert self.id
         assert self.name
         assert 'description' in self
         assert self.work_dir
 
-    @classmethod
-    def get_default_values(cls, work_dir, sections=['common']):
-        dae_config = DAEConfig(dae_data_dir=work_dir)
-
-        default_values = super(StudyConfigBase, cls).get_config(
-            dae_config.default_configuration_conf, work_dir, skip_parsing=True)
-
-        defaults = {}
-        for section in sections:
-            if section in default_values:
-                defaults.update(default_values[section])
-
-        for default_key in defaults.keys():
-            defaults[default_key] = defaults[default_key].replace('%', '%%')
-
-        return defaults
+        self.common_report_config = CommonReportsParseConfig.from_config(
+            self.id, config.get('commonReport', None),
+            config.get('config_file', ''))
 
 
 class StudyConfig(StudyConfigBase):
@@ -118,7 +105,10 @@ class StudyConfig(StudyConfigBase):
         return [self.name]
 
     @classmethod
-    def from_config(cls, config_section):
+    def from_config(cls, config):
+        config_section = config['study']
+        config_section = cls.parse(config_section)
+
         if 'enabled' in config_section:
             if config_section['enabled'] == 'false':
                 return None
@@ -128,11 +118,4 @@ class StudyConfig(StudyConfigBase):
         config_section['authorizedGroups'] = config_section.get(
             'authorizedGroups', [config_section.get('id', '')])
 
-        return StudyConfig(config_section)
-
-    @classmethod
-    def get_default_values(cls, work_dir):
-        defaults = super(StudyConfig, cls).get_default_values(
-            work_dir, sections=['common', 'study'])
-
-        return defaults
+        return StudyConfig(config_section, config)

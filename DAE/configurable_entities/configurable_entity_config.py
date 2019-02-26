@@ -3,8 +3,6 @@ from future import standard_library
 standard_library.install_aliases()
 
 import os
-import sys
-# import traceback
 
 from configparser import ConfigParser
 from box import ConfigBox
@@ -101,7 +99,7 @@ class ConfigurableEntityConfig(object):
 
     @classmethod
     def get_config(
-            cls, config_file, work_dir, default_values={}, skip_parsing=False):
+            cls, config_file, work_dir, default_values={}, default_conf=None):
 
         if not os.path.exists(config_file):
             config_file = os.path.join(work_dir, config_file)
@@ -120,23 +118,30 @@ class ConfigurableEntityConfig(object):
         # traceback.print_stack(file=sys.stderr)
         # print("traceback: ---------------------------------------------")
 
+        if default_conf is not None:
+            assert os.path.exists(default_conf)
+            with open(default_conf, 'r') as f:
+                config_parser.read_file(f)
+
         with open(config_file, 'r') as f:
             config_parser.read_file(f)
 
         config = OrderedDict(
-            (section, OrderedDict(config_parser.items(section)))  # , raw=True)))
+            (section, OrderedDict(config_parser.items(section)))
             for section in config_parser.sections())
 
-        if not skip_parsing:
-            for section in config.keys():
-                config[section] = cls._change_keys_names(config[section])
-                config[section] = cls._concat_two_options(config[section])
-                config[section] = cls._split_str_lists(config[section])
-                config[section] = cls._split_str_sets(config[section])
-                config[section] = cls._cast_to_bool(config[section])
-                config[section] = cls._copy_elements(config[section])
-
         return config
+
+    @classmethod
+    def parse(cls, config_section):
+        config_section = cls._change_keys_names(config_section)
+        config_section = cls._concat_two_options(config_section)
+        config_section = cls._split_str_lists(config_section)
+        config_section = cls._split_str_sets(config_section)
+        config_section = cls._cast_to_bool(config_section)
+        config_section = cls._copy_elements(config_section)
+
+        return config_section
 
     @classmethod
     def add_default_config_key_from_section(cls, config_section, section,

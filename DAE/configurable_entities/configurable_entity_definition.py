@@ -3,7 +3,6 @@ from builtins import str
 
 import os
 import abc
-from itertools import chain
 
 
 class ConfigurableEntityDefinition(object):
@@ -29,7 +28,7 @@ class ConfigurableEntityDefinition(object):
 
     def directory_enabled_configurable_entity_definition(
             self, configurable_entities_dir, configurable_entity_config,
-            work_dir, config_key, default_values={}, skip_sections=[]):
+            work_dir, default_values={}, default_conf=None):
         assert isinstance(configurable_entities_dir, str),\
             type(configurable_entities_dir)
         assert os.path.exists(configurable_entities_dir),\
@@ -49,10 +48,9 @@ class ConfigurableEntityDefinition(object):
 
             configs.append(ConfigurableEntityDefinition.list_from_config(
                 config_path, enabled_dir, configurable_entity_config,
-                default_values, skip_sections))
-        configs = list(chain.from_iterable(configs))
+                default_values, default_conf))
 
-        self.configs = {conf[config_key]: conf for conf in configs}
+        self.configs = {config.id: config for config in configs}
 
     @classmethod
     def _collect_config_paths(cls, dirname):
@@ -70,34 +68,27 @@ class ConfigurableEntityDefinition(object):
 
     def single_file_configurable_entity_definition(
             self, config_path, work_dir, configurable_entity_config,
-            config_key, default_values={}, skip_sections=[]):
+            default_values={}, default_conf=None):
         self.config_path = config_path
 
-        configs = ConfigurableEntityDefinition.list_from_config(
+        config = ConfigurableEntityDefinition.list_from_config(
             config_path, work_dir, configurable_entity_config, default_values,
-            skip_sections)
+            default_conf)
 
-        self.configs = {
-            config[config_key]: config
-            for config in configs
-        }
+        if id in config:
+            self.configs = {config.id: config}
+        else:
+            self.configs = config
 
     @classmethod
     def list_from_config(
             cls, config_file, work_dir, configurable_entity_config,
-            default_values={}, skip_sections=[]):
+            default_values={}, default_conf=None):
         config = configurable_entity_config.get_config(
-            config_file, work_dir, default_values)
-        result = list()
-        for section in config.keys():
-            if section in skip_sections:
-                continue
+            config_file, work_dir, default_values, default_conf)
 
-            entity_config = configurable_entity_config.from_config(
-                config[section])
+        config['config_file'] = config_file
 
-            if entity_config is not None:
-                entity_config['section_name'] = section
-                result.append(entity_config)
+        entity_config = configurable_entity_config.from_config(config)
 
-        return result
+        return entity_config
