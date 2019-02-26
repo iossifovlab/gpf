@@ -134,7 +134,7 @@ class DatasetConfig(StudyConfigBase):
 
     @classmethod
     def get_default_values(cls, work_dir):
-        defaults = super(DatasetConfig, cls).get_default_values(
+        defaults = super(DatasetConfig, cls)._get_default_values(
             work_dir, sections=['common', 'dataset'])
 
         return defaults

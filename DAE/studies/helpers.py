@@ -155,22 +155,22 @@ SPECIAL_ATTRS = merge_dicts(
 
 
 def transform_variants_to_lists(
-        variants, genotype_attrs, pedigree_attrs, pedigree_selectors,
+        variants, preview_columns, pedigree_attrs, pedigree_selectors,
         selected_pedigree_selector):
     for v in variants:
         alt_alleles_count = len(v.alt_alleles)
         for alt_allele in range(alt_alleles_count):
             row_variant = []
-            for attr in genotype_attrs:
+            for column in preview_columns:
                 try:
-                    if attr in SPECIAL_ATTRS:
-                        row_variant.append(SPECIAL_ATTRS[attr](v, alt_allele))
-                    elif attr == 'pedigree':
+                    if column in SPECIAL_ATTRS:
+                        row_variant.append(SPECIAL_ATTRS[column](v, alt_allele))
+                    elif column == 'pedigree':
                         row_variant.append(generate_pedigree(
                             v, pedigree_selectors, selected_pedigree_selector))
                     else:
                         attribute =\
-                            v.alt_alleles[alt_allele].get_attribute(attr, '')
+                            v.alt_alleles[alt_allele].get_attribute(column, '')
                         if not isinstance(attribute, str):
                             if attribute is None or math.isnan(attribute):
                                 attribute = ''

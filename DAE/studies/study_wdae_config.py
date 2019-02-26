@@ -179,8 +179,15 @@ class StudyWdaeMixin(object):
     @staticmethod
     def _get_genotype_browser_pheno_column(dataset_config, col_id):
         prefix = 'genotypeBrowser.pheno.{}'.format(col_id)
-        name = dataset_config.pop('{}.{}'.format(prefix, 'name'))
-        slots = dataset_config.pop('{}.{}'.format(prefix, 'slots')).split(',')
+        name_key = '{}.{}'.format(prefix, 'name')
+        slots_key = '{}.{}'.format(prefix, 'slots')
+        name = dataset_config.pop(name_key)
+        slots = dataset_config.pop(slots_key, None)
+        if slots is None:
+            slots = []
+        else:
+            slots = list(map(str.strip, slots.split(',')))
+
         column = {}
         column['id'] = col_id
         column['name'] = name
@@ -191,7 +198,8 @@ class StudyWdaeMixin(object):
             column_slots.append(
                 {
                     'role': role,
-                    'source': source,
+                    'measure': source,
+                    'source': '{}.{}'.format(role, source),
                     'name': label,
                     'id': '{}.{}'.format(role, source),
                 })
