@@ -3,41 +3,12 @@ from __future__ import unicode_literals
 import os
 import json
 
-from configurable_entities.configuration import DAEConfig
-
-from common_reports.config import CommonReportsConfigs
-
-from studies.dataset_facade import DatasetFacade
-from studies.dataset_factory import DatasetFactory
-from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
-from studies.study_facade import StudyFacade
-from studies.study_definition import DirectoryEnabledStudiesDefinition
-
 
 class CommonReportFacade(object):
     _common_report_cache = {}
 
-    def __init__(self, dae_config=None):
-        if dae_config is None:
-            dae_config = DAEConfig()
-        work_dir = dae_config.dae_data_dir
-        studies_dir = dae_config.studies_dir
-        datasets_dir = dae_config.datasets_dir
-
-        study_definition = DirectoryEnabledStudiesDefinition(
-            studies_dir, work_dir)
-        study_facade = StudyFacade(study_definition)
-
-        dataset_definitions = DirectoryEnabledDatasetsDefinition(
-            study_facade, datasets_dir, work_dir)
-        dataset_factory = DatasetFactory(study_facade)
-
-        dataset_facade =\
-            DatasetFacade(dataset_definitions, dataset_factory)
-
-        self.configs = CommonReportsConfigs()
-        self.configs.scan_directory(studies_dir, study_facade)
-        self.configs.scan_directory(datasets_dir, dataset_facade)
+    def __init__(self, common_reports_query_objects):
+        self.query_objects = common_reports_query_objects.query_objects
 
     def get_common_report(self, common_report_id):
         self.load_cache({common_report_id})
@@ -53,7 +24,7 @@ class CommonReportFacade(object):
         return list(self._common_report_cache.values())
 
     def get_all_common_report_ids(self):
-        return [crc.id for crc in self.configs.common_reports_configs]
+        return [query_object.id for query_object in self.query_objects]
 
     def load_cache(self, common_report_ids=None):
         if common_report_ids is None:
@@ -68,15 +39,20 @@ class CommonReportFacade(object):
                 self._load_common_report_in_cache(common_report_id)
 
     def _load_common_report_in_cache(self, common_report_id):
-        common_reports = list(filter(
-            lambda config: config.id == common_report_id,
-            self.configs.common_reports_configs))
+        common_reports = []
+
+        common_reports += list(filter(
+            lambda query_object:
+            (query_object.common_report_config is not None) and
+            (query_object.common_report_config.id == common_report_id),
+            self.query_objects))
         if len(common_reports) > 0:
-            common_report = common_reports[0]
+            common_report_query_objects = common_reports[0]
         else:
             return
 
-        common_reports_path = common_report.path
+        common_reports_path =\
+            common_report_query_objects.common_report_config.path
 
         if not os.path.exists(common_reports_path):
             return

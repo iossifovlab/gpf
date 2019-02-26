@@ -583,14 +583,17 @@ class CommonReport(object):
 
 class CommonReportsGenerator(object):
 
-    def __init__(self, configs):
-        assert configs is not None
+    def __init__(self, common_reports_query_objects):
+        assert common_reports_query_objects is not None
 
-        self.configs = configs
+        self.query_objects = common_reports_query_objects.query_objects
 
     def save_common_reports(self):
-        for config in self.configs.common_reports_configs:
-            query_object = config.query_object
+        for query_object in self.query_objects:
+            config = query_object.study.common_report_config
+            if config is None:
+                continue
+
             phenotypes_info = config.phenotypes_info
             filter_info = config.filter_info
             effect_groups = config.effect_groups

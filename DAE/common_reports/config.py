@@ -9,8 +9,6 @@ from collections import OrderedDict
 
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
-from configurable_entities.configurable_entity_definition import\
-    ConfigurableEntityDefinition
 
 
 class CommonReportsConfig(object):
@@ -19,18 +17,15 @@ class CommonReportsConfig(object):
     """
 
     def __init__(
-            self, id, config, phenotypes_info, filter_info, query_object, path,
-            *args, **kwargs):
+            self, id, config, phenotypes_info, filter_info, path):
         self.config = config
 
         self.id = id
 
         self.phenotypes_info = phenotypes_info
         self.filter_info = filter_info
-        self.effect_groups = self.config.commonReport.get('effect_groups', [])
-        self.effect_types = self.config.commonReport.get('effect_types', [])
-
-        self.query_object = query_object
+        self.effect_groups = self.config.get('effect_groups', [])
+        self.effect_types = self.config.get('effect_types', [])
 
         self.path = path
 
@@ -63,19 +58,19 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
     @classmethod
     def _parse_phenotype(cls, config, phenotype):
         return OrderedDict([
-            ('name', config.commonReport.get(phenotype + '.name')),
+            ('name', config.get(phenotype + '.name')),
             ('domain', cls._parse_phenotype_domain(
-                config.commonReport.get(phenotype + '.domain'))),
+                config.get(phenotype + '.domain'))),
             ('unaffected', cls._parse_domain_info(
-                config.commonReport.get(phenotype + '.unaffected'))),
+                config.get(phenotype + '.unaffected'))),
             ('default', cls._parse_domain_info(
-                config.commonReport.get(phenotype + '.default'))),
-            ('source', config.commonReport.get(phenotype + '.source'))
+                config.get(phenotype + '.default'))),
+            ('source', config.get(phenotype + '.source'))
         ])
 
     @classmethod
     def _parse_phenotypes(cls, config):
-        phenotypes = config.commonReport.peopleGroups
+        phenotypes = config.peopleGroups
         phenotypes_info = OrderedDict()
         for phenotype in phenotypes:
             pheno = 'peopleGroup.' + phenotype
@@ -86,13 +81,13 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
 
     @staticmethod
     def _parse_data(config):
-        phenotypes = config.commonReport.get('peopleGroups', None)
-        groups = config.commonReport.get('groups', None)
+        phenotypes = config.get('peopleGroups', None)
+        groups = config.get('groups', None)
         draw_all_families =\
-            config.commonReport.get('draw_all_families', False)
+            config.get('draw_all_families', False)
         count_of_families_for_show_id =\
-            config.commonReport.get('count_of_families_for_show_id', None)
-        is_downloadable = config.commonReport.get('is_downloadable', False)
+            config.get('count_of_families_for_show_id', None)
+        is_downloadable = config.get('is_downloadable', False)
 
         if phenotypes is None or groups is None:
             return None
@@ -112,46 +107,38 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
         ])
 
     @classmethod
-    def from_config(cls, config_file, facade):
-        config = Box(cls.get_config(config_file, ''))
-
-        if 'commonReport' not in config or\
-                config.commonReport.get('enabled', True) is False:
+    def from_config(cls, id, config, config_file):
+        if config is None:
             return None
 
-        id = ''
-        for key in config.keys():
-            if 'id' in config[key]:
-                id = config[key].id
+        config = cls.parse(config)
+        config = Box(config)
 
-        try:
-            query_object = facade.get_study_wdae_wrapper(id)
-        except (KeyError, AttributeError):
-            query_object = facade.get_dataset_wdae_wrapper(id)
+        if config.get('enabled', True) is False:
+            return None
 
         phenotypes_info = cls._parse_phenotypes(config)
         filter_info = cls._parse_data(config)
         if filter_info is None:
             return None
 
+        assert os.path.exists(config_file)
         path = os.path.join(
             os.path.split(config_file)[0], 'commonReport/' + id + '.json')
 
         return CommonReportsConfig(
-            id, config, phenotypes_info, filter_info, query_object, path)
+            id, config, phenotypes_info, filter_info, path)
 
 
-class CommonReportsConfigs(object):
+class CommonReportsQueryObjects(object):
 
-    def __init__(self):
-        self.common_reports_configs = []
+    def __init__(self, study_facade, dataset_facade):
+        query_objects = study_facade.get_all_studies_wrapper() +\
+            dataset_facade.get_all_datasets_wrapper()
 
-    def scan_directory(self, directory, facade):
-        config_files =\
-            ConfigurableEntityDefinition._collect_config_paths(directory)
+        print(len([qo for qo in query_objects if qo.common_report_config is not None]))
 
-        for config_file in config_files:
-            config = CommonReportsParseConfig.from_config(config_file, facade)
-
-            if config:
-                self.common_reports_configs.append(config)
+        self.query_objects = [
+            query_object for query_object in query_objects
+            if query_object.common_report_config is not None
+        ]
