@@ -16,11 +16,11 @@ def test_query_passes(quads_f1_dataset_wrapper):
 
 def test_all_alleles_have_pheno_values(quads_f1_dataset_wrapper):
     for variant in quads_f1_dataset_wrapper.query_variants():
-        for allele in variant.matched_alleles:
-            assert allele["prb.instrument1.continuous"]
-            assert allele["prb.instrument1.raw"]
-            assert allele["prb.instrument1.categorical"]
-            assert allele["prb.instrument1.ordinal"]
+        for allele in variant.alt_alleles:
+            assert allele["prb.instrument1.continuous"] is not None
+            assert allele["prb.instrument1.raw"] is not None
+            assert allele["prb.instrument1.categorical"] is not None
+            assert allele["prb.instrument1.ordinal"] is not None
 
 
 @pytest.mark.parametrize("roles,column,value", [
@@ -32,6 +32,6 @@ def test_all_alleles_have_pheno_values(quads_f1_dataset_wrapper):
 def test_alleles_have_pheno_values(
         roles, column, value, quads_f1_dataset_wrapper):
     for variant in quads_f1_dataset_wrapper.query_variants(roles=roles):
-        assert len(variant.matched_alleles) > 0
-        for allele in variant.matched_alleles:
+        assert len(variant.alt_alleles) > 0
+        for allele in variant.alt_alleles:
             assert allele[column] == value
