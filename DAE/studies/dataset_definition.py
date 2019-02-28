@@ -41,14 +41,3 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
                 study_config = self.study_facade.get_study_config(study_id)
                 studies_configs.append(study_config)
             dataset_config.studies_configs = studies_configs
-
-
-# class SingleFileDatasetsDefinition(DatasetsDefinition):
-
-#     def __init__(self, config_path, work_dir=None, default_conf=None):
-#         super(SingleFileDatasetsDefinition, self).__init__()
-#         if work_dir is None:
-#             work_dir = DatasetsDefinition._work_dir_from_environment()
-
-#         self.single_file_configurable_entity_definition(
-#             config_path, work_dir, DatasetConfig, default_conf=default_conf)
