@@ -56,10 +56,37 @@ class DAEConfig(object):
     ANNOTATION_SECTION = 'annotation'
     DEFAULT_CONFIGURATION_SECTION = 'defaultConfiguration'
 
-    def __init__(self, dae_data_dir=None, dae_conf_filename="DAE.conf"):
+    def __init__(
+        self, dae_data_dir=None, 
+        dae_scores_hg19_dir=None, dae_scores_hg38_dir=None,
+        dae_conf_filename="DAE.conf"):
+
         if dae_data_dir is None:
             dae_data_dir = os.environ.get('DAE_DB_DIR', None)
+        assert dae_data_dir is not None
         self._dae_data_dir = os.path.abspath(dae_data_dir)
+        assert os.path.exists(self._dae_data_dir)
+        assert os.path.isdir(self._dae_data_dir)
+
+        if dae_scores_hg19_dir is None:
+            dae_scores_hg19_dir = os.environ.get('DAE_GENOMIC_SCORES_HG19')
+        if dae_scores_hg38_dir is None:
+            dae_scores_hg38_dir = os.environ.get('DAE_GENOMIC_SCORES_HG38')
+
+        self._dae_scores_hg19_dir = None
+        if dae_scores_hg19_dir is not None:
+            self._dae_scores_hg19_dir = os.path.abspath(
+                dae_scores_hg19_dir)
+            assert os.path.exists(self._dae_scores_hg19_dir)
+            assert os.path.isdir(self._dae_scores_hg19_dir)
+
+        self._dae_scores_hg38_dir = None
+        if dae_scores_hg38_dir is not None:
+            self._dae_scores_hg38_dir = os.path.abspath(
+                dae_scores_hg38_dir)
+            assert os.path.exists(self._dae_scores_hg38_dir)
+            assert os.path.isdir(self._dae_scores_hg38_dir)
+
         self.dae_conf_filename = dae_conf_filename
 
         filename = os.path.join(self.dae_data_dir, self.dae_conf_filename)
@@ -68,10 +95,11 @@ class DAEConfig(object):
         )
         assert self.sections is not None
 
-    def _get_config_value(self, section_name, attr_name):
+    def _get_config_value(self, section_name, attr_name, default_value=None):
         if section_name not in self.sections.get_all_section_names():
-            return None
-        return self.sections.get_section_config(section_name).get(attr_name)
+            return default_value
+        return self.sections.get_section_config(section_name).\
+            get(attr_name, default_value)
 
     @property
     def dae_data_dir(self):
@@ -137,12 +165,16 @@ class DAEConfig(object):
     @property
     def genomic_scores_hg19_dir(self):
         return self._get_config_value(
-            self.GENOMIC_SCORES_SECTION, 'scores_hg19_dir')
+            self.GENOMIC_SCORES_SECTION, 
+            'scores_hg19_dir', 
+            self._dae_scores_hg19_dir)
 
     @property
     def genomic_scores_hg38_dir(self):
         return self._get_config_value(
-            self.GENOMIC_SCORES_SECTION, 'scores_hg38_dir')
+            self.GENOMIC_SCORES_SECTION, 
+            'scores_hg38_dir', 
+            self._dae_scores_hg38_dir)
 
     def annotation_section(self):
         return self.sections.get_section_config(self.ANNOTATION_SECTION)
