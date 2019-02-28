@@ -98,7 +98,7 @@ class ConfigurableEntityConfig(object):
         return self.config.to_dict()
 
     @classmethod
-    def get_config(
+    def read_config(
             cls, config_file, work_dir, default_values={}, default_conf=None):
 
         if not os.path.exists(config_file):

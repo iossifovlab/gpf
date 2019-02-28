@@ -14,20 +14,20 @@ class ConfigurableEntityDefinition(object):
     def configurable_entity_ids(self):
         return list(self.configs.keys())
 
-    def get_configurable_entity_config(self, configurable_entity_id):
+    def get_configurable_entity_config_class(self, configurable_entity_id):
         if configurable_entity_id not in self.configs:
             return None
 
         return self.configs[configurable_entity_id]
 
-    def get_all_configurable_entity_configs(self):
+    def get_all_configurable_entity_config_classs(self):
         return list(self.configs.values())
 
     def get_all_configurable_entity_names(self):
         return list(self.configs.keys())
 
     def directory_enabled_configurable_entity_definition(
-            self, configurable_entities_dir, configurable_entity_config,
+            self, configurable_entities_dir, configurable_entity_config_class,
             work_dir, default_values={}, default_conf=None):
         assert isinstance(configurable_entities_dir, str),\
             type(configurable_entities_dir)
@@ -46,8 +46,8 @@ class ConfigurableEntityDefinition(object):
 
         for config_path in config_paths:
 
-            configs.append(ConfigurableEntityDefinition.list_from_config(
-                config_path, enabled_dir, configurable_entity_config,
+            configs.append(ConfigurableEntityDefinition.load_entity_config(
+                config_path, enabled_dir, configurable_entity_config_class,
                 default_values, default_conf))
 
         self.configs = {config.id: config for config in configs}
@@ -67,13 +67,13 @@ class ConfigurableEntityDefinition(object):
         return config_paths
 
     def single_file_configurable_entity_definition(
-            self, config_path, work_dir, configurable_entity_config,
+            self, config_path, work_dir, configurable_entity_config_class,
             default_values={}, default_conf=None):
         self.config_path = config_path
 
-        config = ConfigurableEntityDefinition.list_from_config(
-            config_path, work_dir, configurable_entity_config, default_values,
-            default_conf)
+        config = ConfigurableEntityDefinition.load_entity_config(
+            config_path, work_dir, configurable_entity_config_class,
+            default_values, default_conf)
 
         if id in config:
             self.configs = {config.id: config}
@@ -81,14 +81,14 @@ class ConfigurableEntityDefinition(object):
             self.configs = config
 
     @classmethod
-    def list_from_config(
-            cls, config_file, work_dir, configurable_entity_config,
+    def load_entity_config(
+            cls, config_file, work_dir, configurable_entity_config_class,
             default_values={}, default_conf=None):
-        config = configurable_entity_config.get_config(
+        config = configurable_entity_config_class.read_config(
             config_file, work_dir, default_values, default_conf)
 
         config['config_file'] = config_file
 
-        entity_config = configurable_entity_config.from_config(config)
+        entity_config = configurable_entity_config_class.from_config(config)
 
         return entity_config
