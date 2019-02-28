@@ -28,8 +28,6 @@ class StudyBase(object):
         self.pub_meds = self.config.pub_meds
         self.order = self.config.order
 
-        self.common_report_config = self.config.common_report_config
-
     @property
     def families(self):
         raise NotImplementedError()

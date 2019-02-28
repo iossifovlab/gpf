@@ -8,6 +8,8 @@ import itertools
 from collections import defaultdict, OrderedDict
 from copy import deepcopy
 
+from common_reports.config import CommonReportsParseConfig
+
 from variants.attributes import Role, Sex
 from variants.family import FamiliesBase
 
@@ -586,11 +588,11 @@ class CommonReportsGenerator(object):
     def __init__(self, common_reports_query_objects):
         assert common_reports_query_objects is not None
 
-        self.query_objects = common_reports_query_objects.query_objects
+        self.query_objects_with_config =\
+            common_reports_query_objects.query_objects_with_config
 
     def save_common_reports(self):
-        for query_object in self.query_objects:
-            config = query_object.study.common_report_config
+        for query_object, config in self.query_objects_with_config.items():
             if config is None:
                 continue
 

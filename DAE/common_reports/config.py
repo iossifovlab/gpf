@@ -107,7 +107,11 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
         ])
 
     @classmethod
-    def from_config(cls, id, config, config_file):
+    def from_config(cls, query_object_config):
+        id = query_object_config.id
+        config = query_object_config.study_config.get('commonReport', None)
+        config_file = query_object_config.study_config.get('config_file', '')
+
         if config is None:
             return None
 
@@ -136,9 +140,11 @@ class CommonReportsQueryObjects(object):
         query_objects = study_facade.get_all_studies_wrapper() +\
             dataset_facade.get_all_datasets_wrapper()
 
-        print(len([qo for qo in query_objects if qo.common_report_config is not None]))
+        self.query_objects_with_config = {}
 
-        self.query_objects = [
-            query_object for query_object in query_objects
-            if query_object.common_report_config is not None
-        ]
+        for query_object in query_objects:
+            common_report_config =\
+                CommonReportsParseConfig.from_config(query_object.config)
+            if common_report_config is not None:
+                self.query_objects_with_config[query_object] =\
+                    common_report_config

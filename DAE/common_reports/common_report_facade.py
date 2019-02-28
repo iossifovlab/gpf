@@ -8,7 +8,8 @@ class CommonReportFacade(object):
     _common_report_cache = {}
 
     def __init__(self, common_reports_query_objects):
-        self.query_objects = common_reports_query_objects.query_objects
+        self.query_objects_with_config =\
+            common_reports_query_objects.query_objects_with_config
 
     def get_common_report(self, common_report_id):
         self.load_cache({common_report_id})
@@ -24,7 +25,9 @@ class CommonReportFacade(object):
         return list(self._common_report_cache.values())
 
     def get_all_common_report_ids(self):
-        return [query_object.id for query_object in self.query_objects]
+        return [
+            config.id for config in self.query_objects_with_config.values()
+        ]
 
     def load_cache(self, common_report_ids=None):
         if common_report_ids is None:
@@ -39,20 +42,15 @@ class CommonReportFacade(object):
                 self._load_common_report_in_cache(common_report_id)
 
     def _load_common_report_in_cache(self, common_report_id):
-        common_reports = []
-
-        common_reports += list(filter(
-            lambda query_object:
-            (query_object.common_report_config is not None) and
-            (query_object.common_report_config.id == common_report_id),
-            self.query_objects))
-        if len(common_reports) > 0:
-            common_report_query_objects = common_reports[0]
+        common_report_configs = list(filter(
+            lambda config: (config.id == common_report_id),
+            self.query_objects_with_config.values()))
+        if len(common_report_configs) > 0:
+            common_report_config = common_report_configs[0]
         else:
             return
 
-        common_reports_path =\
-            common_report_query_objects.common_report_config.path
+        common_reports_path = common_report_config.path
 
         if not os.path.exists(common_reports_path):
             return

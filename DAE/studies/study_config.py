@@ -5,7 +5,6 @@ import os
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
 from .study_wdae_config import StudyWdaeMixin
-from common_reports.config import CommonReportsParseConfig
 
 
 class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
@@ -48,17 +47,15 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         'genotypeBrowser.familyFilters': 'genotypeBrowser.familyStudyFilters',
     }
 
-    def __init__(self, study_config, config, *args, **kwargs):
-        super(StudyConfigBase, self).__init__(study_config, *args, **kwargs)
+    def __init__(self, section_config, study_config, *args, **kwargs):
+        super(StudyConfigBase, self).__init__(section_config, *args, **kwargs)
 
         assert self.id
         assert self.name
         assert 'description' in self
         assert self.work_dir
 
-        self.common_report_config = CommonReportsParseConfig.from_config(
-            self.id, config.get('commonReport', None),
-            config.get('config_file', ''))
+        self.study_config = study_config
 
 
 class StudyConfig(StudyConfigBase):

@@ -14,13 +14,13 @@ class ConfigurableEntityDefinition(object):
     def configurable_entity_ids(self):
         return list(self.configs.keys())
 
-    def get_configurable_entity_config_class(self, configurable_entity_id):
+    def get_configurable_entity_config(self, configurable_entity_id):
         if configurable_entity_id not in self.configs:
             return None
 
         return self.configs[configurable_entity_id]
 
-    def get_all_configurable_entity_config_classs(self):
+    def get_all_configurable_entity_configs(self):
         return list(self.configs.values())
 
     def get_all_configurable_entity_names(self):
