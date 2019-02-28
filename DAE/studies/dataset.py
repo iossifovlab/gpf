@@ -85,15 +85,14 @@ class Dataset(StudyBase):
         for pheno_column in self.config.genotypeBrowser.phenoColumns:
             for slot in pheno_column.slots:
                 pheno_value = self.pheno_db.get_measure_values(
-                    slot.source,
+                    slot.measure,
                     family_ids=[variant.family.family_id],
                     roles=[slot.role])
-                key = self._get_pheno_filter_key(
-                    slot, measure_key='source')
+                key = slot.source
                 pheno_values[key] = ','.join(
                     map(str, pheno_value.values()))
 
-        for allele in variant.matched_alleles:
+        for allele in variant.alt_alleles:
             allele.update_attributes(pheno_values)
 
         return variant
