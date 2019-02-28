@@ -6,6 +6,7 @@ from builtins import object
 import os
 from box import Box
 from collections import OrderedDict
+from copy import deepcopy
 
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
@@ -109,7 +110,8 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
     @classmethod
     def from_config(cls, query_object_config):
         id = query_object_config.id
-        config = query_object_config.study_config.get('commonReport', None)
+        config = deepcopy(
+            query_object_config.study_config.get('commonReport', None))
         config_file = query_object_config.study_config.get('config_file', '')
 
         if config is None:
