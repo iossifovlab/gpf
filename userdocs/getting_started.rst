@@ -2,8 +2,8 @@ GPF Getting Started Guide
 =========================
 
 
-Prerequisites
-#############
+Prerequisites [WIP]
+###################
 
     git
     wget
@@ -365,8 +365,8 @@ directory::
     └── summary.parquet
 
 
-Configure Imported Data
-+++++++++++++++++++++++
+Configure Imported Data [WIP]
++++++++++++++++++++++++++++++
 
 Minimal configuration for the newly imported data is as follows::
 
@@ -382,11 +382,12 @@ The ``id`` of the study should be unique into the GPF data instance,
 the study into GPF web UI.
 
 
-Generate Variant Reports
-++++++++++++++++++++++++
+Generate Variant Reports (optional) [TBD]
++++++++++++++++++++++++++++++++++++++++++
 
-Generate Denovo Gene Sets
-+++++++++++++++++++++++++
+Generate Denovo Gene Sets (optional) [TBD]
+++++++++++++++++++++++++++++++++++++++++++
+
 
 Start GPF Web UI
 ++++++++++++++++
