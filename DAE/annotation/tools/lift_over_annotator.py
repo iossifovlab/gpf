@@ -63,7 +63,17 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         liftover_pos = pos - 1
         converted_coordinates = self.lift_over.convert_coordinate(
             chrom, liftover_pos)
-        if len(converted_coordinates) == 0:
+
+        if converted_coordinates is None:
+            print("position: chrom=", chrom, "; pos=", pos,
+                  "(0-pos=", liftover_pos, ")",
+                  "can not be converted into target reference genome",
+                  file=sys.stderr)
+            new_c = None
+            new_p = None
+            new_x = None
+
+        elif len(converted_coordinates) == 0:
             print("position: chrom=", chrom, "; pos=", pos,
                   "(0-pos=", liftover_pos, ")",
                   "can not be converted into target reference genome",
