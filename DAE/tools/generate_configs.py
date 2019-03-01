@@ -1,13 +1,14 @@
 import argparse
-import os.path
-from annotation.annotation_pipeline import PipelineConfig
+import os
+import sys
+import configparser
+import glob
+
 from box import Box
 from collections import OrderedDict
-import configparser
-
+from common.config import to_dict, flatten_dict
 from configurable_entities.configuration import DAEConfig
-from common.config import flatten_dict
-import sys
+from annotation.annotation_pipeline import PipelineConfig
 
 
 class PipelineConfigWrapper(PipelineConfig):
@@ -97,6 +98,17 @@ class PipelineConfigWrapper(PipelineConfig):
                 else:
                     self.score_groups['ungrouped'].append(score_name)
 
+    def score_dirs(self):
+        for section in self.pipeline_sections:
+            if section.annotator_name == \
+                    'score_annotator.PositionMultiScoreAnnotator':
+                for score in section.output_columns:
+                    yield section.options.scores_directory + \
+                          '/' + score
+            elif 'score_annotator' in section.annotator_name or \
+                 'frequency_annotator' in section.annotator_name:
+                yield os.path.split(section.options.scores_file)[0]
+
     def set_genotype_browser_names(self, names_list):
         for pair in names_list:
             pair = pair.split(':')
@@ -164,14 +176,13 @@ class ConfigGenerator(object):
                                                          name=browser_name))
 
             option['slots'] = \
-                ConfigGenerator.group_and_format(slots, width=2)
+                ConfigGenerator.group_and_format(slots, width=1)
             generated_score_groups.append(
                 'scores{}'.format(score_group_counter))
 
         # write genomic scores options
         generated_config_dict['GENOMIC_SCORES_COLUMNS'] = \
-            ConfigGenerator.group_and_format(generated_score_groups +
-                                             self.pipeline_config.all_scores)
+            ConfigGenerator.group_and_format(self.pipeline_config.all_scores)
         generated_config_dict['GENOMIC_SCORES_PREVIEW'] = \
             ConfigGenerator.group_and_format(generated_score_groups)
         generated_config_dict['GENOMIC_SCORES_DOWNLOAD'] = \
@@ -184,7 +195,8 @@ class ConfigGenerator(object):
         with open(template_name, 'r', encoding='utf8') as template:
             generated_config.read_file(template)
 
-        generated_config['dataset'].update(
+        generated_config['genomicScores'] = {}
+        generated_config['genomicScores'].update(
                 flatten_dict(generated_config_dict))
         generated_config.write(sys.stdout)
 
@@ -199,25 +211,31 @@ class ConfigGenerator(object):
         generated_config.add_section('genomicScores')
         generated_config['genomicScores']['dir'] = default_dir
 
-        def write_section(config, score, xscale):
-            sec = config['genomicScores.{}'.format(score)]
-            sec['file'] = (config['genomicScores']['dir']
-                           + '/'
-                           + score)
-            sec['desc'] = self.pipeline_config.browser_name(score)
-            sec['bins'] = '101'
-            sec['help_file'] = sec['file'] + '.md'
-            sec['yscale'] = 'log'
-            sec['xscale'] = xscale
-
-        for score in self.pipeline_config.freq_scores:
-            generated_config.add_section('genomicScores.{}'.format(score))
-            write_section(generated_config, score, 'log')
-        for score in self.pipeline_config.non_freq_scores:
-            generated_config.add_section('genomicScores.{}'.format(score))
-            write_section(generated_config, score, 'linear')
+        for score_dir in self.pipeline_config.score_dirs():
+            for conf in ConfigGenerator.get_score_config(score_dir):
+                if 'histograms' in conf:
+                    hist_dict = to_dict(conf)['histograms']
+                    for score_col in hist_dict:
+                        if score_col == 'default':
+                            continue
+                        sec_name = 'genomicScores.{}'.format(score_col)
+                        sec = OrderedDict()
+                        if 'default' in hist_dict:
+                            sec.update(hist_dict['default'])
+                        sec.update(hist_dict[score_col])
+                        sec['file'] = os.path.join(default_dir, sec['file'])
+                        generated_config[sec_name] = sec
 
         generated_config.write(sys.stdout)
+
+    @staticmethod
+    def get_score_config(score_dir):
+        for conf_file_path in glob.glob(os.path.join(score_dir, '*.conf')):
+            conf = configparser.ConfigParser()
+            conf.optionxform = str
+            with open(conf_file_path, 'r') as conf_file:
+                conf.read_file(conf_file)
+            yield conf
 
 
 if __name__ == '__main__':
