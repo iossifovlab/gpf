@@ -334,7 +334,7 @@ class PhenoDB(object):
         """
         Returns a measure by measure_id.
         """
-        assert measure_id in self.measures
+        assert measure_id in self.measures, measure_id
         return self.measures[measure_id]
 
     def _build_default_filter_clause(self, m, default_filter):
@@ -423,7 +423,7 @@ class PhenoDB(object):
         individuals IDs and column named as `measure_id` values of the measure.
         """
 
-        assert measure_id in self.measures
+        assert measure_id in self.measures, measure_id
         measure = self.measures[measure_id]
 
         df = self._raw_get_measure_values_df(
