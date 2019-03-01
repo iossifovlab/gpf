@@ -1,3 +1,4 @@
+from builtins import str
 
 
 class StudyWdaeMixin(object):
