@@ -56,7 +56,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'GPF: Genotypes and Phenotypes in Families'
-copyright = u'2018, iossifovlab.com'
+copyright = u'2018,2019, iossifovlab.com'
 author = u'iossifovlab.com'
 
 # The version info for the project you're documenting, acts as replacement for

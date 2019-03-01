@@ -237,17 +237,13 @@ Initial setup of GPF Web UI requires several steps:
 
 * Inital setup of the local database to serve GFP Web UI. Since GPF Web UI is
     an Django application, it uses ``sqlite3`` for development purposes.
-    To setup it go into ``gpf/wdae`` directory and run migrations:
-
-    .. code-block:: bash
+    To setup it go into ``gpf/wdae`` directory and run migrations::
 
         cd gpf/wdae
         ./manage.py migrate
 
 * Next step is to create development users. To this end from inside
-    ``gpf/wdae`` directory run ``create_dev_users.sh``:
-
-    .. code-block:: bash
+    ``gpf/wdae`` directory run ``create_dev_users.sh``::
 
         ./create_dev_users.sh
 
@@ -260,9 +256,7 @@ Start GPF Web UI
 ++++++++++++++++
 
 To start the GPF Web UI you need to run Django development server. To this end
-enter into ``gpf/wdae`` directory and run:
-
-    .. code-block:: bash
+enter into ``gpf/wdae`` directory and run::
 
         ./manage.py runserver 0.0.0.0:8000
 
@@ -381,6 +375,20 @@ The ``id`` of the study should be unique into the GPF data instance,
 ``name`` is a human readable name of the study that will be used to display
 the study into GPF web UI.
 
+.. todo::
+
+    At the moment the GPF web UI works only with datasets and so you need
+    to configure a minimal dataset representing ``quad`` study. To this
+    end you will neead a ``quad.conf`` file inside
+    ``data-hg19-startup/datasets``::
+
+        [dataset]
+
+        name = Quad Dataset
+        id = quad_dataset
+        phenotypes=autism
+        studies = quad
+
 
 Generate Variant Reports (optional) [TBD]
 +++++++++++++++++++++++++++++++++++++++++
@@ -391,3 +399,9 @@ Generate Denovo Gene Sets (optional) [TBD]
 
 Start GPF Web UI
 ++++++++++++++++
+
+After importing new study into GPF data instance you need to restart the
+GPF web UI. Stop the Django develompent server and start it again::
+
+        ./manage.py runserver 0.0.0.0:8000
+
