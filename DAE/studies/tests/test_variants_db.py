@@ -1,6 +1,11 @@
 import os
+import pytest
+
 from .conftest import fixtures_dir
 from ..factory import VariantsDb
+
+
+pytestmark = pytest.mark.usefixtures("pheno_conf_path")
 
 
 def test_variants_db_studies_simple(dae_config_fixture):

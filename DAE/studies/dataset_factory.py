@@ -35,6 +35,3 @@ class DatasetFactory(object):
             dataset_config,
             studies
         )
-
-    def get_study_facade(self):
-        return self.study_facade
