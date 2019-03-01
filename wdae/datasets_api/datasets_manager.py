@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 from builtins import object
-import os
 
 from configurable_entities.configuration import DAEConfig
 
@@ -32,6 +31,13 @@ class DatasetsManager(object):
             assert self.vdb is not None
 
         return self.vdb.dataset_facade
+
+    def get_variants_db(self):
+        if self.vdb is None:
+            self.reload_dataset()
+            assert self.vdb is not None
+
+        return self.vdb
 
 
 _datasets_manager = None

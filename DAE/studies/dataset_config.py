@@ -1,6 +1,5 @@
 import functools
 from studies.study_config import StudyConfigBase
-import traceback
 
 
 def _set_union_attribute(studies_configs, option_name):
@@ -99,12 +98,15 @@ class DatasetConfig(StudyConfigBase):
         self.studies_configs = []
 
     @classmethod
-    def from_config(cls, config_section):
+    def from_config(cls, config):
+        config_section = config['dataset']
+        config_section = cls.parse(config_section)
+
         if 'enabled' in config_section:
             if config_section['enabled'] == 'false':
                 return None
         cls._fill_wdae_config(config_section)
-        return DatasetConfig(config_section)
+        return DatasetConfig(config_section, config)
 
     def __getattr__(self, option_name):
         try:
@@ -131,10 +133,3 @@ class DatasetConfig(StudyConfigBase):
 
         combiner = self.COMPOSITE_ATTRIBUTES[option_name]
         return combiner(self.studies_configs, option_name)
-
-    @classmethod
-    def get_default_values(cls, work_dir):
-        defaults = super(DatasetConfig, cls)._get_default_values(
-            work_dir, sections=['common', 'dataset'])
-
-        return defaults

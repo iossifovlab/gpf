@@ -12,9 +12,8 @@ class ConfigSectionConfig(ConfigurableEntityConfig):
         super(ConfigSectionConfig, self).__init__(config, *args, **kwargs)
 
     @classmethod
-    def from_config(cls, config_section, section=None):
-        section_config = config_section
-        return ConfigSectionConfig(section_config)
+    def from_config(cls, config):
+        return ConfigSectionConfig(config)
 
 
 class ConfigSectionDefinition(ConfigurableEntityDefinition):
@@ -26,7 +25,7 @@ class ConfigSectionDefinition(ConfigurableEntityDefinition):
         assert work_dir is not None
 
         self.single_file_configurable_entity_definition(
-            config_path, work_dir, ConfigSectionConfig, 'section_name',
+            config_path, work_dir, ConfigSectionConfig,
             {'wd': work_dir, 'work_dir': work_dir})
 
     @property
