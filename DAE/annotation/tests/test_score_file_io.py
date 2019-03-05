@@ -4,7 +4,21 @@ from box import Box
 
 from .conftest import relative_to_this_test_folder
 from annotation.tools.score_file_io import \
-    DirectAccess, IterativeAccess, LineAdapter
+    DirectAccess, IterativeAccess, LineAdapter, conf_to_dict
+
+
+def test_conf_to_dict():
+    expected_header = ['chrom', 'chromStart', 'chromEnd',
+                       'scoreOne', 'scoreTwo', 'scoreThree',
+                       'scoreFour', 'scoreFive']
+    config_name = \
+        relative_to_this_test_folder('fixtures/sample_score_config.conf')
+
+    with open(config_name, 'r') as conf_file:
+        conf = conf_to_dict(conf_file)
+    assert conf['header'].split(',') == expected_header
+    assert conf['columns']['score'].split(',') == expected_header[3:]
+    assert all([col in conf['schema'].columns for col in expected_header])
 
 
 @pytest.mark.parametrize("score_filename,no_header", [
@@ -204,5 +218,3 @@ def test_iterative_access_with_na_values(chrom, pos_start, pos_end, count):
         assert len(res) == count
         assert res['chromStart'][0] <= pos_start and \
             res['chromEnd'][count-1] >= pos_end
-        
-

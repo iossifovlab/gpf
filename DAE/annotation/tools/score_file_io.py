@@ -18,6 +18,13 @@ from annotation.tools.schema import Schema
 
 
 def conf_to_dict(path):
+
+    def items_to_dict(conf_items):
+        return {key: val.replace('\n', '')
+                        .replace(' ', '')
+                        .replace('\t', '')
+                for key, val in conf_items}
+
     conf_parser = ConfigParser()
     conf_parser.optionxform = str
     conf_parser.read_file(path)
@@ -25,10 +32,12 @@ def conf_to_dict(path):
     assert 'general' in conf_parser
     assert 'columns' in conf_parser
     assert 'schema' in conf_parser
-    conf_settings = dict(conf_parser.items('general'))
-    conf_settings['columns'] = dict(conf_parser.items('columns'))
+    conf_settings = \
+        items_to_dict(conf_parser.items('general'))
+    conf_settings['columns'] = \
+        items_to_dict(conf_parser.items('columns'))
     conf_settings['schema'] = \
-        Schema.from_dict(dict(conf_parser.items('schema')))
+        Schema.from_dict(items_to_dict(conf_parser.items('schema')))
     return conf_settings
 
 
