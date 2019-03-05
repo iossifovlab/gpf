@@ -66,7 +66,7 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
-import { RouterModule, Routes, Router } from '@angular/router';
+import { RouterModule, Routes } from '@angular/router';
 import { StateRestoreService } from './store/state-restore.service';
 import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
