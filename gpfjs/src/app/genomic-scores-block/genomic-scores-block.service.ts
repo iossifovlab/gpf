@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { GenomicScores } from './genomic-scores-block';
 import { ConfigService } from '../config/config.service';
 
-import 'rxjs/add/operator/map';
+
 
 @Injectable()
 export class GenomicScoresBlockService {

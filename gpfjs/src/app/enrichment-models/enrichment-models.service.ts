@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { ConfigService } from '../config/config.service';
 import { EnrichmentModels } from './enrichment-models';
 
-import 'rxjs/add/operator/map';
+
 
 @Injectable()
 export class EnrichmentModelsService {

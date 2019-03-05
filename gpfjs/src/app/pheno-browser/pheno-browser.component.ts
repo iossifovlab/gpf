@@ -1,8 +1,7 @@
 import { Component, OnInit, Input, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 
-import { Observable } from 'rxjs';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Observable ,  BehaviorSubject } from 'rxjs';
 
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
@@ -27,18 +26,18 @@ export class PhenoBrowserComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    let dataset$ = this.route.parent.params
+    let datasetId$ = this.route.parent.params
       .take(1)
-      .map(params => params['dataset']);
+      .map(params => <string>params['dataset']);
 
-    this.initInstruments(dataset$);
-    this.initMeasuresToShow(dataset$);
-    this.initDownloadLink(dataset$);
+    this.initInstruments(datasetId$);
+    this.initMeasuresToShow(datasetId$);
+    this.initDownloadLink(datasetId$);
   }
 
-  initMeasuresToShow(dataset$) {
+  initMeasuresToShow(datasetId$: Observable<string>) {
     this.measuresToShow$ = Observable
-      .combineLatest([this.selectedInstrument$, dataset$])
+      .combineLatest([this.selectedInstrument$, datasetId$])
       .switchMap(([newSelection, datasetId]) => {
         return this.phenoBrowserService.getMeasures(datasetId, newSelection)
       }).share();
@@ -57,9 +56,9 @@ export class PhenoBrowserComponent implements OnInit {
     this.selectedInstrument$.next(instrument);
   }
 
-  initDownloadLink(dataset$) {
+  initDownloadLink(datasetId$: Observable<string>) {
     this.downloadLink$ = Observable
-      .combineLatest([this.selectedInstrument$, dataset$])
+      .combineLatest([this.selectedInstrument$, datasetId$])
       .map(([instrument, datasetId]) =>
         this.phenoBrowserService.getDownloadLink(instrument, datasetId)
       );

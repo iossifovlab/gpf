@@ -1,9 +1,9 @@
 import { Component, OnInit, Input, forwardRef, ViewChild } from '@angular/core';
 import { ContinuousMeasure } from '../measures/measures';
 import { QueryStateCollector } from '../query/query-state-provider';
-import { ContinuousFilterState } from '../pheno-filters/pheno-filters';
+import { ContinuousFilterState, ContinuousSelection } from '../pheno-filters/pheno-filters';
 import { PhenoFilter } from '../datasets/datasets';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
@@ -35,11 +35,12 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
   restoreContinuousFilter(state) {
     let filter = state.find(f => f.id === this.continuousFilterState.id);
     if (filter) {
+      let selection = this.continuousFilterState.selection as ContinuousSelection;
       this.continuousFilterState.measure = filter.measure;
-      this.continuousFilterState.domainMin = filter.domainMin;
-      this.continuousFilterState.domainMax = filter.domainMax;
-      this.continuousFilterState.mmax = filter.mmax;
-      this.continuousFilterState.mmin = filter.mmin;
+      selection.domainMin = filter.domainMin;
+      selection.domainMax = filter.domainMax;
+      selection.max = filter.mmax;
+      selection.min = filter.mmin;
       if (this.measures) {
         let measure = this.measures.find(m => m.name === filter.measure);
         if (measure) {
@@ -50,9 +51,10 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
   }
 
   set selectedMeasure(measure) {
+    let selection = this.continuousFilterState.selection as ContinuousSelection;
     this.continuousFilterState.measure = measure ? measure.name : null;
-    this.continuousFilterState.domainMin = measure ? measure.min : 0;
-    this.continuousFilterState.domainMax = measure ? measure.max : 0;
+    selection.domainMin = measure ? measure.min : 0;
+    selection.domainMax = measure ? measure.max : 0;
     this.internalSelectedMeasure = measure;
   }
 

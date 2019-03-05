@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Headers, Http, Response, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs';
 
-import 'rxjs/add/operator/toPromise';
+
 
 import { ConfigService } from '../config/config.service';
 import { PhenoToolResults } from './pheno-tool-results';

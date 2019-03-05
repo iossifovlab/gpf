@@ -6,9 +6,6 @@ import {
   PhenoFilterState, PhenoFiltersState, CategoricalFilterState,
   ContinuousFilterState
 } from './pheno-filters';
-import { Observable } from 'rxjs/Observable';
-import { ValidationError, validateOrReject } from 'class-validator';
-import { plainToClass } from 'class-transformer';
 
 @Component({
   selector: 'gpf-pheno-filters',
@@ -37,9 +34,16 @@ export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implemen
       this.dataset.genotypeBrowser.phenoFilters
       .concat(this.dataset.genotypeBrowser.familyStudyFilters || [])
       .map(phenoFilter => {
+        console.log(phenoFilter);
         if (phenoFilter.measureType === 'continuous') {
+          const continuousFilterState = new ContinuousFilterState(
+            phenoFilter.name,
+            phenoFilter.measureType,
+            phenoFilter.measureFilter.role,
+            phenoFilter.measureFilter.measure,
+          );
           return [
-            phenoFilter, plainToClass(ContinuousFilterState, phenoFilter)
+            phenoFilter, continuousFilterState
           ] as [PhenoFilter, PhenoFilterState];
         } else if (phenoFilter.measureType === 'categorical') {
           const categoricalFilterState = new CategoricalFilterState(

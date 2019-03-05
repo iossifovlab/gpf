@@ -1,9 +1,7 @@
+
+import {throwError as observableThrowError,  Observable ,  ReplaySubject } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { Headers, Http, Response, RequestOptions, URLSearchParams } from '@angular/http';
-import { Observable } from 'rxjs';
-
-import 'rxjs/add/operator/toPromise';
-import { ReplaySubject } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie';
@@ -94,7 +92,7 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        return Observable.throw(new Error(error.json().error_msg));
+        return observableThrowError(new Error(error.json().error_msg));
       });
   }
 
@@ -108,7 +106,7 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        return Observable.throw(new Error(error.json().error_msg));
+        return observableThrowError(new Error(error.json().error_msg));
       });
   }
 
@@ -167,7 +165,7 @@ export class UsersService {
       hasPassword: user.hasPassword,
     };
     if (!user.id) {
-      return Observable.throw('Unknown id...');
+      return observableThrowError('Unknown id...');
     }
     let csrfToken = this.cookieService.get('csrftoken');
     let headers = new Headers({ 'X-CSRFToken': csrfToken });
@@ -182,7 +180,7 @@ export class UsersService {
 
   createUser(user: User) {
     if (user.id) {
-      return Observable.throw('Create should not have user id');
+      return observableThrowError('Create should not have user id');
     }
 
     let csrfToken = this.cookieService.get('csrftoken');
@@ -198,7 +196,7 @@ export class UsersService {
 
   deleteUser(user: User) {
     if (!user.id) {
-      return Observable.throw('No user id');
+      return observableThrowError('No user id');
     }
     let url = `${this.usersUrl}/${user.id}`;
     let options = new RequestOptions({ withCredentials: true });
@@ -208,7 +206,7 @@ export class UsersService {
 
   removeUserPassword(user: User) {
     if (!user.id) {
-      return Observable.throw('No user id');
+      return observableThrowError('No user id');
     }
     let url = `${this.usersUrl}/${user.id}/password_remove`;
     let options = new RequestOptions({ withCredentials: true });
@@ -218,7 +216,7 @@ export class UsersService {
 
   resetUserPassword(user: User) {
     if (!user.id) {
-      return Observable.throw('No user id');
+      return observableThrowError('No user id');
     }
     let url = `${this.usersUrl}/${user.id}/password_reset`;
     let options = new RequestOptions({ withCredentials: true });

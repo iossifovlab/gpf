@@ -1,7 +1,7 @@
 import { Input, Component, OnInit, OnChanges, ViewChild, Output, EventEmitter, SimpleChanges } from '@angular/core';
 import { GeneWeights } from '../gene-weights/gene-weights';
 import * as d3 from 'd3';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'gpf-histogram',
