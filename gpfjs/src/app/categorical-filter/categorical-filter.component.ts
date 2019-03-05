@@ -1,5 +1,5 @@
 import { Component, OnChanges, SimpleChanges, Input } from '@angular/core';
-import { PhenoFiltersState, CategoricalFilterState } from '../pheno-filters/pheno-filters';
+import { PhenoFiltersState, CategoricalFilterState, CategoricalSelection } from '../pheno-filters/pheno-filters';
 import { PhenoFilter } from '../datasets/datasets';
 import { Observable } from 'rxjs/Observable';
 import { StateRestoreService } from '../store/state-restore.service';
@@ -41,15 +41,15 @@ export class CategoricalFilterComponent implements OnChanges {
   }
 
   set selectedValue(value) {
-    this.categoricalFilterState.selection = [value];
+    (this.categoricalFilterState.selection as CategoricalSelection).selection = [value];
   }
 
   get selectedValue(): string {
-    return this.categoricalFilterState.selection[0];
+    return (this.categoricalFilterState.selection as CategoricalSelection).selection[0];
   }
 
   clear() {
-    this.categoricalFilterState.selection = [];
+    (this.categoricalFilterState.selection as CategoricalSelection).selection = [];
   }
 
 }

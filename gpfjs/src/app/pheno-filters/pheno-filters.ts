@@ -3,12 +3,17 @@ import { IsNumber, Min, Max } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
+export interface Selection{
+  isEmpty(): boolean;
+}
+
 export class PhenoFilterState {
   constructor(
     readonly id: string,
     readonly measureType: string,
     readonly role: string,
     public measure: string,
+    public selection: Selection
   ) {}
 
   isEmpty() {
@@ -17,8 +22,15 @@ export class PhenoFilterState {
   }
 }
 
+export class CategoricalSelection implements Selection {
+  selection: string[] = [];
+
+  isEmpty() {
+    return this.selection.length === 0;
+  }
+}
+
 export class CategoricalFilterState extends PhenoFilterState {
-  selection = [];
 
   constructor(
     id: string,
@@ -27,37 +39,44 @@ export class CategoricalFilterState extends PhenoFilterState {
     role: string,
     measure: string
   ) {
-    super(id, type, role, measure);
+    super(id, type, role, measure, new CategoricalSelection());
   }
 
   isEmpty() {
-    return this.selection.length === 0
-        || super.isEmpty();
+    return this.selection.isEmpty() || super.isEmpty();
   }
 };
 
-export class ContinuousFilterState extends PhenoFilterState {
+export class ContinuousSelection implements Selection {
   @ValidateIf(o => o.mmin !== null)
   @IsNumber()
   @IsLessThanOrEqual('mmax')
   @IsMoreThanOrEqual('domainMin')
-  mmin: number;
+  min: number;
 
   @ValidateIf(o => o.mmax !== null)
   @IsNumber()
   @IsMoreThanOrEqual('mmin')
   @IsLessThanOrEqual('domainMax')
-  mmax: number;
+  max: number;
 
   domainMin: number;
   domainMax: number;
 
+  isEmpty() {
+    return this.min === this.max === null;
+  }
+}
+
+export class ContinuousFilterState extends PhenoFilterState {
+
   constructor(
     id: string,
+    type: string,
     role: string,
     measure: string
   ) {
-    super(id, 'continuous', role, measure);
+    super(id, type, role, measure, new ContinuousSelection());
   }
 };
 
