@@ -8,6 +8,7 @@ import pysam
 from abc import ABCMeta, abstractmethod
 from box import Box
 from annotation.tools.schema import Schema
+from annotation.tools.utils import handle_header
 
 
 def to_str(column_value):
@@ -203,7 +204,7 @@ class TSVReader(TSVFormat):
             header_str = line.strip()
             if header_str.startswith("#"):
                 header_str = header_str[1:]
-            return header_str.split(self.separator)
+            return handle_header(header_str.split(self.separator))
 
     def line_write(self, line):
         raise NotImplementedError()
@@ -297,7 +298,7 @@ class TabixReader(TSVFormat):
             header_str = line[-1]
             if header_str.startswith("#"):
                 header_str = header_str[1:]
-            return header_str.split(self.separator)
+            return handle_header(header_str.split(self.separator))
 
     def _cleanup(self):
         self._progress_done()
