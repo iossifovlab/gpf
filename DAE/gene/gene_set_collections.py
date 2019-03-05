@@ -106,37 +106,29 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         for config in self.dataset_facade.get_all_dataset_configs():
             study_config = config.study_config
 
-            pedigree_selector_str = self._get_att_from_config(
-                study_config, 'pedigreeSelectors')
-            if not pedigree_selector_str:
+            pedigree_selector = self._get_att_from_config(
+                study_config, 'pedigreeSelector')
+            print(pedigree_selector)
+            if not pedigree_selector:
                 continue
-            pedigree_selector = pedigree_selector_str.split(':')
-            study_group_pedigree_selectors = {
-                'source': pedigree_selector[0]
-            }
-
-            standard_criterias = []
-            for standard_criteria_id in self._get_att_list_from_config(
-                    study_config, 'standardCriterias'):
-                segments_arrs = map(
-                    lambda segment_str: segment_str.split(':'),
-                    self._get_att_list_from_config(
-                        study_config, 'standardCriterias.{}.segments'.format(
-                            standard_criteria_id)))
-                standard_criterias.append(
-                    [{
-                        'property': standard_criteria_id,
-                        'name': segment_arr[0],
-                        'value': segment_arr[1].split('.')
-                    }
-                        for segment_arr in segments_arrs]
-                )
-
             self.denovo_gene_sets[config.id] = {
-                'study_group_pedigree_selectors':
-                    study_group_pedigree_selectors,
-                'standard_criterias': standard_criterias
+                'source': pedigree_selector
             }
+
+        self.standard_criterias = []
+        for standard_criteria_id in self._get_att_list('standardCriterias'):
+            segments_arrs = map(
+                lambda segment_str: segment_str.split(':'),
+                self._get_att_list('standardCriterias.{}.segments'.format(
+                        standard_criteria_id)))
+            self.standard_criterias.append(
+                [{
+                    'property': standard_criteria_id,
+                    'name': segment_arr[0],
+                    'value': segment_arr[1].split('.')
+                }
+                    for segment_arr in segments_arrs]
+            )
 
         self.recurrency_criterias = {}
         for recurrency_criteria_str in self._get_att_list(
@@ -207,6 +199,8 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             study_group_cache, set, list)
 
         cache_dir = study_group.gene_sets_cache_file()
+        if not os.path.exists(os.path.dirname(cache_dir)):
+            os.makedirs(os.path.dirname(cache_dir))
         with open(cache_dir, "w") as f:
             json.dump(
                 cache, f, sort_keys=True, indent=4, separators=(',', ': '))
@@ -225,15 +219,14 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return res
 
     def _generate_gene_sets_for(self, study_group):
-        pedigree_selector = self.denovo_gene_sets[
-            study_group.id]['study_group_pedigree_selectors']['source']
+        pedigree_selector = self.denovo_gene_sets[study_group.id]['source']
         pedigree_selector_values = study_group.get_pedigree_values(
             pedigree_selector)
 
         cache = {value: {} for value in pedigree_selector_values}
 
         for criterias_combination in product(
-                *self.denovo_gene_sets[study_group.id]['standard_criterias']):
+                *self.standard_criterias):
             search_args = {criteria['property']: criteria['value']
                            for criteria in criterias_combination}
             for pedigree_selector_value in pedigree_selector_values:
