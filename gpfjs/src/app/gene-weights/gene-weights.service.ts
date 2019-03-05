@@ -7,7 +7,7 @@ import { IdName } from '../common/idname';
 import { GeneWeights, Partitions } from './gene-weights';
 import { ConfigService } from '../config/config.service';
 
-import 'rxjs/add/operator/map';
+
 
 @Injectable()
 export class GeneWeightsService {

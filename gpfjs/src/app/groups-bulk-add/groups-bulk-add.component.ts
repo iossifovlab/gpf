@@ -1,7 +1,7 @@
+
+import {throwError as observableThrowError,  Observable, BehaviorSubject } from 'rxjs';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-
-import { Observable, BehaviorSubject } from 'rxjs';
 import { Select2OptionData } from 'ng2-select2';
 
 import { User } from '../users/users';
@@ -49,7 +49,7 @@ export class GroupsBulkAddComponent implements OnInit {
       .do(params => {
         if (!params['user_ids']) {
           this.router.navigate(['..'], { relativeTo: this.route });
-          return Observable.throw('No user ids..');
+          return observableThrowError('No user ids..');
         }
       })
       .map(params => params['user_ids'].split(',') as string[])
@@ -62,7 +62,7 @@ export class GroupsBulkAddComponent implements OnInit {
         let filteredUsers = users.filter(u => ids.indexOf(u.id) !== -1);
         if (filteredUsers.length !== ids.length) {
           this.router.navigate(['..'], { relativeTo: this.route });
-          return Observable.throw('unknown ids...');
+          return observableThrowError('unknown ids...');
         }
 
         return Observable.of(filteredUsers);

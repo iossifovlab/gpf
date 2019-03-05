@@ -7,7 +7,7 @@ import { IdName } from '../common/idname';
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { ConfigService } from '../config/config.service';
 
-import 'rxjs/add/operator/map';
+
 
 @Injectable()
 export class GeneSetsService {

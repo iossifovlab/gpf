@@ -1,5 +1,6 @@
+
+import {throwError as observableThrowError,  Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
 import { ValidationError, validate } from 'class-validator';
 
 export function toValidationObservable<T>(obj: T): Observable<T> {
@@ -8,7 +9,7 @@ export function toValidationObservable<T>(obj: T): Observable<T> {
       if (errors.length === 0) {
         return Observable.of(obj);
       }
-      return Observable.throw(errors);
+      return observableThrowError(errors);
     });
 };
 

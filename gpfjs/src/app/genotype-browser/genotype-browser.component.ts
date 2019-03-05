@@ -2,7 +2,7 @@ import { Component, Input, OnInit, OnChanges, AfterViewInit, SimpleChanges, Chan
 import { ActivatedRoute, Params, Router } from '@angular/router';
 
 import { Observable } from 'rxjs';
-import 'rxjs/add/operator/zip';
+
 
 import { QueryStateCollector } from '../query/query-state-provider';
 import { QueryService } from '../query/query.service';

@@ -1,12 +1,10 @@
-import { DoCheck, OnDestroy, ContentChildren, QueryList, ViewChildren, forwardRef, OnChanges } from '@angular/core';
 
-import { ReplaySubject, Observable, Subscription } from 'rxjs';
-import { Scheduler } from 'rxjs';
+import {throwError as observableThrowError,  ReplaySubject, Observable, Subscription} from 'rxjs';
+import {Scheduler} from 'rxjs-compat';
+import { DoCheck, OnDestroy, ContentChildren, QueryList, ViewChildren, forwardRef, OnChanges } from '@angular/core';
 
 import { validationErrorsToStringArray, toValidationObservable } from '../utils/to-observable-with-validation';
 import { SaveQuery } from '../query/common-query-data';
-
-import * as _ from 'lodash';
 
 
 export abstract class QueryStateProvider {
@@ -25,7 +23,7 @@ export abstract class QueryStateWithErrorsProvider extends QueryStateProvider {
       })
       .catch(errors => {
         this.errors = validationErrorsToStringArray(errors);
-        return Observable.throw(
+        return observableThrowError(
           `${this.constructor.name}: invalid state`,
           Scheduler.async);
       });

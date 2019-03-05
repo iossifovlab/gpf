@@ -3,7 +3,7 @@ import { ContinuousMeasure } from '../measures/measures';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { ContinuousFilterState, ContinuousSelection } from '../pheno-filters/pheno-filters';
 import { PhenoFilter } from '../datasets/datasets';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({

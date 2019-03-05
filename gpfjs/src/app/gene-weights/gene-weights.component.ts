@@ -4,13 +4,12 @@ import { Input, Component, OnInit, ViewChild, ViewEncapsulation, Output,
 import { FormControl } from '@angular/forms';
 import { GeneWeights, Partitions } from './gene-weights';
 import { GeneWeightsService } from './gene-weights.service';
-import { ReplaySubject }           from 'rxjs/ReplaySubject';
-import { Observable }        from 'rxjs/Observable';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/distinctUntilChanged';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/observable/of';
+import { ReplaySubject ,  Observable }           from 'rxjs';
+
+
+
+
+
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { ValidationError } from 'class-validator';

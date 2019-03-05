@@ -1,8 +1,8 @@
 import { Component, Input } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
-import 'rxjs/add/operator/filter';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
+
+import { ReplaySubject } from 'rxjs';
 
 import { GenomicScores } from '../genomic-scores-block/genomic-scores-block';
 import { PopupComponent } from '../popup/popup.component';

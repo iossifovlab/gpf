@@ -1,7 +1,7 @@
 import { Component, OnChanges, SimpleChanges, Input } from '@angular/core';
 import { PhenoFiltersState, CategoricalFilterState, CategoricalSelection } from '../pheno-filters/pheno-filters';
 import { PhenoFilter } from '../datasets/datasets';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
