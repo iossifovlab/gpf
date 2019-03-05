@@ -18,5 +18,5 @@ export DAE_DB_DIR=<path to work data>/data-hg19
 conda activate gpf3
 
 # setups GPF paths
-source $DAE_SOURCE_DIR/setenv.sh
+source $DAE_SOURCE_DIR/setdae.sh
 
