@@ -54,6 +54,9 @@ class Dataset(StudyBase):
             people_ids_to_query = self._merge_with_people_ids(
                 kwargs, people_ids_to_query)
 
+            if len(people_ids_to_query) == 0:
+                return
+
             kwargs['person_ids'] = list(people_ids_to_query)
 
         for variant in itertools.chain(*[
@@ -83,7 +86,7 @@ class Dataset(StudyBase):
         return variant
 
     def _merge_with_people_ids(self, kwargs, people_ids_to_query):
-        people_ids_filter = kwargs.pop('person_ids  ', None)
+        people_ids_filter = kwargs.pop('person_ids', None)
         result = people_ids_to_query
         if people_ids_filter is not None:
             result = people_ids_to_query.intersection(people_ids_filter)
@@ -93,6 +96,8 @@ class Dataset(StudyBase):
     def _transform_pheno_filters_to_people_ids(self, pheno_filter_args):
         people_ids = []
         for pheno_filter_arg in pheno_filter_args:
+            if not self.pheno_db.has_measure(pheno_filter_arg['measure']):
+                continue
             pheno_constraints = self._get_pheno_filter_constraints(
                 pheno_filter_arg)
 
