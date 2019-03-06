@@ -10,7 +10,7 @@ FILTER_QUERY_CATEGORICAL = {
     "role": "prb",
     "measure": "instrument1.categorical",
     "selection": {
-        "values": ["option2"]
+        "selection": ["option2"]
     }
 }
 

@@ -122,7 +122,7 @@ class Dataset(StudyBase):
         selection = pheno_filter['selection']
         if measure_type in (MeasureType.continuous, MeasureType.ordinal):
             return tuple([selection['min'], selection['max']])
-        return set(selection['values'])
+        return set(selection['selection'])
 
     @property
     def families(self):
@@ -145,7 +145,7 @@ class Dataset(StudyBase):
             lambda x, y: x | y,
             [st.get_pedigree_values(column) for st in self.studies], set())
 
-    # FIXME:
+    # FIXME
     def gene_sets_cache_file(self):
         cache_filename = '{}.json'.format(self.name)
         return cache_filename
