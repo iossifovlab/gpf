@@ -6,7 +6,7 @@ from gene.gene_set_collections import GeneSetsCollections
 from studies.factory import VariantsDb
 
 
-def main():
+def main(options=None):
     description = 'Generate genovo gene sets tool'
     parser = argparse.ArgumentParser(description=description)
 
@@ -19,7 +19,7 @@ def main():
         'names for generating denovo gene sets. Default to all query objects.',
         default=None, action='store')
 
-    args = parser.parse_args()
+    args = parser.parse_args(options)
 
     config = DAEConfig()
     variants_db = VariantsDb(config)
