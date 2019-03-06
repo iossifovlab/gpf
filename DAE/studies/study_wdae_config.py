@@ -1,3 +1,4 @@
+from builtins import str
 
 
 class StudyWdaeMixin(object):
@@ -315,12 +316,12 @@ class StudyWdaeMixin(object):
             config_section['genotypeBrowser.phenoColumns']
         config_section['genotypeBrowser.previewColumnsSlots'] =\
             cls._get_genotype_browser_column_slots(
-                config_section['genotypeBrowser.genotypeColumns'],
-                config_section['genotypeBrowser.previewColumns'])
+                config_section.get('genotypeBrowser.genotypeColumns', []),
+                config_section.get('genotypeBrowser.previewColumns', []))
         config_section['genotypeBrowser.downloadColumnsSlots'] =\
             cls._get_genotype_browser_column_slots(
-                config_section['genotypeBrowser.genotypeColumns'],
-                config_section['genotypeBrowser.downloadColumns'])
+                config_section.get('genotypeBrowser.genotypeColumns', []),
+                config_section.get('genotypeBrowser.downloadColumns', []))
 
         config_section = cls._combine_dict_options(
             config_section,

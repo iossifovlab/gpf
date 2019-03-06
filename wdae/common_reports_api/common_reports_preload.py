@@ -1,11 +1,14 @@
 from preloaded.register import Preload
-from common_reports.common_report_facade import CommonReportFacade
+
+from datasets_api.datasets_manager import get_datasets_manager
 
 
 class CommonReportsPreload(Preload):
     def __init__(self):
         super(CommonReportsPreload, self).__init__()
-        self.common_report_facade = CommonReportFacade()
+
+        self.common_report_facade =\
+            get_datasets_manager().get_variants_db().common_report_facade
 
     def serialize(self):
         return {}

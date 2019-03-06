@@ -7,7 +7,6 @@ import json
 from collections import OrderedDict
 
 from common_reports.common_report import CommonReportsGenerator
-from common_reports.config import CommonReportsConfigs
 
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
@@ -15,6 +14,9 @@ from studies.study_facade import StudyFacade
 from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
+from studies.factory import VariantsDb
+from configurable_entities.configuration import DAEConfig
+from common_reports.config import CommonReportsQueryObjects
 
 
 def fixtures_dir():
@@ -38,10 +40,11 @@ def expected_output_dir():
 
 
 @pytest.fixture(scope='session')
-def study_definitions():
+def study_definitions(dae_config_fixture):
     return DirectoryEnabledStudiesDefinition(
         studies_dir=studies_dir(),
-        work_dir=fixtures_dir())
+        work_dir=fixtures_dir(),
+        default_conf=dae_config_fixture.default_configuration_conf)
 
 
 @pytest.fixture(scope='session')
@@ -56,11 +59,12 @@ def study_facade(study_factory, study_definitions):
 
 
 @pytest.fixture(scope='session')
-def dataset_definitions(study_facade):
+def dataset_definitions(study_facade, dae_config_fixture):
     return DirectoryEnabledDatasetsDefinition(
         study_facade,
         datasets_dir=datasets_dir(),
-        work_dir=fixtures_dir())
+        work_dir=fixtures_dir(),
+        default_conf=dae_config_fixture.default_configuration_conf)
 
 
 @pytest.fixture(scope='session')
@@ -84,17 +88,18 @@ def load_dataset(dataset_factory, dataset_definitions, dataset_name):
 
 
 @pytest.fixture(scope='session')
-def common_reports_config(study_facade, dataset_facade):
-    common_reports_config = CommonReportsConfigs()
-    common_reports_config.scan_directory(studies_dir(), study_facade)
-    common_reports_config.scan_directory(datasets_dir(), dataset_facade)
+def common_reports_query_objects(dae_config_fixture):
+    vdb = VariantsDb(dae_config_fixture)
+    common_reports_query_objects = CommonReportsQueryObjects(
+        vdb.study_facade, vdb.dataset_facade)
 
-    return common_reports_config
+    return common_reports_query_objects
 
 
 @pytest.fixture(scope='session')
-def common_reports_generator(common_reports_config):
-    common_reports_generator = CommonReportsGenerator(common_reports_config)
+def common_reports_generator(common_reports_query_objects):
+    common_reports_generator = CommonReportsGenerator(
+        common_reports_query_objects)
 
     return common_reports_generator
 
@@ -112,3 +117,9 @@ def output():
         return output
 
     return get_output
+
+
+@pytest.fixture(scope='session')
+def dae_config_fixture():
+    dae_config = DAEConfig(fixtures_dir())
+    return dae_config

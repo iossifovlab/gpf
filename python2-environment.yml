@@ -93,7 +93,7 @@ dependencies:
     - cryptography==2.2.2
     - django==1.11.20
     - django-cors-headers==2.4.0
-    - django-guardian==1.5.0
+    - django-guardian==1.4.9
     - djangorestframework==3.9.1
     - engarde==0.4.0
     - idna==2.6

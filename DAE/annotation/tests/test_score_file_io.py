@@ -182,3 +182,27 @@ def test_iterative_access_with_reset_long_jump_ahead(mocker):
         print(score_io._region_reset.call_args)
         # score_io._region_reset.assert_called_once()
         score_io._region_reset.assert_called_once_with("1:20005")
+
+
+@pytest.mark.parametrize("chrom,pos_start,pos_end,count", [
+    ("7", 20000, 20000, 1),
+    ("7", 19999, 20000, 1),
+    ("7", 19999, 20005, 5),
+])
+def test_iterative_access_with_na_values(chrom, pos_start, pos_end, count):
+    score_filename = relative_to_this_test_folder(
+        "fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz")
+    score_config_filename = None
+    options = Box({}, default_box=True, default_box_attr=None)
+
+    with IterativeAccess(
+            options, score_filename, score_config_filename) as score_io:
+        assert score_io is not None
+
+        res = score_io.fetch_scores_df(chrom, pos_start, pos_end)
+        print(res)
+        assert len(res) == count
+        assert res['chromStart'][0] <= pos_start and \
+            res['chromEnd'][count-1] >= pos_end
+        
+
