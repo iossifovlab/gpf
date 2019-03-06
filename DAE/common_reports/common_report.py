@@ -1,14 +1,13 @@
 from __future__ import unicode_literals
 from __future__ import division
 
+import os
 import pandas as pd
 import numpy as np
 import json
 import itertools
 from collections import defaultdict, OrderedDict
 from copy import deepcopy
-
-from common_reports.config import CommonReportsParseConfig
 
 from variants.attributes import Role, Sex
 from variants.family import FamiliesBase
@@ -622,6 +621,8 @@ class CommonReportsGenerator(object):
                 query_object, filter_info, phenotypes_info, effect_groups,
                 effect_types)
 
+            if not os.path.exists(os.path.dirname(path)):
+                os.makedirs(os.path.dirname(path))
             with open(path, 'w+') as crf:
                 json.dump(common_report.to_dict(), crf)
 
