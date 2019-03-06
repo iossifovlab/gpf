@@ -45,10 +45,12 @@ class ConfigurableEntityDefinition(object):
             ConfigurableEntityDefinition._collect_config_paths(enabled_dir)
 
         for config_path in config_paths:
-
-            configs.append(ConfigurableEntityDefinition.load_entity_config(
+            config = ConfigurableEntityDefinition.load_entity_config(
                 config_path, enabled_dir, configurable_entity_config_class,
-                default_values, default_conf))
+                default_values, default_conf)
+
+            if config:
+                configs.append(config)
 
         self.configs = {config.id: config for config in configs}
 
@@ -75,7 +77,7 @@ class ConfigurableEntityDefinition(object):
             config_path, work_dir, configurable_entity_config_class,
             default_values, default_conf)
 
-        if id in config:
+        if config and id in config:
             self.configs = {config.id: config}
         else:
             self.configs = config
