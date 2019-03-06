@@ -8,6 +8,7 @@ import logging
 from utils.vcf_utils import mat2str
 
 from common.query_base import EffectTypesMixin
+from variants.attributes import Role
 
 LOGGER = logging.getLogger(__name__)
 
