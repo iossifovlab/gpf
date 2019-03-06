@@ -248,7 +248,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         return innermost_cache
 
-    df _get_study_groups(self, study_groups_ids=None):
+    def get_study_groups(self, study_groups_ids=None):
         if study_groups_ids is None:
             study_groups_ids = self.denovo_gene_sets.keys()
         return [
