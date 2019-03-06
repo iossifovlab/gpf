@@ -39,3 +39,4 @@ coverage/
 tmp/
 DAE/pyflakes.report
 test_data
+denovo-cache
