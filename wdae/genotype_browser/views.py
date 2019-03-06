@@ -19,7 +19,6 @@ from helpers.logger import log_filter
 from helpers.logger import LOGGER
 
 import traceback
-import preloaded
 from rest_framework.exceptions import NotAuthenticated
 import json
 # from query_variants import join_line, generate_response
@@ -46,9 +45,6 @@ class QueryBaseView(views.APIView):
         return self.datasets_cache[dataset_id]
 
     def __init__(self):
-        self.datasets = preloaded.register.get('datasets')
-        assert self.datasets is not None
-
         self.dataset_facade = get_datasets_manager().get_dataset_facade()
         # self.dataset_factory = get_datasets_manager().get_dataset_factory()
 
