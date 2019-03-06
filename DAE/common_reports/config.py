@@ -150,3 +150,10 @@ class CommonReportsQueryObjects(object):
             if common_report_config is not None:
                 self.query_objects_with_config[query_object] =\
                     common_report_config
+
+    def filter_query_objects(self, query_objects):
+        self.query_objects_with_config = {
+            qo: c
+            for qo, c in self.query_objects_with_config.items()
+            if qo.name in query_objects
+        }
