@@ -357,6 +357,9 @@ class StudyWrapper(object):
             if measure_filter is None or 'measure' not in measure_filter:
                 continue
 
+            if self.study.pheno_db is None:
+                continue
+
             measure = self.study.pheno_db.get_measure(measure_filter['measure'])
             print(measure_filter)
             measure_filter['domain'] = measure.values_domain.split(",")
