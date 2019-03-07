@@ -8,6 +8,7 @@ import json
 import itertools
 from collections import defaultdict, OrderedDict
 from copy import deepcopy
+# from utils.vcf_utils import mat2str
 
 from variants.attributes import Role, Sex
 from variants.family import FamiliesBase
@@ -329,7 +330,6 @@ class EffectWithFilter(object):
         people_with_parents = families_base.persons_with_parents()
         people_with_parents_ids =\
             set(families_base.persons_id(people_with_parents))
-        print(people_with_parents_ids)
 
         variants = self._get_variants(
             query_object, people_with_filter, people_with_parents_ids,
@@ -385,7 +385,10 @@ class EffectWithFilter(object):
         }
 
         variants = list(query_object.query_variants(**variants_query))
-
+        # for v in variants:
+        #     print(v, v.best_st)
+        #     for aa in v.alt_alleles:
+        #         print(aa, aa.inheritance_in_members, mat2str(aa.gt))
         return variants
 
     def _get_number_of_children_with_event(
