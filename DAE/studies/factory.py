@@ -13,6 +13,8 @@ from common_reports.config import CommonReportsQueryObjects
 from gene.scores import ScoreLoader
 from gene.weights import WeightsLoader
 
+from gene.gene_set_collections import GeneSetsCollections
+
 
 class VariantsDb(object):
 
@@ -47,6 +49,8 @@ class VariantsDb(object):
 
         self.score_loader = ScoreLoader()
         self.weights_loader = WeightsLoader()
+
+        self.gene_sets_collections = GeneSetsCollections(self.dataset_facade)
 
     def get_studies_ids(self):
         return self.studies_definitions.study_ids

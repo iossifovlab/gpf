@@ -44,6 +44,9 @@ class StudiesManager(object):
     def get_weights_loader(self):
         return self.get_variants_db().weights_loader
 
+    def get_gene_sets_collections(self):
+        return self.get_variants_db().gene_sets_collections
+
 
 _studies_manager = None
 
