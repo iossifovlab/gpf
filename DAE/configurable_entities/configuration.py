@@ -56,9 +56,9 @@ class DAEConfig(object):
     DEFAULT_CONFIGURATION_SECTION = 'defaultConfiguration'
 
     def __init__(
-        self, dae_data_dir=None, 
+        self, dae_data_dir=None,
         dae_scores_hg19_dir=None, dae_scores_hg38_dir=None,
-        dae_conf_filename="DAE.conf"):
+            dae_conf_filename="DAE.conf"):
 
         if dae_data_dir is None:
             dae_data_dir = os.environ.get('DAE_DB_DIR', None)
