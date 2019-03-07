@@ -8,10 +8,10 @@ from studies.factory import VariantsDb
 from datasets_api.models import Dataset
 
 
-__all__ = ['get_datasets_manager']
+__all__ = ['get_studies_manager']
 
 
-class DatasetsManager(object):
+class StudiesManager(object):
 
     def __init__(self, dae_config=None):
         if dae_config is None:
@@ -25,13 +25,6 @@ class DatasetsManager(object):
         for dataset_id in self.vdb.get_datasets_ids():
             Dataset.recreate_dataset_perm(dataset_id, [])
 
-    def get_dataset_facade(self):
-        if self.vdb is None:
-            self.reload_dataset()
-            assert self.vdb is not None
-
-        return self.vdb.dataset_facade
-
     def get_variants_db(self):
         if self.vdb is None:
             self.reload_dataset()
@@ -39,12 +32,18 @@ class DatasetsManager(object):
 
         return self.vdb
 
+    def get_dataset_facade(self):
+        return self.get_variants_db().dataset_facade
 
-_datasets_manager = None
+    def get_common_report_facade(self):
+        return self.get_variants_db().common_report_facade
 
 
-def get_datasets_manager():
-    global _datasets_manager
-    if _datasets_manager is None:
-        _datasets_manager = DatasetsManager()
-    return _datasets_manager
+_studies_manager = None
+
+
+def get_studies_manager():
+    global _studies_manager
+    if _studies_manager is None:
+        _studies_manager = StudiesManager()
+    return _studies_manager

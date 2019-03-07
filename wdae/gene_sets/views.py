@@ -15,7 +15,7 @@ from django.http.response import StreamingHttpResponse
 import itertools
 from django.utils.http import urlencode
 
-from datasets_api.datasets_manager import get_datasets_manager
+from datasets_api.studies_manager import get_studies_manager
 from preloaded import register
 from datasets_api.permissions import IsDatasetAllowed
 from users_api.authentication import SessionAuthenticationWithoutCSRF
@@ -27,7 +27,7 @@ class GeneSetsBaseView(views.APIView):
 
     def __init__(self):
         self.gscs = register.get('gene_sets_collections')
-        self.dataset_facade = get_datasets_manager().get_dataset_facade()
+        self.dataset_facade = get_studies_manager().get_dataset_facade()
         print("datasets loaded in view")
 
     def datasets_to_study_groups(self, datasets):
