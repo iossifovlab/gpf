@@ -4,7 +4,6 @@ from builtins import str
 import itertools
 import logging
 import helpers.GeneTerm
-from precompute import register
 from django.http.request import QueryDict
 from studies.helpers import mat2str
 
