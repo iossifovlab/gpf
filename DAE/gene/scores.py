@@ -61,6 +61,18 @@ class ScoreLoader(object):
 
         self._load()
 
+    def get_scores(self):
+        result = []
+
+        for score_name in self.scores:
+            score = self[score_name]
+
+            assert score.df is not None
+
+            result.append(score)
+
+        return result
+
     def _load(self):
         scores = self.config.genomicScores.scores
         names = [s.strip() for s in scores.split(',')]

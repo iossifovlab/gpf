@@ -38,6 +38,9 @@ class StudiesManager(object):
     def get_common_report_facade(self):
         return self.get_variants_db().common_report_facade
 
+    def get_score_loader(self):
+        return self.get_variants_db().score_loader
+
 
 _studies_manager = None
 

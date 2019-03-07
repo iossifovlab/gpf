@@ -5,9 +5,12 @@ from studies.study_facade import StudyFacade
 from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
+
 from common_reports.common_report import CommonReportsGenerator
 from common_reports.common_report_facade import CommonReportFacade
 from common_reports.config import CommonReportsQueryObjects
+
+from gene.scores import ScoreLoader
 
 
 class VariantsDb(object):
@@ -40,6 +43,8 @@ class VariantsDb(object):
             self.common_reports_query_objects)
         self.common_report_facade = CommonReportFacade(
             self.common_reports_query_objects)
+
+        self.score_loader = ScoreLoader()
 
     def get_studies_ids(self):
         return self.studies_definitions.study_ids
