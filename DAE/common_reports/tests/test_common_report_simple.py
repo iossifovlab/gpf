@@ -26,7 +26,6 @@ def test_common_report_simple(common_reports_query_objects):
         config.effect_types)
 
     assert common_report is not None
-    pprint(common_report.to_dict())
 
     assert common_report.denovo_report is not None
     assert len(common_report.denovo_report.tables) == 3
@@ -42,26 +41,34 @@ def test_common_report_simple(common_reports_query_objects):
     assert row0.effect_type == 'Frame-shift'
     assert len(row0.row) == 2
 
-    cell0 = row0.row[0]
-    assert cell0.column == 'sib'
-    assert cell0.number_of_observed_events == 0
-    assert cell0.number_of_children_with_event == 0
+    cells = sorted(
+        row0.row,
+        key=lambda c: c.column)
 
-    cell1 = row0.row[1]
-    assert cell1.column == 'prb'
-    assert cell1.number_of_observed_events == 2
-    assert cell1.number_of_children_with_event == 2
+    cell = cells[0]
+    assert cell.column == 'prb'
+    assert cell.number_of_observed_events == 2
+    assert cell.number_of_children_with_event == 2
+
+    cell = cells[1]
+    assert cell.column == 'sib'
+    assert cell.number_of_observed_events == 0
+    assert cell.number_of_children_with_event == 0
 
     assert row1.effect_type == 'Missense'
     assert len(row1.row) == 2
 
-    cell0 = row1.row[0]
-    assert cell0.column == 'sib'
-    assert cell0.number_of_observed_events == 1
-    assert cell0.number_of_children_with_event == 1
+    cells = sorted(
+        row1.row,
+        key=lambda c: c.column)
 
-    cell1 = row1.row[1]
-    assert cell1.column == 'prb'
-    assert cell1.number_of_observed_events == 2
-    assert cell1.number_of_children_with_event == 1
+    cell = cells[0]
+    assert cell.column == 'prb'
+    assert cell.number_of_observed_events == 2
+    assert cell.number_of_children_with_event == 1
+
+    cell = cells[1]
+    assert cell.column == 'sib'
+    assert cell.number_of_observed_events == 1
+    assert cell.number_of_children_with_event == 1
 
