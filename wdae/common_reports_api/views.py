@@ -8,17 +8,14 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-import preloaded
+from datasets_api.studies_manager import get_studies_manager
 
 
 class StudiesSummariesView(APIView):
 
     def __init__(self):
-        register = preloaded.register
-        self.common_reports = register.get('common_reports')
-        assert self.common_reports is not None
-
-        self.common_reports_facade = self.common_reports.get_facade()
+        self.common_reports_facade =\
+            get_studies_manager().get_common_report_facade()
 
     def get_studies_summaries(self, common_reports):
         return {
@@ -63,11 +60,8 @@ class StudiesSummariesView(APIView):
 class VariantReportsView(APIView):
 
     def __init__(self):
-        register = preloaded.register
-        self.common_reports = register.get('common_reports')
-        assert self.common_reports is not None
-
-        self.common_reports_facade = self.common_reports.get_facade()
+        self.common_reports_facade =\
+            get_studies_manager().get_common_report_facade()
 
     def get_studies_info(self, common_reports):
         return [
