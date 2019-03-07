@@ -108,7 +108,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
             pedigree_selector = self._get_att_from_config(
                 study_config, 'pedigreeSelector')
-            print(pedigree_selector)
+
             if not pedigree_selector:
                 continue
             self.denovo_gene_sets[config.id] = {
@@ -165,7 +165,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return self.get_gene_sets()
 
     def _load_cache_from_pickle(self, build_cache=False):
-        study_groups = self._get_study_groups()
+        study_groups = self.get_study_groups()
         for study_group in study_groups:
             cache_dir = study_group.gene_sets_cache_file()
             if not os.path.exists(cache_dir):
@@ -179,7 +179,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             self.cache[study_group.id] = self._load_cache(study_group)
 
     def build_cache(self, study_group_ids=None):
-        for study_group in self._get_study_groups(study_group_ids):
+        for study_group in self.get_study_groups(study_group_ids):
             study_group_cache = self._generate_gene_sets_for(study_group)
             self._save_cache(study_group, study_group_cache)
 
@@ -248,7 +248,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         return innermost_cache
 
-    def _get_study_groups(self, study_groups_ids=None):
+    def get_study_groups(self, study_groups_ids=None):
         if study_groups_ids is None:
             study_groups_ids = self.denovo_gene_sets.keys()
         return [
@@ -261,7 +261,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             {
                 'studyGroupId': study_group.name,
             }
-            for study_group in self._get_study_groups()
+            for study_group in self.get_study_groups()
             if permitted_study_groups is None or
             study_group.name in permitted_study_groups
         ]
