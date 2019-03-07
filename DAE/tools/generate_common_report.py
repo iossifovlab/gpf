@@ -31,10 +31,10 @@ def main(dae_config=None):
     if args.show_studies:
         for query_object in\
                 common_reports_query_objects.query_objects_with_config.keys():
-            print(query_object.name)
+            print(query_object.id)
     else:
         if args.studies:
-            query_objects = args.query_objects.split(',')
+            query_objects = args.studies.split(',')
             common_reports_query_objects.filter_query_objects(query_objects)
 
         crg = CommonReportsGenerator(common_reports_query_objects)
