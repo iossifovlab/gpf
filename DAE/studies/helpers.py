@@ -246,12 +246,13 @@ def get_variants_web_preview(
     rows = transform_variants_to_lists(
         variants, genotype_attrs, pedigree_attrs, pedigree_selectors,
         selected_pedigree_selector)
-    count = min(max_variants_count, VARIANTS_HARD_MAX)
+    max_variants_count = min(max_variants_count, VARIANTS_HARD_MAX)
 
-    limited_rows = itertools.islice(rows, count)
+    limited_rows = itertools.islice(rows, max_variants_count)
+    limited_rows = list(limited_rows)
 
-    if count <= max_variants_count:
-        count = str(count)
+    if len(limited_rows) <= max_variants_count:
+        count = str(len(limited_rows))
     else:
         count = 'more than {}'.format(max_variants_count)
 
