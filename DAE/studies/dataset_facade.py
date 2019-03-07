@@ -6,10 +6,11 @@ class DatasetFacade(object):
     _dataset_cache = {}
     _dataset_wrapper_cache = {}
 
-    def __init__(self, dataset_definitions, dataset_factory):
+    def __init__(self, dataset_definitions, dataset_factory, pheno_factory):
 
         self.dataset_definition = dataset_definitions
         self.dataset_factory = dataset_factory
+        self.pheno_factory = pheno_factory
 
     def get_dataset(self, dataset_id):
         self.load_cache({dataset_id})
@@ -72,4 +73,5 @@ class DatasetFacade(object):
 
         dataset = self.dataset_factory.make_dataset(conf)
         self._dataset_cache[dataset_id] = dataset
-        self._dataset_wrapper_cache[dataset_id] = StudyWrapper(dataset)
+        self._dataset_wrapper_cache[dataset_id] = StudyWrapper(
+            dataset, self.pheno_factory)

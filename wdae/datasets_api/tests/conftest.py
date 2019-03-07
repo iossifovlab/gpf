@@ -4,6 +4,7 @@ import os
 import pytest
 from box import Box
 
+from pheno.pheno_factory import PhenoFactory
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
 from studies.study_facade import StudyFacade
@@ -44,9 +45,10 @@ def study_definitions(dae_config_fixture):
 
 
 @pytest.fixture(scope='session')
-def study_facade(study_factory, study_definitions):
+def study_facade(study_factory, study_definitions, pheno_factory):
     return StudyFacade(
-        study_factory=study_factory, study_definition=study_definitions)
+        pheno_factory, study_factory=study_factory,
+        study_definition=study_definitions)
 
 
 @pytest.fixture(scope='session')
@@ -64,13 +66,18 @@ def dataset_factory(study_facade):
 
 
 @pytest.fixture(scope='session')
-def dataset_facade(dataset_definitions, dataset_factory):
-    return DatasetFacade(dataset_definitions, dataset_factory)
+def dataset_facade(dataset_definitions, dataset_factory, pheno_factory):
+    return DatasetFacade(dataset_definitions, dataset_factory, pheno_factory)
 
 
 @pytest.fixture(scope='session')
 def dataset_view(dataset_facade):
     return DatasetView(dataset_facade)
+
+
+@pytest.fixture(scope='session')
+def pheno_factory():
+    return PhenoFactory()
 
 
 @pytest.fixture(scope='session')
