@@ -16,8 +16,8 @@ def test_conf_to_dict():
 
     with open(config_name, 'r') as conf_file:
         conf = conf_to_dict(conf_file)
-    assert conf['header'].split(',') == expected_header
-    assert conf['columns']['score'].split(',') == expected_header[3:]
+    assert conf['header'] == expected_header
+    assert conf['columns']['score'] == expected_header[3:]
     assert all([col in conf['schema'].columns for col in expected_header])
 
 

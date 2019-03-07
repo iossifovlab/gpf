@@ -19,11 +19,8 @@ from annotation.tools.schema import Schema
 
 def conf_to_dict(path):
 
-    def items_to_dict(conf_items):
-        return {key: val.replace('\n', '')
-                        .replace(' ', '')
-                        .replace('\t', '')
-                for key, val in conf_items}
+    def split_and_strip(input_list, delim=','):
+        return list(map(str.strip, input_list.split(delim)))
 
     conf_parser = ConfigParser()
     conf_parser.optionxform = str
@@ -32,12 +29,16 @@ def conf_to_dict(path):
     assert 'general' in conf_parser
     assert 'columns' in conf_parser
     assert 'schema' in conf_parser
-    conf_settings = \
-        items_to_dict(conf_parser.items('general'))
-    conf_settings['columns'] = \
-        items_to_dict(conf_parser.items('columns'))
+
+    conf_settings = dict(conf_parser.items('general'))
+    conf_settings['columns'] = dict(conf_parser.items('columns'))
     conf_settings['schema'] = \
-        Schema.from_dict(items_to_dict(conf_parser.items('schema')))
+        Schema.from_dict(dict(conf_parser.items('schema')))
+
+    conf_settings['header'] = split_and_strip(conf_settings['header'])
+    conf_settings['columns']['score'] = \
+        split_and_strip(conf_settings['columns']['score'])
+
     return conf_settings
 
 
@@ -98,18 +99,11 @@ class ScoreFile(TabixReader):
     def _setup_config(self, score_config):
         self.config = score_config
 
-        if self.config.header:
-            self.config.header = self.config.header.split(',')
-        else:
-            print('ERROR: Missing header in score {} config.'
-                  .format(self.filename),
-                  file=sys.stderr)
-            sys.exit(-1)
+        assert self.config.header, self.filename
 
         if self.config.columns.pos_end is None:
             self.config.columns.pos_end = self.config.columns.pos_begin
 
-        self.config.columns.score = self.config.columns.score.split(',')
         self.score_names = self.config.columns.score
 
     def _fetch(self, chrom, pos_begin, pos_end):
