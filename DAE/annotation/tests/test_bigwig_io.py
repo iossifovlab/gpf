@@ -56,6 +56,9 @@ def test_bigwig_access_simple():
                     reason='pyBigWig module is not installed')
 def test_bigwig_line_adapter():
     bwline = BigWigLineAdapter('chr1', [0, 1, 0.1234])
+
     assert bwline.chrom == 'chr1'
     assert bwline.pos_begin == 1
     assert bwline.pos_end == 1
+
+    assert bwline[1] == bwline.pos_begin

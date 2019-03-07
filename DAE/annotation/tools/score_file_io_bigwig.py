@@ -29,6 +29,8 @@ class BigWigLineAdapter(LineAdapter):
     def __getitem__(self, index):
         if index == 0:
             return self.chromosome
+        elif index == 1:
+            return self.pos_begin  # return 1-based start position
         else:
             return self.line[index - 1]
 
