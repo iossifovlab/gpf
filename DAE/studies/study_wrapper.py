@@ -337,4 +337,31 @@ class StudyWrapper(object):
 
         config = self._get_dataset_config_options(config)
 
-        return {key: config.get(key, None) for key in keys}
+        result = {key: config.get(key, None) for key in keys}
+
+        self._augment_pheno_filters_domain(result)
+
+        return result
+
+    def _augment_pheno_filters_domain(self, dataset_description):
+        genotype_browser = dataset_description.get('genotypeBrowser', None)
+        if not genotype_browser:
+            return
+
+        pheno_filters = genotype_browser.get('phenoFilters', None)
+        if not pheno_filters:
+            return
+
+        for pheno_filter in pheno_filters:
+            measure_filter = pheno_filter.get('measureFilter', None)
+            if measure_filter is None or 'measure' not in measure_filter:
+                continue
+
+            if self.study.pheno_db is None:
+                continue
+
+            measure = self.study.pheno_db.get_measure(measure_filter['measure'])
+            print(measure_filter)
+            measure_filter['domain'] = measure.values_domain.split(",")
+
+
