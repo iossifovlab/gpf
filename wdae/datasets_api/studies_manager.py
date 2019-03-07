@@ -41,6 +41,9 @@ class StudiesManager(object):
     def get_score_loader(self):
         return self.get_variants_db().score_loader
 
+    def get_weights_loader(self):
+        return self.get_variants_db().weights_loader
+
 
 _studies_manager = None
 

@@ -11,6 +11,7 @@ from common_reports.common_report_facade import CommonReportFacade
 from common_reports.config import CommonReportsQueryObjects
 
 from gene.scores import ScoreLoader
+from gene.weights import WeightsLoader
 
 
 class VariantsDb(object):
@@ -45,6 +46,7 @@ class VariantsDb(object):
             self.common_reports_query_objects)
 
         self.score_loader = ScoreLoader()
+        self.weights_loader = WeightsLoader()
 
     def get_studies_ids(self):
         return self.studies_definitions.study_ids
