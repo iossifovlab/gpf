@@ -329,6 +329,7 @@ class EffectWithFilter(object):
         people_with_parents = families_base.persons_with_parents()
         people_with_parents_ids =\
             set(families_base.persons_id(people_with_parents))
+        print(people_with_parents_ids)
 
         variants = self._get_variants(
             query_object, people_with_filter, people_with_parents_ids,

@@ -88,10 +88,15 @@ def load_dataset(dataset_factory, dataset_definitions, dataset_name):
 
 
 @pytest.fixture(scope='session')
-def common_reports_query_objects(dae_config_fixture):
+def vdb_fixture(dae_config_fixture):
     vdb = VariantsDb(dae_config_fixture)
+    return vdb
+
+
+@pytest.fixture(scope='session')
+def common_reports_query_objects(vdb_fixture):
     common_reports_query_objects = CommonReportsQueryObjects(
-        vdb.study_facade, vdb.dataset_facade)
+        vdb_fixture.study_facade, vdb_fixture.dataset_facade)
 
     return common_reports_query_objects
 
