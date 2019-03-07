@@ -10,7 +10,7 @@ FILTER_QUERY_CATEGORICAL = {
     "role": "prb",
     "measure": "instrument1.categorical",
     "selection": {
-        "values": ["option2"]
+        "selection": ["option2"]
     }
 }
 
@@ -66,27 +66,27 @@ def test_query_with_pheno_filters_work(quads_f1_dataset_wrapper, pheno_query):
 def test_query_with_pheno_filters_and_people_ids_filter(
         quads_f1_dataset_wrapper):
     pheno_query = [FILTER_QUERY_CONTINUOUS]
-    print(type(quads_f1_dataset_wrapper))
+
     variants = quads_f1_dataset_wrapper\
-        .query_variants(phenoFilters=pheno_query, people_ids=['mom1'])
+        .query_variants(phenoFilters=pheno_query, person_ids=['mom1'])
     variants = list(variants)
 
     assert len(variants) == 0
 
 
-def test_query_with_bogus_pheno_filters_raises(quads_f1_dataset_wrapper):
+def test_query_with_bogus_pheno_filters_is_ignored(quads_f1_dataset_wrapper):
     pheno_query = [FILTER_QUERY_BOGUS]
 
     variants = quads_f1_dataset_wrapper \
-        .query_variants(phenoFilters=pheno_query, people_ids=['mom1'])
+        .query_variants(phenoFilters=pheno_query)
     variants = list(variants)
     assert len(variants) == 0
 
 
-def test_query_with_query_not_in_config(quads_f1_dataset_wrapper):
+def test_query_with_query_not_in_config_passes(quads_f1_dataset_wrapper):
     pheno_query = [FILTER_QUERY_ORDINAL]
     variants = quads_f1_dataset_wrapper \
         .query_variants(phenoFilters=pheno_query)
     variants = list(variants)
 
-    assert len(variants) == 0
+    assert len(variants) == 2
