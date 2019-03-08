@@ -4,12 +4,13 @@ Created on Aug 23, 2016
 @author: lubo
 '''
 from __future__ import unicode_literals
+import os
 
-from Config import Config
 import reusables
 from box import ConfigBox
 # import traceback
 
+from configurable_entities.configuration import DAEConfig
 
 class PhenoConfig(ConfigBox):
 
@@ -22,6 +23,23 @@ class PhenoConfig(ConfigBox):
             verify=True,
             defaults={
                 'wd': dae_config.dae_data_dir,
+            })
+
+        return PhenoConfig(conf)
+
+    @staticmethod
+    def from_file(filename=None):
+        if filename is None:
+            dae_config = DAEConfig()
+            return PhenoConfig.from_dae_config(dae_config)
+
+        wd = os.path.dirname(filename)
+        conf = reusables.config_dict(
+            filename,
+            auto_find=False,
+            verify=True,
+            defaults={
+                'wd': wd,
             })
 
         return PhenoConfig(conf)

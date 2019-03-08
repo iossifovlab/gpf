@@ -49,10 +49,10 @@ class VariantsDb(object):
         # self.common_report_facade = CommonReportFacade(
         #     self.common_reports_query_objects)
 
-        self.score_loader = ScoreLoader()
-        self.weights_loader = WeightsLoader()
+        # self.score_loader = ScoreLoader()
+        # self.weights_loader = WeightsLoader()
 
-        self.gene_sets_collections = GeneSetsCollections(self.dataset_facade)
+        # self.gene_sets_collections = GeneSetsCollections(self.dataset_facade)
 
     def get_studies_ids(self):
         return self.studies_definitions.study_ids
