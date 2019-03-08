@@ -19,7 +19,7 @@ output
 *.swp
 gpf-html.tar.gz
 .pytest_cache
-*.parquet
+# *.parquet
 /gpf-html.tar.gz
 .pytest_cache
 metastore_db

@@ -295,6 +295,8 @@ class SummaryVariant(VariantBase):
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
 
+        self._matched_alleles = [a.allele_index for a in alleles]
+
         if not alleles[0].is_reference_allele:
             ref_allele = SummaryAllele.create_reference_allele(alleles[0])
             alleles = list(itertools.chain([ref_allele], alleles))

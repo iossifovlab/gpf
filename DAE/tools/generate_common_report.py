@@ -13,11 +13,11 @@ def main(dae_config=None):
     parser = argparse.ArgumentParser(description=description)
 
     parser.add_argument(
-        '--show_query_objects', help='This option will print available query '
-        'objects (datasets and studies) names', default=False,
+        '--show-studies', help='This option will print available '
+        'datasets and studies names', default=False,
         action='store_true')
     parser.add_argument(
-        '--query_objects', help='Specify query objects (datasets and studies) '
+        '--studies', help='Specify datasets and studies '
         'names for generating common report. Default to all query objects.',
         default=None, action='store')
 
@@ -28,13 +28,13 @@ def main(dae_config=None):
     common_reports_query_objects = CommonReportsQueryObjects(
         vdb.study_facade, vdb.dataset_facade)
 
-    if args.show_query_objects:
+    if args.show_studies:
         for query_object in\
                 common_reports_query_objects.query_objects_with_config.keys():
-            print(query_object.name)
+            print(query_object.id)
     else:
-        if args.query_objects:
-            query_objects = args.query_objects.split(',')
+        if args.studies:
+            query_objects = args.studies.split(',')
             common_reports_query_objects.filter_query_objects(query_objects)
 
         crg = CommonReportsGenerator(common_reports_query_objects)

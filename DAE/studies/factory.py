@@ -20,7 +20,6 @@ class VariantsDb(object):
 
     def __init__(self, dae_config, thrift_connection=None):
         self.dae_config = dae_config
-
         self.studies_definitions = DirectoryEnabledStudiesDefinition(
             studies_dir=dae_config.studies_dir,
             work_dir=dae_config.dae_data_dir,
@@ -28,7 +27,7 @@ class VariantsDb(object):
 
         study_factory = StudyFactory(thrift_connection)
 
-        self.pheno_factory = PhenoFactory()
+        self.pheno_factory = PhenoFactory(dae_config=dae_config)
 
         self.study_facade = StudyFacade(
             self.pheno_factory, self.studies_definitions, study_factory)
@@ -43,17 +42,17 @@ class VariantsDb(object):
         self.dataset_facade = DatasetFacade(
             self.datasets_definitions, self.dataset_factory, self.pheno_factory)
 
-        self.common_reports_query_objects = CommonReportsQueryObjects(
-            self.study_facade, self.dataset_facade)
-        self.common_reports_generator = CommonReportsGenerator(
-            self.common_reports_query_objects)
-        self.common_report_facade = CommonReportFacade(
-            self.common_reports_query_objects)
+        # self.common_reports_query_objects = CommonReportsQueryObjects(
+        #     self.study_facade, self.dataset_facade)
+        # self.common_reports_generator = CommonReportsGenerator(
+        #     self.common_reports_query_objects)
+        # self.common_report_facade = CommonReportFacade(
+        #     self.common_reports_query_objects)
 
-        self.score_loader = ScoreLoader()
-        self.weights_loader = WeightsLoader()
+        # self.score_loader = ScoreLoader()
+        # self.weights_loader = WeightsLoader()
 
-        self.gene_sets_collections = GeneSetsCollections(self.dataset_facade)
+        # self.gene_sets_collections = GeneSetsCollections(self.dataset_facade)
 
     def get_studies_ids(self):
         return self.studies_definitions.study_ids
@@ -73,8 +72,8 @@ class VariantsDb(object):
     def get_datasets_ids(self):
         return self.datasets_definitions.dataset_ids
 
-    def get_datasets_names(self):
-        return self.datasets_definitions.get_all_dataset_names()
+    # def get_datasets_names(self):
+    #     return self.datasets_definitions.get_all_dataset_names()
 
     def get_dataset_config(self, dataset_id):
         return self.datasets_definitions.get_dataset_config(dataset_id)

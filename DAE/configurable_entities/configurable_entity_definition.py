@@ -7,6 +7,7 @@ import abc
 
 class ConfigurableEntityDefinition(object):
     __metaclass__ = abc.ABCMeta
+    ENABLED_DIR = '.'
 
     # configs = {}
 
@@ -88,9 +89,7 @@ class ConfigurableEntityDefinition(object):
             default_values={}, default_conf=None):
         config = configurable_entity_config_class.read_config(
             config_file, work_dir, default_values, default_conf)
-
         config['config_file'] = config_file
-
         entity_config = configurable_entity_config_class.from_config(config)
 
         return entity_config
