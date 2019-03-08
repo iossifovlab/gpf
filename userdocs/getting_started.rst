@@ -20,7 +20,7 @@ If you are using Ubuntu, you can run:
 Clone the GPF Repository
 ########################
 
-To start using GPF system you need to clone the GPF source code repository
+To start using the GPF system, you need to clone the GPF source code repository
 from Github:
 
 .. code-block:: bash
@@ -47,7 +47,7 @@ Download Anaconda from  Anaconda distribution page (https://www.anaconda.com/dis
 
     wget -c https://repo.anaconda.com/archive/Anaconda3-2018.12-Linux-x86_64.sh
 
-and install it in your local environment following the installer instructions:
+and install it in your local environment, following the installer instructions:
 
 .. code-block:: bash
 
@@ -56,7 +56,7 @@ and install it in your local environment following the installer instructions:
 Create GPF environment
 **********************
 
-Most of dependencies for GPF are described into Anaconda environmet description
+Most of the dependencies for GPF are described in Anaconda environment description
 files located inside of the GPF source repository:
 
 .. code-block:: bash
@@ -64,14 +64,14 @@ files located inside of the GPF source repository:
     gpf/python2-environment.yml
     gpf/python3-environment.yml
 
-You can use these files to create an GPF python development environment.
-For example if you want to create Python 3 development conda environment, use:
+You can use these files to create a GPF Python development environment.
+For example, if you want to create a Python 3 development conda environment, use:
 
 .. code-block:: bash
 
     conda env create -n gpf3 -f gpf/python3-environment.yml
 
-To use this environment you need to execute the following command:
+To use this environment, you need to execute the following command:
 
 .. code-block:: bash
 
@@ -84,13 +84,13 @@ Install ``pyarrow`` and ``pandas`` from Anaconda ``conda-forge`` channel:
     conda install -c conda-forge pyarrow pandas
 
 
-Additionally you will need to install `cyvcf2`. To this end clone this repo:
+Additionally, you will need to install `cyvcf2`. Clone the following repository:
 
 .. code-block:: bash
 
     git clone https://github.com/seqpipe/cyvcf2.git
 
-Enter inside `cyvcf2` directory and run pip install:
+Enter the `cyvcf2` directory and run pip install:
 
 .. code-block:: bash
 
@@ -102,7 +102,7 @@ Enter inside `cyvcf2` directory and run pip install:
 Install Spark
 +++++++++++++
 
-After creating a GPF environmet you should have Java JDK 8 installed into your
+After creating a GPF environment, you should have Java JDK 8 installed in your
 environment. Since Apache Spark runs on Java JDK 8, please verify your
 version of Java JDK:
 
@@ -110,7 +110,7 @@ version of Java JDK:
 
     java -version
 
-should display something similar to the following:
+...which should display something similar to the following:
 
 .. code-block:: bash
 
@@ -119,7 +119,7 @@ should display something similar to the following:
     OpenJDK 64-Bit Server VM (build 25.152-b12, mixed mode)
 
 
-Download Apache Spark distribution and unarchive it:
+Download Apache Spark distribution and extract it:
 
 .. code-block:: bash
 
@@ -137,12 +137,12 @@ Start Apache Spark Thrift server:
 Get Startup Data Instance [WIP]
 ###############################
 
-To start working with GPF you will need a startup data instance. There are
+To start working with GPF, you will need a startup data instance. There are
 two GPF startup instances that are aligned with different versions of the
-reference Humman genome - for HG19 and HG38.
+reference human genome - for HG19 and HG38.
 
-If you plan to work with variants alligned to HG19 reference genome, you
-will need `data-hg19-startup` instance. To get it you will need rsync:
+If you plan to work with variants aligned to the HG19 reference genome, you
+will need a `data-hg19-startup` instance:
 
 .. code-block:: bash
 
@@ -153,14 +153,14 @@ This command will copy the necessary data into your working directory.
 
 .. note::
 
-    To make changes into this repo would be better to use::
+    If you intend to make changes in this repo, it would be better to use::
 
         rsync -avPHt -e "ssh -p 2020" \
             seqpipe@nemo.seqpipe.org:repo/data-hg19-startup .
 
 .. note::
 
-    This data is available on `wigclust` into following directory::
+    This data is available on `wigclust` in the following directory::
 
         /mnt/wigclust21/data/safe/chorbadj/GPF/data-hg19-startup
 
@@ -172,17 +172,17 @@ This command will copy the necessary data into your working directory.
 Get Genomic Scores Database [TBD]
 #################################
 
-To annotate variants with genomic scores you will need this genomic scores.
+To annotate variants with genomic scores you will need a genomic scores database.
 
-There are two genomic scores databases aligned to both reference genomes HG19
+There are two genomic scores databases - aligned to reference genomes HG19
 and HG38.
 
-You can download full set of genomic scores databases or choose to download
+You can download the full set of genomic scores or choose to download
 only specific genomic scores you are interested in.
 
 .. note::
 
-    At the moment this data is available on `wigclust` into following
+    At the moment this data is available on `wigclust` in the following
     directories::
 
         /mnt/wigclust21/data/safe/chorbadj/genomics-scores/genomic-scores-hg19
@@ -192,7 +192,7 @@ only specific genomic scores you are interested in.
 Update `setenv.sh` Script
 #########################
 
-Inside GPF source directory there is a file named
+Inside the GPF source directory, there is a file named
 ``setenv_template.sh``:
 
 .. code-block:: bash
@@ -200,13 +200,13 @@ Inside GPF source directory there is a file named
     # specifies where Apache Spark is installed
     export SPARK_HOME=<path to spark distribution>/spark-2.4
 
-    # configure paths to genomics scores databases
+    # configure paths to genomic scores databases
     export DAE_GENOMIC_SCORES_HG19=<path to>/genomic-scores-hg19
     export DAE_GENOMIC_SCORES_HG38=<path to>/genomic-scores-hg38
 
-    # specifies where is the source directory for GPF DAE
+    # specifies where the source directory for GPF DAE is
     export DAE_SOURCE_DIR=<path to gpf>/gpf/DAE
-    # specifies the location of GPF data instance
+    # specifies the location of the GPF data instance
     export DAE_DB_DIR=<path to work data>/data-hg19
 
     # activates GPF conda environment
@@ -215,8 +215,8 @@ Inside GPF source directory there is a file named
     # setups GPF paths
     source $DAE_SOURCE_DIR/setenv.sh
 
-You shoud copy it as ``setenv.sh`` file and edit it according you own setup.
-When you are ready you need to source your ``setenv.sh`` file:
+You should copy it as a separate file named ``setenv.sh`` and edit it according you own setup.
+When you are ready, you need to source your ``setenv.sh`` file:
 
 .. code-block:: bash
 
@@ -235,61 +235,61 @@ Initial Setup of GPF Web UI
 
 Initial setup of GPF Web UI requires several steps:
 
-* Inital setup of the local database to serve GFP Web UI. Since GPF Web UI is
-    an Django application, it uses ``sqlite3`` for development purposes.
-    To setup it go into ``gpf/wdae`` directory and run migrations::
+* Initial setup of the local database to serve GFP Web UI. Since GPF Web UI is
+    a Django application, it uses ``sqlite3`` for development purposes.
+    To set it up, enter the ``gpf/wdae`` directory and run migrations::
 
         cd gpf/wdae
         ./manage.py migrate
 
-* Next step is to create development users. To this end from inside
-    ``gpf/wdae`` directory run ``create_dev_users.sh``::
+* The next step is to create development users. Enter the
+    ``gpf/wdae`` directory and run ``create_dev_users.sh``::
 
         ./create_dev_users.sh
 
-    This scripts creates two users for development purposes that are
-    ``admin@iossifovlab.com`` and ``researche@iossifovlab.com`` that have
-    password ``secret``.
+    This script creates two users for development purposes -
+    ``admin@iossifovlab.com`` and ``researche@iossifovlab.com``. The
+    password for both users is ``secret``.
 
 
 Start GPF Web UI
 ++++++++++++++++
 
-To start the GPF Web UI you need to run Django development server. To this end
-enter into ``gpf/wdae`` directory and run::
+To start the GPF Web UI, you need to run the Django development server. Enter the
+``gpf/wdae`` directory and run::
 
         ./manage.py runserver 0.0.0.0:8000
 
 
-To check that everything works you can open following URL in your browser::
+To check that everything works, you can open following URL in your browser::
 
     http://localhost:8000
 
 .. note::
     If you run the development server on a computer that is different from your
-    host machine, the you should replace `localhost` with the name or IP of your
+    host machine, you should replace `localhost` with the name or IP of your
     server.
 
 
 Import a Demo Dataset
 #####################
 
-In the GPF startup data instance there are a couple demo studies:
+In the GPF startup data instance there are a couple of demo studies:
 
-    * `quad` with couple of variants into single quad family
-    * `multi` with couple of variants into multigenerational family
+    * `quad` with a couple of variants in a single quad family
+    * `multi` with a couple of variants in a multigenerational family
 
 .. note::
-    You can download some more publicly available studies, prepared to be
-    included into GPF startup data instance.
+    You can download some more publicly available studies, which are prepared to be
+    included into the GPF startup data instance.
 
-To demonstrate how to import new study data into the GPF data instance we
-will reproduce the neccessary step for importing `quad` study data.
+To demonstrate how to import new study data into the GPF data instance, we
+will reproduce the necessary steps for importing the `quad` study data.
 
 Import a VCF Dataset
 ++++++++++++++++++++
 
-The example data is located into GPF startup data instance::
+The example data is located in the GPF startup data instance::
 
     cd data-hg19-startup/studies/quad/
 
@@ -308,7 +308,7 @@ This directory has the following structure::
     ├── quad.ped
     └── quad.vcf
 
-The source data required for import consists of:
+The source data required for an import consists of:
 
 *   a pedigree file, describing the family structure and inheritance
     relationships between sampled individuals; the ``quad.ped`` pedigree
@@ -320,8 +320,8 @@ The source data required for import consists of:
         f1       prb1     dad1     mom1     1        2        prb      autism
         f1       sib1     dad1     mom1     2        2        sib      autism
 
-*   a VCF file containing variants; the example variants file ``quad.vcf``
-    content is::
+*   a VCF file containing variants; the content of the example variants file ``quad.vcf``
+    is::
 
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">   
@@ -331,24 +331,24 @@ The source data required for import consists of:
         1        11539    .        T        G        .        .        .        GT       0/1      0/0      0/1      0/0
         2        11540    .        T        G        .        .        .        GT       0/0      0/1      0/1      0/0
 
-Importing this data into GPF data instance means that you need to convert
-pedigree and VCF data into Apache Parquet format and annotate them with variant
+Importing this data into the GPF data instance means that you need to convert
+pedigree and VCF data into the Apache Parquet format and annotate them with variant
 effects and genomic scores. The default configuration for the annotation is
-located into GPF data instance. In the case of GPF startup data instance the
+located in the GPF data instance. In the case of the GPF startup data instance, the
 annotation configuration file is::
 
     data-hg19-startup/annotation.conf
 
-The tool for converting VCF data into Apache Parquet file format is
+The tool for converting VCF data to the Apache Parquet file format is
 ``vcf2parquet``. To run it you need to specify the pedigree file and the VCF
-file you are converting. Also you need to specify where the tool should store
+file you are converting. Additionally, you need to specify where the tool should store
 the result files::
 
     cd data-hg19-startup/studies/quad/
     mkdir out
     vcf2parquet.py vcf quad.ped quad.vcf -o out/
 
-After this command is finished the result data should be stored into ``out/``
+After this command is finished, the result data should be stored in the ``out/``
 directory::
 
     out/
@@ -371,15 +371,15 @@ Minimal configuration for the newly imported data is as follows::
     file_format = thrift
     phenotypes = autism
 
-The ``id`` of the study should be unique into the GPF data instance,
+The ``id`` of the study should be unique in the GPF data instance,
 ``name`` is a human readable name of the study that will be used to display
-the study into GPF web UI.
+the study in the GPF web UI.
 
 .. todo::
 
-    At the moment the GPF web UI works only with datasets and so you need
-    to configure a minimal dataset representing ``quad`` study. To this
-    end you will neead a ``quad.conf`` file inside
+    At the moment the GPF web UI works only with datasets, so you need
+    to configure a minimal dataset representing the ``quad`` study. For this,
+    you will need a ``quad.conf`` file inside
     ``data-hg19-startup/datasets``::
 
         [dataset]
@@ -393,16 +393,16 @@ the study into GPF web UI.
 Generate Variant Reports (optional)
 +++++++++++++++++++++++++++++++++++
 
-To generate families and de Novo variants report you should use
-`generate_common_reports.py`. This tool supports option `--show-studies` to
+To generate families and de Novo variants report, you should use
+`generate_common_reports.py`. This tool supports the option `--show-studies` to
 list all studies and datasets configured in the GPF instance::
 
     generate_common_reports.py --show-studies
 
-To generate the families and variants reports for given configured study
-or dataset you
-should use `--studies` option. For example to generate the families and
-variants reports for the `quad` study you should use::
+To generate the families and variants reports for a given configured study
+or dataset, you
+should use `--studies` option. For example, to generate the families and
+variants reports for the `quad` study, you should use::
 
     generate_common_reports.py --studies quad
 
@@ -410,16 +410,16 @@ variants reports for the `quad` study you should use::
 Generate Denovo Gene Sets (optional)
 ++++++++++++++++++++++++++++++++++++
 
-To generate de Novo Gene sets you should use `generate_denovo_gene_sets.py`
-tools. This tool supports option  `--show-studies` to
+To generate de Novo Gene sets, you should use the `generate_denovo_gene_sets.py`
+tool. This tool supports the option  `--show-studies` to
 list all studies and datasets configured in the GPF instance::
 
     generate_denovo_gene_sets.py --show-studies
 
-To generate the de Novo gene sets for given configured study
-or dataset you
-should use `--studies` option. For example to generate the families and
-variants reports for the `quad` study you should use::
+To generate the de Novo gene sets for a given configured study
+or dataset, you
+should use `--studies` option. For example, to generate the de Novo
+gene sets for the `quad` study, you should use::
 
     generate_denovo_gene_sets.py --studies quad
 
@@ -427,7 +427,7 @@ variants reports for the `quad` study you should use::
 Start GPF Web UI
 ++++++++++++++++
 
-After importing new study into GPF data instance you need to restart the
+After importing a new study into the GPF data instance, you need to restart the
 GPF web UI. Stop the Django develompent server and start it again::
 
         ./manage.py runserver 0.0.0.0:8000
