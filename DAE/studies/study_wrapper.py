@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function, absolute_import
 import functools
 from builtins import str
 
+import os
 import itertools
 
 from RegionOperations import Region
@@ -467,7 +468,14 @@ class StudyWrapper(object):
             if getattr(self.study, 'pheno_db', None) is None:
                 continue
 
-            measure = self.study.pheno_db.get_measure(measure_filter['measure'])
+            measure = self.study.pheno_db.get_measure(
+                measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
+    def gene_sets_cache_file(self):
+        cache_filename = '{}.json'.format(self.id)
+        cache_path = os.path.join(
+            os.path.split(self.config.study_config.config_file)[0],
+            'denovo-cache/' + cache_filename)
 
+        return cache_path
