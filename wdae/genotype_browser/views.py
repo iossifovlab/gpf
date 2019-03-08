@@ -40,12 +40,12 @@ class QueryBaseView(views.APIView):
     def get_dataset_wdae_wrapper(self, dataset_id):
         if dataset_id not in self.datasets_cache:
             self.datasets_cache[dataset_id] =\
-                self.dataset_facade.get_dataset_wdae_wrapper(dataset_id)
+                self.variants_db.get_wdae_wrapper(dataset_id)
 
         return self.datasets_cache[dataset_id]
 
     def __init__(self):
-        self.dataset_facade = get_studies_manager().get_dataset_facade()
+        self.variants_db = get_studies_manager().get_variants_db()
 
 
 class QueryPreviewView(QueryBaseView):

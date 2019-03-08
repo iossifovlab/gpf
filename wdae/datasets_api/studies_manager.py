@@ -52,13 +52,14 @@ class StudiesManager(object):
         self.vdb = VariantsDb(self.dae_config)
         self.common_reports = CommonReportsManager(self.dae_config, self.vdb)
 
-        for dataset_id in self.vdb.get_datasets_ids():
-            Dataset.recreate_dataset_perm(dataset_id, [])
+        for study_id in self.vdb.get_all_ids():
+            Dataset.recreate_dataset_perm(study_id, [])
 
         self.score_loader = ScoreLoader()
         self.weights_loader = WeightsLoader()
 
-        self.gene_sets_collections = GeneSetsCollections(self.vdb.dataset_facade)
+        self.gene_sets_collections = GeneSetsCollections(
+            self.vdb.dataset_facade)
 
     def get_variants_db(self):
         if self.vdb is None:
