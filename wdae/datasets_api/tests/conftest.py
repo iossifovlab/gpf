@@ -49,7 +49,7 @@ def dae_config_fixture():
     return dae_config
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def variants_db_fixture(dae_config_fixture):
     vdb = VariantsDb(dae_config_fixture)
     return vdb
