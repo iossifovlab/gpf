@@ -8,10 +8,17 @@ from common_reports.config import CommonReportsQueryObjects
 from common_reports.common_report import CommonReportsGenerator
 from common_reports.common_report_facade import CommonReportFacade
 
+from gene.scores import ScoreLoader
+from gene.weights import WeightsLoader
+
+from gene.gene_set_collections import GeneSetsCollections
+
 from datasets_api.models import Dataset
 
 
 __all__ = ['get_studies_manager']
+
+
 
 
 class CommonReportsManager(object):
@@ -36,12 +43,22 @@ class StudiesManager(object):
         self.dae_config = dae_config
         self.vdb = None
 
+        self.score_loader = None
+        self.weights_loader = None
+
+        self.gene_sets_collections = None
+
     def reload_dataset(self):
         self.vdb = VariantsDb(self.dae_config)
         self.common_reports = CommonReportsManager(self.dae_config, self.vdb)
 
         for dataset_id in self.vdb.get_datasets_ids():
             Dataset.recreate_dataset_perm(dataset_id, [])
+
+        self.score_loader = ScoreLoader()
+        self.weights_loader = WeightsLoader()
+
+        self.gene_sets_collections = GeneSetsCollections(self.vdb.dataset_facade)
 
     def get_variants_db(self):
         if self.vdb is None:
@@ -59,13 +76,16 @@ class StudiesManager(object):
         return self.common_reports.common_report_facade
 
     def get_score_loader(self):
-        return self.get_variants_db().score_loader
+        self.get_variants_db()
+        return self.score_loader
 
     def get_weights_loader(self):
-        return self.get_variants_db().weights_loader
+        self.get_variants_db()
+        return self.weights_loader
 
     def get_gene_sets_collections(self):
-        return self.get_variants_db().gene_sets_collections
+        self.get_variants_db()
+        return self.gene_sets_collections
 
 
 _studies_manager = None

@@ -27,7 +27,7 @@ def main(options=None):
     denovo = gsc.get_gene_sets_collection('denovo', load=False)
 
     if args.show_studies:
-        for query_object in denovo.get_study_groups():
+        for query_object in denovo._get_datasets():
             print(query_object.id)
     else:
         filter_query_objects_ids = None
@@ -35,7 +35,7 @@ def main(options=None):
             query_objects = args.studies.split(',')
             filter_query_objects_ids = [
                 qo.id
-                for qo in denovo.get_study_groups()
+                for qo in denovo._get_datasets()
                 if qo.id in query_objects
             ]
 
