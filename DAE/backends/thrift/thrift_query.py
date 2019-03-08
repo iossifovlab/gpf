@@ -50,7 +50,7 @@ class ThriftQueryBuilderBase(object):
 
     def has_members(self):
         members_kw = set(['roles', 'person_ids', 'inheritance'])
-        return len(members_kw & self.query_keys()) > 0
+        return len(self.query_keys & members_kw) > 0
 
     def _build_where(self, where_parts):
         if not where_parts:
