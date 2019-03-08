@@ -168,33 +168,85 @@ class StudyWrapper(object):
 
             kwargs['person_ids'] = list(people_ids_to_query)
 
-        for variant in itertools.islice(
+        return self._add_pheno_columns(itertools.islice(
                 self.study.query_variants(**kwargs),
-                limit):
+                limit))
 
-            variant = self._add_pheno_columns(variant)
-
-            yield variant
-
-    def _add_pheno_columns(self, variant):
+    def _add_pheno_columns(self, variants_iterable):
         if self.pheno_db is None:
-            return variant
-        pheno_values = {}
+            for variant in variants_iterable:
+                yield variant
 
-        for pheno_column in self.config.genotypeBrowser.phenoColumns:
-            for slot in pheno_column.slots:
-                pheno_value = self.pheno_db.get_measure_values(
-                    slot.measure,
-                    family_ids=[variant.family.family_id],
-                    roles=[slot.role])
-                key = slot.source
-                pheno_values[key] = ','.join(
-                    map(str, pheno_value.values()))
+        for variants_chunk in self._split_iterable(variants_iterable, 5000):
+            families = {variant.family_id for variant in variants_chunk}
 
-        for allele in variant.alt_alleles:
-            allele.update_attributes(pheno_values)
+            pheno_column_dfs = []
+            pheno_column_names = []
+            for pheno_column in self.config.genotypeBrowser.phenoColumns:
+                for slot in pheno_column.slots:
+                    pheno_column_dfs.append(self.pheno_db.get_measure_values_df(
+                        slot.measure,
+                        family_ids=list(families),
+                        roles=[slot.role]))
+                    pheno_column_names.append(slot.source)
 
-        return variant
+            for variant in variants_chunk:
+                pheno_values = {}
+
+                for pheno_column_df, pheno_column_name in \
+                        zip(pheno_column_dfs, pheno_column_names):
+                    variant_pheno_value_df = pheno_column_df[
+                        pheno_column_df['person_id'].isin(variant.members_ids)]
+                    variant_pheno_value_df.set_index('person_id', inplace=True)
+                    assert len(variant_pheno_value_df.columns) == 1
+                    column = variant_pheno_value_df.columns[0]
+
+                    pheno_values[pheno_column_name] = ",".join(
+                        map(str, variant_pheno_value_df[column].tolist()))
+
+                print(pheno_values)
+
+                for allele in variant.alt_alleles:
+                    allele.update_attributes(pheno_values)
+
+                yield variant
+
+        # pheno_values = {}
+        #
+        # print(self.pheno_db.get_measure_values(
+        #             "diagnosis_summary.best_verbal_iq",
+        #             roles=['prb']))
+        #
+        # for pheno_column in self.config.genotypeBrowser.phenoColumns:
+        #     for slot in pheno_column.slots:
+        #         pheno_value = self.pheno_db.get_measure_values(
+        #             slot.measure,
+        #             family_ids=[variant.family.family_id],
+        #             roles=[slot.role])
+        #         key = slot.source
+        #         pheno_values[key] = ','.join(
+        #             map(str, pheno_value.values()))
+        #
+        # for allele in variant.alt_alleles:
+        #     allele.update_attributes(pheno_values)
+        #
+        # return variant
+
+    @staticmethod
+    def _split_iterable(iterable, max_chunk_length=5000):
+        i = 0
+        result = []
+        for value in iterable:
+            i += 1
+            result.append(value)
+
+            if i == max_chunk_length:
+                yield result
+                result = []
+                i = 0
+
+        if i != 0:
+            yield result
 
     def _merge_with_people_ids(self, kwargs, people_ids_to_query):
         people_ids_filter = kwargs.pop('person_ids', None)
@@ -464,7 +516,7 @@ class StudyWrapper(object):
             if measure_filter is None or 'measure' not in measure_filter:
                 continue
 
-            if getattr(self.study, 'pheno_db', None) is None:
+            if self.pheno_db is None:
                 continue
 
             measure = self.study.pheno_db.get_measure(measure_filter['measure'])
