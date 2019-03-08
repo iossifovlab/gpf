@@ -2,6 +2,8 @@ import json
 
 import common_reports.common_report
 
+import pytest
+
 
 def assert_common_reports(first, second):
     first['phenotype'].sort()
@@ -35,6 +37,7 @@ def assert_common_reports(first, second):
     assert first == second
 
 
+@pytest.mark.xfail
 def test_common_reports_generator(mocker, common_reports_generator, output):
     with mocker.patch(common_reports.common_report.__name__ + '.open',
                       new_callable=mocker.mock_open()):
