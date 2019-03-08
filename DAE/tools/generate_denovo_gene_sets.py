@@ -11,12 +11,12 @@ def main(options=None):
     parser = argparse.ArgumentParser(description=description)
 
     parser.add_argument(
-        '--show_query_objects', help='This option will print available query '
-        'objects (datasets and studies) names', default=False,
+        '--show-studies', help='This option will print available '
+        'datasets and studies names', default=False,
         action='store_true')
     parser.add_argument(
-        '--query_objects', help='Specify query objects (datasets and studies) '
-        'names for generating denovo gene sets. Default to all query objects.',
+        '--studies', help='Specify datasets and studies '
+        'names for generating denovo gene sets. Default to all.',
         default=None, action='store')
 
     args = parser.parse_args(options)
@@ -26,17 +26,17 @@ def main(options=None):
     gsc = GeneSetsCollections(variants_db.dataset_facade)
     denovo = gsc.get_gene_sets_collection('denovo', load=False)
 
-    if args.show_query_objects:
+    if args.show_studies:
         for query_object in denovo.get_study_groups():
-            print(query_object.name)
+            print(query_object.id)
     else:
         filter_query_objects_ids = None
-        if args.query_objects:
-            query_objects = args.query_objects.split(',')
+        if args.studies:
+            query_objects = args.studies.split(',')
             filter_query_objects_ids = [
                 qo.id
                 for qo in denovo.get_study_groups()
-                if qo.name in query_objects
+                if qo.id in query_objects
             ]
 
         denovo.build_cache(filter_query_objects_ids)

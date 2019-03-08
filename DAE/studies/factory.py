@@ -1,3 +1,4 @@
+from pheno.pheno_factory import PhenoFactory
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
 from studies.study_facade import StudyFacade
@@ -19,17 +20,22 @@ class VariantsDb(object):
             default_conf=dae_config.default_configuration_conf)
 
         study_factory = StudyFactory(thrift_connection)
+
+        self.pheno_factory = PhenoFactory(
+            config_filename=dae_config.pheno_conf)
+
         self.study_facade = StudyFacade(
-            self.studies_definitions, study_factory)
+            self.pheno_factory, self.studies_definitions, study_factory)
+
         self.datasets_definitions = DirectoryEnabledDatasetsDefinition(
             self.study_facade,
             datasets_dir=dae_config.datasets_dir,
             work_dir=dae_config.dae_data_dir,
             default_conf=dae_config.default_configuration_conf)
-
-        self.dataset_factory = DatasetFactory(study_facade=self.study_facade)
+        self.dataset_factory = DatasetFactory(
+            self.study_facade)
         self.dataset_facade = DatasetFacade(
-            self.datasets_definitions, self.dataset_factory)
+            self.datasets_definitions, self.dataset_factory, self.pheno_factory)
 
         # self.common_reports_query_objects = CommonReportsQueryObjects(
         #     self.study_facade, self.dataset_facade)

@@ -9,6 +9,7 @@ import shutil
 
 import pytest
 
+from pheno.pheno_factory import PhenoFactory
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
 from studies.study_facade import StudyFacade
@@ -60,8 +61,8 @@ def study_factory():
 
 
 @pytest.fixture(scope='session')
-def study_facade(study_factory, study_definitions):
-    return StudyFacade(
+def study_facade(study_factory, study_definitions, pheno_factory):
+    return StudyFacade(pheno_factory,
         study_factory=study_factory, study_definition=study_definitions)
 
 
@@ -80,10 +81,16 @@ def dataset_factory(study_facade):
 
 
 @pytest.fixture(scope='session')
-def dataset_facade(dataset_definitions, dataset_factory):
+def dataset_facade(dataset_definitions, dataset_factory, pheno_factory):
     return DatasetFacade(
         dataset_definitions=dataset_definitions,
-        dataset_factory=dataset_factory)
+        dataset_factory=dataset_factory,
+        pheno_factory=pheno_factory)
+
+
+@pytest.fixture(scope='session')
+def pheno_factory():
+    return PhenoFactory()
 
 
 def path_to_fixtures(*args):

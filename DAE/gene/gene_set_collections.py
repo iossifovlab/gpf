@@ -418,7 +418,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 **search_args)
 
         # variants = list(variants)
-        # print("Variants count:", len(variants))
+        # print("Variants count:", len(variants), "search args:", search_args)
 
         for variant in variants:
             family_id = variant.family_id
