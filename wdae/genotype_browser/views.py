@@ -12,14 +12,13 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
 
-from datasets_api.datasets_manager import get_datasets_manager
+from datasets_api.studies_manager import get_studies_manager
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 from helpers.logger import log_filter
 from helpers.logger import LOGGER
 
 import traceback
-import preloaded
 from rest_framework.exceptions import NotAuthenticated
 import json
 # from query_variants import join_line, generate_response
@@ -46,7 +45,7 @@ class QueryBaseView(views.APIView):
         return self.datasets_cache[dataset_id]
 
     def __init__(self):
-        self.dataset_facade = get_datasets_manager().get_dataset_facade()
+        self.dataset_facade = get_studies_manager().get_dataset_facade()
 
 
 class QueryPreviewView(QueryBaseView):
@@ -159,16 +158,24 @@ class QueryDownloadView(QueryBaseView):
             except ValueError:
                 pass
 
-            variants_data = generate_response(
-                dataset.get_variants(safe=True, **data),
-                columns, dataset.get_column_labels())
+            # variants_data = generate_response(
+            #     dataset.query_variants(safe=True, **data),
+            #     columns, dataset.get_column_labels())
 
-            if not (user.is_authenticated() and user.has_unlimitted_download):
-                variants_data = self.__limit(variants_data,
-                                             self.DOWNLOAD_LIMIT)
+            variants_data = get_variants_web_preview(
+                    dataset.query_variants(safe=True, **data),
+                    dataset.pedigree_selectors,
+                    data.get('pedigreeSelector', {}),
+                    dataset.download_columns,
+                    dataset.pedigree_columns
+            )
+
+            # if not (user.is_authenticated() and user.has_unlimitted_download):
+            #     variants_data = self.__limit(variants_data,
+            #                                  self.DOWNLOAD_LIMIT)
 
             response = StreamingHttpResponse(
-                list(map(join_line, variants_data)),
+                list(map(join_line, [variants_data['cols']] + variants_data['rows'])),
                 content_type='text/tsv')
 
             response['Content-Disposition'] = 'attachment; filename=variants.tsv'

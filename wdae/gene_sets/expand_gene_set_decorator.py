@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
-from preloaded import register
+
+from datasets_api.studies_manager import get_studies_manager
+
 from common.query_base import GeneSymsMixin
 from datasets_api.permissions import IsDatasetAllowed
 
@@ -9,7 +11,8 @@ def expand_gene_set(request_function):
         if 'geneSet' in request.data:
             gene_sets_collection_id, gene_set_id, gene_sets_types = \
                 GeneSymsMixin.get_gene_set_query(**request.data)
-            gene_sets_collections = register.get('gene_sets_collections')
+            gene_sets_collections =\
+                get_studies_manager().get_gene_sets_collections()
             gene_set = gene_sets_collections.get_gene_set(
                 gene_sets_collection_id, gene_set_id, gene_sets_types,
                 IsDatasetAllowed.permitted_datasets(request.user))

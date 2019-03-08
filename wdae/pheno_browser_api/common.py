@@ -10,7 +10,7 @@ import os
 from django.conf import settings
 
 # from DAE import pheno
-from precompute.filehash import sha256sum
+from helpers.filehash import sha256sum
 
 
 class PhenoBrowserCommon(object):
