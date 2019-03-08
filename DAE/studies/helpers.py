@@ -49,77 +49,6 @@ def get_people_group_attribute(v, attr):
     return ';'.join(people_group_attributes)
 
 
-def normalRefCopyNumber(location, gender):
-    clnInd = location.find(":")
-    chrome = location[0:clnInd]
-
-    if chrome in ['chrX', 'X', '23', 'chr23']:
-        if '-' in location:
-            dshInd = location.find('-')
-            pos = int(location[clnInd + 1:dshInd])
-        else:
-            pos = int(location[clnInd + 1:])
-
-        # hg19 pseudo autosomes region: chrX:60001-2699520
-        # and chrX:154931044-155260560
-        if pos < 60001 or (pos > 2699520 and pos < 154931044) \
-                or pos > 155260560:
-
-            if gender == 'M':
-                return 1
-            elif gender == 'U':
-                LOGGER.warn(
-                    'unspecified gender when calculating normal '
-                    'number of allels '
-                    'in chr%s',
-                    location
-                )
-                return 1
-            elif gender != 'F':
-                raise Exception('weird gender ' + gender)
-    elif chrome in ['chrY', 'Y', '24', 'chr24']:
-        if gender == 'M':
-            return 1
-        elif gender == 'U':
-            LOGGER.warn(
-                'unspecified gender when calculating normal number of allels '
-                'in chr%s',
-                location
-            )
-            return 1
-        elif gender == 'F':
-            return 0
-        else:
-            raise Exception('gender needed')
-    return 2
-
-
-def variant_count_v3(bs, c, location=None, gender=None, denovo_parent=None):
-    normal = 2
-    if location:
-        normal = normalRefCopyNumber(location, gender)
-        # print("variantCount: {}, {}, {}".format(
-        # location, gender, normalRefCN))
-        ref = bs[0, c]
-        # print("count: {}".format(count))
-        count = 0
-        if bs.shape[0] == 2:
-            alles = bs[1, c]
-            if alles != 0:
-                if ref == normal:
-                    print("location: {}, gender: {}, c: {}, normal: {}, bs: {}"
-                          .format(location, gender, c, normal, bs))
-                count = alles
-        elif bs.shape[0] == 1:
-            if normal != ref:
-                count = ref
-
-        if c != denovo_parent:
-            return [count, 0]
-        else:
-            return [0, 1]
-
-
 STANDARD_ATTRS = {
     "family": "family_id",
     "location": "cshl_location",
@@ -127,8 +56,8 @@ STANDARD_ATTRS = {
 }
 
 
-def get_standard_attr(property, v, aa):
-    return getattr(v.alt_alleles[aa], property)
+def get_standard_attr(property, aa):
+    return getattr(aa, property)
 
 
 STANDARD_ATTRS_LAMBDAS = {
@@ -137,15 +66,11 @@ STANDARD_ATTRS_LAMBDAS = {
 }
 
 SPECIAL_ATTRS_FORMAT = {
-    "bestSt": lambda v, aa: mat2str(v.bestSt),
-    "counts": lambda v, aa: mat2str(v.alt_alleles[aa]["counts"]),
-    "genotype": lambda v, aa: mat2str(v.alt_alleles[aa].genotype),
-    "effects": lambda v, aa: ge2str(v.alt_alleles[aa].effects),
-    "requestedGeneEffects": lambda v, aa:
-        ge2str(v.alt_alleles[aa]["requestedGeneEffects"]),
-    "genes": lambda v, aa: gene_effect_get_genes(v.alt_alleles[aa].effects),
+    "genotype": lambda aa: mat2str(aa.genotype),
+    "effects": lambda aa: ge2str(aa.effects),
+    "genes": lambda aa: gene_effect_get_genes(aa.effects),
     "worstEffect":
-        lambda v, aa: gene_effect_get_worst_effect(v.alt_alleles[aa].effects),
+        lambda aa: gene_effect_get_worst_effect(aa.effects),
 }
 
 
@@ -158,20 +83,20 @@ SPECIAL_ATTRS = merge_dicts(
 def transform_variants_to_lists(
         variants, preview_columns, pedigree_attrs, pedigree_selectors,
         selected_pedigree_selector):
+
     for v in variants:
-        alt_alleles_count = len(v.alt_alleles)
-        for alt_allele in range(alt_alleles_count):
+        for alt_allele_index, aa in enumerate(v.matched_alleles):
             row_variant = []
             for column in preview_columns:
                 try:
                     if column in SPECIAL_ATTRS:
-                        row_variant.append(SPECIAL_ATTRS[column](v, alt_allele))
+                        row_variant.append(SPECIAL_ATTRS[column](aa))
                     elif column == 'pedigree':
                         row_variant.append(generate_pedigree(
-                            v, pedigree_selectors, selected_pedigree_selector))
+                            aa, pedigree_selectors, selected_pedigree_selector))
                     else:
                         attribute =\
-                            v.alt_alleles[alt_allele].get_attribute(column, '')
+                            aa.get_attribute(column, '')
                         if not isinstance(attribute, str):
                             if attribute is None or math.isnan(attribute):
                                 attribute = ''
@@ -179,19 +104,22 @@ def transform_variants_to_lists(
                                 attribute = 'inf'
                         row_variant.append(attribute)
                 except (AttributeError, KeyError):
-                    # print(attr, type(e), e)
                     row_variant.append('')
-            for attr in pedigree_attrs:
-                try:
-                    if attr['source'] in SPECIAL_ATTRS:
-                        row_variant.\
-                            append(SPECIAL_ATTRS[attr['source']](
-                                v, alt_allele))
-                    else:
-                        row_variant.append(get_people_group_attribute(v, attr))
-                except (AttributeError, KeyError):
-                    # print(attr, type(e), e)
-                    row_variant.append('')
+
+            # print("------------------------------------------")
+            # print(pedigree_attrs)
+            # print("------------------------------------------")
+
+            # for attr in pedigree_attrs:
+            #     try:
+            #         if attr['source'] in SPECIAL_ATTRS:
+            #             row_variant.\
+            #                 append(SPECIAL_ATTRS[attr['source']](aa))
+            #         else:
+            #             row_variant.append(get_people_group_attribute(v, attr))
+            #     except (AttributeError, KeyError):
+            #         # print(attr, type(e), e)
+            #         row_variant.append('')
             yield row_variant
 
 
@@ -218,6 +146,8 @@ def get_person_color(member, pedigree_selectors, selected_pedigree_selector):
         return selected_pedigree_selectors['default']['color']
 
 
+
+
 def generate_pedigree(variant, pedigree_selectors, selected_pedigree_selector):
     result = []
     for index, member in enumerate(variant.members_in_order):
@@ -231,10 +161,10 @@ def generate_pedigree(variant, pedigree_selectors, selected_pedigree_selector):
             get_person_color(
                 member, pedigree_selectors, selected_pedigree_selector),
             member.layout_position,
-            member.generated
-            ] + variant_count_v3(
-                variant.best_st, index, variant.location, member.sex.short())
-        )
+            member.generated,
+            variant.gt[1, index],
+            0
+        ])
 
     return result
 
