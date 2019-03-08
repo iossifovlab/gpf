@@ -6,7 +6,7 @@ from GenomesDB import GenomesDB
 
 
 from configurable_entities.configuration import DAEConfig
-# from studies.factory import VariantsDb
+from studies.factory import VariantsDb
 
 # from pheno.pheno_factory import PhenoFactory
 
