@@ -83,7 +83,6 @@ def count_variants(variants, regions, inheritance, effect_types):
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_df",
     "variants_thrift",
 ])
 @pytest.mark.parametrize("regions,inheritance,effect_types,count", [

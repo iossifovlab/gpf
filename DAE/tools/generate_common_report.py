@@ -1,39 +1,44 @@
 #!/usr/bin/env python
-import os
+import argparse
+
+from studies.factory import VariantsDb
+from configurable_entities.configuration import DAEConfig
 
 from common_reports.common_report import CommonReportsGenerator
-from common_reports.config import CommonReportsConfigs
-
-from studies.dataset_facade import DatasetFacade
-from studies.dataset_factory import DatasetFactory
-from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
-from studies.study_facade import StudyFacade
-from studies.study_definition import DirectoryEnabledStudiesDefinition
+from common_reports.config import CommonReportsQueryObjects
 
 
-def main():
-    work_dir = os.environ.get("DAE_DB_DIR")
-    config_file = os.environ.get("DAE_DATA_DIR")
-    studies_dir = os.path.join(config_file, 'studies')
-    datasets_dir = os.path.join(config_file, 'datasets')
+def main(dae_config=None):
+    description = 'Generate common reports tool'
+    parser = argparse.ArgumentParser(description=description)
 
-    study_definition = DirectoryEnabledStudiesDefinition(
-        studies_dir, work_dir)
-    study_facade = StudyFacade(study_definition)
+    parser.add_argument(
+        '--show-studies', help='This option will print available '
+        'datasets and studies names', default=False,
+        action='store_true')
+    parser.add_argument(
+        '--studies', help='Specify datasets and studies '
+        'names for generating common report. Default to all query objects.',
+        default=None, action='store')
 
-    dataset_definitions = DirectoryEnabledDatasetsDefinition(
-        study_facade, datasets_dir, work_dir)
-    dataset_factory = DatasetFactory(study_facade)
+    args = parser.parse_args()
 
-    dataset_facade =\
-        DatasetFacade(dataset_definitions, dataset_factory)
+    dae_config = DAEConfig()
+    vdb = VariantsDb(dae_config)
+    common_reports_query_objects = CommonReportsQueryObjects(
+        vdb.study_facade, vdb.dataset_facade)
 
-    common_reports_config = CommonReportsConfigs()
-    common_reports_config.scan_directory(studies_dir, study_facade)
-    common_reports_config.scan_directory(datasets_dir, dataset_facade)
+    if args.show_studies:
+        for query_object in\
+                common_reports_query_objects.query_objects_with_config.keys():
+            print(query_object.id)
+    else:
+        if args.studies:
+            query_objects = args.studies.split(',')
+            common_reports_query_objects.filter_query_objects(query_objects)
 
-    crg = CommonReportsGenerator(common_reports_config)
-    crg.save_common_reports()
+        crg = CommonReportsGenerator(common_reports_query_objects)
+        crg.save_common_reports()
 
 
 if __name__ == '__main__':

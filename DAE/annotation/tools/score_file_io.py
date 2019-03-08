@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 # from builtins import str
 import sys
 import os
 
 import pysam
+import numpy as np
 import pandas as pd
 from collections import defaultdict
 from configparser import ConfigParser
@@ -65,7 +66,8 @@ class ScoreFile(TabixReader):
                 self.score_filename, col, self.config.schema.columns,
             ]
             self.schema.columns[col] = self.config.schema.columns[col]
-        assert all([sn in self.schema.col_names for sn in self.score_names])
+        assert all([sn in self.schema.col_names for sn in self.score_names]), \
+            [self.score_filename, self.score_names, self.schema.col_names]
         self.options.update(self.config)
 
         self.line_config = LineConfig(self.schema.col_names)
@@ -120,8 +122,8 @@ class ScoreFile(TabixReader):
 
     def scores_to_dataframe(self, scores):
         df = pd.DataFrame(scores)
-
         for score_name in self.score_names:
+            df[score_name] = df[score_name].replace(['NA'], np.nan)
             df[score_name] = df[score_name].astype("float32")
         return df
 

@@ -12,6 +12,7 @@ Contents:
 .. toctree::
    :maxdepth: 3
 
+   getting_started
    user_management
    groups
    datasets

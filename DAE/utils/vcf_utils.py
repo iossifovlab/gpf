@@ -114,7 +114,7 @@ def trim_str_back(pos, ref, alt):
     return pos+n, r[n:], a[n:]
 
 
-def cshl_format(pos, ref, alt, trimmer=trim_str_back):
+def cshl_format(pos, ref, alt, trimmer=trim_str_front):
     p, r, a = trimmer(pos, ref, alt)
     if len(r) == len(a) and len(r) == 0:
         # print('ref {:s} is the same as alt {:s}'.format(
@@ -137,7 +137,7 @@ def cshl_format(pos, ref, alt, trimmer=trim_str_back):
     return p, 'complex(' + r + '->' + a + ')', max(len(r), len(a))
 
 
-def vcf2cshl(pos, ref, alt):
-    vp, vt, vl = cshl_format(pos, ref, alt)
+def vcf2cshl(pos, ref, alt, trimmer=trim_str_front):
+    vp, vt, vl = cshl_format(pos, ref, alt, trimmer=trimmer)
 
     return vp, vt, vl

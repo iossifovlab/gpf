@@ -4,12 +4,14 @@ import os
 import pytest
 from box import Box
 
+from pheno.pheno_factory import PhenoFactory
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
 from studies.study_facade import StudyFacade
 from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
+from configurable_entities.configuration import DAEConfig
 from datasets_api.views import DatasetView
 from datasets_api.models import Dataset
 
@@ -35,24 +37,27 @@ def study_factory():
 
 
 @pytest.fixture(scope='session')
-def study_definitions():
+def study_definitions(dae_config_fixture):
     return DirectoryEnabledStudiesDefinition(
         studies_dir=studies_dir(),
-        work_dir=fixtures_dir())
+        work_dir=fixtures_dir(),
+        default_conf=dae_config_fixture.default_configuration_conf)
 
 
 @pytest.fixture(scope='session')
-def study_facade(study_factory, study_definitions):
+def study_facade(study_factory, study_definitions, pheno_factory):
     return StudyFacade(
-        study_factory=study_factory, study_definition=study_definitions)
+        pheno_factory, study_factory=study_factory,
+        study_definition=study_definitions)
 
 
 @pytest.fixture(scope='session')
-def dataset_definitions(study_facade):
+def dataset_definitions(study_facade, dae_config_fixture):
     return DirectoryEnabledDatasetsDefinition(
         study_facade,
         datasets_dir=datasets_dir(),
-        work_dir=fixtures_dir())
+        work_dir=fixtures_dir(),
+        default_conf=dae_config_fixture.default_configuration_conf)
 
 
 @pytest.fixture(scope='session')
@@ -61,13 +66,18 @@ def dataset_factory(study_facade):
 
 
 @pytest.fixture(scope='session')
-def dataset_facade(dataset_definitions, dataset_factory):
-    return DatasetFacade(dataset_definitions, dataset_factory)
+def dataset_facade(dataset_definitions, dataset_factory, pheno_factory):
+    return DatasetFacade(dataset_definitions, dataset_factory, pheno_factory)
 
 
 @pytest.fixture(scope='session')
 def dataset_view(dataset_facade):
     return DatasetView(dataset_facade)
+
+
+@pytest.fixture(scope='session')
+def pheno_factory():
+    return PhenoFactory()
 
 
 @pytest.fixture(scope='session')
@@ -85,3 +95,9 @@ def recreate_dataset_perm():
     Dataset.recreate_dataset_perm('quads_in_parent', [])
     Dataset.recreate_dataset_perm('quads_two_families', [])
     Dataset.recreate_dataset_perm('quads_variant_types', [])
+
+
+@pytest.fixture(scope='session')
+def dae_config_fixture():
+    dae_config = DAEConfig(fixtures_dir())
+    return dae_config

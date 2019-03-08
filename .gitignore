@@ -19,7 +19,7 @@ output
 *.swp
 gpf-html.tar.gz
 .pytest_cache
-*.parquet
+# *.parquet
 /gpf-html.tar.gz
 .pytest_cache
 metastore_db
@@ -37,3 +37,6 @@ DAE/*.json
 .coverage*
 coverage/
 tmp/
+DAE/pyflakes.report
+test_data
+denovo-cache

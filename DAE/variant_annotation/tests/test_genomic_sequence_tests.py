@@ -3,10 +3,10 @@ from builtins import range
 import unittest
 from variant_annotation.annotation_request import AnnotationRequestFactory
 from variant_annotation.annotator import Variant
-from mocks import ExonMock
-from mocks import TranscriptModelMock
-from mocks import ReferenceGenomeMock
-from mocks import AnnotatorMock
+from .mocks import ExonMock
+from .mocks import TranscriptModelMock
+from .mocks import ReferenceGenomeMock
+from .mocks import AnnotatorMock
 
 
 class GenomicSequenceTest(unittest.TestCase):

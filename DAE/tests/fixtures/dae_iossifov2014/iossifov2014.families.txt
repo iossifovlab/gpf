@@ -40,3 +40,8 @@ familyId	personId	dadId	momId	gender	status	role	phenotype	layout	generated
 14500	14500.fa	0	0	M	1	dad	unaffected	1:10.0,50.0	
 14500	14500.p1	14500.fa	14500.mo	M	2	prb	autism	2:39.0,80.0	
 14500	14500.s1	14500.fa	14500.mo	F	1	sib	unaffected	2:10.0,80.0	
+
+12628	12628.mo	0	0	F	1	mom	unaffected	1:39.0,50.0	
+12628	12628.fa	0	0	M	1	dad	unaffected	1:10.0,50.0	
+12628	12628.p1	12628.fa	12628.mo	M	2	prb	autism	2:39.0,80.0	
+12628	12628.s1	12628.fa	12628.mo	F	1	sib	unaffected	2:10.0,80.0	

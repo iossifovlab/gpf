@@ -12,9 +12,8 @@ class ConfigSectionConfig(ConfigurableEntityConfig):
         super(ConfigSectionConfig, self).__init__(config, *args, **kwargs)
 
     @classmethod
-    def from_config(cls, config_section, section=None):
-        section_config = config_section
-        return ConfigSectionConfig(section_config)
+    def from_config(cls, config):
+        return ConfigSectionConfig(config)
 
 
 class ConfigSectionDefinition(ConfigurableEntityDefinition):
@@ -26,7 +25,7 @@ class ConfigSectionDefinition(ConfigurableEntityDefinition):
         assert work_dir is not None
 
         self.single_file_configurable_entity_definition(
-            config_path, work_dir, ConfigSectionConfig, 'section_name',
+            config_path, work_dir, ConfigSectionConfig,
             {'wd': work_dir, 'work_dir': work_dir})
 
     @property
@@ -43,51 +42,50 @@ class ConfigSectionDefinition(ConfigurableEntityDefinition):
         return self.get_all_configurable_entity_names()
 
 
-class AnnotatorConfig(ConfigurableEntityConfig):
-    def __init__(self, config, *args, **kwargs):
-        super(AnnotatorConfig, self).__init__(config, *args, **kwargs)
-
-    @classmethod
-    def from_config(cls, config_section, section=None):
-        section_config = config_section
-        return AnnotatorConfig(section_config)
-
-
-class AnnotatorDefinition(ConfigurableEntityDefinition):
-
-    def __init__(self, config_path, work_dir):
-        super(AnnotatorDefinition, self).__init__()
-
-        self.single_file_configurable_entity_definition(
-            config_path, work_dir, ConfigSectionConfig, 'section_name',
-            {'wd': work_dir, 'work_dir': work_dir})
-
-    @property
-    def annotation_ids(self):
-        return self.configurable_entity_ids()
-
-    def get_annotator_config(self, section_id):
-        return self.get_configurable_entity_config(section_id)
-
-    def get_all_annotator_configs(self):
-        return self.get_all_configurable_entity_configs()
-
-
 class DAEConfig(object):
 
     DIR_NAME = 'dir'
     CONF_FILE = 'confFile'
+    STUDIES_SECTION = 'studiesDB'
+    DATASETS_SECTION = 'datasetsDB'
     PHENO_SECTION = 'phenoDB'
     GENE_INFO_SECTION = 'geneInfoDB'
     GENOMIC_SCORES_SECTION = 'genomicScoresDB'
     GENOMES_SECTION = 'genomesDB'
-    COMMON_REPORTS_SECTION = 'commonReports'
     ANNOTATION_SECTION = 'annotation'
+    DEFAULT_CONFIGURATION_SECTION = 'defaultConfiguration'
 
-    def __init__(self, dae_data_dir=None, dae_conf_filename="DAE.conf"):
+    def __init__(
+        self, dae_data_dir=None,
+        dae_scores_hg19_dir=None, dae_scores_hg38_dir=None,
+            dae_conf_filename="DAE.conf"):
+
         if dae_data_dir is None:
             dae_data_dir = os.environ.get('DAE_DB_DIR', None)
+        assert dae_data_dir is not None
         self._dae_data_dir = os.path.abspath(dae_data_dir)
+        assert os.path.exists(self._dae_data_dir)
+        assert os.path.isdir(self._dae_data_dir)
+
+        if dae_scores_hg19_dir is None:
+            dae_scores_hg19_dir = os.environ.get('DAE_GENOMIC_SCORES_HG19')
+        if dae_scores_hg38_dir is None:
+            dae_scores_hg38_dir = os.environ.get('DAE_GENOMIC_SCORES_HG38')
+
+        self._dae_scores_hg19_dir = None
+        if dae_scores_hg19_dir is not None:
+            self._dae_scores_hg19_dir = os.path.abspath(
+                dae_scores_hg19_dir)
+            assert os.path.exists(self._dae_scores_hg19_dir)
+            assert os.path.isdir(self._dae_scores_hg19_dir)
+
+        self._dae_scores_hg38_dir = None
+        if dae_scores_hg38_dir is not None:
+            self._dae_scores_hg38_dir = os.path.abspath(
+                dae_scores_hg38_dir)
+            assert os.path.exists(self._dae_scores_hg38_dir)
+            assert os.path.isdir(self._dae_scores_hg38_dir)
+
         self.dae_conf_filename = dae_conf_filename
 
         filename = os.path.join(self.dae_data_dir, self.dae_conf_filename)
@@ -96,14 +94,37 @@ class DAEConfig(object):
         )
         assert self.sections is not None
 
-    def _get_config_value(self, section_name, attr_name):
+    def _get_config_value(self, section_name, attr_name, default_value=None):
         if section_name not in self.sections.get_all_section_names():
-            return None
-        return self.sections.get_section_config(section_name).get(attr_name)
+            return default_value
+        return self.sections.get_section_config(section_name).\
+            get(attr_name, default_value)
 
     @property
     def dae_data_dir(self):
         return self._dae_data_dir
+
+    def studies_section(self):
+        return self.sections.get_section_config(self.STUDIES_SECTION)
+
+    @property
+    def studies_dir(self):
+        return self._get_config_value(self.STUDIES_SECTION, self.DIR_NAME)
+
+    @property
+    def studies_conf(self):
+        return self._get_config_value(self.STUDIES_SECTION, self.CONF_FILE)
+
+    def datasets_section(self):
+        return self.sections.get_section_config(self.DATASETS_SECTION)
+
+    @property
+    def datasets_dir(self):
+        return self._get_config_value(self.DATASETS_SECTION, self.DIR_NAME)
+
+    @property
+    def datasets_conf(self):
+        return self._get_config_value(self.DATASETS_SECTION, self.CONF_FILE)
 
     def pheno_section(self):
         return self.sections.get_section_config(self.PHENO_SECTION)
@@ -143,12 +164,16 @@ class DAEConfig(object):
     @property
     def genomic_scores_hg19_dir(self):
         return self._get_config_value(
-            self.GENOMIC_SCORES_SECTION, 'scores_hg19_dir')
+            self.GENOMIC_SCORES_SECTION, 
+            'scores_hg19_dir', 
+            self._dae_scores_hg19_dir)
 
     @property
     def genomic_scores_hg38_dir(self):
         return self._get_config_value(
-            self.GENOMIC_SCORES_SECTION, 'scores_hg38_dir')
+            self.GENOMIC_SCORES_SECTION, 
+            'scores_hg38_dir', 
+            self._dae_scores_hg38_dir)
 
     def annotation_section(self):
         return self.sections.get_section_config(self.ANNOTATION_SECTION)
@@ -185,15 +210,11 @@ class DAEConfig(object):
         return self._get_config_value(
             self.GENOMES_SECTION, self.CONF_FILE)
 
-    def common_reports_section(self):
-        return self.sections.get_section_config(self.COMMON_REPORTS_SECTION)
+    def default_configuration_section(self):
+        return self.sections.get_section_config(
+            self.DEFAULT_CONFIGURATION_SECTION)
 
     @property
-    def common_reports_dir(self):
+    def default_configuration_conf(self):
         return self._get_config_value(
-            self.COMMON_REPORTS_SECTION, self.DIR_NAME)
-
-    @property
-    def common_reports_conf(self):
-        return self._get_config_value(
-            self.COMMON_REPORTS_SECTION, self.CONF_FILE)
+            self.DEFAULT_CONFIGURATION_SECTION, self.CONF_FILE)

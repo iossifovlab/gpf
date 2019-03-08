@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 import sys
 import os
@@ -37,9 +37,8 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
              self.score_file.filename)
 
     def _init_score_file(self):
-        if not self.config.options.scores_file:
-            print("You should provide a score file location.", file=sys.stderr)
-            sys.exit(1)
+        assert self.config.options.scores_file, \
+            [self.config.name, self.config.annotator_name]
 
         scores_filename = os.path.abspath(self.config.options.scores_file)
         assert os.path.exists(scores_filename), scores_filename

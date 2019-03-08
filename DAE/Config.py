@@ -42,13 +42,13 @@ class Config(object):
             'genomicScoresDB', 'dir')
         self._genomicScoresDBconfFile = self._daeConfig.get(
             'genomicScoresDB', 'confFile')
-        self._variantsDBdir = self._daeConfig.get('variantsDB', 'dir')
-        self._variantsDBconfFile = self._daeConfig.get(
-            'variantsDB', 'confFile')
+        # self._variantsDBdir = self._daeConfig.get('variantsDB', 'dir')
+        # self._variantsDBconfFile = self._daeConfig.get(
+        #     'variantsDB', 'confFile')
         self._genomesDBconfFile = self._daeConfig.get('genomesDB', 'confFile')
 
-        self._enrichmentConfFile = self._daeConfig.get(
-            'enrichment', 'confFile')
+        # self._enrichmentConfFile = self._daeConfig.get(
+        #     'enrichment', 'confFile')
 
     @property
     def daeDir(self):
@@ -90,21 +90,21 @@ class Config(object):
     def genomicScoresDBconfFile(self):
         return self._genomicScoresDBconfFile
 
-    @property
-    def variantsDBdir(self):
-        return self._variantsDBdir
+    # @property
+    # def variantsDBdir(self):
+    #     return self._variantsDBdir
 
-    @property
-    def variantsDBconfFile(self):
-        return self._variantsDBconfFile
+    # @property
+    # def variantsDBconfFile(self):
+    #     return self._variantsDBconfFile
 
     @property
     def genomesDBconfFile(self):
         return self._genomesDBconfFile
 
-    @property
-    def enrichmentConfFile(self):
-        return self._enrichmentConfFile
+    # @property
+    # def enrichmentConfFile(self):
+    #     return self._enrichmentConfFile
 
     @property
     def commonReportsConfFile(self):

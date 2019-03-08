@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from guardian.shortcuts import get_groups_with_perms
 
-from datasets_api.datasets_manager import get_datasets_manager
+from datasets_api.studies_manager import get_studies_manager
 from datasets_api.models import Dataset
 from groups_api.serializers import GroupSerializer
 from common.query_base import StatusMixin
@@ -21,7 +21,7 @@ class DatasetView(APIView):
         # assert self.datasets is not None
 
         if datasets_facade is None:
-            datasets_facade = get_datasets_manager().get_dataset_facade()
+            datasets_facade = get_studies_manager().get_dataset_facade()
         self.datasets_facade = datasets_facade
 
     def augment_accessibility(self, dataset, user):
@@ -54,7 +54,7 @@ class DatasetView(APIView):
             res = [self.augment_status_filter(ds) for ds in res]
             return Response({'data': res})
         else:
-            dataset = self.datasets_facade.get_dataset_wrapper(dataset_id)
+            dataset = self.datasets_facade.get_dataset_wdae_wrapper(dataset_id)
             if dataset:
                 res = dataset.get_dataset_description()
                 res = self.augment_accessibility(res, user)

@@ -19,22 +19,30 @@ class Person(object):
             self.atts = atts
         else:
             self.atts = {}
-        assert 'personId' in atts
-        self.family_id = atts['familyId']
-        self.person_id = atts['personId']
-        self.sample_id = atts['sampleId']
-        self.index = atts['index']
+        assert 'person_id' in atts
+        self.family_id = atts['family_id']
+        self.person_id = atts['person_id']
+        self.sample_id = atts.get('sample_id', None)
+        self.index = atts.get('index', None)
         self.sex = atts['sex']
         self.role = atts['role']
         self.status = atts['status']
-        self.mom = atts['momId']
-        self.dad = atts['dadId']
+        self.mom = atts.get('mom_id', None)
+        self.dad = atts.get('dad_id', None)
         self.layout_position = atts.get('layout', None)
         self.generated = atts.get('generated', False)
 
     def __repr__(self):
         return "Person({} ({}); {}; {})".format(
             self.person_id, self.family_id, self.role, self.sex)
+
+    @property
+    def dad_id(self):
+        return self.dad.person_id if self.has_dad() else ''
+
+    @property
+    def mom_id(self):
+        return self.mom.person_id if self.has_mom() else ''
 
     def has_mom(self):
         return not (self.mom is None or self.mom == '0')
@@ -44,6 +52,10 @@ class Person(object):
 
     def has_parent(self):
         return self.has_dad() or self.has_mom()
+
+    def has_generated_parent(self):
+        return ((self.has_dad() and self.dad.generated) or
+                (self.has_mom() and self.mom.generated))
 
     def has_attr(self, item):
         return item in self.atts
@@ -57,8 +69,8 @@ class Family(object):
     def _build_trios(self, persons):
         trios = {}
         for pid, p in list(persons.items()):
-            if p['momId'] in persons and p['dadId'] in persons:
-                trios[pid] = [pid, p['momId'], p['dadId']]
+            if p.mom_id in persons and p.dad_id in persons:
+                trios[pid] = [pid, p.mom_id, p.dad_id]
         return trios
 
     def _build_persons(self, ped_df):
@@ -66,17 +78,37 @@ class Family(object):
         members = []
         for index, person in enumerate(ped_df.to_dict(orient="records")):
             person['index'] = index
-            persons[person['personId']] = person
-            members.append(Person(person))
+            person_object = Person(person)
+
+            persons[person['person_id']] = person_object
+            members.append(person_object)
+
+        self._connect_children_with_parents(persons, members)
+
         return persons, members
 
-    def __init__(self, family_id, ped_df):
-        self.family_id = family_id
-        self.ped_df = ped_df
-        assert np.all(ped_df['familyId'].isin(set([family_id])).values)
+    def _connect_children_with_parents(self, persons, members):
+        for member in members:
+            member.mom = persons.get(member.mom, None)
+            member.dad = persons.get(member.dad, None)
 
-        self.persons, self.members_in_order = self._build_persons(self.ped_df)
-        self.trios = self._build_trios(self.persons)
+    @classmethod
+    def from_df(cls, family_id, ped_df):
+        family = cls(family_id)
+        family.ped_df = ped_df
+        assert np.all(ped_df['family_id'].isin(set([family_id])).values)
+
+        family.persons, family.members_in_order =\
+            family._build_persons(family.ped_df)
+        family.trios = family._build_trios(family.persons)
+
+        return family
+
+    def __init__(self, family_id):
+        self.family_id = family_id
+        self.ped_df = None
+        self.members_in_order = None
+        self.persons = None
 
     def __len__(self):
         return len(self.ped_df)
@@ -87,7 +119,7 @@ class Family(object):
     def members_index(self, person_ids):
         index = []
         for pid in person_ids:
-            index.append(self.persons[pid]['index'])
+            index.append(self.persons[pid].index)
         return index
 
     def get_people_with_role(self, role):
@@ -122,7 +154,7 @@ class Family(object):
 
     @property
     def members_ids(self):
-        return self.ped_df['personId'].values
+        return self.ped_df['person_id'].values
 
 
 class FamiliesBase(object):
@@ -134,14 +166,14 @@ class FamiliesBase(object):
 
     def families_build(self, ped_df, family_class=Family):
         self.ped_df = ped_df
-        for family_id, fam_df in self.ped_df.groupby(by='familyId'):
-            family = family_class(family_id, fam_df)
+        for family_id, fam_df in self.ped_df.groupby(by='family_id'):
+            family = family_class.from_df(family_id, fam_df)
             self.families[family_id] = family
             self.family_ids.append(family_id)
 
     def families_build_from_simple(self, fam_df, family_class=Family):
-        for family_id, fam in fam_df.groupby(by='familyId'):
-            family = family_class(family_id, fam)
+        for family_id, fam in fam_df.groupby(by='family_id'):
+            family = family_class.from_df(family_id, fam_df)
             self.families[family_id] = family
 
     def families_query_by_person(self, person_ids):
@@ -168,7 +200,7 @@ class FamiliesBase(object):
                     with_parents = p.get_attr('with_parents')
                     if with_parents == '1':
                         person.append(p)
-                elif p.has_parent():
+                elif p.has_parent() and (not p.has_generated_parent()):
                     person.append(p)
         return person
 
@@ -219,6 +251,14 @@ class FamiliesBase(object):
         if 'sampleId' not in fam_df.columns:
             sample_ids = pd.Series(data=fam_df['personId'].values)
             fam_df['sampleId'] = sample_ids
+
+        fam_df.rename(columns={
+            'personId': 'person_id',
+            'familyId': 'family_id',
+            'momId': 'mom_id',
+            'dadId': 'dad_id',
+            'sampleId': 'sample_id',
+        }, inplace=True)
         return fam_df
 
     @staticmethod
@@ -259,6 +299,14 @@ class FamiliesBase(object):
                 result_type='reduce',
             )
             ped_df['sampleId'] = sample_ids
+
+        ped_df.rename(columns={
+            'personId': 'person_id',
+            'familyId': 'family_id',
+            'momId': 'mom_id',
+            'dadId': 'dad_id',
+            'sampleId': 'sample_id',
+        }, inplace=True)
         return ped_df
 
     @staticmethod

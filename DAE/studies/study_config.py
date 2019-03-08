@@ -47,47 +47,15 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         'genotypeBrowser.familyFilters': 'genotypeBrowser.familyStudyFilters',
     }
 
-    def __init__(self, config, *args, **kwargs):
-        super(StudyConfigBase, self).__init__(config, *args, **kwargs)
+    def __init__(self, section_config, study_config, *args, **kwargs):
+        super(StudyConfigBase, self).__init__(section_config, *args, **kwargs)
 
         assert self.id
         assert self.name
         assert 'description' in self
         assert self.work_dir
 
-    @classmethod
-    def get_default_values(cls):
-        return {
-            'phenoDB': None,
-            'genotypeBrowser.hasCNV': 'no',
-            'genotypeBrowser.hasComplex': 'no',
-            'genotypeBrowser.genesBlockShowAll': 'yes',
-            'genotypeBrowser.hasFamilyFilters': 'yes',
-            'genotypeBrowser.hasStudyFilters': 'yes',
-            'genotypeBrowser.phenoFilters': '',
-            'genotypeBrowser.hasPresentInChild': 'yes',
-            'genotypeBrowser.hasPresentInParent': 'yes',
-            'genotypeBrowser.hasPedigreeSelector': 'no',
-            'genotypeBrowser.pheno.columns': None,
-            'genotypeBrowser.familyFilters': None,
-            'phenoFilters': '',
-            'phenotypeBrowser': False,
-            'phenotypeGenotypeTool': False,
-
-            'description': None,
-            'order': 0,
-
-            'genotypeBrowser.genotype.columns':
-                'family,phenotype,variant,best,fromparent,inchild,genotype,'
-                'effect,count,geneeffect,effectdetails,weights,freq',
-            'genotypeBrowser.previewColumns':
-                'family,variant,genotype,effect,weights,freq,studyName,'
-                'location,pedigree,inChS,fromParentS,effects,'
-                'requestedGeneEffects,genes,worstEffect',
-            'genotypeBrowser.downloadColumns':
-                'family,phenotype,variant,best,fromparent,inchild,effect,'
-                'count,geneeffect,effectdetails,weights,freq',
-        }
+        self.study_config = study_config
 
 
 class StudyConfig(StudyConfigBase):
@@ -134,7 +102,10 @@ class StudyConfig(StudyConfigBase):
         return [self.name]
 
     @classmethod
-    def from_config(cls, config_section):
+    def from_config(cls, config):
+        config_section = config['study']
+        config_section = cls.parse(config_section)
+
         if 'enabled' in config_section:
             if config_section['enabled'] == 'false':
                 return None
@@ -142,22 +113,6 @@ class StudyConfig(StudyConfigBase):
         cls._fill_wdae_config(config_section)
 
         config_section['authorizedGroups'] = config_section.get(
-            'authorizedGroups', [config_section['id']])
+            'authorizedGroups', [config_section.get('id', '')])
 
-        return StudyConfig(config_section)
-
-    @classmethod
-    def get_default_values(cls):
-        defaults = super(StudyConfig, cls).get_default_values()
-        defaults.update({
-            'studyType': 'WE',
-            'year': '',
-            'pubMed': '',
-            'hasDenovo': 'yes',
-            'hasTransmitted': 'no',
-            'hasComplex': 'no',
-            'hasCNV': 'no',
-            'studyType': 'WE',
-            'phenotypes': None,
-        })
-        return defaults
+        return StudyConfig(config_section, config)

@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 import os
 import itertools
+# import sys
+# import traceback
 
 from collections import OrderedDict
 
 import GenomeAccess
 from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import VariantAnnotator
+# from variant_annotation.effect_to_hgvs import EffectToHGVS
+
 from annotation.tools.annotator_base import VariantAnnotatorBase
 
 
@@ -115,8 +119,10 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
         ('effect_gene_types', 'list(str)'),
         ('effect_genes', 'list(str)'),
         ('effect_details_transcript_ids', 'list(str)'),
+        ('effect_details_genes', 'list(str)'),
         ('effect_details_details', 'list(str)'),
         ('effect_details', 'list(str)'),
+        # ('effect_details_hgvs', 'list(str)')
     ]
 
     def __init__(self, config, **kwargs):
@@ -145,10 +151,12 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
             "{}:{}".format(g, e) for g, e in zip(r[1], r[2])
         ]
         aline[self.columns['effect_details_transcript_ids']] = r[3]
-        aline[self.columns['effect_details_details']] = r[4]
+        aline[self.columns['effect_details_genes']] = r[4]
+        aline[self.columns['effect_details_details']] = r[5]
         aline[self.columns['effect_details']] = [
-            "{}:{}".format(t, d) for t, d in zip(r[3], r[4])
+            "{}:{}:{}".format(t, g, d) for t, g, d in zip(r[3], r[4], r[5])
         ]
+        # aline[self.columns['effect_details_hgvs']] = r[6]
 
     def wrap_effects(self, effects):
         return self.effect_simplify(effects)
@@ -194,17 +202,33 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
     def transcript_effect(cls, effects):
         worst_effect = cls.worst_effect(effects)
         if worst_effect == 'intergenic':
-            return ([u'intergenic'], [u'intergenic'])
+            return (
+                [u'intergenic'], [u'intergenic'],
+                [u'intergenic'], [u'intergenic'])
         if worst_effect == 'no-mutation':
-            return ([u'no-mutation'], [u'no-mutation'])
+            return (
+                [u'no-mutation'], [u'no-mutation'],
+                [u'no-mutation'], [u'no-mutation'])
 
-        result = {}
+        transcripts = []
+        genes = []
+        details = []
+        # hgvs = []
         for effect in effects:
-            result[effect.transcript_id] = effect.create_effect_details()
-        return (
-            [str(r) for r in list(result.keys())],
-            [str(r) for r in list(result.values())]
-        )
+            transcripts.append(effect.transcript_id)
+            genes.append(effect.gene)
+            details.append(effect.create_effect_details())
+            # try:
+            #     hgvs.append(cls.effect_to_HGVS(effect))
+            # except Exception:
+            #     hgvs.append('')
+            #     print(
+            #         "Problems calculating hgvs:",
+            #         transcripts[-1], genes[-1], details[-1],
+            #         file=sys.stderr)
+            #     traceback.print_exc(file=sys.stderr)
+
+        return (transcripts, genes, details)
 
     @classmethod
     def effect_simplify(cls, effects):
@@ -218,5 +242,6 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
         return (
             cls.worst_effect(effects),
             gene_effect[0], gene_effect[1],
-            transcript_effect[0], transcript_effect[1]
+            transcript_effect[0], transcript_effect[1],
+            transcript_effect[2],
         )

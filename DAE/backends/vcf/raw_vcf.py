@@ -3,7 +3,7 @@ Created on Feb 8, 2018
 
 @author: lubo
 '''
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 from __future__ import unicode_literals
 from builtins import str
 
@@ -50,12 +50,20 @@ def samples_to_alleles_index(samples):
 
 class VcfFamily(Family):
 
-    def __init__(self, family_id, ped_df):
-        super(VcfFamily, self).__init__(family_id, ped_df)
+    @classmethod
+    def from_df(cls, family_id, ped_df):
         assert 'sampleIndex' in ped_df.columns
+        family = Family.from_df(family_id, ped_df)
 
-        self.samples = self.ped_df['sampleIndex'].values
-        self.alleles = samples_to_alleles_index(self.samples)
+        family.samples = ped_df['sampleIndex'].values
+        family.alleles = samples_to_alleles_index(family.samples)
+
+        return family
+
+    def __init__(self, family_id):
+        super(VcfFamily, self).__init__(family_id)
+        self.samples = []
+        self.alleles = []
 
     def vcf_samples_index(self, person_ids):
         return self.ped_df[
@@ -115,7 +123,7 @@ class RawFamilyVariants(FamiliesBase):
     def _match_pedigree_to_samples(self, ped_df, samples):
         samples = list(samples)
         samples_needed = set(samples)
-        pedigree_samples = set(ped_df['sampleId'].values)
+        pedigree_samples = set(ped_df['sample_id'].values)
         missing_samples = samples_needed.difference(pedigree_samples)
 
         samples_needed = samples_needed.difference(missing_samples)
@@ -124,21 +132,21 @@ class RawFamilyVariants(FamiliesBase):
         pedigree = []
         seen = set()
         for record in ped_df.to_dict(orient='record'):
-            if record['sampleId'] in samples_needed:
-                if record['sampleId'] in seen:
+            if record['sample_id'] in samples_needed:
+                if record['sample_id'] in seen:
                     continue
-                record['sampleIndex'] = samples.index(record['sampleId'])
+                record['sampleIndex'] = samples.index(record['sample_id'])
                 pedigree.append(record)
-                seen.add(record['sampleId'])
+                seen.add(record['sample_id'])
 
         assert len(pedigree) == len(samples_needed)
 
-        pedigree_order = list(ped_df['sampleId'].values)
+        pedigree_order = list(ped_df['sample_id'].values)
         pedigree = sorted(
-            pedigree, key=lambda p: pedigree_order.index(p['sampleId']))
+            pedigree, key=lambda p: pedigree_order.index(p['sample_id']))
 
         ped_df = pd.DataFrame(pedigree)
-        return ped_df, ped_df['sampleId'].values
+        return ped_df, ped_df['sample_id'].values
 
     def _load_pedigree(self):
         assert self.config.pedigree
@@ -155,7 +163,7 @@ class RawFamilyVariants(FamiliesBase):
         self.ped_df, self.samples = self._match_pedigree_to_samples(
             self.ped_df, self.vcf.samples)
         self.families_build(self.ped_df, family_class=VcfFamily)
-        assert np.all(self.samples == self.ped_df['sampleId'].values)
+        assert np.all(self.samples == self.ped_df['sample_id'].values)
 
         self.vcf_vars = self.vcf.vars
 

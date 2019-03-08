@@ -1,5 +1,6 @@
 from importlib import import_module
 from DAE import genomesDB
+from annotation.tools.utils import handle_header
 
 
 class AnnotatorConfig(object):
@@ -83,7 +84,8 @@ class VariantAnnotatorConfig(AnnotatorConfig):
 
     def _setup_defaults(self):
         if self.options.vcf:
-            assert self.options.v is None
+            assert not self.options.v, \
+                [self.name, self.annotator_name, self.options.v]
 
             if self.options.c is None:
                 self.options.c = 'CHROM'
@@ -145,9 +147,7 @@ class VariantAnnotatorConfig(AnnotatorConfig):
 class LineConfig(object):
 
     def __init__(self, source_header):
-        self.source_header = [
-            col.strip('#') for col in source_header
-        ]
+        self.source_header = handle_header(source_header)
 
     def build(self, source_line):
         return dict(zip(self.source_header, source_line))

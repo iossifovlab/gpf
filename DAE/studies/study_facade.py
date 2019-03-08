@@ -8,7 +8,7 @@ class StudyFacade(object):
     _study_cache = {}
     _study_wrapper_cache = {}
 
-    def __init__(self, study_definition=None, study_factory=None):
+    def __init__(self, pheno_factory, study_definition=None, study_factory=None):
         if study_definition is None:
             study_definition = SingleFileStudiesDefinition()
         if study_factory is None:
@@ -16,13 +16,16 @@ class StudyFacade(object):
 
         self.study_definition = study_definition
         self.study_factory = study_factory
+        self.pheno_factory = pheno_factory
 
     def get_study(self, study_id):
         self.load_cache({study_id})
+        if study_id not in self._study_cache:
+            return None
 
         return self._study_cache[study_id]
 
-    def get_study_wrapper(self, study_id):
+    def get_study_wdae_wrapper(self, study_id):
         self.load_cache({study_id})
 
         if study_id not in self._study_wrapper_cache:
@@ -72,4 +75,4 @@ class StudyFacade(object):
 
         study = self.study_factory.make_study(conf)
         self._study_cache[study_id] = study
-        self._study_wrapper_cache[study_id] = StudyWrapper(study)
+        self._study_wrapper_cache[study_id] = StudyWrapper(study, self.pheno_factory)

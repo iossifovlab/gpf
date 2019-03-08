@@ -98,12 +98,15 @@ class DatasetConfig(StudyConfigBase):
         self.studies_configs = []
 
     @classmethod
-    def from_config(cls, config_section):
+    def from_config(cls, config):
+        config_section = config['dataset']
+        config_section = cls.parse(config_section)
+
         if 'enabled' in config_section:
             if config_section['enabled'] == 'false':
                 return None
         cls._fill_wdae_config(config_section)
-        return DatasetConfig(config_section)
+        return DatasetConfig(config_section, config)
 
     def __getattr__(self, option_name):
         try:
@@ -118,12 +121,12 @@ class DatasetConfig(StudyConfigBase):
             return self._combine_studies_attributes(option_name)
 
     def _combine_studies_attributes(self, option_name):
-        assert len(self.studies) == len(self.studies_configs)
-        assert all([st.id in self.studies for st in self.studies_configs])
-        assert all([
-            (option_name in st) or hasattr(st, option_name)
-            for st in self.studies_configs
-        ]), option_name
+        # assert len(self.studies) == len(self.studies_configs)
+        # assert all([st.id in self.studies for st in self.studies_configs])
+        # assert all([
+        #     (option_name in st) or hasattr(st, option_name)
+        #     for st in self.studies_configs
+        # ]), option_name
 
         if option_name not in self.COMPOSITE_ATTRIBUTES:
             return None

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 from builtins import open
 
 import os
@@ -365,7 +365,8 @@ class MakefileBuilder(VariantDBConfig):
 
         options = parser.parse_args(argv)
         assert options.annotation_config is not None
-        assert os.path.exists(options.annotation_config)
+        assert os.path.exists(options.annotation_config), \
+            options.annotation_config
 
         assert options.genome_file is not None
         assert os.path.exists(options.genome_file)

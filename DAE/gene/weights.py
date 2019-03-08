@@ -11,6 +11,7 @@ standard_library.install_aliases()  # noqa
 from builtins import object
 from configparser import ConfigParser
 from collections import OrderedDict
+from past.utils import old_div
 
 import numpy as np
 from gene.genomic_values import GenomicValues
@@ -48,6 +49,38 @@ class Weights(GenomicValues):
 
         self._load_data()
         self.df.dropna(inplace=True)
+
+        self.histogram_bins, self.histogram_bars = self.bins_bars()
+
+    def bins_bars(self):
+        step = old_div((self.max() - self.min()), (self.bins - 1))
+        dec = - np.log10(step)
+        dec = dec if dec >= 0 else 0
+        dec = int(dec)
+
+        bleft = np.around(self.min(), dec)
+        bright = np.around(self.max() + step, dec)
+
+        if self.xscale == "log":
+            # Max numbers of items in first bin
+            max_count = old_div(self.values().size, self.bins)
+
+            # Find a bin small enough to fit max_count items
+            for bleft in range(-1, -200, -1):
+                if ((self.values()) < 10 ** bleft).sum() < max_count:
+                    break
+
+            bins_in = [0] + list(np.logspace(bleft, np.log10(bright),
+                                             self.bins))
+        else:
+            bins_in = self.bins
+
+        bars, bins = np.histogram(
+            list(self.values()), bins_in,
+            range=[bleft, bright])
+        # bins = np.round(bins, -int(np.log(step)))
+
+        return (bins, bars)
 
     def min(self):
         """
@@ -140,6 +173,18 @@ class WeightsLoader(object):
         self.weights = OrderedDict()
         self._load()
 
+    def get_weights(self):
+        result = []
+
+        for weight_name in self.weights:
+            weight = self[weight_name]
+
+            assert weight.df is not None
+
+            result.append(weight)
+
+        return result
+
     def _load(self):
         weights = self.config.config.get('geneWeights', 'weights')
         names = [n.strip() for n in weights.split(',')]
@@ -149,7 +194,7 @@ class WeightsLoader(object):
 
     def __getitem__(self, weight_name):
         if weight_name not in self.weights:
-            raise KeyError()
+            raise ValueError("unsupported gene weight {}".format(weight_name))
 
         res = self.weights[weight_name]
         if res.df is None:

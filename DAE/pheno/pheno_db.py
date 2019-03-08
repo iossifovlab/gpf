@@ -11,7 +11,7 @@ from sqlalchemy import not_
 
 from collections import defaultdict, OrderedDict
 
-from VariantsDB import Person, Family
+from variants.family import Person, Family
 from pheno.db import DbManager
 from pheno.common import MeasureType, Gender, Status, Role
 
@@ -230,7 +230,7 @@ class PhenoDB(object):
         self.families = {}
 
         for family_id, members in list(families.items()):
-            f = Family()
+            f = Family(family_id)
             f.memberInOrder = members
             f.familyId = family_id
             self.families[family_id] = f
@@ -286,8 +286,8 @@ class PhenoDB(object):
                 self.db.family.c.family_id.in_(family_ids)
             )
         df = pd.read_sql(s, self.db.engine)
-
-        return df[['person_id', 'family_id', 'role', 'gender', 'status']]
+        df.rename(columns={'gender': 'sex'}, inplace=True)
+        return df[['person_id', 'family_id', 'role', 'sex', 'status']]
 
     def get_persons(self, roles=None, person_ids=None, family_ids=None):
         """Returns individuals data from phenotype database.
@@ -314,16 +314,17 @@ class PhenoDB(object):
             family_id = row['family_id']
 
             p = Person(row)
-            p.personId = person_id
-            p.familyId = family_id
+            p.person_id = person_id
+            p.family_id = family_id
             assert row['role'] in Role, \
                 "{} not a valid role".format(row['role'])
-            assert row['gender'] in Gender, \
-                "{} not a valid gender".format(row['gender'])
+            assert row['sex'] in Gender, \
+                "{} not a valid sex".format(row['sex'])
             assert row['status'] in Status, \
                 "{} not a valid status".format(row['status'])
+            # FIXME:
             p.role = row['role']
-            p.gender = row['gender']
+            p.gender = row['sex']
             p.status = row['status']
 
             persons[person_id] = p
@@ -333,7 +334,7 @@ class PhenoDB(object):
         """
         Returns a measure by measure_id.
         """
-        assert measure_id in self.measures
+        assert measure_id in self.measures, measure_id
         return self.measures[measure_id]
 
     def _build_default_filter_clause(self, m, default_filter):
@@ -422,7 +423,7 @@ class PhenoDB(object):
         individuals IDs and column named as `measure_id` values of the measure.
         """
 
-        assert measure_id in self.measures
+        assert measure_id in self.measures, measure_id
         measure = self.measures[measure_id]
 
         df = self._raw_get_measure_values_df(

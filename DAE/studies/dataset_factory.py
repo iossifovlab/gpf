@@ -15,7 +15,7 @@ class DatasetFactory(object):
         self.study_facade = study_facade
 
     def make_dataset(self, dataset_config):
-        assert isinstance(dataset_config, DatasetConfig)
+        assert isinstance(dataset_config, DatasetConfig), type(dataset_config)
 
         studies = []
         for study_name in dataset_config.studies:
@@ -35,6 +35,3 @@ class DatasetFactory(object):
             dataset_config,
             studies
         )
-
-    def get_study_facade(self):
-        return self.study_facade

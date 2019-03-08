@@ -71,6 +71,7 @@ def variant_effect_annotator():
 
         'effect_details': 'effect_details',
         'effect_details_transcript_ids': 'effect_details_transcript_ids',
+        'effect_details_genes': 'effect_details_genes',
         'effect_details_details': 'effect_details_details',
     }
 
@@ -117,6 +118,7 @@ def test_effect_annotator_df(variant_effect_annotator):
         'effect_gene_types',
         'effect_gene_genes',
         'effect_details_transcript_ids',
+        # 'effect_details_genes',
         'effect_details_details'
     ]
     df[columns] = df[columns].fillna('')
@@ -167,6 +169,7 @@ def test_effect_annotators_compare(
         'effect_gene_types',
         'effect_gene_genes',
         'effect_details_transcript_ids',
+        # 'effect_details_genes',
         'effect_details_details'
     ]
     df[columns] = df[columns].fillna('')

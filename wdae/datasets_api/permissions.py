@@ -6,7 +6,7 @@ Created on Jul 5, 2017
 from __future__ import unicode_literals
 from rest_framework import permissions
 
-from datasets_api.datasets_manager import get_datasets_manager
+from datasets_api.studies_manager import get_studies_manager
 from datasets_api.models import Dataset
 from guardian.utils import get_anonymous_user
 
@@ -24,7 +24,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
     @staticmethod
     def permitted_datasets(user):
-        dataset_ids = get_datasets_manager().get_dataset_facade() \
+        dataset_ids = get_studies_manager().get_dataset_facade() \
             .get_all_dataset_ids()
 
         return list(filter(

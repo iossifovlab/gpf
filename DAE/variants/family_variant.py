@@ -154,7 +154,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         """
         if self._variant_in_roles is None:
             self._variant_in_roles = [
-                self.family.persons[pid]['role'] if pid is not None else None
+                self.family.persons[pid].role if pid is not None else None
                 for pid in self.variant_in_members
             ]
         return self._variant_in_roles
@@ -167,7 +167,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         """
         if self._variant_in_sexes is None:
             self._variant_in_sexes = [
-                self.family.persons[pid]['sex'] if pid is not None else None
+                self.family.persons[pid].sex if pid is not None else None
                 for pid in self.variant_in_members
             ]
         return self._variant_in_sexes
@@ -292,14 +292,17 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         self._best_st = None
         self._inheritance_in_members = None
         self._variant_in_members = None
-        self._matched_alleles = []
+        self._matched_alleles = self.summary_variant._matched_alleles
 
     def set_matched_alleles(self, alleles_indexes):
         self._matched_alleles = alleles_indexes
 
     @property
     def matched_alleles(self):
-        return [self.alleles[ai] for ai in self._matched_alleles]
+        return [
+            aa for aa in self.alleles 
+            if aa.allele_index in self._matched_alleles
+        ]
 
     @property
     def matched_alleles_indexes(self):

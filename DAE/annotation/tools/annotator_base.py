@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 import sys
 import traceback
@@ -102,7 +102,7 @@ class CopyAnnotator(AnnotatorBase):
 
     def collect_annotator_schema(self, schema):
         for key, value in self.config.columns_config.items():
-            assert key in schema.columns
+            assert key in schema.columns, [key, schema.columns]
             schema.columns[value] = schema.columns[key]
 
     def line_annotation(self, annotation_line, variant=None):

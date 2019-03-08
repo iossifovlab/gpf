@@ -9,6 +9,7 @@ import shutil
 
 import pytest
 
+from pheno.pheno_factory import PhenoFactory
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
 from studies.study_facade import StudyFacade
@@ -16,6 +17,7 @@ from studies.study_facade import StudyFacade
 from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
+from utils.fixtures import change_environment
 
 from gene.config import GeneInfoConfig
 from gene.gene_set_collections import GeneSetsCollections
@@ -46,10 +48,11 @@ def study_configs(study_definition):
 
 
 @pytest.fixture(scope='session')
-def study_definitions():
+def study_definitions(dae_config_fixture):
     return DirectoryEnabledStudiesDefinition(
         studies_dir=studies_dir(),
-        work_dir=fixtures_dir())
+        work_dir=fixtures_dir(),
+        default_conf=dae_config_fixture.default_configuration_conf)
 
 
 @pytest.fixture(scope='session')
@@ -58,17 +61,18 @@ def study_factory():
 
 
 @pytest.fixture(scope='session')
-def study_facade(study_factory, study_definitions):
-    return StudyFacade(
+def study_facade(study_factory, study_definitions, pheno_factory):
+    return StudyFacade(pheno_factory,
         study_factory=study_factory, study_definition=study_definitions)
 
 
 @pytest.fixture(scope='session')
-def dataset_definitions(study_facade):
+def dataset_definitions(study_facade, dae_config_fixture):
     return DirectoryEnabledDatasetsDefinition(
         study_facade,
         datasets_dir=datasets_dir(),
-        work_dir=fixtures_dir())
+        work_dir=fixtures_dir(),
+        default_conf=dae_config_fixture.default_configuration_conf)
 
 
 @pytest.fixture(scope='session')
@@ -77,10 +81,16 @@ def dataset_factory(study_facade):
 
 
 @pytest.fixture(scope='session')
-def dataset_facade(dataset_definitions, dataset_factory):
+def dataset_facade(dataset_definitions, dataset_factory, pheno_factory):
     return DatasetFacade(
         dataset_definitions=dataset_definitions,
-        dataset_factory=dataset_factory)
+        dataset_factory=dataset_factory,
+        pheno_factory=pheno_factory)
+
+
+@pytest.fixture(scope='session')
+def pheno_factory():
+    return PhenoFactory()
 
 
 def path_to_fixtures(*args):
@@ -95,25 +105,8 @@ def mock_property(mocker):
 
 
 @pytest.fixture()
-def mocked_dataset_config(mocker):
-    mp = mock_property(mocker)
-
-    mp(
-        'configurable_entities.configuration.DAEConfig.gene_info_conf',
-        path_to_fixtures('gene_info.conf'))
-    mp(
-        'configurable_entities.configuration.DAEConfig.gene_info_dir',
-        path_to_fixtures())
-    # mp(
-    #     'configurable_entities.configuration.DAEConfig.dae_data_dir',
-    #     path_to_fixtures())
-
-    return DAEConfig()
-
-
-@pytest.fixture()
-def gene_info_config(mocked_dataset_config):
-    return GeneInfoConfig(config=mocked_dataset_config)
+def gene_info_config():
+    return GeneInfoConfig()
 
 
 @pytest.fixture  # noqa
@@ -129,20 +122,17 @@ def gene_info_cache_dir():
         'Cache dir "{}"already  exists..'.format(cache_dir)
     os.makedirs(cache_dir)
 
-    env_key = 'DATA_STUDY_GROUPS_DENOVO_GENE_SETS_DIR'
-    old_env = os.getenv(env_key, None)
+    new_envs = {
+        'DATA_STUDY_GROUPS_DENOVO_GENE_SETS_DIR':
+            path_to_fixtures('geneInfo', 'cache'),
+        'DAE_DB_DIR':
+            path_to_fixtures()
+    }
 
-    os.environ[env_key] = \
-        path_to_fixtures('geneInfo', 'cache')
-
-    yield
+    for val in change_environment(new_envs):
+        yield val
 
     shutil.rmtree(cache_dir)
-
-    if old_env is None:
-        os.unsetenv(env_key)
-    else:
-        os.putenv(env_key, old_env)
 
 
 @pytest.fixture()
@@ -152,3 +142,9 @@ def calc_gene_sets(gscs):
     denovo_gene_sets.load(build_cache=True)
 
     print("PRECALCULATION COMPLETE")
+
+
+@pytest.fixture(scope='session')
+def dae_config_fixture():
+    dae_config = DAEConfig(fixtures_dir())
+    return dae_config

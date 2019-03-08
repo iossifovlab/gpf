@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 import os
 import pytest
@@ -17,7 +17,7 @@ from .conftest import relative_to_this_test_folder
     ('fixtures/TEST3phyloP100way/TEST3phyloP100way.bedGraph.gz',
      ['0', '1', '2', '3'], True, 18),
     ('fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz',
-     ['0', '1', '2', '3'], True, 14),
+     ['0', '1', '2', '3'], True, 19),
     ('fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz',
      ['0', '1', '2', '3', '4', '5'], True, 54),
 ])
@@ -87,7 +87,7 @@ def test_tsv_reader(filename, header, linecount):
     ('fixtures/TEST3phyloP100way/TEST3phyloP100way.bedGraph.gz',
      ['0', '1', '2', '3'], True, "chr2:20002-20005", 4),
     ('fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz',
-     ['0', '1', '2', '3'], True, None, 14),
+     ['0', '1', '2', '3'], True, None, 19),
     ('fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz',
      ['0', '1', '2', '3'], True, "1:20002-20004", 3),
     ('fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz',
