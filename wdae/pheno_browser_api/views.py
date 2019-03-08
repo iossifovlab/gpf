@@ -5,15 +5,16 @@ Created on Apr 21, 2017
 '''
 from __future__ import print_function
 from __future__ import unicode_literals
+import os
 import numpy as np
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-import preloaded
 from django.conf import settings
-import os
+
+from datasets_api.studies_manager import get_studies_manager
 from pheno_browser_api.common import PhenoBrowserCommon
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.permissions import IsDatasetAllowed
@@ -26,18 +27,14 @@ class PhenoInstrumentsView(APIView):
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        register = preloaded.register
-        self.datasets = register.get('datasets')
-        assert self.datasets is not None
-
-        self.datasets_factory = self.datasets.get_factory()
+        self.datasets_facade = get_studies_manager().get_dataset_facade()
 
     def get(self, request):
         if 'dataset_id' not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params['dataset_id']
 
-        dataset = self.datasets_factory.get_dataset(dataset_id)
+        dataset = self.datasets_facade.get_dataset(dataset_id)
         if dataset is None or dataset.pheno_db is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -58,11 +55,8 @@ class PhenoMeasuresView(APIView):
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        register = preloaded.register
-        self.datasets = register.get('datasets')
-        assert self.datasets is not None
+        self.datasets_facade = get_studies_manager().get_dataset_facade()
 
-        self.datasets_factory = self.datasets.get_factory()
         self.base_url = getattr(
             settings,
             "PHENO_BROWSER_BASE_URL",
@@ -82,7 +76,7 @@ class PhenoMeasuresView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params['dataset_id']
 
-        dataset = self.datasets_factory.get_dataset(dataset_id)
+        dataset = self.datasets_facade.get_dataset(dataset_id)
         if dataset is None or dataset.pheno_db is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -128,18 +122,14 @@ class PhenoMeasuresDownload(APIView):
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        register = preloaded.register
-        self.datasets = register.get('datasets')
-        assert self.datasets is not None
-
-        self.datasets_factory = self.datasets.get_factory()
+        self.datasets_facade = get_studies_manager().get_dataset_facade()
 
     def get(self, request):
         if 'dataset_id' not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params['dataset_id']
 
-        dataset = self.datasets_factory.get_dataset(dataset_id)
+        dataset = self.datasets_facade.get_dataset(dataset_id)
         if dataset is None or dataset.pheno_db is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 

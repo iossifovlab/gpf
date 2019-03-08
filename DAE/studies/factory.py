@@ -5,9 +5,15 @@ from studies.study_facade import StudyFacade
 from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
+
 from common_reports.common_report import CommonReportsGenerator
 from common_reports.common_report_facade import CommonReportFacade
 from common_reports.config import CommonReportsQueryObjects
+
+from gene.scores import ScoreLoader
+from gene.weights import WeightsLoader
+
+from gene.gene_set_collections import GeneSetsCollections
 
 
 class VariantsDb(object):
@@ -21,8 +27,7 @@ class VariantsDb(object):
 
         study_factory = StudyFactory(thrift_connection)
 
-        self.pheno_factory = PhenoFactory(
-            config_filename=dae_config.pheno_conf)
+        self.pheno_factory = PhenoFactory(dae_config=dae_config)
 
         self.study_facade = StudyFacade(
             self.pheno_factory, self.studies_definitions, study_factory)
@@ -43,6 +48,11 @@ class VariantsDb(object):
         #     self.common_reports_query_objects)
         # self.common_report_facade = CommonReportFacade(
         #     self.common_reports_query_objects)
+
+        self.score_loader = ScoreLoader()
+        self.weights_loader = WeightsLoader()
+
+        self.gene_sets_collections = GeneSetsCollections(self.dataset_facade)
 
     def get_studies_ids(self):
         return self.studies_definitions.study_ids

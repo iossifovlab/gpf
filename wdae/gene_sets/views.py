@@ -15,8 +15,7 @@ from django.http.response import StreamingHttpResponse
 import itertools
 from django.utils.http import urlencode
 
-from datasets_api.datasets_manager import get_datasets_manager
-from preloaded import register
+from datasets_api.studies_manager import get_studies_manager
 from datasets_api.permissions import IsDatasetAllowed
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
@@ -26,13 +25,13 @@ class GeneSetsBaseView(views.APIView):
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        self.gscs = register.get('gene_sets_collections')
-        self.dataset_facade = get_datasets_manager().get_dataset_facade()
+        self.gscs = get_studies_manager().get_gene_sets_collections()
+        self.dataset_facade = get_studies_manager().get_dataset_facade()
         print("datasets loaded in view")
 
     def datasets_to_study_groups(self, datasets):
         return [
-            self.dataset_facade.get_dataset(dataset).study_group.name
+            self.dataset_facade.get_dataset(dataset).id
             for dataset in datasets
         ]
 
@@ -40,7 +39,7 @@ class GeneSetsBaseView(views.APIView):
         for gene_sets in gene_sets_collections:
             for datasetMap in gene_sets['types']:
                 study_group_id = datasetMap.pop('studyGroupId')
-                dataset = self.dataset_facade.get_dataset_by_study_group(
+                dataset = self.dataset_facade.get_dataset_wdae_wrapper(
                     study_group_id)
                 if dataset is None:
                     raise RuntimeError(
@@ -63,9 +62,9 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
         permitted_datasets = IsDatasetAllowed.permitted_datasets(request.user)
         permitted_study_groups = \
             self.datasets_to_study_groups(permitted_datasets)
-        gene_sets_collections = deepcopy(self.gscs.get_collections_descriptions(
-            permitted_study_groups))
-        self.study_groups_to_datasets(gene_sets_collections)
+        gene_sets_collections = deepcopy(
+            self.gscs.get_collections_descriptions(permitted_study_groups))
+        # self.study_groups_to_datasets(gene_sets_collections)
         return Response(gene_sets_collections, status=status.HTTP_200_OK)
 
 
@@ -99,8 +98,9 @@ class GeneSetsView(GeneSetsBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         gene_sets_types = data.get('geneSetsTypes', [])
-        gene_sets = self.gscs.get_gene_sets(gene_sets_collection_id,
-            gene_sets_types, IsDatasetAllowed.permitted_datasets(request.user))
+        gene_sets = self.gscs.get_gene_sets(
+            gene_sets_collection_id, gene_sets_types,
+            IsDatasetAllowed.permitted_datasets(request.user))
 
         response = gene_sets
         if 'filter' in data:

@@ -6,7 +6,7 @@ from box import Box
 from collections import OrderedDict
 
 from gene.genomic_values import GenomicValues
-from Config import Config
+from configurable_entities.configuration import DAEConfig
 import common.config
 
 
@@ -17,7 +17,8 @@ class Scores(GenomicValues):
 
         self.config = config
         self.genomic_values_col = 'scores'
-        assert self.section_name in self.config, [self.section_name, self.config]
+        assert self.section_name in self.config,\
+            [self.section_name, self.config]
 
         self.desc = self.config[self.section_name].desc
         self.bins = int(self.config[self.section_name].bins)
@@ -47,19 +48,31 @@ class ScoreLoader(object):
 
     def __init__(self, *args, **kwargs):
         super(ScoreLoader, self).__init__(*args, **kwargs)
-        self.daeConfig = Config()
+        self.daeConfig = DAEConfig()
 
         config = ConfigParser({
-            'wd': self.daeConfig.daeDir
+            'wd': self.daeConfig.dae_data_dir
         })
         config.optionxform = str
-        config.read(self.daeConfig.genomicScoresDBconfFile)
+        config.read(self.daeConfig.genomic_scores_conf)
         self.config = Box(common.config.to_dict(config),
                           default_box=True, default_box_attr=None)
 
         self.scores = OrderedDict()
 
         self._load()
+
+    def get_scores(self):
+        result = []
+
+        for score_name in self.scores:
+            score = self[score_name]
+
+            assert score.df is not None
+
+            result.append(score)
+
+        return result
 
     def _load(self):
         scores = self.config.genomicScores.scores

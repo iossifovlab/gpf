@@ -3,7 +3,7 @@ import os
 import shutil
 
 from DAE import Config
-from datasets_api.datasets_manager import get_datasets_manager
+from datasets_api.studies_manager import get_studies_manager
 from studies.study_definition import SingleFileStudiesDefinition
 from study_groups.study_group_definition import SingleFileStudiesGroupDefinition
 
@@ -70,7 +70,7 @@ def datasets_from_fixtures(db, settings):
 
     os.environ['DAE_DATA_DIR'] = path_to_fixtures()
     print("REPLACING DAE_DATA_DIR")
-    get_datasets_manager().reload_dataset_facade()
+    get_studies_manager().reload_dataset_facade()
 
     yield
 
