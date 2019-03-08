@@ -390,11 +390,38 @@ the study into GPF web UI.
         studies = quad
 
 
-Generate Variant Reports (optional) [TBD]
-+++++++++++++++++++++++++++++++++++++++++
+Generate Variant Reports (optional)
++++++++++++++++++++++++++++++++++++
 
-Generate Denovo Gene Sets (optional) [TBD]
-++++++++++++++++++++++++++++++++++++++++++
+To generate families and de Novo variants report you should use
+`generate_common_reports.py`. This tool supports option `--show-studies` to
+list all studies and datasets configured in the GPF instance::
+
+    generate_common_reports.py --show-studies
+
+To generate the families and variants reports for given configured study
+or dataset you
+should use `--studies` option. For example to generate the families and
+variants reports for the `quad` study you should use::
+
+    generate_common_reports.py --studies quad
+
+
+Generate Denovo Gene Sets (optional)
+++++++++++++++++++++++++++++++++++++
+
+To generate de Novo Gene sets you should use `generate_denovo_gene_sets.py`
+tools. This tool supports option  `--show-studies` to
+list all studies and datasets configured in the GPF instance::
+
+    generate_denovo_gene_sets.py --show-studies
+
+To generate the de Novo gene sets for given configured study
+or dataset you
+should use `--studies` option. For example to generate the families and
+variants reports for the `quad` study you should use::
+
+    generate_denovo_gene_sets.py --studies quad
 
 
 Start GPF Web UI
