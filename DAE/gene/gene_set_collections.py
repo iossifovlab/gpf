@@ -13,7 +13,6 @@ import logging
 from gene.config import GeneInfoConfig
 from GeneTerms import loadGeneTerm
 from pheno.common import Status
-# from studies.dataset_facade import DatasetFacade
 from variants.attributes import Inheritance
 
 LOGGER = logging.getLogger(__name__)
@@ -92,10 +91,10 @@ class GeneSetsCollection(GeneInfoConfig):
 
 class DenovoGeneSetsCollection(GeneInfoConfig):
 
-    def __init__(self, collection_id, dataset_facade):
+    def __init__(self, collection_id, variants_db):
         super(DenovoGeneSetsCollection, self).__init__()
 
-        self.dataset_facade = dataset_facade
+        self.variants_db = variants_db
 
         self.collection_id = collection_id
         self.cache = {}
@@ -103,7 +102,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def _read_config(self):
         self.denovo_gene_sets = OrderedDict()
-        for config in self.dataset_facade.get_all_dataset_configs():
+        for config in self.variants_db.get_all_configs():
             study_config = config.study_config
 
             pedigree_selector = self._get_att_from_config(
@@ -250,7 +249,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         if datasets_ids is None:
             datasets_ids = self.denovo_gene_sets.keys()
         return [
-            self.dataset_facade.get_dataset_wdae_wrapper(dataset_id)
+            self.variants_db.get_wdae_wrapper(dataset_id)
             for dataset_id in datasets_ids
         ]
 
@@ -443,12 +442,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
 class GeneSetsCollections(object):
 
-    def __init__(self, dataset_facade, config=None):
+    def __init__(self, variants_db, config=None):
         if config is None:
             config = GeneInfoConfig()
 
         self.config = config
-        self.dataset_facade = dataset_facade
+        self.variants_db = variants_db
         self.gene_sets_collections = {}
 
     def get_collections_descriptions(self, permitted_datasets=None):
@@ -483,7 +482,7 @@ class GeneSetsCollections(object):
         if gene_sets_collection_id == 'denovo':
             gsc = DenovoGeneSetsCollection(
                 gene_sets_collection_id,
-                dataset_facade=self.dataset_facade)
+                variants_db=self.variants_db)
         else:
             gsc = GeneSetsCollection(gene_sets_collection_id)
 
