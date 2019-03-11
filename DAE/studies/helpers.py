@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from builtins import str
 
 import math
+import numpy as np
 import itertools
 import functools
 import logging
@@ -148,12 +149,14 @@ def get_person_color(member, pedigree_selectors, selected_pedigree_selector):
 
 
 
-def generate_pedigree(variant, pedigree_selectors, selected_pedigree_selector):
+def generate_pedigree(allele, pedigree_selectors, selected_pedigree_selector):
     result = []
-    for index, member in enumerate(variant.members_in_order):
+    best_st = np.sum(allele.gt == allele.allele_index, axis=0)
+
+    for index, member in enumerate(allele.members_in_order):
         # FIXME: add missing denovo parent parameter to variant_count_v3 call
         result.append([
-            variant.family_id,
+            allele.family_id,
             member.person_id,
             member.mom_id,
             member.dad_id,
@@ -162,7 +165,7 @@ def generate_pedigree(variant, pedigree_selectors, selected_pedigree_selector):
                 member, pedigree_selectors, selected_pedigree_selector),
             member.layout_position,
             member.generated,
-            variant.gt[1, index],
+            best_st[index],
             0
         ])
 

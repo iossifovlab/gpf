@@ -77,6 +77,7 @@ class StudiesManager(object):
 
     def get_score_loader(self):
         self.get_variants_db()
+        assert self.score_loader is not None
         return self.score_loader
 
     def get_weights_loader(self):

@@ -57,8 +57,8 @@ class VariantsDb(object):
     def get_studies_ids(self):
         return self.studies_definitions.study_ids
 
-    def get_studies_names(self):
-        return self.studies_definitions.get_all_study_names()
+    # def get_studies_names(self):
+    #     return self.studies_definitions.get_all_study_names()
 
     def get_study_config(self, study_id):
         return self.studies_definitions.get_study_config(study_id)
