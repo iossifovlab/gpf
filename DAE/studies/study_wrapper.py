@@ -168,9 +168,11 @@ class StudyWrapper(object):
 
             kwargs['person_ids'] = list(people_ids_to_query)
 
-        return self._add_pheno_columns(itertools.islice(
-                self.study.query_variants(**kwargs),
-                limit))
+        variants_from_studies = itertools.islice(
+            self.study.query_variants(**kwargs), limit)
+
+        for variant in self._add_pheno_columns(variants_from_studies):
+            yield variant
 
     def _add_pheno_columns(self, variants_iterable):
         if self.pheno_db is None:
@@ -210,27 +212,6 @@ class StudyWrapper(object):
                     allele.update_attributes(pheno_values)
 
                 yield variant
-
-        # pheno_values = {}
-        #
-        # print(self.pheno_db.get_measure_values(
-        #             "diagnosis_summary.best_verbal_iq",
-        #             roles=['prb']))
-        #
-        # for pheno_column in self.config.genotypeBrowser.phenoColumns:
-        #     for slot in pheno_column.slots:
-        #         pheno_value = self.pheno_db.get_measure_values(
-        #             slot.measure,
-        #             family_ids=[variant.family.family_id],
-        #             roles=[slot.role])
-        #         key = slot.source
-        #         pheno_values[key] = ','.join(
-        #             map(str, pheno_value.values()))
-        #
-        # for allele in variant.alt_alleles:
-        #     allele.update_attributes(pheno_values)
-        #
-        # return variant
 
     @staticmethod
     def _split_iterable(iterable, max_chunk_length=5000):
