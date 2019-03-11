@@ -84,3 +84,9 @@ def test_from_arrow(generic_pq_schema, generic_pa_schema):
             generic_pq_schema.columns[col].type_py
         assert converted_schema.columns[col].type_pa == \
             generic_pq_schema.columns[col].type_pa
+
+
+def test_order_as(generic_schema):
+    new_col_order = ['col5', 'col2', 'col3', 'col4', 'col1', 'col6']
+    ordered_schema = generic_schema.order_as(new_col_order)
+    assert ordered_schema.col_names == new_col_order
