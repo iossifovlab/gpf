@@ -182,36 +182,43 @@ class StudyWrapper(object):
         for variants_chunk in self._split_iterable(variants_iterable, 5000):
             families = {variant.family_id for variant in variants_chunk}
 
-            pheno_column_dfs = []
-            pheno_column_names = []
-            for pheno_column in self.config.genotypeBrowser.phenoColumns:
-                for slot in pheno_column.slots:
-                    pheno_column_dfs.append(self.pheno_db.get_measure_values_df(
-                        slot.measure,
-                        family_ids=list(families),
-                        roles=[slot.role]))
-                    pheno_column_names.append(slot.source)
+            pheno_column_values = self._get_all_pheno_values(families)
 
             for variant in variants_chunk:
-                pheno_values = {}
-
-                for pheno_column_df, pheno_column_name in \
-                        zip(pheno_column_dfs, pheno_column_names):
-                    variant_pheno_value_df = pheno_column_df[
-                        pheno_column_df['person_id'].isin(variant.members_ids)]
-                    variant_pheno_value_df.set_index('person_id', inplace=True)
-                    assert len(variant_pheno_value_df.columns) == 1
-                    column = variant_pheno_value_df.columns[0]
-
-                    pheno_values[pheno_column_name] = ",".join(
-                        map(str, variant_pheno_value_df[column].tolist()))
-
-                print(pheno_values)
-
+                pheno_values = self._get_pheno_values_for_variant(
+                    variant, pheno_column_values)
                 for allele in variant.alt_alleles:
                     allele.update_attributes(pheno_values)
 
                 yield variant
+
+    def _get_pheno_values_for_variant(self, variant, pheno_column_values):
+        pheno_values = {}
+
+        for pheno_column_df, pheno_column_name in pheno_column_values:
+            variant_pheno_value_df = pheno_column_df[
+                pheno_column_df['person_id'].isin(variant.members_ids)]
+            variant_pheno_value_df.set_index('person_id', inplace=True)
+            assert len(variant_pheno_value_df.columns) == 1
+            column = variant_pheno_value_df.columns[0]
+
+            pheno_values[pheno_column_name] = ",".join(
+                map(str, variant_pheno_value_df[column].tolist()))
+
+        return pheno_values
+
+    def _get_all_pheno_values(self, families):
+        pheno_column_dfs = []
+        pheno_column_names = []
+        for pheno_column in self.config.genotypeBrowser.phenoColumns:
+            for slot in pheno_column.slots:
+                pheno_column_dfs.append(self.pheno_db.get_measure_values_df(
+                    slot.measure,
+                    family_ids=list(families),
+                    roles=[slot.role]))
+                pheno_column_names.append(slot.source)
+
+        return list(zip(pheno_column_dfs, pheno_column_names))
 
     @staticmethod
     def _split_iterable(iterable, max_chunk_length=5000):
