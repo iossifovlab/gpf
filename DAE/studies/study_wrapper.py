@@ -8,6 +8,7 @@ import itertools
 from RegionOperations import Region
 from pheno.common import MeasureType
 from pheno_tool.pheno_common import PhenoFilterBuilder
+from utils.dae_utils import split_iterable
 from variants.attributes import Role
 from studies.helpers import expand_effect_types
 from backends.attributes_query import role_query, variant_type_converter, \
@@ -179,7 +180,7 @@ class StudyWrapper(object):
             for variant in variants_iterable:
                 yield variant
 
-        for variants_chunk in self._split_iterable(variants_iterable, 5000):
+        for variants_chunk in split_iterable(variants_iterable, 5000):
             families = {variant.family_id for variant in variants_chunk}
 
             pheno_column_values = self._get_all_pheno_values(families)
@@ -219,22 +220,6 @@ class StudyWrapper(object):
                 pheno_column_names.append(slot.source)
 
         return list(zip(pheno_column_dfs, pheno_column_names))
-
-    @staticmethod
-    def _split_iterable(iterable, max_chunk_length=5000):
-        i = 0
-        result = []
-        for value in iterable:
-            i += 1
-            result.append(value)
-
-            if i == max_chunk_length:
-                yield result
-                result = []
-                i = 0
-
-        if i != 0:
-            yield result
 
     def _merge_with_people_ids(self, kwargs, people_ids_to_query):
         people_ids_filter = kwargs.pop('person_ids', None)

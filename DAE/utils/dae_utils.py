@@ -5,6 +5,7 @@ Created on Mar 5, 2018
 '''
 from __future__ import unicode_literals
 import re
+import itertools
 
 SUB_COMPLEX_RE = re.compile(r'^(sub|complex)\(([NACGT]+)->([NACGT]+)\)$')
 INS_RE = re.compile(r'^ins\(([NACGT]+)\)$')
@@ -35,3 +36,20 @@ def dae2vcf_variant(chrom, position, var, genome=None):
         return position - 1, reference, reference[0]
 
     raise NotImplementedError('weird variant: ' + var)
+
+
+def split_iterable(iterable, max_chunk_length=5000):
+    i = 0
+    result = []
+
+    for value in iterable:
+        i += 1
+        result.append(value)
+
+        if i == max_chunk_length:
+            yield result
+            result = []
+            i = 0
+
+    if i != 0:
+        yield result
