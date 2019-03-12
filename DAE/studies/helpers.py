@@ -9,7 +9,6 @@ import logging
 from utils.vcf_utils import mat2str
 
 from common.query_base import EffectTypesMixin
-from variants.attributes import Role
 
 LOGGER = logging.getLogger(__name__)
 
@@ -147,8 +146,6 @@ def get_person_color(member, pedigree_selectors, selected_pedigree_selector):
         return selected_pedigree_selectors['default']['color']
 
 
-
-
 def generate_pedigree(allele, pedigree_selectors, selected_pedigree_selector):
     result = []
     best_st = np.sum(allele.gt == allele.allele_index, axis=0)
@@ -172,19 +169,23 @@ def generate_pedigree(allele, pedigree_selectors, selected_pedigree_selector):
     return result
 
 
-def get_variants_web_preview(
+def get_variants_web(
         variants, pedigree_selectors, selected_pedigree_selector,
-        genotype_attrs, pedigree_attrs, max_variants_count=1000):
-    VARIANTS_HARD_MAX = 2000
+        genotype_attrs, pedigree_attrs, max_variants_count=1000,
+        variants_hard_max=2000):
     rows = transform_variants_to_lists(
         variants, genotype_attrs, pedigree_attrs, pedigree_selectors,
         selected_pedigree_selector)
-    max_variants_count = min(max_variants_count, VARIANTS_HARD_MAX)
 
-    limited_rows = itertools.islice(rows, max_variants_count)
-    limited_rows = list(limited_rows)
+    if max_variants_count is not None:
+        max_variants_count = min(max_variants_count, variants_hard_max)
 
-    if len(limited_rows) <= max_variants_count:
+        limited_rows = itertools.islice(rows, max_variants_count)
+        limited_rows = list(limited_rows)
+    else:
+        limited_rows = list(rows)
+
+    if max_variants_count is None or len(limited_rows) <= max_variants_count:
         count = str(len(limited_rows))
     else:
         count = 'more than {}'.format(max_variants_count)
