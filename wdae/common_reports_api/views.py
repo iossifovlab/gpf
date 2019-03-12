@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from datasets_api.studies_manager import get_studies_manager
+from datasets_api.permissions import IsDatasetAllowed
 
 
 class StudiesSummariesView(APIView):
@@ -45,7 +46,9 @@ class StudiesSummariesView(APIView):
                 'number of siblings':
                     common_report.get('number_of_siblings', ''),
                 'denovo': common_report.get('denovo', ''),
-                'transmitted': common_report.get('transmitted', '')
+                'transmitted': common_report.get('transmitted', ''),
+                'id': common_report.get(
+                    'id', common_report.get('study_name', ''))
             } for common_report in common_reports]
         }
 
@@ -84,6 +87,10 @@ class VariantReportsView(APIView):
         else:
             common_report = self.common_reports_facade.get_common_report(
                 common_report_id)
+
+            common_report['is_downloadable'] =\
+                IsDatasetAllowed.user_has_permission(
+                    request.user, common_report_id)
 
             if common_report:
                 return Response(common_report)
