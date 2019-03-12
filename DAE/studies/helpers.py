@@ -93,7 +93,8 @@ def transform_variants_to_lists(
                         row_variant.append(SPECIAL_ATTRS[column](aa))
                     elif column == 'pedigree':
                         row_variant.append(generate_pedigree(
-                            aa, pedigree_selectors, selected_pedigree_selector))
+                            aa, pedigree_selectors,
+                            selected_pedigree_selector))
                     else:
                         attribute =\
                             aa.get_attribute(column, '')
@@ -157,8 +158,7 @@ def generate_pedigree(allele, pedigree_selectors, selected_pedigree_selector):
 
 def get_variants_web(
         variants, pedigree_selectors, selected_pedigree_selector,
-        genotype_attrs, pedigree_attrs, max_variants_count=1000,
-        variants_hard_max=2000):
+        genotype_attrs, max_variants_count=1000, variants_hard_max=2000):
     rows = transform_variants_to_lists(
         variants, genotype_attrs, pedigree_selectors,
         selected_pedigree_selector)
