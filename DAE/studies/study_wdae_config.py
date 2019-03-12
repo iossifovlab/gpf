@@ -110,30 +110,6 @@ class StudyWdaeMixin(object):
 
         return pedigree
 
-    @classmethod
-    def _get_pedigree_selector_columns(
-            cls, dataset_config, parent_key, pedigree_key):
-        pedigree_selector_columns = dataset_config.pop(
-            parent_key + '.' + pedigree_key + '.' + 'columns', None)
-        if not pedigree_selector_columns:
-            return []
-
-        pedigrees = {}
-
-        pedigrees['name'] = dataset_config.pop(
-            parent_key + '.' + pedigree_key + '.' + 'columns.name')
-        pedigrees['id'] = dataset_config.pop(
-            parent_key + '.' + pedigree_key + '.' + 'columns.id',
-            pedigrees['name'])
-        pedigrees['slots'] = []
-
-        for pedigree_selector_column in pedigree_selector_columns:
-            pedigrees['slots'].append(cls._get_pedigree_selector_column(
-                pedigree_selector_column, dataset_config, parent_key,
-                pedigree_key))
-
-        return [pedigrees]
-
     @staticmethod
     def _get_genotype_browser_pheno_filter(dataset_config, f):
         prefix = 'genotypeBrowser.phenoFilters.{}'.format(f)
@@ -316,16 +292,12 @@ class StudyWdaeMixin(object):
 
     @classmethod
     def _fill_wdae_genotype_browser_config(cls, config_section):
-        config_section['genotypeBrowser.pedigreeColumns'] =\
-            cls._get_pedigree_selector_columns(
-                config_section, 'genotypeBrowser', 'peopleGroup')
         config_section['genotypeBrowser.phenoFilters'] =\
             cls._get_genotype_browser_pheno_filters(config_section)
         config_section['genotypeBrowser.phenoColumns'] =\
             cls._get_genotype_browser_pheno_columns(config_section)
         config_section['genotypeBrowser.genotypeColumns'] =\
             cls._get_genotype_browser_genotype_columns(config_section) + \
-            config_section['genotypeBrowser.pedigreeColumns'] + \
             config_section['genotypeBrowser.phenoColumns']
         config_section['genotypeBrowser.previewColumnsSlots'] =\
             cls._get_genotype_browser_column_slots(

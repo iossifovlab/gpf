@@ -95,7 +95,7 @@ class QueryPreviewView(QueryBaseView):
                 dataset.pedigree_selectors,
                 data.get('pedigreeSelector', {}),
                 dataset.preview_columns,
-                dataset.pedigree_columns
+                # dataset.pedigree_columns
             )
 
             # pprint.pprint(response)

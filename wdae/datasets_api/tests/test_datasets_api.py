@@ -5,7 +5,7 @@ import pytest
 def test_datasets_api_get_all(recreate_dataset_perm, dataset_view, user):
     datasets = dataset_view.get(user).data['data']
     assert datasets
-    assert len(datasets) == 8
+    assert len(datasets) == 14
 
 
 @pytest.mark.django_db(transaction=True)

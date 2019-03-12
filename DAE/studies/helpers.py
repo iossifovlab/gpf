@@ -81,7 +81,7 @@ SPECIAL_ATTRS = merge_dicts(
 
 
 def transform_variants_to_lists(
-        variants, preview_columns, pedigree_attrs, pedigree_selectors,
+        variants, preview_columns, pedigree_selectors,
         selected_pedigree_selector):
 
     for v in variants:
@@ -106,20 +106,6 @@ def transform_variants_to_lists(
                 except (AttributeError, KeyError):
                     row_variant.append('')
 
-            # print("------------------------------------------")
-            # print(pedigree_attrs)
-            # print("------------------------------------------")
-
-            # for attr in pedigree_attrs:
-            #     try:
-            #         if attr['source'] in SPECIAL_ATTRS:
-            #             row_variant.\
-            #                 append(SPECIAL_ATTRS[attr['source']](aa))
-            #         else:
-            #             row_variant.append(get_people_group_attribute(v, attr))
-            #     except (AttributeError, KeyError):
-            #         # print(attr, type(e), e)
-            #         row_variant.append('')
             yield row_variant
 
 
@@ -174,7 +160,7 @@ def get_variants_web(
         genotype_attrs, pedigree_attrs, max_variants_count=1000,
         variants_hard_max=2000):
     rows = transform_variants_to_lists(
-        variants, genotype_attrs, pedigree_attrs, pedigree_selectors,
+        variants, genotype_attrs, pedigree_selectors,
         selected_pedigree_selector)
 
     if max_variants_count is not None:
@@ -192,7 +178,7 @@ def get_variants_web(
 
     return {
         'count': count,
-        'cols': genotype_attrs + [pa['source'] for pa in pedigree_attrs],
+        'cols': genotype_attrs,
         'rows': list(limited_rows)
     }
 

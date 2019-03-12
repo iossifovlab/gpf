@@ -24,9 +24,6 @@ class ConfigurableEntityDefinition(object):
     def get_all_configurable_entity_configs(self):
         return list(self.configs.values())
 
-    def get_all_configurable_entity_names(self):
-        return list(self.configs.keys())
-
     def directory_enabled_configurable_entity_definition(
             self, configurable_entities_dir, configurable_entity_config_class,
             work_dir, default_values={}, default_conf=None):
