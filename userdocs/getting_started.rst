@@ -213,7 +213,7 @@ Inside GPF source directory there is a file named
     conda activate gpf3
 
     # setups GPF paths
-    source $DAE_SOURCE_DIR/setenv.sh
+    source $DAE_SOURCE_DIR/setdae.sh
 
 You shoud copy it as ``setenv.sh`` file and edit it according you own setup.
 When you are ready you need to source your ``setenv.sh`` file:
@@ -270,6 +270,9 @@ To check that everything works you can open following URL in your browser::
     host machine, the you should replace `localhost` with the name or IP of your
     server.
 
+.. note::
+    Before running your development server you will need a running Apache
+    Spark Thrift server.
 
 Import a Demo Dataset
 #####################
