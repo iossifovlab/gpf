@@ -1,7 +1,6 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
 import itertools
 import functools
 
@@ -39,14 +38,6 @@ class Dataset(StudyBase):
         return functools.reduce(
             lambda x, y: x | y,
             [st.get_pedigree_values(column) for st in self.studies], set())
-
-    def gene_sets_cache_file(self):
-        cache_filename = '{}.json'.format(self.id)
-        cache_path = os.path.join(
-            os.path.split(self.config.study_config.config_file)[0],
-            'denovo-cache/' + cache_filename)
-
-        return cache_path
 
     # FIXME: fill these with real values
     def get_column_labels(self):
