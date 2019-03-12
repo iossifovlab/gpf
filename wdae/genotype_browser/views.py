@@ -90,12 +90,13 @@ class QueryPreviewView(QueryBaseView):
 
             dataset = self.get_dataset_wdae_wrapper(dataset_id)
             # LOGGER.info("dataset " + str(dataset))
+            
             response = get_variants_web_preview(
                 dataset.query_variants(safe=True, **data),
                 dataset.pedigree_selectors,
                 data.get('pedigreeSelector', {}),
                 dataset.preview_columns,
-                dataset.pedigree_columns
+                # dataset.pedigree_columns
             )
 
             # pprint.pprint(response)

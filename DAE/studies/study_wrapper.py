@@ -30,7 +30,6 @@ class StudyWrapper(object):
 
         preview_columns = []
         download_columns = []
-        pedigree_columns = {}
         pheno_columns = {}
 
         pedigree_selectors = []
@@ -38,10 +37,6 @@ class StudyWrapper(object):
         if genotype_browser:
             preview_columns = genotype_browser['previewColumnsSlots']
             download_columns = genotype_browser['downloadColumnsSlots']
-            if genotype_browser['pedigreeColumns']:
-                pedigree_columns =\
-                    [s for pc in genotype_browser['pedigreeColumns']
-                     for s in pc['slots']]
             if genotype_browser['phenoColumns']:
                 pheno_columns = [s for pc in genotype_browser['phenoColumns']
                                  for s in pc['slots']]
@@ -51,7 +46,6 @@ class StudyWrapper(object):
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
-        self.pedigree_columns = pedigree_columns
         self.pheno_columns = pheno_columns
 
         self.pedigree_selectors = pedigree_selectors
@@ -437,20 +431,9 @@ class StudyWrapper(object):
         return pedigree_selector_with_id[0] \
             if pedigree_selector_with_id else {}
 
-    # FIXME:
     def _get_dataset_config_options(self, config):
         config['studyTypes'] = self.config.study_types
         config['description'] = self.study.description
-        # config['studies'] = self.config.names
-
-        print(self.config.genotype_browser)
-
-        # config['genotypeBrowser']['hasStudyTypes'] =\
-        #     self.config.has_study_types
-        # config['genotypeBrowser']['hasComplex'] =\
-        #     self.config.has_complex
-        # config['genotypeBrowser']['hasCNV'] =\
-        #     self.config.has_CNV
 
         return config
 
@@ -463,7 +446,6 @@ class StudyWrapper(object):
             'studyTypes', 'studies'
         ]
 
-    # FIXME:
     def get_dataset_description(self):
         keys = self._get_description_keys()
         config = self.config.to_dict()
