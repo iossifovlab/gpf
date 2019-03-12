@@ -43,7 +43,12 @@ class LineAdapter(object):
         return self.line[self.chr_index]
 
     def __getitem__(self, index):
-        return self.line[index]
+        if index == self.pos_begin_index:
+            return self.pos_begin
+        elif index == self.pos_end_index:
+            return self.pos_end
+        else:
+            return self.line[index]
 
     def __len__(self):
         return len(self.line)
@@ -88,8 +93,7 @@ class ScoreFile(object):
 
         if config_filename is None:
             config_filename = "{}.conf".format(self.score_filename)
-        self.config = ConfigBox(reusables.config_dict(config_filename),
-                                camel_killer_box=True)
+        self.config = ConfigBox(reusables.config_dict(config_filename))
 
         self.schema = Schema.from_dict(dict(self.config.schema)) \
                             .order_as(self.header)
@@ -107,9 +111,9 @@ class ScoreFile(object):
             self.chr_prefix = self.config.misc.bool('chr_prefix')
         else:
             self.chr_prefix = False
-        
-        if 'noScoreValue' in self.config.general:
-            self.no_score_value = self.config.noScoreValue
+       
+        if 'noscorevalue' in self.config.general:
+            self.no_score_value = self.config.general.noscorevalue
         else:
             self.no_score_value = 'na'
         if self.no_score_value.lower() in set(['na', 'none']):

@@ -14,7 +14,7 @@ from annotation.tools.score_annotator import PositionScoreAnnotator, \
 try:
     bigwig_enabled = True
     from annotation.tools.score_file_io_bigwig import \
-        BigWigFile
+        BigWigAccess
 except ImportError:
     bigwig_enabled = False
 
@@ -244,13 +244,9 @@ def test_variant_score_annotator_cadd(
                     reason='pyBigWig module is not installed')
 def test_variant_score_annotator_bigwig(capsys):
     options = Box({
-        "vcf": True,
-        "Graw": "fake_genome_ref_file",
         "mode": "overwrite",
         "scores_file": relative_to_this_test_folder(
-            "fixtures/TESTbigwig/TEST_bigwig_score.bw"),
-        "scores_config_file": relative_to_this_test_folder(
-            "fixtures/TESTbigwig/TEST_bigwig_score.bw.conf")
+            "fixtures/TESTbigwig/TEST_bigwig_score.bw")
     }, default_box=True, default_box_attr=None)
 
     columns_config = {
@@ -269,4 +265,4 @@ def test_variant_score_annotator_bigwig(capsys):
 
     score_annotator = PositionScoreAnnotator(config)
     assert score_annotator is not None
-    assert isinstance(score_annotator.score_file, BigWigFile)
+    assert isinstance(score_annotator.score_file.accessor, BigWigAccess)
