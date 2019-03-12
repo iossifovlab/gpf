@@ -6,7 +6,7 @@ import { Dataset } from './datasets';
 import { IdName } from '../common/idname';
 import { Observable } from 'rxjs';
 
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ActivatedRoute, Params, Router, NavigationEnd } from '@angular/router';
 import { Location } from '@angular/common';
 
 @Component({
@@ -28,6 +28,16 @@ export class DatasetsComponent implements OnInit {
     private router: Router,
     private location: Location,
   ) {
+    this.router.routeReuseStrategy.shouldReuseRoute = function() {
+      return false;
+    };
+
+    this.router.events.subscribe((evt) => {
+      if (evt instanceof NavigationEnd) {
+        this.router.navigated = false;
+        window.scrollTo(0, 0);
+      }
+    });
   }
 
   ngOnInit() {
@@ -38,7 +48,7 @@ export class DatasetsComponent implements OnInit {
 
     this.datasets$ = this.filterHiddenGroups(
       this.datasetsService.getDatasetsObservable());
-      
+
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
 
     this.datasets$
