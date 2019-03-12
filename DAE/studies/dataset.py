@@ -38,7 +38,3 @@ class Dataset(StudyBase):
         return functools.reduce(
             lambda x, y: x | y,
             [st.get_pedigree_values(column) for st in self.studies], set())
-
-    # FIXME: fill these with real values
-    def get_column_labels(self):
-        return ['']
