@@ -46,6 +46,8 @@ class Study(StudyBase):
 
         self.backend = backend
 
+        self.studies = [self]
+
     @property
     def families(self):
         return self.backend.families

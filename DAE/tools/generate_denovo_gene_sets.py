@@ -23,23 +23,23 @@ def main(options=None):
 
     config = DAEConfig()
     variants_db = VariantsDb(config)
-    gsc = GeneSetsCollections(variants_db.dataset_facade)
+    gsc = GeneSetsCollections(variants_db)
     denovo = gsc.get_gene_sets_collection('denovo', load=False)
 
     if args.show_studies:
-        for query_object in denovo._get_datasets():
-            print(query_object.id)
+        for study in denovo._get_studies():
+            print(study.id)
     else:
-        filter_query_objects_ids = None
+        filter_studies_ids = None
         if args.studies:
-            query_objects = args.studies.split(',')
-            filter_query_objects_ids = [
-                qo.id
-                for qo in denovo._get_datasets()
-                if qo.id in query_objects
+            studies = args.studies.split(',')
+            filter_studies_ids = [
+                study.id
+                for study in denovo._get_studies()
+                if study.id in studies
             ]
 
-        denovo.build_cache(filter_query_objects_ids)
+        denovo.build_cache(filter_studies_ids)
 
 
 if __name__ == '__main__':
