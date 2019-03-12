@@ -31,6 +31,7 @@ class StudyWrapper(object):
         download_columns = []
         pedigree_columns = {}
         pheno_columns = {}
+        column_labels = {}
 
         pedigree_selectors = []
 
@@ -45,6 +46,8 @@ class StudyWrapper(object):
                 pheno_columns = [s for pc in genotype_browser['phenoColumns']
                                  for s in pc['slots']]
 
+            column_labels = genotype_browser['columnLabels']
+
         if 'pedigreeSelectors' in self.config:
             pedigree_selectors = self.config.pedigree_selectors
 
@@ -52,6 +55,7 @@ class StudyWrapper(object):
         self.download_columns = download_columns
         self.pedigree_columns = pedigree_columns
         self.pheno_columns = pheno_columns
+        self.column_labels = column_labels
 
         self.pedigree_selectors = pedigree_selectors
 
@@ -492,7 +496,9 @@ class StudyWrapper(object):
             if self.pheno_db is None:
                 continue
 
-            measure = self.study.pheno_db.get_measure(measure_filter['measure'])
+            measure = self.study.pheno_db.get_measure(
+                measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
-
+    def get_column_labels(self):
+        return self.column_labels

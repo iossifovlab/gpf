@@ -47,7 +47,3 @@ class Dataset(StudyBase):
             'denovo-cache/' + cache_filename)
 
         return cache_path
-
-    # FIXME: fill these with real values
-    def get_column_labels(self):
-        return ['']

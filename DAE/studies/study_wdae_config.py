@@ -293,6 +293,19 @@ class StudyWdaeMixin(object):
 
         return column_slots
 
+    @staticmethod
+    def _get_genotype_browser_column_labels(genotype_columns):
+        column_labels = {}
+        for gc in genotype_columns:
+            if 'source' in gc and gc['source'] is not None:
+                column_labels[gc['source']] = gc['name']
+
+            for slot in gc['slots']:
+                if slot['source'] is not None:
+                    column_labels[slot['source']] = slot['name']
+
+        return column_labels
+
     @classmethod
     def _fill_wdae_people_group_config(cls, config_section):
         people_group =\
@@ -322,6 +335,10 @@ class StudyWdaeMixin(object):
             cls._get_genotype_browser_column_slots(
                 config_section.get('genotypeBrowser.genotypeColumns', []),
                 config_section.get('genotypeBrowser.downloadColumns', []))
+
+        config_section['genotypeBrowser.columnLabels'] =\
+            cls._get_genotype_browser_column_labels(
+                config_section.get('genotypeBrowser.genotypeColumns', []))
 
         config_section = cls._combine_dict_options(
             config_section,
