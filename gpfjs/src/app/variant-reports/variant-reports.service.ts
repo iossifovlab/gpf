@@ -43,7 +43,7 @@ export class VariantReportsService {
   }
 
   getDownloadLink(variantReport: VariantReport) {
-    return `${environment.apiPath}${this.downloadUrl}${variantReport.studyName}`;
+    return `${environment.apiPath}${this.downloadUrl}${variantReport.id}`;
   }
 
 }

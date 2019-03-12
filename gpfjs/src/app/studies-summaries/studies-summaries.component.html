@@ -31,7 +31,7 @@
             <gpf-table-content>
                 <span *gpfTableCellContent="let data">
                   <a target="_blank"
-                    [routerLink]="['/reports/reports', getQueryParamObject(data[columnNameToFieldName(column)])]">
+                    [routerLink]="['/reports/reports', getQueryParamObject(data['id'])]">
                     {{ data[columnNameToFieldName(column)] }}
                   </a>
                 </span>

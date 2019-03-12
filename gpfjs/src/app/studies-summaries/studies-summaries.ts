@@ -27,7 +27,8 @@ export class StudySummary {
       json['phenotype'],
       json['denovo'],
       json['study type'],
-      json['phenotype'].join(', ')
+      json['phenotype'].join(', '),
+      json['id']
     );
   }
 
@@ -50,7 +51,8 @@ export class StudySummary {
     readonly phenotype: string[],
     readonly denovo: boolean,
     readonly studyType: string,
-    readonly formattedPhenotype: string
+    readonly formattedPhenotype: string,
+    readonly id: string
   ) {}
 
 }
