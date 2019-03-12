@@ -11,14 +11,7 @@ from variants.attributes import VariantType
 from annotation.tools.annotator_base import VariantAnnotatorBase, \
     CompositeVariantAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
-
-from annotation.tools.score_file_io import DirectAccess, IterativeAccess, \
-        peek_conf_key
-try:
-    bigwig_enabled = True
-    from annotation.tools.score_file_io_bigwig import BigWigFile
-except ImportError:
-    bigwig_enabled = False
+from annotation.tools.score_file_io import ScoreFile
 
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):
@@ -43,34 +36,9 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         scores_filename = os.path.abspath(self.config.options.scores_file)
         assert os.path.exists(scores_filename), scores_filename
 
-        if self.config.options.scores_config_file:
-            score_format = (peek_conf_key(self.config.options.scores_config_file,
-                                         'format') or 'tsv').lower()
-            assert score_format in ['tsv', 'bigwig'], \
-                (score_format, self.config.options.scores_config_file)
-        else:
-            score_format = 'tsv'
-
-        if score_format == 'bigwig':
-            assert bigwig_enabled, 'pyBigWig module not installed'
-            self.score_file = BigWigFile(
-                scores_filename,
-                self.config.options.scores_config_file)
-        elif self.config.options.direct:
-            self.score_file = DirectAccess(
-                self.config.options,
-                scores_filename,
-                self.config.options.scores_config_file)
-        else:
-            self.score_file = IterativeAccess(
-                self.config.options,
-                scores_filename,
-                self.config.options.scores_config_file)
-        self.score_file._setup()
-
-        self.no_score_value = self.score_file.no_score_value
-        if self.no_score_value.lower() in set(['na', 'none']):
-            self.no_score_value = None
+        self.score_file = ScoreFile(scores_filename,
+                                    self.config.options.scores_config_file,
+                                    direct=self.config.options.direct)
 
     def collect_annotator_schema(self, schema):
         super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
@@ -81,7 +49,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
     def _scores_not_found(self, aline):
         values = {
             self.config.columns_config[score_name]:
-            self.no_score_value
+            self.score_file.no_score_value
             for score_name in self.score_names}
         aline.update(values)
 
