@@ -123,7 +123,7 @@ class ScoreFile(TabixReader):
         score_lines = self._fetch(stripped_chrom, pos_begin, pos_end)
         result = defaultdict(list)
         for line in score_lines:
-            count = line.pos_end - \
+            count = min(pos_end, line.pos_end) - \
                 max(line.pos_begin, pos_begin) + 1
             assert count >= 1
             result["COUNT"].append(count)

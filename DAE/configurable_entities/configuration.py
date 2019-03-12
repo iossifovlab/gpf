@@ -135,7 +135,7 @@ class DAEConfig(object):
 
     @property
     def pheno_conf(self):
-        return self._get_config_value(self.PHENO_SECTION, self.CONF_FILE)
+        return str(self._get_config_value(self.PHENO_SECTION, self.CONF_FILE))
 
     def gene_info_section(self):
         return self.sections.get_section_config(self.GENE_INFO_SECTION)
