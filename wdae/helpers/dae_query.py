@@ -14,7 +14,7 @@ def columns_to_labels(columns, column_labels):
 
 
 def join_line(l, sep='\t'):
-    tl = map(lambda v: '' if v is None or v == 'None' else v, l)
+    tl = map(lambda v: '' if v is None or v == 'None' else str(v), l)
     return sep.join(tl) + '\n'
 
 
