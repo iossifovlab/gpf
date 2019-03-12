@@ -20,9 +20,6 @@ class StudyDefinition(ConfigurableEntityDefinition):
     def get_all_study_configs(self):
         return self.get_all_configurable_entity_configs()
 
-    def get_all_study_names(self):
-        return self.get_all_configurable_entity_names()
-
 
 class SingleFileStudiesDefinition(StudyDefinition):
 
