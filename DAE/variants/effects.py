@@ -83,12 +83,21 @@ class Effect(object):
         self.genes = EffectGene.from_gene_effects(gene_effects)
         self.transcripts = EffectTranscript.from_effect_transcripts(
             effect_transcripts)
+        self._effect_types = None
 
     def __repr__(self):
         return '{}:{}'.format(self.worst, EffectGene.to_string(self.genes))
 
     def __str__(self):
         return repr(self)
+
+    @property
+    def types(self):
+        if self._effect_types is None:
+            self._effect_types = set([
+                eg.effect for eg in self.genes
+            ])
+        return self._effect_types
 
     @classmethod
     def from_effects(cls, effect_type, effect_genes, transcripts):

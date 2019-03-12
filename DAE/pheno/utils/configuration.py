@@ -4,35 +4,42 @@ Created on Aug 23, 2016
 @author: lubo
 '''
 from __future__ import unicode_literals
+import os
 
-from Config import Config
 import reusables
 from box import ConfigBox
 # import traceback
 
+from configurable_entities.configuration import DAEConfig
 
 class PhenoConfig(ConfigBox):
 
     @staticmethod
+    def from_dae_config(dae_config):
+        filename = dae_config.pheno_conf
+        conf = reusables.config_dict(
+            filename,
+            auto_find=False,
+            verify=True,
+            defaults={
+                'wd': dae_config.dae_data_dir,
+            })
+
+        return PhenoConfig(conf)
+
+    @staticmethod
     def from_file(filename=None):
         if filename is None:
-            dae_config = Config()
-            wd = dae_config.daeDir
-            data_dir = dae_config.data_dir
-            filename = dae_config.phenoDBconfFile
+            dae_config = DAEConfig()
+            return PhenoConfig.from_dae_config(dae_config)
 
-        # not usint builtins.str since reusables throws when the filename is
-        # unicode in python2
-        if not isinstance(filename, str):
-            filename = str(filename)
-
+        wd = os.path.dirname(filename)
         conf = reusables.config_dict(
             filename,
             auto_find=False,
             verify=True,
             defaults={
                 'wd': wd,
-                'data': data_dir,
             })
 
         return PhenoConfig(conf)

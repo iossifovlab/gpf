@@ -116,7 +116,6 @@ class Configure(ConfigBox):
         if not os.path.exists(prefix) or not os.path.isdir(prefix):
             return False
         conf = Configure.from_prefix_parquet(prefix).parquet
-        print(conf)
         
         return os.path.exists(conf.summary_variant) and \
             os.path.exists(conf.family_variant) and \

@@ -7,6 +7,7 @@ import abc
 
 class ConfigurableEntityDefinition(object):
     __metaclass__ = abc.ABCMeta
+    ENABLED_DIR = '.'
 
     # configs = {}
 
@@ -22,9 +23,6 @@ class ConfigurableEntityDefinition(object):
 
     def get_all_configurable_entity_configs(self):
         return list(self.configs.values())
-
-    def get_all_configurable_entity_names(self):
-        return list(self.configs.keys())
 
     def directory_enabled_configurable_entity_definition(
             self, configurable_entities_dir, configurable_entity_config_class,
@@ -45,10 +43,12 @@ class ConfigurableEntityDefinition(object):
             ConfigurableEntityDefinition._collect_config_paths(enabled_dir)
 
         for config_path in config_paths:
-
-            configs.append(ConfigurableEntityDefinition.load_entity_config(
+            config = ConfigurableEntityDefinition.load_entity_config(
                 config_path, enabled_dir, configurable_entity_config_class,
-                default_values, default_conf))
+                default_values, default_conf)
+
+            if config:
+                configs.append(config)
 
         self.configs = {config.id: config for config in configs}
 
@@ -75,7 +75,7 @@ class ConfigurableEntityDefinition(object):
             config_path, work_dir, configurable_entity_config_class,
             default_values, default_conf)
 
-        if id in config:
+        if config and id in config:
             self.configs = {config.id: config}
         else:
             self.configs = config
@@ -86,9 +86,7 @@ class ConfigurableEntityDefinition(object):
             default_values={}, default_conf=None):
         config = configurable_entity_config_class.read_config(
             config_file, work_dir, default_values, default_conf)
-
         config['config_file'] = config_file
-
         entity_config = configurable_entity_config_class.from_config(config)
 
         return entity_config

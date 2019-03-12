@@ -218,3 +218,19 @@ def test_iterative_access_with_na_values(chrom, pos_start, pos_end, count):
         assert len(res) == count
         assert res['chromStart'][0] <= pos_start and \
             res['chromEnd'][count-1] >= pos_end
+
+
+def test_aggregation_correctness():
+    score_filename = relative_to_this_test_folder(
+        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+    score_config_filename = None
+    options = Box({}, default_box=True, default_box_attr=None)
+
+    with IterativeAccess(options,
+                         score_filename,
+                         score_config_filename) as score_io:
+        assert score_io is not None
+
+        res = score_io.fetch_scores_df('1', 10937, 10939)
+        print(res)
+        assert sum(res['COUNT']) == 3

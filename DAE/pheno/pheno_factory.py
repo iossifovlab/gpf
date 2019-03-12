@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from builtins import object
+from configurable_entities.configuration import DAEConfig
 from pheno.utils.configuration import PhenoConfig
 import logging
 
@@ -16,9 +17,12 @@ LOGGER = logging.getLogger(__name__)
 
 class PhenoFactory(object):
 
-    def __init__(self, config_filename=None):
+    def __init__(self, dae_config=None):
         super(PhenoFactory, self).__init__()
-        self.config = PhenoConfig.from_file(config_filename)
+        if dae_config is None:
+            dae_config = DAEConfig()
+
+        self.config = PhenoConfig.from_dae_config(dae_config)
 
     def get_dbfile(self, dbname):
         return self.config.get_dbfile(dbname)

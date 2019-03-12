@@ -3,7 +3,7 @@
 # June 6th 2013
 # by Ewa
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 from __future__ import division
 from __future__ import unicode_literals
 from builtins import next

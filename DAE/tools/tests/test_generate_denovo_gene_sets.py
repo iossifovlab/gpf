@@ -7,4 +7,5 @@ pytestmark = pytest.mark.usefixtures('gene_info_cache_dir')
 
 
 def test_generate_denovo_gene_sets_script_passes():
-    main()
+    main([])
+    main(['--show-studies'])

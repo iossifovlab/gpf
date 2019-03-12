@@ -114,7 +114,7 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
             limit = kwargs['limit']
             sql_query += "\n\tLIMIT {}".format(limit)
 
-        print("FINAL QUERY", sql_query)
+        # print("FINAL QUERY", sql_query)
         with self.connection.cursor() as cursor:
             cursor.execute(sql_query)
             df = as_pandas(cursor)

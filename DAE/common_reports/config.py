@@ -4,6 +4,7 @@ standard_library.install_aliases()  # noqa
 
 from builtins import object
 import os
+
 from box import Box
 from collections import OrderedDict
 from copy import deepcopy
@@ -141,12 +142,18 @@ class CommonReportsQueryObjects(object):
     def __init__(self, study_facade, dataset_facade):
         query_objects = study_facade.get_all_studies_wrapper() +\
             dataset_facade.get_all_datasets_wrapper()
-
         self.query_objects_with_config = {}
-
         for query_object in query_objects:
             common_report_config =\
                 CommonReportsParseConfig.from_config(query_object.config)
             if common_report_config is not None:
                 self.query_objects_with_config[query_object] =\
                     common_report_config
+
+    def filter_query_objects(self, query_objects):
+        self.query_objects_with_config = {
+            qo: c
+            for qo, c in self.query_objects_with_config.items()
+            if qo.id in query_objects
+        }
+

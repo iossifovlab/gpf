@@ -10,7 +10,7 @@ def test_dataset_definitions_simple(dataset_definitions):
     ("id", "quads_composite"),
     ("description", "QUADS COMPOSITE DESCRIPTION"),
     ("studies", ['quads_in_child', 'quads_in_parent']),
-    ("phenotypes", {'autism', 'schizophrenia', 'epilepsy'}),
+    # ("phenotypes", {'autism', 'schizophrenia', 'epilepsy'}),
 
     ("phenotypeGenotypeTool", False),
     ("phenotypeBrowser", False),
@@ -33,7 +33,7 @@ def test_dataset_quads_composite_dict(
     ("id", "quads_composite"),
     ("description", "QUADS COMPOSITE DESCRIPTION"),
     ("studies", ['quads_in_child', 'quads_in_parent']),
-    ("phenotypes", {'autism', 'schizophrenia', 'epilepsy'}),
+    # ("phenotypes", {'autism', 'schizophrenia', 'epilepsy'}),
 
     ("phenotypeGenotypeTool", False),
     ("phenotypeBrowser", False),

@@ -38,8 +38,8 @@ class ConfigSectionDefinition(ConfigurableEntityDefinition):
     def get_all_section_configs(self):
         return self.get_all_configurable_entity_configs()
 
-    def get_all_section_names(self):
-        return self.get_all_configurable_entity_names()
+    def get_all_section_ids(self):
+        return self.configurable_entity_ids
 
 
 class DAEConfig(object):
@@ -56,9 +56,9 @@ class DAEConfig(object):
     DEFAULT_CONFIGURATION_SECTION = 'defaultConfiguration'
 
     def __init__(
-        self, dae_data_dir=None, 
+        self, dae_data_dir=None,
         dae_scores_hg19_dir=None, dae_scores_hg38_dir=None,
-        dae_conf_filename="DAE.conf"):
+            dae_conf_filename="DAE.conf"):
 
         if dae_data_dir is None:
             dae_data_dir = os.environ.get('DAE_DB_DIR', None)
@@ -94,10 +94,10 @@ class DAEConfig(object):
         )
         assert self.sections is not None
 
-    def _get_config_value(self, section_name, attr_name, default_value=None):
-        if section_name not in self.sections.get_all_section_names():
+    def _get_config_value(self, section_id, attr_name, default_value=None):
+        if section_id not in self.sections.get_all_section_ids():
             return default_value
-        return self.sections.get_section_config(section_name).\
+        return self.sections.get_section_config(section_id).\
             get(attr_name, default_value)
 
     @property
@@ -135,7 +135,7 @@ class DAEConfig(object):
 
     @property
     def pheno_conf(self):
-        return self._get_config_value(self.PHENO_SECTION, self.CONF_FILE)
+        return str(self._get_config_value(self.PHENO_SECTION, self.CONF_FILE))
 
     def gene_info_section(self):
         return self.sections.get_section_config(self.GENE_INFO_SECTION)
