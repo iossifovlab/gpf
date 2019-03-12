@@ -376,39 +376,18 @@ class EffectWithFilter(object):
             self, study, denovo_variants, people_with_filter, 
             people_with_parents,
             effect, effect_types_converter):
-        # variants_query = {
-        #     'limit': None,
-        #     'inheritance': 'denovo',
-        #     'effect_types':
-        #         effect_types_converter.get_effect_types(effectTypes=effect),
-        #     'person_ids':
-        #         list(people_with_filter.intersection(people_with_parents))
-        # }
         people = people_with_filter.intersection(people_with_parents)
         effect_types = set(
             effect_types_converter.get_effect_types(effectTypes=effect))
         variants = []
-        # print("-----------------------------------")
-        # print(denovo_variants)
-        # print("-----------------------------------")
         for v in denovo_variants:
             for aa in v.alt_alleles:
-                # print(
-                #     aa.variant_in_members, people, 
-                #     aa.effect.types, effect_types)
                 if not (set(aa.variant_in_members) & people):
                     continue
                 if not (aa.effect.types & effect_types):
                     continue
                 variants.append(v)
                 break
-        # print(variants)
-
-        # variants = list(query_object.query_variants(**variants_query))
-        # for v in variants:
-        #     print(v, v.best_st)
-        #     for aa in v.alt_alleles:
-        #         print(aa, aa.inheritance_in_members, mat2str(aa.gt))
         return variants
 
     def _get_number_of_children_with_event(
