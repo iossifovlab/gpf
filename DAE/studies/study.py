@@ -8,7 +8,7 @@ class StudyBase(object):
 
         self.id = self.config.id
         self.name = self.config.name
-        self.phenotypes = self.config.phenotypes
+        # self.phenotypes = self.config.phenotypes
         self.has_denovo = self.config.has_denovo
         self.has_transmitted = self.config.has_transmitted
         self.has_complex = self.config.has_complex

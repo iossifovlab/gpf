@@ -68,7 +68,7 @@ class StudyConfig(StudyConfigBase):
 
         assert self.file_format
         assert self.work_dir
-        assert self.phenotypes
+        # assert self.phenotypes
         assert 'studyType' in self
         assert 'hasComplex' in self
         assert 'hasCNV' in self
