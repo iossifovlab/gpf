@@ -121,6 +121,6 @@ class StudyConfig(StudyConfigBase):
         config_section['authorizedGroups'] = config_section.get(
             'authorizedGroups', [config_section.get('id', '')])
 
-        config_section['studies'] = [config_section['name']]
+        # config_section['studies'] = [config_section['id']]
 
         return StudyConfig(config_section, config)
