@@ -87,7 +87,7 @@ def dae_build_makefile(dae_config, argv):
     )
 
 
-def dae_build_denovo(dae_config, argv, defaults={}):
+def import_dae_denovo(dae_config, argv, defaults={}):
     config = Configure.from_dict({
         "denovo": {
             'denovo_filename': argv.variants,
@@ -163,7 +163,7 @@ def init_parser_denovo(dae_config, subparsers):
     parser_denovo.add_argument(
         'variants', type=str,
         metavar='<variants filename>',
-        help='annotated variants file'
+        help='DAE denovo variants file'
     )
 
 
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
 
     if argv.type == 'denovo':
-        dae_build_denovo(
+        import_dae_denovo(
             dae_config, argv, defaults=dae_config.annotation_defaults)
     elif argv.type == 'dae':
         dae_build_transmitted(

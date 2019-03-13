@@ -59,8 +59,16 @@ def import_vcf(dae_config, argv, defaults={}):
                 'annotation': None,
             },
         })
+    if 'region' in argv:
+        region = argv.region
+    else:
+        region = None
 
-    region = argv.region
+    if 'bucket_index' in argv:
+        bucket_index = argv.bucket_index
+    else:
+        bucket_index = 1
+
     fvars = create_vcf_variants(vcf_config, region)
 
     annotation_pipeline = construct_import_annotation_pipeline(
@@ -71,7 +79,7 @@ def import_vcf(dae_config, argv, defaults={}):
     variants_iterator_to_parquet(
         fvars,
         argv.output,
-        argv.bucket_index,
+        bucket_index,
         annotation_pipeline
     )
 
