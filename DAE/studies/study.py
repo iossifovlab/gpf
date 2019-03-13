@@ -47,6 +47,7 @@ class Study(StudyBase):
         self.backend = backend
 
         self.studies = [self]
+        self.study_names = ",".join(study.name for study in self.studies)
 
     @property
     def families(self):
