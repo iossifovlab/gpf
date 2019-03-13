@@ -19,7 +19,7 @@ class CommonReportsConfig(object):
     """
 
     def __init__(
-            self, id, config, phenotypes_info, filter_info, path):
+            self, id, config, phenotypes_info, filter_info):
         self.config = config
 
         self.id = id
@@ -29,7 +29,7 @@ class CommonReportsConfig(object):
         self.effect_groups = self.config.get('effect_groups', [])
         self.effect_types = self.config.get('effect_types', [])
 
-        self.path = path
+        self.path = config.file
 
 
 class CommonReportsParseConfig(ConfigurableEntityConfig):
@@ -130,11 +130,14 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
             return None
 
         assert os.path.exists(config_file)
-        path = os.path.join(
-            os.path.split(config_file)[0], 'commonReport/' + id + '.json')
+
+        if config.get('file') is None:
+            dirname = os.path.dirname(config_file)
+            filename = os.path.join(dirname, 'common_report.json')
+            config.file = filename
 
         return CommonReportsConfig(
-            id, config, phenotypes_info, filter_info, path)
+            id, config, phenotypes_info, filter_info)
 
 
 class CommonReportsQueryObjects(object):
