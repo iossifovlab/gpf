@@ -157,8 +157,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return self.gene_info.getGeneTermAttList(self.collection_id, att_name)
 
     def load(self, build_cache=False):
-        from pprint import pprint
-        pprint(self.cache)
         if len(self.cache) == 0:
             self._load_cache_from_pickle(build_cache=build_cache)
         return self.get_gene_sets()
@@ -300,8 +298,6 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         result = []
         for gsn in self.gene_sets_names:
             gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
-            print(gene_set_syms)
-            # print("gene_set_syms", gene_set_syms)
             if gene_set_syms:
                 result.append({
                     'name': gsn,
@@ -342,15 +338,9 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                     iter(recurrency_criterias))]
         else:
             recurrency_criteria = None
-        print(gene_sets_types)
-        # print()
         genes_families = {}
         for dataset_id, pedigree_selector_values in gene_sets_types.items():
             for pedigree_selector_value in pedigree_selector_values:
-                # print("criterias", criterias)
-                # print("recurrency_criterias", recurrency_criterias)
-                # print("standard_criterias", standard_criterias, dataset_id,
-                #       pedigree_selector_value)
                 ds_pedigree_genes_families = self._get_gene_families(
                     self.cache,
                     {dataset_id, pedigree_selector_value} | standard_criterias)
