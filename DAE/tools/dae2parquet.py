@@ -25,7 +25,7 @@ from backends.thrift.import_tools import annotation_pipeline_cli_options, \
 
 
 def get_contigs(tabixfilename):
-    with pysam.Tabixfile(tabixfilename) as tbx:  # @UndefinedVariable
+    with pysam.Tabixfile(tabixfilename) as tbx:  # noqa
         return tbx.contigs
 
 
@@ -116,11 +116,14 @@ def import_dae_denovo(dae_config, argv, defaults={}):
     assert df is not None
 
     assert argv.output is not None
+    bucket_index = 1
+    if 'bucket_index' in argv:
+        bucket_index = argv.bucket_index
 
     variants_iterator_to_parquet(
         fvars,
         argv.output,
-        argv.bucket_index,
+        bucket_index,
         annotation_pipeline=annotation_pipeline
     )
 

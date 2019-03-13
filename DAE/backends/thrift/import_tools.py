@@ -29,7 +29,6 @@ def variants_iterator_to_parquet(
 
     save_ped_df_to_parquet(fvars.ped_df, parquet_config.pedigree)
 
-    print("going to build: ", parquet_prefix, file=sys.stderr)
     start = time.time()
 
     annotation_schema = ParquetSchema()

@@ -17,6 +17,12 @@ def parse_common_arguments(dae_config, parser):
         metavar='<study ID>',
         help='unique study ID to use'
     )
+    parser.add_argument(
+        '-o', '--out', type=str, default='data/',
+        dest='output', metavar='<output directory>',
+        help='output directory. '
+        'If none specified, "data/" directory is used [default: %(default)s]'
+    )
 
 def parse_vcf_arguments(dae_config, subparsers):
     parser = subparsers.add_parser('vcf')
@@ -32,12 +38,6 @@ def parse_vcf_arguments(dae_config, subparsers):
         'vcf', type=str,
         metavar='<VCF filename>',
         help='VCF file to import'
-    )
-    parser.add_argument(
-        '-o', '--out', type=str, default='data',
-        dest='output', metavar='<output directory>',
-        help='output directory. '
-        'If none specified, "data/" directory is used [default: %(default)s]'
     )
 
 def parse_dae_denovo_arguments(dae_config, subparsers):
@@ -55,12 +55,6 @@ def parse_dae_denovo_arguments(dae_config, subparsers):
         'variants', type=str,
         metavar='<variants filename>',
         help='DAE denovo variants file'
-    )
-
-    parser.add_argument(
-        '-o', '--out', type=str, default='./',
-        dest='output', metavar='output filepath',
-        help='output filepath. If none specified, current directory is used'
     )
 
     parser.add_argument(
@@ -112,9 +106,18 @@ def generate_study_config(dae_config, argv):
             output=argv.output
         ))
 
+def generate_common_report(dae_config, study_id):
+    from tools.generate_common_report import main
+    argv = ['--studies', study_id]
+    main(dae_config, argv)
+
+
 if __name__ == "__main__":
     dae_config = DAEConfig()
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
+    study_id = argv.id
+
+    os.makedirs(argv.output, exist_ok=True)
 
     if argv.type == 'vcf':
         import_vcf(
@@ -126,3 +129,5 @@ if __name__ == "__main__":
         raise ValueError("unexpected subcommand")
 
     generate_study_config(dae_config, argv)
+    generate_common_report(dae_config, study_id)
+
