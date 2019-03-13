@@ -35,7 +35,7 @@ class CommonReportsConfig(object):
 class CommonReportsParseConfig(ConfigurableEntityConfig):
 
     SPLIT_STR_LISTS = ('peopleGroups', 'effect_groups', 'effect_types')
-    CAST_TO_BOOL = ('draw_all_families', 'is_downloadable', 'enabled')
+    CAST_TO_BOOL = ('draw_all_families', 'enabled')
 
     @staticmethod
     def _parse_domain_info(domain):
@@ -82,14 +82,13 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
         return phenotypes_info
 
     @staticmethod
-    def _parse_data(config):
+    def _parse_data(config, id):
         phenotypes = config.get('peopleGroups', None)
         groups = config.get('groups', None)
         draw_all_families =\
             config.get('draw_all_families', False)
         count_of_families_for_show_id =\
             config.get('count_of_families_for_show_id', None)
-        is_downloadable = config.get('is_downloadable', False)
 
         if phenotypes is None or groups is None:
             return None
@@ -105,7 +104,7 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
                 for group in groups.split('|')])),
             ('draw_all_families', draw_all_families),
             ('families_count_show_id', count_of_families_for_show_id),
-            ('is_downloadable', is_downloadable),
+            ('id', id),
         ])
 
     @classmethod
@@ -125,7 +124,7 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
             return None
 
         phenotypes_info = cls._parse_phenotypes(config)
-        filter_info = cls._parse_data(config)
+        filter_info = cls._parse_data(config, id)
         if filter_info is None:
             return None
 

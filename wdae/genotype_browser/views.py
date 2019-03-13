@@ -95,7 +95,6 @@ class QueryPreviewView(QueryBaseView):
                 dataset.pedigree_selectors,
                 data.get('pedigreeSelector', {}),
                 dataset.preview_columns,
-                # dataset.pedigree_columns
             )
 
             # pprint.pprint(response)
@@ -157,7 +156,6 @@ class QueryDownloadView(QueryBaseView):
                 dataset.pedigree_selectors,
                 data.get('pedigreeSelector', {}),
                 dataset.download_columns,
-                [],
                 max_variants_count=download_limit,
                 variants_hard_max=self.DOWNLOAD_LIMIT
             )
