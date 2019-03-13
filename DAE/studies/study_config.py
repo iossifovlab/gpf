@@ -51,6 +51,10 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         super(StudyConfigBase, self).__init__(section_config, *args, **kwargs)
 
         assert self.id
+
+        if section_config.get('name') is None:
+            self.name = self.id
+
         assert self.name
         assert 'description' in self
         assert self.work_dir
@@ -63,9 +67,8 @@ class StudyConfig(StudyConfigBase):
     def __init__(self, config, *args, **kwargs):
         super(StudyConfig, self).__init__(config, *args, **kwargs)
 
-        assert 'prefix' in self
         assert self.name
-
+        assert self.prefix
         assert self.file_format
         assert self.work_dir
         # assert self.phenotypes
@@ -77,9 +80,12 @@ class StudyConfig(StudyConfigBase):
         self.make_prefix_absolute_path()
 
     def make_prefix_absolute_path(self):
+
         if not os.path.isabs(self.prefix):
+            config_filename = self.config.study_config.config_file
+            dirname = os.path.dirname(config_filename)
             self.prefix = os.path.abspath(
-                os.path.join(self.work_dir, self.id, self.prefix))
+                os.path.join(dirname, self.prefix))
 
     @property
     def years(self):
