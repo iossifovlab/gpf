@@ -3,7 +3,7 @@ import pytest
 
 def test_study_config_simple(study_definitions):
     assert study_definitions is not None
-    assert study_definitions.get_all_study_names()
+    assert study_definitions.study_ids
 
 
 def test_study_config_year(study_definitions):

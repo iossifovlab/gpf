@@ -3,11 +3,13 @@ from __future__ import unicode_literals, print_function, absolute_import
 import functools
 from builtins import str
 
+import os
 import itertools
 
 from RegionOperations import Region
 from pheno.common import MeasureType
 from pheno_tool.pheno_common import PhenoFilterBuilder
+from utils.dae_utils import split_iterable
 from variants.attributes import Role
 from studies.helpers import expand_effect_types
 from backends.attributes_query import role_query, variant_type_converter, \
@@ -28,29 +30,27 @@ class StudyWrapper(object):
 
         preview_columns = []
         download_columns = []
-        pedigree_columns = {}
         pheno_columns = {}
+        column_labels = {}
 
         pedigree_selectors = []
 
         if genotype_browser:
             preview_columns = genotype_browser['previewColumnsSlots']
             download_columns = genotype_browser['downloadColumnsSlots']
-            if genotype_browser['pedigreeColumns']:
-                pedigree_columns =\
-                    [s for pc in genotype_browser['pedigreeColumns']
-                     for s in pc['slots']]
             if genotype_browser['phenoColumns']:
                 pheno_columns = [s for pc in genotype_browser['phenoColumns']
                                  for s in pc['slots']]
+
+            column_labels = genotype_browser['columnLabels']
 
         if 'pedigreeSelectors' in self.config:
             pedigree_selectors = self.config.pedigree_selectors
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
-        self.pedigree_columns = pedigree_columns
         self.pheno_columns = pheno_columns
+        self.column_labels = column_labels
 
         self.pedigree_selectors = pedigree_selectors
 
@@ -168,33 +168,57 @@ class StudyWrapper(object):
 
             kwargs['person_ids'] = list(people_ids_to_query)
 
-        for variant in itertools.islice(
-                self.study.query_variants(**kwargs),
-                limit):
+        variants_from_studies = itertools.islice(
+            self.study.query_variants(**kwargs), limit)
 
-            variant = self._add_pheno_columns(variant)
-
+        for variant in self._add_pheno_columns(variants_from_studies):
             yield variant
 
-    def _add_pheno_columns(self, variant):
+    def _add_pheno_columns(self, variants_iterable):
         if self.pheno_db is None:
-            return variant
+            for variant in variants_iterable:
+                yield variant
+
+        for variants_chunk in split_iterable(variants_iterable, 5000):
+            families = {variant.family_id for variant in variants_chunk}
+
+            pheno_column_values = self._get_all_pheno_values(families)
+
+            for variant in variants_chunk:
+                pheno_values = self._get_pheno_values_for_variant(
+                    variant, pheno_column_values)
+                for allele in variant.alt_alleles:
+                    allele.update_attributes(pheno_values)
+
+                yield variant
+
+    def _get_pheno_values_for_variant(self, variant, pheno_column_values):
         pheno_values = {}
 
+        for pheno_column_df, pheno_column_name in pheno_column_values:
+            variant_pheno_value_df = pheno_column_df[
+                pheno_column_df['person_id'].isin(variant.members_ids)]
+            variant_pheno_value_df.set_index('person_id', inplace=True)
+            assert len(variant_pheno_value_df.columns) == 1
+            column = variant_pheno_value_df.columns[0]
+
+            pheno_values[pheno_column_name] = ",".join(
+                map(str, variant_pheno_value_df[column].tolist()))
+
+        return pheno_values
+
+    def _get_all_pheno_values(self, families):
+        pheno_column_dfs = []
+        pheno_column_names = []
         for pheno_column in self.config.genotypeBrowser.phenoColumns:
             for slot in pheno_column.slots:
-                pheno_value = self.pheno_db.get_measure_values(
+                pheno_column_dfs.append(self.pheno_db.get_measure_values_df(
                     slot.measure,
-                    family_ids=[variant.family.family_id],
-                    roles=[slot.role])
-                key = slot.source
-                pheno_values[key] = ','.join(
-                    map(str, pheno_value.values()))
+                    family_ids=list(families),
+                    roles=[slot.role]))
+                pheno_column_names.append(slot.source)
 
-        for allele in variant.alt_alleles:
-            allele.update_attributes(pheno_values)
-
-        return variant
+        return list(zip(pheno_column_dfs, pheno_column_names))
 
     def _merge_with_people_ids(self, kwargs, people_ids_to_query):
         people_ids_filter = kwargs.pop('person_ids', None)
@@ -411,20 +435,9 @@ class StudyWrapper(object):
         return pedigree_selector_with_id[0] \
             if pedigree_selector_with_id else {}
 
-    # FIXME:
     def _get_dataset_config_options(self, config):
         config['studyTypes'] = self.config.study_types
         config['description'] = self.study.description
-        # config['studies'] = self.config.names
-
-        print(self.config.genotype_browser)
-
-        # config['genotypeBrowser']['hasStudyTypes'] =\
-        #     self.config.has_study_types
-        # config['genotypeBrowser']['hasComplex'] =\
-        #     self.config.has_complex
-        # config['genotypeBrowser']['hasCNV'] =\
-        #     self.config.has_CNV
 
         return config
 
@@ -437,7 +450,6 @@ class StudyWrapper(object):
             'studyTypes', 'studies'
         ]
 
-    # FIXME:
     def get_dataset_description(self):
         keys = self._get_description_keys()
         config = self.config.to_dict()
@@ -464,10 +476,20 @@ class StudyWrapper(object):
             if measure_filter is None or 'measure' not in measure_filter:
                 continue
 
-            if getattr(self.study, 'pheno_db', None) is None:
+            if self.pheno_db is None:
                 continue
 
-            measure = self.study.pheno_db.get_measure(measure_filter['measure'])
+            measure = self.study.pheno_db.get_measure(
+                measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
+    def get_column_labels(self):
+        return self.column_labels
 
+    def gene_sets_cache_file(self):
+        cache_filename = '{}.json'.format(self.id)
+        cache_path = os.path.join(
+            os.path.split(self.config.study_config.config_file)[0],
+            'denovo-cache/' + cache_filename)
+
+        return cache_path

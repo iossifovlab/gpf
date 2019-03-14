@@ -18,4 +18,7 @@ urlpatterns = [
     url(r'^/studies$',
         views.VariantReportsView.as_view(),
         name="studies"),
+
+    url(r'^/families_data/(?P<common_report_id>.+)$',
+        views.FamiliesDataDownloadView.as_view()),
 ]

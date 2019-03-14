@@ -1,7 +1,5 @@
 import pytest
 
-from box import Box
-
 from .conftest import relative_to_this_test_folder
 from annotation.tools.score_file_io import \
     ScoreFile, LineAdapter, LineBufferAdapter
@@ -202,8 +200,6 @@ def test_iterative_access_with_reset_long_jump_ahead(mocker):
 def test_iterative_access_with_na_values(chrom, pos_start, pos_end, count):
     score_filename = relative_to_this_test_folder(
         "fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz")
-    score_config_filename = None
-    options = Box({}, default_box=True, default_box_attr=None)
 
     score_file = ScoreFile(score_filename)
     assert score_file is not None
@@ -213,3 +209,15 @@ def test_iterative_access_with_na_values(chrom, pos_start, pos_end, count):
     assert len(res) == count
     assert res['chromStart'][0] <= pos_start and \
         res['chromEnd'][count-1] >= pos_end
+
+
+def test_aggregation_correctness():
+    score_filename = relative_to_this_test_folder(
+        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+
+    score_file = ScoreFile(score_filename)
+    assert score_file is not None
+
+    res = score_file.fetch_scores_df('1', 10937, 10939)
+    print(res)
+    assert sum(res['COUNT']) == 3

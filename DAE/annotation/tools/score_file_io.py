@@ -111,7 +111,7 @@ class ScoreFile(object):
             self.chr_prefix = self.config.misc.bool('chr_prefix')
         else:
             self.chr_prefix = False
-       
+
         if 'noscorevalue' in self.config.general:
             self.no_score_value = self.config.general.noscorevalue
         else:
@@ -185,8 +185,8 @@ class ScoreFile(object):
         score_lines = self.accessor._fetch(stripped_chrom, pos_begin, pos_end)
         result = defaultdict(list)
         for line in score_lines:
-            count = min(line.pos_end, pos_end) - \
-                max(line.pos_begin, pos_begin) + 1
+            count = min(pos_end, line.pos_end) - \
+                    max(line.pos_begin, pos_begin) + 1
             assert count >= 1
             result["COUNT"].append(count)
             for index, column in enumerate(self.schema.col_names):

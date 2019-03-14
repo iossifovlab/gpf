@@ -8,7 +8,7 @@ from common_reports.common_report import CommonReportsGenerator
 from common_reports.config import CommonReportsQueryObjects
 
 
-def main(dae_config=None):
+def main(dae_config=None, argv=None):
     description = 'Generate common reports tool'
     parser = argparse.ArgumentParser(description=description)
 
@@ -21,9 +21,11 @@ def main(dae_config=None):
         'names for generating common report. Default to all query objects.',
         default=None, action='store')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
-    dae_config = DAEConfig()
+    if dae_config is None:
+        dae_config = DAEConfig()
+
     vdb = VariantsDb(dae_config)
     common_reports_query_objects = CommonReportsQueryObjects(
         vdb.study_facade, vdb.dataset_facade)

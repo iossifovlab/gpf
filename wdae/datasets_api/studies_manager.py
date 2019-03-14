@@ -19,8 +19,6 @@ from datasets_api.models import Dataset
 __all__ = ['get_studies_manager']
 
 
-
-
 class CommonReportsManager(object):
 
     def __init__(self, dae_config, vdb):
@@ -52,13 +50,13 @@ class StudiesManager(object):
         self.vdb = VariantsDb(self.dae_config)
         self.common_reports = CommonReportsManager(self.dae_config, self.vdb)
 
-        for dataset_id in self.vdb.get_datasets_ids():
-            Dataset.recreate_dataset_perm(dataset_id, [])
+        for study_id in self.vdb.get_all_ids():
+            Dataset.recreate_dataset_perm(study_id, [])
 
         self.score_loader = ScoreLoader()
         self.weights_loader = WeightsLoader()
 
-        self.gene_sets_collections = GeneSetsCollections(self.vdb.dataset_facade)
+        self.gene_sets_collections = GeneSetsCollections(self.vdb)
 
     def get_variants_db(self):
         if self.vdb is None:
@@ -77,6 +75,7 @@ class StudiesManager(object):
 
     def get_score_loader(self):
         self.get_variants_db()
+        assert self.score_loader is not None
         return self.score_loader
 
     def get_weights_loader(self):
