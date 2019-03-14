@@ -343,8 +343,8 @@ Initial setup of GPF Web UI requires several steps:
 Start GPF Web UI
 ++++++++++++++++
 
-To start the GPF Web UI, you need to run the Django development server. Enter the
-``gpf/wdae`` directory and run::
+To start the GPF Web UI, you need to run the Django development server.
+Enter the ``gpf/wdae`` directory and run::
 
         ./manage.py runserver 0.0.0.0:8000
 
@@ -376,6 +376,37 @@ In the GPF startup data instance there are a couple of demo studies:
 
 To demonstrate how to import new study data into the GPF data instance, we
 will reproduce the necessary steps for importing the `quad` study data.
+
+Simple study import
++++++++++++++++++++
+
+Usualy to import study data into GPF instance could take a lot of steps. To
+make initial bootstraping easier you can use `simple_study_import.py` tool
+that combines all the necessary steps in one tool.
+
+Let say you have pedigree file `quad.ped` describing family information
+and VCF file `quad.vcf` with variants.
+
+To import this study into GPF instance:
+
+* go into `studies` directory of GPF instance data folder::
+
+        cd $DAE_DB_DIR/studies
+
+
+* create a directory where you plan to save the imported data and enter inside
+    that directory::
+
+        mkdir quad1
+        cd quad1
+
+
+* run `simple_study_import.py` to import the data; this tool expects there
+    arguments - study ID to use, pedigree file name and VCF file name::
+
+        simple_study_import.py vcf quad1 ../quad/quad.ped ../quad/quad.vcf
+
+
 
 Import a VCF Dataset
 ++++++++++++++++++++
@@ -411,8 +442,8 @@ The source data required for an import consists of:
         f1       prb1     dad1     mom1     1        2        prb      autism
         f1       sib1     dad1     mom1     2        2        sib      autism
 
-*   a VCF file containing variants; the content of the example variants file ``quad.vcf``
-    is::
+*   a VCF file containing variants; the content of the example variants file
+    ``quad.vcf`` is::
 
         ##fileformat=VCFv4.2
         ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">   
@@ -423,24 +454,24 @@ The source data required for an import consists of:
         2        11540    .        T        G        .        .        .        GT       0/0      0/1      0/1      0/0
 
 Importing this data into the GPF data instance means that you need to convert
-pedigree and VCF data into the Apache Parquet format and annotate them with variant
-effects and genomic scores. The default configuration for the annotation is
-located in the GPF data instance. In the case of the GPF startup data instance, the
-annotation configuration file is::
+pedigree and VCF data into the Apache Parquet format and annotate them with
+variant effects and genomic scores. The default configuration for the
+annotation is located in the GPF data instance. In the case of the GPF startup
+data instance, the annotation configuration file is::
 
     data-hg19-startup/annotation.conf
 
 The tool for converting VCF data to the Apache Parquet file format is
 ``vcf2parquet``. To run it you need to specify the pedigree file and the VCF
-file you are converting. Additionally, you need to specify where the tool should store
-the result files::
+file you are converting. Additionally, you need to specify where the tool
+should store the result files::
 
     cd data-hg19-startup/studies/quad/
     mkdir out
     vcf2parquet.py vcf quad.ped quad.vcf -o out/
 
-After this command is finished, the result data should be stored in the ``out/``
-directory::
+After this command is finished, the result data should be stored in the
+``out/`` directory::
 
     out/
     ├── effect_gene.parquet
