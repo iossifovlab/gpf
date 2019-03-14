@@ -134,7 +134,6 @@ import { ChromosomeService } from './chromosome-service/chromosome.service';
 import { ChromosomeComponent } from './chromosome/chromosome.component';
 import { RedirectOnErrorHttpService } from './config/redirect-on-error.service';
 import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view/genotype-browser-single-view.component';
-import { GenotypeBrowserMetaViewComponent } from './genotype-browser-meta-view/genotype-browser-meta-view.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
 import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
@@ -186,15 +185,6 @@ const appRoutes: Routes = [
       {
         path: '**',
         redirectTo: 'browser'
-      }
-    ]
-  },
-  {
-    path: 'all-datasets',
-    children : [
-      {
-        path: 'browser',
-        component: GenotypeBrowserMetaViewComponent
       }
     ]
   },
@@ -339,7 +329,6 @@ const appRoutes: Routes = [
     GenotypePreviewChromosomesComponent,
     ChromosomeComponent,
     GenotypeBrowserSingleViewComponent,
-    GenotypeBrowserMetaViewComponent,
     GenotypePreviewFieldComponent,
     ErrorsAlertComponent,
     SaveQueryButtonComponent,
