@@ -3,7 +3,7 @@ import pytest
 from box import Box
 
 from configurable_entities.configuration import DAEConfig
-from tools.dae2parquet import parse_cli_arguments, dae_build_denovo, \
+from tools.dae2parquet import parse_cli_arguments, import_dae_denovo, \
     dae_build_transmitted, dae_build_makefile
 
 from backends.configure import Configure
@@ -32,7 +32,7 @@ def test_dae2parquet_denovo(
     assert argv is not None
     assert argv.type == 'denovo'
 
-    dae_build_denovo(
+    import_dae_denovo(
         dae_config, argv, defaults={
             'scores_dirname': annotation_scores_dirname,
         })
@@ -168,7 +168,7 @@ def dae_iossifov2014_thrift(
         }
         defaults.update(DAEConfig().annotation_defaults)
 
-        dae_build_denovo(
+        import_dae_denovo(
             dae_config, argv, defaults=defaults)
 
         parquet_config = Configure.from_prefix_parquet(
