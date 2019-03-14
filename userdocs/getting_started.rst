@@ -365,10 +365,12 @@ To check that everything works, you can open following URL in your browser::
 Import a Demo Dataset
 #####################
 
-In the GPF startup data instance there are a couple of demo studies:
+In the GPF startup data instance there are some demo studies already
+imported and configured:
 
     * `quad` with a couple of variants in a single quad family
     * `multi` with a couple of variants in a multigenerational family
+    * ...
 
 .. note::
     You can download some more publicly available studies, which are prepared to be
@@ -384,10 +386,61 @@ Usualy to import study data into GPF instance could take a lot of steps. To
 make initial bootstraping easier you can use `simple_study_import.py` tool
 that combines all the necessary steps in one tool.
 
+`simple_study_import.py` tool
+*****************************
+
+This tool supports variants import from two input formats:
+
+* VCF format
+
+* DAE de Novo list of variants
+
+To see the subcommands and options supported by this tools use::
+
+    simple_study_import.py --help
+
+that will output short help message::
+
+    usage: simple_study_import.py [-h] {vcf,denovo} ...
+
+    simple import of new study data
+
+    optional arguments:
+    -h, --help    show this help message and exit
+
+    subcommands:
+    choose what type of data to convert
+
+    {vcf,denovo}  vcf import or DAE denovo import
+
+To import variants from VCF format you need to use `vcf` subcommand::
+
+    simple_study_import.py  vcf --help
+
+that will output help message for the `vcf` subcommand::
+
+    usage: simple_study_import.py vcf [-h] [-o <output directory>]
+                                    <study ID> <pedigree filename> <VCF
+                                    filename>
+
+    positional arguments:
+    <study ID>            unique study ID to use
+    <pedigree filename>   families file in pedigree format
+    <VCF filename>        VCF file to import
+
+    optional arguments:
+    -h, --help            show this help message and exit
+    -o <output directory>, --out <output directory>
+                            output directory. If none specified, "data/" directory
+                            is used [default: data/]
+
+Example import of VCF variants
+******************************
+
 Let say you have pedigree file `quad.ped` describing family information
 and VCF file `quad.vcf` with variants.
 
-To import this study into GPF instance:
+To import this data as a study into GPF instance:
 
 * go into `studies` directory of GPF instance data folder::
 
