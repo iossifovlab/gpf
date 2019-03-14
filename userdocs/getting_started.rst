@@ -444,18 +444,18 @@ To import this data as a study into GPF instance:
 
 * go into `studies` directory of GPF instance data folder::
 
-        cd $DAE_DB_DIR/studies
+    cd $DAE_DB_DIR/studies
 
 
 * create a directory where you plan to save the imported data and enter inside
-    that directory::
+  that directory::
 
         mkdir quad1
         cd quad1
 
 
 * run `simple_study_import.py` to import the data; this tool expects there
-    arguments - study ID to use, pedigree file name and VCF file name::
+  arguments - study ID to use, pedigree file name and VCF file name::
 
         simple_study_import.py vcf quad1 ../quad/quad.ped ../quad/quad.vcf
 
