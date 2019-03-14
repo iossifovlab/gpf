@@ -1,12 +1,43 @@
 import pytest
 
+import pandas as pd
 from .conftest import relative_to_this_test_folder
+from box import Box
 from annotation.tools.score_file_io import ScoreFile
+from annotation.tools.score_annotator import PositionScoreAnnotator
+from annotation.tools.annotator_config import VariantAnnotatorConfig
 try:
     bigwig_enabled = True
-    from annotation.tools.score_file_io_bigwig import BigWigLineAdapter
+    from annotation.tools.score_file_io_bigwig import \
+        BigWigAccess, BigWigLineAdapter
 except ImportError:
     bigwig_enabled = False
+
+
+expected_bw_output = """RESULT_bigwig_score
+0.8166
+1.05
+22.0111
+21.7
+22.7
+23.05
+"""
+
+
+@pytest.mark.skipif(bigwig_enabled is False,
+                    reason='pyBigWig module is not installed')
+def test_bigwig_line_adapter():
+    score_filename = relative_to_this_test_folder(
+        "fixtures/TESTbigwig/TEST_bigwig_score.bw")
+
+    bw_score_file = ScoreFile(score_filename)
+    bwline = BigWigLineAdapter(bw_score_file, 'chr1', [0, 1, 0.1234])
+
+    assert bwline.chrom == 'chr1'
+    assert bwline.pos_begin == 1
+    assert bwline.pos_end == 1
+
+    assert bwline[1] == bwline.pos_begin
 
 
 @pytest.mark.skipif(bigwig_enabled is False,
@@ -51,15 +82,35 @@ def test_bigwig_access_simple():
 
 @pytest.mark.skipif(bigwig_enabled is False,
                     reason='pyBigWig module is not installed')
-def test_bigwig_line_adapter():
-    score_filename = relative_to_this_test_folder(
-        "fixtures/TESTbigwig/TEST_bigwig_score.bw")
+def test_bigwig_access_indels(expected_df, capsys, variants_io):
 
-    bw_score_file = ScoreFile(score_filename)
-    bwline = BigWigLineAdapter(bw_score_file, 'chr1', [0, 1, 0.1234])
+    options = Box({
+        "mode": "overwrite",
+        "scores_file": relative_to_this_test_folder(
+            "fixtures/TESTbigwig/TEST_bigwig_score.bw")
+    }, default_box=True, default_box_attr=None)
 
-    assert bwline.chrom == 'chr1'
-    assert bwline.pos_begin == 1
-    assert bwline.pos_end == 1
+    config = VariantAnnotatorConfig(
+        name="test_bigwig_annotator",
+        annotator_name="score_annotator.PositionScoreAnnotator",
+        options=options,
+        columns_config={'TEST_bigwig_score': "RESULT_bigwig_score"},
+        virtuals=[]
+    )
+    print(config.options)
+    print(type(config.options))
 
-    assert bwline[1] == bwline.pos_begin
+    with variants_io("fixtures/bigwig_indels.tsv") as io_manager:
+        score_annotator = PositionScoreAnnotator(config)
+        assert score_annotator is not None
+        assert isinstance(score_annotator.score_file.accessor, BigWigAccess)
+        captured = capsys.readouterr()
+        score_annotator.annotate_file(io_manager)
+
+    captured = capsys.readouterr()
+    print(captured.err)
+    print(captured.out)
+    pd.testing.assert_frame_equal(
+        expected_df(captured.out),
+        expected_df(expected_bw_output),
+        check_less_precise=3)
