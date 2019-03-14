@@ -100,6 +100,11 @@ def generate_study_config(dae_config, argv):
     dirname = os.getcwd()
     filename = os.path.join(dirname, "{}.conf".format(argv.id))
 
+    if os.path.exists(filename):
+        print("configuration file already exists:", filename)
+        print("skipping generation of default config for:", argv.id)
+        return
+
     with open(filename, 'w') as outfile:
         outfile.write(STUDY_CONFIG_TEMPLATE.format(
             id=argv.id,
