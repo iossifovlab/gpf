@@ -29,7 +29,6 @@ def variants_iterator_to_parquet(
 
     save_ped_df_to_parquet(fvars.ped_df, parquet_config.pedigree)
 
-    print("going to build: ", parquet_prefix, file=sys.stderr)
     start = time.time()
 
     annotation_schema = ParquetSchema()
@@ -52,7 +51,8 @@ def variants_iterator_to_parquet(
 
 
 def construct_import_annotation_pipeline(dae_config, argv, defaults={}):
-    if argv.annotation_config is not None:
+
+    if 'annotation_config' in argv and argv.annotation_config is not None:
         config_filename = argv.annotation_config
     else:
         config_filename = dae_config.annotation_conf

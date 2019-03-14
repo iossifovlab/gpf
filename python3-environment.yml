@@ -87,5 +87,6 @@ dependencies:
     - lark-parser==0.6.3
     - findspark
     - tqdm==4.24.0
+    - sphinx_rtd_theme
 prefix: /home/sasho/anaconda3/envs/dae-python3
 

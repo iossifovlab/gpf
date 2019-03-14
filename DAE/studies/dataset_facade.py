@@ -47,6 +47,9 @@ class DatasetFacade(object):
     def get_all_dataset_configs(self):
         return self.dataset_definition.get_all_dataset_configs()
 
+    def get_dataset_config(self, dataset_id):
+        return self.dataset_definition.get_dataset_config(dataset_id)
+
     def load_cache(self, dataset_ids=None):
         if dataset_ids is None:
             dataset_ids = set(self.get_all_dataset_ids())
