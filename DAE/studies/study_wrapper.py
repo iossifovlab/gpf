@@ -487,9 +487,8 @@ class StudyWrapper(object):
         return self.column_labels
 
     def gene_sets_cache_file(self):
-        cache_filename = '{}.json'.format(self.id)
         cache_path = os.path.join(
             os.path.split(self.config.study_config.config_file)[0],
-            'denovo-cache/' + cache_filename)
+            'denovo-cache.json')
 
         return cache_path
