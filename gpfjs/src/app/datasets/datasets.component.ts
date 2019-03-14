@@ -6,14 +6,13 @@ import { Dataset } from './datasets';
 import { IdName } from '../common/idname';
 import { Observable } from 'rxjs';
 
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ActivatedRoute, Params, Router, NavigationEnd } from '@angular/router';
 import { Location } from '@angular/common';
 
 @Component({
   selector: 'gpf-datasets',
   templateUrl: './datasets.component.html',
   styleUrls: ['./datasets.component.css'],
-
 })
 export class DatasetsComponent implements OnInit {
   registerAlertVisible = false;
@@ -27,8 +26,7 @@ export class DatasetsComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private location: Location,
-  ) {
-  }
+  ) { }
 
   ngOnInit() {
     this.route.params.subscribe(
@@ -38,7 +36,7 @@ export class DatasetsComponent implements OnInit {
 
     this.datasets$ = this.filterHiddenGroups(
       this.datasetsService.getDatasetsObservable());
-      
+
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
 
     this.datasets$
