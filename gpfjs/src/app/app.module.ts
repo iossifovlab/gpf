@@ -66,7 +66,9 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
-import { RouterModule, Routes } from '@angular/router';
+import { RouteReuseStrategy, RouterModule, Routes } from '@angular/router';
+import { CustomRouteReuseStrategy } from 'app/route-reuse.strategy';
+
 import { StateRestoreService } from './store/state-restore.service';
 import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
@@ -395,7 +397,11 @@ const appRoutes: Routes = [
     { provide: Http, useClass: RedirectOnErrorHttpService,
       deps: [XHRBackend, RequestOptions, Injector]},
     PedigreeMockService,
-    PerfectlyDrawablePedigreeService
+    PerfectlyDrawablePedigreeService,
+    {
+      provide: RouteReuseStrategy,
+      useClass: CustomRouteReuseStrategy
+    }
   ],
 
   entryComponents: [

@@ -27,18 +27,7 @@ export class DatasetsComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private location: Location,
-  ) {
-    this.router.routeReuseStrategy.shouldReuseRoute = function() {
-      return false;
-    };
-
-    this.router.events.subscribe((evt) => {
-      if (evt instanceof NavigationEnd) {
-        this.router.navigated = false;
-        window.scrollTo(0, 0);
-      }
-    });
-  }
+  ) { }
 
   ngOnInit() {
     this.route.params.subscribe(
