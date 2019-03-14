@@ -5,6 +5,7 @@ GPF Getting Started Guide
 Prerequisites [WIP]
 ###################
 
+.. note::
     git
     wget
     gcc
@@ -41,7 +42,8 @@ Setup Anaconda Environment
 Download and install Anaconda
 *****************************
 
-Download Anaconda from  Anaconda distribution page (https://www.anaconda.com/distribution/)
+Download Anaconda from  Anaconda distribution page
+(https://www.anaconda.com/distribution/):
 
 .. code-block:: bash
 
@@ -56,8 +58,8 @@ and install it in your local environment, following the installer instructions:
 Create GPF environment
 **********************
 
-Most of the dependencies for GPF are described in Anaconda environment description
-files located inside of the GPF source repository:
+Most of the dependencies for GPF are described in Anaconda environment
+description files located inside of the GPF source repository:
 
 .. code-block:: bash
 
@@ -65,7 +67,8 @@ files located inside of the GPF source repository:
     gpf/python3-environment.yml
 
 You can use these files to create a GPF Python development environment.
-For example, if you want to create a Python 3 development conda environment, use:
+For example, if you want to create a Python 3 development conda environment,
+use:
 
 .. code-block:: bash
 
@@ -84,7 +87,8 @@ Install ``pyarrow`` and ``pandas`` from Anaconda ``conda-forge`` channel:
     conda install -c conda-forge pyarrow pandas
 
 
-Additionally, you will need to install `cyvcf2`. Clone the following repository:
+Additionally, you will need to install `cyvcf2`. Clone the following
+repository:
 
 .. code-block:: bash
 
@@ -172,7 +176,8 @@ This command will copy the necessary data into your working directory.
 Get Genomic Scores Database [TBD]
 #################################
 
-To annotate variants with genomic scores you will need a genomic scores database.
+To annotate variants with genomic scores you will need a genomic scores
+database.
 
 There are two genomic scores databases - aligned to reference genomes HG19
 and HG38.
@@ -215,8 +220,8 @@ Inside the GPF source directory, there is a file named
     # setups GPF paths
     source $DAE_SOURCE_DIR/setdae.sh
 
-You should copy it as a separate file named ``setenv.sh`` and edit it according you own setup.
-When you are ready, you need to source your ``setenv.sh`` file:
+You should copy it as a separate file named ``setenv.sh`` and edit it according
+you own setup. When you are ready, you need to source your ``setenv.sh`` file:
 
 .. code-block:: bash
 
@@ -225,6 +230,89 @@ When you are ready, you need to source your ``setenv.sh`` file:
 
 Example Usage of GPF Python Interface
 #####################################
+
+Simplest way to start using GPF system python API is to import `variants_db`
+object:
+
+.. code-block:: python3
+
+    from DAE import variants_db as vdb
+
+This `vdb` factory object allows you to get all studies and datasets in the
+configured GPF instance. For example to list all studies configured in
+the startup GPF instance use:
+
+.. code-block:: python3
+
+    vdb.get_studies_ids()
+
+that should return a list of all studies IDs:
+
+.. code-block:: python3
+
+    ['iossifov_2014',
+    'iossifov_2014_small',
+    'trio',
+    'quad',
+    'multi',
+    'ivan']
+
+To get specific study and query it you can use:
+
+.. code-block:: python3
+
+    st = vdb.get_study("trio")
+    vs = st.query_variants()
+    vs = list(vs)
+
+.. note::
+    `query_variants` method returns Python iterator.
+
+To get the basic information about variants found by `query_variants` method
+you can use:
+
+.. code-block:: python3
+
+    for v in vs:
+        for aa in v.alt_alleles:
+            print(aa)
+
+    1:865582 C->T f1
+    1:865583 G->A f1
+    1:865624 G->A f1
+    1:865627 G->A f1
+    1:865664 G->A f1
+    1:865691 C->T f1
+    1:878109 C->G f1
+    1:901921 G->A f1
+    1:905956 CGGCTCGGAAGG->C f1
+    1:1222518 C->A f1
+
+The `query_variants` interface allows you to specify what kind of variants
+you are interesetd in. For example if you need only 'missense' variants you
+can use:
+
+.. code-block:: python3
+
+    st = vdb.get_study("iossifov_2014_small")
+    vs = st.query_variants(effect_types=['missense'])
+    vs = list(vs)
+    print(len(vs))
+
+    >> 6
+
+Or if you are interested in 'missinse' variants only in people with role
+'prb' you can use:
+
+.. code-block:: python3
+
+    vs = st.query_variants(effect_types=['missense'], roles='prb')
+    vs = list(vs)
+    len(vs)
+
+    >> 3
+
+For more information see:
 
 
 Start GPF Web UI
