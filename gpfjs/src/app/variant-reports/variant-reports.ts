@@ -235,6 +235,7 @@ export class VariantReport {
 
   static fromJson(json: any) {
     return new VariantReport(
+      json['id'],
       json['study_name'],
       json['study_description'],
       FamilyReport.fromJson(json['families_report']),
@@ -244,6 +245,7 @@ export class VariantReport {
   }
 
   constructor(
+    readonly id: string,
     readonly studyName: string,
     readonly studyDescription: string,
     readonly familyReport: FamilyReport,

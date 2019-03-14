@@ -44,7 +44,7 @@ export class VariantReportsComponent implements OnInit {
 
     this.variantReport$ = this.selectedReport$
       .switchMap(study => this.variantReportsService.getVariantReport(study))
-      .do(study => this.setSelectedReportParam(study.studyName))
+      .do(study => this.setSelectedReportParam(study.id))
       .share();
 
     this.variantReport$.take(1).subscribe(params => {
@@ -76,14 +76,14 @@ export class VariantReportsComponent implements OnInit {
     }
   }
 
-  private setSelectedReportParam(studyName) {
+  private setSelectedReportParam(id) {
     this.route.params
       .take(1)
       .subscribe(params => {
         if (!params[SELECTED_REPORT_QUERY_PARAM] ||
-          params[SELECTED_REPORT_QUERY_PARAM] !== studyName) {
+          params[SELECTED_REPORT_QUERY_PARAM] !== id) {
             let param = {};
-            param[SELECTED_REPORT_QUERY_PARAM] = studyName;
+            param[SELECTED_REPORT_QUERY_PARAM] = id;
 
             this.router.navigate(['/reports/reports', param]);
           }
@@ -99,7 +99,7 @@ export class VariantReportsComponent implements OnInit {
       .subscribe(([reports, params]) => {
         if (params[SELECTED_REPORT_QUERY_PARAM]) {
           let report = reports.studies
-            .find(study => study.name === params[SELECTED_REPORT_QUERY_PARAM]);
+            .find(study => study.id === params[SELECTED_REPORT_QUERY_PARAM]);
           if (report) {
             this.selectReport(report);
           }
