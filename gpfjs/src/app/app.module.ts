@@ -67,7 +67,7 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
 import { RouteReuseStrategy, RouterModule, Routes } from '@angular/router';
-import { CustomRouteReuseStrategy } from 'app/route-reuse.strategy';
+import { TaggingRouteReuseStrategy } from 'app/route-reuse.strategy';
 
 import { StateRestoreService } from './store/state-restore.service';
 import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
@@ -164,6 +164,9 @@ const appRoutes: Routes = [
   {
     path: 'datasets/:dataset',
     component: DatasetsComponent,
+    data: {
+      reuse: false
+    },
     children: [
       {
         path: 'browser',
@@ -400,7 +403,7 @@ const appRoutes: Routes = [
     PerfectlyDrawablePedigreeService,
     {
       provide: RouteReuseStrategy,
-      useClass: CustomRouteReuseStrategy
+      useClass: TaggingRouteReuseStrategy
     }
   ],
 

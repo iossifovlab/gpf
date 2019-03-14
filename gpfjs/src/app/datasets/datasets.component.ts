@@ -13,7 +13,6 @@ import { Location } from '@angular/common';
   selector: 'gpf-datasets',
   templateUrl: './datasets.component.html',
   styleUrls: ['./datasets.component.css'],
-
 })
 export class DatasetsComponent implements OnInit {
   registerAlertVisible = false;
