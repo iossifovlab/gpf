@@ -279,13 +279,12 @@ class HybridAccess(ScoreFile):
 
     def __init__(self, options, score_filename,
                  config_filename=None, score_config=None):
-        super(IterativeAccess, self).__init__(
+        super(HybridAccess, self).__init__(
             options, score_filename,
             config_filename=config_filename, score_config=score_config)
 
         self.buffer = LineBufferAdapter(self)
-        self.direct_infile = pysam.TabixFile(self.filename)
-        self.last_line = [None, None]
+        self.last_pos = 0
 
     def _reset(self, chrom, pos_begin):
         self.buffer.reset()
@@ -295,26 +294,17 @@ class HybridAccess(ScoreFile):
         self._region_reset(region)
 
     def _fetch(self, chrom, pos_begin, pos_end):
-        if self.last_line[0] is None:
-            self.last_line[0] = pos_begin
-        if self.last_line[1] is None:
-            self.last_line[1] = pos_end
-
         if pos_begin - pos_end <= 1:
-            if (pos_begin - self.last_line[1]) > 1500:
-                self.last_line[0] = pos_begin
-                self.last_line[1] = pos_end
+            if (pos_begin - self.last_pos) > 1500:
                 return self._fetch_direct(chrom, pos_begin, pos_end)
             else:
-                self.last_line[0] = pos_begin
-                self.last_line[1] = pos_end
                 return self._fetch_sequential(chrom, pos_begin, pos_end)
         else:
-            self.last_line[0] = pos_begin
-            self.last_line[1] = pos_end
             return self._fetch_sequential(chrom, pos_begin, pos_end)
 
     def _fetch_sequential(self, chrom, pos_begin, pos_end):
+        self.last_pos = pos_end
+
         if chrom != self.buffer.chrom or \
                 pos_begin < self.buffer.pos_begin or \
                 (pos_begin - self.buffer.pos_end) > self.LONG_JUMP_THRESHOLD:
@@ -328,11 +318,12 @@ class HybridAccess(ScoreFile):
         return self.buffer.select_lines(chrom, pos_begin, pos_end)
 
     def _fetch_direct(self, chrom, pos_begin, pos_end):
+        self.last_pos = pos_end
         try:
             result = []
             chrom = str(chrom)
 
-            for line in self.direct_infile.fetch(
+            for line in self.infile.fetch(
                     chrom, pos_begin-1, pos_end, parser=pysam.asTuple()):
                 line = LineAdapter(self, line)
                 result.append(line)
