@@ -12,7 +12,7 @@ import matplotlib.lines as mlines
 from matplotlib.path import Path
 from matplotlib.backends.backend_pdf import PdfPages
 
-from variants.attributes import Sex
+from variants.attributes import Sex, Role
 
 
 class PDFLayoutDrawer(object):
@@ -233,6 +233,8 @@ class OffsetLayoutDrawer(object):
                 else:
                     individual_color = "purple"
 
+                ind_half_size = individual.size / 2.0
+
                 if Sex.from_name_or_value(
                         individual.individual.member.sex) == Sex.male:
                     coords = [individual.x + self._x_offset,
@@ -240,8 +242,19 @@ class OffsetLayoutDrawer(object):
                     axes.add_patch(mpatches.Rectangle(
                         coords, individual.size, individual.size,
                         facecolor=individual_color, edgecolor="black"))
-                    cx = coords[0] + individual.size / 2.0
-                    cy = coords[1] + individual.size / 2.0
+                    cx = coords[0] + ind_half_size
+                    cy = coords[1] + ind_half_size
+
+                    if individual.individual.member.role == Role.prb:
+                        axes.add_patch(mpatches.Arrow(
+                            coords[0] - ind_half_size,
+                            coords[1] - ind_half_size,
+                            ind_half_size,
+                            ind_half_size,
+                            color='black',
+                            width=2.0,
+                            linewidth=0.1
+                        ))
                 elif Sex.from_name_or_value(
                         individual.individual.member.sex) == Sex.female:
                     coords = [individual.x_center + self._x_offset,
@@ -251,6 +264,19 @@ class OffsetLayoutDrawer(object):
                         facecolor=individual_color, edgecolor="black"))
                     cx = coords[0]
                     cy = coords[1]
+
+                    if individual.individual.member.role == Role.prb:
+                        axes.add_patch(mpatches.Arrow(
+                            (coords[0] + (ind_half_size) *
+                             math.cos(math.radians(225))) - ind_half_size,
+                            (coords[1] + (ind_half_size) *
+                             math.sin(math.radians(225))) - ind_half_size,
+                            ind_half_size,
+                            ind_half_size,
+                            color='black',
+                            width=2.0,
+                            linewidth=0.1
+                        ))
                 else:
                     size = math.sqrt((individual.size ** 2) / 2)
                     coords =\
@@ -261,7 +287,7 @@ class OffsetLayoutDrawer(object):
                         facecolor=individual_color, edgecolor="black",
                         angle=45.0))
                     cx = coords[0]
-                    cy = coords[1] + individual.size / 2.0
+                    cy = coords[1] + ind_half_size
 
                 if self.show_id:
                     axes.annotate(individual.individual.member.id, (cx, cy),
@@ -271,14 +297,14 @@ class OffsetLayoutDrawer(object):
     def _draw_family(self, axes, family):
         col_labels =\
             ["familyId", "individualId", "father", "mother", "sex", "status",
-             "layout"]
+             "role", "layout"]
         table_vals = []
 
         for member in family:
             table_vals.append(
                 [member.family_id, member.id, member.father, member.mother,
                  Sex.from_name_or_value(member.sex), member.status,
-                 member.layout])
+                 member.role, member.layout])
 
         axes.table = plt.table(
             cellText=table_vals, colLabels=col_labels, loc='center')

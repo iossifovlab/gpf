@@ -7,6 +7,8 @@ from collections import defaultdict
 from functools import reduce
 import re
 
+from variants.attributes import Role
+
 
 def layout_parser(layout):
     layout_groups = re.search(
@@ -170,7 +172,7 @@ class Layout(object):
                 [self._id_to_position[x] for x in level])
 
     def _create_lines(self, y_offset=15):
-        for level in self.positions:
+        for level_index, level in enumerate(self.positions):
             for start, individual in enumerate(level):
                 if individual.individual.parents:
                     self.lines.append(Line(
@@ -178,12 +180,26 @@ class Layout(object):
                         individual.x_center, individual.y_center - y_offset
                     ))
 
+                level_y_offset = y_offset
+                for mating_unit in individual.individual.mating_units:
+                    if mating_unit.children.individuals:
+                        for indiv in mating_unit.children.individuals:
+                            child = list(filter(
+                                lambda ind: ind.individual.member.id ==
+                                indiv.member.id,
+                                self.positions[level_index + 1]))
+                            if len(child) != 0:
+                                level_y_offset =\
+                                    child[0].y - individual.y - 30.0 + y_offset
+                                break
+
                 for i, other_individual in enumerate(level[start+1:]):
                     are_next_to_eachother = (i == 0)
                     if (individual.individual.are_mates(
                             other_individual.individual)):
-                        middle_x = old_div((individual.x_center +
-                                    other_individual.x_center), 2.0)
+                        middle_x = old_div(
+                            (individual.x_center + other_individual.x_center),
+                            2.0)
                         if are_next_to_eachother:
                             self.lines.append(Line(
                                 individual.x + individual.size,
@@ -192,7 +208,7 @@ class Layout(object):
                             ))
                             self.lines.append(Line(
                                 middle_x, individual.y_center,
-                                middle_x, individual.y_center + y_offset
+                                middle_x, individual.y_center + level_y_offset
                             ))
                             continue
 
@@ -205,13 +221,15 @@ class Layout(object):
                         self.lines.append(line)
 
                         percent_x = \
-                            old_div((middle_x - individual.x_center), \
-                            (other_individual.x_center - individual.x_center))
+                            old_div(
+                                (middle_x - individual.x_center),
+                                (other_individual.x_center -
+                                 individual.x_center))
                         center_y = line.inverse_curve_y_at(percent_x)
 
                         self.lines.append(Line(
                             middle_x, center_y,
-                            middle_x, individual.y_center + y_offset
+                            middle_x, individual.y_center + level_y_offset
                         ))
 
             i = 0
@@ -223,7 +241,8 @@ class Layout(object):
                     if (individual.individual.are_siblings(
                             other_individual.individual)):
                         self.lines.append(Line(
-                            individual.x_center, individual.y_center - y_offset,
+                            individual.x_center,
+                            individual.y_center - y_offset,
                             other_individual.x_center,
                             other_individual.y_center - y_offset
                         ))
@@ -251,7 +270,8 @@ class Layout(object):
     def _align_multiple_mates_of_individual(self, individual, level):
         moved = 0
 
-        others = {mu.other_parent(individual) for mu in individual.mating_units}
+        others = {mu.other_parent(individual)
+                  for mu in individual.mating_units}
         individual_position = self._id_to_position[individual]
 
         ordered = list(others)
@@ -262,8 +282,10 @@ class Layout(object):
         common_parent_index = level.index(individual)
 
         left_of_common_parent = [i for i in indices if i < common_parent_index]
-        right_of_common_parent = [i for i in indices if i > common_parent_index]
-        right_of_common_parent_reversed = list(reversed(right_of_common_parent))
+        right_of_common_parent =\
+            [i for i in indices if i > common_parent_index]
+        right_of_common_parent_reversed =\
+            list(reversed(right_of_common_parent))
 
         # print(indices)
         # print(left_of_common_parent)
@@ -277,7 +299,7 @@ class Layout(object):
             arch_width = individual_position.x - parent_position.x
 
             compare_width = individual_position.x - \
-                            self._id_to_position[to_compare].x + individual_position.size
+                self._id_to_position[to_compare].x + individual_position.size
 
             if arch_width < 2*compare_width:
                 moved += self._move(
@@ -292,7 +314,7 @@ class Layout(object):
             arch_width = parent_position.x - individual_position.x
 
             compare_width = self._id_to_position[to_compare].x - \
-                            individual_position.x + individual_position.size
+                individual_position.x + individual_position.size
 
             if arch_width < 2 * compare_width:
                 moved += self._move(
@@ -317,7 +339,8 @@ class Layout(object):
                 else:
                     ordered_parents = [mu1.father, mu1.mother, mu2.father]
 
-                ordered_parents = [self._id_to_position[i] for i in ordered_parents]
+                ordered_parents =\
+                    [self._id_to_position[i] for i in ordered_parents]
 
                 if ordered_parents[0].x > ordered_parents[2].x:
                     ordered_parents[0], ordered_parents[2] = \
@@ -453,7 +476,8 @@ class Layout(object):
             to_move -= set(individuals)
 
             if to_move != set():
-                to_move_offset = max([new_end - i.x + min_gap*2.0 + i.size for i in to_move])
+                to_move_offset = max([new_end - i.x + min_gap*2.0 + i.size
+                                      for i in to_move])
         else:
             start = min_individual.x
             end = max_individual.x
@@ -464,7 +488,8 @@ class Layout(object):
             to_move -= set(individuals)
 
             if to_move != set():
-                to_move_offset = min([new_start - i.x - min_gap*2.0 - i.size for i in to_move])
+                to_move_offset = min([new_start - i.x - min_gap*2.0 - i.size
+                                      for i in to_move])
 
         for individual in individuals:
             individual.x += offset
@@ -520,14 +545,27 @@ class Layout(object):
         result = {}
         original_x_offset = x_offset
 
+        prb_y_offset = y_offset
         for rank, individuals in enumerate(levels):
             x_offset = original_x_offset
-            for individual in individuals:
+            is_prb = False
+            for individual_index, individual in enumerate(individuals):
+                has_children = any([bool(len(mu.children.individuals))
+                                    for mu in individual.mating_units])
+                if individual.member.role == Role.prb and has_children and\
+                        individual_index != 0:
+                    x_offset += 20.0
+                    is_prb = True
                 position = IndividualWithCoordinates(
-                    individual, x_offset, (rank + 1) * level_heigh + y_offset)
+                    individual,
+                    x_offset, (rank + 1) * level_heigh + prb_y_offset)
                 result[individual] = position
 
                 x_offset += position.size + gap
+
+            prb_y_offset = y_offset
+            if is_prb:
+                prb_y_offset += 10.0
 
         return result
 
