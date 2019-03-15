@@ -12,8 +12,7 @@ from annotation.tools.annotator_base import VariantAnnotatorBase, \
     CompositeVariantAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 
-from annotation.tools.score_file_io import DirectAccess, \
-    IterativeAccess
+from annotation.tools.score_file_io import HybridAccess
 
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):
@@ -38,16 +37,10 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         scores_filename = os.path.abspath(self.config.options.scores_file)
         assert os.path.exists(scores_filename), scores_filename
 
-        if self.config.options.direct:
-            self.score_file = DirectAccess(
-                self.config.options,
-                scores_filename,
-                self.config.options.scores_config_file)
-        else:
-            self.score_file = IterativeAccess(
-                self.config.options,
-                scores_filename,
-                self.config.options.scores_config_file)
+        self.score_file = HybridAccess(
+            self.config.options,
+            scores_filename,
+            self.config.options.scores_config_file)
         self.score_file._setup()
 
         self.no_score_value = self.score_file.config.noScoreValue

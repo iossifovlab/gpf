@@ -274,8 +274,8 @@ class LineBufferAdapter(object):
         return result
 
 
-class IterativeAccess(ScoreFile):
-    LONG_JUMP_THRESHOLD = 100000
+class HybridAccess(ScoreFile):
+    LONG_JUMP_THRESHOLD = 5000
 
     def __init__(self, options, score_filename,
                  config_filename=None, score_config=None):
@@ -284,19 +284,37 @@ class IterativeAccess(ScoreFile):
             config_filename=config_filename, score_config=score_config)
 
         self.buffer = LineBufferAdapter(self)
+        self.direct_infile = pysam.TabixFile(self.filename)
+        self.last_line = [None, None]
 
     def _reset(self, chrom, pos_begin):
         self.buffer.reset()
 
         region = "{}:{}".format(chrom, pos_begin)
-        # print("RESETTING score file: {} to {}".format(
-        #     self.score_filename, region
-        # ), file=sys.stderr)
 
         self._region_reset(region)
 
     def _fetch(self, chrom, pos_begin, pos_end):
+        if self.last_line[0] is None:
+            self.last_line[0] = pos_begin
+        if self.last_line[1] is None:
+            self.last_line[1] = pos_end
 
+        if pos_begin - pos_end <= 1:
+            if (pos_begin - self.last_line[1]) > 1500:
+                self.last_line[0] = pos_begin
+                self.last_line[1] = pos_end
+                return self._fetch_direct(chrom, pos_begin, pos_end)
+            else:
+                self.last_line[0] = pos_begin
+                self.last_line[1] = pos_end
+                return self._fetch_sequential(chrom, pos_begin, pos_end)
+        else:
+            self.last_line[0] = pos_begin
+            self.last_line[1] = pos_end
+            return self._fetch_sequential(chrom, pos_begin, pos_end)
+
+    def _fetch_sequential(self, chrom, pos_begin, pos_end):
         if chrom != self.buffer.chrom or \
                 pos_begin < self.buffer.pos_begin or \
                 (pos_begin - self.buffer.pos_end) > self.LONG_JUMP_THRESHOLD:
@@ -309,21 +327,12 @@ class IterativeAccess(ScoreFile):
         self.buffer.fill(chrom, pos_begin, pos_end)
         return self.buffer.select_lines(chrom, pos_begin, pos_end)
 
-
-class DirectAccess(ScoreFile):
-
-    def __init__(self, options, score_filename, config_filename=None,
-                 score_config=None):
-        super(DirectAccess, self).__init__(
-            options, score_filename, config_filename=config_filename,
-            score_config=score_config)
-
-    def _fetch(self, chrom, pos_begin, pos_end):
+    def _fetch_direct(self, chrom, pos_begin, pos_end):
         try:
             result = []
             chrom = str(chrom)
 
-            for line in self.infile.fetch(
+            for line in self.direct_infile.fetch(
                     chrom, pos_begin-1, pos_end, parser=pysam.asTuple()):
                 line = LineAdapter(self, line)
                 result.append(line)
