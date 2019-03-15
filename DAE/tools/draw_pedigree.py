@@ -123,6 +123,7 @@ def main():
         "mother": args.mother,
         "sex": args.sex,
         "status": args.status,
+        "role": args.role,
         "layout": args.layout_column
     }
     if args.generated_column:
