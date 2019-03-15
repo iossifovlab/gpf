@@ -3,8 +3,7 @@ import pytest
 from box import Box
 
 from .conftest import relative_to_this_test_folder
-from annotation.tools.score_file_io import \
-    DirectAccess, IterativeAccess, LineAdapter
+from annotation.tools.score_file_io import HybridAccess, LineAdapter
 
 
 @pytest.mark.parametrize("score_filename,no_header", [
@@ -16,7 +15,7 @@ def test_score_file_header(score_filename, no_header):
     score_config_filename = None
     options = Box({}, default_box=True, default_box_attr=None)
 
-    with IterativeAccess(
+    with HybridAccess(
             options, score_filename, score_config_filename) as score_io:
         assert score_io is not None
         if no_header:
@@ -31,7 +30,7 @@ def test_iterative_access_simple():
     score_config_filename = None
     options = Box({}, default_box=True, default_box_attr=None)
 
-    with IterativeAccess(
+    with HybridAccess(
             options, score_filename, score_config_filename) as score_io:
         assert score_io is not None
 
@@ -52,7 +51,7 @@ def test_iterative_line_adapter():
     score_config_filename = None
     options = Box({}, default_box=True, default_box_attr=None)
 
-    with IterativeAccess(
+    with HybridAccess(
             options, score_filename, score_config_filename) as score_io:
         assert score_io is not None
 
@@ -68,7 +67,7 @@ def test_direct_access_simple():
     score_config_filename = None
 
     options = Box({}, default_box=True, default_box_attr=None)
-    with DirectAccess(
+    with HybridAccess(
             options, score_filename, score_config_filename) as score_io:
 
         assert score_io is not None
@@ -88,7 +87,7 @@ def test_iterative_access_with_reset_backward(mocker):
     score_config_filename = None
     options = Box({}, default_box=True, default_box_attr=None)
 
-    with IterativeAccess(
+    with HybridAccess(
             options, score_filename, score_config_filename) as score_io:
         assert score_io is not None
 
@@ -121,7 +120,7 @@ def test_iterative_access_with_reset_different_chrom(mocker):
     score_config_filename = None
     options = Box({}, default_box=True, default_box_attr=None)
 
-    with IterativeAccess(
+    with HybridAccess(
             options, score_filename, score_config_filename) as score_io:
         assert score_io is not None
 
@@ -156,7 +155,7 @@ def test_iterative_access_with_reset_long_jump_ahead(mocker):
     score_config_filename = None
     options = Box({}, default_box=True, default_box_attr=None)
 
-    with IterativeAccess(
+    with HybridAccess(
             options, score_filename, score_config_filename) as score_io:
         assert score_io is not None
 
@@ -195,7 +194,7 @@ def test_iterative_access_with_na_values(chrom, pos_start, pos_end, count):
     score_config_filename = None
     options = Box({}, default_box=True, default_box_attr=None)
 
-    with IterativeAccess(
+    with HybridAccess(
             options, score_filename, score_config_filename) as score_io:
         assert score_io is not None
 
@@ -212,7 +211,7 @@ def test_aggregation_correctness():
     score_config_filename = None
     options = Box({}, default_box=True, default_box_attr=None)
 
-    with IterativeAccess(options,
+    with HybridAccess(options,
                          score_filename,
                          score_config_filename) as score_io:
         assert score_io is not None
