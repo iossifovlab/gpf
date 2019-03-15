@@ -44,14 +44,14 @@ class PedigreeMember(object):
         elif self.status == "2":
             phenotype = "affected"
         return pd.DataFrame.from_dict({
-            "familyId": [self.family_id],
-            "personId": [self.id],
-            "sampleId": [self.id],
+            "family_id": [self.family_id],
+            "person_id": [self.id],
+            "sample_id": [self.id],
             "sex": [Sex.from_name_or_value(self.sex)],
             "role": [Role.unknown],
             "status": [self.status],
-            "momId": [self.mother],
-            "dadId": [self.father],
+            "mom_id": [self.mother],
+            "dad_id": [self.father],
             "layout": [self.layout],
             "generated": [self.generated],
             "phenotype": [phenotype]
