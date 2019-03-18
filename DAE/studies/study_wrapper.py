@@ -99,7 +99,6 @@ class StudyWrapper(object):
 
     # Not implemented:
     # inChild
-    # genomicScores
     # callSet
     # minParentsCalled
     # ultraRareOnly
@@ -124,6 +123,9 @@ class StudyWrapper(object):
         if 'minAltFrequencyPercent' in kwargs or \
                 'maxAltFrequencyPercent' in kwargs:
             self._transform_min_max_alt_frequency(kwargs)
+
+        if 'genomicScores'in kwargs:
+            self._transform_genomic_scores(kwargs)
 
         for key in list(kwargs.keys()):
             if key in self.FILTER_RENAMES_MAP:
@@ -282,6 +284,18 @@ class StudyWrapper(object):
             kwargs['person_ids'] = list(people_with_phenotype)
 
         return kwargs
+
+    def _transform_genomic_scores(self, kwargs):
+        genomic_scores = kwargs.pop('genomicScores', [])
+
+        genomic_scores_filter = [
+            (score['metric'],
+             (score['rangeStart'], score['rangeEnd']))
+            for score in genomic_scores
+            if score['rangeStart'] or score['rangeEnd']
+        ]
+
+        kwargs['real_attr_filter'] = genomic_scores_filter
 
     def _transform_min_max_alt_frequency(self, kwargs):
         min_value = None
@@ -487,9 +501,8 @@ class StudyWrapper(object):
         return self.column_labels
 
     def gene_sets_cache_file(self):
-        cache_filename = '{}.json'.format(self.id)
         cache_path = os.path.join(
             os.path.split(self.config.study_config.config_file)[0],
-            'denovo-cache/' + cache_filename)
+            'denovo-cache.json')
 
         return cache_path

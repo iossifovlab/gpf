@@ -203,7 +203,7 @@ def test_iterative_access_with_na_values(chrom, pos_start, pos_end, count):
         assert len(res) == count
         assert res['chromStart'][0] <= pos_start and \
             res['chromEnd'][count-1] >= pos_end
-        
+
 
 def test_aggregation_correctness():
     score_filename = relative_to_this_test_folder(
