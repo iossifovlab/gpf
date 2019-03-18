@@ -60,6 +60,4 @@ class CommonReportFacade(object):
         if common_report is None:
             return
 
-        common_report['id'] = common_report_id
-
         self._common_report_cache[common_report_id] = common_report
