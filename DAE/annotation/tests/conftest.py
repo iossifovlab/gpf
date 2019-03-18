@@ -7,6 +7,7 @@ from io import StringIO
 
 from box import Box
 from annotation.tools.file_io import IOManager, IOType
+from annotation.tools.score_file_io import ScoreFile, TabixAccess
 
 
 def relative_to_this_test_folder(path):
@@ -40,3 +41,14 @@ def expected_df():
         df = pd.read_csv(infile, sep="\t")
         return df
     return build
+
+
+@pytest.fixture
+def score_file():
+    score_filename = relative_to_this_test_folder(
+        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+
+    score_file_instance = ScoreFile(score_filename)
+    assert score_file_instance is not None
+    assert isinstance(score_file_instance.accessor, TabixAccess)
+    return score_file_instance

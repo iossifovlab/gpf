@@ -2,7 +2,7 @@ import pytest
 
 from .conftest import relative_to_this_test_folder
 from annotation.tools.score_file_io import \
-    ScoreFile, LineAdapter, LineBufferAdapter
+    ScoreFile, TabixAccess, LineAdapter, LineBufferAdapter
 
 
 def test_regions_intersecting():
@@ -35,24 +35,6 @@ def test_regions_non_intersecting():
                                                        *region_pair[0])
 
 
-# @pytest.mark.parametrize("score_filename,no_header", [
-#     ("fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz", True),
-#     ("fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz", True),
-# ])
-# def test_score_file_header(score_filename, no_header):
-#     score_filename = relative_to_this_test_folder(score_filename)
-#     score_config_filename = None
-#     options = Box({}, default_box=True, default_box_attr=None)
-#
-#     with IterativeAccess(
-#             options, score_filename, score_config_filename) as score_io:
-#         assert score_io is not None
-#         if no_header:
-#             assert score_io.options.no_header
-#         else:
-#             assert not score_io.options.no_header
-
-
 def test_load_config():
     score_filename = relative_to_this_test_folder(
         "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
@@ -70,143 +52,71 @@ def test_load_config():
     assert all([col in dummy_score.schema for col in expected_header])
 
 
-def test_iterative_access_simple():
+def test_tabix_threshold_values():
+    assert TabixAccess.LONG_JUMP_THRESHOLD == 5000
+    assert TabixAccess.ACCESS_SWITCH_THRESHOLD == 1500
+
+
+def test_line_adapter(score_file):
     score_filename = relative_to_this_test_folder(
         "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
 
     score_file = ScoreFile(score_filename)
     assert score_file is not None
 
-    res = score_file.fetch_scores_df("1", 10918, 10920)
-    print(res)
-
-    res = score_file.fetch_scores_df("1", 10934, 10934)
-
-    assert len(res) == 1
-
-    assert float(res['TESTphastCons100way'][0]) == \
-        pytest.approx(0.204, 1E-3)
-
-
-def test_iterative_line_adapter():
-    score_filename = relative_to_this_test_folder(
-        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
-
-    score_file = ScoreFile(score_filename)
-    assert score_file is not None
-
-    line = LineAdapter(
-        score_file, ["1", "10", "20", "1", "10", "20", "30"])
-
+    line = LineAdapter(score_file, ["1", "10", "20", "1", "10", "20", "30"])
     assert line.pos_begin == 10
 
 
-def test_direct_access_simple():
-    score_filename = relative_to_this_test_folder(
-        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
-
-    score_file = ScoreFile(score_filename)
-
-    assert score_file is not None
-
-    res = score_file.fetch_scores_df("1", 10934, 10934)
-    print(res)
+@pytest.mark.parametrize("access_type", ['sequential', 'direct'])
+def test_tabix_accessors_simple(score_file, access_type):
+    if access_type == 'sequential':
+        res = score_file.accessor._fetch_sequential('1', 10918, 10920)
+        res = score_file.accessor._fetch_sequential('1', 10934, 10934)
+    else:
+        res = score_file.accessor._fetch_direct('1', 10934, 10934)
 
     assert len(res) == 1
+    assert len(res[0].line) == len(res[0])
+    assert float(res[0][3]) == pytest.approx(0.204, 1E-3)
 
-    assert float(res['TESTphastCons100way'][0]) == \
-        pytest.approx(0.204, 1E-3)
 
-
-def test_iterative_access_with_reset_backward(mocker):
-    score_filename = relative_to_this_test_folder(
-        "fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz")
-
-    score_file = ScoreFile(score_filename)
-    assert score_file is not None
-
-    check_pos = 20005
-    res = score_file.fetch_scores_df("1", check_pos, check_pos)
-    print(res)
-    assert len(res) == 1
-    assert res['chromStart'][0] <= check_pos and \
-        res['chromEnd'][0] >= check_pos
-
+def test_tabix_sequential_access_reset_backward(score_file, mocker):
     mocker.spy(score_file.accessor, '_region_reset')
+    for check_pos in [20005, 20001]:
+        res = score_file.accessor._fetch_sequential('1', check_pos, check_pos)
+        assert len(res) == 1
+        assert res[0][1] <= check_pos and \
+            res[0][2] >= check_pos
 
-    check_pos = 20001
-    res = score_file.fetch_scores_df("1", check_pos, check_pos)
-    print(res)
-    assert len(res) == 1
-    assert res['chromStart'][0] <= check_pos and \
-        res['chromEnd'][0] >= check_pos
-
-    assert score_file.accessor._region_reset.call_count == 1
-    print(dir(score_file.accessor._region_reset))
-    print(score_file.accessor._region_reset.call_args)
-    score_file.accessor._region_reset.assert_called_once_with("1:20001")
+    assert score_file.accessor._region_reset.call_count == 2
+    score_file.accessor._region_reset.assert_called_with("1:20001")
 
 
-def test_iterative_access_with_reset_different_chrom(mocker):
-    score_filename = relative_to_this_test_folder(
-        "fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz")
-
-    score_file = ScoreFile(score_filename)
-    assert score_file is not None
-
-    check_pos = 20000
-    res = score_file.fetch_scores_df("1", check_pos, check_pos)
-    print(res)
-    assert len(res) == 1
-    assert res['chromStart'][0] <= check_pos and \
-        res['chromEnd'][0] >= check_pos
-
+def test_tabix_sequential_access_reset_different_chrom(score_file, mocker):
     mocker.spy(score_file.accessor, '_region_reset')
+    for chrom, check_pos in [('1', 20000), ('2', 20001)]:
+        res = score_file.accessor._fetch_sequential(chrom,
+                                                    check_pos, check_pos)
+        assert len(res) == 1
+        assert res[0][1] <= check_pos and \
+            res[0][2] >= check_pos
 
-    check_pos = 20001
-    res = score_file.fetch_scores_df("2", check_pos, check_pos)
-    print(res)
-    assert len(res) == 1
-    assert res['chromStart'][0] <= check_pos and \
-        res['chromEnd'][0] >= check_pos
-
-    print(score_file.accessor._region_reset.call_args)
-
-    assert score_file.accessor._region_reset.call_count == 1
-    print(dir(score_file.accessor._region_reset))
-    print(score_file.accessor._region_reset.call_args)
-    # score_io._region_reset.assert_called_once()
-    score_file.accessor._region_reset.assert_called_once_with("2:20001")
+    assert score_file.accessor._region_reset.call_count == 2
+    score_file.accessor._region_reset.assert_called_with("2:20001")
 
 
-def test_iterative_access_with_reset_long_jump_ahead(mocker):
-    score_filename = relative_to_this_test_folder(
-        "fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz")
-
-    score_file = ScoreFile(score_filename)
-    assert score_file is not None
-
-    check_pos = 20000
-    res = score_file.fetch_scores_df("1", check_pos, check_pos)
-    print(res)
-    assert len(res) == 1
-    assert res['chromStart'][0] <= check_pos and \
-        res['chromEnd'][0] >= check_pos
-
+def test_tabix_sequential_access_reset_long_jump_ahead(score_file, mocker):
     score_file.accessor.LONG_JUMP_THRESHOLD = 3
     mocker.spy(score_file.accessor, '_region_reset')
+    for check_pos in [20000, 20005]:
+        res = score_file.accessor._fetch_sequential('1', check_pos, check_pos)
+        assert len(res) == 1
+        assert res[0][1] <= check_pos and \
+            res[0][2] >= check_pos
 
-    check_pos = 20005
-    res = score_file.fetch_scores_df("1", check_pos, check_pos)
-    print(res)
-    assert len(res) == 1
-    assert res['chromStart'][0] <= check_pos and \
-        res['chromEnd'][0] >= check_pos
-
-    assert score_file.accessor._region_reset.call_count == 1
-    print(dir(score_file.accessor._region_reset))
-    print(score_file.accessor._region_reset.call_args)
-    score_file.accessor._region_reset.assert_called_once_with("1:20005")
+    assert score_file.accessor._region_reset.call_count == 2
+    score_file.accessor._region_reset.assert_called_with("1:20005")
 
 
 @pytest.mark.parametrize("chrom,pos_start,pos_end,count", [
@@ -214,27 +124,52 @@ def test_iterative_access_with_reset_long_jump_ahead(mocker):
     ("7", 19999, 20000, 1),
     ("7", 19999, 20005, 5),
 ])
-def test_iterative_access_with_na_values(chrom, pos_start, pos_end, count):
-    score_filename = relative_to_this_test_folder(
-        "fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz")
-
-    score_file = ScoreFile(score_filename)
-    assert score_file is not None
-
-    res = score_file.fetch_scores_df(chrom, pos_start, pos_end)
-    print(res)
+def test_tabix_sequential_access_na_values(score_file, chrom,
+                                           pos_start, pos_end, count):
+    res = score_file.accessor._fetch_sequential(chrom, pos_start, pos_end)
     assert len(res) == count
-    assert res['chromStart'][0] <= pos_start and \
-        res['chromEnd'][count-1] >= pos_end
+    assert res[0][1] <= pos_start and \
+        res[count-1][2] >= pos_end
 
 
-def test_aggregation_correctness():
-    score_filename = relative_to_this_test_folder(
-        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+def test_tabix_access_switching(score_file, mocker):
+    mocker.spy(score_file.accessor, '_fetch_sequential')
+    mocker.spy(score_file.accessor, '_fetch_direct')
+    
+    # inital fetch should start sequentially
+    res = score_file.fetch_scores('1', 10937, 10937)
+    assert score_file.accessor._fetch_direct.call_count == 1
+    
+    # fetch substitution that is close
+    res = score_file.fetch_scores('1', 10938, 10938)
+    assert score_file.accessor._fetch_sequential.call_count == 1
+    
+    # fetch substitution that is beyond threshold
+    res = score_file.fetch_scores('1', 12439, 12439)
+    assert score_file.accessor._fetch_direct.call_count == 2
+    
+    # fetch substitution that is close, but behind
+    res = score_file.fetch_scores('1', 12437, 12437)
+    assert score_file.accessor._fetch_sequential.call_count == 2
+    
+    # fetch insertion that is close
+    res = score_file.fetch_scores('1', 12438, 12439)
+    assert score_file.accessor._fetch_sequential.call_count == 3
+    
+    # fetch insertion that is beyond threshold
+    res = score_file.fetch_scores('1', 13940, 13941)
+    assert score_file.accessor._fetch_direct.call_count == 3
+    
+    # fetch deletion that is close
+    res = score_file.fetch_scores('1', 13941, 13950)
+    assert score_file.accessor._fetch_sequential.call_count == 4
+    
+    # fetch deletion that is beyond threshold
+    res = score_file.fetch_scores('1', 16000, 16050)
+    assert score_file.accessor._fetch_direct.call_count == 4
 
-    score_file = ScoreFile(score_filename)
-    assert score_file is not None
 
+def test_aggregation_correctness(score_file):
     res = score_file.fetch_scores_df('1', 10937, 10939)
     print(res)
     assert sum(res['COUNT']) == 3
