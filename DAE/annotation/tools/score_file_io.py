@@ -295,6 +295,7 @@ class LineBufferAdapter(object):
 
 class TabixAccess(TabixReader):
     LONG_JUMP_THRESHOLD = 5000
+    ACCESS_SWITCH_THRESHOLD = 1500
 
     def __init__(self, score_file):
         assert TSVFormat.is_gzip(score_file.score_filename), \
@@ -313,11 +314,8 @@ class TabixAccess(TabixReader):
         self._region_reset("{}:{}".format(chrom, pos_begin))
 
     def _fetch(self, chrom, pos_begin, pos_end):
-        if pos_begin - pos_end <= 1:
-            if (pos_begin - self.last_pos) > 1500:
-                return self._fetch_direct(chrom, pos_begin, pos_end)
-            else:
-                return self._fetch_sequential(chrom, pos_begin, pos_end)
+        if abs(pos_begin - self.last_pos) > self.ACCESS_SWITCH_THRESHOLD:
+            return self._fetch_direct(chrom, pos_begin, pos_end)
         else:
             return self._fetch_sequential(chrom, pos_begin, pos_end)
 
