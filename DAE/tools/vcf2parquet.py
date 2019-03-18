@@ -45,7 +45,7 @@ def create_vcf_variants(config, region=None):
     return fvars
 
 
-def import_vcf(dae_config, argv, defaults={}):
+def import_vcf(dae_config, annotation_pipeline, argv):
     assert os.path.exists(argv.vcf)
     assert os.path.exists(argv.pedigree)
 
@@ -70,9 +70,6 @@ def import_vcf(dae_config, argv, defaults={}):
         bucket_index = 1
 
     fvars = create_vcf_variants(vcf_config, region)
-
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults=defaults)
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
