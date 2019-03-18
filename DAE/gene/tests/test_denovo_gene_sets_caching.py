@@ -54,7 +54,7 @@ def test_f1_affected_and_unaffected_get_gene_sets(gscs):
 
     assert gene_sets
 
-    assert name_in_gene_sets(gene_sets, 'Synonymous', 2)
+    assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
 
 
 def test_f1_unaffected_get_gene_sets(gscs):
@@ -79,7 +79,7 @@ def test_f1_single_get_gene_sets(gscs):
     assert gene_sets
 
     assert name_in_gene_sets(gene_sets, 'Missense.Single', 2)
-    assert name_in_gene_sets(gene_sets, 'Missense.Female', 2)
+    assert name_in_gene_sets(gene_sets, 'Missense.Male', 2)
 
 
 def test_synonymous_recurrency_get_gene_sets(gscs):
