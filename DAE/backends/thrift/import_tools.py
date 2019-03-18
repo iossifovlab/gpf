@@ -71,8 +71,11 @@ def construct_import_annotation_pipeline(dae_config, argv, defaults={}):
     })
     options = Box(options, default_box=True, default_box_attr=None)
 
+    annotation_defaults = dae_config.annotation_defaults
+    annotation_defaults.update(defaults)
+
     pipeline = PipelineAnnotator.build(
-        options, config_filename, defaults=defaults)
+        options, config_filename, defaults=annotation_defaults)
     return pipeline
 
 

@@ -45,40 +45,28 @@ def create_vcf_variants(config, region=None):
     return fvars
 
 
-def import_vcf(dae_config, argv, defaults={}):
-    assert os.path.exists(argv.vcf)
-    assert os.path.exists(argv.pedigree)
-
-    vcf_filename = argv.vcf
-    ped_filename = argv.pedigree
+def import_vcf(
+        dae_config, annotation_pipeline,
+        pedigree_filename, vcf_filename,
+        region=None, bucket_index=1, output='.'):
+    assert os.path.exists(vcf_filename)
+    assert os.path.exists(pedigree_filename)
 
     vcf_config = Configure.from_dict({
             'vcf': {
-                'pedigree': ped_filename,
+                'pedigree': pedigree_filename,
                 'vcf': vcf_filename,
                 'annotation': None,
             },
         })
-    if 'region' in argv:
-        region = argv.region
-    else:
-        region = None
-
-    if 'bucket_index' in argv:
-        bucket_index = argv.bucket_index
-    else:
-        bucket_index = 1
 
     fvars = create_vcf_variants(vcf_config, region)
-
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults=defaults)
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
     variants_iterator_to_parquet(
         fvars,
-        argv.output,
+        output,
         bucket_index,
         annotation_pipeline
     )
@@ -183,7 +171,14 @@ if __name__ == "__main__":
     dae_config = DAEConfig()
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
 
-    if argv.type == 'vcf':
-        import_vcf(dae_config, argv, defaults=dae_config.annotation_defaults)
-    elif argv.type == 'make':
+    if argv.type == 'make':
         generate_makefile(dae_config, argv)
+    elif argv.type == 'vcf':
+        annotation_pipeline = construct_import_annotation_pipeline(
+            dae_config, argv)
+
+        import_vcf(
+            dae_config, annotation_pipeline,
+            argv.pedigree, argv.vcf,
+            region=argv.region, bucket_index=argv.bucket_index,
+            output=argv.output)

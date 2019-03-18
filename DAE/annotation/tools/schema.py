@@ -32,6 +32,13 @@ class Schema(object):
         if col_name in self.columns:
             del(self.columns[col_name])
 
+    def order_as(self, ordered_col_names):
+        ordered_schema = Schema()
+        for col in ordered_col_names:
+            assert col in self.columns, [col, self.col_names]
+            ordered_schema.columns[col] = self.columns[col]
+        return ordered_schema
+
     @classmethod
     def from_dict(cls, schema_dict):
         new_schema = Schema()
@@ -41,12 +48,8 @@ class Schema(object):
                 # TODO Should this skip the faulty col_type
                 # or exit with an error? (or just print out an error?)
                 continue
-            col_list = schema_dict[col_type]\
-                .replace(' ', '')\
-                .replace('\t', '')\
-                .replace('\n', '')
-            for col in col_list.split(','):
-                new_schema.create_column(col, col_type)
+            for col in schema_dict[col_type].split(','):
+                new_schema.create_column(col.strip(), col_type)
         return new_schema
 
     @classmethod

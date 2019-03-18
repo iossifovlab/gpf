@@ -87,42 +87,39 @@ def dae_build_makefile(dae_config, argv):
     )
 
 
-def import_dae_denovo(dae_config, argv, defaults={}):
+def import_dae_denovo(
+        dae_config, annotation_pipeline,
+        families_filename, variants_filename,
+        family_format='pedigree', output='.', bucket_index=0):
     config = Configure.from_dict({
         "denovo": {
-            'denovo_filename': argv.variants,
-            'family_filename': argv.families
+            'denovo_filename': variants_filename,
+            'family_filename': families_filename
         }})
 
     genome = get_genome()
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults=defaults)
-
     fvars = RawDenovo(
         config.denovo.denovo_filename,
         config.denovo.family_filename,
         genome=genome,
         annotator=annotation_pipeline)
-    if argv.family_format == 'simple':
+    if family_format == 'simple':
         fvars.load_simple_families()
-    elif argv.family_format == 'pedigree':
+    elif family_format == 'pedigree':
         fvars.load_pedigree_families()
     else:
         raise ValueError("unexpected family format: {}".format(
-            argv.family_format
+            family_format
         ))
 
     df = fvars.load_denovo_variants()
     assert df is not None
 
-    assert argv.output is not None
-    bucket_index = 1
-    if 'bucket_index' in argv:
-        bucket_index = argv.bucket_index
+    assert output is not None
 
     variants_iterator_to_parquet(
         fvars,
-        argv.output,
+        output,
         bucket_index,
         annotation_pipeline=annotation_pipeline
     )
@@ -131,7 +128,7 @@ def import_dae_denovo(dae_config, argv, defaults={}):
 def init_parser_dae_common(dae_config, parser):
     parser.add_argument(
         'families', type=str,
-        metavar='<pedigree filename>',
+        metavar='<families filename>',
         help='families file in pedigree format'
     )
 
@@ -234,10 +231,14 @@ if __name__ == "__main__":
     dae_config = DAEConfig()
 
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
+    annotation_pipeline = construct_import_annotation_pipeline(
+        dae_config, argv)
 
     if argv.type == 'denovo':
         import_dae_denovo(
-            dae_config, argv, defaults=dae_config.annotation_defaults)
+            dae_config, annotation_pipeline,
+            argv.families, argv.variants, family_format=argv.family_format,
+            output=argv.output, bucket_index=0)
     elif argv.type == 'dae':
         dae_build_transmitted(
             dae_config, argv, defaults=dae_config.annotation_defaults)

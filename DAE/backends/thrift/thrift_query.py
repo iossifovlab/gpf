@@ -163,6 +163,9 @@ class SummarySubQueryBuilder(ThriftQueryBuilderBase):
         real_attr_filter = self.query['real_attr_filter']
         query = []
         for attr_name, attr_range in real_attr_filter:
+            if attr_name not in self.summary_schema:
+                query.append('false')
+                continue
             assert attr_name in self.summary_schema
             assert self.summary_schema[attr_name] == 'double'
             left, right = attr_range
