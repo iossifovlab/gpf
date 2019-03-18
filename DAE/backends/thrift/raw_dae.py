@@ -81,7 +81,6 @@ class BaseDAE(FamiliesBase):
         return columns
 
     def summary_variant_from_dae_record(self, rec, transmission_type):
-        print(transmission_type)
 
         parents_called = int(rec.get('all.nParCalled', 0))
         ref_allele_count = 2 * int(rec.get('all.nParCalled', 0)) - \
