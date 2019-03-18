@@ -24,6 +24,7 @@ def parse_common_arguments(dae_config, parser):
         'If none specified, "data/" directory is used [default: %(default)s]'
     )
 
+
 def parse_vcf_arguments(dae_config, subparsers):
     parser = subparsers.add_parser('vcf')
 
@@ -39,6 +40,7 @@ def parse_vcf_arguments(dae_config, subparsers):
         metavar='<VCF filename>',
         help='VCF file to import'
     )
+
 
 def parse_dae_denovo_arguments(dae_config, subparsers):
     parser = subparsers.add_parser('denovo')
@@ -93,6 +95,7 @@ prefix = {output}
 
 """
 
+
 def generate_study_config(dae_config, argv):
     assert argv.id is not None
     assert argv.output is not None
@@ -110,6 +113,7 @@ def generate_study_config(dae_config, argv):
             id=argv.id,
             output=argv.output
         ))
+
 
 def generate_common_report(dae_config, study_id):
     from tools.generate_common_report import main
@@ -135,4 +139,3 @@ if __name__ == "__main__":
 
     generate_study_config(dae_config, argv)
     generate_common_report(dae_config, study_id)
-

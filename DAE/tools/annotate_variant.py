@@ -6,8 +6,7 @@ from __future__ import print_function
 
 import sys
 import optparse
-from subprocess import call
-import re, os.path
+import os.path
 import GenomeAccess
 from GeneModelFiles import load_gene_models
 from variant_annotation.annotator import VariantAnnotator as VariantAnnotation
@@ -15,7 +14,9 @@ import time
 import datetime
 from DAE import genomesDB
 
-start=time.time()
+
+start = time.time()
+
 
 desc = """Program to annotate variants (substitutions & indels & cnvs)"""
 parser = optparse.OptionParser(
@@ -43,13 +44,13 @@ parser.add_option(
 parser.add_option(
     '-q', help='seq column number/name', action='store')
 parser.add_option(
-    '-l', help ='length column number/name', action='store')
+    '-l', help='length column number/name', action='store')
 
 parser.add_option(
     '-P', help='promoter length', default=0, action='store',
-    type='int', dest = "prom_len")
+    type='int', dest="prom_len")
 parser.add_option(
-    '-H',help='no header in the input file', default=False,
+    '-H', help='no header in the input file', default=False,
     action='store_true', dest='no_header')
 
 parser.add_option(
@@ -69,54 +70,48 @@ parser.add_option(
 parser.add_option(
     '--Graw', help='outside genome file', type='string', action='store')
 
-parser.add_option(
-    '-I', help='geneIDs mapping file; use None for no gene name mapping',
-    default="default"  , type='string', action='store')
-
 (opts, args) = parser.parse_args()
-
-
 
 if opts.help:
     print("\n------------------------------------------------------------\n")
-    print("Program to annotate genomic variants - by Ewa, v2.2, 10/Oct/2013" )
+    print("Program to annotate genomic variants - by Ewa, v2.2, 10/Oct/2013")
     print("BASIC USAGE: annotate_variant.py INFILE <OUTFILE> <options>\n")
     print("-h, --help                       "
-        "show this help message and exit")
+          "show this help message and exit")
     print("-c CHROM                         "
-        "chromosome column number/name ")
+          "chromosome column number/name ")
     print("-p POS                           "
-        "position column number/name")
+          "position column number/name")
     print("-x LOC                           "
-        "location (chr:pos) column number/name ")
+          "location (chr:pos) column number/name ")
     print("-v VAR                           "
-        "variant column number/name ")
+          "variant column number/name ")
     print("-a ALT                           "
-        "alternative allele (FOR SUBSTITUTIONS ONLY) column number/name")
+          "alternative allele (FOR SUBSTITUTIONS ONLY) column number/name")
     print("-r REF                           "
-        "reference allele (FOR SUBSTITUTIONS ONLY) column number/name")
+          "reference allele (FOR SUBSTITUTIONS ONLY) column number/name")
     print("-t TYPE                          "
-        "type of mutation column number/name ")
+          "type of mutation column number/name ")
     print("-q SEQ                           "
-        "seq column number/name ")
+          "seq column number/name ")
     print("-l LEN                           "
-        "length column number/name")
+          "length column number/name")
     print("-P PROM_LEN                      "
-        "promoter length ")
+          "promoter length ")
     print("-H                               "
-        "no header in the input file ")
+          "no header in the input file ")
     print("-T T                             "
-        "gene models ID <RefSeq, CCDS, knownGene> ")
+          "gene models ID <RefSeq, CCDS, knownGene> ")
     print("--Traw=TRAW                      "
-        "outside gene models file path")
+          "outside gene models file path")
     print("--TrawFormat=TRAWFORMAT          "
-        "outside gene models format (refseq, ccds, knowngene)")
+          "outside gene models format (refseq, ccds, knowngene)")
     print("-G G                             "
-        "genome ID (GATK_ResourceBundle_5777_b37_phiX174, hg19)")
+          "genome ID (GATK_ResourceBundle_5777_b37_phiX174, hg19)")
     print("--Graw=GRAW                      "
-        "outside genome file ")
+          "outside genome file ")
     print("-I I                             "
-        "geneIDs mapping file; use None for no gene name mapping ")
+          "geneIDs mapping file; use None for no gene name mapping ")
     print("\n------------------------------------------------------------\n")
     sys.exit(0)
 
@@ -127,21 +122,21 @@ outfile = None
 if len(args) > 0:
     infile = args[0]
 
-if infile != '-' and os.path.exists(infile) == False:
+if infile != '-' and not os.path.exists(infile):
     sys.stderr.write("The given input file does not exist!\n")
     sys.exit(-78)
 
 if len(args) > 1:
     outfile = args[1]
-if outfile=='-':
+if outfile == '-':
     outfile = None
 
-if infile=='-':
+if infile == '-':
     variantFile = sys.stdin
 else:
     variantFile = open(infile)
 
-if opts.no_header == False:
+if not opts.no_header:
     first_line_str = variantFile.readline()
     first_line = first_line_str.split()
 else:
@@ -152,28 +147,31 @@ def give_column_number(s, header):
     try:
         c = header.index(s)
         return(c+1)
-    except:
-        sys.stderr.write("Used parameter: " + s + " does NOT exist in the input file header\n")
+    except Exception:
+        sys.stderr.write(
+            "Used parameter: " + s + " does NOT exist in the "
+            "input file header\n")
         sys.exit(-678)
 
 
 def assign_values(param):
-    if param == None:
-        return(param)
+    if param is None:
+        return param
     try:
         param = int(param)
-    except:
-        if first_line == None:
-            sys.stderr.write("You cannot use column names when the file doesn't have a header (-H option set)!\n")
+    except Exception:
+        if first_line is None:
+            sys.stderr.write(
+                "You cannot use column names when the file doesn't have a "
+                "header (-H option set)!\n")
             sys.exit(-49)
         param = give_column_number(param, first_line)
     return(param)
 
 
-
-if opts.x == None and opts.c == None:
+if opts.x is None and opts.c is None:
     opts.x = "location"
-if (opts.v == None and opts.a == None) and (opts.v == None and opts.t == None):
+if (opts.v is None and opts.a is None) and (opts.v is None and opts.t is None):
     opts.v = "variant"
 
 
@@ -187,35 +185,33 @@ typeCol = assign_values(opts.t)
 seqCol = assign_values(opts.q)
 lengthCol = assign_values(opts.l)
 
-if opts.I == "None":
-    opts.I = None
-
-if opts.G == None and opts.Graw == None:
+if opts.G is None and opts.Graw is None:
     GA = genomesDB.get_genome()
-    if opts.T == None and opts.Traw == None:
+    if opts.T is None and opts.Traw is None:
         gmDB = genomesDB.get_gene_models()
-    elif opts.Traw == None:
+    elif opts.Traw is None:
         gmDB = genomesDB.get_gene_models(opts.T)
     else:
-        gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
+        gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 
 
-elif opts.Graw == None:
+elif opts.Graw is None:
     GA = genomesDB.get_genome(opts.G)
-    if opts.T == None and opts.Traw == None:
+    if opts.T is None and opts.Traw is None:
         gmDB = genomesDB.get_gene_models(genomeId=opts.G)
-    elif opts.Traw == None:
+    elif opts.Traw is None:
         gmDB = genomesDB.get_gene_models(opts.T, genomeId=opts.G)
     else:
-        gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
+        gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 
 else:
     GA = GenomeAccess.openRef(opts.Graw)
-    if opts.Traw == None:
-        print("This genome requires gene models (--Traw option)",
+    if opts.Traw is None:
+        print(
+            "This genome requires gene models (--Traw option)",
             file=sys.stderr)
         sys.exit(-783)
-    gmDB = load_gene_models(opts.Traw, opts.I, opts.TrawFormat)
+    gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 
 
 if "1" in GA.allChromosomes and "1" not in gmDB._utrModels.keys():
@@ -226,17 +222,15 @@ sys.stderr.write("GENOME: " + GA.genomicFile + "\n")
 
 sys.stderr.write("GENE MODEL FILES: " + gmDB.location + "\n")
 
-if outfile != None:
+if outfile is not None:
     out = open(outfile, 'w')
 
-
-
-if opts.no_header == False:
-    if outfile == None:
+if not opts.no_header:
+    if outfile is None:
         print(first_line_str[:-1] + "\teffectType\teffectGene\teffectDetails")
     else:
         out.write(
-            first_line_str[:-1] + 
+            first_line_str[:-1] +
             "\teffectType\teffectGene\teffectDetails\n")
 
 argColumnNs = [
@@ -250,22 +244,23 @@ annotator = VariantAnnotation(GA, gmDB, promoter_len=opts.prom_len)
 
 for l in variantFile:
     if l[0] == "#":
-        if outfile == None:
+        if outfile is None:
             print(l, end='')
         else:
             out.write(l)
         continue
     k += 1
-    if k%1000 == 0:
+    if k % 1000 == 0:
         sys.stderr.write(str(k) + " lines processed\n")
 
     line = l[:-1].split("\t")
-    params = [line[i-1] if i!=None else None for i in argColumnNs]
+    params = [
+        line[i-1] if i is not None else None for i in argColumnNs]
 
     effects = annotator.do_annotate_variant(*params)
     desc = annotator.effect_description(effects)
 
-    if outfile == None:
+    if outfile is None:
         print(l[:-1] + "\t" + "\t".join(desc))
     else:
         out.write(l[:-1] + "\t" + "\t".join(desc) + "\n")
@@ -273,21 +268,21 @@ for l in variantFile:
 if infile != '-':
     variantFile.close()
 
-if outfile != None:
+if outfile is not None:
     out.write("# PROCESSING DETAILS:\n")
     out.write("# " + time.asctime() + "\n")
     out.write("# " + " ".join(sys.argv) + "\n")
     sys.stderr.write("Output file saved as: " + outfile + "\n")
 else:
     print(
-        "# PROCESSING DETAILS:\n# " + time.asctime() + "\n# " + 
+        "# PROCESSING DETAILS:\n# " + time.asctime() + "\n# " +
         " ".join(sys.argv))
 
 
-if outfile != None:
+if outfile is not None:
     out.close()
 
 
 sys.stderr.write(
-    "The program was running for [h:m:s]: " + 
-    str(datetime.timedelta(seconds=round(time.time()-start,0))) + "\n")
+    "The program was running for [h:m:s]: " +
+    str(datetime.timedelta(seconds=round(time.time()-start, 0))) + "\n")
