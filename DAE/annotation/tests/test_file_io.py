@@ -3,6 +3,7 @@ from box import Box
 from annotation.tests.conftest import relative_to_this_test_folder
 from annotation.tools.file_io import TSVGzipReader, \
         TabixReaderVariants, parquet_enabled
+from annotation.tools.file_io_tsv import handle_chrom_prefix
 
 if parquet_enabled:
     from annotation.tools.file_io_parquet import ParquetWriter
@@ -190,7 +191,9 @@ def test_tabix_chrom_prefix(
         assert reader.schema.col_names is not None
 
         assert reader._has_chrom_prefix == has_prefix
-        assert reader._handle_chrom_prefix(region) == check_region
+        assert handle_chrom_prefix(
+                reader._has_chrom_prefix, region) == check_region
+                    
 
         count = 0
         for _line in reader.lines_read_iterator():

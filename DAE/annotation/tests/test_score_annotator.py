@@ -11,6 +11,12 @@ from .conftest import relative_to_this_test_folder
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.score_annotator import PositionScoreAnnotator, \
     PositionMultiScoreAnnotator, NPScoreAnnotator
+try:
+    bigwig_enabled = True
+    from annotation.tools.score_file_io_bigwig import \
+        BigWigAccess
+except ImportError:
+    bigwig_enabled = False
 
 
 input2_phast_exptected = \
