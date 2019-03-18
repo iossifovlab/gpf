@@ -8,106 +8,165 @@ import os
 import pysam
 import numpy as np
 import pandas as pd
+import reusables
 from collections import defaultdict
-from configparser import ConfigParser
-from box import Box
+from box import ConfigBox
 
-from annotation.tools.annotator_config import LineConfig
-from annotation.tools.file_io_tsv import TabixReader
+from annotation.tools.file_io_tsv import TSVFormat, TabixReader, \
+        handle_chrom_prefix
 from annotation.tools.schema import Schema
+try:
+    bigwig_enabled = True
+    from annotation.tools.score_file_io_bigwig import BigWigAccess
+except ImportError:
+    bigwig_enabled = False
 
 
-def conf_to_dict(path):
+class LineAdapter(object):
+    def __init__(self, score_file, line):
+        self.line = line
 
-    def split_and_strip(input_list, delim=','):
-        return list(map(str.strip, input_list.split(delim)))
+        self.header = score_file.header
+        self.chr_index = score_file.chr_index
+        self.pos_begin_index = score_file.pos_begin_index
+        self.pos_end_index = score_file.pos_end_index
 
-    conf_parser = ConfigParser()
-    conf_parser.optionxform = str
-    conf_parser.read_file(path)
+    @property
+    def pos_begin(self):
+        return int(self.line[self.pos_begin_index])
 
-    assert 'general' in conf_parser
-    assert 'columns' in conf_parser
-    assert 'schema' in conf_parser
+    @property
+    def pos_end(self):
+        return int(self.line[self.pos_end_index])
 
-    conf_settings = dict(conf_parser.items('general'))
-    conf_settings['columns'] = dict(conf_parser.items('columns'))
-    conf_settings['schema'] = \
-        Schema.from_dict(dict(conf_parser.items('schema')))
+    @property
+    def chrom(self):
+        return self.line[self.chr_index]
 
-    conf_settings['header'] = split_and_strip(conf_settings['header'])
-    conf_settings['columns']['score'] = \
-        split_and_strip(conf_settings['columns']['score'])
-
-    return conf_settings
-
-
-class ScoreFile(TabixReader):
-
-    def __init__(
-            self, options, score_filename, config_filename=None,
-            score_config=None):
-
-        super(ScoreFile, self).__init__(options, filename=score_filename)
-
-        self.score_filename = score_filename
-        # self.config_filename = config_filename
-        if score_config is None:
-            self._load_config(config_filename)
+    def __getitem__(self, index):
+        if index == self.pos_begin_index:
+            return self.pos_begin
+        elif index == self.pos_end_index:
+            return self.pos_end
         else:
-            self._setup_config(score_config)
+            return self.line[index]
 
-    def _setup(self):
-        super(ScoreFile, self)._setup()
+    def __len__(self):
+        return len(self.header)
 
-        self.schema = Schema()
-        for col in self.config.header:
-            assert col in self.config.schema.columns, [
-                self.score_filename, col, self.config.schema.columns,
-            ]
-            self.schema.columns[col] = self.config.schema.columns[col]
-        assert all([sn in self.schema.col_names for sn in self.score_names]), \
-            [self.score_filename, self.score_names, self.schema.col_names]
-        self.options.update(self.config)
 
-        self.line_config = LineConfig(self.schema.col_names)
+class NoLine(LineAdapter):
+    def __init__(self, score_file):
+        super(NoLine, self).__init__(score_file, [])
+        self.no_score_value = score_file.no_score_value
 
-        self.chr_name = self.config.columns.chr
-        self.pos_begin_name = self.config.columns.pos_begin
-        self.pos_end_name = self.config.columns.pos_end
-        self.ref_name = self.config.columns.ref
-        self.alt_name = self.config.columns.alt
+    @property
+    def pos_begin(self):
+        return -1
 
-        self.chr_index = self.schema.col_names.index(self.chr_name)
-        self.pos_begin_index = self.schema.col_names.index(self.pos_begin_name)
-        self.pos_end_index = self.schema.col_names.index(self.pos_end_name)
+    @property
+    def pos_end(self):
+        return -1
 
-        self.no_score_value = self.config.noScoreValue
+    @property
+    def chrom(self):
+        return None
 
-    def _load_config(self, config_filename=None):
+    def __getitem__(self, index):
+        if index == self.pos_begin_index:
+            return self.pos_begin
+        if index == self.pos_end_index:
+            return self.pos_end
+        if index == self.chr_index:
+            return self.chrom
+        else:
+            return self.no_score_value
+
+
+class ScoreFile(object):
+
+    def __init__(self, score_filename, config_filename=None, direct=False):
+        self.score_filename = score_filename
+        assert os.path.exists(self.score_filename), self.score_filename
+
         if config_filename is None:
-            config_filename = "{}.conf".format(self.filename)
-        assert os.path.exists(config_filename)
+            config_filename = "{}.conf".format(self.score_filename)
+        self.config = ConfigBox(reusables.config_dict(config_filename))
+        assert 'header' in self.config.general
 
-        with open(config_filename, 'r') as conf_file:
-            conf_settings = conf_to_dict(conf_file)
-            score_config = Box(
-                conf_settings, default_box=True,
-                default_box_attr=None)
-            self._setup_config(score_config)
+        self.schema = Schema.from_dict(dict(self.config.schema)) \
+                            .order_as(self.header)
 
-    def _setup_config(self, score_config):
-        self.config = score_config
+        assert all([sn in self.schema for sn in self.score_names]), \
+            [self.score_filename, self.score_names, self.schema.col_names]
 
-        assert self.config.header, self.filename
+        self.chr_index = \
+            self.schema.col_names.index(self.chr_name)
+        self.pos_begin_index = \
+            self.schema.col_names.index(self.pos_begin_name)
+        self.pos_end_index = \
+            self.schema.col_names.index(self.pos_end_name)
 
-        if self.config.columns.pos_end is None:
-            self.config.columns.pos_end = self.config.columns.pos_begin
+        if 'chr_prefix' in self.config.misc:
+            self.chr_prefix = self.config.misc.bool('chr_prefix')
+        else:
+            self.chr_prefix = False
 
-        self.score_names = self.config.columns.score
+        if 'noscorevalue' in self.config.general:
+            self.no_score_value = self.config.general.noscorevalue
+        else:
+            self.no_score_value = 'na'
+        if self.no_score_value.lower() in set(['na', 'none']):
+            self.no_score_value = None
 
-    def _fetch(self, chrom, pos_begin, pos_end):
-        raise NotImplementedError()
+        self._init_access(direct)
+
+    def _init_access(self, direct):
+        if 'format' in self.config.general:
+            score_format = self.config.general.format.lower()
+        else:
+            score_format = 'tsv'
+        assert score_format in ['tsv', 'bigwig'], \
+            (score_format, self.config.options.scores_config_file)
+
+        if score_format == 'bigwig':
+            assert bigwig_enabled, 'pyBigWig module is not installed'
+            self.accessor = BigWigAccess(self)
+        elif direct:
+            self.accessor = DirectAccess(self)
+        else:
+            self.accessor = IterativeAccess(self)
+
+    @property
+    def header(self):
+        return self.config.general.list('header')
+
+    @property
+    def score_names(self):
+        return self.config.columns.list('score')
+
+    @property
+    def chr_name(self):
+        return self.config.columns.chr
+
+    @property
+    def pos_begin_name(self):
+        return self.config.columns.pos_begin
+
+    @property
+    def pos_end_name(self):
+        if 'pos_end' in self.config.columns:
+            return self.config.columns.pos_end
+        else:
+            return self.pos_begin_name
+
+    @property
+    def ref_name(self):
+        return self.config.columns.ref
+
+    @property
+    def alt_name(self):
+        return self.config.columns.alt
 
     def fetch_scores_df(self, chrom, pos_begin, pos_end):
         scores = self.fetch_scores(chrom, pos_begin, pos_end)
@@ -121,13 +180,13 @@ class ScoreFile(TabixReader):
         return df
 
     def fetch_scores(self, chrom, pos_begin, pos_end):
-        stripped_chrom = self._handle_chrom_prefix(chrom)
+        stripped_chrom = handle_chrom_prefix(self.chr_prefix, chrom)
 
-        score_lines = self._fetch(stripped_chrom, pos_begin, pos_end)
+        score_lines = self.accessor._fetch(stripped_chrom, pos_begin, pos_end)
         result = defaultdict(list)
         for line in score_lines:
             count = min(pos_end, line.pos_end) - \
-                max(line.pos_begin, pos_begin) + 1
+                    max(line.pos_begin, pos_begin) + 1
             assert count >= 1
             result["COUNT"].append(count)
             for index, column in enumerate(self.schema.col_names):
@@ -135,48 +194,11 @@ class ScoreFile(TabixReader):
         return result
 
 
-class LineAdapter(object):
-    def __init__(self, score_file, line):
-        self.score_file = score_file
-        self.line = list(line)
-
-        self.line[self.score_file.pos_begin_index] = int(self.pos_begin)
-        self.line[self.score_file.pos_end_index] = int(self.pos_end)
-
-    @property
-    def pos_begin(self):
-        return self.line[self.score_file.pos_begin_index]
-
-    @property
-    def pos_end(self):
-        return self.line[self.score_file.pos_end_index]
-
-    @property
-    def chrom(self):
-        return self.line[self.score_file.chr_index]
-
-    def __getitem__(self, index):
-        return self.line[index]
-
-    def __len__(self):
-        return len(self.line)
-
-
-class NoLine(object):
-    def __init__(self, score_file):
-        self.score_file = score_file
-        self.pos_begin = -1
-        self.pos_end = -1
-        self.chrom = None
-
-    def __getitem__(self, index):
-        return self.score_file.no_score_value
-
-
 class LineBufferAdapter(object):
 
-    def __init__(self, score_file):
+    def __init__(self, score_file, access):
         self.score_file = score_file
+        self.access = access
         self.buffer = []
         self.no_line = NoLine(score_file)
 
@@ -229,13 +251,13 @@ class LineBufferAdapter(object):
             self.pop()
 
     def fill(self, chrom, pos_begin, pos_end):
-        if self.chrom == chrom and \
-                self.pos_end > pos_end:
+        if self.chrom == chrom and self.pos_end > pos_end:
             return
-        if self.score_file.lines_iterator is None:
+        if self.access.lines_iterator is None:
             return
+
         line = None
-        for line in self.score_file.lines_iterator:
+        for line in self.access.lines_iterator:
             line = LineAdapter(self.score_file, line)
             if line.pos_end >= pos_begin:
                 break
@@ -245,7 +267,7 @@ class LineBufferAdapter(object):
 
         self.append(line)
 
-        for line in self.score_file.lines_iterator:
+        for line in self.access.lines_iterator:
             line = LineAdapter(self.score_file, line)
             assert line.chrom == self.chrom, \
                 (line.chrom, self.chrom)
@@ -255,48 +277,58 @@ class LineBufferAdapter(object):
 
     @staticmethod
     def regions_intersect(b1, e1, b2, e2):
-        if b1 >= b2 and b1 <= e2:
-            return True
-        if e1 >= b2 and e1 <= e2:
-            return True
-        if b2 >= b1 and b2 <= e1:
-            return True
-        if e2 >= b1 and e2 <= e1:
-            return True
-        return False
+        assert b1 <= e1
+        assert b2 <= e2
+        if e2 < b1 or b2 > e1:
+            return False
+        return True
 
     def select_lines(self, chrom, pos_begin, pos_end):
         result = []
         for line in self.buffer:
+            line = LineAdapter(self.score_file, line)
             if line.chrom != chrom:
                 continue
             if self.regions_intersect(
-                    pos_begin, pos_end,
-                    line.pos_begin, line.pos_end):
+                    pos_begin, pos_end, line.pos_begin, line.pos_end):
                 result.append(line)
         return result
 
 
-class IterativeAccess(ScoreFile):
-    LONG_JUMP_THRESHOLD = 100000
+class DirectAccess(TabixReader):
 
-    def __init__(self, options, score_filename,
-                 config_filename=None, score_config=None):
-        super(IterativeAccess, self).__init__(
-            options, score_filename,
-            config_filename=config_filename, score_config=score_config)
+    def __init__(self, score_file):
+        assert TSVFormat.is_gzip(score_file.score_filename), \
+             score_file.score_filename
+        assert os.path.exists("{}.tbi".format(score_file.score_filename)), \
+            score_file.score_filename
+        self.infile = pysam.TabixFile(score_file.score_filename)
+        self.score_file = score_file
 
-        self.buffer = LineBufferAdapter(self)
+    def _fetch(self, chrom, pos_begin, pos_end):
+        try:
+            result = []
+            for line in self.infile.fetch(
+                    chrom, pos_begin-1, pos_end, parser=pysam.asTuple()):
+                result.append(LineAdapter(self.score_file, line))
+            return result
+        except ValueError as ex:
+            print("could not find region: ", chrom, pos_begin, pos_end,
+                  ex, file=sys.stderr)
+            return []
+
+
+class IterativeAccess(DirectAccess):
+    LONG_JUMP_THRESHOLD = 5000
+
+    def __init__(self, score_file):
+        super(IterativeAccess, self).__init__(score_file)
+        self.buffer = LineBufferAdapter(self.score_file, self)
+        self._has_chrom_prefix = self.score_file.chr_prefix
 
     def _reset(self, chrom, pos_begin):
         self.buffer.reset()
-
-        region = "{}:{}".format(chrom, pos_begin)
-        # print("RESETTING score file: {} to {}".format(
-        #     self.score_filename, region
-        # ), file=sys.stderr)
-
-        self._region_reset(region)
+        self._region_reset("{}:{}".format(chrom, pos_begin))
 
     def _fetch(self, chrom, pos_begin, pos_end):
 
@@ -311,27 +343,3 @@ class IterativeAccess(ScoreFile):
         self.buffer.purge(chrom, pos_begin, pos_end)
         self.buffer.fill(chrom, pos_begin, pos_end)
         return self.buffer.select_lines(chrom, pos_begin, pos_end)
-
-
-class DirectAccess(ScoreFile):
-
-    def __init__(self, options, score_filename, config_filename=None,
-                 score_config=None):
-        super(DirectAccess, self).__init__(
-            options, score_filename, config_filename=config_filename,
-            score_config=score_config)
-
-    def _fetch(self, chrom, pos_begin, pos_end):
-        try:
-            result = []
-            chrom = str(chrom)
-
-            for line in self.infile.fetch(
-                    chrom, pos_begin-1, pos_end, parser=pysam.asTuple()):
-                line = LineAdapter(self, line)
-                result.append(line)
-            return result
-        except ValueError as ex:
-            print("could not find region: ", chrom, pos_begin, pos_end,
-                  ex, file=sys.stderr)
-            return []
