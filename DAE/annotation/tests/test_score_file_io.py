@@ -53,6 +53,23 @@ def test_regions_non_intersecting():
 #             assert not score_io.options.no_header
 
 
+def test_load_config():
+    score_filename = relative_to_this_test_folder(
+        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+    config_filename = \
+        relative_to_this_test_folder('fixtures/sample_score_config.conf')
+
+    dummy_score = ScoreFile(score_filename, config_filename)
+
+    expected_header = ['chrom', 'chromStart', 'chromEnd',
+                       'scoreOne', 'scoreTwo', 'scoreThree',
+                       'scoreFour', 'scoreFive']
+
+    assert dummy_score.header == expected_header
+    assert dummy_score.score_names == expected_header[3:]
+    assert all([col in dummy_score.schema for col in expected_header])
+
+
 def test_iterative_access_simple():
     score_filename = relative_to_this_test_folder(
         "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")

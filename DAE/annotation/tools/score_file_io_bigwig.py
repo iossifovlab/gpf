@@ -45,6 +45,7 @@ class BigWigAccess(object):
         self.bwfile.close()
 
     def _fetch(self, chrom, pos_begin, pos_end):
+        assert pos_begin - 1 >= 0
         result = []
         try:
             score_values = self.bwfile.intervals(chrom, pos_begin - 1, pos_end)

@@ -26,6 +26,7 @@ class LineAdapter(object):
     def __init__(self, score_file, line):
         self.line = line
 
+        self.header = score_file.header
         self.chr_index = score_file.chr_index
         self.pos_begin_index = score_file.pos_begin_index
         self.pos_end_index = score_file.pos_end_index
@@ -51,7 +52,7 @@ class LineAdapter(object):
             return self.line[index]
 
     def __len__(self):
-        return len(self.line)
+        return len(self.header)
 
 
 class NoLine(LineAdapter):
@@ -81,9 +82,6 @@ class NoLine(LineAdapter):
         else:
             return self.no_score_value
 
-    def __len__(self):
-        return 0
-
 
 class ScoreFile(object):
 
@@ -94,6 +92,7 @@ class ScoreFile(object):
         if config_filename is None:
             config_filename = "{}.conf".format(self.score_filename)
         self.config = ConfigBox(reusables.config_dict(config_filename))
+        assert 'header' in self.config.general
 
         self.schema = Schema.from_dict(dict(self.config.schema)) \
                             .order_as(self.header)
@@ -107,6 +106,7 @@ class ScoreFile(object):
             self.schema.col_names.index(self.pos_begin_name)
         self.pos_end_index = \
             self.schema.col_names.index(self.pos_end_name)
+
         if 'chr_prefix' in self.config.misc:
             self.chr_prefix = self.config.misc.bool('chr_prefix')
         else:
