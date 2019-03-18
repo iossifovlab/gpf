@@ -190,7 +190,7 @@ class Layout(object):
                                 self.positions[level_index + 1]))
                             if len(child) != 0:
                                 level_y_offset =\
-                                    child[0].y - individual.y - 30.0 + y_offset
+                                    child[0].y - individual.y - y_offset
                                 break
 
                 for i, other_individual in enumerate(level[start+1:]):
@@ -554,7 +554,7 @@ class Layout(object):
                                     for mu in individual.mating_units])
                 if individual.member.role == Role.prb and has_children and\
                         individual_index != 0:
-                    x_offset += 20.0
+                    x_offset += original_x_offset / 4.0
                     is_prb = True
                 position = IndividualWithCoordinates(
                     individual,
@@ -565,7 +565,7 @@ class Layout(object):
 
             prb_y_offset = y_offset
             if is_prb:
-                prb_y_offset += 10.0
+                prb_y_offset += (y_offset / 4)
 
         return result
 
