@@ -41,12 +41,8 @@ class Schema(object):
                 # TODO Should this skip the faulty col_type
                 # or exit with an error? (or just print out an error?)
                 continue
-            col_list = schema_dict[col_type]\
-                .replace(' ', '')\
-                .replace('\t', '')\
-                .replace('\n', '')
-            for col in col_list.split(','):
-                new_schema.create_column(col, col_type)
+            for col in schema_dict[col_type].split(','):
+                new_schema.create_column(col.strip(), col_type)
         return new_schema
 
     @classmethod
