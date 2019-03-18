@@ -50,7 +50,7 @@ def variants_iterator_to_parquet(
           file=sys.stderr)
 
 
-def construct_import_annotation_pipeline(dae_config, argv):
+def construct_import_annotation_pipeline(dae_config, argv, defaults={}):
 
     if 'annotation_config' in argv and argv.annotation_config is not None:
         config_filename = argv.annotation_config
@@ -71,8 +71,11 @@ def construct_import_annotation_pipeline(dae_config, argv):
     })
     options = Box(options, default_box=True, default_box_attr=None)
 
+    annotation_defaults = dae_config.annotation_defaults
+    annotation_defaults.update(defaults)
+
     pipeline = PipelineAnnotator.build(
-        options, config_filename, defaults=dae_config.annotation_defaults)
+        options, config_filename, defaults=annotation_defaults)
     return pipeline
 
 

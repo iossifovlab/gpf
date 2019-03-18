@@ -237,7 +237,8 @@ if __name__ == "__main__":
     if argv.type == 'denovo':
         import_dae_denovo(
             dae_config, annotation_pipeline,
-            argv.families, argv.variants, family_format=argv.family_format)
+            argv.families, argv.variants, family_format=argv.family_format,
+            output=argv.output, bucket_index=0)
     elif argv.type == 'dae':
         dae_build_transmitted(
             dae_config, argv, defaults=dae_config.annotation_defaults)

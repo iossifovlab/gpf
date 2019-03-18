@@ -4,6 +4,7 @@ from box import Box
 
 from configurable_entities.configuration import DAEConfig
 from annotation.tools.file_io_parquet import ParquetReader
+from backends.thrift.import_tools import construct_import_annotation_pipeline
 
 from backends.configure import Configure
 
@@ -28,9 +29,16 @@ def test_vcf2parquet_vcf(
     argv = parse_cli_arguments(dae_config, argv)
     assert argv.type == 'vcf'
 
-    import_vcf(dae_config, argv, defaults={
+    annotation_pipeline = construct_import_annotation_pipeline(
+        dae_config, argv, defaults={
             "scores_dirname": annotation_scores_dirname,
-    })
+        })
+
+    import_vcf(
+        dae_config, annotation_pipeline,
+        argv.pedigree, argv.vcf,
+        region=argv.region, bucket_index=argv.bucket_index,
+        output=argv.output)
 
     parquet_summary = Configure.from_prefix_parquet(
         temp_dirname).parquet.summary_variant
