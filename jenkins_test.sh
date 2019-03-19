@@ -71,4 +71,5 @@ py.test -v --cov-config coveragerc \
     --cov precompute \
     --cov preloaded \
     --cov users_api \
-    wdae/datasets_api/tests
+    wdae/datasets_api/tests \
+    wdae/genotype_browser/tests

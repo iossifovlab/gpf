@@ -13,23 +13,7 @@ pytestmark = pytest.mark.usefixtures("mock_studies_manager")
 
 
 EXAMPLE_REQUEST_F1 = {
-    "datasetId": "inheritance_trio",
-    # "effectTypes": ["Frame-shift", "Nonsense", "Splice-site"],
-    # "gender": ["female", "male"],
-    # "presentInChild": [
-    #     "affected and unaffected",
-    #     "affected only",
-    # ],
-    # "presentInParent": [
-    #     "neither",
-    # ],
-    # "variantTypes": [
-    #     "CNV", "del", "ins", "sub",
-    # ],
-    # "pedigreeSelector": {
-    #     "id": "phenotype",
-    #     "checkedValues": ["autism", "unaffected"]
-    # }
+    "datasetId": "quads_f1",
 }
 
 
@@ -50,10 +34,8 @@ def test_simple_query_preview(db, admin_client):
     assert 'legend' in res
 
     assert 8 == len(res['legend'])
-    # self.assertEquals(422, int(res['count']))
-    assert 28 == int(res['count'])
-    # self.assertEquals(422, len(res['rows']))
-    assert 28 == len(res['rows'])
+    assert 4 == int(res['count'])
+    assert 4 == len(res['rows'])
 
 
 def test_missing_dataset(db, client):
