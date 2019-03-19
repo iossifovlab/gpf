@@ -13,7 +13,7 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
     def _init_score_file(self):
         super(FrequencyAnnotator, self)._init_score_file()
 
-        self.score_filename_base = basename(self.score_file.filename)
+        self.score_filename_base = basename(self.score_file.score_filename)
         self.variant_col_name = self.score_file.config.columns.variant
         assert self.variant_col_name
         assert self.variant_col_name in self.score_file.schema.col_names, \

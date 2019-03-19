@@ -32,6 +32,13 @@ class Schema(object):
         if col_name in self.columns:
             del(self.columns[col_name])
 
+    def order_as(self, ordered_col_names):
+        ordered_schema = Schema()
+        for col in ordered_col_names:
+            assert col in self.columns, [col, self.col_names]
+            ordered_schema.columns[col] = self.columns[col]
+        return ordered_schema
+
     @classmethod
     def from_dict(cls, schema_dict):
         new_schema = Schema()
