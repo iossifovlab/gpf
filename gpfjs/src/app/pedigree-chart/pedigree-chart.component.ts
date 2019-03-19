@@ -115,7 +115,7 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
         this.height = this.pedigreeDataWithLayout
           .map(i => i.yUpperLeftCorner + i.size + 1)
           .reduce((acc, current) => Math.max(acc, current), 0);
-        
+
         });
   }
 
@@ -192,11 +192,11 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
     if (sortedCurveLines.length !== 0) {
       let minY = sortedCurveLines[0].inverseCurveP1[1];
       if (minY < 0) {
-        return '0 ' + minY.toString() + ' ' + this.width.toString() + ' ' + (this.height + (-minY)).toString();
+        return '-8 ' + minY.toString() + ' ' + (this.width + 8.0).toString() + ' ' + (this.height + (-minY) + 8.0).toString();
       }
     }
 
-    return '0 0 ' + this.width + ' ' + this.height;
+    return '-8 0 ' + (this.width + 8.0) + ' ' + (this.height + 8.0);
   }
 
   private loadPositions(family: PedigreeData[]) {
