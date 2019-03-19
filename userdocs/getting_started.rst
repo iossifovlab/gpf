@@ -395,23 +395,31 @@ This tool supports variants import from two input formats:
 
 * DAE de Novo list of variants
 
-To see the subcommands and options supported by this tools use::
+To see the available options supported by this tools use::
 
     simple_study_import.py --help
 
 that will output short help message::
 
-    usage: simple_study_import.py [-h] {vcf,denovo} ...
+    usage: simple_study_import.py [-h] [--id <study ID>] [--vcf <VCF filename>]
+                                [--denovo <de Novo variants filename>]
+                                [-o <output directory>]
+                                <pedigree filename>
 
     simple import of new study data
 
+    positional arguments:
+    <pedigree filename>   families file in pedigree format
+
     optional arguments:
-    -h, --help    show this help message and exit
-
-    subcommands:
-    choose what type of data to convert
-
-    {vcf,denovo}  vcf import or DAE denovo import
+    -h, --help            show this help message and exit
+    --id <study ID>       unique study ID to use
+    --vcf <VCF filename>  VCF file to import
+    --denovo <de Novo variants filename>
+                            DAE denovo variants file
+    -o <output directory>, --out <output directory>
+                            output directory. If none specified, "data/" directory
+                            is used [default: data/]
 
 To import variants from VCF format you need to use `vcf` subcommand::
 
@@ -434,135 +442,33 @@ that will output help message for the `vcf` subcommand::
                             output directory. If none specified, "data/" directory
                             is used [default: data/]
 
+
 Example import of VCF variants
 ******************************
 
-Let say you have pedigree file `quad.ped` describing family information
-and VCF file `quad.vcf` with variants.
+Let say you have pedigree file `comp.ped` describing family information,
+a VCF file `comp.vcf` with transmitted variants and a list of de Novo variants
+`comp.tsv`. This example data could be found inside `$DAE_DB_DIR/studies/comp`
+of the GPF startup data instance `data-hg19-startup`.
 
 To import this data as a study into GPF instance:
 
 * go into `studies` directory of GPF instance data folder::
 
-    cd $DAE_DB_DIR/studies
+    cd $DAE_DB_DIR/studies/comp
 
 
-* create a directory where you plan to save the imported data and enter inside
-  that directory::
+* create a directory where you plan to save the imported data::
 
-        mkdir quad1
-        cd quad1
+        mkdir data
+        cd data
 
 
 * run `simple_study_import.py` to import the data; this tool expects there
   arguments - study ID to use, pedigree file name and VCF file name::
 
-        simple_study_import.py vcf quad1 ../quad/quad.ped ../quad/quad.vcf
+        simple_study_import.py comp.ped --denovo comp.tsv --vcf comp.vcf
 
-
-
-Import a VCF Dataset
-++++++++++++++++++++
-
-The example data is located in the GPF startup data instance::
-
-    cd data-hg19-startup/studies/quad/
-
-This directory has the following structure::
-
-    .
-    ├── commonReport
-    │   └── quad.json
-    ├── quad
-    │   ├── effect_gene.parquet
-    │   ├── family.parquet
-    │   ├── member.parquet
-    │   ├── pedigree.parquet
-    │   └── summary.parquet
-    ├── quad.conf
-    ├── quad.ped
-    └── quad.vcf
-
-The source data required for an import consists of:
-
-*   a pedigree file, describing the family structure and inheritance
-    relationships between sampled individuals; the ``quad.ped`` pedigree
-    file content is::
-
-        familyId personId dadId    momId    sex      status   role     phenotype
-        f1       mom1     0        0        2        1        mom      unaffected
-        f1       dad1     0        0        1        1        dad      unaffected
-        f1       prb1     dad1     mom1     1        2        prb      autism
-        f1       sib1     dad1     mom1     2        2        sib      autism
-
-*   a VCF file containing variants; the content of the example variants file
-    ``quad.vcf`` is::
-
-        ##fileformat=VCFv4.2
-        ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">   
-        ##contig=<ID=1>   
-        ##contig=<ID=2>   
-        #CHROM   POS      ID       REF      ALT      QUAL     FILTER   INFO     FORMAT   mom1     dad1     prb1     sib1
-        1        11539    .        T        G        .        .        .        GT       0/1      0/0      0/1      0/0
-        2        11540    .        T        G        .        .        .        GT       0/0      0/1      0/1      0/0
-
-Importing this data into the GPF data instance means that you need to convert
-pedigree and VCF data into the Apache Parquet format and annotate them with
-variant effects and genomic scores. The default configuration for the
-annotation is located in the GPF data instance. In the case of the GPF startup
-data instance, the annotation configuration file is::
-
-    data-hg19-startup/annotation.conf
-
-The tool for converting VCF data to the Apache Parquet file format is
-``vcf2parquet``. To run it you need to specify the pedigree file and the VCF
-file you are converting. Additionally, you need to specify where the tool
-should store the result files::
-
-    cd data-hg19-startup/studies/quad/
-    mkdir out
-    vcf2parquet.py vcf quad.ped quad.vcf -o out/
-
-After this command is finished, the result data should be stored in the
-``out/`` directory::
-
-    out/
-    ├── effect_gene.parquet
-    ├── family.parquet
-    ├── member.parquet
-    ├── pedigree.parquet
-    └── summary.parquet
-
-
-Configure Imported Data [WIP]
-+++++++++++++++++++++++++++++
-
-Minimal configuration for the newly imported data is as follows::
-
-    [study]
-    name = quad
-    id = quad
-    prefix = out/
-    file_format = thrift
-    phenotypes = autism
-
-The ``id`` of the study should be unique in the GPF data instance,
-``name`` is a human readable name of the study that will be used to display
-the study in the GPF web UI.
-
-.. todo::
-
-    At the moment the GPF web UI works only with datasets, so you need
-    to configure a minimal dataset representing the ``quad`` study. For this,
-    you will need a ``quad.conf`` file inside
-    ``data-hg19-startup/datasets``::
-
-        [dataset]
-
-        name = Quad Dataset
-        id = quad_dataset
-        phenotypes=autism
-        studies = quad
 
 
 Generate Variant Reports (optional)
