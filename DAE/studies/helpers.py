@@ -145,6 +145,7 @@ def generate_pedigree(allele, pedigree_selectors, selected_pedigree_selector):
             member.mom_id,
             member.dad_id,
             member.sex.short(),
+            str(member.role),
             get_person_color(
                 member, pedigree_selectors, selected_pedigree_selector),
             member.layout_position,
