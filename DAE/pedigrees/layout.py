@@ -172,7 +172,7 @@ class Layout(object):
                 [self._id_to_position[x] for x in level])
 
     def _create_lines(self, y_offset=15):
-        for level_index, level in enumerate(self.positions):
+        for level in self.positions:
             for start, individual in enumerate(level):
                 if individual.individual.parents:
                     self.lines.append(Line(
@@ -534,7 +534,7 @@ class Layout(object):
 
         for rank, individuals in enumerate(levels):
             x_offset = original_x_offset
-            for individual_index, individual in enumerate(individuals):
+            for individual in individuals:
                 position = IndividualWithCoordinates(
                     individual, x_offset, (rank + 1) * level_heigh + y_offset)
                 result[individual] = position
