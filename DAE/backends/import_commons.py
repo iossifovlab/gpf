@@ -1,6 +1,6 @@
 from __future__ import print_function, absolute_import
 
-import os
+# import os
 import sys
 
 from collections import OrderedDict
@@ -59,9 +59,12 @@ def contigs_makefile_generate(
             suffix = "{:0>3}_{:0>3}_{}_".format(
                 contig_index, part, contig
             )
-            target_prefix = os.path.join(output_prefix, suffix)
+            # target_prefix = os.path.join(output_prefix, suffix)
 
-            parquet = Configure.from_prefix_parquet(target_prefix).parquet
+            parquet = Configure.from_prefix_parquet(
+                output_prefix,
+                bucket_index=bucket_index,
+                suffix=suffix).parquet
 
             targets = [
                 parquet.summary_variant
@@ -72,7 +75,7 @@ def contigs_makefile_generate(
 
             command = "{targets}: " \
                 "{import_sources}\n\t" \
-                "{import_command} -o {target_prefix} " \
+                "{import_command} -o {output_prefix} " \
                 "--bucket-index {bucket_index} " \
                 "--region {region} " \
                 "--sequential " \
@@ -80,7 +83,7 @@ def contigs_makefile_generate(
                 "{import_sources}" \
                 .format(
                     import_command=import_command,
-                    target_prefix=target_prefix,
+                    output_prefix=output_prefix,
                     targets=" ".join(targets),
                     bucket_index=bucket_index,
                     import_sources=import_sources,

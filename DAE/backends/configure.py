@@ -78,26 +78,30 @@ class Configure(ConfigBox):
         return Configure(conf)
 
     @staticmethod
-    def from_prefix_parquet(prefix):
-        if os.path.exists(prefix) and os.path.isdir(prefix):
-            dirname = prefix
-            fileprefix = ""
-        else:
-            dirname, fileprefix = os.path.split(prefix)
+    def from_prefix_parquet(prefix, bucket_index=0, suffix=None):
+        # assert os.path.exists(prefix)
+        # assert os.path.isdir(prefix)
+        assert bucket_index >= 0
 
-        assert os.path.exists(dirname)
-        assert os.path.isdir(dirname)
+        if suffix is None and bucket_index == 0:
+            filesuffix = ""
+        elif bucket_index > 0 and suffix is None:
+            filesuffix = "_{:0>6}".format(bucket_index)
+        elif bucket_index == 0 and suffix is not None:
+            filesuffix = "{}".format(suffix)
+        else:
+            filesuffix = "_{:0>6}{}".format(bucket_index, suffix)
 
         summary_filename = os.path.join(
-            dirname, "{}summary.parquet".format(fileprefix))
+            prefix, "summary{}.parquet".format(filesuffix))
         family_filename = os.path.join(
-            dirname, "{}family.parquet".format(fileprefix))
+            prefix, "family{}.parquet".format(filesuffix))
         member_filename = os.path.join(
-            dirname, "{}member.parquet".format(fileprefix))
+            prefix, "member{}.parquet".format(filesuffix))
         effect_gene_filename = os.path.join(
-            dirname, "{}effect_gene.parquet".format(fileprefix))
+            prefix, "effect_gene{}.parquet".format(filesuffix))
         pedigree_filename = os.path.join(
-            dirname, "{}pedigree.parquet".format(fileprefix))
+            prefix, "pedigree{}.parquet".format(filesuffix))
 
         conf = {
             'parquet': {
@@ -112,11 +116,12 @@ class Configure(ConfigBox):
         return Configure(conf)
 
     @staticmethod
-    def parquet_prefix_exists(prefix):
+    def parquet_prefix_exists(prefix, bucket_index=0, suffix=None):
         if not os.path.exists(prefix) or not os.path.isdir(prefix):
             return False
-        conf = Configure.from_prefix_parquet(prefix).parquet
-        
+        conf = Configure.from_prefix_parquet(prefix, bucket_index, suffix)
+        conf = conf.parquet
+
         return os.path.exists(conf.summary_variant) and \
             os.path.exists(conf.family_variant) and \
             os.path.exists(conf.member_variant) and \

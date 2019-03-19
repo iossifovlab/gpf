@@ -63,21 +63,21 @@ prefix = {output}
 """
 
 
-def generate_study_config(dae_config, argv):
-    assert argv.id is not None
+def generate_study_config(dae_config, study_id, argv):
+    assert study_id is not None
     assert argv.output is not None
 
-    dirname = os.getcwd()
-    filename = os.path.join(dirname, "{}.conf".format(argv.id))
+    dirname = os.path.join(dae_config.studies_dir, study_id)
+    filename = os.path.join(dirname, "{}.conf".format(study_id))
 
     if os.path.exists(filename):
         print("configuration file already exists:", filename)
-        print("skipping generation of default config for:", argv.id)
+        print("skipping generation of default config for:", study_id)
         return
 
     with open(filename, 'w') as outfile:
         outfile.write(STUDY_CONFIG_TEMPLATE.format(
-            id=argv.id,
+            id=study_id,
             output=argv.output
         ))
 
@@ -94,9 +94,13 @@ if __name__ == "__main__":
     if argv.id is not None:
         study_id = argv.id
     else:
-        study_id = os.path.basename(argv.pedigree)
+        study_id, _ = os.path.splitext(os.path.basename(argv.pedigree))
 
-    os.makedirs(argv.output, exist_ok=True)
+    output = os.path.join(
+        dae_config.studies_dir, study_id, argv.output
+    )
+    print("storing results into: ", output, file=sys.stderr)
+    os.makedirs(output, exist_ok=True)
 
     assert argv.vcf is not None or argv.denovo is not None
 
@@ -107,15 +111,12 @@ if __name__ == "__main__":
         import_vcf(
             dae_config, annotation_pipeline,
             argv.pedigree, argv.vcf,
-            output=argv.output)
-    elif argv.denovo is not None:
+            output=output)
+    if argv.denovo is not None:
         import_dae_denovo(
             dae_config, annotation_pipeline,
             argv.pedigree, argv.denovo,
-            output=argv.output, family_format='pedigree')
-    else:
-        raise ValueError(
-            "at least VCF of De Novo variants file should be specified")
+            output=output, family_format='pedigree')
 
-    # generate_study_config(dae_config, argv)
-    # generate_common_report(dae_config, study_id)
+    generate_study_config(dae_config, study_id, argv)
+    generate_common_report(dae_config, study_id)

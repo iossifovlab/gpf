@@ -37,9 +37,10 @@ class DfFamilyVariantsBase(object):
     @staticmethod
     def wrap_variants(families, join_df):
         join_df = join_df.sort_values(
-            by=["chrom", "summary_variant_index", "family_id", "allele_index"])
+            by=["bucket_index", "summary_variant_index",
+                "family_id", "allele_index"])
         for _name, group in join_df.groupby(
-                by=["chrom", "summary_variant_index", "family_id"]):
+                by=["bucket_index", "summary_variant_index", "family_id"]):
             rec = group.to_dict(orient='records')
             yield DfFamilyVariantsBase.wrap_family_variant_multi(families, rec)
 
@@ -59,11 +60,11 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         assert config is not None
 
         self.config = config
-        assert os.path.exists(self.config.pedigree), self.config.pedigree
-        assert os.path.exists(self.config.summary_variant), \
-            self.config.summary_variant
-        assert os.path.exists(self.config.family_variant), \
-            self.config.family_variant
+        # assert os.path.exists(self.config.pedigree), self.config.pedigree
+        # assert os.path.exists(self.config.summary_variant), \
+        #     self.config.summary_variant
+        # assert os.path.exists(self.config.family_variant), \
+        #     self.config.family_variant
 
         if not thrift_connection:
             thrift_connection = ThriftFamilyVariants.get_thrift_connection(
