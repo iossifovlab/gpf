@@ -180,19 +180,6 @@ class Layout(object):
                         individual.x_center, individual.y_center - y_offset
                     ))
 
-                level_y_offset = y_offset
-                for mating_unit in individual.individual.mating_units:
-                    if mating_unit.children.individuals:
-                        for indiv in mating_unit.children.individuals:
-                            child = list(filter(
-                                lambda ind: ind.individual.member.id ==
-                                indiv.member.id,
-                                self.positions[level_index + 1]))
-                            if len(child) != 0:
-                                level_y_offset =\
-                                    child[0].y - individual.y - y_offset
-                                break
-
                 for i, other_individual in enumerate(level[start+1:]):
                     are_next_to_eachother = (i == 0)
                     if (individual.individual.are_mates(
@@ -208,7 +195,7 @@ class Layout(object):
                             ))
                             self.lines.append(Line(
                                 middle_x, individual.y_center,
-                                middle_x, individual.y_center + level_y_offset
+                                middle_x, individual.y_center + y_offset
                             ))
                             continue
 
@@ -229,7 +216,7 @@ class Layout(object):
 
                         self.lines.append(Line(
                             middle_x, center_y,
-                            middle_x, individual.y_center + level_y_offset
+                            middle_x, individual.y_center + y_offset
                         ))
 
             i = 0
@@ -545,27 +532,14 @@ class Layout(object):
         result = {}
         original_x_offset = x_offset
 
-        prb_y_offset = y_offset
         for rank, individuals in enumerate(levels):
             x_offset = original_x_offset
-            is_prb = False
             for individual_index, individual in enumerate(individuals):
-                has_children = any([bool(len(mu.children.individuals))
-                                    for mu in individual.mating_units])
-                if individual.member.role == Role.prb and has_children and\
-                        individual_index != 0:
-                    x_offset += original_x_offset / 4.0
-                    is_prb = True
                 position = IndividualWithCoordinates(
-                    individual,
-                    x_offset, (rank + 1) * level_heigh + prb_y_offset)
+                    individual, x_offset, (rank + 1) * level_heigh + y_offset)
                 result[individual] = position
 
                 x_offset += position.size + gap
-
-            prb_y_offset = y_offset
-            if is_prb:
-                prb_y_offset += (y_offset / 4)
 
         return result
 

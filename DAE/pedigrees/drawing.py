@@ -39,10 +39,11 @@ class PDFLayoutDrawer(object):
 class OffsetLayoutDrawer(object):
 
     def __init__(
-            self, layout, x_offset, y_offset, show_id=False,
+            self, layout, x_offset, y_offset, gap=4.0, show_id=False,
             show_family=False, figsize=(7, 10)):
         self._x_offset = x_offset
         self._y_offset = y_offset
+        self._gap = gap
         self._layout = deepcopy(layout)
         self.show_id = show_id
         self.show_family = show_family
@@ -245,10 +246,10 @@ class OffsetLayoutDrawer(object):
 
                     if individual.individual.member.role == Role.prb:
                         axes.add_patch(mpatches.FancyArrow(
-                            coords[0] - individual.size / 4.0,
-                            coords[1] - individual.size / 4.0,
-                            individual.size / 4.0,
-                            individual.size / 4.0,
+                            coords[0] - self._gap,
+                            coords[1] - self._gap,
+                            self._gap,
+                            self._gap,
                             length_includes_head=True,
                             color='black',
                             head_width=2.0,
@@ -267,13 +268,11 @@ class OffsetLayoutDrawer(object):
                     if individual.individual.member.role == Role.prb:
                         axes.add_patch(mpatches.FancyArrow(
                             (coords[0] + (individual.size / 2.0) *
-                             math.cos(math.radians(225))) -
-                            individual.size / 4.0,
+                             math.cos(math.radians(225))) - self._gap,
                             (coords[1] + (individual.size / 2.0) *
-                             math.sin(math.radians(225))) -
-                            individual.size / 4.0,
-                            individual.size / 4.0,
-                            individual.size / 4.0,
+                             math.sin(math.radians(225))) - self._gap,
+                            self._gap,
+                            self._gap,
                             length_includes_head=True,
                             color='black',
                             head_width=2.0,
