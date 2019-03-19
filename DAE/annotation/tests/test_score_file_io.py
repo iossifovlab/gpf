@@ -15,10 +15,14 @@ def test_regions_intersecting():
         ((10918, 11018), (11018, 11058))
     ]
     for region_pair in regions:
-        assert LineBufferAdapter.regions_intersect(*region_pair[0],
-                                                   *region_pair[1])
-        assert LineBufferAdapter.regions_intersect(*region_pair[1],
-                                                   *region_pair[0])
+        assert LineBufferAdapter.regions_intersect(region_pair[0][0],
+                                                   region_pair[0][1],
+                                                   region_pair[1][0],
+                                                   region_pair[1][1])
+        assert LineBufferAdapter.regions_intersect(region_pair[1][0],
+                                                   region_pair[1][1],
+                                                   region_pair[0][0],
+                                                   region_pair[0][1])
 
 
 def test_regions_non_intersecting():
@@ -29,10 +33,14 @@ def test_regions_non_intersecting():
         ((10918, 11018), (12918, 13018))
     ]
     for region_pair in regions:
-        assert not LineBufferAdapter.regions_intersect(*region_pair[0],
-                                                       *region_pair[1])
-        assert not LineBufferAdapter.regions_intersect(*region_pair[1],
-                                                       *region_pair[0])
+        assert not LineBufferAdapter.regions_intersect(region_pair[0][0],
+                                                       region_pair[0][1],
+                                                       region_pair[1][0],
+                                                       region_pair[1][1])
+        assert not LineBufferAdapter.regions_intersect(region_pair[1][0],
+                                                       region_pair[1][1],
+                                                       region_pair[0][0],
+                                                       region_pair[0][1])
 
 
 def test_load_config():
