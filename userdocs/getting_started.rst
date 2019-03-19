@@ -421,26 +421,6 @@ that will output short help message::
                             output directory. If none specified, "data/" directory
                             is used [default: data/]
 
-To import variants from VCF format you need to use `vcf` subcommand::
-
-    simple_study_import.py  vcf --help
-
-that will output help message for the `vcf` subcommand::
-
-    usage: simple_study_import.py vcf [-h] [-o <output directory>]
-                                    <study ID> <pedigree filename> <VCF
-                                    filename>
-
-    positional arguments:
-    <study ID>            unique study ID to use
-    <pedigree filename>   families file in pedigree format
-    <VCF filename>        VCF file to import
-
-    optional arguments:
-    -h, --help            show this help message and exit
-    -o <output directory>, --out <output directory>
-                            output directory. If none specified, "data/" directory
-                            is used [default: data/]
 
 
 Example import of VCF variants
