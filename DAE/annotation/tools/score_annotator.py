@@ -37,8 +37,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         assert os.path.exists(scores_filename), scores_filename
 
         self.score_file = ScoreFile(scores_filename,
-                                    self.config.options.scores_config_file,
-                                    direct=self.config.options.direct)
+                                    self.config.options.scores_config_file)
 
     def collect_annotator_schema(self, schema):
         super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
