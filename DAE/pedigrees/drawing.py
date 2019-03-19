@@ -241,20 +241,12 @@ class OffsetLayoutDrawer(object):
                     axes.add_patch(mpatches.Rectangle(
                         coords, individual.size, individual.size,
                         facecolor=individual_color, edgecolor="black"))
+
                     cx = coords[0] + individual.size / 2.0
                     cy = coords[1] + individual.size / 2.0
 
-                    if individual.individual.member.role == Role.prb:
-                        axes.add_patch(mpatches.FancyArrow(
-                            coords[0] - self._gap,
-                            coords[1] - self._gap,
-                            self._gap,
-                            self._gap,
-                            length_includes_head=True,
-                            color='black',
-                            head_width=2.0,
-                            linewidth=0.1
-                        ))
+                    dlx = coords[0]
+                    dly = coords[1]
                 elif Sex.from_name_or_value(
                         individual.individual.member.sex) == Sex.female:
                     coords = [individual.x_center + self._x_offset,
@@ -262,22 +254,14 @@ class OffsetLayoutDrawer(object):
                     axes.add_patch(mpatches.Circle(
                         coords, old_div(individual.size, 2),
                         facecolor=individual_color, edgecolor="black"))
+
                     cx = coords[0]
                     cy = coords[1]
 
-                    if individual.individual.member.role == Role.prb:
-                        axes.add_patch(mpatches.FancyArrow(
-                            (coords[0] + (individual.size / 2.0) *
-                             math.cos(math.radians(225))) - self._gap,
-                            (coords[1] + (individual.size / 2.0) *
-                             math.sin(math.radians(225))) - self._gap,
-                            self._gap,
-                            self._gap,
-                            length_includes_head=True,
-                            color='black',
-                            head_width=2.0,
-                            linewidth=0.1
-                        ))
+                    dlx = coords[0] + (individual.size / 2.0) *\
+                        math.cos(math.radians(225))
+                    dly = coords[1] + (individual.size / 2.0) *\
+                        math.sin(math.radians(225))
                 else:
                     size = math.sqrt((individual.size ** 2) / 2)
                     coords =\
@@ -287,8 +271,22 @@ class OffsetLayoutDrawer(object):
                         coords, size, size,
                         facecolor=individual_color, edgecolor="black",
                         angle=45.0))
+
                     cx = coords[0]
                     cy = coords[1] + individual.size / 2.0
+
+                    dlx = coords[0] - individual.size / 4
+                    dly = coords[1] + individual.size / 4
+
+                if individual.individual.member.role == Role.prb:
+                    axes.add_patch(mpatches.FancyArrow(
+                        dlx - self._gap, dly - self._gap,
+                        self._gap, self._gap,
+                        length_includes_head=True,
+                        color='black',
+                        head_width=2.0,
+                        linewidth=0.1
+                    ))
 
                 if self.show_id:
                     axes.annotate(individual.individual.member.id, (cx, cy),
