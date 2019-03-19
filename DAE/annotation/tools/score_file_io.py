@@ -24,63 +24,44 @@ except ImportError:
 
 class LineAdapter(object):
     def __init__(self, score_file, line):
-        self.line = line
+        self.line = list(line)
 
-        self.header = score_file.header
+        self.header_len = len(score_file.header)
         self.chr_index = score_file.chr_index
         self.pos_begin_index = score_file.pos_begin_index
         self.pos_end_index = score_file.pos_end_index
 
+        self.line[self.pos_begin_index] = int(self.line[self.pos_begin_index])
+        self.line[self.pos_end_index] = int(self.line[self.pos_end_index])
+
     @property
     def pos_begin(self):
-        return int(self.line[self.pos_begin_index])
+        return self.line[self.pos_begin_index]
 
     @property
     def pos_end(self):
-        return int(self.line[self.pos_end_index])
+        return self.line[self.pos_end_index]
 
     @property
     def chrom(self):
         return self.line[self.chr_index]
 
     def __getitem__(self, index):
-        if index == self.pos_begin_index:
-            return self.pos_begin
-        elif index == self.pos_end_index:
-            return self.pos_end
-        else:
-            return self.line[index]
+        return self.line[index]
 
     def __len__(self):
-        return len(self.header)
+        return self.header_len
 
 
-class NoLine(LineAdapter):
+class NoLine(object):
     def __init__(self, score_file):
-        super(NoLine, self).__init__(score_file, [])
         self.no_score_value = score_file.no_score_value
-
-    @property
-    def pos_begin(self):
-        return -1
-
-    @property
-    def pos_end(self):
-        return -1
-
-    @property
-    def chrom(self):
-        return None
+        self.pos_begin = -1
+        self.pos_end = -1
+        self.chrom = None
 
     def __getitem__(self, index):
-        if index == self.pos_begin_index:
-            return self.pos_begin
-        if index == self.pos_end_index:
-            return self.pos_end
-        if index == self.chr_index:
-            return self.chrom
-        else:
-            return self.no_score_value
+        return self.no_score_value
 
 
 class ScoreFile(object):
@@ -93,6 +74,10 @@ class ScoreFile(object):
             config_filename = "{}.conf".format(self.score_filename)
         self.config = ConfigBox(reusables.config_dict(config_filename))
         assert 'header' in self.config.general
+        assert 'score' in self.config.columns
+
+        self.header = self.config.general.list('header')
+        self.score_names = self.config.columns.list('score')
 
         self.schema = Schema.from_dict(dict(self.config.schema)) \
                             .order_as(self.header)
@@ -134,14 +119,6 @@ class ScoreFile(object):
             self.accessor = BigWigAccess(self)
         else:
             self.accessor = TabixAccess(self)
-
-    @property
-    def header(self):
-        return self.config.general.list('header')
-
-    @property
-    def score_names(self):
-        return self.config.columns.list('score')
 
     @property
     def chr_name(self):

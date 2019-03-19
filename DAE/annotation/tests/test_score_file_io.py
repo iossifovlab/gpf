@@ -144,7 +144,7 @@ def test_tabix_access_switching(score_file, mocker):
     mocker.spy(score_file.accessor, '_fetch_sequential')
     mocker.spy(score_file.accessor, '_fetch_direct')
     
-    # inital fetch should start sequentially
+    # inital fetch will use direct, as (10937 - 0) is above the threshold
     res = score_file.fetch_scores('1', 10937, 10937)
     assert score_file.accessor._fetch_direct.call_count == 1
     
