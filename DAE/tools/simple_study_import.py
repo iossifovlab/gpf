@@ -63,21 +63,21 @@ prefix = {output}
 """
 
 
-def generate_study_config(dae_config, argv):
-    assert argv.id is not None
+def generate_study_config(dae_config, study_id, argv):
+    assert study_id is not None
     assert argv.output is not None
 
     dirname = os.getcwd()
-    filename = os.path.join(dirname, "{}.conf".format(argv.id))
+    filename = os.path.join(dirname, "{}.conf".format(study_id))
 
     if os.path.exists(filename):
         print("configuration file already exists:", filename)
-        print("skipping generation of default config for:", argv.id)
+        print("skipping generation of default config for:", study_id)
         return
 
     with open(filename, 'w') as outfile:
         outfile.write(STUDY_CONFIG_TEMPLATE.format(
-            id=argv.id,
+            id=study_id,
             output=argv.output
         ))
 
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     if argv.id is not None:
         study_id = argv.id
     else:
-        study_id = os.path.basename(argv.pedigree)
+        study_id, _ = os.path.splitext(os.path.basename(argv.pedigree))
 
     os.makedirs(argv.output, exist_ok=True)
 
@@ -114,5 +114,5 @@ if __name__ == "__main__":
             argv.pedigree, argv.denovo,
             output=argv.output, family_format='pedigree')
 
-    # generate_study_config(dae_config, argv)
-    # generate_common_report(dae_config, study_id)
+    generate_study_config(dae_config, study_id, argv)
+    generate_common_report(dae_config, study_id)
