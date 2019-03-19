@@ -24,7 +24,9 @@ def variants_iterator_to_parquet(
     # if annotation_pipeline is not None:
     #     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
-    parquet_config = Configure.from_prefix_parquet(parquet_prefix).parquet
+    parquet_config = Configure.from_prefix_parquet(
+        parquet_prefix, bucket_index=bucket_index).parquet
+    
     print("converting into ", parquet_config, file=sys.stderr)
 
     save_ped_df_to_parquet(fvars.ped_df, parquet_config.pedigree)

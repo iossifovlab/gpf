@@ -108,14 +108,11 @@ if __name__ == "__main__":
             dae_config, annotation_pipeline,
             argv.pedigree, argv.vcf,
             output=argv.output)
-    elif argv.denovo is not None:
+    if argv.denovo is not None:
         import_dae_denovo(
             dae_config, annotation_pipeline,
             argv.pedigree, argv.denovo,
             output=argv.output, family_format='pedigree')
-    else:
-        raise ValueError(
-            "at least VCF of De Novo variants file should be specified")
 
     # generate_study_config(dae_config, argv)
     # generate_common_report(dae_config, study_id)
