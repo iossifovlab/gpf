@@ -67,7 +67,7 @@ def generate_study_config(dae_config, study_id, argv):
     assert study_id is not None
     assert argv.output is not None
 
-    dirname = os.getcwd()
+    dirname = os.path.join(dae_config.studies_dir, study_id)
     filename = os.path.join(dirname, "{}.conf".format(study_id))
 
     if os.path.exists(filename):
@@ -96,7 +96,11 @@ if __name__ == "__main__":
     else:
         study_id, _ = os.path.splitext(os.path.basename(argv.pedigree))
 
-    os.makedirs(argv.output, exist_ok=True)
+    output = os.path.join(
+        dae_config.studies_dir, study_id, argv.output
+    )
+    print("storing results into: ", output, file=sys.stderr)
+    os.makedirs(output, exist_ok=True)
 
     assert argv.vcf is not None or argv.denovo is not None
 
@@ -107,12 +111,12 @@ if __name__ == "__main__":
         import_vcf(
             dae_config, annotation_pipeline,
             argv.pedigree, argv.vcf,
-            output=argv.output)
+            output=output)
     if argv.denovo is not None:
         import_dae_denovo(
             dae_config, annotation_pipeline,
             argv.pedigree, argv.denovo,
-            output=argv.output, family_format='pedigree')
+            output=output, family_format='pedigree')
 
     generate_study_config(dae_config, study_id, argv)
     generate_common_report(dae_config, study_id)
