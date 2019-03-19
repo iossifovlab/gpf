@@ -5,7 +5,8 @@ from studies.study_definition import SingleFileStudiesDefinition
 
 class StudyFacade(object):
 
-    def __init__(self, pheno_factory, study_definition=None, study_factory=None):
+    def __init__(
+            self, pheno_factory, study_definition=None, study_factory=None):
         self._study_cache = {}
         self._study_wrapper_cache = {}
 
@@ -75,4 +76,5 @@ class StudyFacade(object):
 
         study = self.study_factory.make_study(conf)
         self._study_cache[study_id] = study
-        self._study_wrapper_cache[study_id] = StudyWrapper(study, self.pheno_factory)
+        self._study_wrapper_cache[study_id] = \
+            StudyWrapper(study, self.pheno_factory)

@@ -83,7 +83,7 @@ def contigs_makefile_generate(
                 "{import_sources}" \
                 .format(
                     import_command=import_command,
-                    target_prefix=output_prefix,
+                    output_prefix=output_prefix,
                     targets=" ".join(targets),
                     bucket_index=bucket_index,
                     import_sources=import_sources,

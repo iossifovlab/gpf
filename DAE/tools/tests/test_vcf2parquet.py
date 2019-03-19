@@ -41,7 +41,7 @@ def test_vcf2parquet_vcf(
         output=argv.output)
 
     parquet_summary = Configure.from_prefix_parquet(
-        temp_dirname).parquet.summary_variant
+        temp_dirname, bucket_index=argv.bucket_index).parquet.summary_variant
     summary = ParquetReader(Box({
         'infile': parquet_summary,
     }, default_box=True, default_box_attr=None))

@@ -79,8 +79,8 @@ class Configure(ConfigBox):
 
     @staticmethod
     def from_prefix_parquet(prefix, bucket_index=0, suffix=None):
-        assert os.path.exists(prefix)
-        assert os.path.isdir(prefix)
+        # assert os.path.exists(prefix)
+        # assert os.path.isdir(prefix)
         assert bucket_index >= 0
 
         if suffix is None and bucket_index == 0:
@@ -101,7 +101,7 @@ class Configure(ConfigBox):
         effect_gene_filename = os.path.join(
             prefix, "effect_gene{}.parquet".format(filesuffix))
         pedigree_filename = os.path.join(
-            prefix, "pedigree.parquet{}".format(filesuffix))
+            prefix, "pedigree{}.parquet".format(filesuffix))
 
         conf = {
             'parquet': {

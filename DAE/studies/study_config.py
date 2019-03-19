@@ -14,9 +14,15 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
     )
 
     CAST_TO_BOOL = (
-        'hasComplex', 'hasCNV', 'hasDenovo', 'hasTransmitted',
-        'phenotypeBrowser', 'phenotypeGenotypeTool', 'enrichmentTool',
-        'genotypeBrowser', 'genotypeBrowser.genesBlockShowAll',
+        'hasComplex',
+        'hasCNV',
+        'hasDenovo',
+        'hasTransmitted',
+        'phenotypeBrowser',
+        'phenotypeGenotypeTool',
+        'enrichmentTool',
+        'genotypeBrowser',
+        'genotypeBrowser.genesBlockShowAll',
         'genotypeBrowser.hasPresentInParent',
         'genotypeBrowser.hasComplex',
         'genotypeBrowser.hasPresentInChild',
@@ -69,6 +75,7 @@ class StudyConfig(StudyConfigBase):
 
         assert self.name
         assert self.prefix
+        # assert self.pedigree_file
         assert self.file_format
         assert self.work_dir
         # assert self.phenotypes
