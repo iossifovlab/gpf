@@ -55,37 +55,37 @@ def error_message():
 @pytest.fixture(scope='session')
 def member1(error_message):
     return PedigreeMember(
-        'id1', 'fam1', 'mom1', 'dad1', '1', '2', error_message, False)
+        'id1', 'fam1', 'mom1', 'dad1', '1', '2', 'prb', error_message, False)
 
 
 @pytest.fixture(scope='session')
 def member2():
     return PedigreeMember(
-        'mom1', 'fam1', '0', '0', '2', '1', error_message, False)
+        'mom1', 'fam1', '0', '0', '2', '1', 'mom', error_message, False)
 
 
 @pytest.fixture(scope='session')
 def member3():
     return PedigreeMember(
-        'dad1', 'fam1', '0', '0', '1', '1', error_message, True)
+        'dad1', 'fam1', '0', '0', '1', '1', 'dad', error_message, True)
 
 
 @pytest.fixture(scope='session')
 def member4():
     return PedigreeMember(
-        'id2', 'fam2', 'mom2', 'dad2', '1', '2', '2:100.0,75.0', False)
+        'id2', 'fam2', 'mom2', 'dad2', '1', '2', 'prb', '2:100.0,75.0', False)
 
 
 @pytest.fixture(scope='session')
 def member5():
     return PedigreeMember(
-        'mom2', 'fam2', '0', '0', '2', '1', '1:50.0,50.0', False)
+        'mom2', 'fam2', '0', '0', '2', '1', 'mom', '1:50.0,50.0', False)
 
 
 @pytest.fixture(scope='session')
 def member6():
     return PedigreeMember(
-        'dad2', 'fam2', '0', '0', '1', '1', '1:50.0,100.0', True)
+        'dad2', 'fam2', '0', '0', '1', '1', 'dad', '1:50.0,100.0', True)
 
 
 @pytest.fixture(scope='session')
@@ -179,7 +179,8 @@ def columns_labels():
         'mother': 'momId',
         'sex': 'gender',
         'status': 'status',
-        'layout': 'layout'
+        'layout': 'layout',
+        'role': 'role'
     }
 
 
@@ -201,12 +202,12 @@ def dict_writer(output, header, layout_column, generated_column):
 def test_output():
     return """familyId\tpersonId\tdadId\tmomId\tgender\tstatus\trole\tlayout\tgenerated
 fam1\tid1\tdad1\tmom1\t1\t2\tprb\tError\t
-fam1\tmom1\t0\t0\t2\t1\tmother\tError\t
+fam1\tmom1\t0\t0\t2\t1\tmom\tError\t
 fam2\tid2\tdad2\tmom2\t1\t2\tprb\t2:100.0,75.0\t
-fam2\tdad2\t0\t0\t1\t1\tfather\t1:50.0,100.0\t1
-fam2\tmom2\t0\t0\t2\t1\tmother\t1:50.0,50.0\t
+fam2\tdad2\t0\t0\t1\t1\tdad\t1:50.0,100.0\t1
+fam2\tmom2\t0\t0\t2\t1\tmom\t1:50.0,50.0\t
 fam3\tid3\tdad3\tmom3\t2\t2\tprb\t\t
-fam1\tdad1\t0\t0\t1\t1\t\tError\t1
+fam1\tdad1\t0\t0\t1\t1\tdad\tError\t1
 """
 
 

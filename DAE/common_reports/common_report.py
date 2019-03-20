@@ -119,8 +119,8 @@ class FamilyCounter(object):
 
     def _get_pedigree(self, family, phenotype_info):
         return [[member.family_id, member.person_id, member.dad_id,
-                 member.mom_id, member.sex.short(), self._get_member_color(
-                     member, phenotype_info),
+                 member.mom_id, member.sex.short(), str(member.role),
+                 self._get_member_color(member, phenotype_info),
                  member.layout_position, member.generated, '', '']
                 for member in family.members_in_order]
 
