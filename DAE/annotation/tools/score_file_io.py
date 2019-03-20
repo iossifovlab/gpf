@@ -316,7 +316,7 @@ class TabixAccess(TabixReader):
         try:
             result = []
             for line in self.infile.fetch(
-                    chrom, pos_begin-1, pos_end, parser=pysam.asTuple()):
+                    str(chrom), pos_begin-1, pos_end, parser=pysam.asTuple()):
                 result.append(LineAdapter(self.score_file, line))
             return result
         except ValueError as ex:
