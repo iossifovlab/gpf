@@ -188,6 +188,10 @@ const appRoutes: Routes = [
         component: DatasetDescriptionComponent
       },
       {
+        path: 'commonReport',
+        component: VariantReportsComponent
+      },
+      {
         path: '**',
         redirectTo: 'browser'
       }
