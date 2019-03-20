@@ -47,6 +47,7 @@ class StudiesManager(object):
         self.weights_loader = None
 
         self.gene_sets_collections = None
+        self.common_reports = None
 
     def reload_dataset(self):
         self.vdb = VariantsDb(self.dae_config)
