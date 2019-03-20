@@ -16,10 +16,11 @@ export class PedigreeData {
       arr[3],
       arr[4],
       arr[5],
-      PedigreeData.parsePosition(arr[6]),
-      arr[7],
+      arr[6],
+      PedigreeData.parsePosition(arr[7]),
       arr[8],
-      arr[9]
+      arr[9],
+      arr[10]
     );
   }
 
@@ -29,6 +30,7 @@ export class PedigreeData {
     readonly father: string,
     readonly mother: string,
     readonly gender: string,
+    readonly role: string,
     readonly color: string,
     readonly position: [number, number],
     readonly generated: boolean,

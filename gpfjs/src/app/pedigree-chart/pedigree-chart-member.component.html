@@ -1,4 +1,11 @@
-<svg:rect *ngIf="pedigreeData.gender=='M' || pedigreeData.gender=='U'"
+<svg:defs>
+     <marker id="arrowhead" markerWidth="7" markerHeight="5"
+     refX="7" refY="2.5" orient="auto">
+         <polygon points="0 0, 7 2.5, 0 5" />
+     </marker>
+</svg:defs>
+
+<svg:rect *ngIf="pedigreeData.gender=='M'"
      x=0
      y=0
      width=21
@@ -7,7 +14,6 @@
      fill-opacity="1"
      [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
      [attr.fill]="pedigreeData.color"
-     [attr.transform]="pedigreeData.gender=='U' ? 'rotate(45 10.5 10.5)' : ''"
 />
 
 <svg:circle *ngIf="pedigreeData.gender=='F'"
@@ -18,6 +24,48 @@
      fill-opacity="1"
      [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
      [attr.fill]="pedigreeData.color"
+/>
+
+<svg:rect *ngIf="pedigreeData.gender=='U'"
+     x=3.0753787975412514
+     y=3.0753787975412514
+     width=14.849242404917497
+     height=14.849242404917497
+     stroke-width="1"
+     fill-opacity="1"
+     [attr.stroke]="pedigreeData.generated ? pedigreeData.color : '#000000'"
+     [attr.fill]="pedigreeData.color"
+     [attr.transform]="'rotate(45 10.5 10.5)'"
+/>
+
+<svg:line *ngIf="pedigreeData.gender=='M' && pedigreeData.role == 'prb'"
+     x1=-8
+     y1=29
+     x2=0
+     y2=21
+     stroke="#000"
+     stroke-width="1"
+     marker-end="url(#arrowhead)"
+/>
+
+<svg:line *ngIf="pedigreeData.gender=='F' && pedigreeData.role == 'prb'"
+     x1=-5.075378798
+     y1=25.924621202
+     x2=3.075378798
+     y2=17.924621202
+     stroke="#000"
+     stroke-width="1"
+     marker-end="url(#arrowhead)"
+/>
+
+<svg:line *ngIf="pedigreeData.gender=='U' && pedigreeData.role == 'prb'"
+     x1=-3.25
+     y1=7.75
+     x2=5.25
+     y2=15.75
+     stroke="#000"
+     stroke-width="1"
+     marker-end="url(#arrowhead)"
 />
 
 <svg:text *ngIf="pedigreeData.label" x="10.5" y="15" font-size="14" text-anchor="middle">
