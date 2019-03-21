@@ -57,27 +57,6 @@ class QueryPreviewView(QueryBaseView):
     def __init__(self):
         super(QueryPreviewView, self).__init__()
 
-    def __prepare_variants_response(self, cols, rows):
-        limitted_rows = []
-        count = 0
-        for row in rows:
-            count += 1
-            if count <= self.MAX_SHOWN_VARIANTS:
-                limitted_rows.append(row)
-            if count > self.MAX_VARIANTS:
-                break
-
-        if count <= self.MAX_VARIANTS:
-            count = str(count)
-        else:
-            count = 'more than {}'.format(self.MAX_VARIANTS)
-
-        return {
-            'count': count,
-            'cols': cols,
-            'rows': limitted_rows
-        }
-
     @expand_gene_set
     def post(self, request):
         LOGGER.info(log_filter(request, "query v3 preview request: " +
@@ -95,6 +74,8 @@ class QueryPreviewView(QueryBaseView):
                 dataset.pedigree_selectors,
                 data.get('pedigreeSelector', {}),
                 dataset.preview_columns,
+                max_variants_count=self.MAX_SHOWN_VARIANTS,
+                variants_hard_max=self.MAX_VARIANTS
             )
 
             # pprint.pprint(response)
