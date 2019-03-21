@@ -89,12 +89,14 @@ class QueryPreviewView(QueryBaseView):
             self.check_object_permissions(request, dataset_id)
 
             dataset = self.get_dataset_wdae_wrapper(dataset_id)
+
+            pedigree_selector_id = data.get('pedigreeSelector', {})\
+                                       .get('id', None)
             # LOGGER.info("dataset " + str(dataset))
             response = get_variants_web(
                 dataset.query_variants(safe=True, **data),
-                dataset.pedigree_selectors,
-                data.get('pedigreeSelector', {}),
                 dataset.preview_columns,
+                dataset.get_pedigree_selector(pedigree_selector_id)
             )
 
             # pprint.pprint(response)
