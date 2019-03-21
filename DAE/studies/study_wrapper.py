@@ -442,6 +442,10 @@ class StudyWrapper(object):
         return legend + self._get_legend_default_values()
 
     def get_pedigree_selector(self, pedigree_selector_id):
+        if not pedigree_selector_id:
+            return self.pedigree_selectors[0]\
+                if self.pedigree_selectors else {}
+
         pedigree_selector_with_id = list(filter(
             lambda pedigree_selector: pedigree_selector.get('id') ==
             pedigree_selector_id, self.pedigree_selectors))
