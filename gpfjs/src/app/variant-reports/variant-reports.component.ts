@@ -22,6 +22,7 @@ export class VariantReportsComponent implements OnInit {
   familiesPedigreeTop: number;
   familiesPedigreeBottom: number;
   legendTop: number;
+  showFilter: boolean = true;
 
   reports$: Observable<Studies>;
   selectedReport$ = new Subject<Study>();
@@ -97,6 +98,9 @@ export class VariantReportsComponent implements OnInit {
       ])
       .take(1)
       .subscribe(([reports, params]) => {
+        if ('showFilter' in params) {
+          this.showFilter = (params['showFilter'] === 'true');
+        }
         if (params[SELECTED_REPORT_QUERY_PARAM]) {
           let report = reports.studies
             .find(study => study.id === params[SELECTED_REPORT_QUERY_PARAM]);

@@ -42,8 +42,9 @@ th.rotate > div {
   position: relative;
   height: 210px;
   width: auto;
-  margin-right: 0;
-  padding-left: 2px;
+  margin: auto;
+  margin-top: 0;
+  margin-bottom: 0;
   writing-mode: tb-rl;
   filter: flipv fliph;
   transform: rotate(180deg);
