@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from builtins import str
+import traceback
 
 import math
 import numpy as np
@@ -20,8 +21,15 @@ def merge_dicts(*dicts):
     return result
 
 
-def ge2str(gs):
-    return "|".join(g.symbol + ":" + g.effects for g in gs.genes)
+def ge2str(eff):
+    return "|".join([
+        "{}:{}".format(g.symbol, g.effect) for g in eff.genes])
+
+
+def gd2str(eff):
+    return "|".join([
+        "{}:{}".format(t.transcript_id, t.details)
+        for t in eff.transcripts.values()])
 
 
 def gene_effect_get_worst_effect(gs):
@@ -67,10 +75,18 @@ STANDARD_ATTRS_LAMBDAS = {
 
 SPECIAL_ATTRS_FORMAT = {
     "genotype": lambda aa: mat2str(aa.genotype),
-    "effects": lambda aa: ge2str(aa.effects),
-    "genes": lambda aa: gene_effect_get_genes(aa.effects),
-    "worstEffect":
-        lambda aa: gene_effect_get_worst_effect(aa.effects),
+    "effects": lambda aa: ge2str(aa.effect),
+    "genes": lambda aa: gene_effect_get_genes(aa.effect),
+    "worst_effect":
+        lambda aa: gene_effect_get_worst_effect(aa.effect),
+    "effect_details":
+        lambda aa: gd2str(aa.effect),
+    "best_st":
+        lambda aa: mat2str(aa.best_st),
+    "family_structure":
+        lambda aa: "".join([
+            "{}{}".format(p.role.name, p.sex.short())
+            for p in aa.members_in_order])
 }
 
 
@@ -85,7 +101,7 @@ def transform_variants_to_lists(
         selected_pedigree_selector):
 
     for v in variants:
-        for alt_allele_index, aa in enumerate(v.matched_alleles):
+        for aa in v.matched_alleles:
             row_variant = []
             for column in preview_columns:
                 try:
@@ -105,6 +121,7 @@ def transform_variants_to_lists(
                                 attribute = 'inf'
                         row_variant.append(attribute)
                 except (AttributeError, KeyError):
+                    traceback.print_exc()
                     row_variant.append('')
 
             yield row_variant
@@ -138,7 +155,6 @@ def generate_pedigree(allele, pedigree_selectors, selected_pedigree_selector):
     best_st = np.sum(allele.gt == allele.allele_index, axis=0)
 
     for index, member in enumerate(allele.members_in_order):
-        # FIXME: add missing denovo parent parameter to variant_count_v3 call
         result.append([
             allele.family_id,
             member.person_id,
