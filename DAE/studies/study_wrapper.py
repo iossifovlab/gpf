@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function, absolute_import
 import functools
 from builtins import str
 
+import os
 import itertools
 
 from RegionOperations import Region
@@ -29,29 +30,27 @@ class StudyWrapper(object):
 
         preview_columns = []
         download_columns = []
-        pedigree_columns = {}
         pheno_columns = {}
+        column_labels = {}
 
         pedigree_selectors = []
 
         if genotype_browser:
             preview_columns = genotype_browser['previewColumnsSlots']
             download_columns = genotype_browser['downloadColumnsSlots']
-            if genotype_browser['pedigreeColumns']:
-                pedigree_columns =\
-                    [s for pc in genotype_browser['pedigreeColumns']
-                     for s in pc['slots']]
             if genotype_browser['phenoColumns']:
                 pheno_columns = [s for pc in genotype_browser['phenoColumns']
                                  for s in pc['slots']]
+
+            column_labels = genotype_browser['columnLabels']
 
         if 'pedigreeSelectors' in self.config:
             pedigree_selectors = self.config.pedigree_selectors
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
-        self.pedigree_columns = pedigree_columns
         self.pheno_columns = pheno_columns
+        self.column_labels = column_labels
 
         self.pedigree_selectors = pedigree_selectors
 
@@ -100,7 +99,6 @@ class StudyWrapper(object):
 
     # Not implemented:
     # inChild
-    # genomicScores
     # callSet
     # minParentsCalled
     # ultraRareOnly
@@ -125,6 +123,9 @@ class StudyWrapper(object):
         if 'minAltFrequencyPercent' in kwargs or \
                 'maxAltFrequencyPercent' in kwargs:
             self._transform_min_max_alt_frequency(kwargs)
+
+        if 'genomicScores'in kwargs:
+            self._transform_genomic_scores(kwargs)
 
         for key in list(kwargs.keys()):
             if key in self.FILTER_RENAMES_MAP:
@@ -284,6 +285,18 @@ class StudyWrapper(object):
 
         return kwargs
 
+    def _transform_genomic_scores(self, kwargs):
+        genomic_scores = kwargs.pop('genomicScores', [])
+
+        genomic_scores_filter = [
+            (score['metric'],
+             (score['rangeStart'], score['rangeEnd']))
+            for score in genomic_scores
+            if score['rangeStart'] or score['rangeEnd']
+        ]
+
+        kwargs['real_attr_filter'] = genomic_scores_filter
+
     def _transform_min_max_alt_frequency(self, kwargs):
         min_value = None
         max_value = None
@@ -429,6 +442,10 @@ class StudyWrapper(object):
         return legend + self._get_legend_default_values()
 
     def get_pedigree_selector(self, pedigree_selector_id):
+        if not pedigree_selector_id:
+            return self.pedigree_selectors[0]\
+                if self.pedigree_selectors else {}
+
         pedigree_selector_with_id = list(filter(
             lambda pedigree_selector: pedigree_selector.get('id') ==
             pedigree_selector_id, self.pedigree_selectors))
@@ -436,20 +453,9 @@ class StudyWrapper(object):
         return pedigree_selector_with_id[0] \
             if pedigree_selector_with_id else {}
 
-    # FIXME:
     def _get_dataset_config_options(self, config):
         config['studyTypes'] = self.config.study_types
         config['description'] = self.study.description
-        # config['studies'] = self.config.names
-
-        print(self.config.genotype_browser)
-
-        # config['genotypeBrowser']['hasStudyTypes'] =\
-        #     self.config.has_study_types
-        # config['genotypeBrowser']['hasComplex'] =\
-        #     self.config.has_complex
-        # config['genotypeBrowser']['hasCNV'] =\
-        #     self.config.has_CNV
 
         return config
 
@@ -462,7 +468,6 @@ class StudyWrapper(object):
             'studyTypes', 'studies'
         ]
 
-    # FIXME:
     def get_dataset_description(self):
         keys = self._get_description_keys()
         config = self.config.to_dict()
@@ -492,7 +497,16 @@ class StudyWrapper(object):
             if self.pheno_db is None:
                 continue
 
-            measure = self.study.pheno_db.get_measure(measure_filter['measure'])
+            measure = self.study.pheno_db.get_measure(
+                measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
+    def get_column_labels(self):
+        return self.column_labels
 
+    def gene_sets_cache_file(self):
+        cache_path = os.path.join(
+            os.path.split(self.config.study_config.config_file)[0],
+            'denovo-cache.json')
+
+        return cache_path

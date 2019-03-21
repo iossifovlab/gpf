@@ -114,6 +114,7 @@ class LayoutSaver(object):
                 row[columns_labels["father"]] = member.father
                 row[columns_labels["sex"]] = member.sex
                 row[columns_labels["status"]] = member.status
+                row[columns_labels["role"]] = member.role
                 row.update(generated_layout)
 
                 writer.writerow(row)

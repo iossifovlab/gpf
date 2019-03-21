@@ -52,7 +52,7 @@ class DatasetConfig(StudyConfigBase):
     ]
 
     COMPOSITE_ATTRIBUTES = {
-        'phenotypes': _set_union_attribute,
+        # 'phenotypes': _set_union_attribute,
 
         'phenotypeGenotypeTool': _boolean_and_attribute,
         'phenotypeBrowser': _boolean_and_attribute,

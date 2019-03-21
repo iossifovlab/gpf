@@ -394,8 +394,8 @@ class SummaryVariantFactory(object):
     @staticmethod
     def summary_allele_from_record(
             record, transmission_type='transmitted'):
-        record['transmission_type'] = 'transmitted'
-        if record['effect_type'] is None:
+        record['transmission_type'] = transmission_type
+        if record.get('effect_type') is None:
             effects = None
         else:
             effects = Effect.from_effects(

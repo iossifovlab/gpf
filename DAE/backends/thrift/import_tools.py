@@ -24,12 +24,13 @@ def variants_iterator_to_parquet(
     # if annotation_pipeline is not None:
     #     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
-    parquet_config = Configure.from_prefix_parquet(parquet_prefix).parquet
+    parquet_config = Configure.from_prefix_parquet(
+        parquet_prefix, bucket_index=bucket_index).parquet
+    
     print("converting into ", parquet_config, file=sys.stderr)
 
     save_ped_df_to_parquet(fvars.ped_df, parquet_config.pedigree)
 
-    print("going to build: ", parquet_prefix, file=sys.stderr)
     start = time.time()
 
     annotation_schema = ParquetSchema()
@@ -52,7 +53,8 @@ def variants_iterator_to_parquet(
 
 
 def construct_import_annotation_pipeline(dae_config, argv, defaults={}):
-    if argv.annotation_config is not None:
+
+    if 'annotation_config' in argv and argv.annotation_config is not None:
         config_filename = argv.annotation_config
     else:
         config_filename = dae_config.annotation_conf
@@ -71,8 +73,11 @@ def construct_import_annotation_pipeline(dae_config, argv, defaults={}):
     })
     options = Box(options, default_box=True, default_box_attr=None)
 
+    annotation_defaults = dae_config.annotation_defaults
+    annotation_defaults.update(defaults)
+
     pipeline = PipelineAnnotator.build(
-        options, config_filename, defaults=defaults)
+        options, config_filename, defaults=annotation_defaults)
     return pipeline
 
 

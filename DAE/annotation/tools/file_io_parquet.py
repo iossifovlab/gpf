@@ -109,7 +109,7 @@ class ParquetReader(AbstractFormat):
 
     def _setup(self):
         assert self.options.infile != '-'
-        assert os.path.exists(self.options.infile)
+        assert os.path.exists(self.options.infile), self.options.infile
         self.pqfile = pq.ParquetFile(self.options.infile)
         self.schema = ParquetSchema.from_parquet(self.pqfile.schema)
         self.row_group_count = self.pqfile.num_row_groups

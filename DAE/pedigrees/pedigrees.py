@@ -17,7 +17,7 @@ from variants.attributes import Role, Sex
 
 
 class PedigreeMember(object):
-    def __init__(self, id, family_id, mother, father, sex, status,
+    def __init__(self, id, family_id, mother, father, sex, status, role,
                  layout=None, generated=False):
         self.id = id
         self.family_id = family_id
@@ -26,6 +26,7 @@ class PedigreeMember(object):
         self.sex = sex
         self.status = status
         self.layout = layout
+        self.role = Role.from_name(role)
         self.generated = generated
 
     def has_known_mother(self):
@@ -44,14 +45,14 @@ class PedigreeMember(object):
         elif self.status == "2":
             phenotype = "affected"
         return pd.DataFrame.from_dict({
-            "familyId": [self.family_id],
-            "personId": [self.id],
-            "sampleId": [self.id],
+            "family_id": [self.family_id],
+            "person_id": [self.id],
+            "sample_id": [self.id],
             "sex": [Sex.from_name_or_value(self.sex)],
-            "role": [Role.unknown],
+            "role": [self.role],
             "status": [self.status],
-            "momId": [self.mother],
-            "dadId": [self.father],
+            "mom_id": [self.mother],
+            "dad_id": [self.father],
             "layout": [self.layout],
             "generated": [self.generated],
             "phenotype": [phenotype]
@@ -126,14 +127,14 @@ class FamilyConnections(object):
                 if member.father not in missing_mother_fathers:
                     missing_mother_fathers[member.father] = PedigreeMember(
                         member.father + ".mother", pedigree.family_id,
-                        "0", "0", "2", "-", generated=True)
+                        "0", "0", "2", "-", Role.mom, generated=True)
                     new_members.append(missing_mother_fathers[member.father])
                 member.mother = member.father + ".mother"
             elif member.father == "0":
                 if member.mother not in missing_father_mothers:
                     missing_father_mothers[member.mother] = PedigreeMember(
                         member.mother + ".father", pedigree.family_id,
-                        "0", "0", "1", "-", generated=True)
+                        "0", "0", "1", "-", Role.dad, generated=True)
                     new_members.append(missing_father_mothers[member.mother])
                 member.father = member.mother + ".father"
 
@@ -142,12 +143,12 @@ class FamilyConnections(object):
             if mother.member is None and mother not in new_members:
                 mother.member = PedigreeMember(
                     member.mother, pedigree.family_id, "0", "0", "2", "-",
-                    generated=True)
+                    Role.mom, generated=True)
                 new_members.append(mother.member)
             if father.member is None and father not in new_members:
                 father.member = PedigreeMember(
                     member.father, pedigree.family_id, "0", "0", "1", "-",
-                    generated=True)
+                    Role.dad, generated=True)
                 new_members.append(father.member)
 
         pedigree.add_members(new_members)
@@ -465,6 +466,9 @@ def get_argument_parser(description):
     parser.add_argument(
         '--status', help='Specify status column label. Default to status.',
         default='status', action='store')
+    parser.add_argument(
+        '--role', help='Specify role column label. Default to role.',
+        default='role', action='store')
     parser.add_argument(
         '--no-header-order', help='Comma separated order of columns in header '
         'when header is not in the input file. Values for columns are '

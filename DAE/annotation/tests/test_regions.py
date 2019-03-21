@@ -89,8 +89,8 @@ def test_regions_parameterized(
 
 
 missing_phast_chr2_2 = """CHROM	POS	REF	ALT	RESULT_phastCons100way
-chr2	20003	G	T	-100
-chr2	20004	G	A	-100
+chr2	20006	G	T
+chr2	20007	G	A
 """
 
 missing_phylo_chr2_2 = """CHROM	POS	REF	ALT	RESULT_phyloP100way
@@ -103,12 +103,12 @@ missing_phast_chr22_2 = """CHROM	POS	REF	ALT	RESULT_phastCons100way
 
 
 @pytest.mark.parametrize("direct,score_name,region,expected", [
-    (True, 'phastCons100way', "chr2:20003-20004", missing_phast_chr2_2),
-    (False, 'phastCons100way', "chr2:20003-20004", missing_phast_chr2_2),
+    (True, 'phastCons100way', "chr2:20006-20007", missing_phast_chr2_2),
+    (False, 'phastCons100way', "chr2:20006-20007", missing_phast_chr2_2),
     (True, 'phyloP100way', "chr2:20003-20004", missing_phylo_chr2_2),
     (False, 'phyloP100way', "chr2:20003-20004", missing_phylo_chr2_2),
-    (True, 'phastCons100way', "chr22:20003-20004", missing_phast_chr22_2),
-    (False, 'phastCons100way', "chr22:20003-20004", missing_phast_chr22_2),
+    (True, 'phastCons100way', "chr22:20006-20007", missing_phast_chr22_2),
+    (False, 'phastCons100way', "chr22:20006-20007", missing_phast_chr22_2),
 ])
 def test_regions_parameterized_missing_scores(
         expected_df, variants_io, capsys,

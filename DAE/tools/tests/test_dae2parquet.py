@@ -3,10 +3,12 @@ import pytest
 from box import Box
 
 from configurable_entities.configuration import DAEConfig
-from tools.dae2parquet import parse_cli_arguments, dae_build_denovo, \
+from tools.dae2parquet import parse_cli_arguments, import_dae_denovo, \
     dae_build_transmitted, dae_build_makefile
 
 from backends.configure import Configure
+from backends.thrift.import_tools import construct_import_annotation_pipeline
+
 from annotation.tools.file_io_parquet import ParquetReader
 
 from RegionOperations import Region
@@ -32,10 +34,15 @@ def test_dae2parquet_denovo(
     assert argv is not None
     assert argv.type == 'denovo'
 
-    dae_build_denovo(
+    annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, argv, defaults={
             'scores_dirname': annotation_scores_dirname,
         })
+
+    import_dae_denovo(
+        dae_config, annotation_pipeline,
+        argv.families, argv.variants, family_format=argv.family_format,
+        output=argv.output)
 
     parquet_summary = Configure.from_prefix_parquet(
         temp_dirname).parquet.summary_variant
@@ -163,13 +170,15 @@ def dae_iossifov2014_thrift(
         assert argv is not None
         assert argv.type == 'denovo'
 
-        defaults = {
+        annotation_pipeline = construct_import_annotation_pipeline(
+            dae_config, argv, defaults={
                 'scores_dirname': annotation_scores_dirname,
-        }
-        defaults.update(DAEConfig().annotation_defaults)
+            })
 
-        dae_build_denovo(
-            dae_config, argv, defaults=defaults)
+        import_dae_denovo(
+            dae_config, annotation_pipeline,
+            argv.families, argv.variants, family_format=argv.family_format,
+            output=argv.output)
 
         parquet_config = Configure.from_prefix_parquet(
             temp_dirname).parquet

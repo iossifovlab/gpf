@@ -5,10 +5,11 @@ from studies.study_definition import SingleFileStudiesDefinition
 
 class StudyFacade(object):
 
-    _study_cache = {}
-    _study_wrapper_cache = {}
+    def __init__(
+            self, pheno_factory, study_definition=None, study_factory=None):
+        self._study_cache = {}
+        self._study_wrapper_cache = {}
 
-    def __init__(self, pheno_factory, study_definition=None, study_factory=None):
         if study_definition is None:
             study_definition = SingleFileStudiesDefinition()
         if study_factory is None:
@@ -45,7 +46,7 @@ class StudyFacade(object):
 
     def get_all_study_ids(self):
         return [
-            conf.name
+            conf.id
             for conf in
             self.study_definition.get_all_study_configs()
         ]
@@ -75,4 +76,5 @@ class StudyFacade(object):
 
         study = self.study_factory.make_study(conf)
         self._study_cache[study_id] = study
-        self._study_wrapper_cache[study_id] = StudyWrapper(study, self.pheno_factory)
+        self._study_wrapper_cache[study_id] = \
+            StudyWrapper(study, self.pheno_factory)

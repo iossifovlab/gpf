@@ -20,6 +20,16 @@ def to_str(column_value):
         return str(column_value)
 
 
+def handle_chrom_prefix(expect_prefix, data):
+    if data is None:
+        return data
+    if expect_prefix and not data.startswith('chr'):
+        return "chr{}".format(data)
+    if not expect_prefix and data.startswith('chr'):
+        return data[3:]
+    return data
+
+
 class RegionHelper(object):
 
     def __init__(self, region_string, pos_index):
@@ -257,18 +267,8 @@ class TabixReader(TSVFormat):
         self.region = self.options.region
         self._has_chrom_prefix = None
 
-    def _handle_chrom_prefix(self, data):
-        if data is None:
-            return data
-        if self._has_chrom_prefix and not data.startswith('chr'):
-            return "chr{}".format(data)
-        if not self._has_chrom_prefix and data.startswith('chr'):
-            return data[3:]
-        return data
-
     def _region_reset(self, region):
-        region = self._handle_chrom_prefix(region)
-
+        region = handle_chrom_prefix(self._has_chrom_prefix, region)
         try:
             self.lines_iterator = self.infile.fetch(
                 region=region,

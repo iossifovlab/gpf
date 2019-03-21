@@ -1,5 +1,3 @@
-import os
-
 import pandas as pd
 
 from box import Box
@@ -60,13 +58,11 @@ def test_variants_iterator_to_parquet(
     fvars = RawFamilyVariants(vcf_config, annotator=freq_annotator)
     assert fvars is not None
 
-    parquet_prefix = os.path.join(temp_dirname, "effects_trio_")
-    print(parquet_prefix)
-    parquet_config = Configure.from_prefix_parquet(parquet_prefix)
+    parquet_config = Configure.from_prefix_parquet(temp_dirname)
 
     variants_iterator_to_parquet(
         fvars,
-        parquet_prefix,
+        temp_dirname,
         annotation_pipeline=annotation_pipeline_internal,
     )
 

@@ -80,7 +80,8 @@ class BaseDAE(FamiliesBase):
             columns[columns.index('variant')] = 'cshl_variant'
         return columns
 
-    def summary_variant_from_dae_record(self, rec):
+    def summary_variant_from_dae_record(self, rec, transmission_type):
+
         parents_called = int(rec.get('all.nParCalled', 0))
         ref_allele_count = 2 * int(rec.get('all.nParCalled', 0)) - \
             int(rec.get('all.nAltAlls', 0))
@@ -97,11 +98,6 @@ class BaseDAE(FamiliesBase):
             'cshl_variant': rec['cshl_variant'],
             'summary_variant_index': rec['summary_variant_index'],
             'allele_index': 0,
-            'effect_type': None,
-            'effect_gene_genes': None,
-            'effect_gene_types': None,
-            'effect_details_transcript_ids': None,
-            'effect_details_details': None,
             'af_parents_called_count': parents_called,
             'af_parents_called_percent':
                 float(rec.get('all.prcntParCalled', 0.0)),
@@ -109,10 +105,9 @@ class BaseDAE(FamiliesBase):
             'af_allele_freq': ref_allele_prcnt,
             'transmission_type': self.transmission_type,
         }
-        ref_allele = SummaryVariantFactory.summary_allele_from_record(ref)
+        ref_allele = SummaryVariantFactory.summary_allele_from_record(
+            ref, transmission_type=transmission_type)
 
-        genes, effects = self.split_gene_effects(rec['effectGene'])
-        effect_details = [str(rec['effectDetails'])]
         alt = {
             'chrom': rec['chrom'],
             'position': rec['position'],
@@ -124,11 +119,6 @@ class BaseDAE(FamiliesBase):
             'cshl_variant': rec['cshl_variant'],
             'summary_variant_index': rec['summary_variant_index'],
             'allele_index': 1,
-            'effect_type': rec['effectType'],
-            'effect_gene_genes': genes,
-            'effect_gene_types': effects,
-            'effect_details_transcript_ids': effect_details,
-            'effect_details_details': effect_details,
             'af_parents_called_count': int(rec.get('all.nParCalled', 0)),
             'af_parents_called_percent':
                 float(rec.get('all.prcntParCalled', 0.0)),
@@ -139,7 +129,8 @@ class BaseDAE(FamiliesBase):
         if self.annotator:
             self.annotator.line_annotation(alt)
 
-        alt_allele = SummaryVariantFactory.summary_allele_from_record(alt)
+        alt_allele = SummaryVariantFactory.summary_allele_from_record(
+            alt, transmission_type=transmission_type)
         assert alt_allele is not None
 
         return SummaryVariant([ref_allele, alt_allele])
@@ -226,7 +217,8 @@ class RawDAE(BaseDAE):
                 rec['all.altFreq'] = float(rec['all.altFreq'])
                 rec['summary_variant_index'] = summary_index
 
-                summary_variant = self.summary_variant_from_dae_record(rec)
+                summary_variant = self.summary_variant_from_dae_record(
+                    rec, transmission_type='transmitted')
                 family_data = rec['familyData']
                 if family_data == 'TOOMANY':
                     toomany_line = next(toomany_iterator)
@@ -349,7 +341,8 @@ class RawDenovo(BaseDAE):
         for index, row in df.iterrows():
             row['summary_variant_index'] = index
             try:
-                summary_variant = self.summary_variant_from_dae_record(row)
+                summary_variant = self.summary_variant_from_dae_record(
+                    row, transmission_type='denovo')
 
                 gt = self.explode_family_genotype(
                     row['family_data'], col_sep=" ")

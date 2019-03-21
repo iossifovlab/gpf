@@ -52,18 +52,12 @@ class VariantsDb(object):
         studies_ids = set(self.get_studies_ids())
         dataset_ids = set(self.get_datasets_ids())
 
-        print("studies", studies_ids)
-        print("datasets", dataset_ids)
-
         overlapping = studies_ids.intersection(dataset_ids)
 
         assert overlapping == set(), "Overlapping studies and datasets ids: {}".format(overlapping)
 
     def get_studies_ids(self):
         return self.studies_definitions.study_ids
-
-    # def get_studies_names(self):
-    #     return self.studies_definitions.get_all_study_names()
 
     def get_study_config(self, study_id):
         return self.study_facade.get_study_config(study_id)

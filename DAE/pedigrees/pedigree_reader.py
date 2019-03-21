@@ -21,6 +21,7 @@ class PedigreeReader(object):
                     "mother": row[columns_labels["mother"]],
                     "sex": row[columns_labels["sex"]],
                     "status": row[columns_labels["status"]],
+                    "role": row[columns_labels["role"]],
                     "layout": row.get(columns_labels["layout"], None)
                 }
                 if 'generated' in columns_labels:
@@ -45,5 +46,6 @@ class PedigreeReader(object):
             "mother": "momId",
             "sex": "gender",
             "status": "status",
+            "role": "role",
             "layout": "layout"
         }

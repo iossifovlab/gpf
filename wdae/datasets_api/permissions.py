@@ -24,8 +24,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
     @staticmethod
     def permitted_datasets(user):
-        dataset_ids = get_studies_manager().get_dataset_facade() \
-            .get_all_dataset_ids()
+        dataset_ids = get_studies_manager().get_variants_db().get_all_ids()
 
         return list(filter(
             lambda dataset_id: IsDatasetAllowed.user_has_permission(

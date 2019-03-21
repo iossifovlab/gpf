@@ -119,8 +119,8 @@ class FamilyCounter(object):
 
     def _get_pedigree(self, family, phenotype_info):
         return [[member.family_id, member.person_id, member.dad_id,
-                 member.mom_id, member.sex.short(), self._get_member_color(
-                     member, phenotype_info),
+                 member.mom_id, member.sex.short(), str(member.role),
+                 self._get_member_color(member, phenotype_info),
                  member.layout_position, member.generated, '', '']
                 for member in family.members_in_order]
 
@@ -332,8 +332,8 @@ class EffectWithFilter(object):
             set(families_base.persons_id(people_with_parents))
 
         variants = self._get_variants(
-            study, denovo_variants, people_with_filter, people_with_parents_ids,
-            effect, effect_types_converter)
+            study, denovo_variants, people_with_filter,
+            people_with_parents_ids, effect, effect_types_converter)
 
         self.number_of_observed_events = len(variants)
         self.number_of_children_with_event =\
@@ -376,39 +376,18 @@ class EffectWithFilter(object):
             self, study, denovo_variants, people_with_filter, 
             people_with_parents,
             effect, effect_types_converter):
-        # variants_query = {
-        #     'limit': None,
-        #     'inheritance': 'denovo',
-        #     'effect_types':
-        #         effect_types_converter.get_effect_types(effectTypes=effect),
-        #     'person_ids':
-        #         list(people_with_filter.intersection(people_with_parents))
-        # }
         people = people_with_filter.intersection(people_with_parents)
         effect_types = set(
             effect_types_converter.get_effect_types(effectTypes=effect))
         variants = []
-        # print("-----------------------------------")
-        # print(denovo_variants)
-        # print("-----------------------------------")
         for v in denovo_variants:
             for aa in v.alt_alleles:
-                # print(
-                #     aa.variant_in_members, people, 
-                #     aa.effect.types, effect_types)
                 if not (set(aa.variant_in_members) & people):
                     continue
                 if not (aa.effect.types & effect_types):
                     continue
                 variants.append(v)
                 break
-        # print(variants)
-
-        # variants = list(query_object.query_variants(**variants_query))
-        # for v in variants:
-        #     print(v, v.best_st)
-        #     for aa in v.alt_alleles:
-        #         print(aa, aa.inheritance_in_members, mat2str(aa.gt))
         return variants
 
     def _get_number_of_children_with_event(
@@ -435,7 +414,8 @@ class Effect(object):
     def __init__(
             self, study, denovo_variants, effect, filter_objects):
         self.effect_type = effect
-        self.row = self._get_row(study, denovo_variants, effect, filter_objects)
+        self.row = self._get_row(
+            study, denovo_variants, effect, filter_objects)
 
     def to_dict(self):
         return OrderedDict([
@@ -581,6 +561,7 @@ class CommonReport(object):
         filter_objects = FilterObjects.get_filter_objects(
             query_object, phenotypes_info, filter_info['groups'])
 
+        self.id = filter_info['id']
         self.families_report = FamiliesReport(
             query_object, phenotypes_info, filter_objects,
             filter_info['draw_all_families'],
@@ -602,10 +583,10 @@ class CommonReport(object):
         self.denovo = query_object.has_denovo
         self.transmitted = query_object.has_transmitted
         self.study_description = query_object.description
-        self.is_downloadable = filter_info['is_downloadable']
 
     def to_dict(self):
         return OrderedDict([
+            ('id', self.id),
             ('families_report', self.families_report.to_dict()),
             ('denovo_report', (
                 self.denovo_report.to_dict()
@@ -621,8 +602,7 @@ class CommonReport(object):
             ('number_of_siblings', self.number_of_siblings),
             ('denovo', self.denovo),
             ('transmitted', self.transmitted),
-            ('study_description', self.study_description),
-            ('is_downloadable', self.is_downloadable)
+            ('study_description', self.study_description)
         ])
 
     def _get_phenotype(self, phenotypes_info):
@@ -644,7 +624,6 @@ class CommonReportsGenerator(object):
 
         self.query_objects_with_config =\
             common_reports_query_objects.query_objects_with_config
-        # print(len(self.query_objects_with_config), self.query_objects_with_config)
 
     def save_common_reports(self):
         for query_object, config in self.query_objects_with_config.items():

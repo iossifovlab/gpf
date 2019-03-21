@@ -13,7 +13,7 @@ from .conftest import relative_to_this_test_folder
 
 @pytest.mark.parametrize("filename,header,no_header,linecount", [
     ('fixtures/input3.tsv.gz',
-     ['CHROM', 'POS', 'REF', 'ALT'], None, 18),
+     ['CHROM', 'POS', 'REF', 'ALT'], None, 20),
     ('fixtures/TEST3phyloP100way/TEST3phyloP100way.bedGraph.gz',
      ['0', '1', '2', '3'], True, 18),
     ('fixtures/TEST3phastCons100way/TEST3phastCons100way.bedGraph.gz',
@@ -67,7 +67,7 @@ def test_tsv_reader(filename, header, linecount):
 
 @pytest.mark.parametrize("filename,header,no_header,region,linecount", [
     ('fixtures/input3.tsv.gz',
-     ['CHROM', 'POS', 'REF', 'ALT'], None, None, 18),
+     ['CHROM', 'POS', 'REF', 'ALT'], None, None, 20),
     ('fixtures/input3.tsv.gz',
      ['CHROM', 'POS', 'REF', 'ALT'], None, "chr1:20002-20004", 3),
     ('fixtures/input3.tsv.gz',
@@ -129,7 +129,7 @@ def test_tabix_reader(filename, header, no_header, region, linecount):
 def test_tabix_reader_simple():
     filename, header, region, linecount = (
         'fixtures/input3.tsv.gz',
-        ['CHROM', 'POS', 'REF', 'ALT'], None, 18)
+        ['CHROM', 'POS', 'REF', 'ALT'], None, 20)
 
     infilename = relative_to_this_test_folder(filename)
     os.path.exists(infilename)
