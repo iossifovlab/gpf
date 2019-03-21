@@ -1,5 +1,7 @@
 import functools
+
 from studies.study_config import StudyConfigBase
+from studies.genotype_browser_config import GenotypeBrowserConfig
 
 
 def _set_union_attribute(studies_configs, option_name):
@@ -105,8 +107,13 @@ class DatasetConfig(StudyConfigBase):
         if 'enabled' in config_section:
             if config_section['enabled'] == 'false':
                 return None
+
         cls._fill_wdae_config(config_section)
-        return DatasetConfig(config_section, config)
+        genotype_browser = False
+        if config_section.get('genotypeBrowser', False) is True:
+            genotype_browser = GenotypeBrowserConfig.from_config(config)
+
+        return DatasetConfig(config_section, config, genotype_browser)
 
     def __getattr__(self, option_name):
         try:
