@@ -75,7 +75,7 @@ class QueryPreviewView(QueryBaseView):
             response = get_variants_web(
                 dataset.query_variants(safe=True, **data),
                 dataset.preview_columns,
-                dataset.get_pedigree_selector(pedigree_selector_id)
+                dataset.get_pedigree_selector(pedigree_selector_id),
                 max_variants_count=self.MAX_SHOWN_VARIANTS,
                 variants_hard_max=self.MAX_VARIANTS
             )
