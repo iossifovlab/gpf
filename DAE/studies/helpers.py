@@ -96,9 +96,7 @@ SPECIAL_ATTRS = merge_dicts(
 )
 
 
-def transform_variants_to_lists(
-        variants, preview_columns, pedigree_selectors,
-        selected_pedigree_selector):
+def transform_variants_to_lists(variants, preview_columns, pedigree_selector):
 
     for v in variants:
         for aa in v.matched_alleles:
@@ -108,9 +106,8 @@ def transform_variants_to_lists(
                     if column in SPECIAL_ATTRS:
                         row_variant.append(SPECIAL_ATTRS[column](aa))
                     elif column == 'pedigree':
-                        row_variant.append(generate_pedigree(
-                            aa, pedigree_selectors,
-                            selected_pedigree_selector))
+                        row_variant.append(
+                            generate_pedigree(aa, pedigree_selector))
                     else:
                         attribute =\
                             aa.get_attribute(column, '')
@@ -127,30 +124,23 @@ def transform_variants_to_lists(
             yield row_variant
 
 
-def get_person_color(member, pedigree_selectors, selected_pedigree_selector):
+def get_person_color(member, pedigree_selector):
     if member.generated:
         return '#E0E0E0'
-    if len(pedigree_selectors) == 0:
+    if len(pedigree_selector) == 0:
         return '#FFFFFF'
-    pedigree_selector_id = selected_pedigree_selector.get('id', None)
-    if pedigree_selector_id:
-        selected_pedigree_selectors = list(filter(
-            lambda ps: ps.id == pedigree_selector_id,
-            pedigree_selectors))[0]
-    else:
-        selected_pedigree_selectors = pedigree_selectors[0]
 
-    people_group_attribute =\
-        member.get_attr(selected_pedigree_selectors['source'])
+    people_group_attribute = member.get_attr(pedigree_selector['source'])
     domain = list(filter(lambda d: d['name'] == people_group_attribute,
-                         selected_pedigree_selectors['domain']))
+                         pedigree_selector['domain']))
+
     if domain and people_group_attribute:
         return domain[0]['color']
     else:
-        return selected_pedigree_selectors['default']['color']
+        return pedigree_selector['default']['color']
 
 
-def generate_pedigree(allele, pedigree_selectors, selected_pedigree_selector):
+def generate_pedigree(allele, pedigree_selector):
     result = []
     best_st = np.sum(allele.gt == allele.allele_index, axis=0)
 
@@ -161,8 +151,8 @@ def generate_pedigree(allele, pedigree_selectors, selected_pedigree_selector):
             member.mom_id,
             member.dad_id,
             member.sex.short(),
-            get_person_color(
-                member, pedigree_selectors, selected_pedigree_selector),
+            str(member.role),
+            get_person_color(member, pedigree_selector),
             member.layout_position,
             member.generated,
             best_st[index],
@@ -173,11 +163,10 @@ def generate_pedigree(allele, pedigree_selectors, selected_pedigree_selector):
 
 
 def get_variants_web(
-        variants, pedigree_selectors, selected_pedigree_selector,
-        genotype_attrs, max_variants_count=1000, variants_hard_max=2000):
+        variants, genotype_attrs, pedigree_selector, max_variants_count=1000,
+        variants_hard_max=2000):
     rows = transform_variants_to_lists(
-        variants, genotype_attrs, pedigree_selectors,
-        selected_pedigree_selector)
+        variants, genotype_attrs, pedigree_selector)
 
     if max_variants_count is not None:
         max_variants_count = min(max_variants_count, variants_hard_max)
