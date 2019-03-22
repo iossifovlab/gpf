@@ -80,13 +80,6 @@ To use this environment, you need to execute the following command:
 
     conda activate gpf3
 
-Install ``pyarrow`` and ``pandas`` from Anaconda ``conda-forge`` channel:
-
-.. code-block:: bash
-
-    conda install -c conda-forge pyarrow pandas
-
-
 Additionally, you will need to install `cyvcf2`. Clone the following
 repository:
 
