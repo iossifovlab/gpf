@@ -131,5 +131,7 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
                         .replace("'", "").split(",")
         df.effect_gene_types = df.effect_gene_types.apply(s2a)
         df.effect_gene_genes = df.effect_gene_genes.apply(s2a)
+        df.effect_details_transcript_ids = df.effect_details_transcript_ids.apply(s2a)
+        df.effect_details_details = df.effect_details_details.apply(s2a)
 
         return self.wrap_variants(self.families, df)

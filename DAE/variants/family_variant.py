@@ -63,6 +63,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         #: summary allele that corresponds to this allele in family variant
         self.summary_allele = summary_allele
         self.gt = genotype
+        self._best_st = None
 
         FamilyDelegate.__init__(self, family)
 
@@ -98,6 +99,25 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         array.
         """
         return self.gt.flatten(order='F')
+
+    @property
+    def best_st(self):
+        if self._best_st is None:
+            ref = (2 * np.ones(len(self.family), dtype=GENOTYPE_TYPE))
+            unknown = np.any(
+                self.gt == -1, axis=0)
+
+            alt_gt = np.zeros(self.gt.shape, dtype=GENOTYPE_TYPE)
+            alt_gt[self.gt == self.allele_index] = 1
+
+            alt = np.sum(alt_gt, axis=0, dtype=GENOTYPE_TYPE)
+            ref = ref - alt
+
+            best = [ref, alt]
+            self._best_st = np.stack(best, axis=0)
+            self._best_st[:, unknown] = -1
+
+        return self._best_st
 
     @property
     def inheritance_in_members(self):

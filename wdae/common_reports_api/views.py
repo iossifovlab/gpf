@@ -25,7 +25,6 @@ class StudiesSummariesView(APIView):
         return {
             'columns': [
                 'study name',
-                'description',
                 'phenotype',
                 'study type',
                 'study year',

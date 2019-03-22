@@ -226,7 +226,7 @@ class VariantsParquetWriter(object):
 
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
-                print("{} family variants imported for {:.2f} sec".format(
+                print("{} family alleles imported for {:.2f} sec".format(
                         family_variant_index, elapsed),
                       file=sys.stderr)
 
@@ -249,7 +249,7 @@ class VariantsParquetWriter(object):
                 family_table, member_table
 
         elapsed = time.time() - self.start
-        print("DONE: {} family variants imported for {:.2f} sec".format(
+        print("DONE: {} family alleles imported for {:.2f} sec".format(
                 family_variant_index, elapsed),
               file=sys.stderr)
 
