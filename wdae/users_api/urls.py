@@ -11,7 +11,7 @@ from rest_framework.routers import SimpleRouter
 from users_api import views
 
 router = SimpleRouter(trailing_slash=False)
-router.register(r'users', views.UserViewSet, base_name='users')
+router.register(r'users', views.UserViewSet, basename='users')
 
 urlpatterns = [
     url(r'users/register$', views.register),
