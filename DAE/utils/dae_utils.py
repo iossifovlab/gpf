@@ -5,7 +5,6 @@ Created on Mar 5, 2018
 '''
 from __future__ import unicode_literals
 import re
-import itertools
 
 SUB_COMPLEX_RE = re.compile(r'^(sub|complex)\(([NACGT]+)->([NACGT]+)\)$')
 INS_RE = re.compile(r'^ins\(([NACGT]+)\)$')

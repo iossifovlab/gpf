@@ -45,7 +45,8 @@ class QueryBaseView(views.APIView):
         return self.datasets_cache[dataset_id]
 
     def __init__(self):
-        self.variants_db = get_studies_manager().get_variants_db()
+        self.variants_db = get_studies_manager()\
+            .get_variants_db()
         self.weights_loader = get_studies_manager().get_weights_loader()
 
 

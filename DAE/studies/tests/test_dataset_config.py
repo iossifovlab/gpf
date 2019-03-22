@@ -7,7 +7,7 @@ def test_dataset_definitions_simple(dataset_definitions):
 
 @pytest.mark.parametrize("option_name,expected_value", [
     ("name", "QUADS_COMPOSITE"),
-    ("id", "quads_composite"),
+    ("id", "quads_composite_ds"),
     ("description", "QUADS COMPOSITE DESCRIPTION"),
     ("studies", ['quads_in_child', 'quads_in_parent']),
     # ("phenotypes", {'autism', 'schizophrenia', 'epilepsy'}),
@@ -30,7 +30,7 @@ def test_dataset_quads_composite_dict(
 
 @pytest.mark.parametrize("option_name,expected_value", [
     ("name", "QUADS_COMPOSITE"),
-    ("id", "quads_composite"),
+    ("id", "quads_composite_ds"),
     ("description", "QUADS COMPOSITE DESCRIPTION"),
     ("studies", ['quads_in_child', 'quads_in_parent']),
     # ("phenotypes", {'autism', 'schizophrenia', 'epilepsy'}),
