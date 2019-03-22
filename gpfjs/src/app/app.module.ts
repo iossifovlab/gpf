@@ -198,23 +198,8 @@ const appRoutes: Routes = [
     ]
   },
   {
-    path: 'reports',
-    component: CommonReportsComponent,
-    children: [
-      {
-        path: '',
-        pathMatch: 'full',
-        redirectTo: 'summary',
-      },
-      {
-        path: 'summary',
-        component: StudiesSummariesComponent
-      },
-      {
-        path: 'reports',
-        component: VariantReportsComponent
-      }
-    ]
+    path: 'reports/summary',
+    component: StudiesSummariesComponent
   },
   {
     path: 'management',

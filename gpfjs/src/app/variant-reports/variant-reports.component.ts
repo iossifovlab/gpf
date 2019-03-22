@@ -1,15 +1,11 @@
 import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { VariantReportsService } from './variant-reports.service';
-import { Studies, Study, VariantReport, FamilyCounter, PedigreeCounter,
-         EffectTypeTable, DeNovoData, PedigreeTable, PeopleCounter,
-         PeopleSex
-        } from './variant-reports';
-
-export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
+import { VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable,
+         DeNovoData, PedigreeTable, PeopleCounter, PeopleSex } from './variant-reports';
 
 @Component({
   selector: 'gpf-variant-reports',
@@ -22,10 +18,6 @@ export class VariantReportsComponent implements OnInit {
   familiesPedigreeTop: number;
   familiesPedigreeBottom: number;
   legendTop: number;
-  showFilter: boolean = true;
-
-  reports$: Observable<Studies>;
-  selectedReport$ = new Subject<Study>();
 
   currentPeopleCounter: PeopleCounter;
   currentPedigreeTable: PedigreeTable;
@@ -41,12 +33,12 @@ export class VariantReportsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.reports$ = this.variantReportsService.getStudies().share();
+    let datasetId$ = this.route.parent.params
+      .take(1)
+      .map(params => <string>params['dataset']);
 
-    this.variantReport$ = this.selectedReport$
-      .switchMap(study => this.variantReportsService.getVariantReport(study))
-      .do(study => this.setSelectedReportParam(study.id))
-      .share();
+    this.variantReport$ = datasetId$.switchMap(datasetId =>
+      this.variantReportsService.getVariantReport(datasetId)).share();
 
     this.variantReport$.take(1).subscribe(params => {
       this.pedigreeTables = params.familyReport.familiesCounters.map(
@@ -61,9 +53,8 @@ export class VariantReportsComponent implements OnInit {
       this.currentPedigreeTable = this.pedigreeTables[0];
       this.currentDenovoReport = params.denovoReport.tables[0];
     });
-
-    this.loadReportFromParams();
   }
+
   @HostListener('window:scroll', ['$event'])
   @HostListener('click', ['$event'])
   onWindowScroll(event) {
@@ -75,61 +66,6 @@ export class VariantReportsComponent implements OnInit {
     if (this.legend && this.legend.nativeElement) {
       this.legendTop = this.legend.nativeElement.getBoundingClientRect().top;
     }
-  }
-
-  private setSelectedReportParam(id) {
-    this.route.params
-      .take(1)
-      .subscribe(params => {
-        if (!params[SELECTED_REPORT_QUERY_PARAM] ||
-          params[SELECTED_REPORT_QUERY_PARAM] !== id) {
-            let param = {};
-            param[SELECTED_REPORT_QUERY_PARAM] = id;
-
-            this.router.navigate(['/reports/reports', param]);
-          }
-      });
-  }
-
-  private loadReportFromParams() {
-    Observable.combineLatest([
-        this.reports$,
-        this.route.params
-      ])
-      .take(1)
-      .subscribe(([reports, params]) => {
-        if ('showFilter' in params) {
-          this.showFilter = (params['showFilter'] === 'true');
-        }
-        if (params[SELECTED_REPORT_QUERY_PARAM]) {
-          let report = reports.studies
-            .find(study => study.id === params[SELECTED_REPORT_QUERY_PARAM]);
-          if (report) {
-            this.selectReport(report);
-          }
-        }
-      });
-
-  }
-
-  selectReport(study: Study) {
-    this.selectedReport$.next(study);
-
-    this.variantReport$.take(1).subscribe(params => {
-      this.pedigreeTables = params.familyReport.familiesCounters.map(
-        familiesCounters => {
-          return {
-            'pedigrees': this.chunkPedigrees(familiesCounters.familyCounter),
-            'phenotypes': familiesCounters.phenotypes,
-            'groupName': familiesCounters.groupName,
-            'legend': familiesCounters.legend
-          };
-        });
-
-      this.currentPeopleCounter = params.familyReport.peopleCounters[0];
-      this.currentPedigreeTable = this.pedigreeTables[0];
-      this.currentDenovoReport = params.denovoReport.tables[0];
-    });
   }
 
   getPeopleSexValue(peopleSex: string) {
@@ -185,7 +121,6 @@ export class VariantReportsComponent implements OnInit {
           return acc;
         },
         []);
-
   }
 
   getRows(effectGroups: string[], effectTypes: string[]) {
