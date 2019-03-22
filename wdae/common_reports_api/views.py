@@ -79,29 +79,23 @@ class VariantReportsView(APIView):
         ]
 
     def get(self, request, common_report_id=None):
-        if common_report_id is None:
-            common_reports =\
-                self.common_reports_facade.get_all_common_reports()
+        assert common_report_id
 
-            studies = self.get_studies_info(common_reports)
+        common_report = self.common_reports_facade.get_common_report(
+            common_report_id)
 
-            return Response({'report_studies': studies})
-        else:
-            common_report = self.common_reports_facade.get_common_report(
-                common_report_id)
+        common_report['is_downloadable'] =\
+            IsDatasetAllowed.user_has_permission(
+                request.user, common_report_id)
 
-            common_report['is_downloadable'] =\
-                IsDatasetAllowed.user_has_permission(
-                    request.user, common_report_id)
-
-            if common_report:
-                return Response(common_report)
-            return Response(
-                {
-                    'error': 'Common report {} not found'.format(
-                        common_report_id)
-                },
-                status=status.HTTP_404_NOT_FOUND)
+        if common_report:
+            return Response(common_report)
+        return Response(
+            {
+                'error': 'Common report {} not found'.format(
+                    common_report_id)
+            },
+            status=status.HTTP_404_NOT_FOUND)
 
 
 class FamiliesDataDownloadView(APIView):
