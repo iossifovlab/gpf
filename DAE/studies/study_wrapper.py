@@ -31,6 +31,7 @@ class StudyWrapper(object):
         preview_columns = []
         download_columns = []
         pheno_columns = {}
+        gene_weights_columns = []
         column_labels = {}
 
         pedigree_selectors = []
@@ -41,6 +42,7 @@ class StudyWrapper(object):
             if genotype_browser['phenoColumns']:
                 pheno_columns = [s for pc in genotype_browser['phenoColumns']
                                  for s in pc['slots']]
+            gene_weights_columns = genotype_browser['geneWeightsColumns']
 
             column_labels = genotype_browser['columnLabels']
 
@@ -50,6 +52,7 @@ class StudyWrapper(object):
         self.preview_columns = preview_columns
         self.download_columns = download_columns
         self.pheno_columns = pheno_columns
+        self.gene_weights_columns = gene_weights_columns
         self.column_labels = column_labels
 
         self.pedigree_selectors = pedigree_selectors
@@ -444,6 +447,10 @@ class StudyWrapper(object):
         return legend + self._get_legend_default_values()
 
     def get_pedigree_selector(self, pedigree_selector_id):
+        if not pedigree_selector_id:
+            return self.pedigree_selectors[0]\
+                if self.pedigree_selectors else {}
+
         pedigree_selector_with_id = list(filter(
             lambda pedigree_selector: pedigree_selector.get('id') ==
             pedigree_selector_id, self.pedigree_selectors))

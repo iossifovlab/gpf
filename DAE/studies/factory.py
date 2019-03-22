@@ -6,15 +6,6 @@ from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
 
-# from common_reports.common_report import CommonReportsGenerator
-# from common_reports.common_report_facade import CommonReportFacade
-# from common_reports.config import CommonReportsQueryObjects
-
-# from gene.scores import ScoreLoader
-# from gene.weights import WeightsLoader
-
-# from gene.gene_set_collections import GeneSetsCollections
-
 
 class VariantsDb(object):
 
@@ -43,6 +34,8 @@ class VariantsDb(object):
             self.datasets_definitions, self.dataset_factory,
             self.pheno_factory)
 
+        self._configuration_check()
+
         # self.common_reports_query_objects = CommonReportsQueryObjects(
         #     self.study_facade, self.dataset_facade)
         # self.common_reports_generator = CommonReportsGenerator(
@@ -54,6 +47,14 @@ class VariantsDb(object):
         # self.weights_loader = WeightsLoader()
 
         # self.gene_sets_collections = GeneSetsCollections(self.dataset_facade)
+
+    def _configuration_check(self):
+        studies_ids = set(self.get_studies_ids())
+        dataset_ids = set(self.get_datasets_ids())
+
+        overlapping = studies_ids.intersection(dataset_ids)
+
+        assert overlapping == set(), "Overlapping studies and datasets ids: {}".format(overlapping)
 
     def get_studies_ids(self):
         return self.studies_definitions.study_ids

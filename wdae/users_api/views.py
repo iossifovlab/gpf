@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager, Group
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.decorators import action
 import django.contrib.auth
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -44,7 +44,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return serializer_class
 
-    @detail_route(methods=['post'])
+    @action(detail=True, methods=['post'])
     def password_remove(self, request, pk=None):
         self.check_permissions(request)
         user = get_object_or_404(get_user_model(), pk=pk)
@@ -56,7 +56,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @detail_route(methods=['post'])
+    @action(detail=True, methods=['post'])
     def password_reset(self, request, pk=None):
         self.check_permissions(request)
         user = get_object_or_404(get_user_model(), pk=pk)
@@ -66,7 +66,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @list_route(methods=['post'])
+    @action(detail=False, methods=['post'])
     def bulk_add_group(self, request):
         self.check_permissions(request)
 
@@ -86,7 +86,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_200_OK)
 
-    @list_route(methods=['post'])
+    @action(detail=False, methods=['post'])
     def bulk_remove_group(self, request):
         serializer = BulkGroupOperationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

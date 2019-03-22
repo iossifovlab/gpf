@@ -58,7 +58,10 @@ class Study(StudyBase):
                 self.name not in kwargs['studyFilters']:
             return []
         else:
-            return self.backend.query_variants(**kwargs)
+            for variant in self.backend.query_variants(**kwargs):
+                for allele in variant.alleles:
+                    allele.update_attributes({'studyName': self.name})
+                yield variant
 
     def get_pedigree_values(self, column):
         return set(self.backend.ped_df[column])

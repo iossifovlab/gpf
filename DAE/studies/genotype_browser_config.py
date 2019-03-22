@@ -230,6 +230,20 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
 
         return column_labels
 
+    @staticmethod
+    def _get_genotype_browser_gene_weights_columns(genotype_columns):
+        gene_weights_columns = list(filter(
+            lambda gc: gc['id'] == 'weights', genotype_columns))
+
+        if len(gene_weights_columns) == 0:
+            return []
+
+        gene_weights_slots = []
+        for gwc in gene_weights_columns[0].get('slots', None):
+            gene_weights_slots.append(gwc['id'])
+
+        return gene_weights_slots
+
     @classmethod
     def from_config(cls, config):
         config_section = config.get('genotypeBrowser', None)
@@ -256,5 +270,9 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         config_section['columnLabels'] =\
             cls._get_genotype_browser_column_labels(
                 config_section.get('genotypeColumns', []))
+
+        config_section['genotypeBrowser.geneWeightsColumns'] =\
+            cls._get_genotype_browser_gene_weights_columns(
+                config_section.get('genotypeBrowser.genotypeColumns', []))
 
         return GenotypeBrowserConfig(config_section)
