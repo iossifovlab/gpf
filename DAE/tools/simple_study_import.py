@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import
 import os
 import sys
 import argparse
+import time
 
 from configurable_entities.configuration import DAEConfig
 from backends.thrift.import_tools import construct_import_annotation_pipeline
@@ -50,6 +51,12 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
         'If none specified, "data/" directory is used [default: %(default)s]'
     )
 
+    parser.add_argument(
+        '--skip-reports',
+        help='skip running report generation [default: %(default)s]',
+        default=False,
+        action='store_true',        
+    )
     parser_args = parser.parse_args(argv)
     return parser_args
 
@@ -119,4 +126,10 @@ if __name__ == "__main__":
             output=output, family_format='pedigree')
 
     generate_study_config(dae_config, study_id, argv)
-    generate_common_report(dae_config, study_id)
+    if not argv.skip_reports:
+        print("generating common reports...", file=sys.stderr)
+        start = time.time()
+        generate_common_report(dae_config, study_id)
+        print("DONE: generating common reports in {:.2f} sec".format(
+            time.time() - start
+            ), file=sys.stderr)

@@ -150,12 +150,12 @@ def dataset_facade(dataset_definitions, dataset_factory, pheno_factory):
 
 @pytest.fixture(scope='module')
 def quads_composite_dataset_config(dataset_definitions):
-    return dataset_definitions.get_dataset_config('quads_composite')
+    return dataset_definitions.get_dataset_config('quads_composite_ds')
 
 
 @pytest.fixture(scope='module')
 def composite_dataset_config(dataset_definitions):
-    return dataset_definitions.get_dataset_config('composite_dataset')
+    return dataset_definitions.get_dataset_config('composite_dataset_ds')
 
 
 @pytest.fixture(scope='module')
@@ -175,7 +175,7 @@ def load_dataset(dataset_factory, dataset_definitions, dataset_name):
 @pytest.fixture(scope='module')
 def inheritance_trio_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
-        dataset_factory, dataset_definitions, 'inheritance_trio')
+        dataset_factory, dataset_definitions, 'inheritance_trio_ds')
 
 
 @pytest.fixture(scope='module')
@@ -186,7 +186,7 @@ def inheritance_trio_dataset_wrapper(inheritance_trio_dataset, pheno_factory):
 @pytest.fixture(scope='module')
 def quads_two_families_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
-        dataset_factory, dataset_definitions, 'quads_two_families')
+        dataset_factory, dataset_definitions, 'quads_two_families_ds')
 
 
 @pytest.fixture(scope='module')
@@ -197,7 +197,7 @@ def quads_two_families_dataset_wrapper(quads_two_families_dataset):
 @pytest.fixture(scope='module')
 def quads_f1_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
-        dataset_factory, dataset_definitions, 'quads_f1')
+        dataset_factory, dataset_definitions, 'quads_f1_ds')
 
 
 @pytest.fixture(scope='module')
@@ -208,7 +208,7 @@ def quads_f1_dataset_wrapper(quads_f1_dataset, pheno_factory):
 @pytest.fixture(scope='module')
 def quads_variant_types_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
-        dataset_factory, dataset_definitions, 'quads_variant_types')
+        dataset_factory, dataset_definitions, 'quads_variant_types_ds')
 
 
 @pytest.fixture(scope='module')
@@ -220,7 +220,7 @@ def quads_variant_types_dataset_wrapper(
 @pytest.fixture(scope='module')
 def quads_in_child_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
-        dataset_factory, dataset_definitions, 'quads_in_child')
+        dataset_factory, dataset_definitions, 'quads_in_child_ds')
 
 
 @pytest.fixture(scope='module')
@@ -231,7 +231,7 @@ def quads_in_child_dataset_wrapper(quads_in_child_dataset, pheno_factory):
 @pytest.fixture(scope='module')
 def quads_in_parent_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
-        dataset_factory, dataset_definitions, 'quads_in_parent')
+        dataset_factory, dataset_definitions, 'quads_in_parent_ds')
 
 
 @pytest.fixture(scope='module')
@@ -242,7 +242,7 @@ def quads_in_parent_dataset_wrapper(quads_in_parent_dataset, pheno_factory):
 @pytest.fixture(scope='module')
 def composite_dataset(dataset_factory, dataset_definitions):
     return load_dataset(
-        dataset_factory, dataset_definitions, 'composite_dataset')
+        dataset_factory, dataset_definitions, 'composite_dataset_ds')
 
 
 @pytest.fixture(scope='module')

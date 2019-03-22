@@ -1,0 +1,5 @@
+chrom	position	reference	alternative	summary_variant_index	allele_index	allele_count	effect_type	effect_gene_genes	effect_gene_types	effect_details_transcript_ids	effect_details_details	af_parents_called_count	af_parents_called_percent	af_allele_count	af_allele_freq
+1	11539	T		0	0	2						2	100	3	75
+1	11539	T	G	0	1	2	intergenic	intergenic	intergenic	intergenic	intergenic	2	100	1	25
+2	11540	T		1	0	2						2	100	3	75
+2	11540	T	G	1	1	2	intergenic	intergenic	intergenic	intergenic	intergenic	2	100	1	25

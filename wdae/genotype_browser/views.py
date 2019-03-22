@@ -45,7 +45,9 @@ class QueryBaseView(views.APIView):
         return self.datasets_cache[dataset_id]
 
     def __init__(self):
-        self.variants_db = get_studies_manager().get_variants_db()
+        self.variants_db = get_studies_manager()\
+            .get_variants_db()
+        self.weights_loader = get_studies_manager().get_weights_loader()
 
 
 class QueryPreviewView(QueryBaseView):
@@ -69,16 +71,11 @@ class QueryPreviewView(QueryBaseView):
 
             dataset = self.get_dataset_wdae_wrapper(dataset_id)
 
-            pedigree_selector_id = data.get('pedigreeSelector', {})\
-                                       .get('id', None)
             # LOGGER.info("dataset " + str(dataset))
             response = get_variants_web(
-                dataset.query_variants(safe=True, **data),
-                dataset.preview_columns,
-                dataset.get_pedigree_selector(pedigree_selector_id),
+                dataset, data, dataset.preview_columns, self.weights_loader, 
                 max_variants_count=self.MAX_SHOWN_VARIANTS,
-                variants_hard_max=self.MAX_VARIANTS
-            )
+                variants_hard_max=self.MAX_VARIANTS)
 
             # pprint.pprint(response)
             response['legend'] = dataset.get_legend(safe=True, **data)
@@ -135,10 +132,7 @@ class QueryDownloadView(QueryBaseView):
                 download_limit = self.DOWNLOAD_LIMIT
 
             variants_data = get_variants_web(
-                dataset.query_variants(safe=True, **data),
-                dataset.pedigree_selectors,
-                data.get('pedigreeSelector', {}),
-                dataset.download_columns,
+                dataset, data, dataset.download_columns, self.weights_loader,
                 max_variants_count=download_limit,
                 variants_hard_max=self.DOWNLOAD_LIMIT
             )

@@ -48,16 +48,17 @@ FILTER_QUERY_ORDINAL = {
 }
 
 
-@pytest.mark.parametrize("pheno_query", [
-    [FILTER_QUERY_CATEGORICAL],
-    [FILTER_QUERY_CONTINUOUS],
-    [FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS],
+@pytest.mark.parametrize("pheno_query,variants_count", [
+    ([FILTER_QUERY_CATEGORICAL], 2),
+    ([FILTER_QUERY_CONTINUOUS], 2),
+    ([FILTER_QUERY_CATEGORICAL, FILTER_QUERY_CONTINUOUS], 2),
 ])
-def test_query_with_pheno_filters_work(quads_f1_dataset_wrapper, pheno_query):
+def test_query_with_pheno_filters_work(
+        quads_f1_dataset_wrapper, pheno_query, variants_count):
     variants = quads_f1_dataset_wrapper.query_variants(phenoFilters=pheno_query)
     variants = list(variants)
 
-    assert variants
+    assert len(variants) == variants_count
     for variant in variants:
         for ph in pheno_query:
             assert variant[ph["measure"]] is not None

@@ -16,7 +16,7 @@ def fixtures_dir():
 
 @pytest.fixture()
 def client(mocker, dae_config_fixture):
-    mocker.patch('datasets_api.studies_manager.get_studies_manager',
+    mocker.patch('datasets_api.views.get_studies_manager',
                  side_effect=lambda: StudiesManager(dae_config_fixture))
     return Client()
 
