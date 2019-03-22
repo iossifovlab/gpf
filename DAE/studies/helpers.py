@@ -176,23 +176,21 @@ def get_variants_web(
     rows = transform_variants_to_lists(
         variants, genotype_attrs, pedigree_selector)
 
-    if max_variants_count is not None:
-        max_variants_count = min(max_variants_count, variants_hard_max)
-
-        limited_rows = itertools.islice(rows, max_variants_count)
+    if variants_hard_max is not None:
+        limited_rows = itertools.islice(rows, variants_hard_max+1)
         limited_rows = list(limited_rows)
     else:
         limited_rows = list(rows)
 
-    if max_variants_count is None or len(limited_rows) <= max_variants_count:
+    if variants_hard_max is None or len(limited_rows) < variants_hard_max:
         count = str(len(limited_rows))
     else:
-        count = 'more than {}'.format(max_variants_count)
+        count = 'more than {}'.format(variants_hard_max)
 
     return {
         'count': count,
         'cols': genotype_attrs,
-        'rows': list(limited_rows)
+        'rows': list(limited_rows[:max_variants_count])
     }
 
 
