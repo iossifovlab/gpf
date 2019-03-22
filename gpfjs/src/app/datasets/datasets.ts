@@ -1,4 +1,3 @@
-import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
 import { UserGroup } from '../users-groups/users-groups';
 import * as _ from 'lodash';

@@ -42,8 +42,8 @@
       <li *ngIf="selectedDataset.phenotypeGenotypeTool" class="nav-item">
         <a class="nav-link" routerLink="phenoTool" routerLinkActive="active">Phenotype Tool</a>
       </li>
-      <li *ngIf="selectedDataset.genotypeBrowser" class="nav-item">
-        <a class="nav-link" [routerLink]="['commonReport', getQueryParamObject(selectedDataset.id)]" routerLinkActive="active">Common Report</a>
+      <li class="nav-item">
+        <a class="nav-link" routerLink="commonReport" routerLinkActive="active">Common Report</a>
       </li>
     </ul>
   </nav>

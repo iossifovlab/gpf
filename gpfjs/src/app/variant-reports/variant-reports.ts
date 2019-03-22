@@ -1,31 +1,5 @@
 import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 
-export class Study {
-
-  static fromJsonArray(json: any[]) {
-    return new Study(json['study_name'], json['id'], json['study_description']);
-  }
-
-  constructor(
-    readonly name: string,
-    readonly id: string,
-    readonly description: string
-  ) {}
-}
-
-export class Studies {
-
-    static fromJson(json: any) {
-      return new Studies(json['report_studies']
-        .map(study => Study.fromJsonArray(study)));
-    }
-
-    constructor(
-      readonly studies: Study[]
-    ) {}
-
-}
-
 export class ChildrenCounter {
 
   static fromJson(json: any, row: string) {
