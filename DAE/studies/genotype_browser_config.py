@@ -271,8 +271,8 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
             cls._get_genotype_browser_column_labels(
                 config_section.get('genotypeColumns', []))
 
-        config_section['genotypeBrowser.geneWeightsColumns'] =\
+        config_section['geneWeightsColumns'] =\
             cls._get_genotype_browser_gene_weights_columns(
-                config_section.get('genotypeBrowser.genotypeColumns', []))
+                config_section.get('genotypeColumns', []))
 
         return GenotypeBrowserConfig(config_section)
