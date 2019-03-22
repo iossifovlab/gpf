@@ -7,8 +7,9 @@ import numpy as np
 import itertools
 import functools
 import logging
-from utils.vcf_utils import mat2str
 
+from utils.vcf_utils import mat2str
+from utils.dae_utils import split_iterable
 from common.query_base import EffectTypesMixin
 
 LOGGER = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ def gene_effect_get_genes(gs):
     if gs is None:
         return ''
     genes_set = set([x.symbol for x in gs.genes])
-    genes = list(genes_set)
+    genes = sorted(list(genes_set))
 
     return ';'.join(genes)
 
@@ -163,8 +164,15 @@ def generate_pedigree(allele, pedigree_selector):
 
 
 def get_variants_web(
-        variants, genotype_attrs, pedigree_selector, max_variants_count=1000,
-        variants_hard_max=2000):
+        dataset, query, genotype_attrs, weights_loader,
+        max_variants_count=1000, variants_hard_max=2000):
+    variants = dataset.query_variants(safe=True, **query)
+    pedigree_selector_id = query.get('pedigreeSelector', {}).get('id', None)
+    pedigree_selector = dataset.get_pedigree_selector(pedigree_selector_id)
+
+    variants = add_gene_weight_columns(
+        weights_loader, variants, dataset.gene_weights_columns)
+
     rows = transform_variants_to_lists(
         variants, genotype_attrs, pedigree_selector)
 
@@ -207,3 +215,24 @@ def expand_effect_types(effect_types):
         else:
             result += EffectTypesMixin.EFFECT_TYPES_MAPPING[effect]
     return result
+
+
+def add_gene_weight_columns(
+        weights_loader, variants_iterable, gene_weights_columns):
+    for variants_chunk in split_iterable(variants_iterable, 5000):
+        for variant in variants_chunk:
+            for allele in variant.alt_alleles:
+                genes = gene_effect_get_genes(allele.effects).split(';')
+                gene = genes[0]
+
+                gene_weights_values = {}
+                for gwc in gene_weights_columns:
+                    gene_weights = weights_loader[gwc]
+                    if gene != '':
+                        gene_weights_values[gwc] =\
+                            gene_weights.to_dict().get(gene, '')
+                    else:
+                        gene_weights_values[gwc] = ''
+
+                allele.update_attributes(gene_weights_values)
+            yield variant

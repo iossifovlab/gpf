@@ -31,6 +31,7 @@ class StudyWrapper(object):
         preview_columns = []
         download_columns = []
         pheno_columns = {}
+        gene_weights_columns = []
         column_labels = {}
 
         pedigree_selectors = []
@@ -41,6 +42,7 @@ class StudyWrapper(object):
             if genotype_browser['phenoColumns']:
                 pheno_columns = [s for pc in genotype_browser['phenoColumns']
                                  for s in pc['slots']]
+            gene_weights_columns = genotype_browser['geneWeightsColumns']
 
             column_labels = genotype_browser['columnLabels']
 
@@ -50,6 +52,7 @@ class StudyWrapper(object):
         self.preview_columns = preview_columns
         self.download_columns = download_columns
         self.pheno_columns = pheno_columns
+        self.gene_weights_columns = gene_weights_columns
         self.column_labels = column_labels
 
         self.pedigree_selectors = pedigree_selectors

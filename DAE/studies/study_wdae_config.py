@@ -282,6 +282,20 @@ class StudyWdaeMixin(object):
 
         return column_labels
 
+    @staticmethod
+    def _get_genotype_browser_gene_weights_columns(genotype_columns):
+        gene_weights_columns = list(filter(
+            lambda gc: gc['id'] == 'weights', genotype_columns))
+
+        if len(gene_weights_columns) == 0:
+            return []
+
+        gene_weights_slots = []
+        for gwc in gene_weights_columns[0].get('slots', None):
+            gene_weights_slots.append(gwc['id'])
+
+        return gene_weights_slots
+
     @classmethod
     def _fill_wdae_people_group_config(cls, config_section):
         people_group =\
@@ -310,6 +324,10 @@ class StudyWdaeMixin(object):
 
         config_section['genotypeBrowser.columnLabels'] =\
             cls._get_genotype_browser_column_labels(
+                config_section.get('genotypeBrowser.genotypeColumns', []))
+
+        config_section['genotypeBrowser.geneWeightsColumns'] =\
+            cls._get_genotype_browser_gene_weights_columns(
                 config_section.get('genotypeBrowser.genotypeColumns', []))
 
         config_section = cls._combine_dict_options(
