@@ -21,7 +21,8 @@ class DatasetView(APIView):
         # assert self.datasets is not None
 
         if variants_db is None:
-            variants_db = get_studies_manager().get_variants_db()
+            variants_db = get_studies_manager()\
+                .get_variants_db()
         self.variants_db = variants_db
 
     def augment_accessibility(self, dataset, user):
