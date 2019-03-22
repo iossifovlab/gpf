@@ -105,7 +105,6 @@ import { StudiesSummariesService } from './studies-summaries/studies-summaries.s
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CommonReportsComponent } from './common-reports/common-reports.component';
 import { VariantReportsComponent } from './variant-reports/variant-reports.component';
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
@@ -303,7 +302,6 @@ const appRoutes: Routes = [
     PhenoBrowserTableComponent,
     PValueIntensityPipe,
     StudiesSummariesComponent,
-    CommonReportsComponent,
     VariantReportsComponent,
     DatasetDescriptionComponent,
     GenomicScoresComponent,
