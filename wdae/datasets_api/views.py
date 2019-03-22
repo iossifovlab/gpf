@@ -46,8 +46,9 @@ class DatasetView(APIView):
         user = request.user
         if dataset_id is None:
             datasets = self.variants_db.get_all_wrappers()
-            res = list(dataset.get_dataset_description()
-                       for dataset in datasets)
+            res = sorted(list(dataset.get_dataset_description()
+                         for dataset in datasets),
+                         key=lambda dataset: dataset['name'])
 
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]
