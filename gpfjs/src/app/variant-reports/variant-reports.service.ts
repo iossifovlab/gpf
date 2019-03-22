@@ -3,13 +3,12 @@ import { Http, RequestOptions } from '@angular/http';
 
 import { Observable } from 'rxjs';
 
-import { Studies, Study, VariantReport } from './variant-reports';
+import { VariantReport } from './variant-reports';
 import { environment } from '../../environments/environment';
 
 @Injectable()
 export class VariantReportsService {
 
-  private studiesUrl = 'common_reports/studies';
   private variantsUrl = 'common_reports/studies/';
   private downloadUrl = 'common_reports/families_data/';
 
@@ -17,20 +16,9 @@ export class VariantReportsService {
     private http: Http
   ) { }
 
-  getStudies() {
+  getVariantReport(datasetId: string): Observable<VariantReport> {
     let options = new RequestOptions({ withCredentials: true });
-    return this.http
-      .get(this.studiesUrl, options)
-      .map(response => Studies.fromJson(response.json()))
-      .catch(error => {
-        console.log(error);
-        return Observable.of(null as Studies);
-      });
-  }
-
-  getVariantReport(study: Study) {
-    let options = new RequestOptions({ withCredentials: true });
-    let url = `${this.variantsUrl}${study.id}`;
+    let url = `${this.variantsUrl}${datasetId}`;
     return this.http
       .get(url, options)
       .map(response => {

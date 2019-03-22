@@ -1,13 +1,11 @@
 import { UsersService } from '../users/users.service';
-import { Component, OnInit, Input, Output, EventEmitter, NgZone } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset } from './datasets';
-import { SELECTED_REPORT_QUERY_PARAM } from '../variant-reports/variant-reports.component';
 
-import { IdName } from '../common/idname';
 import { Observable } from 'rxjs';
 
-import { ActivatedRoute, Params, Router, NavigationEnd } from '@angular/router';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
 @Component({
@@ -77,12 +75,5 @@ export class DatasetsComponent implements OnInit {
     } else {
       this.router.navigate(['/', 'datasets', dataset.id]);
     }
-  }
-
-  getQueryParamObject(value) {
-    let result = {};
-    result[SELECTED_REPORT_QUERY_PARAM] = value;
-    result['showFilter'] = false;
-    return result;
   }
 }
