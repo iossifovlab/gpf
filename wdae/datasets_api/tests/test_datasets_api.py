@@ -34,7 +34,6 @@ def test_datasets_name_ordering(client):
 
     assert response
     assert response.status_code == 200
-    assert len(response.data['data']) == 14
 
     sorted_response_data = sorted(response.data['data'],
                                   key=lambda d: d['name'])
