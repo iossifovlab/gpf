@@ -21,7 +21,8 @@ class DatasetView(APIView):
         # assert self.datasets is not None
 
         if variants_db is None:
-            variants_db = get_studies_manager().get_variants_db()
+            variants_db = get_studies_manager()\
+                .get_variants_db()
         self.variants_db = variants_db
 
     def augment_accessibility(self, dataset, user):
@@ -46,8 +47,9 @@ class DatasetView(APIView):
         user = request.user
         if dataset_id is None:
             datasets = self.variants_db.get_all_wrappers()
-            res = list(dataset.get_dataset_description()
-                       for dataset in datasets)
+            res = sorted(list(dataset.get_dataset_description()
+                         for dataset in datasets),
+                         key=lambda dataset: dataset['name'])
 
             res = [self.augment_accessibility(ds, user) for ds in res]
             res = [self.augment_with_groups(ds) for ds in res]

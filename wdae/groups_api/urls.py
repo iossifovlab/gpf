@@ -7,7 +7,7 @@ from django.conf.urls import url
 
 
 router = SimpleRouter(trailing_slash=False)
-router.register(r'groups', GroupsViewSet, base_name='groups')
+router.register(r'groups', GroupsViewSet, basename='groups')
 
 urlpatterns = [
     url(r'^groups/grant-permission$', GrantPermissionToGroupView.as_view(),

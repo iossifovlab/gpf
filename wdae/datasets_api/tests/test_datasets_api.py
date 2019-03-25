@@ -7,7 +7,7 @@ def test_datasets_api_get_all(client):
 
     assert response
     assert response.status_code == 200
-    assert len(response.data['data']) == 14
+    assert len(response.data['data']) == 6
 
 
 @pytest.mark.django_db(transaction=True)

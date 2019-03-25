@@ -158,10 +158,10 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def load(self, build_cache=False):
         if len(self.cache) == 0:
-            self._load_cache_from_pickle(build_cache=build_cache)
+            self._load_cache_from_json(build_cache=build_cache)
         return self.get_gene_sets()
 
-    def _load_cache_from_pickle(self, build_cache=False):
+    def _load_cache_from_json(self, build_cache=False):
         studies = self._get_studies()
         for study in studies:
             cache_dir = study.gene_sets_cache_file()
