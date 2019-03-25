@@ -8,10 +8,8 @@ import csv
 from collections import defaultdict
 from pheno.prepare.individuals2ped import \
     IndividualUnit, MatingUnit
-from pheno.common import Status
-from pheno.common import Gender
-from pheno.common import Role
 from future.utils import with_metaclass
+from variants.attributes import Role, Sex, Status
 
 
 class PedigreeError(Exception):
@@ -128,7 +126,7 @@ class SPARKCsvPedigreeReader(CsvPedigreeReader):
         return Status.affected if int(val) == 2 else Status.unaffected
 
     def convert_gender(self, val):
-        return Gender.M if int(val) == 1 else Gender.F
+        return Sex.male if int(val) == 1 else Sex.female
 
     def convert_individual_id(self, _family_id, individual_id):
         return individual_id
@@ -155,9 +153,9 @@ class AGRERawCsvPedigreeReader(CsvPedigreeReader):
 
     def convert_gender(self, val):
         if val == "Female":
-            return Gender.F
+            return Sex.female
         elif val == "Male":
-            return Gender.M
+            return Sex.male
         else:
             raise ValueError("unexpected sex: {}".format(val))
 
@@ -184,8 +182,8 @@ class VIPCsvPedigreeReader(CsvPedigreeReader):
         }
 
     GENDER_TO_ENUM = {
-        "male": Gender.M,
-        "female": Gender.F
+        "male": Sex.male,
+        "female": Sex.female
     }
 
     def convert_status(self, status):
@@ -271,9 +269,9 @@ class PedigreeToFamily(object):
                         or individual.individual.has_role()):
                     continue
 
-                if individual.individual.gender == Gender.M:
+                if individual.individual.gender == Sex.male:
                     individual.individual.assign_role(Role.paternal_uncle)
-                if individual.individual.gender == Gender.F:
+                if individual.individual.gender == Sex.female:
                     individual.individual.assign_role(Role.paternal_aunt)
 
                 self._assign_roles_paternal_cousin(individual)
@@ -308,9 +306,9 @@ class PedigreeToFamily(object):
                         or individual.individual.has_role()):
                     continue
 
-                if individual.individual.gender == Gender.M:
+                if individual.individual.gender == Sex.male:
                     individual.individual.assign_role(Role.maternal_uncle)
-                if individual.individual.gender == Gender.F:
+                if individual.individual.gender == Sex.female:
                     individual.individual.assign_role(Role.maternal_aunt)
 
                 self._assign_roles_maternal_cousin(individual)
@@ -390,7 +388,10 @@ class PedigreeToFamily(object):
         return sorted(affected, key=lambda x: x.individual.individual_id)[0]
 
     def get_affected(self, individuals):
-        return [x for x in individuals if x.individual.status == Status.affected]
+        return [
+            x for x in individuals
+            if x.individual.status == Status.affected
+        ]
 
     def build_families(self, families):
         pedigrees = {}

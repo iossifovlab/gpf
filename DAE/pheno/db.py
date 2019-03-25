@@ -10,7 +10,8 @@ from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
     ForeignKey
 from sqlalchemy.sql import select
 
-from pheno.common import Gender, Status, Role, MeasureType
+from variants.attributes import Sex, Status, Role
+from pheno.common import MeasureType
 from sqlalchemy.sql.schema import UniqueConstraint, PrimaryKeyConstraint
 
 
@@ -46,7 +47,7 @@ class DbManager(object):
             Column('role', Enum(Role), nullable=False),
             Column('status', Enum(Status),
                    nullable=False, default=Status.unaffected),
-            Column('gender', Enum(Gender), nullable=False),
+            Column('gender', Enum(Sex), nullable=False),
             Column('sample_id', String(16), nullable=True),
             UniqueConstraint('family_id', 'person_id', name='person_key'),
         )

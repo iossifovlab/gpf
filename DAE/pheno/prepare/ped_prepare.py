@@ -11,7 +11,8 @@ from builtins import object
 import numpy as np
 import pandas as pd
 from pheno.db import DbManager
-from pheno.common import RoleMapping, Role, Status, Gender, MeasureType
+from pheno.common import RoleMapping, MeasureType
+from variants.attributes import Role, Status, Sex
 import os
 from box import Box
 from collections import defaultdict, OrderedDict
@@ -188,7 +189,7 @@ class PreparePersons(PrepareBase):
                 self.PERSON_ID: row['personId'],
                 'role': Role(row['role']),
                 'status': Status(row['status']),
-                'gender': Gender(row['gender']),
+                'gender': Sex(row['gender']),
                 'sample_id': self._build_sample_id(row.get('sampleId')),
             }
             persons.append(p)

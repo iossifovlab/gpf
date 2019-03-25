@@ -9,10 +9,8 @@ import itertools
 import argparse
 import csv
 from collections import defaultdict, OrderedDict
-from pheno.common import Role
+from variants.attributes import Role, Status, Sex
 from pheno.common import RoleMapping
-from pheno.common import Status
-from pheno.common import Gender
 from future.utils import with_metaclass
 
 
@@ -272,8 +270,8 @@ class SPARKCsvIndividualsReader(CsvIndividualsReader):
     }
 
     GENDER_TO_ENUM = {
-        "Male": Gender.M,
-        "Female": Gender.F
+        "Male": Sex.male,
+        "Female": Sex.female
     }
 
     def convert_status(self, status):
@@ -308,8 +306,8 @@ class InternalCsvIndividualsReader(CsvIndividualsReader):
     }
 
     GENDER_TO_ENUM = {
-        "Male": Gender.M,
-        "Female": Gender.F
+        "Male": Sex.male,
+        "Female": Sex.female
     }
 
     def convert_status(self, status):
@@ -340,8 +338,8 @@ class VIPCsvIndividualsReader(CsvIndividualsReader):
         }
 
     GENDER_TO_ENUM = {
-        "male": Gender.M,
-        "female": Gender.F
+        "Male": Sex.male,
+        "Female": Sex.female
     }
 
     def convert_family_id(self, family_id):

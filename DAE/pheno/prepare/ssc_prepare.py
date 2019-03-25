@@ -9,7 +9,7 @@ import os
 
 import pandas as pd
 import numpy as np
-from pheno.common import Role, Gender, Status
+from variants.attributes import Role, Sex, Status
 
 
 def load_and_join():
@@ -154,21 +154,21 @@ def infer_roles(persons_df):
 def build_gender(row):
     role = row['role']
     if role == Role.mom:
-        return Gender.F
+        return Sex.female
     elif role == Role.dad:
-        return Gender.M
+        return Sex.male
     elif row['sex_core'] == 'female':
-        return Gender.F
+        return Sex.female
     elif row['sex_core'] == 'male':
-        return Gender.M
+        return Sex.male
     elif row['sex'] == 'female':
-        return Gender.F
+        return Sex.female
     elif row['sex'] == 'male':
-        return Gender.M
+        return Sex.male
     elif row['genderI'] == 'F':
-        return Gender.F
+        return Sex.female
     elif row['genderI'] == 'M':
-        return Gender.M
+        return Sex.male
     else:
         return None
 
