@@ -106,7 +106,7 @@ class StudyWrapper(object):
     # minParentsCalled
     # ultraRareOnly
     # TMM_ALL
-    def query_variants(self, weights_loader, **kwargs):
+    def query_variants(self, weights_loader=None, **kwargs):
         # print("kwargs in study group:", kwargs)
         kwargs = self._add_people_with_phenotype(kwargs)
 
@@ -306,6 +306,9 @@ class StudyWrapper(object):
         kwargs['real_attr_filter'] += genomic_scores_filter
 
     def _transform_gene_weights(self, weights_loader, kwargs):
+        if not weights_loader:
+            return
+
         gene_weights = kwargs.pop('geneWeights', {})
 
         weight_name = gene_weights.get('weight', None)
