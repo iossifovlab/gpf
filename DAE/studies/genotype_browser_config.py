@@ -40,25 +40,6 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         super(GenotypeBrowserConfig, self).__init__(config, *args, **kwargs)
 
     @staticmethod
-    def _get_pedigree_selector_column(
-            pedigree_selector_column, dataset_config, parent_key,
-            pedigree_key):
-
-        pedigree = {}
-
-        pedigree['id'] = pedigree_selector_column
-        pedigree['name'] = dataset_config.pop(
-            parent_key + '.' + pedigree_key + '.' + pedigree_selector_column +
-            '.name', None)
-        pedigree['role'] = dataset_config.pop(
-            parent_key + '.' + pedigree_key + '.' + pedigree_selector_column +
-            '.role', None)
-        pedigree['source'] = dataset_config.get(
-            pedigree_key + '.' + pedigree_selector_column + '.source', None)
-
-        return pedigree
-
-    @staticmethod
     def _get_genotype_browser_pheno_filter(dataset_config, f):
         prefix = 'phenoFilters.{}'.format(f)
         name = dataset_config.pop('{}.{}'.format(prefix, 'name'), None)

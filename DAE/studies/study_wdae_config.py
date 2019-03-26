@@ -87,25 +87,6 @@ class StudyWdaeMixin(object):
 
         return pedigrees
 
-    @staticmethod
-    def _get_pedigree_selector_column(
-            pedigree_selector_column, dataset_config, parent_key,
-            pedigree_key):
-
-        pedigree = {}
-
-        pedigree['id'] = pedigree_selector_column
-        pedigree['name'] = dataset_config.pop(
-            parent_key + '.' + pedigree_key + '.' + pedigree_selector_column +
-            '.name', None)
-        pedigree['role'] = dataset_config.pop(
-            parent_key + '.' + pedigree_key + '.' + pedigree_selector_column +
-            '.role', None)
-        pedigree['source'] = dataset_config.get(
-            pedigree_key + '.' + pedigree_selector_column + '.source', None)
-
-        return pedigree
-
     @classmethod
     def _fill_wdae_people_group_config(cls, config_section):
         people_group =\
