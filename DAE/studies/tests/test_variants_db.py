@@ -66,7 +66,7 @@ def test_get_non_existing_study_wrapper(variants_db_fixture):
 
 def test_get_all_studies(variants_db_fixture):
     studies = variants_db_fixture.get_all_studies()
-    assert len(studies) == 6
+    assert len(studies) == 7
 
 
 ##############################################################
@@ -110,7 +110,7 @@ def test_get_non_existing_dataset_wrapper(variants_db_fixture):
 
 def test_get_all_datasets(variants_db_fixture):
     datasets = variants_db_fixture.get_all_datasets()
-    assert len(datasets) == 8
+    assert len(datasets) == 9
 
 
 ##############################################################
@@ -167,4 +167,4 @@ def test_get_non_existing_wrapper(variants_db_fixture):
 
 def test_get_all(variants_db_fixture):
     studies = variants_db_fixture.get_all()
-    assert len(studies) == 14
+    assert len(studies) == 16

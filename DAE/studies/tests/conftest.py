@@ -13,6 +13,9 @@ from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
 from studies.factory import VariantsDb
 
+from gene.config import GeneInfoConfig
+from gene.weights import WeightsLoader
+
 from utils.fixtures import change_environment
 from configurable_entities.configuration import DAEConfig
 
@@ -61,6 +64,11 @@ def quads_f1_config(study_definitions):
     return study_definitions.get_study_config('quads_f1')
 
 
+@pytest.fixture(scope='module')
+def quads_f2_config(study_definitions):
+    return study_definitions.get_study_config('quads_f2')
+
+
 def load_study(study_factory, study_definitions, study_name):
     config = study_definitions.get_study_config(study_name)
 
@@ -77,6 +85,11 @@ def inheritance_trio(study_factory, study_definitions):
 @pytest.fixture(scope='module')
 def quads_f1(study_factory, study_definitions):
     return load_study(study_factory, study_definitions, 'quads_f1')
+
+
+@pytest.fixture(scope='module')
+def quads_f2(study_factory, study_definitions):
+    return load_study(study_factory, study_definitions, 'quads_f2')
 
 
 @pytest.fixture(scope='module')
@@ -110,6 +123,11 @@ def quads_f1_wrapper(quads_f1, pheno_factory):
 
 
 @pytest.fixture(scope='module')
+def quads_f2_wrapper(quads_f2, pheno_factory):
+    return StudyWrapper(quads_f2, pheno_factory)
+
+
+@pytest.fixture(scope='module')
 def quads_variant_types_wrapper(quads_variant_types, pheno_factory):
     return StudyWrapper(quads_variant_types, pheno_factory)
 
@@ -132,6 +150,16 @@ def quads_in_parent_wrapper(quads_in_parent, pheno_factory):
 @pytest.fixture(scope='module')
 def pheno_factory():
     return PhenoFactory()
+
+
+@pytest.fixture(scope='module')
+def gene_info_config(dae_config_fixture):
+    return GeneInfoConfig(dae_config_fixture)
+
+
+@pytest.fixture(scope='module')
+def weights_loader(gene_info_config):
+    return WeightsLoader(config=gene_info_config)
 
 
 @pytest.fixture(scope='module')
@@ -203,6 +231,17 @@ def quads_f1_dataset(dataset_factory, dataset_definitions):
 @pytest.fixture(scope='module')
 def quads_f1_dataset_wrapper(quads_f1_dataset, pheno_factory):
     return StudyWrapper(quads_f1_dataset, pheno_factory)
+
+
+@pytest.fixture(scope='module')
+def quads_f2_dataset(dataset_factory, dataset_definitions):
+    return load_dataset(
+        dataset_factory, dataset_definitions, 'quads_f2_ds')
+
+
+@pytest.fixture(scope='module')
+def quads_f2_dataset_wrapper(quads_f2_dataset, pheno_factory):
+    return StudyWrapper(quads_f2_dataset, pheno_factory)
 
 
 @pytest.fixture(scope='module')

@@ -240,3 +240,25 @@ def test_query_with_multiple_study_filters(inheritance_trio_wrapper):
                     query_variants(studyFilters=[{'studyName': 'QUADS_F1'},
                                                  {'studyName': 'TEST_NAME'}]))
     assert len(variants) == 0
+
+
+@pytest.mark.parametrize("geneWeights,count", [
+    ({'weight': 'LGD_rank', 'rangeStart': None, 'rangeEnd': None}, 5),
+    ({'weight': 'LGD_rank', 'rangeStart': 10.5, 'rangeEnd': None}, 5),
+    ({'weight': 'LGD_rank', 'rangeStart': None, 'rangeEnd': 20000.0}, 5),
+    ({'weight': 'LGD_rank', 'rangeStart': 2000.0, 'rangeEnd': 4000.0}, 1),
+    ({'weight': 'LGD_rank', 'rangeStart': 9000.0, 'rangeEnd': 11000.0}, 4),
+    ({'weight': 'LGD_rank', 'rangeStart': 1000.0, 'rangeEnd': 2000.0}, 0),
+    ({'weight': 'ala bala', 'rangeStart': 1000.0, 'rangeEnd': 2000.0}, 5),
+])
+def test_query_gene_weights(
+        geneWeights, count, quads_f2_wrapper, weights_loader):
+    variants = list(quads_f2_wrapper.query_variants(
+        weights_loader=weights_loader, geneWeights=geneWeights))
+
+    assert len(variants) == count
+
+    all_variants = list(quads_f2_wrapper.query_variants(
+        geneWeights=geneWeights))
+
+    assert len(all_variants) == 5
