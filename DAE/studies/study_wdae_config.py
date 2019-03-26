@@ -1,6 +1,3 @@
-from builtins import str
-
-
 class StudyWdaeMixin(object):
 
     @staticmethod
@@ -14,8 +11,7 @@ class StudyWdaeMixin(object):
 
     @staticmethod
     def _combine_dict_options(
-        dataset_config, dict_options_keys=[
-            'enrichmentTool', 'genotypeBrowser']):
+            dataset_config, dict_options_keys=['enrichmentTool']):
 
         for key in dict_options_keys:
             if dataset_config.get(key, True):
@@ -91,211 +87,6 @@ class StudyWdaeMixin(object):
 
         return pedigrees
 
-    @staticmethod
-    def _get_pedigree_selector_column(
-            pedigree_selector_column, dataset_config, parent_key,
-            pedigree_key):
-
-        pedigree = {}
-
-        pedigree['id'] = pedigree_selector_column
-        pedigree['name'] = dataset_config.pop(
-            parent_key + '.' + pedigree_key + '.' + pedigree_selector_column +
-            '.name', None)
-        pedigree['role'] = dataset_config.pop(
-            parent_key + '.' + pedigree_key + '.' + pedigree_selector_column +
-            '.role', None)
-        pedigree['source'] = dataset_config.get(
-            pedigree_key + '.' + pedigree_selector_column + '.source', None)
-
-        return pedigree
-
-    @staticmethod
-    def _get_genotype_browser_pheno_filter(dataset_config, f):
-        prefix = 'genotypeBrowser.phenoFilters.{}'.format(f)
-        name = dataset_config.pop('{}.{}'.format(prefix, 'name'), None)
-        measure_type = dataset_config.pop(
-            '{}.{}'.format(prefix, 'type'), None)
-        mf = dataset_config.pop('{}.{}'.format(prefix, 'filter'), None)
-        mf = mf.split(':')
-        if 'single' == mf[0]:
-            filter_type, role, measure = mf
-            measure_filter = {
-                'filterType': filter_type,
-                'role': role,
-                'measure': measure
-            }
-        elif 'multi' == mf[0]:
-            filter_type, role = mf
-            measure_filter = {
-                'filterType': filter_type,
-                'role': role
-            }
-        return {
-            'name': name,
-            'measureType': measure_type,
-            'measureFilter': measure_filter
-        }
-
-    @classmethod
-    def _get_genotype_browser_pheno_filters(cls, dataset_config):
-        result = []
-        filters = dataset_config.pop(
-            'genotypeBrowser.phenoFilters.filters', None)
-
-        if not filters:
-            return None
-
-        for f in filters:
-            pheno_filter =\
-                cls._get_genotype_browser_pheno_filter(dataset_config, f)
-            result.append(pheno_filter)
-
-        return result
-
-    @staticmethod
-    def _get_genotype_browser_pheno_column(dataset_config, col_id):
-        prefix = 'genotypeBrowser.pheno.{}'.format(col_id)
-        name_key = '{}.{}'.format(prefix, 'name')
-        slots_key = '{}.{}'.format(prefix, 'slots')
-        name = dataset_config.pop(name_key)
-        slots = dataset_config.pop(slots_key, None)
-        if slots is None:
-            slots = []
-        else:
-            slots = list(map(str.strip, slots.split(',')))
-
-        column = {}
-        column['id'] = col_id
-        column['name'] = name
-
-        column_slots = []
-        for slot in slots:
-            role, source, label = slot.split(':')
-            column_slots.append(
-                {
-                    'role': role,
-                    'measure': source,
-                    'source': '{}.{}'.format(role, source),
-                    'name': label,
-                    'id': '{}.{}'.format(role, source),
-                })
-        column['slots'] = column_slots
-        return column
-
-    @classmethod
-    def _get_genotype_browser_pheno_columns(cls, dataset_config):
-        result = []
-        columns = dataset_config.pop('genotypeBrowser.pheno.columns', None)
-        if not columns:
-            return []
-
-        for col in columns:
-            column = cls._get_genotype_browser_pheno_column(
-                dataset_config, col)
-            result.append(column)
-
-        return result
-
-    @staticmethod
-    def _get_genotype_browser_genotype_column(dataset_config, col_id):
-        prefix = 'genotypeBrowser.genotype.{}'.format(col_id)
-        name = dataset_config.pop('{}.{}'.format(prefix, 'name'), None)
-        source = dataset_config.pop('{}.{}'.format(prefix, 'source'), None)
-        slots = dataset_config.pop('{}.{}'.format(prefix, 'slots'), None)
-
-        if slots:
-            slots = slots.split(',')
-
-        column = {}
-        column['id'] = col_id
-        column['name'] = name
-        column['source'] = source
-
-        column_slots = []
-        for slot in slots or []:
-            slot_arr = [el.strip() for el in slot.split(':')]
-            if len(slot_arr) == 1:
-                source = slot_arr[0]
-                label = slot_arr[0]
-                label_format = "%s"
-            elif len(slot_arr) == 2:
-                source, label = slot_arr
-                label_format = "%s"
-            elif len(slot_arr) == 3:
-                source, label, label_format = slot_arr
-            column_slots.append(
-                {
-                    'source': source,
-                    'name': label,
-                    'id': source,
-                    'format': label_format
-                })
-        column['slots'] = column_slots
-        return column
-
-    @classmethod
-    def _get_genotype_browser_genotype_columns(cls, dataset_config):
-        result = []
-        columns = dataset_config.pop('genotypeBrowser.genotype.columns', None)
-        if not columns:
-            return []
-
-        for col in columns:
-            column =\
-                cls._get_genotype_browser_genotype_column(dataset_config, col)
-            result.append(column)
-        return result
-
-    @staticmethod
-    def _get_genotype_browser_column_slots(genotype_columns, columns):
-        column_slots = []
-        for column in columns:
-            genotype_column = list(filter(
-                lambda genotype_column: genotype_column['id'] == column,
-                genotype_columns
-            ))
-
-            if len(genotype_column) == 0:
-                continue
-            gc = genotype_column[0]
-
-            if 'source' in gc and gc['source'] is not None:
-                column_slots.append(gc['source'])
-
-            for slot in gc['slots']:
-                if slot['source'] is not None:
-                    column_slots.append(slot['source'])
-
-        return column_slots
-
-    @staticmethod
-    def _get_genotype_browser_column_labels(genotype_columns):
-        column_labels = {}
-        for gc in genotype_columns:
-            if 'source' in gc and gc['source'] is not None:
-                column_labels[gc['source']] = gc['name']
-
-            for slot in gc['slots']:
-                if slot['source'] is not None:
-                    column_labels[slot['source']] = slot['name']
-
-        return column_labels
-
-    @staticmethod
-    def _get_genotype_browser_gene_weights_columns(genotype_columns):
-        gene_weights_columns = list(filter(
-            lambda gc: gc['id'] == 'weights', genotype_columns))
-
-        if len(gene_weights_columns) == 0:
-            return []
-
-        gene_weights_slots = []
-        for gwc in gene_weights_columns[0].get('slots', None):
-            gene_weights_slots.append(gwc['id'])
-
-        return gene_weights_slots
-
     @classmethod
     def _fill_wdae_people_group_config(cls, config_section):
         people_group =\
@@ -303,46 +94,6 @@ class StudyWdaeMixin(object):
         if people_group:
             config_section['pedigreeSelectors'] = people_group
             config_section['peopleGroup'] = config_section['pedigreeSelectors']
-
-    @classmethod
-    def _fill_wdae_genotype_browser_config(cls, config_section):
-        config_section['genotypeBrowser.phenoFilters'] =\
-            cls._get_genotype_browser_pheno_filters(config_section)
-        config_section['genotypeBrowser.phenoColumns'] =\
-            cls._get_genotype_browser_pheno_columns(config_section)
-        config_section['genotypeBrowser.genotypeColumns'] =\
-            cls._get_genotype_browser_genotype_columns(config_section) + \
-            config_section['genotypeBrowser.phenoColumns']
-        config_section['genotypeBrowser.previewColumnsSlots'] =\
-            cls._get_genotype_browser_column_slots(
-                config_section.get('genotypeBrowser.genotypeColumns', []),
-                config_section.get('genotypeBrowser.previewColumns', []))
-        config_section['genotypeBrowser.downloadColumnsSlots'] =\
-            cls._get_genotype_browser_column_slots(
-                config_section.get('genotypeBrowser.genotypeColumns', []),
-                config_section.get('genotypeBrowser.downloadColumns', []))
-
-        config_section['genotypeBrowser.columnLabels'] =\
-            cls._get_genotype_browser_column_labels(
-                config_section.get('genotypeBrowser.genotypeColumns', []))
-
-        config_section['genotypeBrowser.geneWeightsColumns'] =\
-            cls._get_genotype_browser_gene_weights_columns(
-                config_section.get('genotypeBrowser.genotypeColumns', []))
-
-        config_section = cls._combine_dict_options(
-            config_section,
-            dict_options_keys=['genotypeBrowser'])
-
-        genotype_browser = config_section['genotypeBrowser']
-        if not genotype_browser:
-            config_section['genotypeBrowser'] = False
-            return
-
-        for key, value in genotype_browser.items():
-            if value:
-                return
-        config_section['genotypeBrowser'] = False
 
     @classmethod
     def _fill_wdae_enrichment_tool_config(cls, config_section):
@@ -353,5 +104,4 @@ class StudyWdaeMixin(object):
     @classmethod
     def _fill_wdae_config(cls, config_section):
         cls._fill_wdae_people_group_config(config_section)
-        cls._fill_wdae_genotype_browser_config(config_section)
         cls._fill_wdae_enrichment_tool_config(config_section)
