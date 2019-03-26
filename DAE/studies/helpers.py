@@ -155,7 +155,7 @@ def generate_pedigree(allele, pedigree_selector):
 
 def get_variants_web(
         dataset, query, genotype_attrs, weights_loader,
-        max_variants_count=1000, variants_hard_max=2000):
+        variants_hard_max=2000):
     variants = dataset.query_variants(weights_loader, safe=True, **query)
     pedigree_selector_id = query.get('pedigreeSelector', {}).get('id', None)
     pedigree_selector = dataset.get_pedigree_selector(pedigree_selector_id)
@@ -168,20 +168,45 @@ def get_variants_web(
 
     if variants_hard_max is not None:
         limited_rows = itertools.islice(rows, variants_hard_max+1)
-        limited_rows = list(limited_rows)
-    else:
-        limited_rows = list(rows)
 
-    if variants_hard_max is None or len(limited_rows) < variants_hard_max:
-        count = str(len(limited_rows))
+    return {
+        'cols': genotype_attrs,
+        'rows': limited_rows
+    }
+
+
+def get_variants_web_preview(
+        dataset, query, weights_loader, max_variants_count=1000,
+        variants_hard_max=2000):
+    web_preview = get_variants_web(
+        dataset, query, dataset.preview_columns, weights_loader,
+        variants_hard_max)
+
+    web_preview['rows'] = list(web_preview['rows'])
+
+    if variants_hard_max is None or\
+            len(web_preview['rows']) < variants_hard_max:
+        count = str(len(web_preview['rows']))
     else:
         count = 'more than {}'.format(variants_hard_max)
 
-    return {
-        'count': count,
-        'cols': genotype_attrs,
-        'rows': list(limited_rows[:max_variants_count])
-    }
+    web_preview['count'] = count
+    web_preview['rows'] = list(web_preview['rows'][:max_variants_count])
+
+    return web_preview
+
+
+def get_variants_web_download(
+        dataset, query, weights_loader, max_variants_count=1000,
+        variants_hard_max=2000):
+    web_preview = get_variants_web(
+        dataset, query, dataset.download_columns, weights_loader,
+        variants_hard_max)
+
+    web_preview['rows'] =\
+        itertools.islice(web_preview['rows'], max_variants_count)
+
+    return web_preview
 
 
 def expand_effect_types(effect_types):
