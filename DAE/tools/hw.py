@@ -88,7 +88,7 @@ def G_test(cnt, eCnt):
 
 
 def Chi2_test(cnt, eCnt):
-    df = len(cnt) - 2	
+    df = len(cnt) - 2
 
     T = sum([(c-e)*(c-e)/e for c, e in zip(cnt, eCnt) if e != 0])
     pv = 1. - stats.chi2.cdf(sum(T), df)
@@ -107,7 +107,7 @@ def Chi2_options(cnt, eCnt, genF, X=False):
 
 
 # global variable
-# defalult is False 
+# defalult is False
 # add -c to make it True
 chi2_test_flag = True
 
@@ -131,7 +131,7 @@ def pval_count_autosome(cnt):
     genF = [(1-p)*(1-p), 2.*(1-p)*p, p*p]
     eCnt = [N*x for x in genF]
 
-    pv = Test(cnt, eCnt, genF) 
+    pv = Test(cnt, eCnt, genF)
 
     return pv, eCnt
 
@@ -184,7 +184,7 @@ def main():
     ox, args = parser.parse_args()
 
     ref = ReaderStat(args[0])
-    mny = ReaderStat(tooManyFile(args[0]))	
+    mny = ReaderStat(tooManyFile(args[0]))
 
     ref.notExistExit()
 
