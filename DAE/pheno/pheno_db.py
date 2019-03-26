@@ -13,8 +13,8 @@ from collections import defaultdict, OrderedDict
 
 from variants.family import Person, Family
 from pheno.db import DbManager
-from pheno.common import MeasureType, Gender, Status, Role
-
+from pheno.common import MeasureType
+from variants.attributes import Sex, Status, Role
 
 
 class Instrument(object):
@@ -261,7 +261,7 @@ class PhenoDB(object):
         Each row of the returned data frame represnts a person from phenotype
         database.
 
-        Columns returned are: `person_id`, `family_id`, `role`, `gender`.
+        Columns returned are: `person_id`, `family_id`, `role`, `sex`.
         """
 
         columns = [
@@ -269,7 +269,7 @@ class PhenoDB(object):
             self.db.person.c.person_id,
             self.db.person.c.role,
             self.db.person.c.status,
-            self.db.person.c.gender,
+            self.db.person.c.sex,
         ]
         s = select(columns)
         s = s.select_from(
@@ -286,7 +286,7 @@ class PhenoDB(object):
                 self.db.family.c.family_id.in_(family_ids)
             )
         df = pd.read_sql(s, self.db.engine)
-        df.rename(columns={'gender': 'sex'}, inplace=True)
+        # df.rename(columns={'sex': 'sex'}, inplace=True)
         return df[['person_id', 'family_id', 'role', 'sex', 'status']]
 
     def get_persons(self, roles=None, person_ids=None, family_ids=None):
@@ -318,13 +318,13 @@ class PhenoDB(object):
             p.family_id = family_id
             assert row['role'] in Role, \
                 "{} not a valid role".format(row['role'])
-            assert row['sex'] in Gender, \
+            assert row['sex'] in Sex, \
                 "{} not a valid sex".format(row['sex'])
             assert row['status'] in Status, \
                 "{} not a valid status".format(row['status'])
             # FIXME:
             p.role = row['role']
-            p.gender = row['sex']
+            p.sex = row['sex']
             p.status = row['status']
 
             persons[person_id] = p
@@ -361,7 +361,7 @@ class PhenoDB(object):
         columns = [
             self.db.family.c.family_id,
             self.db.person.c.person_id,
-            self.db.person.c.gender,
+            self.db.person.c.sex,
             self.db.person.c.status,
             value_table.c.value,
         ]
