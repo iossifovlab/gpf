@@ -190,6 +190,9 @@ class WeightsLoader(object):
 
     def _load(self):
         weights = self.config.config.get('geneWeights', 'weights')
+        if weights == '':
+            return
+
         names = [n.strip() for n in weights.split(',')]
         for name in names:
             w = Weights(name)

@@ -78,6 +78,9 @@ class ScoreLoader(object):
 
     def _load(self):
         scores = self.config.genomicScores.scores
+        if scores == '':
+            return
+
         names = [s.strip() for s in scores.split(',')]
         for name in names:
             s = Scores(name, self.config)
