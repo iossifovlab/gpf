@@ -48,16 +48,6 @@ def gene_effect_get_genes(gs):
     return ';'.join(genes)
 
 
-def get_people_group_attribute(v, attr):
-    attributes = v.people_group_attribute(attr)
-
-    attributes = list(filter(None.__ne__, attributes))
-    attributes_set = set(attributes)
-    people_group_attributes = list(attributes_set)
-
-    return ';'.join(people_group_attributes)
-
-
 STANDARD_ATTRS = {
     "family": "family_id",
     "location": "cshl_location",
@@ -166,7 +156,7 @@ def generate_pedigree(allele, pedigree_selector):
 def get_variants_web(
         dataset, query, genotype_attrs, weights_loader,
         variants_hard_max=2000):
-    variants = dataset.query_variants(safe=True, **query)
+    variants = dataset.query_variants(weights_loader, safe=True, **query)
     pedigree_selector_id = query.get('pedigreeSelector', {}).get('id', None)
     pedigree_selector = dataset.get_pedigree_selector(pedigree_selector_id)
 
