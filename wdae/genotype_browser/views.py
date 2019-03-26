@@ -8,25 +8,27 @@ from __future__ import unicode_literals
 from builtins import map
 from builtins import str
 
+from django.http.response import StreamingHttpResponse
 from rest_framework import views, status
 from rest_framework.response import Response
-from django.http.response import StreamingHttpResponse
+from rest_framework.exceptions import NotAuthenticated
 
-from datasets_api.studies_manager import get_studies_manager
-from users_api.authentication import SessionAuthenticationWithoutCSRF
+import json
+import logging
+import traceback
+import itertools
 
 from helpers.logger import log_filter
 from helpers.logger import LOGGER
-
-import traceback
-from rest_framework.exceptions import NotAuthenticated
-import json
-# from query_variants import join_line, generate_response
-from datasets_api.permissions import IsDatasetAllowed
-from studies.helpers import get_variants_web
-import logging
-from gene_sets.expand_gene_set_decorator import expand_gene_set
 from helpers.dae_query import join_line, columns_to_labels
+
+from datasets_api.studies_manager import get_studies_manager
+from datasets_api.permissions import IsDatasetAllowed
+from users_api.authentication import SessionAuthenticationWithoutCSRF
+
+from studies.helpers import get_variants_web_preview, get_variants_web_download
+from gene_sets.expand_gene_set_decorator import expand_gene_set
+
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +74,8 @@ class QueryPreviewView(QueryBaseView):
             dataset = self.get_dataset_wdae_wrapper(dataset_id)
 
             # LOGGER.info("dataset " + str(dataset))
-            response = get_variants_web(
-                dataset, data, dataset.preview_columns, self.weights_loader, 
+            response = get_variants_web_preview(
+                dataset, data, self.weights_loader,
                 max_variants_count=self.MAX_SHOWN_VARIANTS,
                 variants_hard_max=self.MAX_VARIANTS)
 
@@ -131,8 +133,8 @@ class QueryDownloadView(QueryBaseView):
             if not (user.is_authenticated() and user.has_unlimitted_download):
                 download_limit = self.DOWNLOAD_LIMIT
 
-            variants_data = get_variants_web(
-                dataset, data, dataset.download_columns, self.weights_loader,
+            variants_data = get_variants_web_download(
+                dataset, data, self.weights_loader,
                 max_variants_count=download_limit,
                 variants_hard_max=self.DOWNLOAD_LIMIT
             )
@@ -142,7 +144,7 @@ class QueryDownloadView(QueryBaseView):
             rows = variants_data['rows']
 
             response = StreamingHttpResponse(
-                list(map(join_line, [columns] + rows)),
+                map(join_line, itertools.chain([columns], rows)),
                 content_type='text/tsv')
 
             response['Content-Disposition'] =\
