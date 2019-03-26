@@ -30,7 +30,7 @@ def test_query_preview_have_pheno_columns(db, admin_client):
     assert status.HTTP_200_OK == response.status_code
     res = response.data
 
-    assert 19 == len(res['cols'])
+    assert 18 == len(res['cols'])
     assert res['cols'][-4:] == [
         'prb.instrument1.continuous',
         'prb.instrument1.categorical',

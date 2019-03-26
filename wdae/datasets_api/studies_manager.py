@@ -8,6 +8,7 @@ from common_reports.config import CommonReportsQueryObjects
 from common_reports.common_report import CommonReportsGenerator
 from common_reports.common_report_facade import CommonReportFacade
 
+from gene.config import GeneInfoConfig
 from gene.scores import ScoreLoader
 from gene.weights import WeightsLoader
 
@@ -54,8 +55,9 @@ class StudiesManager(object):
         for study_id in self.vdb.get_all_ids():
             Dataset.recreate_dataset_perm(study_id, [])
 
-        self.score_loader = ScoreLoader()
-        self.weights_loader = WeightsLoader()
+        self.score_loader = ScoreLoader(daeConfig=self.dae_config)
+        gene_info_config = GeneInfoConfig(self.dae_config)
+        self.weights_loader = WeightsLoader(config=gene_info_config)
 
         self.gene_sets_collections = GeneSetsCollections(self.vdb)
 
