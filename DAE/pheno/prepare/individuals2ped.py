@@ -1,4 +1,5 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
+
 from __future__ import unicode_literals
 from builtins import map
 from builtins import str
@@ -16,8 +17,8 @@ from future.utils import with_metaclass
 
 class Individual(object):
 
-    def __init__(self, individual_id, family_id, gender, role, status):
-        self.gender = gender
+    def __init__(self, individual_id, family_id, sex, role, status):
+        self.sex = sex
         self.individual_id = individual_id
         self.family_id = family_id
         self.role = role
@@ -149,11 +150,11 @@ class IndividualUnit(object):
             return '0'
         return self.parents.mother.get_individual_id()
 
-    def get_gender(self):
+    def get_sex(self):
         if not self.individual:
             return 'UNKNOWN'
 
-        return self.individual.gender.value
+        return self.individual.sex.value
 
     def get_status(self):
         if not self.individual:
@@ -208,7 +209,7 @@ class CsvIndividualsReader(with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def convert_gender(self, gender):
+    def convert_sex(self, sex):
         raise NotImplementedError()
 
     def convert_family_id(self, family_id):
@@ -239,7 +240,7 @@ class CsvIndividualsReader(with_metaclass(abc.ABCMeta, object)):
                 kwargs["family_id"], kwargs["individual_id"])
             kwargs["status"] = self.convert_status(kwargs["status"])
             kwargs["role"] = self.convert_role(kwargs["role"])
-            kwargs["gender"] = self.convert_gender(kwargs["gender"])
+            kwargs["sex"] = self.convert_sex(kwargs["sex"])
 
             individuals.append(Individual(**kwargs))
 
@@ -260,7 +261,7 @@ class SPARKCsvIndividualsReader(CsvIndividualsReader):
             "role": "role",
             "family_id": "family_id",
             "individual_id": "subject_sp_id",
-            "gender": "sex",
+            "sex": "sex",
             "status": "asd"
         }
 
@@ -269,7 +270,7 @@ class SPARKCsvIndividualsReader(CsvIndividualsReader):
         "False": Status.unaffected
     }
 
-    GENDER_TO_ENUM = {
+    SEX_TO_ENUM = {
         "Male": Sex.male,
         "Female": Sex.female
     }
@@ -277,8 +278,8 @@ class SPARKCsvIndividualsReader(CsvIndividualsReader):
     def convert_status(self, status):
         return self.STATUS_TO_ENUM[status]
 
-    def convert_gender(self, gender):
-        return self.GENDER_TO_ENUM[gender]
+    def convert_sex(self, sex):
+        return self.SEX_TO_ENUM[sex]
 
     def convert_individual_id(self, family_id, individual_id):
         return individual_id
@@ -296,7 +297,7 @@ class InternalCsvIndividualsReader(CsvIndividualsReader):
             "role": "role",
             "family_id": "family_id",
             "individual_id": "individual_id",
-            "gender": "sex",
+            "sex": "sex",
             "status": "affected"
         }
 
@@ -305,7 +306,7 @@ class InternalCsvIndividualsReader(CsvIndividualsReader):
         "False": Status.unaffected
     }
 
-    GENDER_TO_ENUM = {
+    SEX_TO_ENUM = {
         "Male": Sex.male,
         "Female": Sex.female
     }
@@ -313,8 +314,8 @@ class InternalCsvIndividualsReader(CsvIndividualsReader):
     def convert_status(self, status):
         return self.STATUS_TO_ENUM[status]
 
-    def convert_gender(self, gender):
-        return self.GENDER_TO_ENUM[gender]
+    def convert_sex(self, sex):
+        return self.SEX_TO_ENUM[sex]
 
     def convert_individual_id(self, family_id, individual_id):
         return individual_id
@@ -332,12 +333,12 @@ class VIPCsvIndividualsReader(CsvIndividualsReader):
             "role": "relationship_to_iip",
             "family_id": "family",
             "individual_id": "sfari_id",
-            "gender": "sex",
+            "sex": "sex",
             # "status": "genetic_status",
             "status": "genetic_status_16p",
         }
 
-    GENDER_TO_ENUM = {
+    SEX_TO_ENUM = {
         "Male": Sex.male,
         "Female": Sex.female
     }
@@ -352,8 +353,8 @@ class VIPCsvIndividualsReader(CsvIndividualsReader):
         return RoleMapping.VIP[role] \
             if role in RoleMapping.VIP else Role.unknown
 
-    def convert_gender(self, gender):
-        return self.GENDER_TO_ENUM[gender]
+    def convert_sex(self, sex):
+        return self.SEX_TO_ENUM[sex]
 
     def convert_status(self, status):
         return Status.unaffected if status == 'negative' \
@@ -486,7 +487,7 @@ class PedigreeToCsv(object):
         with open(self.filename, "w") as csv_file:
             writer = csv.writer(csv_file, delimiter='\t')
             writer.writerow([
-                "familyId", "personId", "dadId", "momId", "gender",
+                "familyId", "personId", "dadId", "momId", "sex",
                 "status", "role"])
             writer.writerows(list(map(self.get_row, pedigrees)))
 
@@ -497,7 +498,7 @@ class PedigreeToCsv(object):
             individual.get_individual_id(),
             individual.get_father_id(),
             individual.get_mother_id(),
-            individual.get_gender(),
+            individual.get_sex(),
             individual.get_status(),
             individual.get_role()
         ]

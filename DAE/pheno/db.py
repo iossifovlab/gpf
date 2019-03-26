@@ -47,7 +47,7 @@ class DbManager(object):
             Column('role', Enum(Role), nullable=False),
             Column('status', Enum(Status),
                    nullable=False, default=Status.unaffected),
-            Column('gender', Enum(Sex), nullable=False),
+            Column('sex', Enum(Sex), nullable=False),
             Column('sample_id', String(16), nullable=True),
             UniqueConstraint('family_id', 'person_id', name='person_key'),
         )
@@ -131,7 +131,7 @@ class DbManager(object):
             self.family.c.family_id,
             self.person.c.role,
             self.person.c.status,
-            self.person.c.gender,
+            self.person.c.sex,
         ])
         s = s.select_from(self.person.join(self.family))
         with self.engine.connect() as connection:

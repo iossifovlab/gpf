@@ -5,13 +5,12 @@ Created on May 24, 2017
 '''
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import object
 import enum
 from box import Box
 from pprint import pprint
 from collections import OrderedDict
 from copy import deepcopy
-from variants.attributes import Sex, Status, Role
+from variants.attributes import Role
 
 
 # class Gender(enum.Enum):

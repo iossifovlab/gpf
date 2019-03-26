@@ -50,7 +50,7 @@ def load_and_join():
         columns={
             'person_id': 'personId',
             'family_id': 'familyId',
-            'gender': 'genderI',
+            'sex': 'sexI',
             'role': 'roleI'
         })
     assert 'personId' in individuals_df.columns
@@ -151,7 +151,7 @@ def infer_roles(persons_df):
     return persons_df
 
 
-def build_gender(row):
+def build_sex(row):
     role = row['role']
     if role == Role.mom:
         return Sex.female
@@ -165,26 +165,26 @@ def build_gender(row):
         return Sex.female
     elif row['sex'] == 'male':
         return Sex.male
-    elif row['genderI'] == 'F':
+    elif row['sexI'] == 'F':
         return Sex.female
-    elif row['genderI'] == 'M':
+    elif row['sexI'] == 'M':
         return Sex.male
     else:
         return None
 
 
-def infer_gender(persons_df, without_gender=[]):
-    gender = pd.Series(0, index=persons_df.index, dtype=np.int32)
+def infer_sex(persons_df, without_sex=[]):
+    sex = pd.Series(0, index=persons_df.index, dtype=np.int32)
     for index, row in persons_df.iterrows():
-        sex = build_gender(row)
+        sex = build_sex(row)
         if sex is None:
-            without_gender.append(row['personId'])
-            gender[index] = 0
+            without_sex.append(row['personId'])
+            sex[index] = 0
         else:
-            gender[index] = sex.value
-    persons_df['gender'] = gender
+            sex[index] = sex.value
+    persons_df['sex'] = sex
 
-    return persons_df[persons_df.gender != 0]
+    return persons_df[persons_df.sex != 0]
 
 
 def infer_race(persons_df):
@@ -204,7 +204,7 @@ COLUMNS = [
     'personId',
     'dadId',
     'momId',
-    'gender',
+    'sex',
     'status',
     'sampleId',
     'role',
@@ -292,8 +292,8 @@ def build_pedigree(persons_df):
 def build_pedigree_file():
     persons_df = load_and_join()
     persons_df = infer_roles(persons_df)
-    without_gender = []
-    persons_df = infer_gender(persons_df, without_gender)
+    without_sex = []
+    persons_df = infer_sex(persons_df, without_sex)
     persons_df = infer_race(persons_df)
 
     return build_pedigree(persons_df)
