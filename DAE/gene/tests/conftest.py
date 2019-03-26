@@ -13,6 +13,7 @@ from utils.fixtures import change_environment
 
 from gene.config import GeneInfoConfig
 from gene.gene_set_collections import GeneSetsCollections
+from gene.weights import WeightsLoader
 
 from utils.fixtures import path_to_fixtures as _path_to_fixtures
 # Used by pytest
@@ -37,8 +38,8 @@ def mock_property(mocker):
 
 
 @pytest.fixture()
-def gene_info_config():
-    return GeneInfoConfig()
+def gene_info_config(dae_config_fixture):
+    return GeneInfoConfig(dae_config_fixture)
 
 
 @pytest.fixture  # noqa
@@ -74,6 +75,11 @@ def calc_gene_sets(gscs):
     denovo_gene_sets.load(build_cache=True)
 
     print("PRECALCULATION COMPLETE")
+
+
+@pytest.fixture()
+def weights_loader(gene_info_config):
+    return WeightsLoader(config=gene_info_config)
 
 
 @pytest.fixture(scope='session')

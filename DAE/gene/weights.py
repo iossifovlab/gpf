@@ -167,9 +167,12 @@ class WeightsLoader(object):
     Used by Web interface.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, config=None, *args, **kwargs):
         super(WeightsLoader, self).__init__(*args, **kwargs)
-        self.config = GeneInfoConfig()
+        if config is None:
+            config = GeneInfoConfig()
+        self.config = config
+
         self.weights = OrderedDict()
         self._load()
 
