@@ -166,7 +166,7 @@ def generate_pedigree(allele, pedigree_selector):
 def get_variants_web(
         dataset, query, genotype_attrs, weights_loader,
         max_variants_count=1000, variants_hard_max=2000):
-    variants = dataset.query_variants(safe=True, **query)
+    variants = dataset.query_variants(weights_loader, safe=True, **query)
     pedigree_selector_id = query.get('pedigreeSelector', {}).get('id', None)
     pedigree_selector = dataset.get_pedigree_selector(pedigree_selector_id)
 

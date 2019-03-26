@@ -106,7 +106,7 @@ class StudyWrapper(object):
     # minParentsCalled
     # ultraRareOnly
     # TMM_ALL
-    def query_variants(self, **kwargs):
+    def query_variants(self, weights_loader, **kwargs):
         # print("kwargs in study group:", kwargs)
         kwargs = self._add_people_with_phenotype(kwargs)
 
@@ -129,6 +129,9 @@ class StudyWrapper(object):
 
         if 'genomicScores'in kwargs:
             self._transform_genomic_scores(kwargs)
+
+        if 'geneWeights' in kwargs:
+            self._transform_gene_weights(weights_loader, kwargs)
 
         for key in list(kwargs.keys()):
             if key in self.FILTER_RENAMES_MAP:
@@ -298,7 +301,26 @@ class StudyWrapper(object):
             if score['rangeStart'] or score['rangeEnd']
         ]
 
-        kwargs['real_attr_filter'] = genomic_scores_filter
+        if 'real_attr_filter' not in kwargs:
+            kwargs['real_attr_filter'] = []
+        kwargs['real_attr_filter'] += genomic_scores_filter
+
+    def _transform_gene_weights(self, weights_loader, kwargs):
+        gene_weights = kwargs.pop('geneWeights', {})
+
+        weight_name = gene_weights.get('weight', None)
+        range_start = gene_weights.get('rangeStart', None)
+        range_end = gene_weights.get('rangeEnd', None)
+
+        if weight_name and weight_name in weights_loader:
+            weight = weights_loader[gene_weights.get('weight')]
+
+            genes = weight.get_genes(range_start, range_end)
+
+            if 'genes' not in kwargs:
+                kwargs['genes'] = []
+
+            kwargs['genes'] += list(genes)
 
     def _transform_min_max_alt_frequency(self, kwargs):
         min_value = None
