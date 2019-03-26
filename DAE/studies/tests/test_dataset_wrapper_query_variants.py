@@ -263,3 +263,23 @@ def test_query_gene_weights(
         geneWeights=geneWeights))
 
     assert len(all_variants) == 5
+
+
+@pytest.mark.parametrize("genomicScores,count", [
+    ([{'metric': 'score1', 'rangeStart': None, 'rangeEnd': None}], 5),
+    ([{'metric': 'score1', 'rangeStart': 10.5, 'rangeEnd': None}], 4),
+    ([{'metric': 'score1', 'rangeStart': None, 'rangeEnd': 25.0}], 1),
+    ([{'metric': 'score1', 'rangeStart': 2.0, 'rangeEnd': 7.0}], 1),
+    ([{'metric': 'score1', 'rangeStart': 40.5, 'rangeEnd': 55.0}], 2),
+    ([{'metric': 'score1', 'rangeStart': 42.0, 'rangeEnd': 43.0}], 0),
+    ([{'metric': 'ala bala', 'rangeStart': 5.0, 'rangeEnd': 50.0}], 0),
+    ([{'metric': 'score1', 'rangeStart': 2.0, 'rangeEnd': 7.0},
+      {'metric': 'score2', 'rangeStart': 50.0, 'rangeEnd': 150.0}], 1),
+    ([{'metric': 'score1', 'rangeStart': 2.0, 'rangeEnd': 7.0},
+      {'metric': 'score2', 'rangeStart': 50.0, 'rangeEnd': 75.0}], 0),
+])
+def test_query_genomic_scores(genomicScores, count, quads_f2_dataset_wrapper):
+    variants = list(quads_f2_dataset_wrapper.query_variants(
+        genomicScores=genomicScores))
+
+    assert len(variants) == count
