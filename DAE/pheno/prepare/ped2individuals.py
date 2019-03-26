@@ -456,7 +456,7 @@ def main():
     reader = None
     if args.pheno == 'spark':
         reader = SPARKCsvPedigreeReader()
-    elif args.pheno == 'vip':
+    elif args.pheno == 'svip':
         reader = VIPCsvPedigreeReader()
     elif args.pheno == 'agre':
         reader = AGRERawCsvPedigreeReader()
