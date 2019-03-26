@@ -46,9 +46,11 @@ class Scores(GenomicValues):
 
 class ScoreLoader(object):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, daeConfig=None, *args, **kwargs):
         super(ScoreLoader, self).__init__(*args, **kwargs)
-        self.daeConfig = DAEConfig()
+        if daeConfig is None:
+            daeConfig = DAEConfig()
+        self.daeConfig = daeConfig
 
         config = ConfigParser({
             'wd': self.daeConfig.dae_data_dir
@@ -76,6 +78,9 @@ class ScoreLoader(object):
 
     def _load(self):
         scores = self.config.genomicScores.scores
+        if scores == '':
+            return
+
         names = [s.strip() for s in scores.split(',')]
         for name in names:
             s = Scores(name, self.config)
