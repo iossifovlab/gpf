@@ -55,7 +55,7 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
         '--skip-reports',
         help='skip running report generation [default: %(default)s]',
         default=False,
-        action='store_true',        
+        action='store_true',
     )
     parser_args = parser.parse_args(argv)
     return parser_args

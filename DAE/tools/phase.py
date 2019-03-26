@@ -109,11 +109,11 @@ if __name__ == "__main__":
 
     posFamilyPhs = phase(inp)
     for pfphs in posFamilyPhs:
-        print("-----------------") 
+        print("-----------------")
         print("mom")
-        print(pfphs[0]) 
+        print(pfphs[0])
         print("dad")
-        print(pfphs[1]) 
+        print(pfphs[1])
 
     for ph in possiblePersonPhasing(inp, L, P, nCpies, 0):
         print("oo", ph)
