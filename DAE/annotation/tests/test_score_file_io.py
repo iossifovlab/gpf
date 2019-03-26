@@ -143,37 +143,37 @@ def test_tabix_sequential_access_na_values(score_file, chrom,
 def test_tabix_access_switching(score_file, mocker):
     mocker.spy(score_file.accessor, '_fetch_sequential')
     mocker.spy(score_file.accessor, '_fetch_direct')
-    
+
     # inital fetch will use direct, as (10937 - 0) is above the threshold
-    res = score_file.fetch_scores('1', 10937, 10937)
+    score_file.fetch_scores('1', 10937, 10937)
     assert score_file.accessor._fetch_direct.call_count == 1
-    
+
     # fetch substitution that is close
-    res = score_file.fetch_scores('1', 10938, 10938)
+    score_file.fetch_scores('1', 10938, 10938)
     assert score_file.accessor._fetch_sequential.call_count == 1
-    
+
     # fetch substitution that is beyond threshold
-    res = score_file.fetch_scores('1', 12439, 12439)
+    score_file.fetch_scores('1', 12439, 12439)
     assert score_file.accessor._fetch_direct.call_count == 2
-    
+
     # fetch substitution that is close, but behind
-    res = score_file.fetch_scores('1', 12437, 12437)
+    score_file.fetch_scores('1', 12437, 12437)
     assert score_file.accessor._fetch_sequential.call_count == 2
-    
+
     # fetch insertion that is close
-    res = score_file.fetch_scores('1', 12438, 12439)
+    score_file.fetch_scores('1', 12438, 12439)
     assert score_file.accessor._fetch_sequential.call_count == 3
-    
+
     # fetch insertion that is beyond threshold
-    res = score_file.fetch_scores('1', 13940, 13941)
+    score_file.fetch_scores('1', 13940, 13941)
     assert score_file.accessor._fetch_direct.call_count == 3
-    
+
     # fetch deletion that is close
-    res = score_file.fetch_scores('1', 13941, 13950)
+    score_file.fetch_scores('1', 13941, 13950)
     assert score_file.accessor._fetch_sequential.call_count == 4
-    
+
     # fetch deletion that is beyond threshold
-    res = score_file.fetch_scores('1', 16000, 16050)
+    score_file.fetch_scores('1', 16000, 16050)
     assert score_file.accessor._fetch_direct.call_count == 4
 
 

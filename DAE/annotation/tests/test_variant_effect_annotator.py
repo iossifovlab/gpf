@@ -69,7 +69,7 @@ def test_effect_annotator(effect_annotator, variants_io, capsys):
 def test_effect_annotator_df(effect_annotator):
 
     df = RawVariantsLoader.load_annotation_file(
-        relative_to_this_test_folder("fixtures/effects_trio_multi-eff.txt")        
+        relative_to_this_test_folder("fixtures/effects_trio_multi-eff.txt")
     )
 
     columns = [
