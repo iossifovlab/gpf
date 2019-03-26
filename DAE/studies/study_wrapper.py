@@ -76,14 +76,13 @@ class StudyWrapper(object):
 
             if self.config.genotypeBrowser:
                 pheno_filters = self.config.genotypeBrowser.phenoFilters
-                self.pheno_filters_in_config = {
-                    self._get_pheno_filter_key(pf.measureFilter)
-                    for pf in pheno_filters
-                    if pf['measureFilter']['filterType'] == 'single'
-                }
-
                 if pheno_filters:
-                    self.pheno_filter_builder =\
+                    self.pheno_filters_in_config = {
+                        self._get_pheno_filter_key(pf.measureFilter)
+                        for pf in pheno_filters
+                        if pf['measureFilter']['filterType'] == 'single'
+                    }
+                    self.pheno_filter_builder = \
                         PhenoFilterBuilder(self.pheno_db)
 
     @staticmethod
