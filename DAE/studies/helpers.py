@@ -48,16 +48,6 @@ def gene_effect_get_genes(gs):
     return ';'.join(genes)
 
 
-def get_people_group_attribute(v, attr):
-    attributes = v.people_group_attribute(attr)
-
-    attributes = list(filter(None.__ne__, attributes))
-    attributes_set = set(attributes)
-    people_group_attributes = list(attributes_set)
-
-    return ';'.join(people_group_attributes)
-
-
 STANDARD_ATTRS = {
     "family": "family_id",
     "location": "cshl_location",
