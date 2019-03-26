@@ -11,20 +11,20 @@ from builtins import range
 from past.utils import old_div
 from builtins import object
 import textwrap
-import matplotlib as mpl
-from pheno.common import Role, Status, Gender
-mpl.use("PS")
+import matplotlib as mpl; mpl.use("PS")  # noqa
 
-import matplotlib.pyplot as plt  # @IgnorePep8
-plt.ioff()
+# from pheno.common import Status, Gender
+from variants.attributes import Status, Sex
 
-import pandas as pd  # @IgnorePep8
-import numpy as np  # @IgnorePep8
-import seaborn as sns  # @IgnorePep8
-import statsmodels.api as sm  # @IgnorePep8
+import matplotlib.pyplot as plt; plt.ioff()  # noqa
+
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import statsmodels.api as sm
 from pheno.common import ROLES_GRAPHS_DEFINITION
 
-import traceback  # @IgnorePep8
+import traceback
 
 
 MAX_CATEGORIES_COUNT = 12
@@ -43,10 +43,10 @@ class GraphColumn(object):
         return self.df.shape[0]
 
     def males_count(self):
-        return self.df[self.df.gender == Gender.M].shape[0]
+        return self.df[self.df.sex == Sex.male].shape[0]
 
     def females_count(self):
-        return self.df[self.df.gender == Gender.F].shape[0]
+        return self.df[self.df.sex == Sex.female].shape[0]
 
     @property
     def label(self):
@@ -83,7 +83,7 @@ def male_female_legend(color_male, color_female, ax=None):
     import matplotlib.patches as mpatches
     male_patch = mpatches.Patch(color=color_male, label="M")
     female_patch = mpatches.Patch(color=color_female, label="F")
-    ax.legend(handles=[male_patch, female_patch], title="gender")
+    ax.legend(handles=[male_patch, female_patch], title="Sex")
 
 
 def draw_linregres(df, col1, col2, jitter=None, ax=None):
@@ -92,8 +92,8 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
 
     dd = df.dropna()
 
-    dmale = dd[dd.gender == Gender.M]
-    dfemale = dd[dd.gender == Gender.F]
+    dmale = dd[dd.sex == Sex.male]
+    dfemale = dd[dd.sex == Sex.female]
 
     name1, name2 = names(col1, col2)
     ax.set_xlabel(name1)
@@ -157,8 +157,8 @@ def draw_distribution(df, measure_id, ax=None):
     color_male, color_female = male_female_colors()
     ax.hist(
         [
-            df[df.gender == Gender.F][measure_id],
-            df[df.gender == Gender.M][measure_id]
+            df[df.sex == Sex.female][measure_id],
+            df[df.sex == Sex.male][measure_id]
         ],
         color=[color_female, color_male],
         stacked=True,
@@ -192,12 +192,12 @@ def role_labels(ordered_columns):
 
 
 def gender_palette_light():
-    palette = sns.diverging_palette(240, 10, s=80, l=77, n=2)  # @IgnorePep8
+    palette = sns.diverging_palette(240, 10, s=80, l=77, n=2)  # noqa
     return palette
 
 
 def gender_palette():
-    palette = sns.diverging_palette(240, 10, s=80, l=50, n=2)  # @IgnorePep8
+    palette = sns.diverging_palette(240, 10, s=80, l=50, n=2)  # noqa
     return palette
 
 
@@ -255,8 +255,8 @@ def draw_measure_violinplot(
     set_figure_size(fig, len(columns))
 
     sns.violinplot(
-        data=df_with_column_names, x="column_name", y=measure_id, hue="gender",
-        order=column_names, hue_order=[Gender.M, Gender.F],
+        data=df_with_column_names, x="column_name", y=measure_id, hue="sex",
+        order=column_names, hue_order=[Sex.male, Sex.female],
         linewidth=1, split=True,
         scale="count",
         scale_hue=False,
@@ -265,8 +265,8 @@ def draw_measure_violinplot(
 
     palette = gender_palette_light()
     sns.stripplot(
-        data=df_with_column_names, x="column_name", y=measure_id, hue="gender",
-        order=column_names, hue_order=[Gender.M, Gender.F],
+        data=df_with_column_names, x="column_name", y=measure_id, hue="sex",
+        order=column_names, hue_order=[Sex.male, Sex.female],
         jitter=0.025, size=2,
         palette=palette,
         linewidth=0.1)
@@ -331,8 +331,8 @@ def draw_categorical_violin_distribution(
     for column in columns:
         df_role = column.df
 
-        df_male = df_role[df_role.gender == Gender.M]
-        df_female = df_role[df_role.gender == Gender.F]
+        df_male = df_role[df_role.sex == Sex.male]
+        df_female = df_role[df_role.sex == Sex.female]
 
         male_data = df_male[numerical_measure_name].values
         female_data = df_female[numerical_measure_name].values

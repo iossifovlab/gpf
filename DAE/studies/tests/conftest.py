@@ -55,7 +55,8 @@ def study_factory():
 
 @pytest.fixture(scope='module')
 def study_facade(study_factory, study_definitions, pheno_factory):
-    return StudyFacade(pheno_factory,
+    return StudyFacade(
+        pheno_factory,
         study_factory=study_factory, study_definition=study_definitions)
 
 
