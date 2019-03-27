@@ -31,8 +31,11 @@ class DfFamilyVariantsBase(object):
         family = families[family_id]
         gt = records[0]['genotype']
         gt = gt.reshape([2, len(family)], order='F')
-
-        return FamilyVariant(sv, family, gt)
+        fv = FamilyVariant(sv, family, gt)
+        fv.set_matched_alleles([
+            r['allele_index'] for r in records
+        ])
+        return fv
 
     @staticmethod
     def wrap_variants(families, join_df):
@@ -131,7 +134,8 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
                         .replace("'", "").split(",")
         df.effect_gene_types = df.effect_gene_types.apply(s2a)
         df.effect_gene_genes = df.effect_gene_genes.apply(s2a)
-        df.effect_details_transcript_ids = df.effect_details_transcript_ids.apply(s2a)
+        df.effect_details_transcript_ids = \
+            df.effect_details_transcript_ids.apply(s2a)
         df.effect_details_details = df.effect_details_details.apply(s2a)
 
         return self.wrap_variants(self.families, df)
