@@ -412,7 +412,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         for variant in variants:
             family_id = variant.family_id
             for allele in variant.alt_alleles:
-                effect = allele.summary_allele.effect
+                effect = allele.effect
                 for gene in effect.genes:
                     cache.setdefault(gene.symbol, set()).add(family_id)
 
