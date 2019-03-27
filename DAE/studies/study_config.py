@@ -26,11 +26,11 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
     )
 
     SPLIT_STR_LISTS = [
-        'authorizedGroups',
+        'authorizedGroups'
     ]
 
     NEW_KEYS_NAMES = {
-        'phenoGenoTool': 'phenotypeGenotypeTool',
+        'phenoGenoTool': 'phenotypeGenotypeTool'
     }
 
     def __init__(
