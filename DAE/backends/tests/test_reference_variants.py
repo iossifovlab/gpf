@@ -9,7 +9,7 @@ import pytest
 from utils.vcf_utils import mat2str
 
 
-@pytest.mark.xfail(reason="frequencies should probably be removed")
+# @pytest.mark.xfail(reason="frequencies should probably be removed")
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
 ])
@@ -42,7 +42,7 @@ def test_reference_variant_single_allele(
     assert v.frequencies[0] == pytest.approx(87.5)
     assert v.effects is None
 
-    sv = v
+    sv = v.summary_variant
 
     print(sv.frequencies)
     assert len(sv.frequencies) == 2

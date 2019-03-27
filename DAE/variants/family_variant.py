@@ -295,7 +295,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         SummaryVariant.__init__(self, summary_variant.alleles)
         FamilyDelegate.__init__(self, family)
 
-        # self.summary_variant = summary_variant
+        self.summary_variant = summary_variant
         self.gt = np.copy(genotype)
 
         alleles = [
@@ -321,6 +321,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         self._best_st = None
         self._inheritance_in_members = None
         self._variant_in_members = None
+        self._matched_alleles = []
 
     def set_matched_alleles(self, alleles_indexes):
         self._matched_alleles = alleles_indexes
@@ -328,7 +329,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
     @property
     def matched_alleles(self):
         return [
-            aa for aa in self.alleles 
+            aa for aa in self.alleles
             if aa.allele_index in self._matched_alleles
         ]
 
