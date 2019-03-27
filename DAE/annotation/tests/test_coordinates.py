@@ -5,7 +5,7 @@ from variants.variant import SummaryAllele
 
 
 @pytest.mark.parametrize(
-    "variant,check_pos,check_cshl_pos,check_ref,check_alt", 
+    "variant,check_pos,check_cshl_pos,check_ref,check_alt",
     [
         ('sub(A->T)', 150013938, 150013938, 'A', 'T'),
         ('ins(AA)', 150013937, 150013938, 'A', 'AAA'),

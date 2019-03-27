@@ -2,9 +2,10 @@ from __future__ import unicode_literals
 
 import os
 
+from studies.genotype_browser_config import GenotypeBrowserConfig
+from studies.study_wdae_config import StudyWdaeMixin
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
-from .study_wdae_config import StudyWdaeMixin
 
 
 class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
@@ -22,38 +23,19 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         'phenotypeGenotypeTool',
         'enrichmentTool',
         'genotypeBrowser',
-        'genotypeBrowser.genesBlockShowAll',
-        'genotypeBrowser.hasPresentInParent',
-        'genotypeBrowser.hasComplex',
-        'genotypeBrowser.hasPresentInChild',
-        'genotypeBrowser.hasPedigreeSelector',
-        'genotypeBrowser.hasCNV',
-        'genotypeBrowser.hasFamilyFilters',
-        'genotypeBrowser.hasStudyTypes',
-        'genotypeBrowser.hasStudyFilters',
     )
 
     SPLIT_STR_LISTS = [
         'authorizedGroups',
-        'genotypeBrowser.phenoFilters',
-        'genotypeBrowser.baseColumns',
-        'genotypeBrowser.basePreviewColumns',
-        'genotypeBrowser.baseDownloadColumns',
-        'genotypeBrowser.previewColumns',
-        'genotypeBrowser.downloadColumns',
-        'genotypeBrowser.pheno.columns',
-        'genotypeBrowser.familyStudyFilters',
-        'genotypeBrowser.phenoFilters.filters',
-        'genotypeBrowser.genotype.columns',
-        'genotypeBrowser.peopleGroup.columns',
     ]
 
     NEW_KEYS_NAMES = {
         'phenoGenoTool': 'phenotypeGenotypeTool',
-        'genotypeBrowser.familyFilters': 'genotypeBrowser.familyStudyFilters',
     }
 
-    def __init__(self, section_config, study_config, *args, **kwargs):
+    def __init__(
+            self, section_config, study_config, genotype_browser, *args,
+            **kwargs):
         super(StudyConfigBase, self).__init__(section_config, *args, **kwargs)
 
         assert self.id
@@ -66,6 +48,7 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         assert self.work_dir
 
         self.study_config = study_config
+        self.genotypeBrowser = genotype_browser
 
 
 class StudyConfig(StudyConfigBase):
@@ -124,10 +107,13 @@ class StudyConfig(StudyConfigBase):
                 return None
 
         cls._fill_wdae_config(config_section)
+        genotype_browser = False
+        if config_section.get('genotypeBrowser', False) is True:
+            genotype_browser = GenotypeBrowserConfig.from_config(config)
 
         config_section['authorizedGroups'] = config_section.get(
             'authorizedGroups', [config_section.get('id', '')])
 
         # config_section['studies'] = [config_section['id']]
 
-        return StudyConfig(config_section, config)
+        return StudyConfig(config_section, config, genotype_browser)

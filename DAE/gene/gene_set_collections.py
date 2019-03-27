@@ -12,8 +12,7 @@ import logging
 
 from gene.config import GeneInfoConfig
 from GeneTerms import loadGeneTerm
-from pheno.common import Status
-from variants.attributes import Inheritance
+from variants.attributes import Inheritance, Status
 
 LOGGER = logging.getLogger(__name__)
 

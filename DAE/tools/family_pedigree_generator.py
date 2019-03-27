@@ -148,12 +148,20 @@ def save_family(family, filename=None):
 
 def main():
     desc = "Program to generate family pedigree file."
-    parser = argparse.ArgumentParser(description=desc,
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--mateships', type=int, action='store', default=30, help='amount of mateships to generate')
-    parser.add_argument('--children', type=int, action='store', default=5, help='amount of children per mateship')
-    parser.add_argument('--deep', action='store_true', help='generate deep family trees')
-    parser.add_argument('--output', action='store', default=None, help='custom generated output filename')
+    parser = argparse.ArgumentParser(
+        description=desc,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        '--mateships', type=int, action='store', default=30,
+        help='amount of mateships to generate')
+    parser.add_argument(
+        '--children', type=int, action='store', default=5,
+        help='amount of children per mateship')
+    parser.add_argument(
+        '--deep', action='store_true', help='generate deep family trees')
+    parser.add_argument(
+        '--output', action='store', default=None,
+        help='custom generated output filename')
     opts = parser.parse_args()
 
     if opts.deep:
@@ -162,6 +170,7 @@ def main():
         fg = FamilyGenerator()
     family = fg.generate(opts.mateships, opts.children)
     save_family(family, opts.output)
+
 
 if __name__ == '__main__':
     main()

@@ -8,7 +8,7 @@ from builtins import object
 from builtins import str
 import itertools
 from gene.weights import Weights
-from pheno.common import Status, Role
+from variants.attributes import Status, Role
 import re
 # from gene.gene_set_collections import GeneSetsCollections
 

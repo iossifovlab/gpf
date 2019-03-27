@@ -56,7 +56,7 @@ class Study(StudyBase):
     def query_variants(self, **kwargs):
         if 'studyFilters' in kwargs and \
                 self.name not in kwargs['studyFilters']:
-            return []
+            return
         else:
             for variant in self.backend.query_variants(**kwargs):
                 for allele in variant.alleles:

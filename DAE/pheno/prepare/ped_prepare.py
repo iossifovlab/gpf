@@ -11,7 +11,8 @@ from builtins import object
 import numpy as np
 import pandas as pd
 from pheno.db import DbManager
-from pheno.common import RoleMapping, Role, Status, Gender, MeasureType
+from pheno.common import RoleMapping, MeasureType
+from variants.attributes import Role, Status, Sex
 import os
 from box import Box
 from collections import defaultdict, OrderedDict
@@ -27,7 +28,7 @@ class PrepareCommon(object):
 
     PED_COLUMNS = [
         'familyId', 'personId', 'dadId', 'momId',
-        'gender', 'status',
+        'sex', 'status',
         # 'sampleId',
         # 'role',
     ]
@@ -153,7 +154,10 @@ class PreparePersons(PrepareBase):
                 'status': np.int32,
             }
         )
+        df = df.rename(columns={'gender': 'sex'})
+
         assert set(cls.PED_COLUMNS) <= set(df.columns)
+
         return df
 
     def prepare_pedigree(self, ped_df):
@@ -180,6 +184,8 @@ class PreparePersons(PrepareBase):
         return str(sample_id)
 
     def _save_persons(self, ped_df):
+        print(ped_df.head())
+
         families = self.db.get_families()
         persons = []
         for _index, row in ped_df.iterrows():
@@ -188,7 +194,7 @@ class PreparePersons(PrepareBase):
                 self.PERSON_ID: row['personId'],
                 'role': Role(row['role']),
                 'status': Status(row['status']),
-                'gender': Gender(row['gender']),
+                'sex': Sex(row['sex']),
                 'sample_id': self._build_sample_id(row.get('sampleId')),
             }
             persons.append(p)
@@ -390,7 +396,9 @@ class PrepareVariables(PreparePersons):
             sep = '\t'
 
         for filename in filenames:
-            df = pd.read_csv(filename, sep=sep, low_memory=False)
+            print("reading instrument:", filename)
+            df = pd.read_csv(
+                filename, sep=sep, low_memory=False, encoding='ISO-8859-1')
             person_id = self._get_person_column_name(df)
             print("renaming column '{}' in instrument: {}".format(
                 person_id, instrument_name))

@@ -5,8 +5,8 @@ Created on Nov 7, 2016
 '''
 from __future__ import unicode_literals
 
-from future import standard_library
-standard_library.install_aliases()  # noqa
+
+from future import standard_library; standard_library.install_aliases()  # noqa
 
 from builtins import object
 from configparser import ConfigParser
@@ -14,9 +14,10 @@ from collections import OrderedDict
 from past.utils import old_div
 
 import numpy as np
+from configurable_entities.configuration import DAEConfig
+
 from gene.genomic_values import GenomicValues
 from gene.config import GeneInfoConfig
-from Config import Config
 
 
 class Weights(GenomicValues):
@@ -132,28 +133,26 @@ class Weights(GenomicValues):
         return self.df
 
     @staticmethod
-    def load_gene_weights(name):
+    def load_gene_weights(name, dae_config=None):
         """
         Creates and loads a gene weights instance by gene weights name.
         """
-        assert name in Weights.list_gene_weights()
+        assert name in Weights.list_gene_weights(dae_config)
         w = Weights(name)
         return w
 
     @staticmethod
-    def list_gene_weights():
+    def list_gene_weights(dae_config=None):
         """
         Lists all available gene weights configured in `geneInfo.conf`.
         """
-        dae_config = Config()
-        wd = dae_config.daeDir
-        data_dir = dae_config.data_dir
+        if dae_config is None:
+            dae_config = DAEConfig()
 
         config = ConfigParser({
-            'wd': wd,
-            'data': data_dir,
+            'wd': dae_config.dae_data_dir,
         })
-        config.read(dae_config.geneInfoDBconfFile)
+        config.read(dae_config.gene_info_conf)
 
         weights = config.get('geneWeights', 'weights')
         names = [n.strip() for n in weights.split(',')]
@@ -167,9 +166,12 @@ class WeightsLoader(object):
     Used by Web interface.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, config=None, *args, **kwargs):
         super(WeightsLoader, self).__init__(*args, **kwargs)
-        self.config = GeneInfoConfig()
+        if config is None:
+            config = GeneInfoConfig()
+        self.config = config
+
         self.weights = OrderedDict()
         self._load()
 
@@ -187,6 +189,9 @@ class WeightsLoader(object):
 
     def _load(self):
         weights = self.config.config.get('geneWeights', 'weights')
+        if weights == '':
+            return
+
         names = [n.strip() for n in weights.split(',')]
         for name in names:
             w = Weights(name)

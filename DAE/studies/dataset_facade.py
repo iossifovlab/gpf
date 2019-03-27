@@ -3,10 +3,9 @@ from studies.study_wrapper import StudyWrapper
 
 class DatasetFacade(object):
 
-    _dataset_cache = {}
-    _dataset_wrapper_cache = {}
-
     def __init__(self, dataset_definitions, dataset_factory, pheno_factory):
+        self._dataset_cache = {}
+        self._dataset_wrapper_cache = {}
 
         self.dataset_definition = dataset_definitions
         self.dataset_factory = dataset_factory

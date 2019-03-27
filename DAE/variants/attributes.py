@@ -58,9 +58,13 @@ class Role(enum.Enum):
 
 
 class Sex(enum.Enum):
-    male = 1
-    female = 2
-    unspecified = 0
+    M = 1
+    F = 2
+    U = 0
+
+    male = M
+    female = F
+    unspecified = U
 
     @staticmethod
     def from_name(name):
