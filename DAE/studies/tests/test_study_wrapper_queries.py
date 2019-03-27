@@ -43,8 +43,8 @@ def test_query_family_variants(families, count, quads_two_families_wrapper):
 
 
 @pytest.mark.parametrize("sexes,count", [
-    (["M"], 2),
-    (["F"], 1),
+    (["M"], 3),
+    (["F"], 2),
 ])
 def test_query_sexes_variants(sexes, count, quads_f1_wrapper):
     variants = list(quads_f1_wrapper.query_variants(sexes=sexes))
@@ -67,7 +67,7 @@ def test_query_variant_type_variants(
 
 
 @pytest.mark.parametrize("effect_types,count", [
-    (["Intergenic"], 2),
+    (["Intergenic"], 3),
     (["CNV"], 0)
 ])
 def test_query_effect_types_variants(effect_types, count, quads_f1_wrapper):

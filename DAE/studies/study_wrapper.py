@@ -220,7 +220,7 @@ class StudyWrapper(object):
         result = {}
         print("roles_values", roles_values)
         for roles_value in roles_values:
-            result[roles_value.destination] = ",".join(self._get_roles_value(
+            result[roles_value.destination] = "".join(self._get_roles_value(
                 allele, roles_value.roles))
 
         return result
