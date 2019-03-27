@@ -19,7 +19,6 @@ from pheno_browser_api.common import PhenoBrowserCommon
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.permissions import IsDatasetAllowed
 from django.http.response import HttpResponse
-from pheno_browser.db import DbManager
 
 
 class PhenoInstrumentsView(APIView):
@@ -27,14 +26,14 @@ class PhenoInstrumentsView(APIView):
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        self.datasets_facade = get_studies_manager().get_dataset_facade()
+        self.variants_db = get_studies_manager().get_variants_db()
 
     def get(self, request):
         if 'dataset_id' not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params['dataset_id']
 
-        dataset = self.datasets_facade.get_dataset(dataset_id)
+        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
         if dataset is None or dataset.pheno_db is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -55,7 +54,7 @@ class PhenoMeasuresView(APIView):
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        self.datasets_facade = get_studies_manager().get_dataset_facade()
+        self.variants_db = get_studies_manager().get_variants_db()
 
         self.base_url = getattr(
             settings,
@@ -76,7 +75,7 @@ class PhenoMeasuresView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params['dataset_id']
 
-        dataset = self.datasets_facade.get_dataset(dataset_id)
+        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
         if dataset is None or dataset.pheno_db is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -85,27 +84,27 @@ class PhenoMeasuresView(APIView):
             instruments = list(dataset.pheno_db.instruments.keys())
             instrument = instruments[0]
 
-        browser_dbfile = self.get_browser_dbfile(
-            dataset.pheno_name)
+        db = dataset.pheno_db
 
-        db = DbManager(dbfile=browser_dbfile)
-        db.build()
-
-        df = db.get_instrument_df(instrument)
+        df = db._get_measures_df(instrument)
 
         res = []
         for row in df.to_dict('records'):
             print((row, type(row)))
             m = row
-            print(m)
-            if isnan(m['pvalue_correlation_nviq_male']):
-                m['pvalue_correlation_nviq_male'] = "NaN"
-            if isnan(m['pvalue_correlation_age_male']):
-                m['pvalue_correlation_age_male'] = "NaN"
-            if isnan(m['pvalue_correlation_nviq_female']):
-                m['pvalue_correlation_nviq_female'] = "NaN"
-            if isnan(m['pvalue_correlation_age_female']):
-                m['pvalue_correlation_age_female'] = "NaN"
+            # if isnan(m['pvalue_correlation_nviq_male']):
+            #     m['pvalue_correlation_nviq_male'] = "NaN"
+            # if isnan(m['pvalue_correlation_age_male']):
+            #     m['pvalue_correlation_age_male'] = "NaN"
+            # if isnan(m['pvalue_correlation_nviq_female']):
+            #     m['pvalue_correlation_nviq_female'] = "NaN"
+            # if isnan(m['pvalue_correlation_age_female']):
+            #     m['pvalue_correlation_age_female'] = "NaN"
+
+            if isnan(m['min_value']):
+                m['min_value'] = "NaN"
+            if isnan(m['max_value']):
+                m['max_value'] = "NaN"
 
             if m['values_domain'] is None:
                 m['values_domain'] = ""
@@ -122,14 +121,14 @@ class PhenoMeasuresDownload(APIView):
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        self.datasets_facade = get_studies_manager().get_dataset_facade()
+        self.variants_db = get_studies_manager().get_variants_db()
 
     def get(self, request):
         if 'dataset_id' not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params['dataset_id']
 
-        dataset = self.datasets_facade.get_dataset(dataset_id)
+        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
         if dataset is None or dataset.pheno_db is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
