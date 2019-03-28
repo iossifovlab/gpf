@@ -63,37 +63,56 @@ class StudyWdaeMixin(object):
         return pedigree
 
     @classmethod
-    def _get_pedigree_selectors(cls, dataset_config, pedigree_key):
-        pedigree = {}
+    def _get_present_in_role(
+            cls, present_in_role_type, present_in_role_options, study_config):
+        present_in_role = {}
+
+        present_in_role['name'] = \
+            study_config.pop(present_in_role_type + '.name', None)
+        present_in_role['roles'] = \
+            [el.strip() for el in study_config.pop(
+                present_in_role_type + '.roles').split(',')]
+
+        return present_in_role
+
+    @classmethod
+    def _get_selectors(cls, dataset_config, selector_key, selector_getter):
+        selector = {}
         for key, value in dataset_config.items():
             option_type, option_fullname = cls._split_section(key)
-            if option_type != pedigree_key:
+            if option_type != selector_key:
                 continue
 
-            pedigree_type, pedigree_option =\
+            selector_type, selector_option =\
                 cls._split_section(option_fullname)
-            if pedigree_key + '.' + pedigree_type not in pedigree:
-                pedigree[pedigree_key + '.' + pedigree_type] =\
-                    [pedigree_option]
+            if selector_key + '.' + selector_type not in selector:
+                selector[selector_key + '.' + selector_type] =\
+                    [selector_option]
             else:
-                pedigree[pedigree_key + '.' + pedigree_type].append(
-                    pedigree_option)
+                selector[selector_key + '.' + selector_type].append(
+                    selector_option)
 
-        pedigrees = []
-        for pedigree_type, pedigree_options in pedigree.items():
-            if 'domain' in pedigree_options:
-                pedigrees.append(cls._get_pedigree(
-                    pedigree_type, pedigree_options, dataset_config))
+        selectors = []
+        for selector_type, selector_options in selector.items():
+            selectors.append(selector_getter(
+                selector_type, selector_options, dataset_config))
 
-        return pedigrees
+        return selectors
 
     @classmethod
     def _fill_wdae_people_group_config(cls, config_section):
-        people_group =\
-            cls._get_pedigree_selectors(config_section, 'peopleGroup')
+        people_group = cls._get_selectors(
+            config_section, 'peopleGroup', cls._get_pedigree)
         if people_group:
             config_section['pedigreeSelectors'] = people_group
             config_section['peopleGroup'] = config_section['pedigreeSelectors']
+
+    @classmethod
+    def _fill_wdae_present_in_role_config(cls, config_section):
+        present_in_role = cls._get_selectors(
+            config_section, 'presentInRole', cls._get_present_in_role)
+        if present_in_role:
+            config_section['presentInRole'] = present_in_role
 
     @classmethod
     def _fill_wdae_enrichment_tool_config(cls, config_section):
@@ -104,4 +123,5 @@ class StudyWdaeMixin(object):
     @classmethod
     def _fill_wdae_config(cls, config_section):
         cls._fill_wdae_people_group_config(config_section)
+        cls._fill_wdae_present_in_role_config(config_section)
         cls._fill_wdae_enrichment_tool_config(config_section)
