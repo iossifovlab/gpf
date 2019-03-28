@@ -142,16 +142,16 @@ def test_query_present_in_child_and_roles(quads_f1_wrapper):
 @pytest.mark.parametrize(
     "option,count",
     [
-        (["mother only"], 1),
-        (["father only"], 1),
-        (["mother and father"], 1),
-        (["neither"], 1),
-        (["mother and father", "mother only"], 2),
-        (["mother only", "neither"], 2),
-        ([
+        ({'presentInParent': ["mother only"]}, 1),
+        ({'presentInParent': ["father only"]}, 1),
+        ({'presentInParent': ["mother and father"]}, 1),
+        ({'presentInParent': ["neither"]}, 1),
+        ({'presentInParent': ["mother and father", "mother only"]}, 2),
+        ({'presentInParent': ["mother only", "neither"]}, 2),
+        ({'presentInParent': [
              "mother only", "father only", "mother and father",
              "neither"
-         ], 4),
+         ]}, 4),
     ],
     ids=repr
 )

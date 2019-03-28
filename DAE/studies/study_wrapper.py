@@ -102,7 +102,6 @@ class StudyWrapper(object):
     }
 
     # Not implemented:
-    # inChild
     # callSet
     # minParentsCalled
     # ultraRareOnly
@@ -409,7 +408,7 @@ class StudyWrapper(object):
     def _transform_present_in_parent(self, kwargs):
         roles_query = []
 
-        for filter_option in kwargs['presentInParent']:
+        for filter_option in kwargs['presentInParent']['presentInParent']:
             new_roles = None
 
             if filter_option == 'mother only':
