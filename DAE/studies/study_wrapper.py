@@ -11,7 +11,7 @@ from RegionOperations import Region
 from pheno.common import MeasureType
 from pheno_tool.pheno_common import PhenoFilterBuilder
 from utils.dae_utils import split_iterable
-from variants.attributes import Role, Sex
+from variants.attributes import Role
 from studies.helpers import expand_effect_types
 from backends.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, ContainsNode
@@ -237,7 +237,11 @@ class StudyWrapper(object):
         return result
 
     def _add_pheno_columns(self, variants_iterable):
-        if self.pheno_db is None:
+        genotype_browser = self.study.config.genotypeBrowser
+
+        if self.pheno_db is None or \
+                (isinstance(genotype_browser, bool) and
+                 genotype_browser is False):
             for variant in variants_iterable:
                 yield variant
 
@@ -272,12 +276,14 @@ class StudyWrapper(object):
     def _get_all_pheno_values(self, families):
         pheno_column_dfs = []
         pheno_column_names = []
+
         for pheno_column in self.config.genotypeBrowser.phenoColumns:
             for slot in pheno_column.slots:
-                pheno_column_dfs.append(self.pheno_db.get_measure_values_df(
-                    slot.measure,
-                    family_ids=list(families),
-                    roles=[slot.role]))
+                pheno_column_dfs.append(
+                    self.pheno_db.get_measure_values_df(
+                        slot.measure,
+                        family_ids=list(families),
+                        roles=[slot.role]))
                 pheno_column_names.append(slot.source)
 
         return list(zip(pheno_column_dfs, pheno_column_names))
