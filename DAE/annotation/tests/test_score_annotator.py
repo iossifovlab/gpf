@@ -13,8 +13,7 @@ from annotation.tools.score_annotator import PositionScoreAnnotator, \
     PositionMultiScoreAnnotator, NPScoreAnnotator
 try:
     bigwig_enabled = True
-    from annotation.tools.score_file_io_bigwig import \
-        BigWigAccess
+    from annotation.tools.score_file_io_bigwig import BigWigAccess  # noqa
 except ImportError:
     bigwig_enabled = False
 

@@ -241,3 +241,45 @@ def test_query_study_filter(composite_dataset_wrapper):
                              query_variants(studyFilters=[
                                             {'studyName': 'QUADS_F1'}]))
     assert len(quads_f1_variants) == 2
+
+
+@pytest.mark.parametrize("geneWeights,count", [
+    ({'weight': 'LGD_rank', 'rangeStart': None, 'rangeEnd': None}, 5),
+    ({'weight': 'LGD_rank', 'rangeStart': 10.5, 'rangeEnd': None}, 5),
+    ({'weight': 'LGD_rank', 'rangeStart': None, 'rangeEnd': 20000.0}, 5),
+    ({'weight': 'LGD_rank', 'rangeStart': 2000.0, 'rangeEnd': 4000.0}, 1),
+    ({'weight': 'LGD_rank', 'rangeStart': 9000.0, 'rangeEnd': 11000.0}, 4),
+    ({'weight': 'LGD_rank', 'rangeStart': 1000.0, 'rangeEnd': 2000.0}, 0),
+    ({'weight': 'ala bala', 'rangeStart': 1000.0, 'rangeEnd': 2000.0}, 5),
+])
+def test_query_gene_weights(
+        geneWeights, count, quads_f2_dataset_wrapper, weights_loader):
+    variants = list(quads_f2_dataset_wrapper.query_variants(
+        weights_loader=weights_loader, geneWeights=geneWeights))
+
+    assert len(variants) == count
+
+    all_variants = list(quads_f2_dataset_wrapper.query_variants(
+        geneWeights=geneWeights))
+
+    assert len(all_variants) == 5
+
+
+@pytest.mark.parametrize("genomicScores,count", [
+    ([{'metric': 'score1', 'rangeStart': None, 'rangeEnd': None}], 5),
+    ([{'metric': 'score1', 'rangeStart': 10.5, 'rangeEnd': None}], 4),
+    ([{'metric': 'score1', 'rangeStart': None, 'rangeEnd': 25.0}], 1),
+    ([{'metric': 'score1', 'rangeStart': 2.0, 'rangeEnd': 7.0}], 1),
+    ([{'metric': 'score1', 'rangeStart': 40.5, 'rangeEnd': 55.0}], 2),
+    ([{'metric': 'score1', 'rangeStart': 42.0, 'rangeEnd': 43.0}], 0),
+    ([{'metric': 'ala bala', 'rangeStart': 5.0, 'rangeEnd': 50.0}], 0),
+    ([{'metric': 'score1', 'rangeStart': 2.0, 'rangeEnd': 7.0},
+      {'metric': 'score2', 'rangeStart': 50.0, 'rangeEnd': 150.0}], 1),
+    ([{'metric': 'score1', 'rangeStart': 2.0, 'rangeEnd': 7.0},
+      {'metric': 'score2', 'rangeStart': 50.0, 'rangeEnd': 75.0}], 0),
+])
+def test_query_genomic_scores(genomicScores, count, quads_f2_dataset_wrapper):
+    variants = list(quads_f2_dataset_wrapper.query_variants(
+        genomicScores=genomicScores))
+
+    assert len(variants) == count

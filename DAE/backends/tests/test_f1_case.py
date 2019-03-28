@@ -54,7 +54,7 @@ def test_f1_check_all_variants_effects(variants_vcf):
     for v in vs:
         print(
             v, v.effects, mat2str(v.best_st))
-        summary_alleles = v.summary_variant.alleles
+        summary_alleles = v.summary_alleles
         sa1 = summary_alleles[1]
         sa2 = summary_alleles[2]
 

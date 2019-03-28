@@ -164,15 +164,15 @@ class DAEConfig(object):
     @property
     def genomic_scores_hg19_dir(self):
         return self._get_config_value(
-            self.GENOMIC_SCORES_SECTION, 
-            'scores_hg19_dir', 
+            self.GENOMIC_SCORES_SECTION,
+            'scores_hg19_dir',
             self._dae_scores_hg19_dir)
 
     @property
     def genomic_scores_hg38_dir(self):
         return self._get_config_value(
-            self.GENOMIC_SCORES_SECTION, 
-            'scores_hg38_dir', 
+            self.GENOMIC_SCORES_SECTION,
+            'scores_hg38_dir',
             self._dae_scores_hg38_dir)
 
     def annotation_section(self):

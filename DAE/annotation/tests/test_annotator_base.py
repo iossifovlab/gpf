@@ -1,5 +1,5 @@
 import pytest
-import pandas as pd 
+import pandas as pd
 
 from .conftest import relative_to_this_test_folder
 from box import Box
@@ -113,7 +113,6 @@ def test_copy_annotator_multi(capsys, variants_io_m, expected_df):
     print(df)
 
     print(df[['test1', 'test2']])
-
 
     with variants_io_m as io_manager:
         annotator = CopyAnnotator(section_config)
