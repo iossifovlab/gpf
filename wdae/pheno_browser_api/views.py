@@ -13,12 +13,13 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.conf import settings
+from django.http.response import HttpResponse
 
 from datasets_api.studies_manager import get_studies_manager
-from pheno_browser_api.common import PhenoBrowserCommon
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.permissions import IsDatasetAllowed
-from django.http.response import HttpResponse
+
+from pheno_browser.db import DbManager
 
 
 class PhenoInstrumentsView(APIView):
@@ -61,8 +62,16 @@ class PhenoMeasuresView(APIView):
             "PHENO_BROWSER_BASE_URL",
             "/static/pheno_browser/")
 
+    def get_cache_dir(self, dbname):
+        cache_dir = getattr(
+            settings,
+            "PHENO_BROWSER_CACHE",
+            None)
+        dbdir = os.path.join(cache_dir, dbname)
+        return dbdir
+
     def get_browser_dbfile(self, dbname):
-        cache_dir = PhenoBrowserCommon.get_cache_dir(dbname)
+        cache_dir = self.get_cache_dir(dbname)
 
         browser_db = "{}_browser.db".format(dbname)
         return os.path.join(
@@ -84,27 +93,25 @@ class PhenoMeasuresView(APIView):
             instruments = list(dataset.pheno_db.instruments.keys())
             instrument = instruments[0]
 
-        db = dataset.pheno_db
+        browser_dbfile = self.get_browser_dbfile(
+            dataset.config.phenoDB)
 
-        df = db._get_measures_df(instrument)
+        db = DbManager(dbfile=browser_dbfile)
+        db.build()
+
+        df = db.get_instrument_df(instrument)
 
         res = []
         for row in df.to_dict('records'):
-            print((row, type(row)))
             m = row
-            # if isnan(m['pvalue_correlation_nviq_male']):
-            #     m['pvalue_correlation_nviq_male'] = "NaN"
-            # if isnan(m['pvalue_correlation_age_male']):
-            #     m['pvalue_correlation_age_male'] = "NaN"
-            # if isnan(m['pvalue_correlation_nviq_female']):
-            #     m['pvalue_correlation_nviq_female'] = "NaN"
-            # if isnan(m['pvalue_correlation_age_female']):
-            #     m['pvalue_correlation_age_female'] = "NaN"
-
-            if isnan(m['min_value']):
-                m['min_value'] = "NaN"
-            if isnan(m['max_value']):
-                m['max_value'] = "NaN"
+            if isnan(m['pvalue_correlation_nviq_male']):
+                m['pvalue_correlation_nviq_male'] = "NaN"
+            if isnan(m['pvalue_correlation_age_male']):
+                m['pvalue_correlation_age_male'] = "NaN"
+            if isnan(m['pvalue_correlation_nviq_female']):
+                m['pvalue_correlation_nviq_female'] = "NaN"
+            if isnan(m['pvalue_correlation_age_female']):
+                m['pvalue_correlation_age_female'] = "NaN"
 
             if m['values_domain'] is None:
                 m['values_domain'] = ""
