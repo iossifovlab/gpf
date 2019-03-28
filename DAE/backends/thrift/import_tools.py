@@ -26,7 +26,7 @@ def variants_iterator_to_parquet(
 
     parquet_config = Configure.from_prefix_parquet(
         parquet_prefix, bucket_index=bucket_index).parquet
-    
+
     print("converting into ", parquet_config, file=sys.stderr)
 
     save_ped_df_to_parquet(fvars.ped_df, parquet_config.pedigree)
@@ -50,6 +50,7 @@ def variants_iterator_to_parquet(
 
     print("DONE: {} for {:.2f} sec".format(parquet_prefix, end-start),
           file=sys.stderr)
+    return parquet_config
 
 
 def construct_import_annotation_pipeline(dae_config, argv, defaults={}):

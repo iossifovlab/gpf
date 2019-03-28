@@ -117,7 +117,7 @@ def import_dae_denovo(
 
     assert output is not None
 
-    variants_iterator_to_parquet(
+    return variants_iterator_to_parquet(
         fvars,
         output,
         bucket_index,

@@ -6,6 +6,7 @@ import os
 import sys
 import argparse
 import time
+import shutil
 
 from configurable_entities.configuration import DAEConfig
 from backends.thrift.import_tools import construct_import_annotation_pipeline
@@ -114,16 +115,28 @@ if __name__ == "__main__":
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, argv)
 
+    denovo_parquet = None
+    vcf_parquet = None
+
     if argv.vcf is not None:
-        import_vcf(
+        vcf_parquet = import_vcf(
             dae_config, annotation_pipeline,
             argv.pedigree, argv.vcf,
             output=output)
     if argv.denovo is not None:
-        import_dae_denovo(
+        denovo_parquet = import_dae_denovo(
             dae_config, annotation_pipeline,
             argv.pedigree, argv.denovo,
             output=output, family_format='pedigree')
+    if argv.denovo is None and argv.vcf is not None:
+        assert denovo_parquet is None
+        assert vcf_parquet is not None
+        pedigree_filename = os.path.join(output, "pedigree.parquet")
+        shutil.copyfile(
+            vcf_parquet.pedigree,
+            pedigree_filename
+        )
+        assert os.path.exists(pedigree_filename), pedigree_filename
 
     generate_study_config(dae_config, study_id, argv)
     if not argv.skip_reports:
