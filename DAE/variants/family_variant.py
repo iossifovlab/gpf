@@ -77,9 +77,12 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self.gt = genotype
         self._best_st = None
 
+        FamilyDelegate.__init__(self, family)
+
         self._inheritance = None
         self._inheritance_in_members = None
         self._variant_in_members = None
+        self._variant_in_members_objects = None
         self._variant_in_roles = None
         self._variant_in_sexes = None
 
@@ -164,8 +167,8 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         Returns set of members IDs of the family that are affected by
         this family variant.
         """
-        allele_index = getattr(self, "allele_index", None)
         if self._variant_in_members is None:
+            allele_index = getattr(self, "allele_index", None)
             gt = np.copy(self.gt)
             if allele_index is not None:
                 gt[gt != allele_index] = 0
@@ -175,6 +178,18 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             self._variant_in_members = np.copy(self.members_ids)
             self._variant_in_members[noindex] = None
         return self._variant_in_members
+
+    @property
+    def variant_in_members_objects(self):
+        if self._variant_in_members_objects is None:
+
+            variant_in_members = set(filter(None, self.variant_in_members))
+            self._variant_in_members_objects = [
+                member
+                for member in self.family.members_in_order
+                if member.person_id in variant_in_members
+            ]
+        return self._variant_in_members_objects
 
     @property
     def variant_in_roles(self):

@@ -30,6 +30,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         'phenoFilters.filters',
         'genotype.columns',
         'peopleGroup.columns',
+        'inRoles.columns'
     ]
 
     NEW_KEYS_NAMES = {
@@ -164,6 +165,38 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         return column
 
     @classmethod
+    def _get_genotype_browser_in_roles_columns(cls, dataset_config):
+        result = []
+        columns = dataset_config.pop('inRoles.columns', None)
+        if not columns:
+            return []
+
+        for col in columns:
+            column = cls._get_genotype_browser_in_roles_column(
+                dataset_config, col)
+            result.append(column)
+
+        return result
+
+    @staticmethod
+    def _get_genotype_browser_in_roles_column(dataset_config, col_id):
+        prefix = 'inRoles.{}'.format(col_id)
+        roles = dataset_config.pop('{}.{}'.format(prefix, 'roles'))
+        destination = dataset_config.pop(
+            '{}.{}'.format(prefix, 'destination'), col_id)
+
+        assert roles
+        assert destination
+
+        column = {
+            'id': col_id,
+            'roles': [role.strip() for role in roles.split(',')],
+            'destination': destination
+        }
+
+        return column
+
+    @classmethod
     def _get_genotype_browser_genotype_columns(cls, dataset_config):
         result = []
         columns = dataset_config.pop('genotype.columns', None)
@@ -239,6 +272,8 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         config_section['genotypeColumns'] =\
             cls._get_genotype_browser_genotype_columns(config_section) + \
             config_section['phenoColumns']
+        config_section['rolesColumns'] =\
+            cls._get_genotype_browser_in_roles_columns(config_section)
         config_section['previewColumnsSlots'] =\
             cls._get_genotype_browser_column_slots(
                 config_section.get('genotypeColumns', []),

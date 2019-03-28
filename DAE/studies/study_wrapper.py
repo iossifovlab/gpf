@@ -1,5 +1,6 @@
 from __future__ import unicode_literals, print_function, absolute_import
 
+import copy
 import functools
 from builtins import str
 
@@ -10,7 +11,7 @@ from RegionOperations import Region
 from pheno.common import MeasureType
 from pheno_tool.pheno_common import PhenoFilterBuilder
 from utils.dae_utils import split_iterable
-from variants.attributes import Role
+from variants.attributes import Role, Sex
 from studies.helpers import expand_effect_types
 from backends.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, ContainsNode
@@ -181,7 +182,59 @@ class StudyWrapper(object):
             self.study.query_variants(**kwargs), limit)
 
         for variant in self._add_pheno_columns(variants_from_studies):
+            variant = self._add_roles_columns(variant)
             yield variant
+
+    def _add_roles_columns(self, variant):
+        genotype_browser = self.study.config.genotypeBrowser
+        if isinstance(genotype_browser, bool) and genotype_browser is False:
+            return variant
+        # assert isinstance(genotype_browser, dict), type(genotype_browser)
+
+        roles_columns = self.study.config.genotypeBrowser.rolesColumns
+
+        if not roles_columns:
+            return variant
+
+        parsed_roles_columns = self._parse_roles_columns(roles_columns)
+
+        for allele in variant.alt_alleles:
+            roles_values = self._get_all_roles_values(
+                allele, parsed_roles_columns)
+            allele.update_attributes(roles_values)
+
+        return variant
+
+    def _parse_roles_columns(self, roles_columns):
+        result = []
+        for roles_column in roles_columns:
+            roles_copy = copy.deepcopy(roles_column)
+            roles = roles_copy.roles
+            roles_copy.roles = [Role.from_name(role) for role in roles]
+
+            result.append(roles_copy)
+
+        return result
+
+    def _get_all_roles_values(self, allele, roles_values):
+        result = {}
+        print("roles_values", roles_values)
+        for roles_value in roles_values:
+            result[roles_value.destination] = "".join(self._get_roles_value(
+                allele, roles_value.roles))
+
+        return result
+
+    def _get_roles_value(self, allele, roles):
+        result = []
+        variant_in_members = allele.variant_in_members_objects
+
+        for role in roles:
+            for member in variant_in_members:
+                if member.role == role:
+                    result.append(str(role) + member.sex.short())
+
+        return result
 
     def _add_pheno_columns(self, variants_iterable):
         if self.pheno_db is None:

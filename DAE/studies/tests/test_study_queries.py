@@ -37,11 +37,10 @@ def test_query_family_variants(families, count, quads_two_families_wrapper):
 
 
 @pytest.mark.parametrize("sexes,count", [
-    ("M", 2),
-    ("F", 1),
+    ("M", 3),
+    ("F", 2),
 ])
 def test_query_sexes_variants(sexes, count, quads_f1_wrapper):
     variants = list(quads_f1_wrapper.query_variants(sexes=sexes))
 
     assert len(variants) == count
-pytestmark = pytest.mark.usefixtures("pheno_conf_path")
