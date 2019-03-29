@@ -38,22 +38,9 @@ export class GenotypeBrowserComponent extends QueryStateCollector
   }
 
   getCurrentState() {
-    const state = this.collectState();
+    const state = super.getCurrentState();
 
-    return Observable.zip(...state, function(...states) {
-      const stateJSON = {};
-      for (const st of  states) {
-        for (const key in st) {
-          if (key in stateJSON) {
-            stateJSON[key] = {...stateJSON[key], ...st[key]};
-          } else {
-            stateJSON[key] = st[key];
-          }
-        }
-      }
-      return stateJSON;
-    })
-      .map(state => {
+    return state.map(state => {
         const stateObject = Object.assign(
           { datasetId: this.selectedDatasetId },
           ...state);

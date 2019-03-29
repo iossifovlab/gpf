@@ -2,9 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { EnrichmentResults } from '../enrichment-query/enrichment-result';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { EnrichmentQueryService } from '../enrichment-query/enrichment-query.service';
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ActivatedRoute, Params } from '@angular/router';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
-import { Observable } from 'rxjs';
 
 @Component({
   selector: 'gpf-enrichment-tool',
@@ -36,11 +35,11 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
   }
 
   getCurrentState() {
-    let state = this.collectState();
+    const state = super.getCurrentState();
 
-    return Observable.zip(...state)
+    return state
       .map(state => {
-        let stateObject = Object.assign(
+        const stateObject = Object.assign(
           { datasetId: this.selectedDatasetId },
           ...state);
         return stateObject;
@@ -49,15 +48,10 @@ export class EnrichmentToolComponent extends QueryStateCollector implements OnIn
 
   submitQuery() {
     this.loadingService.setLoadingStart();
-    let stateArray = this.collectState();
-    Observable.zip(...stateArray)
-    .subscribe(
+    this.getCurrentState().subscribe(
       state => {
         this.enrichmentResults = null;
-        let queryData = Object.assign({},
-                                      {datasetId: this.selectedDatasetId},
-                                      ...state);
-        this.enrichmentQueryService.getEnrichmentTest(queryData).subscribe(
+        this.enrichmentQueryService.getEnrichmentTest(state).subscribe(
           (enrichmentResults) => {
             this.enrichmentResults = enrichmentResults;
             this.loadingService.setLoadingStop();
