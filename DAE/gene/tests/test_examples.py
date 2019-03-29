@@ -6,8 +6,6 @@ Created on Apr 16, 2018
 from __future__ import print_function, absolute_import
 from __future__ import unicode_literals
 
-import pytest
-
 # pytestmark = pytest.mark.skip('removed used interface')
 # pytestmark = pytest.mark.usefixtures("gene_info_cache_dir")
 

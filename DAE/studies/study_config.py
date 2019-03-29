@@ -34,7 +34,7 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
     }
 
     def __init__(
-            self, section_config, study_config, genotype_browser, *args,
+            self, section_config, study_config, genotype_browser=None, *args,
             **kwargs):
         super(StudyConfigBase, self).__init__(section_config, *args, **kwargs)
 
@@ -48,7 +48,9 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         assert self.work_dir
 
         self.study_config = study_config
-        self.genotypeBrowser = genotype_browser
+
+        if genotype_browser is not None:
+            self.genotypeBrowser = genotype_browser
 
 
 class StudyConfig(StudyConfigBase):
@@ -107,7 +109,7 @@ class StudyConfig(StudyConfigBase):
                 return None
 
         cls._fill_wdae_config(config_section)
-        genotype_browser = False
+        genotype_browser = None
         if config_section.get('genotypeBrowser', False) is True:
             genotype_browser = GenotypeBrowserConfig.from_config(config)
 

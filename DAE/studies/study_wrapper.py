@@ -26,7 +26,6 @@ class StudyWrapper(object):
         self._init_pheno(self.pheno_factory)
 
     def _init_wdae_config(self):
-        genotype_browser = self.config.genotypeBrowser
 
         preview_columns = []
         download_columns = []
@@ -36,7 +35,8 @@ class StudyWrapper(object):
 
         pedigree_selectors = []
 
-        if genotype_browser:
+        if 'genotypeBrowser' in self.config and self.config.genotype_browser:
+            genotype_browser = self.config.genotypeBrowser
             preview_columns = genotype_browser['previewColumnsSlots']
             download_columns = genotype_browser['downloadColumnsSlots']
             if genotype_browser['phenoColumns']:
@@ -46,8 +46,8 @@ class StudyWrapper(object):
 
             column_labels = genotype_browser['columnLabels']
 
-        if 'pedigreeSelectors' in self.config:
-            pedigree_selectors = self.config.pedigree_selectors
+            if 'pedigreeSelectors' in genotype_browser:
+                pedigree_selectors = genotype_browser.pedigree_selectors
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
@@ -74,7 +74,8 @@ class StudyWrapper(object):
         if pheno_db:
             self.pheno_db = pheno_factory.get_pheno_db(pheno_db)
 
-            if self.config.genotypeBrowser:
+            if 'genotypeBrowser' in self.config and \
+                    self.config.genotypeBrowser:
                 pheno_filters = self.config.genotypeBrowser.phenoFilters
                 if pheno_filters:
                     self.pheno_filters_in_config = {
@@ -218,13 +219,15 @@ class StudyWrapper(object):
     def _get_all_pheno_values(self, families):
         pheno_column_dfs = []
         pheno_column_names = []
-        for pheno_column in self.config.genotypeBrowser.phenoColumns:
-            for slot in pheno_column.slots:
-                pheno_column_dfs.append(self.pheno_db.get_measure_values_df(
-                    slot.measure,
-                    family_ids=list(families),
-                    roles=[slot.role]))
-                pheno_column_names.append(slot.source)
+        if 'genotypeBrowser' in self.config and self.config.genotypeBrowser:
+            for pheno_column in self.config.genotypeBrowser.phenoColumns:
+                for slot in pheno_column.slots:
+                    pheno_column_dfs.append(
+                        self.pheno_db.get_measure_values_df(
+                            slot.measure,
+                            family_ids=list(families),
+                            roles=[slot.role]))
+                    pheno_column_names.append(slot.source)
 
         return list(zip(pheno_column_dfs, pheno_column_names))
 
@@ -492,8 +495,7 @@ class StudyWrapper(object):
         return [
             'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
             'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
-            'enrichmentTool', 'genotypeBrowser', 'pedigreeSelectors',
-            'studyTypes', 'studies', 'presentInRole'
+            'enrichmentTool', 'genotypeBrowser', 'studyTypes', 'studies'
         ]
 
     def get_dataset_description(self):
