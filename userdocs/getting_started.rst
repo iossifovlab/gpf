@@ -510,7 +510,7 @@ The included files are:
 To import these phenotype database into the GPF system you need to use
 `pheno2DAE.py` tool::
 
-    pheno2DAE.py -p pheno.ped -i instruments/ -o pheno.db
+    pheno2DAE.py -p comp_pheno.ped -i instruments/ -o comp_pheno.db
 
 Options uses in this command are as follows:
 
@@ -532,7 +532,8 @@ To generate the data needed for the GPF Phenotype Browser you can use
 
 .. code:: bash
 
-    pheno2browser.py -d ./pheno.db -p pheno -o browser/pheno \
+    pheno2browser.py -d ./comp_pheno.db -p comp_pheno \
+        -o browser/comp_pheno \
         --age "i1:age" --nonverbal_iq "i1:iq"
 
 Options used in this example are as follows:
@@ -549,4 +550,53 @@ Options used in this example are as follows:
   | correspond to the age at assesment and non-verbal IQ; when such
   | measures are specified, the phenotype browser displays correlation
   | between each measure displayed and age at assesment and non-verbal IQ.
+
+Configure Phenotype Database
+++++++++++++++++++++++++++++
+
+For the newly imported phenotype database to be accesssible from GPF system
+you need to configure the phenotype DB in `phenoDB.conf` configuration file.
+To this end you need to add `comp_pheno` section to `phenoDB.conf` file:
+
+.. code::
+
+    [comp_pheno]
+    dbfile = %(cache_dir)s/comp_pheno.db
+    age = age
+    nonverbal_iq = iq
+    browser_dbfile = %(browser_dir)s/comp_pheno/comp_pheno_browser.db
+    browser_images_dir = %(browser_dir)s/comp_pheno
+    browser_images_url = /static/comp_pheno
+
+and add `comp_pheno` to the list of phenotype database:
+
+.. code::
+
+    [pheno]
+    dbs=comp_pheno
+
+
+Configure Phenotype Browser
++++++++++++++++++++++++++++
+
+The phenotype databases could be attached to one or more studies and datasets.
+If you want to attach `comp_pheno` phenotype database to `comp` study you need
+to specify it in the `comp` stydy configuration file `comp.conf`:
+
+.. code::
+
+    [study]
+
+    id = comp
+    prefix = data/
+    phenoDB = comp_pheno
+
+and to enable the phenotype browser you should add:
+
+.. code::
+
+    phenotypeBrowser = yes
+
+If you restart the GPF system WEB interface after this change you should be
+able to see `Phenotype Browser` tab in `comp` dataset.
 
