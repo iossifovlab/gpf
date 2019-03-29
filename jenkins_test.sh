@@ -32,6 +32,7 @@ py.test --traceconfig -v --cov-config coveragerc \
     DAE/gene/tests \
     DAE/pedigrees/tests \
     DAE/pheno/tests \
+    DAE/pheno_browser/tests \
     DAE/studies/tests \
     DAE/tools/tests \
     DAE/utils/tests \

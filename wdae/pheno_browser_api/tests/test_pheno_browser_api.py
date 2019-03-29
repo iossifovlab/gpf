@@ -28,7 +28,7 @@ class Test(APITestCase):
         self.assertIn('instruments', response.data)
         self.assertEqual(103, len(response.data['instruments']))
 
-    @pytest.mark.skip('issues with pheno browser cache')
+    @pytest.mark.skip('missing ssc dataset')
     def test_measures_ssc_commonly_used(self):
         url = "{}?dataset_id=SSC&instrument=ssc_commonly_used".format(
             self.MEASURES_URL)
@@ -55,7 +55,6 @@ class Test(APITestCase):
 
         self.assertEqual(169, len(response.data['measures']))
 
-    @pytest.mark.skip('issues with pheno browser cache')
     def test_measures_svip_bad_json(self):
         problem_urls = [
             "{}?dataset_id=SVIP&instrument=svip_neuro_exam",
