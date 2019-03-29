@@ -493,7 +493,7 @@ class StudyWrapper(object):
             'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
             'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
             'enrichmentTool', 'genotypeBrowser', 'pedigreeSelectors',
-            'studyTypes', 'studies'
+            'studyTypes', 'studies', 'presentInRole'
         ]
 
     def get_dataset_description(self):
