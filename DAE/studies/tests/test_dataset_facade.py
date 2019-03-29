@@ -1,9 +1,3 @@
-import pytest
-
-
-pytestmark = pytest.mark.usefixtures("pheno_conf_path")
-
-
 def test_dataset_facade_simple(dataset_facade):
     assert sorted(dataset_facade.get_all_dataset_ids()) == \
         sorted([

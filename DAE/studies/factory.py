@@ -9,7 +9,9 @@ from studies.dataset_facade import DatasetFacade
 
 class VariantsDb(object):
 
-    def __init__(self, dae_config, thrift_connection=None):
+    def __init__(
+            self, dae_config,
+            pheno_factory=None, thrift_connection=None):
         self.dae_config = dae_config
         self.studies_definitions = DirectoryEnabledStudiesDefinition(
             studies_dir=dae_config.studies_dir,
@@ -18,7 +20,9 @@ class VariantsDb(object):
 
         study_factory = StudyFactory(thrift_connection)
 
-        self.pheno_factory = PhenoFactory(dae_config=dae_config)
+        if pheno_factory is None:
+            pheno_factory = PhenoFactory(dae_config=dae_config)
+        self.pheno_factory = pheno_factory
 
         self.study_facade = StudyFacade(
             self.pheno_factory, self.studies_definitions, study_factory)
@@ -54,7 +58,8 @@ class VariantsDb(object):
 
         overlapping = studies_ids.intersection(dataset_ids)
 
-        assert overlapping == set(), "Overlapping studies and datasets ids: {}".format(overlapping)
+        assert overlapping == set(), \
+            "Overlapping studies and datasets ids: {}".format(overlapping)
 
     def get_studies_ids(self):
         return self.studies_definitions.study_ids

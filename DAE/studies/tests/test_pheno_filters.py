@@ -2,8 +2,6 @@ from __future__ import unicode_literals
 
 import pytest
 
-pytestmark = pytest.mark.usefixtures("pheno_conf_path")
-
 FILTER_QUERY_CATEGORICAL = {
     "id": "Categorical",
     "measureType": "categorical",

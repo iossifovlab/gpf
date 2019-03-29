@@ -149,8 +149,8 @@ def quads_in_parent_wrapper(quads_in_parent, pheno_factory):
 
 
 @pytest.fixture(scope='module')
-def pheno_factory():
-    return PhenoFactory()
+def pheno_factory(dae_config_fixture):
+    return PhenoFactory(dae_config_fixture)
 
 
 @pytest.fixture(scope='module')
@@ -288,16 +288,6 @@ def composite_dataset(dataset_factory, dataset_definitions):
 @pytest.fixture(scope='module')
 def composite_dataset_wrapper(composite_dataset, pheno_factory):
     return StudyWrapper(composite_dataset, pheno_factory)
-
-
-@pytest.fixture(scope='module')
-def pheno_conf_path():
-    new_envs = {
-        'DAE_DB_DIR': fixtures_dir()
-    }
-
-    for val in change_environment(new_envs):
-        yield val
 
 
 @pytest.fixture(scope='module')

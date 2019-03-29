@@ -64,7 +64,7 @@ def import_vcf(
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
-    variants_iterator_to_parquet(
+    return variants_iterator_to_parquet(
         fvars,
         output,
         bucket_index,
