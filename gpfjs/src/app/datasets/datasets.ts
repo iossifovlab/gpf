@@ -64,6 +64,32 @@ export class PedigreeSelector extends IdName {
   }
 }
 
+export class PresentInRole {
+  static fromJson(json: any): PresentInRole {
+    if (!json) {
+      return undefined;
+    }
+
+    return new PresentInRole(
+      json['name'],
+      json['roles'],
+    );
+  }
+  static fromJsonArray(jsonArray: Array<Object>): Array<PresentInRole> {
+    if (!jsonArray) {
+      return undefined;
+    }
+
+    return jsonArray.map((json) => PresentInRole.fromJson(json));
+  }
+
+  constructor(
+    readonly name: string,
+    readonly roles: string[]
+  ) {
+  }
+}
+
 export class AdditionalColumnSlot {
   static fromJson(json: any): AdditionalColumnSlot {
     return new AdditionalColumnSlot(
@@ -164,6 +190,7 @@ export class GenotypeBrowser {
       json['hasPedigreeSelector'],
       json['hasPresentInChild'],
       json['hasPresentInParent'],
+      json['hasPresentInRole'],
       json['hasCNV'],
       json['hasComplex'],
       json['hasFamilyFilters'],
@@ -182,6 +209,7 @@ export class GenotypeBrowser {
     readonly hasPedigreeSelector: boolean,
     readonly hasPresentInChild: boolean,
     readonly hasPresentInParent: boolean,
+    readonly hasPresentInRole: boolean,
     readonly hasCNV: boolean,
     readonly hasComplex: boolean,
     readonly hasFamilyFilters: boolean,
@@ -219,6 +247,7 @@ export class Dataset extends IdName {
       json['phenotypeBrowser'],
       GenotypeBrowser.fromJson(json['genotypeBrowser']),
       PedigreeSelector.fromJsonArray(json['pedigreeSelectors']),
+      PresentInRole.fromJsonArray(json['presentInRole']),
       UserGroup.fromJsonArray(json['groups']),
     );
   }
@@ -247,6 +276,7 @@ export class Dataset extends IdName {
     readonly phenotypeBrowser: boolean,
     readonly genotypeBrowser: GenotypeBrowser,
     readonly pedigreeSelectors: PedigreeSelector[],
+    readonly presentInRole: PresentInRole[],
     readonly groups: UserGroup[]
   ) {
     super(id, name);

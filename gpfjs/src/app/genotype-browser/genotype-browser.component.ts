@@ -1,14 +1,11 @@
 import { Component, Input, OnInit, OnChanges, AfterViewInit, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, Params, Router } from '@angular/router';
 
 import { Observable } from 'rxjs';
-
 
 import { QueryStateCollector } from '../query/query-state-provider';
 import { QueryService } from '../query/query.service';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
 import { ConfigService } from '../config/config.service';
-import { StateRestoreService } from '../store/state-restore.service';
 import { DatasetsService } from '../datasets/datasets.service';
 import { Dataset } from '../datasets/datasets';
 
@@ -35,20 +32,29 @@ export class GenotypeBrowserComponent extends QueryStateCollector
     private queryService: QueryService,
     readonly configService: ConfigService,
     private loadingService: FullscreenLoadingService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private stateRestoreService: StateRestoreService,
     private datasetsService: DatasetsService,
   ) {
     super();
   }
 
   getCurrentState() {
-    let state = this.collectState();
+    const state = this.collectState();
 
-    return Observable.zip(...state)
+    return Observable.zip(...state, function(...states) {
+      const stateJSON = {};
+      for (const st of  states) {
+        for (const key in st) {
+          if (key in stateJSON) {
+            stateJSON[key] = {...stateJSON[key], ...st[key]};
+          } else {
+            stateJSON[key] = st[key];
+          }
+        }
+      }
+      return stateJSON;
+    })
       .map(state => {
-        let stateObject = Object.assign(
+        const stateObject = Object.assign(
           { datasetId: this.selectedDatasetId },
           ...state);
         return stateObject;
