@@ -139,52 +139,60 @@ two GPF startup instances that are aligned with different versions of the
 reference human genome - for HG19 and HG38.
 
 If you plan to work with variants aligned to the HG19 reference genome, you
-will need a `data-hg19-startup` instance:
+will need a `data-hg19-startup` instance.
 
 .. code-block:: bash
 
-    rsync -avPHt -e "ssh -p 2020" --exclude ".dvc" --exclude ".git" \
-        seqpipe@nemo.seqpipe.org:repo/data-hg19-startup .
+    wget -c https://iossifovlab.com/distribution/public/data-hg19-startup.tar.gz
 
-This command will copy the necessary data into your working directory.
+This command will copy the necessary data into your working directory. To
+use you need to untar it:
 
-.. note::
+.. code-block:: bash
 
-    If you intend to make changes in this repo, it would be better to use::
+    tar zxvf data-hg19-startup.tar.gz
 
-        rsync -avPHt -e "ssh -p 2020" \
-            seqpipe@nemo.seqpipe.org:repo/data-hg19-startup .
-
-.. note::
-
-    This data is available on `wigclust` in the following directory::
-
-        /mnt/wigclust21/data/safe/chorbadj/GPF/data-hg19-startup
-
-.. todo::
-
-    We need to prepare GPF startup data instance for HG38.
+This command is going to create  directory `data-hg19-startup` that contains
+preconfigured GPF data for HG19.
 
 
-Get Genomic Scores Database [TBD]
-#################################
+Get Genomic Scores Database (optional)
+######################################
 
 To annotate variants with genomic scores you will need a genomic scores
-database.
+database or at least genomic scores you plan to use. You can find some
+genomic scores for HG19 at
+`https://iossifovlab.com/distribution/public/genomic-scores-hg19/`
 
-There are two genomic scores databases - aligned to reference genomes HG19
-and HG38.
+Download and untar the genomic scores you want to use into a separate
+directory. For example, if you want to use `gnomAD_exome` and `gnomAD_genome`
+frequencies:
 
-You can download the full set of genomic scores or choose to download
-only specific genomic scores you are interested in.
+.. code:: bash
+
+    mkdir genomic-scores-hg19
+    cd genomic-scores-hg19
+    wget -c https://iossifovlab.com/distribution/public/genomic-scores-hg19/gnomAD_exome-hg19.tar
+    wget -c https://iossifovlab.com/distribution/public/genomic-scores-hg19/gnomAD_genome-hg19.tar
+    tar xvf gnomAD_exome-hg19.tar
+    tar xvf gnomAD_genome-hg19.tar
+
+This will create two subdirectories inside your `genomic-scores-hg19`
+directory,
+that contain `gnomAD_exome` and `gnomAD_genome` frequencies prepared to be used
+by GPF annotation pipeline and GPF import tools.
 
 .. note::
 
-    At the moment this data is available on `wigclust` in the following
-    directories::
+    If you want to use some genomic scores you should edit GPF annotation
+    pipeline configuration file::
 
-        /mnt/wigclust21/data/safe/chorbadj/genomics-scores/genomic-scores-hg19
-        /mnt/wigclust21/data/safe/chorbadj/genomics-scores/genomic-scores-hg38
+        data-hg19-startup/annotation.conf
+    
+    This configuration pipeline contains some examples how to configure
+    genomic scores annotation for `MPC` and `CADD` genomic scores and
+    for `gnomAD_exome` and `gnomAD_genome` frequencies. Comment out
+    the appropriate example and adjust it according your needs.
 
 
 Update `setenv.sh` Script
@@ -199,8 +207,8 @@ Inside the GPF source directory, there is a file named
     export SPARK_HOME=<path to spark distribution>/spark-2.4
 
     # configure paths to genomic scores databases
-    export DAE_GENOMIC_SCORES_HG19=<path to>/genomic-scores-hg19
-    export DAE_GENOMIC_SCORES_HG38=<path to>/genomic-scores-hg38
+    # export DAE_GENOMIC_SCORES_HG19=<path to>/genomic-scores-hg19
+    # export DAE_GENOMIC_SCORES_HG38=<path to>/genomic-scores-hg38
 
     # specifies where the source directory for GPF DAE is
     export DAE_SOURCE_DIR=<path to gpf>/gpf/DAE
@@ -213,8 +221,18 @@ Inside the GPF source directory, there is a file named
     # setups GPF paths
     source $DAE_SOURCE_DIR/setdae.sh
 
+
 You should copy it as a separate file named ``setenv.sh`` and edit it according
-you own setup. When you are ready, you need to source your ``setenv.sh`` file:
+you own setup.
+
+.. note::
+
+    If you plan to use genomic scores annotation you need to comment out
+    setting of `DAE_GENOMIC_SCORES_HG19` and `DAE_GENOMIC_SCORES_HG38`
+    environment variables and edit them accordingly.
+
+
+When you are ready, you need to source your ``setenv.sh`` file:
 
 .. code-block:: bash
 
@@ -429,12 +447,6 @@ To import this data as a study into GPF instance:
 * go into `studies` directory of GPF instance data folder::
 
     cd $DAE_DB_DIR/studies/comp
-
-
-* create a directory where you plan to save the imported data::
-
-        mkdir data
-        cd data
 
 
 * run `simple_study_import.py` to import the data; this tool expects there
