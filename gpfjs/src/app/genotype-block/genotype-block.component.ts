@@ -80,13 +80,13 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
       if (!dataset) {
         return [];
       }
-      return dataset.pedigreeSelectors;
+      return dataset.genotypeBrowser.pedigreeSelectors;
     });
     this.presentInRole = selectedDataset$.map(dataset => {
       if (!dataset) {
         return [];
       }
-      return dataset.presentInRole;
+      return dataset.genotypeBrowser.presentInRole;
     });
     this.rolesFilterOptions = selectedDataset$.map(dataset => {
       if (!dataset || !dataset.genotypeBrowser) {
