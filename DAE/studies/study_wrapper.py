@@ -218,7 +218,6 @@ class StudyWrapper(object):
 
     def _get_all_roles_values(self, allele, roles_values):
         result = {}
-        print("roles_values", roles_values)
         for roles_value in roles_values:
             result[roles_value.destination] = "".join(self._get_roles_value(
                 allele, roles_value.roles))
@@ -408,7 +407,6 @@ class StudyWrapper(object):
         if value_range[1] is None:
             value_range = (value_range[0], float('inf'))
 
-        print(value_range)
 
         value = 'af_allele_freq'
         if 'real_attr_filter' not in kwargs:
@@ -585,7 +583,7 @@ class StudyWrapper(object):
             if self.pheno_db is None:
                 continue
 
-            measure = self.study.pheno_db.get_measure(
+            measure = self.pheno_db.get_measure(
                 measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
