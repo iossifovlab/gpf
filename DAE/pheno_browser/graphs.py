@@ -13,7 +13,6 @@ from builtins import object
 import textwrap
 import matplotlib as mpl; mpl.use("PS")  # noqa
 
-# from pheno.common import Status, Gender
 from variants.attributes import Status, Sex
 
 import matplotlib.pyplot as plt; plt.ioff()  # noqa
@@ -127,7 +126,7 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
         jfemale1 = np.random.uniform(-jitter, jitter, len(dfemale[col1]))
         jfemale2 = np.random.uniform(-jitter, jitter, len(dfemale[col2]))
 
-    [color_male, color_female] = gender_palette_light()
+    color_male, color_female = gender_palette_light()
     ax.plot(
         dmale[col1] + jmale1,
         dmale[col2] + jmale2,
@@ -139,14 +138,14 @@ def draw_linregres(df, col1, col2, jitter=None, ax=None):
         ".", color=color_female, ms=4,
         label="female")
 
-    [color_male, color_female] = gender_palette()
+    color_male, color_female = gender_palette()
     if res_male:
         ax.plot(dmale[col1], res_male.predict(), color=color_male)
     if res_female:
         ax.plot(dfemale[col1], res_female.predict(), color=color_female)
 
     male_female_legend(color_male, color_female, ax)
-    plt.tight_layout()
+    # plt.tight_layout()
     return res_male, res_female
 
 
@@ -168,13 +167,13 @@ def draw_distribution(df, measure_id, ax=None):
 
     ax.set_xlabel(measure_id)
     ax.set_ylabel("count")
-    plt.tight_layout()
+    # plt.tight_layout()
 
 
 def column_counts(column):
     counts = {
         "column_name": textwrap.fill(column.name, 9),
-        "column_status": "$\it{" + column.status.name + "}$",
+        "column_status": "$\\it{" + column.status.name + "}$",
         "column_total": column.all_count(),
         "male_total": column.males_count(),
         "female_total": column.females_count()
@@ -187,8 +186,9 @@ def role_labels(ordered_columns):
         "{column_name}\n{column_status}\n"
         "all:{column_total:>4d}\n"
         "M: {male_total:>4d}\n"
-        "F: {female_total:>4d}".format(**column_counts(column))
-        for column in ordered_columns]
+        "F: {female_total:>4d}".
+        format(**column_counts(col)) for col in ordered_columns
+    ]
 
 
 def gender_palette_light():
@@ -275,7 +275,7 @@ def draw_measure_violinplot(
     plt.xticks(list(range(0, len(labels))), labels)
     ax.set_ylabel(measure_id)
     ax.set_xlabel("role")
-    plt.tight_layout()
+    # plt.tight_layout()
 
     return True
 
@@ -350,6 +350,7 @@ def draw_categorical_violin_distribution(
         0, len(columns) * 2 * binned_maximum, 2 * binned_maximum)
 
     _fig, ax = plt.subplots()
+    _fig.set_tight_layout(True)
     set_figure_size(_fig, len(columns))
     female_text_offeset = binned_maximum * 0.05
     for count, (male, female) in enumerate(binned_datasets):
@@ -381,9 +382,6 @@ def draw_categorical_violin_distribution(
     plt.xticks(x_locations, labels)
 
     male_female_legend(color_male, color_female, ax)
-
-    plt.tight_layout()
-
     return True
 
 
