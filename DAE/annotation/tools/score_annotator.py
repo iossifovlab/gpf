@@ -27,7 +27,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         assert all([
             sn in self.score_file.score_names for sn in self.score_names]), \
             (self.score_names, self.score_file.score_names,
-             self.score_file.filename)
+             self.score_file.score_filename)
 
     def _init_score_file(self):
         assert self.config.options.scores_file, \

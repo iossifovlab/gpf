@@ -92,8 +92,8 @@ class ScoreFile(object):
         self.pos_end_index = \
             self.schema.col_names.index(self.pos_end_name)
 
-        if 'chr_prefix' in self.config.misc:
-            self.chr_prefix = self.config.misc.bool('chr_prefix')
+        if 'chr_prefix' in self.config.general:
+            self.chr_prefix = self.config.general.bool('chr_prefix')
         else:
             self.chr_prefix = False
 
@@ -111,10 +111,10 @@ class ScoreFile(object):
             score_format = self.config.general.format.lower()
         else:
             score_format = 'tsv'
-        assert score_format in ['tsv', 'bigwig'], \
+        assert score_format in ['bedgraph', 'tsv', 'bigwig', 'bw'], \
             (score_format, self.config.options.scores_config_file)
 
-        if score_format == 'bigwig':
+        if score_format == 'bigwig' or score_format == 'bw':
             assert bigwig_enabled, 'pyBigWig module is not installed'
             self.accessor = BigWigAccess(self)
         else:
