@@ -215,7 +215,9 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def _generate_gene_sets_for(self, study):
         pedigree_selector = self.denovo_gene_sets[study.id]['source']
-        pedigree_selector_values = study.get_pedigree_values(pedigree_selector)
+        pedigree_selector_values = [
+            str(p) for p in study.get_pedigree_values(pedigree_selector)
+        ]
 
         cache = {value: {} for value in pedigree_selector_values}
 

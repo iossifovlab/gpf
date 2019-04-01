@@ -157,4 +157,3 @@ class CommonReportsQueryObjects(object):
             for qo, c in self.query_objects_with_config.items()
             if qo.id in query_objects
         }
-

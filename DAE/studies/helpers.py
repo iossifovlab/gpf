@@ -121,7 +121,8 @@ def get_person_color(member, pedigree_selector):
     if len(pedigree_selector) == 0:
         return '#FFFFFF'
 
-    people_group_attribute = member.get_attr(pedigree_selector['source'])
+    source = pedigree_selector['source']
+    people_group_attribute = member.get_attr(source)
     domain = list(filter(lambda d: d['name'] == people_group_attribute,
                          pedigree_selector['domain']))
 

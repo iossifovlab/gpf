@@ -61,7 +61,7 @@ class Person(object):
         return item in self.atts
 
     def get_attr(self, item):
-        return self.atts.get(item)
+        return str(self.atts.get(item))
 
 
 class Family(object):

@@ -407,7 +407,6 @@ class StudyWrapper(object):
         if value_range[1] is None:
             value_range = (value_range[0], float('inf'))
 
-
         value = 'af_allele_freq'
         if 'real_attr_filter' not in kwargs:
             kwargs['real_attr_filter'] = []

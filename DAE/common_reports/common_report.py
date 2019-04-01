@@ -373,7 +373,7 @@ class EffectWithFilter(object):
         return people_with_filter
 
     def _get_variants(
-            self, study, denovo_variants, people_with_filter, 
+            self, study, denovo_variants, people_with_filter,
             people_with_parents,
             effect, effect_types_converter):
         people = people_with_filter.intersection(people_with_parents)
@@ -522,7 +522,7 @@ class DenovoReport(object):
         denovo_variants = list(denovo_variants)
 
         self.tables = self._get_tables(
-            query_object, denovo_variants, 
+            query_object, denovo_variants,
             effect_groups, effect_types, filter_objects)
 
     def to_dict(self):
@@ -664,7 +664,8 @@ class PhenotypeInfo(object):
         self.phenotype_group = phenotype_group
 
     def _get_phenotypes(self, query_object):
-        return list(query_object.get_pedigree_values(self.source))
+        return list([
+            str(p) for p in query_object.get_pedigree_values(self.source)])
 
     def get_phenotypes(self):
         return [
