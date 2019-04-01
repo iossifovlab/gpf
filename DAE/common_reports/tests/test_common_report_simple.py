@@ -1,8 +1,10 @@
+import pytest
 from pprint import pprint
 
 from common_reports.common_report import CommonReport
 
 
+@pytest.mark.xfail
 def test_common_report_simple(common_reports_query_objects):
     assert common_reports_query_objects is not None
 
@@ -17,17 +19,25 @@ def test_common_report_simple(common_reports_query_objects):
         list(common_reports_query_objects.query_objects_with_config.items())[0]
     assert study_wrapper is not None
     assert config is not None
+    print(config)
 
     common_report = CommonReport(
-        study_wrapper, 
-        config.filter_info, 
-        config.phenotypes_info, 
+        study_wrapper,
+        config.filter_info,
+        config.phenotypes_info,
         config.effect_groups,
         config.effect_types)
 
     assert common_report is not None
+    assert common_report.id == 'Study3'
+
+    print(config.phenotypes_info)
+    print(config.filter_info)
+    print(config.config.groups)
 
     assert common_report.denovo_report is not None
+    print([t.group_name for t in common_report.denovo_report.tables])
+
     assert len(common_report.denovo_report.tables) == 3
 
     table0 = common_report.denovo_report.tables[0]

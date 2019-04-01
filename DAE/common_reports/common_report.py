@@ -536,6 +536,8 @@ class DenovoReport(object):
 
         denovo_report_tables = []
         for filter_object in filter_objects:
+            print("filter object:", filter_object)
+
             denovo_report_table = DenovoReportTable(
                 query_object, denovo_variants,
                 deepcopy(effect_groups), deepcopy(effect_types),
@@ -759,13 +761,17 @@ class FilterObjects(object):
         for name, group in groups.items():
             filters = []
             for el in group:
+                print("group:", el)
                 if phenotypes_info.has_phenotype_info(el):
                     phenotype_info = phenotypes_info.get_phenotype_info(el)
+                    print("phenotype_info:", el, 
+                          phenotype_info.source, phenotype_info.phenotypes)
                     el_column = phenotype_info.source
                     el_values = phenotype_info.phenotypes
                 else:
                     el_column = el
                     el_values = query_object.get_pedigree_values(el)
+                    print("group:", el, el_column, el_values)
 
                 filter = []
                 for el_value in el_values:
