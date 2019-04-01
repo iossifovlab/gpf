@@ -3,6 +3,7 @@
 *.log
 *.cache
 *.db
+!DAE/pheno/tests/fixtures/pheno.db
 wdae.sql
 .project
 .pydevproject
