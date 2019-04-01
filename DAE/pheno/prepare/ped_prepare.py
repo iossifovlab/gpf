@@ -80,9 +80,9 @@ class PreparePersons(PrepareBase):
     def _find_parent_in_family_ped(family_df, mom_or_dad):
         df = family_df[family_df[mom_or_dad] != '0']
         assert len(df[mom_or_dad].unique()) <= 1
-        if len(df) == 1:
+        if len(df) > 0:
             row = df.iloc[0]
-            return (row.familyId, row.personId)
+            return (row.familyId, row[mom_or_dad])
         return None
 
     @staticmethod
@@ -123,9 +123,11 @@ class PreparePersons(PrepareBase):
             if dad:
                 roles[dad] = Role.dad
             for p in self._find_prb_in_family(family_df):
-                roles[p] = Role.prb
+                if p not in roles:
+                    roles[p] = Role.prb
             for p in self._find_sib_in_family(family_df):
-                roles[p] = Role.sib
+                if p not in roles:
+                    roles[p] = Role.sib
         assert len(roles) == len(ped_df)
 
         role = pd.Series(ped_df.index)
