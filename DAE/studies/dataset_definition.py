@@ -31,7 +31,8 @@ class DirectoryEnabledDatasetsDefinition(DatasetsDefinition):
         self.study_facade = study_facade
 
         self.directory_enabled_configurable_entity_definition(
-            datasets_dir, DatasetConfig, work_dir, default_conf=default_conf)
+            datasets_dir, DatasetConfig, work_dir, default_conf=default_conf,
+            fail_silently=True)
         self._fill_studies_configs()
 
     def _fill_studies_configs(self):
