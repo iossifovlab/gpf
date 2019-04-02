@@ -3,6 +3,8 @@ from builtins import str
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
 
+from variants.attributes import Role
+
 
 class GenotypeBrowserConfig(ConfigurableEntityConfig):
 
@@ -276,8 +278,11 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         present_in_role['name'] = \
             study_config.pop(present_in_role_type + '.name', None)
         present_in_role['roles'] = \
-            [el.strip() for el in study_config.pop(
-                present_in_role_type + '.roles').split(',')]
+            [
+                Role.from_name(el.strip()).display_name
+                for el in study_config.pop(
+                   present_in_role_type + '.roles').split(',')
+            ]
 
         return present_in_role
 
