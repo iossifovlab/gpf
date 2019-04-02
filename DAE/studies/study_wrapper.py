@@ -510,13 +510,13 @@ class StudyWrapper(object):
 
     def get_present_in_role(self, present_in_role_name):
         if not present_in_role_name:
-            return []
+            return {}
 
         present_in_role = list(filter(
             lambda present_in_role: present_in_role.get('name') ==
             present_in_role_name, self.present_in_role))
 
-        return present_in_role[0] if present_in_role else []
+        return present_in_role[0] if present_in_role else {}
 
     def _get_dataset_config_options(self, config):
         config['studyTypes'] = self.config.study_types
