@@ -34,6 +34,7 @@ class StudyWrapper(object):
         column_labels = {}
 
         pedigree_selectors = []
+        present_in_role = []
 
         if 'genotypeBrowser' in self.config and self.config.genotype_browser:
             genotype_browser = self.config.genotypeBrowser
@@ -48,6 +49,8 @@ class StudyWrapper(object):
 
             if 'pedigreeSelectors' in genotype_browser:
                 pedigree_selectors = genotype_browser.pedigree_selectors
+            if 'presentInRole' in genotype_browser:
+                present_in_role = genotype_browser.present_in_role
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
@@ -56,6 +59,7 @@ class StudyWrapper(object):
         self.column_labels = column_labels
 
         self.pedigree_selectors = pedigree_selectors
+        self.present_in_role = present_in_role
 
         if len(self.pedigree_selectors) != 0:
             self.legend = {
@@ -123,6 +127,9 @@ class StudyWrapper(object):
 
         if 'presentInParent' in kwargs:
             self._transform_present_in_parent(kwargs)
+
+        if 'presentInRole' in kwargs:
+            self._transform_present_in_role(kwargs)
 
         if 'minAltFrequencyPercent' in kwargs or \
                 'maxAltFrequencyPercent' in kwargs:
@@ -394,19 +401,7 @@ class StudyWrapper(object):
 
         kwargs.pop('presentInChild')
 
-        if not roles_query:
-            return
-
-        roles_query = OrNode(roles_query)
-
-        original_roles = kwargs.get('roles', None)
-        if original_roles is not None:
-            if isinstance(original_roles, str):
-                original_roles = role_query.transform_query_string_to_tree(
-                    original_roles)
-            kwargs['roles'] = AndNode([original_roles, roles_query])
-        else:
-            kwargs['roles'] = roles_query
+        self._add_roles_to_query(roles_query, kwargs)
 
     def _transform_present_in_parent(self, kwargs):
         roles_query = []
@@ -443,6 +438,35 @@ class StudyWrapper(object):
 
         kwargs.pop('presentInParent')
 
+        self._add_roles_to_query(roles_query, kwargs)
+
+    def _transform_present_in_role(self, kwargs):
+        roles_query = []
+
+        for pir_name, filter_options in kwargs['presentInRole'].items():
+
+            for filter_option in filter_options:
+                new_roles = None
+
+                if filter_option != 'neither':
+                    new_roles = \
+                        ContainsNode(Role.from_display_name(filter_option))
+
+                if filter_option == 'neither':
+                    new_roles = AndNode([
+                        NotNode(ContainsNode(Role.from_display_name(role)))
+                        for role in self.get_present_in_role(pir_name)
+                                        .get('roles')
+                    ])
+
+                if new_roles:
+                    roles_query.append(new_roles)
+
+        kwargs.pop('presentInRole')
+
+        self._add_roles_to_query(roles_query, kwargs)
+
+    def _add_roles_to_query(self, roles_query, kwargs):
         if not roles_query:
             return
 
@@ -483,6 +507,16 @@ class StudyWrapper(object):
 
         return pedigree_selector_with_id[0] \
             if pedigree_selector_with_id else {}
+
+    def get_present_in_role(self, present_in_role_name):
+        if not present_in_role_name:
+            return []
+
+        present_in_role = list(filter(
+            lambda present_in_role: present_in_role.get('name') ==
+            present_in_role_name, self.present_in_role))
+
+        return present_in_role[0] if present_in_role else []
 
     def _get_dataset_config_options(self, config):
         config['studyTypes'] = self.config.study_types
