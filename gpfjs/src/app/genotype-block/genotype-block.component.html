@@ -10,8 +10,10 @@
 		<div *ngIf="hasPresentInParent | async" class="col-lg-3">
 			<gpf-present-in-parent></gpf-present-in-parent>
 		</div>
-		<div *ngIf="hasPresentInRole | async" class="col-lg-3">
-			<gpf-present-in-role *ngFor="let pir of presentInRole | async" [presentInRole]="pir"></gpf-present-in-role>
+		<div class="col-lg-3 panel-row" *ngIf="hasPresentInRole | async">
+			<div>
+				<gpf-present-in-role *ngFor="let pir of presentInRole | async" [presentInRole]="pir"></gpf-present-in-role>
+			</div>
 		</div>
 
 		<div class="col-lg-2 panel-row">
