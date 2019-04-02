@@ -26,7 +26,7 @@ class PhenoMeasuresView(QueryBaseView):
 
         try:
             dataset_id = data['datasetId']
-            dataset = self.dataset_facade.get_dataset_wdae_wrapper(dataset_id)
+            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
             assert dataset is not None
 
             if dataset.pheno_db is None:
@@ -72,7 +72,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
         data = request.data
         try:
             dataset_id = data['datasetId']
-            dataset = self.dataset_facade.get_dataset_wdae_wrapper(dataset_id)
+            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
 
             assert dataset is not None
             assert dataset.pheno_db is not None
@@ -120,7 +120,7 @@ class PhenoMeasurePartitionsView(QueryBaseView):
         data = request.data
         try:
             dataset_id = data['datasetId']
-            dataset = self.dataset_facade.get_dataset_wdae_wrapper(dataset_id)
+            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
             assert dataset is not None
             assert dataset.pheno_db is not None
             assert "measure" in data

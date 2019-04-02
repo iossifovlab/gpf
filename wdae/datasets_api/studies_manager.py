@@ -16,6 +16,8 @@ from gene.gene_set_collections import GeneSetsCollections
 
 from datasets_api.models import Dataset
 
+from threading import Lock
+
 
 __all__ = ['get_studies_manager']
 
@@ -91,10 +93,21 @@ class StudiesManager(object):
 
 
 _studies_manager = None
+_studies_manager_lock = Lock()
 
 
 def get_studies_manager():
     global _studies_manager
+    global _studies_manager_lock
+
     if _studies_manager is None:
-        _studies_manager = StudiesManager()
+        _studies_manager_lock.acquire()
+        try:
+            if _studies_manager is None:
+                sm = StudiesManager()
+                sm.reload_dataset()
+                _studies_manager = sm
+        finally:
+            _studies_manager_lock.release()
+
     return _studies_manager

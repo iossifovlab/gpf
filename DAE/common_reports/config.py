@@ -1,6 +1,5 @@
 from __future__ import unicode_literals, print_function, absolute_import
-from future import standard_library
-standard_library.install_aliases()  # noqa
+from future import standard_library; standard_library.install_aliases()  # noqa
 
 from builtins import object
 import os
@@ -158,4 +157,3 @@ class CommonReportsQueryObjects(object):
             for qo, c in self.query_objects_with_config.items()
             if qo.id in query_objects
         }
-

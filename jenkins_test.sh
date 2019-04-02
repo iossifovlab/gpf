@@ -32,6 +32,7 @@ py.test --traceconfig -v --cov-config coveragerc \
     DAE/gene/tests \
     DAE/pedigrees/tests \
     DAE/pheno/tests \
+    DAE/pheno_browser/tests \
     DAE/studies/tests \
     DAE/tools/tests \
     DAE/utils/tests \
@@ -72,4 +73,5 @@ py.test -v --cov-config coveragerc \
     --cov preloaded \
     --cov users_api \
     wdae/datasets_api/tests \
-    wdae/genotype_browser/tests
+    wdae/genotype_browser/tests \
+    wdae/pheno_browser_api/tests

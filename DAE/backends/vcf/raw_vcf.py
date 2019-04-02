@@ -201,7 +201,7 @@ class RawFamilyVariants(FamiliesBase):
 #                       np.arange(len(self.annot_df)))
 
     def persons_samples(self, persons):
-        return sorted([p.get_attr('sampleIndex') for p in persons])
+        return sorted([p.sample_index for p in persons])
 
     def filter_regions(self, v, regions):
         for reg in regions:

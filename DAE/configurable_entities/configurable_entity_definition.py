@@ -7,9 +7,12 @@ import abc
 
 class ConfigurableEntityDefinition(object):
     __metaclass__ = abc.ABCMeta
+
     ENABLED_DIR = '.'
 
     # configs = {}
+    def __init__(self):
+        self.configs = {}
 
     @property
     def configurable_entity_ids(self):
@@ -26,21 +29,19 @@ class ConfigurableEntityDefinition(object):
 
     def directory_enabled_configurable_entity_definition(
             self, configurable_entities_dir, configurable_entity_config_class,
-            work_dir, default_values={}, default_conf=None):
+            work_dir, default_values=None, default_conf=None,
+            fail_silently=False):
+        if default_values is None:
+            default_values = {}
         assert isinstance(configurable_entities_dir, str),\
             type(configurable_entities_dir)
-        assert os.path.exists(configurable_entities_dir),\
-            configurable_entities_dir
 
         enabled_dir = os.path.join(configurable_entities_dir, self.ENABLED_DIR)
         enabled_dir = os.path.abspath(enabled_dir)
 
-        assert os.path.exists(enabled_dir), enabled_dir
-        assert os.path.isdir(enabled_dir), enabled_dir
-
         configs = []
-        config_paths =\
-            ConfigurableEntityDefinition._collect_config_paths(enabled_dir)
+        config_paths = ConfigurableEntityDefinition\
+            ._collect_config_paths(enabled_dir, fail_silently)
 
         for config_path in config_paths:
             config = ConfigurableEntityDefinition.load_entity_config(
@@ -53,12 +54,16 @@ class ConfigurableEntityDefinition(object):
         self.configs = {config.id: config for config in configs}
 
     @classmethod
-    def _collect_config_paths(cls, dirname):
+    def _collect_config_paths(cls, dirname, fail_silently=False):
         config_paths = []
+        if not os.path.exists(dirname):
+            if fail_silently:
+                return []
+            raise RuntimeError(dirname)
         for path in os.listdir(dirname):
             p = os.path.join(dirname, path)
             if os.path.isdir(p):
-                subpaths = cls._collect_config_paths(p)
+                subpaths = cls._collect_config_paths(p, fail_silently)
                 config_paths.extend(subpaths)
             elif path.endswith('.conf'):
                 config_paths.append(
@@ -68,8 +73,9 @@ class ConfigurableEntityDefinition(object):
 
     def single_file_configurable_entity_definition(
             self, config_path, work_dir, configurable_entity_config_class,
-            default_values={}, default_conf=None):
-        self.config_path = config_path
+            default_values=None, default_conf=None):
+        if default_values is None:
+            default_values = {}
 
         config = ConfigurableEntityDefinition.load_entity_config(
             config_path, work_dir, configurable_entity_config_class,
@@ -83,7 +89,9 @@ class ConfigurableEntityDefinition(object):
     @classmethod
     def load_entity_config(
             cls, config_file, work_dir, configurable_entity_config_class,
-            default_values={}, default_conf=None):
+            default_values=None, default_conf=None):
+        if default_values is None:
+            default_values = {}
         config = configurable_entity_config_class.read_config(
             config_file, work_dir, default_values, default_conf)
         config['config_file'] = config_file

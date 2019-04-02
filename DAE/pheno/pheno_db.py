@@ -25,7 +25,7 @@ class Instrument(object):
 
     * `instrument_name`
 
-    * `masures` -- dictionary of all measures in the instrument
+    * `measures` -- dictionary of all measures in the instrument
     """
 
     def __init__(self, name):

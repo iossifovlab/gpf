@@ -5,6 +5,9 @@ Created on Aug 31, 2017
 '''
 from __future__ import unicode_literals
 from builtins import object
+
+# import os
+
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, String, Float, Enum
 from sqlalchemy.sql import select
@@ -16,6 +19,7 @@ import pandas as pd
 class DbManager(object):
 
     def __init__(self, dbfile):
+        # assert os.path.exists(dbfile), dbfile
         self.dbfile = dbfile
         self.metadata = MetaData()
         self.engine = create_engine("sqlite:///{}".format(dbfile))

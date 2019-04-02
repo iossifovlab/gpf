@@ -13,28 +13,61 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django.conf import settings
+from django.http.response import HttpResponse
 
 from datasets_api.studies_manager import get_studies_manager
-from pheno_browser_api.common import PhenoBrowserCommon
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.permissions import IsDatasetAllowed
-from django.http.response import HttpResponse
+
 from pheno_browser.db import DbManager
 
 
-class PhenoInstrumentsView(APIView):
+class PhenoBrowserBaseView(APIView):
+
+    def __init__(self):
+        self.variants_db = get_studies_manager().get_variants_db()
+        self.pheno_config = self.variants_db.pheno_factory.config
+
+    def get_cache_dir(self, dbname):
+
+        cache_dir = getattr(
+            settings,
+            "PHENO_BROWSER_CACHE",
+            None)
+        dbdir = os.path.join(cache_dir, dbname)
+        return dbdir
+
+    def get_browser_dbfile(self, dbname):
+        browser_dbfile = self.pheno_config.get_browser_dbfile(dbname)
+        assert browser_dbfile is not None
+        assert os.path.exists(browser_dbfile)
+        return browser_dbfile
+
+    def get_browser_images_dir(self, dbname):
+        browser_images_dir = self.pheno_config.get_browser_images_dir(dbname)
+        assert browser_images_dir is not None
+        assert os.path.exists(browser_images_dir)
+        assert os.path.isdir(browser_images_dir)
+        return browser_images_dir
+
+    def get_browser_images_url(self, dbname):
+        browser_images_url = self.pheno_config.get_browser_images_url(dbname)
+        assert browser_images_url is not None
+        return browser_images_url
+
+class PhenoInstrumentsView(PhenoBrowserBaseView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        self.datasets_facade = get_studies_manager().get_dataset_facade()
+        super(PhenoInstrumentsView, self).__init__()
 
     def get(self, request):
         if 'dataset_id' not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params['dataset_id']
 
-        dataset = self.datasets_facade.get_dataset(dataset_id)
+        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
         if dataset is None or dataset.pheno_db is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -50,33 +83,19 @@ def isnan(val):
     return val is None or np.isnan(val)
 
 
-class PhenoMeasuresView(APIView):
+class PhenoMeasuresView(PhenoBrowserBaseView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        self.datasets_facade = get_studies_manager().get_dataset_facade()
-
-        self.base_url = getattr(
-            settings,
-            "PHENO_BROWSER_BASE_URL",
-            "/static/pheno_browser/")
-
-    def get_browser_dbfile(self, dbname):
-        cache_dir = PhenoBrowserCommon.get_cache_dir(dbname)
-
-        browser_db = "{}_browser.db".format(dbname)
-        return os.path.join(
-            cache_dir,
-            browser_db
-        )
+        super(PhenoMeasuresView, self).__init__()
 
     def get(self, request):
         if 'dataset_id' not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params['dataset_id']
 
-        dataset = self.datasets_facade.get_dataset(dataset_id)
+        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
         if dataset is None or dataset.pheno_db is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -86,7 +105,9 @@ class PhenoMeasuresView(APIView):
             instrument = instruments[0]
 
         browser_dbfile = self.get_browser_dbfile(
-            dataset.pheno_name)
+            dataset.config.phenoDB)
+        browser_images_url = self.get_browser_images_url(
+            dataset.config.phenoDB)
 
         db = DbManager(dbfile=browser_dbfile)
         db.build()
@@ -95,9 +116,7 @@ class PhenoMeasuresView(APIView):
 
         res = []
         for row in df.to_dict('records'):
-            print((row, type(row)))
             m = row
-            print(m)
             if isnan(m['pvalue_correlation_nviq_male']):
                 m['pvalue_correlation_nviq_male'] = "NaN"
             if isnan(m['pvalue_correlation_age_male']):
@@ -112,24 +131,24 @@ class PhenoMeasuresView(APIView):
             m['measure_type'] = m['measure_type'].name
             res.append(m)
         return Response({
-            'base_image_url': self.base_url,
+            'base_image_url': browser_images_url,
             'measures': res,
         })
 
 
-class PhenoMeasuresDownload(APIView):
+class PhenoMeasuresDownload(PhenoBrowserBaseView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        self.datasets_facade = get_studies_manager().get_dataset_facade()
+        super(PhenoMeasuresDownload, self).__init__()
 
     def get(self, request):
         if 'dataset_id' not in request.query_params:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         dataset_id = request.query_params['dataset_id']
 
-        dataset = self.datasets_facade.get_dataset(dataset_id)
+        dataset = self.variants_db.get_wdae_wrapper(dataset_id)
         if dataset is None or dataset.pheno_db is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 

@@ -3,8 +3,6 @@ from builtins import str
 import pytest
 from variants.attributes import Role
 
-pytestmark = pytest.mark.usefixtures("pheno_conf_path")
-
 
 def test_dataset_with_phenodb_can_be_loaded(quads_f1_dataset_wrapper):
     assert quads_f1_dataset_wrapper is not None

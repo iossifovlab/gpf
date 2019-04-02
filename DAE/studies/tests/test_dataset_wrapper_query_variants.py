@@ -2,8 +2,6 @@ from __future__ import unicode_literals
 
 import pytest
 
-pytestmark = pytest.mark.usefixtures("pheno_conf_path")
-
 
 def test_query_all_variants(inheritance_trio_dataset_wrapper):
     variants = list(inheritance_trio_dataset_wrapper.query_variants())
@@ -49,8 +47,8 @@ def test_query_family_variants(
 
 
 @pytest.mark.parametrize("sexes,count", [
-    (["M"], 2),
-    (["F"], 1),
+    (["M"], 3),
+    (["F"], 2),
 ])
 def test_query_sexes_variants(sexes, count, quads_f1_dataset_wrapper):
     variants = list(quads_f1_dataset_wrapper.query_variants(sexes=sexes))
@@ -73,7 +71,7 @@ def test_query_variant_type_variants(
 
 
 @pytest.mark.parametrize("effect_types,count", [
-    (["Intergenic"], 2),
+    (["Intergenic"], 3),
     (["CNV"], 0)
 ])
 def test_query_effect_types_variants(
@@ -274,7 +272,7 @@ def test_query_study_filter(composite_dataset_wrapper):
 
     all_variants = list(composite_dataset_wrapper.
                         query_variants(studyFilters=[]))
-    assert len(all_variants) == 16
+    assert len(all_variants) == 17
 
     inh_trio_variants = list(composite_dataset_wrapper.
                              query_variants(studyFilters=[
@@ -284,7 +282,7 @@ def test_query_study_filter(composite_dataset_wrapper):
     quads_f1_variants = list(composite_dataset_wrapper.
                              query_variants(studyFilters=[
                                             {'studyName': 'QUADS_F1'}]))
-    assert len(quads_f1_variants) == 2
+    assert len(quads_f1_variants) == 3
 
 
 @pytest.mark.parametrize("geneWeights,count", [

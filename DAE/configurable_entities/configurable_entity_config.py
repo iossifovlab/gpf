@@ -98,7 +98,9 @@ class ConfigurableEntityConfig(object):
 
     @classmethod
     def read_config(
-            cls, config_file, work_dir, default_values={}, default_conf=None):
+            cls, config_file, work_dir, default_values=None, default_conf=None):
+        if default_values is None:
+            default_values = {}
 
         if not os.path.exists(config_file):
             config_file = os.path.join(work_dir, config_file)

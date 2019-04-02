@@ -6,8 +6,8 @@ pheno2browser -- prepares a DAE pheno browser data
 '''
 from __future__ import print_function, unicode_literals, absolute_import
 
-from future import standard_library
-standard_library.install_aliases()  # noqa
+from future import standard_library; standard_library.install_aliases()  # noqa
+from builtins import str
 
 import sys
 import os
@@ -17,7 +17,6 @@ from pheno import pheno_db
 from pheno.pheno_regression import PhenoRegression
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
 import hashlib
-from builtins import str
 
 
 class CLIError(Exception):

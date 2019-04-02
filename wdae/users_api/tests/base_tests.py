@@ -10,8 +10,6 @@ from rest_framework.authtoken.models import Token
 from datasets_api.studies_manager import get_studies_manager
 from datasets_api.models import Dataset
 
-from precompute import register
-
 
 class BaseAuthenticatedUserTest(APITestCase):
 
@@ -21,7 +19,8 @@ class BaseAuthenticatedUserTest(APITestCase):
         super(BaseAuthenticatedUserTest, cls).setUpClass()
         dataset_facade = get_studies_manager().get_facade()
 
-        print("datasets in dataset facade: ", dataset_facade.get_all_dataset_ids())
+        print("datasets in dataset facade: ",
+              dataset_facade.get_all_dataset_ids())
         for dataset in dataset_facade.get_all_datasets():
             Dataset.recreate_dataset_perm(dataset.id, [])
 

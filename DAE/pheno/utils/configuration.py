@@ -12,6 +12,7 @@ from box import ConfigBox
 
 from configurable_entities.configuration import DAEConfig
 
+
 class PhenoConfig(ConfigBox):
 
     @staticmethod
@@ -66,3 +67,12 @@ class PhenoConfig(ConfigBox):
 
     def get_nonverbal_iq(self, dbname):
         return self[dbname].nonverbal_iq
+
+    def get_browser_dbfile(self, dbname):
+        return self[dbname].browser_dbfile
+    
+    def get_browser_images_dir(self, dbname):
+        return self[dbname].browser_images_dir
+
+    def get_browser_images_url(self, dbname):
+        return self[dbname].browser_images_url

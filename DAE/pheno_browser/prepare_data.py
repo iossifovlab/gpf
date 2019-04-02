@@ -30,10 +30,20 @@ class PreparePhenoBrowserBase(object):
     LARGE_DPI = 150
     SMALL_DPI = 16
 
-    def __init__(self, pheno_name, pheno_db, pheno_regression, output_dir):
+    def __init__(
+            self, pheno_name, pheno_db, pheno_regression,
+            output_dir, images_dir=None):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
-        self.output_base = os.path.basename(output_dir)
+        if images_dir is None:
+            images_dir = os.path.join(self.output_dir, 'images')
+        if not os.path.exists(images_dir):
+            os.makedirs(images_dir)
+
+        assert os.path.exists(images_dir)
+
+        self.images_dir = images_dir
+
         self.pheno_db = pheno_db
         self.pheno_regressiong = pheno_regression
 
@@ -101,7 +111,7 @@ class PreparePhenoBrowserBase(object):
 
     def figure_filepath(self, measure, suffix):
         filename = "{}.{}.png".format(measure.measure_id, suffix)
-        outdir = os.path.join(self.output_dir, measure.instrument_name)
+        outdir = os.path.join(self.images_dir, measure.instrument_name)
         if not os.path.exists(outdir):
             os.mkdir(outdir)
 
@@ -110,8 +120,7 @@ class PreparePhenoBrowserBase(object):
 
     def figure_path(self, measure, suffix):
         filename = "{}.{}.png".format(measure.measure_id, suffix)
-        outdir = os.path.join(self.output_base, measure.instrument_name)
-
+        outdir = os.path.join(self.images_dir, measure.instrument_name)
         filepath = os.path.join(outdir, filename)
         return filepath
 
