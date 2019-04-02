@@ -372,19 +372,19 @@ class StudyWrapper(object):
         for filter_option in kwargs['presentInChild']:
             new_roles = None
 
-            if filter_option == 'affected only':
+            if filter_option == 'proband only':
                 new_roles = AndNode([
                     ContainsNode(Role.prb),
                     NotNode(ContainsNode(Role.sib))
                 ])
 
-            if filter_option == 'unaffected only':
+            if filter_option == 'sibling only':
                 new_roles = AndNode([
                     NotNode(ContainsNode(Role.prb)),
                     ContainsNode(Role.sib)
                 ])
 
-            if filter_option == 'affected and unaffected':
+            if filter_option == 'proband and sibling':
                 new_roles = AndNode([
                     ContainsNode(Role.prb),
                     ContainsNode(Role.sib)
