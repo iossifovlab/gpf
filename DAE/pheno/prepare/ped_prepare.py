@@ -233,20 +233,22 @@ class Task(PrepareCommon):
 
 class ClassifyMeasureTask(Task):
 
-    def __init__(self, config, instrument_name, measure_name, df):
+    def __init__(self, config, instrument_name, measure_name,
+                 measure_desc, df):
         self.config = config
         self.mdf = df[[self.PERSON_ID, self.PID_COLUMN, measure_name]].copy()
         self.mdf.rename(columns={measure_name: 'value'}, inplace=True)
         self.measure = self.create_default_measure(
-            instrument_name, measure_name)
+            instrument_name, measure_name, measure_desc)
 
     @staticmethod
-    def create_default_measure(instrument_name, measure_name):
+    def create_default_measure(instrument_name, measure_name, measure_desc):
         measure = {
             'measure_type': MeasureType.other,
             'measure_name': measure_name,
             'instrument_name': instrument_name,
             'measure_id': '{}.{}'.format(instrument_name, measure_name),
+            'description': measure_desc,
             'individuals': None,
             'default_filter': None,
             'min_value': None,
@@ -492,16 +494,17 @@ class PrepareVariables(PreparePersons):
                 )
         return instruments
 
-    def build_variables(self, instruments_dirname):
+    def build_variables(self, instruments_dirname, description_path):
         self.log_header()
 
         self.build_pheno_common()
 
         instruments = self._collect_instruments(instruments_dirname)
+        descriptions = self.load_descriptions(description_path)
         for instrument_name, instrument_filenames in list(instruments.items()):
             assert instrument_name is not None
             df = self.load_instrument(instrument_name, instrument_filenames)
-            self.build_instrument(instrument_name, df)
+            self.build_instrument(instrument_name, df, descriptions)
 
     def _augment_person_ids(self, df):
         persons = self.get_persons()
@@ -536,7 +539,7 @@ class PrepareVariables(PreparePersons):
         pheno_common_columns.extend(pheno_common_measures)
         self.build_instrument('pheno_common', df[pheno_common_columns])
 
-    def build_instrument(self, instrument_name, df):
+    def build_instrument(self, instrument_name, df, descriptions=None):
 
         assert df is not None
         assert self.PERSON_ID in df.columns
@@ -548,8 +551,14 @@ class PrepareVariables(PreparePersons):
             if measure_name == self.PID_COLUMN or \
                     measure_name == self.PERSON_ID:
                 continue
+
+            if descriptions:
+                measure_desc = descriptions(instrument_name, measure_name)
+            else:
+                measure_desc = None
+
             classify_task = ClassifyMeasureTask(
-                self.config, instrument_name, measure_name, df)
+                self.config, instrument_name, measure_name, measure_desc, df)
             res = self.pool.apply_async(classify_task)
             classify_queue.put(res)
         while not classify_queue.empty():
@@ -607,6 +616,31 @@ class PrepareVariables(PreparePersons):
         measure.measure_type = self.classifier.classify(classifier_report)
 
         return classifier_report, measure
+
+    def load_descriptions(self, description_path):
+        if not description_path:
+            return None
+        assert os.path.exists(os.path.abspath(description_path)), \
+            description_path
+
+        df = pd.read_csv(description_path, sep='\t')
+
+        class DescriptionDf:
+            def __init__(self, desc_df):
+                self.desc_df = desc_df
+                assert all([col in list(desc_df) for col in
+                           ['instrumentName', 'measureName',
+                            'measureId', 'description']]), \
+                    list(desc_df)
+
+            def __call__(self, iname, mname):
+                if mname not in self.desc_df['measureName'].values:
+                    return None
+                row = self.desc_df.query(('(instrumentName == @iname) and '
+                                          '(measureName == @mname)'))
+                return row.iloc[0]['description']
+
+        return DescriptionDf(df)
 
 
 # class PrepareMetaMeasures(PrepareBase):
