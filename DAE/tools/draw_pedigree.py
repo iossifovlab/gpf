@@ -13,8 +13,9 @@ from pedigrees.pedigrees import get_argument_parser
 from pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from pedigrees.layout_loader import LayoutLoader
 from variants.family import FamiliesBase
-from common_reports.common_report import FamiliesReport, FilterObjects,\
-    FilterObject, PhenotypeInfo
+from common_reports.family_report import FamiliesReport
+from common_reports.phenotype_info import PhenotypeInfo
+from common_reports.filter import FilterObjects, FilterObject
 
 
 def draw_family_pedigree(family, show_id=False):
