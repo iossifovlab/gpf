@@ -41,8 +41,8 @@ class PeopleCounter(object):
         for family in families.values():
             people += list(filter(
                 lambda pwr: pwr.sex == sex and
-                all([pwr.get_attr(filter.column) == filter.value
-                     for filter in filter_object.filters]),
+                all([pwr.get_attr(filt.column) == filt.value
+                     for filt in filter_object.filters]),
                 family.members_in_order))
 
         return people
@@ -536,8 +536,6 @@ class DenovoReport(object):
 
         denovo_report_tables = []
         for filter_object in filter_objects:
-            print("filter object:", filter_object)
-
             denovo_report_table = DenovoReportTable(
                 query_object, denovo_variants,
                 deepcopy(effect_groups), deepcopy(effect_types),
@@ -717,6 +715,7 @@ class PhenotypesInfo(object):
 class Filter(object):
 
     def __init__(self, column, value, column_value=None):
+        value = str(value)
         self.column = column
         self.value = value
         self.column_value =\
@@ -761,17 +760,13 @@ class FilterObjects(object):
         for name, group in groups.items():
             filters = []
             for el in group:
-                print("group:", el)
                 if phenotypes_info.has_phenotype_info(el):
                     phenotype_info = phenotypes_info.get_phenotype_info(el)
-                    print("phenotype_info:", el, 
-                          phenotype_info.source, phenotype_info.phenotypes)
                     el_column = phenotype_info.source
                     el_values = phenotype_info.phenotypes
                 else:
                     el_column = el
                     el_values = query_object.get_pedigree_values(el)
-                    print("group:", el, el_column, el_values)
 
                 filter = []
                 for el_value in el_values:

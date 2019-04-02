@@ -1,10 +1,8 @@
-import pytest
 from pprint import pprint
 
 from common_reports.common_report import CommonReport
 
 
-@pytest.mark.xfail
 def test_common_report_simple(common_reports_query_objects):
     assert common_reports_query_objects is not None
 
