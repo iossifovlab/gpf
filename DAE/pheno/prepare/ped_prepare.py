@@ -500,7 +500,7 @@ class PrepareVariables(PreparePersons):
         self.build_pheno_common()
 
         instruments = self._collect_instruments(instruments_dirname)
-        descriptions = self.load_descriptions(description_path)
+        descriptions = PrepareVariables.load_descriptions(description_path)
         for instrument_name, instrument_filenames in list(instruments.items()):
             assert instrument_name is not None
             df = self.load_instrument(instrument_name, instrument_filenames)
@@ -617,7 +617,8 @@ class PrepareVariables(PreparePersons):
 
         return classifier_report, measure
 
-    def load_descriptions(self, description_path):
+    @staticmethod
+    def load_descriptions(description_path):
         if not description_path:
             return None
         assert os.path.exists(os.path.abspath(description_path)), \
