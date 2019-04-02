@@ -470,7 +470,7 @@ or dataset, you
 should use `--studies` option. For example, to generate the families and
 variants reports for the `quad` study, you should use::
 
-    generate_common_reports.py --studies quad
+    generate_common_reports.py --studies comp
 
 
 Generate Denovo Gene Sets (optional)
@@ -488,7 +488,7 @@ or dataset, you
 should use `--studies` option. For example, to generate the de Novo
 gene sets for the `quad` study, you should use::
 
-    generate_denovo_gene_sets.py --studies quad
+    generate_denovo_gene_sets.py --studies comp
 
 
 Start GPF Web UI
@@ -503,8 +503,8 @@ GPF web UI. Stop the Django develompent server and start it again::
 Work with Phenotype Data
 ########################
 
-Import a Demo Phenotype Dabase
-++++++++++++++++++++++++++++++
+Simple Pheno Import Tool
+++++++++++++++++++++++++
 
 In the GPF startup data instance there is a demo phenotype database inside
 the following directory::
@@ -519,49 +519,39 @@ The included files are:
 
 * `instruments/i1.csv` - all measurements for instrument `i1`.
 
-To import these phenotype database into the GPF system you need to use
-`pheno2DAE.py` tool::
+The easiest way to import this phenotype database into the GPF instance is to
+use `simple_pheno_import.py` tool. This tool combines converting phenotype
+instruments and measures into GPF phenotype database and generates data and
+figures need for GPF Phonotype Browser.
 
-    pheno2DAE.py -p comp_pheno.ped -i instruments/ -o comp_pheno.db
+.. code::
+
+    simple_pheno_import.py -p comp_pheno.ped \
+        -i instruments/ -P comp_pheno \
+        --age "i1:age" --nonverbal_iq "i1:iq"
 
 Options uses in this command are as follows:
 
-* `-p` option allows us to specify the pedigree file;
+* `-p` option allows to specify the pedigree file;
 
-* | `-i` option allows us to spcecify the directory where instruments
+* | `-i` option allows to spcecify the directory where instruments
   | are located;
 
-* `-o` options specifies the name of the output file.
+* `-d` options specifies the name of the output database file.
 
-You can use `-h` option to see all options supported by the `pheno2DAE.py`
-tool.
-
-Generate Pheno Browser Data
-+++++++++++++++++++++++++++
-
-To generate the data needed for the GPF Phenotype Browser you can use
-`pheno2browser.py` tool. Example usege of the tools is shown bellow:
-
-.. code:: bash
-
-    pheno2browser.py -d ./comp_pheno.db -p comp_pheno \
-        -o browser/comp_pheno \
-        --age "i1:age" --nonverbal_iq "i1:iq"
-
-Options used in this example are as follows:
-
-* `-d` option specifies path to already imported phenotype database file;
-
-* | `-p` options specifies the name of the phenotype database that will be
+* | `-P` options specifies the name of the phenotype database that will be
   | used in phenotype browser;
 
-* | `-o` option specifies the output directory where all the generated
+* | `-b` option specifies the output directory where all the generated
   | file will be stored;
 
 * | `--age` and `--nonverbal_iq` option specifies which measures ids
   | correspond to the age at assesment and non-verbal IQ; when such
   | measures are specified, the phenotype browser displays correlation
   | between each measure displayed and age at assesment and non-verbal IQ.
+
+You can use `-h` option to see all options supported by the
+`simple_pheno_import.py` tool.
 
 Configure Phenotype Database
 ++++++++++++++++++++++++++++
@@ -612,3 +602,65 @@ and to enable the phenotype browser you should add:
 If you restart the GPF system WEB interface after this change you should be
 able to see `Phenotype Browser` tab in `comp` dataset.
 
+Phenotype Database Tools
+++++++++++++++++++++++++
+
+Import a Demo Phenotype Dabase
+******************************
+
+In the GPF startup data instance there is a demo phenotype database inside
+the following directory::
+
+    cd data-hg19-startup/pheno
+
+The included files are:
+
+* `pheno.ped` - the pedigree file for all families included into the database;
+
+* `instruments` - directory, containing all instruments;
+
+* `instruments/i1.csv` - all measurements for instrument `i1`.
+
+To import these phenotype database into the GPF system you need to use
+`pheno2DAE.py` tool::
+
+    pheno2dae.py -p comp_pheno.ped -i instruments/ -o comp_pheno.db
+
+Options uses in this command are as follows:
+
+* `-p` option allows us to specify the pedigree file;
+
+* | `-i` option allows us to spcecify the directory where instruments
+  | are located;
+
+* `-o` options specifies the name of the output file.
+
+You can use `-h` option to see all options supported by the `pheno2dae.py`
+tool.
+
+Generate Pheno Browser Data
+***************************
+
+To generate the data needed for the GPF Phenotype Browser you can use
+`pheno2browser.py` tool. Example usege of the tools is shown bellow:
+
+.. code:: bash
+
+    pheno2browser.py -d ./comp_pheno.db -p comp_pheno \
+        -o browser/comp_pheno \
+        --age "i1:age" --nonverbal_iq "i1:iq"
+
+Options used in this example are as follows:
+
+* `-d` option specifies path to already imported phenotype database file;
+
+* | `-p` options specifies the name of the phenotype database that will be
+  | used in phenotype browser;
+
+* | `-o` option specifies the output directory where all the generated
+  | file will be stored;
+
+* | `--age` and `--nonverbal_iq` option specifies which measures ids
+  | correspond to the age at assesment and non-verbal IQ; when such
+  | measures are specified, the phenotype browser displays correlation
+  | between each measure displayed and age at assesment and non-verbal IQ.
