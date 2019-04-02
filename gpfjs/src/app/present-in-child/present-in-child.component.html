@@ -9,29 +9,29 @@
         </div>
         <div class="checkbox">
           <label>
-            <input #affectedOnlyCheckbox
+            <input #probandOnlyCheckbox
                 type="checkbox"
-                [checked]="presentInChild.selected.has('affected only')"
-                (change)="presentInChildCheckValue('affected only', affectedOnlyCheckbox.checked)">
-            affected only
+                [checked]="presentInChild.selected.has('proband only')"
+                (change)="presentInChildCheckValue('proband only', probandOnlyCheckbox.checked)">
+            proband only
           </label>
         </div>
         <div class="checkbox">
           <label>
-            <input #unaffectedOnlyCheckbox
+            <input #siblingOnlyCheckbox
                 type="checkbox"
-                [checked]="presentInChild.selected.has('unaffected only')"
-                (change)="presentInChildCheckValue('unaffected only', unaffectedOnlyCheckbox.checked)">
-            unaffected only
+                [checked]="presentInChild.selected.has('sibling only')"
+                (change)="presentInChildCheckValue('sibling only', siblingOnlyCheckbox.checked)">
+            sibling only
           </label>
         </div>
         <div class="checkbox">
           <label>
-            <input #affectedUnaffectedCheckbox
+            <input #probandSiblingCheckbox
                 type="checkbox"
-                [checked]="presentInChild.selected.has('affected and unaffected')"
-                (change)="presentInChildCheckValue('affected and unaffected', affectedUnaffectedCheckbox.checked)">
-            affected and unaffected
+                [checked]="presentInChild.selected.has('proband and sibling')"
+                (change)="presentInChildCheckValue('proband and sibling', probandSiblingCheckbox.checked)">
+            proband and sibling
           </label>
         </div>
         <div class="checkbox">
