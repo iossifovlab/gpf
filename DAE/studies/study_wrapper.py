@@ -193,9 +193,11 @@ class StudyWrapper(object):
             yield variant
 
     def _add_roles_columns(self, variant):
-        genotype_browser = self.study.config.genotypeBrowser
-        if isinstance(genotype_browser, bool) and genotype_browser is False:
+        if 'genotypeBrowser' not in self.study.config or \
+            'genotypeBrowser' in self.study.config and \
+                not self.study.config.genotypeBrowser:
             return variant
+
         # assert isinstance(genotype_browser, dict), type(genotype_browser)
 
         roles_columns = self.study.config.genotypeBrowser.rolesColumns
@@ -243,11 +245,10 @@ class StudyWrapper(object):
         return result
 
     def _add_pheno_columns(self, variants_iterable):
-        genotype_browser = self.study.config.genotypeBrowser
-
         if self.pheno_db is None or \
-                (isinstance(genotype_browser, bool) and
-                 genotype_browser is False):
+            'genotypeBrowser' not in self.study.config or \
+                'genotypeBrowser' in self.study.config and not \
+                self.study.config.genotypeBrowser:
             for variant in variants_iterable:
                 yield variant
 
