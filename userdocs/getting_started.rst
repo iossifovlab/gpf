@@ -577,7 +577,6 @@ and add `comp_pheno` to the list of phenotype database:
     [pheno]
     dbs=comp_pheno
 
-
 Configure Phenotype Browser
 +++++++++++++++++++++++++++
 
@@ -601,6 +600,55 @@ and to enable the phenotype browser you should add:
 
 If you restart the GPF system WEB interface after this change you should be
 able to see `Phenotype Browser` tab in `comp` dataset.
+
+Configure Phenotype Filters in Genotype Browser
++++++++++++++++++++++++++++++++++++++++++++++++
+
+A study or a dataset can have Phenotype Filters configured for it's Genotype
+Browser when it has a phenoDB attached to it. The configuration looks like this:
+
+.. code::
+
+    [genotypeBrowser]
+
+    phenoFilters.filters = continuous
+
+    phenoFilters.continuous.name = Continuous
+    phenoFilters.continuous.type = continuous
+    phenoFilters.continuous.filter = multi:prb
+
+`phenoFilters.filters` is a comma separated list of ids of the defined
+Phenotype Filters. Each phenotype filter is expected to have a
+`phenoFilters.<pheno_filter_id>` configuration.
+
+The required configuration options for each pheno filter are:
+
+* | `phenoFilters.<pheno_filter_id>.name` - name to use when showing the pheno
+  | filter in the Genotype Browser Table Preview.
+
+* | `phenoFilters.<pheno_filter_id>.type` - the type of the pheno filter. One
+  | of `continuous`, `categorical`, `ordinal` or `raw`.
+
+* `phenoFilters.<pheno_filter_id>.filter` - the definition of the filter.
+
+The definition of a pheno filter has the format
+`<filter_type>:<role>(:<measure_id>)`. Each of these
+
+* | `filter_type` - either `single` or `multiple`. A single filter is used to
+  | filter on only one specified measure (specified by `<measure_id>`). A
+  | `multiple` pheno filter allows the user to choose which measure to use for
+  | filtering. The available measures depend on the
+  | `phenoFilters.<pheno_filter_id>.type` field.
+
+* | `role` - which persons' phenotype data to use for this filter. Ex. `prb`
+  | uses the probands' values for filtering. When the role matches more than
+  | one person the first is chosen.
+
+* | `measure_id` - id of the measure to be used for a `single` filter. Not
+  | used when a `multiple` filter is being defined.
+
+After adding the configuration for Phenotype Filters and reloading the Genotype
+Browser the Advanced option of the Family Filters should be present.
 
 Phenotype Database Tools
 ++++++++++++++++++++++++
