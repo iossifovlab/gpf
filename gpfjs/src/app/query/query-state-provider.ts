@@ -1,7 +1,7 @@
 
 import {throwError as observableThrowError,  ReplaySubject, Observable, Subscription} from 'rxjs';
 import {Scheduler} from 'rxjs-compat';
-import { DoCheck, OnDestroy, ContentChildren, QueryList, ViewChildren, forwardRef, OnChanges } from '@angular/core';
+import { DoCheck, OnDestroy, QueryList, ViewChildren, forwardRef } from '@angular/core';
 
 import { validationErrorsToStringArray, toValidationObservable } from '../utils/to-observable-with-validation';
 import { SaveQuery } from '../query/common-query-data';
@@ -61,18 +61,30 @@ export abstract class QueryStateCollector implements DoCheck, OnDestroy, SaveQue
   }
 
   ngOnDestroy() {
-    for (let subscruption of this.subscriptions) {
+    for (const subscruption of this.subscriptions) {
       subscruption.unsubscribe();
     }
     this.subscriptions = new Array<Subscription>();
   }
 
   getCurrentState() {
-      let state = this.collectState();
+      const state = this.collectState();
 
-      return Observable.zip(...state)
+      return Observable.zip(...state, function(...states) {
+        const stateJSON = {};
+        for (const st of  states) {
+          for (const key in st) {
+            if (key in stateJSON) {
+              stateJSON[key] = {...stateJSON[key], ...st[key]};
+            } else {
+              stateJSON[key] = st[key];
+            }
+          }
+        }
+        return stateJSON;
+      })
         .map(state => {
-          let stateObject = Object.assign({}, ...state);
+          const stateObject = Object.assign({}, ...state);
           return stateObject;
         });
     }
@@ -80,15 +92,27 @@ export abstract class QueryStateCollector implements DoCheck, OnDestroy, SaveQue
   getStateChange() {
     this.stateObjectString = '';
 
-    let observable = Observable
+    const observable = Observable
       .merge(this.stateChange$, this.directContentChildren.changes, this.contentChildren.changes)
       .subscribeOn(Scheduler.queue)
       .share();
 
     return Observable.concat(observable.first(), observable.skip(1).debounceTime(200))
       .switchMap(_ => {
-        let stateArray = this.collectState();
-        return Observable.zip(...stateArray)
+        const stateArray = this.collectState();
+        return Observable.zip(...stateArray, function(...states) {
+          const stateJSON = {};
+          for (const st of  states) {
+            for (const key in st) {
+              if (key in stateJSON) {
+                stateJSON[key] = {...stateJSON[key], ...st[key]};
+              } else {
+                stateJSON[key] = st[key];
+              }
+            }
+          }
+          return stateJSON;
+        })
           .catch(error => {
             return Observable.of([]);
           })
@@ -97,7 +121,7 @@ export abstract class QueryStateCollector implements DoCheck, OnDestroy, SaveQue
               return '';
             }
 
-            let stateString = JSON.stringify(Object.assign({}, ...state));
+            const stateString = JSON.stringify(Object.assign({}, ...state));
             if (stateString !== this.stateObjectString) {
               this.stateObjectString = stateString;
             }

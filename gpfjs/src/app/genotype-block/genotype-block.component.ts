@@ -3,7 +3,7 @@ import { Component, AfterViewInit, forwardRef } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { QueryStateCollector } from '../query/query-state-provider';
-import { Dataset, PedigreeSelector } from '../datasets/datasets';
+import { Dataset, PedigreeSelector, PresentInRole } from '../datasets/datasets';
 import { DatasetsService } from '../datasets/datasets.service';
 
 @Component({
@@ -18,8 +18,10 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
   hasPedigreeSelector: Observable<boolean>;
   hasPresentInChild: Observable<boolean>;
   hasPresentInParent: Observable<boolean>;
+  hasPresentInRole: Observable<boolean>;
   hasStudyTypes: Observable<boolean>;
   pedigrees: Observable<Array<PedigreeSelector>>;
+  presentInRole: Observable<Array<PresentInRole>>;
   selectedDataset$: Observable<Dataset>;
   rolesFilterOptions: Observable<Array<string>>;
 
@@ -31,7 +33,7 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
 
   ngAfterViewInit() {
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
-    let selectedDataset$ = this.selectedDataset$;
+    const selectedDataset$ = this.selectedDataset$;
     this.hasCNV = selectedDataset$.map(dataset => {
       if (!dataset) {
         return false;
@@ -62,6 +64,12 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
       }
       return dataset.genotypeBrowser.hasPresentInParent;
     });
+    this.hasPresentInRole = selectedDataset$.map(dataset => {
+      if (!dataset) {
+        return false;
+      }
+      return dataset.genotypeBrowser.hasPresentInRole;
+    });
     this.hasStudyTypes = selectedDataset$.map(dataset => {
       if (!dataset) {
         return false;
@@ -72,7 +80,13 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
       if (!dataset) {
         return [];
       }
-      return dataset.pedigreeSelectors;
+      return dataset.genotypeBrowser.pedigreeSelectors;
+    });
+    this.presentInRole = selectedDataset$.map(dataset => {
+      if (!dataset) {
+        return [];
+      }
+      return dataset.genotypeBrowser.presentInRole;
     });
     this.rolesFilterOptions = selectedDataset$.map(dataset => {
       if (!dataset || !dataset.genotypeBrowser) {

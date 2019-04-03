@@ -1,10 +1,9 @@
 import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { DatasetsService } from '../datasets/datasets.service';
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { Dataset } from '../datasets/datasets';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loading.service';
-import { Observable } from 'rxjs';
 import { PhenoToolService } from './pheno-tool.service';
 import { PhenoToolResults } from './pheno-tool-results';
 import { ConfigService } from '../config/config.service';
@@ -38,11 +37,10 @@ export class PhenoToolComponent extends QueryStateCollector
   }
 
   getCurrentState() {
-    let state = this.collectState();
+    const state = super.getCurrentState();
 
-    return Observable.zip(...state)
-      .map(state => {
-        let stateObject = Object.assign(
+    return state.map(state => {
+        const stateObject = Object.assign(
           { datasetId: this.selectedDatasetId },
           ...state);
         return stateObject;
@@ -51,14 +49,9 @@ export class PhenoToolComponent extends QueryStateCollector
 
   ngAfterViewInit() {
     this.detectNextStateChange(() => {
-      let stateArray = this.collectState();
-      Observable.zip(...stateArray)
+      this.getCurrentState()
         .subscribe(state => {
-          let stateObject = Object.assign({}, ...state);
-          this.phenoToolState = Object.assign(
-            {},
-            { datasetId: this.selectedDatasetId },
-            stateObject);
+          this.phenoToolState = state;
         },
         error => {
           console.warn(error);
@@ -76,14 +69,9 @@ export class PhenoToolComponent extends QueryStateCollector
 
   submitQuery() {
     this.loadingService.setLoadingStart();
-    let stateArray = this.collectState();
-    Observable.zip(...stateArray)
-    .subscribe(
+    this.getCurrentState().subscribe(
       state => {
-        let queryData = Object.assign({},
-                                      {datasetId: this.selectedDatasetId},
-                                      ...state);
-        this.phenoToolService.getPhenoToolResults(queryData).subscribe(
+        this.phenoToolService.getPhenoToolResults(state).subscribe(
           (phenoToolResults) => {
             this.phenoToolResults = phenoToolResults;
             this.loadingService.setLoadingStop();
@@ -103,13 +91,9 @@ export class PhenoToolComponent extends QueryStateCollector
   }
 
   onDownload(event) {
-    let stateArray = this.collectState();
-    Observable.zip(...stateArray)
+    this.getCurrentState()
       .subscribe(state => {
-        let queryData = Object.assign({},
-                                      {datasetId: this.selectedDatasetId},
-                                      ...state);
-        event.target.queryData.value = JSON.stringify(queryData);
+        event.target.queryData.value = JSON.stringify(state);
         console.log(event.target);
         event.target.submit();
       },
