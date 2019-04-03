@@ -15,7 +15,7 @@ If you are using Ubuntu, you can run:
 
 .. code-block:: bash
 
-    sudo apt-get install git wget build-essential zlib1g-dev
+    sudo apt-get install git wget build-essential zlib1g-dev libsasl2-dev
 
 
 Clone the GPF Repository
