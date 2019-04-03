@@ -650,6 +650,60 @@ The definition of a pheno filter has the format
 After adding the configuration for Phenotype Filters and reloading the Genotype
 Browser the Advanced option of the Family Filters should be present.
 
+Configure Phenotype Columns in Genotype Browser
++++++++++++++++++++++++++++++++++++++++++++++++
+
+Phenotype Columns are values from the Phenotype Database for each variant
+displayed in Genotype Browser Preview table. They can be added when a phenoDB
+is attached to a study or a dataset.
+
+To add a Phenotype Column you need to define it in the study or dataset config:
+
+.. code::
+
+    [genotypeBrowser]
+
+    pheno.columns = pheno
+
+    pheno.pheno.name = Measures
+    pheno.pheno.slots = prb:i1.age:Age,
+        prb:i1.iq:Iq
+
+
+The `pheno.columns` property is a comma separated list of ids for each Pheno
+Column. Each Pheno Column has to have a `pheno.<measure_id>` configuration with
+the following properties:
+
+* | `pheno.<measure_id>.name` - the display name of the pheno column group used
+  | in the Genotype Browser Preview table.
+
+* | `pheno.<measure_id>.slots` - comma separated definitions for all pheno
+  | columns.
+
+The Phenotype Column definition has the following structure:
+`<role>:<measure_id>:<name>`, where:
+
+* | `<role>` - role of the person whose pheno values will be displayed. If
+  | the role matches two or more people all of their values will be shown,
+  | separated with a comma.
+
+* `<measure_id>` - id of the measure whose values will be displayed.
+
+* `<name>` - the name of the sub-column to be displayed.
+
+For the Phenotype Columns to be in the Genotype Browser Preview table or the
+Genotype Browser Download file, they have to be present in the `previewColumns`
+or the `downloadColumns` in the Genotype Browser configuration.
+
+.. code::
+
+    previewColumns = family,variant,genotype,effect,weights,
+    scores3,scores5,
+    pheno
+
+
+In the above `comp` configuration the last column `pheno` is a Phenotype Column.
+
 Phenotype Database Tools
 ++++++++++++++++++++++++
 
