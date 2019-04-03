@@ -70,7 +70,7 @@ class PhenoConfig(ConfigBox):
 
     def get_browser_dbfile(self, dbname):
         return self[dbname].browser_dbfile
-    
+
     def get_browser_images_dir(self, dbname):
         return self[dbname].browser_images_dir
 

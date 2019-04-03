@@ -1,5 +1,4 @@
 import os
-import pytest
 
 from .conftest import fixtures_dir
 from ..factory import VariantsDb

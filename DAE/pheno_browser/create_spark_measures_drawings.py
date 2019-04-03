@@ -1,8 +1,8 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
+
 from __future__ import unicode_literals
 import os
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
-from pheno_browser.db import DbManager
 
 
 from DAE import pheno
@@ -11,7 +11,6 @@ from pheno.pheno_regression import PhenoRegression
 
 def main():
     output_folder = './output'
-    db_name = 'sqlite.db'
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -43,8 +42,10 @@ def main():
 
     # drawer.handle_measure(instrument.measures['status'])
 
-    # ordinal = {measure.measure_type for instrument in drawer.pheno_db.instruments.values()
-    #            for measure in instrument.measures.values()}
+    # ordinal = {
+    #       measure.measure_type
+    #       for instrument in drawer.pheno_db.instruments.values()
+    #       for measure in instrument.measures.values()}
     # print(ordinal)
 
     # draw_ordinal_measure(

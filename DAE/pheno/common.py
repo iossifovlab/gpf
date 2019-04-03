@@ -129,7 +129,9 @@ ROLES_GRAPHS_DEFINITION = OrderedDict([
         Role.maternal_uncle, Role.maternal_aunt
     ]),
     ("step parents", [Role.step_mom, Role.step_dad]),
-    ("half siblings", [Role.paternal_half_sibling, Role.maternal_half_sibling]),
+    ("half siblings", [
+        Role.paternal_half_sibling, Role.maternal_half_sibling
+    ]),
     ("children", [Role.child])
 ])
 

@@ -59,9 +59,3 @@ def test_chr3_variant_has_both_siblings(quads_f1_dataset_wrapper):
 
     assert allele.get_attribute('inChS') == 'sibFsibF'
     assert allele.get_attribute('fromParentS') == 'dadM'
-
-
-
-
-
-

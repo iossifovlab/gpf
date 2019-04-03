@@ -63,4 +63,3 @@ def test_configure_prefix_dirname_plus_fileprefix_parquet(temp_dirname):
     assert not os.path.exists(parquet.member_variant)
     assert 'test_' in parquet.member_variant
     assert temp_dirname in parquet.member_variant
-

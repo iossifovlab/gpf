@@ -87,7 +87,7 @@ def test_f2_reference_and_unknown(
     ([Region("1", 905957, 905957)],
      "denovo", False, False, 1),  # find denovo
     ([Region("1", 905957, 905957)],
-     "not denovo and not omission and not unknown and not missing", 
+     "not denovo and not omission and not unknown and not missing",
      False, False, 0),
     ([Region("1", 905957, 905957)],
      None, True, True, 1),  # find all

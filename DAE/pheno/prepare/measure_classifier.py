@@ -106,7 +106,8 @@ class ClassifierReport(object):
         for val in self.string_values:
             counts[val] += 1
         distribution = [(val, count) for (val, count) in list(counts.items())]
-        distribution = sorted(distribution, key=lambda _val_count: -_val_count[1])
+        distribution = sorted(
+            distribution, key=lambda _val_count: -_val_count[1])
         distribution = distribution[:self.DISTRIBUTION_CUTOFF]
         distribution = [
             (val[:self.MAX_CHARS], count)
@@ -300,7 +301,8 @@ class MeasureClassifier(object):
         if rep.count_with_values < conf.min_individuals:
             return MeasureType.raw
 
-        non_numeric = old_div((1.0 * rep.count_with_non_numeric_values), \
+        non_numeric = old_div(
+            (1.0 * rep.count_with_non_numeric_values),
             rep.count_with_values)
 
         if non_numeric <= conf.non_numeric_cutoff:
