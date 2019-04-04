@@ -98,7 +98,8 @@ class ConfigurableEntityConfig(object):
 
     @classmethod
     def read_config(
-            cls, config_file, work_dir, default_values=None, default_conf=None):
+            cls, config_file, work_dir, default_values=None,
+            default_conf=None):
         if default_values is None:
             default_values = {}
 

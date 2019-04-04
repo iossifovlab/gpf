@@ -148,14 +148,14 @@ class FamiliesCounters(object):
         self.families_count_show_id = families_count_show_id
 
         self.group_name = people_group_info.name
-        self.phenotypes = people_group_info.get_phenotypes()
+        self.people_groups = people_group_info.get_people_groups()
         self.counters = self._get_counters()
         self.legend = self._get_legend()
 
     def to_dict(self):
         return OrderedDict([
             ('group_name', self.group_name),
-            ('phenotypes', self.phenotypes),
+            ('phenotypes', self.people_groups),
             ('counters', [counter.to_dict() for counter in self.counters]),
             ('legend', self.legend)
         ])

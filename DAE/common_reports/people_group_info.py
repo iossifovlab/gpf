@@ -7,27 +7,27 @@ from collections import OrderedDict
 class PeopleGroupInfo(object):
 
     def __init__(
-            self, people_group_info, phenotype_group, study=None,
-            phenotypes=None):
+            self, people_group_info, people_group, study=None,
+            people_groups=None):
         self.name = people_group_info['name']
-        self.domain = people_group_info['domain']
+        self.domain = people_group_info['values']
         self.unaffected = people_group_info['unaffected']
         self.default = people_group_info['default']
         self.source = people_group_info['source']
 
-        self.phenotypes = self._get_phenotypes(study)\
-            if phenotypes is None else phenotypes
+        self.people_groups = self._get_people_groups(study)\
+            if people_groups is None else people_groups
 
-        self.phenotype_group = phenotype_group
+        self.people_group = people_group
 
-    def _get_phenotypes(self, study):
+    def _get_people_groups(self, study):
         return list([
             str(p) for p in study.get_pedigree_values(self.source)])
 
-    def get_phenotypes(self):
+    def get_people_groups(self):
         return [
-            phenotype if phenotype is not None else self.default['name']
-            for phenotype in self.phenotypes
+            people_group if people_group is not None else self.default['name']
+            for people_group in self.people_groups
         ]
 
     @property
@@ -51,22 +51,22 @@ class PeopleGroupsInfo(object):
     def _get_people_groups_info(self):
         return [
             PeopleGroupInfo(
-                self.people_groups_info[phenotype_group], phenotype_group,
+                self.people_groups_info[people_group], people_group,
                 study=self.study)
-            for phenotype_group in self.filter_info['phenotype_groups']
+            for people_group in self.filter_info['people_groups']
         ]
 
     def get_first_people_group_info(self):
         return self.people_groups_info[0]
 
-    def has_people_group_info(self, phenotype_group):
+    def has_people_group_info(self, people_group):
         return len(list(filter(
             lambda people_group_info:
-            people_group_info.phenotype_group == phenotype_group,
+            people_group_info.people_group == people_group,
             self.people_groups_info))) != 0
 
-    def get_people_group_info(self, phenotype_group):
+    def get_people_group_info(self, people_group):
         return list(filter(
             lambda people_group_info:
-            people_group_info.phenotype_group == phenotype_group,
+            people_group_info.people_group == people_group,
             self.people_groups_info))[0]

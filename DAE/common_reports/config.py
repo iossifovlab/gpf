@@ -36,67 +36,33 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
     SPLIT_STR_LISTS = ('peopleGroups', 'effect_groups', 'effect_types')
     CAST_TO_BOOL = ('draw_all_families', 'enabled')
 
-    @staticmethod
-    def _parse_domain_info(domain):
-        id, name, color = domain.split(':')
-
-        return OrderedDict([
-            ('id', id.strip()),
-            ('name', name.strip()),
-            ('color', color.strip())
-        ])
-
     @classmethod
-    def _parse_phenotype_domain(cls, phenotype_domain):
-        phenotype = OrderedDict()
-
-        for domain in phenotype_domain.split(','):
-            domain_info = cls._parse_domain_info(domain)
-            phenotype[domain_info['id']] = domain_info
-
-        return phenotype
-
-    @classmethod
-    def _parse_phenotype(cls, config, phenotype):
-        return OrderedDict([
-            ('name', config.get(phenotype + '.name')),
-            ('domain', cls._parse_phenotype_domain(
-                config.get(phenotype + '.domain'))),
-            ('unaffected', cls._parse_domain_info(
-                config.get(phenotype + '.unaffected'))),
-            ('default', cls._parse_domain_info(
-                config.get(phenotype + '.default'))),
-            ('source', config.get(phenotype + '.source'))
-        ])
-
-    @classmethod
-    def _parse_phenotypes(cls, config):
-        phenotypes = config.peopleGroups
+    def _get_people_groups(cls, config, people_groups):
         people_groups_info = OrderedDict()
-        for phenotype in phenotypes:
-            pheno = 'peopleGroup.' + phenotype
-            people_groups_info[phenotype] =\
-                cls._parse_phenotype(config, pheno)
+        for people_group in people_groups:
+            if people_group['id'] not in config.peopleGroups:
+                continue
+            people_groups_info[people_group['id']] = people_group
 
         return people_groups_info
 
     @staticmethod
     def _parse_data(config, id):
-        phenotypes = config.get('peopleGroups', None)
+        people_groups = config.get('peopleGroups', None)
         groups = config.get('groups', None)
         draw_all_families =\
             config.get('draw_all_families', False)
         count_of_families_for_show_id =\
             config.get('count_of_families_for_show_id', None)
 
-        if phenotypes is None or groups is None:
+        if people_groups is None or groups is None:
             return None
         if count_of_families_for_show_id is not None:
             count_of_families_for_show_id =\
                 int(count_of_families_for_show_id)
 
         return OrderedDict([
-            ('phenotype_groups', phenotypes),
+            ('people_groups', people_groups),
             ('groups', OrderedDict([
                 (group.split(':')[1].strip(),
                     group.split(':')[0].strip().split(','))
@@ -122,7 +88,12 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
         if config.get('enabled', True) is False:
             return None
 
-        people_groups_info = cls._parse_phenotypes(config)
+        people_groups = {}
+        if 'genotypeBrowser' in study_config and study_config.genotype_browser:
+            genotype_browser = study_config.genotype_browser
+            people_groups = genotype_browser.people_group
+
+        people_groups_info = cls._get_people_groups(config, people_groups)
         filter_info = cls._parse_data(config, id)
         if filter_info is None:
             return None

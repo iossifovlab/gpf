@@ -79,10 +79,10 @@ def get_families_report(pedigrees):
         'name': 'Phenotype'
     }
 
-    phenotypes = ['affected', 'unaffected', 'unknown']
+    people_groups = ['affected', 'unaffected', 'unknown']
 
     people_group_info = PeopleGroupInfo(
-        people_group_info, 'Phenotype', phenotypes=phenotypes)
+        people_group_info, 'Phenotype', people_groups=people_groups)
 
     people_groups_info = Box({'people_groups_info': [people_group_info]})
 

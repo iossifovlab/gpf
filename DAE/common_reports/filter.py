@@ -57,7 +57,7 @@ class FilterObjects(object):
                     people_group_info = \
                         people_groups_info.get_people_group_info(el)
                     el_column = people_group_info.source
-                    el_values = people_group_info.phenotypes
+                    el_values = people_group_info.people_groups
                 else:
                     el_column = el
                     el_values = query_object.get_pedigree_values(el)

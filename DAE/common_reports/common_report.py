@@ -75,7 +75,7 @@ class CommonReport(object):
         default_phenotype = people_group_info.default['name']
 
         return [pheno if pheno is not None else default_phenotype
-                for pheno in people_group_info.phenotypes]
+                for pheno in people_group_info.people_groups]
 
     def _get_number_of_people_with_role(self, role):
         return sum([len(family.get_people_with_role(role))
