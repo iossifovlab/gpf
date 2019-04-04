@@ -16,7 +16,7 @@ from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
 from studies.factory import VariantsDb
 from configurable_entities.configuration import DAEConfig
-from common_reports.config import CommonReportsQueryObjects
+from common_reports.config import CommonReportsStudies
 
 
 def fixtures_dir():
@@ -54,8 +54,8 @@ def study_factory():
 
 @pytest.fixture(scope='session')
 def study_facade(study_factory, study_definitions, pheno_factory):
-    return StudyFacade(pheno_factory,
-        study_factory=study_factory, study_definition=study_definitions)
+    return StudyFacade(pheno_factory, study_factory=study_factory,
+                       study_definition=study_definitions)
 
 
 @pytest.fixture(scope='session')
@@ -95,7 +95,7 @@ def vdb_fixture(dae_config_fixture):
 
 @pytest.fixture(scope='session')
 def common_reports_query_objects(vdb_fixture):
-    common_reports_query_objects = CommonReportsQueryObjects(
+    common_reports_query_objects = CommonReportsStudies(
         vdb_fixture.study_facade, vdb_fixture.dataset_facade)
 
     return common_reports_query_objects

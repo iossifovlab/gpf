@@ -40,7 +40,7 @@ class VariantsDb(object):
 
         self._configuration_check()
 
-        # self.common_reports_query_objects = CommonReportsQueryObjects(
+        # self.common_reports_query_objects = CommonReportsStudies(
         #     self.study_facade, self.dataset_facade)
         # self.common_reports_generator = CommonReportsGenerator(
         #     self.common_reports_query_objects)

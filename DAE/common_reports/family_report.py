@@ -10,16 +10,17 @@ from common_reports.family_counter import FamiliesCounters
 class FamiliesReport(object):
 
     def __init__(
-            self, query_object, phenotypes_info, filter_objects,
+            self, study, people_groups_info, filter_objects,
             draw_all_families=False, families_count_show_id=False):
-        families = query_object.families
+        self.families = study.families
+        self.people_groups_info = people_groups_info
+        self.filter_objects = filter_objects
+        self.draw_all_families = draw_all_families
+        self.families_count_show_id = families_count_show_id
 
-        self.families_total = len(families)
-        self.people_counters =\
-            self._get_people_counters(families, filter_objects)
-        self.families_counters = self._get_families_counters(
-            families, phenotypes_info, draw_all_families,
-            families_count_show_id)
+        self.families_total = len(self.families)
+        self.people_counters = self._get_people_counters()
+        self.families_counters = self._get_families_counters()
 
     def to_dict(self):
         return OrderedDict([
@@ -29,17 +30,16 @@ class FamiliesReport(object):
              [fc.to_dict() for fc in self.families_counters])
         ])
 
-    def _get_people_counters(self, families, filter_objects):
+    def _get_people_counters(self):
         return [
-            PeopleCounters(families, filter_object)
-            for filter_object in filter_objects
+            PeopleCounters(self.families, filter_object)
+            for filter_object in self.filter_objects
         ]
 
-    def _get_families_counters(
-            self, families, phenotypes_info, draw_all_families,
-            families_count_show_id):
+    def _get_families_counters(self):
         return [
-            FamiliesCounters(families, phenotype_info, draw_all_families,
-                             families_count_show_id)
-            for phenotype_info in phenotypes_info.phenotypes_info
+            FamiliesCounters(
+                self.families, people_group_info, self.draw_all_families,
+                self.families_count_show_id)
+            for people_group_info in self.people_groups_info.people_groups_info
         ]

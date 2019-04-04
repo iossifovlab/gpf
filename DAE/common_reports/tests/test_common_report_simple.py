@@ -8,13 +8,13 @@ def test_common_report_simple(common_reports_query_objects):
 
     print([
         st.name
-        for st in common_reports_query_objects.query_objects_with_config.keys()
+        for st in common_reports_query_objects.studies_with_config.keys()
     ])
     studies = ['Study3']
-    common_reports_query_objects.filter_query_objects(studies)
+    common_reports_query_objects.filter_studies(studies)
 
     study_wrapper, config = \
-        list(common_reports_query_objects.query_objects_with_config.items())[0]
+        list(common_reports_query_objects.studies_with_config.items())[0]
     assert study_wrapper is not None
     assert config is not None
     print(config)
@@ -22,14 +22,14 @@ def test_common_report_simple(common_reports_query_objects):
     common_report = CommonReport(
         study_wrapper,
         config.filter_info,
-        config.phenotypes_info,
+        config.people_groups_info,
         config.effect_groups,
         config.effect_types)
 
     assert common_report is not None
     assert common_report.id == 'Study3'
 
-    print(config.phenotypes_info)
+    print(config.people_groups_info)
     print(config.filter_info)
     print(config.config.groups)
 
@@ -79,4 +79,3 @@ def test_common_report_simple(common_reports_query_objects):
     assert cell.column == 'sib'
     assert cell.number_of_observed_events == 1
     assert cell.number_of_children_with_event == 1
-

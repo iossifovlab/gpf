@@ -18,12 +18,12 @@ class CommonReportsConfig(object):
     """
 
     def __init__(
-            self, id, config, phenotypes_info, filter_info):
+            self, id, config, people_groups_info, filter_info):
         self.config = config
 
         self.id = id
 
-        self.phenotypes_info = phenotypes_info
+        self.people_groups_info = people_groups_info
         self.filter_info = filter_info
         self.effect_groups = self.config.get('effect_groups', [])
         self.effect_types = self.config.get('effect_types', [])
@@ -72,13 +72,13 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
     @classmethod
     def _parse_phenotypes(cls, config):
         phenotypes = config.peopleGroups
-        phenotypes_info = OrderedDict()
+        people_groups_info = OrderedDict()
         for phenotype in phenotypes:
             pheno = 'peopleGroup.' + phenotype
-            phenotypes_info[phenotype] =\
+            people_groups_info[phenotype] =\
                 cls._parse_phenotype(config, pheno)
 
-        return phenotypes_info
+        return people_groups_info
 
     @staticmethod
     def _parse_data(config, id):
@@ -107,11 +107,11 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
         ])
 
     @classmethod
-    def from_config(cls, query_object_config):
-        id = query_object_config.id
+    def from_config(cls, study_config):
+        id = study_config.id
         config = deepcopy(
-            query_object_config.study_config.get('commonReport', None))
-        config_file = query_object_config.study_config.get('config_file', '')
+            study_config.study_config.get('commonReport', None))
+        config_file = study_config.study_config.get('config_file', '')
 
         if config is None:
             return None
@@ -122,7 +122,7 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
         if config.get('enabled', True) is False:
             return None
 
-        phenotypes_info = cls._parse_phenotypes(config)
+        people_groups_info = cls._parse_phenotypes(config)
         filter_info = cls._parse_data(config, id)
         if filter_info is None:
             return None
@@ -135,25 +135,24 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
             config.file = filename
 
         return CommonReportsConfig(
-            id, config, phenotypes_info, filter_info)
+            id, config, people_groups_info, filter_info)
 
 
-class CommonReportsQueryObjects(object):
+class CommonReportsStudies(object):
 
     def __init__(self, study_facade, dataset_facade):
-        query_objects = study_facade.get_all_studies_wrapper() +\
+        studies = study_facade.get_all_studies_wrapper() +\
             dataset_facade.get_all_datasets_wrapper()
-        self.query_objects_with_config = {}
-        for query_object in query_objects:
-            common_report_config =\
-                CommonReportsParseConfig.from_config(query_object.config)
+        self.studies_with_config = {}
+        for study in studies:
+            common_report_config = \
+                CommonReportsParseConfig.from_config(study.config)
             if common_report_config is not None:
-                self.query_objects_with_config[query_object] =\
-                    common_report_config
+                self.studies_with_config[study] = common_report_config
 
-    def filter_query_objects(self, query_objects):
-        self.query_objects_with_config = {
+    def filter_studies(self, studies):
+        self.studies_with_config = {
             qo: c
-            for qo, c in self.query_objects_with_config.items()
-            if qo.id in query_objects
+            for qo, c in self.studies_with_config.items()
+            if qo.id in studies
         }

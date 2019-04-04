@@ -9,43 +9,44 @@ from variants.attributes import Role
 
 from common_reports.family_report import FamiliesReport
 from common_reports.denovo_report import DenovoReport
-from common_reports.phenotype_info import PhenotypesInfo
+from common_reports.people_group_info import PeopleGroupsInfo
 from common_reports.filter import FilterObjects
 
 
 class CommonReport(object):
 
     def __init__(
-            self, query_object, filter_info, phenotypes_info, effect_groups,
+            self, study, filter_info, people_groups_info, effect_groups,
             effect_types):
-        phenotypes_info = PhenotypesInfo(
-            query_object, filter_info, phenotypes_info)
+        self.study = study
+        self.people_groups_info = PeopleGroupsInfo(
+            study, filter_info, people_groups_info)
 
         filter_objects = FilterObjects.get_filter_objects(
-            query_object, phenotypes_info, filter_info['groups'])
+            study, self.people_groups_info, filter_info['groups'])
 
         self.id = filter_info['id']
         self.families_report = FamiliesReport(
-            query_object, phenotypes_info, filter_objects,
+            study, self.people_groups_info, filter_objects,
             filter_info['draw_all_families'],
             filter_info['families_count_show_id'])
         self.denovo_report = DenovoReport(
-            query_object, effect_groups, effect_types, filter_objects)
-        self.study_name = query_object.name
-        self.phenotype = self._get_phenotype(phenotypes_info)
-        self.study_type = ','.join(query_object.study_types)\
-            if query_object.study_types else None
-        self.study_year = query_object.year
-        self.pub_med = query_object.pub_med
+            study, effect_groups, effect_types, filter_objects)
+        self.study_name = study.name
+        self.phenotype = self._get_phenotype()
+        self.study_type = ','.join(study.study_types)\
+            if study.study_types else None
+        self.study_year = study.year
+        self.pub_med = study.pub_med
 
-        self.families = len(query_object.families)
+        self.families = len(study.families)
         self.number_of_probands =\
-            self._get_number_of_people_with_role(query_object, Role.prb)
+            self._get_number_of_people_with_role(Role.prb)
         self.number_of_siblings =\
-            self._get_number_of_people_with_role(query_object, Role.sib)
-        self.denovo = query_object.has_denovo
-        self.transmitted = query_object.has_transmitted
-        self.study_description = query_object.description
+            self._get_number_of_people_with_role(Role.sib)
+        self.denovo = study.has_denovo
+        self.transmitted = study.has_transmitted
+        self.study_description = study.description
 
     def to_dict(self):
         return OrderedDict([
@@ -68,32 +69,32 @@ class CommonReport(object):
             ('study_description', self.study_description)
         ])
 
-    def _get_phenotype(self, phenotypes_info):
-        phenotype_info = phenotypes_info.get_first_phenotype_info()
-        default_phenotype = phenotype_info.default['name']
+    def _get_phenotype(self):
+        people_group_info = \
+            self.people_groups_info.get_first_people_group_info()
+        default_phenotype = people_group_info.default['name']
 
         return [pheno if pheno is not None else default_phenotype
-                for pheno in phenotype_info.phenotypes]
+                for pheno in people_group_info.phenotypes]
 
-    def _get_number_of_people_with_role(self, query_object, role):
+    def _get_number_of_people_with_role(self, role):
         return sum([len(family.get_people_with_role(role))
-                    for family in query_object.families.values()])
+                    for family in self.study.families.values()])
 
 
 class CommonReportsGenerator(object):
 
-    def __init__(self, common_reports_query_objects):
-        assert common_reports_query_objects is not None
+    def __init__(self, common_reports_studies):
+        assert common_reports_studies is not None
 
-        self.query_objects_with_config =\
-            common_reports_query_objects.query_objects_with_config
+        self.studys_with_config = common_reports_studies.studies_with_config
 
     def save_common_reports(self):
-        for query_object, config in self.query_objects_with_config.items():
+        for study, config in self.studys_with_config.items():
             if config is None:
                 continue
 
-            phenotypes_info = config.phenotypes_info
+            people_groups_info = config.people_groups_info
             filter_info = config.filter_info
             effect_groups = config.effect_groups
             effect_types = config.effect_types
@@ -101,7 +102,7 @@ class CommonReportsGenerator(object):
             path = config.path
 
             common_report = CommonReport(
-                query_object, filter_info, phenotypes_info, effect_groups,
+                study, filter_info, people_groups_info, effect_groups,
                 effect_types)
 
             if not os.path.exists(os.path.dirname(path)):

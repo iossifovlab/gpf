@@ -4,7 +4,7 @@ from builtins import object
 from configurable_entities.configuration import DAEConfig
 
 from studies.factory import VariantsDb
-from common_reports.config import CommonReportsQueryObjects
+from common_reports.config import CommonReportsStudies
 from common_reports.common_report import CommonReportsGenerator
 from common_reports.common_report_facade import CommonReportFacade
 
@@ -28,7 +28,7 @@ class CommonReportsManager(object):
         self.dae_config = dae_config
         self.vdb = vdb
 
-        self.common_reports_query_objects = CommonReportsQueryObjects(
+        self.common_reports_query_objects = CommonReportsStudies(
             self.vdb.study_facade, self.vdb.dataset_facade)
         self.common_reports_generator = CommonReportsGenerator(
             self.common_reports_query_objects)

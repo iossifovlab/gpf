@@ -5,7 +5,7 @@ from studies.factory import VariantsDb
 from configurable_entities.configuration import DAEConfig
 
 from common_reports.common_report import CommonReportsGenerator
-from common_reports.config import CommonReportsQueryObjects
+from common_reports.config import CommonReportsStudies
 
 
 def main(dae_config=None, argv=None):
@@ -27,17 +27,17 @@ def main(dae_config=None, argv=None):
         dae_config = DAEConfig()
 
     vdb = VariantsDb(dae_config)
-    common_reports_query_objects = CommonReportsQueryObjects(
+    common_reports_query_objects = CommonReportsStudies(
         vdb.study_facade, vdb.dataset_facade)
 
     if args.show_studies:
         for query_object in\
-                common_reports_query_objects.query_objects_with_config.keys():
+                common_reports_query_objects.studies_with_config.keys():
             print(query_object.id)
     else:
         if args.studies:
             query_objects = args.studies.split(',')
-            common_reports_query_objects.filter_query_objects(query_objects)
+            common_reports_query_objects.filter_studies(query_objects)
 
         crg = CommonReportsGenerator(common_reports_query_objects)
         crg.save_common_reports()

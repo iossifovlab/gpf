@@ -12,22 +12,25 @@ from common.query_base import EffectTypesMixin
 class EffectWithFilter(object):
 
     def __init__(self, study, denovo_variants, filter_object, effect):
-        effect_types_converter = EffectTypesMixin()
+        self.study = study
+        self.denovo_variants = denovo_variants
+        self.filter_object = filter_object
+        self.effect = effect
+
+        self.effect_types_converter = EffectTypesMixin()
         families_base = FamiliesBase()
         families_base.families = study.families
 
-        people_with_filter =\
-            self._people_with_filter(study, filter_object)
+        people_with_filter = self._people_with_filter()
         people_with_parents = families_base.persons_with_parents()
         people_with_parents_ids =\
             set(families_base.persons_id(people_with_parents))
 
         variants = self._get_variants(
-            study, denovo_variants, people_with_filter,
-            people_with_parents_ids, effect, effect_types_converter)
+            people_with_filter, people_with_parents_ids)
 
         self.number_of_observed_events = len(variants)
-        self.number_of_children_with_event =\
+        self.number_of_children_with_event = \
             self._get_number_of_children_with_event(
                 variants, people_with_filter, people_with_parents_ids)
         self.observed_rate_per_child =\
@@ -37,7 +40,7 @@ class EffectWithFilter(object):
             self.number_of_children_with_event / len(people_with_parents_ids)\
             if len(people_with_parents_ids) != 0 else 0
 
-        self.column = filter_object.get_column()
+        self.column = self.filter_object.get_column_name()
 
     def to_dict(self):
         return OrderedDict([
@@ -50,28 +53,25 @@ class EffectWithFilter(object):
             ('column', self.column)
         ])
 
-    def _people_with_filter(self, query_object, filter_object):
+    def _people_with_filter(self):
         people_with_filter = set()
 
-        for family in query_object.families.values():
+        for family in self.study.families.values():
             family_members_with_filter = set.intersection(*[set(
                 family.get_people_with_property(filter.column, filter.value))
-                for filter in filter_object.filters])
+                for filter in self.filter_object.filters])
             family_members_with_filter_ids =\
                 [person.person_id for person in family_members_with_filter]
             people_with_filter.update(family_members_with_filter_ids)
 
         return people_with_filter
 
-    def _get_variants(
-            self, study, denovo_variants, people_with_filter,
-            people_with_parents,
-            effect, effect_types_converter):
+    def _get_variants(self, people_with_filter, people_with_parents):
         people = people_with_filter.intersection(people_with_parents)
-        effect_types = set(
-            effect_types_converter.get_effect_types(effectTypes=effect))
+        effect_types = set(self.effect_types_converter.get_effect_types(
+            effectTypes=self.effect))
         variants = []
-        for v in denovo_variants:
+        for v in self.denovo_variants:
             for aa in v.alt_alleles:
                 if not (set(aa.variant_in_members) & people):
                     continue
@@ -102,11 +102,13 @@ class EffectWithFilter(object):
 
 class Effect(object):
 
-    def __init__(
-            self, study, denovo_variants, effect, filter_objects):
+    def __init__(self, study, denovo_variants, effect, filter_objects):
+        self.study = study
+        self.denovo_variants = denovo_variants
+        self.filter_objects = filter_objects
+
         self.effect_type = effect
-        self.row = self._get_row(
-            study, denovo_variants, effect, filter_objects)
+        self.row = self._get_row()
 
     def to_dict(self):
         return OrderedDict([
@@ -114,10 +116,12 @@ class Effect(object):
             ('row', [r.to_dict() for r in self.row])
         ])
 
-    def _get_row(self, study, denovo_variants, effect, filter_objects):
+    def _get_row(self):
         return [
-            EffectWithFilter(study, denovo_variants, filter_object, effect)
-            for filter_object in filter_objects.filter_objects]
+            EffectWithFilter(
+                self.study, self.denovo_variants, filter_object,
+                self.effect_type)
+            for filter_object in self.filter_objects.filter_objects]
 
     def is_row_empty(self):
         return all([value.is_empty() for value in self.row])
@@ -133,9 +137,13 @@ class Effect(object):
 class DenovoReportTable(object):
 
     def __init__(
-            self, query_object, denovo_variants,
-            effect_groups, effect_types, filter_object):
-        effects = effect_groups + effect_types
+            self, study, denovo_variants, effect_groups, effect_types,
+            filter_object):
+        self.study = study
+        self.denovo_variants = denovo_variants
+        self.filter_object = filter_object
+
+        self.effects = effect_groups + effect_types
 
         self.group_name = filter_object.name
         self.columns = filter_object.get_columns()
@@ -143,8 +151,7 @@ class DenovoReportTable(object):
         self.effect_groups = effect_groups
         self.effect_types = effect_types
 
-        self.rows = self._get_rows(
-            query_object, denovo_variants, effects, filter_object)
+        self.rows = self._get_rows()
 
     def to_dict(self):
         return OrderedDict([
@@ -175,12 +182,13 @@ class DenovoReportTable(object):
             lambda effect_row: not effect_row.is_row_empty(),
             effect_rows))
 
-    def _get_rows(
-            self, query_object, denovo_variants, effects, filter_object):
+    def _get_rows(self):
 
         effect_rows = [
-            Effect(query_object, denovo_variants, effect, filter_object)
-            for effect in effects]
+            Effect(
+                self.study, self.denovo_variants, effect, self.filter_object)
+            for effect in self.effects
+        ]
 
         effect_rows_empty_columns = list(map(
             all, np.array([effect_row.get_empty()
@@ -204,33 +212,31 @@ class DenovoReportTable(object):
 
 class DenovoReport(object):
 
-    def __init__(
-            self, query_object, effect_groups, effect_types, filter_objects):
-        denovo_variants = query_object.query_variants(
+    def __init__(self, study, effect_groups, effect_types, filter_objects):
+        self.study = study
+        self.effect_groups = effect_groups
+        self.effect_types = effect_types
+        self.filter_objects = filter_objects
+
+        denovo_variants = study.query_variants(
             limit=None,
             inheritance='denovo',
         )
-        denovo_variants = list(denovo_variants)
+        self.denovo_variants = list(denovo_variants)
 
-        self.tables = self._get_tables(
-            query_object, denovo_variants,
-            effect_groups, effect_types, filter_objects)
+        self.tables = self._get_tables()
 
     def to_dict(self):
         return OrderedDict([
             ('tables', [t.to_dict() for t in self.tables])
         ])
 
-    def _get_tables(
-            self, query_object, denovo_variants,
-            effect_groups, effect_types, filter_objects):
-
+    def _get_tables(self):
         denovo_report_tables = []
-        for filter_object in filter_objects:
+        for filter_object in self.filter_objects:
             denovo_report_table = DenovoReportTable(
-                query_object, denovo_variants,
-                deepcopy(effect_groups), deepcopy(effect_types),
-                filter_object)
+                self.study, self.denovo_variants, deepcopy(self.effect_groups),
+                deepcopy(self.effect_types), filter_object)
 
             if not denovo_report_table.is_empty():
                 denovo_report_tables.append(denovo_report_table)

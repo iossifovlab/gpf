@@ -8,8 +8,8 @@ class CommonReportFacade(object):
     _common_report_cache = {}
 
     def __init__(self, common_reports_query_objects):
-        self.query_objects_with_config =\
-            common_reports_query_objects.query_objects_with_config
+        self.studies_with_config = \
+            common_reports_query_objects.studies_with_config
 
     def get_common_report(self, common_report_id):
         self.load_cache({common_report_id})
@@ -26,7 +26,7 @@ class CommonReportFacade(object):
 
     def get_all_common_report_ids(self):
         return [
-            config.id for config in self.query_objects_with_config.values()
+            config.id for config in self.studies_with_config.values()
         ]
 
     def load_cache(self, common_report_ids=None):
@@ -44,7 +44,7 @@ class CommonReportFacade(object):
     def _load_common_report_in_cache(self, common_report_id):
         common_report_configs = list(filter(
             lambda config: (config.id == common_report_id),
-            self.query_objects_with_config.values()))
+            self.studies_with_config.values()))
         if len(common_report_configs) > 0:
             common_report_config = common_report_configs[0]
         else:
