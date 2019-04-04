@@ -16,7 +16,7 @@ from studies.factory import VariantsDb
 from gene.config import GeneInfoConfig
 from gene.weights import WeightsLoader
 
-from utils.fixtures import change_environment
+# from utils.fixtures import change_environment
 from configurable_entities.configuration import DAEConfig
 
 

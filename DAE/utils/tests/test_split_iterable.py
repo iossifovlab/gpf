@@ -53,7 +53,3 @@ def test_consumes_given_iterable():
 
     for val in it:
         pytest.fail("should have been consumed")
-
-
-
-

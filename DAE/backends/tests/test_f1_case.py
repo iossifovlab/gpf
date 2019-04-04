@@ -214,7 +214,7 @@ def test_f1_cannonical_omission(
     ([Region("1", 906092, 906092)], "denovo", None, 0),
     ([Region("1", 906092, 906092)], "omission", ["synonymous"], 1),
     ([Region("1", 906092, 906092)], "omission", ["missense"], 1),
-    ([Region("1", 906092, 906092)], 
+    ([Region("1", 906092, 906092)],
      "not omission and not mendelian and not unknown", ["missense"], 0),
     ([Region("1", 906092, 906092)], "not omission", None, 1),
 ])
@@ -274,5 +274,5 @@ def test_f1_all_unknown_901923(
         return_reference=True,
         return_unknown=True)
 
-    vs = list(vs)    
+    vs = list(vs)
     assert len(vs) == count

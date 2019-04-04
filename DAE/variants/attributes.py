@@ -11,6 +11,39 @@ import enum
 
 class Role(enum.Enum):
 
+    DISPLAY_NAME = {
+        'maternal_grandmother': 'Maternal Grandmother',
+        'maternal_grandfather': 'Maternal Grandfather',
+        'paternal_grandmother': 'Paternal Grandmother',
+        'paternal_grandfather': 'Paternal Grandfather',
+
+        'mom': 'Mom',
+        'dad': 'Dad',
+        'parent': 'Parent',
+
+        'prb': 'Proband',
+        'sib': 'Sibling',
+        'child': 'Child',
+
+        'maternal_half_sibling': 'Maternal Half Sibling',
+        'paternal_half_sibling': 'Paternal Half Sibling',
+        'half_sibling': 'Half Sibling',
+
+        'maternal_aunt': 'Maternal Aunt',
+        'maternal_uncle': 'Maternal Uncle',
+        'paternal_aunt': 'Paternal Aunt',
+        'paternal_uncle': 'Paternal Uncle',
+
+        'maternal_cousin': 'Maternal Cousin',
+        'paternal_cousin': 'Paternal Cousin',
+
+        'step_mom': 'Step Mom',
+        'step_dad': 'Step Dad',
+        'spouse': 'Spouse',
+
+        'unknown': 'Unknown'
+    }
+
     maternal_grandmother = 1
     maternal_grandfather = 2
     paternal_grandmother = 3
@@ -42,6 +75,10 @@ class Role(enum.Enum):
 
     unknown = 100
 
+    @property
+    def display_name(self):
+        return Role.DISPLAY_NAME.value[self.name]
+
     def __repr__(self):
         return self.name
         # return "{}: {:023b}".format(self.name, self.value)
@@ -53,6 +90,16 @@ class Role(enum.Enum):
     def from_name(name):
         if name in Role.__members__:
             return Role[name]
+        else:
+            return Role.unknown
+
+    @staticmethod
+    def from_display_name(display_name):
+        if display_name in Role.DISPLAY_NAME.value.values():
+            for name, display_name_value in Role.DISPLAY_NAME.value.items():
+                if display_name_value == display_name:
+                    return Role.from_name(name)
+            return Role.unknown
         else:
             return Role.unknown
 

@@ -27,7 +27,6 @@ class StudyWrapper(object):
         self._init_pheno(self.pheno_factory)
 
     def _init_wdae_config(self):
-        genotype_browser = self.config.genotypeBrowser
 
         preview_columns = []
         download_columns = []
@@ -36,8 +35,10 @@ class StudyWrapper(object):
         column_labels = {}
 
         pedigree_selectors = []
+        present_in_role = []
 
-        if genotype_browser:
+        if 'genotypeBrowser' in self.config and self.config.genotype_browser:
+            genotype_browser = self.config.genotypeBrowser
             preview_columns = genotype_browser['previewColumnsSlots']
             download_columns = genotype_browser['downloadColumnsSlots']
             if genotype_browser['phenoColumns']:
@@ -47,8 +48,10 @@ class StudyWrapper(object):
 
             column_labels = genotype_browser['columnLabels']
 
-        if 'pedigreeSelectors' in self.config:
-            pedigree_selectors = self.config.pedigree_selectors
+            if 'pedigreeSelectors' in genotype_browser:
+                pedigree_selectors = genotype_browser.pedigree_selectors
+            if 'presentInRole' in genotype_browser:
+                present_in_role = genotype_browser.present_in_role
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
@@ -57,6 +60,7 @@ class StudyWrapper(object):
         self.column_labels = column_labels
 
         self.pedigree_selectors = pedigree_selectors
+        self.present_in_role = present_in_role
 
         if len(self.pedigree_selectors) != 0:
             self.legend = {
@@ -75,7 +79,8 @@ class StudyWrapper(object):
         if pheno_db:
             self.pheno_db = pheno_factory.get_pheno_db(pheno_db)
 
-            if self.config.genotypeBrowser:
+            if 'genotypeBrowser' in self.config and \
+                    self.config.genotypeBrowser:
                 pheno_filters = self.config.genotypeBrowser.phenoFilters
                 if pheno_filters:
                     self.pheno_filters_in_config = {
@@ -103,7 +108,6 @@ class StudyWrapper(object):
     }
 
     # Not implemented:
-    # inChild
     # callSet
     # minParentsCalled
     # ultraRareOnly
@@ -124,6 +128,9 @@ class StudyWrapper(object):
 
         if 'presentInParent' in kwargs:
             self._transform_present_in_parent(kwargs)
+
+        if 'presentInRole' in kwargs:
+            self._transform_present_in_role(kwargs)
 
         if 'minAltFrequencyPercent' in kwargs or \
                 'maxAltFrequencyPercent' in kwargs:
@@ -186,9 +193,11 @@ class StudyWrapper(object):
             yield variant
 
     def _add_roles_columns(self, variant):
-        genotype_browser = self.study.config.genotypeBrowser
-        if isinstance(genotype_browser, bool) and genotype_browser is False:
+        if 'genotypeBrowser' not in self.study.config or \
+            'genotypeBrowser' in self.study.config and \
+                not self.study.config.genotypeBrowser:
             return variant
+
         # assert isinstance(genotype_browser, dict), type(genotype_browser)
 
         roles_columns = self.study.config.genotypeBrowser.rolesColumns
@@ -236,11 +245,10 @@ class StudyWrapper(object):
         return result
 
     def _add_pheno_columns(self, variants_iterable):
-        genotype_browser = self.study.config.genotypeBrowser
-
         if self.pheno_db is None or \
-                (isinstance(genotype_browser, bool) and
-                 genotype_browser is False):
+            'genotypeBrowser' not in self.study.config or \
+                'genotypeBrowser' in self.study.config and not \
+                self.study.config.genotypeBrowser:
             for variant in variants_iterable:
                 yield variant
 
@@ -276,14 +284,15 @@ class StudyWrapper(object):
         pheno_column_dfs = []
         pheno_column_names = []
 
-        for pheno_column in self.config.genotypeBrowser.phenoColumns:
-            for slot in pheno_column.slots:
-                pheno_column_dfs.append(
-                    self.pheno_db.get_measure_values_df(
-                        slot.measure,
-                        family_ids=list(families),
-                        roles=[slot.role]))
-                pheno_column_names.append(slot.source)
+        if 'genotypeBrowser' in self.config and self.config.genotypeBrowser:
+            for pheno_column in self.config.genotypeBrowser.phenoColumns:
+                for slot in pheno_column.slots:
+                    pheno_column_dfs.append(
+                        self.pheno_db.get_measure_values_df(
+                            slot.measure,
+                            family_ids=list(families),
+                            roles=[slot.role]))
+                    pheno_column_names.append(slot.source)
 
         return list(zip(pheno_column_dfs, pheno_column_names))
 
@@ -419,19 +428,19 @@ class StudyWrapper(object):
         for filter_option in kwargs['presentInChild']:
             new_roles = None
 
-            if filter_option == 'affected only':
+            if filter_option == 'proband only':
                 new_roles = AndNode([
                     ContainsNode(Role.prb),
                     NotNode(ContainsNode(Role.sib))
                 ])
 
-            if filter_option == 'unaffected only':
+            if filter_option == 'sibling only':
                 new_roles = AndNode([
                     NotNode(ContainsNode(Role.prb)),
                     ContainsNode(Role.sib)
                 ])
 
-            if filter_option == 'affected and unaffected':
+            if filter_option == 'proband and sibling':
                 new_roles = AndNode([
                     ContainsNode(Role.prb),
                     ContainsNode(Role.sib)
@@ -448,24 +457,12 @@ class StudyWrapper(object):
 
         kwargs.pop('presentInChild')
 
-        if not roles_query:
-            return
-
-        roles_query = OrNode(roles_query)
-
-        original_roles = kwargs.get('roles', None)
-        if original_roles is not None:
-            if isinstance(original_roles, str):
-                original_roles = role_query.transform_query_string_to_tree(
-                    original_roles)
-            kwargs['roles'] = AndNode([original_roles, roles_query])
-        else:
-            kwargs['roles'] = roles_query
+        self._add_roles_to_query(roles_query, kwargs)
 
     def _transform_present_in_parent(self, kwargs):
         roles_query = []
 
-        for filter_option in kwargs['presentInParent']:
+        for filter_option in kwargs['presentInParent']['presentInParent']:
             new_roles = None
 
             if filter_option == 'mother only':
@@ -497,6 +494,35 @@ class StudyWrapper(object):
 
         kwargs.pop('presentInParent')
 
+        self._add_roles_to_query(roles_query, kwargs)
+
+    def _transform_present_in_role(self, kwargs):
+        roles_query = []
+
+        for pir_name, filter_options in kwargs['presentInRole'].items():
+
+            for filter_option in filter_options:
+                new_roles = None
+
+                if filter_option != 'neither':
+                    new_roles = \
+                        ContainsNode(Role.from_display_name(filter_option))
+
+                if filter_option == 'neither':
+                    new_roles = AndNode([
+                        NotNode(ContainsNode(Role.from_display_name(role)))
+                        for role in self.get_present_in_role(pir_name)
+                                        .get('roles')
+                    ])
+
+                if new_roles:
+                    roles_query.append(new_roles)
+
+        kwargs.pop('presentInRole')
+
+        self._add_roles_to_query(roles_query, kwargs)
+
+    def _add_roles_to_query(self, roles_query, kwargs):
         if not roles_query:
             return
 
@@ -538,6 +564,16 @@ class StudyWrapper(object):
         return pedigree_selector_with_id[0] \
             if pedigree_selector_with_id else {}
 
+    def get_present_in_role(self, present_in_role_name):
+        if not present_in_role_name:
+            return {}
+
+        present_in_role = list(filter(
+            lambda present_in_role: present_in_role.get('name') ==
+            present_in_role_name, self.present_in_role))
+
+        return present_in_role[0] if present_in_role else {}
+
     def _get_dataset_config_options(self, config):
         config['studyTypes'] = self.config.study_types
         config['description'] = self.study.description
@@ -549,8 +585,7 @@ class StudyWrapper(object):
         return [
             'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
             'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
-            'enrichmentTool', 'genotypeBrowser', 'pedigreeSelectors',
-            'studyTypes', 'studies'
+            'enrichmentTool', 'genotypeBrowser', 'studyTypes', 'studies'
         ]
 
     def get_dataset_description(self):

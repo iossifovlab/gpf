@@ -29,7 +29,7 @@ def _same_value_attribute(studies_configs, option_name):
     res = getattr(studies_configs[0], option_name)
     for check_config in studies_configs[1:]:
         check = getattr(check_config, option_name)
-        assert res == check, "{} == {}".format(res, check)
+        assert res.to_json() == check.to_json(), "{} == {}".format(res, check)
     return res
 
 
@@ -68,11 +68,6 @@ class DatasetConfig(StudyConfigBase):
         'has_transmitted': _boolean_or_attribute,
         'has_denovo': _boolean_or_attribute,
 
-        'people_group': _same_value_attribute,
-        'peopleGroup': _same_value_attribute,
-        'pedigree_selectors': _same_value_attribute,
-        'pedigreeSelectors': _same_value_attribute,
-
         'genotypeBrowser': _same_value_attribute,
         'genotype_browser': _same_value_attribute,
 
@@ -109,7 +104,7 @@ class DatasetConfig(StudyConfigBase):
                 return None
 
         cls._fill_wdae_config(config_section)
-        genotype_browser = False
+        genotype_browser = None
         if config_section.get('genotypeBrowser', False) is True:
             genotype_browser = GenotypeBrowserConfig.from_config(config)
 

@@ -247,7 +247,8 @@ class MakefileBuilder(VariantDBConfig):
                         region_index=region_index,
                         contig=contig)
                 target = self.escape_target(output_basename + part_sufix)
-                args = '--mode=replace --config {config} --sequential -c chr -p position' \
+                args = '--mode=replace --config {config} --sequential ' \
+                    '-c chr -p position' \
                     ' --Graw {genome_file}' \
                     ' --region={chr}:{begin_pos}-{end_pos}'.format(
                         config=self.annotation_config,

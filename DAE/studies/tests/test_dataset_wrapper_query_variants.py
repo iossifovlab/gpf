@@ -96,14 +96,14 @@ def test_query_regions_variants(regions, count, quads_f1_dataset_wrapper):
 @pytest.mark.parametrize(
     "option,count",
     [
-        (["affected only"], 1),
-        (["unaffected only"], 1),
-        (["affected and unaffected"], 1),
+        (["proband only"], 1),
+        (["sibling only"], 1),
+        (["proband and sibling"], 1),
         (["neither"], 1),
-        (["affected and unaffected", "affected only"], 2),
-        (["affected only", "neither"], 2),
+        (["proband and sibling", "proband only"], 2),
+        (["proband only", "neither"], 2),
         ([
-             "affected only", "unaffected only", "affected and unaffected",
+             "proband only", "sibling only", "proband and sibling",
              "neither"
          ], 4),
     ],
@@ -119,9 +119,9 @@ def test_query_present_in_child(option, count, quads_in_child_dataset_wrapper):
 @pytest.mark.parametrize(
     "option,raw_query",
     [
-        (["affected only"], "prb and not sib"),
-        (["unaffected only"], "sib and not prb"),
-        (["affected and unaffected"], "sib and prb"),
+        (["proband only"], "prb and not sib"),
+        (["sibling only"], "sib and not prb"),
+        (["proband and sibling"], "sib and prb"),
         (["neither"], "not sib and not prb"),
     ],
     ids=repr
@@ -139,7 +139,7 @@ def test_query_present_in_child_compared_to_raw(
 
 def test_query_present_in_child_and_roles(quads_f1_dataset_wrapper):
     variants = list(quads_f1_dataset_wrapper.query_variants(
-        presentInChild=["affected only"], roles="dad"))
+        presentInChild=["proband only"], roles="dad"))
 
     assert len(variants) == 1
 
@@ -147,16 +147,16 @@ def test_query_present_in_child_and_roles(quads_f1_dataset_wrapper):
 @pytest.mark.parametrize(
     "option,count",
     [
-        (["mother only"], 1),
-        (["father only"], 1),
-        (["mother and father"], 1),
-        (["neither"], 1),
-        (["mother and father", "mother only"], 2),
-        (["mother only", "neither"], 2),
-        ([
+        ({'presentInParent': ["mother only"]}, 1),
+        ({'presentInParent': ["father only"]}, 1),
+        ({'presentInParent': ["mother and father"]}, 1),
+        ({'presentInParent': ["neither"]}, 1),
+        ({'presentInParent': ["mother and father", "mother only"]}, 2),
+        ({'presentInParent': ["mother only", "neither"]}, 2),
+        ({'presentInParent': [
              "mother only", "father only", "mother and father",
              "neither"
-         ], 4),
+         ]}, 4),
     ],
     ids=repr
 )
@@ -166,6 +166,50 @@ def test_query_present_in_parent(
         presentInParent=option))
 
     assert len(variants) == count
+
+
+@pytest.mark.parametrize(
+    "option,count",
+    [
+        ({"Present in Probant and Sibling": ["Proband"]}, 2),
+        ({"Present in Probant and Sibling": ["Sibling"]}, 2),
+        ({"Present in Probant and Sibling": ["Proband", "Sibling"]}, 3),
+        ({"Present in Probant and Sibling": ["neither"]}, 1),
+        ({"Present in Probant and Sibling": ["Proband", "neither"]}, 3),
+        ({"Present in Probant and Sibling": [
+            "Proband", "Sibling", "neither"
+        ]}, 4),
+    ],
+    ids=repr
+)
+def test_query_present_in_role(option, count, quads_in_child_dataset_wrapper):
+    variants = list(quads_in_child_dataset_wrapper.query_variants(
+        presentInRole=option))
+
+    assert len(variants) == count
+
+
+@pytest.mark.parametrize(
+    "option,raw_query",
+    [
+        ({"Present in Probant and Sibling": ["Proband"]}, "prb"),
+        ({"Present in Probant and Sibling": ["Sibling"]}, "sib"),
+        ({"Present in Probant and Sibling": ["Proband", "Sibling"]},
+         "prb or sib"),
+        ({"Present in Probant and Sibling": ["neither"]},
+         "not prb and not sib"),
+    ],
+    ids=repr
+)
+def test_query_present_in_role_compared_to_raw(
+        option, raw_query, quads_f1_dataset_wrapper):
+    vs = quads_f1_dataset_wrapper.studies[0]\
+        .query_variants(roles=raw_query)
+    vs = list(vs)
+
+    variants = list(quads_f1_dataset_wrapper.query_variants(
+        presentInRole=option))
+    assert len(vs) == len(variants)
 
 
 @pytest.mark.parametrize(
