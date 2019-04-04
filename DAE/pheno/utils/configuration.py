@@ -14,30 +14,29 @@ from configurable_entities.configurable_entity_definition import \
         ConfigurableEntityDefinition
 
 
-def pheno_confbox(conf_path, wd):
+def pheno_confbox(conf_path):
     return ConfigBox(reusables.config_dict(conf_path,
-                     auto_find=False, verify=True, defaults={'wd': wd}))
+                     auto_find=False, verify=True,
+                     defaults={'wd': os.path.dirname(conf_path)}))
 
 
 class PhenoConfig(object):
 
     @staticmethod
     def from_dae_config(dae_config):
-        configs = [pheno_confbox(conf_path, dae_config.dae_data_dir)
+        configs = [pheno_confbox(conf_path)
                    for conf_path in ConfigurableEntityDefinition.
                    _collect_config_paths(dae_config.pheno_dir)]
-        return PhenoConfig(dae_config.pheno_dir, configs)
+        return PhenoConfig(configs)
 
     @staticmethod
     def from_file(filename=None):
         if filename is None:
             dae_config = DAEConfig()
             return PhenoConfig.from_dae_config(dae_config)
-        wd = os.path.dirname(filename)
-        return PhenoConfig(wd, [pheno_confbox(filename, wd)])
+        return PhenoConfig([pheno_confbox(filename)])
 
-    def __init__(self, pheno_dir, configs):
-
+    def __init__(self, configs):
         class PhenoConfDict(dict):
             """
                 Custom dict that additionally prints the
@@ -46,7 +45,6 @@ class PhenoConfig(object):
             def __missing__(self, key):
                 raise KeyError(key, self.keys())
 
-        self.pheno_dir = pheno_dir
         self.pheno_configs = PhenoConfDict()
         for conf in configs:
             self.pheno_configs[conf['general'].name] = conf['general']
@@ -59,7 +57,7 @@ class PhenoConfig(object):
         return list(self.pheno_configs.keys())
 
     def get_dbfile(self, dbname):
-        return os.path.join(self.pheno_dir,
+        return os.path.join(self.pheno_configs[dbname].wd,
                             self.pheno_configs[dbname].dbfile)
 
     def get_dbconfig(self, dbname):
@@ -72,11 +70,11 @@ class PhenoConfig(object):
         return self.pheno_configs[dbname].nonverbal_iq
 
     def get_browser_dbfile(self, dbname):
-        return os.path.join(self.pheno_dir,
+        return os.path.join(self.pheno_configs[dbname].wd,
                             self.pheno_configs[dbname].browser_dbfile)
 
     def get_browser_images_dir(self, dbname):
-        return os.path.join(self.pheno_dir,
+        return os.path.join(self.pheno_configs[dbname].wd,
                             self.pheno_configs[dbname].browser_images_dir)
 
     def get_browser_images_url(self, dbname):
