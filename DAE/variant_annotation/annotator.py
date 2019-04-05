@@ -85,7 +85,7 @@ class VariantAnnotator(object):
                     variant.ref_position_last >= key[0] - self.promoter_len):
                 for tm in self.gene_models._utrModels[variant.chromosome][key]:
                     logger.debug("========: %s-%s :====================",
-                                tm.gene, tm.trID)
+                                 tm.gene, tm.trID)
                     effect = self.get_effect_for_transcript(variant, tm)
 
                     logger.debug("")

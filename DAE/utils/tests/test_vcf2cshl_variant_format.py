@@ -178,4 +178,3 @@ def test_spark_v3_problems_check():
 
     assert var1 == "ins(GCCCCACCTTCCTCTCCTCCT)"
     assert pos1 == position + 1
-

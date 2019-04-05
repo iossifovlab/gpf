@@ -41,8 +41,8 @@ class PeopleCounter(object):
         for family in families.values():
             people += list(filter(
                 lambda pwr: pwr.sex == sex and
-                all([pwr.get_attr(filter.column) == filter.value
-                     for filter in filter_object.filters]),
+                all([pwr.get_attr(filt.column) == filt.value
+                     for filt in filter_object.filters]),
                 family.members_in_order))
 
         return people
@@ -715,6 +715,7 @@ class PhenotypesInfo(object):
 class Filter(object):
 
     def __init__(self, column, value, column_value=None):
+        value = str(value)
         self.column = column
         self.value = value
         self.column_value =\

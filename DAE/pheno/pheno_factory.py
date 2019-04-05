@@ -31,10 +31,10 @@ class PhenoFactory(object):
         return self.config.get_dbconfig(dbname)
 
     def has_pheno_db(self, dbname):
-        return dbname in self.config.pheno.list("dbs")
+        return dbname in self.config
 
     def get_pheno_db_names(self):
-        return self.config.pheno.list("dbs")[:]
+        return self.config.db_names
 
     def get_pheno_db(self, dbname):
         if not self.has_pheno_db(dbname):

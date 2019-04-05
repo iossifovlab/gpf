@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 from builtins import object
+
+
 class Effect(object):
     gene = None
     transcript_id = None

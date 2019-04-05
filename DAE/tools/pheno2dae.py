@@ -250,6 +250,9 @@ USAGE
         if not check_config_pheno_db(config):
             raise Exception("bad classification boundaries")
 
+        if os.path.exists(args.output):
+            raise CLIError('output file already exists')
+
         prep = PrepareVariables(config)
         prep.build_pedigree(args.pedigree)
         prep.build_variables(args.instruments, args.description)
@@ -262,7 +265,7 @@ USAGE
 
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
-        sys.stderr.write(indent + "  for help use --help")
+        sys.stderr.write(indent + "  for help use --help\n")
         return 2
 
 
