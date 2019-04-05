@@ -24,6 +24,7 @@ from common_reports.people_group_info import PeopleGroupsInfo
 from common_reports.people_counter import PeopleCounter, PeopleCounters
 from common_reports.family_counter import FamilyCounter, FamiliesCounter, \
     FamiliesCounters
+from common_reports.family_report import FamiliesReport
 
 
 def fixtures_dir():
@@ -232,7 +233,7 @@ def families_groups(study1):
 
 
 @pytest.fixture(scope='session')
-def family_counter(study1, filter_object_s1, people_groups_info_s1):
+def family_counter(study1, people_groups_info_s1):
     return FamilyCounter(
         study1.families['f5'], 1,
         people_groups_info_s1.get_people_group_info('phenotype')
@@ -240,38 +241,43 @@ def family_counter(study1, filter_object_s1, people_groups_info_s1):
 
 
 @pytest.fixture(scope='session')
-def families_counter(families_groups, filter_object_s1, people_groups_info_s1):
+def families_counter(families_groups, people_groups_info_s1):
     return FamiliesCounter(
         families_groups,
         people_groups_info_s1.get_people_group_info('phenotype'),
-        False, None
+        False, False
     )
 
 
 @pytest.fixture(scope='session')
-def families_counter_draw_all(
-        families_groups, filter_object_s1, people_groups_info_s1):
+def families_counter_draw_all(families_groups, people_groups_info_s1):
     return FamiliesCounter(
         families_groups,
         people_groups_info_s1.get_people_group_info('phenotype'),
-        True, None
+        True, False
     )
 
 
 @pytest.fixture(scope='session')
-def families_counter_same(
-        families_groups_same, filter_object_s1, people_groups_info_s1):
+def families_counter_same(families_groups_same, people_groups_info_s1):
     return FamiliesCounter(
         families_groups_same,
         people_groups_info_s1.get_people_group_info('phenotype'),
-        False, None
+        False, False
     )
 
 
 @pytest.fixture(scope='session')
-def families_counters(study1, filter_object_s1, people_groups_info_s1):
+def families_counters(study1, people_groups_info_s1):
     return FamiliesCounters(
         study1.families,
         people_groups_info_s1.get_people_group_info('phenotype'),
-        False, None
+        False, False
+    )
+
+
+@pytest.fixture(scope='session')
+def families_report(study1, filter_object_s1, people_groups_info_s1):
+    return FamiliesReport(
+        study1, people_groups_info_s1, filter_object_s1
     )
