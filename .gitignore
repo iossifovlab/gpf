@@ -4,6 +4,7 @@
 *.cache
 *.db
 !DAE/pheno/tests/fixtures/fake_phenoDB/fake.db
+!DAE/pheno/tests/fixtures/fake_phenoDB/dummy_1/dummy.db
 wdae.sql
 .project
 .pydevproject
