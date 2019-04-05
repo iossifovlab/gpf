@@ -17,6 +17,11 @@ from studies.dataset_facade import DatasetFacade
 from studies.factory import VariantsDb
 from configurable_entities.configuration import DAEConfig
 from common_reports.config import CommonReportsStudies
+from pheno.pheno_factory import PhenoFactory
+
+from common_reports.filter import FilterObjects
+from common_reports.people_group_info import PeopleGroupsInfo
+from common_reports.people_counter import PeopleCounter, PeopleCounters
 
 
 def fixtures_dir():
@@ -50,6 +55,11 @@ def study_definitions(dae_config_fixture):
 @pytest.fixture(scope='session')
 def study_factory():
     return StudyFactory()
+
+
+@pytest.fixture(scope='session')
+def pheno_factory(dae_config_fixture):
+    return PhenoFactory(dae_config_fixture)
 
 
 @pytest.fixture(scope='session')
@@ -128,3 +138,79 @@ def output():
 def dae_config_fixture():
     dae_config = DAEConfig(fixtures_dir())
     return dae_config
+
+
+@pytest.fixture(scope='session')
+def study1(study_facade):
+    return study_facade.get_study_wdae_wrapper("Study1")
+
+
+@pytest.fixture(scope='session')
+def study1_config(study_facade):
+    return study_facade.get_study_config("Study1")
+
+
+@pytest.fixture(scope='session')
+def groups_s1():
+    return {
+        'Role and Diagnosis': ['role', 'phenotype']
+    }
+
+
+@pytest.fixture(scope='session')
+def filter_info_s1():
+    return {
+        'people_groups': ['phenotype']
+    }
+
+
+@pytest.fixture(scope='session')
+def people_groups_info(study1_config):
+    people_groups = {}
+    if 'genotypeBrowser' in study1_config and study1_config.genotype_browser:
+        genotype_browser = study1_config.genotype_browser
+        people_groups = genotype_browser.people_group
+
+    people_groups_info = OrderedDict()
+    for people_group in people_groups:
+        people_groups_info[people_group['id']] = people_group
+
+    return people_groups_info
+
+
+@pytest.fixture(scope='session')
+def people_groups_info_s1(study1, filter_info_s1, people_groups_info):
+    return PeopleGroupsInfo(study1, filter_info_s1, people_groups_info)
+
+
+@pytest.fixture(scope='session')
+def filter_object_s1(study1, people_groups_info_s1, groups_s1):
+    return FilterObjects.get_filter_objects(
+        study1, people_groups_info_s1, groups_s1)
+
+
+@pytest.fixture(scope='session')
+def pc_s1_dad_and_phenotype1(study1, filter_object_s1):
+    filter_object = None
+    for fo in filter_object_s1[0].filter_objects:
+        if fo.get_column_name() == 'dad and phenotype1':
+            filter_object = fo
+    assert filter_object
+
+    return PeopleCounter(study1.families, filter_object)
+
+
+@pytest.fixture(scope='session')
+def pc_s1_mom_and_phenotype1(study1, filter_object_s1):
+    filter_object = None
+    for fo in filter_object_s1[0].filter_objects:
+        if fo.get_column_name() == 'mom and phenotype1':
+            filter_object = fo
+    assert filter_object
+
+    return PeopleCounter(study1.families, filter_object)
+
+
+@pytest.fixture(scope='session')
+def people_counters(study1, filter_object_s1):
+    return PeopleCounters(study1.families, filter_object_s1[0])

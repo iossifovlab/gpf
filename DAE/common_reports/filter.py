@@ -48,7 +48,7 @@ class FilterObjects(object):
                 for filter_object in self.filter_objects]
 
     @staticmethod
-    def get_filter_objects(query_object, people_groups_info, groups):
+    def get_filter_objects(study, people_groups_info, groups):
         filter_objects = []
         for name, group in groups.items():
             filters = []
@@ -60,7 +60,7 @@ class FilterObjects(object):
                     el_values = people_group_info.people_groups
                 else:
                     el_column = el
-                    el_values = query_object.get_pedigree_values(el)
+                    el_values = study.get_pedigree_values(el)
 
                 filter = []
                 for el_value in el_values:
