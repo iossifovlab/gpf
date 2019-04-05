@@ -23,3 +23,12 @@ f8	mom8	0	0	2	1	mom	phenotype1	mom8
 f8	dad8	0	0	1	1	dad	pheno	dad8
 f8	ch8	dad8	mom8	2	2	prb	phenotype1	ch8
 f8	ch8.1	dad8	mom8	2	2	sib	phenotype2	ch8.1	1.0
+f9	ch9	0	0	1	1	sib	phenotype1	ch9
+f9	ch9.1	0	0	1	1	prb	phenotype1	ch9.1
+f9	ch9.2	0	0	1	1	prb	phenotype1	ch9.2
+f10	ch10	0	0	1	1	sib	phenotype1	ch10
+f10	ch10.1	0	0	1	1	sib	phenotype1	ch10.1
+f10	ch10.2	0	0	1	1	prb	phenotype1	ch10.2
+f11	mom11	0	0	2	1	mom	unaffected	mom11
+f11	dad11	0	0	1	1	dad	unaffected	dad11
+f11	ch11	dad11	mom11	2	2	prb	unaffected	ch11

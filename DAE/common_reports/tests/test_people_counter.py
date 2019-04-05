@@ -29,13 +29,13 @@ def test_people_counter_empty(pc_s1_dad_and_phenotype1):
 
 
 def test_people_counters(people_counters):
-    assert len(people_counters.counters) == 7
+    assert len(people_counters.counters) == 9
     assert people_counters.group_name == 'Role and Diagnosis'
     assert people_counters.rows == \
         ['people_male', 'people_female', 'people_total']
     assert sorted(people_counters.columns) == sorted(
-        ['sib and phenotype2', 'prb and phenotype1', 'prb and phenotype2',
-         'mom and unaffected', 'mom and phenotype1', 'dad and pheno',
-         'dad and unaffected'])
+        ['sib and phenotype1', 'sib and phenotype2', 'prb and phenotype1',
+         'prb and phenotype2', 'prb and unaffected', 'mom and unaffected',
+         'mom and phenotype1', 'dad and pheno', 'dad and unaffected'])
 
     assert len(people_counters.to_dict().keys()) == 4
