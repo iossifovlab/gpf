@@ -47,7 +47,22 @@ class PhenoConfig(object):
 
         self.pheno_configs = PhenoConfDict()
         for conf in configs:
-            self.pheno_configs[conf['general'].name] = conf['general']
+            if 'phenoDB' in conf:
+                name = conf['phenoDB'].name
+                self.pheno_configs[name] = conf['phenoDB']
+                if 'dbfile' in conf['phenoDB']:
+                    assert os.path.isfile(self.get_dbfile(name)), name
+                else:
+                    conf['phenoDB'].dbfile = None
+                if 'browser_dbfile' in conf['phenoDB']:
+                    assert os.path.isfile(self.get_browser_dbfile(name)), name
+                else:
+                    conf['phenoDB'].browser_dbfile = None
+                if 'browser_images_dir' in conf['phenoDB']:
+                    assert os.path.isdir(
+                            self.get_browser_images_dir(name)), name
+                else:
+                    conf['phenoDB'].browser_images_dir = None
 
     def __contains__(self, dbname):
         return dbname in self.pheno_configs
@@ -57,6 +72,8 @@ class PhenoConfig(object):
         return list(self.pheno_configs.keys())
 
     def get_dbfile(self, dbname):
+        if self.pheno_configs[dbname].dbfile is None:
+            return None
         return os.path.join(self.pheno_configs[dbname].wd,
                             self.pheno_configs[dbname].dbfile)
 
@@ -64,18 +81,22 @@ class PhenoConfig(object):
         return self.pheno_configs[dbname]
 
     def get_age(self, dbname):
-        return self.pheno_configs[dbname].age
+        return self.pheno_configs[dbname].get('age', None)
 
     def get_nonverbal_iq(self, dbname):
-        return self.pheno_configs[dbname].nonverbal_iq
+        return self.pheno_configs[dbname].get('nonverbal_iq', None)
 
     def get_browser_dbfile(self, dbname):
+        if self.pheno_configs[dbname].browser_dbfile is None:
+            return None
         return os.path.join(self.pheno_configs[dbname].wd,
                             self.pheno_configs[dbname].browser_dbfile)
 
     def get_browser_images_dir(self, dbname):
+        if self.pheno_configs[dbname].browser_images_dir is None:
+            return None
         return os.path.join(self.pheno_configs[dbname].wd,
                             self.pheno_configs[dbname].browser_images_dir)
 
     def get_browser_images_url(self, dbname):
-        return self.pheno_configs[dbname].browser_images_url
+        return self.pheno_configs[dbname].get('browser_images_url', None)
