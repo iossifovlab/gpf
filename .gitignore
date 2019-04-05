@@ -3,8 +3,9 @@
 *.log
 *.cache
 *.db
-!DAE/pheno/tests/fixtures/pheno.db
-!DAE/pheno_browser/tests/fixtures/pheno.db
+!DAE/pheno_browser/tests/fixtures/fake_phenoDB/pheno_db_with_desc/pheno.db
+!DAE/pheno/tests/fixtures/fake_phenoDB/fake.db
+!DAE/pheno/tests/fixtures/fake_phenoDB/dummy_1/dummy.db
 wdae.sql
 .project
 .pydevproject
