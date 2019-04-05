@@ -5,6 +5,7 @@
 *.db
 !DAE/pheno/tests/fixtures/fake_phenoDB/main_fake/fake.db
 !DAE/pheno/tests/fixtures/fake_phenoDB/dummy_1/dummy.db
+!DAE/pheno/tests/fixtures/fake_phenoDB/dummy_1/dummy_browser.db
 wdae.sql
 .project
 .pydevproject
