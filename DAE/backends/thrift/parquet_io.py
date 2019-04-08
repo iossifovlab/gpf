@@ -122,7 +122,10 @@ class VariantsParquetWriter(object):
         pa.field("allele_index", pa.int8()),
         pa.field("family_variant_index", pa.int64()),
 
-        pa.field("member_variant", pa.string()),
+        pa.field("variant_in_member", pa.string()),
+        pa.field("variant_in_role", pa.int8()),
+        pa.field("variant_in_sex", pa.int8()),
+        pa.field("inheritance_in_member", pa.int8()),
     ])
 
     def __init__(self, full_variants_iterator, annotation_schema=None):
@@ -185,8 +188,17 @@ class VariantsParquetWriter(object):
             self.member_data.data_append(
                 "family_variant_index", family_variant_index)
             self.member_data.data_append(
-                "member_variant",
+                "variant_in_member",
                 fa.variant_in_members[member_index])
+            self.member_data.data_append(
+                "variant_in_role",
+                fa.variant_in_roles[member_index])
+            self.member_data.data_append(
+                "variant_in_sex",
+                fa.variant_in_sexes[member_index])
+            self.member_data.data_append(
+                "inheritance_in_member",
+                fa.inheritance_in_members[member_index])
 
     def variants_table(self, bucket_index=0, batch_size=100000):
         family_variant_index = 0
