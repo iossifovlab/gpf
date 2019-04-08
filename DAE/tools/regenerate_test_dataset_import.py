@@ -107,7 +107,7 @@ class RegenerateTestDataset(object):
 
         tool = os.path.join(
             self.TOOLS_DIR,
-            "pheno2DAE.py"
+            "pheno2dae.py"
         )
 
         assert os.path.exists(tool)

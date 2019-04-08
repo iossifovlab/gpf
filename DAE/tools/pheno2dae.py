@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 '''
-pheno2DAE -- prepares a DAE pheno DB cache
+pheno2dae -- prepares a DAE pheno DB cache
 
 '''
 from __future__ import unicode_literals
@@ -124,6 +124,11 @@ USAGE
             dest="pedigree",
             help="pedigree file where families descriptions are located",
             metavar="path")
+
+        parser.add_argument(
+            '-d', '--description',
+            help="standardized tsv file that contains measure descriptions"
+        )
 
         parser.add_argument(
             '-o', '--output',
@@ -250,7 +255,7 @@ USAGE
 
         prep = PrepareVariables(config)
         prep.build_pedigree(args.pedigree)
-        prep.build_variables(args.instruments)
+        prep.build_variables(args.instruments, args.description)
 
         return 0
     except KeyboardInterrupt:
