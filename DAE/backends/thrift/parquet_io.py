@@ -192,13 +192,13 @@ class VariantsParquetWriter(object):
                 fa.variant_in_members[member_index])
             self.member_data.data_append(
                 "variant_in_role",
-                fa.variant_in_roles[member_index])
+                fa.variant_in_roles[member_index].value)
             self.member_data.data_append(
                 "variant_in_sex",
-                fa.variant_in_sexes[member_index])
+                fa.variant_in_sexes[member_index].value)
             self.member_data.data_append(
                 "inheritance_in_member",
-                fa.inheritance_in_members[member_index])
+                fa.inheritance_in_members[member_index].value)
 
     def variants_table(self, bucket_index=0, batch_size=100000):
         family_variant_index = 0
