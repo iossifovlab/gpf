@@ -51,16 +51,19 @@ class PhenoConfig(object):
                 name = conf['phenoDB'].name
                 self.pheno_configs[name] = conf['phenoDB']
                 if 'dbfile' in conf['phenoDB']:
-                    assert os.path.isfile(self.get_dbfile(name)), name
+                    assert os.path.isfile(self.get_dbfile(name)), \
+                            self.get_dbfile(name)
                 else:
                     conf['phenoDB'].dbfile = None
                 if 'browser_dbfile' in conf['phenoDB']:
-                    assert os.path.isfile(self.get_browser_dbfile(name)), name
+                    assert os.path.isfile(self.get_browser_dbfile(name)), \
+                            self.get_browser_dbfile(name)
                 else:
                     conf['phenoDB'].browser_dbfile = None
                 if 'browser_images_dir' in conf['phenoDB']:
                     assert os.path.isdir(
-                            self.get_browser_images_dir(name)), name
+                            self.get_browser_images_dir(name)), \
+                                self.get_browser_images_dir(name)
                 else:
                     conf['phenoDB'].browser_images_dir = None
 
