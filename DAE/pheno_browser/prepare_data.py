@@ -90,6 +90,7 @@ class PreparePhenoBrowserBase(object):
             'instrument_name': measure.instrument_name,
             'measure_name': measure.measure_name,
             'measure_type': measure.measure_type,
+            'description': measure.description,
             'values_domain': measure.values_domain
         }
 
@@ -270,10 +271,11 @@ class PreparePhenoBrowserBase(object):
         print('-------------------------------------------')
         print(var['measure_id'])
         print('-------------------------------------------')
-        print('instrument: {}'.format(var['instrument_name']))
-        print('measure:    {}'.format(var['measure_name']))
-        print('type:       {}'.format(var['measure_type']))
-        print('domain:     {}'.format(var['values_domain']))
+        print('instrument:  {}'.format(var['instrument_name']))
+        print('measure:     {}'.format(var['measure_name']))
+        print('type:        {}'.format(var['measure_type']))
+        print('description: {}'.format(var['description']))
+        print('domain:      {}'.format(var['values_domain']))
         print('-------------------------------------------')
 
     def handle_measure(self, measure):
