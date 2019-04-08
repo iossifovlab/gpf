@@ -234,7 +234,7 @@ class MemberSubQueryBuilder(ThriftQueryBuilderBase):
 
     def _build_person_ids_where(self):
         return self._build_iterable_string_attr_where(
-            'person_ids', 'M.member_variant'
+            'person_ids', 'M.variant_in_member'
         )
 
     def build_where(self):
