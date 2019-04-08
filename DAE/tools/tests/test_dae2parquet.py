@@ -91,8 +91,13 @@ def test_dae2parquet_transmitted(
     assert argv is not None
     assert argv.type == 'dae'
 
-    dae_build_transmitted(
+    annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, argv, defaults={
+            'scores_dirname': annotation_scores_dirname,
+        })
+
+    dae_build_transmitted(
+        dae_config, annotation_pipeline, argv, defaults={
             'scores_dirname': annotation_scores_dirname,
         })
 

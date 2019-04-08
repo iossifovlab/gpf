@@ -96,7 +96,8 @@ def dae_build_makefile(dae_config, argv):
         "{family_filename} {summary_filename} {toomany_filename}".format(
             family_filename=argv.families,
             summary_filename=argv.summary,
-            toomany_filename=argv.toomany)
+            toomany_filename=argv.toomany),
+        log_directory=argv.log
     )
 
 
@@ -219,6 +220,13 @@ def init_parser_make(dae_config, subparsers):
         default=None,
         dest='len', metavar='len',
         help='split contigs in regions with length <len>'
+    )
+
+    parser.add_argument(
+        '--log', type=str,
+        default=None,
+        dest='log', metavar='<log dir>',
+        help='directory to store log files'
     )
 
 

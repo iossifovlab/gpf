@@ -1,6 +1,6 @@
 from __future__ import print_function, absolute_import
 
-# import os
+import os
 import sys
 
 from collections import OrderedDict
@@ -37,10 +37,11 @@ def build_contig_regions(genome, TRANSMITTED_STEP=10000000):
 
 
 def contigs_makefile_generate(
-        build_contigs, data_contigs, output_prefix,
+        build_contigs, data_contigs, output_directory,
         import_command,
         annotation_config,
         import_sources,
+        log_directory=None,
         outfile=sys.stdout):
 
     makefile = []
@@ -56,13 +57,13 @@ def contigs_makefile_generate(
 
         for part, region in enumerate(build_contigs[contig]):
             bucket_index = (contig_index + 1) * 100 + part
-            suffix = "{:0>3}_{:0>3}_{}_".format(
+            suffix = "{:0>3}_{:0>3}_{}".format(
                 contig_index, part, contig
             )
             # target_prefix = os.path.join(output_prefix, suffix)
 
             parquet = Configure.from_prefix_parquet(
-                output_prefix,
+                output_directory,
                 bucket_index=bucket_index,
                 suffix=suffix).parquet
 
@@ -73,24 +74,48 @@ def contigs_makefile_generate(
             all_targets.extend(targets)
             contig_targets[contig].extend(targets)
 
-            command = "{targets}: " \
-                "{import_sources}\n\t" \
-                "{import_command} -o {output_prefix} " \
+            command = "{import_command} -o {output_directory} " \
                 "--bucket-index {bucket_index} " \
                 "--region {region} " \
-                "--sequential " \
                 "--annotation {annotation_config} " \
                 "{import_sources}" \
                 .format(
                     import_command=import_command,
-                    output_prefix=output_prefix,
+                    output_directory=output_directory,
                     targets=" ".join(targets),
                     bucket_index=bucket_index,
                     import_sources=import_sources,
                     region=str(region),
                     annotation_config=annotation_config,
                 )
-            makefile.append(command)
+            if log_directory is not None:
+                if not os.path.exists(log_directory):
+                    os.makedirs(log_directory)
+                assert os.path.exists(log_directory), log_directory
+                assert os.path.isdir(log_directory), log_directory
+                log_filename = os.path.join(
+                    log_directory,
+                    "log_{:0>6}.log".format(bucket_index))
+                time_filename = os.path.join(
+                    log_directory,
+                    "time_{:0>6}.log".format(bucket_index))
+
+                command = "time ({command} &> {log_filename}) " \
+                    "2> {time_filename}".format(
+                        command=command,
+                        log_filename=log_filename,
+                        time_filename=time_filename
+                    )
+
+            make_rule = "{targets}: " \
+                "{import_sources}\n\t" \
+                "{command}" \
+                .format(
+                    command=command,
+                    targets=" ".join(targets),
+                    import_sources=import_sources,
+                )
+            makefile.append(make_rule)
 
     print('SHELL=/bin/bash -o pipefail', file=outfile)
     print('.DELETE_ON_ERROR:\n', file=outfile)
