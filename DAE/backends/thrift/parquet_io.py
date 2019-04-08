@@ -196,6 +196,7 @@ class VariantsParquetWriter(object):
 
             for sa in summary_variant.alleles:
                 sa.attributes['bucket_index'] = bucket_index
+
                 for name in self.summary_data.schema.names:
                     self.summary_data.data_append(name, sa.get_attribute(name))
                 if sa.is_reference_allele:
@@ -311,7 +312,6 @@ def save_ped_df_to_parquet(ped_df, filename):
     ped_df.role = ped_df.role.apply(lambda r: r.value)
     ped_df.sex = ped_df.sex.apply(lambda s: s.value)
     ped_df.status = ped_df.status.apply(lambda s: s.value)
-    print("ped_df.columns:", ped_df.columns, [type(c) for c in ped_df.columns])
 
     table = pa.Table.from_pandas(ped_df, schema=pedigree_parquet_schema())
     pq.write_table(table, filename)
@@ -325,7 +325,6 @@ def read_ped_df_from_parquet(filename):
     if 'layout' in ped_df:
         ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
 
-    print("ped_df.columns:", ped_df.columns, [type(c) for c in ped_df.columns])
     ped_df = ped_df.rename(columns={
         'personId': 'person_id',
         'familyId': 'family_id',
@@ -333,6 +332,4 @@ def read_ped_df_from_parquet(filename):
         'dadId': 'dad_id',
         'sampleId': 'sample_id',
     })
-    print("ped_df.columns:", ped_df.columns, [type(c) for c in ped_df.columns])
-
     return ped_df

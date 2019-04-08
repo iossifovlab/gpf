@@ -29,7 +29,8 @@ def get_contigs(tabixfilename):
         return tbx.contigs
 
 
-def dae_build_transmitted(dae_config, argv, defaults={}):
+def dae_build_transmitted(
+        dae_config, annotation_pipeline, argv, defaults={}):
     config = Configure.from_dict({
         "dae": {
             'summary_filename': argv.summary,
@@ -47,7 +48,8 @@ def dae_build_transmitted(dae_config, argv, defaults={}):
         config.dae.toomany_filename,
         config.dae.family_filename,
         region=argv.region,
-        genome=genome)
+        genome=genome,
+        annotator=annotation_pipeline)
 
     if argv.family_format == 'simple':
         fvars.load_simple_families()
@@ -74,11 +76,22 @@ def dae_build_makefile(dae_config, argv):
     genome = get_genome(genome_file=None)
     build_contigs = build_contig_regions(genome, argv.len)
 
+    family_format = ""
+    if argv.family_format == 'simple':
+        family_format = "-f simple"
+    elif argv.family_format == 'pedigree':
+        family_format = "-f simple"
+    else:
+        raise ValueError("unexpected family format: {}".format(
+            argv.family_format
+        ))
+
     contigs_makefile_generate(
         build_contigs,
         data_contigs,
         argv.output,
-        'dae2parquet.py dae',
+        'dae2parquet.py dae {family_format}'.format(
+            family_format=family_format),
         argv.annotation_config,
         "{family_filename} {summary_filename} {toomany_filename}".format(
             family_filename=argv.families,
@@ -241,6 +254,7 @@ if __name__ == "__main__":
             output=argv.output, bucket_index=0)
     elif argv.type == 'dae':
         dae_build_transmitted(
-            dae_config, argv, defaults=dae_config.annotation_defaults)
+            dae_config, annotation_pipeline, argv,
+            defaults=dae_config.annotation_defaults)
     elif argv.type == 'make':
         dae_build_makefile(dae_config, argv)
