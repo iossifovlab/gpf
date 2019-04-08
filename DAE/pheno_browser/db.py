@@ -9,7 +9,7 @@ from builtins import object
 # import os
 
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy import Table, Column, String, Float, Enum
+from sqlalchemy import Table, Column, String, Float, Enum, func
 from sqlalchemy.sql import select
 from pheno.common import MeasureType
 # import traceback
@@ -37,6 +37,7 @@ class DbManager(object):
             Column('instrument_name', String(64), nullable=False, index=True),
             Column('measure_name', String(64), nullable=False, index=True),
             Column('measure_type', Enum(MeasureType), nullable=False),
+            Column('description', String(256)),
             Column('values_domain', String(256)),
 
             Column('figure_distribution_small', String(256)),
@@ -88,3 +89,12 @@ class DbManager(object):
         s = s.where(self.variable_browser.c.instrument_name == instrument_name)
         df = pd.read_sql(s, self.engine)
         return df
+
+    @property
+    def has_descriptions(self):
+        with self.engine.connect() as connection:
+            return bool(connection.execute(
+                        select([func.count()]).
+                        select_from(self.variable_browser).
+                        where(Column('description').isnot(None)))
+                        .scalar())

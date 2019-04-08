@@ -126,6 +126,11 @@ USAGE
             metavar="path")
 
         parser.add_argument(
+            '-d', '--description',
+            help="standardized tsv file that contains measure descriptions"
+        )
+
+        parser.add_argument(
             '-o', '--output',
             dest='output',
             help='ouput file',
@@ -250,7 +255,7 @@ USAGE
 
         prep = PrepareVariables(config)
         prep.build_pedigree(args.pedigree)
-        prep.build_variables(args.instruments)
+        prep.build_variables(args.instruments, args.description)
 
         return 0
     except KeyboardInterrupt:
