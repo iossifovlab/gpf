@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 '''
-pheno2DAE -- prepares a DAE pheno DB cache
+pheno2dae -- prepares a DAE pheno DB cache
 
 '''
 from __future__ import unicode_literals
