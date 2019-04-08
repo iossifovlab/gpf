@@ -4,6 +4,7 @@
 import sys
 import os
 import traceback
+import configparser
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
@@ -16,14 +17,17 @@ def pheno_cli_parser():
     parser = ArgumentParser(
         description="simple phenotype database import tool",
         formatter_class=RawDescriptionHelpFormatter)
+
     parser.add_argument(
         "-v", "--verbose", dest="verbose",
         action="count", help="set verbosity level [default: %(default)s]")
+
     parser.add_argument(
         "-i", "--instruments",
         dest="instruments",
         help="directory where all instruments are located",
         metavar="<instruments dir>")
+
     parser.add_argument(
         "-p", "--pedigree",
         dest="pedigree",
@@ -31,21 +35,16 @@ def pheno_cli_parser():
         metavar="<pedigree file>")
 
     parser.add_argument(
-        '-d', '--pheno-db-filename',
-        dest='pheno_db_filename',
-        help='pheno DB ouput file',
-        metavar='<pheno db filename>')
+        "-d", "--data-dictionary",
+        dest="data_dictionary",
+        help="tab separated file that contains descriptions of measures",
+        metavar="<data dictionary file>")
 
     parser.add_argument(
-        "-P", "--pheno",
+        "-o", "--pheno",
         dest="pheno_name",
-        help="pheno database name"
+        help="output pheno database name"
     )
-    parser.add_argument(
-        '-b', '--browser-dir',
-        dest='browser_dir',
-        help='output browser dir',
-        metavar='<browser dir>')
 
     parser.add_argument(
         '--age',
@@ -69,6 +68,22 @@ def pheno_cli_parser():
     )
 
     return parser
+
+
+def generate_pheno_db_config(args):
+    config = configparser.ConfigParser()
+    config['phenoDB'] = {}
+    section = config['phenoDB']
+    section['name'] = args.pheno_name
+    section['dbfile'] = os.path.basename(args.pheno_db_filename)
+    section['age'] = args.age
+    section['nonverbal_iq'] = args.nonverbal_iq
+    section['browser_dbfile'] = \
+        'browser/{}_browser.db'.format(args.pheno_name)
+    section['browser_images_dir'] = 'browser/images'
+    section['browser_images_url'] = \
+        '/static/{}/images'.format(args.pheno_name)
+    return config
 
 
 def parse_pheno_db_config(args):
@@ -103,39 +118,48 @@ def main(argv):
             print("missing pheno db name", sys.stderr)
             raise ValueError()
 
-        if args.pheno_db_filename is None:
-            args.pheno_db_filename = os.path.join(
-                os.path.curdir,
-                "{}.db".format(args.pheno_name)
-            )
+        pheno_db_dir = os.path.join(os.path.curdir, args.pheno_name)
+
+        if not os.path.exists(pheno_db_dir):
+            os.makedirs(pheno_db_dir)
+
+        args.pheno_db_filename = os.path.join(
+            pheno_db_dir,
+            "{}.db".format(args.pheno_name)
+        )
         if os.path.exists(args.pheno_db_filename):
             if not args.force:
-                print(
-                    "pheno db filename already exists:",
-                    args.pheno_db_filename)
+                print("pheno db filename already exists:",
+                      args.pheno_db_filename)
                 raise ValueError()
             else:
                 os.remove(args.pheno_db_filename)
 
-        if args.browser_dir is None:
-            args.browser_dir = os.path.join(
-                os.path.dirname(args.pheno_db_filename),
-                "browser",
-                args.pheno_name
-            )
+        args.browser_dir = os.path.join(
+            pheno_db_dir,
+            "browser"
+        )
         if not os.path.exists(args.browser_dir):
             os.makedirs(args.browser_dir)
 
         config = parse_pheno_db_config(args)
         prep = PrepareVariables(config)
         prep.build_pedigree(args.pedigree)
-        prep.build_variables(args.instruments)
+        prep.build_variables(args.instruments, args.data_dictionary)
 
         build_pheno_browser(
             args.pheno_db_filename, args.pheno_name,
             args.browser_dir,
             args.age, args.nonverbal_iq
         )
+
+        pheno_conf_path = os.path.join(
+            pheno_db_dir,
+            '{}.conf'.format(args.pheno_name)
+        )
+
+        with open(pheno_conf_path, 'w') as pheno_conf_file:
+            generate_pheno_db_config(args).write(pheno_conf_file)
 
         return 0
     except KeyboardInterrupt:
