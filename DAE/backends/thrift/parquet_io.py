@@ -291,16 +291,16 @@ class VariantsParquetWriter(object):
 
 def pedigree_parquet_schema():
     fields = [
-        pa.field("familyId", pa.string()),
-        pa.field("personId", pa.string()),
-        pa.field("dadId", pa.string()),
-        pa.field("momId", pa.string()),
+        pa.field("family_id", pa.string()),
+        pa.field("person_id", pa.string()),
+        pa.field("dad_id", pa.string()),
+        pa.field("mom_id", pa.string()),
         pa.field("sex", pa.int8()),
         pa.field("status", pa.int8()),
         pa.field("role", pa.int32()),
-        pa.field("sampleId", pa.string()),
-        pa.field("familyIndex", pa.int32()),
-        pa.field("personIndex", pa.int32()),
+        pa.field("sample_id", pa.string()),
+        # pa.field("family_index", pa.int32()),
+        # pa.field("person_index", pa.int32()),
     ]
 
     return pa.schema(fields)
@@ -311,6 +311,7 @@ def save_ped_df_to_parquet(ped_df, filename):
     ped_df.role = ped_df.role.apply(lambda r: r.value)
     ped_df.sex = ped_df.sex.apply(lambda s: s.value)
     ped_df.status = ped_df.status.apply(lambda s: s.value)
+    print("ped_df.columns:", ped_df.columns, [type(c) for c in ped_df.columns])
 
     table = pa.Table.from_pandas(ped_df, schema=pedigree_parquet_schema())
     pq.write_table(table, filename)
@@ -324,12 +325,14 @@ def read_ped_df_from_parquet(filename):
     if 'layout' in ped_df:
         ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
 
-    ped_df.rename(columns={
+    print("ped_df.columns:", ped_df.columns, [type(c) for c in ped_df.columns])
+    ped_df = ped_df.rename(columns={
         'personId': 'person_id',
         'familyId': 'family_id',
         'momId': 'mom_id',
         'dadId': 'dad_id',
         'sampleId': 'sample_id',
-    }, inplace=True)
+    })
+    print("ped_df.columns:", ped_df.columns, [type(c) for c in ped_df.columns])
 
     return ped_df

@@ -8,7 +8,8 @@ RUN apt-get update --fix-missing && \
 
 COPY python3-environment.yml /code
 
-RUN conda env update -n root -f /code/python3-environment.yml && \
+RUN conda env update -n base -f /code/python3-environment.yml && \
+    conda install -c conda-forge pyarrow=0.13.0 && \
 	conda clean --all -y && \
 	# FIXME: should setup env with local versions somewhere else
 	pip install git+git://github.com/seqpipe/cyvcf2 && \

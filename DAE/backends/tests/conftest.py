@@ -261,8 +261,7 @@ def parquet_variants(request, variants_vcf):
             summary_filename=conf.summary_variant,
             family_filename=conf.family_variant,
             effect_gene_filename=conf.effect_gene_variant,
-            member_filename=conf.member_variant,
-            batch_size=2)
+            member_filename=conf.member_variant)
 
         return conf
 
