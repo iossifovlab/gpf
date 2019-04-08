@@ -246,11 +246,14 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
     def _get_studies(self, datasets_ids=None):
         if datasets_ids is None:
-            datasets_ids = self.denovo_gene_sets.keys()
+            datasets_ids = self.get_study_ids()
         return [
             self.variants_db.get_wdae_wrapper(dataset_id)
             for dataset_id in datasets_ids
         ]
+
+    def get_study_ids(self):
+        return self.denovo_gene_sets.keys()
 
     def get_gene_sets_types_legend(self, permitted_datasets=None):
         return [
