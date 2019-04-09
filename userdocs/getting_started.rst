@@ -192,7 +192,7 @@ by GPF annotation pipeline and GPF import tools.
     This configuration pipeline contains some examples how to configure
     genomic scores annotation for `MPC` and `CADD` genomic scores and
     for `gnomAD_exome` and `gnomAD_genome` frequencies. Comment out
-    the appropriate example and adjust it according your needs.
+    the appropriate example and adjust it according to your needs.
 
 
 Update `setenv.sh` Script
@@ -460,17 +460,17 @@ Generate Variant Reports (optional)
 +++++++++++++++++++++++++++++++++++
 
 To generate families and de Novo variants report, you should use
-`generate_common_reports.py`. This tool supports the option `--show-studies` to
+`generate_common_report.py`. This tool supports the option `--show-studies` to
 list all studies and datasets configured in the GPF instance::
 
-    generate_common_reports.py --show-studies
+    generate_common_report.py --show-studies
 
 To generate the families and variants reports for a given configured study
 or dataset, you
 should use `--studies` option. For example, to generate the families and
 variants reports for the `quad` study, you should use::
 
-    generate_common_reports.py --studies comp
+    generate_common_report.py --studies comp
 
 
 Generate Denovo Gene Sets (optional)
