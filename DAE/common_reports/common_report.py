@@ -25,11 +25,11 @@ class CommonReport(object):
         filter_objects = FilterObjects.get_filter_objects(
             study, self.people_groups_info, filter_info['groups'])
 
-        self.id = filter_info['id']
+        self.id = study.id
         self.families_report = FamiliesReport(
             study, self.people_groups_info, filter_objects,
-            filter_info['draw_all_families'],
-            filter_info['families_count_show_id'])
+            filter_info.get('draw_all_families', False),
+            filter_info.get('families_count_show_id', None))
         self.denovo_report = DenovoReport(
             study, effect_groups, effect_types, filter_objects)
         self.study_name = study.name

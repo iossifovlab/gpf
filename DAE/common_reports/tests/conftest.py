@@ -27,6 +27,7 @@ from common_reports.family_counter import FamilyCounter, FamiliesCounter, \
 from common_reports.family_report import FamiliesReport
 from common_reports.denovo_report import EffectWithFilter, Effect, \
     DenovoReportTable, DenovoReport
+from common_reports.common_report import CommonReport
 
 
 def fixtures_dir():
@@ -379,4 +380,11 @@ def denovo_report_table(dataset1, denovo_variants_ds1, filter_objects):
 def denovo_report(dataset1, filter_objects):
     return DenovoReport(
         dataset1, ['Missense'], ['Frame-shift'], filter_objects
+    )
+
+
+@pytest.fixture(scope='session')
+def common_report(study4, filter_info, people_groups):
+    return CommonReport(
+        study4, filter_info, people_groups, ['Missense'], ['Frame-shift']
     )
