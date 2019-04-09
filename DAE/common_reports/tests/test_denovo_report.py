@@ -29,7 +29,7 @@ def test_effect_with_filter_empty(effect_with_filter_empty):
     assert effect_with_filter_empty.number_of_children_with_event == 0
     assert effect_with_filter_empty.observed_rate_per_child == 0
     assert effect_with_filter_empty.percent_of_children_with_events == 0
-    assert effect_with_filter_empty.column == 'dad and pheno'
+    assert effect_with_filter_empty.column == 'dad and unknown'
 
     assert effect_with_filter_empty.is_empty() is True
 

@@ -24,10 +24,13 @@ class PeopleGroupInfo(object):
         return list([
             str(p) for p in study.get_pedigree_values(self.source)])
 
+    def _is_default(self, people_group):
+        return people_group not in self.domain.keys()
+
     def get_people_groups(self):
         return list(frozenset([
             people_group
-            if people_group in self.domain.keys() else self.default['name']
+            if not self._is_default(people_group) else self.default['name']
             for people_group in self.people_groups
         ]))
 

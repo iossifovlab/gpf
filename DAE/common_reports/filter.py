@@ -22,8 +22,8 @@ class FilterObject(object):
     def __init__(self, filters=[]):
         self.filters = filters
 
-    def add_filter(self, column, value):
-        self.filters.append(Filter(column, value))
+    def add_filter(self, column, value, column_value=None):
+        self.filters.append(Filter(column, value, column_value))
 
     def get_column_name(self):
         return ' and '.join(
@@ -64,15 +64,15 @@ class FilterObjects(object):
 
                 filter = []
                 for el_value in el_values:
-                    if people_groups_info.has_people_group_info(el) and\
-                            el_value is None:
+                    if people_groups_info.has_people_group_info(el):
                         people_group_info = \
                             people_groups_info.get_people_group_info(el)
-                        filter.append(Filter(
-                            el_column, el_value,
-                            people_group_info.default['name']))
-                    else:
-                        filter.append(Filter(el_column, el_value))
+                        if people_group_info._is_default(el_value):
+                            filter.append(Filter(
+                                el_column, el_value,
+                                people_group_info.default['name']))
+                            continue
+                    filter.append(Filter(el_column, el_value))
                 filters.append(filter)
 
             filter_objects.append(FilterObjects(name, FilterObject.from_list(

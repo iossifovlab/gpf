@@ -36,6 +36,6 @@ def test_people_counters(people_counters):
     assert sorted(people_counters.columns) == sorted(
         ['sib and phenotype1', 'sib and phenotype2', 'prb and phenotype1',
          'prb and phenotype2', 'prb and unaffected', 'mom and unaffected',
-         'mom and phenotype1', 'dad and pheno', 'dad and unaffected'])
+         'mom and phenotype1', 'dad and unknown', 'dad and unaffected'])
 
     assert len(people_counters.to_dict().keys()) == 4

@@ -19,7 +19,7 @@ from configurable_entities.configuration import DAEConfig
 from common_reports.config import CommonReportsStudies
 from pheno.pheno_factory import PhenoFactory
 
-from common_reports.filter import FilterObjects
+from common_reports.filter import Filter, FilterObject, FilterObjects
 from common_reports.people_group_info import PeopleGroupInfo, PeopleGroupsInfo
 from common_reports.people_counter import PeopleCounter, PeopleCounters
 from common_reports.family_counter import FamilyCounter, FamiliesCounter, \
@@ -214,9 +214,33 @@ def people_groups_info(study1, filter_info, people_groups):
 
 
 @pytest.fixture(scope='session')
+def filter_role():
+    return Filter('role', 'mom', column_value='Mother')
+
+
+@pytest.fixture(scope='session')
+def filter_people_group():
+    return Filter('phenotype', 'pheno', column_value='Pheno')
+
+
+@pytest.fixture(scope='function')
+def filter_object(filter_role):
+    return FilterObject([filter_role])
+
+
+@pytest.fixture(scope='session')
+def filter_object_from_list(filter_role, filter_people_group):
+    return FilterObject.from_list([[filter_role, filter_people_group]])
+
+
+@pytest.fixture(scope='function')
+def filter_objects_simple(filter_object):
+    return FilterObjects('Role', filter_objects=[filter_object])
+
+
+@pytest.fixture(scope='session')
 def filter_objects(study1, people_groups_info, groups):
-    return FilterObjects.get_filter_objects(
-        study1, people_groups_info, groups)
+    return FilterObjects.get_filter_objects(study1, people_groups_info, groups)
 
 
 @pytest.fixture(scope='session')
@@ -352,7 +376,7 @@ def effect_with_filter_frame_shift(
 def effect_with_filter_empty(dataset1, denovo_variants_ds1, filter_objects):
     filter_object = None
     for fo in filter_objects[0].filter_objects:
-        if fo.get_column_name() == 'dad and pheno':
+        if fo.get_column_name() == 'dad and unknown':
             filter_object = fo
     assert filter_object
 
