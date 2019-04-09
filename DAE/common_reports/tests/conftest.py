@@ -25,6 +25,8 @@ from common_reports.people_counter import PeopleCounter, PeopleCounters
 from common_reports.family_counter import FamilyCounter, FamiliesCounter, \
     FamiliesCounters
 from common_reports.family_report import FamiliesReport
+from common_reports.denovo_report import EffectWithFilter, Effect, \
+    DenovoReportTable, DenovoReport
 
 
 def fixtures_dir():
@@ -86,10 +88,11 @@ def dataset_factory(study_facade):
 
 
 @pytest.fixture(scope='session')
-def dataset_facade(dataset_definitions, dataset_factory):
+def dataset_facade(dataset_definitions, dataset_factory, pheno_factory):
     return DatasetFacade(
         dataset_definitions=dataset_definitions,
-        dataset_factory=dataset_factory)
+        dataset_factory=dataset_factory,
+        pheno_factory=pheno_factory)
 
 
 def load_dataset(dataset_factory, dataset_definitions, dataset_name):
@@ -146,6 +149,11 @@ def dae_config_fixture():
 @pytest.fixture(scope='session')
 def study1(study_facade):
     return study_facade.get_study_wdae_wrapper("Study1")
+
+
+@pytest.fixture(scope='session')
+def dataset1(dataset_facade):
+    return dataset_facade.get_dataset_wdae_wrapper("Dataset1")
 
 
 @pytest.fixture(scope='session')
@@ -280,4 +288,81 @@ def families_counters(study1, people_groups_info_s1):
 def families_report(study1, filter_object_s1, people_groups_info_s1):
     return FamiliesReport(
         study1, people_groups_info_s1, filter_object_s1
+    )
+
+
+@pytest.fixture(scope='session')
+def denovo_variants_ds1(dataset1):
+    denovo_variants = dataset1.query_variants(
+        limit=None,
+        inheritance='denovo',
+    )
+    denovo_variants = list(denovo_variants)
+
+    assert len(denovo_variants) == 8
+
+    return denovo_variants
+
+
+@pytest.fixture(scope='session')
+def effect_with_filter_missense(
+        dataset1, denovo_variants_ds1, filter_object_s1):
+    filter_object = None
+    for fo in filter_object_s1[0].filter_objects:
+        if fo.get_column_name() == 'sib and phenotype2':
+            filter_object = fo
+    assert filter_object
+
+    return EffectWithFilter(
+        dataset1, denovo_variants_ds1, filter_object, 'Missense'
+    )
+
+
+@pytest.fixture(scope='session')
+def effect_with_filter_frame_shift(
+        dataset1, denovo_variants_ds1, filter_object_s1):
+    filter_object = None
+    for fo in filter_object_s1[0].filter_objects:
+        if fo.get_column_name() == 'prb and phenotype1':
+            filter_object = fo
+    assert filter_object
+
+    return EffectWithFilter(
+        dataset1, denovo_variants_ds1, filter_object, 'Frame-shift'
+    )
+
+
+@pytest.fixture(scope='session')
+def effect_with_filter_empty(
+        dataset1, denovo_variants_ds1, filter_object_s1):
+    filter_object = None
+    for fo in filter_object_s1[0].filter_objects:
+        if fo.get_column_name() == 'dad and pheno':
+            filter_object = fo
+    assert filter_object
+
+    return EffectWithFilter(
+        dataset1, denovo_variants_ds1, filter_object, 'Frame-shift'
+    )
+
+
+@pytest.fixture(scope='session')
+def effect(dataset1, denovo_variants_ds1, filter_object_s1):
+    return Effect(
+        dataset1, denovo_variants_ds1, 'Missense', filter_object_s1[0]
+    )
+
+
+@pytest.fixture(scope='session')
+def denovo_report_table(dataset1, denovo_variants_ds1, filter_object_s1):
+    return DenovoReportTable(
+        dataset1, denovo_variants_ds1, ['Missense', 'Splice-site'],
+        ['Frame-shift', 'Nonsense'], filter_object_s1[0]
+    )
+
+
+@pytest.fixture(scope='session')
+def denovo_report(dataset1, filter_object_s1):
+    return DenovoReport(
+        dataset1, ['Missense'], ['Frame-shift'], filter_object_s1
     )
