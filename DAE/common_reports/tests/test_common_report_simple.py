@@ -3,28 +3,23 @@ from pprint import pprint
 from common_reports.common_report import CommonReport
 
 
-def test_common_report_simple(common_reports_query_objects):
-    assert common_reports_query_objects is not None
+def test_common_report_simple(vdb_fixture, common_report_facade):
+    assert common_report_facade is not None
 
     print([
-        st.name
-        for st in common_reports_query_objects.studies_with_config.keys()
+        vdb_fixture.get(common_report_id).name
+        for common_report_id in
+        common_report_facade.get_all_common_report_ids()
     ])
-    studies = ['Study3']
-    common_reports_query_objects.filter_studies(studies)
 
-    study_wrapper, config = \
-        list(common_reports_query_objects.studies_with_config.items())[0]
+    study_wrapper = vdb_fixture.get_wdae_wrapper('Study3')
     assert study_wrapper is not None
+
+    config = common_report_facade.get_common_report_config('Study3')
     assert config is not None
     print(config)
 
-    common_report = CommonReport(
-        study_wrapper,
-        config.filter_info,
-        config.people_groups_info,
-        config.effect_groups,
-        config.effect_types)
+    common_report = CommonReport(study_wrapper, config)
 
     assert common_report is not None
     assert common_report.id == 'Study3'

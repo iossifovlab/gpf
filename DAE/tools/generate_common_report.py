@@ -4,8 +4,7 @@ import argparse
 from studies.factory import VariantsDb
 from configurable_entities.configuration import DAEConfig
 
-from common_reports.common_report import CommonReportsGenerator
-from common_reports.config import CommonReportsStudies
+from common_reports.common_report_facade import CommonReportFacade
 
 
 def main(dae_config=None, argv=None):
@@ -27,20 +26,17 @@ def main(dae_config=None, argv=None):
         dae_config = DAEConfig()
 
     vdb = VariantsDb(dae_config)
-    common_reports_query_objects = CommonReportsStudies(
-        vdb.study_facade, vdb.dataset_facade)
+    common_report_facade = CommonReportFacade(vdb)
 
     if args.show_studies:
-        for query_object in\
-                common_reports_query_objects.studies_with_config.keys():
-            print(query_object.id)
+        for study_id in common_report_facade.get_all_common_report_ids():
+            print(study_id)
     else:
         if args.studies:
-            query_objects = args.studies.split(',')
-            common_reports_query_objects.filter_studies(query_objects)
-
-        crg = CommonReportsGenerator(common_reports_query_objects)
-        crg.save_common_reports()
+            studies = args.studies.split(',')
+            common_report_facade.generate_common_reports(studies)
+        else:
+            common_report_facade.generate_all_common_reports()
 
 
 if __name__ == '__main__':

@@ -1,8 +1,6 @@
 from __future__ import unicode_literals
 from __future__ import division
 
-import os
-import json
 from collections import OrderedDict
 
 from variants.attributes import Role
@@ -15,9 +13,12 @@ from common_reports.filter import FilterObjects
 
 class CommonReport(object):
 
-    def __init__(
-            self, study, filter_info, people_groups_info, effect_groups,
-            effect_types):
+    def __init__(self, study, common_report_config):
+        people_groups_info = common_report_config.people_groups_info
+        filter_info = common_report_config.filter_info
+        effect_groups = common_report_config.effect_groups
+        effect_types = common_report_config.effect_types
+
         self.study = study
         self.people_groups_info = PeopleGroupsInfo(
             study, filter_info, people_groups_info)
@@ -80,32 +81,3 @@ class CommonReport(object):
     def _get_number_of_people_with_role(self, role):
         return sum([len(family.get_people_with_role(role))
                     for family in self.study.families.values()])
-
-
-class CommonReportsGenerator(object):
-
-    def __init__(self, common_reports_studies):
-        assert common_reports_studies is not None
-
-        self.studys_with_config = common_reports_studies.studies_with_config
-
-    def save_common_reports(self):
-        for study, config in self.studys_with_config.items():
-            if config is None:
-                continue
-
-            people_groups_info = config.people_groups_info
-            filter_info = config.filter_info
-            effect_groups = config.effect_groups
-            effect_types = config.effect_types
-
-            path = config.path
-
-            common_report = CommonReport(
-                study, filter_info, people_groups_info, effect_groups,
-                effect_types)
-
-            if not os.path.exists(os.path.dirname(path)):
-                os.makedirs(os.path.dirname(path))
-            with open(path, 'w+') as crf:
-                json.dump(common_report.to_dict(), crf)

@@ -1,13 +1,10 @@
 from __future__ import unicode_literals
 
 import pytest
-import os
 
-import json
+import os
 from copy import deepcopy
 from collections import OrderedDict
-
-from common_reports.common_report import CommonReportsGenerator
 
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
@@ -17,7 +14,6 @@ from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
 from studies.factory import VariantsDb
 from configurable_entities.configuration import DAEConfig
-from common_reports.config import CommonReportsStudies
 from pheno.pheno_factory import PhenoFactory
 
 from common_reports.filter import Filter, FilterObject, FilterObjects
@@ -30,6 +26,7 @@ from common_reports.denovo_report import EffectWithFilter, Effect, \
     DenovoReportTable, DenovoReport
 from common_reports.common_report import CommonReport
 from common_reports.config import CommonReportsConfig, CommonReportsParseConfig
+from common_reports.common_report_facade import CommonReportFacade
 
 
 def fixtures_dir():
@@ -45,11 +42,6 @@ def studies_dir():
 def datasets_dir():
     return os.path.abspath(
         os.path.join(os.path.dirname(__file__), 'fixtures/datasets'))
-
-
-def expected_output_dir():
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'fixtures/expected_output'))
 
 
 @pytest.fixture(scope='session')
@@ -98,14 +90,6 @@ def dataset_facade(dataset_definitions, dataset_factory, pheno_factory):
         pheno_factory=pheno_factory)
 
 
-def load_dataset(dataset_factory, dataset_definitions, dataset_name):
-    config = dataset_definitions.get_dataset_config(dataset_name)
-
-    result = dataset_factory.make_dataset(config)
-    assert result is not None
-    return result
-
-
 @pytest.fixture(scope='session')
 def vdb_fixture(dae_config_fixture):
     vdb = VariantsDb(dae_config_fixture)
@@ -113,34 +97,10 @@ def vdb_fixture(dae_config_fixture):
 
 
 @pytest.fixture(scope='session')
-def common_reports_query_objects(vdb_fixture):
-    common_reports_query_objects = CommonReportsStudies(
-        vdb_fixture.study_facade, vdb_fixture.dataset_facade)
+def common_report_facade(vdb_fixture):
+    common_report_facade = CommonReportFacade(vdb_fixture)
 
-    return common_reports_query_objects
-
-
-@pytest.fixture(scope='session')
-def common_reports_generator(common_reports_query_objects):
-    common_reports_generator = CommonReportsGenerator(
-        common_reports_query_objects)
-
-    return common_reports_generator
-
-
-@pytest.fixture(scope='session')
-def output():
-    def get_output(name):
-        output_filename = os.path.join(
-            expected_output_dir(),
-            name + '.json'
-        )
-        with open(output_filename) as o:
-            output = json.load(o, object_pairs_hook=OrderedDict)
-
-        return output
-
-    return get_output
+    return common_report_facade
 
 
 @pytest.fixture(scope='session')
@@ -425,10 +385,8 @@ def denovo_report(dataset1, filter_objects):
 
 
 @pytest.fixture(scope='session')
-def common_report(study4, filter_info, people_groups):
-    return CommonReport(
-        study4, filter_info, people_groups, ['Missense'], ['Frame-shift']
-    )
+def common_report(study4, common_reports_config):
+    return CommonReport(study4, common_reports_config)
 
 
 @pytest.fixture(scope='session')
@@ -436,6 +394,8 @@ def common_reports_config(study1, study1_config, people_groups, filter_info):
     common_report_config = \
         deepcopy(study1_config.study_config.get('commonReport', None))
     common_report_config['file'] = '/path/to/common_report'
+    common_report_config['effect_groups'] = ['Missense']
+    common_report_config['effect_types'] = ['Frame-shift']
 
     return CommonReportsConfig(
         study1.id, common_report_config, people_groups, filter_info

@@ -107,23 +107,3 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
 
         return CommonReportsConfig(
             id, config, people_groups_info, filter_info)
-
-
-class CommonReportsStudies(object):
-
-    def __init__(self, study_facade, dataset_facade):
-        studies = study_facade.get_all_studies_wrapper() +\
-            dataset_facade.get_all_datasets_wrapper()
-        self.studies_with_config = {}
-        for study in studies:
-            common_report_config = \
-                CommonReportsParseConfig.from_config(study.config)
-            if common_report_config is not None:
-                self.studies_with_config[study] = common_report_config
-
-    def filter_studies(self, studies):
-        self.studies_with_config = {
-            qo: c
-            for qo, c in self.studies_with_config.items()
-            if qo.id in studies
-        }

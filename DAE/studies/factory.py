@@ -40,18 +40,6 @@ class VariantsDb(object):
 
         self._configuration_check()
 
-        # self.common_reports_query_objects = CommonReportsStudies(
-        #     self.study_facade, self.dataset_facade)
-        # self.common_reports_generator = CommonReportsGenerator(
-        #     self.common_reports_query_objects)
-        # self.common_report_facade = CommonReportFacade(
-        #     self.common_reports_query_objects)
-
-        # self.score_loader = ScoreLoader()
-        # self.weights_loader = WeightsLoader()
-
-        # self.gene_sets_collections = GeneSetsCollections(self.dataset_facade)
-
     def _configuration_check(self):
         studies_ids = set(self.get_studies_ids())
         dataset_ids = set(self.get_datasets_ids())

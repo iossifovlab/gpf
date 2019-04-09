@@ -6,8 +6,8 @@ def test_common_reports_config(
     assert common_reports_config.id == 'Study1'
     assert common_reports_config.people_groups_info == people_groups
     assert common_reports_config.filter_info == filter_info
-    assert common_reports_config.effect_groups == []
-    assert common_reports_config.effect_types == 'Frame-shift,Missense'
+    assert common_reports_config.effect_groups == ['Missense']
+    assert common_reports_config.effect_types == ['Frame-shift']
     assert common_reports_config.path == '/path/to/common_report'
 
 
