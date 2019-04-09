@@ -74,6 +74,9 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
 
     @classmethod
     def from_config(cls, study_config):
+        if not study_config:
+            return None
+
         id = study_config.id
         config = deepcopy(
             study_config.study_config.get('commonReport', None))

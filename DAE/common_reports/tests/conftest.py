@@ -420,3 +420,19 @@ def common_reports_parse_config_disabled(dataset3_config):
 @pytest.fixture(scope='session')
 def common_reports_parse_config_missing_groups(dataset4_config):
     return CommonReportsParseConfig.from_config(dataset4_config)
+
+
+@pytest.fixture(scope='module')
+def remove_common_reports(common_report_facade):
+    all_configs = common_report_facade.get_all_common_report_configs()
+    temp_files = [config.path for config in all_configs]
+
+    for temp_file in temp_files:
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+
+    yield
+
+    for temp_file in temp_files:
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
