@@ -3,7 +3,10 @@ Created on Apr 21, 2017
 
 @author: lubo
 '''
-import pytest
+import os
+
+from datasets_api.studies_manager import StudiesManager
+from configurable_entities.configuration import DAEConfig
 
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -15,59 +18,45 @@ class Test(APITestCase):
     MEASURES_URL = "/api/v3/pheno_browser/measures"
     DOWNLOAD_URL = "/api/v3/pheno_browser/download"
 
+    def setUp(self):
+        # inject testing data fixtures
+        init = StudiesManager.__init__
+
+        fixtures_dir = os.path.abspath(
+            os.path.join(
+                os.path.dirname(__file__),
+                'fixtures'))
+
+        fake_dae_config = DAEConfig(fixtures_dir)
+
+        def new_init(self, dae_config=None):
+            init(self, fake_dae_config)
+
+        StudiesManager.__init__ = new_init
+
     def test_instruments_missing_dataset_id(self):
         response = self.client.get(self.URL)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
-    @pytest.mark.skip('missing ssc dataset')
-    def test_instruments_ssc(self):
-        url = "{}?dataset_id=SSC".format(self.URL)
+    def test_instruments(self):
+        url = "{}?dataset_id=quads_f1_ds".format(self.URL)
         response = self.client.get(url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIn('default', response.data)
         self.assertIn('instruments', response.data)
-        self.assertEqual(103, len(response.data['instruments']))
+        self.assertEqual(3, len(response.data['instruments']))
 
-    @pytest.mark.skip('missing ssc dataset')
-    def test_measures_ssc_commonly_used(self):
-        url = "{}?dataset_id=SSC&instrument=ssc_commonly_used".format(
+    def test_measures(self):
+        url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
             self.MEASURES_URL)
         response = self.client.get(url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIn('base_image_url', response.data)
         self.assertIn('measures', response.data)
+        self.assertEqual(4, len(response.data['measures']))
 
-    def test_instruments_svip(self):
-        url = "{}?dataset_id=SVIP".format(self.URL)
-        response = self.client.get(url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertIn('default', response.data)
-        self.assertIn('instruments', response.data)
-        self.assertEqual(71, len(response.data['instruments']))
-
-    def test_measures_svip_diagnosis_summary(self):
-        url = "{}?dataset_id=SVIP&instrument=diagnosis_summary".format(
-            self.MEASURES_URL)
-        response = self.client.get(url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertIn('base_image_url', response.data)
-        self.assertIn('measures', response.data)
-
-        self.assertEqual(169, len(response.data['measures']))
-
-    def test_measures_svip_bad_json(self):
-        problem_urls = [
-            "{}?dataset_id=SVIP&instrument=svip_neuro_exam",
-            "{}?dataset_id=SVIP&instrument=svip_subjects",
-        ]
-        urls = [u.format(self.MEASURES_URL)for u in problem_urls]
-
-        for url in urls:
-            response = self.client.get(url)
-            self.assertEqual(status.HTTP_200_OK, response.status_code)
-
-    def test_download_svip_diagnosis_summary(self):
-        url = "{}?dataset_id=SVIP&instrument=diagnosis_summary".format(
+    def test_download(self):
+        url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
             self.DOWNLOAD_URL)
         response = self.client.get(url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
