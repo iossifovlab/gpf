@@ -12,6 +12,8 @@ from pheno.common import default_config, dump_config, check_config_pheno_db
 from pheno.prepare.ped_prepare import PrepareVariables
 from tools.pheno2browser import build_pheno_browser
 
+from configurable_entities.configuration import DAEConfig
+
 
 def pheno_cli_parser():
     parser = ArgumentParser(
@@ -106,6 +108,8 @@ def main(argv):
     try:
         # Setup argument parser
 
+        dae_conf = DAEConfig()
+
         parser = pheno_cli_parser()
         args = parser.parse_args(argv)
         if args.instruments is None:
@@ -118,7 +122,10 @@ def main(argv):
             print("missing pheno db name", sys.stderr)
             raise ValueError()
 
-        pheno_db_dir = os.path.join(os.path.curdir, args.pheno_name)
+        pheno_db_dir = os.path.join(
+            dae_conf.pheno_dir,
+            args.pheno_name
+        )
 
         if not os.path.exists(pheno_db_dir):
             os.makedirs(pheno_db_dir)
