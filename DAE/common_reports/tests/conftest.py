@@ -4,6 +4,7 @@ import pytest
 import os
 
 import json
+from copy import deepcopy
 from collections import OrderedDict
 
 from common_reports.common_report import CommonReportsGenerator
@@ -28,6 +29,7 @@ from common_reports.family_report import FamiliesReport
 from common_reports.denovo_report import EffectWithFilter, Effect, \
     DenovoReportTable, DenovoReport
 from common_reports.common_report import CommonReport
+from common_reports.config import CommonReportsConfig, CommonReportsParseConfig
 
 
 def fixtures_dir():
@@ -170,6 +172,21 @@ def dataset1(dataset_facade):
 @pytest.fixture(scope='session')
 def study1_config(study_facade):
     return study_facade.get_study_config("Study1")
+
+
+@pytest.fixture(scope='session')
+def dataset2_config(dataset_facade):
+    return dataset_facade.get_dataset_config("Dataset2")
+
+
+@pytest.fixture(scope='session')
+def dataset3_config(dataset_facade):
+    return dataset_facade.get_dataset_config("Dataset3")
+
+
+@pytest.fixture(scope='session')
+def dataset4_config(dataset_facade):
+    return dataset_facade.get_dataset_config("Dataset4")
 
 
 @pytest.fixture(scope='session')
@@ -412,3 +429,34 @@ def common_report(study4, filter_info, people_groups):
     return CommonReport(
         study4, filter_info, people_groups, ['Missense'], ['Frame-shift']
     )
+
+
+@pytest.fixture(scope='session')
+def common_reports_config(study1, study1_config, people_groups, filter_info):
+    common_report_config = \
+        deepcopy(study1_config.study_config.get('commonReport', None))
+    common_report_config['file'] = '/path/to/common_report'
+
+    return CommonReportsConfig(
+        study1.id, common_report_config, people_groups, filter_info
+    )
+
+
+@pytest.fixture(scope='session')
+def common_reports_parse_config(study1_config):
+    return CommonReportsParseConfig.from_config(study1_config)
+
+
+@pytest.fixture(scope='session')
+def common_reports_parse_config_missing_config(dataset2_config):
+    return CommonReportsParseConfig.from_config(dataset2_config)
+
+
+@pytest.fixture(scope='session')
+def common_reports_parse_config_disabled(dataset3_config):
+    return CommonReportsParseConfig.from_config(dataset3_config)
+
+
+@pytest.fixture(scope='session')
+def common_reports_parse_config_missing_groups(dataset4_config):
+    return CommonReportsParseConfig.from_config(dataset4_config)
