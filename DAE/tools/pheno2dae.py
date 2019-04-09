@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 '''
-pheno2DAE -- prepares a DAE pheno DB cache
+pheno2dae -- prepares a DAE pheno DB cache
 
 '''
 from __future__ import unicode_literals
@@ -126,6 +126,11 @@ USAGE
             metavar="path")
 
         parser.add_argument(
+            '-d', '--description',
+            help="standardized tsv file that contains measure descriptions"
+        )
+
+        parser.add_argument(
             '-o', '--output',
             dest='output',
             help='ouput file',
@@ -245,9 +250,12 @@ USAGE
         if not check_config_pheno_db(config):
             raise Exception("bad classification boundaries")
 
+        if os.path.exists(args.output):
+            raise CLIError('output file already exists')
+
         prep = PrepareVariables(config)
         prep.build_pedigree(args.pedigree)
-        prep.build_variables(args.instruments)
+        prep.build_variables(args.instruments, args.description)
 
         return 0
     except KeyboardInterrupt:
@@ -257,7 +265,7 @@ USAGE
 
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
-        sys.stderr.write(indent + "  for help use --help")
+        sys.stderr.write(indent + "  for help use --help\n")
         return 2
 
 

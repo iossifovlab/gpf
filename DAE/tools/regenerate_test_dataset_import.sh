@@ -11,7 +11,7 @@ ped2NucFam.py $T/fam.ped $D/nuc-fam.ped
 cp $T/nuc-fam.ped $D/nuc-fam-phn.ped
 
 dnv2DAE.py $D/nuc-fam.ped $T/denovo.csv -m , -i SP_id -c CHROM -p POS -r REF -a ALT -o $D/dnvNuc
-pheno2DAE.py -f $D/nuc-fam-phn.ped -i $T/instruments/ -o $D/test.db
+pheno2dae.py -f $D/nuc-fam-phn.ped -i $T/instruments/ -o $D/test.db
 
 vcf2DAE.py $D/nuc-fam.ped $T/calls.vcf.gz -o $D/tmNuc
 vcf2DAE.py $D/nuc-fam.ped $T/fam1.vcf,$T/fam2.vcf,$T/fam3.vcf -o $D/tmSmallNucFam 

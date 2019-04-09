@@ -27,16 +27,16 @@ def main(options=None):
     denovo = gsc.get_gene_sets_collection('denovo', load=False)
 
     if args.show_studies:
-        for study in denovo._get_studies():
-            print(study.id)
+        for study_id in denovo.get_study_ids():
+            print(study_id)
     else:
         filter_studies_ids = None
         if args.studies:
             studies = args.studies.split(',')
             filter_studies_ids = [
-                study.id
-                for study in denovo._get_studies()
-                if study.id in studies
+                study_id
+                for study_id in denovo.get_study_ids()
+                if study_id in studies
             ]
 
         denovo.build_cache(filter_studies_ids)
