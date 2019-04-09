@@ -9,7 +9,7 @@ f4	mom4	0	0	2	1	mom	phenotype1	mom4
 f4	ch4	dad4	mom4	2	2	prb	phenotype1	ch4
 f4	ch4.1	dad4	mom4	2	2	sib	phenotype2	ch4.1
 f4	dad4	0	0	1	1	dad	pheno	dad4	1.0
-f5	mom5	0	0	2	1	mom	phenotype1	mom5
+f5	mom5	0	0	2	1	mom		mom5
 f5	dad5	0	0	1	1	dad	pheno	dad5
 f5	ch5	dad5	mom5	2	2	prb	phenotype1	ch5
 f5	ch5.1	dad5	mom5	2	2	sib	phenotype2	ch5.1

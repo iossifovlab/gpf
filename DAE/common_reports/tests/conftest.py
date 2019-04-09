@@ -20,7 +20,7 @@ from common_reports.config import CommonReportsStudies
 from pheno.pheno_factory import PhenoFactory
 
 from common_reports.filter import FilterObjects
-from common_reports.people_group_info import PeopleGroupsInfo
+from common_reports.people_group_info import PeopleGroupInfo, PeopleGroupsInfo
 from common_reports.people_counter import PeopleCounter, PeopleCounters
 from common_reports.family_counter import FamilyCounter, FamiliesCounter, \
     FamiliesCounters
@@ -152,6 +152,16 @@ def study1(study_facade):
 
 
 @pytest.fixture(scope='session')
+def study2(study_facade):
+    return study_facade.get_study_wdae_wrapper("Study2")
+
+
+@pytest.fixture(scope='session')
+def study4(study_facade):
+    return study_facade.get_study_wdae_wrapper("study4")
+
+
+@pytest.fixture(scope='session')
 def dataset1(dataset_facade):
     return dataset_facade.get_dataset_wdae_wrapper("Dataset1")
 
@@ -162,48 +172,56 @@ def study1_config(study_facade):
 
 
 @pytest.fixture(scope='session')
-def groups_s1():
+def groups():
     return {
         'Role and Diagnosis': ['role', 'phenotype']
     }
 
 
 @pytest.fixture(scope='session')
-def filter_info_s1():
+def filter_info(groups):
     return {
-        'people_groups': ['phenotype']
+        'people_groups': ['phenotype'],
+        'groups': groups
     }
 
 
 @pytest.fixture(scope='session')
-def people_groups_info(study1_config):
-    people_groups = {}
+def people_groups(study1_config):
+    people_group = {}
     if 'genotypeBrowser' in study1_config and study1_config.genotype_browser:
         genotype_browser = study1_config.genotype_browser
-        people_groups = genotype_browser.people_group
+        people_group = genotype_browser.people_group
 
-    people_groups_info = OrderedDict()
-    for people_group in people_groups:
-        people_groups_info[people_group['id']] = people_group
+    people_groups = OrderedDict()
+    for pg in people_group:
+        people_groups[pg['id']] = pg
 
-    return people_groups_info
-
-
-@pytest.fixture(scope='session')
-def people_groups_info_s1(study1, filter_info_s1, people_groups_info):
-    return PeopleGroupsInfo(study1, filter_info_s1, people_groups_info)
+    return people_groups
 
 
 @pytest.fixture(scope='session')
-def filter_object_s1(study1, people_groups_info_s1, groups_s1):
+def people_group_info(people_groups, study2):
+    return PeopleGroupInfo(
+        people_groups['phenotype'], 'phenotype', study=study2
+    )
+
+
+@pytest.fixture(scope='session')
+def people_groups_info(study1, filter_info, people_groups):
+    return PeopleGroupsInfo(study1, filter_info, people_groups)
+
+
+@pytest.fixture(scope='session')
+def filter_objects(study1, people_groups_info, groups):
     return FilterObjects.get_filter_objects(
-        study1, people_groups_info_s1, groups_s1)
+        study1, people_groups_info, groups)
 
 
 @pytest.fixture(scope='session')
-def pc_s1_dad_and_phenotype1(study1, filter_object_s1):
+def pc_s1_dad_and_phenotype1(study1, filter_objects):
     filter_object = None
-    for fo in filter_object_s1[0].filter_objects:
+    for fo in filter_objects[0].filter_objects:
         if fo.get_column_name() == 'dad and phenotype1':
             filter_object = fo
     assert filter_object
@@ -212,9 +230,9 @@ def pc_s1_dad_and_phenotype1(study1, filter_object_s1):
 
 
 @pytest.fixture(scope='session')
-def pc_s1_mom_and_phenotype1(study1, filter_object_s1):
+def pc_s1_mom_and_phenotype1(study1, filter_objects):
     filter_object = None
-    for fo in filter_object_s1[0].filter_objects:
+    for fo in filter_objects[0].filter_objects:
         if fo.get_column_name() == 'mom and phenotype1':
             filter_object = fo
     assert filter_object
@@ -223,8 +241,8 @@ def pc_s1_mom_and_phenotype1(study1, filter_object_s1):
 
 
 @pytest.fixture(scope='session')
-def people_counters(study1, filter_object_s1):
-    return PeopleCounters(study1.families, filter_object_s1[0])
+def people_counters(study1, filter_objects):
+    return PeopleCounters(study1.families, filter_objects[0])
 
 
 @pytest.fixture(scope='session')
@@ -241,54 +259,52 @@ def families_groups(study1):
 
 
 @pytest.fixture(scope='session')
-def family_counter(study1, people_groups_info_s1):
+def family_counter(study1, people_groups_info):
     return FamilyCounter(
         study1.families['f5'], 1,
-        people_groups_info_s1.get_people_group_info('phenotype')
+        people_groups_info.get_people_group_info('phenotype')
     )
 
 
 @pytest.fixture(scope='session')
-def families_counter(families_groups, people_groups_info_s1):
+def families_counter(families_groups, people_groups_info):
     return FamiliesCounter(
         families_groups,
-        people_groups_info_s1.get_people_group_info('phenotype'),
+        people_groups_info.get_people_group_info('phenotype'),
         False, False
     )
 
 
 @pytest.fixture(scope='session')
-def families_counter_draw_all(families_groups, people_groups_info_s1):
+def families_counter_draw_all(families_groups, people_groups_info):
     return FamiliesCounter(
         families_groups,
-        people_groups_info_s1.get_people_group_info('phenotype'),
+        people_groups_info.get_people_group_info('phenotype'),
         True, False
     )
 
 
 @pytest.fixture(scope='session')
-def families_counter_same(families_groups_same, people_groups_info_s1):
+def families_counter_same(families_groups_same, people_groups_info):
     return FamiliesCounter(
         families_groups_same,
-        people_groups_info_s1.get_people_group_info('phenotype'),
+        people_groups_info.get_people_group_info('phenotype'),
         False, False
     )
 
 
 @pytest.fixture(scope='session')
-def families_counters(study1, people_groups_info_s1):
+def families_counters(study1, people_groups_info):
     return FamiliesCounters(
         study1.families,
-        people_groups_info_s1.get_people_group_info('phenotype'),
+        people_groups_info.get_people_group_info('phenotype'),
         False, False
     )
 
 
 @pytest.fixture(scope='session')
-def families_report(study1, filter_object_s1, people_groups_info_s1):
-    return FamiliesReport(
-        study1, people_groups_info_s1, filter_object_s1
-    )
+def families_report(study1, filter_objects, people_groups_info):
+    return FamiliesReport(study1, people_groups_info, filter_objects)
 
 
 @pytest.fixture(scope='session')
@@ -305,10 +321,9 @@ def denovo_variants_ds1(dataset1):
 
 
 @pytest.fixture(scope='session')
-def effect_with_filter_missense(
-        dataset1, denovo_variants_ds1, filter_object_s1):
+def effect_with_filter_missense(dataset1, denovo_variants_ds1, filter_objects):
     filter_object = None
-    for fo in filter_object_s1[0].filter_objects:
+    for fo in filter_objects[0].filter_objects:
         if fo.get_column_name() == 'sib and phenotype2':
             filter_object = fo
     assert filter_object
@@ -320,9 +335,9 @@ def effect_with_filter_missense(
 
 @pytest.fixture(scope='session')
 def effect_with_filter_frame_shift(
-        dataset1, denovo_variants_ds1, filter_object_s1):
+        dataset1, denovo_variants_ds1, filter_objects):
     filter_object = None
-    for fo in filter_object_s1[0].filter_objects:
+    for fo in filter_objects[0].filter_objects:
         if fo.get_column_name() == 'prb and phenotype1':
             filter_object = fo
     assert filter_object
@@ -333,10 +348,9 @@ def effect_with_filter_frame_shift(
 
 
 @pytest.fixture(scope='session')
-def effect_with_filter_empty(
-        dataset1, denovo_variants_ds1, filter_object_s1):
+def effect_with_filter_empty(dataset1, denovo_variants_ds1, filter_objects):
     filter_object = None
-    for fo in filter_object_s1[0].filter_objects:
+    for fo in filter_objects[0].filter_objects:
         if fo.get_column_name() == 'dad and pheno':
             filter_object = fo
     assert filter_object
@@ -347,22 +361,22 @@ def effect_with_filter_empty(
 
 
 @pytest.fixture(scope='session')
-def effect(dataset1, denovo_variants_ds1, filter_object_s1):
+def effect(dataset1, denovo_variants_ds1, filter_objects):
     return Effect(
-        dataset1, denovo_variants_ds1, 'Missense', filter_object_s1[0]
+        dataset1, denovo_variants_ds1, 'Missense', filter_objects[0]
     )
 
 
 @pytest.fixture(scope='session')
-def denovo_report_table(dataset1, denovo_variants_ds1, filter_object_s1):
+def denovo_report_table(dataset1, denovo_variants_ds1, filter_objects):
     return DenovoReportTable(
         dataset1, denovo_variants_ds1, ['Missense', 'Splice-site'],
-        ['Frame-shift', 'Nonsense'], filter_object_s1[0]
+        ['Frame-shift', 'Nonsense'], filter_objects[0]
     )
 
 
 @pytest.fixture(scope='session')
-def denovo_report(dataset1, filter_object_s1):
+def denovo_report(dataset1, filter_objects):
     return DenovoReport(
-        dataset1, ['Missense'], ['Frame-shift'], filter_object_s1
+        dataset1, ['Missense'], ['Frame-shift'], filter_objects
     )

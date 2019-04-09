@@ -8,7 +8,7 @@ class PeopleGroupInfo(object):
 
     def __init__(
             self, people_group_info, people_group, study=None,
-            people_groups=None):
+            people_groups=[]):
         self.name = people_group_info['name']
         self.domain = people_group_info['values']
         self.unaffected = people_group_info['unaffected']
@@ -16,7 +16,7 @@ class PeopleGroupInfo(object):
         self.source = people_group_info['source']
 
         self.people_groups = self._get_people_groups(study)\
-            if people_groups is None else people_groups
+            if study is not None and len(people_groups) == 0 else people_groups
 
         self.people_group = people_group
 
@@ -25,10 +25,11 @@ class PeopleGroupInfo(object):
             str(p) for p in study.get_pedigree_values(self.source)])
 
     def get_people_groups(self):
-        return [
-            people_group if people_group is not None else self.default['name']
+        return list(frozenset([
+            people_group
+            if people_group in self.domain.keys() else self.default['name']
             for people_group in self.people_groups
-        ]
+        ]))
 
     @property
     def missing_person_info(self):
@@ -66,7 +67,8 @@ class PeopleGroupsInfo(object):
             self.people_groups_info))) != 0
 
     def get_people_group_info(self, people_group):
-        return list(filter(
+        people_groups_info = list(filter(
             lambda people_group_info:
             people_group_info.people_group == people_group,
-            self.people_groups_info))[0]
+            self.people_groups_info))
+        return people_groups_info[0] if len(people_groups_info) != 0 else []

@@ -38,7 +38,7 @@ def test_families_counter_same(families_counter_same):
 def test_families_counters(families_counters):
     assert families_counters.group_name == 'Study phenotype'
     assert sorted(families_counters.people_groups) == \
-        sorted(['phenotype1', 'phenotype2', 'pheno', 'unaffected'])
+        sorted(['phenotype1', 'phenotype2', 'unknown', 'unaffected'])
     assert len(families_counters.counters) == 3
     assert len(families_counters.legend) == 6
     assert families_counters.legend[-1]['id'] == 'missing-person'
