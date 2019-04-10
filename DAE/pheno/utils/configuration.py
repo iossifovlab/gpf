@@ -18,7 +18,6 @@ import common.config
 
 
 def pheno_confbox(conf_path):
-    print(conf_path, os.path.dirname(conf_path))
     config_parser = CaseSensitiveConfigParser(
         defaults={'wd': os.path.dirname(conf_path)})
     with open(conf_path, "r") as f:
