@@ -51,9 +51,10 @@ def test_families_group_counter_draw_all(families_groups, people_groups_info):
 
 
 def test_families_group_counter_same(study1, people_groups_info):
-    families_groups = [study1.families['f1'], study1.families['f3'],
-            study1.families['f6'], study1.families['f9'],
-            study1.families['f10']]
+    families_groups = [
+        study1.families['f1'], study1.families['f3'], study1.families['f6'],
+        study1.families['f9'], study1.families['f10']
+    ]
 
     families_group_counter = FamiliesGroupCounter(
         families_groups,
@@ -76,7 +77,7 @@ def test_families_group_counters(study1, people_groups_info):
     assert families_group_counters.group_name == 'Study phenotype'
     assert sorted(families_group_counters.people_groups) == \
         sorted(['phenotype1', 'phenotype2', 'unknown', 'unaffected'])
-    assert len(families_group_counters.counters) == 3
+    assert len(families_group_counters.counters) == 4
     assert len(families_group_counters.legend) == 6
     assert families_group_counters.legend[-1]['id'] == 'missing-person'
 
