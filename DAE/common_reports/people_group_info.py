@@ -11,7 +11,6 @@ class PeopleGroupInfo(object):
             people_groups=[]):
         self.name = people_group_info['name']
         self.domain = people_group_info['values']
-        self.unaffected = people_group_info['unaffected']
         self.default = people_group_info['default']
         self.source = people_group_info['source']
 
