@@ -6,18 +6,24 @@ Created on Aug 23, 2016
 from __future__ import unicode_literals
 
 import os
-import reusables
 from box import ConfigBox
 
+from configurable_entities.configurable_entity_config import \
+    CaseSensitiveConfigParser
 from configurable_entities.configuration import DAEConfig
 from configurable_entities.configurable_entity_definition import \
         ConfigurableEntityDefinition
 
+import common.config
+
 
 def pheno_confbox(conf_path):
-    return ConfigBox(reusables.config_dict(conf_path,
-                     auto_find=False, verify=True,
-                     defaults={'wd': os.path.dirname(conf_path)}))
+    print(conf_path, os.path.dirname(conf_path))
+    config_parser = CaseSensitiveConfigParser(
+        defaults={'wd': os.path.dirname(conf_path)})
+    with open(conf_path, "r") as f:
+        config_parser.read_file(f)
+    return ConfigBox(common.config.to_dict(config_parser))
 
 
 class PhenoConfig(object):
