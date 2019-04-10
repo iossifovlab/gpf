@@ -232,6 +232,9 @@ class DenovoReport(object):
         ])
 
     def _get_tables(self):
+        if len(self.denovo_variants) == 0:
+            return []
+
         denovo_report_tables = []
         for filter_object in self.filter_objects:
             denovo_report_table = DenovoReportTable(
