@@ -4,7 +4,7 @@ from __future__ import division
 from collections import OrderedDict
 
 from common_reports.people_counter import PeopleCounters
-from common_reports.family_counter import FamiliesCounters
+from common_reports.family_counter import FamiliesGroupCounters
 
 
 class FamiliesReport(object):
@@ -38,7 +38,7 @@ class FamiliesReport(object):
 
     def _get_families_counters(self):
         return [
-            FamiliesCounters(
+            FamiliesGroupCounters(
                 self.families, people_group_info, self.draw_all_families,
                 self.families_count_show_id)
             for people_group_info in self.people_groups_info.people_groups_info

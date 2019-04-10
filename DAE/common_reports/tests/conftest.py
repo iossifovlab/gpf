@@ -19,10 +19,10 @@ from pheno.pheno_factory import PhenoFactory
 from common_reports.filter import Filter, FilterObject, FilterObjects
 from common_reports.people_group_info import PeopleGroupInfo, PeopleGroupsInfo
 from common_reports.people_counter import PeopleCounter, PeopleCounters
-from common_reports.family_counter import FamilyCounter, FamiliesCounter, \
-    FamiliesCounters
+from common_reports.family_counter import FamilyCounter, \
+    FamiliesGroupCounter, FamiliesGroupCounters
 from common_reports.family_report import FamiliesReport
-from common_reports.denovo_report import EffectWithFilter, Effect, \
+from common_reports.denovo_report import EffectCell, EffectRow, \
     DenovoReportTable, DenovoReport
 from common_reports.common_report import CommonReport
 from common_reports.config import CommonReportsConfig, CommonReportsParseConfig
@@ -270,7 +270,7 @@ def family_counter(study1, people_groups_info):
 
 @pytest.fixture(scope='session')
 def families_counter(families_groups, people_groups_info):
-    return FamiliesCounter(
+    return FamiliesGroupCounter(
         families_groups,
         people_groups_info.get_people_group_info('phenotype'),
         False, False
@@ -279,7 +279,7 @@ def families_counter(families_groups, people_groups_info):
 
 @pytest.fixture(scope='session')
 def families_counter_draw_all(families_groups, people_groups_info):
-    return FamiliesCounter(
+    return FamiliesGroupCounter(
         families_groups,
         people_groups_info.get_people_group_info('phenotype'),
         True, False
@@ -288,7 +288,7 @@ def families_counter_draw_all(families_groups, people_groups_info):
 
 @pytest.fixture(scope='session')
 def families_counter_same(families_groups_same, people_groups_info):
-    return FamiliesCounter(
+    return FamiliesGroupCounter(
         families_groups_same,
         people_groups_info.get_people_group_info('phenotype'),
         False, False
@@ -297,7 +297,7 @@ def families_counter_same(families_groups_same, people_groups_info):
 
 @pytest.fixture(scope='session')
 def families_counters(study1, people_groups_info):
-    return FamiliesCounters(
+    return FamiliesGroupCounters(
         study1.families,
         people_groups_info.get_people_group_info('phenotype'),
         False, False
@@ -330,7 +330,7 @@ def effect_with_filter_missense(dataset1, denovo_variants_ds1, filter_objects):
             filter_object = fo
     assert filter_object
 
-    return EffectWithFilter(
+    return EffectCell(
         dataset1, denovo_variants_ds1, filter_object, 'Missense'
     )
 
@@ -344,7 +344,7 @@ def effect_with_filter_frame_shift(
             filter_object = fo
     assert filter_object
 
-    return EffectWithFilter(
+    return EffectCell(
         dataset1, denovo_variants_ds1, filter_object, 'Frame-shift'
     )
 
@@ -357,14 +357,14 @@ def effect_with_filter_empty(dataset1, denovo_variants_ds1, filter_objects):
             filter_object = fo
     assert filter_object
 
-    return EffectWithFilter(
+    return EffectCell(
         dataset1, denovo_variants_ds1, filter_object, 'Frame-shift'
     )
 
 
 @pytest.fixture(scope='session')
 def effect(dataset1, denovo_variants_ds1, filter_objects):
-    return Effect(
+    return EffectRow(
         dataset1, denovo_variants_ds1, 'Missense', filter_objects[0]
     )
 

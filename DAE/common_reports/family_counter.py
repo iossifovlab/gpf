@@ -39,7 +39,7 @@ class FamilyCounter(object):
                 for member in self.family.members_in_order]
 
 
-class FamiliesCounter(object):
+class FamiliesGroupCounter(object):
 
     def __init__(
             self, families, people_group_info, draw_all_families,
@@ -137,7 +137,7 @@ class FamiliesCounter(object):
                 for family, pedigrees_count in families_counters.items()]
 
 
-class FamiliesCounters(object):
+class FamiliesGroupCounters(object):
 
     def __init__(
             self, families, people_group_info, draw_all_families,
@@ -181,7 +181,7 @@ class FamiliesCounters(object):
         families_groups =\
             self._get_families_groups()
 
-        return [FamiliesCounter(
+        return [FamiliesGroupCounter(
             families, self.people_group_info, self.draw_all_families,
             self.families_count_show_id)
                 for families in families_groups]

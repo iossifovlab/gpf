@@ -9,7 +9,7 @@ from variants.family import FamiliesBase
 from common.query_base import EffectTypesMixin
 
 
-class EffectWithFilter(object):
+class EffectCell(object):
 
     def __init__(self, study, denovo_variants, filter_object, effect):
         self.study = study
@@ -100,7 +100,7 @@ class EffectWithFilter(object):
             self.percent_of_children_with_events == 0
 
 
-class Effect(object):
+class EffectRow(object):
 
     def __init__(self, study, denovo_variants, effect, filter_objects):
         self.study = study
@@ -118,7 +118,7 @@ class Effect(object):
 
     def _get_row(self):
         return [
-            EffectWithFilter(
+            EffectCell(
                 self.study, self.denovo_variants, filter_object,
                 self.effect_type)
             for filter_object in self.filter_objects.filter_objects]
@@ -185,7 +185,7 @@ class DenovoReportTable(object):
     def _get_rows(self):
 
         effect_rows = [
-            Effect(
+            EffectRow(
                 self.study, self.denovo_variants, effect, self.filter_object)
             for effect in self.effects
         ]
