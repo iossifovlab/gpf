@@ -1,3 +1,6 @@
+from common_reports.filter import FilterObject, FilterObjects
+
+
 def test_filter(filter_role):
     assert filter_role.column == 'role'
     assert filter_role.value == 'mom'
@@ -6,8 +9,10 @@ def test_filter(filter_role):
     assert filter_role.get_column_name() == 'Mother'
 
 
-def test_filter_object(
-        filter_object, filter_object_from_list, filter_people_group):
+def test_filter_object(filter_object, filter_role, filter_people_group):
+    filter_object_from_list = FilterObject.from_list(
+        [[filter_role, filter_people_group]])
+
     assert filter_object.get_column_name() == 'Mother'
     filter_object.add_filter(
         filter_people_group.column, filter_people_group.value,
@@ -19,13 +24,15 @@ def test_filter_object(
         len(filter_object.filters)
 
 
-def test_filter_objects(filter_objects_simple, filter_people_group):
-    assert filter_objects_simple.name == 'Role'
-    assert filter_objects_simple.get_columns() == ['Mother']
+def test_filter_objects(filter_object, filter_people_group):
+    filter_objects = FilterObjects('Role', filter_objects=[filter_object])
 
-    filter_objects_simple.add_filter_object(filter_people_group)
+    assert filter_objects.name == 'Role'
+    assert filter_objects.get_columns() == ['Mother']
 
-    assert filter_objects_simple.get_columns() == ['Mother', 'Pheno']
+    filter_objects.add_filter_object(filter_people_group)
+
+    assert filter_objects.get_columns() == ['Mother', 'Pheno']
 
 
 def test_get_filter_objects(filter_objects):

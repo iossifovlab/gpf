@@ -1,34 +1,51 @@
-def test_people_counter(pc_s1_mom_and_phenotype1):
-    assert pc_s1_mom_and_phenotype1.people_male == 0
-    assert pc_s1_mom_and_phenotype1.people_female == 4
-    assert pc_s1_mom_and_phenotype1.people_unspecified == 0
-    assert pc_s1_mom_and_phenotype1.people_total == 4
+from common_reports.people_counter import PeopleCounter, PeopleCounters
 
-    assert pc_s1_mom_and_phenotype1.column == 'mom and phenotype1'
 
-    assert pc_s1_mom_and_phenotype1.is_empty() is False
-    assert pc_s1_mom_and_phenotype1.is_empty_field('people_male') is True
-    assert pc_s1_mom_and_phenotype1.is_empty_field('people_female') is False
+def test_people_counter(study1, filter_objects):
+    filter_object = filter_objects[0].get_filter_object_by_column_name(
+        'mom and phenotype1')
+    assert filter_object
 
-    assert len(pc_s1_mom_and_phenotype1.to_dict(
+    people_counter = PeopleCounter(study1.families, filter_object)
+
+    assert people_counter.people_male == 0
+    assert people_counter.people_female == 4
+    assert people_counter.people_unspecified == 0
+    assert people_counter.people_total == 4
+
+    assert people_counter.column == 'mom and phenotype1'
+
+    assert people_counter.is_empty() is False
+    assert people_counter.is_empty_field('people_male') is True
+    assert people_counter.is_empty_field('people_female') is False
+
+    assert len(people_counter.to_dict(
         ['people_female', 'people_total']).keys()) == 3
 
 
-def test_people_counter_empty(pc_s1_dad_and_phenotype1):
-    assert pc_s1_dad_and_phenotype1.people_male == 0
-    assert pc_s1_dad_and_phenotype1.people_female == 0
-    assert pc_s1_dad_and_phenotype1.people_unspecified == 0
-    assert pc_s1_dad_and_phenotype1.people_total == 0
+def test_people_counter_empty(study1, filter_objects):
+    filter_object = filter_objects[0].get_filter_object_by_column_name(
+        'dad and phenotype1')
+    assert filter_object
 
-    assert pc_s1_dad_and_phenotype1.column == 'dad and phenotype1'
+    people_counter = PeopleCounter(study1.families, filter_object)
 
-    assert pc_s1_dad_and_phenotype1.is_empty() is True
-    assert pc_s1_dad_and_phenotype1.is_empty_field('people_male') is True
+    assert people_counter.people_male == 0
+    assert people_counter.people_female == 0
+    assert people_counter.people_unspecified == 0
+    assert people_counter.people_total == 0
 
-    assert len(pc_s1_dad_and_phenotype1.to_dict([]).keys()) == 1
+    assert people_counter.column == 'dad and phenotype1'
+
+    assert people_counter.is_empty() is True
+    assert people_counter.is_empty_field('people_male') is True
+
+    assert len(people_counter.to_dict([]).keys()) == 1
 
 
-def test_people_counters(people_counters):
+def test_people_counters(study1, filter_objects):
+    people_counters = PeopleCounters(study1.families, filter_objects[0])
+
     assert len(people_counters.counters) == 9
     assert people_counters.group_name == 'Role and Diagnosis'
     assert people_counters.rows == \

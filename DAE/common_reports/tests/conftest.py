@@ -17,15 +17,8 @@ from configurable_entities.configuration import DAEConfig
 from pheno.pheno_factory import PhenoFactory
 
 from common_reports.filter import Filter, FilterObject, FilterObjects
-from common_reports.people_group_info import PeopleGroupInfo, PeopleGroupsInfo
-from common_reports.people_counter import PeopleCounter, PeopleCounters
-from common_reports.family_counter import FamilyCounter, \
-    FamiliesGroupCounter, FamiliesGroupCounters
-from common_reports.family_report import FamiliesReport
-from common_reports.denovo_report import EffectCell, EffectRow, \
-    DenovoReportTable, DenovoReport
-from common_reports.common_report import CommonReport
-from common_reports.config import CommonReportsConfig, CommonReportsParseConfig
+from common_reports.people_group_info import PeopleGroupsInfo
+from common_reports.config import CommonReportsConfig
 from common_reports.common_report_facade import CommonReportFacade
 
 
@@ -91,6 +84,12 @@ def dataset_facade(dataset_definitions, dataset_factory, pheno_factory):
 
 
 @pytest.fixture(scope='session')
+def dae_config_fixture():
+    dae_config = DAEConfig(fixtures_dir())
+    return dae_config
+
+
+@pytest.fixture(scope='session')
 def vdb_fixture(dae_config_fixture):
     vdb = VariantsDb(dae_config_fixture)
     return vdb
@@ -101,12 +100,6 @@ def common_report_facade(vdb_fixture):
     common_report_facade = CommonReportFacade(vdb_fixture)
 
     return common_report_facade
-
-
-@pytest.fixture(scope='session')
-def dae_config_fixture():
-    dae_config = DAEConfig(fixtures_dir())
-    return dae_config
 
 
 @pytest.fixture(scope='session')
@@ -179,13 +172,6 @@ def people_groups(study1_config):
 
 
 @pytest.fixture(scope='session')
-def people_group_info(people_groups, study2):
-    return PeopleGroupInfo(
-        people_groups['phenotype'], 'phenotype', study=study2
-    )
-
-
-@pytest.fixture(scope='session')
 def people_groups_info(study1, filter_info, people_groups):
     return PeopleGroupsInfo(study1, filter_info, people_groups)
 
@@ -206,107 +192,14 @@ def filter_object(filter_role):
 
 
 @pytest.fixture(scope='session')
-def filter_object_from_list(filter_role, filter_people_group):
-    return FilterObject.from_list([[filter_role, filter_people_group]])
-
-
-@pytest.fixture(scope='function')
-def filter_objects_simple(filter_object):
-    return FilterObjects('Role', filter_objects=[filter_object])
-
-
-@pytest.fixture(scope='session')
 def filter_objects(study1, people_groups_info, groups):
     return FilterObjects.get_filter_objects(study1, people_groups_info, groups)
-
-
-@pytest.fixture(scope='session')
-def pc_s1_dad_and_phenotype1(study1, filter_objects):
-    filter_object = None
-    for fo in filter_objects[0].filter_objects:
-        if fo.get_column_name() == 'dad and phenotype1':
-            filter_object = fo
-    assert filter_object
-
-    return PeopleCounter(study1.families, filter_object)
-
-
-@pytest.fixture(scope='session')
-def pc_s1_mom_and_phenotype1(study1, filter_objects):
-    filter_object = None
-    for fo in filter_objects[0].filter_objects:
-        if fo.get_column_name() == 'mom and phenotype1':
-            filter_object = fo
-    assert filter_object
-
-    return PeopleCounter(study1.families, filter_object)
-
-
-@pytest.fixture(scope='session')
-def people_counters(study1, filter_objects):
-    return PeopleCounters(study1.families, filter_objects[0])
-
-
-@pytest.fixture(scope='session')
-def families_groups_same(study1):
-    return [study1.families['f1'], study1.families['f3'],
-            study1.families['f6'], study1.families['f9'],
-            study1.families['f10']]
 
 
 @pytest.fixture(scope='session')
 def families_groups(study1):
     return [study1.families['f4'], study1.families['f5'],
             study1.families['f7'], study1.families['f8']]
-
-
-@pytest.fixture(scope='session')
-def family_counter(study1, people_groups_info):
-    return FamilyCounter(
-        study1.families['f5'], 1,
-        people_groups_info.get_people_group_info('phenotype')
-    )
-
-
-@pytest.fixture(scope='session')
-def families_counter(families_groups, people_groups_info):
-    return FamiliesGroupCounter(
-        families_groups,
-        people_groups_info.get_people_group_info('phenotype'),
-        False, False
-    )
-
-
-@pytest.fixture(scope='session')
-def families_counter_draw_all(families_groups, people_groups_info):
-    return FamiliesGroupCounter(
-        families_groups,
-        people_groups_info.get_people_group_info('phenotype'),
-        True, False
-    )
-
-
-@pytest.fixture(scope='session')
-def families_counter_same(families_groups_same, people_groups_info):
-    return FamiliesGroupCounter(
-        families_groups_same,
-        people_groups_info.get_people_group_info('phenotype'),
-        False, False
-    )
-
-
-@pytest.fixture(scope='session')
-def families_counters(study1, people_groups_info):
-    return FamiliesGroupCounters(
-        study1.families,
-        people_groups_info.get_people_group_info('phenotype'),
-        False, False
-    )
-
-
-@pytest.fixture(scope='session')
-def families_report(study1, filter_objects, people_groups_info):
-    return FamiliesReport(study1, people_groups_info, filter_objects)
 
 
 @pytest.fixture(scope='session')
@@ -323,73 +216,6 @@ def denovo_variants_ds1(dataset1):
 
 
 @pytest.fixture(scope='session')
-def effect_with_filter_missense(dataset1, denovo_variants_ds1, filter_objects):
-    filter_object = None
-    for fo in filter_objects[0].filter_objects:
-        if fo.get_column_name() == 'sib and phenotype2':
-            filter_object = fo
-    assert filter_object
-
-    return EffectCell(
-        dataset1, denovo_variants_ds1, filter_object, 'Missense'
-    )
-
-
-@pytest.fixture(scope='session')
-def effect_with_filter_frame_shift(
-        dataset1, denovo_variants_ds1, filter_objects):
-    filter_object = None
-    for fo in filter_objects[0].filter_objects:
-        if fo.get_column_name() == 'prb and phenotype1':
-            filter_object = fo
-    assert filter_object
-
-    return EffectCell(
-        dataset1, denovo_variants_ds1, filter_object, 'Frame-shift'
-    )
-
-
-@pytest.fixture(scope='session')
-def effect_with_filter_empty(dataset1, denovo_variants_ds1, filter_objects):
-    filter_object = None
-    for fo in filter_objects[0].filter_objects:
-        if fo.get_column_name() == 'dad and unknown':
-            filter_object = fo
-    assert filter_object
-
-    return EffectCell(
-        dataset1, denovo_variants_ds1, filter_object, 'Frame-shift'
-    )
-
-
-@pytest.fixture(scope='session')
-def effect(dataset1, denovo_variants_ds1, filter_objects):
-    return EffectRow(
-        dataset1, denovo_variants_ds1, 'Missense', filter_objects[0]
-    )
-
-
-@pytest.fixture(scope='session')
-def denovo_report_table(dataset1, denovo_variants_ds1, filter_objects):
-    return DenovoReportTable(
-        dataset1, denovo_variants_ds1, ['Missense', 'Splice-site'],
-        ['Frame-shift', 'Nonsense'], filter_objects[0]
-    )
-
-
-@pytest.fixture(scope='session')
-def denovo_report(dataset1, filter_objects):
-    return DenovoReport(
-        dataset1, ['Missense'], ['Frame-shift'], filter_objects
-    )
-
-
-@pytest.fixture(scope='session')
-def common_report(study4, common_reports_config):
-    return CommonReport(study4, common_reports_config)
-
-
-@pytest.fixture(scope='session')
 def common_reports_config(study1, study1_config, people_groups, filter_info):
     common_report_config = \
         deepcopy(study1_config.study_config.get('commonReport', None))
@@ -400,26 +226,6 @@ def common_reports_config(study1, study1_config, people_groups, filter_info):
     return CommonReportsConfig(
         study1.id, common_report_config, people_groups, filter_info
     )
-
-
-@pytest.fixture(scope='session')
-def common_reports_parse_config(study1_config):
-    return CommonReportsParseConfig.from_config(study1_config)
-
-
-@pytest.fixture(scope='session')
-def common_reports_parse_config_missing_config(dataset2_config):
-    return CommonReportsParseConfig.from_config(dataset2_config)
-
-
-@pytest.fixture(scope='session')
-def common_reports_parse_config_disabled(dataset3_config):
-    return CommonReportsParseConfig.from_config(dataset3_config)
-
-
-@pytest.fixture(scope='session')
-def common_reports_parse_config_missing_groups(dataset4_config):
-    return CommonReportsParseConfig.from_config(dataset4_config)
 
 
 @pytest.fixture(scope='module')

@@ -1,61 +1,96 @@
-def test_effect_with_filter_missense(effect_with_filter_missense):
-    assert effect_with_filter_missense.number_of_observed_events == 2
-    assert effect_with_filter_missense.number_of_children_with_event == 1
-    assert effect_with_filter_missense.observed_rate_per_child == 2 / 12
-    assert effect_with_filter_missense.percent_of_children_with_events == \
-        1 / 12
-    assert effect_with_filter_missense.column == 'sib and phenotype2'
-
-    assert effect_with_filter_missense.is_empty() is False
-
-    assert len(effect_with_filter_missense.to_dict()) == 5
+from common_reports.denovo_report import EffectCell, EffectRow, \
+    DenovoReportTable, DenovoReport
 
 
-def test_effect_with_filter_frame_shift(effect_with_filter_frame_shift):
-    assert effect_with_filter_frame_shift.number_of_observed_events == 2
-    assert effect_with_filter_frame_shift.number_of_children_with_event == 2
-    assert effect_with_filter_frame_shift.observed_rate_per_child == 2 / 12
-    assert effect_with_filter_frame_shift.percent_of_children_with_events == \
-        2 / 12
-    assert effect_with_filter_frame_shift.column == 'prb and phenotype1'
+def test_effect_cell_missense(dataset1, denovo_variants_ds1, filter_objects):
+    filter_object = filter_objects[0].get_filter_object_by_column_name(
+        'sib and phenotype2')
+    assert filter_object
 
-    assert effect_with_filter_frame_shift.is_empty() is False
+    effect_cell = EffectCell(
+        dataset1, denovo_variants_ds1, filter_object, 'Missense'
+    )
 
-    assert len(effect_with_filter_frame_shift.to_dict()) == 5
+    assert effect_cell.number_of_observed_events == 2
+    assert effect_cell.number_of_children_with_event == 1
+    assert effect_cell.observed_rate_per_child == 2 / 12
+    assert effect_cell.percent_of_children_with_events == 1 / 12
+    assert effect_cell.column == 'sib and phenotype2'
 
+    assert effect_cell.is_empty() is False
 
-def test_effect_with_filter_empty(effect_with_filter_empty):
-    assert effect_with_filter_empty.number_of_observed_events == 0
-    assert effect_with_filter_empty.number_of_children_with_event == 0
-    assert effect_with_filter_empty.observed_rate_per_child == 0
-    assert effect_with_filter_empty.percent_of_children_with_events == 0
-    assert effect_with_filter_empty.column == 'dad and unknown'
-
-    assert effect_with_filter_empty.is_empty() is True
-
-    assert len(effect_with_filter_empty.to_dict()) == 5
+    assert len(effect_cell.to_dict()) == 5
 
 
-def test_effect(effect):
-    assert effect.effect_type == 'Missense'
-    assert len(effect.row) == 16
+def test_effect_cell_frame_shift(dataset1, denovo_variants_ds1, filter_objects):
+    filter_object = filter_objects[0].get_filter_object_by_column_name(
+        'prb and phenotype1')
+    assert filter_object
 
-    assert effect.is_row_empty() is False
-    empty = effect.get_empty()
+    effect_cell = EffectCell(
+        dataset1, denovo_variants_ds1, filter_object, 'Frame-shift'
+    )
+
+    assert effect_cell.number_of_observed_events == 2
+    assert effect_cell.number_of_children_with_event == 2
+    assert effect_cell.observed_rate_per_child == 2 / 12
+    assert effect_cell.percent_of_children_with_events == 2 / 12
+    assert effect_cell.column == 'prb and phenotype1'
+
+    assert effect_cell.is_empty() is False
+
+    assert len(effect_cell.to_dict()) == 5
+
+
+def test_effect_cell_empty(dataset1, denovo_variants_ds1, filter_objects):
+    filter_object = filter_objects[0].get_filter_object_by_column_name(
+        'dad and unknown')
+    assert filter_object
+
+    effect_cell = EffectCell(
+        dataset1, denovo_variants_ds1, filter_object, 'Frame-shift'
+    )
+
+    assert effect_cell.number_of_observed_events == 0
+    assert effect_cell.number_of_children_with_event == 0
+    assert effect_cell.observed_rate_per_child == 0
+    assert effect_cell.percent_of_children_with_events == 0
+    assert effect_cell.column == 'dad and unknown'
+
+    assert effect_cell.is_empty() is True
+
+    assert len(effect_cell.to_dict()) == 5
+
+
+def test_effect_row(dataset1, denovo_variants_ds1, filter_objects):
+    effect_row = EffectRow(
+        dataset1, denovo_variants_ds1, 'Missense', filter_objects[0]
+    )
+
+    assert effect_row.effect_type == 'Missense'
+    assert len(effect_row.row) == 16
+
+    assert effect_row.is_row_empty() is False
+    empty = effect_row.get_empty()
     empty_indexes = [i for i in range(len(empty)) if empty[i]]
     assert len(empty) == 16
     assert len(empty_indexes) == 14
-    effect.remove_elements(empty_indexes)
+    effect_row.remove_elements(empty_indexes)
 
-    assert len(effect.row) == 2
+    assert len(effect_row.row) == 2
 
-    effect.remove_elements([0, 1])
-    assert effect.is_row_empty() is True
+    effect_row.remove_elements([0, 1])
+    assert effect_row.is_row_empty() is True
 
-    assert len(effect.to_dict()) == 2
+    assert len(effect_row.to_dict()) == 2
 
 
-def test_denovo_report_table(denovo_report_table):
+def test_denovo_report_table(dataset1, denovo_variants_ds1, filter_objects):
+    denovo_report_table = DenovoReportTable(
+        dataset1, denovo_variants_ds1, ['Missense', 'Splice-site'],
+        ['Frame-shift', 'Nonsense'], filter_objects[0]
+    )
+
     assert denovo_report_table.group_name == 'Role and Diagnosis'
     assert sorted(denovo_report_table.columns) == \
         sorted(['sib and phenotype2', 'prb and phenotype1'])
@@ -68,7 +103,11 @@ def test_denovo_report_table(denovo_report_table):
     assert len(denovo_report_table.to_dict()) == 5
 
 
-def test_denovo_report(denovo_report, denovo_variants_ds1):
+def test_denovo_report(dataset1, filter_objects, denovo_variants_ds1):
+    denovo_report = DenovoReport(
+        dataset1, ['Missense'], ['Frame-shift'], filter_objects
+    )
+
     assert len(denovo_report.denovo_variants) == 8
     assert denovo_report.denovo_variants == denovo_variants_ds1
     assert len(denovo_report.tables) == 1

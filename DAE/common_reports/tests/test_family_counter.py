@@ -1,4 +1,13 @@
-def test_family_counter(family_counter):
+from common_reports.family_counter import FamilyCounter, \
+    FamiliesGroupCounter, FamiliesGroupCounters
+
+
+def test_family_counter(study1, people_groups_info):
+    family_counter = FamilyCounter(
+        study1.families['f5'], 1,
+        people_groups_info.get_people_group_info('phenotype')
+    )
+
     assert family_counter.pedigree[0] == \
         ['f5', 'mom5', '', '', 'F', 'mom', '#e35252', None, False, '', '']
     assert family_counter.pedigree[1] == \
@@ -14,33 +23,61 @@ def test_family_counter(family_counter):
     assert len(family_counter.to_dict().keys()) == 2
 
 
-def test_families_counter(families_counter):
-    assert len(families_counter.counters) == 3
-    assert len(families_counter.counters[0].pedigree) == 4
-    assert len(families_counter.counters[1].pedigree) == 4
-    assert len(families_counter.counters[2].pedigree) == 3
+def test_families_group_counter(families_groups, people_groups_info):
+    families_group_counter = FamiliesGroupCounter(
+        families_groups,
+        people_groups_info.get_people_group_info('phenotype'),
+        False, False
+    )
 
-    assert len(families_counter.to_dict().keys()) == 1
+    assert len(families_group_counter.counters) == 3
+    assert len(families_group_counter.counters[0].pedigree) == 4
+    assert len(families_group_counter.counters[1].pedigree) == 4
+    assert len(families_group_counter.counters[2].pedigree) == 3
 
-
-def test_families_counter_draw_all(families_counter_draw_all):
-    assert len(families_counter_draw_all.counters) == 4
-
-    assert len(families_counter_draw_all.to_dict().keys()) == 1
-
-
-def test_families_counter_same(families_counter_same):
-    assert len(families_counter_same.counters) == 4
-
-    assert len(families_counter_same.to_dict().keys()) == 1
+    assert len(families_group_counter.to_dict().keys()) == 1
 
 
-def test_families_counters(families_counters):
-    assert families_counters.group_name == 'Study phenotype'
-    assert sorted(families_counters.people_groups) == \
+def test_families_group_counter_draw_all(families_groups, people_groups_info):
+    families_group_counter = FamiliesGroupCounter(
+        families_groups,
+        people_groups_info.get_people_group_info('phenotype'),
+        True, False
+    )
+
+    assert len(families_group_counter.counters) == 4
+
+    assert len(families_group_counter.to_dict().keys()) == 1
+
+
+def test_families_group_counter_same(study1, people_groups_info):
+    families_groups = [study1.families['f1'], study1.families['f3'],
+            study1.families['f6'], study1.families['f9'],
+            study1.families['f10']]
+
+    families_group_counter = FamiliesGroupCounter(
+        families_groups,
+        people_groups_info.get_people_group_info('phenotype'),
+        False, False
+    )
+
+    assert len(families_group_counter.counters) == 4
+
+    assert len(families_group_counter.to_dict().keys()) == 1
+
+
+def test_families_group_counters(study1, people_groups_info):
+    families_group_counters = FamiliesGroupCounters(
+        study1.families,
+        people_groups_info.get_people_group_info('phenotype'),
+        False, False
+    )
+
+    assert families_group_counters.group_name == 'Study phenotype'
+    assert sorted(families_group_counters.people_groups) == \
         sorted(['phenotype1', 'phenotype2', 'unknown', 'unaffected'])
-    assert len(families_counters.counters) == 3
-    assert len(families_counters.legend) == 6
-    assert families_counters.legend[-1]['id'] == 'missing-person'
+    assert len(families_group_counters.counters) == 3
+    assert len(families_group_counters.legend) == 6
+    assert families_group_counters.legend[-1]['id'] == 'missing-person'
 
-    assert len(families_counters.to_dict().keys()) == 4
+    assert len(families_group_counters.to_dict().keys()) == 4

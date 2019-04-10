@@ -1,4 +1,11 @@
-def test_people_group_info(people_group_info):
+from common_reports.people_group_info import PeopleGroupInfo
+
+
+def test_people_group_info(people_groups, study2):
+    people_group_info = PeopleGroupInfo(
+        people_groups['phenotype'], 'phenotype', study=study2
+    )
+
     assert people_group_info.name == 'Study phenotype'
     assert people_group_info.domain['phenotype1'].id == 'phenotype1'
     assert people_group_info.domain['phenotype1'].name == 'phenotype 1'

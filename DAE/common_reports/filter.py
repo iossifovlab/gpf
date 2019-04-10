@@ -47,6 +47,12 @@ class FilterObjects(object):
         return [filter_object.get_column_name()
                 for filter_object in self.filter_objects]
 
+    def get_filter_object_by_column_name(self, name):
+        for fo in self.filter_objects:
+            if fo.get_column_name() == name:
+                return fo
+        return None
+
     @staticmethod
     def get_filter_objects(study, people_groups_info, groups):
         filter_objects = []
