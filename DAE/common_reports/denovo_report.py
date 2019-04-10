@@ -58,8 +58,8 @@ class EffectWithFilter(object):
 
         for family in self.study.families.values():
             family_members_with_filter = set.intersection(*[set(
-                family.get_people_with_property(filter.column, filter.value))
-                for filter in self.filter_object.filters])
+                family.get_people_with_property(filt.column, filt.value))
+                for filt in self.filter_object.filters])
             family_members_with_filter_ids =\
                 [person.person_id for person in family_members_with_filter]
             people_with_filter.update(family_members_with_filter_ids)

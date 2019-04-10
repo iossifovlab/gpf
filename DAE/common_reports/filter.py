@@ -27,11 +27,11 @@ class FilterObject(object):
 
     def get_column_name(self):
         return ' and '.join(
-            [filter.get_column_name() for filter in self.filters])
+            [filt.get_column_name() for filt in self.filters])
 
     @staticmethod
     def from_list(filters):
-        return [FilterObject(list(filter)) for filter in filters]
+        return [FilterObject(list(filt)) for filt in filters]
 
 
 class FilterObjects(object):
@@ -62,18 +62,18 @@ class FilterObjects(object):
                     el_column = el
                     el_values = study.get_pedigree_values(el)
 
-                filter = []
+                filt = []
                 for el_value in el_values:
                     if people_groups_info.has_people_group_info(el):
                         people_group_info = \
                             people_groups_info.get_people_group_info(el)
                         if people_group_info._is_default(el_value):
-                            filter.append(Filter(
+                            filt.append(Filter(
                                 el_column, el_value,
                                 people_group_info.default['name']))
                             continue
-                    filter.append(Filter(el_column, el_value))
-                filters.append(filter)
+                    filt.append(Filter(el_column, el_value))
+                filters.append(filt)
 
             filter_objects.append(FilterObjects(name, FilterObject.from_list(
                 list(itertools.product(*filters)))))
