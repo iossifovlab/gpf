@@ -10,6 +10,8 @@ class PeopleGroupInfo(object):
             self, people_group_info, people_group, study=None,
             people_groups=[]):
         self.name = people_group_info['name']
+        self.domain_order = \
+            [domain.id for domain in people_group_info['domain']]
         self.domain = people_group_info['values']
         self.default = people_group_info['default']
         self.source = people_group_info['source']
