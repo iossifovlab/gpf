@@ -164,9 +164,11 @@ class FamiliesGroupCounters(object):
         families_groups = defaultdict(list)
 
         for family in self.families.values():
+            family_phenotypes = \
+                family.get_family_phenotypes(self.people_group_info.source)
             family_phenotypes = frozenset(
-                family.get_family_phenotypes(self.people_group_info.source))
-            family_phenotypes -= {self.people_group_info.unaffected['name']}
+                self.people_group_info.sort_people_groups_by_domain_order(
+                    list(family_phenotypes)))
 
             families_groups[family_phenotypes].append(family)
 

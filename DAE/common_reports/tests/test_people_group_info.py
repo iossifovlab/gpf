@@ -19,9 +19,8 @@ def test_people_group_info(people_groups, study2):
     assert people_group_info.domain['unaffected'].id == 'unaffected'
     assert people_group_info.domain['unaffected'].name == 'unaffected'
     assert people_group_info.domain['unaffected'].color == '#ffffff'
-    assert people_group_info.unaffected.id == 'unaffected'
-    assert people_group_info.unaffected.name == 'unaffected'
-    assert people_group_info.unaffected.color == '#ffffff'
+    assert people_group_info.domain_order == \
+        ['phenotype1', 'phenotype2', 'phenotype3', 'unaffected']
     assert people_group_info.default.id == 'unknown'
     assert people_group_info.default.name == 'unknown'
     assert people_group_info.default.color == '#aaaaaa'

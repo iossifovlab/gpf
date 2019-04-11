@@ -295,9 +295,6 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         pedigree['default'] =\
             cls._pedigree_selectors_split_dict(
                 study_config.pop(pedigree_type + '.default'))
-        pedigree['unaffected'] =\
-            cls._pedigree_selectors_split_dict(
-                study_config.pop(pedigree_type + '.unaffected'))
         pedigree['domain'] =\
             cls._split_dict_lists(
                 study_config.pop(pedigree_type + '.domain'))

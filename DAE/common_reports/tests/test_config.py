@@ -28,8 +28,6 @@ def test_common_reports_parse_config(study1_config):
     assert len(people_groups_info['domain']) == 4
     assert sorted(people_groups_info['domain'][0].keys()) == \
         sorted(['id', 'name', 'color'])
-    assert sorted(people_groups_info['unaffected'].keys()) == \
-        sorted(['id', 'name', 'color'])
     assert sorted(people_groups_info['default'].keys()) == \
         sorted(['id', 'name', 'color'])
     assert people_groups_info['source'] == 'study.phenotype'
