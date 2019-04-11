@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { PopupComponent } from '../popup/popup.component';
 
 import { Observable } from 'rxjs';
 
@@ -16,11 +18,19 @@ export class StudiesSummariesComponent implements OnInit {
   columnNameToFieldName = StudySummary.columnNameToFieldName;
 
   constructor(
-    private studiesSummariesService: StudiesSummariesService
+    private studiesSummariesService: StudiesSummariesService,
+    private modalService: NgbModal
   ) { }
 
   ngOnInit() {
     this.studiesSummaries$ = this.studiesSummariesService.getStudiesSummaries()
       .share();
+  }
+
+  showDescription(desc) {
+    const modalRef = this.modalService.open(PopupComponent, {
+      size: 'lg'
+    });
+    modalRef.componentInstance.data = desc
   }
 }
