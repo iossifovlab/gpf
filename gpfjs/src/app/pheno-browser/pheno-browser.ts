@@ -36,6 +36,7 @@ export class PhenoMeasure {
       json['measure_id'],
       json['measure_name'],
       json['measure_type'],
+      json['description'],
     );
   }
 
@@ -60,6 +61,7 @@ export class PhenoMeasure {
     readonly measureId: string,
     readonly measureName: string,
     readonly measureType: string,
+    readonly description: string,
   ) { }
 }
 
@@ -68,7 +70,8 @@ export class PhenoMeasures {
   static fromJson(json: Object): PhenoMeasures {
     return new PhenoMeasures(
       json['base_image_url'],
-      json['measures'].map((phenoMeasure) => PhenoMeasure.fromJson(phenoMeasure)));
+      json['measures'].map((phenoMeasure) => PhenoMeasure.fromJson(phenoMeasure)),
+      json['has_descriptions']);
   }
 
   static addBasePath(phenoMeasures: PhenoMeasures): PhenoMeasures {
@@ -103,13 +106,16 @@ export class PhenoMeasures {
         phenoMeasure.measureId,
         phenoMeasure.measureName,
         phenoMeasure.measureType,
-      ))
+        phenoMeasure.description
+      )),
+      phenoMeasures.hasDescriptions
     );
   }
 
   constructor(
     readonly baseImageUrl: string,
-    readonly measures: Array<PhenoMeasure>
+    readonly measures: Array<PhenoMeasure>,
+    readonly hasDescriptions: boolean
   ) {}
 
 }
