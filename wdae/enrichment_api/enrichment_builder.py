@@ -70,7 +70,7 @@ class EnrichmentBuilder(object):
                 person_grouping_id,
                 person_grouping_selector['id'])
             if res:
-                res['personGroupingValue'] = person_grouping_selector['name']
+                res['personGroupingValue'] = person_grouping_selector['id']
                 res['selector'] = person_grouping_selector['name']
                 results.append(res)
         self.results = results
