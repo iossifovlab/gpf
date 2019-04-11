@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from common_reports.denovo_report import EffectCell, EffectRow, \
     DenovoReportTable, DenovoReport
 
@@ -13,8 +15,8 @@ def test_effect_cell_missense(dataset1, denovo_variants_ds1, filter_objects):
 
     assert effect_cell.number_of_observed_events == 2
     assert effect_cell.number_of_children_with_event == 1
-    assert effect_cell.observed_rate_per_child == 2 / 12
-    assert effect_cell.percent_of_children_with_events == 1 / 12
+    assert effect_cell.observed_rate_per_child == 2.0 / 12.0
+    assert effect_cell.percent_of_children_with_events == 1.0 / 12.0
     assert effect_cell.column == 'sib and phenotype2'
 
     assert effect_cell.is_empty() is False
@@ -22,7 +24,8 @@ def test_effect_cell_missense(dataset1, denovo_variants_ds1, filter_objects):
     assert len(effect_cell.to_dict()) == 5
 
 
-def test_effect_cell_frame_shift(dataset1, denovo_variants_ds1, filter_objects):
+def test_effect_cell_frame_shift(
+        dataset1, denovo_variants_ds1, filter_objects):
     filter_object = filter_objects[0].get_filter_object_by_column_name(
         'prb and phenotype1')
     assert filter_object
@@ -33,8 +36,8 @@ def test_effect_cell_frame_shift(dataset1, denovo_variants_ds1, filter_objects):
 
     assert effect_cell.number_of_observed_events == 2
     assert effect_cell.number_of_children_with_event == 2
-    assert effect_cell.observed_rate_per_child == 2 / 12
-    assert effect_cell.percent_of_children_with_events == 2 / 12
+    assert effect_cell.observed_rate_per_child == 2.0 / 12.0
+    assert effect_cell.percent_of_children_with_events == 2.0 / 12.0
     assert effect_cell.column == 'prb and phenotype1'
 
     assert effect_cell.is_empty() is False
