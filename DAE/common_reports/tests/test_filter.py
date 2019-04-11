@@ -29,6 +29,12 @@ def test_filter_objects(filter_object, filter_people_group):
 
     assert filter_objects.name == 'Role'
     assert filter_objects.get_columns() == ['Mother']
+    assert filter_objects.get_filter_object_by_column_name(
+        'Mother') is not None
+    assert filter_objects.get_filter_object_by_column_name(
+        'Mother').get_column_name() == 'Mother'
+    assert filter_objects.get_filter_object_by_column_name(
+        'mom and dad') is None
 
     filter_objects.add_filter_object(filter_people_group)
 
