@@ -519,31 +519,31 @@ The included files are:
 
 * `instruments/i1.csv` - all measurements for instrument `i1`.
 
+* `comp_pheno_data_dictionary.tsv` - descriptions for all measurements
+
 The easiest way to import this phenotype database into the GPF instance is to
 use `simple_pheno_import.py` tool. This tool combines converting phenotype
 instruments and measures into GPF phenotype database and generates data and
-figures need for GPF Phonotype Browser.
+figures need for GPF Phonotype Browser. It will import the phenotype database
+directly to the DAE data directory specified in your environment.
 
 .. code::
 
     simple_pheno_import.py -p comp_pheno.ped \
-        -i instruments/ -P comp_pheno \
+        -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno \
         --age "i1:age" --nonverbal_iq "i1:iq"
 
-Options uses in this command are as follows:
+Options used in this command are as follows:
 
 * `-p` option allows to specify the pedigree file;
+
+* `-d` option specifies the name of the data dictionary file for the phenotype database
 
 * | `-i` option allows to spcecify the directory where instruments
   | are located;
 
-* `-d` options specifies the name of the output database file.
-
-* | `-P` options specifies the name of the phenotype database that will be
+* | `-o` options specifies the name of the output phenotype database that will be
   | used in phenotype browser;
-
-* | `-b` option specifies the output directory where all the generated
-  | file will be stored;
 
 * | `--age` and `--nonverbal_iq` option specifies which measures ids
   | correspond to the age at assesment and non-verbal IQ; when such
@@ -556,26 +556,18 @@ You can use `-h` option to see all options supported by the
 Configure Phenotype Database
 ++++++++++++++++++++++++++++
 
-For the newly imported phenotype database to be accesssible from GPF system
-you need to configure the phenotype DB in `phenoDB.conf` configuration file.
-To this end you need to add `comp_pheno` section to `phenoDB.conf` file:
+The newly imported phenotype database has an automatically generated
+configuration file.
 
 .. code::
 
-    [comp_pheno]
-    dbfile = %(cache_dir)s/comp_pheno.db
+    [phenoDB]
+    dbfile = comp_pheno.db
     age = age
     nonverbal_iq = iq
-    browser_dbfile = %(browser_dir)s/comp_pheno/comp_pheno_browser.db
-    browser_images_dir = %(browser_dir)s/comp_pheno
+    browser_dbfile = browser/comp_pheno_browser.db
+    browser_images_dir = browser/comp_pheno
     browser_images_url = /static/comp_pheno
-
-and add `comp_pheno` to the list of phenotype database:
-
-.. code::
-
-    [pheno]
-    dbs=comp_pheno
 
 Configure Phenotype Browser
 +++++++++++++++++++++++++++
@@ -726,7 +718,7 @@ The included files are:
 To import these phenotype database into the GPF system you need to use
 `pheno2DAE.py` tool::
 
-    pheno2dae.py -p comp_pheno.ped -i instruments/ -o comp_pheno.db
+    pheno2dae.py -p comp_pheno.ped -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno.db
 
 Options uses in this command are as follows:
 
@@ -734,6 +726,8 @@ Options uses in this command are as follows:
 
 * | `-i` option allows us to spcecify the directory where instruments
   | are located;
+
+* `-d` option specifies the name of the data dictionary file for the phenotype database
 
 * `-o` options specifies the name of the output file.
 
