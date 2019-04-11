@@ -32,6 +32,13 @@ def test_people_group_info(people_groups, study2):
         sorted(['unaffected', 'phenotype1', 'phenotype2', 'unknown'])
     assert people_group_info.people_group == 'phenotype'
 
+    assert people_group_info.sort_people_groups_by_domain_order(
+        ['phenotype2', 'phenotype1', 'phenotype3']) == \
+        ['phenotype1', 'phenotype2', 'phenotype3']
+    assert people_group_info.sort_people_groups_by_domain_order(
+        ['pheno', 'asd', 'phenotype2', 'phenotype1', 'phenotype3']) == \
+        ['phenotype1', 'phenotype2', 'phenotype3', 'asd', 'pheno']
+
     assert people_group_info.missing_person_info['id'] == 'missing-person'
     assert people_group_info.missing_person_info['name'] == 'missing-person'
     assert people_group_info.missing_person_info['color'] == '#E0E0E0'

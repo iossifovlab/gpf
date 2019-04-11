@@ -118,3 +118,17 @@ def test_denovo_report(dataset1, filter_objects, denovo_variants_ds1):
     assert denovo_report.is_empty() is False
 
     assert len(denovo_report.to_dict()) == 1
+
+
+def test_denovo_report_empty(study2, filter_objects):
+    denovo_report = DenovoReport(
+        study2, ['Missense'], ['Frame-shift'], filter_objects
+    )
+
+    assert len(denovo_report.denovo_variants) == 0
+    assert denovo_report.denovo_variants == []
+    assert len(denovo_report.tables) == 0
+
+    assert denovo_report.is_empty() is True
+
+    assert len(denovo_report.to_dict()) == 1
