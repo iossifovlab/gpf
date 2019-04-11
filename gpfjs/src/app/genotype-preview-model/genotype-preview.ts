@@ -2,7 +2,7 @@ export class PedigreeData {
 
   static parsePosition(position: string) {
     if (position != null) {
-      let result = position.split(',').map(x => parseFloat(x));
+      const result = position.split(',').map(x => parseFloat(x));
       return result as [number, number];
     }
     return null;
@@ -40,7 +40,7 @@ export class PedigreeData {
 
 }
 
-let KEY_TO_MAPPER: Map<string, any> = new Map([
+const KEY_TO_MAPPER: Map<string, any> = new Map([
   ['pedigree', (arr: Array<Array<any>>) => arr.map((elem) => PedigreeData.fromArray(elem))]
 ]);
 
@@ -48,11 +48,11 @@ export class GenotypePreview {
   data: any = new Map<string, any>();
 
   static fromJson(row: string, json: any): GenotypePreview {
-    let result = new GenotypePreview();
-    for (let elem in json.rows[row]) {
+    const result = new GenotypePreview();
+    for (const elem in json.rows[row]) {
       if (json.rows[row].hasOwnProperty(elem)) {
-        let mapper = KEY_TO_MAPPER.get(json.cols[elem]);
-        let propertyValue = json.rows[row][elem];
+        const mapper = KEY_TO_MAPPER.get(json.cols[elem]);
+        const propertyValue = json.rows[row][elem];
 
         if (mapper) {
           result.data[json.cols[elem]] = mapper(propertyValue);
@@ -65,7 +65,7 @@ export class GenotypePreview {
     return result;
   }
 
-  get(key: string) : any {
+  get(key: string): any {
     return this.data[key];
   }
 
@@ -82,11 +82,11 @@ export class GenotypePreviewsArray {
       return new GenotypePreviewsArray(0, null);
     }
 
-    let genotypePreviewsArray = new GenotypePreviewsArray(json.count, json.legend);
+    const genotypePreviewsArray = new GenotypePreviewsArray(json.count, json.legend);
 
-    for (let row in json.rows) {
+    for (const row in json.rows) {
       if (json.rows.hasOwnProperty(row)) {
-        let genotypePreview = GenotypePreview.fromJson(row, json);
+        const genotypePreview = GenotypePreview.fromJson(row, json);
         genotypePreviewsArray.genotypePreviews.push(genotypePreview);
       }
     }
