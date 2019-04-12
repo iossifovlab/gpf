@@ -168,7 +168,7 @@ export class ChromosomeComponent implements OnChanges {
 
         this.variants.push({
           x: x,
-          figure: getFigureByEffect(genotypePreview.get('effectType')),
+          figure: getFigureByEffect(genotypePreview.get('worst_effect')),
           color: COLORS[sex],
           stackIndex: stackIndex,
           proband: proband,
