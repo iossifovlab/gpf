@@ -121,8 +121,7 @@ class PreparePhenoBrowserBase(object):
 
     def figure_path(self, measure, suffix):
         filename = "{}.{}.png".format(measure.measure_id, suffix)
-        outdir = os.path.join(self.images_dir, measure.instrument_name)
-        filepath = os.path.join(outdir, filename)
+        filepath = os.path.join(measure.instrument_name, filename)
         return filepath
 
     def save_fig(self, measure, suffix):

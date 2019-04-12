@@ -84,7 +84,7 @@ def generate_pheno_db_config(args):
         'browser/{}_browser.db'.format(args.pheno_name)
     section['browser_images_dir'] = 'browser/images'
     section['browser_images_url'] = \
-        '/static/{}/images'.format(args.pheno_name)
+        '/static/{}/browser/images/'.format(args.pheno_name)
     return config
 
 
