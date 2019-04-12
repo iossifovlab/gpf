@@ -635,7 +635,8 @@ class PrepareVariables(PreparePersons):
                     list(desc_df)
 
             def __call__(self, iname, mname):
-                if mname not in self.desc_df['measureName'].values:
+                if '{}.{}'.format(iname, mname) not in \
+                        self.desc_df['measureId'].values:
                     return None
                 row = self.desc_df.query(('(instrumentName == @iname) and '
                                           '(measureName == @mname)'))
