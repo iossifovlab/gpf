@@ -13,8 +13,9 @@ from pedigrees.pedigrees import get_argument_parser
 from pedigrees.drawing import OffsetLayoutDrawer, PDFLayoutDrawer
 from pedigrees.layout_loader import LayoutLoader
 from variants.family import FamiliesBase
-from common_reports.common_report import FamiliesReport, FilterObjects,\
-    FilterObject, PhenotypeInfo
+from common_reports.family_report import FamiliesReport
+from common_reports.people_group_info import PeopleGroupInfo
+from common_reports.filter import FilterObjects, FilterObject
 
 
 def draw_family_pedigree(family, show_id=False):
@@ -56,7 +57,7 @@ def get_families_report(pedigrees):
     families = FamiliesBase(pedigrees_df)
     families.families_build(pedigrees_df)
 
-    phenotype_info = {
+    people_group_info = {
         'domain': {
             'affected': {
                 'id': 'affected',
@@ -78,12 +79,12 @@ def get_families_report(pedigrees):
         'name': 'Phenotype'
     }
 
-    phenotypes = ['affected', 'unaffected', 'unknown']
+    people_groups = ['affected', 'unaffected', 'unknown']
 
-    phenotype_info = PhenotypeInfo(
-        phenotype_info, 'Phenotype', phenotypes=phenotypes)
+    people_group_info = PeopleGroupInfo(
+        people_group_info, 'Phenotype', people_groups=people_groups)
 
-    phenotypes_info = Box({'phenotypes_info': [phenotype_info]})
+    people_groups_info = Box({'people_groups_info': [people_group_info]})
 
     filters_objects = []
 
@@ -100,7 +101,7 @@ def get_families_report(pedigrees):
     filters_objects.append(filter_objects)
 
     families_report = FamiliesReport(
-        families, phenotypes_info, filters_objects)
+        families, people_groups_info, filters_objects)
 
     return families_report
 
