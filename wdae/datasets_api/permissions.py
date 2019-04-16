@@ -13,6 +13,13 @@ from guardian.utils import get_anonymous_user
 
 class IsDatasetAllowed(permissions.BasePermission):
 
+    def has_permission(self, request, view):
+        if 'dataset_id' not in request.query_params:
+            return True
+
+        return self.has_object_permission(
+            request, view, request.query_params['dataset_id'])
+
     def has_object_permission(self, request, view, dataset_id):
         return self.user_has_permission(request.user, dataset_id)
 

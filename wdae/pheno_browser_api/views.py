@@ -55,6 +55,7 @@ class PhenoBrowserBaseView(APIView):
         assert browser_images_url is not None
         return browser_images_url
 
+
 class PhenoInstrumentsView(PhenoBrowserBaseView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
     permission_classes = (IsDatasetAllowed,)
