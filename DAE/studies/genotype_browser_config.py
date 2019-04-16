@@ -19,6 +19,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         'hasStudyTypes',
         'hasStudyFilters',
         'hasPresentInRole',
+        'hasGraphicalPreview',
     )
 
     SPLIT_STR_LISTS = [
