@@ -3,10 +3,8 @@ from __future__ import unicode_literals
 import os
 import pytest
 
-from django.test import Client
-
-from datasets_api.studies_manager import StudiesManager
 from configurable_entities.configuration import DAEConfig
+from datasets_api.studies_manager import StudiesManager
 
 
 def fixtures_dir():
@@ -15,13 +13,19 @@ def fixtures_dir():
 
 
 @pytest.fixture()
-def client(mocker, dae_config_fixture):
-    mocker.patch('datasets_api.views.get_studies_manager',
-                 side_effect=lambda: StudiesManager(dae_config_fixture))
-    return Client()
-
-
-@pytest.fixture(scope='session')
 def dae_config_fixture():
     dae_config = DAEConfig(fixtures_dir())
     return dae_config
+
+
+@pytest.fixture()
+def studies_manager(dae_config_fixture):
+    return StudiesManager(dae_config_fixture)
+
+
+@pytest.fixture()
+def mock_studies_manager(db, mocker, studies_manager):
+    studies_manager.reload_dataset()
+    mocker.patch(
+        'datasets_api.views.get_studies_manager',
+        return_value=studies_manager)

@@ -1,36 +1,44 @@
 import pytest
 
+pytestmark = pytest.mark.usefixtures("mock_studies_manager")
 
-@pytest.mark.django_db(transaction=True)
-def test_datasets_api_get_all(client):
-    response = client.get('/api/v3/datasets')
+
+def test_datasets_api_get_all(admin_client):
+    response = admin_client.get('/api/v3/datasets')
 
     assert response
     assert response.status_code == 200
     assert len(response.data['data']) == 6
 
 
-@pytest.mark.django_db(transaction=True)
-def test_datasets_api_get_one(client):
-    response = client.get('/api/v3/datasets/quads_in_parent')
-
+def test_datasets_api_get_one(admin_client):
+    response = admin_client.get('/api/v3/datasets/quads_in_parent')
+    print(response.data)
     assert response
     assert response.status_code == 200
+    assert response.data['data']['accessRights'] is True
     assert response.data['data']['name'] == 'QUADS_IN_PARENT'
 
 
-@pytest.mark.django_db(transaction=True)
-def test_datasets_api_get_404(client):
-    response = client.get('/api/v3/datasets/alabala')
+def test_datasets_api_get_404(admin_client):
+    response = admin_client.get('/api/v3/datasets/alabala')
 
     assert response
     assert response.status_code == 404
     assert response.data['error'] == 'Dataset alabala not found'
 
 
-@pytest.mark.django_db(transaction=True)
-def test_datasets_name_ordering(client):
-    response = client.get('/api/v3/datasets')
+def test_datasets_api_get_forbiden(user_client):
+    response = user_client.get('/api/v3/datasets/quads_in_parent')
+
+    assert response
+    assert response.status_code == 200
+    assert response.data['data']['accessRights'] is False
+    assert response.data['data']['name'] == 'QUADS_IN_PARENT'
+
+
+def test_datasets_name_ordering(admin_client):
+    response = admin_client.get('/api/v3/datasets')
 
     assert response
     assert response.status_code == 200

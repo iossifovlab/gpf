@@ -58,7 +58,14 @@ def get_families_report(pedigrees):
     families.families_build(pedigrees_df)
 
     people_group_info = {
-        'domain': {
+        'domain': [
+            {
+                'id': 'affected',
+                'name': 'affected',
+                'color': '#e35252'
+            }
+        ],
+        'values': {
             'affected': {
                 'id': 'affected',
                 'name': 'affected',
