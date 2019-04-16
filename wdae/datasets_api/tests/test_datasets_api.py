@@ -28,7 +28,7 @@ def test_datasets_api_get_404(admin_client):
     assert response.data['error'] == 'Dataset alabala not found'
 
 
-def test_datasets_api_get_forbiden(user_client):
+def test_datasets_api_get_forbidden(user_client):
     response = user_client.get('/api/v3/datasets/quads_in_parent')
 
     assert response

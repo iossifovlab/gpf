@@ -38,17 +38,19 @@ def test_simple_query_preview(db, admin_client):
     assert 4 == len(res['rows'])
 
 
-def test_missing_dataset(db, client):
+def test_missing_dataset(db, user_client):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
     del data['datasetId']
 
-    response = client.post(URL, json.dumps(data), content_type='application/json')
+    response = user_client.post(
+        URL, json.dumps(data), content_type='application/json')
     assert status.HTTP_400_BAD_REQUEST, response.status_code
 
 
-def test_bad_dataset(db, client):
+def test_bad_dataset(db, user_client):
     data = copy.deepcopy(EXAMPLE_REQUEST_F1)
     data['datasetId'] = 'ala bala portokala'
 
-    response = client.post(URL, json.dumps(data), content_type='application/json')
+    response = user_client.post(
+        URL, json.dumps(data), content_type='application/json')
     assert status.HTTP_400_BAD_REQUEST, response.status_code
