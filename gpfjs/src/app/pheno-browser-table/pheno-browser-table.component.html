@@ -1,4 +1,4 @@
-<gpf-table [dataSource]="measures" style="display: inline-block">
+<gpf-table [dataSource]="measures.measures" style="display: inline-block">
     <gpf-table-column>
         <gpf-table-header caption="Proband Pheno Measure" field="measureName"></gpf-table-header>
         <gpf-table-content>
@@ -7,6 +7,16 @@
             </span>
         </gpf-table-content>
     </gpf-table-column>
+    <div *ngIf="measures.hasDescriptions">
+	    <gpf-table-column>
+		<gpf-table-header caption="Measure Description" field="description"></gpf-table-header>
+		<gpf-table-content>
+		    <span *gpfTableCellContent="let data">
+			<div ngbTooltip="{{data.description}}">{{ data.description }}</div>
+		    </span>
+		</gpf-table-content>
+	    </gpf-table-column>
+    </div>
     <gpf-table-column>
         <gpf-table-header caption="Pheno Measure Values"></gpf-table-header>
         <gpf-table-content>
