@@ -53,6 +53,7 @@ class Test(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertIn('base_image_url', response.data)
         self.assertIn('measures', response.data)
+        self.assertIn('has_descriptions', response.data)
         self.assertEqual(4, len(response.data['measures']))
 
     def test_download(self):

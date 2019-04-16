@@ -133,6 +133,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         return Response({
             'base_image_url': browser_images_url,
             'measures': res,
+            'has_descriptions': db.has_descriptions,
         })
 
 
