@@ -23,7 +23,7 @@ const COLORS: ColorsMap = {
   'U' : 'green'
 };
 
-const GENOME_BROWSER: string = "http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr";
+const GENOME_BROWSER = 'http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg19&position=chr';
 
 enum Figure {
   None = 0,
@@ -38,9 +38,9 @@ const FIGURES_EFFECTS: Map<Figure, Array<string>> = new Map([
   [Figure.Circle, ['synonymous', 'non-coding', 'intron', 'intergenic', '3"UTR', '5"UTR']]
 ]);
 
-function getFigureByEffect(effect: string) : Figure {
-  for (let key of Array.from(FIGURES_EFFECTS.keys())) {
-    if (FIGURES_EFFECTS.get(key).indexOf(effect) != -1) {
+function getFigureByEffect(effect: string): Figure {
+  for (const key of Array.from(FIGURES_EFFECTS.keys())) {
+    if (FIGURES_EFFECTS.get(key).indexOf(effect) !== -1) {
       return key;
     }
   }
@@ -89,14 +89,14 @@ export class ChromosomeComponent implements OnChanges {
   @Input()
   centromerePosition: number;
 
-  chromosomeHeight: number = 15;
+  chromosomeHeight = 15;
 
   @Input()
-  variantSignWidth: number = 9.5;
+  variantSignWidth = 9.5;
 
-  baseVariantSignWidth: number = 9.5;
+  baseVariantSignWidth = 9.5;
 
-  nameWidth: number = 30;
+  nameWidth = 30;
 
   scale: number;
   startingPoint: number;
@@ -108,14 +108,14 @@ export class ChromosomeComponent implements OnChanges {
   svgHeight: number;
   svgWidth: number;
   baseStarPathDescription: string;
-  maxTopStackIndex: number = 1;
-  maxBottomStackIndex: number = 1;
-  maxStackIndex: number = 1;
+  maxTopStackIndex = 1;
+  maxBottomStackIndex = 1;
+  maxStackIndex = 1;
 
   constructor() { }
 
   ngOnChanges(changes: SimpleChanges) {
-    let starScale: number = this.variantSignWidth / this.baseVariantSignWidth;;
+    const starScale: number = this.variantSignWidth / this.baseVariantSignWidth;
 
     this.baseStarPathDescription = `l ${1.64 * starScale} ${3.2 * starScale}
                                 l ${3.2 * starScale} ${0.4 * starScale}
@@ -138,17 +138,17 @@ export class ChromosomeComponent implements OnChanges {
       (genotypePreview: GenotypePreview) => +genotypePreview.get('location').split(':')[1]);
 
     if (this.genotypePreviews) {
-      for (let genotypePreview of this.genotypePreviews) {
-        let locationInChromosome: number = +genotypePreview.get('location').split(':')[1];
-        let x: number = locationInChromosome * this.scale + this.startingPoint;
-        let proband: boolean = genotypePreview.get('inChS').indexOf('prb') != -1;
-        let sex: string = genotypePreview.get('inChS')[3];
+      for (const genotypePreview of this.genotypePreviews) {
+        const locationInChromosome: number = +genotypePreview.get('location').split(':')[1];
+        const x: number = locationInChromosome * this.scale + this.startingPoint;
+        const proband: boolean = genotypePreview.get('inChS').indexOf('prb') !== -1;
+        const sex: string = genotypePreview.get('inChS')[3];
         let stackIndex;
 
-        let stackIndexMap: Map<number, boolean> = new Map();
+        const stackIndexMap: Map<number, boolean> = new Map();
         for (let i = this.variants.length - 1; i >= 0; i--) {
-          let variant = this.variants[i];
-          if (variant.proband == proband) {
+          const variant = this.variants[i];
+          if (variant.proband === proband) {
             if ((x - variant.x) < this.variantSignWidth) {
               stackIndexMap[variant.stackIndex] = true;
             } else {
@@ -156,7 +156,7 @@ export class ChromosomeComponent implements OnChanges {
             }
           }
         }
-        
+
         for (let i = 1; ; i++) {
           if (!stackIndexMap[i]) {
             stackIndex = i;
@@ -168,7 +168,7 @@ export class ChromosomeComponent implements OnChanges {
 
         this.variants.push({
           x: x,
-          figure: getFigureByEffect(genotypePreview.get('effectType')),
+          figure: getFigureByEffect(genotypePreview.get('worst_effect')),
           color: COLORS[sex],
           stackIndex: stackIndex,
           proband: proband,
@@ -183,8 +183,8 @@ export class ChromosomeComponent implements OnChanges {
 
     this.leftBands = [];
     this.rightBands = [];
-    for (let band of this.chromosome.bands) {
-      let bandComponent: ChromosomeBandComponent = {
+    for (const band of this.chromosome.bands) {
+      const bandComponent: ChromosomeBandComponent = {
         x: this.startingPoint + band.start * this.scale,
         y: this.variantSignWidth * this.maxStackIndex + 1,
         width: (band.end - band.start) * this.scale,
