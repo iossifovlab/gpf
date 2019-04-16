@@ -56,6 +56,7 @@ def test_measures(admin_client):
     assert response.status_code == 200
     assert 'base_image_url' in response.data
     assert 'measures' in response.data
+    assert 'has_descriptions' in response.data
     assert len(response.data['measures']) == 4
 
 
