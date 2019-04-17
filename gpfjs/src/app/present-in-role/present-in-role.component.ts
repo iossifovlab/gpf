@@ -28,9 +28,9 @@ export class PresentInRoleComponent extends QueryStateWithErrorsProvider impleme
     this.stateRestoreService.getState(this.constructor.name)
       .take(1)
       .subscribe(state => {
-        if (state['presentInRole'] && state['presentInRole'][this.presentInRole.name]) {
+        if (state['presentInRole'] && state['presentInRole'][this.presentInRole.id]) {
           this.presentInRoleSelector.selected =
-            new Set(state['presentInRole'][this.presentInRole.name] as string[]);
+            new Set(state['presentInRole'][this.presentInRole.id] as string[]);
         }
       });
 
@@ -58,7 +58,7 @@ export class PresentInRoleComponent extends QueryStateWithErrorsProvider impleme
       .map(state => {
         return {
           presentInRole: {
-            [this.presentInRole.name]: Array.from(state.selected)
+            [this.presentInRole.id]: Array.from(state.selected)
           }
         };
       });
