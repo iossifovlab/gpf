@@ -590,13 +590,14 @@ class StudyWrapper(object):
 
     def get_dataset_description(self):
         keys = self._get_description_keys()
-        config = self.config.to_dict()
+        config = self.config
 
         config = self._get_dataset_config_options(config)
 
         result = {key: config.get(key, None) for key in keys}
 
         self._augment_pheno_filters_domain(result)
+        self._filter_genotype_browser(result)
 
         return result
 
@@ -620,6 +621,14 @@ class StudyWrapper(object):
             measure = self.pheno_db.get_measure(
                 measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
+
+    def _filter_genotype_browser(self, dataset_description):
+        genotype_browser = dataset_description.get('genotypeBrowser', None)
+        if not genotype_browser:
+            return
+
+        dataset_description['genotypeBrowser'] = \
+            genotype_browser.get_genotype_browser_description()
 
     def get_column_labels(self):
         return self.column_labels
