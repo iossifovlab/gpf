@@ -6,7 +6,6 @@ import 'rxjs/add/operator/toPromise';
 import { ReplaySubject } from 'rxjs';
 
 import { ConfigService } from '../config/config.service';
-import { CookieService } from 'ngx-cookie';
 import { User } from './users';
 
 @Injectable()
@@ -27,16 +26,13 @@ export class UsersService {
 
   constructor(
     private http: Http,
-    private config: ConfigService,
-    private cookieService: CookieService
+    private config: ConfigService
   ) {
 
   }
 
   logout(): Observable<boolean> {
-    let csrfToken = this.cookieService.get('csrftoken');
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    let options = new RequestOptions({ withCredentials: true });
 
     return this.http.post(this.logoutUrl, {}, options)
       .map(res => {
@@ -45,9 +41,7 @@ export class UsersService {
   }
 
   login(username: string, password: string): Observable<boolean> {
-    let csrfToken = this.cookieService.get('csrftoken');
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    let options = new RequestOptions({ withCredentials: true });
 
     return this.http.post(this.loginUrl, { username: username, password: password }, options)
       .map(res => {
@@ -81,9 +75,7 @@ export class UsersService {
   }
 
   register(email: string, name: string, researcherId: string): Observable<boolean> {
-    let csrfToken = this.cookieService.get('csrftoken');
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    let options = new RequestOptions({ withCredentials: true });
 
     return this.http.post(this.registerUrl, {
       email: email,
@@ -99,9 +91,7 @@ export class UsersService {
   }
 
   resetPassword(email: string): Observable<boolean> {
-    let csrfToken = this.cookieService.get('csrftoken');
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    let options = new RequestOptions({ withCredentials: true });
 
     return this.http.post(this.resetPasswordUrl, { email: email }, options)
       .map(res => {
@@ -113,9 +103,7 @@ export class UsersService {
   }
 
   changePassword(password: string, verifPath: string): Observable<boolean> {
-    let csrfToken = this.cookieService.get('csrftoken');
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    let options = new RequestOptions({ withCredentials: true });
 
     return this.http.post(this.changePasswordUrl, {
       password: password, verifPath: verifPath
@@ -129,9 +117,7 @@ export class UsersService {
   }
 
   checkVerification(verifPath: string): Observable<boolean> {
-    let csrfToken = this.cookieService.get('csrftoken');
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    let options = new RequestOptions({ withCredentials: true });
 
     return this.http.post(this.checkVerificationUrl, {
       verifPath: verifPath
@@ -169,10 +155,7 @@ export class UsersService {
     if (!user.id) {
       return Observable.throw('Unknown id...');
     }
-    let csrfToken = this.cookieService.get('csrftoken');
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({
-      headers: headers,
       withCredentials: true
     });
     let url = `${this.usersUrl}/${user.id}`;
@@ -185,10 +168,7 @@ export class UsersService {
       return Observable.throw('Create should not have user id');
     }
 
-    let csrfToken = this.cookieService.get('csrftoken');
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
     let options = new RequestOptions({
-      headers: headers,
       withCredentials: true
     });
 

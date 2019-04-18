@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { Http, Headers, Response, URLSearchParams, RequestOptions, RequestOptionsArgs } from '@angular/http';
 
 import { Observable } from 'rxjs';
-import { CookieService } from 'ngx-cookie';
 
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
 
@@ -17,14 +16,11 @@ export class PhenoBrowserService {
 
   constructor(
     private http: Http,
-    private cookieService: CookieService,
     private config: ConfigService
   ) {}
 
   private getOptions(): RequestOptions {
-    let csrfToken = this.cookieService.get("csrftoken");
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    let options = new RequestOptions({ withCredentials: true });
 
     return options;
   }

@@ -2,7 +2,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, Injector } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
-import { RequestOptions, Http, XHRBackend } from '@angular/http';
+import { RequestOptions, Http, XHRBackend, XSRFStrategy, CookieXSRFStrategy } from '@angular/http';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -48,7 +48,6 @@ import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.va
 
 import { StudyTypesComponent } from './study-types/study-types.component';
 
-import { CookieModule } from 'ngx-cookie';
 
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component';
 import { GpfTabsetComponent } from './tabset/tabset.component';
@@ -352,7 +351,6 @@ const appRoutes: Routes = [
     PedigreeChartModule,
     HistogramModule,
     RouterModule.forRoot(appRoutes),
-    CookieModule.forRoot(),
     BrowserAnimationsModule,
     MarkdownModule.forRoot(),
     Select2Module,
@@ -361,6 +359,9 @@ const appRoutes: Routes = [
     })
   ],
   providers: [
+    { provide: XSRFStrategy, 
+      useValue: new CookieXSRFStrategy('csrftoken', 'X-CSRFToken') 
+    },
     ConfigService,
     DatasetsService,
     QueryService,
