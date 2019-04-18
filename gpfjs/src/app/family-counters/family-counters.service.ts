@@ -7,19 +7,15 @@ import { Observable } from 'rxjs';
 // import '../rxjs-operators';
 
 import { ConfigService } from '../config/config.service';
-import { CookieService } from 'ngx-cookie';
 
 @Injectable()
 export class FamilyCountersService {
   private familyCountersUrl = "family_counters/counters";
   constructor(
-    private http: Http,
-    private cookieService: CookieService) {}
+    private http: Http) {}
 
   private getOptions(): RequestOptions {
-    let csrfToken = this.cookieService.get("csrftoken");
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    let options = new RequestOptions({ withCredentials: true });
 
     return options;
   }
