@@ -234,9 +234,9 @@ def variants_thrift(parquet_variants, testing_thriftserver):
 def parquet_variants(request, variants_vcf):
     dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
 
-    def fin():
-        shutil.rmtree(dirname)
-    request.addfinalizer(fin)
+    # def fin():
+    #     shutil.rmtree(dirname)
+    # request.addfinalizer(fin)
 
     def builder(path):
         basename = os.path.basename(path)
@@ -247,6 +247,7 @@ def parquet_variants(request, variants_vcf):
 
         if not os.path.exists(fulldirname):
             os.mkdir(fulldirname)
+
         conf = Configure.from_prefix_parquet(fulldirname).parquet
 
         fvars = variants_vcf(path)

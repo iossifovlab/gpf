@@ -36,13 +36,13 @@ class ThriftQueryBuilderBase(object):
             {where}
     """
 
-    def __init__(self, query, summary_schema, tables, db='parquet'):
+    def __init__(self, query, summary_schema, tables):
 
         self.query = {k: v for k, v in query.items() if v is not None}
         self.summary_schema = summary_schema
         self.query_keys = set(query.keys())
         self.tables = tables
-        self.db = 'parquet'
+        self.db = self.tables.db
 
     def has_gene_effects(self):
         return self.query.get('effect_types') is not None \
@@ -108,9 +108,9 @@ class SummarySubQueryBuilder(ThriftQueryBuilderBase):
                         AND E.allele_index = S.allele_index
     """
 
-    def __init__(self, query, summary_schema, tables, db='parquet'):
+    def __init__(self, query, summary_schema, tables):
         super(SummarySubQueryBuilder, self).__init__(
-            query, summary_schema, tables, db)
+            query, summary_schema, tables)
 
     def _build_effect_type_where(self):
         return self._build_iterable_string_attr_where(
@@ -217,11 +217,11 @@ class SummarySubQueryBuilder(ThriftQueryBuilderBase):
 
 class MemberSubQueryBuilder(ThriftQueryBuilderBase):
 
-    def __init__(self, query, summary_schema, tables, db='parquet'):
+    def __init__(self, query, summary_schema, tables):
         super(MemberSubQueryBuilder, self).__init__(
-            query, summary_schema, tables, db)
+            query, summary_schema, tables)
         self.summary_query_builder = SummarySubQueryBuilder(
-            query, summary_schema, tables, db)
+            query, summary_schema, tables)
 
     MEMBER_JOIN = """
         LEFT JOIN {db}.`{member_variant}` AS M
@@ -275,13 +275,13 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
             S.bucket_index, S.summary_variant_index
     """
 
-    def __init__(self, query, summary_schema, tables, db='parquet'):
+    def __init__(self, query, summary_schema, tables):
         super(ThriftQueryBuilder, self).__init__(
-            query, summary_schema, tables, db)
+            query, summary_schema, tables)
         self.summary_query_builder = SummarySubQueryBuilder(
-            query, summary_schema, tables, db)
+            query, summary_schema, tables)
         self.member_query_builder = MemberSubQueryBuilder(
-            query, summary_schema, tables, db)
+            query, summary_schema, tables)
 
     def _build_complex_where_with_array_attr(
             self, attr_name, column_name, attr_transformer):
@@ -306,21 +306,26 @@ class ThriftQueryBuilder(ThriftQueryBuilderBase):
             'inheritance', 'F.inheritance_in_members', inheritance_query)
 
     @staticmethod
-    def summary_schema_query(tables, db='parquet'):
-        query = """
-            CREATE TEMPORARY VIEW parquetTable
-            USING org.apache.spark.sql.parquet
-            OPTIONS (
-                path "{summary_variant}"
+    def summary_schema_query(tables):
+        if tables['db'] == 'parquet':
+            q1 = """
+                CREATE TEMPORARY VIEW summaryParquetTable
+                USING org.apache.spark.sql.parquet
+                OPTIONS (
+                    path "{summary_variant}"
+                )
+            """.format(
+                summary_variant=tables['summary_variant'],
             )
-        """.format(
-            db=db,
-            summary_variant=tables['summary_variant'],
-        )
-        return [
-            query,
-            "DESCRIBE EXTENDED parquetTable"
-        ]
+            q2 = "DESCRIBE summaryParquetTable"
+            return [q1, q2]
+        else:
+            return [
+                "DESCRIBE {db}.{summary}".format(
+                    db=tables['db'],
+                    summary=tables['summary_variant']
+                )
+            ]
 
     def build(self):
 

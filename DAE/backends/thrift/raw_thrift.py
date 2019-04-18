@@ -13,10 +13,10 @@ from impala.util import as_pandas
 from variants.family import FamiliesBase, Family
 from variants.variant import SummaryVariantFactory
 from variants.family_variant import FamilyVariant
+from variants.attributes import Role, Status, Sex
 
 from ..configure import Configure
 from .thrift_query import ThriftQueryBuilder
-from .parquet_io import read_ped_df_from_parquet
 
 
 class DfFamilyVariantsBase(object):
@@ -63,11 +63,6 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         assert config is not None
 
         self.config = config
-        # assert os.path.exists(self.config.pedigree), self.config.pedigree
-        # assert os.path.exists(self.config.summary_variant), \
-        #     self.config.summary_variant
-        # assert os.path.exists(self.config.family_variant), \
-        #     self.config.family_variant
 
         if not thrift_connection:
             thrift_connection = ThriftFamilyVariants.get_thrift_connection(
@@ -75,18 +70,19 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
         self.connection = thrift_connection
 
         assert self.connection is not None
-        self.ped_df = read_ped_df_from_parquet(self.config.pedigree)
+        self.ped_df = self._load_pedigree()
         self.families_build(self.ped_df, family_class=Family)
         self._summary_schema = None
 
     @property
     def summary_schema(self):
         if not self._summary_schema:
-            query = ThriftQueryBuilder.summary_schema_query(
+            queries = ThriftQueryBuilder.summary_schema_query(
                 tables=self.config)
+
             with self.connection.cursor() as cursor:
-                cursor.execute(query[0])
-                cursor.execute(query[1])
+                for q in queries:
+                    cursor.execute(q)
                 df = as_pandas(cursor)
             records = df[['col_name', 'data_type']].to_records()
             self._summary_schema = {
@@ -108,17 +104,49 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
         return thrift_connection
 
+    def _load_pedigree(self):
+        with self.connection.cursor() as cursor:
+            print(self.config)
+            q = """
+                SELECT * FROM {db}.`{pedigree}`
+            """.format(db=self.config.db, pedigree=self.config.pedigree)
+            print(q)
+
+            cursor.execute(q)
+            ped_df = as_pandas(cursor)
+
+        ped_df = ped_df.rename(columns={
+            'pedigree.personid': 'person_id',
+            'pedigree.familyid': 'family_id',
+            'pedigree.momid': 'mom_id',
+            'pedigree.dadid': 'dad_id',
+            'pedigree.sampleid': 'sample_id',
+            'pedigree.sex': 'sex',
+            'pedigree.status': 'status',
+            'pedigree.role': 'role',
+            'pedigree.generated': 'generated',
+            'pedigree.layout': 'layout',
+            'pedigree.phenotype': 'phenotype',
+        })
+        ped_df.role = ped_df.role.apply(lambda v: Role(v))
+        ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
+        ped_df.status = ped_df.status.apply(lambda v: Status(v))
+        if 'layout' in ped_df:
+            ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
+
+        return ped_df
+
     def query_variants(self, **kwargs):
         builder = ThriftQueryBuilder(
             kwargs, summary_schema=self.summary_schema,
-            tables=self.config, db='parquet')
+            tables=self.config)
         sql_query = builder.build()
 
         if kwargs.get('limit'):
             limit = kwargs['limit']
             sql_query += "\n\tLIMIT {}".format(limit)
 
-        # print("FINAL QUERY", sql_query)
+        print("FINAL QUERY", sql_query)
         with self.connection.cursor() as cursor:
             cursor.execute(sql_query)
             df = as_pandas(cursor)

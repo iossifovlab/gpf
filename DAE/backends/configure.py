@@ -109,7 +109,27 @@ class Configure(ConfigBox):
                 'family_variant': family_filename,
                 'member_variant': member_filename,
                 'effect_gene_variant': effect_gene_filename,
-                'pedigree': pedigree_filename
+                'pedigree': pedigree_filename,
+                'db': 'parquet'
+            }
+        }
+
+        return Configure(conf)
+
+    @staticmethod
+    def from_thrift_db(
+            db, summary='summary', family='family',
+            effect_gene='effect_gene', member='member',
+            pedigree='pedigree'):
+
+        conf = {
+            'parquet': {
+                'summary_variant': summary,
+                'family_variant': family,
+                'member_variant': member,
+                'effect_gene_variant': effect_gene,
+                'pedigree': pedigree,
+                'db': db,
             }
         }
 
