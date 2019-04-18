@@ -24,7 +24,7 @@
     "@angular/router": "^5.0.0",
     "@ng-bootstrap/ng-bootstrap": "1.0.0-beta.4",
     "@types/d3": "^5.0.0",
-    "@types/lodash": "4.14.74",
+    "@types/lodash": "4.14.108",
     "@types/node": "^6.0.65",
     "@types/sprintf": "^0.1.0",
     "angular-confirmation-popover": "^3.2.0",
@@ -72,6 +72,6 @@
     "protractor": "~5.4.0",
     "ts-node": "3.3.0",
     "tslint": "^5.8.0",
-    "typescript": "~2.6.1"
+    "typescript": "~2.7.2"
   }
 }
