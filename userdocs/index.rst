@@ -14,6 +14,7 @@ GPF: Genotypes and Phenotypes in Families
    getting_started
    genotype_browser
    pedigree_generation
+   pheno
    user_management
    groups
    datasets
