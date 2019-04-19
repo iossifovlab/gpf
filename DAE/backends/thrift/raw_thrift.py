@@ -106,27 +106,25 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
 
     def _load_pedigree(self):
         with self.connection.cursor() as cursor:
-            print(self.config)
             q = """
                 SELECT * FROM {db}.`{pedigree}`
             """.format(db=self.config.db, pedigree=self.config.pedigree)
-            print(q)
 
             cursor.execute(q)
             ped_df = as_pandas(cursor)
 
         ped_df = ped_df.rename(columns={
-            'pedigree.personid': 'person_id',
-            'pedigree.familyid': 'family_id',
-            'pedigree.momid': 'mom_id',
-            'pedigree.dadid': 'dad_id',
-            'pedigree.sampleid': 'sample_id',
-            'pedigree.sex': 'sex',
-            'pedigree.status': 'status',
-            'pedigree.role': 'role',
-            'pedigree.generated': 'generated',
-            'pedigree.layout': 'layout',
-            'pedigree.phenotype': 'phenotype',
+            'personId': 'person_id',
+            'familyId': 'family_id',
+            'momId': 'mom_id',
+            'dadId': 'dad_id',
+            'sampleId': 'sample_id',
+            'sex': 'sex',
+            'status': 'status',
+            'role': 'role',
+            'generated': 'generated',
+            'layout': 'layout',
+            'phenotype': 'phenotype',
         })
         ped_df.role = ped_df.role.apply(lambda v: Role(v))
         ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
@@ -146,7 +144,6 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
             limit = kwargs['limit']
             sql_query += "\n\tLIMIT {}".format(limit)
 
-        print("FINAL QUERY", sql_query)
         with self.connection.cursor() as cursor:
             cursor.execute(sql_query)
             df = as_pandas(cursor)
