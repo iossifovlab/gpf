@@ -552,6 +552,13 @@ class StudyWrapper(object):
 
         return legend + self._get_legend_default_values()
 
+    def get_gene_sets_legend(self, people_group_id):
+        gene_sets_ps = self.get_pedigree_selector(people_group_id)
+        if len(gene_sets_ps) == 0:
+            return []
+
+        return gene_sets_ps['domain']
+
     def get_pedigree_selector(self, pedigree_selector_id):
         if not pedigree_selector_id:
             return self.pedigree_selectors[0]\
@@ -624,9 +631,9 @@ class StudyWrapper(object):
     def get_column_labels(self):
         return self.column_labels
 
-    def gene_sets_cache_file(self):
+    def gene_sets_cache_file(self, people_group_id=''):
         cache_path = os.path.join(
             os.path.split(self.config.study_config.config_file)[0],
-            'denovo-cache.json')
+            'denovo-cache-' + people_group_id + '.json')
 
         return cache_path
