@@ -35,7 +35,7 @@ class ResearcherRegistrationTest(APITestCase):
 
         response = self.client.post('/api/v3/users/register', data,
                                     format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_fail_register_case_changed_email(self):
         data = {
@@ -45,7 +45,7 @@ class ResearcherRegistrationTest(APITestCase):
 
         response = self.client.post('/api/v3/users/register', data,
                                     format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_fail_register_wrong_id(self):
         data = {
@@ -56,9 +56,7 @@ class ResearcherRegistrationTest(APITestCase):
 
         response = self.client.post('/api/v3/users/register', data,
                                     format='json')
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data['error_msg'],
-                         'Email or Researcher Id not found')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_fail_register_wrong_email(self):
         data = {
@@ -69,9 +67,7 @@ class ResearcherRegistrationTest(APITestCase):
 
         response = self.client.post('/api/v3/users/register', data,
                                     format='json')
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data['error_msg'],
-                         'Email or Researcher Id not found')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_reset_pass_without_registration(self):
         data = {
@@ -81,10 +77,7 @@ class ResearcherRegistrationTest(APITestCase):
 
         response = self.client.post('/api/v3/users/reset_password', data,
                                     format='json')
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-        self.assertEqual(response.data['error_msg'],
-                         'User with this email is approved for registration. '
-                         'Please, register first')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_reset_pass_without_registration_wrong_email(self):
         data = {
@@ -94,9 +87,7 @@ class ResearcherRegistrationTest(APITestCase):
 
         response = self.client.post('/api/v3/users/reset_password', data,
                                     format='json')
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(response.data['error_msg'],
-                         'User with this email not found')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_successful_register(self):
         name = "NEW_NAME"
@@ -243,8 +234,7 @@ class UsersAPITest(APITestCase):
 
         response = self.client.post('/api/v3/users/register', data,
                                     format='json')
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-        self.assertEqual(response.data['error_msg'], 'User already exists')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 class UserAuthenticationTest(APITestCase):
