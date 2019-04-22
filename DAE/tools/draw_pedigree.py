@@ -114,13 +114,23 @@ def get_families_report(pedigrees):
 
 
 def main():
-    parser = get_argument_parser("Draw PDP.")
+    parser = get_argument_parser(
+        "Produce a pedigree drawing in PDF format "
+        "from a pedigree file with layout coordinates.")
+    parser.add_argument(
+        "--layout-column", metavar="l", default="layout",
+        help="name of the column containing layout coordinates. "
+        "Default to layout.")
     parser.add_argument(
         '--show-id', help='show individual id in pedigree', dest='show_id',
         action='store_true', default=False)
     parser.add_argument(
         '--show-family', help='show family info below pedigree',
         dest='show_family', action='store_true', default=False)
+    parser.add_argument(
+        "--generated-column", metavar="m", default="generated",
+        help="name of the column that contains an "
+             "indicator for generated individuals")
 
     args = parser.parse_args()
 
