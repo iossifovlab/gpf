@@ -1,5 +1,13 @@
 <gpf-table [dataSource]="measures.measures" style="display: inline-block">
     <gpf-table-column>
+        <gpf-table-header caption="Instrument" field="instrumentName"></gpf-table-header>
+        <gpf-table-content>
+            <span *gpfTableCellContent="let data">
+                <div ngbTooltip="{{data.instrumentName}}">{{ data.instrumentName }}</div>
+            </span>
+        </gpf-table-content>
+    </gpf-table-column>
+    <gpf-table-column>
         <gpf-table-header caption="Proband Pheno Measure" field="measureName"></gpf-table-header>
         <gpf-table-content>
             <span *gpfTableCellContent="let data">

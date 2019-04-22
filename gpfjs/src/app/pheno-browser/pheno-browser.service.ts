@@ -41,13 +41,14 @@ export class PhenoBrowserService {
       .map((response: Response) => response.json() as PhenoInstruments);
   }
 
-  getMeasures(datasetId: string, instrument: PhenoInstrument): Observable<PhenoMeasures> {
+  getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasures> {
 
     let options = this.getOptions();
     options.search = new URLSearchParams();
 
     options.search.set('dataset_id', datasetId);
     options.search.set('instrument', instrument);
+    options.search.set('search', search);
 
     return this.http
       .get(this.measuresUrl, options)
