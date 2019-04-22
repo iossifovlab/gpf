@@ -15,7 +15,7 @@ import { SelectableUser } from './user-management';
 })
 export class UserManagementComponent implements OnInit {
 
-  private input$ = new ReplaySubject<string>(1);
+  input$ = new ReplaySubject<string>(1);
   users$: Observable<SelectableUser[]>;
 
 

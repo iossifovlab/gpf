@@ -20,7 +20,7 @@ export class PhenoBrowserComponent implements OnInit {
   instruments: Observable<PhenoInstruments>;
   downloadLink$: Observable<string>;
 
-  private input$ = new ReplaySubject<string>(1);
+  input$ = new ReplaySubject<string>(1);
 
   constructor(
     private route: ActivatedRoute,
