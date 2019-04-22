@@ -101,9 +101,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument = request.query_params.get('instrument', None)
-        if instrument is None:
-            instruments = list(dataset.pheno_db.instruments.keys())
-            instrument = instruments[0]
+        search_term = request.query_params.get('search', None)
 
         browser_dbfile = self.get_browser_dbfile(
             dataset.config.phenoDB)
@@ -113,7 +111,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         db = DbManager(dbfile=browser_dbfile)
         db.build()
 
-        df = db.get_instrument_df(instrument)
+        df = db.search_measures(instrument, search_term)
 
         res = []
         for row in df.to_dict('records'):
