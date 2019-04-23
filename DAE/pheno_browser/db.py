@@ -89,7 +89,9 @@ class DbManager(object):
         query_params = []
 
         if keyword:
-            keyword = '%{}%'.format(keyword)
+            keyword = '%{}%'.format(
+                keyword.replace('%', r'\%')
+                       .replace('_', r'\_'))
             if not instrument_name:
                 query_params.append(
                     self.variable_browser.c.instrument_name.like(keyword))
