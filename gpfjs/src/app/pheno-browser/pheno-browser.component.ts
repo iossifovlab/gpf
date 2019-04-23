@@ -1,7 +1,8 @@
 import { Component, OnInit, Input, ViewEncapsulation } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
+import { Location } from '@angular/common';
 
-import { Observable ,  BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs';
 
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
@@ -19,10 +20,13 @@ export class PhenoBrowserComponent implements OnInit {
   instruments: Observable<PhenoInstruments>;
   downloadLink$: Observable<string>;
 
+  input$ = new ReplaySubject<string>(1);
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private phenoBrowserService: PhenoBrowserService,
+    private location: Location,
   ) { }
 
   ngOnInit() {
@@ -36,20 +40,43 @@ export class PhenoBrowserComponent implements OnInit {
   }
 
   initMeasuresToShow(datasetId$: Observable<string>) {
-    this.measuresToShow$ = Observable
-      .combineLatest([this.selectedInstrument$, datasetId$])
-      .switchMap(([newSelection, datasetId]) => {
-        return this.phenoBrowserService.getMeasures(datasetId, newSelection)
-      }).share();
+    this.measuresToShow$ = this.input$
+      .map(searchTerm => searchTerm.trim())
+      .debounceTime(300)
+      .distinctUntilChanged()
+      .combineLatest(this.selectedInstrument$, datasetId$)
+      .do(([searchTerm, newSelection, datasetId]) => {
+        let queryParamsObject: any = {};
+        if (newSelection) {
+          queryParamsObject.instrument = newSelection;
+        }
+        if (searchTerm) {
+          queryParamsObject.search = searchTerm;
+        }
+        let url = this.router.createUrlTree(['.'], {
+          relativeTo: this.route,
+          replaceUrl: true,
+          queryParams: queryParamsObject
+        }).toString();
+        this.location.go(url);
+      })
+      .switchMap(([searchTerm, newSelection, datasetId]) => {
+        return this.phenoBrowserService.getMeasures(datasetId, newSelection, searchTerm)
+      })
+      .share();
+
+    this.route.queryParamMap
+      .map(params => [params.get('instrument') || '',  params.get('search') || ''])
+      .take(1)
+      .subscribe(([instrument, queryTerm]) => {
+        this.search(queryTerm);
+        this.emitInstrument(instrument);
+      });
   }
 
   initInstruments(datasetId$: Observable<string>): void {
     this.instruments = datasetId$.switchMap(datasetId =>
       this.phenoBrowserService.getInstruments(datasetId)).share();
-
-    this.instruments.take(1).subscribe((phenoInstruments) => {
-      this.emitInstrument(phenoInstruments.default);
-    });
   }
 
   emitInstrument(instrument: PhenoInstrument) {
@@ -62,5 +89,9 @@ export class PhenoBrowserComponent implements OnInit {
       .map(([instrument, datasetId]) =>
         this.phenoBrowserService.getDownloadLink(instrument, datasetId)
       );
+  }
+
+  search(value: string) {
+    this.input$.next(value)
   }
 }
