@@ -33,9 +33,9 @@ export class PedigreeSelectorComponent extends QueryStateWithErrorsProvider impl
     this.stateRestoreService.getState(this.constructor.name)
       .take(1)
       .subscribe(state => {
-        if (state['pedigreeSelector'] && state['pedigreeSelector']['id']) {
-          for (let pedigree of  this.pedigrees) {
-            if (pedigree.id === state['pedigreeSelector']['id']
+        if (state['peopleGroup'] && state['peopleGroup']['id']) {
+          for (const pedigree of  this.pedigrees) {
+            if (pedigree.id === state['peopleGroup']['id']
                   && (!this.pedigreeState.pedigree || this.pedigreeState.pedigree.id !== pedigree.id)) {
               this.pedigreeState.pedigree = pedigree;
               this.pedigreeState.checkedValues =
@@ -43,8 +43,8 @@ export class PedigreeSelectorComponent extends QueryStateWithErrorsProvider impl
             }
           }
         }
-        if (state['pedigreeSelector'] && state['pedigreeSelector']['checkedValues']) {
-          let checkedValues = new Set(state['pedigreeSelector']['checkedValues']);
+        if (state['peopleGroup'] && state['peopleGroup']['checkedValues']) {
+          const checkedValues = new Set(state['peopleGroup']['checkedValues']);
           if (checkedValues.size !== this.pedigreeState.checkedValues.size ||
               Array.from(this.pedigreeState.checkedValues).filter(v => checkedValues.has(v)).length !== 0) {
             this.pedigreeState.checkedValues = checkedValues;
@@ -106,7 +106,7 @@ export class PedigreeSelectorComponent extends QueryStateWithErrorsProvider impl
   getState() {
     return this.validateAndGetState(this.pedigreeState)
       .map(pedigreeState => ({
-        pedigreeSelector: {
+        peopleGroup: {
           id: pedigreeState.pedigree.id,
           checkedValues: Array.from(pedigreeState.checkedValues)
         }

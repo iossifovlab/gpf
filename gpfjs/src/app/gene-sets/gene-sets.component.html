@@ -8,11 +8,11 @@
         #acc="ngbAccordion" class="gene-sets-types row-sm-3">
       <ngb-panel *ngFor="let type of selectedGeneSetsCollection.types; let i = index" id="denovo-geneset-type-{{i}}">
         <ng-template ngbPanelTitle *ngIf="selectedGeneSetsCollection?.types?.length > 1">
-          <span class="dropdown-toggle btn-sm">{{ type.datasetName }}</span>
+          <span class="dropdown-toggle btn-sm">{{ getGeneSetName(type, 30) }}</span>
         </ng-template>
         <ng-template ngbPanelContent>
           <div *ngFor="let phenotype of type.phenotypes">
-            <input type="checkbox" [ngModel]="isSelectedGeneType(type.datasetId, phenotype.id)" (ngModelChange)="setSelectedGeneType(type.datasetId, phenotype.id, $event); onSearch()">
+            <input type="checkbox" [ngModel]="isSelectedGeneType(type.datasetId, type.peopleGroupId, phenotype.id)" (ngModelChange)="setSelectedGeneType(type.datasetId, type.peopleGroupId, phenotype.id, $event); onSearch()">
             <span class="pedigree-icon" [style.background-color]="phenotype.color"></span>
             {{ phenotype.name }}
           </div>

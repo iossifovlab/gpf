@@ -25,13 +25,13 @@ export class CommonQueryData {
   }
 
   protected static prepareGeneSymbols(state: any): string[] {
-    let geneSymbols: GeneSymbols = state.geneSymbols;
+    const geneSymbols: GeneSymbols = state.geneSymbols;
 
     if (geneSymbols === null) {
       return null;
     }
 
-    let result = geneSymbols.geneSymbols
+    const result = geneSymbols.geneSymbols
       .split(/[,\s]/)
       .filter(s => s !== '')
       .map(s => s.toUpperCase());
@@ -42,7 +42,7 @@ export class CommonQueryData {
   }
 
   protected static prepareGeneSet(state: any): GeneSetState {
-    let geneSetsState: GeneSetsState = state.geneSets;
+    const geneSetsState: GeneSetsState = state.geneSets;
 
     if (geneSetsState === null) {
       return null;
@@ -60,7 +60,7 @@ export class CommonQueryData {
   }
 
   protected static prepareGeneWeights(state: any): GeneWeightsState {
-    let weightsState: GeneWeightsState = state.geneWeights;
+    const weightsState: GeneWeightsState = state.geneWeights;
 
     if (weightsState === null) {
       return null;

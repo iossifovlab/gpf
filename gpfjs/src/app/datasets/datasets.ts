@@ -205,7 +205,7 @@ export class GenotypeBrowser {
       [...AdditionalColumn.fromJsonArray(json['genotypeColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
       PhenoFilter.fromJsonArray(json['familyStudyFilters']),
-      PedigreeSelector.fromJsonArray(json['pedigreeSelectors']),
+      PedigreeSelector.fromJsonArray(json['peopleGroup']),
       PresentInRole.fromJsonArray(json['presentInRole']),
     );
   }
