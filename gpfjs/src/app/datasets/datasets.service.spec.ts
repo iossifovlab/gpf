@@ -34,7 +34,7 @@ const mockDatasetResponse: Dataset = {
     hasPedigreeSelector: true,
     hasStudyTypes: false,
   },
-  pedigreeSelectors: [
+  peopleGroups: [
     {
       id: '16pstatus',
       name: '16p Status',
@@ -184,7 +184,7 @@ describe('DatasetService', () => {
 
       service.getDataset('VIP').subscribe(res => {
         expect(res.id).toEqual('VIP');
-        expect(res.pedigreeSelectors.length).toBe(2);
+        expect(res.peopleGroups.length).toBe(2);
       });
 
     })
