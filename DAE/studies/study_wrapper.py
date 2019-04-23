@@ -499,7 +499,7 @@ class StudyWrapper(object):
     def _transform_present_in_role(self, kwargs):
         roles_query = []
 
-        for pir_name, filter_options in kwargs['presentInRole'].items():
+        for pir_id, filter_options in kwargs['presentInRole'].items():
 
             for filter_option in filter_options:
                 new_roles = None
@@ -511,7 +511,7 @@ class StudyWrapper(object):
                 if filter_option == 'neither':
                     new_roles = AndNode([
                         NotNode(ContainsNode(Role.from_display_name(role)))
-                        for role in self.get_present_in_role(pir_name)
+                        for role in self.get_present_in_role(pir_id)
                                         .get('roles')
                     ])
 
@@ -564,13 +564,13 @@ class StudyWrapper(object):
         return pedigree_selector_with_id[0] \
             if pedigree_selector_with_id else {}
 
-    def get_present_in_role(self, present_in_role_name):
-        if not present_in_role_name:
+    def get_present_in_role(self, present_in_role_id):
+        if not present_in_role_id:
             return {}
 
         present_in_role = list(filter(
-            lambda present_in_role: present_in_role.get('name') ==
-            present_in_role_name, self.present_in_role))
+            lambda present_in_role: present_in_role.get('id') ==
+            present_in_role_id, self.present_in_role))
 
         return present_in_role[0] if present_in_role else {}
 

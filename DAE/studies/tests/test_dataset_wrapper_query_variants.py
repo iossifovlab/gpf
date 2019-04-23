@@ -171,14 +171,12 @@ def test_query_present_in_parent(
 @pytest.mark.parametrize(
     "option,count",
     [
-        ({"Present in Probant and Sibling": ["Proband"]}, 2),
-        ({"Present in Probant and Sibling": ["Sibling"]}, 2),
-        ({"Present in Probant and Sibling": ["Proband", "Sibling"]}, 3),
-        ({"Present in Probant and Sibling": ["neither"]}, 1),
-        ({"Present in Probant and Sibling": ["Proband", "neither"]}, 3),
-        ({"Present in Probant and Sibling": [
-            "Proband", "Sibling", "neither"
-        ]}, 4),
+        ({"prb": ["Proband"]}, 2),
+        ({"prb": ["Sibling"]}, 2),
+        ({"prb": ["Proband", "Sibling"]}, 3),
+        ({"prb": ["neither"]}, 1),
+        ({"prb": ["Proband", "neither"]}, 3),
+        ({"prb": ["Proband", "Sibling", "neither"]}, 4),
     ],
     ids=repr
 )
@@ -192,12 +190,10 @@ def test_query_present_in_role(option, count, quads_in_child_dataset_wrapper):
 @pytest.mark.parametrize(
     "option,raw_query",
     [
-        ({"Present in Probant and Sibling": ["Proband"]}, "prb"),
-        ({"Present in Probant and Sibling": ["Sibling"]}, "sib"),
-        ({"Present in Probant and Sibling": ["Proband", "Sibling"]},
-         "prb or sib"),
-        ({"Present in Probant and Sibling": ["neither"]},
-         "not prb and not sib"),
+        ({"prb": ["Proband"]}, "prb"),
+        ({"prb": ["Sibling"]}, "sib"),
+        ({"prb": ["Proband", "Sibling"]}, "prb or sib"),
+        ({"prb": ["neither"]}, "not prb and not sib"),
     ],
     ids=repr
 )

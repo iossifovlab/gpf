@@ -311,6 +311,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
 
         present_in_role['name'] = \
             study_config.pop(present_in_role_type + '.name', None)
+        _, present_in_role['id'] = cls._split_section(present_in_role_type)
         present_in_role['roles'] = \
             [
                 Role.from_name(el.strip()).display_name
