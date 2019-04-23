@@ -55,11 +55,11 @@ def test_example2_denovo_gene_sets(gscs):
     print(dir(denovo))
 
     denovo_sets = denovo.get_gene_sets({
-        'f1_group': ['autism']})
+        'f1_group': {'phenotype': ['autism']}})
     assert denovo_sets
     print(denovo_sets)
 
     denovo_sets2 = denovo.get_gene_sets({
-        'f1_group': ['autism', 'unaffected']})
+        'f1_group': {'phenotype': ['autism', 'unaffected']}})
     assert len(denovo_sets) <= \
         len(denovo_sets2)

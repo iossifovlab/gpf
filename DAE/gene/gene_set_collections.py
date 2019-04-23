@@ -103,7 +103,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         self.denovo_gene_sets = OrderedDict()
         for config in self.variants_db.get_all_configs():
             study_config = config.study_config
-
+            
             genotype_browser = None
             if 'genotypeBrowser' in study_config and \
                     study_config.genotype_browser:
@@ -115,10 +115,13 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             if 'pedigreeSelectors' in genotype_browser:
                 pedigree_selectors = genotype_browser.pedigree_selectors
             if len(pedigree_selectors) == 0:
-                return
+                continue
 
             people_groups = \
                 self._get_att_list_from_config(study_config, 'peopleGroups')
+
+            if people_groups and len(people_groups) == 0:
+                continue
 
             self.denovo_gene_sets[config.id] = {
                 ps.id: {
@@ -159,7 +162,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         gene_terms_section = config.get('denovoGeneSets', None)
         if gene_terms_section:
             att = gene_terms_section.get(att_name, None)
-            if att:
+            if type(att) == str:
                 return [a.strip() for a in att.split(',')]
 
     def _get_att_list(self, att_name):
@@ -301,7 +304,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 if v and (permitted_datasets is None or
                           k in permitted_datasets)
             } for k, pg in gene_sets_types.items()
-        }                
+        }
 
     @staticmethod
     def _format_description(
