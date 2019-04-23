@@ -398,7 +398,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
             'hasStudyFilters', 'hasStudyTypes', 'hasGraphicalPreview',
             'genesBlockShowAll', 'previewColumns', 'rolesFilterOptions',
             'genotypeColumns', 'phenoFilters', 'familyStudyFilters',
-            'pedigreeSelectors', 'presentInRole'
+            'peopleGroup', 'presentInRole'
         ]
 
     def get_genotype_browser_description(self):
