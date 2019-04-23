@@ -87,7 +87,7 @@ SPECIAL_ATTRS = merge_dicts(
 )
 
 
-def transform_variants_to_lists(variants, preview_columns, pedigree_selector):
+def transform_variants_to_lists(variants, preview_columns, people_group):
 
     for v in variants:
         for aa in v.matched_alleles:
@@ -97,8 +97,7 @@ def transform_variants_to_lists(variants, preview_columns, pedigree_selector):
                     if column in SPECIAL_ATTRS:
                         row_variant.append(SPECIAL_ATTRS[column](aa))
                     elif column == 'pedigree':
-                        row_variant.append(
-                            generate_pedigree(aa, pedigree_selector))
+                        row_variant.append(generate_pedigree(aa, people_group))
                     else:
                         attribute =\
                             aa.get_attribute(column, '')
@@ -115,24 +114,24 @@ def transform_variants_to_lists(variants, preview_columns, pedigree_selector):
             yield row_variant
 
 
-def get_person_color(member, pedigree_selector):
+def get_person_color(member, people_group):
     if member.generated:
         return '#E0E0E0'
-    if len(pedigree_selector) == 0:
+    if len(people_group) == 0:
         return '#FFFFFF'
 
-    source = pedigree_selector['source']
+    source = people_group['source']
     people_group_attribute = member.get_attr(source)
     domain = list(filter(lambda d: d['name'] == people_group_attribute,
-                         pedigree_selector['domain']))
+                         people_group['domain']))
 
     if domain and people_group_attribute:
         return domain[0]['color']
     else:
-        return pedigree_selector['default']['color']
+        return people_group['default']['color']
 
 
-def generate_pedigree(allele, pedigree_selector):
+def generate_pedigree(allele, people_group):
     result = []
     best_st = np.sum(allele.gt == allele.allele_index, axis=0)
 
@@ -144,7 +143,7 @@ def generate_pedigree(allele, pedigree_selector):
             member.dad_id,
             member.sex.short(),
             str(member.role),
-            get_person_color(member, pedigree_selector),
+            get_person_color(member, people_group),
             member.layout_position,
             member.generated,
             best_st[index],
@@ -158,14 +157,13 @@ def get_variants_web(
         dataset, query, genotype_attrs, weights_loader,
         variants_hard_max=2000):
     variants = dataset.query_variants(weights_loader, safe=True, **query)
-    pedigree_selector_id = query.get('pedigreeSelector', {}).get('id', None)
-    pedigree_selector = dataset.get_pedigree_selector(pedigree_selector_id)
+    people_group_id = query.get('peopleGroup', {}).get('id', None)
+    people_group = dataset.get_people_group(people_group_id)
 
     variants = add_gene_weight_columns(
         weights_loader, variants, dataset.gene_weights_columns)
 
-    rows = transform_variants_to_lists(
-        variants, genotype_attrs, pedigree_selector)
+    rows = transform_variants_to_lists(variants, genotype_attrs, people_group)
 
     if variants_hard_max is not None:
         limited_rows = itertools.islice(rows, variants_hard_max+1)

@@ -104,13 +104,32 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         for config in self.variants_db.get_all_configs():
             study_config = config.study_config
 
-            pedigree_selector = self._get_att_from_config(
-                study_config, 'pedigreeSelector')
-
-            if not pedigree_selector:
+            genotype_browser = None
+            if 'genotypeBrowser' in study_config and \
+                    study_config.genotype_browser:
+                genotype_browser = study_config.genotype_browser
+            if genotype_browser is None:
                 continue
+
+            people_groups = []
+            if 'peopleGroup' in genotype_browser:
+                people_groups = genotype_browser.people_group
+            if len(people_groups) == 0:
+                continue
+
+            people_groups_list = \
+                self._get_att_list_from_config(study_config, 'peopleGroups')
+
+            if not people_groups_list or \
+                    (people_groups_list and len(people_groups_list) == 0):
+                continue
+
             self.denovo_gene_sets[config.id] = {
-                'source': pedigree_selector
+                pg.id: {
+                    'name': pg.name,
+                    'source': pg.source
+                } for pg in people_groups
+                if pg.id in people_groups_list
             }
 
         self.standard_criterias = []
@@ -140,17 +159,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         self.gene_sets_names = self._get_att_list('geneSetsNames')
 
-    def _get_att_from_config(self, config, att_name):
-        gene_terms_section = config.get(
-            'geneTerms.' + self.collection_id, None)
+    def _get_att_list_from_config(self, config, att_name):
+        gene_terms_section = config.get('denovoGeneSets', None)
         if gene_terms_section:
             att = gene_terms_section.get(att_name, None)
-            return att
-
-    def _get_att_list_from_config(self, config, att_name):
-        att = self._get_att(config, att_name)
-        if att:
-            return [a.strip() for a in att.split(',')]
+            if type(att) == str:
+                return [a.strip() for a in att.split(',')]
 
     def _get_att_list(self, att_name):
         return self.gene_info.getGeneTermAttList(self.collection_id, att_name)
@@ -163,24 +177,33 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
     def _load_cache_from_json(self, build_cache=False):
         studies = self._get_studies()
         for study in studies:
-            cache_dir = study.gene_sets_cache_file()
-            if not os.path.exists(cache_dir):
-                if not build_cache:
-                    raise EnvironmentError(
-                        "Denovo gene sets caches dir '{}' "
-                        "does not exists".format(cache_dir))
-                else:
-                    self.build_cache([study.id])
+            for people_group_id, _ in self.denovo_gene_sets[study.id].items():
+                cache_dir = study.gene_sets_cache_file(people_group_id)
+                if not os.path.exists(cache_dir):
+                    if not build_cache:
+                        raise EnvironmentError(
+                            "Denovo gene sets caches dir '{}' "
+                            "does not exists".format(cache_dir))
+                    else:
+                        self.build_cache([study.id], [people_group_id])
+                        cache_dir = study.gene_sets_cache_file(people_group_id)
 
-            self.cache[study.id] = self._load_cache(study)
+                if study.id not in self.cache:
+                    self.cache[study.id] = {}
+                self.cache[study.id][people_group_id] = \
+                    self._load_cache(cache_dir)
 
-    def build_cache(self, study_ids=None):
+    def build_cache(self, study_ids=None, people_group_ids=None):
         for study in self._get_studies(study_ids):
-            study_cache = self._generate_gene_sets_for(study)
-            self._save_cache(study, study_cache)
+            for people_group_id, _ in self.denovo_gene_sets[study.id].items():
+                if people_group_ids and \
+                        people_group_id not in people_group_ids:
+                    continue
+                study_cache = self._generate_gene_sets_for(
+                    study, people_group_id)
+                self._save_cache(study, people_group_id, study_cache)
 
-    def _load_cache(self, study):
-        cache_dir = study.gene_sets_cache_file()
+    def _load_cache(self, cache_dir):
         with open(cache_dir, "r") as f:
             result = json.load(f)
 
@@ -189,11 +212,11 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         return result
 
-    def _save_cache(self, study, study_cache):
+    def _save_cache(self, study, people_group_id, study_cache):
         # change all sets to lists so they can be saved in json
         cache = self._convert_cache_innermost_types(study_cache, set, list)
 
-        cache_dir = study.gene_sets_cache_file()
+        cache_dir = study.gene_sets_cache_file(people_group_id)
         if not os.path.exists(os.path.dirname(cache_dir)):
             os.makedirs(os.path.dirname(cache_dir))
         with open(cache_dir, "w") as f:
@@ -213,25 +236,25 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
 
         return res
 
-    def _generate_gene_sets_for(self, study):
-        pedigree_selector = self.denovo_gene_sets[study.id]['source']
-        pedigree_selector_values = [
-            str(p) for p in study.get_pedigree_values(pedigree_selector)
+    def _generate_gene_sets_for(self, study, people_group_id):
+        people_group = \
+            self.denovo_gene_sets[study.id][people_group_id]['source']
+
+        people_group_values = [
+            str(p) for p in study.get_pedigree_values(people_group)
         ]
 
-        cache = {value: {} for value in pedigree_selector_values}
+        cache = {value: {} for value in people_group_values}
 
         for criterias_combination in product(
                 *self.standard_criterias):
             search_args = {criteria['property']: criteria['value']
                            for criteria in criterias_combination}
-            for pedigree_selector_value in pedigree_selector_values:
+            for people_group_value in people_group_values:
                 innermost_cache = self._init_criterias_cache(
-                    cache[pedigree_selector_value],
-                    criterias_combination)
+                    cache[people_group_value], criterias_combination)
                 innermost_cache.update(self._add_genes_families(
-                    pedigree_selector, pedigree_selector_value, study,
-                    search_args))
+                    people_group, people_group_value, study, search_args))
 
         return cache
 
@@ -260,39 +283,53 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             {
                 'datasetId': study.id,
                 'datasetName': study.name,
-                'phenotypes': study.get_legend()
+                'peopleGroupId': people_group_id,
+                'peopleGroupName': people_group['name'],
+                'phenotypes': study.get_gene_sets_legend(people_group_id)
             }
             for study in self._get_studies()
+            for people_group_id, people_group in
+            self.denovo_gene_sets[study.id].items()
             if permitted_datasets is None or
             study.id in permitted_datasets
         ]
 
     @staticmethod
     def _filter_gene_sets_types(gene_sets_types, permitted_datasets):
-        return {k: v
-                for k, v in gene_sets_types.items()
+        return {
+            k: {
+                pg_id: v
+                for pg_id, v in pg.items()
                 if v and (permitted_datasets is None or
-                          k in permitted_datasets)}
+                          k in permitted_datasets)
+            } for k, pg in gene_sets_types.items()
+        }
 
     @staticmethod
     def _format_description(
             gene_sets_types, include_datasets_desc=False,
             full_description=True):
         if full_description:
-            return ";".join(["{}:{}".format(d, ",".join(p))
-                             for d, p in gene_sets_types.items()])
+            return ";".join([
+                "{}:{}:{}".format(d, pg_id, ",".join(p))
+                for d, pg in gene_sets_types.items() for pg_id, p in pg.items()
+            ])
 
-        pedigree_selectors = ', '.join(
-            set(chain(*list(gene_sets_types.values()))))
+        people_groups = ', '.join(set(chain(*list([
+            p for pg in gene_sets_types.values() for p in pg.values()]))))
         if include_datasets_desc:
             return '{}::{}'.format(
-                ', '.join(set(gene_sets_types.keys())),
-                pedigree_selectors)
+                ', '.join(set([
+                    '{}:{}'.format(d, pg_id)
+                    for d, pg in gene_sets_types.items()
+                    for pg_id, _ in pg.items()])),
+                people_groups)
         else:
-            return pedigree_selectors
+            return people_groups
 
     def get_gene_sets(
-            self, gene_sets_types={'f1_group': ['autism']}, **kwargs):
+            self, gene_sets_types={'f1_group': {'phenotype': ['autism']}},
+            **kwargs):
         gene_sets_types = self._filter_gene_sets_types(
             gene_sets_types,
             kwargs.get('permitted_datasets', None))
@@ -311,8 +348,9 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 })
         return result
 
-    def get_gene_set(self, gene_set_id, gene_sets_types={'SD': ['autism']},
-                     **kwargs):
+    def get_gene_set(
+            self, gene_set_id,
+            gene_sets_types={'SD': {'phenotype': ['autism']}}, **kwargs):
         gene_sets_types = self._filter_gene_sets_types(
             gene_sets_types,
             kwargs.get('permitted_datasets'))
@@ -343,13 +381,16 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         else:
             recurrency_criteria = None
         genes_families = {}
-        for dataset_id, pedigree_selector_values in gene_sets_types.items():
-            for pedigree_selector_value in pedigree_selector_values:
-                ds_pedigree_genes_families = self._get_gene_families(
-                    self.cache,
-                    {dataset_id, pedigree_selector_value} | standard_criterias)
-                for gene, families in ds_pedigree_genes_families.items():
-                    genes_families.setdefault(gene, set()).update(families)
+        for dataset_id, people_group in gene_sets_types.items():
+            for people_group_id, people_group_values in \
+                    people_group.items():
+                for people_group_value in people_group_values:
+                    ds_pedigree_genes_families = self._get_gene_families(
+                        self.cache,
+                        {dataset_id, people_group_id, people_group_value}
+                        | standard_criterias)
+                    for gene, families in ds_pedigree_genes_families.items():
+                        genes_families.setdefault(gene, set()).update(families)
 
         # print("genes_families", genes_families)
         matching_genes = genes_families

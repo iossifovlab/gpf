@@ -25,7 +25,7 @@ EXAMPLE_REQUEST_SSC = {
     ],
     "genes": "All",
     "datasetId": "SSC",
-    "pedigreeSelector": {
+    "peopleGroup": {
         "id": "phenotype",
         "checkedValues": ["autism", "unaffected"]
     }

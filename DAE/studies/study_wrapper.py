@@ -34,7 +34,7 @@ class StudyWrapper(object):
         gene_weights_columns = []
         column_labels = {}
 
-        pedigree_selectors = []
+        people_groups = []
         present_in_role = []
 
         if 'genotypeBrowser' in self.config and self.config.genotype_browser:
@@ -48,8 +48,8 @@ class StudyWrapper(object):
 
             column_labels = genotype_browser['columnLabels']
 
-            if 'pedigreeSelectors' in genotype_browser:
-                pedigree_selectors = genotype_browser.pedigree_selectors
+            if 'peopleGroup' in genotype_browser:
+                people_groups = genotype_browser.people_group
             if 'presentInRole' in genotype_browser:
                 present_in_role = genotype_browser.present_in_role
 
@@ -59,13 +59,13 @@ class StudyWrapper(object):
         self.gene_weights_columns = gene_weights_columns
         self.column_labels = column_labels
 
-        self.pedigree_selectors = pedigree_selectors
+        self.people_groups = people_groups
         self.present_in_role = present_in_role
 
-        if len(self.pedigree_selectors) != 0:
+        if len(self.people_groups) != 0:
             self.legend = {
                 ps['id']: ps['domain'] + [ps['default']]
-                for ps in self.pedigree_selectors
+                for ps in self.people_groups
             }
         else:
             self.legend = {}
@@ -337,18 +337,17 @@ class StudyWrapper(object):
 
     def _add_people_with_phenotype(self, kwargs):
         people_with_phenotype = set()
-        if 'pedigreeSelector' in kwargs and\
-                kwargs['pedigreeSelector'] is not None:
-            pedigree_selector_query = kwargs.pop('pedigreeSelector')
+        if 'peopleGroup' in kwargs and\
+                kwargs['peopleGroup'] is not None:
+            pedigree_selector_query = kwargs.pop('peopleGroup')
 
-            pedigree_selector = self.get_pedigree_selector(
-                pedigree_selector_query['id'])
+            people_group = self.get_people_group(pedigree_selector_query['id'])
 
             for family in self.families.values():
                 family_members_with_phenotype = set(
                     [person.person_id for person in
                         family.get_people_with_phenotypes(
-                            pedigree_selector['source'],
+                            people_group['source'],
                             pedigree_selector_query['checkedValues'])])
                 people_with_phenotype.update(family_members_with_phenotype)
 
@@ -545,24 +544,29 @@ class StudyWrapper(object):
         }]
 
     def get_legend(self, *args, **kwargs):
-        if 'pedigreeSelector' not in kwargs:
+        if 'peopleGroup' not in kwargs:
             legend = list(self.legend.values())[0] if self.legend else []
         else:
-            legend = self.legend.get(kwargs['pedigreeSelector']['id'], [])
+            legend = self.legend.get(kwargs['peopleGroup']['id'], [])
 
         return legend + self._get_legend_default_values()
 
-    def get_pedigree_selector(self, pedigree_selector_id):
-        if not pedigree_selector_id:
-            return self.pedigree_selectors[0]\
-                if self.pedigree_selectors else {}
+    def get_gene_sets_legend(self, people_group_id):
+        gene_sets_pg = self.get_people_group(people_group_id)
+        if len(gene_sets_pg) == 0:
+            return []
 
-        pedigree_selector_with_id = list(filter(
-            lambda pedigree_selector: pedigree_selector.get('id') ==
-            pedigree_selector_id, self.pedigree_selectors))
+        return gene_sets_pg['domain']
 
-        return pedigree_selector_with_id[0] \
-            if pedigree_selector_with_id else {}
+    def get_people_group(self, people_group_id):
+        if not people_group_id:
+            return self.people_groups[0] if self.people_groups else {}
+
+        people_group_with_id = list(filter(
+            lambda people_group: people_group.get('id') == people_group_id,
+            self.people_groups))
+
+        return people_group_with_id[0] if people_group_with_id else {}
 
     def get_present_in_role(self, present_in_role_id):
         if not present_in_role_id:
@@ -633,9 +637,9 @@ class StudyWrapper(object):
     def get_column_labels(self):
         return self.column_labels
 
-    def gene_sets_cache_file(self):
+    def gene_sets_cache_file(self, people_group_id=''):
         cache_path = os.path.join(
             os.path.split(self.config.study_config.config_file)[0],
-            'denovo-cache.json')
+            'denovo-cache-' + people_group_id + '.json')
 
         return cache_path

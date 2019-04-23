@@ -63,7 +63,7 @@ class EnrichmentBuilder(object):
         enrichment_config = self.dataset.descriptor.get('enrichmentTool')
         assert enrichment_config is not None
         person_grouping_id = enrichment_config['selector']
-        person_grouping = self.dataset.get_pedigree_selector(
+        person_grouping = self.dataset.get_people_group(
             default=False,
             person_grouping=person_grouping_id)
 

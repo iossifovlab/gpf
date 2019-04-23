@@ -21,7 +21,7 @@ class GenotypeHelper(object):
         return DatasetGenotypeHelper(dataset, grouping, grouping_selector)
 
     def get_variants(self):
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class StudiesGenotypeHelper(GenotypeHelper):
@@ -77,7 +77,7 @@ class DatasetGenotypeHelper(GenotypeHelper):
         self.dataset = dataset
         self.person_grouping_id = person_grouping
         self.person_grouping_selector = person_grouping_selector
-        self.person_grouping = self.dataset.get_pedigree_selector(
+        self.person_grouping = self.dataset.get_people_group(
             person_grouping=person_grouping)
         assert self.person_grouping['id'] == self.person_grouping_id
         self.study_types = study_types
