@@ -53,7 +53,7 @@ class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
             'datasetId': grouping_results['datasetId'],
             'effectTypes': effect_types_fixed,
             'gender': gender,
-            'pedigreeSelector': {
+            'peopleGroup': {
                 'id': grouping_results['personGroupingId'],
                 'checkedValues': [grouping_results['personGroupingValue']]},
             'studyTypes': ['we'],

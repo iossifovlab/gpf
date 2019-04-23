@@ -380,8 +380,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         people_group = cls._get_selectors(
             config_section, 'peopleGroup', cls._get_pedigree)
         if people_group:
-            config_section['pedigreeSelectors'] = people_group
-            config_section['peopleGroup'] = config_section['pedigreeSelectors']
+            config_section['peopleGroup'] = people_group
 
         present_in_role = cls._get_selectors(
             config_section, 'presentInRole', cls._get_present_in_role)

@@ -103,7 +103,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         self.denovo_gene_sets = OrderedDict()
         for config in self.variants_db.get_all_configs():
             study_config = config.study_config
-            
+
             genotype_browser = None
             if 'genotypeBrowser' in study_config and \
                     study_config.genotype_browser:
@@ -111,10 +111,10 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             if genotype_browser is None:
                 continue
 
-            pedigree_selectors = []
-            if 'pedigreeSelectors' in genotype_browser:
-                pedigree_selectors = genotype_browser.pedigree_selectors
-            if len(pedigree_selectors) == 0:
+            people_groups = []
+            if 'PeopleGroups' in genotype_browser:
+                people_groups = genotype_browser.people_groups
+            if len(people_groups) == 0:
                 continue
 
             people_groups = \
@@ -124,11 +124,11 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 continue
 
             self.denovo_gene_sets[config.id] = {
-                ps.id: {
-                    'name': ps.name,
-                    'source': ps.source
-                } for ps in pedigree_selectors
-                if not people_groups or ps.id in people_groups
+                pg.id: {
+                    'name': pg.name,
+                    'source': pg.source
+                } for pg in people_groups
+                if not people_groups or pg.id in people_groups
             }
 
         self.standard_criterias = []
@@ -236,26 +236,24 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         return res
 
     def _generate_gene_sets_for(self, study, people_group_id):
-        pedigree_selector = \
+        people_group = \
             self.denovo_gene_sets[study.id][people_group_id]['source']
 
-        pedigree_selector_values = [
-            str(p) for p in study.get_pedigree_values(pedigree_selector)
+        people_group_values = [
+            str(p) for p in study.get_pedigree_values(people_group)
         ]
 
-        cache = {value: {} for value in pedigree_selector_values}
+        cache = {value: {} for value in people_group_values}
 
         for criterias_combination in product(
                 *self.standard_criterias):
             search_args = {criteria['property']: criteria['value']
                            for criteria in criterias_combination}
-            for pedigree_selector_value in pedigree_selector_values:
+            for people_group_value in people_group_values:
                 innermost_cache = self._init_criterias_cache(
-                    cache[pedigree_selector_value],
-                    criterias_combination)
+                    cache[people_group_value], criterias_combination)
                 innermost_cache.update(self._add_genes_families(
-                    pedigree_selector, pedigree_selector_value, study,
-                    search_args))
+                    people_group, people_group_value, study, search_args))
 
         return cache
 
@@ -316,7 +314,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 for d, pg in gene_sets_types.items() for pg_id, p in pg.items()
             ])
 
-        pedigree_selectors = ', '.join(set(chain(*list([
+        people_groups = ', '.join(set(chain(*list([
             p for pg in gene_sets_types.values() for p in pg.values()]))))
         if include_datasets_desc:
             return '{}::{}'.format(
@@ -324,9 +322,9 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                     '{}:{}'.format(d, pg_id)
                     for d, pg in gene_sets_types.items()
                     for pg_id, _ in pg.items()])),
-                pedigree_selectors)
+                people_groups)
         else:
-            return pedigree_selectors
+            return people_groups
 
     def get_gene_sets(
             self, gene_sets_types={'f1_group': {'phenotype': ['autism']}},
@@ -383,12 +381,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
             recurrency_criteria = None
         genes_families = {}
         for dataset_id, people_group in gene_sets_types.items():
-            for people_group_id, pedigree_selector_values in \
+            for people_group_id, people_group_values in \
                     people_group.items():
-                for pedigree_selector_value in pedigree_selector_values:
+                for people_group_value in people_group_values:
                     ds_pedigree_genes_families = self._get_gene_families(
                         self.cache,
-                        {dataset_id, people_group_id, pedigree_selector_value}
+                        {dataset_id, people_group_id, people_group_value}
                         | standard_criterias)
                     for gene, families in ds_pedigree_genes_families.items():
                         genes_families.setdefault(gene, set()).update(families)
