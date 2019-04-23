@@ -50,3 +50,64 @@ def test_quads_f1_config_attr(quads_f1_config, option_name, expected_value):
     assert quads_f1_config is not None
 
     assert getattr(quads_f1_config, option_name) == expected_value
+
+
+@pytest.mark.parametrize("option_name,expected_value", [
+    ("hasPresentInChild", False),
+    ("hasPresentInParent", False),
+    ("hasFamilyFilters", False),
+    ("hasPedigreeSelector", True),
+    ("hasCNV", False),
+    ("hasComplex", False),
+    ("genesBlockShowAll", True),
+    ("hasStudyFilters", True),
+    ("phenoFilters", None),
+])
+def test_quads_f1_config_genotype_browser(
+        quads_f1_config, option_name, expected_value):
+    genotype_browser = quads_f1_config.genotype_browser
+
+    assert genotype_browser[option_name] == expected_value
+
+
+@pytest.mark.parametrize(
+    "option_name,expected_name,expected_source,expected_slots", [
+        ("genotype", "genotype", "pedigree", [
+            {'source': "inChS", 'name': 'in child', 'id': 'inChS',
+             'format': '%s'},
+            {'source': "fromParentS", 'name': 'from parent',
+             'id': 'fromParentS', 'format': '%s'}
+        ]),
+        ("effect", "effect", None, [
+            {'source': "worstEffect", 'name': 'worst effect type',
+             'id': 'worstEffect', 'format': '%s'},
+            {'source': "genes", 'name': 'genes', 'id': 'genes',
+             'format': '%s'}
+        ]),
+        ("best", "family genotype", "bestSt", []),
+    ]
+)
+def test_quads_f1_config_genotype_browser_genotype_column(
+        quads_f1_config, option_name, expected_name, expected_source,
+        expected_slots):
+    genotype_browser = quads_f1_config.genotype_browser
+
+    genotype_column = list(filter(
+        lambda gc: gc['id'] == option_name,
+        genotype_browser['genotypeColumns']
+    ))
+
+    assert len(genotype_column) == 1
+    genotype_column = genotype_column[0]
+
+    assert genotype_column['id'] == option_name
+    assert genotype_column['name'] == expected_name
+    assert genotype_column['source'] == expected_source
+
+    assert len(genotype_column['slots']) == len(expected_slots)
+
+    for gc_slot, e_slot in zip(genotype_column['slots'], expected_slots):
+        assert gc_slot['source'] == e_slot['source']
+        assert gc_slot['name'] == e_slot['name']
+        assert gc_slot['id'] == e_slot['id']
+        assert gc_slot['format'] == e_slot['format']
