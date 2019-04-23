@@ -112,15 +112,16 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 continue
 
             people_groups = []
-            if 'PeopleGroups' in genotype_browser:
-                people_groups = genotype_browser.people_groups
+            if 'peopleGroup' in genotype_browser:
+                people_groups = genotype_browser.people_group
             if len(people_groups) == 0:
                 continue
 
-            people_groups = \
+            people_groups_list = \
                 self._get_att_list_from_config(study_config, 'peopleGroups')
 
-            if people_groups and len(people_groups) == 0:
+            if not people_groups_list or \
+                    (people_groups_list and len(people_groups_list) == 0):
                 continue
 
             self.denovo_gene_sets[config.id] = {
@@ -128,7 +129,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                     'name': pg.name,
                     'source': pg.source
                 } for pg in people_groups
-                if not people_groups or pg.id in people_groups
+                if pg.id in people_groups_list
             }
 
         self.standard_criterias = []
