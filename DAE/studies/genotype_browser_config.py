@@ -311,6 +311,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
 
         present_in_role['name'] = \
             study_config.pop(present_in_role_type + '.name', None)
+        _, present_in_role['id'] = cls._split_section(present_in_role_type)
         present_in_role['roles'] = \
             [
                 Role.from_name(el.strip()).display_name
@@ -388,3 +389,22 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
             config_section['presentInRole'] = present_in_role
 
         return GenotypeBrowserConfig(config_section)
+
+    @staticmethod
+    def _get_description_keys():
+        return [
+            'hasPedigreeSelector', 'hasPresentInChild', 'hasPresentInParent',
+            'hasPresentInRole', 'hasCNV', 'hasComplex', 'hasFamilyFilters',
+            'hasStudyFilters', 'hasStudyTypes', 'hasGraphicalPreview',
+            'genesBlockShowAll', 'previewColumns', 'rolesFilterOptions',
+            'genotypeColumns', 'phenoFilters', 'familyStudyFilters',
+            'pedigreeSelectors', 'presentInRole'
+        ]
+
+    def get_genotype_browser_description(self):
+        keys = self._get_description_keys()
+        config = self.to_dict()
+
+        result = {key: config.get(key, None) for key in keys}
+
+        return result
