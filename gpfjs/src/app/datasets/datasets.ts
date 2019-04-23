@@ -71,6 +71,7 @@ export class PresentInRole {
     }
 
     return new PresentInRole(
+      json['id'],
       json['name'],
       json['roles'],
     );
@@ -84,6 +85,7 @@ export class PresentInRole {
   }
 
   constructor(
+    readonly id: string,
     readonly name: string,
     readonly roles: string[]
   ) {
