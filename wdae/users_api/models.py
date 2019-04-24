@@ -71,7 +71,7 @@ class WdaeUserManager(BaseUserManager):
 
 class WdaeUser(AbstractBaseUser, PermissionsMixin):
     app_label = 'api'
-    name = models.CharField(max_length='100')
+    name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
 
     is_staff = models.BooleanField(default=False)
@@ -340,7 +340,7 @@ pre_delete.connect(group_pre_delete, Group, weak=False)
 
 
 class VerificationPath(models.Model):
-    path = models.CharField(max_length='255', unique=True)
+    path = models.CharField(max_length=255, unique=True)
     user = models.OneToOneField(WdaeUser)
 
     def __str__(self):

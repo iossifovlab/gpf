@@ -36,16 +36,18 @@ class Command(BaseCommand, ImportUsersBase):
             help='Sets the password of the user',
         )
 
+        parser.add_argument('email')
+
     def handle(self, *args, **options):
-        if(len(args) != 1):
-            raise CommandError('Exactly one argument required')
+        # if(len(args) != 1):
+        #     raise CommandError('Exactly one argument required')
 
         UserModel = get_user_model()
-        if UserModel.objects.filter(email=args[0]).exists():
+        if UserModel.objects.filter(email=options['email']).exists():
             raise CommandError('User exists')
 
         res = {
-            'Email': args[0],
+            'Email': options['email'],
             'Name': options['name'],
             'Groups': options['groups'],
         }
@@ -53,7 +55,7 @@ class Command(BaseCommand, ImportUsersBase):
         user = self.handle_user(res)
 
         if options['password'] is None:
-            call_command('changepassword', username=args[0],
+            call_command('changepassword', username=options['email'],
                          stdout=self.stdout)
         else:
             user.set_password(options['password'])

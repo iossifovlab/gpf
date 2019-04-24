@@ -6,11 +6,11 @@ from django.conf.urls import url
 
 
 router = SimpleRouter(trailing_slash=False)
-router.register(r'', GroupsViewSet, base_name='groups')
+router.register(r'groups', GroupsViewSet, basename='groups')
 
 urlpatterns = [
-    url(r'^/grant-permission$', GrantPermissionToGroupView.as_view(),
+    url(r'^groups/grant-permission$', GrantPermissionToGroupView.as_view(),
         name="grant_permission"),
-    url(r'^/revoke-permission$', RevokePermissionToGroupView.as_view(),
+    url(r'^groups/revoke-permission$', RevokePermissionToGroupView.as_view(),
         name="revoke_permission"),
 ] + router.urls
