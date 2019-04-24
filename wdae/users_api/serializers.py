@@ -26,7 +26,8 @@ class UserSerializer(serializers.ModelSerializer):
     groups = serializers.ListSerializer(
         child=CreatableSlugRelatedField(
             slug_field='name', queryset=Group.objects.all()),
-        validators=[ProtectedGroupsValidator(), SomeSuperuserLeftValidator()])
+        validators=[ProtectedGroupsValidator(), SomeSuperuserLeftValidator()],
+        default=[])
 
     hasPassword = serializers.BooleanField(source='is_active', read_only=True)
 
