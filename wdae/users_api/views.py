@@ -110,16 +110,14 @@ def reset_password(request):
     try:
         user = user_model.objects.get(email=email)
         if not user.is_active:
-            return Response({'error_msg': 'User with this email is approved'
-                             ' for registration. Please, register first'},
-                            status=status.HTTP_409_CONFLICT)
+            return Response({}, status=status.HTTP_200_OK)
         user.reset_password()
         user.deauthenticate()
 
         return Response({}, status.HTTP_200_OK)
     except user_model.DoesNotExist:
-        return Response({'error_msg': 'User with this email not found'},
-                        status=status.HTTP_404_NOT_FOUND)
+        return Response({},
+                        status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -144,8 +142,7 @@ def register(request):
         preexisting_user = user_model.objects.get(email__iexact=email,
                                                   groups__name=group_name)
         if preexisting_user.is_active:
-            return Response({'error_msg': 'User already exists'},
-                            status=status.HTTP_409_CONFLICT)
+            return Response({}, status=status.HTTP_201_CREATED)
 
         preexisting_user.register_preexisting_user(request.data.get('name'))
         LOGGER.info(log_filter(
@@ -160,20 +157,19 @@ def register(request):
             "email: '" + str(email) + "'; researcher id: '" + 
             str(researcher_id) + "'"
         ))
-        return Response({}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({}, status=status.HTTP_201_CREATED)
     except user_model.DoesNotExist:
         LOGGER.error(log_filter(
             request, "Registration failed: Email or Researcher Id not found; "
             "email: '" + str(email) + "'; researcher id: '" + 
             str(researcher_id) + "'"
         ))
-        return Response({'error_msg': 'Email or Researcher Id not found'},
-                        status=status.HTTP_404_NOT_FOUND)
+        return Response({}, status=status.HTTP_201_CREATED)
     except KeyError:
         LOGGER.error(log_filter(
             request, "Registration failed: KeyError; " + str(request.data)
         ))
-        return Response({}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({}, status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST'])
