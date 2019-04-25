@@ -2,11 +2,8 @@ import {
   Input, Component, OnInit, OnChanges, SimpleChanges, forwardRef
 } from '@angular/core';
 
-import { Observable } from 'rxjs';
-
 import { VariantTypes } from './varianttypes';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
 import { StateRestoreService } from '../store/state-restore.service';
 import { DatasetsService } from '../datasets/datasets.service';
 
@@ -53,7 +50,7 @@ export class VarianttypesComponent extends QueryStateWithErrorsProvider
   }
 
   selectAll(): void {
-    let selected = new Set(['sub', 'ins', 'del']);
+    const selected = new Set(['sub', 'ins', 'del']);
     if (this.hasComplex) {
       selected.add('complex');
     }
@@ -69,7 +66,7 @@ export class VarianttypesComponent extends QueryStateWithErrorsProvider
 
   variantTypesCheckValue(variantType: string, value: boolean): void {
     if (variantType === 'sub' || variantType === 'ins' || variantType === 'del' ||
-        variantType === 'CNV' || variantType == 'complex') {
+        variantType === 'CNV' || variantType === 'complex') {
       if (value) {
         this.variantTypes.selected.add(variantType);
       } else {

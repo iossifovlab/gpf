@@ -1,9 +1,6 @@
 import { Gender } from './gender';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
-import { Observable } from 'rxjs';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { QueryData } from '../query/query';
 import { StateRestoreService } from '../store/state-restore.service';
@@ -33,7 +30,7 @@ export class GenderComponent extends QueryStateWithErrorsProvider implements OnI
       .subscribe((state) => {
         if (state['gender']) {
           this.selectNone();
-          for (let gender of state['gender']) {
+          for (const gender of state['gender']) {
             if (gender === 'female' || gender === 'male' || gender === 'unspecified') {
              this.gender[gender] = true;
             }

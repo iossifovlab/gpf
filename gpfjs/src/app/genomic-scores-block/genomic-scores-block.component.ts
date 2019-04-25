@@ -54,8 +54,8 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
             .take(1)
             .subscribe(state => {
                 if (state['genomicScores'] && state['genomicScores'].length > 0) {
-                    for (let score of state['genomicScores']) {
-                        let genomicScore = new GenomicScoreState();
+                    for (const score of state['genomicScores']) {
+                        const genomicScore = new GenomicScoreState();
                         genomicScore.score = this.genomicScoresArray
                                                  .find(el => el['score'] === score['metric']);
                         genomicScore.rangeStart = score['rangeStart'];
@@ -73,7 +73,7 @@ export class GenomicScoresBlockComponent extends QueryStateWithErrorsProvider im
         this.genomicScoresBlockService.getGenomicScores()
         .take(1)
         .subscribe(genomicScores => {
-            this.genomicScoresArray = genomicScores
+            this.genomicScoresArray = genomicScores;
 
             this.restoreStateSubscribe();
         });
