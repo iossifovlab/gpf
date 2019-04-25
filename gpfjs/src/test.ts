@@ -26,7 +26,7 @@ getTestBed().initTestEnvironment(
 );
 // Then we find all the tests.
 // let context = require.context('./', true, /\.spec\.ts$/);
-let context = require.context('./', true, /add\-button\.component\.spec\.ts$/);
+const context = require.context('./', true, /add\-button\.component\.spec\.ts|genomic\-scores\.component\.spec\.ts$/);
 // And load the modules.
 context.keys().map(context);
 // Finally, start Karma to run the tests.
