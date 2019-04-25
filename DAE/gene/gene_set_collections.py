@@ -163,7 +163,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         gene_terms_section = config.get('denovoGeneSets', None)
         if gene_terms_section:
             att = gene_terms_section.get(att_name, None)
-            if type(att) == str:
+            if isinstance(att, str):
                 return [a.strip() for a in att.split(',')]
 
     def _get_att_list(self, att_name):
