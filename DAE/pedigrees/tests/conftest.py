@@ -6,7 +6,9 @@ import csv
 
 from pedigrees.layout_saver import LayoutSaver
 from pedigrees.layout_loader import LayoutLoader
-from pedigrees.pedigrees import Pedigree, PedigreeMember, Individual
+from pedigrees.pedigree_reader import PedigreeReader
+from pedigrees.pedigrees import Pedigree, PedigreeMember, Individual, \
+    FamilyConnections
 from pedigrees.layout import IndividualWithCoordinates, Layout
 from utils.fixtures import path_to_fixtures as _path_to_fixtures
 
@@ -237,3 +239,24 @@ def loaded_layout2(layout_positions2):
     layout.positions = layout_positions2
 
     return layout
+
+
+@pytest.fixture(scope='session')
+def pedigree_reader():
+    return PedigreeReader()
+
+
+@pytest.fixture(scope='session')
+def pedigree_test(pedigree_reader, input_filename):
+    return pedigree_reader.read_file(input_filename, return_as_dict=True)
+
+
+@pytest.fixture(scope='session')
+def fam1(pedigree_test):
+    return pedigree_test['fam1']
+
+
+@pytest.fixture(scope='session')
+def fam1_family_connections(fam1):
+    return FamilyConnections.from_pedigree(fam1)
+
