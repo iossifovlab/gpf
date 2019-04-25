@@ -113,7 +113,7 @@ import { GenomicScoresComponent } from './genomic-scores/genomic-scores.componen
 import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component';
 import { GenomicScoresBlockService } from './genomic-scores-block/genomic-scores-block.service';
 
-import { MarkdownModule } from 'angular2-markdown';
+import { NgxMdModule } from 'ngx-md';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { UserInfoPipe } from './users/user-info.pipe';
 import { UsersTableComponent } from './users-table/users-table.component';
@@ -347,7 +347,7 @@ const appRoutes: Routes = [
     RouterModule.forRoot(appRoutes),
     CookieModule.forRoot(),
     BrowserAnimationsModule,
-    MarkdownModule.forRoot(),
+    NgxMdModule.forRoot(),
     Select2Module,
     ConfirmationPopoverModule.forRoot({
       confirmButtonType: 'danger'
