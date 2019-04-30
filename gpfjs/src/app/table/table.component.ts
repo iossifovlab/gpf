@@ -1,6 +1,5 @@
 import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef,
-  EventEmitter, Input, Component, ContentChildren,
-  QueryList, ViewContainerRef
+  Input, Component, ContentChildren, QueryList, ViewContainerRef
 } from '@angular/core';
 
 import { GpfTableColumnComponent } from './component/column.component';
@@ -69,19 +68,19 @@ export class GpfTableComponent {
     if (!this.dataSource) {
       return [0, 0];
     }
-    let visibleRowCount = Math.ceil(window.innerHeight / this.lastRowHeight);
-    let maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount;
+    const visibleRowCount = Math.ceil(window.innerHeight / this.lastRowHeight);
+    const maxRowCountToDraw = this.drawOutsideVisibleCount * 2 + visibleRowCount;
 
     let startIndex = Math.ceil(-this.tableTopPosition / this.lastRowHeight) - this.drawOutsideVisibleCount;
 
     // We should display at least maxRowCountToDraw rows, even at the bottom of the page
-    let maxStartIndex = this.dataSource.length - maxRowCountToDraw;
+    const maxStartIndex = this.dataSource.length - maxRowCountToDraw;
     startIndex = Math.min(startIndex , maxStartIndex);
 
     // Make sure we always start from index 0 or above
     startIndex = Math.max(0, startIndex);
 
-    let endIndex = startIndex + maxRowCountToDraw;
+    const endIndex = startIndex + maxRowCountToDraw;
     return [startIndex, endIndex];
   }
 
@@ -106,7 +105,7 @@ export class GpfTableComponent {
     if (this.noScrollOptimization) {
       return this.dataSource;
     }
-    let scrollIndices  = this.getScrollIndices();
+    const scrollIndices  = this.getScrollIndices();
     return this.dataSource.slice(scrollIndices[0], scrollIndices[1]);
   }
 }
