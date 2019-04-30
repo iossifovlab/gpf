@@ -1,4 +1,4 @@
-import { Input, ContentChildren, ViewContainerRef, QueryList, ViewChildren, Component } from '@angular/core';
+import { Input, ContentChildren, ViewContainerRef, QueryList, Component } from '@angular/core';
 
 import { GpfTableContentHeaderComponent } from './header.component';
 import { GpfTableContentComponent } from './content.component';
