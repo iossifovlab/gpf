@@ -1,12 +1,7 @@
-import { ContentChild, ViewChildren, ViewChild, HostListener, ChangeDetectorRef,
-  Output, EventEmitter, Input, Directive, Component, OnInit, ContentChildren,
-  QueryList, TemplateRef, ViewContainerRef, ComponentFactoryResolver,
-  AfterViewInit, Query, ElementRef
-} from '@angular/core';
+import { Output, EventEmitter, Input, Component, ViewContainerRef } from '@angular/core';
 import { GpfTableContentHeaderComponent } from '../../component/header.component';
 import { GpfTableSubheaderComponent } from '../../component/subheader.component';
 import { SortInfo } from '../../table.component';
-import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 
