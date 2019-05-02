@@ -10,4 +10,4 @@ export class PedigreeSelectorState {
     message: 'select at least one'
   })
   checkedValues = new Set();
-};
+}

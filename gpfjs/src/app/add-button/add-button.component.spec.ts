@@ -22,4 +22,14 @@ describe('AddButtonComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should give image path prefix', () => {
+    expect(component.imgPathPrefix).toBe('assets/');
+  });
+
+  it('should emit on click', () => {
+    spyOn(component.addFilter, 'emit');
+    component.add();
+    expect(component.addFilter.emit).toHaveBeenCalledWith(null);
+  });
 });
