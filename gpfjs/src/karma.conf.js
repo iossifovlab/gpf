@@ -16,7 +16,7 @@ module.exports = function (config) {
     },
     coverageIstanbulReporter: {
       dir: require('path').join(__dirname, '../coverage'),
-      reports: ['lcovonly', 'html'],
+      reports: ['lcovonly', 'html', 'cobertura'],
       fixWebpackSourcePaths: true
     },
     reporters: ['progress'],
