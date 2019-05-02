@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Http, Headers, Response, URLSearchParams, RequestOptions } from '@angular/http';
 
+// tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 import { CookieService } from 'ngx-cookie';
 
@@ -22,16 +23,16 @@ export class PhenoBrowserService {
   ) {}
 
   private getOptions(): RequestOptions {
-    let csrfToken = this.cookieService.get("csrftoken");
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return options;
   }
 
   getInstruments(datasetId: string): Observable<PhenoInstruments> {
 
-    let options = this.getOptions();
+    const options = this.getOptions();
     options.search = new URLSearchParams();
 
     options.search.set('dataset_id', datasetId);
@@ -43,7 +44,7 @@ export class PhenoBrowserService {
 
   getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasures> {
 
-    let options = this.getOptions();
+    const options = this.getOptions();
     options.search = new URLSearchParams();
 
     options.search.set('dataset_id', datasetId);

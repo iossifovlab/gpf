@@ -37,7 +37,7 @@ export class FamilyIdsComponent extends QueryStateWithErrorsProvider implements 
 
   getState() {
     return this.validateAndGetState(this.familyIds).map(familyIds => {
-        let result = familyIds.familyIds
+      const result = familyIds.familyIds
           .split(/[,\s]/)
           .filter(s => s !== '');
         if (result.length === 0) {

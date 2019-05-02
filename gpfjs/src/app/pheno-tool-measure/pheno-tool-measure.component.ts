@@ -1,5 +1,6 @@
 import { Component, OnInit, forwardRef } from '@angular/core';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
+// tslint:disable-next-line:import-blacklist
 import { Observable, ReplaySubject } from 'rxjs';
 import { PhenoToolMeasure } from './pheno-tool-measure';
 import { StateRestoreService } from '../store/state-restore.service';

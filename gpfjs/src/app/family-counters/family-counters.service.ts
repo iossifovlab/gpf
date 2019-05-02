@@ -1,25 +1,25 @@
 import { Injectable } from '@angular/core';
 
-import { Response, Headers, Http, RequestOptions } from '@angular/http';
+import { Headers, Http, RequestOptions } from '@angular/http';
 import { FamilyObjectArray } from './family-counters';
 
+// tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 // import '../rxjs-operators';
 
-import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie';
 
 @Injectable()
 export class FamilyCountersService {
-  private familyCountersUrl = "family_counters/counters";
+  private familyCountersUrl = 'family_counters/counters';
   constructor(
     private http: Http,
     private cookieService: CookieService) {}
 
   private getOptions(): RequestOptions {
-    let csrfToken = this.cookieService.get("csrftoken");
-    let headers = new Headers({ 'X-CSRFToken': csrfToken });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return options;
   }

@@ -46,7 +46,7 @@ AU0001,6,2,1,2,Autism,AU000106,,`;
   processAllFamilies() {
     return this.allFamilies.split('\n')
       .map(arr => {
-        let result = arr.split(',');
+        const result = arr.split(',');
         result.pop();
         return result;
       })

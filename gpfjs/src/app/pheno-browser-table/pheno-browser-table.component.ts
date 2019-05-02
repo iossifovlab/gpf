@@ -63,7 +63,7 @@ export class PhenoBrowserTableComponent {
   }
 
   getBackgroundColor(pValue: string): string {
-    let intensity = this.pValueIntensityPipe.transform(pValue);
+    const intensity = this.pValueIntensityPipe.transform(pValue);
 
     return `rgba(255, ${intensity}, ${intensity}, 0.8)`;
   }

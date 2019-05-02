@@ -15,21 +15,21 @@ export class UsersGroupsService {
   ) { }
 
   getAllGroups() {
-    let options = new RequestOptions({ withCredentials: true });
+    const options = new RequestOptions({ withCredentials: true });
 
     return this.http.get(this.groupsUrl, options)
       .map(response => UserGroup.fromJsonArray(response.json()));
   }
 
   getGroup(groupId: number) {
-    let options = new RequestOptions({ withCredentials: true });
+    const options = new RequestOptions({ withCredentials: true });
 
     return this.http.get(`${this.groupsUrl}/${groupId}`, options)
       .map(response => UserGroup.fromJson(response.json()));
   }
 
   grantPermission(groupName: string, dataset: Dataset) {
-    let options = new RequestOptions({ withCredentials: true });
+    const options = new RequestOptions({ withCredentials: true });
 
     return this.http.post(this.groupGrantPermissionUrl, {
       groupName: groupName,
@@ -38,7 +38,7 @@ export class UsersGroupsService {
   }
 
   revokePermission(group: UserGroup, dataset: Dataset) {
-    let options = new RequestOptions({ withCredentials: true });
+    const options = new RequestOptions({ withCredentials: true });
 
     return this.http.post(this.groupRevokePermissionUrl, {
       groupId: group.id,

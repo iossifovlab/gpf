@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
+// tslint:disable-next-line:import-blacklist
 import { BehaviorSubject } from 'rxjs';
 
 import { User } from '../users/users';
@@ -44,10 +45,10 @@ export class UserEditComponent implements OnInit {
         this.user$.next(user);
       });
 
-    let allGroups = this.usersGroupsService
+      const allGroups = this.usersGroupsService
       .getAllGroups()
       .subscribe(groups => this.groups$.next(groups));
-  };
+  }
 
   getDefaultGroupsSelect2() {
     return this.getDefaultGroups().map(group => ({

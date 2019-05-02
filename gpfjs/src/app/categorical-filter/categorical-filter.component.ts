@@ -31,7 +31,7 @@ export class CategoricalFilterComponent implements OnChanges {
   }
 
   restoreCategoricalFilter(state) {
-    let phenoFilterState = state
+    const phenoFilterState = state
       .find(f => f.id === this.categoricalFilterState.id);
     if (phenoFilterState) {
       this.categoricalFilterState.selection =

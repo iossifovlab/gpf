@@ -32,7 +32,7 @@ export class GeneSymbolsComponent extends QueryStateWithErrorsProvider implement
   getState() {
     return this.validateAndGetState(this.geneSymbols)
       .map(state => {
-        let result = state.geneSymbols
+        const result = state.geneSymbols
           .split(/[,\s]/)
           .filter(s => s !== '')
           .map(s => s.toUpperCase());

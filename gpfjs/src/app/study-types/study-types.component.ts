@@ -28,7 +28,7 @@ export class StudyTypesComponent extends QueryStateWithErrorsProvider implements
       .subscribe(state => {
         if (state['studyTypes']) {
           this.selectNone();
-          for (let studyType of state['studyTypes']) {
+          for (const studyType of state['studyTypes']) {
             if (studyType === 'we') {
               this.studyTypes.we = true;
             }

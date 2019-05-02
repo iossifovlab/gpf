@@ -24,17 +24,17 @@ export class EnrichmentTableRowComponent {
     // it's url later. Otherwise this window.open is treated as a pop-up and
     // being blocked by most browsers.
     // https://stackoverflow.com/a/22470171/2316754
-    let newWindow = window.open("", "_blank");
+    const newWindow = window.open('', '_blank');
     this.queryService.saveQuery(genotypePreview, 'genotype')
       .take(1)
       .subscribe(urlObject => {
-        let url = this.queryService.getLoadUrlFromResponse(urlObject);
+        const url = this.queryService.getLoadUrlFromResponse(urlObject);
         newWindow.location.assign(url);
       });
   }
 
   getBackgroundColor(testResult: EnrichmentTestResult) {
-    let intensity = this.pValueIntensityPipe.transform(testResult.pvalue);
+    const intensity = this.pValueIntensityPipe.transform(testResult.pvalue);
 
     if (testResult.overlapped > testResult.expected) {
       return `rgba(255, ${intensity}, ${intensity}, 0.8)`;

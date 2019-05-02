@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Headers, Http, Response, RequestOptions } from '@angular/http';
+// tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 
 
@@ -29,13 +30,13 @@ export class QueryService {
   }
 
   private parseGenotypePreviewResponse(response: Response): GenotypePreviewsArray {
-    let data = response.json();
-    let genotypePreviewsArray = GenotypePreviewsArray.fromJson(data);
+    const data = response.json();
+    const genotypePreviewsArray = GenotypePreviewsArray.fromJson(data);
     return genotypePreviewsArray;
   }
 
   getGenotypePreviewByFilter(filter: QueryData): Observable<GenotypePreviewsArray> {
-    let options = new RequestOptions({
+    const options = new RequestOptions({
       headers: this.headers, withCredentials: true
     });
 
@@ -44,14 +45,14 @@ export class QueryService {
   }
 
   saveQuery(queryData: {}, page: string) {
-    let options = new RequestOptions({
+    const options = new RequestOptions({
         headers: this.headers
     });
-    let data = {
+    const data = {
         data: queryData,
         page: page
     };
-    
+
     return this.http
         .post(this.saveQueryEndpoint, data, options)
         .map(response => response.json());
@@ -59,11 +60,11 @@ export class QueryService {
   }
 
   loadQuery(uuid: string) {
-    let options = new RequestOptions({
+    const options = new RequestOptions({
         headers: this.headers,
         withCredentials: true
     });
-    
+
     return this.http
         .post(this.loadQueryEndpoint, { uuid: uuid }, options)
         .map(response => response.json());

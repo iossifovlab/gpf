@@ -33,8 +33,8 @@ export class RegionsFilterComponent extends QueryStateWithErrorsProvider impleme
   getState() {
     return this.validateAndGetState(this.regionsFilter)
       .map(state => {
-        let regionsFilter: string = state.regionsFilter;
-        let result = regionsFilter
+        const regionsFilter: string = state.regionsFilter;
+        const result = regionsFilter
           .split(/[\s]/)
           .map(s => s.replace(/[,]/g, ''))
           .filter(s => s !== '');

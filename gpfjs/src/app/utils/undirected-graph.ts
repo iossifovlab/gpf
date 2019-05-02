@@ -39,7 +39,7 @@ export class UndirectedGraph<T> implements Graph<T> {
 
     this.vertices.push(vertex);
     this.edges.push([]);
-    for (let edge of edges) {
+    for (const edge of edges) {
       this.addEdge(edge[0], edge[1]);
       this.addEdge(edge[1], edge[0]);
     }
@@ -49,8 +49,8 @@ export class UndirectedGraph<T> implements Graph<T> {
     this.checkVertex(vertex1);
     this.checkVertex(vertex2);
 
-    let edge1: Edge<T> = [vertex1, vertex2];
-    let edge2: Edge<T> = [vertex2, vertex1];
+    const edge1: Edge<T> = [vertex1, vertex2];
+    const edge2: Edge<T> = [vertex2, vertex1];
 
     this.getEdgesForVertex(vertex1).push(edge1);
     this.getEdgesForVertex(vertex2).push(edge2);
@@ -58,7 +58,7 @@ export class UndirectedGraph<T> implements Graph<T> {
   }
 
   getEdgesForVertex(vertex: Vertex<T>) {
-    let index = this.vertices.indexOf(vertex);
+    const index = this.vertices.indexOf(vertex);
 
     if (index === -1) {
       return [];
@@ -76,7 +76,7 @@ export class UndirectedGraph<T> implements Graph<T> {
       return false;
     }
 
-    for (let edge of this.getEdgesForVertex(vertex1)) {
+    for (const edge of this.getEdgesForVertex(vertex1)) {
       if (edge[1] === vertex2) {
         return true;
       }
@@ -90,15 +90,15 @@ export class UndirectedGraph<T> implements Graph<T> {
   }
 
   getEdges() {
-    let allEdges: Edge<T>[] = [];
-    let alreadyAddedVertices: Vertex<T>[] = [];
+    const allEdges: Edge<T>[] = [];
+    const alreadyAddedVertices: Vertex<T>[] = [];
 
     for (let i = 0; i < this.edges.length; i++) {
-      let it = this.edges[i].entries();
+      const it = this.edges[i].entries();
       let res = it.next();
 
       while (!res.done) {
-        let [, edge] = res.value;
+        const [, edge] = res.value;
         if (alreadyAddedVertices.indexOf(edge[1]) === -1) {
           allEdges.push(edge);
         }
@@ -112,8 +112,8 @@ export class UndirectedGraph<T> implements Graph<T> {
   }
 
   private checkCorrectEdges(vertex: Vertex<T>, edges: Array<Edge<T>>) {
-    for (let edge of edges) {
-      let otherVertex: Vertex<T> = getOtherVertex(vertex, edge);
+    for (const edge of edges) {
+      const otherVertex: Vertex<T> = getOtherVertex(vertex, edge);
 
       if (otherVertex == null) {
         throw new Error(`Edge (${edge[0]}, ${edge[1]}) does not have vertex ${vertex}`);

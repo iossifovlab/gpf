@@ -14,7 +14,7 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
     }
 
     let valid = true;
-    let lines = text.split('\n')
+    const lines = text.split('\n')
       .map(t => t.trim())
       .filter(t => !!t);
 
@@ -22,15 +22,15 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
       valid = false;
     }
 
-    for (let line of lines) {
-      valid = valid && this.isValid(line);  
+    for (const line of lines) {
+      valid = valid && this.isValid(line);
     }
 
     return valid;
   }
 
   private isValid(line: string) {
-    let match = line.match(RegionsFilterValidator.LINE_REGEX);
+    const match = line.match(RegionsFilterValidator.LINE_REGEX);
     if (match === null) {
       return false;
     }

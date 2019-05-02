@@ -86,7 +86,7 @@ export class GeneWeightsComponent extends QueryStateWithErrorsProvider implement
       .take(1)
       .subscribe(state => {
         if (state['geneWeights'] && state['geneWeights']['weight']) {
-          for (let geneWeight of this.geneWeightsArray) {
+          for (const geneWeight of this.geneWeightsArray) {
             if (geneWeight.weight === state['geneWeights']['weight']) {
               this.selectedGeneWeights = geneWeight;
             }
