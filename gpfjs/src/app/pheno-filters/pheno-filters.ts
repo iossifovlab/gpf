@@ -1,9 +1,9 @@
-import { Validate, ValidateIf } from 'class-validator';
-import { IsNumber, Min, Max } from 'class-validator';
+import { ValidateIf } from 'class-validator';
+import { IsNumber } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
-export interface Selection{
+export interface Selection {
   isEmpty(): boolean;
 }
 
@@ -45,7 +45,7 @@ export class CategoricalFilterState extends PhenoFilterState {
   isEmpty() {
     return this.selection.isEmpty() || super.isEmpty();
   }
-};
+}
 
 export class ContinuousSelection implements Selection {
   @ValidateIf(o => o.mmin !== null)
@@ -78,8 +78,8 @@ export class ContinuousFilterState extends PhenoFilterState {
   ) {
     super(id, type, role, measure, new ContinuousSelection());
   }
-};
+}
 
 export class PhenoFiltersState {
   phenoFilters: Array<PhenoFilterState> = [];
-};
+}

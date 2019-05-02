@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
 import { Observable, ReplaySubject } from 'rxjs';
 import { Scheduler } from 'rxjs-compat';
 
@@ -35,7 +34,7 @@ export class StateRestoreService {
 
   onParamsUpdate(jsonEncodedState: string) {
     if (jsonEncodedState && jsonEncodedState.length > 0) {
-      let currentState = JSON.parse(jsonEncodedState);
+      const currentState = JSON.parse(jsonEncodedState);
       this.pushNewState(currentState);
     }
   }

@@ -75,7 +75,7 @@ export class DatasetsTableComponent implements OnInit {
   }
 
   alwaysSelected(groups: string[]) {
-    return (this.groups || []).filter(g => groups.indexOf(g.name) === -1)
+    return (this.groups || []).filter(g => groups.indexOf(g.name) === -1);
   }
 
   updatePermissions(dataset, groupName) {
@@ -91,7 +91,7 @@ export class DatasetsTableComponent implements OnInit {
       .debounceTime(200)
       .distinctUntilChanged()
       .map(groupName => {
-        if (groupName === "") {
+        if (groupName === '') {
           return [];
         }
 
@@ -104,7 +104,7 @@ export class DatasetsTableComponent implements OnInit {
   }
 
   searchGroups = (groups: string[]) => {
-    return (text$: Observable<string>) => this.search(groups, text$)
+    return (text$: Observable<string>) => this.search(groups, text$);
   }
 
   isDefaultGroup(dataset: Dataset, group: string) {

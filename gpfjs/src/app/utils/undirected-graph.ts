@@ -116,7 +116,7 @@ export class UndirectedGraph<T> implements Graph<T> {
       let otherVertex: Vertex<T> = getOtherVertex(vertex, edge);
 
       if (otherVertex == null) {
-        throw `Edge (${edge[0]}, ${edge[1]}) does not have vertex ${vertex}`;
+        throw new Error(`Edge (${edge[0]}, ${edge[1]}) does not have vertex ${vertex}`);
       }
 
       this.checkVertex(otherVertex);
@@ -125,7 +125,7 @@ export class UndirectedGraph<T> implements Graph<T> {
 
   private checkVertex(vertex: Vertex<T>) {
     if (!this.hasVertex(vertex)) {
-      throw `Graph does not have vertex ${vertex}`;
+      throw new Error(`Graph does not have vertex ${vertex}`);
     }
   }
 }

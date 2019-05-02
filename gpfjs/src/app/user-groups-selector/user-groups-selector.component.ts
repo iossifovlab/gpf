@@ -1,11 +1,10 @@
 import {
   Component, OnInit, Input, EventEmitter, Output, OnChanges, SimpleChanges,
-  ViewChild, ElementRef
+  ViewChild
 } from '@angular/core';
 
 import { Select2OptionData, Select2Component } from 'ng2-select2';
 
-import { User } from '../users/users';
 import { UserGroup } from '../users-groups/users-groups';
 
 @Component({
@@ -60,7 +59,7 @@ export class UserGroupsSelectorComponent implements OnInit, OnChanges {
 
     this.data = this.toSelectOptions(this.groups);
   }
-  
+
   toSelectOptions(groups: UserGroup[]) {
 
     return this.filterProtectedGroups(groups.map(group => group.name))

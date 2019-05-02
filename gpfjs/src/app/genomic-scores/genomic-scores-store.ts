@@ -40,7 +40,7 @@ export class GenomicScoreState {
         if (score) {
             this.score = score;
             this.changeDomain(score);
-        } else { 
+        } else {
             this.score = null;
         }
         this.rangeStart = null;

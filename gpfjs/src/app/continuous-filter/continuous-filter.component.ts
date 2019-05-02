@@ -1,13 +1,10 @@
 import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
-import { ContinuousFilterState, PhenoFiltersState, ContinuousSelection } from '../pheno-filters/pheno-filters';
+import { ContinuousFilterState, ContinuousSelection } from '../pheno-filters/pheno-filters';
 import { StateRestoreService } from '../store/state-restore.service';
 import { Observable ,  Subject } from 'rxjs';
 import { Partitions } from '../gene-weights/gene-weights';
-import { validateOrReject } from 'class-validator';
-import { plainToClass } from 'class-transformer';
-import { ValidationError } from 'class-validator';
 
 @Component({
   selector: 'gpf-continuous-filter',

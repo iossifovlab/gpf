@@ -1,6 +1,5 @@
 
 import {throwError as observableThrowError,  Observable } from 'rxjs';
-import { Injectable } from '@angular/core';
 import { ValidationError, validate } from 'class-validator';
 
 export function toValidationObservable<T>(obj: T): Observable<T> {
@@ -11,7 +10,7 @@ export function toValidationObservable<T>(obj: T): Observable<T> {
       }
       return observableThrowError(errors);
     });
-};
+}
 
 
 export function validationErrorsToStringArray(validationErrors: ValidationError[]): Array<string> | Array<Array<string>> {

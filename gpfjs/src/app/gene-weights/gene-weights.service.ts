@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
+import { Headers, Http, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs';
 
-import { IdDescription } from '../common/iddescription';
-import { IdName } from '../common/idname';
 import { GeneWeights, Partitions } from './gene-weights';
 import { ConfigService } from '../config/config.service';
 

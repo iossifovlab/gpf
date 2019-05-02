@@ -38,7 +38,7 @@ export class Individual extends IndividualSet {
   }
 
   toString() {
-      return this.pedigreeData.id
+      return this.pedigreeData.id;
   }
 
   addRank(rank: number) {

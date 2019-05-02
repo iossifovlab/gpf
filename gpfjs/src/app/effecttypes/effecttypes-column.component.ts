@@ -26,4 +26,4 @@ export class EffecttypesColumnComponent implements OnInit {
       'checked': value
     });
   }
-};
+}

@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
-import { Observable, BehaviorSubject } from 'rxjs';
-import { Select2OptionData } from 'ng2-select2';
+import { BehaviorSubject } from 'rxjs';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -63,7 +62,7 @@ export class UserEditComponent implements OnInit {
   }
 
   getDefaultGroups() {
-    return ['any_user', this.emailValue]
+    return ['any_user', this.emailValue];
   }
 
   submit(user) {

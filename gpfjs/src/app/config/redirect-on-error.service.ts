@@ -2,8 +2,7 @@
 import {throwError as observableThrowError,  Observable } from 'rxjs';
 import { Injectable, Injector } from '@angular/core';
 import {
-  Request, XHRBackend, RequestOptions, Response, Http, RequestOptionsArgs,
-  Headers
+  Request, XHRBackend, RequestOptions, Response, Http, RequestOptionsArgs
 } from '@angular/http';
 import { Router } from '@angular/router';
 
@@ -38,7 +37,7 @@ export class RedirectOnErrorHttpService extends Http {
       if (error.status >= 400 && error.status < 500) {
 
         this.redirectsList.push(new Date());
-        if(!this.shouldRedirect()) {
+        if (!this.shouldRedirect()) {
           console.warn('too many redirects...');
           return observableThrowError(error);
         }

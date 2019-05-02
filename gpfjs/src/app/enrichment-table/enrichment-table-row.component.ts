@@ -1,7 +1,6 @@
-import { Component, Input, Directive } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import {
-  EnrichmentResults, EnrichmentEffectResult, EnrichmentTestResult,
-  GenotypePreviewWithDatasetId
+  EnrichmentEffectResult, EnrichmentTestResult, GenotypePreviewWithDatasetId
 } from '../enrichment-query/enrichment-result';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
 import { QueryService } from '../query/query.service';
@@ -21,8 +20,8 @@ export class EnrichmentTableRowComponent {
   ) {}
 
   goToQuery(genotypePreview: GenotypePreviewWithDatasetId) {
-    // Create new window now because we are in a 'click' event callback, update 
-    // it's url later. Otherwise this window.open is treated as a pop-up and 
+    // Create new window now because we are in a 'click' event callback, update
+    // it's url later. Otherwise this window.open is treated as a pop-up and
     // being blocked by most browsers.
     // https://stackoverflow.com/a/22470171/2316754
     let newWindow = window.open("", "_blank");

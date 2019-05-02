@@ -1,10 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
-import { Observable, Subject, ReplaySubject, BehaviorSubject } from 'rxjs';
+import { Headers, Http, RequestOptions } from '@angular/http';
+import { Observable, ReplaySubject, BehaviorSubject } from 'rxjs';
 import { Scheduler } from 'rxjs-compat';
-
-import { IdDescription } from '../common/iddescription';
-import { IdName } from '../common/idname';
 
 import { Dataset } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';

@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 
 
 import { ConfigService } from '../config/config.service';
-import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-model/genotype-preview';
+import { GenotypePreviewsArray } from '../genotype-preview-model/genotype-preview';
 import { QueryData } from './query';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -72,12 +72,12 @@ export class QueryService {
 
   getLoadUrl(uuid: string) {
     let pathname = this.router.createUrlTree(
-      ["load-query", uuid]).toString();
+      ['load-query', uuid]).toString();
     pathname = this.location.prepareExternalUrl(pathname);
     return window.location.origin + pathname;
   }
 
   getLoadUrlFromResponse(response: {}) {
-    return this.getLoadUrl(response["uuid"]);
+    return this.getLoadUrl(response['uuid']);
   }
 }

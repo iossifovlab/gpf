@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Http, RequestOptions } from '@angular/http';
 import { UserGroup } from './users-groups';
-import { ReplaySubject } from 'rxjs';
 import { Dataset } from '../datasets/datasets';
 
 @Injectable()

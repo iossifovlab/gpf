@@ -1,4 +1,3 @@
-import { Input, Directive } from '@angular/core';
 import {
   ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments
 } from 'class-validator';
@@ -7,7 +6,7 @@ import {
 export class RegionsFilterValidator implements ValidatorConstraintInterface {
 
   private static LINE_REGEX = new RegExp(
-    "^(?:chr)?(?:[0-9xX]|[0-1][0-9]|2[0-2]):([0-9,]+)(?:\-([0-9,]+))?$", "i");
+    '^(?:chr)?(?:[0-9xX]|[0-1][0-9]|2[0-2]):([0-9,]+)(?:\-([0-9,]+))?$', 'i');
 
   validate(text: string, args: ValidationArguments) {
     if (!text) {
@@ -18,8 +17,8 @@ export class RegionsFilterValidator implements ValidatorConstraintInterface {
     let lines = text.split('\n')
       .map(t => t.trim())
       .filter(t => !!t);
-    
-    if(lines.length === 0) {
+
+    if (lines.length === 0) {
       valid = false;
     }
 

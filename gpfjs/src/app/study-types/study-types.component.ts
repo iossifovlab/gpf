@@ -1,10 +1,6 @@
 import { StudyTypes } from './study-types';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
-import { Observable } from 'rxjs';
-
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { QueryData } from '../query/query';
 import { StateRestoreService } from '../store/state-restore.service';

@@ -26,7 +26,7 @@ export class FamilyObject {
             FamilyCount.fromJson(json['count']),
             json['color'],
             json['name']
-        )
+        );
     }
 
 }

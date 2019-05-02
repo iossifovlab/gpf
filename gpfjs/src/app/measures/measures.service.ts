@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Http, RequestOptions, URLSearchParams, Headers } from '@angular/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
-import { ContinuousMeasure, HistogramData } from './measures'
+import { ContinuousMeasure, HistogramData } from './measures';
 import { Partitions } from '../gene-weights/gene-weights';
 
 @Injectable()

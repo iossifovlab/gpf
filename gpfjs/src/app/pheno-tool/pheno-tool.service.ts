@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
+import { Headers, Http, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs';
 
 
@@ -26,7 +26,7 @@ export class PhenoToolService {
 
     return this.http.post(this.phenoToolUrl, filter, options)
       .map(res => {
-        return PhenoToolResults.fromJson(res.json());;
+        return PhenoToolResults.fromJson(res.json());
       });
   }
 }

@@ -28,8 +28,8 @@ export class FamilyCountersService {
     return this.http.post(this.familyCountersUrl, filters, this.getOptions())
       .map((response) => FamilyObjectArray.fromJsonArray(response.json()))
       .catch((err) => {
-        console.log("Family counter:", err);
+        console.log('Family counter:', err);
         return Observable.of(null);
-      })
+      });
   }
 }

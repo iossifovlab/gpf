@@ -1,10 +1,7 @@
 import { RegionsFilter } from './regions-filter';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
-import { Observable } from 'rxjs';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({

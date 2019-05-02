@@ -1,11 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
+import { Headers, Http, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs';
 
-
-
 import { ConfigService } from '../config/config.service';
-import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-model/genotype-preview';
 import { EnrichmentResults } from './enrichment-result';
 
 @Injectable()

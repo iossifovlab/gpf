@@ -1,7 +1,7 @@
 
 import {throwError as observableThrowError,  Observable ,  ReplaySubject } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions, URLSearchParams } from '@angular/http';
+import { Headers, Http, RequestOptions, URLSearchParams } from '@angular/http';
 
 import { ConfigService } from '../config/config.service';
 import { CookieService } from 'ngx-cookie';

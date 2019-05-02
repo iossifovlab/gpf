@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Http, Headers, Response, URLSearchParams, RequestOptions, RequestOptionsArgs } from '@angular/http';
+import { Http, Headers, Response, URLSearchParams, RequestOptions } from '@angular/http';
 
 import { Observable } from 'rxjs';
 import { CookieService } from 'ngx-cookie';
@@ -58,6 +58,6 @@ export class PhenoBrowserService {
 
   getDownloadLink(instrument: PhenoInstrument, datasetId: string) {
     return `${this.config.baseUrl}${this.downloadUrl}`
-           + `?dataset_id=${datasetId}&instrument=${instrument}`
+           + `?dataset_id=${datasetId}&instrument=${instrument}`;
   }
 }
