@@ -1,7 +1,4 @@
-import {
-    Input, Component, ViewContainerRef, ComponentFactoryResolver, HostListener,
-    OnInit, AfterViewInit
-} from '@angular/core';
+import { Input, Component, ViewContainerRef, OnInit, AfterViewInit } from '@angular/core';
 import { GpfTableColumnComponent } from '../component/column.component';
 import { ResizeService } from '../resize.service';
 
@@ -44,7 +41,7 @@ export class GpfTableEmptyCellComponent implements OnInit, AfterViewInit {
         if (this.isCustomWidth) {
             return;
         }
-        let width = this.nativeElement.getBoundingClientRect().width;
+        const width = this.nativeElement.getBoundingClientRect().width;
         if (width > 0 && width !== this.columnInfo.columnWidth) {
             this.columnInfo.columnWidth = width + 'px';
         }

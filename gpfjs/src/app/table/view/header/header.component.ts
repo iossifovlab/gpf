@@ -1,5 +1,4 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { GpfTableColumnComponent } from '../../component/column.component';
 import { SortInfo } from '../../table.component';
 
 
@@ -14,11 +13,11 @@ export class GpfTableHeaderComponent {
   @Input() sortingInfo: SortInfo;
 
   get subheadersCount() {
-      if (this.columns.first) {
-          let length = this.columns.first.headerChildren.length;
-          return Array(length).fill(0).map((x, i) => i);
-      }
-      return [];
+    if (this.columns.first) {
+        const length = this.columns.first.headerChildren.length;
+        return Array(length).fill(0).map((x, i) => i);
+    }
+    return [];
   }
 
   getWidth(column) {
