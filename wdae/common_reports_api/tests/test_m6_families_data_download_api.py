@@ -27,7 +27,7 @@ class Test(BaseAuthenticatedUserTest):
 
         for num, _line in enumerate(response.streaming_content):
             pass
-        self.assertEqual(9452 + 1, num)
+        self.assertEqual(9448 + 1, num)
 
 
 if __name__ == "__main__":

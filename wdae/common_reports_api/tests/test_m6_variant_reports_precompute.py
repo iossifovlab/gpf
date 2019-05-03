@@ -45,11 +45,11 @@ class Test(unittest.TestCase):
         vr.deserialize(self.data)
         fr = vr.families_report
         cc = fr.get_children_counters('autism')
-        self.assertEquals(2167, cc.children_male)
+        self.assertEquals(2166, cc.children_male)
         self.assertEquals(341, cc.children_female)
 
         cc = fr.get_children_counters('unaffected')
-        self.assertEquals(900, cc.children_male)
+        self.assertEquals(899, cc.children_male)
         self.assertEquals(1011, cc.children_female)
 
     def test_deserialize_family_reports_family_counters(self):
@@ -63,7 +63,7 @@ class Test(unittest.TestCase):
         (_p, c) = fc.get_counter('dadMmomFprbMsibF')
         self.assertEqual(877, c)
         (_p, c) = fc.get_counter('dadMmomFprbMsibM')
-        self.assertEqual(790, c)
+        self.assertEqual(789, c)
         (_p, c) = fc.get_counter('dadMmomFprbM')
         self.assertEqual(500, c)
         (_p, c) = fc.get_counter('dadMmomFprbFsibF')

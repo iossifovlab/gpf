@@ -26,3 +26,5 @@ test_data/
 .vscode/
 wdae/docs/_build
 gpf-dist.tar.gz
+test_data
+annotation.tmp

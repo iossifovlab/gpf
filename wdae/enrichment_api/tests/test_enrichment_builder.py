@@ -48,7 +48,7 @@ class Test(APITestCase):
         res = self.res[0]
         self.assertEquals('autism', res['selector'])
 
-        self.assertEquals(2583, res['missense']['all']['count'])
+        self.assertEquals(2581, res['missense']['all']['count'])
         self.assertEquals(95, res['missense']['all']['overlapped'])
 
     def test_autism_synonymous_all(self):
