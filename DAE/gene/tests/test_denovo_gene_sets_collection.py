@@ -22,7 +22,7 @@ def test_denovo_get_gene_set_sd_lgds_autism(gscs):
 def test_denovo_get_gene_set_sd_missense_autism(gscs):
     lgds = gscs.get_gene_set('denovo', 'Missense', {'SD_TEST': ['autism']})
     assert lgds is not None
-    assert lgds['count'] == 2587
+    assert lgds['count'] == 2585
     assert lgds['name'] == 'Missense'
 
 
@@ -129,7 +129,7 @@ def test_denovo_get_gene_set_sd_svip_missense_autism(gscs):
             'SVIP': ['ASD and other neurodevelopmental disorders']
         })
     assert lgds is not None
-    assert lgds['count'] == 2723
+    assert lgds['count'] == 2721
     assert lgds['name'] == 'Missense'
 
 
@@ -197,4 +197,4 @@ def test_denovo_sd_ssc_missense_single(gscs):
     gs = denovo.get_gene_set('Missense.Single', gene_sets_types={
                              'SD_TEST': ['autism'], 'SSC': ['autism']})
     assert gs is not None
-    assert gs['count'] == 2198
+    assert gs['count'] == 2196
