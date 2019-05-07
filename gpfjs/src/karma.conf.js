@@ -23,7 +23,8 @@ module.exports = function (config) {
     reporters: ['progress', 'junit'],
     junitReporter: {
       outputDir: require('path').join(__dirname, '../coverage'),
-      outputFile: 'coverage-junit.xml',
+      outputFile: 'junit-report.xml',
+      suite: '',
       useBrowserName: false,
     },
     port: 9876,
