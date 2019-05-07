@@ -14,3 +14,6 @@ import 'app/table/view/empty-cell.component.spec';
 import 'app/table/view/header/header-cell.component.spec';
 import 'app/table/table.component.spec';
 import 'app/genotype-preview-table/genotype-preview-table.component.spec';
+import 'app/pheno-browser/pheno-browser.spec';
+import 'app/pheno-browser/pheno-browser.service.spec';
+import 'app/pheno-browser/pheno-browser.component.spec';
