@@ -1,9 +1,8 @@
-import { Component, OnInit, Input, forwardRef, ViewChild } from '@angular/core';
+import { Component, OnInit, Input, forwardRef } from '@angular/core';
 import { ContinuousMeasure } from '../measures/measures';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { ContinuousFilterState, ContinuousSelection } from '../pheno-filters/pheno-filters';
 import { PhenoFilter } from '../datasets/datasets';
-import { Observable } from 'rxjs';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
@@ -33,16 +32,16 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
   }
 
   restoreContinuousFilter(state) {
-    let filter = state.find(f => f.id === this.continuousFilterState.id);
+    const filter = state.find(f => f.id === this.continuousFilterState.id);
     if (filter) {
-      let selection = this.continuousFilterState.selection as ContinuousSelection;
+      const selection = this.continuousFilterState.selection as ContinuousSelection;
       this.continuousFilterState.measure = filter.measure;
       selection.domainMin = filter.domainMin;
       selection.domainMax = filter.domainMax;
       selection.max = filter.mmax;
       selection.min = filter.mmin;
       if (this.measures) {
-        let measure = this.measures.find(m => m.name === filter.measure);
+        const measure = this.measures.find(m => m.name === filter.measure);
         if (measure) {
           this.internalSelectedMeasure = measure;
         }
@@ -51,7 +50,7 @@ export class MultiContinuousFilterComponent extends QueryStateCollector implemen
   }
 
   set selectedMeasure(measure) {
-    let selection = this.continuousFilterState.selection as ContinuousSelection;
+    const selection = this.continuousFilterState.selection as ContinuousSelection;
     this.continuousFilterState.measure = measure ? measure.name : null;
     selection.domainMin = measure ? measure.min : 0;
     selection.domainMax = measure ? measure.max : 0;

@@ -6,7 +6,7 @@ import { PhenoToolResult } from '../pheno-tool/pheno-tool-results';
   templateUrl: './pheno-tool-results-chart-per-result.component.html',
 })
 export class PhenoToolResultsChartPerResultComponent implements OnInit {
-  @Input() results: PhenoToolResult
+  @Input() results: PhenoToolResult;
   @Input() yScale: d3.ScaleLinear<number, number>;
   @Input() color: string;
   @Input() fillColor: string;
@@ -25,7 +25,7 @@ export class PhenoToolResultsChartPerResultComponent implements OnInit {
   }
 
   get centerY() {
-    return (this.endY + this.startY)/2;
+    return (this.endY + this.startY) / 2;
   }
 
 }

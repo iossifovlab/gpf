@@ -2,7 +2,7 @@
 <div class="input-group">
   <select class="form-control" [(ngModel)]="selectedValue" required>
     <option *ngFor="let value of categoricalFilter?.measureFilter?.domain" [ngValue]="value">
-      {{value}}
+      {{ value }}
     </option>
   </select>
   <span class="input-group-btn">

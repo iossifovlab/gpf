@@ -1,6 +1,6 @@
-import { Component, Input, forwardRef, ViewChild } from '@angular/core';
-import { QueryStateCollector } from '../query/query-state-provider'
-import { StateRestoreService } from '../store/state-restore.service'
+import { Component, Input, forwardRef, ViewChild, AfterViewInit } from '@angular/core';
+import { QueryStateCollector } from '../query/query-state-provider';
+import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
   selector: 'gpf-genes-block',
@@ -8,7 +8,7 @@ import { StateRestoreService } from '../store/state-restore.service'
   styleUrls: ['./genes-block.component.css'],
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => GenesBlockComponent) }]
 })
-export class GenesBlockComponent extends QueryStateCollector {
+export class GenesBlockComponent extends QueryStateCollector implements AfterViewInit {
   @Input() showAllTab = true;
   @ViewChild('tabset') ngbTabset;
 
@@ -22,16 +22,14 @@ export class GenesBlockComponent extends QueryStateCollector {
     this.stateRestoreService.getState(this.constructor.name)
       .take(1)
       .subscribe(state => {
-        if ("geneSymbols" in state) {
-          this.ngbTabset.select("gene-symbols")
-        }
-        else if ("geneSet" in state) {
-          this.ngbTabset.select("gene-sets")
-        }
-        else if ("geneWeights" in state) {
-          this.ngbTabset.select("gene-weights")
+        if ('geneSymbols' in state) {
+          this.ngbTabset.select('gene-symbols');
+        } else if ('geneSet' in state) {
+          this.ngbTabset.select('gene-sets');
+        } else if ('geneWeights' in state) {
+          this.ngbTabset.select('gene-weights');
         }
       }
-    )
+    );
   }
 }

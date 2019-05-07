@@ -4,4 +4,4 @@ export class FamilyIds {
 
   @IsNotEmpty()
   familyIds = '';
-};
+}

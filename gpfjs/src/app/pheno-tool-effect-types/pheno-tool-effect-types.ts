@@ -24,4 +24,4 @@ export const PHENO_TOOL_INITIAL_VALUES: string[] = [
 ];
 
 export const PHENO_TOOL_ALL: string[] =
-  PHENO_TOOL_OTHERS.concat(PHENO_TOOL_CNV).concat(PHENO_TOOL_LGDS)
+  PHENO_TOOL_OTHERS.concat(PHENO_TOOL_CNV).concat(PHENO_TOOL_LGDS);

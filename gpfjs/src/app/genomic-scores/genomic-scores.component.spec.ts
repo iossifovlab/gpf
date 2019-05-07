@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 import { NgbModule, NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 
-import { MarkdownModule } from 'angular2-markdown';
+import { NgxMdModule } from 'ngx-md';
 
 import { GenomicScoresComponent } from './genomic-scores.component';
 import { GenomicScoreState } from './genomic-scores-store';
@@ -34,7 +34,7 @@ describe('GenomicScoresComponent', () => {
       imports: [
         NgbModule.forRoot(),
         FormsModule,
-        MarkdownModule
+        NgxMdModule
       ]
     })
     .overrideModule(BrowserDynamicTestingModule, {

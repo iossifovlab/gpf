@@ -4,7 +4,7 @@ import { HttpModule } from '@angular/http';
 
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
-import { MarkdownModule } from 'angular2-markdown';
+import { NgxMdModule } from 'ngx-md';
 
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
@@ -70,7 +70,7 @@ describe('GenomicScoresBlockComponent', () => {
       imports: [
         NgbModule.forRoot(),
         FormsModule,
-        MarkdownModule,
+        NgxMdModule,
         HttpModule
       ],
       providers: [

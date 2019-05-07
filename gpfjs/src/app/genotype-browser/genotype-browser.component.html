@@ -35,7 +35,7 @@
     </div>
     <div class="genotype-browser-results" *ngIf="genotypePreviewsArray">
       <p class="overview">
-        {{genotypePreviewsArray.total}} variants selected ({{ genotypePreviewsArray.genotypePreviews.length }} shown)
+        {{ genotypePreviewsArray.total }} variants selected ({{ genotypePreviewsArray.genotypePreviews.length }} shown)
       </p>
       <gpf-genotype-preview-table
       	*ngIf="tablePreview"

@@ -3,11 +3,8 @@ import {
 } from './present-in-parent';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
-import { Observable } from 'rxjs';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { QueryData, Rarity } from '../query/query';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
+import { Rarity } from '../query/query';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
@@ -29,7 +26,7 @@ export class PresentInParentComponent extends QueryStateWithErrorsProvider imple
   }
 
   restoreCheckedState(state) {
-    for (let key of state) {
+    for (const key of state) {
       if (key === 'father only') {
         this.presentInParent.fatherOnly = true;
       }
@@ -164,7 +161,7 @@ export class PresentInParentComponent extends QueryStateWithErrorsProvider imple
   getState() {
     return this.validateAndGetState(this.presentInParent)
       .map(presentInParent => {
-        let result = new Array<string>();
+        const result = new Array<string>();
         if (presentInParent.fatherOnly) {
           result.push('father only');
         }
@@ -178,7 +175,7 @@ export class PresentInParentComponent extends QueryStateWithErrorsProvider imple
           result.push('neither');
         }
 
-        let rarity: Rarity = {
+        const rarity: Rarity = {
           ultraRare: presentInParent.ultraRare,
           minFreq: presentInParent.rarityIntervalStart,
           maxFreq: presentInParent.rarityIntervalEnd

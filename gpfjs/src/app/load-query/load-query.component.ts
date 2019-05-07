@@ -28,7 +28,7 @@ export class LoadQueryComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-      console.log("LoadQueryComponent loaded");
+      console.log('LoadQueryComponent loaded');
       this.route.params.subscribe(
           params => {
               if (!params['uuid']) {

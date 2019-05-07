@@ -1,4 +1,4 @@
-import { Dataset } from "../datasets/datasets";
+import { Dataset } from '../datasets/datasets';
 
 export class DatasetTableRow {
   constructor(

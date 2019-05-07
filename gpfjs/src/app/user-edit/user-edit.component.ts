@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
-import { Observable, BehaviorSubject } from 'rxjs';
-import { Select2OptionData } from 'ng2-select2';
+// tslint:disable-next-line:import-blacklist
+import { BehaviorSubject } from 'rxjs';
 
 import { User } from '../users/users';
 import { UsersService } from '../users/users.service';
@@ -45,10 +45,10 @@ export class UserEditComponent implements OnInit {
         this.user$.next(user);
       });
 
-    let allGroups = this.usersGroupsService
+      const allGroups = this.usersGroupsService
       .getAllGroups()
       .subscribe(groups => this.groups$.next(groups));
-  };
+  }
 
   getDefaultGroupsSelect2() {
     return this.getDefaultGroups().map(group => ({
@@ -63,7 +63,7 @@ export class UserEditComponent implements OnInit {
   }
 
   getDefaultGroups() {
-    return ['any_user', this.emailValue]
+    return ['any_user', this.emailValue];
   }
 
   submit(user) {

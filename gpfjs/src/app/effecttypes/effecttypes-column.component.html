@@ -1,5 +1,5 @@
 <div class="effectypes-col">
-  <em>{{columnName}}</em>
+  <em>{{ columnName }}</em>
   <div *ngFor="let effect of effectTypesLabels; let i=index" class="checkbox">
     <label>
       <input
@@ -8,7 +8,7 @@
         [checked]="effectTypes.selected.indexOf(effect) !== -1"
         (change)="checkEffectType(i, checkbox.checked);
                   $event.stopPropagation()">
-      {{effect}}
+      {{ effect }}
     </label>
   </div>
 </div>

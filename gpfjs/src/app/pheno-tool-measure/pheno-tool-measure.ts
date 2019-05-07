@@ -8,4 +8,4 @@ export class PhenoToolMeasure {
     measure: ContinuousMeasure = null;
 
     normalizeBy: string[] = new Array<string>();
-};
+}

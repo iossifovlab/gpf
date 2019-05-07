@@ -31,6 +31,6 @@ export class StudiesSummariesComponent implements OnInit {
     const modalRef = this.modalService.open(PopupComponent, {
       size: 'lg'
     });
-    modalRef.componentInstance.data = desc
+    modalRef.componentInstance.data = desc;
   }
 }

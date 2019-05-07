@@ -1,4 +1,4 @@
-let basePath = '';
+const basePath = '';
 
 export const environment = {
   production: true,

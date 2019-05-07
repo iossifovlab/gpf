@@ -35,11 +35,18 @@ export class PedigreeMockService {
     ['AU0052', '212', '0', '0', '2', '', 'AU0052212', 'asd'],
     ['AU0052', '311', '211', '212', '1', '', 'AU0052311', 'asd'],
   ].map(person => PedigreeData.fromArray(person));
+  // truncated
+  allFamilies = `AU0001,1,0,0,2,,AU000101,,
+AU0001,2,0,0,1,,AU000102,,
+AU0001,3,2,1,2,Autism,AU000103,,
+AU0001,4,2,1,2,Autism,AU000104,,
+AU0001,5,2,1,2,Autism,AU000105,,
+AU0001,6,2,1,2,Autism,AU000106,,`;
 
   processAllFamilies() {
     return this.allFamilies.split('\n')
       .map(arr => {
-        let result = arr.split(',');
+        const result = arr.split(',');
         result.pop();
         return result;
       })
@@ -64,12 +71,5 @@ export class PedigreeMockService {
   getMockFamily(): {} {
     return this.processAllFamilies();
   }
-  // truncated
-  allFamilies = `AU0001,1,0,0,2,,AU000101,,
-AU0001,2,0,0,1,,AU000102,,
-AU0001,3,2,1,2,Autism,AU000103,,
-AU0001,4,2,1,2,Autism,AU000104,,
-AU0001,5,2,1,2,Autism,AU000105,,
-AU0001,6,2,1,2,Autism,AU000106,,`
 
 }

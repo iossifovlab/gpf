@@ -1,13 +1,11 @@
 import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
-import { ContinuousFilterState, PhenoFiltersState, ContinuousSelection } from '../pheno-filters/pheno-filters';
+import { ContinuousFilterState, ContinuousSelection } from '../pheno-filters/pheno-filters';
 import { StateRestoreService } from '../store/state-restore.service';
+// tslint:disable-next-line:import-blacklist
 import { Observable ,  Subject } from 'rxjs';
 import { Partitions } from '../gene-weights/gene-weights';
-import { validateOrReject } from 'class-validator';
-import { plainToClass } from 'class-transformer';
-import { ValidationError } from 'class-validator';
 
 @Component({
   selector: 'gpf-continuous-filter',
@@ -52,7 +50,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     if (this.datasetId && this.measureName) {
       this.measuresService.getMeasureHistogram(this.datasetId, this.measureName)
         .subscribe(histogramData => {
-          let selection = (this.continuousFilterState.selection as ContinuousSelection);
+          const selection = (this.continuousFilterState.selection as ContinuousSelection);
           this.histogramData = histogramData;
           if (!selection.min) {
             selection.min = histogramData.min;
@@ -65,7 +63,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   }
 
   set rangeStart(value) {
-    let selection = (this.continuousFilterState.selection as ContinuousSelection);
+    const selection = (this.continuousFilterState.selection as ContinuousSelection);
     selection.min = value;
     this.rangeChanges.next([
       this.datasetId,
@@ -80,7 +78,7 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
   }
 
   set rangeEnd(value) {
-    let selection = (this.continuousFilterState.selection as ContinuousSelection);
+    const selection = (this.continuousFilterState.selection as ContinuousSelection);
     selection.max = value;
     this.rangeChanges.next([
       this.datasetId,

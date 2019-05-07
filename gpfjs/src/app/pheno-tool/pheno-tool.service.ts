@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
+import { Headers, Http, RequestOptions } from '@angular/http';
+// tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 
 
@@ -21,12 +22,12 @@ export class PhenoToolService {
   }
 
   getPhenoToolResults(filter): Observable<any> {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return this.http.post(this.phenoToolUrl, filter, options)
       .map(res => {
-        return PhenoToolResults.fromJson(res.json());;
+        return PhenoToolResults.fromJson(res.json());
       });
   }
 }

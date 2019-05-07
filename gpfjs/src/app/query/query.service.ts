@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Headers, Http, Response, RequestOptions } from '@angular/http';
+// tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 
 
 
 import { ConfigService } from '../config/config.service';
-import { GenotypePreview, GenotypePreviewsArray } from '../genotype-preview-model/genotype-preview';
+import { GenotypePreviewsArray } from '../genotype-preview-model/genotype-preview';
 import { QueryData } from './query';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -29,13 +30,13 @@ export class QueryService {
   }
 
   private parseGenotypePreviewResponse(response: Response): GenotypePreviewsArray {
-    let data = response.json();
-    let genotypePreviewsArray = GenotypePreviewsArray.fromJson(data);
+    const data = response.json();
+    const genotypePreviewsArray = GenotypePreviewsArray.fromJson(data);
     return genotypePreviewsArray;
   }
 
   getGenotypePreviewByFilter(filter: QueryData): Observable<GenotypePreviewsArray> {
-    let options = new RequestOptions({
+    const options = new RequestOptions({
       headers: this.headers, withCredentials: true
     });
 
@@ -44,14 +45,14 @@ export class QueryService {
   }
 
   saveQuery(queryData: {}, page: string) {
-    let options = new RequestOptions({
+    const options = new RequestOptions({
         headers: this.headers
     });
-    let data = {
+    const data = {
         data: queryData,
         page: page
     };
-    
+
     return this.http
         .post(this.saveQueryEndpoint, data, options)
         .map(response => response.json());
@@ -59,11 +60,11 @@ export class QueryService {
   }
 
   loadQuery(uuid: string) {
-    let options = new RequestOptions({
+    const options = new RequestOptions({
         headers: this.headers,
         withCredentials: true
     });
-    
+
     return this.http
         .post(this.loadQueryEndpoint, { uuid: uuid }, options)
         .map(response => response.json());
@@ -72,12 +73,12 @@ export class QueryService {
 
   getLoadUrl(uuid: string) {
     let pathname = this.router.createUrlTree(
-      ["load-query", uuid]).toString();
+      ['load-query', uuid]).toString();
     pathname = this.location.prepareExternalUrl(pathname);
     return window.location.origin + pathname;
   }
 
   getLoadUrlFromResponse(response: {}) {
-    return this.getLoadUrl(response["uuid"]);
+    return this.getLoadUrl(response['uuid']);
   }
 }

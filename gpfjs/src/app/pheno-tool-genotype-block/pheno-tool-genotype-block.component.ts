@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, forwardRef } from '@angular/core';
-import { QueryStateCollector } from '../query/query-state-provider'
+import { QueryStateCollector } from '../query/query-state-provider';
 
 @Component({
   selector: 'gpf-pheno-tool-genotype-block',
@@ -13,7 +13,7 @@ export class PhenoToolGenotypeBlockComponent extends QueryStateCollector  implem
   hasCNV = false;
 
   constructor() {
-    super(); 
+    super();
   }
 
   ngOnInit() {

@@ -14,13 +14,13 @@ export class SmallRemoveButtonComponent implements OnInit {
   hide = false;
 
   @Input()
-  message = "";
+  message = '';
 
   @Input()
-  confirmText = "Remove";
+  confirmText = 'Remove';
 
   @Input()
-  title = "Remove";
+  title = 'Remove';
 
   constructor() { }
 

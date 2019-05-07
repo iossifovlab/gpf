@@ -26,4 +26,4 @@ export class EnrichmentModel {
 
   @IsNotEmpty()
   counting: IdDescription;
-};
+}

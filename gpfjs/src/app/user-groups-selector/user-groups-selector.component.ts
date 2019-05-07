@@ -1,11 +1,10 @@
 import {
   Component, OnInit, Input, EventEmitter, Output, OnChanges, SimpleChanges,
-  ViewChild, ElementRef
+  ViewChild
 } from '@angular/core';
 
 import { Select2OptionData, Select2Component } from 'ng2-select2';
 
-import { User } from '../users/users';
 import { UserGroup } from '../users-groups/users-groups';
 
 @Component({
@@ -30,18 +29,18 @@ export class UserGroupsSelectorComponent implements OnInit, OnChanges {
 
   ngOnChanges(changes: SimpleChanges) {
     if ('alwaysSelectedGroups' in changes && this.element) {
-      let prev = changes.alwaysSelectedGroups.previousValue;
-      let curr = changes.alwaysSelectedGroups.currentValue;
-      
-      if (curr.length != prev.length || curr.some((v,i)=> v !== prev[i])) {
+      const prev = changes.alwaysSelectedGroups.previousValue;
+      const curr = changes.alwaysSelectedGroups.currentValue;
+
+      if (curr.length !== prev.length || curr.some((v, i) => v !== prev[i])) {
         this.changeSelectedGroups(this.element.val());
       }
     }
 
     if ('groups' in changes) {
-      let current = changes.groups.currentValue;
-      let previous = changes.groups.previousValue;
-      if (!previous || current.length !== previous.length || current.some((v, i) => v != previous[i])) {
+      const current = changes.groups.currentValue;
+      const previous = changes.groups.previousValue;
+      if (!previous || current.length !== previous.length || current.some((v, i) => v !== previous[i])) {
         this.data = this.toSelectOptions(changes.groups.currentValue);
       }
     }
@@ -60,7 +59,7 @@ export class UserGroupsSelectorComponent implements OnInit, OnChanges {
 
     this.data = this.toSelectOptions(this.groups);
   }
-  
+
   toSelectOptions(groups: UserGroup[]) {
 
     return this.filterProtectedGroups(groups.map(group => group.name))
@@ -77,7 +76,7 @@ export class UserGroupsSelectorComponent implements OnInit, OnChanges {
     if (!groups) {
       return;
     }
-    let event = groups.slice().concat(this.getProtectedGroups());
+    const event = groups.slice().concat(this.getProtectedGroups());
     this.groupsChange.next(event);
   }
 
