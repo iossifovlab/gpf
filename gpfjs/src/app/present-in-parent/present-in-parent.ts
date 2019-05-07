@@ -34,4 +34,4 @@ export class PresentInParent {
   rarityType = RARITY_ULTRARARE;
 
   ultraRare = true;
-};
+}

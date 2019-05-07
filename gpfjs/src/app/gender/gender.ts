@@ -10,4 +10,4 @@ export class Gender {
     message: 'select at least one'
   })
   unspecified = true;
-};
+}

@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
-import { Observable, Subject, ReplaySubject, BehaviorSubject } from 'rxjs';
+import { Headers, Http, RequestOptions } from '@angular/http';
+// tslint:disable-next-line:import-blacklist
+import { Observable, ReplaySubject, BehaviorSubject } from 'rxjs';
 import { Scheduler } from 'rxjs-compat';
-
-import { IdDescription } from '../common/iddescription';
-import { IdName } from '../common/idname';
 
 import { Dataset } from '../datasets/datasets';
 import { UsersService } from '../users/users.service';
@@ -47,18 +45,18 @@ export class DatasetsService {
   }
 
   getDatasets(): Observable<Dataset[]> {
-    let options = new RequestOptions({ withCredentials: true });
+    const options = new RequestOptions({ withCredentials: true });
     return this.http.get(this.datasetUrl, options)
       .map(res => {
-        let datasets = Dataset.fromJsonArray(res.json().data);
+        const datasets = Dataset.fromJsonArray(res.json().data);
         this.datasets$.next(datasets);
         return datasets;
       });
   }
 
   getDataset(datasetId: string): Observable<Dataset> {
-    let url = `${this.datasetUrl}/${datasetId}`;
-    let options = new RequestOptions({ withCredentials: true });
+    const url = `${this.datasetUrl}/${datasetId}`;
+    const options = new RequestOptions({ withCredentials: true });
 
     return this.http.get(url, options)
       .map(res => {

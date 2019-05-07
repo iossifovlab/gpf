@@ -1,7 +1,8 @@
-import { Component, OnInit, Input, ViewEncapsulation } from '@angular/core';
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
+// tslint:disable-next-line:import-blacklist
 import { Observable, BehaviorSubject, ReplaySubject } from 'rxjs';
 
 import { PhenoBrowserService } from './pheno-browser.service';
@@ -30,7 +31,7 @@ export class PhenoBrowserComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    let datasetId$ = this.route.parent.params
+    const datasetId$ = this.route.parent.params
       .take(1)
       .map(params => <string>params['dataset']);
 
@@ -46,14 +47,14 @@ export class PhenoBrowserComponent implements OnInit {
       .distinctUntilChanged()
       .combineLatest(this.selectedInstrument$, datasetId$)
       .do(([searchTerm, newSelection, datasetId]) => {
-        let queryParamsObject: any = {};
+        const queryParamsObject: any = {};
         if (newSelection) {
           queryParamsObject.instrument = newSelection;
         }
         if (searchTerm) {
           queryParamsObject.search = searchTerm;
         }
-        let url = this.router.createUrlTree(['.'], {
+        const url = this.router.createUrlTree(['.'], {
           relativeTo: this.route,
           replaceUrl: true,
           queryParams: queryParamsObject
@@ -61,7 +62,7 @@ export class PhenoBrowserComponent implements OnInit {
         this.location.go(url);
       })
       .switchMap(([searchTerm, newSelection, datasetId]) => {
-        return this.phenoBrowserService.getMeasures(datasetId, newSelection, searchTerm)
+        return this.phenoBrowserService.getMeasures(datasetId, newSelection, searchTerm);
       })
       .share();
 
@@ -92,6 +93,6 @@ export class PhenoBrowserComponent implements OnInit {
   }
 
   search(value: string) {
-    this.input$.next(value)
+    this.input$.next(value);
   }
 }

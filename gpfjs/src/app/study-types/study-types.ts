@@ -11,5 +11,4 @@ export class StudyTypes {
     message: 'select at least one'
   })
   wg = true;
-};
-
+}

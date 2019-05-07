@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BaseRequestOptions, RequestOptions, RequestOptionsArgs } from '@angular/http';
+import { BaseRequestOptions, RequestOptionsArgs } from '@angular/http';
 import { Location } from '@angular/common';
 
 import { ConfigService } from './config.service';
@@ -14,10 +14,12 @@ export class CustomRequestOptions extends BaseRequestOptions {
   }
 
   merge(options?: RequestOptionsArgs): CustomRequestOptions {
-    if (options.url) options.url = Location.joinWithSlash(this.configService.baseUrl, options.url);
-    let result = <CustomRequestOptions> super.merge(options);
+    if (options.url) {
+      options.url = Location.joinWithSlash(this.configService.baseUrl, options.url);
+    }
+    const result = <CustomRequestOptions> super.merge(options);
     result.merge = this.merge;
     result.configService = this.configService;
-    return result
+    return result;
   }
 }

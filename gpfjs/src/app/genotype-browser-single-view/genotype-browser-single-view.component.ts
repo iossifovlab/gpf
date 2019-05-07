@@ -16,10 +16,10 @@ export class GenotypeBrowserSingleViewComponent implements OnInit {
 
   ngOnInit() {
     this.route.parent.params.subscribe(
-      (params: Params) => { 
-        this.selectedDatasetId = params['dataset']
+      (params: Params) => {
+        this.selectedDatasetId = params['dataset'];
       }
-     )
+     );
   }
 
 }

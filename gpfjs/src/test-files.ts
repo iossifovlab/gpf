@@ -1,0 +1,16 @@
+import 'app/add-button/add-button.component.spec';
+import 'app/genomic-scores/genomic-scores.component.spec';
+import 'app/genomic-scores-block/genomic-scores-block.component.spec';
+import 'app/pedigree-chart/pedigree-chart-member.component.spec';
+import 'app/pedigree-chart/pedigree-chart.component.spec';
+import 'app/genotype-preview-field/genotype-preview-field.component.spec';
+import 'app/table/component/subcontent.component.spec';
+import 'app/table/component/content.component.spec';
+import 'app/table/component/subheader.component.spec';
+import 'app/table/component/header.component.spec';
+import 'app/table/component/column.component.spec';
+import 'app/table/view/cell.component.spec';
+import 'app/table/view/empty-cell.component.spec';
+import 'app/table/view/header/header-cell.component.spec';
+import 'app/table/table.component.spec';
+import 'app/genotype-preview-table/genotype-preview-table.component.spec';

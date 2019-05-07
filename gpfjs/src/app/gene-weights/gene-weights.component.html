@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-sm-3">
           <select class="form-control" [(ngModel)]="selectedGeneWeights" required>
-		    <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{geneWeights.desc}}</option>
+		    <option *ngFor="let geneWeights of geneWeightsArray" [ngValue]="geneWeights">{{ geneWeights.desc }}</option>
 		  </select>
       <div *ngIf="selectedGeneWeights" style="margin-top: 5px;">
         <a href="{{ getDownloadLink() }}">Download</a>

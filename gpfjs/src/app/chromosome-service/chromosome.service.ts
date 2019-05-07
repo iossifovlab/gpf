@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 
-import { Chromosome, ChromosomeBand } from './chromosome';
+import { Chromosome } from './chromosome';
 
 @Injectable()
 export class ChromosomeService {
 
-  chromosomeUrl: string = 'chromosomes/';
+  chromosomeUrl = 'chromosomes/';
 
   constructor(private http: Http) { }
 

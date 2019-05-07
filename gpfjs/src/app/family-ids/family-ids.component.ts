@@ -1,10 +1,6 @@
 import { Component, OnInit, forwardRef } from '@angular/core';
-import { validate } from 'class-validator';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { Observable } from 'rxjs';
 import { FamilyIds } from './family-ids';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
@@ -41,7 +37,7 @@ export class FamilyIdsComponent extends QueryStateWithErrorsProvider implements 
 
   getState() {
     return this.validateAndGetState(this.familyIds).map(familyIds => {
-        let result = familyIds.familyIds
+      const result = familyIds.familyIds
           .split(/[,\s]/)
           .filter(s => s !== '');
         if (result.length === 0) {

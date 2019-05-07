@@ -1,5 +1,5 @@
 import { GeneWeights } from './gene-weights';
-import { IsNotEmpty, IsNumber, Min, Max, ValidateIf } from 'class-validator';
+import { IsNotEmpty, IsNumber, ValidateIf } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
@@ -34,4 +34,4 @@ export class GeneWeightsState {
         weights.bins[weights.bins.length - 1];
     }
   }
-};
+}

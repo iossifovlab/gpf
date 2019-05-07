@@ -1,9 +1,9 @@
-import {registerDecorator, ValidationOptions, ValidationArguments} from "class-validator";
+import {registerDecorator, ValidationOptions, ValidationArguments} from 'class-validator';
 
 export function IsLessThanOrEqual(property: string, validationOptions?: ValidationOptions) {
    return function (object: Object, propertyName: string) {
         registerDecorator({
-            name: "isLessThanOrEqual",
+            name: 'isLessThanOrEqual',
             target: object.constructor,
             propertyName: propertyName,
             options: validationOptions,
@@ -12,16 +12,15 @@ export function IsLessThanOrEqual(property: string, validationOptions?: Validati
                 validate(value: any, args: ValidationArguments) {
                     const [relatedPropertyName] = args.constraints;
                     try {
-                      var relatedValue = relatedPropertyName.split('.').reduce((a, b) => a[b], (args.object as any));
+                      const relatedValue = relatedPropertyName.split('.').reduce((a, b) => a[b], (args.object as any));
                       if (relatedValue === null) {
                         return true;
                       }
 
-                      return typeof value === "number" &&
-                             typeof relatedValue === "number" &&
+                      return typeof value === 'number' &&
+                             typeof relatedValue === 'number' &&
                              value <= relatedValue;
-                    }
-                    catch (exception) {
+                    } catch (exception) {
                       return false;
                     }
                 },

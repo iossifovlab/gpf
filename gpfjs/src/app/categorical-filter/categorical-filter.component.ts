@@ -1,7 +1,6 @@
 import { Component, OnChanges, SimpleChanges, Input } from '@angular/core';
-import { PhenoFiltersState, CategoricalFilterState, CategoricalSelection } from '../pheno-filters/pheno-filters';
+import { CategoricalFilterState, CategoricalSelection } from '../pheno-filters/pheno-filters';
 import { PhenoFilter } from '../datasets/datasets';
-import { Observable } from 'rxjs';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
@@ -32,7 +31,7 @@ export class CategoricalFilterComponent implements OnChanges {
   }
 
   restoreCategoricalFilter(state) {
-    let phenoFilterState = state
+    const phenoFilterState = state
       .find(f => f.id === this.categoricalFilterState.id);
     if (phenoFilterState) {
       this.categoricalFilterState.selection =

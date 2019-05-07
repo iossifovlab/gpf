@@ -1,7 +1,6 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 
-import { Dataset } from '../datasets/datasets';
-import { StudyFilterState } from './study-filter-store'
+import { StudyFilterState } from './study-filter-store';
 
 @Component({
   selector: 'gpf-study-filter',

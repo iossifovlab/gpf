@@ -3,6 +3,7 @@ import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { DatasetsService } from './datasets.service';
 import { Dataset } from './datasets';
 
+// tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 
 import { ActivatedRoute, Params, Router } from '@angular/router';
@@ -64,9 +65,9 @@ export class DatasetsComponent implements OnInit {
   }
 
   filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
-    return datasets.map(datasets => 
-      datasets.filter(dataset => 
-        dataset.groups.find(g => g.name == 'hidden') == null || dataset.accessRights));
+    return datasets.map(datasets =>
+      datasets.filter(dataset =>
+        dataset.groups.find(g => g.name === 'hidden') == null || dataset.accessRights));
   }
 
   selectDataset(dataset: Dataset) {

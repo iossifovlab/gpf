@@ -39,7 +39,7 @@ export class StudyFiltersBlockComponent extends QueryStateWithErrorsProvider imp
 
   constructor(
     private stateRestoreService: StateRestoreService
-  ){
+  ) {
     super();
   }
 

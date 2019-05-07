@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 
+// tslint:disable-next-line:import-blacklist
 import { ReplaySubject } from 'rxjs';
 
 import { GenomicScores } from '../genomic-scores-block/genomic-scores-block';
