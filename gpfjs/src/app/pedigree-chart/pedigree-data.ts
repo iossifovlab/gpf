@@ -6,8 +6,8 @@ export abstract class IndividualSet {
     abstract individualSet(): Set<Individual>;
 
     generationRanks(): Set<number> {
-      let individuals = this.individualSet();
-      let ranks = new Set();
+      const individuals = this.individualSet();
+      const ranks = new Set();
 
       individuals.forEach(individual => ranks.add(individual.rank));
 
@@ -48,7 +48,7 @@ export class Individual extends IndividualSet {
 
     this.rank = rank;
 
-    for (let matingUnit of this.matingUnits) {
+    for (const matingUnit of this.matingUnits) {
       matingUnit.children.individuals.forEach(child => {
         child.addRank(rank - 1);
       });
@@ -64,9 +64,9 @@ export class Individual extends IndividualSet {
   }
 
   childrenSet() {
-    let childrenSet = new Set<Individual>();
+    const childrenSet = new Set<Individual>();
 
-    for (let matingUnit of this.matingUnits) {
+    for (const matingUnit of this.matingUnits) {
       matingUnit.childrenSet().forEach(child => childrenSet.add(child));
     }
 
@@ -77,7 +77,7 @@ export class Individual extends IndividualSet {
   areMates(second: Individual) {
     let areInMatingUnit = false;
 
-    for (let matingUnit of this.matingUnits) {
+    for (const matingUnit of this.matingUnits) {
       if (matingUnit.father === second || matingUnit.mother === second) {
         areInMatingUnit = true;
       }
@@ -124,8 +124,8 @@ export class MatingUnit extends IndividualSet {
   }
 
   toString() {
-    let ids = this.individualSet();
-    let sortedIds = Array.from(ids)
+    const ids = this.individualSet();
+    const sortedIds = Array.from(ids)
       .map(individual => individual.pedigreeData.id)
       .sort((a, b) => a.localeCompare(b))
       .join(',');
@@ -153,8 +153,8 @@ export class SibshipUnit extends IndividualSet {
   individuals = new Array<Individual>();
 
   toString() {
-    let ids = this.individualSet();
-    let sortedIds = Array.from(ids)
+    const ids = this.individualSet();
+    const sortedIds = Array.from(ids)
       .map(individual => individual.pedigreeData.id)
       .sort((a, b) => a.localeCompare(b))
       .join(',');
@@ -231,7 +231,7 @@ export class Line {
   }
 
   curveYAt(t: number) {
-    let one_minus_t = 1.0 - t;
+    const one_minus_t = 1.0 - t;
 
     return (one_minus_t ** 3) * this.curveP0[1] +
         3 * (one_minus_t ** 2) * t * this.curveP1[1] +
@@ -240,7 +240,7 @@ export class Line {
   }
 
   inverseCurveYAt(t: number) {
-    let one_minus_t = 1.0 - t;
+    const one_minus_t = 1.0 - t;
 
     return (one_minus_t ** 3) * this.curveP0[1] +
         3 * (one_minus_t ** 2) * t * this.inverseCurveP1[1] +
@@ -271,7 +271,7 @@ export class SameLevelGroup {
   }
 
   get individualsWithPositions() {
-    let result: Array<IndividualWithPosition> = [];
+    const result: Array<IndividualWithPosition> = [];
 
     for (let i = 0; i < this.members.length; i++) {
       result.push(new IndividualWithPosition(
@@ -289,7 +289,7 @@ export class SameLevelGroup {
   }
 
   getXForMember(member: Individual) {
-    let index = this.members.indexOf(member);
+    const index = this.members.indexOf(member);
     if (index === -1) {
       return -1;
     }

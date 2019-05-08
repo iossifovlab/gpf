@@ -35,4 +35,8 @@ describe('PedigreeChartMemberComponent', () => {
   it('should be created', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should have pedigree data', () => {
+    expect(component.pedigreeData.id).toBe('id');
+  });
 });
