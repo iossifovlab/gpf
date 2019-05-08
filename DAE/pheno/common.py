@@ -193,7 +193,7 @@ def check_config_pheno_db(config):
         return False
     ordinal = config.classification.ordinal.min_rank
     if ordinal < categorical:
-        print('ordianl min rank expected to be >= categorical min rank')
+        print('ordinal min rank expected to be >= categorical min rank')
         return False
     continuous = config.classification.continuous.min_rank
     if continuous < ordinal:

@@ -55,6 +55,7 @@ class PhenoBrowserBaseView(APIView):
         assert browser_images_url is not None
         return browser_images_url
 
+
 class PhenoInstrumentsView(PhenoBrowserBaseView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
     permission_classes = (IsDatasetAllowed,)
@@ -100,9 +101,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument = request.query_params.get('instrument', None)
-        if instrument is None:
-            instruments = list(dataset.pheno_db.instruments.keys())
-            instrument = instruments[0]
+        search_term = request.query_params.get('search', None)
 
         browser_dbfile = self.get_browser_dbfile(
             dataset.config.phenoDB)
@@ -112,7 +111,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         db = DbManager(dbfile=browser_dbfile)
         db.build()
 
-        df = db.get_instrument_df(instrument)
+        df = db.search_measures(instrument, search_term)
 
         res = []
         for row in df.to_dict('records'):
@@ -133,6 +132,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         return Response({
             'base_image_url': browser_images_url,
             'measures': res,
+            'has_descriptions': db.has_descriptions,
         })
 
 

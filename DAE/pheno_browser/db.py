@@ -9,7 +9,7 @@ from builtins import object
 # import os
 
 from sqlalchemy import MetaData, create_engine
-from sqlalchemy import Table, Column, String, Float, Enum, func
+from sqlalchemy import Table, Column, String, Float, Enum, func, or_
 from sqlalchemy.sql import select
 from pheno.common import MeasureType
 # import traceback
@@ -84,10 +84,30 @@ class DbManager(object):
             else:
                 return None
 
-    def get_instrument_df(self, instrument_name):
-        s = self.variable_browser.select()
-        s = s.where(self.variable_browser.c.instrument_name == instrument_name)
-        df = pd.read_sql(s, self.engine)
+    def search_measures(self, instrument_name=None, keyword=None):
+
+        query_params = []
+
+        if keyword:
+            keyword = '%{}%'.format(
+                keyword.replace('%', r'\%')
+                       .replace('_', r'\_'))
+            if not instrument_name:
+                query_params.append(
+                    self.variable_browser.c.instrument_name.like(keyword))
+            query_params.append(
+                self.variable_browser.c.measure_name.like(keyword))
+            query_params.append(
+                self.variable_browser.c.description.like(keyword))
+            query = self.variable_browser.select(or_(*query_params))
+        else:
+            query = self.variable_browser.select()
+
+        if instrument_name:
+            query = query.where(
+                self.variable_browser.c.instrument_name == instrument_name)
+
+        df = pd.read_sql(query, self.engine)
         return df
 
     @property

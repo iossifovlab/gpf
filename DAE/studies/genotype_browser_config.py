@@ -19,6 +19,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         'hasStudyTypes',
         'hasStudyFilters',
         'hasPresentInRole',
+        'hasGraphicalPreview',
     )
 
     SPLIT_STR_LISTS = [
@@ -310,6 +311,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
 
         present_in_role['name'] = \
             study_config.pop(present_in_role_type + '.name', None)
+        _, present_in_role['id'] = cls._split_section(present_in_role_type)
         present_in_role['roles'] = \
             [
                 Role.from_name(el.strip()).display_name
@@ -379,8 +381,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         people_group = cls._get_selectors(
             config_section, 'peopleGroup', cls._get_pedigree)
         if people_group:
-            config_section['pedigreeSelectors'] = people_group
-            config_section['peopleGroup'] = config_section['pedigreeSelectors']
+            config_section['peopleGroup'] = people_group
 
         present_in_role = cls._get_selectors(
             config_section, 'presentInRole', cls._get_present_in_role)
@@ -388,3 +389,22 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
             config_section['presentInRole'] = present_in_role
 
         return GenotypeBrowserConfig(config_section)
+
+    @staticmethod
+    def _get_description_keys():
+        return [
+            'hasPedigreeSelector', 'hasPresentInChild', 'hasPresentInParent',
+            'hasPresentInRole', 'hasCNV', 'hasComplex', 'hasFamilyFilters',
+            'hasStudyFilters', 'hasStudyTypes', 'hasGraphicalPreview',
+            'genesBlockShowAll', 'previewColumns', 'rolesFilterOptions',
+            'genotypeColumns', 'phenoFilters', 'familyStudyFilters',
+            'peopleGroup', 'presentInRole', 'phenoColumns', 'downloadColumns'
+        ]
+
+    def get_genotype_browser_description(self):
+        keys = self._get_description_keys()
+        config = self.to_dict()
+
+        result = {key: config.get(key, None) for key in keys}
+
+        return result

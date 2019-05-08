@@ -10,7 +10,7 @@ import sys
 import os
 
 from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
+# from argparse import ArgumentDefaultsHelpFormatter
 import traceback
 from pheno.common import dump_config,\
     check_config_pheno_db, default_config
@@ -107,13 +107,18 @@ USAGE
 ''' % (program_shortdesc, )
 
     try:
+        defaults = default_config()
+
         # Setup argument parser
         parser = ArgumentParser(
-            description=program_license,
-            formatter_class=RawDescriptionHelpFormatter)
+            description=program_license)
+        # formatter_class=RawDescriptionHelpFormatter
+        # formatter_class=ArgumentDefaultsHelpFormatter)
         parser.add_argument(
-            "-v", "--verbose", dest="verbose",
-            action="count", help="set verbosity level [default: %(default)s]")
+            "-v", "--verbose",
+            dest="verbose",
+            action="count",
+            help="set verbosity level")
         parser.add_argument(
             "-i", "--instruments",
             dest="instruments",
@@ -124,45 +129,44 @@ USAGE
             dest="pedigree",
             help="pedigree file where families descriptions are located",
             metavar="path")
-
         parser.add_argument(
             '-d', '--description',
-            help="standardized tsv file that contains measure descriptions"
-        )
-
+            help="standardized tsv file that contains measure descriptions")
         parser.add_argument(
             '-o', '--output',
             dest='output',
-            help='ouput file',
+            help='output file',
             metavar='filename')
-
         parser.add_argument(
             '-C', '--continuous',
             type=int,
             dest='continuous',
+            default=defaults['classification']['continuous']['min_rank'],
             help='minimal count of unique values for a measure to be '
-            'classified as continuous (default: 15)')
-
+            'classified as continuous (default: %(default)s)')
         parser.add_argument(
             '-O', '--ordinal',
             type=int,
             dest='ordinal',
+            default=defaults['classification']['ordinal']['min_rank'],
             help='minimal count of unique values for a measure to be '
-            'classified as ordinal (default: 5)')
+            'classified as ordinal (default: %(default)s)')
 
         parser.add_argument(
             '-A', '--categorical',
             type=int,
             dest='categorical',
+            default=defaults['classification']['categorical']['min_rank'],
             help='minimal count of unique values for a measure to be '
-            'classified as categorical (default: 2)')
+            'classified as categorical (default: %(default)s)')
 
         parser.add_argument(
             '-I', '--min-individuals',
             type=int,
             dest='min_individuals',
+            default=defaults['classification']['min_individuals'],
             help='minimal number of individuals for a measure to be '
-            'considered for classification (default: 20)')
+            'considered for classification (default: %(default)s)')
 
         parser.add_argument(
             '-S', '--skip-columns',
@@ -181,49 +185,56 @@ USAGE
             action="store_true",
             dest='composite_fids',
             help="builds composite family IDs from parents' IDs"
+            ' (default: %(default)s)'
         )
 
         parser.add_argument(
             '-r', '--role',
             dest='role',
-            help='sets role handling; available choices "column", "guess"; '
-            'default value is "column"'
+            default=defaults['person']['role']['type'],
+            help='sets role handling; available choices: "column", "guess"'
+            ' (default: %(default)s)'
         )
 
         parser.add_argument(
             '--role-mapping',
             dest='role_mapping',
+            default=defaults['person']['role']['mapping'],
             help='sets role column mapping rules; '
-            'available choices "SPARK", "SSC", "INTERNAL"; '
-            'default value is "INTERNAL"'
+            'available choices "SPARK", "SSC", "INTERNAL"'
+            ' (default: %(default)s)'
         )
 
         parser.add_argument(
             '-P', '--person-column',
             dest='person_column',
+            default=defaults['person']['role']['column'],
             help="sets name of a column in instrument's files, "
-            "containing personId"
+            "containing personId (default: %(default)s)"
         )
 
         parser.add_argument(
             '-T', '--tab-separated',
             dest='tab_separated',
-            help="instruments file are tab separated",
-            action="store_true"
+            action="store_true",
+            help="instruments file are tab separated"
+                 " (default: %(default)s)"
         )
 
         parser.add_argument(
             '--report-only',
             dest='report_only',
-            help='runs the tool in report only mode',
-            type=str
+            action='store_true',
+            help='runs the tool in report only mode (default: %(default)s)'
         )
 
         parser.add_argument(
             '--parallel',
             type=int,
             dest="parallel",
+            default=defaults['parallel'],
             help="size of executors pool to use for processing"
+                 " (default: %(default)s)"
         )
 
         # Process arguments

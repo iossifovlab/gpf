@@ -35,7 +35,15 @@ def save_pedigree(family):
 
 
 def main():
-    parser = get_argument_parser("Save PDP.")
+    parser = get_argument_parser(
+        "Generate a pedigree file containing a column "
+        "with pedigree layout coordinates.")
+    parser.add_argument(
+        "--layout-column", metavar="l", default="layout",
+        help="layout column name to be used when saving the layout.")
+    parser.add_argument(
+        "--generated-column", metavar="m", default="generated",
+        help="generated column name to be used when generating individuals")
     args = parser.parse_args()
 
     columns_labels = {

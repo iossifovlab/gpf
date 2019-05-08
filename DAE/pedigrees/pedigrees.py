@@ -431,7 +431,9 @@ class MatingUnit(IndividualGroup):
 
 
 def get_argument_parser(description):
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=description)
 
     parser.add_argument(
         "file", metavar="f", help="the .ped file")
@@ -439,35 +441,28 @@ def get_argument_parser(description):
         "--output", metavar="o", help="the output filename file",
         default="output.pdf")
     parser.add_argument(
-        "--layout-column", metavar="l", default="layout",
-        help="layout column name to be used when saving the layout. "
-        "Default to layout.")
-    parser.add_argument(
-        "--generated-column", metavar="m", default="generated",
-        help="generated column name to be used when generate person")
-    parser.add_argument(
-        '--delimiter', help='delimiter used in the split column; defaults to '
+        '--delimiter', help='delimiter used in pedigree file; defaults to '
         '"\\t"', default='\t', action='store')
     parser.add_argument(
-        '--family_id', help='Specify family id column label. Default to '
-        'familyId.', default='familyId', action='store')
+        '--family_id', help='Specify family id column label.',
+        default='familyId', action='store')
     parser.add_argument(
-        '--id', help='Specify id column label. Default to personId.',
+        '--id', help='Specify id column label.',
         default='personId', action='store')
     parser.add_argument(
-        '--father', help='Specify father column label. Default to dadId.',
+        '--father', help='Specify father column label',
         default='dadId', action='store')
     parser.add_argument(
-        '--mother', help='Specify mother column label. Default to momId.',
+        '--mother', help='Specify mother column label',
         default='momId', action='store')
     parser.add_argument(
-        '--sex', help='Specify sex column label. Default to gender.',
+        '--sex', help='Specify sex column label.',
         default='gender', action='store')
     parser.add_argument(
-        '--status', help='Specify status column label. Default to status.',
+        '--status', help='Specify status column label.',
         default='status', action='store')
     parser.add_argument(
-        '--role', help='Specify role column label. Default to role.',
+        '--role', help='Specify role column label.',
         default='role', action='store')
     parser.add_argument(
         '--no-header-order', help='Comma separated order of columns in header '
