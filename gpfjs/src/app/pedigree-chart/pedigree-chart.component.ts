@@ -450,6 +450,9 @@ export class PedigreeChartComponent implements OnInit, AfterViewInit, OnDestroy 
 
     const [firstChild, lastChild] = this.getFirstAndLastChild(level, mates);
 
+    if (lastChild == null || firstChild == null) {
+      return 0;
+    }
     const childrenCenter = (lastChild.xCenter + firstChild.xCenter) / 2;
     const parentsCenter = (father.xCenter + mother.xCenter) / 2;
     const offset = parentsCenter - childrenCenter;
