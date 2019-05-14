@@ -39,6 +39,7 @@ def test_write(
 
     assert layout_saver._people == expected_people
 
+
 # FIXME: this test should probably be rewritten to use and captured stdout
 #  instead of trying to mock `open`
 def test_save(
@@ -49,8 +50,8 @@ def test_save(
     layout_saver.write(family1, error_message)
     layout_saver.write(family2, layout2)
 
-    new_open = lambda name, *args, **kwargs: \
-        open(name, *args, **kwargs) if name != output_filename else name
+    def new_open(name, *args, **kwargs):
+        return open(name, *args, **kwargs) if name != output_filename else name
 
     with mocker.patch(
             pedigrees.layout_saver.__name__ + '.open', side_effect=new_open):

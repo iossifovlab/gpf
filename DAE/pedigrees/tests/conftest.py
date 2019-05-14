@@ -8,8 +8,11 @@ from pedigrees.layout_saver import LayoutSaver
 from pedigrees.layout_loader import LayoutLoader
 from pedigrees.pedigree_reader import PedigreeReader
 from pedigrees.pedigrees import Pedigree, PedigreeMember, Individual, \
-    FamilyConnections
+    FamilyConnections, MatingUnit, SibshipUnit
+from pedigrees.interval_sandwich import SandwichSolver
 from pedigrees.layout import IndividualWithCoordinates, Layout
+from pedigrees.drawing import OffsetLayoutDrawer
+
 from utils.fixtures import path_to_fixtures as _path_to_fixtures
 
 
@@ -54,53 +57,116 @@ def error_message():
     return 'Error'
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def member1(error_message):
     return PedigreeMember(
-        'id1', 'fam1', 'mom1', 'dad1', '1', '2', 'prb', error_message, False)
+        'id1', 'fam1', 'mom1', 'dad1', '2', '2', 'prb', error_message, False)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def member2():
     return PedigreeMember(
         'mom1', 'fam1', '0', '0', '2', '1', 'mom', error_message, False)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def member3():
     return PedigreeMember(
         'dad1', 'fam1', '0', '0', '1', '1', 'dad', error_message, True)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def member4():
     return PedigreeMember(
         'id2', 'fam2', 'mom2', 'dad2', '1', '2', 'prb', '2:100.0,75.0', False)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def member5():
     return PedigreeMember(
         'mom2', 'fam2', '0', '0', '2', '1', 'mom', '1:50.0,50.0', False)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def member6():
     return PedigreeMember(
         'dad2', 'fam2', '0', '0', '1', '1', 'dad', '1:50.0,100.0', True)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
+def member7():
+    return PedigreeMember('id3', 'fam3', 'mom3', '0', '1', '2', 'prb')
+
+
+@pytest.fixture(scope='function')
+def individual4(member4):
+    return Individual(member=member4)
+
+
+@pytest.fixture(scope='function')
+def individual5(member5):
+    return Individual(member=member5)
+
+
+@pytest.fixture(scope='function')
+def individual6(member6):
+    return Individual(member=member6)
+
+
+@pytest.fixture(scope='function')
 def family1(member1, member2, member3):
     return Pedigree([member1, member2, member3])
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def family2(member4, member5, member6):
     return Pedigree([member4, member5, member6])
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
+def family3(member7):
+    return Pedigree([member7])
+
+
+@pytest.fixture(scope='function')
+def sibship_unit2(individual4):
+    return SibshipUnit({individual4})
+
+
+@pytest.fixture(scope='function')
+def mating_unit2(individual5, individual6, sibship_unit2):
+    return MatingUnit(individual5, individual6, sibship_unit2)
+
+
+@pytest.fixture(scope='function')
+def id_to_mating_unit_valid(mating_unit2):
+    return {
+        'mom2,dad2': mating_unit2
+    }
+
+
+@pytest.fixture(scope='function')
+def id_to_mating_unit_unvalid(individual4, individual5, individual6):
+    return [
+        {
+            'mom2,dad2': MatingUnit(
+                Individual(), individual6, SibshipUnit(individual4)
+            )
+        },
+        {
+            'mom2,dad2': MatingUnit(
+                individual5, Individual(), SibshipUnit(individual4)
+            )
+        },
+        {
+            'mom2,dad2': MatingUnit(
+                individual5, individual6, SibshipUnit([Individual()])
+            )
+        }
+    ]
+
+
+@pytest.fixture(scope='function')
 def people_with_layout_error(layout_column, generated_column, error_message):
     return {
         'fam1;id1': {
@@ -118,7 +184,7 @@ def people_with_layout_error(layout_column, generated_column, error_message):
     }
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def people_with_layout(
         layout_column, generated_column, member4, member5, member6):
     return {
@@ -137,7 +203,7 @@ def people_with_layout(
     }
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def people1(member1, member2, member3):
     return {
         'fam1;id1': member1,
@@ -146,7 +212,7 @@ def people1(member1, member2, member3):
     }
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def people2(member4, member5, member6):
     return {
         'fam2;id2': member4,
@@ -155,21 +221,52 @@ def people2(member4, member5, member6):
     }
 
 
-@pytest.fixture(scope='session')
-def layout2(member4, member5, member6):
+@pytest.fixture(scope='function')
+def layout2(individual4, individual5, individual6):
     layout = Layout()
     layout._id_to_position = {
-        Individual(member=member4): IndividualWithCoordinates(
-            Individual(member=member4), 100.0, 75.0),
-        Individual(member=member5): IndividualWithCoordinates(
-            Individual(member=member5), 50.0, 50.0),
-        Individual(member=member6): IndividualWithCoordinates(
-            Individual(member=member6), 50.0, 100.0)
+        individual4: IndividualWithCoordinates(individual4, 100.0, 75.0),
+        individual5: IndividualWithCoordinates(individual5, 50.0, 50.0),
+        individual6: IndividualWithCoordinates(individual6, 50.0, 100.0)
     }
     layout._individuals_by_rank = [
-        [Individual(member=member5), Individual(member=member6)],
-        [Individual(member=member4)]]
+        [individual5, individual6],
+        [individual4]
+    ]
     return layout
+
+
+@pytest.fixture(scope='function')
+def family_connections_from_family2(family2):
+    return FamilyConnections.from_pedigree(family2)
+
+
+@pytest.fixture(scope='function')
+def sandwich_instance_from_family2(family_connections_from_family2):
+    return family_connections_from_family2.create_sandwich_instance()
+
+
+@pytest.fixture(scope='function')
+def intervals_from_family2(sandwich_instance_from_family2):
+    return SandwichSolver.solve(sandwich_instance_from_family2)
+
+
+@pytest.fixture(scope='function')
+def individuals_intervals_from_family2(intervals_from_family2):
+    return [interval for interval in intervals_from_family2
+            if interval.vertex.is_individual()]
+
+
+@pytest.fixture(scope='function')
+def layout_from_family2(individuals_intervals_from_family2):
+    return Layout(individuals_intervals_from_family2)
+
+
+@pytest.fixture(scope='function')
+def drawing_from_family2(layout_from_family2):
+    return OffsetLayoutDrawer(
+        layout_from_family2, 0, 0, show_id=True, show_family=True
+    )
 
 
 @pytest.fixture(scope='session')
@@ -213,17 +310,17 @@ fam1\tdad1\t0\t0\t1\t1\tdad\tError\t1
 """
 
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def layout_loader1(family1):
     return LayoutLoader(family1)
 
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def layout_loader2(family2):
     return LayoutLoader(family2)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def layout_positions2(member4, member5, member6):
     return [
         [IndividualWithCoordinates(Individual(member=member6), 50.0, 100.0),
@@ -232,7 +329,7 @@ def layout_positions2(member4, member5, member6):
     ]
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def loaded_layout2(layout_positions2):
     layout = Layout()
 
@@ -259,4 +356,3 @@ def fam1(pedigree_test):
 @pytest.fixture(scope='session')
 def fam1_family_connections(fam1):
     return FamilyConnections.from_pedigree(fam1)
-
