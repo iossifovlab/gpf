@@ -151,7 +151,12 @@ class FamilyConnections(object):
                     Role.dad, generated=True)
                 new_members.append(father.member)
 
-        pedigree.add_members(new_members)
+        unique_new_members = []
+        for elem in new_members:
+            if elem.id not in [member.id for member in unique_new_members]:
+                unique_new_members.append(elem)
+
+        pedigree.add_members(unique_new_members)
 
     @classmethod
     def from_pedigree(cls, pedigree, add_missing_members=True):
