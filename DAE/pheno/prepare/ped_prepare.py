@@ -27,7 +27,7 @@ class PrepareCommon(object):
     PERSON_ID = 'person_id'
 
     PED_COLUMNS = [
-        'familyId', 'personId', 'dadId', 'momId',
+        'family_id', 'person_id', 'dad_id', 'mom_id',
         'sex', 'status',
         # 'sampleId',
         # 'role',
@@ -82,23 +82,23 @@ class PreparePersons(PrepareBase):
         assert len(df[mom_or_dad].unique()) <= 1
         if len(df) > 0:
             row = df.iloc[0]
-            return (row.familyId, row[mom_or_dad])
+            return (row.family_id, row[mom_or_dad])
         return None
 
     @staticmethod
     def _find_mom_in_family_ped(family_df):
-        return PreparePersons._find_parent_in_family_ped(family_df, 'momId')
+        return PreparePersons._find_parent_in_family_ped(family_df, 'mom_id')
 
     @staticmethod
     def _find_dad_in_family_ped(family_df):
-        return PreparePersons._find_parent_in_family_ped(family_df, 'dadId')
+        return PreparePersons._find_parent_in_family_ped(family_df, 'dad_id')
 
     @staticmethod
     def _find_status_in_family(family_df, status):
         df = family_df[family_df.status == status]
         result = []
         for row in df.to_dict('records'):
-            result.append((row['familyId'], row['personId']))
+            result.append((row['family_id'], row['person_id']))
         return result
 
     @staticmethod
@@ -113,7 +113,7 @@ class PreparePersons(PrepareBase):
 
     def _guess_role_nuc(self, ped_df):
         assert self.config.person.role.type == 'guess'
-        grouped = ped_df.groupby('familyId')
+        grouped = ped_df.groupby('family_id')
         roles = {}
         for _, family_df in grouped:
             mom = self._find_mom_in_family_ped(family_df)
@@ -132,7 +132,7 @@ class PreparePersons(PrepareBase):
 
         role = pd.Series(ped_df.index)
         for index, row in ped_df.iterrows():
-            role[index] = roles[(row['familyId'], row['personId'])]
+            role[index] = roles[(row['family_id'], row['person_id'])]
         ped_df['role'] = role
         return ped_df
 
@@ -156,9 +156,17 @@ class PreparePersons(PrepareBase):
                 'status': np.int32,
             }
         )
-        df = df.rename(columns={'gender': 'sex'})
+        df = df.rename(
+            columns={
+                'gender': 'sex',
+                'personId': 'person_id',
+                'familyId': 'family_id',
+                'momId': 'mom_id',
+                'dadId': 'dad_id',
+            })
 
         assert set(cls.PED_COLUMNS) <= set(df.columns)
+        print(df.columns)
 
         return df
 
@@ -166,11 +174,12 @@ class PreparePersons(PrepareBase):
         assert set(self.PED_COLUMNS) <= set(ped_df.columns)
         ped_df = self._prepare_families(ped_df)
         ped_df = self._prepare_persons(ped_df)
+        print(ped_df.columns)
         return ped_df
 
     def _save_families(self, ped_df):
         families = [
-            {'family_id': fid} for fid in ped_df['familyId'].unique()
+            {'family_id': fid} for fid in ped_df['family_id'].unique()
         ]
         ins = self.db.family.insert()
         with self.db.engine.connect() as connection:
@@ -192,12 +201,12 @@ class PreparePersons(PrepareBase):
         persons = []
         for _index, row in ped_df.iterrows():
             p = {
-                'family_id': families[row['familyId']].id,
-                self.PERSON_ID: row['personId'],
+                'family_id': families[row['family_id']].id,
+                self.PERSON_ID: row['person_id'],
                 'role': Role(row['role']),
                 'status': Status(row['status']),
                 'sex': Sex(row['sex']),
-                'sample_id': self._build_sample_id(row.get('sampleId')),
+                'sample_id': self._build_sample_id(row.get('sample_id')),
             }
             persons.append(p)
         ins = self.db.person.insert()
@@ -508,6 +517,7 @@ class PrepareVariables(PreparePersons):
 
     def _augment_person_ids(self, df):
         persons = self.get_persons()
+        print(df.columns)
         pid = pd.Series(df.index)
         for index, row in df.iterrows():
             p = persons.get(row[self.PERSON_ID])

@@ -208,7 +208,7 @@ USAGE
         parser.add_argument(
             '-P', '--person-column',
             dest='person_column',
-            default=defaults['person']['role']['column'],
+            # default=defaults['person']['role']['column'],
             help="sets name of a column in instrument's files, "
             "containing personId (default: %(default)s)"
         )
