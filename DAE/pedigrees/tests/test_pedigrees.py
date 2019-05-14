@@ -1,5 +1,9 @@
-from pedigrees.pedigrees import FamilyConnections
+
+from pedigrees.pedigrees import FamilyConnections, MatingUnit, SibshipUnit, \
+    Individual
 from variants.attributes import Role, Sex
+
+NO_RANK = -3673473456
 
 
 def test_pedigree_member(member4):
@@ -60,9 +64,9 @@ def test_individual(individual4, individual5, individual6, mating_unit2):
     assert len(individual5.children_set()) == 1
     assert individual4 in individual5.children_set()
 
-    assert individual4.rank == -3673473456
-    assert individual5.rank == -3673473456
-    assert individual6.rank == -3673473456
+    assert individual4.rank == NO_RANK
+    assert individual5.rank == NO_RANK
+    assert individual6.rank == NO_RANK
     individual5.add_rank(1)
     assert individual4.rank == 0
     assert individual5.rank == 1
@@ -76,17 +80,35 @@ def test_individual(individual4, individual5, individual6, mating_unit2):
     assert individual5.is_individual() is True
 
 
-def test_family_connections_valid(id_to_mating_unit_valid):
-    assert FamilyConnections.is_valid_family(id_to_mating_unit_valid) is True
+def test_family_connections_valid(mating_unit2):
+    id_to_mating_unit = {
+        'mom2,dad2': mating_unit2
+    }
+    assert FamilyConnections.is_valid_family(id_to_mating_unit) is True
 
 
-def test_family_connections_unvalid(id_to_mating_unit_unvalid):
-    assert FamilyConnections.is_valid_family(
-        id_to_mating_unit_unvalid[0]) is False
-    assert FamilyConnections.is_valid_family(
-        id_to_mating_unit_unvalid[1]) is False
-    assert FamilyConnections.is_valid_family(
-        id_to_mating_unit_unvalid[2]) is False
+def test_family_connections_invalid(individual4, individual5, individual6):
+    id_to_mating_unit = [
+        {
+            'mom2,dad2': MatingUnit(
+                Individual(), individual6, SibshipUnit(individual4)
+            )
+        },
+        {
+            'mom2,dad2': MatingUnit(
+                individual5, Individual(), SibshipUnit(individual4)
+            )
+        },
+        {
+            'mom2,dad2': MatingUnit(
+                individual5, individual6, SibshipUnit([Individual()])
+            )
+        }
+    ]
+
+    assert FamilyConnections.is_valid_family(id_to_mating_unit[0]) is False
+    assert FamilyConnections.is_valid_family(id_to_mating_unit[1]) is False
+    assert FamilyConnections.is_valid_family(id_to_mating_unit[2]) is False
 
 
 def test_family_connections_add_missing_members(family2, family3):

@@ -139,34 +139,6 @@ def mating_unit2(individual5, individual6, sibship_unit2):
 
 
 @pytest.fixture(scope='function')
-def id_to_mating_unit_valid(mating_unit2):
-    return {
-        'mom2,dad2': mating_unit2
-    }
-
-
-@pytest.fixture(scope='function')
-def id_to_mating_unit_unvalid(individual4, individual5, individual6):
-    return [
-        {
-            'mom2,dad2': MatingUnit(
-                Individual(), individual6, SibshipUnit(individual4)
-            )
-        },
-        {
-            'mom2,dad2': MatingUnit(
-                individual5, Individual(), SibshipUnit(individual4)
-            )
-        },
-        {
-            'mom2,dad2': MatingUnit(
-                individual5, individual6, SibshipUnit([Individual()])
-            )
-        }
-    ]
-
-
-@pytest.fixture(scope='function')
 def people_with_layout_error(layout_column, generated_column, error_message):
     return {
         'fam1;id1': {
