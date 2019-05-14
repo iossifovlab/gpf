@@ -290,7 +290,8 @@ class FamilyConnections(object):
         # print("same_generation_not_mates",
         #       len(same_generation_not_mates), same_generation_not_mates)
         # print("same_generation_not_siblings",
-        #       len(same_generation_not_siblings), same_generation_not_siblings)
+        #       len(same_generation_not_siblings),
+        #       same_generation_not_siblings)
         # print("intergenerational_edges",
         #       len(intergenerational_edges), intergenerational_edges)
 

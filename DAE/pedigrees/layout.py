@@ -7,8 +7,6 @@ from collections import defaultdict
 from functools import reduce
 import re
 
-from variants.attributes import Role
-
 
 def layout_parser(layout):
     layout_groups = re.search(
@@ -553,7 +551,7 @@ class Layout(object):
         for key in sorted(rank_to_individuals.keys()):
             sorted_intervals = sorted(rank_to_individuals[key],
                                       key=lambda x: (x.left, x.right))
-            # print(map(lambda x: x.vertex, sorted_intervals))
+            # print(list(map(lambda x: x.vertex, sorted_intervals)))
             result.append([x.vertex for x in sorted_intervals])
 
         return result

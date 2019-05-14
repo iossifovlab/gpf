@@ -197,7 +197,8 @@ class OffsetLayoutDrawer(object):
                 ))
 
     def _draw_rounded_lines(self, axes):
-        elementwise_sum = lambda x, y: tuple([x[0] + y[0], x[1] + y[1]])
+        def elementwise_sum(x, y):
+            return tuple([x[0] + y[0], x[1] + y[1]])
 
         for line in self._layout.lines:
             if line.curved:

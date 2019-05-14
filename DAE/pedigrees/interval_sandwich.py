@@ -211,7 +211,7 @@ class Realization(object):
         return interval1.right < interval2.left
 
     def is_maximal(self, index):
-        for i, v in enumerate(self.domain):
+        for i, _ in enumerate(self.domain):
             if i != index and self.is_in_interval_order(index, i):
                 return False
 
@@ -347,8 +347,8 @@ class SandwichSolver(object):
                     sandwich_instance.forbidden_graph,
                     [IntervalForVertex(vertex)],
                     [vertex],
-                    _graph_neighbors_cache=
-                    initial_realization[0]._graph_neighbors_cache
+                    _graph_neighbors_cache=initial_realization[0]
+                    ._graph_neighbors_cache
                     if i > 0 else None
                 )
             )
@@ -368,7 +368,9 @@ class SandwichSolver(object):
             current_iteration += 1
 
             # if current_iteration == 100000:
-            #     print("Bailing at {} iterations...".format(current_iteration))
+            #     print(
+            #         "Bailing at {} iterations...".format(current_iteration)
+            #     )
             #     return None
 
             other_vertices = sandwich_instance.vertices \
