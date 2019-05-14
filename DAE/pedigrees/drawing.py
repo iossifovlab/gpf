@@ -6,7 +6,8 @@ from copy import deepcopy
 import math
 from itertools import zip_longest
 
-import matplotlib.pyplot as plt
+import matplotlib as mpl; mpl.use('PS')  # noqa
+import matplotlib.pyplot as plt; plt.ioff()  # noqa
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from matplotlib.path import Path
