@@ -282,8 +282,12 @@ class PreparePhenoBrowserBase(object):
     def run(self):
         db = DbManager(dbfile=self.browser_db)
         db.build()
-
+        progress_nl()
+        print("Instruments:", self.pheno_db.instruments.values)
+        progress_nl()
         for instrument in self.pheno_db.instruments.values():
+            progress_nl()
+            progress(text=str(instrument) + "\n")
             progress_nl()
             for measure in instrument.measures.values():
                 progress(text=str(measure) + "\n")
