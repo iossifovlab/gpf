@@ -6,6 +6,7 @@ Created on Apr 10, 2017
 from __future__ import print_function
 
 import os
+import traceback
 import matplotlib as mpl
 import numpy as np
 
@@ -293,5 +294,11 @@ class PreparePhenoBrowserBase(object):
             progress_nl()
             for measure in instrument.measures.values():
                 progress(text=str(measure) + "\n")
-                var = self.handle_measure(measure)
-                db.save(var)
+                try:
+                    var = self.handle_measure(measure)
+                    db.save(var)
+                except Exception:
+                    print("--------------------------------------------------")
+                    print("Exception while processing measure:", str(measure))
+                    traceback.print_exc()
+                    print("--------------------------------------------------")
