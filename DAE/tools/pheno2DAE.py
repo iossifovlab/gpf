@@ -251,7 +251,7 @@ USAGE
 
         return 0
     except KeyboardInterrupt:
-        return 0
+        return 1
     except Exception as e:
         traceback.print_exc()
 
