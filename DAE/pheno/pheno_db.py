@@ -3,6 +3,7 @@ Created on Sep 10, 2016
 
 @author: lubo
 '''
+from __future__ import print_function
 import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_
@@ -200,7 +201,9 @@ class PhenoDB(object):
         instruments = OrderedDict()
 
         df = self._get_measures_df()
-        instrument_names = df.instrument_name.unique()
+        instrument_names = list(df.instrument_name.unique())
+        instrument_names = sorted(instrument_names)
+        print("Instruments({}):".format(self.db.dbfile), instrument_names)
 
         for instrument_name in instrument_names:
             instrument = Instrument(instrument_name)

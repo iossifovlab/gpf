@@ -3,6 +3,8 @@ Created on Apr 10, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import os
 import matplotlib as mpl
 import numpy as np
@@ -283,7 +285,7 @@ class PreparePhenoBrowserBase(object):
         db = DbManager(dbfile=self.browser_db)
         db.build()
         progress_nl()
-        print("Instruments:", self.pheno_db.instruments.values)
+        print("Instruments:", list(self.pheno_db.instruments.keys()))
         progress_nl()
         for instrument in self.pheno_db.instruments.values():
             progress_nl()
