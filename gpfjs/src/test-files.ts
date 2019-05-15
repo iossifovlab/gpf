@@ -17,3 +17,4 @@ import 'app/genotype-preview-table/genotype-preview-table.component.spec';
 import 'app/pheno-browser/pheno-browser.spec';
 import 'app/pheno-browser/pheno-browser.service.spec';
 import 'app/pheno-browser/pheno-browser.component.spec';
+import 'app/histogram/histogram.component.spec';
