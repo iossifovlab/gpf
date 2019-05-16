@@ -18,3 +18,4 @@ import 'app/pheno-browser/pheno-browser.spec';
 import 'app/pheno-browser/pheno-browser.service.spec';
 import 'app/pheno-browser/pheno-browser.component.spec';
 import 'app/histogram/histogram.component.spec';
+import 'app/chromosome/chromosome.component.spec';
