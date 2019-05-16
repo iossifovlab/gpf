@@ -60,9 +60,12 @@ def test_dataset_quads_composite_attr(
 def test_composite_dataset_config_people_group(composite_dataset_config):
     assert composite_dataset_config is not None
 
-    assert composite_dataset_config.genotype_browser is not None
-    assert composite_dataset_config.genotype_browser.people_group is not None
-    people_group = composite_dataset_config.genotype_browser.people_group
+    assert composite_dataset_config.genotype_browser is False
+    assert composite_dataset_config.genotype_browser_config is not None
+    assert composite_dataset_config.genotype_browser_config.people_group \
+        is not None
+    people_group = composite_dataset_config.genotype_browser_config\
+                                           .people_group
 
     assert len(people_group) == 1
     pg = people_group[0]
@@ -74,10 +77,11 @@ def test_composite_dataset_config_people_group(composite_dataset_config):
 def test_composite_dataset_config_genotype_browser(composite_dataset_config):
     assert composite_dataset_config is not None
 
-    assert composite_dataset_config.genotype_browser is not None
-    genotype_browser = composite_dataset_config.genotype_browser
+    assert composite_dataset_config.genotype_browser is True
+    assert composite_dataset_config.genotype_browser_config is not None
+    genotype_browser_config = composite_dataset_config.genotype_browser_config
 
-    download_columns = genotype_browser.download_columns
+    download_columns = genotype_browser_config.download_columns
     assert download_columns.to_list() == \
         ['family', 'phenotype', 'variant', 'best', 'fromparent',
          'inchild', 'effect', 'count', 'geneeffect', 'effectdetails',
@@ -111,10 +115,12 @@ def test_composite_dataset_config_people_group_overwrite(
         quads_composite_dataset_config):
     assert quads_composite_dataset_config is not None
 
-    assert quads_composite_dataset_config.genotype_browser is not None
-    assert quads_composite_dataset_config.genotype_browser.people_group \
-        is not None
-    people_group = quads_composite_dataset_config.genotype_browser.people_group
+    assert quads_composite_dataset_config.genotype_browser is True
+    assert quads_composite_dataset_config.genotype_browser_config is not None
+    assert quads_composite_dataset_config.genotype_browser_config\
+                                         .people_group is not None
+    people_group = quads_composite_dataset_config.genotype_browser_config\
+                                                 .people_group
 
     assert len(people_group) == 1
     pg = people_group[0]
@@ -129,12 +135,14 @@ def test_composite_dataset_config_genotype_browser_overwrite(
 
     study_config = quads_composite_dataset_config.studies_configs[0]
 
-    assert quads_composite_dataset_config.genotype_browser is not None
-    genotype_browser = quads_composite_dataset_config.genotype_browser
+    assert quads_composite_dataset_config.genotype_browser is True
+    assert quads_composite_dataset_config.genotype_browser_config is not None
+    genotype_browser_config = \
+        quads_composite_dataset_config.genotype_browser_config
 
-    assert study_config.genotype_browser != genotype_browser
+    assert study_config.genotype_browser_config != genotype_browser_config
 
-    download_columns = genotype_browser.download_columns
+    download_columns = genotype_browser_config.download_columns
     print(download_columns)
 
     assert download_columns.to_list() == \

@@ -56,6 +56,9 @@ class DatasetConfig(StudyConfigBase):
     COMPOSITE_ATTRIBUTES = {
         # 'phenotypes': _set_union_attribute,
 
+        'genotypeBrowser': _same_value_attribute,
+        'genotype_browser': _same_value_attribute,
+
         'phenotypeGenotypeTool': _boolean_and_attribute,
         'phenotypeBrowser': _boolean_and_attribute,
 
@@ -68,8 +71,8 @@ class DatasetConfig(StudyConfigBase):
         'has_transmitted': _boolean_or_attribute,
         'has_denovo': _boolean_or_attribute,
 
-        'genotypeBrowser': _same_value_attribute,
-        'genotype_browser': _same_value_attribute,
+        'genotypeBrowserConfig': _same_value_attribute,
+        'genotype_browser_config': _same_value_attribute,
 
         'enrichmentTool': _same_value_attribute,
         'enrichment_tool': _same_value_attribute,
@@ -104,11 +107,15 @@ class DatasetConfig(StudyConfigBase):
                 return None
 
         cls._fill_wdae_config(config_section)
-        genotype_browser = None
-        if config_section.get('genotypeBrowser', False) is True:
-            genotype_browser = GenotypeBrowserConfig.from_config(config)
+        genotype_browser_config = None
+        if config.get('genotypeBrowser', None) is not None and \
+                config_section.get('genotypeBrowser', False) is True:
+            genotype_browser_config = GenotypeBrowserConfig.from_config(config)
 
-        return DatasetConfig(config_section, config, genotype_browser)
+        return DatasetConfig(
+            config_section, config,
+            genotype_browser_config=genotype_browser_config
+        )
 
     def __getattr__(self, option_name):
         try:

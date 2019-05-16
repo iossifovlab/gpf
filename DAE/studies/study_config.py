@@ -23,6 +23,7 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         'phenotypeGenotypeTool',
         'enrichmentTool',
         'genotypeBrowser',
+        'commonReport'
     )
 
     SPLIT_STR_LISTS = [
@@ -34,8 +35,8 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
     }
 
     def __init__(
-            self, section_config, study_config, genotype_browser=None, *args,
-            **kwargs):
+            self, section_config, study_config, genotype_browser_config=None,
+            *args, **kwargs):
         super(StudyConfigBase, self).__init__(section_config, *args, **kwargs)
 
         assert self.id
@@ -49,8 +50,8 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
 
         self.study_config = study_config
 
-        if genotype_browser is not None:
-            self.genotypeBrowser = genotype_browser
+        if genotype_browser_config is not None:
+            self.genotypeBrowserConfig = genotype_browser_config
 
 
 class StudyConfig(StudyConfigBase):
@@ -109,13 +110,17 @@ class StudyConfig(StudyConfigBase):
                 return None
 
         cls._fill_wdae_config(config_section)
-        genotype_browser = None
-        if config_section.get('genotypeBrowser', False) is True:
-            genotype_browser = GenotypeBrowserConfig.from_config(config)
+        genotype_browser_config = None
+        if config.get('genotypeBrowser', None) is not None and \
+                config_section.get('genotypeBrowser', False) is True:
+            genotype_browser_config = GenotypeBrowserConfig.from_config(config)
 
         config_section['authorizedGroups'] = config_section.get(
             'authorizedGroups', [config_section.get('id', '')])
 
         # config_section['studies'] = [config_section['id']]
 
-        return StudyConfig(config_section, config, genotype_browser)
+        return StudyConfig(
+            config_section, config,
+            genotype_browser_config=genotype_browser_config
+        )

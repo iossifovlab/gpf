@@ -37,21 +37,24 @@ class StudyWrapper(object):
         people_groups = []
         present_in_role = []
 
-        if 'genotypeBrowser' in self.config and self.config.genotype_browser:
-            genotype_browser = self.config.genotypeBrowser
-            preview_columns = genotype_browser['previewColumnsSlots']
-            download_columns = genotype_browser['downloadColumnsSlots']
-            if genotype_browser['phenoColumns']:
-                pheno_columns = [s for pc in genotype_browser['phenoColumns']
-                                 for s in pc['slots']]
-            gene_weights_columns = genotype_browser['geneWeightsColumns']
+        if 'genotypeBrowserConfig' in self.config and \
+                self.config.genotype_browser_config:
+            genotype_browser_config = self.config.genotypeBrowserConfig
+            preview_columns = genotype_browser_config['previewColumnsSlots']
+            download_columns = genotype_browser_config['downloadColumnsSlots']
+            if genotype_browser_config['phenoColumns']:
+                pheno_columns = \
+                    [s for pc in genotype_browser_config['phenoColumns']
+                     for s in pc['slots']]
+            gene_weights_columns = \
+                genotype_browser_config['geneWeightsColumns']
 
-            column_labels = genotype_browser['columnLabels']
+            column_labels = genotype_browser_config['columnLabels']
 
-            if 'peopleGroup' in genotype_browser:
-                people_groups = genotype_browser.people_group
-            if 'presentInRole' in genotype_browser:
-                present_in_role = genotype_browser.present_in_role
+            if 'peopleGroup' in genotype_browser_config:
+                people_groups = genotype_browser_config.people_group
+            if 'presentInRole' in genotype_browser_config:
+                present_in_role = genotype_browser_config.present_in_role
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
@@ -79,9 +82,9 @@ class StudyWrapper(object):
         if pheno_db:
             self.pheno_db = pheno_factory.get_pheno_db(pheno_db)
 
-            if 'genotypeBrowser' in self.config and \
-                    self.config.genotypeBrowser:
-                pheno_filters = self.config.genotypeBrowser.phenoFilters
+            if 'genotypeBrowserConfig' in self.config and \
+                    self.config.genotypeBrowserConfig:
+                pheno_filters = self.config.genotypeBrowserConfig.phenoFilters
                 if pheno_filters:
                     self.pheno_filters_in_config = {
                         self._get_pheno_filter_key(pf.measureFilter)
@@ -193,14 +196,15 @@ class StudyWrapper(object):
             yield variant
 
     def _add_roles_columns(self, variant):
-        if 'genotypeBrowser' not in self.study.config or \
-            'genotypeBrowser' in self.study.config and \
-                not self.study.config.genotypeBrowser:
+        if 'genotypeBrowserConfig' not in self.study.config or \
+            ('genotypeBrowserConfig' in self.study.config and
+                not self.study.config.genotypeBrowserConfig):
             return variant
 
-        # assert isinstance(genotype_browser, dict), type(genotype_browser)
+        # assert isinstance(genotype_browser_config, dict), \
+        #   type(genotype_browser_config)
 
-        roles_columns = self.study.config.genotypeBrowser.rolesColumns
+        roles_columns = self.study.config.genotypeBrowserConfig.rolesColumns
 
         if not roles_columns:
             return variant
@@ -246,9 +250,9 @@ class StudyWrapper(object):
 
     def _add_pheno_columns(self, variants_iterable):
         if self.pheno_db is None or \
-            'genotypeBrowser' not in self.study.config or \
-                'genotypeBrowser' in self.study.config and not \
-                self.study.config.genotypeBrowser:
+            'genotypeBrowserConfig' not in self.study.config or \
+                ('genotypeBrowserConfig' in self.study.config and not
+                 self.study.config.genotypeBrowserConfig):
             for variant in variants_iterable:
                 yield variant
 
@@ -284,8 +288,9 @@ class StudyWrapper(object):
         pheno_column_dfs = []
         pheno_column_names = []
 
-        if 'genotypeBrowser' in self.config and self.config.genotypeBrowser:
-            for pheno_column in self.config.genotypeBrowser.phenoColumns:
+        if 'genotypeBrowserConfig' in self.config and \
+                self.config.genotypeBrowserConfig:
+            for pheno_column in self.config.genotypeBrowserConfig.phenoColumns:
                 for slot in pheno_column.slots:
                     pheno_column_dfs.append(
                         self.pheno_db.get_measure_values_df(
@@ -589,7 +594,8 @@ class StudyWrapper(object):
         return [
             'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
             'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
-            'enrichmentTool', 'genotypeBrowser', 'studyTypes', 'studies'
+            'enrichmentTool', 'genotypeBrowser', 'genotypeBrowserConfig',
+            'commonReport', 'studyTypes', 'studies'
         ]
 
     def get_dataset_description(self):
@@ -601,16 +607,17 @@ class StudyWrapper(object):
         result = {key: config.get(key, None) for key in keys}
 
         self._augment_pheno_filters_domain(result)
-        self._filter_genotype_browser(result)
+        self._filter_genotype_browser_config(result)
 
         return result
 
     def _augment_pheno_filters_domain(self, dataset_description):
-        genotype_browser = dataset_description.get('genotypeBrowser', None)
-        if not genotype_browser:
+        genotype_browser_config = dataset_description.get(
+            'genotypeBrowserConfig', None)
+        if not genotype_browser_config:
             return
 
-        pheno_filters = genotype_browser.get('phenoFilters', None)
+        pheno_filters = genotype_browser_config.get('phenoFilters', None)
         if not pheno_filters:
             return
 
@@ -626,13 +633,14 @@ class StudyWrapper(object):
                 measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
-    def _filter_genotype_browser(self, dataset_description):
-        genotype_browser = dataset_description.get('genotypeBrowser', None)
-        if not genotype_browser:
+    def _filter_genotype_browser_config(self, dataset_description):
+        genotype_browser_config = \
+            dataset_description.get('genotypeBrowserConfig', None)
+        if not genotype_browser_config:
             return
 
-        dataset_description['genotypeBrowser'] = \
-            genotype_browser.get_genotype_browser_description()
+        dataset_description['genotypeBrowserConfig'] = \
+            genotype_browser_config.get_genotype_browser_config_description()
 
     def get_column_labels(self):
         return self.column_labels

@@ -92,9 +92,10 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
             return None
 
         people_groups = {}
-        if 'genotypeBrowser' in study_config and study_config.genotype_browser:
-            genotype_browser = study_config.genotype_browser
-            people_groups = genotype_browser.people_group
+        if 'genotypeBrowserConfig' in study_config and \
+                study_config.genotype_browser_config:
+            genotype_browser_config = study_config.genotype_browser_config
+            people_groups = genotype_browser_config.people_group
 
         people_groups_info = cls._get_people_groups(config, people_groups)
         filter_info = cls._parse_data(config, id)

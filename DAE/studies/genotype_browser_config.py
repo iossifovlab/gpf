@@ -401,7 +401,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
             'peopleGroup', 'presentInRole', 'phenoColumns', 'downloadColumns'
         ]
 
-    def get_genotype_browser_description(self):
+    def get_genotype_browser_config_description(self):
         keys = self._get_description_keys()
         config = self.to_dict()
 

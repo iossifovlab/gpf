@@ -160,9 +160,10 @@ def filter_info(groups):
 @pytest.fixture(scope='session')
 def people_groups(study1_config):
     people_group = {}
-    if 'genotypeBrowser' in study1_config and study1_config.genotype_browser:
-        genotype_browser = study1_config.genotype_browser
-        people_group = genotype_browser.people_group
+    if 'genotypeBrowserConfig' in study1_config and \
+            study1_config.genotype_browser_config:
+        genotype_browser_config = study1_config.genotype_browser_config
+        people_group = genotype_browser_config.people_group
 
     people_groups = OrderedDict()
     for pg in people_group:
