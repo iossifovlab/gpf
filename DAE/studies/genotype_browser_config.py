@@ -9,7 +9,6 @@ from variants.attributes import Role
 class GenotypeBrowserConfig(ConfigurableEntityConfig):
 
     CAST_TO_BOOL = (
-        'genesBlockShowAll',
         'hasPresentInParent',
         'hasComplex',
         'hasPresentInChild',
@@ -396,9 +395,9 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
             'hasPedigreeSelector', 'hasPresentInChild', 'hasPresentInParent',
             'hasPresentInRole', 'hasCNV', 'hasComplex', 'hasFamilyFilters',
             'hasStudyFilters', 'hasStudyTypes', 'hasGraphicalPreview',
-            'genesBlockShowAll', 'previewColumns', 'rolesFilterOptions',
-            'genotypeColumns', 'phenoFilters', 'familyStudyFilters',
-            'peopleGroup', 'presentInRole', 'phenoColumns', 'downloadColumns'
+            'previewColumns', 'rolesFilterOptions', 'genotypeColumns',
+            'phenoFilters', 'familyStudyFilters', 'peopleGroup',
+            'presentInRole', 'phenoColumns', 'downloadColumns'
         ]
 
     def get_genotype_browser_config_description(self):

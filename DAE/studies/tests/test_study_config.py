@@ -59,7 +59,6 @@ def test_quads_f1_config_attr(quads_f1_config, option_name, expected_value):
     ("hasPedigreeSelector", True),
     ("hasCNV", False),
     ("hasComplex", False),
-    ("genesBlockShowAll", True),
     ("hasStudyFilters", True),
     ("phenoFilters", None),
 ])
