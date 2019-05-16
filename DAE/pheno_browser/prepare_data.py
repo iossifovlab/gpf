@@ -297,8 +297,10 @@ class PreparePhenoBrowserBase(object):
                 try:
                     var = self.handle_measure(measure)
                     db.save(var)
-                except Exception:
+                except Exception as ex:
                     print("--------------------------------------------------")
-                    print("Exception while processing measure:", str(measure))
+                    print(
+                        "Exception while processing measure:", 
+                        str(measure), ex)
                     traceback.print_exc()
                     print("--------------------------------------------------")
