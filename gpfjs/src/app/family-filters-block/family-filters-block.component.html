@@ -11,7 +11,7 @@
               <gpf-family-ids></gpf-family-ids>
           </ng-template>
       </ngb-tab>
-      <ngb-tab *ngIf="dataset?.genotypeBrowser?.phenoFilters"
+      <ngb-tab *ngIf="dataset?.genotypeBrowserConfig?.phenoFilters"
                id="pheno-filters" title="Advanced">
           <ng-template ngbTabContent>
               <gpf-pheno-filters [dataset]="dataset">

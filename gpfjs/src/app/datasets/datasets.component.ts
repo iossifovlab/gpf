@@ -43,7 +43,7 @@ export class DatasetsComponent implements OnInit {
       .take(1)
       .subscribe(datasets => {
         if (!this.datasetsService.hasSelectedDataset()) {
-          this.router.navigate(['/', 'datasets', datasets[0].id]);
+          this.selectDataset(datasets[0]);
         }
       });
 
@@ -64,6 +64,24 @@ export class DatasetsComponent implements OnInit {
       });
   }
 
+  findFirstTool(selectedDataset: Dataset) {
+    if (selectedDataset.description) {
+      return 'description';
+    } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
+      return 'browser';
+    } else if (selectedDataset.phenotypeBrowser) {
+      return 'phenotypeBrowser';
+    } else if (selectedDataset.enrichmentTool) {
+      return 'enrichment';
+    } else if (selectedDataset.phenotypeGenotypeTool) {
+      return 'phenoTool';
+    } else if (selectedDataset) {
+      return 'commonReport';
+    } else {
+      return '';
+    }
+  }
+
   filterHiddenGroups(datasets: Observable<Dataset[]>): Observable<Dataset[]> {
     return datasets.map(datasets =>
       datasets.filter(dataset =>
@@ -71,10 +89,6 @@ export class DatasetsComponent implements OnInit {
   }
 
   selectDataset(dataset: Dataset) {
-    if (dataset.description) {
-      this.router.navigate(['/', 'datasets', dataset.id, 'description']);
-    } else {
-      this.router.navigate(['/', 'datasets', dataset.id]);
-    }
+    this.router.navigate(['/', 'datasets', dataset.id, this.findFirstTool(dataset)]);
   }
 }

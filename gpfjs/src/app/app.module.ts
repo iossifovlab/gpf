@@ -190,10 +190,6 @@ const appRoutes: Routes = [
       {
         path: 'commonReport',
         component: VariantReportsComponent
-      },
-      {
-        path: '**',
-        redirectTo: 'browser'
       }
     ]
   },

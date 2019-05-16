@@ -250,10 +250,12 @@ export class Dataset extends IdName {
       json['studies'],
       json['studyTypes'],
       json['phenoDB'],
+      json['genotypeBrowser'],
       json['phenotypeGenotypeTool'],
       json['enrichmentTool'],
       json['phenotypeBrowser'],
-      GenotypeBrowser.fromJson(json['genotypeBrowser']),
+      json['commonReport'],
+      json['genotypeBrowserConfig'] ? GenotypeBrowser.fromJson(json['genotypeBrowserConfig']) : null,
       UserGroup.fromJsonArray(json['groups']),
     );
   }
@@ -277,10 +279,12 @@ export class Dataset extends IdName {
     readonly studies: string[],
     readonly studyTypes: string[],
     readonly phenoDB: string,
+    readonly genotypeBrowser: boolean,
     readonly phenotypeGenotypeTool: boolean,
     readonly enrichmentTool: boolean,
     readonly phenotypeBrowser: boolean,
-    readonly genotypeBrowser: GenotypeBrowser,
+    readonly commonReport: boolean,
+    readonly genotypeBrowserConfig: GenotypeBrowser,
     readonly groups: UserGroup[]
   ) {
     super(id, name);

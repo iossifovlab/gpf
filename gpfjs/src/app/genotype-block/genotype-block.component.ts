@@ -35,64 +35,64 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
     const selectedDataset$ = this.selectedDataset$;
     this.hasCNV = selectedDataset$.map(dataset => {
-      if (!dataset) {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
         return false;
       }
-      return dataset.genotypeBrowser.hasCNV;
+      return dataset.genotypeBrowserConfig.hasCNV;
     });
     this.hasComplex = selectedDataset$.map(dataset => {
-      if (!dataset) {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
         return false;
       }
-      return dataset.genotypeBrowser.hasComplex;
+      return dataset.genotypeBrowserConfig.hasComplex;
     });
     this.hasPedigreeSelector = selectedDataset$.map(dataset => {
-      if (!dataset) {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
         return false;
       }
-      return dataset.genotypeBrowser.hasPedigreeSelector;
+      return dataset.genotypeBrowserConfig.hasPedigreeSelector;
     });
     this.hasPresentInChild = selectedDataset$.map(dataset => {
-      if (!dataset) {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
         return false;
       }
-      return dataset.genotypeBrowser.hasPresentInChild;
+      return dataset.genotypeBrowserConfig.hasPresentInChild;
     });
     this.hasPresentInParent = selectedDataset$.map(dataset => {
-      if (!dataset) {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
         return false;
       }
-      return dataset.genotypeBrowser.hasPresentInParent;
+      return dataset.genotypeBrowserConfig.hasPresentInParent;
     });
     this.hasPresentInRole = selectedDataset$.map(dataset => {
-      if (!dataset) {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
         return false;
       }
-      return dataset.genotypeBrowser.hasPresentInRole;
+      return dataset.genotypeBrowserConfig.hasPresentInRole;
     });
     this.hasStudyTypes = selectedDataset$.map(dataset => {
-      if (!dataset) {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
         return false;
       }
-      return dataset.genotypeBrowser.hasStudyTypes;
+      return dataset.genotypeBrowserConfig.hasStudyTypes;
     });
     this.pedigrees = selectedDataset$.map(dataset => {
-      if (!dataset) {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
         return [];
       }
-      return dataset.genotypeBrowser.pedigreeSelectors;
+      return dataset.genotypeBrowserConfig.pedigreeSelectors;
     });
     this.presentInRole = selectedDataset$.map(dataset => {
-      if (!dataset) {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
         return [];
       }
-      return dataset.genotypeBrowser.presentInRole;
+      return dataset.genotypeBrowserConfig.presentInRole;
     });
     this.rolesFilterOptions = selectedDataset$.map(dataset => {
-      if (!dataset || !dataset.genotypeBrowser) {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
         return [];
       }
-      return dataset.genotypeBrowser.rolesFilterOptions;
+      return dataset.genotypeBrowserConfig.rolesFilterOptions;
     });
   }
 
