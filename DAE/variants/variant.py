@@ -50,6 +50,10 @@ class VariantBase(object):
         self._alternative = alternative
 
     @property
+    def chrom(self):
+        return self.chromosome
+
+    @property
     def alternative(self):
         """
         alternative DNA string; comma separated string when multiple
@@ -196,11 +200,8 @@ class SummaryAllele(VariantBase):
         #: index of the allele of summary variant
         self.allele_index = allele_index
 
-        if alternative is None:
-            self.details = None
-        else:
-            self.details = VariantDetail.from_vcf(
-                chromosome, position, reference, alternative)
+        self.details = None
+
         #: variant effect of the allele; None for the reference allele.
         self.effect = effect
         #: frequency of the allele
@@ -218,24 +219,39 @@ class SummaryAllele(VariantBase):
 
     @property
     def cshl_variant(self):
-        if self.details is not None:
-            return self.details.cshl_variant
-        else:
+        if self.alternative is None:
             return None
+        if self.details is None:
+
+            self.details = VariantDetail.from_vcf(
+                self.chromosome, self.position,
+                self.reference, self.alternative)
+
+        return self.details.cshl_variant
 
     @property
     def cshl_location(self):
-        if self.details is not None:
-            return self.details.cshl_location
-        else:
+        if self.alternative is None:
             return None
+
+        if self.details is None:
+            self.details = VariantDetail.from_vcf(
+                self.chromosome, self.position,
+                self.reference, self.alternative)
+
+        return self.details.cshl_location
 
     @property
     def variant_type(self):
-        if self.details is not None:
-            return self.details.variant_type
-        else:
+        if self.alternative is None:
             return None
+
+        if self.details is None:
+            self.details = VariantDetail.from_vcf(
+                self.chromosome, self.position,
+                self.reference, self.alternative)
+
+        return self.details.variant_type
 
     @property
     def effects(self):
