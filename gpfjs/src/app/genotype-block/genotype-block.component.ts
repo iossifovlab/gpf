@@ -77,10 +77,10 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
       return dataset.genotypeBrowserConfig.hasStudyTypes;
     });
     this.pedigrees = selectedDataset$.map(dataset => {
-      if (!dataset || !dataset.genotypeBrowserConfig) {
+      if (!dataset || !dataset.peopleGroupConfig) {
         return [];
       }
-      return dataset.genotypeBrowserConfig.pedigreeSelectors;
+      return dataset.peopleGroupConfig.pedigreeSelectors;
     });
     this.presentInRole = selectedDataset$.map(dataset => {
       if (!dataset || !dataset.genotypeBrowserConfig) {

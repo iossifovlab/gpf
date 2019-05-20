@@ -204,7 +204,6 @@ export class GenotypeBrowser {
       [...AdditionalColumn.fromJsonArray(json['genotypeColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
       PhenoFilter.fromJsonArray(json['familyStudyFilters']),
-      PedigreeSelector.fromJsonArray(json['peopleGroup']),
       PresentInRole.fromJsonArray(json['presentInRole']),
     );
   }
@@ -225,14 +224,24 @@ export class GenotypeBrowser {
     readonly allColumns: Array<AdditionalColumn>,
     readonly phenoFilters: Array<PhenoFilter>,
     readonly familyStudyFilters: Array<PhenoFilter>,
-    readonly pedigreeSelectors: PedigreeSelector[],
     readonly presentInRole: PresentInRole[],
   ) {
     this.columns = _.filter(this.allColumns,
       (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);
   }
+}
 
+export class PeopleGroup {
 
+  static fromJson(json: any): PeopleGroup {
+    return new PeopleGroup(
+      PedigreeSelector.fromJsonArray(json['peopleGroup'])
+    );
+  }
+
+  constructor(
+    readonly pedigreeSelectors: PedigreeSelector[],
+  ) { }
 }
 
 export class Dataset extends IdName {
@@ -254,6 +263,7 @@ export class Dataset extends IdName {
       json['phenotypeBrowser'],
       json['commonReport'],
       json['genotypeBrowserConfig'] ? GenotypeBrowser.fromJson(json['genotypeBrowserConfig']) : null,
+      json['peopleGroupConfig'] ? PeopleGroup.fromJson(json['peopleGroupConfig']) : null,
       UserGroup.fromJsonArray(json['groups']),
     );
   }
@@ -283,6 +293,7 @@ export class Dataset extends IdName {
     readonly phenotypeBrowser: boolean,
     readonly commonReport: boolean,
     readonly genotypeBrowserConfig: GenotypeBrowser,
+    readonly peopleGroupConfig: PeopleGroup,
     readonly groups: UserGroup[]
   ) {
     super(id, name);
