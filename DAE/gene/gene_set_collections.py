@@ -104,17 +104,12 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         for config in self.variants_db.get_all_configs():
             study_config = config.study_config
 
-            genotype_browser_config = None
-            if 'genotypeBrowserConfig' in config and \
-                    config.genotype_browser_config:
-                genotype_browser_config = config.genotype_browser_config
-            if genotype_browser_config is None:
-                continue
-
-            people_groups = []
-            if 'peopleGroup' in genotype_browser_config:
-                people_groups = genotype_browser_config.people_group
-            if len(people_groups) == 0:
+            people_group = []
+            if 'peopleGroupConfig' in config and config.people_group_config:
+                people_group_config = config.people_group_config
+                if people_group_config['peopleGroup']:
+                    people_group = people_group_config.people_group
+            if len(people_group) == 0:
                 continue
 
             people_groups_list = \
@@ -128,7 +123,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
                 pg.id: {
                     'name': pg.name,
                     'source': pg.source
-                } for pg in people_groups
+                } for pg in people_group
                 if pg.id in people_groups_list
             }
 

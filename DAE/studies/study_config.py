@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import os
 
-from studies.genotype_browser_config import GenotypeBrowserConfig
 from studies.study_wdae_config import StudyWdaeMixin
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
@@ -34,9 +33,7 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         'phenoGenoTool': 'phenotypeGenotypeTool'
     }
 
-    def __init__(
-            self, section_config, study_config, genotype_browser_config=None,
-            *args, **kwargs):
+    def __init__(self, section_config, *args, **kwargs):
         super(StudyConfigBase, self).__init__(section_config, *args, **kwargs)
 
         assert self.id
@@ -47,11 +44,6 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         assert self.name
         assert 'description' in self
         assert self.work_dir
-
-        self.study_config = study_config
-
-        if genotype_browser_config is not None:
-            self.genotypeBrowserConfig = genotype_browser_config
 
 
 class StudyConfig(StudyConfigBase):
@@ -109,18 +101,11 @@ class StudyConfig(StudyConfigBase):
             if config_section['enabled'] == 'false':
                 return None
 
-        cls._fill_wdae_config(config_section)
-        genotype_browser_config = None
-        if config.get('genotypeBrowser', None) is not None and \
-                config_section.get('genotypeBrowser', False) is True:
-            genotype_browser_config = GenotypeBrowserConfig.from_config(config)
+        cls._fill_wdae_config(config_section, config)
 
         config_section['authorizedGroups'] = config_section.get(
             'authorizedGroups', [config_section.get('id', '')])
 
         # config_section['studies'] = [config_section['id']]
 
-        return StudyConfig(
-            config_section, config,
-            genotype_browser_config=genotype_browser_config
-        )
+        return StudyConfig(config_section)

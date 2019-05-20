@@ -60,12 +60,10 @@ def test_dataset_quads_composite_attr(
 def test_composite_dataset_config_people_group(composite_dataset_config):
     assert composite_dataset_config is not None
 
-    assert composite_dataset_config.genotype_browser is False
-    assert composite_dataset_config.genotype_browser_config is not None
-    assert composite_dataset_config.genotype_browser_config.people_group \
+    assert composite_dataset_config.people_group_config is not None
+    assert composite_dataset_config.people_group_config.people_group \
         is not None
-    people_group = composite_dataset_config.genotype_browser_config\
-                                           .people_group
+    people_group = composite_dataset_config.people_group_config.people_group
 
     assert len(people_group) == 1
     pg = people_group[0]
@@ -115,11 +113,10 @@ def test_composite_dataset_config_people_group_overwrite(
         quads_composite_dataset_config):
     assert quads_composite_dataset_config is not None
 
-    assert quads_composite_dataset_config.genotype_browser is True
-    assert quads_composite_dataset_config.genotype_browser_config is not None
-    assert quads_composite_dataset_config.genotype_browser_config\
-                                         .people_group is not None
-    people_group = quads_composite_dataset_config.genotype_browser_config\
+    assert quads_composite_dataset_config.people_group_config is not None
+    assert quads_composite_dataset_config.people_group_config.people_group \
+        is not None
+    people_group = quads_composite_dataset_config.people_group_config\
                                                  .people_group
 
     assert len(people_group) == 1

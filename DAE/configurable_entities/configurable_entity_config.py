@@ -220,3 +220,44 @@ class ConfigurableEntityConfig(object):
             config[new] = config[old]
 
         return config
+
+    @staticmethod
+    def _split_section(section):
+        index = section.find('.')
+        if index == -1:
+            return (section, None)
+        section_type = section[:index]
+        section_name = section[index + 1:]
+        return (section_type, section_name)
+
+    @classmethod
+    def _get_selectors(
+            cls, config, selector_group, selector_getter,
+            selector_elements=None):
+        selector = {}
+        for key, value in config.items():
+            option_type, option_fullname = cls._split_section(key)
+            if (option_type != selector_group and selector_group is not None) \
+                    or option_fullname is None:
+                continue
+
+            selector_key = ''
+            if selector_group is not None:
+                selector_type, selector_option =\
+                    cls._split_section(option_fullname)
+                selector_key = selector_group + '.' + selector_type
+            else:
+                selector_type, selector_option = option_type, option_fullname
+                selector_key = selector_type
+
+            if selector_key not in selector:
+                selector[selector_key] = [selector_option]
+            else:
+                selector[selector_key].append(selector_option)
+
+        selectors = []
+        for selector_type, selector_options in selector.items():
+            selectors.append(selector_getter(
+                selector_type, selector_options, config))
+
+        return selectors

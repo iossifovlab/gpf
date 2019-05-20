@@ -34,8 +34,14 @@ class StudyWrapper(object):
         gene_weights_columns = []
         column_labels = {}
 
-        people_groups = []
+        people_group = []
         present_in_role = []
+
+        if 'peopleGroupConfig' in self.config and \
+                self.config.people_group_config:
+            people_group_config = self.config.people_group_config
+            if 'peopleGroup' in people_group_config:
+                people_group = people_group_config.people_group
 
         if 'genotypeBrowserConfig' in self.config and \
                 self.config.genotype_browser_config:
@@ -51,8 +57,6 @@ class StudyWrapper(object):
 
             column_labels = genotype_browser_config['columnLabels']
 
-            if 'peopleGroup' in genotype_browser_config:
-                people_groups = genotype_browser_config.people_group
             if 'presentInRole' in genotype_browser_config:
                 present_in_role = genotype_browser_config.present_in_role
 
@@ -62,13 +66,13 @@ class StudyWrapper(object):
         self.gene_weights_columns = gene_weights_columns
         self.column_labels = column_labels
 
-        self.people_groups = people_groups
+        self.people_group = people_group
         self.present_in_role = present_in_role
 
-        if len(self.people_groups) != 0:
+        if len(self.people_group) != 0:
             self.legend = {
                 ps['id']: ps['domain'] + [ps['default']]
-                for ps in self.people_groups
+                for ps in self.people_group
             }
         else:
             self.legend = {}
@@ -565,11 +569,11 @@ class StudyWrapper(object):
 
     def get_people_group(self, people_group_id):
         if not people_group_id:
-            return self.people_groups[0] if self.people_groups else {}
+            return self.people_group[0] if self.people_group else {}
 
         people_group_with_id = list(filter(
             lambda people_group: people_group.get('id') == people_group_id,
-            self.people_groups))
+            self.people_group))
 
         return people_group_with_id[0] if people_group_with_id else {}
 
@@ -594,8 +598,14 @@ class StudyWrapper(object):
         return [
             'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
             'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
-            'enrichmentTool', 'genotypeBrowser', 'genotypeBrowserConfig',
-            'commonReport', 'studyTypes', 'studies'
+            'enrichmentTool', 'genotypeBrowser', 'peopleGroupConfig',
+            'genotypeBrowserConfig', 'commonReport', 'studyTypes', 'studies'
+        ]
+
+    @staticmethod
+    def _get_configs_keys():
+        return [
+            'genotypeBrowserConfig', 'peopleGroupConfig'
         ]
 
     def get_dataset_description(self):
@@ -607,7 +617,8 @@ class StudyWrapper(object):
         result = {key: config.get(key, None) for key in keys}
 
         self._augment_pheno_filters_domain(result)
-        self._filter_genotype_browser_config(result)
+        configs = self._get_configs_keys()
+        self._filter_configs(result, configs)
 
         return result
 
@@ -633,14 +644,13 @@ class StudyWrapper(object):
                 measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
-    def _filter_genotype_browser_config(self, dataset_description):
-        genotype_browser_config = \
-            dataset_description.get('genotypeBrowserConfig', None)
-        if not genotype_browser_config:
-            return
+    def _filter_configs(self, dataset_description, config_keys=[]):
+        for config_key in config_keys:
+            config = dataset_description.get(config_key, None)
+            if not config:
+                return
 
-        dataset_description['genotypeBrowserConfig'] = \
-            genotype_browser_config.get_genotype_browser_config_description()
+            dataset_description[config_key] = config.get_config_description()
 
     def get_column_labels(self):
         return self.column_labels
