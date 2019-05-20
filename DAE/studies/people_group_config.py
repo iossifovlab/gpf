@@ -61,8 +61,6 @@ class PeopleGroupConfig(ConfigurableEntityConfig):
             people_group_elements
         )
 
-        print(people_group)
-
         if people_group:
             config_section['peopleGroup'] = people_group
 
