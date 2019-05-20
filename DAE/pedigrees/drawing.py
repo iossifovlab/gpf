@@ -6,7 +6,8 @@ from copy import deepcopy
 import math
 from itertools import zip_longest
 
-import matplotlib.pyplot as plt
+import matplotlib as mpl; mpl.use('PS')  # noqa
+import matplotlib.pyplot as plt; plt.ioff()  # noqa
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 from matplotlib.path import Path
@@ -197,7 +198,8 @@ class OffsetLayoutDrawer(object):
                 ))
 
     def _draw_rounded_lines(self, axes):
-        elementwise_sum = lambda x, y: tuple([x[0] + y[0], x[1] + y[1]])
+        def elementwise_sum(x, y):
+            return tuple([x[0] + y[0], x[1] + y[1]])
 
         for line in self._layout.lines:
             if line.curved:

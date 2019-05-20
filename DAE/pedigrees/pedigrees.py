@@ -151,7 +151,12 @@ class FamilyConnections(object):
                     Role.dad, generated=True)
                 new_members.append(father.member)
 
-        pedigree.add_members(new_members)
+        unique_new_members = []
+        for elem in new_members:
+            if elem.id not in [member.id for member in unique_new_members]:
+                unique_new_members.append(elem)
+
+        pedigree.add_members(unique_new_members)
 
     @classmethod
     def from_pedigree(cls, pedigree, add_missing_members=True):
@@ -193,6 +198,13 @@ class FamilyConnections(object):
         return FamilyConnections(pedigree, id_to_individual, id_to_mating_unit)
 
     def create_sandwich_instance(self):
+        """
+        Generate an Interval Graph Sandwich problem instance.
+        Based on
+        https://academic.oup.com/bioinformatics/article-pdf/17/2/174/442086/170174.pdf
+        Slightly modified to support people with multiple mates.
+        :return: SandwichInstance
+        """
         self.add_ranks()
 
         individuals = self.get_individuals()
@@ -201,10 +213,16 @@ class FamilyConnections(object):
 
         all_vertices = individuals | mating_units | sibship_units
 
-        # Ea-
-        same_rank_edges = {frozenset([i1, i2])
-                           for i1 in individuals for i2 in individuals
-                           if i1 is not i2 and i1.rank is i2.rank}
+        # Ea-: individuals of same rank should not intersect
+        same_rank_edges = {
+            frozenset([i1, i2])
+            for i1 in individuals
+            for i2 in individuals
+            if i1 is not i2 and i1.rank is i2.rank
+        }
+        # Allow intersection of individuals who have the same mate. This allows
+        # drawing of pedigrees with the curved link when there is a person
+        # with more than 2 mates.
         multiple_partners_edges = {
             frozenset([i1, i2])
             for i1 in individuals
@@ -214,37 +232,59 @@ class FamilyConnections(object):
         same_rank_edges -= multiple_partners_edges
         same_rank_edges = set(map(tuple, same_rank_edges))
 
-        # Eb+
-        mating_edges = {(i, m) for i in individuals for m in mating_units
-                        if i.individual_set().issubset(m.individual_set())}
-        # Eb-
-        same_generation_not_mates = \
-            {(i, m) for i in individuals for m in mating_units
-             if i.generation_ranks() == m.generation_ranks()}
+        # Eb+: mating units and individuals in them should intersect
+        mating_edges = {
+            (i, m)
+            for i in individuals
+            for m in mating_units
+            if i.individual_set().issubset(m.individual_set())
+        }
+        # Eb-: and no others of the same rank should intersect
+        same_generation_not_mates = {
+            (i, m)
+            for i in individuals
+            for m in mating_units
+            if i.generation_ranks() == m.generation_ranks()
+        }
         same_generation_not_mates = same_generation_not_mates - mating_edges
 
-        # Ec+
-        sibship_edges = {(i, s) for i in individuals for s in sibship_units
-                         if i.individual_set().issubset(s.individual_set())}
-        # Ec-
-        same_generation_not_siblings = \
-            {(i, s) for i in individuals for s in sibship_units
-             if i.parents is not None and
-                i.generation_ranks() == s.generation_ranks()}
+        # Ec+: sibship units and individuals in them should intersect
+        sibship_edges = {
+            (i, s)
+            for i in individuals
+            for s in sibship_units
+            if i.individual_set().issubset(s.individual_set())
+        }
+        # Ec-: and no others of the same rank should intersect
+        same_generation_not_siblings = {
+            (i, s)
+            for i in individuals
+            for s in sibship_units
+            if i.parents is not None and
+            i.generation_ranks() == s.generation_ranks()
+        }
         same_generation_not_siblings = same_generation_not_siblings \
             - sibship_edges
 
-        # Ed+
-        mates_siblings_edges = {(m, s) for m in mating_units
-                                for s in sibship_units
-                                if(m.children.individual_set() is
-                                    s.individual_set())}
+        # Ed+: mating units and corresponding sibships should intersect
+        mates_siblings_edges = {
+            (m, s)
+            for m in mating_units
+            for s in sibship_units
+            if(m.children.individual_set() is
+                s.individual_set())
+        }
 
-        # Ee-
-        intergenerational_edges = \
-            {(m, a) for m in mating_units for a in sibship_units | mating_units
-             if (m.generation_ranks() & a.generation_ranks() == set()) and
-             (m.individual_set() & a.individual_set() == set())}
+        # Ee-: mating units and sibship or mating units of different ranks
+        # should not intersect
+        intergenerational_edges = {
+            (m, a)
+            for m in mating_units
+            for a in sibship_units | mating_units
+            if (m.generation_ranks() & a.generation_ranks() == set()) and
+            (m.individual_set() & a.individual_set() == set())
+            # this check seems redundant
+        }
         intergenerational_edges -= mates_siblings_edges
 
         required_set = mating_edges | sibship_edges | mates_siblings_edges
@@ -255,7 +295,8 @@ class FamilyConnections(object):
         # print("same_generation_not_mates",
         #       len(same_generation_not_mates), same_generation_not_mates)
         # print("same_generation_not_siblings",
-        #       len(same_generation_not_siblings), same_generation_not_siblings)
+        #       len(same_generation_not_siblings),
+        #       same_generation_not_siblings)
         # print("intergenerational_edges",
         #       len(intergenerational_edges), intergenerational_edges)
 
