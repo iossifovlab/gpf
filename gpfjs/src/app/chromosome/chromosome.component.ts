@@ -13,7 +13,7 @@ const COLORS: ColorsMap = {
   'acen' : '#8B2323',
   'gneg' : '#FFF',
   'gpos100' : '#000',
-  'gpos25' : '##E5E5E5',
+  'gpos25' : '#E5E5E5',
   'gpos50' : '#B3B3B3',
   'gpos75' : '#666',
   'gvar' : '#FFF',
@@ -108,8 +108,6 @@ export class ChromosomeComponent implements OnChanges {
   svgHeight: number;
   svgWidth: number;
   baseStarPathDescription: string;
-  maxTopStackIndex = 1;
-  maxBottomStackIndex = 1;
   maxStackIndex = 1;
 
   constructor() { }
