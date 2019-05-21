@@ -20,7 +20,6 @@ def test_study_config_year(study_definitions):
     ("description", "QUADS F1"),
     ("phenotypeGenotypeTool", True),
     ("phenotypeBrowser", False),
-    # ("peopleGroup.phenotype.name", "Phenotype"),
     ("phenoDB", ""),
 ])
 def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
