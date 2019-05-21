@@ -20,7 +20,6 @@ def test_study_config_year(study_definitions):
     ("description", "QUADS F1"),
     ("phenotypeGenotypeTool", True),
     ("phenotypeBrowser", False),
-    # ("peopleGroup.phenotype.name", "Phenotype"),
     ("phenoDB", ""),
 ])
 def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
@@ -59,15 +58,14 @@ def test_quads_f1_config_attr(quads_f1_config, option_name, expected_value):
     ("hasPedigreeSelector", True),
     ("hasCNV", False),
     ("hasComplex", False),
-    ("genesBlockShowAll", True),
     ("hasStudyFilters", True),
     ("phenoFilters", None),
 ])
 def test_quads_f1_config_genotype_browser(
         quads_f1_config, option_name, expected_value):
-    genotype_browser = quads_f1_config.genotype_browser
+    genotype_browser_config = quads_f1_config.genotype_browser_config
 
-    assert genotype_browser[option_name] == expected_value
+    assert genotype_browser_config[option_name] == expected_value
 
 
 @pytest.mark.parametrize(
@@ -90,11 +88,11 @@ def test_quads_f1_config_genotype_browser(
 def test_quads_f1_config_genotype_browser_genotype_column(
         quads_f1_config, option_name, expected_name, expected_source,
         expected_slots):
-    genotype_browser = quads_f1_config.genotype_browser
+    genotype_browser_config = quads_f1_config.genotype_browser_config
 
     genotype_column = list(filter(
         lambda gc: gc['id'] == option_name,
-        genotype_browser['genotypeColumns']
+        genotype_browser_config['genotypeColumns']
     ))
 
     assert len(genotype_column) == 1
