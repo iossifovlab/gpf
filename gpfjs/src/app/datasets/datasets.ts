@@ -199,13 +199,11 @@ export class GenotypeBrowser {
       json['hasStudyFilters'],
       json['hasStudyTypes'],
       json['hasGraphicalPreview'],
-      json['genesBlockShowAll'],
       json['previewColumns'],
       json['rolesFilterOptions'],
       [...AdditionalColumn.fromJsonArray(json['genotypeColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
       PhenoFilter.fromJsonArray(json['familyStudyFilters']),
-      PedigreeSelector.fromJsonArray(json['peopleGroup']),
       PresentInRole.fromJsonArray(json['presentInRole']),
     );
   }
@@ -221,20 +219,29 @@ export class GenotypeBrowser {
     readonly hasStudyFilters: boolean,
     readonly hasStudyTypes: boolean,
     readonly hasGraphicalPreview: boolean,
-    readonly genesBlockShowAll: boolean,
     readonly previewColumnsIds: string[],
     readonly rolesFilterOptions: string[],
     readonly allColumns: Array<AdditionalColumn>,
     readonly phenoFilters: Array<PhenoFilter>,
     readonly familyStudyFilters: Array<PhenoFilter>,
-    readonly pedigreeSelectors: PedigreeSelector[],
     readonly presentInRole: PresentInRole[],
   ) {
     this.columns = _.filter(this.allColumns,
       (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);
   }
+}
 
+export class PeopleGroup {
 
+  static fromJson(json: any): PeopleGroup {
+    return new PeopleGroup(
+      PedigreeSelector.fromJsonArray(json['peopleGroup'])
+    );
+  }
+
+  constructor(
+    readonly pedigreeSelectors: PedigreeSelector[],
+  ) { }
 }
 
 export class Dataset extends IdName {
@@ -250,10 +257,13 @@ export class Dataset extends IdName {
       json['studies'],
       json['studyTypes'],
       json['phenoDB'],
+      json['genotypeBrowser'],
       json['phenotypeGenotypeTool'],
       json['enrichmentTool'],
       json['phenotypeBrowser'],
-      GenotypeBrowser.fromJson(json['genotypeBrowser']),
+      json['commonReport'],
+      json['genotypeBrowserConfig'] ? GenotypeBrowser.fromJson(json['genotypeBrowserConfig']) : null,
+      json['peopleGroupConfig'] ? PeopleGroup.fromJson(json['peopleGroupConfig']) : null,
       UserGroup.fromJsonArray(json['groups']),
     );
   }
@@ -277,10 +287,13 @@ export class Dataset extends IdName {
     readonly studies: string[],
     readonly studyTypes: string[],
     readonly phenoDB: string,
+    readonly genotypeBrowser: boolean,
     readonly phenotypeGenotypeTool: boolean,
     readonly enrichmentTool: boolean,
     readonly phenotypeBrowser: boolean,
-    readonly genotypeBrowser: GenotypeBrowser,
+    readonly commonReport: boolean,
+    readonly genotypeBrowserConfig: GenotypeBrowser,
+    readonly peopleGroupConfig: PeopleGroup,
     readonly groups: UserGroup[]
   ) {
     super(id, name);

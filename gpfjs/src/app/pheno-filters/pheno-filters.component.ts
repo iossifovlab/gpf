@@ -31,8 +31,8 @@ export class PhenoFiltersComponent extends QueryStateWithErrorsProvider implemen
     }
 
     this.phenoFiltersState =
-      this.dataset.genotypeBrowser.phenoFilters
-      .concat(this.dataset.genotypeBrowser.familyStudyFilters || [])
+      this.dataset.genotypeBrowserConfig.phenoFilters
+      .concat(this.dataset.genotypeBrowserConfig.familyStudyFilters || [])
       .map(phenoFilter => {
         console.log(phenoFilter);
         if (phenoFilter.measureType === 'continuous') {

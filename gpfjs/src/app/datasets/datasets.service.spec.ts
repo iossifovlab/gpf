@@ -24,11 +24,13 @@ const mockDatasetResponse: Dataset = {
   studyTypes: ['WE'],
   phenoDB: 'vip',
 
+  genotypeBrowser: true,
   phenotypeGenotypeTool: true,
   enrichmentTool: false,
   phenotypeBrowser: true,
+  commonReport: true,
 
-  genotypeBrowser: {
+  genotypeBrowserConfig: {
     hasCNV: false,
     hasAdvancedFamilyFilters: false,
     hasPedigreeSelector: true,

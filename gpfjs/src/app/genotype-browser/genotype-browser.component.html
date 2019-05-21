@@ -1,17 +1,17 @@
 <div *ngIf="selectedDataset$ | async as dataset">
   <div *ngIf="dataset.accessRights">
     <div class="container">
-      <gpf-genes-block [showAllTab]="dataset?.genotypeBrowser?.genesBlockShowAll"></gpf-genes-block>
+      <gpf-genes-block></gpf-genes-block>
       <gpf-regions-block></gpf-regions-block>
       <gpf-genotype-block></gpf-genotype-block>
       <gpf-study-filters-block
-        *ngIf="dataset?.genotypeBrowser?.hasStudyFilters"
+        *ngIf="dataset?.genotypeBrowserConfig?.hasStudyFilters"
         [dataset]="dataset">
       </gpf-study-filters-block>
       <gpf-genomic-scores-block>
       </gpf-genomic-scores-block>
       <gpf-family-filters-block
-        *ngIf="dataset?.genotypeBrowser?.hasFamilyFilters"
+        *ngIf="dataset?.genotypeBrowserConfig?.hasFamilyFilters"
         [dataset]="dataset"
         [genotypeBrowserState]="genotypeBrowserState">
       </gpf-family-filters-block>
@@ -25,7 +25,7 @@
         </form>
         <div class="button">
           <input type="button" class="btn btn-md btn-primary" value="Table Preview" (click)="tablePreview = true; submitQuery()">
-          <input *ngIf="dataset?.genotypeBrowser?.hasGraphicalPreview"
+          <input *ngIf="dataset?.genotypeBrowserConfig?.hasGraphicalPreview"
             type="button" class="btn btn-md btn-primary"
             value="Graphical Preview"
             (click)="tablePreview = false; submitQuery()">
@@ -39,7 +39,7 @@
       </p>
       <gpf-genotype-preview-table
       	*ngIf="tablePreview"
-        [columns]="dataset?.genotypeBrowser?.columns"
+        [columns]="dataset?.genotypeBrowserConfig?.columns"
         [genotypePreviewsArray]="genotypePreviewsArray">
       </gpf-genotype-preview-table>
       <gpf-genotype-preview-chromosomes
