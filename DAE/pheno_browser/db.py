@@ -96,6 +96,8 @@ class DbManager(object):
                 query_params.append(
                     self.variable_browser.c.instrument_name.like(keyword, escape='\\'))
             query_params.append(
+                self.variable_browser.c.measure_id.like(keyword, escape='\\'))
+            query_params.append(
                 self.variable_browser.c.measure_name.like(keyword, escape='\\'))
             query_params.append(
                 self.variable_browser.c.description.like(keyword, escape='\\'))
