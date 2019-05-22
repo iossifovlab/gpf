@@ -3,7 +3,8 @@ FROM continuumio/miniconda3
 RUN mkdir /data && mkdir /spark-home && mkdir /code
 
 RUN apt-get update --fix-missing && \ 
-	apt-get install -y build-essential default-libmysqlclient-dev gcc libgl1-mesa-glx openjdk-8-jre-headless procps vim libsasl2-dev && \
+	apt-get install -y build-essential default-libmysqlclient-dev gcc \
+        libgl1-mesa-glx openjdk-8-jdk-headless procps vim libsasl2-dev && \
 	apt-get clean
 
 COPY python3-environment.yml /code
@@ -27,7 +28,7 @@ ENV DAE_DATA_DIR="/data/parquet"
 # HADOOP
 ENV HADOOP_VER 3.0.2
 
-ENV HADOOP_HOME /opt/hive
+ENV HADOOP_HOME /opt/hadoop
 ENV HADOOP_CONF_DIR $HADOOP_HOME/conf
 
 ENV PATH $HADOOP_HOME/bin:$PATH
