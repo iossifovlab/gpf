@@ -44,6 +44,11 @@ class ConfigSectionDefinition(ConfigurableEntityDefinition):
 
 class DAEConfig(object):
 
+    HDFS_SECTION = 'HDFS'
+    HDFS_HOST = 'host'
+    HDFS_PORT = 'port'
+    HDFS_BASE_DIR = 'baseDir'
+
     DIR_NAME = 'dir'
     CONF_FILE = 'confFile'
     STUDIES_SECTION = 'studiesDB'
@@ -99,6 +104,23 @@ class DAEConfig(object):
             return default_value
         return self.sections.get_section_config(section_id).\
             get(attr_name, default_value)
+
+    def hdfs_section(self):
+        return self.sections.get_section_config(self.HDFS_SECTION)
+
+    @property
+    def hdfs_base_dir(self):
+        return self._get_config_value(
+            self.HDFS_SECTION, self.HDFS_BASE_DIR, "/tmp")
+
+    @property
+    def hdfs_host(self):
+        return self._get_config_value(self.HDFS_SECTION, self.HDFS_HOST, None)
+
+    @property
+    def hdfs_port(self):
+        return int(self._get_config_value(
+            self.HDFS_SECTION, self.HDFS_PORT, 0))
 
     @property
     def dae_data_dir(self):

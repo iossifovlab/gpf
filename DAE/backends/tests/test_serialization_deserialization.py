@@ -1,9 +1,10 @@
 import numpy as np
+import pyarrow as pa
 
 import pytest
 from RegionOperations import Region
 from backends.impala.serializers import FamilyVariantSerializer
-from backends.impala.parquet_io import VariantsParquetWriter
+from backends.impala.parquet_io import VariantsParquetWriter, HdfsHelpers
 
 
 @pytest.mark.parametrize("fixture_name,pos", [
@@ -50,4 +51,14 @@ def test_variants_serialize(variants_vcf, fixture_name, pos):
     assert np.all(v.gt == vv.gt)
 
     writer = VariantsParquetWriter(vvars.full_variants_iterator())
-    writer.save_variants_to_parquet("test.parquet")
+    fs = pa.hdfs.connect(host="localhost", port=8020)
+    writer.save_variants_to_parquet(
+        "test.parquet", filesystem=fs)
+
+
+def test_hdfs_helpers():
+    hdfs = HdfsHelpers(host="localhost", port=8020)
+    assert hdfs is not None
+
+    dirname = hdfs.tempdir()
+    print(dirname)

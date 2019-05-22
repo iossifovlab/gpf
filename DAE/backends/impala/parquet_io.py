@@ -2,6 +2,7 @@ import sys
 import time
 import itertools
 import traceback
+import tempfile
 
 from collections import namedtuple
 
@@ -51,10 +52,6 @@ class ParquetData(object):
         batch = self.build_batch()
         self.data_reset()
         return pa.Table.from_batches([batch])
-
-    def build_writer(self, filename):
-        writer = pq.ParquetWriter(filename, self.schema)
-        return writer
 
     def __len__(self):
         return len(self.data['summary_variant_index'])
@@ -276,9 +273,11 @@ class VariantsParquetWriter(object):
               file=sys.stderr)
 
     def save_variants_to_parquet(
-            self, filename=None, bucket_index=1, batch_size=100000):
+            self, filename=None, bucket_index=1, batch_size=100000,
+            filesystem=None):
 
-        writer = self.data.build_writer(filename)
+        writer = pq.ParquetWriter(
+            filename, self.data.schema, filesystem=filesystem)
 
         try:
             for table in self.variants_table(bucket_index, batch_size):
@@ -290,3 +289,31 @@ class VariantsParquetWriter(object):
             traceback.print_exc(file=sys.stdout)
         finally:
             writer.close()
+
+
+class HdfsHelpers(object):
+
+    def __init__(self, host=None, port=0):
+        self.host = host
+        self.port = port
+        self.hdfs = pa.hdfs.connect(host=self.host, port=self.port)
+
+    def exists(self, path):
+        return self.hdfs.exists(path)
+
+    def mkdir(self, path):
+        return self.hdfs.mkdir(path)
+
+    def tempdir(self, prefix='', suffix=''):
+        dirname = tempfile.mktemp(prefix=prefix, suffix=suffix)
+        status = self.mkdir(dirname)
+        print(status)
+        status = self.chmod(dirname, 0o666)
+        print(status)
+        return dirname
+
+    def chmod(self, path, mode):
+        return self.hdfs.chmod(path, mode)
+
+    def delete(self, path, recursive=False):
+        return self.hdfs.delete(path, recursive=recursive)

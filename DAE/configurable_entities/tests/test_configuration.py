@@ -96,3 +96,16 @@ def test_dae_config_annotation_defaults(fixturedir, dae_config):
         os.path.join(fixturedir, 'genomic_scores_db')
     assert defaults['scores_hg38_dir'] == \
         os.path.join(fixturedir, 'genomic_scores_db')
+
+
+def test_dae_config_hdfs(fixturedir, dae_config):
+    assert dae_config is not None
+
+    assert dae_config.dae_data_dir == fixturedir
+
+    assert dae_config.hdfs_section() is not None
+    print(dae_config.hdfs_section())
+
+    assert dae_config.hdfs_host == 'localhost'
+    assert dae_config.hdfs_port == 8020
+    assert dae_config.hdfs_base_dir == '/tmp/test_data'
