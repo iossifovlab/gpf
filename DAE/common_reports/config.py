@@ -37,9 +37,9 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
     CAST_TO_BOOL = ('draw_all_families', 'enabled')
 
     @classmethod
-    def _get_people_groups(cls, config, people_groups):
+    def _get_people_groups(cls, config, people_group):
         people_groups_info = OrderedDict()
-        for people_group in people_groups:
+        for people_group in people_group:
             if people_group['id'] not in config.peopleGroups:
                 continue
             people_groups_info[people_group['id']] = people_group
@@ -91,12 +91,15 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
         if config.get('enabled', True) is False:
             return None
 
-        people_groups = {}
-        if 'genotypeBrowser' in study_config and study_config.genotype_browser:
-            genotype_browser = study_config.genotype_browser
-            people_groups = genotype_browser.people_group
+        people_group = []
+        if 'peopleGroupConfig' in study_config and \
+                study_config.people_group_config:
+            people_group_config = study_config.people_group_config
+            if people_group_config['peopleGroup']:
+                people_group = people_group_config.people_group
 
-        people_groups_info = cls._get_people_groups(config, people_groups)
+        people_groups_info = \
+            cls._get_people_groups(config, people_group)
         filter_info = cls._parse_data(config, id)
         if filter_info is None:
             return None
