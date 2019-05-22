@@ -117,6 +117,42 @@ class Configure(ConfigBox):
         return Configure(conf)
 
     @staticmethod
+    def from_prefix_impala(prefix, db=None, bucket_index=0, suffix=None):
+        # assert os.path.exists(prefix)
+        # assert os.path.isdir(prefix)
+        assert bucket_index >= 0
+
+        if db is None:
+            basename = os.path.basename(prefix)
+            db = basename
+            if not db:
+                db = "test_impala_db"
+
+        if suffix is None and bucket_index == 0:
+            filesuffix = ""
+        elif bucket_index > 0 and suffix is None:
+            filesuffix = "_{:0>6}".format(bucket_index)
+        elif bucket_index == 0 and suffix is not None:
+            filesuffix = "{}".format(suffix)
+        else:
+            filesuffix = "_{:0>6}{}".format(bucket_index, suffix)
+
+        variants_filename = os.path.join(
+            prefix, "variants{}.parquet".format(filesuffix))
+        pedigree_filename = os.path.join(
+            prefix, "pedigree{}.parquet".format(filesuffix))
+
+        conf = {
+            'impala': {
+                'variants': variants_filename,
+                'pedigree': pedigree_filename,
+                'db': db
+            }
+        }
+
+        return Configure(conf)
+
+    @staticmethod
     def from_thrift_db(
             db, summary='summary', family='family',
             effect_gene='effect_gene', member='member',

@@ -24,6 +24,19 @@ ENV THRIFTSERVER_PORT="60008"
 
 ENV DAE_DATA_DIR="/data/parquet"
 
+# HADOOP
+ENV HADOOP_VER 3.0.2
+
+ENV HADOOP_HOME /opt/hive
+ENV HADOOP_CONF_DIR $HADOOP_HOME/conf
+
+ENV PATH $HADOOP_HOME/bin:$PATH
+
+RUN wget http://it.apache.contactlab.it/hadoop/core/hadoop-${HADOOP_VER}/hadoop-${HADOOP_VER}.tar.gz
+RUN tar -xvf hadoop-$HADOOP_VER.tar.gz -C ..; \
+    mv ../hadoop-${HADOOP_VER} $HADOOP_HOME
+
+
 COPY . /code
 
 WORKDIR /code

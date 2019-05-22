@@ -306,10 +306,11 @@ class HdfsHelpers(object):
 
     def tempdir(self, prefix='', suffix=''):
         dirname = tempfile.mktemp(prefix=prefix, suffix=suffix)
-        status = self.mkdir(dirname)
-        print(status)
-        status = self.chmod(dirname, 0o666)
-        print(status)
+        self.mkdir(dirname)
+        self.chmod(dirname, 0o666)
+        assert self.exists(dirname)
+        print(dirname)
+
         return dirname
 
     def chmod(self, path, mode):
@@ -317,3 +318,6 @@ class HdfsHelpers(object):
 
     def delete(self, path, recursive=False):
         return self.hdfs.delete(path, recursive=recursive)
+
+    def filesystem(self):
+        return self.hdfs
