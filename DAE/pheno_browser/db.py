@@ -94,11 +94,11 @@ class DbManager(object):
                        .replace('_', r'\_'))
             if not instrument_name:
                 query_params.append(
-                    self.variable_browser.c.instrument_name.like(keyword))
+                    self.variable_browser.c.instrument_name.like(keyword, escape='\\'))
             query_params.append(
-                self.variable_browser.c.measure_name.like(keyword))
+                self.variable_browser.c.measure_name.like(keyword, escape='\\'))
             query_params.append(
-                self.variable_browser.c.description.like(keyword))
+                self.variable_browser.c.description.like(keyword, escape='\\'))
             query = self.variable_browser.select(or_(*query_params))
         else:
             query = self.variable_browser.select()
