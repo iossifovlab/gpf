@@ -275,37 +275,45 @@ def parquet_variants(request, variants_vcf):
 def test_hdfs(request):
     from backends.impala.parquet_io import HdfsHelpers
     # hdfs = HdfsHelpers(host="dory.local", port=8020)
-    # hdfs = HdfsHelpers(host="172.18.0.1", port=8020)
-    hdfs = HdfsHelpers()
+    hdfs = HdfsHelpers(host="172.18.0.1", port=8020)
+    # hdfs = HdfsHelpers()
     return hdfs
 
 
 @pytest.fixture(scope='session')
 def impala_parquet_variants(request, test_hdfs, variants_vcf):
     dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
+    tempname = os.path.basename(dirname)
 
     # def fin():
     #     test_hdfs.delete(dirname)
     # request.addfinalizer(fin)
 
     def builder(path):
-        from backends.impala.parquet_io import VariantsParquetWriter
+        from backends.impala.parquet_io import VariantsParquetWriter, \
+            save_ped_df_to_parquet
 
         fvars = variants_vcf(path)
         assert not fvars.is_empty()
 
         basename = os.path.basename(path)
         fulldirname = os.path.join(dirname, basename)
+        test_hdfs.mkdir(dirname)
         test_hdfs.mkdir(fulldirname)
         assert test_hdfs.exists(fulldirname)
 
-        conf = Configure.from_prefix_impala(fulldirname).impala
+        conf = Configure.from_prefix_impala(fulldirname, db=tempname).impala
         print(conf)
+
+        save_ped_df_to_parquet(
+            fvars.ped_df, conf.files.pedigree,
+            filesystem=test_hdfs.filesystem())
 
         variants_builder = VariantsParquetWriter(
             fvars.full_variants_iterator())
         variants_builder.save_variants_to_parquet(
-            conf.variants, filesystem=test_hdfs.filesystem())
+            conf.files.variants,
+            filesystem=test_hdfs.filesystem())
 
         return conf
 

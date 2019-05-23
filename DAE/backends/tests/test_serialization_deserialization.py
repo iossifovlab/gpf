@@ -10,7 +10,7 @@ from backends.impala.parquet_io import VariantsParquetWriter, HdfsHelpers
 @pytest.mark.parametrize("fixture_name,pos", [
     ("fixtures/a", 11540),
 ])
-def test_variants_serialize(variants_vcf, fixture_name, pos):
+def test_variants_serialize(test_hdfs, variants_vcf, fixture_name, pos):
 
     vvars = variants_vcf(fixture_name)
     assert vvars is not None
@@ -51,14 +51,7 @@ def test_variants_serialize(variants_vcf, fixture_name, pos):
     assert np.all(v.gt == vv.gt)
 
     writer = VariantsParquetWriter(vvars.full_variants_iterator())
-    fs = pa.hdfs.connect()
     writer.save_variants_to_parquet(
-        "test.parquet", filesystem=fs)
+        "test.parquet", filesystem=test_hdfs.filesystem())
 
-
-def test_hdfs_helpers():
-    hdfs = HdfsHelpers(host="localhost", port=8020)
-    assert hdfs is not None
-
-    dirname = hdfs.tempdir()
-    print(dirname)
+    assert test_hdfs.exists("test.parquet")

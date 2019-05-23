@@ -144,9 +144,15 @@ class Configure(ConfigBox):
 
         conf = {
             'impala': {
-                'variants': variants_filename,
-                'pedigree': pedigree_filename,
-                'db': db
+                'files': {
+                    'variants': variants_filename,
+                    'pedigree': pedigree_filename,
+                },
+                'db': db,
+                'tables': {
+                    'variant': 'variant',
+                    'pedigree': 'pedigree',
+                }
             }
         }
 

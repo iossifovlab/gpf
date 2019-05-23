@@ -291,6 +291,32 @@ class VariantsParquetWriter(object):
             writer.close()
 
 
+def pedigree_parquet_schema():
+    fields = [
+        pa.field("family_id", pa.string()),
+        pa.field("person_id", pa.string()),
+        pa.field("dad_id", pa.string()),
+        pa.field("mom_id", pa.string()),
+        pa.field("sex", pa.int8()),
+        pa.field("status", pa.int8()),
+        pa.field("role", pa.int32()),
+        pa.field("sample_id", pa.string()),
+    ]
+
+    return pa.schema(fields)
+
+
+def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
+
+    ped_df = ped_df.copy()
+    ped_df.role = ped_df.role.apply(lambda r: r.value)
+    ped_df.sex = ped_df.sex.apply(lambda s: s.value)
+    ped_df.status = ped_df.status.apply(lambda s: s.value)
+
+    table = pa.Table.from_pandas(ped_df, schema=pedigree_parquet_schema())
+    pq.write_table(table, filename, filesystem=filesystem)
+
+
 class HdfsHelpers(object):
 
     def __init__(self, host=None, port=0):
@@ -302,14 +328,14 @@ class HdfsHelpers(object):
         return self.hdfs.exists(path)
 
     def mkdir(self, path):
-        return self.hdfs.mkdir(path)
+        print(path)
+        self.hdfs.mkdir(path)
+        self.chmod(path, 0o777)
 
     def tempdir(self, prefix='', suffix=''):
         dirname = tempfile.mktemp(prefix=prefix, suffix=suffix)
         self.mkdir(dirname)
-        self.chmod(dirname, 0o666)
         assert self.exists(dirname)
-        print(dirname)
 
         return dirname
 
