@@ -144,7 +144,7 @@ def default_genome():
 @pytest.fixture(scope='session')
 def default_gene_models():
     from DAE import genomesDB
-    gene_models = genomesDB.get_gene_models()  # @UndefinedVariable
+    gene_models = genomesDB.get_gene_models("RefSeq2013")
     return gene_models
 
 

@@ -274,7 +274,8 @@ def parquet_variants(request, variants_vcf):
 @pytest.fixture(scope='session')
 def test_hdfs(request):
     from backends.impala.parquet_io import HdfsHelpers
-    hdfs = HdfsHelpers(host="dory.local", port=8020)
+    # hdfs = HdfsHelpers(host="dory.local", port=8020)
+    hdfs = HdfsHelpers(host="172.18.0.1", port=8020)
     return hdfs
 
 

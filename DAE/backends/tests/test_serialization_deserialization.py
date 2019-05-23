@@ -51,7 +51,7 @@ def test_variants_serialize(variants_vcf, fixture_name, pos):
     assert np.all(v.gt == vv.gt)
 
     writer = VariantsParquetWriter(vvars.full_variants_iterator())
-    fs = pa.hdfs.connect(host="localhost", port=8020)
+    fs = pa.hdfs.connect(host="172.18.0.1", port=8020)
     writer.save_variants_to_parquet(
         "test.parquet", filesystem=fs)
 
