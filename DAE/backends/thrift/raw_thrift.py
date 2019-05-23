@@ -53,7 +53,7 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
     def __init__(
         self, config=None, prefix=None,
             thrift_host=None, thrift_port=None,
-            thrift_connection=None):
+            thrift_connection=None, filesystem='local'):
 
         super(ThriftFamilyVariants, self).__init__()
 
@@ -61,7 +61,12 @@ class ThriftFamilyVariants(FamiliesBase, DfFamilyVariantsBase):
             config = Configure.from_prefix_parquet(prefix).parquet
 
         assert config is not None
-
+        if filesystem == 'local':
+            config.summary_variant = "file://" + config.summary_variant
+            config.family_variant = "file://" + config.family_variant
+            config.member_variant = "file://" + config.member_variant
+            config.effect_gene_variant = "file://" + config.effect_gene_variant
+            config.pedigree = "file://" + config.pedigree
         self.config = config
 
         if not thrift_connection:
