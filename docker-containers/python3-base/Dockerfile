@@ -7,9 +7,10 @@ RUN apt-get update --fix-missing && \
         libgl1-mesa-glx openjdk-8-jdk-headless procps vim libsasl2-dev && \
 	apt-get clean
 
-COPY python3-environment.yml /code
+ADD ./python3-environment.yml /
+ADD ./docker-containers/python3-base/etc/core-site.xml /core-site.xml
 
-RUN conda env update -n base -f /code/python3-environment.yml && \
+RUN conda env update -n base -f /python3-environment.yml && \
     conda install -c conda-forge pyarrow=0.13.0 && \
 	conda clean --all -y && \
 	# FIXME: should setup env with local versions somewhere else
@@ -23,8 +24,6 @@ ENV PYTHONPATH="$DAE_SOURCE_DIR:$PYTHONPATH"
 ENV SPARK_HOME="/spark-home"
 ENV THRIFTSERVER_PORT="60008"
 
-ENV DAE_DATA_DIR="/data/parquet"
-
 # HADOOP
 ENV HADOOP_VER 3.0.2
 
@@ -37,12 +36,12 @@ RUN wget http://it.apache.contactlab.it/hadoop/core/hadoop-${HADOOP_VER}/hadoop-
 RUN tar -xvf hadoop-$HADOOP_VER.tar.gz -C ..; \
     mv ../hadoop-${HADOOP_VER} $HADOOP_HOME
 
-COPY containers/python3-base/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
+ADD ./docker-containers/python3-base/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 
-COPY . /code
 
 WORKDIR /code
+
 
 SHELL ["/bin/bash", "-c"]
