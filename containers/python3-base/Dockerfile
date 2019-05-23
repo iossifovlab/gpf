@@ -37,6 +37,7 @@ RUN wget http://it.apache.contactlab.it/hadoop/core/hadoop-${HADOOP_VER}/hadoop-
 RUN tar -xvf hadoop-$HADOOP_VER.tar.gz -C ..; \
     mv ../hadoop-${HADOOP_VER} $HADOOP_HOME
 
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 
 COPY . /code
 
