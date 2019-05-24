@@ -21,7 +21,9 @@ def test_variants_import(test_hdfs, impala_parquet_variants, fixture_name):
     assert test_hdfs.exists(conf.files.variants)
     assert test_hdfs.exists(conf.files.pedigree)
 
-    backend = ImpalaBackend("localhost", 21050, "localhost", 8020)
+    backend = ImpalaBackend(
+        "dory.seqpipe.org", 21050,
+        "dory.seqpipe.org", 8020)
     assert backend is not None
     backend.import_dataset(conf)
 
@@ -31,8 +33,8 @@ def test_variants_import(test_hdfs, impala_parquet_variants, fixture_name):
 
 
 def test_impala_backend_simple():
-    hdfs = ImpalaBackend.get_hdfs("localhost", 8020)
+    hdfs = ImpalaBackend.get_hdfs("dory.seqpipe.org", 8020)
     assert hdfs is not None
 
-    with ImpalaBackend.get_impala("localhost", 21050) as conn:
+    with ImpalaBackend.get_impala("dory.seqpipe.org", 21050) as conn:
         assert conn is not None
