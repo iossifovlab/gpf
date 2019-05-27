@@ -25,9 +25,22 @@ def test_variants_import(test_hdfs, impala_parquet_variants, fixture_name):
         "dory.seqpipe.org", 21050,
         "dory.seqpipe.org", 8020)
     assert backend is not None
-    backend.import_dataset(conf)
+
+    backend.import_variants(conf)
 
     ped_df = backend.load_pedigree(conf)
+    assert ped_df is not None
+    print(ped_df)
+
+
+@pytest.mark.parametrize("fixture_name", [
+    "fixtures/a",
+])
+def test_variants_db_import(test_impala_backend, impala_variants, fixture_name):
+    conf = impala_variants(fixture_name)
+    print(conf)
+
+    ped_df = test_impala_backend.load_pedigree(conf)
     assert ped_df is not None
     print(ped_df)
 

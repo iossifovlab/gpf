@@ -280,13 +280,34 @@ def test_hdfs(request):
 
 
 @pytest.fixture(scope='session')
-def impala_parquet_variants(request, test_hdfs):
+def test_impala_backend(request):
+    from backends.impala.impala_backend import ImpalaBackend
+    backend = ImpalaBackend(
+        "dory.seqpipe.org", 21050,
+        "dory.seqpipe.org", 8020)
+
+    return backend
+
+
+@pytest.fixture
+def impala_variants(request, impala_parquet_variants, test_impala_backend):
+
+    def builder(path):
+        impala_config = impala_parquet_variants(path)
+        test_impala_backend.import_variants(impala_config)
+        return impala_config
+    return builder
+
+
+@pytest.fixture
+def impala_parquet_variants(request, test_hdfs, test_impala_backend):
     dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     tempname = os.path.basename(dirname)
 
-    # def fin():
-    #     test_hdfs.delete(dirname)
-    # request.addfinalizer(fin)
+    def fin():
+        test_hdfs.delete(dirname, recursive=True)
+        test_impala_backend.drop_variants_database(tempname)
+    request.addfinalizer(fin)
 
     def builder(path):
         from configurable_entities.configuration import DAEConfig
@@ -305,8 +326,6 @@ def impala_parquet_variants(request, test_hdfs):
 
         basename = os.path.basename(path)
         fulldirname = os.path.join(dirname, basename)
-        os.mkdir(dirname)
-        os.mkdir(fulldirname)
 
         test_hdfs.mkdir(dirname)
         test_hdfs.mkdir(fulldirname)
@@ -319,6 +338,7 @@ def impala_parquet_variants(request, test_hdfs):
             output=fulldirname,
             filesystem=test_hdfs.filesystem())
         impala_config['db'] = tempname
+        # test_impala_backend.import_dataset(impala_config)
 
         return impala_config
 

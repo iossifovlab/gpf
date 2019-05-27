@@ -15,7 +15,7 @@ class ImpalaBackend(object):
         self.impala = self.get_impala(impala_host, impala_port)
         self.hdfs = self.get_hdfs(hdfs_host, hdfs_port)
 
-    def import_dataset(self, config):
+    def import_variants(self, config):
         with self.impala.cursor() as cursor:
             cursor.execute("""
                 CREATE DATABASE IF NOT EXISTS {db}
@@ -35,6 +35,12 @@ class ImpalaBackend(object):
             cursor.execute("""
                 LOAD DATA INPATH '{pedigree}' INTO TABLE {db}.pedigree
             """.format(db=config.db, pedigree=config.files.pedigree))
+
+    def drop_variants_database(self, dbname):
+        with self.impala.cursor() as cursor:
+            cursor.execute("""
+                DROP DATABASE IF EXISTS {db} CASCADE
+            """.format(db=dbname))
 
     @staticmethod
     def get_impala(impala_host=None, impala_port=None):
