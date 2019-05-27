@@ -1,4 +1,5 @@
 import pickle
+import zlib
 
 from variants.variant import SummaryAllele, SummaryVariant
 from variants.family_variant import FamilyVariant
@@ -12,10 +13,10 @@ class FamilyVariantSerializer(object):
 
     def serialize(self, variant):
         data = self.serialize_family_variant(variant)
-        return pickle.dumps(data)
+        return zlib.compress(pickle.dumps(data))
 
     def deserialize(self, buf):
-        data = pickle.loads(buf)
+        data = pickle.loads(zlib.decompress(buf))
         return self.deserialize_family_variant(data)
 
     def serialize_allele(self, allele):
