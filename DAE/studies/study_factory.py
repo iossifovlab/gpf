@@ -29,7 +29,8 @@ class StudyFactory(object):
                 'family_variant': os.path.join(prefix, family_files),
                 'member_variant': os.path.join(prefix, member_files),
                 'effect_gene_variant': os.path.join(prefix, effect_gene_files),
-                'pedigree': os.path.join(prefix, pedigree_file)
+                'pedigree': os.path.join(prefix, pedigree_file),
+                'db': 'parquet',
             }
         }
         return Configure(conf)
