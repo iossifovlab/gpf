@@ -293,9 +293,12 @@ def test_impala_backend(request):
 def impala_variants(request, impala_parquet_variants, test_impala_backend):
 
     def builder(path):
+        from backends.impala.impala_variants import ImpalaFamilyVariants
+
         impala_config = impala_parquet_variants(path)
         test_impala_backend.import_variants(impala_config)
-        return impala_config
+        fvars = ImpalaFamilyVariants(impala_config, test_impala_backend)
+        return fvars
     return builder
 
 

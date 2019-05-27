@@ -1,55 +1,25 @@
-from variants.family import FamiliesBase
-from impala.util import as_pandas
-
-from variants.attributes import Role, Status, Sex
+from variants.family import FamiliesBase, Family
+from backends.impala.serializers import FamilyVariantSerializer
 
 
 class ImpalaFamilyVariants(FamiliesBase):
 
-    def __init__(
-        self, config,
-            impala_host=None, impala_port=None,
-            impala_connection=None):
+    def __init__(self, config, impala_backend):
 
         super(ImpalaFamilyVariants, self).__init__()
 
-        self.config = config.impala
+        self.config = config
         assert self.config is not None
+        self.backend = impala_backend
+        self.ped_df = self.backend.load_pedigree(self.config)
+        self.families_build(self.ped_df, family_class=Family)
+        self.schema = self.backend.variants_schema(self.config)
+        self.serializer = FamilyVariantSerializer(self.families)
 
-        if impala_connection is None:
-            impala_connection = self.get_connection(impala_host, impala_port)
-        self.connection = impala_connection
+    def query_variants(self, **kwargs):
+        for row in self.backend.query_variants(self.config, **kwargs):
+            v = self.serializer.deserialize(row[0])
+            matched_alleles = [int(a) for a in row[1].split(',')]
+            v.set_matched_alleles(matched_alleles)
 
-    @staticmethod
-    def import_variants(impala_connection, variants_filename):
-        pass
-
-    def _load_pedigree(self):
-        with self.connection.cursor() as cursor:
-            q = """
-                SELECT * FROM {db}.`{pedigree}`
-            """.format(db=self.config.db, pedigree=self.config.pedigree)
-
-            cursor.execute(q)
-            ped_df = as_pandas(cursor)
-
-        ped_df = ped_df.rename(columns={
-            'personId': 'person_id',
-            'familyId': 'family_id',
-            'momId': 'mom_id',
-            'dadId': 'dad_id',
-            'sampleId': 'sample_id',
-            'sex': 'sex',
-            'status': 'status',
-            'role': 'role',
-            'generated': 'generated',
-            'layout': 'layout',
-            'phenotype': 'phenotype',
-        })
-        ped_df.role = ped_df.role.apply(lambda v: Role(v))
-        ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
-        ped_df.status = ped_df.status.apply(lambda v: Status(v))
-        if 'layout' in ped_df:
-            ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
-
-        return ped_df
+            yield v

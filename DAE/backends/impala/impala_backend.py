@@ -98,3 +98,38 @@ class ImpalaBackend(object):
             ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
 
         return ped_df
+
+    def variants_schema(self, config):
+        with self.impala.cursor() as cursor:
+            q = """
+                DESCRIBE {db}.{variant}
+            """.format(db=config.db, variant=config.tables.variant)
+            cursor.execute(q)
+            df = as_pandas(cursor)
+            print(df)
+            records = df[['name', 'type']].to_records()
+            schema = {
+                col_name: col_type for (_, col_name, col_type) in records
+            }
+            print(schema)
+            return schema
+
+    def query_variants(self, config, **kwargs):
+        with self.impala.cursor() as cursor:
+            query = self.build_query(config, **kwargs)
+            cursor.execute(query)
+            for row in cursor:
+                yield row
+
+    def build_query(self, config, **kwargs):
+        return """
+            SELECT
+                `data`, GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
+            FROM {db}.{variant}
+            GROUP BY
+                bucket_index,
+                summary_variant_index,
+                family_variant_index,
+                `data`
+            """.format(
+            db=config.db, variant=config.tables.variant)

@@ -11,6 +11,14 @@ def test_hdfs_helpers():
     print(dirname)
 
 
+def test_impala_backend_simple():
+    hdfs = ImpalaBackend.get_hdfs("dory.seqpipe.org", 8020)
+    assert hdfs is not None
+
+    with ImpalaBackend.get_impala("dory.seqpipe.org", 21050) as conn:
+        assert conn is not None
+
+
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/a",
 ])
@@ -32,22 +40,24 @@ def test_variants_import(test_hdfs, impala_parquet_variants, fixture_name):
     assert ped_df is not None
     print(ped_df)
 
+    df = backend.variants_schema(conf)
+    print(df)
+
 
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/a",
 ])
-def test_variants_db_import(test_impala_backend, impala_variants, fixture_name):
-    conf = impala_variants(fixture_name)
-    print(conf)
+def test_impala_variants_simple(impala_variants, fixture_name):
+    fvars = impala_variants(fixture_name)
 
-    ped_df = test_impala_backend.load_pedigree(conf)
-    assert ped_df is not None
-    print(ped_df)
+    vs = list(fvars.query_variants())
+    print(len(vs))
 
+    for v in vs:
+        print(v)
+        for a in v.alt_alleles:
+            print(">", a)
+        for a in v.matched_alleles:
+            print(">", a)
 
-def test_impala_backend_simple():
-    hdfs = ImpalaBackend.get_hdfs("dory.seqpipe.org", 8020)
-    assert hdfs is not None
-
-    with ImpalaBackend.get_impala("dory.seqpipe.org", 21050) as conn:
-        assert conn is not None
+    assert len(vs) == 5

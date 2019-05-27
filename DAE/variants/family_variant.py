@@ -6,8 +6,6 @@ Created on Jul 9, 2018
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import range
-from builtins import object
 import numpy as np
 
 from variants.variant import SummaryVariant, SummaryAllele
