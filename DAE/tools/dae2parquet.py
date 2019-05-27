@@ -13,6 +13,8 @@ import argparse
 
 from configurable_entities.configuration import DAEConfig
 
+from annotation.tools.file_io_parquet import ParquetSchema
+
 from backends.vcf.builder import get_genome
 from backends.configure import Configure
 from backends.thrift.raw_dae import RawDAE, RawDenovo
@@ -29,8 +31,56 @@ def get_contigs(tabixfilename):
         return tbx.contigs
 
 
+# def dae_build_transmitted(
+#         dae_config, annotation_pipeline, argv, defaults={}):
+
+#     from backends.thrift.import_tools import variants_iterator_to_parquet
+
+#     config = Configure.from_dict({
+#         "dae": {
+#             'summary_filename': argv.summary,
+#             'toomany_filename': argv.toomany,
+#             'family_filename': argv.families
+#         }})
+
+#     # contigs = ['chr21', 'chr22']
+
+#     assert argv.output is not None
+#     genome = get_genome(genome_file=None)
+
+#     fvars = RawDAE(
+#         config.dae.summary_filename,
+#         config.dae.toomany_filename,
+#         config.dae.family_filename,
+#         region=argv.region,
+#         genome=genome,
+#         annotator=annotation_pipeline)
+
+#     if argv.family_format == 'simple':
+#         fvars.load_simple_families()
+#     elif argv.family_format == 'pedigree':
+#         fvars.load_pedigree_families()
+#     else:
+#         raise ValueError("unexpected family format: {}".format(
+#             argv.family_format
+#         ))
+
+#     annotation_pipeline = construct_import_annotation_pipeline(
+#         dae_config, argv, defaults=defaults)
+
+#     variants_iterator_to_parquet(
+#         fvars,
+#         argv.output,
+#         argv.bucket_index,
+#         annotation_pipeline
+#     )
+
+
 def dae_build_transmitted(
         dae_config, annotation_pipeline, argv, defaults={}):
+
+    from backends.impala.import_tools import variants_iterator_to_parquet
+
     config = Configure.from_dict({
         "dae": {
             'summary_filename': argv.summary,
@@ -62,12 +112,18 @@ def dae_build_transmitted(
 
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, argv, defaults=defaults)
+    annotation_schema = ParquetSchema()
+    annotation_pipeline.collect_annotator_schema(annotation_schema)
+    print("Annotation schema:")
+    print("---------------------------------------")
+    print(annotation_schema)
+    print("---------------------------------------")
 
     variants_iterator_to_parquet(
         fvars,
         argv.output,
         argv.bucket_index,
-        annotation_pipeline
+        annotation_schema
     )
 
 

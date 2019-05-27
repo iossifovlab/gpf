@@ -16,7 +16,9 @@ class ParquetSchema(Schema):
     # New types only need to be added here.
     type_map = OrderedDict([
         ('str', (str, pa.string())),
-        ('float', (float, pa.float64())),
+        ('float', (float, pa.float32())),
+        ('float32', (float, pa.float32())),
+        ('float64', (float, pa.float64())),
         ('int', (int, pa.uint32())),
         ('int8', (int, pa.int8())),
         ('int16', (int, pa.int16())),
@@ -24,7 +26,9 @@ class ParquetSchema(Schema):
         ('int64', (int, pa.int64())),
         ('list(str)', (str, pa.list_(pa.string()))),
         ('list(float)', (float, pa.list_(pa.float64()))),
-        ('list(int)', (int, pa.list_(pa.uint32())))
+        ('list(int)', (int, pa.list_(pa.uint32()))),
+        ('bool', (bool, pa.bool_())),
+        ('binary', (bytes, pa.binary())),
     ])
 
     def __init__(self):
@@ -70,10 +74,14 @@ class ParquetSchema(Schema):
     def from_arrow(cls, pa_schema):
         new_schema = ParquetSchema()
         for col in pa_schema:
+            found = False
             for type_name, types in new_schema.type_map.items():
                 if col.type == types[1]:
                     new_schema.columns[col.name] = cls.produce_type(type_name)
+                    found = True
                     break
+            assert found, col
+
         if len(new_schema.columns) != len(pa_schema):
             print(("An error occured during conversion of the"
                    " Parquet file's schema. This is most likely caused"

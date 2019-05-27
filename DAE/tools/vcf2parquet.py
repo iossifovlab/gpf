@@ -13,6 +13,8 @@ import argparse
 
 from configurable_entities.configuration import DAEConfig
 
+from annotation.tools.file_io_parquet import ParquetSchema
+
 from backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
 
@@ -24,7 +26,7 @@ from backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 from backends.vcf.builder import get_genome
 from backends.thrift.import_tools import annotation_pipeline_cli_options, \
-    construct_import_annotation_pipeline, variants_iterator_to_parquet
+    construct_import_annotation_pipeline
 
 # import multiprocessing
 # import functools
@@ -45,10 +47,44 @@ def create_vcf_variants(config, region=None):
     return fvars
 
 
+# def import_vcf(
+#         dae_config, annotation_pipeline,
+#         pedigree_filename, vcf_filename,
+#         region=None, bucket_index=1, output='.'):
+
+#     from backends.thrift.import_tools import variants_iterator_to_parquet
+
+#     assert os.path.exists(vcf_filename)
+#     assert os.path.exists(pedigree_filename)
+
+#     vcf_config = Configure.from_dict({
+#             'vcf': {
+#                 'pedigree': pedigree_filename,
+#                 'vcf': vcf_filename,
+#                 'annotation': None,
+#             },
+#         })
+
+#     fvars = create_vcf_variants(vcf_config, region)
+
+#     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
+
+#     return variants_iterator_to_parquet(
+#         fvars,
+#         output,
+#         bucket_index,
+#         annotation_pipeline
+#     )
+
+
 def import_vcf(
         dae_config, annotation_pipeline,
         pedigree_filename, vcf_filename,
-        region=None, bucket_index=1, output='.'):
+        region=None, bucket_index=1, output='.',
+        filesystem=None):
+
+    from backends.impala.import_tools import variants_iterator_to_parquet
+
     assert os.path.exists(vcf_filename)
     assert os.path.exists(pedigree_filename)
 
@@ -63,12 +99,15 @@ def import_vcf(
     fvars = create_vcf_variants(vcf_config, region)
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
+    annotation_schema = ParquetSchema()
+    annotation_pipeline.collect_annotator_schema(annotation_schema)
 
     return variants_iterator_to_parquet(
         fvars,
         output,
         bucket_index,
-        annotation_pipeline
+        annotation_schema,
+        filesystem=filesystem
     )
 
 
@@ -113,6 +152,24 @@ def parser_common_arguments(dae_config, parser):
         help='output filepath prefix. '
         'If none specified, current directory is used [default: %(default)s]'
     )
+
+
+# def parse_vcf_arguments(dae_config, subparsers):
+#     parser = subparsers.add_parser('vcf')
+#     parser_common_arguments(dae_config, parser)
+
+#     parser.add_argument(
+#         '--region', type=str,
+#         dest='region', metavar='region',
+#         default=None,
+#         help='region to convert [default: %(default)s]'
+#     )
+
+#     parser.add_argument(
+#         '-b', '--bucket-index', type=int, default=1,
+#         dest='bucket_index', metavar='bucket index',
+#         help='bucket index [default: %(default)s]'
+#     )
 
 
 def parse_vcf_arguments(dae_config, subparsers):
@@ -182,3 +239,4 @@ if __name__ == "__main__":
             argv.pedigree, argv.vcf,
             region=argv.region, bucket_index=argv.bucket_index,
             output=argv.output)
+

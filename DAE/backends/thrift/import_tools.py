@@ -50,18 +50,20 @@ def variants_iterator_to_parquet(
     return parquet_config
 
 
-def construct_import_annotation_pipeline(dae_config, argv, defaults={}):
+def construct_import_annotation_pipeline(dae_config, argv=None, defaults={}):
 
-    if 'annotation_config' in argv and argv.annotation_config is not None:
+    if argv is not None and 'annotation_config' in argv and \
+            argv.annotation_config is not None:
         config_filename = argv.annotation_config
     else:
         config_filename = dae_config.annotation_conf
 
     assert os.path.exists(config_filename), config_filename
-
-    options = {
-        k: v for k, v in argv._get_kwargs()
-    }
+    options = {}
+    if argv is not None:
+        options = {
+            k: v for k, v in argv._get_kwargs()
+        }
     options.update({
         "vcf": True,
         'c': 'chrom',

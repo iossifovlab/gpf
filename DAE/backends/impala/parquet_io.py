@@ -40,11 +40,13 @@ class ParquetData(object):
 
     def build_batch(self):
         batch_data = []
-        for name in self.schema.names:
+        for index, name in enumerate(self.schema.names):
             assert name in self.data
             column = self.data[name]
             field = self.schema.field_by_name(name)
             batch_data.append(pa.array(column, type=field.type))
+            if index > 0:
+                assert len(batch_data[index]) == len(batch_data[0]), name
         batch = pa.RecordBatch.from_arrays(batch_data, self.schema.names)
         return batch
 
@@ -204,15 +206,31 @@ class VariantsParquetWriter(object):
         pa.field("data", pa.binary()),
     ])
 
+    EXCLUDE = [
+        'effect_gene_genes',
+        'effect_gene_types',
+        'effect_genes',
+        'effect_details_transcript_ids',
+        'effect_details_details',
+        'effect_details',
+    ]
+
     def __init__(self, full_variants_iterator, annotation_schema=None):
         self.full_variants_iterator = full_variants_iterator
 
         if annotation_schema is not None:
             base_schema = ParquetSchema.from_arrow(self.SCHEMA)
-            schema = ParquetSchema.merge_schemas(
-                base_schema, annotation_schema).to_arrow()
+
+            print("base_schema:", base_schema)
+            print("annotation_schema:", annotation_schema)
+            print("!!!ANNOTATION SCHEMA NOT APPLIED!!!")
+            # schema = ParquetSchema.merge_schemas(
+            #     base_schema, annotation_schema).to_arrow()
+            schema = self.SCHEMA
         else:
             schema = self.SCHEMA
+
+        print("Final schema:", schema)
 
         self.start = time.time()
         self.data = ParquetData(schema)
