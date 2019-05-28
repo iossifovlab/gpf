@@ -269,9 +269,9 @@ class VariantsParquetWriter(object):
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
                 print(
-                    "(bucket={}): {} family variants imported for {:.2f} sec".
+                    "{} family variants imported for {:.2f} sec".
                     format(
-                       bucket_index, family_variant_index, elapsed),
+                       family_variant_index, elapsed),
                     file=sys.stderr)
 
             if len(self.data) >= batch_size:
@@ -286,9 +286,9 @@ class VariantsParquetWriter(object):
 
         elapsed = time.time() - self.start
         print(
-            "DONE(bucket={}): {} family variants imported for {:.2f} sec".
+            "DONE: {} family variants imported for {:.2f} sec".
             format(
-                bucket_index, family_variant_index, elapsed),
+                family_variant_index, elapsed),
             file=sys.stderr)
 
     def save_variants_to_parquet(

@@ -176,6 +176,15 @@ class ImpalaBackend(object):
             where.append(self._build_iterable_string_attr_where(
                 'family_id', query['family_ids']
             ))
+        if query.get('effect_types') is not None:
+            where.append(self._build_iterable_string_attr_where(
+                'effect_type', query['effect_types']
+            ))
+        if query.get('genes') is not None:
+            where.append(self._build_iterable_string_attr_where(
+                'effect_gene', query['genes']
+            ))
+
         return where
 
     def build_query(self, config, **kwargs):

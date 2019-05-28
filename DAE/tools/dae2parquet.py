@@ -114,10 +114,6 @@ def dae_build_transmitted(
         dae_config, argv, defaults=defaults)
     annotation_schema = ParquetSchema()
     annotation_pipeline.collect_annotator_schema(annotation_schema)
-    print("Annotation schema:")
-    print("---------------------------------------")
-    print(annotation_schema)
-    print("---------------------------------------")
 
     variants_iterator_to_parquet(
         fvars,
