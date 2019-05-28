@@ -11,9 +11,10 @@ class PeopleGroupConfig(ConfigurableEntityConfig):
     def __init__(self, config, *args, **kwargs):
         super(PeopleGroupConfig, self).__init__(config, *args, **kwargs)
 
+    @property
     def people_group(self):
         if 'peopleGroup' in self:
-            return self.people_group
+            return self['peopleGroup']
         return []
 
     @staticmethod

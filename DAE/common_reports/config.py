@@ -91,7 +91,7 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
         if config.get('enabled', True) is False:
             return None
 
-        people_group = study_config.people_group()
+        people_group = study_config.people_group
 
         people_groups_info = \
             cls._get_people_groups(config, people_group)

@@ -45,16 +45,16 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         assert 'description' in self
         assert self.work_dir
 
+    @property
     def people_group(self):
-        if 'peopleGroupConfig' in self and \
-                self.people_group_config:
-            return self.people_group_config.people_group()
+        if 'peopleGroupConfig' in self and self['peopleGroupConfig']:
+            return self['peopleGroupConfig'].people_group
         return []
 
+    @property
     def genotype_browser_config(self):
-        if 'genotypeBrowserConfig' in self and \
-                self.genotype_browser_config:
-            return self.genotypeBrowserConfig
+        if 'genotypeBrowserConfig' in self and self['genotypeBrowserConfig']:
+            return self['genotypeBrowserConfig']
         return None
 
 

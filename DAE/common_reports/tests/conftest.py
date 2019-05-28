@@ -159,7 +159,7 @@ def filter_info(groups):
 
 @pytest.fixture(scope='session')
 def people_groups(study1_config):
-    people_group = study1_config.people_group()
+    people_group = study1_config.people_group
 
     people_groups = OrderedDict()
     for pg in people_group:

@@ -104,7 +104,7 @@ class DenovoGeneSetsCollection(GeneInfoConfig):
         for config in self.variants_db.get_all_configs():
             study_config = config.study_config
 
-            people_group = config.people_group()
+            people_group = config.people_group
             if len(people_group) == 0:
                 continue
 

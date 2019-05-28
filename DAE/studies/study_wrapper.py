@@ -36,7 +36,7 @@ class StudyWrapper(object):
 
         present_in_role = []
 
-        genotype_browser_config = self.config.genotype_browser_config()
+        genotype_browser_config = self.config.genotype_browser_config
         if genotype_browser_config:
             preview_columns = genotype_browser_config['previewColumnsSlots']
             download_columns = genotype_browser_config['downloadColumnsSlots']
@@ -58,7 +58,7 @@ class StudyWrapper(object):
         self.gene_weights_columns = gene_weights_columns
         self.column_labels = column_labels
 
-        self.people_group = self.config.people_group()
+        self.people_group = self.config.people_group
         self.present_in_role = present_in_role
 
         if len(self.people_group) != 0:
@@ -78,7 +78,7 @@ class StudyWrapper(object):
         if pheno_db:
             self.pheno_db = pheno_factory.get_pheno_db(pheno_db)
 
-            genotype_browser_config = self.config.genotype_browser_config()
+            genotype_browser_config = self.config.genotype_browser_config
             if genotype_browser_config:
                 pheno_filters = genotype_browser_config.phenoFilters
                 if pheno_filters:
@@ -192,7 +192,7 @@ class StudyWrapper(object):
             yield variant
 
     def _add_roles_columns(self, variant):
-        genotype_browser_config = self.config.genotype_browser_config()
+        genotype_browser_config = self.config.genotype_browser_config
         if genotype_browser_config is None:
             return variant
 
@@ -244,7 +244,7 @@ class StudyWrapper(object):
         return result
 
     def _add_pheno_columns(self, variants_iterable):
-        genotype_browser_config = self.config.genotype_browser_config()
+        genotype_browser_config = self.config.genotype_browser_config
         if self.pheno_db is None or genotype_browser_config is None:
             for variant in variants_iterable:
                 yield variant
@@ -281,7 +281,7 @@ class StudyWrapper(object):
         pheno_column_dfs = []
         pheno_column_names = []
 
-        genotype_browser_config = self.config.genotype_browser_config()
+        genotype_browser_config = self.config.genotype_browser_config
         if genotype_browser_config:
             for pheno_column in genotype_browser_config.phenoColumns:
                 for slot in pheno_column.slots:
