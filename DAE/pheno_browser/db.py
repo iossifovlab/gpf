@@ -42,18 +42,19 @@ class DbManager(object):
 
             Column('figure_distribution_small', String(256)),
             Column('figure_distribution', String(256)),
+        )
 
-
-            Column('figure_correlation_nviq_small', String(256)),
-            Column('figure_correlation_nviq', String(256)),
-            Column('pvalue_correlation_nviq_male', Float()),
-            Column('pvalue_correlation_nviq_female', Float()),
-
-            Column('figure_correlation_age_small', String(256)),
-            Column('figure_correlation_age', String(256)),
-            Column('pvalue_correlation_age_male', Float()),
-            Column('pvalue_correlation_age_female', Float()),
-
+        self.regressions = Table(
+            'regressions', self.metadata,
+            Column('regression_name', String(128),
+                   nullable=False, index=True),
+            Column('measure_id', String(128), nullable=False, index=True),
+            Column('regression_measure_id', String(128),
+                   nullable=False, index=True),
+            Column('figure_regression', String(256)),
+            Column('figure_regression_small', String(256)),
+            Column('pvalue_regression_male', Float()),
+            Column('pvalue_regression_female', Float()),
         )
 
     def save(self, v):
@@ -71,6 +72,22 @@ class DbManager(object):
                 update().values(**v).where(
                     self.variable_browser.c.measure_id == measure_id
                 )
+            with self.engine.begin() as connection:
+                connection.execute(update)
+
+    def save_regression(self, r):
+        try:
+            insert = self.regressions. \
+                insert().values(r)
+            with self.engine.begin() as connection:
+                connection.execute(insert)
+        except Exception:
+            regression_name = r['regression_name']
+
+            del r['regression_name']
+            update = self.variable_browser.update().values(r).where(
+                self.variable_browser.c.regression_name == regression_name
+            )
             with self.engine.begin() as connection:
                 connection.execute(update)
 
@@ -94,13 +111,17 @@ class DbManager(object):
                        .replace('_', r'\_'))
             if not instrument_name:
                 query_params.append(
-                    self.variable_browser.c.instrument_name.like(keyword, escape='\\'))
+                    self.variable_browser.c.instrument_name.like(
+                        keyword, escape='\\'))
             query_params.append(
-                self.variable_browser.c.measure_id.like(keyword, escape='\\'))
+                self.variable_browser.c.measure_id.like(
+                    keyword, escape='\\'))
             query_params.append(
-                self.variable_browser.c.measure_name.like(keyword, escape='\\'))
+                self.variable_browser.c.measure_name.like(
+                    keyword, escape='\\'))
             query_params.append(
-                self.variable_browser.c.description.like(keyword, escape='\\'))
+                self.variable_browser.c.description.like(
+                    keyword, escape='\\'))
             query = self.variable_browser.select(or_(*query_params))
         else:
             query = self.variable_browser.select()
