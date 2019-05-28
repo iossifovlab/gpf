@@ -215,6 +215,11 @@ class ImpalaBackend(object):
                 'variant_in_role', query['roles'],
                 role_query
             ))
+        if query.get("sexes"):
+            where.append(self._build_complex_attr_where(
+                'variant_in_sex', query['sexes'],
+                sex_query
+            ))
         return where
 
     def build_query(self, config, **kwargs):
