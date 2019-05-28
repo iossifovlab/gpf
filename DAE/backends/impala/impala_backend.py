@@ -4,6 +4,12 @@ from impala.util import as_pandas
 
 from RegionOperations import Region
 
+from ..attributes_query import \
+    QueryTreeToSQLTransformer, \
+    role_query, sex_query, \
+    inheritance_query,\
+    variant_type_query
+
 from variants.attributes import Role, Status, Sex
 from backends.impala.parquet_io import HdfsHelpers
 
@@ -125,6 +131,7 @@ class ImpalaBackend(object):
     def query_variants(self, config, **kwargs):
         with self.impala.cursor() as cursor:
             query = self.build_query(config, **kwargs)
+            print("FINAL QUERY: ", query)
             cursor.execute(query)
             for row in cursor:
                 yield row
@@ -168,6 +175,16 @@ class ImpalaBackend(object):
                 values=','.join(values))
             return where
 
+    def _build_complex_attr_where(
+            self, column_name, query_value, query_transformer):
+        assert query_value is not None
+        parsed = query_value
+        if isinstance(query_value, str):
+            parsed = query_transformer.transform_query_string_to_tree(
+                    query_value)
+        transformer = QueryTreeToSQLTransformer(column_name)
+        return transformer.transform(parsed)
+
     def _build_where(self, query):
         where = []
         if query.get('regions'):
@@ -184,7 +201,11 @@ class ImpalaBackend(object):
             where.append(self._build_iterable_string_attr_where(
                 'effect_gene', query['genes']
             ))
-
+        if query.get("inheritance"):
+            where.append(self._build_complex_attr_where(
+                'inheritance_in_member', query['inheritance'],
+                inheritance_query
+            ))
         return where
 
     def build_query(self, config, **kwargs):
