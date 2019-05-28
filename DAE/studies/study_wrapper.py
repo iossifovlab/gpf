@@ -34,18 +34,10 @@ class StudyWrapper(object):
         gene_weights_columns = []
         column_labels = {}
 
-        people_group = []
         present_in_role = []
 
-        if 'peopleGroupConfig' in self.config and \
-                self.config.people_group_config:
-            people_group_config = self.config.people_group_config
-            if 'peopleGroup' in people_group_config:
-                people_group = people_group_config.people_group
-
-        if 'genotypeBrowserConfig' in self.config and \
-                self.config.genotype_browser_config:
-            genotype_browser_config = self.config.genotypeBrowserConfig
+        genotype_browser_config = self.config.genotype_browser_config()
+        if genotype_browser_config:
             preview_columns = genotype_browser_config['previewColumnsSlots']
             download_columns = genotype_browser_config['downloadColumnsSlots']
             if genotype_browser_config['phenoColumns']:
@@ -66,7 +58,7 @@ class StudyWrapper(object):
         self.gene_weights_columns = gene_weights_columns
         self.column_labels = column_labels
 
-        self.people_group = people_group
+        self.people_group = self.config.people_group()
         self.present_in_role = present_in_role
 
         if len(self.people_group) != 0:
@@ -86,9 +78,9 @@ class StudyWrapper(object):
         if pheno_db:
             self.pheno_db = pheno_factory.get_pheno_db(pheno_db)
 
-            if 'genotypeBrowserConfig' in self.config and \
-                    self.config.genotypeBrowserConfig:
-                pheno_filters = self.config.genotypeBrowserConfig.phenoFilters
+            genotype_browser_config = self.config.genotype_browser_config()
+            if genotype_browser_config:
+                pheno_filters = genotype_browser_config.phenoFilters
                 if pheno_filters:
                     self.pheno_filters_in_config = {
                         self._get_pheno_filter_key(pf.measureFilter)
@@ -200,15 +192,14 @@ class StudyWrapper(object):
             yield variant
 
     def _add_roles_columns(self, variant):
-        if 'genotypeBrowserConfig' not in self.study.config or \
-            ('genotypeBrowserConfig' in self.study.config and
-                not self.study.config.genotypeBrowserConfig):
+        genotype_browser_config = self.config.genotype_browser_config()
+        if genotype_browser_config is None:
             return variant
 
         # assert isinstance(genotype_browser_config, dict), \
         #   type(genotype_browser_config)
 
-        roles_columns = self.study.config.genotypeBrowserConfig.rolesColumns
+        roles_columns = genotype_browser_config.rolesColumns
 
         if not roles_columns:
             return variant
@@ -253,10 +244,8 @@ class StudyWrapper(object):
         return result
 
     def _add_pheno_columns(self, variants_iterable):
-        if self.pheno_db is None or \
-            'genotypeBrowserConfig' not in self.study.config or \
-                ('genotypeBrowserConfig' in self.study.config and not
-                 self.study.config.genotypeBrowserConfig):
+        genotype_browser_config = self.config.genotype_browser_config()
+        if self.pheno_db is None or genotype_browser_config is None:
             for variant in variants_iterable:
                 yield variant
 
@@ -292,9 +281,9 @@ class StudyWrapper(object):
         pheno_column_dfs = []
         pheno_column_names = []
 
-        if 'genotypeBrowserConfig' in self.config and \
-                self.config.genotypeBrowserConfig:
-            for pheno_column in self.config.genotypeBrowserConfig.phenoColumns:
+        genotype_browser_config = self.config.genotype_browser_config()
+        if genotype_browser_config:
+            for pheno_column in genotype_browser_config.phenoColumns:
                 for slot in pheno_column.slots:
                     pheno_column_dfs.append(
                         self.pheno_db.get_measure_values_df(
