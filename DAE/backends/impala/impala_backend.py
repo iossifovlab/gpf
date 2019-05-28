@@ -210,6 +210,11 @@ class ImpalaBackend(object):
                 'inheritance_in_member', query['inheritance'],
                 inheritance_query
             ))
+        if query.get("roles"):
+            where.append(self._build_complex_attr_where(
+                'variant_in_role', query['roles'],
+                role_query
+            ))
         return where
 
     def build_query(self, config, **kwargs):
