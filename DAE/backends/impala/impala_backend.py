@@ -116,12 +116,10 @@ class ImpalaBackend(object):
             """.format(db=config.db, variant=config.tables.variant)
             cursor.execute(q)
             df = as_pandas(cursor)
-            print(df)
             records = df[['name', 'type']].to_records()
             schema = {
                 col_name: col_type for (_, col_name, col_type) in records
             }
-            print(schema)
             return schema
 
     def query_variants(self, config, **kwargs):
@@ -131,11 +129,10 @@ class ImpalaBackend(object):
             for row in cursor:
                 yield row
 
-    def _build_regions_where(self, query):
-        assert 'regions' in query
-        assert isinstance(query['regions'], list)
+    def _build_regions_where(self, query_values):
+        assert isinstance(query_values, list)
         where = []
-        for region in query['regions']:
+        for region in query_values:
             assert isinstance(region, Region)
             where.append(
                "(`chrom` = {q}{chrom}{q} AND `position` >= {start} AND "
@@ -148,10 +145,37 @@ class ImpalaBackend(object):
             )
         return ' OR '.join(where)
 
+    def _build_iterable_string_attr_where(self, column_name, query_values):
+        assert query_values is not None
+
+        assert isinstance(query_values, list) or \
+            isinstance(query_values, set)
+
+        if not query_values:
+            where = ' {column_name} IS NULL'.format(
+                column_name=column_name
+            )
+            return where
+        else:
+            values = [
+                ' {q}{val}{q} '.format(
+                    q=self.QUOTE,
+                    val=val.replace("'", "\\'"))
+                for val in query_values]
+
+            where = ' {column_name} in ( {values} ) '.format(
+                column_name=column_name,
+                values=','.join(values))
+            return where
+
     def _build_where(self, query):
         where = []
         if query.get('regions'):
-            where.append(self._build_regions_where(query))
+            where.append(self._build_regions_where(query['regions']))
+        if query.get('family_ids') is not None:
+            where.append(self._build_iterable_string_attr_where(
+                'family_id', query['family_ids']
+            ))
         return where
 
     def build_query(self, config, **kwargs):
@@ -159,7 +183,8 @@ class ImpalaBackend(object):
         where_clause = ""
         if where:
             where_clause = self.WHERE.format(
-                where=" AND ".join(where)
+                where=" AND ".join([
+                    "( {} )".format(w) for w in where])
             )
         return """
             SELECT
