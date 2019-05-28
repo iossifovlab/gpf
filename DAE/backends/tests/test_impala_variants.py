@@ -40,15 +40,15 @@ def test_variants_import(test_hdfs, impala_parquet_variants, fixture_name):
     assert ped_df is not None
     print(ped_df)
 
-    df = backend.variants_schema(conf)
-    print(df)
+    # df = backend.variants_schema(conf)
+    # print(df)
 
 
 @pytest.mark.parametrize("fixture_name", [
     "fixtures/a",
 ])
-def test_impala_variants_simple(impala_variants, fixture_name):
-    fvars = impala_variants(fixture_name)
+def test_impala_variants_simple(variants_impala, fixture_name):
+    fvars = variants_impala(fixture_name)
 
     vs = list(fvars.query_variants())
     print(len(vs))

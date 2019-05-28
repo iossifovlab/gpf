@@ -138,10 +138,11 @@ def raw_denovo(config_denovo, default_genome):
 
 @pytest.fixture
 def variants_implementations(
-        variants_vcf, variants_thrift):
+        variants_vcf, variants_thrift, variants_impala):
     impls = {
         "variants_vcf": variants_vcf,
         "variants_thrift": variants_thrift,
+        "variants_impala": variants_impala,
     }
     return impls
 
@@ -289,8 +290,8 @@ def test_impala_backend(request):
     return backend
 
 
-@pytest.fixture
-def impala_variants(request, impala_parquet_variants, test_impala_backend):
+@pytest.fixture(scope='session')
+def variants_impala(request, impala_parquet_variants, test_impala_backend):
 
     def builder(path):
         from backends.impala.impala_variants import ImpalaFamilyVariants
@@ -302,7 +303,7 @@ def impala_variants(request, impala_parquet_variants, test_impala_backend):
     return builder
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def impala_parquet_variants(request, test_hdfs, test_impala_backend):
     dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     tempname = os.path.basename(dirname)

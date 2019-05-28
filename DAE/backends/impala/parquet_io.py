@@ -10,7 +10,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from annotation.tools.file_io_parquet import ParquetSchema
+# from annotation.tools.file_io_parquet import ParquetSchema
 from backends.impala.serializers import FamilyVariantSerializer
 
 
@@ -219,18 +219,15 @@ class VariantsParquetWriter(object):
         self.full_variants_iterator = full_variants_iterator
 
         if annotation_schema is not None:
-            base_schema = ParquetSchema.from_arrow(self.SCHEMA)
-
-            print("base_schema:", base_schema)
-            print("annotation_schema:", annotation_schema)
+            # base_schema = ParquetSchema.from_arrow(self.SCHEMA)
+            # print("base_schema:", base_schema)
+            # print("annotation_schema:", annotation_schema)
             print("!!!ANNOTATION SCHEMA NOT APPLIED!!!")
             # schema = ParquetSchema.merge_schemas(
             #     base_schema, annotation_schema).to_arrow()
             schema = self.SCHEMA
         else:
             schema = self.SCHEMA
-
-        print("Final schema:", schema)
 
         self.start = time.time()
         self.data = ParquetData(schema)
@@ -271,9 +268,11 @@ class VariantsParquetWriter(object):
 
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
-                print("{} family variants imported for {:.2f} sec".format(
-                       family_variant_index, elapsed),
-                      file=sys.stderr)
+                print(
+                    "(bucket={}): {} family variants imported for {:.2f} sec".
+                    format(
+                       bucket_index, family_variant_index, elapsed),
+                    file=sys.stderr)
 
             if len(self.data) >= batch_size:
                 table = self.data.build_table()
@@ -286,16 +285,49 @@ class VariantsParquetWriter(object):
             yield table
 
         elapsed = time.time() - self.start
-        print("DONE: {} family variants imported for {:.2f} sec".format(
-                family_variant_index, elapsed),
-              file=sys.stderr)
+        print(
+            "DONE(bucket={}): {} family variants imported for {:.2f} sec".
+            format(
+                bucket_index, family_variant_index, elapsed),
+            file=sys.stderr)
 
     def save_variants_to_parquet(
             self, filename=None, bucket_index=1, batch_size=100000,
             filesystem=None):
 
+        compression = {
+            b'data': 'GZIP',
+
+            b"bucket_index": "SNAPPY",
+            b"summary_variant_index": "SNAPPY",
+            b"allele_index": "SNAPPY",
+            b"chrom": "SNAPPY",
+            b"position": "SNAPPY",
+            b"reference": "SNAPPY",
+            b"alternative": "SNAPPY",
+            b"variant_type": "SNAPPY",
+            b"worst_effect": "SNAPPY",
+            b"af_parents_called_count": "SNAPPY",
+            b"af_parents_called_percent": "SNAPPY",
+            b"af_allele_count": "SNAPPY",
+            b"af_allele_freq": "SNAPPY",
+
+            b"effect_type": "SNAPPY",
+            b"effect_gene": "SNAPPY",
+
+            b"family_variant_index": "SNAPPY",
+            b"family_id": "SNAPPY",
+            b"is_denovo": "SNAPPY",
+
+            b"variant_in_member": "SNAPPY",
+            b"variant_in_role": "SNAPPY",
+            b"variant_in_sex": "SNAPPY",
+            b"inheritance_in_member": "SNAPPY",
+        }
+
         writer = pq.ParquetWriter(
-            filename, self.data.schema, filesystem=filesystem)
+            filename, self.data.schema,
+            compression=compression, filesystem=filesystem)
 
         try:
             for table in self.variants_table(bucket_index, batch_size):

@@ -2,11 +2,18 @@ import os
 from impala import dbapi
 from impala.util import as_pandas
 
+from RegionOperations import Region
+
 from variants.attributes import Role, Status, Sex
 from backends.impala.parquet_io import HdfsHelpers
 
 
 class ImpalaBackend(object):
+    QUOTE = "'"
+    WHERE = """
+        WHERE
+            {where}
+    """
 
     def __init__(
             self, impala_host=None, impala_port=None,
@@ -17,6 +24,9 @@ class ImpalaBackend(object):
 
     def import_variants(self, config):
         with self.impala.cursor() as cursor:
+            cursor.execute("""
+                DROP DATABASE IF EXISTS {db} CASCADE
+            """.format(db=config.db))
             cursor.execute("""
                 CREATE DATABASE IF NOT EXISTS {db}
             """.format(db=config.db))
@@ -121,15 +131,46 @@ class ImpalaBackend(object):
             for row in cursor:
                 yield row
 
+    def _build_regions_where(self, query):
+        assert 'regions' in query
+        assert isinstance(query['regions'], list)
+        where = []
+        for region in query['regions']:
+            assert isinstance(region, Region)
+            where.append(
+               "(`chrom` = {q}{chrom}{q} AND `position` >= {start} AND "
+               "`position` <= {stop})"
+               .format(
+                    q=self.QUOTE,
+                    chrom=region.chrom,
+                    start=region.start,
+                    stop=region.stop)
+            )
+        return ' OR '.join(where)
+
+    def _build_where(self, query):
+        where = []
+        if query.get('regions'):
+            where.append(self._build_regions_where(query))
+        return where
+
     def build_query(self, config, **kwargs):
+        where = self._build_where(kwargs)
+        where_clause = ""
+        if where:
+            where_clause = self.WHERE.format(
+                where=" AND ".join(where)
+            )
         return """
             SELECT
                 `data`, GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
             FROM {db}.{variant}
+            {where_clause}
             GROUP BY
                 bucket_index,
                 summary_variant_index,
                 family_variant_index,
                 `data`
             """.format(
-            db=config.db, variant=config.tables.variant)
+            db=config.db, variant=config.tables.variant,
+            where_clause=where_clause)

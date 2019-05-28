@@ -12,7 +12,8 @@ from RegionOperations import Region
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    "variants_thrift",
+    # "variants_thrift",
+    "variants_impala",
 ])
 @pytest.mark.parametrize("fixture_name,regions,count", [
     ("fixtures/effects_trio_multi", None, 3),
@@ -31,16 +32,16 @@ from RegionOperations import Region
     ("fixtures/effects_trio",
      [Region("1", 865582, 865624), Region("1", 878109, 905956)], 6),
 
-    ("fixtures/inheritance_multi", [Region("1", 11500, 11521)], 6),
-    ("fixtures/inheritance_multi", [Region("1", 11500, 11501)], 2),
+    ("fixtures/inheritance_multi", [Region("1", 11500, 11521)], 5),
+    ("fixtures/inheritance_multi", [Region("1", 11500, 11501)], 1),
     ("fixtures/inheritance_multi", [Region("1", 11503, 11511)], 2),
     ("fixtures/inheritance_multi",
-     [Region("1", 11500, 11501), Region("1", 11503, 11511)], 4),
+     [Region("1", 11500, 11501), Region("1", 11503, 11511)], 3),
 
     ("fixtures/trios2", [Region("1", 11539, 11539)], 2),
-    ("fixtures/trios2", [Region("1", 11550, 11550)], 2),
+    ("fixtures/trios2", [Region("1", 11551, 11551)], 2),
     ("fixtures/trios2",
-     [Region("1", 11539, 11539), Region("1", 11550, 11550)], 4),
+     [Region("1", 11539, 11539), Region("1", 11551, 11551)], 4),
 
 ])
 def test_fixture_query_by_regions(
@@ -50,8 +51,8 @@ def test_fixture_query_by_regions(
 
     vs = vvars.query_variants(
         regions=regions,
-        return_reference=True,
-        return_unknown=True)
+        return_reference=False,
+        return_unknown=False)
     vs = list(vs)
     print(vs)
     assert len(vs) == count
