@@ -12,7 +12,7 @@ GPF: Genotypes and Phenotypes in Families
    :maxdepth: 2
 
    getting_started
-   genotype_browser
+   configurations
    pedigree_generation
    pheno
    user_management

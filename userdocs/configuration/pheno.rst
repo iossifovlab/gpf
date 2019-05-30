@@ -1,0 +1,82 @@
+Phenotype Database Configuration
+=================================
+
+The configuration file for a single phenotype database follows the general
+INI format. Its name can be freely chosen, however, it *must* contain a
+``phenoDB`` section - this will indicate that it is a phenotype database
+configuration file.  This configuration file must properly describe a single
+phenotype database. Its properties, which must belong to the ``phenoDB``
+section, are explained below.
+
+name
+----
+
+.. code-block:: ini
+
+  name = {pheno db name}
+
+This is the unique name of the phenotype database. It can be used in the
+configuration files of studies and datasets to attach the phenotype
+database to them.
+
+dbfile
+------
+
+.. code-block:: ini
+
+  dbfile = {sqlite3 pheno db path}
+
+The path to the SQLite3 phenotype database file, relative to the
+configuration file.
+
+age
+---
+
+.. code-block:: ini
+
+  age = {age measure id}
+
+The id of the measure that contains an individual's age. Composed of
+the name of the instrument containing the age measure and the age measure's
+name. Optional.
+
+nonverbal_iq
+------------
+
+.. code-block:: ini
+
+  nonverbal_iq = {nviq measure id}
+
+The id of the measure that contains an individual's nonverbal IQ. Composed of
+the name of the instrument containing the NVIQ measure and the NVIQ measure's
+name. Optional.
+
+browser_dbfile
+--------------
+
+.. code-block:: ini
+
+  browser_dbfile = {sqlite3 pheno browser db path}
+
+The path to the SQLite3 phenotype **browser** database file, relative to the
+configuration file.
+
+browser_images_dir
+------------------
+
+.. code-block:: ini
+
+  browser_images_dir = {images directory path}
+
+The path to the directory containing the measure images for the browser,
+relative to the configuration file.
+
+browser_images_url
+------------------
+
+.. code-block:: ini
+
+  browser_images_url = /static/{images directory path}/
+
+The path to the directory containing the measure images for the browser,
+relative to the *static root directory*. The trailing slash is required.
