@@ -40,7 +40,7 @@ class ImpalaBackend(object):
                 config.files.pedigree)
             self.import_variant_files(
                 cursor, config.db, config.tables.variant,
-                config.files.variant, config.files.variant
+                [config.files.variant]
             )
 
     def import_pedigree_file(self, cursor, dbname, table_name, pedigree_file):
