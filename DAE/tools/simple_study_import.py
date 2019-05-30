@@ -69,6 +69,7 @@ STUDY_CONFIG_TEMPLATE = """
 
 id = {id}
 prefix = {output}
+file_format = impala
 
 """
 

@@ -10,7 +10,6 @@ class ImpalaFamilyVariants(FamiliesBase):
 
         assert config is not None
         self.config = config
-        print("creating impala variants:", self.config)
 
         self.backend = impala_backend
         self.ped_df = self.backend.load_pedigree(self.config)
@@ -19,7 +18,6 @@ class ImpalaFamilyVariants(FamiliesBase):
         self.serializer = FamilyVariantSerializer(self.families)
 
     def query_variants(self, **kwargs):
-        print("query impala variants:", self.config)
 
         for row in self.backend.query_variants(self.config, **kwargs):
             v = self.serializer.deserialize(row[0])

@@ -97,6 +97,7 @@ class StudyFactory(object):
             impala_config = self.impala_configuration(study_config).impala
             impala_backend = self.make_impala_backend()
             variants = ImpalaFamilyVariants(impala_config, impala_backend)
+            return Study(study_config, variants)
         else:
             variants = RawFamilyVariants(
                 prefix=study_config.prefix)

@@ -21,7 +21,12 @@ class StudyWrapper(object):
 
     def __init__(self, study, pheno_factory, *args, **kwargs):
         super(StudyWrapper, self).__init__(*args, **kwargs)
+        assert study is not None
+
         self.study = study
+        self.config = study.config
+        assert self.config is not None
+
         self._init_wdae_config()
         self.pheno_factory = pheno_factory
         self._init_pheno(self.pheno_factory)
