@@ -117,16 +117,18 @@ class Configure(ConfigBox):
         return Configure(conf)
 
     @staticmethod
-    def from_prefix_impala(prefix, db=None, bucket_index=0, suffix=None):
-        # assert os.path.exists(prefix)
-        # assert os.path.isdir(prefix)
+    def from_prefix_impala(
+            prefix, db=None, study_id=None, bucket_index=0, suffix=None):
+
         assert bucket_index >= 0
 
+        basename = os.path.basename(prefix)
+        if study_id is None:
+            study_id = basename
+        assert study_id
+
         if db is None:
-            basename = os.path.basename(prefix)
-            db = basename
-            if not db:
-                db = "test_impala_db"
+            db = study_id
 
         if suffix is None and bucket_index == 0:
             filesuffix = ""
@@ -137,21 +139,23 @@ class Configure(ConfigBox):
         else:
             filesuffix = "_{:0>6}{}".format(bucket_index, suffix)
 
-        variants_filename = os.path.join(
-            prefix, "variants{}.parquet".format(filesuffix))
+        variant_filename = os.path.join(
+            prefix, "{}_variant{}.parquet".format(
+                study_id, filesuffix))
         pedigree_filename = os.path.join(
-            prefix, "pedigree{}.parquet".format(filesuffix))
+            prefix, "{}_pedigree{}.parquet".format(
+                study_id, filesuffix))
 
         conf = {
             'impala': {
                 'files': {
-                    'variants': variants_filename,
+                    'variant': variant_filename,
                     'pedigree': pedigree_filename,
                 },
                 'db': db,
                 'tables': {
-                    'variant': 'variant',
-                    'pedigree': 'pedigree',
+                    'variant': '{}_variant'.format(study_id),
+                    'pedigree': '{}_pedigree'.format(study_id),
                 }
             }
         }

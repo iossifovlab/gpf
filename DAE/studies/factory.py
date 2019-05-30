@@ -18,13 +18,14 @@ class VariantsDb(object):
             work_dir=dae_config.dae_data_dir,
             default_conf=dae_config.default_configuration_conf)
 
-        study_factory = StudyFactory(thrift_connection)
+        study_factory = StudyFactory(dae_config, thrift_connection)
 
         if pheno_factory is None:
             pheno_factory = PhenoFactory(dae_config=dae_config)
         self.pheno_factory = pheno_factory
 
         self.study_facade = StudyFacade(
+            self.dae_config,
             self.pheno_factory, self.studies_definitions, study_factory)
 
         self.datasets_definitions = DirectoryEnabledDatasetsDefinition(

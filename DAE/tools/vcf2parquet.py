@@ -81,7 +81,7 @@ def import_vcf(
         dae_config, annotation_pipeline,
         pedigree_filename, vcf_filename,
         region=None, bucket_index=1, output='.',
-        filesystem=None):
+        study_id=None, filesystem=None):
 
     from backends.impala.import_tools import variants_iterator_to_parquet
 
@@ -96,15 +96,25 @@ def import_vcf(
             },
         })
 
+    if study_id is None:
+        filename = os.path.basename(pedigree_filename)
+        study_id = os.path.splitext(filename)[0]
+        print(filename, os.path.splitext(filename), study_id)
+
+    impala_config = Configure.from_prefix_impala(
+        output, bucket_index=bucket_index, db=None, study_id=study_id).impala
+    print("converting into ", impala_config, file=sys.stderr)
+
     fvars = create_vcf_variants(vcf_config, region)
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
+
     annotation_schema = ParquetSchema()
     annotation_pipeline.collect_annotator_schema(annotation_schema)
 
     return variants_iterator_to_parquet(
         fvars,
-        output,
+        impala_config,
         bucket_index,
         annotation_schema,
         filesystem=filesystem

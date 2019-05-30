@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import itertools
@@ -397,3 +398,16 @@ class HdfsHelpers(object):
 
     def filesystem(self):
         return self.hdfs
+
+    def put(self, local_filename, hdfs_filename):
+        assert os.path.exists(local_filename)
+
+        with open(local_filename, 'rb') as infile:
+            self.hdfs.upload(hdfs_filename, infile)
+
+    def get(self, hdfs_filename, local_filename):
+        # assert os.path.exists(local_filename)
+        assert self.exists(hdfs_filename)
+
+        with open(local_filename, "wb") as outfile:
+            self.hdfs.download(hdfs_filename, outfile)

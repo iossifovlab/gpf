@@ -49,6 +49,11 @@ class DAEConfig(object):
     HDFS_PORT = 'port'
     HDFS_BASE_DIR = 'baseDir'
 
+    IMPALA_SECTION = 'Impala'
+    IMPALA_HOST = 'host'
+    IMPALA_PORT = 'port'
+    IMPALA_DB = 'db'
+
     DIR_NAME = 'dir'
     CONF_FILE = 'confFile'
     STUDIES_SECTION = 'studiesDB'
@@ -104,6 +109,24 @@ class DAEConfig(object):
             return default_value
         return self.sections.get_section_config(section_id).\
             get(attr_name, default_value)
+
+    def impala_section(self):
+        return self.sections.get_section_config(self.IMPALA_SECTION)
+
+    @property
+    def impala_db(self):
+        return self._get_config_value(
+            self.IMPALA_SECTION, self.IMPALA_DB, "gpf_variant_db")
+
+    @property
+    def impala_host(self):
+        return self._get_config_value(
+            self.IMPALA_SECTION, self.IMPALA_HOST, None)
+
+    @property
+    def impala_port(self):
+        return int(self._get_config_value(
+            self.IMPALA_SECTION, self.IMPALA_PORT, 21050))
 
     def hdfs_section(self):
         return self.sections.get_section_config(self.HDFS_SECTION)

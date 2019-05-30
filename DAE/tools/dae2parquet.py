@@ -23,7 +23,9 @@ from backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 
 from backends.thrift.import_tools import annotation_pipeline_cli_options, \
-    construct_import_annotation_pipeline, variants_iterator_to_parquet
+    construct_import_annotation_pipeline
+
+from backends.impala.import_tools import variants_iterator_to_parquet
 
 
 def get_contigs(tabixfilename):
@@ -79,8 +81,6 @@ def get_contigs(tabixfilename):
 def dae_build_transmitted(
         dae_config, annotation_pipeline, argv, defaults={}):
 
-    from backends.impala.import_tools import variants_iterator_to_parquet
-
     config = Configure.from_dict({
         "dae": {
             'summary_filename': argv.summary,
@@ -110,8 +110,6 @@ def dae_build_transmitted(
             argv.family_format
         ))
 
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults=defaults)
     annotation_schema = ParquetSchema()
     annotation_pipeline.collect_annotator_schema(annotation_schema)
 
@@ -156,7 +154,9 @@ def dae_build_makefile(dae_config, argv):
 def import_dae_denovo(
         dae_config, annotation_pipeline,
         families_filename, variants_filename,
-        family_format='pedigree', output='.', bucket_index=0):
+        family_format='pedigree', output='.', bucket_index=0,
+        defaults={}):
+
     config = Configure.from_dict({
         "denovo": {
             'denovo_filename': variants_filename,
@@ -183,11 +183,14 @@ def import_dae_denovo(
 
     assert output is not None
 
+    annotation_schema = ParquetSchema()
+    annotation_pipeline.collect_annotator_schema(annotation_schema)
+
     return variants_iterator_to_parquet(
         fvars,
         output,
         bucket_index,
-        annotation_pipeline=annotation_pipeline
+        annotation_schema
     )
 
 

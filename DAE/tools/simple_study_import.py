@@ -6,6 +6,7 @@ import os
 import sys
 import argparse
 import time
+import glob
 import shutil
 
 from configurable_entities.configuration import DAEConfig
@@ -13,6 +14,7 @@ from backends.thrift.import_tools import construct_import_annotation_pipeline
 
 from tools.vcf2parquet import import_vcf
 from tools.dae2parquet import import_dae_denovo
+from backends.impala.impala_backend import ImpalaBackend
 
 
 def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
@@ -71,6 +73,55 @@ prefix = {output}
 """
 
 
+def impala_load_study(dae_config, study_id, parquet_directory):
+    backend = ImpalaBackend(
+        dae_config.impala_host, dae_config.impala_port,
+        dae_config.hdfs_host, dae_config.hdfs_port)
+
+    variant_glob = os.path.join(
+        parquet_directory,
+        "{}_variant*.parquet".format(study_id))
+    pedigree_glob = os.path.join(
+        parquet_directory,
+        "{}_pedigree.parquet".format(study_id))
+
+    hdfs_dirname = os.path.join(dae_config.hdfs_base_dir, study_id)
+    if not backend.hdfs.exists(hdfs_dirname):
+        backend.hdfs.mkdir(hdfs_dirname)
+
+    variant_files = []
+    for variant_filename in glob.glob(variant_glob):
+        print(variant_filename)
+        basename = os.path.basename(variant_filename)
+        hdfs_filename = os.path.join(hdfs_dirname, basename)
+        variant_files.append(hdfs_filename)
+        backend.hdfs.put(variant_filename, hdfs_filename)
+
+    pedigree_files = []
+    for pedigree_filename in glob.glob(pedigree_glob):
+        print(pedigree_filename)
+        basename = os.path.basename(pedigree_filename)
+        hdfs_filename = os.path.join(hdfs_dirname, basename)
+        pedigree_files.append(hdfs_filename)
+        backend.hdfs.put(pedigree_filename, hdfs_filename)
+
+    dbname = dae_config.impala_db
+    pedigree_table = "{}_pedigree".format(study_id)
+    variant_table = "{}_variant".format(study_id)
+    variant_glob = os.path.join(
+        hdfs_dirname, "{}_variant*.parquet".format(study_id)
+    )
+    with backend.impala.cursor() as cursor:
+        cursor.execute("""
+            CREATE DATABASE IF NOT EXISTS {db}
+        """.format(db=dbname))
+
+        backend.import_pedigree_file(
+            cursor, dbname, pedigree_table, pedigree_files[0])
+        backend.import_variant_files(
+            cursor, dbname, variant_table, variant_files)
+
+
 def generate_study_config(dae_config, study_id, argv):
     assert study_id is not None
     assert argv.output is not None
@@ -122,7 +173,7 @@ if __name__ == "__main__":
         vcf_parquet = import_vcf(
             dae_config, annotation_pipeline,
             argv.pedigree, argv.vcf,
-            output=output)
+            output=output, study_id=study_id)
     if argv.denovo is not None:
         denovo_parquet = import_dae_denovo(
             dae_config, annotation_pipeline,
@@ -131,14 +182,17 @@ if __name__ == "__main__":
     if argv.denovo is None and argv.vcf is not None:
         assert denovo_parquet is None
         assert vcf_parquet is not None
-        pedigree_filename = os.path.join(output, "pedigree.parquet")
+        pedigree_filename = os.path.join(
+            output, "{}_pedigree.parquet".format(study_id))
         shutil.copyfile(
-            vcf_parquet.pedigree,
+            vcf_parquet.files.pedigree,
             pedigree_filename
         )
         assert os.path.exists(pedigree_filename), pedigree_filename
 
     generate_study_config(dae_config, study_id, argv)
+    impala_load_study(dae_config, study_id, output)
+
     if not argv.skip_reports:
         print("generating common reports...", file=sys.stderr)
         start = time.time()

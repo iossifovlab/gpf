@@ -46,8 +46,8 @@ def study_definitions(dae_config_fixture):
 
 
 @pytest.fixture(scope='session')
-def study_factory():
-    return StudyFactory()
+def study_factory(dae_config_fixture):
+    return StudyFactory(dae_config_fixture)
 
 
 @pytest.fixture(scope='session')
