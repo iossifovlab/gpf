@@ -17,6 +17,16 @@ class PeopleGroupConfig(ConfigurableEntityConfig):
             return self['peopleGroup']
         return []
 
+    def get_people_group(self, people_group_id):
+        if not people_group_id:
+            return self.people_group[0] if self.people_group else {}
+
+        people_group_with_id = list(filter(
+            lambda people_group: people_group.get('id') == people_group_id,
+            self.people_group))
+
+        return people_group_with_id[0] if people_group_with_id else {}
+
     @staticmethod
     def _people_group_selectors_split_dict(dict_to_split):
         options = dict_to_split.split(':')

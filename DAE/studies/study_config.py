@@ -52,6 +52,12 @@ class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
         return []
 
     @property
+    def people_group_config(self):
+        if 'peopleGroupConfig' in self and self['peopleGroupConfig']:
+            return self['peopleGroupConfig']
+        return None
+
+    @property
     def genotype_browser_config(self):
         if 'genotypeBrowserConfig' in self and self['genotypeBrowserConfig']:
             return self['genotypeBrowserConfig']

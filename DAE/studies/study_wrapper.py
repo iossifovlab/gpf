@@ -334,12 +334,15 @@ class StudyWrapper(object):
         return set(selection['selection'])
 
     def _add_people_with_phenotype(self, kwargs):
+        people_group_config = self.config.people_group_config
         people_with_phenotype = set()
-        if 'peopleGroup' in kwargs and\
-                kwargs['peopleGroup'] is not None:
+        if 'peopleGroup' in kwargs and \
+                kwargs['peopleGroup'] is not None and \
+                people_group_config is not None:
             pedigree_selector_query = kwargs.pop('peopleGroup')
 
-            people_group = self.get_people_group(pedigree_selector_query['id'])
+            people_group = people_group_config.get_people_group(
+                pedigree_selector_query['id'])
 
             for family in self.families.values():
                 family_members_with_phenotype = set(
