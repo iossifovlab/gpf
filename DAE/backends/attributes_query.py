@@ -382,6 +382,13 @@ class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
             reduce((lambda x, y: x + ", " + y), arg) + "))"
 
 
+class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
+
+    def ContainsNode(self, arg):
+        return "BITAND(" + self.column_name + ", " + \
+            self.token_converter(arg) + ") != 0"
+
+
 # class RegionsQueryToSQLTransformer(object):
 #
 #     def __init__(self):

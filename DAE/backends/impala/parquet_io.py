@@ -4,6 +4,8 @@ import time
 import itertools
 import traceback
 import tempfile
+import operator
+import functools
 
 from collections import namedtuple
 
@@ -90,15 +92,18 @@ class ParquetSerializer(object):
             'family_variant_index',
             'family_id',
             'is_denovo',
+            'variant_sexes',
+            'variant_roles',
+            'variant_inheritance',
         ]
     )
 
     member = namedtuple(
         'member', [
             'variant_in_member',
-            'variant_in_role',
-            'variant_in_sex',
-            'inheritance_in_member',
+            # 'variant_in_role',
+            # 'variant_in_sex',
+            # 'inheritance_in_member',
         ]
     )
 
@@ -149,29 +154,32 @@ class ParquetSerializer(object):
         ]
 
     def serialize_family(self, family_variant_index, family):
-        return self.family(
+        res = self.family(
             family_variant_index,
             family.family_id,
-            family.get_attribute('is_denovo')
+            family.get_attribute('is_denovo'),
+            functools.reduce(
+                operator.or_,
+                [vs.value for vs in family.variant_in_sexes if vs is not None],
+                0),
+            functools.reduce(
+                operator.or_,
+                [vr.value for vr in family.variant_in_roles if vr is not None],
+                0),
+            functools.reduce(
+                operator.or_,
+                [vi.value for vi in family.inheritance_in_members
+                 if vi is not None],
+                0),
         )
+        return res
 
     def serialize_members(self, family_variant_index, family):
         result = []
-        for variant_in_member, variant_in_role, \
-                variant_in_sex, inheritance_in_member in zip(
-                    family.variant_in_members,
-                    family.variant_in_roles,
-                    family.variant_in_sexes,
-                    family.inheritance_in_members):
-
+        for variant_in_member in family.variant_in_members:
             if variant_in_member is None:
                 continue
-            result.append(self.member(
-                variant_in_member,
-                variant_in_role.value,
-                variant_in_sex.value,
-                inheritance_in_member.value))
-
+            result.append(self.member(variant_in_member))
         return result
 
 
@@ -199,10 +207,11 @@ class VariantsParquetWriter(object):
         pa.field("family_id", pa.string()),
         pa.field("is_denovo", pa.bool_()),
 
+        pa.field("variant_sexes", pa.int8()),
+        pa.field("variant_roles", pa.int32()),
+        pa.field("variant_inheritance", pa.int16()),
+
         pa.field("variant_in_member", pa.string()),
-        pa.field("variant_in_role", pa.int8()),
-        pa.field("variant_in_sex", pa.int8()),
-        pa.field("inheritance_in_member", pa.int8()),
 
         pa.field("data", pa.binary()),
     ])

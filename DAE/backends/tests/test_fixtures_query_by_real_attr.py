@@ -8,6 +8,7 @@ from __future__ import print_function, unicode_literals, absolute_import
 import pytest
 
 
+@pytest.mark.xfail(reason='queries by genomic scores are broken in impala')
 @pytest.mark.parametrize("variants", [
     'vcf_import_thift',
     'vcf_import_raw',

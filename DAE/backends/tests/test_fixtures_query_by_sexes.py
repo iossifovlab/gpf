@@ -19,8 +19,8 @@ import pytest
     ("fixtures/effects_trio_dad", 'male or female', 2),
     ("fixtures/trios2", 'female', 17),
     ("fixtures/trios2", 'male', 15),
-    # FIXME: ("fixtures/trios2", 'female and not male', 9),
-    # FIXME: ("fixtures/trios2", 'male and not female', 7),
+    ("fixtures/trios2", 'female and not male', 9),
+    ("fixtures/trios2", 'male and not female', 7),
 ])
 def test_fixture_query_by_sex(
         variants_impl, variants, fixture_name, sexes, count):

@@ -194,7 +194,8 @@ class StudyWrapper(object):
 
             if len(people_ids_to_query) == 0:
                 return
-
+            assert not kwargs.get('person_ids'), \
+                "Rethink how to combine person ids"
             kwargs['person_ids'] = list(people_ids_to_query)
 
         variants_from_studies = itertools.islice(

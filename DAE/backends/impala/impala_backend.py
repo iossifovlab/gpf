@@ -5,7 +5,7 @@ from impala.util import as_pandas
 from RegionOperations import Region
 
 from ..attributes_query import \
-    QueryTreeToSQLTransformer, \
+    QueryTreeToSQLBitwiseTransformer, \
     role_query, sex_query, \
     inheritance_query,\
     variant_type_query
@@ -167,7 +167,7 @@ class ImpalaBackend(object):
     def query_variants(self, config, **kwargs):
         with self.impala.cursor() as cursor:
             query = self.build_query(config, **kwargs)
-            # print("FINAL QUERY: ", query)
+            print("FINAL QUERY: ", query)
             cursor.execute(query)
             for row in cursor:
                 yield row
@@ -211,14 +211,14 @@ class ImpalaBackend(object):
                 values=','.join(values))
             return where
 
-    def _build_complex_attr_where(
+    def _build_bitwise_attr_where(
             self, column_name, query_value, query_transformer):
         assert query_value is not None
         parsed = query_value
         if isinstance(query_value, str):
             parsed = query_transformer.transform_query_string_to_tree(
                     query_value)
-        transformer = QueryTreeToSQLTransformer(column_name)
+        transformer = QueryTreeToSQLBitwiseTransformer(column_name)
         return transformer.transform(parsed)
 
     def _build_where(self, query):
@@ -242,18 +242,18 @@ class ImpalaBackend(object):
                 'effect_gene', query['genes']
             ))
         if query.get("inheritance"):
-            where.append(self._build_complex_attr_where(
-                'inheritance_in_member', query['inheritance'],
+            where.append(self._build_bitwise_attr_where(
+                'variant_inheritance', query['inheritance'],
                 inheritance_query
             ))
         if query.get("roles"):
-            where.append(self._build_complex_attr_where(
-                'variant_in_role', query['roles'],
+            where.append(self._build_bitwise_attr_where(
+                'variant_roles', query['roles'],
                 role_query
             ))
         if query.get("sexes"):
-            where.append(self._build_complex_attr_where(
-                'variant_in_sex', query['sexes'],
+            where.append(self._build_bitwise_attr_where(
+                'variant_sexes', query['sexes'],
                 sex_query
             ))
         if query.get("variant_type"):
