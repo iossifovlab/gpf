@@ -18,10 +18,10 @@ class CommonReportsConfig(object):
     """
 
     def __init__(
-            self, id, config, people_groups_info, filter_info):
+            self, cr_id, config, people_groups_info, filter_info):
         self.config = config
 
-        self.id = id
+        self.id = cr_id
 
         self.people_groups_info = people_groups_info
         self.filter_info = filter_info
@@ -47,7 +47,7 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
         return people_groups_info
 
     @staticmethod
-    def _parse_data(config, id):
+    def _parse_data(config, cr_id):
         people_groups = config.get('peopleGroups', None)
         groups = config.get('groups', None)
         draw_all_families =\
@@ -69,7 +69,7 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
                 for group in groups.split('|')])),
             ('draw_all_families', draw_all_families),
             ('families_count_show_id', count_of_families_for_show_id),
-            ('id', id),
+            ('id', cr_id),
         ])
 
     @classmethod
@@ -77,7 +77,7 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
         if not study_config:
             return None
 
-        id = study_config.id
+        cr_id = study_config.id
         config = deepcopy(
             study_config.study_config.get('commonReport', None))
         config_file = study_config.study_config.get('config_file', '')
@@ -95,7 +95,7 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
 
         people_groups_info = \
             cls._get_people_groups(config, people_group)
-        filter_info = cls._parse_data(config, id)
+        filter_info = cls._parse_data(config, cr_id)
         if filter_info is None:
             return None
 
@@ -107,4 +107,4 @@ class CommonReportsParseConfig(ConfigurableEntityConfig):
             config.file = filename
 
         return CommonReportsConfig(
-            id, config, people_groups_info, filter_info)
+            cr_id, config, people_groups_info, filter_info)
