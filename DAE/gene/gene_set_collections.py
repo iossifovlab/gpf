@@ -286,7 +286,7 @@ class DenovoGeneSetsCollection(object):
                 for people_group_value in people_group_values:
                     ds_pedigree_genes_families = self._get_gene_families(
                         self.cache,
-                        {dataset_id, people_group_id, people_group_value}
+                        {people_group_id, people_group_value}
                         | standard_criterias)
                     for gene, families in ds_pedigree_genes_families.items():
                         genes_families.setdefault(gene, set()).update(families)

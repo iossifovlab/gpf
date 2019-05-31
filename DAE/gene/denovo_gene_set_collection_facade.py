@@ -33,31 +33,37 @@ class DenovoGeneSetCollectionFacade(object):
         return gene_sets_collections_desc
 
     @staticmethod
-    def _filter_gene_sets_types(gene_sets_types, permitted_datasets):
-        return {
-            k: {
-                pg_id: v
-                for pg_id, v in pg.items()
-                if v and (permitted_datasets is None or
-                          k in permitted_datasets)
-            } for k, pg in gene_sets_types.items()
-        }
+    def _get_gene_sets_types(
+            denovo_gene_set_id, gene_sets_types, permitted_datasets):
+        denovo_gene_sets_types = gene_sets_types.get(denovo_gene_set_id, None)
+
+        if denovo_gene_sets_types and \
+            (permitted_datasets is None or
+             denovo_gene_set_id in permitted_datasets):
+
+            return {
+                denovo_gene_set_id: {
+                    k: pg
+                    for k, pg in denovo_gene_sets_types.items() if pg
+                }
+            }
+
+        return None
 
     def get_denovo_gene_set(
             self, gene_sets_collection_id, denovo_gene_set_id,
-            gene_sets_types=[], permitted_datasets=None):
+            gene_sets_types={}, permitted_datasets=None):
         assert gene_sets_collection_id == 'denovo'
 
         self.load_cache()
 
-        gene_sets_types = self._filter_gene_sets_types(
-            gene_sets_types, permitted_datasets)
-
         result = []
         for denovo_gene_set_id, denovo_gene_set in \
                 self._denovo_gene_set_cache.items():
-            if permitted_datasets is None or \
-                    denovo_gene_set_id in permitted_datasets:
+            denovo_gene_sets_types = self._get_gene_sets_types(
+                denovo_gene_set_id, gene_sets_types, permitted_datasets)
+
+            if denovo_gene_sets_types is not None:
                 result.append(
                     denovo_gene_set.get_gene_set(
                         gene_sets_collection_id, gene_sets_types
@@ -67,23 +73,20 @@ class DenovoGeneSetCollectionFacade(object):
         return result[0]
 
     def get_denovo_gene_sets(
-            self, gene_sets_collection_id, gene_sets_types=[],
+            self, gene_sets_collection_id, gene_sets_types={},
             permitted_datasets=None, load=True):
         assert gene_sets_collection_id == 'denovo'
 
         self.load_cache()
 
-        gene_sets_types = self._filter_gene_sets_types(
-            gene_sets_types, permitted_datasets)
-
         result = []
         for denovo_gene_set_id, denovo_gene_set in \
                 self._denovo_gene_set_cache.items():
-            if permitted_datasets is None or \
-                    denovo_gene_set_id in permitted_datasets:
-                result.append(
-                    denovo_gene_set.get_gene_sets(gene_sets_types)
-                )
+            denovo_gene_sets_types = self._get_gene_sets_types(
+                denovo_gene_set_id, gene_sets_types, permitted_datasets)
+            print(gene_sets_types)
+            if denovo_gene_sets_types is not None:
+                result.append(denovo_gene_set.get_gene_sets(gene_sets_types))
 
         return result[0]
 
