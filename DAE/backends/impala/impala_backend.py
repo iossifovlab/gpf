@@ -257,7 +257,7 @@ class ImpalaBackend(object):
                 sex_query
             ))
         if query.get("variant_type"):
-            where.append(self._build_complex_attr_where(
+            where.append(self._build_bitwise_attr_where(
                 'variant_type', query['variant_type'],
                 variant_type_query
             ))

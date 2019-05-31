@@ -10,7 +10,6 @@ import pytest
 from utils.vcf_utils import mat2str
 
 
-@pytest.mark.xfail("Omission inheritance is not supported in impala")
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_impala",
@@ -31,14 +30,13 @@ def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
     assert len(vs) == count
 
 
-@pytest.mark.xfail("Omission inheritance is not supported in impala")
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_impala",
 ])
 @pytest.mark.parametrize("count,inheritance", [
     (7, "mendelian"),
-    (3, "omission"),
+    (1, "omission"),
     (1, "denovo"),
 ])
 def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
@@ -51,7 +49,6 @@ def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
         assert len(mat2str(v.best_st)) == 9
 
 
-@pytest.mark.xfail("Omission inheritance is not supported in impala")
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_impala",
@@ -59,7 +56,7 @@ def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
 @pytest.mark.parametrize("count,inheritance", [
     (5, None),
     (4, "mendelian"),
-    (2, "omission"),
+    (0, "omission"),
     (1, "denovo"),
 ])
 def test_inheritance_multi_full(variants_impl, variants, count, inheritance):

@@ -225,10 +225,10 @@ class Inheritance(enum.Enum):
 class VariantType(enum.Enum):
     invalid = 0
     substitution = 1
-    insertion = 2
-    deletion = 3
-    complex = 4
-    CNV = 5
+    insertion = 1 << 1
+    deletion = 1 << 2
+    complex = 1 << 3
+    CNV = 1 << 4
 
     @staticmethod
     def from_name(name):
