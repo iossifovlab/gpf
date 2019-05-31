@@ -83,10 +83,13 @@ class DbManager(object):
                 connection.execute(insert)
         except Exception:
             regression_name = r['regression_name']
+            measure_id = r['measure_id']
 
             del r['regression_name']
-            update = self.variable_browser.update().values(r).where(
-                self.variable_browser.c.regression_name == regression_name
+            del r['measure_id']
+            update = self.regressions.update().values(r).where(
+                self.regressions.c.regression_name == regression_name
+                & self.regressions.c.measure_id == measure_id
             )
             with self.engine.begin() as connection:
                 connection.execute(update)
@@ -132,6 +135,22 @@ class DbManager(object):
 
         df = pd.read_sql(query, self.engine)
         return df
+
+    def get_regressions(self, measure_id):
+        s = select([self.regressions])
+        s = s.where(self.regressions.c.measure_id == measure_id)
+        with self.engine.connect() as connection:
+            vs = connection.execute(s).fetchall()
+            if vs:
+                return vs
+            else:
+                return None
+
+    @property
+    def regression_names(self):
+        s = select([self.regressions.c.regression_name], distinct=True)
+        with self.engine.connect() as connection:
+            return list(map(lambda x: x.values()[0], connection.execute(s)))
 
     @property
     def has_descriptions(self):
