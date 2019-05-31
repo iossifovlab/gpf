@@ -26,6 +26,8 @@ class GeneSetsBaseView(views.APIView):
 
     def __init__(self):
         self.gscs = get_studies_manager().get_gene_sets_collections()
+        self.dgscf = \
+            get_studies_manager().get_denovo_gene_set_collection_facade()
         print("datasets loaded in view")
 
 
@@ -38,6 +40,10 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
         permitted_datasets = IsDatasetAllowed.permitted_datasets(request.user)
         gene_sets_collections = deepcopy(
             self.gscs.get_collections_descriptions(permitted_datasets))
+        denovo_gene_sets_collections = deepcopy(
+            self.dgscf.get_collections_descriptions(permitted_datasets))
+
+        gene_sets_collections.append(denovo_gene_sets_collections)
         return Response(gene_sets_collections, status=status.HTTP_200_OK)
 
 
@@ -66,14 +72,23 @@ class GeneSetsView(GeneSetsBaseView):
         if 'geneSetsCollection' not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         gene_sets_collection_id = data['geneSetsCollection']
-
-        if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
         gene_sets_types = data.get('geneSetsTypes', [])
-        gene_sets = self.gscs.get_gene_sets(
-            gene_sets_collection_id, gene_sets_types,
-            IsDatasetAllowed.permitted_datasets(request.user))
+
+        if gene_sets_collection_id == 'denovo':
+            if not self.dgscf.has_denovo_gene_set(gene_sets_collection_id):
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+            gene_sets = self.dgscf.get_denovo_gene_sets(
+                gene_sets_collection_id, gene_sets_types,
+                IsDatasetAllowed.permitted_datasets(request.user))
+
+        else:
+            if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+            gene_sets = self.gscs.get_gene_sets(
+                gene_sets_collection_id, gene_sets_types,
+                IsDatasetAllowed.permitted_datasets(request.user))
 
         response = gene_sets
         if 'filter' in data:
@@ -138,17 +153,30 @@ class GeneSetDownloadView(GeneSetsBaseView):
         gene_sets_types = self.datasets_to_study_groups_types(gene_sets_types)
         permitted_datasets = IsDatasetAllowed.permitted_datasets(user)
 
-        if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
-            return Response({
-                "unknown gene set collection": gene_sets_collection_id
-            }, status=status.HTTP_404_NOT_FOUND)
+        if gene_sets_collection_id == 'denovo':
+            if not self.dgscf.has_denovo_gene_set(gene_sets_collection_id):
+                return Response(status=status.HTTP_404_NOT_FOUND)
 
-        gene_set = self.gscs.get_gene_set(
-            gene_sets_collection_id,
-            gene_set_id,
-            gene_sets_types,
-            permitted_datasets
-        )
+            gene_set = self.dgscf.get_denovo_gene_set(
+                gene_sets_collection_id,
+                gene_set_id,
+                gene_sets_types,
+                permitted_datasets
+            )
+
+        else:
+            if not self.gscs.has_gene_sets_collection(gene_sets_collection_id):
+                return Response({
+                    "unknown gene set collection": gene_sets_collection_id
+                }, status=status.HTTP_404_NOT_FOUND)
+
+            gene_set = self.gscs.get_gene_set(
+                gene_sets_collection_id,
+                gene_set_id,
+                gene_sets_types,
+                permitted_datasets
+            )
+
         if gene_set is None:
             print("GENE SET NOT FOUND", permitted_datasets)
             return Response(status=status.HTTP_404_NOT_FOUND)

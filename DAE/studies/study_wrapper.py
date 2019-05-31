@@ -4,7 +4,6 @@ import copy
 import functools
 from builtins import str
 
-import os
 import itertools
 
 from RegionOperations import Region
@@ -552,23 +551,6 @@ class StudyWrapper(object):
 
         return legend + self._get_legend_default_values()
 
-    def get_gene_sets_legend(self, people_group_id):
-        gene_sets_pg = self.get_people_group(people_group_id)
-        if len(gene_sets_pg) == 0:
-            return []
-
-        return gene_sets_pg['domain']
-
-    def get_people_group(self, people_group_id):
-        if not people_group_id:
-            return self.people_group[0] if self.people_group else {}
-
-        people_group_with_id = list(filter(
-            lambda people_group: people_group.get('id') == people_group_id,
-            self.people_group))
-
-        return people_group_with_id[0] if people_group_with_id else {}
-
     def get_present_in_role(self, present_in_role_id):
         if not present_in_role_id:
             return {}
@@ -646,10 +628,3 @@ class StudyWrapper(object):
 
     def get_column_labels(self):
         return self.column_labels
-
-    def gene_sets_cache_file(self, people_group_id=''):
-        cache_path = os.path.join(
-            os.path.split(self.config.study_config.config_file)[0],
-            'denovo-cache-' + people_group_id + '.json')
-
-        return cache_path
