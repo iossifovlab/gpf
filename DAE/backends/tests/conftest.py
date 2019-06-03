@@ -5,9 +5,6 @@ Created on Feb 7, 2018
 '''
 from __future__ import print_function, unicode_literals, absolute_import
 
-# make sure env variables are set correctly
-import findspark; findspark.init()  # noqa this needs to be the first import
-
 from io import StringIO
 
 import pytest
@@ -15,8 +12,6 @@ import os
 import tempfile
 
 import logging
-
-from pyspark.sql import SparkSession
 
 from variants.family import Family, FamiliesBase
 from variants.family_variant import FamilyVariant
@@ -33,37 +28,6 @@ from backends.thrift.raw_thrift import ThriftFamilyVariants
 
 from .common_tests_helpers import relative_to_this_test_folder
 
-
-def quiet_py4j():
-    """ turn down spark logging for the test context """
-    logger = logging.getLogger('py4j')
-    logger.setLevel(logging.WARN)
-
-
-@pytest.fixture(scope="session")
-def spark(request):
-    """ fixture for creating a spark context
-    Args:
-        request: pytest.FixtureRequest object
-    """
-    spark = SparkSession.\
-        builder.\
-        appName("pytest-pyspark-local-testing").\
-        getOrCreate()
-
-    request.addfinalizer(lambda: spark.stop())
-
-    quiet_py4j()
-    return spark
-
-
-@pytest.fixture(scope="session")
-def spark_context(spark):
-    """ fixture for creating a spark context
-    Args:
-        request: pytest.FixtureRequest object
-    """
-    return spark.sparkContext
 
 
 @pytest.fixture(scope='session')
@@ -249,18 +213,14 @@ def variants_vcf(default_genome, default_gene_models):
 @pytest.fixture(scope='session')
 def test_hdfs(request):
     from backends.impala.parquet_io import HdfsHelpers
-    # hdfs = HdfsHelpers(host="dory.local", port=8020)
-    hdfs = HdfsHelpers(host="dory.seqpipe.org", port=8020)
-    # hdfs = HdfsHelpers()
+    hdfs = HdfsHelpers()
     return hdfs
 
 
 @pytest.fixture(scope='session')
 def test_impala_backend(request):
     from backends.impala.impala_backend import ImpalaBackend
-    backend = ImpalaBackend(
-        "dory.seqpipe.org", 21050,
-        "dory.seqpipe.org", 8020)
+    backend = ImpalaBackend()
 
     return backend
 
@@ -283,10 +243,10 @@ def impala_parquet_variants(request, test_hdfs, test_impala_backend):
     dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     tempname = os.path.basename(dirname)
 
-    def fin():
-        test_hdfs.delete(dirname, recursive=True)
-        test_impala_backend.drop_variants_database(tempname)
-    request.addfinalizer(fin)
+    # def fin():
+    #     test_hdfs.delete(dirname, recursive=True)
+    #     test_impala_backend.drop_variants_database(tempname)
+    # request.addfinalizer(fin)
 
     def builder(path):
         from configurable_entities.configuration import DAEConfig
@@ -299,6 +259,7 @@ def impala_parquet_variants(request, test_hdfs, test_impala_backend):
         vcf_config = Configure.from_prefix_vcf(vcf_prefix).vcf
 
         dae_config = DAEConfig()
+        print(dae_config)
 
         annotation_pipeline = construct_import_annotation_pipeline(
             dae_config)

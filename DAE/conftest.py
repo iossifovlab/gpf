@@ -18,8 +18,8 @@ from annotation.annotation_pipeline import PipelineAnnotator
 
 from backends.configure import Configure
 from backends.thrift.raw_dae import RawDAE, RawDenovo
-from backends.thrift.import_tools import variants_iterator_to_parquet
-from backends.thrift.raw_thrift import ThriftFamilyVariants
+# from backends.thrift.import_tools import variants_iterator_to_parquet
+# from backends.thrift.raw_thrift import ThriftFamilyVariants
 from backends.vcf.raw_vcf import RawFamilyVariants
 from backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
@@ -216,16 +216,16 @@ def vcf_import_raw(
     return fvars
 
 
-@pytest.fixture
-def vcf_import_thrift(
-        vcf_import_raw, annotation_pipeline_internal, temp_dirname):
-    variants_iterator_to_parquet(
-        vcf_import_raw,
-        temp_dirname,
-        annotation_pipeline=annotation_pipeline_internal
-    )
-    fvars = ThriftFamilyVariants(prefix=temp_dirname)
-    return fvars
+# @pytest.fixture
+# def vcf_import_thrift(
+#         vcf_import_raw, annotation_pipeline_internal, temp_dirname):
+#     variants_iterator_to_parquet(
+#         vcf_import_raw,
+#         temp_dirname,
+#         annotation_pipeline=annotation_pipeline_internal
+#     )
+#     fvars = ThriftFamilyVariants(prefix=temp_dirname)
+#     return fvars
 
 
 @pytest.fixture
@@ -269,47 +269,3 @@ def dae_iossifov2014(
     return denovo
 
 
-@pytest.fixture(scope='session')
-def parquet_thrift(testing_thriftserver):
-    def builder(parquet_config):
-        return ThriftFamilyVariants(
-            config=parquet_config,
-            thrift_connection=testing_thriftserver)
-    return builder
-
-
-@pytest.fixture(scope='session')
-def testing_thriftserver(request):
-    from impala.dbapi import connect
-
-    spark_home = os.environ.get("SPARK_HOME")
-    assert spark_home is not None
-
-    thrift_host = os.getenv("THRIFTSERVER_HOST", "127.0.0.1")
-    thrift_port = int(os.getenv("THRIFTSERVER_PORT", 10000))
-
-    def thrift_connect(retries=200):
-        for count in range(retries + 1):
-            try:
-                time.sleep(2.0)
-                print("trying to connect to thrift server: try={}".format(
-                    count + 1))
-                conn = connect(host=thrift_host, port=thrift_port,
-                               auth_mechanism='PLAIN')
-                return conn
-            except Exception as ex:
-                print("connect to thriftserver failed:", ex)
-        return None
-
-    conn = thrift_connect(3)
-    if conn is not None:
-        return conn
-
-    start_cmd = "{}/sbin/start-thriftserver.sh " \
-        "--hiveconf hive.server2.thrift.port={}".format(
-            spark_home, thrift_port)
-
-    print("starting thrift command: ", start_cmd)
-    os.system(start_cmd)
-
-    return thrift_connect()

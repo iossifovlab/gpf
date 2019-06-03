@@ -22,8 +22,8 @@ class ImpalaBackend(object):
     """
 
     def __init__(
-            self, impala_host, impala_port,
-            hdfs_host, hdfs_port):
+            self, impala_host=None, impala_port=None,
+            hdfs_host=None, hdfs_port=None):
 
         self.impala = self.get_impala(impala_host, impala_port)
         self.hdfs = self.get_hdfs(hdfs_host, hdfs_port)
@@ -92,10 +92,10 @@ class ImpalaBackend(object):
     def get_impala(impala_host=None, impala_port=None):
         if impala_host is None:
             impala_host = "127.0.0.1"
-        impala_host = os.getenv("IMPALA_HOST", impala_host)
+        impala_host = os.getenv("DAE_IMPALA_HOST", impala_host)
         if impala_port is None:
             impala_port = 21050
-        impala_port = int(os.getenv("IMPALA_PORT", impala_port))
+        impala_port = int(os.getenv("DAE_IMPALA_PORT", impala_port))
 
         print("impala connecting to:", impala_host, impala_port)
 
@@ -111,10 +111,10 @@ class ImpalaBackend(object):
 
         if hdfs_host is None:
             hdfs_host = "127.0.0.1"
-        hdfs_host = os.getenv("HDFS_HOST", hdfs_host)
+        hdfs_host = os.getenv("DAE_HDFS_HOST", hdfs_host)
         if hdfs_port is None:
             hdfs_port = 8020
-        hdfs_port = int(os.getenv("HDFS_PORT", hdfs_port))
+        hdfs_port = int(os.getenv("DAE_HDFS_PORT", hdfs_port))
 
         print("hdfs connecting to:", hdfs_host, hdfs_port)
 

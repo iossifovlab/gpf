@@ -379,9 +379,17 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
 
 class HdfsHelpers(object):
 
-    def __init__(self, host=None, port=0):
-        self.host = host
-        self.port = port
+    def __init__(self, hdfs_host=None, hdfs_port=0):
+
+        if hdfs_host is None:
+            hdfs_host = "127.0.0.1"
+        hdfs_host = os.getenv("DAE_HDFS_HOST", hdfs_host)
+        if hdfs_port is None:
+            hdfs_port = 8020
+        hdfs_port = int(os.getenv("DAE_HDFS_PORT", hdfs_port))
+
+        self.host = hdfs_host
+        self.port = hdfs_port
         self.hdfs = pa.hdfs.connect(host=self.host, port=self.port)
 
     def exists(self, path):

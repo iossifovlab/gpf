@@ -77,10 +77,15 @@ class DAEConfig(object):
         assert os.path.exists(self._dae_data_dir)
         assert os.path.isdir(self._dae_data_dir)
 
-        if dae_scores_hg19_dir is None:
-            dae_scores_hg19_dir = os.environ.get('DAE_GENOMIC_SCORES_HG19')
-        if dae_scores_hg38_dir is None:
-            dae_scores_hg38_dir = os.environ.get('DAE_GENOMIC_SCORES_HG38')
+        dae_scores_hg19_dir = os.environ.get(
+            'DAE_GENOMIC_SCORES_HG19',
+            dae_scores_hg19_dir)
+        dae_scores_hg38_dir = os.environ.get(
+            'DAE_GENOMIC_SCORES_HG38',
+            dae_scores_hg19_dir)
+
+        print(dae_scores_hg19_dir)
+        print(dae_scores_hg38_dir)
 
         self._dae_scores_hg19_dir = None
         if dae_scores_hg19_dir is not None:
@@ -103,6 +108,8 @@ class DAEConfig(object):
             filename, work_dir=self.dae_data_dir
         )
         assert self.sections is not None
+        print(self.genomic_scores_hg19_dir)
+        print(self.genomic_scores_hg38_dir)
 
     def _get_config_value(self, section_id, attr_name, default_value=None):
         if section_id not in self.sections.get_all_section_ids():
@@ -208,17 +215,11 @@ class DAEConfig(object):
 
     @property
     def genomic_scores_hg19_dir(self):
-        return self._get_config_value(
-            self.GENOMIC_SCORES_SECTION,
-            'scores_hg19_dir',
-            self._dae_scores_hg19_dir)
+        return self._dae_scores_hg19_dir
 
     @property
     def genomic_scores_hg38_dir(self):
-        return self._get_config_value(
-            self.GENOMIC_SCORES_SECTION,
-            'scores_hg38_dir',
-            self._dae_scores_hg38_dir)
+        return self._dae_scores_hg38_dir
 
     def annotation_section(self):
         return self.sections.get_section_config(self.ANNOTATION_SECTION)
