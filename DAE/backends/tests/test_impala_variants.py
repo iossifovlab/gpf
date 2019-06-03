@@ -26,7 +26,7 @@ def test_variants_import(test_hdfs, impala_parquet_variants, fixture_name):
     conf = impala_parquet_variants(fixture_name)
     print(conf)
 
-    assert test_hdfs.exists(conf.files.variants)
+    assert test_hdfs.exists(conf.files.variant)
     assert test_hdfs.exists(conf.files.pedigree)
 
     backend = ImpalaBackend(

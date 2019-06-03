@@ -15,10 +15,10 @@ from variants.effects import EffectGene
 
 # pytestmark = pytest.mark.xfail
 
-
+@pytest.mark.xfail(reason='return_reference not supported in Impala')
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    "variants_thrift",
+    "variants_impala",
 ])
 @pytest.mark.parametrize(
     "position,inheritance,effect_types,return_reference,matched_alleles",
@@ -52,9 +52,10 @@ def test_f1_matched_alleles(
     assert v.matched_alleles_indexes == matched_alleles
 
 
+@pytest.mark.xfail(reason='return_reference not supported in Impala')
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    "variants_thrift",
+    "variants_impala",
 ])
 @pytest.mark.parametrize(
     "position,inheritance,effect_types,return_reference,"

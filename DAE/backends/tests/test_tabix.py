@@ -4,7 +4,7 @@ import pysam
 from contextlib import closing
 
 
-@pytest.xfail
+@pytest.mark.xfail
 def test_tabix():
     dirname = '/home/lubo/Work/seq-pipeline/data-hg19-parquet/'\
         'parquet/studies/w1202s766e611'

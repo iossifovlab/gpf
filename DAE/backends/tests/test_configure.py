@@ -33,7 +33,6 @@ def test_configure_prefix_dirname_parquet(temp_dirname):
     assert temp_dirname == os.path.dirname(parquet.member_variant)
 
 
-@pytest.mark.xfail
 def test_configure_prefix_dirname_plus_fileprefix_parquet(temp_dirname):
     conf = Configure.from_prefix_parquet(
         os.path.join(temp_dirname, "test_"))

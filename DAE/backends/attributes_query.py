@@ -385,8 +385,47 @@ class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
 class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
 
     def ContainsNode(self, arg):
-        return "BITAND(" + self.column_name + ", " + \
-            self.token_converter(arg) + ") != 0"
+        res = "(BITAND({}, {}) != 0)".format(
+            self.column_name,
+            self.token_converter(arg))
+        return res
+
+    def LessThanNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def GreaterThanNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def LessThanEqNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def GreaterThanEqNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def ElementOfNode(self, arg):
+        res = "(BITAND({}, {}) != 0)".format(
+            self.column_name,
+            self.token_converter(arg))
+        return res
+
+    def EqualsNode(self, arg):
+        return self.column_name + " = " + self.token_converter(arg)
+
+    def NotNode(self, children):
+        assert len(children) == 1
+        return "(NOT ({}))".format(children[0])
+
+    def AndNode(self, children):
+        res = reduce(
+            lambda x, y: "({}) AND ({})".format(x, y),
+            children)
+        return res
+
+    def OrNode(self, children):
+        res = reduce(
+            lambda x, y: "({}) OR ({})".format(x, y),
+            children)
+        return res
 
 
 # class RegionsQueryToSQLTransformer(object):

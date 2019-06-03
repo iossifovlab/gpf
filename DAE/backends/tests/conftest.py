@@ -22,10 +22,6 @@ from variants.family import Family, FamiliesBase
 from variants.family_variant import FamilyVariant
 from variants.variant import SummaryAllele, SummaryVariant
 
-from ..attributes_query import PARSER as attributes_query_parser, \
-    QueryTransformerMatcher
-from ..attributes_query import \
-    parser_with_ambiguity as attributes_query_parser_with_ambiguity
 from ..configure import Configure
 
 from ..vcf.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
@@ -138,10 +134,9 @@ def raw_denovo(config_denovo, default_genome):
 
 @pytest.fixture
 def variants_implementations(
-        variants_vcf, variants_thrift, variants_impala):
+        variants_vcf, variants_impala):
     impls = {
         "variants_vcf": variants_vcf,
-        "variants_thrift": variants_thrift,
         "variants_impala": variants_impala,
     }
     return impls
@@ -187,26 +182,6 @@ def fv1(fam1, sv):
     return rfun
 
 
-@pytest.fixture()
-def parser():
-    return attributes_query_parser
-
-
-@pytest.fixture()
-def parser_with_ambiguity():
-    return attributes_query_parser_with_ambiguity
-
-
-@pytest.fixture()
-def transformer_matcher():
-    return QueryTransformerMatcher()
-
-
-@pytest.fixture()
-def transformer_matcher_class():
-    return QueryTransformerMatcher
-
-
 @pytest.fixture(scope='session')
 def variants_vcf(default_genome, default_gene_models):
     def builder(path):
@@ -220,53 +195,53 @@ def variants_vcf(default_genome, default_gene_models):
     return builder
 
 
-@pytest.fixture(scope='session')
-def variants_thrift(parquet_variants, testing_thriftserver):
-    def builder(path):
-        parquet_conf = parquet_variants(path)
-        return ThriftFamilyVariants(
-            config=parquet_conf,
-            thrift_connection=testing_thriftserver)
-    return builder
+# @pytest.fixture(scope='session')
+# def variants_thrift(parquet_variants, testing_thriftserver):
+#     def builder(path):
+#         parquet_conf = parquet_variants(path)
+#         return ThriftFamilyVariants(
+#             config=parquet_conf,
+#             thrift_connection=testing_thriftserver)
+#     return builder
 
 
-@pytest.fixture(scope='session')
-def parquet_variants(request, variants_vcf):
-    dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
+# @pytest.fixture(scope='session')
+# def parquet_variants(request, variants_vcf):
+#     dirname = tempfile.mkdtemp(suffix='_data', prefix='variants_')
 
-    # def fin():
-    #     shutil.rmtree(dirname)
-    # request.addfinalizer(fin)
+#     # def fin():
+#     #     shutil.rmtree(dirname)
+#     # request.addfinalizer(fin)
 
-    def builder(path):
-        basename = os.path.basename(path)
-        fulldirname = os.path.join(dirname, basename)
+#     def builder(path):
+#         basename = os.path.basename(path)
+#         fulldirname = os.path.join(dirname, basename)
 
-        if Configure.parquet_prefix_exists(fulldirname):
-            return Configure.from_prefix_parquet(fulldirname).parquet
+#         if Configure.parquet_prefix_exists(fulldirname):
+#             return Configure.from_prefix_parquet(fulldirname).parquet
 
-        if not os.path.exists(fulldirname):
-            os.mkdir(fulldirname)
+#         if not os.path.exists(fulldirname):
+#             os.mkdir(fulldirname)
 
-        conf = Configure.from_prefix_parquet(fulldirname).parquet
+#         conf = Configure.from_prefix_parquet(fulldirname).parquet
 
-        fvars = variants_vcf(path)
+#         fvars = variants_vcf(path)
 
-        assert not fvars.is_empty()
+#         assert not fvars.is_empty()
 
-        save_ped_df_to_parquet(fvars.ped_df, conf.pedigree)
+#         save_ped_df_to_parquet(fvars.ped_df, conf.pedigree)
 
-        variants_builder = VariantsParquetWriter(
-            fvars.full_variants_iterator())
-        variants_builder.save_variants_to_parquet(
-            summary_filename=conf.summary_variant,
-            family_filename=conf.family_variant,
-            effect_gene_filename=conf.effect_gene_variant,
-            member_filename=conf.member_variant)
+#         variants_builder = VariantsParquetWriter(
+#             fvars.full_variants_iterator())
+#         variants_builder.save_variants_to_parquet(
+#             summary_filename=conf.summary_variant,
+#             family_filename=conf.family_variant,
+#             effect_gene_filename=conf.effect_gene_variant,
+#             member_filename=conf.member_variant)
 
-        return conf
+#         return conf
 
-    return builder
+#     return builder
 
 
 # Impala backend
