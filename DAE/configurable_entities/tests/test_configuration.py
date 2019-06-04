@@ -20,7 +20,9 @@ def fixturedir():
 @pytest.fixture
 def dae_config(fixturedir):
     filename = "dae_test.conf"
-    config = DAEConfig(dae_data_dir=fixturedir, dae_conf_filename=filename)
+    config = DAEConfig(
+        dae_data_dir=fixturedir, dae_conf_filename=filename,
+        environment_override=False)
     return config
 
 

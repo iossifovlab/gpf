@@ -68,7 +68,7 @@ class DAEConfig(object):
     def __init__(
         self, dae_data_dir=None,
         dae_scores_hg19_dir=None, dae_scores_hg38_dir=None,
-            dae_conf_filename="DAE.conf"):
+            dae_conf_filename="DAE.conf", environment_override=True):
 
         if dae_data_dir is None:
             dae_data_dir = os.environ.get('DAE_DB_DIR', None)
@@ -77,12 +77,13 @@ class DAEConfig(object):
         assert os.path.exists(self._dae_data_dir)
         assert os.path.isdir(self._dae_data_dir)
 
-        dae_scores_hg19_dir = os.environ.get(
-            'DAE_GENOMIC_SCORES_HG19',
-            dae_scores_hg19_dir)
-        dae_scores_hg38_dir = os.environ.get(
-            'DAE_GENOMIC_SCORES_HG38',
-            dae_scores_hg19_dir)
+        if environment_override:
+            dae_scores_hg19_dir = os.environ.get(
+                'DAE_GENOMIC_SCORES_HG19',
+                dae_scores_hg19_dir)
+            dae_scores_hg38_dir = os.environ.get(
+                'DAE_GENOMIC_SCORES_HG38',
+                dae_scores_hg19_dir)
 
         self._dae_scores_hg19_dir = None
         if dae_scores_hg19_dir is not None:
@@ -210,11 +211,23 @@ class DAEConfig(object):
 
     @property
     def genomic_scores_hg19_dir(self):
-        return self._dae_scores_hg19_dir
+        if self._dae_scores_hg19_dir:
+            return self._dae_scores_hg19_dir
+        else:
+            return self._get_config_value(
+                self.GENOMIC_SCORES_SECTION,
+                'scores_hg19_dir',
+                self._dae_scores_hg19_dir)
 
     @property
     def genomic_scores_hg38_dir(self):
-        return self._dae_scores_hg38_dir
+        if self._dae_scores_hg38_dir:
+            return self._dae_scores_hg38_dir
+        else:
+            return self._get_config_value(
+                self.GENOMIC_SCORES_SECTION,
+                'scores_hg38_dir',
+                self._dae_scores_hg38_dir)
 
     def annotation_section(self):
         return self.sections.get_section_config(self.ANNOTATION_SECTION)
