@@ -99,6 +99,14 @@ class DenovoGeneSetCollectionFacade(object):
 
         return len(self._denovo_gene_set_cache) != 0
 
+    def build_cache(self, denovo_gene_set_ids=None):
+        self.load_cache()
+
+        for dgs_id, dgs in self._denovo_gene_set_cache.items():
+            if denovo_gene_set_ids and dgs_id not in denovo_gene_set_ids:
+                continue
+            dgs.build_cache()
+
     def load_cache(self, denovo_gene_set_ids=None, load=True):
         if denovo_gene_set_ids is None:
             denovo_gene_set_ids = set(self.variants_db.get_all_ids())
