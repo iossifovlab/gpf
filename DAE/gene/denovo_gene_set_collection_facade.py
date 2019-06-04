@@ -1,5 +1,5 @@
 from gene.config import DenovoGeneSetCollectionConfig
-from gene.gene_set_collections import DenovoGeneSetsCollection
+from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 
 
 class DenovoGeneSetCollectionFacade(object):
