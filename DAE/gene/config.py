@@ -109,7 +109,7 @@ class DenovoGeneSetCollectionConfig(ConfigurableEntityConfig):
                 'from': int(from_count),
                 'to': int(to_count)
             }
-        
+
         return recurrency_criterias
 
     @staticmethod

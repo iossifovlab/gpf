@@ -105,7 +105,7 @@ class DenovoGeneSetsCollection(object):
     def load(self, build_cache=False):
         if len(self.cache) == 0:
             self._load_cache_from_json(build_cache=build_cache)
-        return self.get_gene_sets()
+        return DenovoGeneSetsCollection.get_gene_sets([self])
 
     def _load_cache_from_json(self, build_cache=False):
         for people_group_id, _ in self.denovo_gene_sets.items():
@@ -236,13 +236,61 @@ class DenovoGeneSetsCollection(object):
         else:
             return people_groups
 
+    @staticmethod
+    def _get_gene_sets_names(dgsc):
+        if len(dgsc) == 0:
+            return []
+
+        gene_sets_names = frozenset(dgsc[0].gene_sets_names)
+
+        for d in dgsc:
+            gene_sets_names = gene_sets_names.intersection(d.gene_sets_names)
+
+        return list(gene_sets_names)
+
+    @staticmethod
+    def _get_recurrency_criterias(dgsc):
+        if len(dgsc) == 0:
+            return {}
+
+        recurrency_criterias = dgsc[0].recurrency_criterias
+
+        for d in dgsc:
+            common_elements = frozenset(recurrency_criterias.keys()).\
+                intersection(d.recurrency_criterias.keys())
+
+            new_recurrency_criterias = {}
+            for ce in common_elements:
+                new_recurrency_criterias[ce] = {
+                    'from': max(recurrency_criterias[ce]['from'],
+                                d.recurrency_criterias[ce]['from']),
+                    'to': min(recurrency_criterias[ce]['to'],
+                              d.recurrency_criterias[ce]['to'])
+                }
+
+            recurrency_criterias = new_recurrency_criterias
+
+        return recurrency_criterias
+
+    @staticmethod
+    def _get_cache(dgsc):
+        cache = {}
+
+        for d in dgsc:
+            cache[d.study.id] = d.cache
+
+        return cache
+
+    @classmethod
     def get_gene_sets(
-            self, gene_sets_types={'f1_group': {'phenotype': ['autism']}}):
-        gene_sets_types_desc = self._format_description(gene_sets_types)
+            cls, denovo_gene_sets_collections,
+            gene_sets_types={'f1_group': {'phenotype': ['autism']}}):
+        gene_sets_types_desc = cls._format_description(gene_sets_types)
 
         result = []
-        for gsn in self.gene_sets_names:
-            gene_set_syms = self._get_gene_set_syms(gsn, gene_sets_types)
+        for gsn in cls._get_gene_sets_names(denovo_gene_sets_collections):
+            gene_set_syms = cls._get_gene_set_syms(
+                gsn, denovo_gene_sets_collections, gene_sets_types)
             if gene_set_syms:
                 result.append({
                     'name': gsn,
@@ -252,10 +300,12 @@ class DenovoGeneSetsCollection(object):
                 })
         return result
 
+    @classmethod
     def get_gene_set(
-            self, gene_set_id,
+            cls, gene_set_id, denovo_gene_sets_collections,
             gene_sets_types={'SD': {'phenotype': ['autism']}}):
-        syms = self._get_gene_set_syms(gene_set_id, gene_sets_types)
+        syms = cls._get_gene_set_syms(
+            gene_set_id, denovo_gene_sets_collections, gene_sets_types)
         if not syms:
             return None
 
@@ -265,18 +315,18 @@ class DenovoGeneSetsCollection(object):
             "syms": syms,
             "desc": "{} ({})".format(
                 gene_set_id,
-                self._format_description(gene_sets_types)
+                cls._format_description(gene_sets_types)
             )
         }
 
-    def _get_gene_set_syms(self, gene_set_id, gene_sets_types):
+    @classmethod
+    def _get_gene_set_syms(cls, gene_set_id, dgsc, gene_sets_types):
+        rc = cls._get_recurrency_criterias(dgsc)
         criterias = set(gene_set_id.split('.'))
-        recurrency_criterias = criterias & set(
-            self.recurrency_criterias.keys())
+        recurrency_criterias = criterias & set(rc.keys())
         standard_criterias = criterias - recurrency_criterias
         if len(recurrency_criterias) > 0:
-            recurrency_criteria = self.recurrency_criterias[next(
-                    iter(recurrency_criterias))]
+            recurrency_criteria = rc[next(iter(recurrency_criterias))]
         else:
             recurrency_criteria = None
         genes_families = {}
@@ -284,9 +334,9 @@ class DenovoGeneSetsCollection(object):
             for people_group_id, people_group_values in \
                     people_group.items():
                 for people_group_value in people_group_values:
-                    ds_pedigree_genes_families = self._get_gene_families(
-                        self.cache,
-                        {people_group_id, people_group_value}
+                    ds_pedigree_genes_families = cls._get_gene_families(
+                        cls._get_cache(dgsc),
+                        {dataset_id, people_group_id, people_group_value}
                         | standard_criterias)
                     for gene, families in ds_pedigree_genes_families.items():
                         genes_families.setdefault(gene, set()).update(families)
@@ -341,7 +391,7 @@ class DenovoGeneSetsCollection(object):
     def _add_genes_families(
             cls, phenotype_column, phenotype, study, search_args):
         cache = {}
-        affected_people = DenovoGeneSetsCollection._get_affected_people(
+        affected_people = cls._get_affected_people(
             study, phenotype_column, phenotype)
         variants = study.query_variants(
                 inheritance=str(Inheritance.denovo.name),
