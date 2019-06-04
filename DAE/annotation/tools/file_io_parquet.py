@@ -82,13 +82,7 @@ class ParquetSchema(Schema):
                     break
             assert found, col
 
-        if len(new_schema.columns) != len(pa_schema):
-            print(("An error occured during conversion of the"
-                   " Parquet file's schema. This is most likely caused"
-                   " by a missing type counterpart in"
-                   " type_map (ParquetSchema class)."),
-                  file=sys.stderr)
-            sys.exit(-1)
+        assert len(new_schema.columns) == len(pa_schema)
         return new_schema
 
     def to_arrow(self):

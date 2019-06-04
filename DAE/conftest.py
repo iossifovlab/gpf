@@ -18,8 +18,6 @@ from annotation.annotation_pipeline import PipelineAnnotator
 
 from backends.configure import Configure
 from backends.thrift.raw_dae import RawDAE, RawDenovo
-# from backends.thrift.import_tools import variants_iterator_to_parquet
-# from backends.thrift.raw_thrift import ThriftFamilyVariants
 from backends.vcf.raw_vcf import RawFamilyVariants
 from backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator

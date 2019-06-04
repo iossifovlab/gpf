@@ -38,6 +38,12 @@ def datasets_dir():
 
 
 @pytest.fixture(scope='session')
+def dae_config_fixture():
+    dae_config = DAEConfig(fixtures_dir())
+    return dae_config
+
+
+@pytest.fixture(scope='session')
 def study_definitions(dae_config_fixture):
     return DirectoryEnabledStudiesDefinition(
         studies_dir=studies_dir(),
@@ -56,9 +62,12 @@ def pheno_factory(dae_config_fixture):
 
 
 @pytest.fixture(scope='session')
-def study_facade(study_factory, study_definitions, pheno_factory):
-    return StudyFacade(pheno_factory, study_factory=study_factory,
-                       study_definition=study_definitions)
+def study_facade(
+        dae_config_fixture, study_factory, study_definitions, pheno_factory):
+    return StudyFacade(
+        dae_config_fixture, pheno_factory,
+        study_factory=study_factory,
+        study_definition=study_definitions)
 
 
 @pytest.fixture(scope='session')

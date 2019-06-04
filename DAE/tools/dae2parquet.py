@@ -113,9 +113,13 @@ def dae_build_transmitted(
     annotation_schema = ParquetSchema()
     annotation_pipeline.collect_annotator_schema(annotation_schema)
 
+    impala_config = Configure.from_prefix_impala(
+        argv.output, bucket_index=argv.bucket_index,
+        db=None, study_id=None).impala
+
     variants_iterator_to_parquet(
         fvars,
-        argv.output,
+        impala_config,
         argv.bucket_index,
         annotation_schema
     )

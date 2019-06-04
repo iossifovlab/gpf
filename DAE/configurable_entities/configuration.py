@@ -84,9 +84,6 @@ class DAEConfig(object):
             'DAE_GENOMIC_SCORES_HG38',
             dae_scores_hg19_dir)
 
-        print(dae_scores_hg19_dir)
-        print(dae_scores_hg38_dir)
-
         self._dae_scores_hg19_dir = None
         if dae_scores_hg19_dir is not None:
             self._dae_scores_hg19_dir = os.path.abspath(
@@ -108,8 +105,6 @@ class DAEConfig(object):
             filename, work_dir=self.dae_data_dir
         )
         assert self.sections is not None
-        print(self.genomic_scores_hg19_dir)
-        print(self.genomic_scores_hg38_dir)
 
     def _get_config_value(self, section_id, attr_name, default_value=None):
         if section_id not in self.sections.get_all_section_ids():

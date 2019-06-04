@@ -122,7 +122,7 @@ class Configure(ConfigBox):
 
         assert bucket_index >= 0
 
-        basename = os.path.basename(prefix)
+        basename = os.path.basename(os.path.abspath(prefix))
         if study_id is None:
             study_id = basename
         assert study_id

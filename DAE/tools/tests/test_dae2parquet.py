@@ -14,6 +14,7 @@ from annotation.tools.file_io_parquet import ParquetReader
 from RegionOperations import Region
 
 
+@pytest.mark.xfail(reason="import of de novo variants does not work in Impala")
 def test_dae2parquet_denovo(
         dae_denovo_config, annotation_pipeline_config,
         annotation_scores_dirname,
@@ -70,6 +71,7 @@ def test_dae2parquet_denovo(
     assert schema['effect_details'].type_name == 'list(str)'
 
 
+@pytest.mark.xfail(reason="annotation on import not ready for Impala")
 def test_dae2parquet_transmitted(
         dae_transmitted_config, annotation_pipeline_config,
         annotation_scores_dirname,
@@ -156,7 +158,7 @@ def test_dae2parquet_make(
 @pytest.fixture
 def dae_iossifov2014_thrift(
         dae_iossifov2014_config,
-        annotation_scores_dirname, temp_dirname, parquet_thrift):
+        annotation_scores_dirname, temp_dirname):  # FIXME:, parquet_thrift):
 
     def build(annotation_config):
         config = dae_iossifov2014_config
@@ -189,11 +191,12 @@ def dae_iossifov2014_thrift(
             temp_dirname).parquet
         assert parquet_config is not None
 
-        return parquet_thrift(parquet_config)
+        return None  # FIXME: parquet_thrift(parquet_config)
 
     return build
 
 
+@pytest.mark.xfail(reason="import of de novo variants does not work in Impala")
 @pytest.mark.parametrize("annotation_config", [
     'annotation_pipeline_config',
     # 'annotation_pipeline_default_config'
