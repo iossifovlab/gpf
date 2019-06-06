@@ -50,7 +50,7 @@ class FrequencyAnnotator(VariantScoreAnnotatorBase):
                 val = scores[native][variant_index]
                 try:
                     if val in set(['', ' ']):
-                        aline[output] = self.no_score_value
+                        aline[output] = self.score_file.no_score_value
                     else:
                         aline[output] = float(val)
                 except ValueError as ex:
