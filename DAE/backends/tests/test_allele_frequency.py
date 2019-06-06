@@ -21,7 +21,7 @@ from utils.vcf_utils import mat2str
     (Region('1', 11552, 11552), 2, 0.0, 100.0),
 ])
 def test_variant_frequency_single(variants_vcf, region, count, freq0, freq1):
-    fvars = variants_vcf("fixtures/trios2")
+    fvars = variants_vcf("backends/trios2")
     vs = list(fvars.query_variants(
         regions=[region],
         return_reference=True,
@@ -47,7 +47,7 @@ def test_variant_frequency_single(variants_vcf, region, count, freq0, freq1):
 def test_variant_frequency_multi_alleles(
         variants_vcf, region, count, freq0, freq1, freq2):
 
-    fvars = variants_vcf("fixtures/trios2")
+    fvars = variants_vcf("backends/trios2")
     vs = list(fvars.query_variants(
         regions=[region],
         return_reference=True,

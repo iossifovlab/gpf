@@ -17,9 +17,9 @@ from utils.vcf_utils import mat2str
     "variants_impala",
 ])
 @pytest.mark.parametrize("fixture_name,count", [
-    ("fixtures/effects_trio_multi", 3),
-    ("fixtures/effects_trio", 10),
-    ("fixtures/inheritance_multi", 6),
+    ("backends/effects_trio_multi", 3),
+    ("backends/effects_trio", 10),
+    ("backends/inheritance_multi", 6),
     # ("fixtures/trios2", 30),
 ])
 def test_variants_all_count(variants_impl, variants, fixture_name, count):
@@ -37,7 +37,7 @@ def test_variants_all_count(variants_impl, variants, fixture_name, count):
 
 @pytest.mark.xfail(reason="retrun reference does not work in Impala")
 @pytest.mark.parametrize("fixture_name", [
-    "fixtures/trios2",
+    "backends/trios2",
 ])
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
@@ -77,7 +77,7 @@ def test_df_query_multiallelic3_families(
     "variants_impala",
 ])
 @pytest.mark.parametrize("fixture_name", [
-    "fixtures/trios2_11541",
+    "backends/trios2_11541",
 ])
 def test_reference_variant(
         variants_impl, variants, fixture_name):
@@ -106,7 +106,7 @@ def test_reference_variant(
     "variants_thrift",
 ])
 @pytest.mark.parametrize("fixture_name", [
-    "fixtures/trios2_11600",
+    "backends/trios2_11600",
 ])
 def test_reference_multiallelic_variant(
         variants_impl, variants, fixture_name):

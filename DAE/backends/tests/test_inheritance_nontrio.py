@@ -20,7 +20,7 @@ from variants.attributes import Inheritance
     (Region('1', 11505, 11505), 1, Inheritance.unknown),
 ])
 def test_inheritance_nontrio(variants_vcf, region, count, inheritance):
-    fvars = variants_vcf("fixtures/inheritance_nontrio")
+    fvars = variants_vcf("backends/inheritance_nontrio")
     vs = list(fvars.query_variants(
         regions=[region],
         family_ids=['f1'],

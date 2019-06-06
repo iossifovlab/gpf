@@ -20,9 +20,9 @@ from ..attributes_query import role_query
     "variants_impala",
 ])
 @pytest.mark.parametrize("fixture_name,regions,roles,count", [
-    ("fixtures/effects_trio_dad", None, 'dad', 1),
-    ("fixtures/effects_trio", None, 'dad', 1),
-    ("fixtures/trios2", [Region("1", 11539, 11552)], 'prb', 2),
+    ("backends/effects_trio_dad", None, 'dad', 1),
+    ("backends/effects_trio", None, 'dad', 1),
+    ("backends/trios2", [Region("1", 11539, 11552)], 'prb', 2),
 ])
 def test_fixture_query_by_roles(
         variants_impl, variants, fixture_name, regions, roles, count):

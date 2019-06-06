@@ -17,7 +17,7 @@ from RegionOperations import Region
     (Region('1', 11503, 11503), 1, ['mom1', 'dad1', 'ch1']),
 ])
 def test_variant_in_members(variants_vcf, region, count, members):
-    fvars = variants_vcf("fixtures/unknown_trio")
+    fvars = variants_vcf("backends/unknown_trio")
     vs = list(fvars.query_variants(regions=[region]))
     assert len(vs) == count
     for v in vs:

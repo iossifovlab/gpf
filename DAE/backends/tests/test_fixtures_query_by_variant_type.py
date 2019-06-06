@@ -20,7 +20,7 @@ import pytest
 ])
 def test_single_alt_allele_variant_types(
         variants_impl, variants, variant_type, count):
-    fvars = variants_impl(variants)("fixtures/effects_trio")
+    fvars = variants_impl(variants)("backends/effects_trio")
     vs = list(fvars.query_variants(
         variant_type=variant_type,
     ))
@@ -41,7 +41,7 @@ def test_single_alt_allele_variant_types(
 ])
 def test_multi_alt_allele_variant_types(
         variants_impl, variants, variant_type, count):
-    fvars = variants_impl(variants)("fixtures/effects_trio_multi")
+    fvars = variants_impl(variants)("backends/effects_trio_multi")
     vs = list(fvars.query_variants(
         variant_type=variant_type,
     ))

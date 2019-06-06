@@ -16,21 +16,21 @@ from RegionOperations import Region
 ])
 @pytest.mark.parametrize("fixture_name,regions,family_ids,count", [
 
-    ("fixtures/trios2", [Region("1", 11539, 11539)], ['f1'], 1),
-    ("fixtures/trios2", [Region("1", 11539, 11539)], ['f2'], 1),
-    ("fixtures/trios2", [Region("1", 11539, 11539)], ['f1', 'f2'], 2),
-    ("fixtures/trios2", [Region("1", 11539, 11539)], [], 0),
-    ("fixtures/trios2", [Region("1", 11539, 11539)], None, 2),
+    ("backends/trios2", [Region("1", 11539, 11539)], ['f1'], 1),
+    ("backends/trios2", [Region("1", 11539, 11539)], ['f2'], 1),
+    ("backends/trios2", [Region("1", 11539, 11539)], ['f1', 'f2'], 2),
+    ("backends/trios2", [Region("1", 11539, 11539)], [], 0),
+    ("backends/trios2", [Region("1", 11539, 11539)], None, 2),
 
-    ("fixtures/trios2",
+    ("backends/trios2",
      [Region("1", 11539, 11539), Region("1", 11551, 11551)], ['f1'], 2),
-    ("fixtures/trios2",
+    ("backends/trios2",
      [Region("1", 11539, 11539), Region("1", 11551, 11551)], ['f2'], 2),
-    ("fixtures/trios2",
+    ("backends/trios2",
      [Region("1", 11539, 11539), Region("1", 11551, 11551)], ['f1', 'f2'], 4),
-    ("fixtures/trios2",
+    ("backends/trios2",
      [Region("1", 11539, 11539), Region("1", 11551, 11551)], [], 0),
-    ("fixtures/trios2",
+    ("backends/trios2",
      [Region("1", 11539, 11539), Region("1", 11551, 11551)], None, 4),
 ])
 def test_fixture_query_by_family_ids(

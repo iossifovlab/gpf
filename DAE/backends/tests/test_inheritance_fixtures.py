@@ -18,7 +18,7 @@ from utils.vcf_utils import mat2str
     (Region('1', 11531, 11540), 1, "unknown"),
 ])
 def test_inheritance_trio_full(variants_vcf, region, count, inheritance):
-    fvars = variants_vcf("fixtures/inheritance_trio")
+    fvars = variants_vcf("backends/inheritance_trio")
     vs = list(fvars.query_variants(
         inheritance=inheritance,
         regions=[region],
@@ -40,7 +40,7 @@ def test_inheritance_trio_full(variants_vcf, region, count, inheritance):
     (Region('1', 11521, 11530), 2, "denovo"),
 ])
 def test_inheritance_quad_full(variants_vcf, region, count, inheritance):
-    fvars = variants_vcf("fixtures/inheritance_quad")
+    fvars = variants_vcf("backends/inheritance_quad")
     vs = list(fvars.query_variants(
         regions=[region],
         return_reference=False,
@@ -61,7 +61,7 @@ def test_inheritance_quad_full(variants_vcf, region, count, inheritance):
     (Region('1', 11521, 11530), 1, "unknown"),
 ])
 def test_inheritance_multi_full(variants_vcf, region, count, inheritance):
-    fvars = variants_vcf("fixtures/inheritance_multi")
+    fvars = variants_vcf("backends/inheritance_multi")
     vs = list(fvars.query_variants(
         regions=[region],
         return_reference=False,

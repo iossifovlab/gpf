@@ -44,7 +44,7 @@ def test_f1_inheritance_query(query, positive, negative):
 
 
 def test_f1_check_all_variants_effects(variants_vcf):
-    vvars = variants_vcf("fixtures/f1_test")
+    vvars = variants_vcf("backends/f1_test")
     assert vvars is not None
 
     vs = vvars.query_variants(
@@ -65,7 +65,7 @@ def test_f1_check_all_variants_effects(variants_vcf):
 
 
 def count_variants(variants, regions, inheritance, effect_types):
-    vvars = variants("fixtures/f1_test")
+    vvars = variants("backends/f1_test")
     assert vvars is not None
 
     vs = vvars.query_variants(
@@ -96,7 +96,7 @@ def test_f1_simple(
         variants_impl, variants,
         regions, inheritance, effect_types, count):
 
-    vvars = variants_impl(variants)("fixtures/f1_test")
+    vvars = variants_impl(variants)("backends/f1_test")
     assert vvars is not None
 
     vs = vvars.query_variants(

@@ -35,7 +35,7 @@ def test_f1_matched_alleles(
         position, inheritance, effect_types, return_reference,
         matched_alleles):
 
-    vvars = variants_impl(variants)("fixtures/f1_test")
+    vvars = variants_impl(variants)("backends/f1_test")
     assert vvars is not None
 
     vs = vvars.query_variants(
@@ -82,7 +82,7 @@ def test_f1_requested_effects(
         position, inheritance, effect_types, return_reference,
         matched_alleles_effects):
 
-    vvars = variants_impl(variants)("fixtures/f1_test")
+    vvars = variants_impl(variants)("backends/f1_test")
     assert vvars is not None
 
     vs = vvars.query_variants(

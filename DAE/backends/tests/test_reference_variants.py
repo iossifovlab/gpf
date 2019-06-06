@@ -14,7 +14,7 @@ from utils.vcf_utils import mat2str
     "variants_vcf",
 ])
 @pytest.mark.parametrize("fixture_name", [
-    "fixtures/trios2_11541",
+    "backends/trios2_11541",
 ])
 def test_reference_variant_single_allele(
         variants_impl, variants, fixture_name):

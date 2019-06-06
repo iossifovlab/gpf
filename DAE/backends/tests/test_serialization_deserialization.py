@@ -1,14 +1,13 @@
 import numpy as np
-import pyarrow as pa
 
 import pytest
 from RegionOperations import Region
 from backends.impala.serializers import FamilyVariantSerializer
-from backends.impala.parquet_io import VariantsParquetWriter, HdfsHelpers
+from backends.impala.parquet_io import VariantsParquetWriter
 
 
 @pytest.mark.parametrize("fixture_name,pos", [
-    ("fixtures/a", 11540),
+    ("backends/a", 11540),
 ])
 def test_variants_serialize(test_hdfs, variants_vcf, fixture_name, pos):
 

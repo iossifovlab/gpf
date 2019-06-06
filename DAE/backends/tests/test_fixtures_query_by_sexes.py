@@ -13,14 +13,14 @@ import pytest
     "variants_impala",
 ])
 @pytest.mark.parametrize("fixture_name,sexes,count", [
-    ("fixtures/effects_trio_dad", 'male', 1),
-    ("fixtures/effects_trio_dad", None, 2),
-    ("fixtures/effects_trio_dad", 'female', 1),
-    ("fixtures/effects_trio_dad", 'male or female', 2),
-    ("fixtures/trios2", 'female', 17),
-    ("fixtures/trios2", 'male', 15),
-    ("fixtures/trios2", 'female and not male', 9),
-    ("fixtures/trios2", 'male and not female', 7),
+    ("backends/effects_trio_dad", 'male', 1),
+    ("backends/effects_trio_dad", None, 2),
+    ("backends/effects_trio_dad", 'female', 1),
+    ("backends/effects_trio_dad", 'male or female', 2),
+    ("backends/trios2", 'female', 17),
+    ("backends/trios2", 'male', 15),
+    ("backends/trios2", 'female and not male', 9),
+    ("backends/trios2", 'male and not female', 7),
 ])
 def test_fixture_query_by_sex(
         variants_impl, variants, fixture_name, sexes, count):

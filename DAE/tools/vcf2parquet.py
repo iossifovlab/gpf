@@ -47,36 +47,6 @@ def create_vcf_variants(config, region=None):
     return fvars
 
 
-# def import_vcf(
-#         dae_config, annotation_pipeline,
-#         pedigree_filename, vcf_filename,
-#         region=None, bucket_index=1, output='.'):
-
-#     from backends.thrift.import_tools import variants_iterator_to_parquet
-
-#     assert os.path.exists(vcf_filename)
-#     assert os.path.exists(pedigree_filename)
-
-#     vcf_config = Configure.from_dict({
-#             'vcf': {
-#                 'pedigree': pedigree_filename,
-#                 'vcf': vcf_filename,
-#                 'annotation': None,
-#             },
-#         })
-
-#     fvars = create_vcf_variants(vcf_config, region)
-
-#     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
-
-#     return variants_iterator_to_parquet(
-#         fvars,
-#         output,
-#         bucket_index,
-#         annotation_pipeline
-#     )
-
-
 def import_vcf(
         dae_config, annotation_pipeline,
         pedigree_filename, vcf_filename,
@@ -85,8 +55,8 @@ def import_vcf(
 
     from backends.impala.import_tools import variants_iterator_to_parquet
 
-    assert os.path.exists(vcf_filename)
-    assert os.path.exists(pedigree_filename)
+    assert os.path.exists(vcf_filename), vcf_filename
+    assert os.path.exists(pedigree_filename), pedigree_filename
 
     vcf_config = Configure.from_dict({
             'vcf': {

@@ -20,7 +20,7 @@ def test_impala_backend_simple():
 
 
 @pytest.mark.parametrize("fixture_name", [
-    "fixtures/a",
+    "backends/a",
 ])
 def test_variants_import(test_hdfs, impala_parquet_variants, fixture_name):
     conf = impala_parquet_variants(fixture_name)
@@ -43,7 +43,7 @@ def test_variants_import(test_hdfs, impala_parquet_variants, fixture_name):
 
 
 @pytest.mark.parametrize("fixture_name", [
-    "fixtures/a",
+    "backends/a",
 ])
 def test_impala_variants_simple(variants_impala, fixture_name):
     fvars = variants_impala(fixture_name)

@@ -17,7 +17,7 @@ from ..thrift.raw_dae import RawDAE, BaseDAE
 
 
 def test_dae_full_variants_iterator(raw_dae, temp_dirname):
-    dae = raw_dae("fixtures/transmission")
+    dae = raw_dae("backends/transmission")
     dae.load_simple_families()
 
     assert dae is not None
@@ -62,7 +62,7 @@ def test_best2gt():
 
 
 def test_load_denovo(raw_denovo):
-    denovo = raw_denovo("fixtures/denovo")
+    denovo = raw_denovo("backends/denovo")
     denovo.load_simple_families()
 
     assert denovo is not None
@@ -79,7 +79,7 @@ def test_load_denovo(raw_denovo):
 
 
 def test_load_denovo_families(raw_denovo):
-    denovo = raw_denovo("fixtures/denovo")
+    denovo = raw_denovo("backends/denovo")
 
     denovo.load_simple_families()
     assert denovo.families is not None

@@ -21,7 +21,7 @@ from utils.vcf_utils import mat2str
     ("unknown", 14),
 ])
 def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
-    fvars = variants_impl(variants)("fixtures/inheritance_trio")
+    fvars = variants_impl(variants)("backends/inheritance_trio")
     vs = list(fvars.query_variants(
         inheritance=inheritance,
         return_reference=False))
@@ -40,7 +40,7 @@ def test_inheritance_trio_full(variants_impl, variants, inheritance, count):
     (1, "denovo"),
 ])
 def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
-    fvars = variants_impl(variants)("fixtures/inheritance_quad")
+    fvars = variants_impl(variants)("backends/inheritance_quad")
     vs = list(fvars.query_variants(
         inheritance=inheritance,
         return_reference=False))
@@ -60,7 +60,7 @@ def test_inheritance_quad_full(variants_impl, variants, count, inheritance):
     (1, "denovo"),
 ])
 def test_inheritance_multi_full(variants_impl, variants, count, inheritance):
-    fvars = variants_impl(variants)("fixtures/inheritance_multi")
+    fvars = variants_impl(variants)("backends/inheritance_multi")
     vs = list(fvars.query_variants(
         inheritance=inheritance,
         return_reference=False))

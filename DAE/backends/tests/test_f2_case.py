@@ -11,7 +11,7 @@ from RegionOperations import Region
 
 def count_variants(
         variants, regions, inheritance, reference, unknown,
-        fixture_name="fixtures/f1_test"):
+        fixture_name="backends/f1_test"):
     vvars = variants(fixture_name)
     assert vvars is not None
 

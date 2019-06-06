@@ -14,22 +14,22 @@ import pytest
 ])
 @pytest.mark.parametrize("fixture_name,person_ids,count", [
 
-    ("fixtures/trios2_11600", None, 1),
-    ("fixtures/trios2_11600", ['dad2'], 1),
-    ("fixtures/trios2_11600", ['dad1'], 0),
-    ("fixtures/trios2_11600", ['ch2'], 1),
-    ("fixtures/trios2_11600", ['ch1'], 0),
-    ("fixtures/trios2", ['mom1'], 8),
-    ("fixtures/trios2", ['dad1'], 7),
-    ("fixtures/trios2", ['mom2'], 7),
-    ("fixtures/trios2", ['ch1'], 2),
-    ("fixtures/trios2", ['ch2'], 2),
-    ("fixtures/trios2", ['mom2', 'ch2'], 8),
-    ("fixtures/trios2", ['mom1', 'dad1'], 9),
-    ("fixtures/generated_people", None, 2),
-    ("fixtures/generated_people", ['prb1'], 1),
-    ("fixtures/generated_people", ['prb2'], 1),
-    ("fixtures/generated_people", ['prb1', 'prb2'], 2),
+    ("backends/trios2_11600", None, 1),
+    ("backends/trios2_11600", ['dad2'], 1),
+    ("backends/trios2_11600", ['dad1'], 0),
+    ("backends/trios2_11600", ['ch2'], 1),
+    ("backends/trios2_11600", ['ch1'], 0),
+    ("backends/trios2", ['mom1'], 8),
+    ("backends/trios2", ['dad1'], 7),
+    ("backends/trios2", ['mom2'], 7),
+    ("backends/trios2", ['ch1'], 2),
+    ("backends/trios2", ['ch2'], 2),
+    ("backends/trios2", ['mom2', 'ch2'], 8),
+    ("backends/trios2", ['mom1', 'dad1'], 9),
+    ("backends/generated_people", None, 2),
+    ("backends/generated_people", ['prb1'], 1),
+    ("backends/generated_people", ['prb2'], 1),
+    ("backends/generated_people", ['prb1', 'prb2'], 2),
 ])
 def test_fixture_query_by_person_ids(
         variants_impl, variants, fixture_name, person_ids, count):
