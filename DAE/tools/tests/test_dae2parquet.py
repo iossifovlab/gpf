@@ -129,6 +129,7 @@ def test_dae2parquet_transmitted(
     assert schema['effect_details'].type_name == 'list(str)'
 
 
+@pytest.mark.xfail
 def test_dae2parquet_make(
         dae_transmitted_config, annotation_pipeline_config,
         annotation_scores_dirname,

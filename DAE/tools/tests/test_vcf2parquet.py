@@ -67,6 +67,7 @@ def test_vcf2parquet_vcf(
     assert schema['effect_details'].type_name == 'list(str)'
 
 
+@pytest.mark.xfail(reason="annotation on import not ready for Impala")
 def test_vcf2parquet_make(
         vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname,
