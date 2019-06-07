@@ -206,7 +206,7 @@ def dae_transmitted(
 @pytest.fixture
 def vcf_import_config():
     fullpath = relative_to_this_test_folder(
-        "tests/fixtures/vcf_import/effects_trio"
+        "fixtures/vcf_import/effects_trio"
     )
     config = Configure.from_prefix_vcf(fullpath)
     return config.vcf
@@ -246,7 +246,7 @@ def fixture_select(
 @pytest.fixture(scope='session')
 def dae_iossifov2014_config():
     fullpath = relative_to_this_test_folder(
-        "tests/fixtures/dae_iossifov2014/iossifov2014"
+        "fixtures/dae_iossifov2014/iossifov2014"
     )
     config = Configure.from_prefix_denovo(fullpath)
     return config.denovo
