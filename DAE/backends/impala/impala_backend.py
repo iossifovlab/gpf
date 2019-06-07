@@ -82,12 +82,6 @@ class ImpalaBackend(object):
                 db=dbname, variant_file=variant_file,
                 variant=table_name))
 
-    def drop_variants_database(self, dbname):
-        with self.impala.cursor() as cursor:
-            cursor.execute("""
-                DROP DATABASE IF EXISTS {db} CASCADE
-            """.format(db=dbname))
-
     @staticmethod
     def get_impala(impala_host=None, impala_port=None):
         if impala_host is None:
@@ -119,6 +113,44 @@ class ImpalaBackend(object):
         print("hdfs connecting to:", hdfs_host, hdfs_port)
 
         return HdfsHelpers(hdfs_host, hdfs_port)
+
+    def check_database(self, dbname):
+        with self.impala.cursor() as cursor:
+            q = """
+                SHOW DATABASES
+            """
+
+            cursor.execute(q)
+            for row in cursor:
+                if row[0] == dbname:
+                    return True
+        return False
+
+    def check_table(self, dbname, tablename):
+        with self.impala.cursor() as cursor:
+            q = """
+                SHOW TABLES IN {db}
+            """.format(db=dbname)
+
+            cursor.execute(q)
+            for row in cursor:
+                if row[0] == tablename:
+                    return True
+        return False
+
+    def create_database(self, dbname):
+        with self.impala.cursor() as cursor:
+            q = """
+                CREATE DATABASE IF NOT EXISTS {db}
+            """.format(db=dbname)
+
+            cursor.execute(q)
+
+    def drop_database(self, dbname):
+        with self.impala.cursor() as cursor:
+            cursor.execute("""
+                DROP DATABASE IF EXISTS {db} CASCADE
+            """.format(db=dbname))
 
     def load_pedigree(self, config):
         with self.impala.cursor() as cursor:

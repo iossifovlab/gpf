@@ -3,6 +3,7 @@ import os
 import pytest
 import shutil
 import tempfile
+import glob
 
 import pandas as pd
 from io import StringIO
@@ -18,6 +19,10 @@ from backends.thrift.raw_dae import RawDAE, RawDenovo
 from backends.vcf.raw_vcf import RawFamilyVariants
 from backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
+
+from backends.thrift.import_tools import \
+    construct_import_annotation_pipeline
+from tools.vcf2parquet import import_vcf
 
 
 def relative_to_this_test_folder(path):
@@ -74,7 +79,7 @@ def fixture_dirname(request):
 @pytest.fixture(scope='session')
 def annotation_pipeline_config():
     filename = relative_to_this_test_folder(
-        "tests/fixtures/annotation_pipeline/import_annotation.conf")
+        "fixtures/annotation_pipeline/import_annotation.conf")
     return filename
 
 
@@ -87,14 +92,14 @@ def annotation_pipeline_default_config():
 @pytest.fixture(scope='session')
 def annotation_scores_dirname():
     filename = relative_to_this_test_folder(
-        "tests/fixtures/annotation_pipeline/")
+        "fixtures/annotation_pipeline/")
     return filename
 
 
 @pytest.fixture(scope='session')
 def annotation_pipeline_vcf():
     filename = relative_to_this_test_folder(
-        "tests/fixtures/annotation_pipeline/import_annotation.conf")
+        "fixtures/annotation_pipeline/import_annotation.conf")
 
     options = Box({
             "default_arguments": None,
@@ -108,7 +113,7 @@ def annotation_pipeline_vcf():
         options, filename,
         defaults={
             "scores_dirname": relative_to_this_test_folder(
-                "tests/fixtures/annotation_pipeline/")
+                "fixtures/annotation_pipeline/")
         })
     return pipeline
 
@@ -116,7 +121,7 @@ def annotation_pipeline_vcf():
 @pytest.fixture(scope='session')
 def annotation_pipeline_internal():
     filename = relative_to_this_test_folder(
-        "tests/fixtures/annotation_pipeline/import_annotation.conf")
+        "fixtures/annotation_pipeline/import_annotation.conf")
 
     options = Box({
             "default_arguments": None,
@@ -133,7 +138,7 @@ def annotation_pipeline_internal():
         options, filename,
         defaults={
             "scores_dirname": relative_to_this_test_folder(
-                "tests/fixtures/annotation_pipeline/")
+                "fixtures/annotation_pipeline/")
         })
     return pipeline
 
@@ -155,7 +160,7 @@ def default_gene_models():
 @pytest.fixture
 def dae_denovo_config():
     fullpath = relative_to_this_test_folder(
-        "tests/fixtures/dae_denovo/denovo"
+        "fixtures/dae_denovo/denovo"
     )
     config = Configure.from_prefix_denovo(fullpath)
     return config.denovo
@@ -177,7 +182,7 @@ def dae_denovo(
 @pytest.fixture
 def dae_transmitted_config():
     fullpath = relative_to_this_test_folder(
-        "tests/fixtures/dae_transmitted/transmission"
+        "fixtures/dae_transmitted/transmission"
     )
     config = Configure.from_prefix_dae(fullpath)
     return config.dae
@@ -218,18 +223,6 @@ def vcf_import_raw(
     fvars.annot_df = annotation_pipeline_internal.annotate_df(fvars.annot_df)
 
     return fvars
-
-
-# @pytest.fixture
-# def vcf_import_thrift(
-#         vcf_import_raw, annotation_pipeline_internal, temp_dirname):
-#     variants_iterator_to_parquet(
-#         vcf_import_raw,
-#         temp_dirname,
-#         annotation_pipeline=annotation_pipeline_internal
-#     )
-#     fvars = ThriftFamilyVariants(prefix=temp_dirname)
-#     return fvars
 
 
 @pytest.fixture
@@ -284,82 +277,6 @@ def variants_vcf(default_genome, default_gene_models):
             a_path, genome=default_genome, gene_models=default_gene_models,
             force_reannotate=True)
         return fvars
-    return builder
-
-
-# Impala backend
-@pytest.fixture(scope='session')
-def test_hdfs(request):
-    from backends.impala.parquet_io import HdfsHelpers
-    hdfs = HdfsHelpers()
-    return hdfs
-
-
-@pytest.fixture(scope='session')
-def test_impala_backend(request):
-    from backends.impala.impala_backend import ImpalaBackend
-    backend = ImpalaBackend()
-
-    return backend
-
-
-@pytest.fixture(scope='session')
-def variants_impala(request, impala_parquet_variants, test_impala_backend):
-
-    def builder(path):
-        from backends.impala.impala_variants import ImpalaFamilyVariants
-
-        impala_config = impala_parquet_variants(path)
-        test_impala_backend.import_variants(impala_config)
-        fvars = ImpalaFamilyVariants(impala_config, test_impala_backend)
-        return fvars
-    return builder
-
-
-@pytest.fixture(scope='session')
-def impala_parquet_variants(request, test_hdfs, test_impala_backend):
-    dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
-    tempname = os.path.basename(dirname)
-
-    def fin():
-        test_hdfs.delete(dirname, recursive=True)
-        test_impala_backend.drop_variants_database(tempname)
-    request.addfinalizer(fin)
-
-    def builder(path):
-        from configurable_entities.configuration import DAEConfig
-
-        from backends.thrift.import_tools import \
-            construct_import_annotation_pipeline
-        from tools.vcf2parquet import import_vcf
-
-        vcf_prefix = relative_to_this_test_folder(
-            os.path.join("fixtures", path))
-        vcf_config = Configure.from_prefix_vcf(vcf_prefix).vcf
-
-        dae_config = DAEConfig()
-        print(dae_config)
-
-        annotation_pipeline = construct_import_annotation_pipeline(
-            dae_config)
-
-        basename = os.path.basename(path)
-        fulldirname = os.path.join(dirname, basename)
-
-        test_hdfs.mkdir(dirname)
-        test_hdfs.mkdir(fulldirname)
-        assert test_hdfs.exists(fulldirname)
-
-        impala_config = import_vcf(
-            dae_config, annotation_pipeline,
-            vcf_config.pedigree, vcf_config.vcf,
-            region=None, bucket_index=0,
-            output=fulldirname,
-            filesystem=test_hdfs.filesystem())
-        impala_config['db'] = tempname
-
-        return impala_config
-
     return builder
 
 
@@ -424,3 +341,176 @@ def raw_denovo(config_denovo, default_genome):
             annotator=None)
         return denovo
     return builder
+
+
+def impala_test_dbname():
+    return 'impala_test_db'
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--reimport", action="store_true", default=False,
+        help="force reimport"
+    )
+
+
+@pytest.fixture(scope='session')
+def reimport(request):
+    return bool(request.config.getoption("--reimport"))
+
+
+# Impala backend
+@pytest.fixture(scope='session')
+def test_hdfs(request):
+    from backends.impala.parquet_io import HdfsHelpers
+    hdfs = HdfsHelpers()
+    return hdfs
+
+
+@pytest.fixture(scope='session')
+def test_impala_backend(request):
+    from backends.impala.impala_backend import ImpalaBackend
+    backend = ImpalaBackend()
+
+    return backend
+
+
+def collect_vcf(dirname):
+    result = []
+    pattern = os.path.join(dirname, "*.vcf")
+    for filename in glob.glob(pattern):
+        prefix = os.path.splitext(filename)[0]
+        vcf_config = Configure.from_prefix_vcf(prefix).vcf
+        result.append(vcf_config)
+    return result
+
+
+def build_impala_config(vcf_config):
+    study_id = os.path.basename(
+        os.path.splitext(vcf_config.pedigree)[0])
+
+    conf = {
+        'impala': {
+            'db': impala_test_dbname(),
+            'tables': {
+                'variant': '{}_variant'.format(study_id),
+                'pedigree': '{}_pedigree'.format(study_id),
+            }
+        }
+    }
+    return Configure(conf).impala
+
+
+DATA_IMPORT_COUNT = 0
+
+
+@pytest.fixture(scope='session')
+def data_import(
+        request, test_hdfs, test_impala_backend, reimport):
+
+    global DATA_IMPORT_COUNT
+    DATA_IMPORT_COUNT += 1
+
+    assert DATA_IMPORT_COUNT == 1
+
+    temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
+    test_hdfs.mkdir(temp_dirname)
+
+    dae_config = DAEConfig()
+    annotation_pipeline = construct_import_annotation_pipeline(
+        dae_config)
+
+    def fin():
+        test_hdfs.delete(temp_dirname, recursive=True)
+    request.addfinalizer(fin)
+
+    def build(dirname):
+
+        if not test_impala_backend.check_database(impala_test_dbname()):
+            test_impala_backend.create_database(impala_test_dbname())
+
+        vcfdirname = relative_to_this_test_folder(
+            os.path.join("fixtures", dirname))
+        vcf_configs = collect_vcf(vcfdirname)
+
+        for vcf in vcf_configs:
+            impala = build_impala_config(vcf)
+            if not reimport and \
+                    test_impala_backend.check_table(
+                        impala_test_dbname(), impala.tables.variant) and \
+                    test_impala_backend.check_table(
+                        impala_test_dbname(), impala.tables.pedigree):
+                continue
+            impala_config = import_vcf(
+                dae_config, annotation_pipeline,
+                vcf.pedigree, vcf.vcf,
+                region=None, bucket_index=0,
+                output=temp_dirname,
+                filesystem=test_hdfs.filesystem())
+            impala_config['db'] = impala_test_dbname()
+            test_impala_backend.import_variants(impala_config)
+
+    build("backends/")
+    return True
+
+
+@pytest.fixture(scope='session')
+def variants_impala(request, data_import, test_impala_backend):
+
+    def builder(path):
+        from backends.impala.impala_variants import ImpalaFamilyVariants
+
+        vcf_prefix = relative_to_this_test_folder(
+            os.path.join("fixtures", path))
+        vcf_config = Configure.from_prefix_vcf(vcf_prefix).vcf
+        impala_config = build_impala_config(vcf_config)
+        fvars = ImpalaFamilyVariants(impala_config, test_impala_backend)
+        return fvars
+    return builder
+
+
+# @pytest.fixture(scope='session')
+# def impala_parquet_variants(request, test_hdfs, test_impala_backend):
+#     dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
+#     tempname = os.path.basename(dirname)
+
+#     def fin():
+#         test_hdfs.delete(dirname, recursive=True)
+#         test_impala_backend.drop_variants_database(tempname)
+#     request.addfinalizer(fin)
+
+#     def builder(path):
+#         from configurable_entities.configuration import DAEConfig
+
+#         from backends.thrift.import_tools import \
+#             construct_import_annotation_pipeline
+#         from tools.vcf2parquet import import_vcf
+
+#         vcf_prefix = relative_to_this_test_folder(
+#             os.path.join("fixtures", path))
+#         vcf_config = Configure.from_prefix_vcf(vcf_prefix).vcf
+
+#         dae_config = DAEConfig()
+#         print(dae_config)
+
+#         annotation_pipeline = construct_import_annotation_pipeline(
+#             dae_config)
+
+#         basename = os.path.basename(path)
+#         fulldirname = os.path.join(dirname, basename)
+
+#         test_hdfs.mkdir(dirname)
+#         test_hdfs.mkdir(fulldirname)
+#         assert test_hdfs.exists(fulldirname)
+
+#         impala_config = import_vcf(
+#             dae_config, annotation_pipeline,
+#             vcf_config.pedigree, vcf_config.vcf,
+#             region=None, bucket_index=0,
+#             output=fulldirname,
+#             filesystem=test_hdfs.filesystem())
+#         impala_config['db'] = tempname
+
+#         return impala_config
+
+#     return builder
