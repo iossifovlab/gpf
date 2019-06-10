@@ -1,4 +1,4 @@
-geneInfo.conf
-=============
+Gene Info Configuration
+=======================
 
 TODO

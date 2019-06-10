@@ -1,4 +1,4 @@
-genomesDB.conf
-==============
+GenomesDB configuration
+=======================
 
 TODO
