@@ -11,6 +11,7 @@ from builtins import object
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, String, Float, Enum, func, or_
 from sqlalchemy.sql import select
+from sqlalchemy.schema import PrimaryKeyConstraint
 from pheno.common import MeasureType
 # import traceback
 import pandas as pd
@@ -55,6 +56,8 @@ class DbManager(object):
             Column('figure_regression_small', String(256)),
             Column('pvalue_regression_male', Float()),
             Column('pvalue_regression_female', Float()),
+            PrimaryKeyConstraint('regression_name', 'measure_id',
+                                 name='regression_pkey')
         )
 
     def save(self, v):
@@ -88,8 +91,8 @@ class DbManager(object):
             del r['regression_name']
             del r['measure_id']
             update = self.regressions.update().values(r).where(
-                self.regressions.c.regression_name == regression_name
-                & self.regressions.c.measure_id == measure_id
+                (self.regressions.c.regression_name == regression_name)
+                & (self.regressions.c.measure_id == measure_id)
             )
             with self.engine.begin() as connection:
                 connection.execute(update)
