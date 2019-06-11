@@ -62,13 +62,13 @@ def contigs_makefile_generate(
             )
             # target_prefix = os.path.join(output_prefix, suffix)
 
-            parquet = Configure.from_prefix_parquet(
+            parquet = Configure.from_prefix_impala(
                 output_directory,
                 bucket_index=bucket_index,
-                suffix=suffix).parquet
+                suffix=suffix).impala
 
             targets = [
-                parquet.summary_variant
+                parquet.files.variant
             ]
 
             all_targets.extend(targets)
