@@ -15,6 +15,7 @@ from GeneInfoDB import GeneInfoDB
 from configurable_entities.configuration import DAEConfig
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
+from variants.attributes import Sex
 
 
 class GeneInfoConfig(object):
@@ -66,15 +67,15 @@ class DenovoGeneSetCollectionConfig(ConfigurableEntityConfig):
     @staticmethod
     def _standard_criterias_split_dict(standard_criteria_id, dict_to_split):
         options = dict_to_split.split(':')
-        value = options[1]
-        if standard_criteria_id != 'sexes':
-            value = value.split('.')
+        value = options[1].split('.')
 
         # TODO: Remove this when study.query_variants can support non
         # expand_effect_types as LGDs
         if standard_criteria_id == 'effect_types':
             from studies.helpers import expand_effect_types
             value = expand_effect_types(value)
+        elif standard_criteria_id == 'sexes':
+            value = [Sex.from_name(v) for v in value]
 
         return {
             'property': standard_criteria_id,

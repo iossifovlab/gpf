@@ -96,6 +96,13 @@ class DenovoGeneSetsCollection(object):
 
         cache = {value: {} for value in people_group_values}
 
+        variants = self.study.query_variants(
+            inheritance=str(Inheritance.denovo.name),
+            status='{} or {}'.format(
+                Status.affected.name, Status.unaffected.name)
+        )
+        variants = list(variants)
+
         for criterias_combination in product(
                 *self.standard_criterias):
             search_args = {criteria['property']: criteria['value']
@@ -104,7 +111,8 @@ class DenovoGeneSetsCollection(object):
                 innermost_cache = self._init_criterias_cache(
                     cache[people_group_value], criterias_combination)
                 innermost_cache.update(self._add_genes_families(
-                    people_group, people_group_value, self.study, search_args))
+                    people_group, people_group_value, self.study, variants,
+                    search_args))
 
         return cache
 
@@ -315,36 +323,46 @@ class DenovoGeneSetsCollection(object):
 
     @classmethod
     def _add_genes_families(
-            cls, phenotype_column, phenotype, study, search_args):
+            cls, people_group, people_group_value, study, variants,
+            search_args):
         cache = {}
-        affected_people = cls._get_affected_people(
-            study, phenotype_column, phenotype)
-        variants = study.query_variants(
-                inheritance=str(Inheritance.denovo.name),
-                status='{} or {}'.format(
-                    Status.affected.name, Status.unaffected.name),
-                person_ids=list(affected_people),
-                **search_args)
-
-        # variants = list(variants)
-        # print("Variants count:", len(variants), "search args:", search_args)
+        people_with_people_group = cls._get_people_with_people_group(
+            study, people_group, people_group_value)
 
         for variant in variants:
             family_id = variant.family_id
-            for allele in variant.alt_alleles:
-                effect = allele.effect
+            for aa in variant.alt_alleles:
+                if not (set(aa.variant_in_members) & people_with_people_group):
+                    continue
+
+                filter_flag = False
+                for search_arg_name, search_arg_value in search_args.items():
+                    if search_arg_name == 'effect_types':
+                        if not (aa.effect.types & set(search_arg_value)):
+                            filter_flag = True
+                            break
+                    elif search_arg_name == 'sexes':
+                        if not (set(aa.variant_in_sexes) &
+                                set(search_arg_value)):
+                            filter_flag = True
+                            break
+
+                if filter_flag:
+                    continue
+
+                effect = aa.effect
                 for gene in effect.genes:
                     cache.setdefault(gene.symbol, set()).add(family_id)
 
         return cache
 
     @staticmethod
-    def _get_affected_people(study, phenotype_column, phenotype):
-        affected_person_ids = set()
-        for study in study.studies:
-            pedigree_df = study.backend.ped_df
+    def _get_people_with_people_group(study, people_group, people_group_value):
+        person_with_people_group_ids = set()
+        for s in study.studies:
+            pedigree_df = s.backend.ped_df
             people_ids = pedigree_df[
-                pedigree_df[phenotype_column] == phenotype]
-            affected_person_ids.update(people_ids['person_id'])
+                pedigree_df[people_group] == people_group_value]
+            person_with_people_group_ids.update(people_ids['person_id'])
 
-        return affected_person_ids
+        return person_with_people_group_ids
