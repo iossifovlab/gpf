@@ -65,7 +65,8 @@ class DenovoGeneSetsCollection(object):
 
     def _save_cache(self, people_group_id, study_cache):
         # change all sets to lists so they can be saved in json
-        cache = self._convert_cache_innermost_types(study_cache, set, list)
+        cache = self._convert_cache_innermost_types(
+            study_cache, set, list, sort_values=True)
 
         cache_dir = self.config.denovo_gene_set_cache_file(people_group_id)
         if not os.path.exists(os.path.dirname(cache_dir)):
@@ -74,8 +75,11 @@ class DenovoGeneSetsCollection(object):
             json.dump(
                 cache, f, sort_keys=True, indent=4, separators=(',', ': '))
 
-    def _convert_cache_innermost_types(self, cache, from_type, to_type):
+    def _convert_cache_innermost_types(
+            self, cache, from_type, to_type, sort_values=False):
         if isinstance(cache, from_type):
+            if sort_values is True:
+                return sorted(to_type(cache))
             return to_type(cache)
         assert isinstance(cache, dict), \
             "expected type 'dict', got '{}'".format(type(cache))
@@ -83,7 +87,7 @@ class DenovoGeneSetsCollection(object):
         res = {}
         for key, value in cache.items():
             res[key] = self._convert_cache_innermost_types(
-                value, from_type, to_type)
+                value, from_type, to_type, sort_values=sort_values)
 
         return res
 
@@ -103,8 +107,7 @@ class DenovoGeneSetsCollection(object):
         )
         variants = list(variants)
 
-        for criterias_combination in product(
-                *self.standard_criterias):
+        for criterias_combination in product(*self.standard_criterias):
             search_args = {criteria['property']: criteria['value']
                            for criteria in criterias_combination}
             for people_group_value in people_group_values:
@@ -120,8 +123,7 @@ class DenovoGeneSetsCollection(object):
     def _init_criterias_cache(dataset_cache, criterias_combination):
         innermost_cache = dataset_cache
         for criteria in criterias_combination:
-            innermost_cache = \
-                innermost_cache.setdefault(criteria['name'], {})
+            innermost_cache = innermost_cache.setdefault(criteria['name'], {})
 
         return innermost_cache
 
