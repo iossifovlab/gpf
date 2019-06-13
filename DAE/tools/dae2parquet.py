@@ -120,8 +120,9 @@ def dae_build_transmitted(
     variants_iterator_to_parquet(
         fvars,
         impala_config,
-        argv.bucket_index,
-        annotation_schema
+        bucket_index=argv.bucket_index,
+        rows=argv.rows,
+        annotation_schema=annotation_schema
     )
 
 
@@ -151,6 +152,7 @@ def dae_build_makefile(dae_config, argv):
             family_filename=argv.families,
             summary_filename=argv.summary,
             toomany_filename=argv.toomany),
+        rows=argv.rows,
         log_directory=argv.log
     )
 
@@ -253,6 +255,13 @@ def init_transmitted_common(dae_config, parser):
         'toomany', type=str,
         metavar='<toomany filename>',
         help=''
+    )
+
+    parser.add_argument(
+        '-r', '--rows', type=int,
+        default=100000,
+        dest='rows', metavar='rows',
+        help='row group size'
     )
 
 

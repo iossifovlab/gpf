@@ -242,7 +242,7 @@ class VariantsParquetWriter(object):
         self.start = time.time()
         self.data = ParquetData(schema)
 
-    def variants_table(self, bucket_index=0, batch_size=100000):
+    def variants_table(self, bucket_index=0, rows=10000):
         variant_serializer = FamilyVariantSerializer(None)
         parquet_serializer = ParquetSerializer()
 
@@ -284,7 +284,7 @@ class VariantsParquetWriter(object):
                        family_variant_index, elapsed),
                     file=sys.stderr)
 
-            if len(self.data) >= batch_size:
+            if len(self.data) >= rows:
                 table = self.data.build_table()
 
                 yield table
@@ -302,7 +302,7 @@ class VariantsParquetWriter(object):
             file=sys.stderr)
 
     def save_variants_to_parquet(
-            self, filename=None, bucket_index=1, batch_size=100000,
+            self, filename=None, bucket_index=1, rows=100000,
             filesystem=None):
 
         compression = {
@@ -340,7 +340,8 @@ class VariantsParquetWriter(object):
             compression=compression, filesystem=filesystem)
 
         try:
-            for table in self.variants_table(bucket_index, batch_size):
+            for table in self.variants_table(
+                    bucket_index=bucket_index, rows=rows):
                 assert table.schema == self.data.schema
                 writer.write_table(table)
 

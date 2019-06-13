@@ -42,6 +42,7 @@ def contigs_makefile_generate(
         annotation_config,
         import_sources,
         log_directory=None,
+        rows=100000,
         outfile=sys.stdout):
 
     makefile = []
@@ -77,6 +78,7 @@ def contigs_makefile_generate(
             command = "{import_command} -o {output_directory} " \
                 "--bucket-index {bucket_index} " \
                 "--region {region} " \
+                "--rows {rows} " \
                 "--annotation {annotation_config} " \
                 "{import_sources}" \
                 .format(
@@ -86,6 +88,7 @@ def contigs_makefile_generate(
                     bucket_index=bucket_index,
                     import_sources=import_sources,
                     region=str(region),
+                    rows=rows,
                     annotation_config=annotation_config,
                 )
             if log_directory is not None:

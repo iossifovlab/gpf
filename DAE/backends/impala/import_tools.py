@@ -6,7 +6,7 @@ from backends.impala.parquet_io import VariantsParquetWriter, \
 
 
 def variants_iterator_to_parquet(
-        fvars, impala_config, bucket_index=0,
+        fvars, impala_config, bucket_index=0, rows=100000,
         annotation_schema=None, filesystem=None):
 
     if fvars.is_empty():
