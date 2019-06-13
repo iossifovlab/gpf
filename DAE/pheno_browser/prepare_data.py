@@ -127,7 +127,7 @@ class PreparePhenoBrowserBase(object):
         )
 
     def build_regression(self, dependent_measure,
-                         independent_measure, jitter=0.1):
+                         independent_measure, jitter):
         MIN_VALUES = 5
         MIN_UNIQUE_VALUES = 2
 
@@ -261,9 +261,15 @@ class PreparePhenoBrowserBase(object):
                         continue
                     res['regression_name'] = reg_name
                     res['regression_measure_id'] = reg_measure.measure_id
+
+                    if 'jitter' in reg:
+                        jitter = float(reg['jitter'])
+                    else:
+                        jitter = 0.1
+
                     res.update(
                         self.build_regression(
-                            measure, reg_measure, float(reg['jitter'])))
+                            measure, reg_measure, jitter))
                     yield res
 
     def run(self):
