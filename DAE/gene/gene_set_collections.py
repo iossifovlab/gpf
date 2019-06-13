@@ -128,6 +128,8 @@ class GeneSetsCollections(object):
         return gsc
 
     def get_gene_sets_collection(self, gene_sets_collection_id, load=True):
+        assert gene_sets_collection_id != 'denovo'
+
         if gene_sets_collection_id not in self.gene_sets_collections:
             gsc = self._load_gene_sets_collection(
                 gene_sets_collection_id, load)
@@ -137,6 +139,8 @@ class GeneSetsCollections(object):
 
     def get_gene_sets(self, gene_sets_collection_id, gene_sets_types=[],
                       permitted_datasets=None, load=True):
+        assert gene_sets_collection_id != 'denovo'
+
         gsc = self.get_gene_sets_collection(gene_sets_collection_id, load)
         if gsc is None:
             return None
@@ -146,6 +150,8 @@ class GeneSetsCollections(object):
 
     def get_gene_set(self, gene_sets_collection_id, gene_set_id,
                      gene_sets_types=[], permitted_datasets=None):
+        assert gene_sets_collection_id != 'denovo'
+
         gsc = self.get_gene_sets_collection(gene_sets_collection_id)
         if gsc is None:
             return None

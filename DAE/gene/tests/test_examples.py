@@ -48,18 +48,16 @@ geneSetsNames=LGDs,LGDs.Male,LGDs.Female,LGDs.Recurrent,LGDs.Single,LGDs.Triple,
 """
 
 
-def test_example2_denovo_gene_sets(gscs):
+def test_example2_denovo_gene_sets(denovo_gene_sets_facade):
     # gsc = DenovoGeneSetsCollection()
     # gsc.load()
-    denovo = gscs.get_gene_sets_collection('denovo')
-    print(dir(denovo))
 
-    denovo_sets = denovo.get_gene_sets({
+    denovo_sets = denovo_gene_sets_facade.get_denovo_gene_sets('denovo', {
         'f1_group': {'phenotype': ['autism']}})
     assert denovo_sets
     print(denovo_sets)
 
-    denovo_sets2 = denovo.get_gene_sets({
+    denovo_sets2 = denovo_gene_sets_facade.get_denovo_gene_sets('denovo', {
         'f1_group': {'phenotype': ['autism', 'unaffected']}})
     assert len(denovo_sets) <= \
         len(denovo_sets2)
