@@ -10,7 +10,7 @@ import glob
 import shutil
 
 from configurable_entities.configuration import DAEConfig
-from backends.thrift.import_tools import construct_import_annotation_pipeline
+from backends.import_commons import construct_import_annotation_pipeline
 
 from tools.vcf2parquet import import_vcf
 from tools.dae2parquet import import_dae_denovo

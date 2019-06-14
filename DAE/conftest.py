@@ -15,12 +15,12 @@ from configurable_entities.configuration import DAEConfig
 from annotation.annotation_pipeline import PipelineAnnotator
 
 from backends.configure import Configure
-from backends.thrift.raw_dae import RawDAE, RawDenovo
+from backends.dae.raw_dae import RawDAE, RawDenovo
 from backends.vcf.raw_vcf import RawFamilyVariants
 from backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
 
-from backends.thrift.import_tools import \
+from backends.import_commons import \
     construct_import_annotation_pipeline
 from tools.vcf2parquet import import_vcf
 
@@ -467,50 +467,3 @@ def variants_impala(request, data_import, test_impala_backend):
         fvars = ImpalaFamilyVariants(impala_config, test_impala_backend)
         return fvars
     return builder
-
-
-# @pytest.fixture(scope='session')
-# def impala_parquet_variants(request, test_hdfs, test_impala_backend):
-#     dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
-#     tempname = os.path.basename(dirname)
-
-#     def fin():
-#         test_hdfs.delete(dirname, recursive=True)
-#         test_impala_backend.drop_variants_database(tempname)
-#     request.addfinalizer(fin)
-
-#     def builder(path):
-#         from configurable_entities.configuration import DAEConfig
-
-#         from backends.thrift.import_tools import \
-#             construct_import_annotation_pipeline
-#         from tools.vcf2parquet import import_vcf
-
-#         vcf_prefix = relative_to_this_test_folder(
-#             os.path.join("fixtures", path))
-#         vcf_config = Configure.from_prefix_vcf(vcf_prefix).vcf
-
-#         dae_config = DAEConfig()
-#         print(dae_config)
-
-#         annotation_pipeline = construct_import_annotation_pipeline(
-#             dae_config)
-
-#         basename = os.path.basename(path)
-#         fulldirname = os.path.join(dirname, basename)
-
-#         test_hdfs.mkdir(dirname)
-#         test_hdfs.mkdir(fulldirname)
-#         assert test_hdfs.exists(fulldirname)
-
-#         impala_config = import_vcf(
-#             dae_config, annotation_pipeline,
-#             vcf_config.pedigree, vcf_config.vcf,
-#             region=None, bucket_index=0,
-#             output=fulldirname,
-#             filesystem=test_hdfs.filesystem())
-#         impala_config['db'] = tempname
-
-#         return impala_config
-
-#     return builder

@@ -8,7 +8,7 @@ from __future__ import print_function, absolute_import, unicode_literals
 import numpy as np
 from utils.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
 
-from ..thrift.raw_dae import RawDAE, BaseDAE
+from ..dae.raw_dae import RawDAE, BaseDAE
 
 
 def test_explode_family_genotype():

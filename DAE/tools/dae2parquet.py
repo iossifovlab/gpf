@@ -17,12 +17,12 @@ from annotation.tools.file_io_parquet import ParquetSchema
 
 from backends.vcf.builder import get_genome
 from backends.configure import Configure
-from backends.thrift.raw_dae import RawDAE, RawDenovo
+from backends.dae.raw_dae import RawDAE, RawDenovo
 
 from backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 
-from backends.thrift.import_tools import annotation_pipeline_cli_options, \
+from backends.import_commons import annotation_pipeline_cli_options, \
     construct_import_annotation_pipeline
 
 from backends.impala.import_tools import variants_iterator_to_parquet
@@ -31,51 +31,6 @@ from backends.impala.import_tools import variants_iterator_to_parquet
 def get_contigs(tabixfilename):
     with pysam.Tabixfile(tabixfilename) as tbx:  # noqa
         return tbx.contigs
-
-
-# def dae_build_transmitted(
-#         dae_config, annotation_pipeline, argv, defaults={}):
-
-#     from backends.thrift.import_tools import variants_iterator_to_parquet
-
-#     config = Configure.from_dict({
-#         "dae": {
-#             'summary_filename': argv.summary,
-#             'toomany_filename': argv.toomany,
-#             'family_filename': argv.families
-#         }})
-
-#     # contigs = ['chr21', 'chr22']
-
-#     assert argv.output is not None
-#     genome = get_genome(genome_file=None)
-
-#     fvars = RawDAE(
-#         config.dae.summary_filename,
-#         config.dae.toomany_filename,
-#         config.dae.family_filename,
-#         region=argv.region,
-#         genome=genome,
-#         annotator=annotation_pipeline)
-
-#     if argv.family_format == 'simple':
-#         fvars.load_simple_families()
-#     elif argv.family_format == 'pedigree':
-#         fvars.load_pedigree_families()
-#     else:
-#         raise ValueError("unexpected family format: {}".format(
-#             argv.family_format
-#         ))
-
-#     annotation_pipeline = construct_import_annotation_pipeline(
-#         dae_config, argv, defaults=defaults)
-
-#     variants_iterator_to_parquet(
-#         fvars,
-#         argv.output,
-#         argv.bucket_index,
-#         annotation_pipeline
-#     )
 
 
 def dae_build_transmitted(

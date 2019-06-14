@@ -7,7 +7,7 @@ from tools.dae2parquet import parse_cli_arguments, import_dae_denovo, \
     dae_build_transmitted, dae_build_makefile
 
 from backends.configure import Configure
-from backends.thrift.import_tools import construct_import_annotation_pipeline
+from backends.import_commons import construct_import_annotation_pipeline
 
 from annotation.tools.file_io_parquet import ParquetReader
 

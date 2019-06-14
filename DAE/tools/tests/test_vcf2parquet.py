@@ -4,7 +4,7 @@ from box import Box
 
 from configurable_entities.configuration import DAEConfig
 from annotation.tools.file_io_parquet import ParquetReader
-from backends.thrift.import_tools import construct_import_annotation_pipeline
+from backends.import_commons import construct_import_annotation_pipeline
 
 from backends.configure import Configure
 

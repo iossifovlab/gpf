@@ -8,7 +8,7 @@ from backends.configure import Configure
 from backends.vcf.raw_vcf import RawFamilyVariants
 from backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
-from backends.thrift.import_tools import variants_iterator_to_parquet
+from backends.impala.import_tools import variants_iterator_to_parquet
 
 from .conftest import relative_to_this_test_folder
 

@@ -25,8 +25,10 @@ from cyvcf2 import VCF
 from backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 from backends.vcf.builder import get_genome
-from backends.thrift.import_tools import annotation_pipeline_cli_options, \
+from backends.import_commons import annotation_pipeline_cli_options, \
     construct_import_annotation_pipeline
+
+from backends.impala.import_tools import variants_iterator_to_parquet
 
 # import multiprocessing
 # import functools
@@ -52,8 +54,6 @@ def import_vcf(
         pedigree_filename, vcf_filename,
         region=None, bucket_index=1, output='.',
         study_id=None, filesystem=None):
-
-    from backends.impala.import_tools import variants_iterator_to_parquet
 
     assert os.path.exists(vcf_filename), vcf_filename
     assert os.path.exists(pedigree_filename), pedigree_filename
