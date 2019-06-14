@@ -304,6 +304,10 @@ class ImpalaBackend(object):
                 where=" AND ".join([
                     "( {} )".format(w) for w in where])
             )
+        limit_clause = ""
+        if kwargs.get("limit"):
+            limit_clause = "LIMIT {}".format(kwargs.get("limit"))
+
         return """
             SELECT
                 `data`, GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
@@ -314,6 +318,8 @@ class ImpalaBackend(object):
                 summary_variant_index,
                 family_variant_index,
                 `data`
+            {limit_clause}
             """.format(
             db=config.db, variant=config.tables.variant,
-            where_clause=where_clause)
+            where_clause=where_clause,
+            limit_clause=limit_clause)

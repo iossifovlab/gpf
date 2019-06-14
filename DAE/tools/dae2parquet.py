@@ -195,8 +195,9 @@ def import_dae_denovo(
     return variants_iterator_to_parquet(
         fvars,
         output,
-        bucket_index,
-        annotation_schema
+        bucket_index=bucket_index,
+        rows=argv.rows,
+        annotation_schema=annotation_schema
     )
 
 

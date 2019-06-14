@@ -25,7 +25,10 @@ def variants_iterator_to_parquet(
     print("[DONE] going to create variants writer...")
 
     variants_writer.save_variants_to_parquet(
-        impala_config.files.variant, filesystem=filesystem)
+        impala_config.files.variant, 
+        bucket_index=bucket_index,
+        rows=rows,
+        filesystem=filesystem)
     end = time.time()
 
     print(

@@ -7,7 +7,7 @@ import tempfile
 import operator
 import functools
 
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 
 import numpy as np
 import pyarrow as pa
@@ -245,9 +245,10 @@ class VariantsParquetWriter(object):
     def variants_table(self, bucket_index=0, rows=10000):
         variant_serializer = FamilyVariantSerializer(None)
         parquet_serializer = ParquetSerializer()
+        print("row group size:", rows)
 
         family_variant_index = 0
-
+        histogram = defaultdict(lambda: 0)
         for summary_variant_index, (_, family_variants) in \
                 enumerate(self.full_variants_iterator):
 
@@ -255,6 +256,7 @@ class VariantsParquetWriter(object):
                 family_variant_index += 1
 
                 data = variant_serializer.serialize(family_variant)
+                repetition = 0
                 for family_allele in family_variant.alleles:
                     summary = parquet_serializer.serialize_summary(
                         summary_variant_index, family_allele
@@ -269,19 +271,23 @@ class VariantsParquetWriter(object):
                     for (d, s, e, f, m) in itertools.product(
                             [data], [summary], effect_genes, [family], member):
 
+                        repetition += 1
+
                         self.data.data_append('data', d)
                         self.data.data_append('bucket_index', bucket_index)
 
                         for d in (s, e, f, m):
                             for key, val in d._asdict().items():
                                 self.data.data_append(key, val)
+                histogram[repetition] += 1
 
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
                 print(
-                    "{} family variants imported for {:.2f} sec".
+                    "Bucket {}: {} family variants imported for {:.2f} sec".
                     format(
-                       family_variant_index, elapsed),
+                        bucket_index,
+                        family_variant_index, elapsed),
                     file=sys.stderr)
 
             if len(self.data) >= rows:
@@ -294,12 +300,19 @@ class VariantsParquetWriter(object):
 
             yield table
 
+        print("-------------------------------------------", file=sys.stderr)
+        print("Bucket:", bucket_index, file=sys.stderr)
+        print("-------------------------------------------", file=sys.stderr)
         elapsed = time.time() - self.start
         print(
             "DONE: {} family variants imported for {:.2f} sec".
             format(
                 family_variant_index, elapsed),
             file=sys.stderr)
+        print("-------------------------------------------", file=sys.stderr)
+        for r, c in histogram.items():
+            print(r, c, file=sys.stderr)
+        print("-------------------------------------------", file=sys.stderr)
 
     def save_variants_to_parquet(
             self, filename=None, bucket_index=1, rows=100000,
