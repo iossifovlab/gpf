@@ -52,7 +52,7 @@ def create_vcf_variants(config, region=None):
 def import_vcf(
         dae_config, annotation_pipeline,
         pedigree_filename, vcf_filename,
-        region=None, bucket_index=1, output='.',
+        region=None, bucket_index=1, rows=10000, output='.',
         study_id=None, filesystem=None):
 
     assert os.path.exists(vcf_filename), vcf_filename
@@ -85,8 +85,9 @@ def import_vcf(
     return variants_iterator_to_parquet(
         fvars,
         impala_config,
-        bucket_index,
-        annotation_schema,
+        bucket_index=bucket_index,
+        rows=rows,
+        annotation_schema=annotation_schema,
         filesystem=filesystem
     )
 

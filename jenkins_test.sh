@@ -6,7 +6,7 @@ export PYTHONPATH=${DAE_SOURCE_DIR}:$PYTHONPATH
 export PYTHONPATH=${DAE_SOURCE_DIR}/tools:$PYTHONPATH
 
 rm -rf coverage/ && mkdir coverage && \
-py.test --traceconfig -v --cov-config coveragerc \
+py.test --traceconfig -v --cov-config coveragerc --reimport \
     --junitxml=coverage/dae-junit.xml \
     --cov-report html:coverage/coverage.html \
     --cov-report xml:coverage/coverage.xml \
