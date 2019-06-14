@@ -63,6 +63,12 @@ class EffectTranscript(object):
     def __str__(self):
         return self.__repr__()
 
+    def __eq__(self, other):
+        assert isinstance(other, EffectTranscript)
+
+        return self.transcript_id == other.transcript_id and \
+            self.details == other.details
+
     @classmethod
     def from_tuple(cls, t):
         (transcript_id, details) = tuple(t)
@@ -90,6 +96,13 @@ class Effect(object):
 
     def __str__(self):
         return repr(self)
+
+    def __eq__(self, other):
+        assert isinstance(other, Effect)
+
+        return self.worst == other.worst and \
+            self.genes == other.genes and \
+            self.transcripts == other.transcripts
 
     @property
     def types(self):

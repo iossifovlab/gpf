@@ -6,6 +6,8 @@ import traceback
 import tempfile
 import operator
 import functools
+import pickle
+import struct
 
 from collections import namedtuple, defaultdict
 
@@ -15,6 +17,7 @@ import pyarrow.parquet as pq
 
 # from annotation.tools.file_io_parquet import ParquetSchema
 from backends.impala.serializers import FamilyVariantSerializer
+from utils.vcf_utils import GENOTYPE_TYPE
 
 
 class ParquetData(object):
@@ -153,24 +156,58 @@ class ParquetSerializer(object):
             for eg in allele.effect.genes
         ]
 
-    def serialize_family(self, family_variant_index, family):
+    @staticmethod
+    def serialize_variant_genotype(gt):
+        rows, _ = gt.shape
+        assert rows == 2
+
+        return gt.flatten(order='F').tobytes()
+
+    @staticmethod
+    def deserialize_variant_genotype(data):
+        gt = np.frombuffer(data, dtype=GENOTYPE_TYPE)
+        assert len(gt) % 2 == 0
+
+        size = len(gt) // 2
+        gt = gt.reshape([2, size], order='F')
+        return gt
+
+    @staticmethod
+    def serialize_variant_alternatives(alternatives):
+        return pickle.dumps(alternatives)
+
+    @staticmethod
+    def deserialize_variant_alternatives(data):
+        return pickle.loads(data)
+
+    @staticmethod
+    def serialize_variant_effects(effects):
+        return pickle.dumps(effects)
+
+    @staticmethod
+    def deserialize_variant_effects(data):
+        return pickle.loads(data)
+
+    def serialize_family(self, family_variant_index, family_allele):
         res = self.family(
             family_variant_index,
-            family.family_id,
-            family.get_attribute('is_denovo'),
+            family_allele.family_id,
+            family_allele.get_attribute('is_denovo'),
             functools.reduce(
-                operator.or_,
-                [vs.value for vs in family.variant_in_sexes if vs is not None],
-                0),
+                operator.or_, [
+                    vs.value for vs in family_allele.variant_in_sexes
+                    if vs is not None
+                ], 0),
             functools.reduce(
-                operator.or_,
-                [vr.value for vr in family.variant_in_roles if vr is not None],
-                0),
+                operator.or_, [
+                    vr.value for vr in family_allele.variant_in_roles
+                    if vr is not None
+                ], 0),
             functools.reduce(
-                operator.or_,
-                [vi.value for vi in family.inheritance_in_members
-                 if vi is not None],
-                0),
+                operator.or_, [
+                    vi.value for vi in family_allele.inheritance_in_members
+                    if vi is not None
+                ], 0),
         )
         return res
 

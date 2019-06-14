@@ -29,7 +29,6 @@ class FamilyVariantSerializer(object):
             allele.summary_index,
             allele.allele_index,
             allele.effect,
-            allele.frequency,
             allele.attributes,
         ]
 

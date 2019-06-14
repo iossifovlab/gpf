@@ -152,6 +152,10 @@ class AltAlleleItems(object):
     def __str__(self):
         return str(self.items)
 
+    def __eq__(self, other):
+        return len(self.items) == len(other.items) and \
+            all([s == o for (s, o) in zip(self.items, other.items)])
+
 
 class VariantDetail(object):
     def __init__(self, chrom, position, variant, length):
@@ -190,7 +194,6 @@ class SummaryAllele(VariantBase):
                  summary_index=None,
                  allele_index=0,
                  effect=None,
-                 frequency=None,
                  attributes=None):
         super(SummaryAllele, self).__init__(
             chromosome, position, reference, alternative)
@@ -204,8 +207,6 @@ class SummaryAllele(VariantBase):
 
         #: variant effect of the allele; None for the reference allele.
         self.effect = effect
-        #: frequency of the allele
-        self.frequency = frequency
 
         if attributes is None:
             #: allele additional attributes
@@ -216,6 +217,10 @@ class SummaryAllele(VariantBase):
 
         self.update_attributes({'variant_type': self.variant_type.value
                                 if self.variant_type else None})
+
+    @property
+    def frequency(self):
+        return self.get_attribute('af_allele_freq')
 
     @property
     def cshl_variant(self):
@@ -431,7 +436,6 @@ class SummaryVariantFactory(object):
             summary_index=record['summary_variant_index'],
             allele_index=record['allele_index'],
             effect=effects,
-            frequency=record['af_allele_freq'],
             attributes=record)
 
     @staticmethod

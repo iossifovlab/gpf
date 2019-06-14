@@ -66,7 +66,6 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             summary_allele.summary_index,
             summary_allele.allele_index,
             summary_allele.effect,
-            summary_allele.frequency,
             summary_allele.attributes)
         FamilyDelegate.__init__(self, family)
 
@@ -384,25 +383,6 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         `reference`.
         """
         return np.all(self.gt == -1)
-
-    # @property
-    # def inheritance_in_members(self):
-    #     if self._inheritance_in_members is None:
-    #         self._inheritance_in_members = set()
-    #         for allele in self.alleles:
-    #             self._inheritance_in_members = \
-    #                 self._inheritance_in_members | \
-    #                 set(allele.inheritance_in_members)
-    #     return self._inheritance_in_members
-
-    # @property
-    # def variant_in_members(self):
-    #     if self._variant_in_members is None:
-    #         self._variant_in_members = set()
-    #         for allele in self.alt_alleles:
-    #             self._variant_in_members = self._variant_in_members | \
-    #                 allele.variant_in_members
-    #     return self._variant_in_members
 
     def __repr__(self):
         if not self.alternative:
