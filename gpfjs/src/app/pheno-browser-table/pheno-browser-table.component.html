@@ -63,14 +63,14 @@
                 <gpf-table-subcontent>
                     <span class="expanded-span"
                      *gpfTableCellContent="let data"
-                      [style.background-color]="getBackgroundColor(data.regressions.getReg(regression).pvalueCorrelationMale)">
+                      [style.background-color]="getBackgroundColor(data.regressions.getReg(regression).pvalueRegressionMale)">
                       {{ data.regressions.getReg(regression).pvalueRegressionMale | numberWithExp: "1.2-4" }}
                     </span>
                 </gpf-table-subcontent>
                 <gpf-table-subcontent>
                     <span class="expanded-span"
                      *gpfTableCellContent="let data"
-                      [style.background-color]="getBackgroundColor(data.regressions.getReg(regression).pvalueCorrelationFemale)">
+                      [style.background-color]="getBackgroundColor(data.regressions.getReg(regression).pvalueRegressionFemale)">
                       {{ data.regressions.getReg(regression).pvalueRegressionFemale | numberWithExp: "1.2-4" }}
                     </span>
                 </gpf-table-subcontent>

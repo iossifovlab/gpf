@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { PhenoBrowserComponent } from './pheno-browser.component';
 import { PhenoBrowserService } from './pheno-browser.service';
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
-import { fakeJsonMeasure } from './pheno-browser.spec';
+import { fakeJsonMeasureOneRegression } from './pheno-browser.spec';
 import { environment } from '../../environments/environment';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -37,7 +37,7 @@ import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/observable/combineLatest';
     
 
-let fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasure));
+let fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression));
 fakeJsonMeasurei1.instrument_name = 'i1';
 fakeJsonMeasurei1.measure_id = 'i1.test_measure';
 
@@ -48,7 +48,7 @@ class MockPhenoBrowserService {
   }
 
   getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasures> {
-    let measures = PhenoMeasures.fromJson({'base_image_url': 'base', 'measures': [fakeJsonMeasurei1], 'has_descriptions': true});
+    let measures = PhenoMeasures.fromJson({'base_image_url': 'base', 'measures': [fakeJsonMeasurei1], 'has_descriptions': true, 'regression_names': ['age']});
     measures = PhenoMeasures.addBasePath(measures);
     return of(measures);
   }
@@ -216,8 +216,6 @@ describe('PhenoBrowserComponent', () => {
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('i1'));
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('1.0e-6'));
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('0.2'));
-      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('0.3'));
-      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('0.4'));
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('test_measure'));
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('ordinal'));
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('a test measure'));

@@ -35,7 +35,7 @@ describe('pheno browser service', () => {
   });
 
   it('should fetch instruments', () => {
-    // as unknown is used to bypass warnings, since string[] does not overlap with PhenoInstruments
+    // 'as unknown' is used to bypass warnings, since string[] does not overlap with PhenoInstruments
     const expectedInstruments: PhenoInstruments = ['i1', 'i2', 'i3'] as unknown as PhenoInstruments;
     const response: Response = new Response(new ResponseOptions({'body': ['i1', 'i2', 'i3']}));
 
@@ -47,7 +47,7 @@ describe('pheno browser service', () => {
   });
 
   it('should fetch measures by parameters', () => {
-    const phenoMeasuresJson = {'base_image_url': 'base', 'measures': [fakeJsonMeasure], 'has_descriptions': true}
+    const phenoMeasuresJson = {'base_image_url': 'base', 'measures': [fakeJsonMeasure], 'has_descriptions': true, 'regression_names': []}
     const expectedMeasures: PhenoMeasures = PhenoMeasures.fromJson(phenoMeasuresJson);
     const response: Response = new Response(new ResponseOptions({'body': phenoMeasuresJson}));
 
