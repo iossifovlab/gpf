@@ -73,11 +73,18 @@ def gene_info_cache_dir():
 
 @pytest.fixture()
 def calc_gene_sets(denovo_gene_sets):
-    denovo_gene_sets[0].load(build_cache=True)
-    denovo_gene_sets[1].load(build_cache=True)
-    denovo_gene_sets[2].load(build_cache=True)
+    for dgs in denovo_gene_sets:
+        dgs.load(build_cache=True)
 
     print("PRECALCULATION COMPLETE")
+
+
+@pytest.fixture(scope="session")
+def cleanup_gene_sets(request, denovo_gene_sets):
+    def remove_gene_sets():
+        for dgs in denovo_gene_sets:
+            os.remove(dgs.config.denovo_gene_set_cache_file('phenotype'))
+    request.addfinalizer(remove_gene_sets)
 
 
 @pytest.fixture()

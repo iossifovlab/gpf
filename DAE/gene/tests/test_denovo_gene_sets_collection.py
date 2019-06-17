@@ -6,7 +6,8 @@ Created on Feb 16, 2017
 from __future__ import unicode_literals
 import pytest
 
-pytestmark = pytest.mark.usefixtures("gene_info_cache_dir", "calc_gene_sets")
+pytestmark = pytest.mark.usefixtures(
+    'gene_info_cache_dir', 'calc_gene_sets', 'cleanup_gene_sets')
 
 
 def test_denovo_gene_sets_exist(denovo_gene_sets_facade):
