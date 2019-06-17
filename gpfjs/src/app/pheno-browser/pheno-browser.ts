@@ -1,5 +1,68 @@
 import { environment } from '../../environments/environment';
 
+function addBaseUrlIfNotNull(currentPath: string, bp: string): string {
+  if (currentPath) {
+    return bp + currentPath;
+  }
+  return null;
+};
+
+export class PhenoRegression {
+
+  regressionName: string;
+  measureId: string;
+  regressionMeasureId: string;
+  figureRegression: string;
+  figureRegressionSmall: string;
+  pvalueRegressionMale: number;
+  pvalueRegressionFemale: number;
+
+  constructor(json: Object) {
+    this.regressionName = json['regression_name'];
+    this.measureId = json['measure_id'];
+    this.regressionMeasureId = json['regression_measure_id'];
+    this.figureRegression = json['figure_regression'];
+    this.figureRegressionSmall = json['figure_regression_small'];
+    this.pvalueRegressionMale = json['pvalue_regression_male'];
+    this.pvalueRegressionFemale = json['pvalue_regression_female'];
+  }
+
+  addBasePath(basePath: string) {
+    this.figureRegression = addBaseUrlIfNotNull(this.figureRegression, basePath);
+    this.figureRegressionSmall = addBaseUrlIfNotNull(this.figureRegressionSmall, basePath);
+  }
+}
+
+export class PhenoRegressions {
+
+  static emptyRegression = new PhenoRegression({
+    'figure_regression': null,
+    'figure_regression_small': null,
+    'pvalue_regression_male': null,
+    'pvalue_regression_female': null
+  });
+
+  constructor(regArr: Object[]) {
+    for (let i = 0; i < regArr.length; i++) {
+      this[regArr[i]['regression_name']] = new PhenoRegression(regArr[i]);
+    }
+  }
+
+  addBasePath(basePath: string) {
+    for (let reg of Object.getOwnPropertyNames(this)) {
+      this[reg].addBasePath(basePath);
+    }
+  }
+
+  getReg(name: string) {
+    if (this.hasOwnProperty(name)) {
+      return this[name];
+    } else {
+      return PhenoRegressions.emptyRegression;
+    }
+  }
+}
+
 export type PhenoInstrument = string;
 
 export class PhenoInstruments {
@@ -23,20 +86,12 @@ export class PhenoMeasure {
       json['figure_distribution'],
       json['figure_distribution_small'],
 
-      json['figure_correlation_nviq'],
-      json['figure_correlation_nviq_small'],
-      json['pvalue_correlation_nviq_male'] as number,
-      json['pvalue_correlation_nviq_female'] as number,
-
-      json['figure_correlation_age'],
-      json['figure_correlation_age_small'],
-      json['pvalue_correlation_age_male'] as number,
-      json['pvalue_correlation_age_female'] as number,
-
       json['measure_id'],
       json['measure_name'],
       json['measure_type'],
       json['description'],
+
+      new PhenoRegressions(json['regressions'])
     );
   }
 
@@ -48,20 +103,12 @@ export class PhenoMeasure {
     readonly figureDistribution: string,
     readonly figureDistributionSmall: string,
 
-    readonly figureCorrelationNviq: string,
-    readonly figureCorrelationNviqSmall: string,
-    readonly pvalueCorrelationNviqMale: number,
-    readonly pvalueCorrelationNviqFemale: number,
-
-    readonly figureCorrelationAge: string,
-    readonly figureCorrelationAgeSmall: string,
-    readonly pvalueCorrelationAgeMale: number,
-    readonly pvalueCorrelationAgeFemale: number,
-
     readonly measureId: string,
     readonly measureName: string,
     readonly measureType: string,
     readonly description: string,
+
+    readonly regressions: PhenoRegressions,
   ) { }
 }
 
@@ -71,17 +118,14 @@ export class PhenoMeasures {
     return new PhenoMeasures(
       json['base_image_url'],
       json['measures'].map((phenoMeasure) => PhenoMeasure.fromJson(phenoMeasure)),
-      json['has_descriptions']);
+      json['has_descriptions'],
+      json['regression_names']);
   }
 
   static addBasePath(phenoMeasures: PhenoMeasures): PhenoMeasures {
     let basePath = environment.basePath + phenoMeasures.baseImageUrl;
-    let addBaseUrlIfNotNull = (currentPath: string, bp: string) => {
-      if (currentPath) {
-        return bp + currentPath;
-      }
-      return null;
-    };
+
+    phenoMeasures.measures.map(measure => measure.regressions.addBasePath(basePath));
 
     return new PhenoMeasures(
       phenoMeasures.baseImageUrl,
@@ -93,29 +137,23 @@ export class PhenoMeasures {
         addBaseUrlIfNotNull(phenoMeasure.figureDistribution, basePath),
         addBaseUrlIfNotNull(phenoMeasure.figureDistributionSmall, basePath),
 
-        addBaseUrlIfNotNull(phenoMeasure.figureCorrelationNviq, basePath),
-        addBaseUrlIfNotNull(phenoMeasure.figureCorrelationNviqSmall, basePath),
-        phenoMeasure.pvalueCorrelationNviqMale,
-        phenoMeasure.pvalueCorrelationNviqFemale,
-
-        addBaseUrlIfNotNull(phenoMeasure.figureCorrelationAge, basePath),
-        addBaseUrlIfNotNull(phenoMeasure.figureCorrelationAgeSmall, basePath),
-        phenoMeasure.pvalueCorrelationAgeMale,
-        phenoMeasure.pvalueCorrelationAgeFemale,
-
         phenoMeasure.measureId,
         phenoMeasure.measureName,
         phenoMeasure.measureType,
-        phenoMeasure.description
+        phenoMeasure.description,
+
+        phenoMeasure.regressions,
       )),
-      phenoMeasures.hasDescriptions
+      phenoMeasures.hasDescriptions,
+      phenoMeasures.regressionNames
     );
   }
 
   constructor(
     readonly baseImageUrl: string,
     readonly measures: Array<PhenoMeasure>,
-    readonly hasDescriptions: boolean
+    readonly hasDescriptions: boolean,
+    readonly regressionNames: string
   ) {}
 
 }

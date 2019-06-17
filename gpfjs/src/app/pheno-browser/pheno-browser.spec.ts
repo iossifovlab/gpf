@@ -1,4 +1,4 @@
-import { PhenoMeasure, PhenoMeasures } from "./pheno-browser"
+import { PhenoMeasure, PhenoMeasures, PhenoRegression, PhenoRegressions } from "./pheno-browser"
 import { environment } from '../../environments/environment';
   
 export const fakeJsonMeasure = {
@@ -7,19 +7,67 @@ export const fakeJsonMeasure = {
   values_domain: '0,1',
   figure_distribution: 'test.jpg',
   figure_distribution_small: null,
-  figure_correlation_nviq: 'test_nviq.jpg',
-  figure_correlation_nviq_small: 'test_nviq_small.jpg',
-  pvalue_correlation_nviq_male: 0.000001,
-  pvalue_correlation_nviq_female: 0.2,
-  figure_correlation_age: 'test_age.jpg',
-  figure_correlation_age_small: 'test_age_small.jpg',
-  pvalue_correlation_age_male: 0.3,
-  pvalue_correlation_age_female: 0.4,
   measure_id: 'test_instrument.test_measure',
   measure_name: 'test_measure',
   measure_type: 'ordinal',
   description: 'a test measure',
+  regressions: []
 };
+
+export const fakeJsonMeasureOneRegression = {
+  Index: 1,
+  instrument_name: 'test_instrument',
+  values_domain: '0,1',
+  figure_distribution: 'test.jpg',
+  figure_distribution_small: null,
+  measure_id: 'test_instrument.test_measure',
+  measure_name: 'test_measure',
+  measure_type: 'ordinal',
+  description: 'a test measure',
+  regressions: [
+    {
+      regression_name: "age",
+      measure_id: "test_instrument.test_measure",
+      regression_measure_id: "test_instrument.age",
+      figure_regression: "imagepath",
+      figure_regression_small: "imagepathsmall",
+      pvalue_regression_male: 1.0e-6,
+      pvalue_regression_female: 0.20,
+    }
+  ]
+};
+
+export const fakeJsonMeasureTwoRegressions = {
+  Index: 1,
+  instrument_name: 'test_instrument',
+  values_domain: '0,1',
+  figure_distribution: 'test.jpg',
+  figure_distribution_small: null,
+  measure_id: 'test_instrument.test_measure',
+  measure_name: 'test_measure',
+  measure_type: 'ordinal',
+  description: 'a test measure',
+  regressions: [
+    {
+      regression_name: "age",
+      measure_id: "test_instrument.test_measure",
+      regression_measure_id: "test_instrument.age",
+      figure_regression: "imagepathage",
+      figure_regression_small: "imagepathagesmall",
+      pvalue_regression_male: 0.01,
+      pvalue_regression_female: 1.0,
+    },
+    {
+      regression_name: "iq",
+      measure_id: "test_instrument.test_measure",
+      regression_measure_id: "test_instrument.nviq",
+      figure_regression: "imagepathiq",
+      figure_regression_small: "imagepathiqsmall",
+      pvalue_regression_male: 0.02,
+      pvalue_regression_female: 2.0,
+    }
+  ]
+}
 
 describe('pheno measure', () => {
 
@@ -32,14 +80,6 @@ describe('pheno measure', () => {
     expect(phenoMeasure.valuesDomain).toBe('0,1');
     expect(phenoMeasure.figureDistribution).toBe('test.jpg');
     expect(phenoMeasure.figureDistributionSmall).toBe(null);
-    expect(phenoMeasure.figureCorrelationNviq).toBe('test_nviq.jpg');
-    expect(phenoMeasure.figureCorrelationNviqSmall).toBe('test_nviq_small.jpg');
-    expect(phenoMeasure.pvalueCorrelationNviqMale).toBe(0.000001);
-    expect(phenoMeasure.pvalueCorrelationNviqFemale).toBe(0.2);
-    expect(phenoMeasure.figureCorrelationAge).toBe('test_age.jpg');
-    expect(phenoMeasure.figureCorrelationAgeSmall).toBe('test_age_small.jpg');
-    expect(phenoMeasure.pvalueCorrelationAgeMale).toBe(0.3);
-    expect(phenoMeasure.pvalueCorrelationAgeFemale).toBe(0.4);
     expect(phenoMeasure.measureId).toBe('test_instrument.test_measure')
     expect(phenoMeasure.measureName).toBe('test_measure')
     expect(phenoMeasure.measureType).toBe('ordinal')
@@ -68,9 +108,61 @@ describe('pheno measures', () => {
     let bpMeasure = bpMeasures.measures[0];
     expect(bpMeasure.figureDistribution).toBe(environment.basePath + '/test_base_url/test.jpg');
     expect(bpMeasure.figureDistributionSmall).toBe(null);
-    expect(bpMeasure.figureCorrelationNviq).toBe(environment.basePath + '/test_base_url/test_nviq.jpg');
-    expect(bpMeasure.figureCorrelationNviqSmall).toBe(environment.basePath + '/test_base_url/test_nviq_small.jpg');
-    expect(bpMeasure.figureCorrelationAge).toBe(environment.basePath + '/test_base_url/test_age.jpg');
-    expect(bpMeasure.figureCorrelationAgeSmall).toBe(environment.basePath + '/test_base_url/test_age_small.jpg');
   });
+});
+
+describe('PhenoRegression', () => {
+
+  let phenoRegression = new PhenoRegression(fakeJsonMeasureOneRegression.regressions[0]);
+  let phenoRegressionBasePath = new PhenoRegression(fakeJsonMeasureOneRegression.regressions[0]);
+
+  it('should be creatable from a given json', () => {
+    expect(phenoRegression.regressionName).toEqual('age');
+    expect(phenoRegression.measureId).toEqual('test_instrument.test_measure');
+    expect(phenoRegression.regressionMeasureId).toEqual('test_instrument.age');
+    expect(phenoRegression.figureRegression).toEqual('imagepath');
+    expect(phenoRegression.figureRegressionSmall).toEqual('imagepathsmall');
+    expect(phenoRegression.pvalueRegressionMale).toEqual(1.0e-6);
+    expect(phenoRegression.pvalueRegressionFemale).toEqual(0.20);
+  });
+
+  it('should be able to add a base path', () => {
+    phenoRegressionBasePath.addBasePath('a_base_path/');
+    expect(phenoRegressionBasePath.figureRegression).toEqual('a_base_path/imagepath');
+    expect(phenoRegressionBasePath.figureRegressionSmall).toEqual('a_base_path/imagepathsmall');
+  });
+
+});
+
+describe('PhenoRegressions', () => {
+
+  let phenoRegressions = new PhenoRegressions(fakeJsonMeasureTwoRegressions.regressions);
+  let phenoRegressionsBasePath = new PhenoRegressions(fakeJsonMeasureTwoRegressions.regressions);
+
+  it('should be creatable from a given json', () => {
+    expect(phenoRegressions['age'].regressionName).toEqual('age');
+    expect(phenoRegressions['age'].measureId).toEqual('test_instrument.test_measure');
+    expect(phenoRegressions['age'].regressionMeasureId).toEqual('test_instrument.age');
+    expect(phenoRegressions['age'].figureRegression).toEqual('imagepathage')
+    expect(phenoRegressions['age'].figureRegressionSmall).toEqual('imagepathagesmall');
+    expect(phenoRegressions['age'].pvalueRegressionMale).toEqual(0.01);
+    expect(phenoRegressions['age'].pvalueRegressionFemale).toEqual(1.00);
+
+    expect(phenoRegressions['iq'].regressionName).toEqual('iq');
+    expect(phenoRegressions['iq'].measureId).toEqual('test_instrument.test_measure');
+    expect(phenoRegressions['iq'].regressionMeasureId).toEqual('test_instrument.nviq');
+    expect(phenoRegressions['iq'].figureRegression).toEqual('imagepathiq');
+    expect(phenoRegressions['iq'].figureRegressionSmall).toEqual('imagepathiqsmall');
+    expect(phenoRegressions['iq'].pvalueRegressionMale).toEqual(0.02);
+    expect(phenoRegressions['iq'].pvalueRegressionFemale).toEqual(2.00);
+  });
+
+  it('should be able to add a base path', () => {
+    phenoRegressionsBasePath.addBasePath('a_base_path/');
+    expect(phenoRegressionsBasePath['age'].figureRegression).toEqual('a_base_path/imagepathage');
+    expect(phenoRegressionsBasePath['age'].figureRegressionSmall).toEqual('a_base_path/imagepathagesmall');
+    expect(phenoRegressionsBasePath['iq'].figureRegression).toEqual('a_base_path/imagepathiq')
+    expect(phenoRegressionsBasePath['iq'].figureRegressionSmall).toEqual('a_base_path/imagepathiqsmall');
+  });
+
 });

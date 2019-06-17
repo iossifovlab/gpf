@@ -15,16 +15,14 @@
             </span>
         </gpf-table-content>
     </gpf-table-column>
-    <div *ngIf="measures.hasDescriptions">
-	    <gpf-table-column>
-		<gpf-table-header caption="Measure Description" field="description"></gpf-table-header>
-		<gpf-table-content>
-		    <span *gpfTableCellContent="let data">
-			<div ngbTooltip="{{data.description}}">{{ data.description }}</div>
-		    </span>
-		</gpf-table-content>
-	    </gpf-table-column>
-    </div>
+    <gpf-table-column *ngIf="measures.hasDescriptions">
+        <gpf-table-header caption="Measure Description" field="description"></gpf-table-header>
+        <gpf-table-content>
+            <span *gpfTableCellContent="let data">
+            <div ngbTooltip="{{data.description}}">{{ data.description }}</div>
+            </span>
+        </gpf-table-content>
+    </gpf-table-column>
     <gpf-table-column>
         <gpf-table-header caption="Pheno Measure Values"></gpf-table-header>
         <gpf-table-content>
@@ -45,68 +43,38 @@
             <gpf-table-subcontent field="valuesDomain"></gpf-table-subcontent>
         </gpf-table-content>
     </gpf-table-column>
-    <gpf-table-column>
-        <gpf-table-header caption="Correlation by Non-Verbal IQ"></gpf-table-header>
-        <gpf-table-content>
-            <span *gpfTableCellContent="let data">
-                <a [class.clickable]="!!data.figureCorrelationNviq" (click)="openModal(content, data.figureCorrelationNviq)">
-                    <img *ngIf="data.figureCorrelationNviqSmall" class="table-chart" [src]="data.figureCorrelationNviqSmall" />
-                </a>
-            </span>
-        </gpf-table-content>
-    </gpf-table-column>
-    <gpf-table-column header="P Value">
-        <gpf-table-header caption="P Value">
-            <gpf-table-subheader caption="male" field="pvalueCorrelationNviqMale"></gpf-table-subheader>
-            <gpf-table-subheader caption="female" field="pvalueCorrelationNviqFemale"></gpf-table-subheader>
-        </gpf-table-header>
-        <gpf-table-content>
-            <gpf-table-subcontent>
-                <span class="expanded-span"
-                   *gpfTableCellContent="let data"
-                   [style.background-color]="getBackgroundColor(data.pvalueCorrelationNviqMale)">
-                  {{ data.pvalueCorrelationNviqMale | numberWithExp: "1.2-4" }}
+    <div *ngFor="let regression of measures.regressionNames">
+        <gpf-table-column>
+            <gpf-table-header caption="Regression by {{regression}}"></gpf-table-header>
+            <gpf-table-content>
+                <span *gpfTableCellContent="let data">
+                    <a [class.clickable]="!!data.regressions.getReg(regression).figureRegression" (click)="openModal(content, data.regressions.getReg(regression).figureRegression)">
+                        <img *ngIf="data.regressions.getReg(regression).figureRegressionSmall" class="table-chart" [src]="data.regressions.getReg(regression).figureRegressionSmall" />
+                    </a>
                 </span>
-            </gpf-table-subcontent>
-            <gpf-table-subcontent>
-                <span class="expanded-span"
-                   *gpfTableCellContent="let data"
-                   [style.background-color]="getBackgroundColor(data.pvalueCorrelationNviqFemale)">
-                  {{ data.pvalueCorrelationNviqFemale | numberWithExp: "1.2-4" }}
-                </span>
-            </gpf-table-subcontent>
-        </gpf-table-content>
-    </gpf-table-column>
-    <gpf-table-column>
-        <gpf-table-header caption="Correlation by Age"></gpf-table-header>
-        <gpf-table-content>
-            <span *gpfTableCellContent="let data">
-                <a [class.clickable]="!!data.figureCorrelationAge" (click)="openModal(content, data.figureCorrelationAge)">
-                    <img *ngIf="data.figureCorrelationAgeSmall" class="table-chart" [src]="data.figureCorrelationAgeSmall" />
-                </a>
-            </span>
-        </gpf-table-content>
-    </gpf-table-column>
-    <gpf-table-column>
-        <gpf-table-header caption="P Value">
-            <gpf-table-subheader caption="male" field="pvalueCorrelationAgeMale"></gpf-table-subheader>
-            <gpf-table-subheader caption="female" field="pvalueCorrelationAgeFemale"></gpf-table-subheader>
-        </gpf-table-header>
-        <gpf-table-content>
-            <gpf-table-subcontent>
-                <span class="expanded-span"
-                  *gpfTableCellContent="let data"
-                  [style.background-color]="getBackgroundColor(data.pvalueCorrelationAgeMale)">
-                  {{ data.pvalueCorrelationAgeMale | numberWithExp: "1.2-4" }}
-                </span>
-            </gpf-table-subcontent>
-            <gpf-table-subcontent>
-                <span class="expanded-span"
-                  *gpfTableCellContent="let data"
-                  [style.background-color]="getBackgroundColor(data.pvalueCorrelationAgeFemale)">
-                  {{ data.pvalueCorrelationAgeFemale | numberWithExp: "1.2-4" }}
-                </span>
-            </gpf-table-subcontent>
-        </gpf-table-content>
-    </gpf-table-column>
+            </gpf-table-content>
+        </gpf-table-column>
+        <gpf-table-column>
+            <gpf-table-header caption="{{regression}} P Value">
+                <gpf-table-subheader caption="male" field="pvalueRegressionMale"></gpf-table-subheader>
+                <gpf-table-subheader caption="female" field="pvalueRegressionFemale"></gpf-table-subheader>
+            </gpf-table-header>
+            <gpf-table-content>
+                <gpf-table-subcontent>
+                    <span class="expanded-span"
+                     *gpfTableCellContent="let data"
+                      [style.background-color]="getBackgroundColor(data.regressions.getReg(regression).pvalueRegressionMale)">
+                      {{ data.regressions.getReg(regression).pvalueRegressionMale | numberWithExp: "1.2-4" }}
+                    </span>
+                </gpf-table-subcontent>
+                <gpf-table-subcontent>
+                    <span class="expanded-span"
+                     *gpfTableCellContent="let data"
+                      [style.background-color]="getBackgroundColor(data.regressions.getReg(regression).pvalueRegressionFemale)">
+                      {{ data.regressions.getReg(regression).pvalueRegressionFemale | numberWithExp: "1.2-4" }}
+                    </span>
+                </gpf-table-subcontent>
+            </gpf-table-content>
+        </gpf-table-column>
+    </div>
 </gpf-table>
