@@ -51,20 +51,18 @@ To generate the data needed for the GPF Phenotype Browser you can use
         -d ./pheno_db.db \
         -p pheno_db_name \
         -o browser/pheno_db_name \
-        --age "i1:age" --nonverbal_iq "i1:iq"
+        --regression pheno_reg.conf
 
-* `-d` option specifies path to already imported phenotype database file;
+* ``-d`` option specifies path to already imported phenotype database file;
 
-* `-p` option specifies the name of the phenotype database that will be
+* ``-p`` option specifies the name of the phenotype database that will be
   used in phenotype browser;
 
-* `-o` option specifies the output directory where all the generated
+* ``-o`` option specifies the output directory where all the generated
   file will be stored;
 
-* `--age` and `--nonverbal_iq` options specify which measure ids
-  correspond to the age at assessment and non-verbal IQ; when such
-  measures are specified, the phenotype browser displays correlation;
-  between each measure displayed and age at assessment and non-verbal IQ.
+* ``--regression`` option specifies an absolute path to a pheno regression
+  config file
 
 Measure Classification
 ######################

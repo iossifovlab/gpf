@@ -513,7 +513,7 @@ the following directory::
 
 The included files are:
 
-* `pheno.ped` - the pedigree file for all families included into the database;
+* `comp_pheno.ped` - the pedigree file for all families included into the database;
 
 * `instruments` - directory, containing all instruments;
 
@@ -521,17 +521,19 @@ The included files are:
 
 * `comp_pheno_data_dictionary.tsv` - descriptions for all measurements
 
+* `comp_pheno_regressions.conf` - regression configuration file
+
 The easiest way to import this phenotype database into the GPF instance is to
 use `simple_pheno_import.py` tool. This tool combines converting phenotype
-instruments and measures into GPF phenotype database and generates data and
-figures need for GPF Phonotype Browser. It will import the phenotype database
+instruments and measures into a GPF phenotype database and generates data and
+figures needed for GPF Phenotype Browser. It will import the phenotype database
 directly to the DAE data directory specified in your environment.
 
 .. code::
 
     simple_pheno_import.py -p comp_pheno.ped \
         -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno \
-        --age "i1:age" --nonverbal_iq "i1:iq"
+        --regression comp_pheno_regressions.conf
 
 Options used in this command are as follows:
 
@@ -545,10 +547,8 @@ Options used in this command are as follows:
 * | `-o` options specifies the name of the output phenotype database that will be
   | used in phenotype browser;
 
-* | `--age` and `--nonverbal_iq` option specifies which measures ids
-  | correspond to the age at assesment and non-verbal IQ; when such
-  | measures are specified, the phenotype browser displays correlation
-  | between each measure displayed and age at assesment and non-verbal IQ.
+* `--regression` option specifies a path to a pheno regression config which describes
+  a list of measures to make regressions against
 
 You can use `-h` option to see all options supported by the
 `simple_pheno_import.py` tool.
@@ -563,8 +563,6 @@ configuration file.
 
     [phenoDB]
     dbfile = comp_pheno.db
-    age = age
-    nonverbal_iq = iq
     browser_dbfile = browser/comp_pheno_browser.db
     browser_images_dir = browser/comp_pheno
     browser_images_url = /static/comp_pheno
