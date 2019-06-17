@@ -356,7 +356,7 @@ class VariantsParquetWriter(object):
             filesystem=None):
 
         compression = {
-            b'data': 'GZIP',
+            b'data': 'SNAPPY',
 
             b"bucket_index": "SNAPPY",
             b"summary_variant_index": "SNAPPY",
@@ -379,10 +379,11 @@ class VariantsParquetWriter(object):
             b"family_id": "SNAPPY",
             b"is_denovo": "SNAPPY",
 
+            b"variant_sexes": "SNAPPY",
+            b"variant_roles": "SNAPPY",
+            b"variant_sexes": "SNAPPY",
+            b"variant_inheritance": "SNAPPY",
             b"variant_in_member": "SNAPPY",
-            b"variant_in_role": "SNAPPY",
-            b"variant_in_sex": "SNAPPY",
-            b"inheritance_in_member": "SNAPPY",
         }
 
         writer = pq.ParquetWriter(

@@ -76,7 +76,6 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
         FamilyDelegate.__init__(self, family)
 
-        self._inheritance = None
         self._inheritance_in_members = None
         self._variant_in_members = None
         self._variant_in_members_objects = None
