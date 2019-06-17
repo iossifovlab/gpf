@@ -129,20 +129,6 @@ USAGE
             metavar='path')
 
         parser.add_argument(
-            '--age',
-            dest="age",
-            help="pheno measure ID represenging age at assesment",
-            type=str
-        )
-
-        parser.add_argument(
-            '--nonverbal_iq',
-            dest="nonverbal_iq",
-            help="pheno measure ID representing non-verbal IQ measure",
-            type=str,
-        )
-
-        parser.add_argument(
             '--regression',
             help=("path to a regression configuration file"),
             type=str
