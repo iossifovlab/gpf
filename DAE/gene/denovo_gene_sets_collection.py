@@ -334,6 +334,8 @@ class DenovoGeneSetsCollection(object):
         for variant in variants:
             family_id = variant.family_id
             for aa in variant.alt_alleles:
+                if Inheritance.denovo not in aa.inheritance_in_members:
+                    continue
                 if not (set(aa.variant_in_members) & people_with_people_group):
                     continue
 
