@@ -11,6 +11,7 @@ from builtins import object
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, String, Float, Enum, func, or_
 from sqlalchemy.sql import select
+from sqlalchemy.schema import PrimaryKeyConstraint
 from pheno.common import MeasureType
 # import traceback
 import pandas as pd
@@ -42,18 +43,21 @@ class DbManager(object):
 
             Column('figure_distribution_small', String(256)),
             Column('figure_distribution', String(256)),
+        )
 
-
-            Column('figure_correlation_nviq_small', String(256)),
-            Column('figure_correlation_nviq', String(256)),
-            Column('pvalue_correlation_nviq_male', Float()),
-            Column('pvalue_correlation_nviq_female', Float()),
-
-            Column('figure_correlation_age_small', String(256)),
-            Column('figure_correlation_age', String(256)),
-            Column('pvalue_correlation_age_male', Float()),
-            Column('pvalue_correlation_age_female', Float()),
-
+        self.regressions = Table(
+            'regressions', self.metadata,
+            Column('regression_name', String(128),
+                   nullable=False, index=True),
+            Column('measure_id', String(128), nullable=False, index=True),
+            Column('regression_measure_id', String(128),
+                   nullable=False, index=True),
+            Column('figure_regression', String(256)),
+            Column('figure_regression_small', String(256)),
+            Column('pvalue_regression_male', Float()),
+            Column('pvalue_regression_female', Float()),
+            PrimaryKeyConstraint('regression_name', 'measure_id',
+                                 name='regression_pkey')
         )
 
     def save(self, v):
@@ -71,6 +75,25 @@ class DbManager(object):
                 update().values(**v).where(
                     self.variable_browser.c.measure_id == measure_id
                 )
+            with self.engine.begin() as connection:
+                connection.execute(update)
+
+    def save_regression(self, r):
+        try:
+            insert = self.regressions. \
+                insert().values(r)
+            with self.engine.begin() as connection:
+                connection.execute(insert)
+        except Exception:
+            regression_name = r['regression_name']
+            measure_id = r['measure_id']
+
+            del r['regression_name']
+            del r['measure_id']
+            update = self.regressions.update().values(r).where(
+                (self.regressions.c.regression_name == regression_name)
+                & (self.regressions.c.measure_id == measure_id)
+            )
             with self.engine.begin() as connection:
                 connection.execute(update)
 
@@ -94,13 +117,17 @@ class DbManager(object):
                        .replace('_', r'\_'))
             if not instrument_name:
                 query_params.append(
-                    self.variable_browser.c.instrument_name.like(keyword, escape='\\'))
+                    self.variable_browser.c.instrument_name.like(
+                        keyword, escape='\\'))
             query_params.append(
-                self.variable_browser.c.measure_id.like(keyword, escape='\\'))
+                self.variable_browser.c.measure_id.like(
+                    keyword, escape='\\'))
             query_params.append(
-                self.variable_browser.c.measure_name.like(keyword, escape='\\'))
+                self.variable_browser.c.measure_name.like(
+                    keyword, escape='\\'))
             query_params.append(
-                self.variable_browser.c.description.like(keyword, escape='\\'))
+                self.variable_browser.c.description.like(
+                    keyword, escape='\\'))
             query = self.variable_browser.select(or_(*query_params))
         else:
             query = self.variable_browser.select()
@@ -111,6 +138,22 @@ class DbManager(object):
 
         df = pd.read_sql(query, self.engine)
         return df
+
+    def get_regressions(self, measure_id):
+        s = select([self.regressions])
+        s = s.where(self.regressions.c.measure_id == measure_id)
+        with self.engine.connect() as connection:
+            vs = connection.execute(s).fetchall()
+            if vs:
+                return vs
+            else:
+                return None
+
+    @property
+    def regression_names(self):
+        s = select([self.regressions.c.regression_name], distinct=True)
+        with self.engine.connect() as connection:
+            return list(map(lambda x: x.values()[0], connection.execute(s)))
 
     @property
     def has_descriptions(self):

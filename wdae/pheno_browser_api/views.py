@@ -114,25 +114,28 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         df = db.search_measures(instrument, search_term)
 
         res = []
-        for row in df.to_dict('records'):
-            m = row
-            if isnan(m['pvalue_correlation_nviq_male']):
-                m['pvalue_correlation_nviq_male'] = "NaN"
-            if isnan(m['pvalue_correlation_age_male']):
-                m['pvalue_correlation_age_male'] = "NaN"
-            if isnan(m['pvalue_correlation_nviq_female']):
-                m['pvalue_correlation_nviq_female'] = "NaN"
-            if isnan(m['pvalue_correlation_age_female']):
-                m['pvalue_correlation_age_female'] = "NaN"
+        for m in df.to_dict('records'):
 
             if m['values_domain'] is None:
                 m['values_domain'] = ""
             m['measure_type'] = m['measure_type'].name
+
+            m['regressions'] = db.get_regressions(m['measure_id']) or []
+
+            for reg in m['regressions']:
+                reg = dict(reg)
+                if isnan(reg['pvalue_regression_male']):
+                    reg['pvalue_regression_male'] = "NaN"
+                if isnan(reg['pvalue_regression_female']):
+                    reg['pvalue_regression_female'] = "NaN"
+
             res.append(m)
+
         return Response({
             'base_image_url': browser_images_url,
             'measures': res,
             'has_descriptions': db.has_descriptions,
+            'regression_names': db.regression_names
         })
 
 
