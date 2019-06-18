@@ -199,7 +199,7 @@ class ImpalaBackend(object):
     def query_variants(self, config, **kwargs):
         with self.impala.cursor() as cursor:
             query = self.build_query(config, **kwargs)
-            # print("FINAL QUERY: ", query)
+            print("FINAL QUERY: ", query)
             cursor.execute(query)
             for row in cursor:
                 yield row
@@ -310,14 +310,27 @@ class ImpalaBackend(object):
 
         return """
             SELECT
-                `data`, GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
+                chrom,
+                `position`,
+                reference,
+                alternatives_data,
+                effect_data,
+                family_id,
+                genotype,
+                GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
             FROM {db}.{variant}
             {where_clause}
             GROUP BY
                 bucket_index,
                 summary_variant_index,
                 family_variant_index,
-                `data`
+                chrom,
+                `position`,
+                reference,
+                alternatives_data,
+                effect_data,
+                family_id,
+                genotype
             {limit_clause}
             """.format(
             db=config.db, variant=config.tables.variant,

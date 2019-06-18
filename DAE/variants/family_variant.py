@@ -72,6 +72,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         #: summary allele that corresponds to this allele in family variant
         # self.summary_allele = summary_allele
         self.gt = genotype
+        assert self.gt.dtype == GENOTYPE_TYPE
         self._best_st = None
 
         FamilyDelegate.__init__(self, family)
@@ -166,6 +167,7 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         if self._variant_in_members is None:
             allele_index = getattr(self, "allele_index", None)
             gt = np.copy(self.gt)
+
             if allele_index is not None:
                 gt[gt != allele_index] = 0
             else:

@@ -6,8 +6,8 @@ import traceback
 import tempfile
 import operator
 import functools
-import pickle
-import struct
+
+from variants.effects import Effect
 
 from collections import namedtuple, defaultdict
 
@@ -15,8 +15,8 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-# from annotation.tools.file_io_parquet import ParquetSchema
-from backends.impala.serializers import FamilyVariantSerializer
+from variants.variant import SummaryAllele, SummaryVariant
+from variants.family_variant import FamilyVariant
 from utils.vcf_utils import GENOTYPE_TYPE
 
 
@@ -80,13 +80,15 @@ class ParquetSerializer(object):
             'af_parents_called_count',
             'af_parents_called_percent',
             'af_allele_count',
-            'af_allele_freq'
+            'af_allele_freq',
+            'alternatives_data',
         ])
 
     effect_gene = namedtuple(
         'effect_gene', [
             'effect_type',
-            'effect_gene'
+            'effect_gene',
+            'effect_data',
         ]
     )
 
@@ -98,6 +100,7 @@ class ParquetSerializer(object):
             'variant_sexes',
             'variant_roles',
             'variant_inheritance',
+            'genotype',
         ]
     )
 
@@ -110,11 +113,14 @@ class ParquetSerializer(object):
         ]
     )
 
-    def __init__(self, include_reference=True, annotation_schema=None):
+    def __init__(
+            self, include_reference=True, annotation_schema=None):
+        # self.families = families
         self.include_reference = include_reference
         self.annotation_schema = annotation_schema
 
-    def serialize_summary(self, summary_variant_index, allele):
+    def serialize_summary(
+            self, summary_variant_index, allele, alternatives_data):
         if not self.include_reference and allele.is_reference_allele:
             return None
         elif allele.is_reference_allele:
@@ -130,7 +136,8 @@ class ParquetSerializer(object):
                 allele.get_attribute('af_parents_called_count'),
                 allele.get_attribute('af_parents_called_percent'),
                 allele.get_attribute('af_allele_count'),
-                allele.get_attribute('af_allele_freq')
+                allele.get_attribute('af_allele_freq'),
+                alternatives_data,
             )
         else:
             return self.summary(
@@ -145,14 +152,15 @@ class ParquetSerializer(object):
                 allele.get_attribute('af_parents_called_count'),
                 allele.get_attribute('af_parents_called_percent'),
                 allele.get_attribute('af_allele_count'),
-                allele.get_attribute('af_allele_freq')
+                allele.get_attribute('af_allele_freq'),
+                alternatives_data,
             )
 
-    def serialize_effects(self, allele):
+    def serialize_effects(self, allele, effect_data):
         if allele.is_reference_allele:
-            return self.effect_gene(None, None)
+            return self.effect_gene(None, None, effect_data)
         return [
-            self.effect_gene(eg.effect, eg.symbol)
+            self.effect_gene(eg.effect, eg.symbol, effect_data)
             for eg in allele.effect.genes
         ]
 
@@ -160,12 +168,16 @@ class ParquetSerializer(object):
     def serialize_variant_genotype(gt):
         rows, _ = gt.shape
         assert rows == 2
+        flat = gt.flatten(order='F')
+        buff = flat.tobytes()
+        data = str(buff, 'latin1')
 
-        return gt.flatten(order='F').tobytes()
+        return data
 
     @staticmethod
     def deserialize_variant_genotype(data):
-        gt = np.frombuffer(data, dtype=GENOTYPE_TYPE)
+        buff = bytes(data, 'latin1')
+        gt = np.frombuffer(buff, dtype=GENOTYPE_TYPE)
         assert len(gt) % 2 == 0
 
         size = len(gt) // 2
@@ -174,21 +186,24 @@ class ParquetSerializer(object):
 
     @staticmethod
     def serialize_variant_alternatives(alternatives):
-        return pickle.dumps(alternatives)
+        return ",".join(alternatives)
 
     @staticmethod
     def deserialize_variant_alternatives(data):
-        return pickle.loads(data)
+        return data.split(",")
 
     @staticmethod
     def serialize_variant_effects(effects):
-        return pickle.dumps(effects)
+        if effects is None:
+            return None
+        return "#".join([str(e) for e in effects])
 
     @staticmethod
     def deserialize_variant_effects(data):
-        return pickle.loads(data)
+        return [Effect.from_string(e) for e in data.split("#")]
 
-    def serialize_family(self, family_variant_index, family_allele):
+    def serialize_family(
+            self, family_variant_index, family_allele, genotype_data):
         res = self.family(
             family_variant_index,
             family_allele.family_id,
@@ -208,6 +223,7 @@ class ParquetSerializer(object):
                     vi.value for vi in family_allele.inheritance_in_members
                     if vi is not None
                 ], 0),
+            genotype_data,
         )
         return res
 
@@ -218,6 +234,36 @@ class ParquetSerializer(object):
                 continue
             result.append(self.member(variant_in_member))
         return result
+
+    def deserialize_variant(
+            self, family,
+            chrom, position, reference, alternatives_data, 
+            effect_data, genotype_data):
+        effects = ParquetSerializer.deserialize_variant_effects(
+            effect_data)
+        alternatives = ParquetSerializer.deserialize_variant_alternatives(
+            alternatives_data
+        )
+        assert len(effects) == len(alternatives)
+
+        # family = self.families.get(family_id)
+        assert family is not None
+
+        genotype = ParquetSerializer.deserialize_variant_genotype(
+            genotype_data)
+        rows, cols = genotype.shape
+        assert cols == len(family)
+
+        alleles = []
+        for alt, effect in zip(alternatives, effects):
+            allele = SummaryAllele(
+                chrom, position, reference, alt, effect=effect)
+            alleles.append(allele)
+        return FamilyVariant(
+            SummaryVariant(alleles),
+            family,
+            genotype
+        )
 
 
 class VariantsParquetWriter(object):
@@ -236,9 +282,11 @@ class VariantsParquetWriter(object):
         pa.field("af_parents_called_percent", pa.float32()),
         pa.field("af_allele_count", pa.int32()),
         pa.field("af_allele_freq", pa.float32()),
+        pa.field("alternatives_data", pa.string()),
 
         pa.field("effect_type", pa.string()),
         pa.field("effect_gene", pa.string()),
+        pa.field("effect_data", pa.string()),
 
         pa.field("family_variant_index", pa.int64()),
         pa.field("family_id", pa.string()),
@@ -249,8 +297,9 @@ class VariantsParquetWriter(object):
         pa.field("variant_inheritance", pa.int16()),
 
         pa.field("variant_in_member", pa.string()),
+        pa.field("genotype", pa.string()),
 
-        pa.field("data", pa.binary()),
+        # pa.field("data", pa.binary()),
     ])
 
     EXCLUDE = [
@@ -280,7 +329,6 @@ class VariantsParquetWriter(object):
         self.data = ParquetData(schema)
 
     def variants_table(self, bucket_index=0, rows=10000):
-        variant_serializer = FamilyVariantSerializer(None)
         parquet_serializer = ParquetSerializer()
         print("row group size:", rows)
 
@@ -291,26 +339,32 @@ class VariantsParquetWriter(object):
 
             for family_variant in family_variants:
                 family_variant_index += 1
+                effect_data = parquet_serializer.serialize_variant_effects(
+                    family_variant.effects
+                )
+                alternatives_data = family_variant.alternative
+                genotype_data = parquet_serializer.serialize_variant_genotype(
+                    family_variant.gt
+                )
 
-                data = variant_serializer.serialize(family_variant)
                 repetition = 0
                 for family_allele in family_variant.alleles:
                     summary = parquet_serializer.serialize_summary(
-                        summary_variant_index, family_allele
+                        summary_variant_index, family_allele,
+                        alternatives_data
                     )
                     effect_genes = parquet_serializer.serialize_effects(
-                        family_allele)
+                        family_allele, effect_data)
                     family = parquet_serializer.serialize_family(
-                        family_variant_index, family_allele)
+                        family_variant_index, family_allele, genotype_data)
                     member = parquet_serializer.serialize_members(
                         family_variant_index, family_allele)
 
-                    for (d, s, e, f, m) in itertools.product(
-                            [data], [summary], effect_genes, [family], member):
+                    for (s, e, f, m) in itertools.product(
+                            [summary], effect_genes, [family], member):
 
                         repetition += 1
 
-                        self.data.data_append('data', d)
                         self.data.data_append('bucket_index', bucket_index)
 
                         for d in (s, e, f, m):

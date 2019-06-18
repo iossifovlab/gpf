@@ -12,6 +12,8 @@ import os
 import numpy as np
 import pandas as pd
 
+from utils.vcf_utils import GENOTYPE_TYPE
+
 from variants.family import FamiliesBase
 from variants.family import Family
 from variants.variant import SummaryVariantFactory
@@ -86,7 +88,8 @@ class VariantFactory(SummaryVariantFactory):
         assert vcf is not None
         # assert isinstance(family, VcfFamily)
 
-        gt = np.copy(vcf.gt_idxs[family.alleles])
+        gt = vcf.gt_idxs[family.alleles].\
+            astype(GENOTYPE_TYPE, casting='same_kind')
         gt = gt.reshape([2, len(family)], order='F')
 
         return VariantFactory.from_summary_variant(
