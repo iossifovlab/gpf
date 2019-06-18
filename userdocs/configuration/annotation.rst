@@ -49,6 +49,9 @@ options.*
 These are custom options that will be passed to the annotator.
 Each annotator provides different options that can be set.
 
+.. FIXME
+   Describe prom_len option of VariantEffectAnnotator
+
 =========================================== =========================== =================================================================================
 Option                                      Used by                     Description
 =========================================== =========================== =================================================================================
@@ -60,7 +63,6 @@ dbNSFP_filename                             dbNSFPAnnotator             A glob-l
 dbNSFP_config                               dbNSFPAnnotator             The name (not absolute path) of the score config inside the dbNSFP directory.
 Graw                                        VariantEffectAnnotator      The absolute path to the genome file.
 Traw                                        VariantEffectAnnotator      The absolute path to the gene models file.
-prom_len                                    VariantEffectAnnotator      (???)
 chain_file                                  LiftOverAnnotator           The absolute path to the liftover chain to be used.
 =========================================== =========================== =================================================================================
 
