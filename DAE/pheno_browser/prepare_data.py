@@ -247,6 +247,9 @@ class PreparePhenoBrowserBase(object):
         return res
 
     def handle_regressions(self, measure):
+        if measure.measure_type not in [MeasureType.continuous,
+                                        MeasureType.ordinal]:
+            return
         res = {'measure_id': measure.measure_id}
         for reg_id, reg in self.pheno_regressions.items():
             reg_measure = self._get_measure_by_name(reg['measure_name'],
@@ -261,8 +264,8 @@ class PreparePhenoBrowserBase(object):
             res['regression_id'] = reg_id
             jitter = float(reg.get('jitter', 0.1))
             res.update(self.build_regression(measure, reg_measure, jitter))
-            if res.get('pvalue_regression_male') or \
-               res.get('pvalue_regression_female'):
+            if res.get('pvalue_regression_male') is not None or \
+               res.get('pvalue_regression_female') is not None:
                 yield res
 
     def run(self):
@@ -284,8 +287,6 @@ class PreparePhenoBrowserBase(object):
                 progress(text=str(measure) + "\n")
                 var = self.handle_measure(measure)
                 db.save(var)
-                if self.pheno_regressions and \
-                   measure.measure_type in [MeasureType.continuous,
-                                            MeasureType.ordinal]:
+                if self.pheno_regressions:
                     for regression in self.handle_regressions(measure):
                             db.save_regression_values(regression)
