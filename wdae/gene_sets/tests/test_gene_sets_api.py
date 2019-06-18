@@ -15,6 +15,20 @@ pytestmark = pytest.mark.usefixtures(
     'mock_studies_manager', 'calc_gene_sets', 'cleanup_gene_sets')
 
 
+def name_in_gene_sets(gene_sets, name, count=None):
+    for gene_set in gene_sets:
+        if gene_set['name'] == name:
+            print(gene_set)
+            if count is not None:
+                if gene_set['count'] == count:
+                    return True
+                else:
+                    return False
+            return True
+
+    return False
+
+
 def test_gene_sets_collections(db, admin_client):
     url = "/api/v3/gene_sets/gene_sets_collections"
     response = admin_client.get(url,)
@@ -91,7 +105,8 @@ def test_main_gene_set_not_found(db, admin_client):
         "geneSetsCollection": "main",
         "geneSet": "BadBadName",
     }
-    response = admin_client.post(url, query, format='json')
+    response = admin_client.post(
+        url, json.dumps(query), content_type='application/json', format='json')
     assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
 
@@ -101,7 +116,8 @@ def test_bad_gene_set_collection_not_found(db, admin_client):
         "geneSetsCollection": "BadBadName",
         "geneSet": "BadBadName",
     }
-    response = admin_client.post(url, query, format='json')
+    response = admin_client.post(
+        url, json.dumps(query), content_type='application/json', format='json')
     assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
 
@@ -199,3 +215,48 @@ def test_get_bad_gene_set_collection_not_found(db, admin_client):
     request = "{}?{}".format(url, urlencode(query))
     response = admin_client.get(request)
     assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
+
+
+def test_get_gene_set_collection_empty_query(db, admin_client):
+    url = "/api/v3/gene_sets/gene_set_download"
+    query = {}
+    request = "{}?{}".format(url, urlencode(query))
+    response = admin_client.get(request)
+    assert status.HTTP_400_BAD_REQUEST == response.status_code, repr(response)
+
+
+def test_gene_sets(db, admin_client):
+    url = "/api/v3/gene_sets/gene_sets"
+    query = {
+        "geneSetsCollection": "denovo",
+        "geneSetsTypes": {
+            "f1_group": {
+                "phenotype": ["autism"]
+            }
+        }
+    }
+    response = admin_client.post(
+        url, json.dumps(query), content_type='application/json', format='json')
+    assert status.HTTP_200_OK == response.status_code, repr(response.content)
+    result = response.data
+    assert name_in_gene_sets(result, 'Synonymous', 1)
+
+
+def test_gene_sets_empty_query(db, admin_client):
+    url = "/api/v3/gene_sets/gene_sets"
+    query = {}
+    response = admin_client.post(
+        url, json.dumps(query), content_type='application/json', format='json')
+    assert status.HTTP_400_BAD_REQUEST == response.status_code, \
+        repr(response.content)
+
+
+def test_gene_sets_missing(db, admin_client):
+    url = "/api/v3/gene_sets/gene_sets"
+    query = {
+        "geneSetsCollection": "BadBadName"
+    }
+    response = admin_client.post(
+        url, json.dumps(query), content_type='application/json', format='json')
+    assert status.HTTP_404_NOT_FOUND == response.status_code, \
+        repr(response.content)

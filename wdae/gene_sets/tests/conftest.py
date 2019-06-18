@@ -40,9 +40,6 @@ def mock_studies_manager(db, mocker, studies_manager):
         'gene_sets.views.get_studies_manager',
         return_value=studies_manager)
     mocker.patch(
-        'gene_sets.expand_gene_set_decorator.get_studies_manager',
-        return_value=studies_manager)
-    mocker.patch(
         'datasets_api.permissions.get_studies_manager',
         return_value=studies_manager)
 
