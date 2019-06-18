@@ -125,7 +125,7 @@ class GeneSetDownloadView(GeneSetsBaseView):
         "geneSetsCollection": "denovo",
         "geneSet": "LGDs",
         "geneSetsTypes": {
-            "SD_TEST": ["autism", "epilepsy"]
+            "SD_TEST": {"phenotype": ["autism", "epilepsy"]}
         }
         }
     """
@@ -136,13 +136,6 @@ class GeneSetDownloadView(GeneSetsBaseView):
     def post(self, request):
         return self._build_response(request.data, request.user)
 
-    def datasets_to_study_groups_types(self, gene_sets_types):
-        result = {}
-        for dataset_id, values in gene_sets_types.items():
-            result[dataset_id] = values
-
-        return result
-
     def _build_response(self, data, user):
         if 'geneSetsCollection' not in data or 'geneSet' not in data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -150,7 +143,6 @@ class GeneSetDownloadView(GeneSetsBaseView):
         gene_set_id = data['geneSet']
         gene_sets_types = data.get('geneSetsTypes', {})
 
-        gene_sets_types = self.datasets_to_study_groups_types(gene_sets_types)
         permitted_datasets = IsDatasetAllowed.permitted_datasets(user)
 
         if gene_sets_collection_id == 'denovo':

@@ -57,7 +57,8 @@ class StudiesManager(object):
         gene_info_config = GeneInfoConfig(self.dae_config)
         self.weights_loader = WeightsLoader(config=gene_info_config)
 
-        self.gene_sets_collections = GeneSetsCollections(self.vdb)
+        self.gene_sets_collections = GeneSetsCollections(
+            self.vdb, gene_info_config)
         self.denovo_gene_set_collection_facade = \
             DenovoGeneSetCollectionFacade(self.vdb)
 

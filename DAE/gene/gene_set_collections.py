@@ -12,8 +12,8 @@ LOGGER = logging.getLogger(__name__)
 
 class GeneSetsCollection(GeneInfoConfig):
 
-    def __init__(self, gene_sets_collection_id):
-        super(GeneSetsCollection, self).__init__()
+    def __init__(self, gene_sets_collection_id, dae_config=None):
+        super(GeneSetsCollection, self).__init__(config=dae_config)
 
         assert gene_sets_collection_id != 'denovo'
         self.gsc_id = gene_sets_collection_id
@@ -85,7 +85,7 @@ class GeneSetsCollections(object):
 
     def __init__(self, variants_db, config=None):
         if config is None:
-            config = GeneInfoConfig()
+            config = GeneInfoConfig(config=self.variants_db.dae_config)
 
         self.config = config
         self.variants_db = variants_db
@@ -120,7 +120,8 @@ class GeneSetsCollections(object):
         ])
 
     def _load_gene_sets_collection(self, gene_sets_collection_id, load=True):
-        gsc = GeneSetsCollection(gene_sets_collection_id)
+        gsc = GeneSetsCollection(
+            gene_sets_collection_id, dae_config=self.variants_db.dae_config)
 
         if load:
             gsc.load()
