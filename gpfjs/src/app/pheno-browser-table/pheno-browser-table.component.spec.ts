@@ -33,7 +33,7 @@ class HostComponentNoRegressions {
       base_image_url: "",
       measures: [fakeJsonMeasure],
       has_descriptions: true,
-      regression_names: []
+      regression_names: {}
     }
   );
   @ViewChild('table') table;
@@ -94,7 +94,7 @@ class HostComponentOneRegression {
       base_image_url: "",
       measures: [fakeJsonMeasureOneRegression],
       has_descriptions: true,
-      regression_names: ["age"]
+      regression_names: {"age": "age"}
     }
   );
   @ViewChild('table') table;
@@ -159,7 +159,7 @@ class HostComponentTwoRegressions {
       base_image_url: "",
       measures: [fakeJsonMeasureTwoRegressions],
       has_descriptions: true,
-      regression_names: ["age", "iq"]
+      regression_names: {"age": "", "iq": ""}
     }
   );
   @ViewChild('table') table;

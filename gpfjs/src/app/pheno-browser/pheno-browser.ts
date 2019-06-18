@@ -9,7 +9,7 @@ function addBaseUrlIfNotNull(currentPath: string, bp: string): string {
 
 export class PhenoRegression {
 
-  regressionName: string;
+  regressionId: string;
   measureId: string;
   figureRegression: string;
   figureRegressionSmall: string;
@@ -17,7 +17,7 @@ export class PhenoRegression {
   pvalueRegressionFemale: number;
 
   constructor(json: Object) {
-    this.regressionName = json['regression_name'];
+    this.regressionId = json['regression_id'];
     this.measureId = json['measure_id'];
     this.figureRegression = json['figure_regression'];
     this.figureRegressionSmall = json['figure_regression_small'];

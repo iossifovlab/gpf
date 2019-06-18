@@ -57,7 +57,12 @@ export class PhenoBrowserTableComponent {
   }
 
   getRegressionName(regressionId: string) {
-    return this.measures.regressionNames[regressionId];
+    if(this.measures.regressionNames[regressionId]) {
+      return this.measures.regressionNames[regressionId];
+    }
+    else {
+      return regressionId;
+    }
   }
 
   openModal(content, imageUrl) {

@@ -40,6 +40,8 @@ import 'rxjs/add/observable/combineLatest';
 let fakeJsonMeasurei1 = JSON.parse(JSON.stringify(fakeJsonMeasureOneRegression));
 fakeJsonMeasurei1.instrument_name = 'i1';
 fakeJsonMeasurei1.measure_id = 'i1.test_measure';
+fakeJsonMeasurei1.measure_name = 'test_measure';
+fakeJsonMeasurei1.regressions[0].measure_id = 'i1.test_measure';
 
 
 class MockPhenoBrowserService {
@@ -48,7 +50,7 @@ class MockPhenoBrowserService {
   }
 
   getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasures> {
-    let measures = PhenoMeasures.fromJson({'base_image_url': 'base', 'measures': [fakeJsonMeasurei1], 'has_descriptions': true, 'regression_names': ['age']});
+    let measures = PhenoMeasures.fromJson({'base_image_url': 'base', 'measures': [fakeJsonMeasurei1], 'has_descriptions': true, 'regression_names': {'age': 'age'}});
     measures = PhenoMeasures.addBasePath(measures);
     return of(measures);
   }
