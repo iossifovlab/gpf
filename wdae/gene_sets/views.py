@@ -43,7 +43,7 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
         denovo_gene_sets_collections = deepcopy(
             self.dgscf.get_collections_descriptions(permitted_datasets))
 
-        gene_sets_collections.append(denovo_gene_sets_collections)
+        gene_sets_collections[1:1] = [denovo_gene_sets_collections]
         return Response(gene_sets_collections, status=status.HTTP_200_OK)
 
 
