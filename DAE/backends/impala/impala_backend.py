@@ -316,7 +316,7 @@ class ImpalaBackend(object):
                 alternatives_data,
                 effect_data,
                 family_id,
-                genotype,
+                genotype_data,
                 GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
             FROM {db}.{variant}
             {where_clause}
@@ -330,7 +330,7 @@ class ImpalaBackend(object):
                 alternatives_data,
                 effect_data,
                 family_id,
-                genotype
+                genotype_data
             {limit_clause}
             """.format(
             db=config.db, variant=config.tables.variant,

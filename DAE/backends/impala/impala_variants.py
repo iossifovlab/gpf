@@ -20,12 +20,10 @@ class ImpalaFamilyVariants(FamiliesBase):
     def query_variants(self, **kwargs):
 
         for row in self.backend.query_variants(self.config, **kwargs):
-            print(row)
             chrom, position, reference, alternatives_data, \
                 effect_data, family_id, genotype_data, \
                 matched_alleles = row
 
-            print(genotype_data)
             family = self.families.get(family_id)
             v = self.serializer.deserialize_variant(
                 family,

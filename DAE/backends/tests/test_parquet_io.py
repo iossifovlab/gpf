@@ -84,7 +84,7 @@ def test_variants_parquet_io(
                 alternatives_data,
                 effect_data,
                 family_id,
-                genotype,
+                genotype_data,
                 GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
             FROM {db}.{variant}
             {where_clause}
@@ -98,7 +98,7 @@ def test_variants_parquet_io(
                 alternatives_data,
                 effect_data,
                 family_id,
-                genotype
+                genotype_data
             {limit_clause}
             """.format(
                 db=db, variant="variant",

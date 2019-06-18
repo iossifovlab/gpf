@@ -100,7 +100,7 @@ class ParquetSerializer(object):
             'variant_sexes',
             'variant_roles',
             'variant_inheritance',
-            'genotype',
+            'genotype_data',
         ]
     )
 
@@ -297,7 +297,7 @@ class VariantsParquetWriter(object):
         pa.field("variant_inheritance", pa.int16()),
 
         pa.field("variant_in_member", pa.string()),
-        pa.field("genotype", pa.string()),
+        pa.field("genotype_data", pa.string()),
 
         # pa.field("data", pa.binary()),
     ])
@@ -410,8 +410,6 @@ class VariantsParquetWriter(object):
             filesystem=None):
 
         compression = {
-            b'data': 'SNAPPY',
-
             b"bucket_index": "SNAPPY",
             b"summary_variant_index": "SNAPPY",
             b"allele_index": "SNAPPY",
@@ -438,6 +436,10 @@ class VariantsParquetWriter(object):
             b"variant_sexes": "SNAPPY",
             b"variant_inheritance": "SNAPPY",
             b"variant_in_member": "SNAPPY",
+
+            b"alternatives_data": "SNAPPY",
+            b"effect_data": "SNAPPY",
+            b"genotype_data": "SNAPPY",
         }
 
         writer = pq.ParquetWriter(
