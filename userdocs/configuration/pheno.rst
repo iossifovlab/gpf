@@ -29,28 +29,6 @@ dbfile
 The path to the SQLite3 phenotype database file, relative to the
 configuration file.
 
-age
----
-
-.. code-block:: ini
-
-  age = {age measure id}
-
-The id of the measure that contains an individual's age. Composed of
-the name of the instrument containing the age measure and the age measure's
-name. Optional.
-
-nonverbal_iq
-------------
-
-.. code-block:: ini
-
-  nonverbal_iq = {nviq measure id}
-
-The id of the measure that contains an individual's nonverbal IQ. Composed of
-the name of the instrument containing the NVIQ measure and the NVIQ measure's
-name. Optional.
-
 browser_dbfile
 --------------
 

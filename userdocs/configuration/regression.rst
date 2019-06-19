@@ -41,3 +41,13 @@ jitter
 
 A float value that determines the amount of jitter to apply
 to points when drawing the regression plot. The default value is 0.1.
+
+
+display_name
+------------
+
+.. code-block:: ini
+
+  display_name = {pheno regression display name}
+
+Determines the name of the regression's column in the phenotype browser.
