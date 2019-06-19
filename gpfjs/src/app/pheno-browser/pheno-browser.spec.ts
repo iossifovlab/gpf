@@ -26,9 +26,8 @@ export const fakeJsonMeasureOneRegression = {
   description: 'a test measure',
   regressions: [
     {
-      regression_name: "age",
+      regression_id: "age",
       measure_id: "test_instrument.test_measure",
-      regression_measure_id: "test_instrument.age",
       figure_regression: "imagepath",
       figure_regression_small: "imagepathsmall",
       pvalue_regression_male: 1.0e-6,
@@ -49,18 +48,16 @@ export const fakeJsonMeasureTwoRegressions = {
   description: 'a test measure',
   regressions: [
     {
-      regression_name: "age",
+      regression_id: "age",
       measure_id: "test_instrument.test_measure",
-      regression_measure_id: "test_instrument.age",
       figure_regression: "imagepathage",
       figure_regression_small: "imagepathagesmall",
       pvalue_regression_male: 0.01,
       pvalue_regression_female: 1.0,
     },
     {
-      regression_name: "iq",
+      regression_id: "iq",
       measure_id: "test_instrument.test_measure",
-      regression_measure_id: "test_instrument.nviq",
       figure_regression: "imagepathiq",
       figure_regression_small: "imagepathiqsmall",
       pvalue_regression_male: 0.02,
@@ -117,9 +114,8 @@ describe('PhenoRegression', () => {
   let phenoRegressionBasePath = new PhenoRegression(fakeJsonMeasureOneRegression.regressions[0]);
 
   it('should be creatable from a given json', () => {
-    expect(phenoRegression.regressionName).toEqual('age');
+    expect(phenoRegression.regressionId).toEqual('age');
     expect(phenoRegression.measureId).toEqual('test_instrument.test_measure');
-    expect(phenoRegression.regressionMeasureId).toEqual('test_instrument.age');
     expect(phenoRegression.figureRegression).toEqual('imagepath');
     expect(phenoRegression.figureRegressionSmall).toEqual('imagepathsmall');
     expect(phenoRegression.pvalueRegressionMale).toEqual(1.0e-6);
@@ -140,17 +136,15 @@ describe('PhenoRegressions', () => {
   let phenoRegressionsBasePath = new PhenoRegressions(fakeJsonMeasureTwoRegressions.regressions);
 
   it('should be creatable from a given json', () => {
-    expect(phenoRegressions['age'].regressionName).toEqual('age');
+    expect(phenoRegressions['age'].regressionId).toEqual('age');
     expect(phenoRegressions['age'].measureId).toEqual('test_instrument.test_measure');
-    expect(phenoRegressions['age'].regressionMeasureId).toEqual('test_instrument.age');
     expect(phenoRegressions['age'].figureRegression).toEqual('imagepathage')
     expect(phenoRegressions['age'].figureRegressionSmall).toEqual('imagepathagesmall');
     expect(phenoRegressions['age'].pvalueRegressionMale).toEqual(0.01);
     expect(phenoRegressions['age'].pvalueRegressionFemale).toEqual(1.00);
 
-    expect(phenoRegressions['iq'].regressionName).toEqual('iq');
+    expect(phenoRegressions['iq'].regressionId).toEqual('iq');
     expect(phenoRegressions['iq'].measureId).toEqual('test_instrument.test_measure');
-    expect(phenoRegressions['iq'].regressionMeasureId).toEqual('test_instrument.nviq');
     expect(phenoRegressions['iq'].figureRegression).toEqual('imagepathiq');
     expect(phenoRegressions['iq'].figureRegressionSmall).toEqual('imagepathiqsmall');
     expect(phenoRegressions['iq'].pvalueRegressionMale).toEqual(0.02);

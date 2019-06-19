@@ -9,18 +9,16 @@ function addBaseUrlIfNotNull(currentPath: string, bp: string): string {
 
 export class PhenoRegression {
 
-  regressionName: string;
+  regressionId: string;
   measureId: string;
-  regressionMeasureId: string;
   figureRegression: string;
   figureRegressionSmall: string;
   pvalueRegressionMale: number;
   pvalueRegressionFemale: number;
 
   constructor(json: Object) {
-    this.regressionName = json['regression_name'];
+    this.regressionId = json['regression_id'];
     this.measureId = json['measure_id'];
-    this.regressionMeasureId = json['regression_measure_id'];
     this.figureRegression = json['figure_regression'];
     this.figureRegressionSmall = json['figure_regression_small'];
     this.pvalueRegressionMale = json['pvalue_regression_male'];
@@ -44,7 +42,7 @@ export class PhenoRegressions {
 
   constructor(regArr: Object[]) {
     for (let i = 0; i < regArr.length; i++) {
-      this[regArr[i]['regression_name']] = new PhenoRegression(regArr[i]);
+      this[regArr[i]['regression_id']] = new PhenoRegression(regArr[i]);
     }
   }
 
@@ -153,7 +151,7 @@ export class PhenoMeasures {
     readonly baseImageUrl: string,
     readonly measures: Array<PhenoMeasure>,
     readonly hasDescriptions: boolean,
-    readonly regressionNames: string
+    readonly regressionNames: object
   ) {}
 
 }

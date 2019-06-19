@@ -52,6 +52,18 @@ export class PhenoBrowserTableComponent {
     return leftVal.localeCompare(rightVal);
   }
 
+  getRegressionIds() {
+    return Object.getOwnPropertyNames(this.measures.regressionNames);
+  }
+
+  getRegressionName(regressionId: string) {
+    if(this.measures.regressionNames[regressionId]) {
+      return this.measures.regressionNames[regressionId];
+    }
+    else {
+      return regressionId;
+    }
+  }
 
   openModal(content, imageUrl) {
     if (imageUrl) {
