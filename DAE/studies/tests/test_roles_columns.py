@@ -1,6 +1,6 @@
 def test_all_roles_columns_are_present_in_config(quads_f1_dataset_wrapper):
-    roles_cols = quads_f1_dataset_wrapper.config.genotypeBrowserConfig\
-                                         .rolesColumns
+    roles_cols = quads_f1_dataset_wrapper.config.genotype_browser_config. \
+        rolesColumns
 
     assert roles_cols
     roles_cols_ids = [role.id for role in roles_cols]

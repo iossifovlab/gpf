@@ -2,7 +2,8 @@
 import argparse
 
 from configurable_entities.configuration import DAEConfig
-from gene.gene_set_collections import GeneSetsCollections
+from gene.denovo_gene_set_collection_facade import \
+    DenovoGeneSetCollectionFacade
 from studies.factory import VariantsDb
 
 
@@ -23,11 +24,10 @@ def main(options=None):
 
     config = DAEConfig()
     variants_db = VariantsDb(config)
-    gsc = GeneSetsCollections(variants_db)
-    denovo = gsc.get_gene_sets_collection('denovo', load=False)
+    dgscf = DenovoGeneSetCollectionFacade(variants_db)
 
     if args.show_studies:
-        for study_id in denovo.get_study_ids():
+        for study_id in dgscf.get_all_denovo_gene_set_ids():
             print(study_id)
     else:
         filter_studies_ids = None
@@ -35,11 +35,11 @@ def main(options=None):
             studies = args.studies.split(',')
             filter_studies_ids = [
                 study_id
-                for study_id in denovo.get_study_ids()
+                for study_id in dgscf.get_all_denovo_gene_set_ids()
                 if study_id in studies
             ]
 
-        denovo.build_cache(filter_studies_ids)
+        dgscf.build_cache(filter_studies_ids)
 
 
 if __name__ == '__main__':
