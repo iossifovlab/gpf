@@ -33,7 +33,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
         'phenoFilters.filters',
         'genotype.columns',
         'inRoles.columns',
-        'presentInRoleColumns'
+        'selectedPresentInRoleValues'
     ]
 
     NEW_KEYS_NAMES = {
@@ -312,7 +312,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
                 config_section.get('genotypeColumns', []))
 
         present_in_role_elements = \
-            config_section.get('presentInRoleColumns', None)
+            config_section.get('selectedPresentInRoleValues', None)
         present_in_role = cls._get_selectors(
             config_section, 'presentInRole', cls._get_present_in_role,
             present_in_role_elements)

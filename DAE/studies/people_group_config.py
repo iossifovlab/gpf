@@ -5,7 +5,7 @@ from configurable_entities.configurable_entity_config import \
 class PeopleGroupConfig(ConfigurableEntityConfig):
 
     SPLIT_STR_LISTS = [
-        'columns'
+        'selectedPeopleGroupValues'
     ]
 
     def __init__(self, config, *args, **kwargs):
@@ -71,7 +71,8 @@ class PeopleGroupConfig(ConfigurableEntityConfig):
 
         config_section = cls.parse(config_section)
 
-        people_group_elements = config_section.get('columns', None)
+        people_group_elements = config_section.get(
+            'selectedPeopleGroupValues', None)
         people_group = cls._get_selectors(
             config_section, None, cls._get_people_group,
             people_group_elements
