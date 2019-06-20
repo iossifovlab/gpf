@@ -86,8 +86,8 @@ def test_synonymous_recurrency_get_gene_sets(denovo_gene_sets):
 
     assert gene_sets
 
-    assert name_in_gene_sets(gene_sets, 'Synonymous.WE.Recurrent', 1)
-    assert not name_in_gene_sets(gene_sets, 'Synonymous.WE.Triple')
+    assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
+    assert not name_in_gene_sets(gene_sets, 'Synonymous.Triple')
 
 
 def test_missense_recurrency_get_gene_sets(denovo_gene_sets):
@@ -108,8 +108,8 @@ def test_synonymous_triple_get_gene_sets(denovo_gene_sets):
 
     assert gene_sets
 
-    assert name_in_gene_sets(gene_sets, 'Synonymous.WE.Recurrent', 1)
-    assert name_in_gene_sets(gene_sets, 'Synonymous.WE.Triple', 1)
+    assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
+    assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
 
 
 def test_missense_triple_get_gene_sets(denovo_gene_sets):
@@ -143,11 +143,8 @@ def test_autism_trio_get_gene_sets(denovo_gene_set_f4):
     assert gene_sets
 
     assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
-    assert name_in_gene_sets(gene_sets, 'Synonymous.WE', 1)
-    assert name_in_gene_sets(gene_sets, 'Synonymous.WE.Recurrent', 1)
     assert name_in_gene_sets(gene_sets, 'Missense', 1)
     assert name_in_gene_sets(gene_sets, 'Missense.Recurrent', 1)
-    assert name_in_gene_sets(gene_sets, 'Missense.WE.Recurrent', 1)
     assert name_in_gene_sets(gene_sets, 'Missense.Female', 1)
 
 
@@ -159,7 +156,6 @@ def test_unaffected_trio_get_gene_sets(denovo_gene_set_f4):
     assert gene_sets
 
     assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
-    assert name_in_gene_sets(gene_sets, 'Synonymous.WE', 1)
 
 
 def test_affected_and_unaffected_trio_get_gene_sets(denovo_gene_set_f4):
@@ -170,9 +166,6 @@ def test_affected_and_unaffected_trio_get_gene_sets(denovo_gene_set_f4):
     assert gene_sets
 
     assert name_in_gene_sets(gene_sets, 'Synonymous', 2)
-    assert name_in_gene_sets(gene_sets, 'Synonymous.WE', 2)
-    assert name_in_gene_sets(gene_sets, 'Synonymous.WE.Recurrent', 1)
     assert name_in_gene_sets(gene_sets, 'Missense', 1)
     assert name_in_gene_sets(gene_sets, 'Missense.Recurrent', 1)
-    assert name_in_gene_sets(gene_sets, 'Missense.WE.Recurrent', 1)
     assert name_in_gene_sets(gene_sets, 'Missense.Female', 1)

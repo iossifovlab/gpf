@@ -93,13 +93,10 @@ def test_get_denovo_gene_sets_f4_autism(denovo_gene_sets_facade):
         'denovo', {'f4_trio': {'phenotype': ['autism']}})
 
     assert dgs is not None
-    assert len(dgs) == 7
+    assert len(dgs) == 4
     assert name_in_gene_sets(dgs, 'Synonymous', 1)
-    assert name_in_gene_sets(dgs, 'Synonymous.WE', 1)
-    assert name_in_gene_sets(dgs, 'Synonymous.WE.Recurrent', 1)
     assert name_in_gene_sets(dgs, 'Missense', 1)
     assert name_in_gene_sets(dgs, 'Missense.Recurrent', 1)
-    assert name_in_gene_sets(dgs, 'Missense.WE.Recurrent', 1)
     assert name_in_gene_sets(dgs, 'Missense.Female', 1)
 
 
@@ -108,9 +105,8 @@ def test_get_denovo_gene_sets_f4_unaffected(denovo_gene_sets_facade):
         'denovo', {'f4_trio': {'phenotype': ['unaffected']}})
 
     assert dgs is not None
-    assert len(dgs) == 2
+    assert len(dgs) == 1
     assert name_in_gene_sets(dgs, 'Synonymous', 1)
-    assert name_in_gene_sets(dgs, 'Synonymous.WE', 1)
 
 
 def test_get_denovo_gene_sets_f4_autism_unaffected(denovo_gene_sets_facade):
@@ -118,13 +114,10 @@ def test_get_denovo_gene_sets_f4_autism_unaffected(denovo_gene_sets_facade):
         'denovo', {'f4_trio': {'phenotype': ['autism', 'unaffected']}})
 
     assert dgs is not None
-    assert len(dgs) == 7
+    assert len(dgs) == 4
     assert name_in_gene_sets(dgs, 'Synonymous', 2)
-    assert name_in_gene_sets(dgs, 'Synonymous.WE', 2)
-    assert name_in_gene_sets(dgs, 'Synonymous.WE.Recurrent', 1)
     assert name_in_gene_sets(dgs, 'Missense', 1)
     assert name_in_gene_sets(dgs, 'Missense.Recurrent', 1)
-    assert name_in_gene_sets(dgs, 'Missense.WE.Recurrent', 1)
     assert name_in_gene_sets(dgs, 'Missense.Female', 1)
 
 
@@ -138,7 +131,7 @@ def test_build_load_denovo_gene_set_cache(denovo_gene_sets_facade):
         'denovo', {'f4_trio': {'phenotype': ['autism', 'unaffected']}})
 
     assert dgs is not None
-    assert len(dgs) == 7
+    assert len(dgs) == 4
 
     denovo_gene_sets_facade.build_cache(['f4_trio'])
     denovo_gene_sets_facade._denovo_gene_set_cache = {}
@@ -148,4 +141,4 @@ def test_build_load_denovo_gene_set_cache(denovo_gene_sets_facade):
         'denovo', {'f4_trio': {'phenotype': ['autism', 'unaffected']}})
 
     assert dgs is not None
-    assert len(dgs) == 7
+    assert len(dgs) == 4
