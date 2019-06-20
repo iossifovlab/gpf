@@ -219,8 +219,7 @@ class DenovoGeneSetsCollection(object):
 
     @classmethod
     def get_gene_sets(
-            cls, denovo_gene_sets_collections,
-            gene_sets_types={'f1_group': {'phenotype': ['autism']}}):
+            cls, denovo_gene_sets_collections, gene_sets_types={}):
         gene_sets_types_desc = cls._format_description(gene_sets_types)
 
         result = []
@@ -239,7 +238,7 @@ class DenovoGeneSetsCollection(object):
     @classmethod
     def get_gene_set(
             cls, gene_set_id, denovo_gene_sets_collections,
-            gene_sets_types={'SD': {'phenotype': ['autism']}}):
+            gene_sets_types={}):
         syms = cls._get_gene_set_syms(
             gene_set_id, denovo_gene_sets_collections, gene_sets_types)
         if not syms:
