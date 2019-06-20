@@ -8,8 +8,7 @@ import pytest
 
 from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 
-pytestmark = pytest.mark.usefixtures(
-    'gene_info_cache_dir', 'calc_gene_sets', 'cleanup_gene_sets')
+pytestmark = pytest.mark.usefixtures('gene_info_cache_dir', 'calc_gene_sets')
 
 
 def name_in_gene_sets(gene_sets, name, count=None):

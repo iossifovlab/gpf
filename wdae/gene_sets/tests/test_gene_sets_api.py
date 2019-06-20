@@ -11,8 +11,7 @@ from rest_framework import status
 import json
 
 
-pytestmark = pytest.mark.usefixtures(
-    'mock_studies_manager', 'calc_gene_sets', 'cleanup_gene_sets')
+pytestmark = pytest.mark.usefixtures('mock_studies_manager', 'calc_gene_sets')
 
 
 def name_in_gene_sets(gene_sets, name, count=None):
