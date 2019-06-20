@@ -145,7 +145,7 @@ class DenovoGeneSetsCollection(object):
                 'datasetName': self.study.name,
                 'peopleGroupId': people_group_id,
                 'peopleGroupName': people_group['name'],
-                'phenotypes': self.get_gene_sets_legend(people_group_id)
+                'peopleGroupLegend': self.get_gene_sets_legend(people_group_id)
             }
             for people_group_id, people_group in self.denovo_gene_sets.items()
         ]

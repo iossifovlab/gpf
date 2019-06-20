@@ -50,7 +50,7 @@ def test_get_f4_collections_descriptions(denovo_gene_sets_facade):
     assert gene_sets_collections['types'][0]['datasetName'] == 'f4_trio'
     assert gene_sets_collections['types'][0]['peopleGroupId'] == 'phenotype'
     assert gene_sets_collections['types'][0]['peopleGroupName'] == 'Phenotype'
-    assert len(gene_sets_collections['types'][0]['phenotypes']) == 6
+    assert len(gene_sets_collections['types'][0]['peopleGroupLegend']) == 6
 
 
 @pytest.mark.parametrize('denovo_gene_set_id,people_groups,count', [
