@@ -199,7 +199,7 @@ class ImpalaBackend(object):
     def query_variants(self, config, **kwargs):
         with self.impala.cursor() as cursor:
             query = self.build_query(config, **kwargs)
-            print("FINAL QUERY: ", query)
+            # print("FINAL QUERY: ", query)
             cursor.execute(query)
             for row in cursor:
                 yield row
