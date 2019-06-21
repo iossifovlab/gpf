@@ -4,7 +4,6 @@ import copy
 import functools
 from builtins import str
 
-import os
 import itertools
 
 from RegionOperations import Region
@@ -39,18 +38,10 @@ class StudyWrapper(object):
         gene_weights_columns = []
         column_labels = {}
 
-        people_group = []
         present_in_role = []
 
-        if 'peopleGroupConfig' in self.config and \
-                self.config.people_group_config:
-            people_group_config = self.config.people_group_config
-            if 'peopleGroup' in people_group_config:
-                people_group = people_group_config.people_group
-
-        if 'genotypeBrowserConfig' in self.config and \
-                self.config.genotype_browser_config:
-            genotype_browser_config = self.config.genotypeBrowserConfig
+        genotype_browser_config = self.config.genotype_browser_config
+        if genotype_browser_config:
             preview_columns = genotype_browser_config['previewColumnsSlots']
             download_columns = genotype_browser_config['downloadColumnsSlots']
             if genotype_browser_config['phenoColumns']:
@@ -71,7 +62,7 @@ class StudyWrapper(object):
         self.gene_weights_columns = gene_weights_columns
         self.column_labels = column_labels
 
-        self.people_group = people_group
+        self.people_group = self.config.people_group
         self.present_in_role = present_in_role
 
         if len(self.people_group) != 0:
@@ -91,9 +82,9 @@ class StudyWrapper(object):
         if pheno_db:
             self.pheno_db = pheno_factory.get_pheno_db(pheno_db)
 
-            if 'genotypeBrowserConfig' in self.config and \
-                    self.config.genotypeBrowserConfig:
-                pheno_filters = self.config.genotypeBrowserConfig.phenoFilters
+            genotype_browser_config = self.config.genotype_browser_config
+            if genotype_browser_config:
+                pheno_filters = genotype_browser_config.phenoFilters
                 if pheno_filters:
                     self.pheno_filters_in_config = {
                         self._get_pheno_filter_key(pf.measureFilter)
@@ -206,15 +197,14 @@ class StudyWrapper(object):
             yield variant
 
     def _add_roles_columns(self, variant):
-        if 'genotypeBrowserConfig' not in self.study.config or \
-            ('genotypeBrowserConfig' in self.study.config and
-                not self.study.config.genotypeBrowserConfig):
+        genotype_browser_config = self.config.genotype_browser_config
+        if genotype_browser_config is None:
             return variant
 
         # assert isinstance(genotype_browser_config, dict), \
         #   type(genotype_browser_config)
 
-        roles_columns = self.study.config.genotypeBrowserConfig.rolesColumns
+        roles_columns = genotype_browser_config.rolesColumns
 
         if not roles_columns:
             return variant
@@ -259,10 +249,8 @@ class StudyWrapper(object):
         return result
 
     def _add_pheno_columns(self, variants_iterable):
-        if self.pheno_db is None or \
-            'genotypeBrowserConfig' not in self.study.config or \
-                ('genotypeBrowserConfig' in self.study.config and not
-                 self.study.config.genotypeBrowserConfig):
+        genotype_browser_config = self.config.genotype_browser_config
+        if self.pheno_db is None or genotype_browser_config is None:
             for variant in variants_iterable:
                 yield variant
 
@@ -298,9 +286,9 @@ class StudyWrapper(object):
         pheno_column_dfs = []
         pheno_column_names = []
 
-        if 'genotypeBrowserConfig' in self.config and \
-                self.config.genotypeBrowserConfig:
-            for pheno_column in self.config.genotypeBrowserConfig.phenoColumns:
+        genotype_browser_config = self.config.genotype_browser_config
+        if genotype_browser_config:
+            for pheno_column in genotype_browser_config.phenoColumns:
                 for slot in pheno_column.slots:
                     pheno_column_dfs.append(
                         self.pheno_db.get_measure_values_df(
@@ -351,12 +339,15 @@ class StudyWrapper(object):
         return set(selection['selection'])
 
     def _add_people_with_phenotype(self, kwargs):
+        people_group_config = self.config.people_group_config
         people_with_phenotype = set()
-        if 'peopleGroup' in kwargs and\
-                kwargs['peopleGroup'] is not None:
+        if 'peopleGroup' in kwargs and \
+                kwargs['peopleGroup'] is not None and \
+                people_group_config is not None:
             pedigree_selector_query = kwargs.pop('peopleGroup')
 
-            people_group = self.get_people_group(pedigree_selector_query['id'])
+            people_group = people_group_config.get_people_group(
+                pedigree_selector_query['id'])
 
             for family in self.families.values():
                 family_members_with_phenotype = set(
@@ -566,23 +557,6 @@ class StudyWrapper(object):
 
         return legend + self._get_legend_default_values()
 
-    def get_gene_sets_legend(self, people_group_id):
-        gene_sets_pg = self.get_people_group(people_group_id)
-        if len(gene_sets_pg) == 0:
-            return []
-
-        return gene_sets_pg['domain']
-
-    def get_people_group(self, people_group_id):
-        if not people_group_id:
-            return self.people_group[0] if self.people_group else {}
-
-        people_group_with_id = list(filter(
-            lambda people_group: people_group.get('id') == people_group_id,
-            self.people_group))
-
-        return people_group_with_id[0] if people_group_with_id else {}
-
     def get_present_in_role(self, present_in_role_id):
         if not present_in_role_id:
             return {}
@@ -660,10 +634,3 @@ class StudyWrapper(object):
 
     def get_column_labels(self):
         return self.column_labels
-
-    def gene_sets_cache_file(self, people_group_id=''):
-        cache_path = os.path.join(
-            os.path.split(self.config.study_config.config_file)[0],
-            'denovo-cache-' + people_group_id + '.json')
-
-        return cache_path

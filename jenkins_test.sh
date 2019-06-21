@@ -74,7 +74,8 @@ py.test -v --cov-config coveragerc \
     --cov users_api \
     wdae/datasets_api/tests \
     wdae/genotype_browser/tests \
-    wdae/pheno_browser_api/tests
+    wdae/pheno_browser_api/tests \
+    wdae/gene_sets/tests
 
 
 chmod a+rwx -R coverage

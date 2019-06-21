@@ -31,8 +31,8 @@ class PreparePhenoBrowserBase(object):
     SMALL_DPI = 16
 
     def __init__(
-            self, pheno_name, pheno_db, pheno_regression,
-            output_dir, images_dir=None):
+            self, pheno_name, pheno_db, output_dir,
+            pheno_regressions=None, images_dir=None):
         assert os.path.exists(output_dir)
         self.output_dir = output_dir
         if images_dir is None:
@@ -45,7 +45,7 @@ class PreparePhenoBrowserBase(object):
         self.images_dir = images_dir
 
         self.pheno_db = pheno_db
-        self.pheno_regressiong = pheno_regression
+        self.pheno_regressions = pheno_regressions
 
         self.browser_db = os.path.join(
             output_dir,
@@ -94,22 +94,6 @@ class PreparePhenoBrowserBase(object):
             'values_domain': measure.values_domain
         }
 
-    def load_measure_and_age(self, measure):
-        age_id = self.pheno_regressiong.get_age_measure_id(measure.measure_id)
-        if not age_id:
-            return None
-        age = self.pheno_db.get_measure(age_id)
-        return self._augment_measure_values_df(age, 'age', measure)
-
-    def load_measure_and_nonverbal_iq(self, measure):
-        nonverbal_iq_id = self.pheno_regressiong.get_nonverbal_iq_measure_id(
-            measure.measure_id)
-        if not nonverbal_iq_id:
-            return None
-        nonverbal_iq = self.pheno_db.get_measure(nonverbal_iq_id)
-        return self._augment_measure_values_df(
-            nonverbal_iq, 'nonverbal_iq', measure)
-
     def figure_filepath(self, measure, suffix):
         filename = "{}.{}.png".format(measure.measure_id, suffix)
         outdir = os.path.join(self.images_dir, measure.instrument_name)
@@ -142,80 +126,46 @@ class PreparePhenoBrowserBase(object):
                 measure, suffix)
         )
 
-    def build_regression_by_age(self, measure):
+    def build_regression(self, dependent_measure,
+                         independent_measure, jitter):
+        MIN_VALUES = 5
+        MIN_UNIQUE_VALUES = 2
+
         res = {}
-        age_id = self.pheno_regressiong.get_age_measure_id(measure.measure_id)
-        if age_id is None:
-            return res
-        if measure.measure_id == age_id:
+
+        if dependent_measure.measure_id == independent_measure.measure_id:
             return res
 
-        df = self.load_measure_and_age(measure)
-        if df is None:
-            return res
-        dd = df[df.role == Role.prb]
-        dd.loc[:, 'age'] = dd['age'].astype(np.float32)
-        dd = dd[np.isfinite(dd.age)]
+        aug_col_name = independent_measure.measure_name
 
-        if dd[measure.measure_id].nunique() == 1:
+        aug_df = self._augment_measure_values_df(
+            independent_measure,
+            aug_col_name,
+            dependent_measure)
+
+        if aug_df is None:
             return res
 
-        if len(dd) <= 5:
+        aug_df = aug_df[aug_df.role == Role.prb]
+        aug_df.loc[:, aug_col_name] = aug_df[aug_col_name].astype(np.float32)
+        aug_df = aug_df[np.isfinite(aug_df[aug_col_name])]
+
+        if aug_df[dependent_measure.measure_id].nunique() < MIN_UNIQUE_VALUES \
+           or len(aug_df) <= MIN_VALUES:
             return res
 
         res_male, res_female = draw_linregres(
-            dd, 'age', measure.measure_id, jitter=0.1)
-        res['pvalue_correlation_age_male'] = res_male.pvalues['age'] \
+            aug_df, aug_col_name, dependent_measure.measure_id, jitter)
+        res['pvalue_regression_male'] = res_male.pvalues[aug_col_name] \
             if res_male is not None else None
-        res['pvalue_correlation_age_female'] = res_female.pvalues['age'] \
+        res['pvalue_regression_female'] = res_female.pvalues[aug_col_name] \
             if res_female is not None else None
 
         if res_male is not None or res_female is not None:
-            (res['figure_correlation_age_small'],
-             res['figure_correlation_age']) = \
-                self.save_fig(measure, "prb_regression_by_age")
-        return res
-
-    def build_regression_by_nviq(self, measure):
-        res = {}
-        nviq_id = self.pheno_regressiong \
-            .get_nonverbal_iq_measure_id(measure.measure_id)
-        if nviq_id is None:
-            return res
-        if measure.measure_id == nviq_id:
-            return res
-        age_id = self.pheno_regressiong.get_age_measure_id(measure.measure_id)
-        if measure.measure_id == age_id:
-            return res
-
-        df = self.load_measure_and_nonverbal_iq(measure)
-        if df is None:
-            return res
-
-        dd = df[df.role == Role.prb]
-        dd.loc[:, 'nonverbal_iq'] = dd['nonverbal_iq'].astype(np.float32)
-        dd = dd[np.isfinite(dd.nonverbal_iq)]
-
-        if len(dd) <= 5:
-            return res
-
-        if dd[measure.measure_id].nunique() == 1:
-            return res
-
-        res_male, res_female = draw_linregres(
-            dd, 'nonverbal_iq', measure.measure_id, jitter=0.1)
-
-        res['pvalue_correlation_nviq_male'] = \
-            res_male.pvalues['nonverbal_iq'] \
-            if res_male is not None else None
-        res['pvalue_correlation_nviq_female'] = \
-            res_female.pvalues['nonverbal_iq'] \
-            if res_female is not None else None
-
-        if res_male is not None or res_female is not None:
-            (res['figure_correlation_nviq_small'],
-             res['figure_correlation_nviq']) = self.save_fig(
-                 measure, "prb_regression_by_nviq")
+            (res['figure_regression_small'],
+             res['figure_regression']) = \
+                self.save_fig(dependent_measure,
+                              "prb_regression_by_{}".format(aug_col_name))
         return res
 
     def build_values_violinplot(self, measure):
@@ -277,24 +227,59 @@ class PreparePhenoBrowserBase(object):
         print('domain:      {}'.format(var['values_domain']))
         print('-------------------------------------------')
 
+    def _get_measure_by_name(self, measure_name, instrument_name):
+        if instrument_name:
+            measure_id = '.'.join([instrument_name, measure_name])
+            if self.pheno_db.has_measure(measure_id):
+                return self.pheno_db.get_measure(measure_id)
+        return None
+
     def handle_measure(self, measure):
         res = PreparePhenoBrowserBase._measure_to_dict(measure)
 
         if measure.measure_type == MeasureType.continuous:
             res.update(self.build_values_violinplot(measure))
-            res.update(self.build_regression_by_nviq(measure))
-            res.update(self.build_regression_by_age(measure))
         elif measure.measure_type == MeasureType.ordinal:
             res.update(self.build_values_ordinal_distribution(measure))
-            res.update(self.build_regression_by_nviq(measure))
-            res.update(self.build_regression_by_age(measure))
         elif measure.measure_type == MeasureType.categorical:
             res.update(self.build_values_categorical_distribution(measure))
+
         return res
+
+    def handle_regressions(self, measure):
+        if measure.measure_type not in [MeasureType.continuous,
+                                        MeasureType.ordinal]:
+            return
+        res = {'measure_id': measure.measure_id}
+        for reg_id, reg in self.pheno_regressions.items():
+            reg_measure = self._get_measure_by_name(reg['measure_name'],
+                                                    reg['instrument_name'] or
+                                                    measure.instrument_name)
+            if not reg_measure:
+                continue
+            if self.pheno_regressions.has_measure(measure.measure_name,
+                                                  measure.instrument_name):
+                continue
+
+            res['regression_id'] = reg_id
+            jitter = float(reg.get('jitter', 0.1))
+            res.update(self.build_regression(measure, reg_measure, jitter))
+            if res.get('pvalue_regression_male') is not None or \
+               res.get('pvalue_regression_female') is not None:
+                yield res
 
     def run(self):
         db = DbManager(dbfile=self.browser_db)
         db.build()
+
+        if self.pheno_regressions:
+            for reg_id, reg_data in self.pheno_regressions.items():
+                db.save_regression({
+                    'regression_id': reg_id,
+                    'instrument_name': reg_data['instrument_name'],
+                    'measure_name': reg_data['measure_name'],
+                    'display_name': reg_data['display_name']
+                })
 
         for instrument in list(self.pheno_db.instruments.values()):
             progress_nl()
@@ -302,3 +287,6 @@ class PreparePhenoBrowserBase(object):
                 progress(text=str(measure) + "\n")
                 var = self.handle_measure(measure)
                 db.save(var)
+                if self.pheno_regressions:
+                    for regression in self.handle_regressions(measure):
+                            db.save_regression_values(regression)

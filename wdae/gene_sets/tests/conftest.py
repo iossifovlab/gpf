@@ -1,94 +1,77 @@
-import pytest
+from __future__ import unicode_literals
+
 import os
-import shutil
+import pytest
 
-from DAE import Config
-from datasets_api.studies_manager import get_studies_manager
-from studies.study_definition import SingleFileStudiesDefinition
-from study_groups.study_group_definition import SingleFileStudiesGroupDefinition
+from gene.config import DenovoGeneSetCollectionConfig
+from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 
-from utils.fixtures import path_to_fixtures as _path_to_fixtures
-
-
-def path_to_fixtures(*args, package='wdae'):
-    return _path_to_fixtures('gene_sets', *args, package=package)
+from configurable_entities.configuration import DAEConfig
+from studies.factory import VariantsDb
+from datasets_api.studies_manager import StudiesManager
 
 
-def mock_property(mocker):
-    def result(property, mock_value):
-        file_mock = mocker.patch(property, new_callable=mocker.PropertyMock)
-        file_mock.return_value = mock_value
-    return result
-
-
-def mock_preload(mocker, mocked_key, func, original):
-    def mock_get(key):
-        if key == mocked_key: # gene_sets_collections':
-            return func()
-        return original(key)
-    mocker.patch('preloaded.register.get', new=mock_get)
-
-
-@pytest.fixture(scope='session')
-def studies_definition():
-    return SingleFileStudiesDefinition(
-        path_to_fixtures('studies', 'studies.conf'),
-        path_to_fixtures('studies'))
-
-
-@pytest.fixture(scope='session')
-def basic_study_groups_definition():
-    return SingleFileStudiesGroupDefinition(
-        path_to_fixtures('studies', 'study_groups.conf'))
+def fixtures_dir():
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
 @pytest.fixture()
-def mocked_dataset_config(mocker):
-    mp = mock_property(mocker)
-
-    mp('Config.Config.geneInfoDBconfFile', path_to_fixtures('gene_info.conf'))
-    mp('Config.Config.geneInfoDBdir', path_to_fixtures())
-    mp('Config.Config.daeDir', path_to_fixtures())
-
-    return Config()
+def dae_config_fixture():
+    dae_config = DAEConfig(fixtures_dir())
+    return dae_config
 
 
 @pytest.fixture()
-def mock_preloader_gene_info_config(mocker, gscs):
-    import preloaded.register
-    original = preloaded.register.get
-
-    def mock_func():
-        return gscs
-
-    mock_preload(mocker, 'gene_sets_collections', mock_func, original)
+def variants_db_fixture(dae_config_fixture):
+    vdb = VariantsDb(dae_config_fixture)
+    return vdb
 
 
 @pytest.fixture()
-def datasets_from_fixtures(db, settings):
-    old_dataset_path = os.environ['DAE_DATA_DIR']
-
-    os.environ['DAE_DATA_DIR'] = path_to_fixtures()
-    print("REPLACING DAE_DATA_DIR")
-    get_studies_manager().reload_dataset_facade()
-
-    yield
-
-    os.environ['DAE_DATA_DIR'] = old_dataset_path
+def studies_manager(dae_config_fixture):
+    return StudiesManager(dae_config_fixture)
 
 
-@pytest.fixture(scope='session')
-def gene_info_cache_dir():
-    fixtures_dir = path_to_fixtures()
-    module_dir = os.path.dirname(fixtures_dir)
-    if not os.path.exists(module_dir):
-        raise EnvironmentError(
-            'Module "{}" does not exist..'.format(module_dir))
-    cache_dir = path_to_fixtures('geneInfo', 'cache')
-    shutil.rmtree(cache_dir, ignore_errors=True)
-    assert not os.path.exists(cache_dir)
-    os.makedirs(cache_dir)
+@pytest.fixture()
+def mock_studies_manager(db, mocker, studies_manager):
+    studies_manager.reload_dataset()
+    mocker.patch(
+        'gene_sets.views.get_studies_manager',
+        return_value=studies_manager)
+    mocker.patch(
+        'datasets_api.permissions.get_studies_manager',
+        return_value=studies_manager)
 
-    yield
 
-    shutil.rmtree(cache_dir)
+@pytest.fixture()
+def calc_gene_sets(denovo_gene_sets):
+    for dgs in denovo_gene_sets:
+        dgs.load(build_cache=True)
+
+    print("PRECALCULATION COMPLETE")
+
+
+@pytest.fixture()
+def cleanup_gene_sets(request, denovo_gene_sets):
+    def remove_gene_sets():
+        for dgs in denovo_gene_sets:
+            os.remove(dgs.config.denovo_gene_set_cache_file('phenotype'))
+    request.addfinalizer(remove_gene_sets)
+
+
+def get_denovo_gene_sets_by_id(variants_db_fixture, dgs_id):
+    denovo_gene_set_config = DenovoGeneSetCollectionConfig.from_config(
+        variants_db_fixture.get_config(dgs_id))
+
+    return DenovoGeneSetsCollection(
+        variants_db_fixture.get(dgs_id), denovo_gene_set_config)
+
+
+@pytest.fixture()
+def denovo_gene_sets(variants_db_fixture):
+    return [
+        get_denovo_gene_sets_by_id(variants_db_fixture, 'f1_group'),
+        get_denovo_gene_sets_by_id(variants_db_fixture, 'f2_group'),
+        get_denovo_gene_sets_by_id(variants_db_fixture, 'f3_group')
+    ]

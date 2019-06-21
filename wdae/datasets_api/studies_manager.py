@@ -12,6 +12,8 @@ from gene.scores import ScoreLoader
 from gene.weights import WeightsLoader
 
 from gene.gene_set_collections import GeneSetsCollections
+from gene.denovo_gene_set_collection_facade import \
+    DenovoGeneSetCollectionFacade
 
 from datasets_api.models import Dataset
 
@@ -55,7 +57,10 @@ class StudiesManager(object):
         gene_info_config = GeneInfoConfig(self.dae_config)
         self.weights_loader = WeightsLoader(config=gene_info_config)
 
-        self.gene_sets_collections = GeneSetsCollections(self.vdb)
+        self.gene_sets_collections = GeneSetsCollections(
+            self.vdb, gene_info_config)
+        self.denovo_gene_set_collection_facade = \
+            DenovoGeneSetCollectionFacade(self.vdb)
 
     def get_variants_db(self):
         if self.vdb is None:
@@ -84,6 +89,10 @@ class StudiesManager(object):
     def get_gene_sets_collections(self):
         self.get_variants_db()
         return self.gene_sets_collections
+
+    def get_denovo_gene_set_collection_facade(self):
+        self.get_variants_db()
+        return self.denovo_gene_set_collection_facade
 
 
 _studies_manager = None

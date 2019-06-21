@@ -49,17 +49,8 @@ def pheno_cli_parser():
     )
 
     parser.add_argument(
-        '--age',
-        dest="age",
-        help="pheno measure ID represenging age at assesment",
-        type=str
-    )
-
-    parser.add_argument(
-        '--nonverbal_iq',
-        dest="nonverbal_iq",
-        help="pheno measure ID representing non-verbal IQ measure",
-        type=str,
+        '--regression',
+        help="absolute path to a regression configuration file"
     )
 
     parser.add_argument(
@@ -78,8 +69,8 @@ def generate_pheno_db_config(args):
     section = config['phenoDB']
     section['name'] = args.pheno_name
     section['dbfile'] = os.path.basename(args.pheno_db_filename)
-    section['age'] = args.age
-    section['nonverbal_iq'] = args.nonverbal_iq
+    # TODO
+    # Should the regression config be written to the pheno db config?
     section['browser_dbfile'] = \
         'browser/{}_browser.db'.format(args.pheno_name)
     section['browser_images_dir'] = 'browser/images'
@@ -157,7 +148,7 @@ def main(argv):
         build_pheno_browser(
             args.pheno_db_filename, args.pheno_name,
             args.browser_dir,
-            args.age, args.nonverbal_iq
+            args.regression
         )
 
         pheno_conf_path = os.path.join(
