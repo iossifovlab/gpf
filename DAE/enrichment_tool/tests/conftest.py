@@ -88,7 +88,7 @@ def samocha_background():
     return bg
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def synonymous_background():
-    bg = SynonymousBackground(use_cache=True)
+    bg = SynonymousBackground(use_cache=False)
     return bg

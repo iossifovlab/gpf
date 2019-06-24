@@ -11,12 +11,6 @@ from enrichment_tool.event_counters import GeneEventsCounter
 from enrichment_tool.genotype_helper import GenotypeHelper as GH
 
 
-@pytest.fixture(scope='module')
-def background(request):
-    bg = SynonymousBackground(use_cache=True)
-    return bg
-
-
 # def test_synonymous_background_default(background):
 #     assert background.background is not None
 #     assert background.foreground is not None
@@ -39,15 +33,17 @@ def background(request):
 #     assert not background.cache_load()
 
 
-def test_synonymous_background_stats_default(background):
-    assert background is not None
+def test_synonymous_background_stats_default(synonymous_background):
+    assert synonymous_background is not None
 
     # assert 211645 == np.sum(background.background['raw'])
     # FIXME: changed after reannotation
-    assert 211661 == np.sum(background.background['raw'])
+    default_background = synonymous_background.data[
+        synonymous_background.default_background]
+    assert 211661 == np.sum(default_background['background']['raw'])
 
 
-def test_stats_autism_lgd(background, autism_studies,
+def test_stats_autism_lgd(synonymous_background, autism_studies,
                           gene_set):
     counter = GeneEventsCounter()
     gh = GH.from_studies(autism_studies, 'prb')
@@ -56,7 +52,7 @@ def test_stats_autism_lgd(background, autism_studies,
 
     events = counter.events(variants)
 
-    enrichment_results = background.calc_stats(
+    enrichment_results = synonymous_background.calc_stats(
         'LGDs',
         events,
         gene_set,
@@ -82,7 +78,7 @@ def test_stats_autism_lgd(background, autism_studies,
     assert 4.6E-05 == pytest.approx(er['female'].pvalue, abs=1E-4)
 
 
-def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
+def test_stats_schizophrenia_with_lgd(synonymous_background, schizophrenia_studies,
                                       gene_set):
     counter = GeneEventsCounter()
     gh = GH.from_studies(schizophrenia_studies, 'prb')
@@ -91,7 +87,7 @@ def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
 
     events = counter.events(variants)
 
-    enrichment_results = background.calc_stats(
+    enrichment_results = synonymous_background.calc_stats(
         'LGDs',
         events,
         gene_set,
@@ -116,7 +112,7 @@ def test_stats_schizophrenia_with_lgd(background, schizophrenia_studies,
     assert 0.657 == pytest.approx(er['female'].pvalue, abs=1E-3)
 
 
-def test_stats_unaffected_with_missense(background, unaffected_studies,
+def test_stats_unaffected_with_missense(synonymous_background, unaffected_studies,
                                         gene_set):
     counter = GeneEventsCounter()
     gh = GH.from_studies(unaffected_studies, 'sib')
@@ -125,7 +121,7 @@ def test_stats_unaffected_with_missense(background, unaffected_studies,
 
     events = counter.events(variants)
 
-    enrichment_results = background.calc_stats(
+    enrichment_results = synonymous_background.calc_stats(
         'missense',
         events,
         gene_set,

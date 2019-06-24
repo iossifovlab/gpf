@@ -25,8 +25,10 @@ class BackgroundBase(BackgroundConfig):
         self.background = None
         self.name = name
         assert self.name is not None
+        self.use_cache = use_cache
 
-        if not use_cache:
+    def _load_or_build(self):
+        if not self.use_cache:
             self.precompute()
         else:
             if not self.cache_load():
@@ -104,7 +106,6 @@ class BackgroundCommon(BackgroundBase):
 
 
 class SynonymousBackground(BackgroundCommon):
-    TRANSMITTED_STUDY_NAME = 'w1202s766e611'
 
     @staticmethod
     def _collect_affected_gene_syms(vs):
@@ -153,31 +154,62 @@ class SynonymousBackground(BackgroundCommon):
         super(SynonymousBackground, self).__init__(
             'synonymousBackgroundModel', use_cache)
 
+        self.studies = [
+            st.strip() for st in self[self.name, 'studies'].split()
+        ]
+        self.default_background = self[self.name, 'default_background']
+        assert self.default_background in self.studies
+        self.data = {}
+        self._load_or_build()
+
     def precompute(self):
-        self.background, self.foreground = \
-            self._build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
-        return self.background
+        self.data = {}
+        for study_name in self.studies:
+            background, foreground = \
+                self._build_synonymous_background(study_name)
+            self.data[study_name] = {
+                'background': background,
+                'foreground': foreground
+            }
+        return self.data
 
     def serialize(self):
-        fout = cStringIO.StringIO()
-        np.save(fout, self.background)
+        result = {}
+        for study_name, data in self.data.items():
 
-        b = zlib.compress(fout.getvalue())
-        f = zlib.compress(cPickle.dumps(self.foreground))
-        return {'background': b,
-                'foreground': f}
+            fout = cStringIO.StringIO()
+            np.save(fout, data['background'])
+
+            b = zlib.compress(fout.getvalue())
+            f = zlib.compress(cPickle.dumps(data['foreground']))
+            result[study_name] = cPickle.dumps({
+                'background': b,
+                'foreground': f,
+            })
+        return result
 
     def deserialize(self, data):
-        b = data['background']
-        fin = cStringIO.StringIO(zlib.decompress(b))
-        self.background = np.load(fin)
+        self.data = {}
+        for study_name, background in data.items():
+            # print(background)
 
-        f = data['foreground']
-        self.foreground = cPickle.loads(zlib.decompress(f))
+            background = cPickle.loads(background)
+
+            b = background['background']
+            fin = cStringIO.StringIO(zlib.decompress(b))
+            b = np.load(fin)
+
+            f = background['foreground']
+            f = cPickle.loads(zlib.decompress(f))
+            self.data[study_name] = {
+                'background': b,
+                'foreground': f,
+            }
 
     def _count_foreground_events(self, gene_syms):
+        foreground = self.data[self.default_background]['foreground']
         count = 0
-        for gs in self.foreground:
+        for gs in foreground:
             touch = False
             for sym in gs:
                 if sym in gene_syms:
@@ -188,16 +220,19 @@ class SynonymousBackground(BackgroundCommon):
         return count
 
     def _count(self, gene_syms):
+        background = self.data[self.default_background]['background']
         vpred = np.vectorize(lambda sym: sym in gene_syms)
-        index = vpred(self.background['sym'])
-        base = np.sum(self.background['raw'][index])
+        index = vpred(background['sym'])
+        base = np.sum(background['raw'][index])
         foreground = self._count_foreground_events(gene_syms)
         res = base + foreground
         return res
 
     @property
     def _total(self):
-        return np.sum(self.background['raw']) + len(self.foreground)
+        foreground = self.data[self.default_background]['foreground']
+        background = self.data[self.default_background]['background']
+        return np.sum(background['raw']) + len(foreground)
 
 
 class CodingLenBackground(BackgroundCommon):
@@ -220,6 +255,7 @@ class CodingLenBackground(BackgroundCommon):
     def __init__(self, use_cache=False):
         super(CodingLenBackground, self).__init__(
             'codingLenBackgroundModel', use_cache)
+        self._load_or_build()
 
     def precompute(self):
         back = self._load_and_prepare_build()
@@ -324,6 +360,7 @@ class SamochaBackground(BackgroundBase):
     def __init__(self, use_cache=False):
         super(SamochaBackground, self).__init__(
             'samochaBackgroundModel', use_cache)
+        self._load_or_build()
 
     def precompute(self):
         self.background = self._load_and_prepare_build()
