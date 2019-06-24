@@ -64,11 +64,14 @@ class EnrichmentModelsMixin(object):
         return counting_name
 
     def get_background_model(self, query):
+        dataset_id = query.get('datasetId', None)
         background_name = query.get('enrichmentBackgroundModel', None)
         if background_name is None:
             background_name = self.get_default_background_name()
         if precompute.register.has_key(background_name):  # @IgnorePep8
             background = precompute.register.get(background_name)
+            if background_name == 'synonymousBackgroundModel':
+                background.reset_default_background(dataset_id)
         else:
             background_name = self.get_default_background_name()
             background = precompute.register.get(background_name)

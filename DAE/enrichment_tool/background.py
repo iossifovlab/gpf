@@ -3,6 +3,8 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
+from __future__ import print_function
+
 import cPickle
 import cStringIO
 from collections import Counter
@@ -205,6 +207,17 @@ class SynonymousBackground(BackgroundCommon):
                 'background': b,
                 'foreground': f,
             }
+
+    def reset_default_background(self, study_name=None):
+        if study_name is None:
+            self.default_background = self[self.name, 'default_background']
+        elif study_name in self.studies:
+            self.default_background = study_name
+        else:
+            self.default_background = self[self.name, 'default_background']
+        print(
+            "Enrichment synonymous background reset to:",
+            self.default_background)
 
     def _count_foreground_events(self, gene_syms):
         foreground = self.data[self.default_background]['foreground']
