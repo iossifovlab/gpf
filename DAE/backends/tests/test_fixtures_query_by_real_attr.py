@@ -10,7 +10,7 @@ import pytest
 
 @pytest.mark.xfail(reason='queries by genomic scores are broken in impala')
 @pytest.mark.parametrize("variants", [
-    'vcf_import_thift',
+    # 'vcf_import_thift',
     'vcf_import_raw',
 ])
 @pytest.mark.parametrize("real_attr_filter,count", [

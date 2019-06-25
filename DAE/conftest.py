@@ -227,12 +227,10 @@ def vcf_import_raw(
 
 @pytest.fixture
 def fixture_select(
-        vcf_import_raw, vcf_import_thrift,
+        vcf_import_raw,
         annotation_pipeline_config, annotation_pipeline_default_config):
     def build(fixture_name):
-        if fixture_name == 'vcf_import_thift':
-            return vcf_import_thrift
-        elif fixture_name == 'vcf_import_raw':
+        if fixture_name == 'vcf_import_raw':
             return vcf_import_raw
         elif fixture_name == 'annotation_pipeline_config':
             return annotation_pipeline_config
