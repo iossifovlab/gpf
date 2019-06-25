@@ -266,7 +266,7 @@ class CodingLenBackground(BackgroundCommon):
         assert filename is not None
         back = []
         with open(filename, 'r') as f:
-            reader = csv.reader(f)
+            reader = csv.reader(f, delimiter='\t')
             reader.next()
             for row in reader:
                 back.append((str(row[1]), int(row[2])))
