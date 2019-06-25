@@ -70,10 +70,6 @@ class VariantsParquetWriter(object):
         pa.field("alternative", pa.string()),
         pa.field("variant_type", pa.int8()),
         pa.field("worst_effect", pa.string()),
-        pa.field("af_parents_called_count", pa.int32()),
-        pa.field("af_parents_called_percent", pa.float32()),
-        pa.field("af_allele_count", pa.int32()),
-        pa.field("af_allele_freq", pa.float32()),
         pa.field("alternatives_data", pa.string()),
 
         pa.field("effect_type", pa.string()),
@@ -91,7 +87,12 @@ class VariantsParquetWriter(object):
         pa.field("variant_in_member", pa.string()),
         pa.field("genotype_data", pa.string()),
 
-        # pa.field("data", pa.binary()),
+        pa.field('af_parents_called_count', pa.int32()),
+        pa.field('af_parents_called_percent', pa.float32()),
+        pa.field('af_allele_count', pa.int32()),
+        pa.field('af_allele_freq', pa.float32()),
+        pa.field('frequency_data', pa.string()),
+
     ])
 
     EXCLUDE = [
@@ -138,12 +139,19 @@ class VariantsParquetWriter(object):
                 genotype_data = parquet_serializer.serialize_variant_genotype(
                     family_variant.gt
                 )
+                frequency_data = \
+                    parquet_serializer.serialize_variant_frequency(
+                        family_variant
+                    )
 
                 repetition = 0
                 for family_allele in family_variant.alleles:
                     summary = parquet_serializer.serialize_summary(
                         summary_variant_index, family_allele,
                         alternatives_data
+                    )
+                    frequency = parquet_serializer.serialize_alelle_frequency(
+                        family_allele, frequency_data
                     )
                     effect_genes = parquet_serializer.serialize_effects(
                         family_allele, effect_data)
@@ -152,14 +160,15 @@ class VariantsParquetWriter(object):
                     member = parquet_serializer.serialize_members(
                         family_variant_index, family_allele)
 
-                    for (s, e, f, m) in itertools.product(
-                            [summary], effect_genes, [family], member):
+                    for (s, freq, e, f, m) in itertools.product(
+                            [summary], [frequency], effect_genes,
+                            [family], member):
 
                         repetition += 1
 
                         self.data.data_append('bucket_index', bucket_index)
 
-                        for d in (s, e, f, m):
+                        for d in (s, freq, e, f, m):
                             for key, val in d._asdict().items():
                                 self.data.data_append(key, val)
                 histogram[repetition] += 1

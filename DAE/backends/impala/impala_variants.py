@@ -21,14 +21,14 @@ class ImpalaFamilyVariants(FamiliesBase):
 
         for row in self.backend.query_variants(self.config, **kwargs):
             chrom, position, reference, alternatives_data, \
-                effect_data, family_id, genotype_data, \
+                effect_data, family_id, genotype_data, frequency_data, \
                 matched_alleles = row
 
             family = self.families.get(family_id)
             v = self.serializer.deserialize_variant(
                 family,
                 chrom, position, reference, alternatives_data,
-                effect_data, genotype_data
+                effect_data, genotype_data, frequency_data
             )
 
             matched_alleles = [int(a) for a in matched_alleles.split(',')]

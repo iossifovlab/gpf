@@ -31,7 +31,7 @@ def test_alternatives_serialize_deserialize(alts):
     data = ParquetSerializer.serialize_variant_alternatives(alts)
     alts2 = ParquetSerializer.deserialize_variant_alternatives(data)
 
-    assert alts == alts2
+    assert alts == alts2[1:]
 
 
 def test_variant_effects_serialize_deserialize(variants_vcf):
@@ -42,7 +42,7 @@ def test_variant_effects_serialize_deserialize(variants_vcf):
         data = ParquetSerializer.serialize_variant_effects(v.effects)
         effects2 = ParquetSerializer.deserialize_variant_effects(data)
 
-        assert all([e1 == e2 for e1, e2 in zip(effects2, v.effects)])
+        assert all([e1 == e2 for e1, e2 in zip(effects2[1:], v.effects)])
 
 
 def test_variants_parquet_io(
@@ -85,6 +85,7 @@ def test_variants_parquet_io(
                 effect_data,
                 family_id,
                 genotype_data,
+                frequency_data,
                 GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
             FROM {db}.{variant}
             {where_clause}
@@ -98,21 +99,37 @@ def test_variants_parquet_io(
                 alternatives_data,
                 effect_data,
                 family_id,
-                genotype_data
+                genotype_data,
+                frequency_data
             {limit_clause}
             """.format(
                 db=db, variant="variant",
                 where_clause="",
                 limit_clause=""))
+        
+        parquet_serializer = ParquetSerializer()
+
         for row in cursor:
             print(row)
 
             chrom, position, reference, alternatives_data, \
-                effect_data, family_id, genotype_data, \
+                effect_data, family_id, genotype_data, frequency_data, \
                 matched_alleles = row
+
+            family = fvars.families[family_id]
+            print(family)
 
             print(genotype_data)
             gt = ParquetSerializer.deserialize_variant_genotype(
                 genotype_data)
             print(gt)
 
+            frequencies = ParquetSerializer.deserialize_variant_frequency(
+                frequency_data)
+            print(frequencies)
+
+            v = parquet_serializer.deserialize_variant(
+                family, chrom, position, reference, alternatives_data,
+                effect_data, genotype_data, frequency_data
+            )
+            print(v)

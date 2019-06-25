@@ -24,10 +24,6 @@ class ParquetSerializer(object):
             'alternative',
             'variant_type',
             'worst_effect',
-            'af_parents_called_count',
-            'af_parents_called_percent',
-            'af_allele_count',
-            'af_allele_freq',
             'alternatives_data',
         ])
 
@@ -60,6 +56,16 @@ class ParquetSerializer(object):
         ]
     )
 
+    frequency = namedtuple(
+        'frequency', [
+            'af_parents_called_count',
+            'af_parents_called_percent',
+            'af_allele_count',
+            'af_allele_freq',
+            'frequency_data',
+        ]
+    )
+
     def __init__(
             self, include_reference=True, annotation_schema=None):
         # self.families = families
@@ -68,9 +74,9 @@ class ParquetSerializer(object):
 
     def serialize_summary(
             self, summary_variant_index, allele, alternatives_data):
-        if not self.include_reference and allele.is_reference_allele:
-            return None
-        elif allele.is_reference_allele:
+        # if not self.include_reference and allele.is_reference_allele:
+        #     return None
+        if allele.is_reference_allele:
             return self.summary(
                 summary_variant_index,
                 allele.allele_index,
@@ -80,10 +86,6 @@ class ParquetSerializer(object):
                 None,
                 None,
                 None,
-                allele.get_attribute('af_parents_called_count'),
-                allele.get_attribute('af_parents_called_percent'),
-                allele.get_attribute('af_allele_count'),
-                allele.get_attribute('af_allele_freq'),
                 alternatives_data,
             )
         else:
@@ -96,10 +98,6 @@ class ParquetSerializer(object):
                 allele.alternative,
                 allele.variant_type.value,
                 allele.effect.worst,
-                allele.get_attribute('af_parents_called_count'),
-                allele.get_attribute('af_parents_called_percent'),
-                allele.get_attribute('af_allele_count'),
-                allele.get_attribute('af_allele_freq'),
                 alternatives_data,
             )
 
@@ -110,6 +108,49 @@ class ParquetSerializer(object):
             self.effect_gene(eg.effect, eg.symbol, effect_data)
             for eg in allele.effect.genes
         ]
+
+    def serialize_alelle_frequency(self, allele, frequency_data):
+        freq = self.frequency(
+            allele.get_attribute('af_parents_called_count'),
+            allele.get_attribute('af_parents_called_percent'),
+            allele.get_attribute('af_allele_count'),
+            allele.get_attribute('af_allele_freq'),
+            frequency_data,
+        )
+        return freq
+
+    @staticmethod
+    def serialize_variant_frequency(v):
+        result = np.zeros((len(v.alleles), 4), dtype=np.float32)
+        for row, allele in enumerate(v.alleles):
+            result[row, 0] = allele.get_attribute('af_parents_called_count')
+            result[row, 1] = allele.get_attribute('af_parents_called_percent')
+            result[row, 2] = allele.get_attribute('af_allele_count')
+            result[row, 3] = allele.get_attribute('af_allele_freq')
+        flat = result.flatten(order='F')
+        buff = flat.tobytes()
+        data = str(buff, 'latin1')
+        return data
+
+    @staticmethod
+    def deserialize_variant_frequency(data):
+        buff = bytes(data, 'latin1')
+        flat = np.frombuffer(buff, dtype=np.float32)
+        assert len(flat) % 4 == 0
+
+        rows = len(flat) // 4
+        result = flat.reshape([rows, 4], order='F')
+        attributes = []
+        for row in range(rows):
+            a = {
+                'af_parents_called_count': int(result[row, 0]),
+                'af_parents_called_percent': result[row, 1],
+                'af_allele_count': int(result[row, 2]),
+                'af_allele_freq': result[row, 3],
+            }
+            attributes.append(a)
+
+        return attributes
 
     @staticmethod
     def serialize_variant_genotype(gt):
@@ -137,7 +178,9 @@ class ParquetSerializer(object):
 
     @staticmethod
     def deserialize_variant_alternatives(data):
-        return data.split(",")
+        res = [None]
+        res.extend(data.split(","))
+        return res
 
     @staticmethod
     def serialize_variant_effects(effects):
@@ -147,7 +190,9 @@ class ParquetSerializer(object):
 
     @staticmethod
     def deserialize_variant_effects(data):
-        return [Effect.from_string(e) for e in data.split("#")]
+        res = [None]
+        res.extend([Effect.from_string(e) for e in data.split("#")])
+        return res
 
     def serialize_family(
             self, family_variant_index, family_allele, genotype_data):
@@ -185,14 +230,13 @@ class ParquetSerializer(object):
     def deserialize_variant(
             self, family,
             chrom, position, reference, alternatives_data,
-            effect_data, genotype_data):
+            effect_data, genotype_data, frequency_data):
         effects = ParquetSerializer.deserialize_variant_effects(
             effect_data)
         alternatives = ParquetSerializer.deserialize_variant_alternatives(
             alternatives_data
         )
         assert len(effects) == len(alternatives)
-
         # family = self.families.get(family_id)
         assert family is not None
 
@@ -201,13 +245,20 @@ class ParquetSerializer(object):
         rows, cols = genotype.shape
         assert cols == len(family)
 
+        frequencies = ParquetSerializer.deserialize_variant_frequency(
+            frequency_data)
+        assert len(frequencies) == len(alternatives)
+
         alleles = []
-        for alt, effect in zip(alternatives, effects):
+        for allele_index, (alt, effect, freq) in \
+                enumerate(zip(alternatives, effects, frequencies)):
             allele = SummaryAllele(
-                chrom, position, reference, alt, effect=effect)
+                chrom, position, reference,
+                alternative=alt,
+                allele_index=allele_index,
+                effect=effect,
+                attributes=freq)
             alleles.append(allele)
-        return FamilyVariant(
-            SummaryVariant(alleles),
-            family,
-            genotype
-        )
+        sv = SummaryVariant(alleles)
+
+        return FamilyVariant(sv, family, genotype)
