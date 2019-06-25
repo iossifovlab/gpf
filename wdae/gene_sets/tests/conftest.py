@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 import os
 import pytest
 
-from gene.config import DenovoGeneSetCollectionConfig
+from gene.denovo_gene_set_collection_config import \
+    DenovoGeneSetCollectionConfig
 from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 
 from configurable_entities.configuration import DAEConfig

@@ -136,11 +136,3 @@ def loadGeneTerm(path):
         return _ReadGmtFile(path)
     else:
         return _ReadEwaSetFile(path)
-
-# if __name__ == "__main__":
-#     print("hi")
-#     # gt = loadGeneTerm(
-# '/mnt/wigclust5/data/unsafe/autism/genomes/hg19/
-#           miRNA-TargetScan6.0-Conserved')
-#     gt = loadGeneTerm(
-# '/data/safe/ecicek/Workspace6/GeneToTermMapping/Domain-map.txt')
