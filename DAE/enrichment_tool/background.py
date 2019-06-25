@@ -164,6 +164,10 @@ class SynonymousBackground(BackgroundCommon):
         self.data = {}
         self._load_or_build()
 
+    @property
+    def is_ready(self):
+        return self.data
+
     def precompute(self):
         self.data = {}
         for study_name in self.studies:
@@ -251,11 +255,14 @@ class SynonymousBackground(BackgroundCommon):
 class CodingLenBackground(BackgroundCommon):
 
     @property
-    def filename(self):
-        return self[self.name, 'file']
+    def background_dir(self):
+        return self[self.name, 'background_dir']
 
-    def _load_and_prepare_build(self):
-        filename = self.filename
+    def _load_and_prepare_build(self, study_name):
+        filename = os.path.join(
+            self.background_dir,
+            "{}.tsv".format(study_name))
+
         assert filename is not None
         back = []
         with open(filename, 'r') as f:
@@ -268,36 +275,68 @@ class CodingLenBackground(BackgroundCommon):
     def __init__(self, use_cache=False):
         super(CodingLenBackground, self).__init__(
             'codingLenBackgroundModel', use_cache)
+
+        self.studies = [
+            st.strip() for st in self[self.name, 'studies'].split()
+        ]
+        self.default_background = self[self.name, 'default_background']
+        assert self.default_background in self.studies
+        self.data = {}
         self._load_or_build()
 
+    @property
+    def is_ready(self):
+        return self.data
+
     def precompute(self):
-        back = self._load_and_prepare_build()
-        self.background = np.array(
-            back,
-            dtype=[('sym', '|S32'), ('raw', '>i4')])
-        return self.background
+        self.data = {}
+        for study_name in self.studies:
+
+            back = self._load_and_prepare_build(study_name)
+            background = np.array(
+                back,
+                dtype=[('sym', '|S32'), ('raw', '>i4')])
+            self.data[study_name] = background
+        return self.data
 
     def serialize(self):
-        fout = cStringIO.StringIO()
-        np.save(fout, self.background)
+        result = {}
+        for study_name, data in self.data.items():
+            fout = cStringIO.StringIO()
+            np.save(fout, data)
 
-        b = zlib.compress(fout.getvalue())
-        return {'background': b}
+            b = zlib.compress(fout.getvalue())
+            result[study_name] = b
+        return result
 
     def deserialize(self, data):
-        b = data['background']
-        fin = cStringIO.StringIO(zlib.decompress(b))
-        self.background = np.load(fin)
+        self.data = {}
+        for study_name, background in data.items():
+            fin = cStringIO.StringIO(zlib.decompress(background))
+            self.data[study_name] = np.load(fin)
+
+    def reset_default_background(self, study_name=None):
+        if study_name is None:
+            self.default_background = self[self.name, 'default_background']
+        elif study_name in self.studies:
+            self.default_background = study_name
+        else:
+            self.default_background = self[self.name, 'default_background']
+        print(
+            "Enrichment coding lenght background reset to:",
+            self.default_background)
 
     def _count(self, gene_syms):
+        background = self.data[self.default_background]
         vpred = np.vectorize(lambda sym: sym in gene_syms)
-        index = vpred(self.background['sym'])
-        res = np.sum(self.background['raw'][index])
+        index = vpred(background['sym'])
+        res = np.sum(background['raw'][index])
         return res
 
     @property
     def _total(self):
-        return np.sum(self.background['raw'])
+        background = self.data[self.default_background]
+        return np.sum(background['raw'])
 
 
 def poisson_test(observed, expected):

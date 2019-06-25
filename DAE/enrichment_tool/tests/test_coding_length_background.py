@@ -14,13 +14,13 @@ from gene.gene_set_collections import GeneSetsCollection
 def test_coding_length_background_default():
     background = CodingLenBackground()
 
-    assert background.background is not None
+    assert background.data
 
     background.cache_save()
 
     b1 = CodingLenBackground()
     assert b1.cache_load()
-    assert b1.background is not None
+    assert b1.data
 
     assert np.all(background.background == b1.background)
 
@@ -44,13 +44,13 @@ def gene_syms(request):
 
 def test_load(background):
     background = CodingLenBackground()
-    bg = background._load_and_prepare_build()
+    bg = background._load_and_prepare_build('w1202s766e611')
     assert bg is not None
 
 
 def test_max_sym_len(background):
     background = CodingLenBackground()
-    bg = background._load_and_prepare_build()
+    bg = background._load_and_prepare_build('w1202s766e611')
 
     max_sym_len = max([len(s) for (s, _l) in bg])
     assert max_sym_len < 32

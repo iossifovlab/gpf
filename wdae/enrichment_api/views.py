@@ -70,7 +70,8 @@ class EnrichmentModelsMixin(object):
             background_name = self.get_default_background_name()
         if precompute.register.has_key(background_name):  # @IgnorePep8
             background = precompute.register.get(background_name)
-            if background_name == 'synonymousBackgroundModel':
+            if background_name == 'synonymousBackgroundModel' or \
+                    background_name == 'codingLenBackgroundModel':
                 background.reset_default_background(dataset_id)
         else:
             background_name = self.get_default_background_name()
