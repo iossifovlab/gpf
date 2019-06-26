@@ -4,7 +4,7 @@ export class GeneSetsCollection {
     return new GeneSetsCollection(
       json['name'],
       json['desc'],
-      GeneSetType.fromJsonArray(json['segments'])
+      GeneSetType.fromJsonArray(json['types'])
     );
   }
 
