@@ -11,27 +11,38 @@ from ..attributes_query import \
     variant_type_query
 
 from variants.attributes import Role, Status, Sex
-from backends.impala.parquet_io import HdfsHelpers
 
 
-class ImpalaBackend(object):
-    QUOTE = "'"
-    WHERE = """
-        WHERE
-            {where}
-    """
+class ImpalaHelpers(object):
+
+    @staticmethod
+    def get_impala(impala_host=None, impala_port=None):
+        if impala_host is None:
+            impala_host = "127.0.0.1"
+        impala_host = os.getenv("DAE_IMPALA_HOST", impala_host)
+        if impala_port is None:
+            impala_port = 21050
+        impala_port = int(os.getenv("DAE_IMPALA_PORT", impala_port))
+
+        print("impala connecting to:", impala_host, impala_port)
+
+        impala_connection = dbapi.connect(
+            host=impala_host,
+            port=impala_port)
+        print("DONE impala connect...")
+
+        return impala_connection
 
     def __init__(
-            self, impala_host=None, impala_port=None,
-            hdfs_host=None, hdfs_port=None):
-
-        self.impala = self.get_impala(impala_host, impala_port)
-        self.hdfs = self.get_hdfs(hdfs_host, hdfs_port)
+            self, impala_host=None, impala_port=None, impala_connection=None):
+        if impala_connection is None:
+            impala_connection = self.get_impala(impala_host, impala_port)
+        self.connection = impala_connection
 
     def import_variants(self, config):
         print("importing variants into impala:", config)
 
-        with self.impala.cursor() as cursor:
+        with self.connection.cursor() as cursor:
             cursor.execute("""
                 CREATE DATABASE IF NOT EXISTS {db}
             """.format(db=config.db))
@@ -82,40 +93,8 @@ class ImpalaBackend(object):
                 db=dbname, variant_file=variant_file,
                 variant=table_name))
 
-    @staticmethod
-    def get_impala(impala_host=None, impala_port=None):
-        if impala_host is None:
-            impala_host = "127.0.0.1"
-        impala_host = os.getenv("DAE_IMPALA_HOST", impala_host)
-        if impala_port is None:
-            impala_port = 21050
-        impala_port = int(os.getenv("DAE_IMPALA_PORT", impala_port))
-
-        print("impala connecting to:", impala_host, impala_port)
-
-        impala_connection = dbapi.connect(
-            host=impala_host,
-            port=impala_port)
-        print("DONE impala connect...")
-
-        return impala_connection
-
-    @staticmethod
-    def get_hdfs(hdfs_host=None, hdfs_port=None):
-
-        if hdfs_host is None:
-            hdfs_host = "127.0.0.1"
-        hdfs_host = os.getenv("DAE_HDFS_HOST", hdfs_host)
-        if hdfs_port is None:
-            hdfs_port = 8020
-        hdfs_port = int(os.getenv("DAE_HDFS_PORT", hdfs_port))
-
-        print("hdfs connecting to:", hdfs_host, hdfs_port)
-
-        return HdfsHelpers(hdfs_host, hdfs_port)
-
     def check_database(self, dbname):
-        with self.impala.cursor() as cursor:
+        with self.connection.cursor() as cursor:
             q = """
                 SHOW DATABASES
             """
@@ -127,7 +106,7 @@ class ImpalaBackend(object):
         return False
 
     def check_table(self, dbname, tablename):
-        with self.impala.cursor() as cursor:
+        with self.connection.cursor() as cursor:
             q = """
                 SHOW TABLES IN {db}
             """.format(db=dbname)
@@ -139,7 +118,7 @@ class ImpalaBackend(object):
         return False
 
     def create_database(self, dbname):
-        with self.impala.cursor() as cursor:
+        with self.connection.cursor() as cursor:
             q = """
                 CREATE DATABASE IF NOT EXISTS {db}
             """.format(db=dbname)
@@ -147,10 +126,23 @@ class ImpalaBackend(object):
             cursor.execute(q)
 
     def drop_database(self, dbname):
-        with self.impala.cursor() as cursor:
+        with self.connection.cursor() as cursor:
             cursor.execute("""
                 DROP DATABASE IF EXISTS {db} CASCADE
             """.format(db=dbname))
+
+
+class ImpalaBackend(object):
+    QUOTE = "'"
+    WHERE = """
+        WHERE
+            {where}
+    """
+
+    def __init__(self, impala_connection):
+
+        self.impala = impala_connection
+        # self.config = impala_config
 
     def load_pedigree(self, config):
         with self.impala.cursor() as cursor:

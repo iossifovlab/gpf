@@ -360,15 +360,23 @@ def reimport(request):
 # Impala backend
 @pytest.fixture(scope='session')
 def test_hdfs(request):
-    from backends.impala.parquet_io import HdfsHelpers
-    hdfs = HdfsHelpers()
+    from backends.impala.hdfs_helpers import HdfsHelpers
+    hdfs = HdfsHelpers.get_hdfs()
     return hdfs
 
 
 @pytest.fixture(scope='session')
-def test_impala_backend(request):
+def test_impala_helpers(request):
+    from backends.impala.impala_backend import ImpalaHelpers
+    helpers = ImpalaHelpers()
+
+    return helpers
+
+
+@pytest.fixture(scope='session')
+def test_impala_backend(request, test_impala_helpers):
     from backends.impala.impala_backend import ImpalaBackend
-    backend = ImpalaBackend()
+    backend = ImpalaBackend(test_impala_helpers.connection)
 
     return backend
 
@@ -404,7 +412,7 @@ DATA_IMPORT_COUNT = 0
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, test_hdfs, test_impala_backend, reimport):
+        request, test_hdfs, test_impala_helpers, reimport):
 
     global DATA_IMPORT_COUNT
     DATA_IMPORT_COUNT += 1
@@ -424,8 +432,8 @@ def data_import(
 
     def build(dirname):
 
-        if not test_impala_backend.check_database(impala_test_dbname()):
-            test_impala_backend.create_database(impala_test_dbname())
+        if not test_impala_helpers.check_database(impala_test_dbname()):
+            test_impala_helpers.create_database(impala_test_dbname())
 
         vcfdirname = relative_to_this_test_folder(
             os.path.join("fixtures", dirname))
@@ -434,9 +442,9 @@ def data_import(
         for vcf in vcf_configs:
             impala = build_impala_config(vcf)
             if not reimport and \
-                    test_impala_backend.check_table(
+                    test_impala_helpers.check_table(
                         impala_test_dbname(), impala.tables.variant) and \
-                    test_impala_backend.check_table(
+                    test_impala_helpers.check_table(
                         impala_test_dbname(), impala.tables.pedigree):
                 continue
             impala_config = import_vcf(
@@ -446,7 +454,7 @@ def data_import(
                 output=temp_dirname,
                 filesystem=test_hdfs.filesystem())
             impala_config['db'] = impala_test_dbname()
-            test_impala_backend.import_variants(impala_config)
+            test_impala_helpers.import_variants(impala_config)
 
     build("backends/")
     return True

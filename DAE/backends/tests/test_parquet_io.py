@@ -46,7 +46,8 @@ def test_variant_effects_serialize_deserialize(variants_vcf):
 
 
 def test_variants_parquet_io(
-        variants_vcf, temp_filename, test_impala_backend, test_hdfs):
+        variants_vcf, temp_filename, test_hdfs,
+        test_impala_backend, test_impala_helpers):
     fvars = variants_vcf("backends/effects_trio_dad")
 
     variants_writer = VariantsParquetWriter(fvars.full_variants_iterator())
@@ -61,7 +62,7 @@ def test_variants_parquet_io(
         temp_filename, os.path.join(temp_dirname, "variant.parquet"))
 
     db = 'ala_bala_db'
-    with test_impala_backend.impala.cursor() as cursor:
+    with test_impala_helpers.connection.cursor() as cursor:
         cursor.execute("""
             DROP DATABASE IF EXISTS {db} CASCADE
         """.format(db=db))
@@ -70,12 +71,12 @@ def test_variants_parquet_io(
             CREATE DATABASE IF NOT EXISTS {db}
         """.format(db=db))
 
-        test_impala_backend.import_variant_files(
+        test_impala_helpers.import_variant_files(
             cursor, db, "variant",
             [os.path.join(temp_dirname, "variant.parquet")]
         )
 
-    with test_impala_backend.impala.cursor() as cursor:
+    with test_impala_helpers.connection.cursor() as cursor:
         cursor.execute("""
             SELECT
                 chrom,
