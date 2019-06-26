@@ -10,18 +10,17 @@ from collections import Counter
 
 from scipy.stats.stats import ttest_ind
 
-# from VariantsDB import Person
 import numpy as np
 import pandas as pd
-from pheno_tool.genotype_helper import GenotypeHelper
-from pheno_tool.genotype_helper import VariantsType as VT
 
 from pheno_tool.pheno_common import PhenoFilterBuilder, PhenoResult
 import statsmodels.api as sm
-from pheno.common import Role, Gender
+
+from pheno.common import MeasureType
+
+from variants.attributes import Role, Sex
 import logging
 
-# from utils.profiler import profile
 LOGGER = logging.getLogger(__name__)
 
 
@@ -30,116 +29,67 @@ class PhenoTool(object):
     Tool to estimate dependency between variants and phenotype measrues.
 
     Arguments of the constructor are:
-    'phdb' -- instance of `PhenoDB` class
+    `pheno_db` -- a phenotype database
 
-    `studies` -- list of studies
+    `measure_id` -- a phenotype measure ID
 
-    `roles` -- list of roles
-
-    `measure_id` -- measure ID
-
-    `normalize_by` -- list of continuous measures. Default value is an empty
-    list
+    `normalize_by` -- list of continuous measure names. Default value is
+    an empty list
 
     `pheno_filters` -- dictionary of measure IDs and filter specifiers. Default
     is empty dictionary.
     """
 
-    # @profile("pheno_tool_init.prof")
-    def __init__(self, phdb, studies, roles,
-                 measure_id, normalize_by=[],
+    def __init__(self, pheno_db, measure_id, normalize_by=[],
                  pheno_filters={}):
 
-        assert phdb.has_measure(measure_id)
-        assert all([phdb.has_measure(m) for m in normalize_by])
+        assert pheno_db.has_measure(measure_id)
 
-        assert len(roles) >= 1
-        assert all([isinstance(r, Role) for r in roles])
-
-        self.phdb = phdb
-        self.studies = studies
-        self.roles = roles
-
-        self.persons = None
+        self.pheno_db = pheno_db
         self.measure_id = measure_id
-        self.normalize_by = normalize_by
-        self.genotype_helper = GenotypeHelper(studies)
 
-        filter_builder = PhenoFilterBuilder(phdb)
+        self.normalize_by = [normalize_id for normalize_id in [
+            self.get_normalize_measure_id(normalize_name)
+            for normalize_name in normalize_by]
+            if normalize_id is not None]
 
-        self.pheno_filters = [
-            filter_builder.make_filter(m, c) for m, c in list(pheno_filters.items())
-        ]
-        self._build_subjects()
-        self._normalize_df(self.df, self.measure_id, self.normalize_by)
+        self.normalize_by = [self.get_normalize_measure_id(normalize_name)
+                             for normalize_name in normalize_by]
+        self.normalize_by = [normalize_id
+                             for normalize_id in self.normalize_by
+                             if normalize_id is not None]
+        print(self.normalize_by)
 
-    @classmethod
-    def _assert_persons_equal(cls, p1, p2):
-        if p1.personId == p2.personId and \
-                p1.role == p2.role and \
-                p1.gender == p2.gender:
+        assert all([pheno_db.get_measure(m).measure_type
+                    == MeasureType.continuous
+                    for m in self.normalize_by])
+        assert pheno_db.get_measure(measure_id).measure_type in \
+            [MeasureType.continuous, MeasureType.ordinal]
 
-            return True
+        if pheno_filters:
+            filter_builder = PhenoFilterBuilder(self.pheno_db)
+            self.pheno_filters = [
+                filter_builder.make_filter(m, c)
+                for m, c in list(pheno_filters.items())
+            ]
         else:
-            LOGGER.info("mismatched persons: {} != {}".format(p1, p2))
-            return False
+            self.pheno_filters = []
 
-    @classmethod
-    def _studies_persons(cls, studies, roles):
-        persons = {}
-        for st in studies:
-            for fam in list(st.families.values()):
-                for person in fam.memberInOrder:
-                    if person.role in roles and \
-                            person.personId not in persons:
-                        persons[person.personId] = person
-        return persons
-
-    @classmethod
-    def _measures_persons_df(cls, phdb, roles, measures, persons):
-        df = phdb.get_persons_values_df(measures, roles=roles)
-        df.dropna(inplace=True)
-        df = df[df.person_id.isin(persons)]
-        return df
-
-    @classmethod
-    def _persons(cls, df):
-        persons = {}
-        for _index, row in df.iterrows():
-            person = Person()
-            person.personId = row['person_id']
-            person.gender = row['gender']
-            person.role = row['role']
-            persons[person.personId] = person
-        return persons
-
-    def _build_subjects(self):
-        persons = self._studies_persons(self.studies, self.roles)
-        measures = [self.measure_id]
-        measures.extend(self.normalize_by)
+        # TODO currently filtering only for probands, expand with additional
+        # options via PeopleGroup
+        self.pheno_df = self.pheno_db.get_persons_values_df([self.measure_id],
+                                                            roles=[Role.prb])
         for f in self.pheno_filters:
-            measures.append(f.measure_id)
+            self.pheno_df = f.apply(self.pheno_df)
+        self._normalize_df(self.pheno_df, self.measure_id, self.normalize_by)
 
-        df = self._measures_persons_df(
-            self.phdb, self.roles,
-            measures,
-            persons)
-
-        for f in self.pheno_filters:
-            df = f.apply(df)
-
-        self.df = df.copy()
-        self.persons = self._persons(df)
-
-    def list_of_subjects(self, rebuild=False):
-        if self.persons is None or rebuild:
-            self._build_subjects()
-        return self.persons
-
-    def list_of_subjects_df(self, rebuild=False):
-        if self.df is None or rebuild:
-            self._build_subjects()
-        return self.df
+    def get_normalize_measure_id(self, normalize_name):
+        instrument_name = self.measure_id.split('.')[0]
+        normalize_id = '.'.join([instrument_name, normalize_name])
+        if self.pheno_db.has_measure(normalize_id):
+            return normalize_id
+        else:
+            return None
 
     @staticmethod
     def _normalize_df(df, measure_id, normalize_by=[]):
@@ -157,24 +107,6 @@ class PhenoTool(object):
             dn = pd.Series(index=df.index, data=fitted.resid)
             df['normalized'] = dn
             return df
-
-    def normalize_measure_values_df(self, measure_id, normalize_by=[]):
-        """
-        Returns a data frame containing values for the `measure_id`.
-
-        Values are normalized if the argument `normalize_by` is a non empty
-        list of measure_ids.
-        """
-        assert isinstance(normalize_by, list)
-        assert all([self.phdb.get_measure(m).measure_type == 'continuous' for m in normalize_by])
-        assert self.phdb.get_measure(measure_id).measure_type == 'continuous'
-
-        measures = normalize_by[:]
-        measures.append(measure_id)
-
-        df = self.phdb.get_persons_values_df(measures, roles=self.roles)
-        df.dropna(inplace=True)
-        return self._normalize_df(df, measure_id, normalize_by)
 
     @staticmethod
     def _calc_base_stats(arr):
@@ -197,88 +129,73 @@ class PhenoTool(object):
         return pv
 
     @classmethod
-    def _calc_stats(cls, data, gender):
+    def _calc_stats(cls, data, sex):
         if len(data) == 0:
             result = PhenoResult(None, None)
-            result.positive_count = np.nan
-            result.positive_mean = np.nan
-            result.positive_deviation = np.nan
+            result.positive_count = 0
+            result.positive_mean = 0
+            result.positive_deviation = 0
 
-            result.negative_count = np.nan
-            result.negative_mean = np.nan
-            result.negative_deviation = np.nan
+            result.negative_count = 0
+            result.negative_mean = 0
+            result.negative_deviation = 0
+            result.pvalue = 'NA'
             return result
 
         positive_index = np.logical_and(
-            data['variants'] != 0, ~np.isnan(data['variants']))
+            data['variant_count'] != 0, ~np.isnan(data['variant_count']))
 
-        negative_index = data['variants'] == 0
+        negative_index = data['variant_count'] == 0
 
-        if gender is None:
-            gender_index = None
-            positive_gender_index = positive_index
-            negative_gender_index = negative_index
+        if sex is None:
+            sex_index = None
+            positive_sex_index = positive_index
+            negative_sex_index = negative_index
         else:
-            gender_index = data['gender'] == gender
-            positive_gender_index = np.logical_and(
-                positive_index, gender_index)
-            negative_gender_index = np.logical_and(negative_index,
-                                                   gender_index)
+            sex_index = data['sex'] == sex
+            positive_sex_index = np.logical_and(
+                positive_index, sex_index)
+            negative_sex_index = np.logical_and(negative_index,
+                                                sex_index)
 
-            assert not np.any(np.logical_and(positive_gender_index,
-                                             negative_gender_index))
+            assert not np.any(np.logical_and(positive_sex_index,
+                                             negative_sex_index))
 
-        positive = data[positive_gender_index].normalized.values
-        negative = data[negative_gender_index].normalized.values
+        positive = data[positive_sex_index].normalized.values
+        negative = data[negative_sex_index].normalized.values
         p_val = cls._calc_pv(positive, negative)
 
-        result = PhenoResult(data, gender_index)
+        result = PhenoResult(data, sex_index)
         result._set_positive_stats(*PhenoTool._calc_base_stats(positive))
         result._set_negative_stats(*PhenoTool._calc_base_stats(negative))
-
         result.pvalue = p_val
 
         return result
 
-    # @profile("pheno_tool_calc.prof")
-    def calc(self, variants, gender_split=False):
+    def calc(self, variants, sex_split=False):
         """
-        `variants` -- expects either variants type specification (instance of
-        :ref:`VariantsType` class) or already calculated variants from
-        :ref:`GenotypeHelper` class.
+        `variants` -- an instance of Counter, matching personIds to
+        an amount of variants
 
-        `gender_split` -- should we split the result by gender or not. Default
+        `sex_split` -- should we split the result by sex or not. Default
         is `False`.
 
         """
-        if isinstance(variants, VT):
-            persons_variants = self.genotype_helper.get_persons_variants_df(
-                variants)
-        elif isinstance(variants, Counter):
+        assert(isinstance(variants, Counter))
+        persons_variants = pd.DataFrame(
+            data=list(variants.items()),
+            columns=['person_id', 'variant_count'])
+        persons_variants.set_index('person_id', inplace=True)
 
-            persons_variants = pd.DataFrame(
-                data=[(k, v) for k, v in list(variants.items())],
-                columns=['person_id', 'variants'])
-            persons_variants.set_index('person_id', inplace=True)
-        elif isinstance(variants, pd.DataFrame):
-            persons_variants = variants
-        else:
-            raise ValueError(
-                "expected VariantsType object or persons variants")
+        merged_df = pd.merge(self.pheno_df, persons_variants,
+                             how='left', on=['person_id'])
+        merged_df.fillna(0, inplace=True)
 
-        if 'variants' in self.df:
-            # delete variants column
-            del self.df['variants']
-
-        df = self.df.join(
-            persons_variants, on="person_id", rsuffix="_variants")
-        df.fillna(0, inplace=True)
-
-        if not gender_split:
-            return self._calc_stats(df, None)
+        if not sex_split:
+            return self._calc_stats(merged_df, None)
         else:
             result = {}
-            for gender in [Gender.M, Gender.F]:
-                p = self._calc_stats(df, gender)
-                result[gender.name] = p
+            for sex in [Sex.M, Sex.F]:
+                p = self._calc_stats(merged_df, sex)
+                result[sex.name] = p
             return result

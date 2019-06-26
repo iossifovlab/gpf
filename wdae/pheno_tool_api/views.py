@@ -8,16 +8,16 @@ from users_api.authentication import SessionAuthenticationWithoutCSRF
 from rest_framework.exceptions import NotAuthenticated
 import traceback
 from pheno_tool.tool import PhenoTool
-from pheno_tool_api.genotype_helper import GenotypeHelper
 from functools import partial
 from django.http.response import StreamingHttpResponse
 import json
-from pheno.common import Role, Gender
+from variants.attributes import Sex
 import logging
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 from functools import reduce
+from collections import Counter
 
-from datasets_api.studies_manager import get_studies_manager 
+from datasets_api.studies_manager import get_studies_manager
 
 logger = logging.getLogger(__name__)
 
@@ -27,71 +27,86 @@ class PhenoToolView(APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
-        datasets_facade = get_studies_manager().get_dataset_facade()
-        self._dataset_facade = datasets_facade
+        self._variants_db = get_studies_manager().get_variants_db()
 
     @classmethod
-    def get_result_by_gender(cls, result, gender):
+    def get_result_by_sex(cls, result, sex):
         return {
             "negative": {
-                "count": result[gender].negative_count,
-                "deviation": result[gender].negative_deviation,
-                "mean": result[gender].negative_mean
+                "count": result[sex].negative_count,
+                "deviation": result[sex].negative_deviation,
+                "mean": result[sex].negative_mean
             },
             "positive": {
-                "count": result[gender].positive_count,
-                "deviation": result[gender].positive_deviation,
-                "mean": result[gender].positive_mean
+                "count": result[sex].positive_count,
+                "deviation": result[sex].positive_deviation,
+                "mean": result[sex].positive_mean
             },
-            "pValue": result[gender].pvalue
+            "pValue": result[sex].pvalue
         }
+
+    @staticmethod
+    def get_people_variants(data, dataset):
+        people_variants = {}
+        lgds = False
+
+        if 'LGDs' in data['effectTypes']:
+            lgds = True
+            oldeffecttypes = list(data['effectTypes'])
+            data['effectTypes'].pop(data['effectTypes'].index('LGDs'))
+            data['effectTypes'].extend(['splice-site', 'frame-shift',
+                                        'nonsense', 'no-frame-shift-newStop'])
+
+        for variant in dataset.query_variants(**data):
+            for allele in variant.matched_alleles:
+                if allele.effect.worst not in people_variants:
+                    people_variants[allele.effect.worst] = Counter()
+                for person in allele.variant_in_members:
+                    if person:
+                        people_variants[allele.effect.worst][person] += 1
+
+        if lgds:
+            data['effectTypes'] = oldeffecttypes
+            people_variants['lgds'] = Counter()
+            if 'splice-site' in people_variants:
+                people_variants['lgds'] += people_variants['splice-site']
+                del(people_variants['splice-site'])
+            if 'frame-shift' in people_variants:
+                people_variants['lgds'] += people_variants['frame-shift']
+                del(people_variants['frame-shift'])
+            if 'nonsense' in people_variants:
+                people_variants['lgds'] += people_variants['nonsense']
+                del(people_variants['nonsense'])
+            if 'no-frame-shift-newStop' in people_variants:
+                people_variants['lgds'] += \
+                    people_variants['no-frame-shift-newStop']
+                del(people_variants['no-frame-shift-newStop'])
+
+        return people_variants
 
     @classmethod
-    def calc_by_effect(cls, effect, tool, data, dataset):
-        data['effectTypes'] = [effect]
-
-        variants = dataset.get_variants(safe=True, **data)
-        variants_df = GenotypeHelper.to_persons_variants_df(variants)
-
-        result = tool.calc(variants_df, gender_split=True)
+    def calc_by_effect(cls, effect, tool, people_variants):
+        result = tool.calc(people_variants, sex_split=True)
         return {
             "effect": effect,
-            "maleResults": cls.get_result_by_gender(result, Gender.M.name),
-            "femaleResults": cls.get_result_by_gender(result, Gender.F.name),
+            "maleResults": cls.get_result_by_sex(result, Sex.M.name),
+            "femaleResults": cls.get_result_by_sex(result, Sex.F.name),
         }
 
-    def get_normalize_measure_id(
-            self, measure_id, normalize_by, pheno_reg):
-        if normalize_by == "non-verbal iq":
-            return pheno_reg.get_nonverbal_iq_measure_id(measure_id)
-        elif normalize_by == "age":
-            return pheno_reg.get_age_measure_id(measure_id)
-
     def prepare_pheno_tool(self, data):
-        dataset_id = data['datasetId']
-        measure_id = data['measureId']
-        dataset = self.dataset_facade.get_dataset(dataset_id)
-        normalize_by = [
-            self.get_normalize_measure_id(
-                measure_id,
-                normalize_by_elem,
-                dataset.pheno_reg)
-            for normalize_by_elem in data['normalizeBy']
-        ]
-        normalize_by = [n for n in normalize_by if n is not None]
-
+        study_wrapper = self._variants_db.get_wdae_wrapper(data['datasetId'])
         tool = PhenoTool(
-            dataset.pheno_db, dataset.studies, roles=[Role.prb],
-            measure_id=measure_id, normalize_by=normalize_by
+            study_wrapper.pheno_db,
+            measure_id=data['measureId'],
+            normalize_by=data['normalizeBy']
         )
-
-        return dataset, tool, normalize_by
+        return study_wrapper, tool
 
     @staticmethod
     def _align_NA_results(results):
         for result in results:
-            for gender in ['femaleResults', 'maleResults']:
-                res = result[gender]
+            for sex in ['femaleResults', 'maleResults']:
+                res = result[sex]
                 if res['positive']['count'] == 0:
                     assert res['positive']['mean'] == 0
                     assert res['positive']['deviation'] == 0
@@ -117,20 +132,22 @@ class PhenoToolView(APIView):
     def post(self, request):
         data = request.data
         try:
-            dataset, tool, normalize_by = self.prepare_pheno_tool(data)
+            dataset, tool = self.prepare_pheno_tool(data)
+            people_variants = self.get_people_variants(data, dataset)
 
-            results = [self.calc_by_effect(effect, tool, data, dataset)
+            data['effectTypes'] = list(map(lambda x: str.lower(x),
+                                           data['effectTypes']))
+
+            results = [self.calc_by_effect(
+                       effect, tool, people_variants.get(effect, Counter()))
                        for effect in data['effectTypes']]
-
             self._align_NA_results(results)
-            description = self._build_report_description(
-                tool.measure_id, normalize_by)
 
             response = {
-                "description": description,
+                "description": self._build_report_description(
+                    tool.measure_id, tool.normalize_by),
                 "results": results
             }
-
             return Response(response)
 
         except NotAuthenticated:
@@ -145,7 +162,7 @@ class PhenoToolView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class PhenoToolDownload(PhenoToolView):
+class PhenoToolDownload(PhenoToolView):  # TODO Restore to working condition
     def _parse_query_params(self, data):
         res = {str(k): str(v) for k, v in list(data.items())}
         assert 'queryData' in res

@@ -93,7 +93,7 @@ class PhenoResult(object):
     def _select_genotype(df, index):
         if df is None:
             return None
-        gdf = df[['person_id', 'gender', 'role', 'variants']]
+        gdf = df[['person_id', 'sex', 'role', 'variant_count']]
         if index is not None:
             gdf = gdf[index]
         return gdf
@@ -104,7 +104,7 @@ class PhenoResult(object):
             return None
 
         columns = list(df.columns)
-        del columns[columns.index('variants')]
+        del columns[columns.index('variant_count')]
         del columns[columns.index('family_id')]
 
         pdf = df[columns]
@@ -129,7 +129,7 @@ class PhenoResult(object):
             return result
 
         for _index, row in self.genotypes_df.iterrows():
-            result[row['person_id']] = row['variants']
+            result[row['person_id']] = row['variant_count']
         return result
 
     @property
