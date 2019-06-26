@@ -4,7 +4,7 @@ from studies.study import Study
 from backends.vcf.raw_vcf import RawFamilyVariants
 from backends.configure import Configure
 
-from backends.impala.impala_backend import ImpalaHelpers
+from backends.impala.impala_helpers import ImpalaHelpers
 from backends.impala.impala_variants import ImpalaFamilyVariants
 
 

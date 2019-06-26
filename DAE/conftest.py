@@ -367,7 +367,7 @@ def test_hdfs(request):
 
 @pytest.fixture(scope='session')
 def test_impala_helpers(request):
-    from backends.impala.impala_backend import ImpalaHelpers
+    from backends.impala.impala_helpers import ImpalaHelpers
     helpers = ImpalaHelpers()
 
     return helpers
