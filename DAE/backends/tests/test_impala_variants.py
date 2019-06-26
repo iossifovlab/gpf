@@ -1,6 +1,6 @@
 import pytest
 from backends.impala.hdfs_helpers import HdfsHelpers
-from backends.impala.impala_backend import ImpalaBackend, ImpalaHelpers
+from backends.impala.impala_backend import ImpalaHelpers
 
 
 def test_hdfs_helpers():

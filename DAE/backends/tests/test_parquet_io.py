@@ -47,7 +47,7 @@ def test_variant_effects_serialize_deserialize(variants_vcf):
 
 def test_variants_parquet_io(
         variants_vcf, temp_filename, test_hdfs,
-        test_impala_backend, test_impala_helpers):
+        test_impala_helpers):
     fvars = variants_vcf("backends/effects_trio_dad")
 
     variants_writer = VariantsParquetWriter(fvars.full_variants_iterator())

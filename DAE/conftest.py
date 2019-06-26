@@ -373,14 +373,6 @@ def test_impala_helpers(request):
     return helpers
 
 
-@pytest.fixture(scope='session')
-def test_impala_backend(request, test_impala_helpers):
-    from backends.impala.impala_backend import ImpalaBackend
-    backend = ImpalaBackend(test_impala_helpers.connection)
-
-    return backend
-
-
 def collect_vcf(dirname):
     result = []
     pattern = os.path.join(dirname, "*.vcf")
@@ -461,7 +453,7 @@ def data_import(
 
 
 @pytest.fixture(scope='session')
-def variants_impala(request, data_import, test_impala_backend):
+def variants_impala(request, data_import, test_impala_helpers):
 
     def builder(path):
         from backends.impala.impala_variants import ImpalaFamilyVariants
@@ -470,6 +462,7 @@ def variants_impala(request, data_import, test_impala_backend):
             os.path.join("fixtures", path))
         vcf_config = Configure.from_prefix_vcf(vcf_prefix).vcf
         impala_config = build_impala_config(vcf_config)
-        fvars = ImpalaFamilyVariants(impala_config, test_impala_backend)
+        fvars = ImpalaFamilyVariants(
+            impala_config, test_impala_helpers.connection)
         return fvars
     return builder
