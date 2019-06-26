@@ -29,9 +29,9 @@ class ImpalaFamilyVariants(FamiliesBase):
         self.config = config
 
         self.impala = impala_connection
-        self.ped_df = self.load_pedigree(self.config)
+        self.ped_df = self.load_pedigree()
         self.families_build(self.ped_df, family_class=Family)
-        self.schema = self.variants_schema(self.config)
+        self.schema = self.variants_schema()
         self.serializer = ParquetSerializer(self.families)
 
     def query_variants(self, **kwargs):
@@ -56,11 +56,11 @@ class ImpalaFamilyVariants(FamiliesBase):
                 v.set_matched_alleles(matched_alleles)
                 yield v
 
-    def load_pedigree(self, config):
+    def load_pedigree(self):
         with self.impala.cursor() as cursor:
             q = """
                 SELECT * FROM {db}.{pedigree}
-            """.format(db=config.db, pedigree=config.tables.pedigree)
+            """.format(db=self.config.db, pedigree=self.config.tables.pedigree)
 
             cursor.execute(q)
             ped_df = as_pandas(cursor)
@@ -86,11 +86,11 @@ class ImpalaFamilyVariants(FamiliesBase):
 
         return ped_df
 
-    def variants_schema(self, config):
+    def variants_schema(self):
         with self.impala.cursor() as cursor:
             q = """
                 DESCRIBE {db}.{variant}
-            """.format(db=config.db, variant=config.tables.variant)
+            """.format(db=self.config.db, variant=self.config.tables.variant)
 
             cursor.execute(q)
             df = as_pandas(cursor)
@@ -99,6 +99,29 @@ class ImpalaFamilyVariants(FamiliesBase):
                 col_name: col_type for (_, col_name, col_type) in records
             }
             return schema
+
+    def _build_real_attr_where(self, query):
+            assert query.get("real_attr_filter")
+            real_attr_filter = query['real_attr_filter']
+            query = []
+            for attr_name, attr_range in real_attr_filter:
+                if attr_name not in self.schema:
+                    query.append('false')
+                    continue
+                assert attr_name in self.schema
+                assert self.schema[attr_name] == 'double'
+                left, right = attr_range
+                if left is None:
+                    assert right is not None
+                    query.append("({} <= {})".format(attr_name, right))
+                elif right is None:
+                    assert left is not None
+                    query.append("({} >= {})".format(attr_name, left))
+                else:
+                    query.append(
+                        "({attr} >= {left} AND {attr} <= {right})".format(
+                            attr=attr_name, left=left, right=right))
+            return ' AND '.join(query)
 
     def _build_regions_where(self, query_values):
         assert isinstance(query_values, list)
@@ -189,6 +212,9 @@ class ImpalaFamilyVariants(FamiliesBase):
                 'variant_type', query['variant_type'],
                 variant_type_query
             ))
+        if query.get('real_attr_filter'):
+            where.append(self._build_real_attr_where(query))
+            
         return where
 
     def build_query(self, config, **kwargs):
