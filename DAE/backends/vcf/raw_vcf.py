@@ -272,6 +272,11 @@ class RawFamilyVariants(FamiliesBase):
         if kwargs.get('real_attr_filter') is not None:
             if not self.filter_real_attr(allele, kwargs['real_attr_filter']):
                 return False
+        if kwargs.get('ultra_rare'):
+            if not self.filter_real_attr(
+                    allele, [("af_allele_count", (1, 1))]):
+                return False
+
         if kwargs.get('genes') is not None or \
                 kwargs.get('effect_types') is not None:
             if not self.filter_gene_effects(

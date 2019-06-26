@@ -109,7 +109,9 @@ class ImpalaFamilyVariants(FamiliesBase):
                     query.append('false')
                     continue
                 assert attr_name in self.schema
-                assert self.schema[attr_name] == 'double'
+                assert self.schema[attr_name] == 'float' or \
+                    self.schema[attr_name] == 'int', \
+                    self.schema[attr_name]
                 left, right = attr_range
                 if left is None:
                     assert right is not None
@@ -122,6 +124,12 @@ class ImpalaFamilyVariants(FamiliesBase):
                         "({attr} >= {left} AND {attr} <= {right})".format(
                             attr=attr_name, left=left, right=right))
             return ' AND '.join(query)
+
+    def _build_ultra_rare_where(self, query):
+        assert query.get("ultra_rare")
+        return self._build_real_attr_where({
+            "real_attr_filter": [("af_allele_count", (1, 1))]
+            })
 
     def _build_regions_where(self, query_values):
         assert isinstance(query_values, list)
@@ -214,7 +222,9 @@ class ImpalaFamilyVariants(FamiliesBase):
             ))
         if query.get('real_attr_filter'):
             where.append(self._build_real_attr_where(query))
-            
+        if query.get('ultra_rare'):
+            where.append(self._build_ultra_rare_where(query))
+
         return where
 
     def build_query(self, config, **kwargs):
