@@ -151,7 +151,7 @@ class ImpalaFamilyVariants(FamiliesBase):
         assert query_values is not None
 
         assert isinstance(query_values, list) or \
-            isinstance(query_values, set)
+            isinstance(query_values, set), type(query_values)
 
         if not query_values:
             where = ' {column_name} IS NULL'.format(

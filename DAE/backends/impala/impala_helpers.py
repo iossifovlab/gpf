@@ -13,12 +13,9 @@ class ImpalaHelpers(object):
             impala_port = 21050
         impala_port = int(os.getenv("DAE_IMPALA_PORT", impala_port))
 
-        print("impala connecting to:", impala_host, impala_port)
-
         impala_connection = dbapi.connect(
             host=impala_host,
             port=impala_port)
-        print("DONE impala connect...")
 
         return impala_connection
 
