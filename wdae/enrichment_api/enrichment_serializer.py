@@ -4,7 +4,6 @@ Created on May 4, 2017
 @author: lubo
 '''
 from __future__ import unicode_literals
-from enrichment_api.enrichment_builder import EnrichmentBuilder
 from enrichment_tool.event_counters import EnrichmentResult
 from common.query_base import EffectTypesMixin, ChildGenderMixin
 from functools import reduce
@@ -12,8 +11,10 @@ from functools import reduce
 
 class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
 
-    def __init__(self, results):
+    def __init__(self, enrichment_config, results):
         super(EnrichmentSerializer, self).__init__()
+        self.enrichment_config = enrichment_config
+
         self.enrichment_results = results
 
     def serialize(self):
@@ -26,10 +27,10 @@ class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
     def serialize_person_grouping(self, grouping_results):
         output = {}
         output['selector'] = grouping_results['selector']
-        output['personGroupingId'] = grouping_results['personGroupingId']
+        output['peopleGroupId'] = grouping_results['peopleGroupId']
         output['childrenStats'] = grouping_results['childrenStats']
 
-        for effect_type in EnrichmentBuilder.EFFECT_TYPES:
+        for effect_type in self.enrichment_config.effect_types:
             result = grouping_results[effect_type]
             out = {}
             out['all'] = self.serialize_all(
@@ -54,8 +55,8 @@ class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
             'effectTypes': effect_types_fixed,
             'gender': gender,
             'peopleGroup': {
-                'id': grouping_results['personGroupingId'],
-                'checkedValues': [grouping_results['personGroupingValue']]},
+                'id': grouping_results['peopleGroupId'],
+                'checkedValues': [grouping_results['peopleGroupValue']]},
             'studyTypes': ['we'],
             'variantTypes': ['ins', 'sub', 'del']
         }
