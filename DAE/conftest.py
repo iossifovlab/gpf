@@ -227,12 +227,10 @@ def vcf_import_raw(
 
 @pytest.fixture
 def fixture_select(
-        vcf_import_raw, vcf_import_thrift,
+        vcf_import_raw,
         annotation_pipeline_config, annotation_pipeline_default_config):
     def build(fixture_name):
-        if fixture_name == 'vcf_import_thift':
-            return vcf_import_thrift
-        elif fixture_name == 'vcf_import_raw':
+        if fixture_name == 'vcf_import_raw':
             return vcf_import_raw
         elif fixture_name == 'annotation_pipeline_config':
             return annotation_pipeline_config
@@ -362,17 +360,17 @@ def reimport(request):
 # Impala backend
 @pytest.fixture(scope='session')
 def test_hdfs(request):
-    from backends.impala.parquet_io import HdfsHelpers
-    hdfs = HdfsHelpers()
+    from backends.impala.hdfs_helpers import HdfsHelpers
+    hdfs = HdfsHelpers.get_hdfs()
     return hdfs
 
 
 @pytest.fixture(scope='session')
-def test_impala_backend(request):
-    from backends.impala.impala_backend import ImpalaBackend
-    backend = ImpalaBackend()
+def test_impala_helpers(request):
+    from backends.impala.impala_helpers import ImpalaHelpers
+    helpers = ImpalaHelpers()
 
-    return backend
+    return helpers
 
 
 def collect_vcf(dirname):
@@ -406,7 +404,7 @@ DATA_IMPORT_COUNT = 0
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, test_hdfs, test_impala_backend, reimport):
+        request, test_hdfs, test_impala_helpers, reimport):
 
     global DATA_IMPORT_COUNT
     DATA_IMPORT_COUNT += 1
@@ -426,8 +424,8 @@ def data_import(
 
     def build(dirname):
 
-        if not test_impala_backend.check_database(impala_test_dbname()):
-            test_impala_backend.create_database(impala_test_dbname())
+        if not test_impala_helpers.check_database(impala_test_dbname()):
+            test_impala_helpers.create_database(impala_test_dbname())
 
         vcfdirname = relative_to_this_test_folder(
             os.path.join("fixtures", dirname))
@@ -436,9 +434,9 @@ def data_import(
         for vcf in vcf_configs:
             impala = build_impala_config(vcf)
             if not reimport and \
-                    test_impala_backend.check_table(
+                    test_impala_helpers.check_table(
                         impala_test_dbname(), impala.tables.variant) and \
-                    test_impala_backend.check_table(
+                    test_impala_helpers.check_table(
                         impala_test_dbname(), impala.tables.pedigree):
                 continue
             impala_config = import_vcf(
@@ -448,14 +446,14 @@ def data_import(
                 output=temp_dirname,
                 filesystem=test_hdfs.filesystem())
             impala_config['db'] = impala_test_dbname()
-            test_impala_backend.import_variants(impala_config)
+            test_impala_helpers.import_variants(impala_config)
 
     build("backends/")
     return True
 
 
 @pytest.fixture(scope='session')
-def variants_impala(request, data_import, test_impala_backend):
+def variants_impala(request, data_import, test_impala_helpers):
 
     def builder(path):
         from backends.impala.impala_variants import ImpalaFamilyVariants
@@ -464,6 +462,7 @@ def variants_impala(request, data_import, test_impala_backend):
             os.path.join("fixtures", path))
         vcf_config = Configure.from_prefix_vcf(vcf_prefix).vcf
         impala_config = build_impala_config(vcf_config)
-        fvars = ImpalaFamilyVariants(impala_config, test_impala_backend)
+        fvars = ImpalaFamilyVariants(
+            impala_config, test_impala_helpers.connection)
         return fvars
     return builder

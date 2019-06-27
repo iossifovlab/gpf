@@ -4,7 +4,7 @@ from studies.study import Study
 from backends.vcf.raw_vcf import RawFamilyVariants
 from backends.configure import Configure
 
-from backends.impala.impala_backend import ImpalaBackend
+from backends.impala.impala_helpers import ImpalaHelpers
 from backends.impala.impala_variants import ImpalaFamilyVariants
 
 
@@ -43,13 +43,11 @@ class StudyFactory(object):
         }
         return Configure(conf)
 
-    def make_impala_backend(self):
+    def make_impala_connection(self):
+        connection = ImpalaHelpers.get_impala(
+            self.dae_config.impala_host, self.dae_config.impala_port)
 
-        backend = ImpalaBackend(
-            self.dae_config.impala_host, self.dae_config.impala_port,
-            self.dae_config.hdfs_host, self.dae_config.hdfs_port)
-
-        return backend
+        return connection
 
     def make_study(self, study_config):
         if study_config.file_format not in self.FILE_FORMATS:
@@ -61,8 +59,8 @@ class StudyFactory(object):
 
         if study_config.file_format == 'impala':
             impala_config = self.impala_configuration(study_config).impala
-            impala_backend = self.make_impala_backend()
-            variants = ImpalaFamilyVariants(impala_config, impala_backend)
+            impala_connection = self.make_impala_connection()
+            variants = ImpalaFamilyVariants(impala_config, impala_connection)
             return Study(study_config, variants)
         else:
             variants = RawFamilyVariants(

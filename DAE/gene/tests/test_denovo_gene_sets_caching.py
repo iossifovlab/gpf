@@ -6,7 +6,10 @@ Created on Feb 27, 2017
 from __future__ import unicode_literals
 import pytest
 
-pytestmark = pytest.mark.usefixtures("gene_info_cache_dir", "calc_gene_sets")
+from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
+
+pytestmark = pytest.mark.usefixtures(
+    'gene_info_cache_dir', 'calc_gene_sets', 'cleanup_gene_sets')
 
 
 def name_in_gene_sets(gene_sets, name, count=None):
@@ -23,23 +26,20 @@ def name_in_gene_sets(gene_sets, name, count=None):
     return False
 
 
-def test_generate_cache(gscs):
-    denovo = gscs.get_gene_sets_collection('denovo')
-    computed = denovo.load()
+def test_generate_cache(denovo_gene_sets):
+    computed = denovo_gene_sets[0].load()
     assert computed is not None
 
 
-def test_load_cache(gscs):
-    denovo = gscs.get_gene_sets_collection('denovo')
-    denovo.load()
-    loaded = denovo.load()
+def test_load_cache(denovo_gene_sets):
+    denovo_gene_sets[0].load()
+    loaded = denovo_gene_sets[0].load()
     assert loaded is not None
 
 
-def test_f1_autism_get_gene_sets(gscs):
-    denovo = gscs.get_gene_sets_collection('denovo')
-
-    gene_sets = denovo.get_gene_sets(
+def test_f1_autism_get_gene_sets(denovo_gene_sets):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        denovo_gene_sets,
         gene_sets_types={'f1_group': {'phenotype': ['autism']}})
 
     assert gene_sets
@@ -47,10 +47,9 @@ def test_f1_autism_get_gene_sets(gscs):
     assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
 
 
-def test_f1_affected_and_unaffected_get_gene_sets(gscs):
-    denovo = gscs.get_gene_sets_collection('denovo')
-
-    gene_sets = denovo.get_gene_sets(
+def test_f1_affected_and_unaffected_get_gene_sets(denovo_gene_sets):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        denovo_gene_sets,
         gene_sets_types={'f1_group': {'phenotype': ['autism', 'unaffected']}})
 
     assert gene_sets
@@ -58,10 +57,9 @@ def test_f1_affected_and_unaffected_get_gene_sets(gscs):
     assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
 
 
-def test_f1_unaffected_get_gene_sets(gscs):
-    denovo = gscs.get_gene_sets_collection('denovo')
-
-    gene_sets = denovo.get_gene_sets(
+def test_f1_unaffected_get_gene_sets(denovo_gene_sets):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        denovo_gene_sets,
         gene_sets_types={'f1_group': {'phenotype': ['unaffected']}})
 
     assert gene_sets
@@ -71,10 +69,9 @@ def test_f1_unaffected_get_gene_sets(gscs):
     # assert name_in_gene_sets(gene_sets, 'Missense.Female', 0)
 
 
-def test_f1_single_get_gene_sets(gscs):
-    denovo = gscs.get_gene_sets_collection('denovo')
-
-    gene_sets = denovo.get_gene_sets(
+def test_f1_single_get_gene_sets(denovo_gene_sets):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        denovo_gene_sets,
         gene_sets_types={'f1_group': {'phenotype': ['unaffected']}})
 
     assert gene_sets
@@ -83,10 +80,9 @@ def test_f1_single_get_gene_sets(gscs):
     assert name_in_gene_sets(gene_sets, 'Missense.Male', 2)
 
 
-def test_synonymous_recurrency_get_gene_sets(gscs):
-    denovo = gscs.get_gene_sets_collection('denovo')
-
-    gene_sets = denovo.get_gene_sets(
+def test_synonymous_recurrency_get_gene_sets(denovo_gene_sets):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        denovo_gene_sets,
         gene_sets_types={'f2_group': {'phenotype': ['autism']}})
 
     assert gene_sets
@@ -95,10 +91,9 @@ def test_synonymous_recurrency_get_gene_sets(gscs):
     assert not name_in_gene_sets(gene_sets, 'Synonymous.WE.Triple')
 
 
-def test_missense_recurrency_get_gene_sets(gscs):
-    denovo = gscs.get_gene_sets_collection('denovo')
-
-    gene_sets = denovo.get_gene_sets(
+def test_missense_recurrency_get_gene_sets(denovo_gene_sets):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        denovo_gene_sets,
         gene_sets_types={'f2_group': {'phenotype': ['unaffected']}})
 
     assert gene_sets
@@ -107,10 +102,9 @@ def test_missense_recurrency_get_gene_sets(gscs):
     assert not name_in_gene_sets(gene_sets, 'Missense.Triple')
 
 
-def test_synonymous_triple_get_gene_sets(gscs):
-    denovo = gscs.get_gene_sets_collection('denovo')
-
-    gene_sets = denovo.get_gene_sets(
+def test_synonymous_triple_get_gene_sets(denovo_gene_sets):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        denovo_gene_sets,
         gene_sets_types={'f3_group': {'phenotype': ['autism']}})
 
     assert gene_sets
@@ -119,10 +113,9 @@ def test_synonymous_triple_get_gene_sets(gscs):
     assert name_in_gene_sets(gene_sets, 'Synonymous.WE.Triple', 1)
 
 
-def test_missense_triple_get_gene_sets(gscs):
-    denovo = gscs.get_gene_sets_collection('denovo')
-
-    gene_sets = denovo.get_gene_sets(
+def test_missense_triple_get_gene_sets(denovo_gene_sets):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        denovo_gene_sets,
         gene_sets_types={'f3_group': {'phenotype': ['unaffected']}})
 
     assert gene_sets
@@ -131,13 +124,56 @@ def test_missense_triple_get_gene_sets(gscs):
     assert name_in_gene_sets(gene_sets, 'Missense.Triple', 2)
 
 
-def test_missense_triple_get_gene_sets_affected_and_unaffected(gscs):
-    denovo = gscs.get_gene_sets_collection('denovo')
-
-    gene_sets = denovo.get_gene_sets(
+def test_missense_triple_get_gene_sets_affected_and_unaffected(
+        denovo_gene_sets):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        denovo_gene_sets,
         gene_sets_types={'f3_group': {'phenotype': ['autism', 'unaffected']}})
 
     assert gene_sets
 
     assert name_in_gene_sets(gene_sets, 'Missense.Recurrent', 2)
     assert name_in_gene_sets(gene_sets, 'Missense.Triple', 2)
+
+
+def test_autism_trio_get_gene_sets(denovo_gene_set_f4):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        [denovo_gene_set_f4],
+        gene_sets_types={'f4_trio': {'phenotype': ['autism']}})
+
+    assert gene_sets
+
+    assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
+    assert name_in_gene_sets(gene_sets, 'Synonymous.WE', 1)
+    assert name_in_gene_sets(gene_sets, 'Synonymous.WE.Recurrent', 1)
+    assert name_in_gene_sets(gene_sets, 'Missense', 1)
+    assert name_in_gene_sets(gene_sets, 'Missense.Recurrent', 1)
+    assert name_in_gene_sets(gene_sets, 'Missense.WE.Recurrent', 1)
+    assert name_in_gene_sets(gene_sets, 'Missense.Female', 1)
+
+
+def test_unaffected_trio_get_gene_sets(denovo_gene_set_f4):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        [denovo_gene_set_f4],
+        gene_sets_types={'f4_trio': {'phenotype': ['unaffected']}})
+
+    assert gene_sets
+
+    assert name_in_gene_sets(gene_sets, 'Synonymous', 1)
+    assert name_in_gene_sets(gene_sets, 'Synonymous.WE', 1)
+
+
+def test_affected_and_unaffected_trio_get_gene_sets(denovo_gene_set_f4):
+    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+        [denovo_gene_set_f4],
+        gene_sets_types={'f4_trio': {'phenotype': ['autism', 'unaffected']}})
+
+    assert gene_sets
+
+    assert name_in_gene_sets(gene_sets, 'Synonymous', 2)
+    assert name_in_gene_sets(gene_sets, 'Synonymous.WE', 2)
+    assert name_in_gene_sets(gene_sets, 'Synonymous.WE.Recurrent', 1)
+    assert name_in_gene_sets(gene_sets, 'Missense', 1)
+    assert name_in_gene_sets(gene_sets, 'Missense.Recurrent', 1)
+    assert name_in_gene_sets(gene_sets, 'Missense.WE.Recurrent', 1)
+    assert name_in_gene_sets(gene_sets, 'Missense.Female', 1)

@@ -1,0 +1,10 @@
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=EFF,Number=1,Type=String,Description="Effect">
+##contig=<ID=1>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	mom1	dad1	ch1	mom2	dad2	ch2	ch2.1
+1	865583	.	G	A	.	.	EFF=SYN:SAMD11	GT	0/0	0/1	0/0	0/0	0/1	0/0	0/0
+1	865624	.	G	A	.	.	EFF=MIS:SAMD11	GT	0/0	0/0	0/1	0/0	0/0	0/1	0/0
+1	865664	.	G	A	.	.	EFF=SYN:SAMD11	GT	0/0	0/0	0/1	0/0	0/0	0/1	0/0
+1	901923	.	C	A	.	.	EFF=MIS:PLEKHN1	GT	0/1	0/0	0/0	0/1	0/0	0/0	0/0
+1	905957	.	C	T	.	.	EFF=SYN:PLEKHN1	GT	0/0	0/0	0/0	0/0	0/0	0/0	0/1

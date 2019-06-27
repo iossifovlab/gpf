@@ -76,8 +76,8 @@ def test_composite_dataset_config_genotype_browser(composite_dataset_config):
     assert composite_dataset_config is not None
 
     assert composite_dataset_config.genotype_browser is True
-    assert composite_dataset_config.genotype_browser_config is not None
     genotype_browser_config = composite_dataset_config.genotype_browser_config
+    assert genotype_browser_config is not None
 
     download_columns = genotype_browser_config.download_columns
     assert download_columns.to_list() == \
@@ -133,9 +133,9 @@ def test_composite_dataset_config_genotype_browser_overwrite(
     study_config = quads_composite_dataset_config.studies_configs[0]
 
     assert quads_composite_dataset_config.genotype_browser is True
-    assert quads_composite_dataset_config.genotype_browser_config is not None
     genotype_browser_config = \
         quads_composite_dataset_config.genotype_browser_config
+    assert genotype_browser_config is not None
 
     assert study_config.genotype_browser_config != genotype_browser_config
 

@@ -28,11 +28,12 @@ class Weights(GenomicValues):
     in `geneInfo.conf`.
     """
 
-    def __init__(self, weights_name, *args, **kwargs):
+    def __init__(self, weights_name, config=None, *args, **kwargs):
         super(Weights, self).__init__('geneWeights.{}'.format(weights_name),
                                       *args, **kwargs)
-
-        self.config = GeneInfoConfig()
+        if config is None:
+            config = GeneInfoConfig()
+        self.config = config
 
         self.genomic_values_col = 'gene'
 
@@ -194,7 +195,7 @@ class WeightsLoader(object):
 
         names = [n.strip() for n in weights.split(',')]
         for name in names:
-            w = Weights(name)
+            w = Weights(name, config=self.config)
             self.weights[name] = w
 
     def __getitem__(self, weight_name):

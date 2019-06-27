@@ -12,6 +12,8 @@ import os
 import numpy as np
 import pandas as pd
 
+from utils.vcf_utils import GENOTYPE_TYPE
+
 from variants.family import FamiliesBase
 from variants.family import Family
 from variants.variant import SummaryVariantFactory
@@ -86,7 +88,8 @@ class VariantFactory(SummaryVariantFactory):
         assert vcf is not None
         # assert isinstance(family, VcfFamily)
 
-        gt = np.copy(vcf.gt_idxs[family.alleles])
+        gt = vcf.gt_idxs[family.alleles].\
+            astype(GENOTYPE_TYPE, casting='same_kind')
         gt = gt.reshape([2, len(family)], order='F')
 
         return VariantFactory.from_summary_variant(
@@ -269,6 +272,11 @@ class RawFamilyVariants(FamiliesBase):
         if kwargs.get('real_attr_filter') is not None:
             if not self.filter_real_attr(allele, kwargs['real_attr_filter']):
                 return False
+        if kwargs.get('ultra_rare'):
+            if not self.filter_real_attr(
+                    allele, [("af_allele_count", (1, 1))]):
+                return False
+
         if kwargs.get('genes') is not None or \
                 kwargs.get('effect_types') is not None:
             if not self.filter_gene_effects(
