@@ -19,7 +19,7 @@ urlpatterns = [
     url(r'^api/v3/gene_sets', include('gene_sets.urls')),
     url(r'^api/v3/chromosomes', include('chromosome.urls')),
     url(r'^api/v3/genotype_browser', include('genotype_browser.urls')),
-    # url(r'^api/v3/enrichment', include('enrichment_api.urls')),
+    url(r'^api/v3/enrichment', include('enrichment_api.urls')),
     url(r'^api/v3/', include('users_api.urls')),
     url(r'^api/v3/measures', include('measures_api.urls')),
     url(r'^api/v3/family_counters', include('family_counters_api.urls')),
