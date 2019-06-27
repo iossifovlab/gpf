@@ -163,7 +163,7 @@ def pheno_factory(dae_config_fixture):
 
 @pytest.fixture(scope='module')
 def gene_info_config(dae_config_fixture):
-    return GeneInfoConfig(dae_config_fixture)
+    return GeneInfoConfig.from_config(dae_config_fixture)
 
 
 @pytest.fixture(scope='module')

@@ -276,7 +276,7 @@ class GenotypeBrowserConfig(ConfigurableEntityConfig):
                    present_in_role_type + '.roles').split(',')
             ]
 
-        return present_in_role
+        yield present_in_role
 
     @classmethod
     def from_config(cls, config):

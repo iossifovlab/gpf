@@ -4,168 +4,168 @@ Created on Feb 16, 2017
 @author: lubo
 '''
 from __future__ import unicode_literals
-from builtins import object
 from future import standard_library
 standard_library.install_aliases()  # noqa
-import os
-from copy import deepcopy
 
-from configparser import ConfigParser
-from GeneInfoDB import GeneInfoDB
+import sys
+from box import Box
+
 from configurable_entities.configuration import DAEConfig
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
-from variants.attributes import Sex
+
+from gene.gene_weight_config import GeneWeightConfig
+from gene.gene_term_config import GeneTermConfig
+from gene.chromosome_config import ChromosomeConfig
+from gene.GeneTerms import loadGeneTerm
 
 
-class GeneInfoConfig(object):
+class GeneInfoConfig(ConfigurableEntityConfig):
     """
     Helper class for accessing DAE and geneInfo configuration.
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None, *args, **kwargs):
+        super(GeneInfoConfig, self).__init__(config, *args, **kwargs)
+
+    @classmethod
+    def from_config(cls, dae_config=None):
+        if dae_config is None:
+            dae_config = DAEConfig()
+
+        config = cls.read_config(
+            dae_config.gene_info_conf, dae_config.dae_data_dir)
+
+        config = Box(config)
+
+        parsed_config = {}
+
+        parsed_config['geneInfo'] = GeneInfoDB.from_config(
+            config.get('GeneInfo', None))
+        parsed_config['geneWeights'] = GeneWeightConfig.from_config(config)
+        parsed_config['geneTerms'] = GeneTermConfig.from_config(config)
+        parsed_config['chromosomes'] = ChromosomeConfig.from_config(
+            config.get('chromosomes', None))
+
+        return GeneInfoConfig(parsed_config)
+
+    def getGeneTermIds(self):
+        return self.gene_terms.keys()
+
+    def getGeneTermAtt(self, gt_id, attName):
+        if gt_id in self.gene_terms and \
+                self.gene_terms[gt_id].get(attName, None):
+            return self.gene_terms[gt_id][attName]
+
+    def getGeneTerms(self, gt_id='main', inNS='sym'):
+        fl = self.gene_terms[gt_id].file
+        gt = loadGeneTerm(fl)
+        if not inNS:
+            return gt
+        if gt.geneNS == inNS:
+            return gt
+        if gt.geneNS == 'id' and inNS == 'sym':
+            def rF(x):
+                if x in self.gene_info.genes:
+                    return self.gene_info.genes[x].sym
+            gt.renameGenes('sym', rF)
+        elif gt.geneNS == 'sym' and inNS == 'id':
+            gt.renameGenes(
+                'id', lambda x: self.gene_info.getCleanGeneId('sym', x))
+        else:
+            raise Exception(
+                'Unknown name space for the ' + gt_id + ' gene terms: |'
+                + gt.geneNS + '|' + inNS + '|')
+        return gt
+
+
+class GeneInfoDB(ConfigurableEntityConfig):
+
+    def __init__(self, config=None, *args, **kwargs):
+        super(GeneInfoDB, self).__init__(config, *args, **kwargs)
+
+    @classmethod
+    def from_config(cls, config=None):
         if config is None:
-            config = DAEConfig()
-        self.dae_config = config
+            return
 
-        wd = self.dae_config.dae_data_dir
+        return GeneInfoDB(config)
 
-        self.config = ConfigParser({
-            'wd': wd,
-        })
-        with open(self.dae_config.gene_info_conf, "r") as infile:
-            self.config.read_file(infile)
+    @property
+    def genes(self):
+        try:
+            return self._genes
+        except AttributeError:
+            pass
+        self._parseNCBIGeneInfo()
+        return self._genes
 
-        self.gene_info = GeneInfoDB(
-            self.dae_config.gene_info_conf,
-            self.dae_config.dae_data_dir)
+    @property
+    def nsTokens(self):
+        try:
+            return self._nsTokens
+        except AttributeError:
+            pass
+        self._parseNCBIGeneInfo()
+        return self._nsTokens
 
+    def _parseNCBIGeneInfo(self):
+        self._genes = {}
+        self._nsTokens = {}
+        with open(self.gene_info_file) as f:
+            for line in f:
+                if line[0] == "#":
+                    # print "COMMENT: ", line
+                    continue
+                cs = line.strip().split("\t")
+                if len(cs) != 15:
+                    raise Exception(
+                        'Unexpected line in the ' + self.gene_info_file)
 
-class DenovoGeneSetCollectionConfig(ConfigurableEntityConfig):
-    SPLIT_STR_LISTS = (
-        'peopleGroups',
-        'standardCriterias',
-        'standardCriteriasColumns',
-        'recurrencyCriteria.segments',
-        'geneSetsNames'
-    )
+                # Format: tax_id GeneID Symbol LocusTag Synonyms dbXrefs
+                # chromosome map_location description
+                # type_of_gene Symbol_from_nomenclature_authority
+                # Full_name_from_nomenclature_authority Nomenclature_status
+                # Other_designations Modification_date
+                # (tab is used as a separator, pound sign - start of a comment)
+                (tax_id, GeneID, Symbol, LocusTag, Synonyms, dbXrefs,
+                    chromosome, map_location, description, type_of_gene,
+                    Symbol_from_nomenclature_authority,
+                    Full_name_from_nomenclature_authority, Nomenclature_status,
+                    Other_designations, Modification_date) = cs
 
-    CAST_TO_BOOL = ('enabled')
+                gi = Box()
+                gi.id = GeneID
+                gi.sym = Symbol
+                gi.syns = set(Synonyms.split("|"))
+                gi.desc = description
 
-    def __init__(self, config, *args, **kwargs):
-        super(DenovoGeneSetCollectionConfig, self).__init__(
-            config, *args, **kwargs)
+                if (gi.id in self._genes):
+                    raise Exception(
+                        'The gene ' + gi.id + ' is repeated twice in the ' +
+                        self.gene_info_file + ' file')
 
-    def denovo_gene_set_cache_file(self, people_group_id=''):
-        cache_path = os.path.join(
-            os.path.split(self.config_file)[0],
-            'denovo-cache-' + people_group_id + '.json'
-        )
+                self._genes[gi.id] = gi
+                self._addNSTokenToGeneInfo("id", gi.id, gi)
+                self._addNSTokenToGeneInfo("sym", gi.sym, gi)
+                for s in gi.syns:
+                    self._addNSTokenToGeneInfo("syns", s, gi)
+        print("loaded ", len(self._genes), "genes", file=sys.stderr)
 
-        return cache_path
+    def _addNSTokenToGeneInfo(self, ns, token, gi):
+        if ns not in self._nsTokens:
+            self._nsTokens[ns] = {}
+        tokens = self._nsTokens[ns]
+        if token not in tokens:
+            tokens[token] = []
+        tokens[token].append(gi)
 
-    @staticmethod
-    def _standard_criterias_split_dict(standard_criteria_id, dict_to_split):
-        options = dict_to_split.split(':')
-        value = options[1].split('.')
-
-        # TODO: Remove this when study.query_variants can support non
-        # expand_effect_types as LGDs
-        if standard_criteria_id == 'effect_types':
-            from studies.helpers import expand_effect_types
-            value = expand_effect_types(value)
-        elif standard_criteria_id == 'sexes':
-            value = [Sex.from_name(v) for v in value]
-
-        return {
-            'property': standard_criteria_id,
-            'name': options[0],
-            'value': value
-        }
-
-    @classmethod
-    def _split_dict_lists(cls, standard_criteria_id, dict_to_split):
-        options = [
-            cls._standard_criterias_split_dict(
-                standard_criteria_id, el.strip())
-            for el in dict_to_split.split(',')
-        ]
-        return options
-
-    @classmethod
-    def _get_standard_criterias(
-            cls, standard_criteria_type, standard_criteria_options,
-            study_config):
-        standard_criteria_id = standard_criteria_type.split('.')[-1]
-
-        standard_criterias = cls._split_dict_lists(
-            standard_criteria_id,
-            study_config.pop(standard_criteria_type + '.segments')
-        )
-
-        return standard_criterias
-
-    @staticmethod
-    def _get_recurrency_criterias(recurrency_criteria_segments):
-        recurrency_criterias = {}
-        for recurrency_criteria_str in recurrency_criteria_segments:
-            name, from_count, to_count = \
-                recurrency_criteria_str.strip().split(':')
-            recurrency_criterias[name] = {
-                'from': int(from_count),
-                'to': int(to_count)
-            }
-
-        return recurrency_criterias
-
-    @staticmethod
-    def _get_denovo_gene_sets(people_group, people_groups):
-        if len(people_group) == 0:
-            return None
-
-        if not people_groups or (people_groups and len(people_groups) == 0):
-            return None
-
-        denovo_gene_sets = {
-            pg.id: {
-                'name': pg.name,
-                'source': pg.source
-            } for pg in people_group
-            if pg.id in people_groups
-        }
-
-        return denovo_gene_sets
-
-    @classmethod
-    def from_config(cls, config):
-        study_config = config.study_config
-        config_section = deepcopy(study_config.get('denovoGeneSets', None))
-        if config_section is None:
-            return None
-
-        config_section = cls.parse(config_section)
-
-        if config.get('enabled', True) is False:
-            return None
-
-        config_section['id'] = config.id
-
-        standard_criterias_elements = \
-            config_section.get('standardCriteriasColumns', None)
-        config_section['standardCriterias'] = cls._get_selectors(
-            config_section, 'standardCriterias', cls._get_standard_criterias,
-            standard_criterias_elements)
-
-        config_section['recurrencyCriterias'] = cls._get_recurrency_criterias(
-            config_section.get('recurrencyCriteria.segments', []))
-
-        if 'peopleGroups' not in config_section or not \
-                config_section['peopleGroups']:
-            return None
-
-        config_section['denovoGeneSets'] = cls._get_denovo_gene_sets(
-            config.people_group, config_section['peopleGroups'])
-
-        config_section['configFile'] = study_config.config_file
-
-        return DenovoGeneSetCollectionConfig(config_section)
+    def getCleanGeneId(self, ns, t):
+        if ns not in self.nsTokens:
+            return
+        allTokens = self.nsTokens[ns]
+        if t not in allTokens:
+            return
+        if len(allTokens[t]) != 1:
+            return
+        return allTokens[t][0].id

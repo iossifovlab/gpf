@@ -61,7 +61,7 @@ class PeopleGroupConfig(ConfigurableEntityConfig):
         people_group['values'] =\
             cls._get_values(people_group['domain'])
 
-        return people_group
+        yield people_group
 
     @classmethod
     def from_config(cls, config):

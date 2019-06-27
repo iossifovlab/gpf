@@ -41,6 +41,7 @@ class StudiesManager(object):
         self.vdb = None
 
         self.score_loader = None
+        self.gene_info_config = None
         self.weights_loader = None
 
         self.gene_sets_collections = None
@@ -54,11 +55,11 @@ class StudiesManager(object):
             Dataset.recreate_dataset_perm(study_id, [])
 
         self.score_loader = ScoreLoader(daeConfig=self.dae_config)
-        gene_info_config = GeneInfoConfig(self.dae_config)
-        self.weights_loader = WeightsLoader(config=gene_info_config)
+        self.gene_info_config = GeneInfoConfig.from_config(self.dae_config)
+        self.weights_loader = WeightsLoader(config=self.gene_info_config)
 
         self.gene_sets_collections = GeneSetsCollections(
-            self.vdb, gene_info_config)
+            self.vdb, self.gene_info_config)
         self.denovo_gene_set_collection_facade = \
             DenovoGeneSetCollectionFacade(self.vdb)
 
@@ -76,6 +77,10 @@ class StudiesManager(object):
     def get_common_report_facade(self):
         self.get_variants_db()
         return self.common_reports.common_report_facade
+
+    def get_gene_info_config(self):
+        self.get_variants_db()
+        return self.gene_info_config
 
     def get_score_loader(self):
         self.get_variants_db()

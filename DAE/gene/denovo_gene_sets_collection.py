@@ -145,7 +145,7 @@ class DenovoGeneSetsCollection(object):
                 'datasetName': self.study.name,
                 'peopleGroupId': people_group_id,
                 'peopleGroupName': people_group['name'],
-                'phenotypes': self.get_gene_sets_legend(people_group_id)
+                'peopleGroupLegend': self.get_gene_sets_legend(people_group_id)
             }
             for people_group_id, people_group in self.denovo_gene_sets.items()
         ]
@@ -219,8 +219,7 @@ class DenovoGeneSetsCollection(object):
 
     @classmethod
     def get_gene_sets(
-            cls, denovo_gene_sets_collections,
-            gene_sets_types={'f1_group': {'phenotype': ['autism']}}):
+            cls, denovo_gene_sets_collections, gene_sets_types={}):
         gene_sets_types_desc = cls._format_description(gene_sets_types)
 
         result = []
@@ -239,7 +238,7 @@ class DenovoGeneSetsCollection(object):
     @classmethod
     def get_gene_set(
             cls, gene_set_id, denovo_gene_sets_collections,
-            gene_sets_types={'SD': {'phenotype': ['autism']}}):
+            gene_sets_types={}):
         syms = cls._get_gene_set_syms(
             gene_set_id, denovo_gene_sets_collections, gene_sets_types)
         if not syms:
@@ -366,7 +365,8 @@ class DenovoGeneSetsCollection(object):
         for s in study.studies:
             pedigree_df = s.backend.ped_df
             people_ids = pedigree_df[
-                pedigree_df[people_group] == people_group_value]
+                pedigree_df[people_group].apply(str) ==
+                str(people_group_value)]
             person_with_people_group_ids.update(people_ids['person_id'])
 
         return person_with_people_group_ids

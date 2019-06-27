@@ -27,6 +27,7 @@ class ConfigurableEntityConfig(object):
     SPLIT_STR_LISTS = ()
     SPLIT_STR_SETS = ()
     CAST_TO_BOOL = ()
+    CAST_TO_INT = ()
     ELEMENTS_TO_COPY = {}
 
     def __init__(self, config, *args, **kwargs):
@@ -141,6 +142,7 @@ class ConfigurableEntityConfig(object):
         config_section = cls._split_str_lists(config_section)
         config_section = cls._split_str_sets(config_section)
         config_section = cls._cast_to_bool(config_section)
+        config_section = cls._cast_to_int(config_section)
         config_section = cls._copy_elements(config_section)
 
         return config_section
@@ -205,6 +207,14 @@ class ConfigurableEntityConfig(object):
         return config
 
     @classmethod
+    def _cast_to_int(cls, config):
+        for key in cls.CAST_TO_INT:
+            if key in config:
+                config[key] = int(config[key])
+
+        return config
+
+    @classmethod
     def _concat_two_options(cls, config):
         for first, second in cls.CONCAT_OPTIONS.items():
             res =\
@@ -260,7 +270,7 @@ class ConfigurableEntityConfig(object):
 
         selectors = []
         for selector_type, selector_options in selector.items():
-            selectors.append(selector_getter(
-                selector_type, selector_options, config))
+            for s in selector_getter(selector_type, selector_options, config):
+                selectors.append(s)
 
         return selectors

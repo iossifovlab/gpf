@@ -10,7 +10,6 @@ import itertools
 from gene.weights import Weights
 from variants.attributes import Status, Role
 import re
-# from gene.gene_set_collections import GeneSetsCollections
 
 
 class EffectTypesMixin(object):
