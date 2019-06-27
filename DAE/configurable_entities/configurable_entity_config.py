@@ -250,9 +250,15 @@ class ConfigurableEntityConfig(object):
             if (option_type != selector_group and selector_group is not None) \
                     or option_fullname is None:
                 continue
-            if selector_elements is not None and \
-                    option_type not in selector_elements:
-                continue
+
+            if selector_elements is not None:
+                ot, of = cls._split_section(option_fullname)
+                if of is None:
+                    if option_type not in selector_elements:
+                        continue
+                else:
+                    if ot not in selector_elements:
+                        continue
 
             selector_key = ''
             if selector_group is not None:
