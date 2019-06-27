@@ -11,10 +11,10 @@
           <span class="dropdown-toggle btn-sm">{{ getGeneSetName(type, 30) }}</span>
         </ng-template>
         <ng-template ngbPanelContent>
-          <div *ngFor="let phenotype of type.phenotypes">
-            <input type="checkbox" [ngModel]="isSelectedGeneType(type.datasetId, type.peopleGroupId, phenotype.id)" (ngModelChange)="setSelectedGeneType(type.datasetId, type.peopleGroupId, phenotype.id, $event); onSearch()">
-            <span class="pedigree-icon" [style.background-color]="phenotype.color"></span>
-            {{ phenotype.name }}
+          <div *ngFor="let peopleGroup of type.peopleGroupLegend">
+            <input type="checkbox" [ngModel]="isSelectedGeneType(type.datasetId, type.peopleGroupId, peopleGroup.id)" (ngModelChange)="setSelectedGeneType(type.datasetId, type.peopleGroupId, peopleGroup.id, $event); onSearch()">
+            <span class="pedigree-icon" [style.background-color]="peopleGroup.color"></span>
+            {{ peopleGroup.name }}
           </div>
         </ng-template>
       </ngb-panel>

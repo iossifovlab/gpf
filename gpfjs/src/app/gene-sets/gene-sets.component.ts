@@ -63,9 +63,9 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
       for (const geneType of geneTypes) {
         const datasetId = geneType.datasetId;
         const peopleGroupId = geneType.peopleGroupId;
-        for (const phenotype of geneType.phenotypes) {
-          if (geneSetsTypes[datasetId][peopleGroupId].indexOf(phenotype.id) > -1) {
-            this.geneSetsState.select(datasetId, peopleGroupId, phenotype.id);
+        for (const peopleGroup of geneType.peopleGroupLegend) {
+          if (geneSetsTypes[datasetId][peopleGroupId].indexOf(peopleGroup.id) > -1) {
+            this.geneSetsState.select(datasetId, peopleGroupId, peopleGroup.id);
           }
         }
       }
@@ -164,7 +164,7 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
     if (selectedGeneSetsCollection.types.length > 0) {
       const geneSetType = selectedGeneSetsCollection.types[0];
       this.setSelectedGeneType(geneSetType.datasetId, geneSetType.peopleGroupId,
-                               geneSetType.phenotypes[0].id, true);
+                               geneSetType.peopleGroupLegend[0].id, true);
     }
     this.onSearch();
   }

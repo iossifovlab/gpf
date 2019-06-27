@@ -56,7 +56,7 @@ export class GeneSetType {
   static fromJson(json: any): GeneSetType {
     return new GeneSetType(
       json.datasetId, json.datasetName, json.peopleGroupId,
-      json.peopleGroupName, json.phenotypes
+      json.peopleGroupName, json.peopleGroupLegend
     );
   }
 
@@ -65,6 +65,6 @@ export class GeneSetType {
     readonly datasetName: string,
     readonly peopleGroupId: string,
     readonly peopleGroupName: string,
-    readonly phenotypes: Array<any>
+    readonly peopleGroupLegend: Array<any>
   ) { }
 }
