@@ -5,11 +5,27 @@ from configurable_entities.configurable_entity_config import \
 class PeopleGroupConfig(ConfigurableEntityConfig):
 
     SPLIT_STR_LISTS = [
-        'columns'
+        'selectedPeopleGroupValues'
     ]
 
     def __init__(self, config, *args, **kwargs):
         super(PeopleGroupConfig, self).__init__(config, *args, **kwargs)
+
+    @property
+    def people_group(self):
+        if 'peopleGroup' in self:
+            return self['peopleGroup']
+        return []
+
+    def get_people_group(self, people_group_id):
+        if not people_group_id:
+            return self.people_group[0] if self.people_group else {}
+
+        people_group_with_id = list(filter(
+            lambda people_group: people_group.get('id') == people_group_id,
+            self.people_group))
+
+        return people_group_with_id[0] if people_group_with_id else {}
 
     @staticmethod
     def _people_group_selectors_split_dict(dict_to_split):
@@ -45,7 +61,7 @@ class PeopleGroupConfig(ConfigurableEntityConfig):
         people_group['values'] =\
             cls._get_values(people_group['domain'])
 
-        return people_group
+        yield people_group
 
     @classmethod
     def from_config(cls, config):
@@ -55,7 +71,8 @@ class PeopleGroupConfig(ConfigurableEntityConfig):
 
         config_section = cls.parse(config_section)
 
-        people_group_elements = config_section.get('columns', None)
+        people_group_elements = config_section.get(
+            'selectedPeopleGroupValues', None)
         people_group = cls._get_selectors(
             config_section, None, cls._get_people_group,
             people_group_elements

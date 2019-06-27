@@ -9,12 +9,10 @@ from __future__ import unicode_literals
 from future import standard_library; standard_library.install_aliases()  # noqa
 
 from builtins import object
-from configparser import ConfigParser
 from collections import OrderedDict
 from past.utils import old_div
 
 import numpy as np
-from configurable_entities.configuration import DAEConfig
 
 from gene.genomic_values import GenomicValues
 from gene.config import GeneInfoConfig
@@ -28,23 +26,25 @@ class Weights(GenomicValues):
     in `geneInfo.conf`.
     """
 
-    def __init__(self, weights_name, *args, **kwargs):
+    def __init__(
+            self, weights_name, config=None, *args, **kwargs):
         super(Weights, self).__init__('geneWeights.{}'.format(weights_name),
                                       *args, **kwargs)
-
-        self.config = GeneInfoConfig()
+        if config is None:
+            config = GeneInfoConfig.from_config()
+        self.config = config
 
         self.genomic_values_col = 'gene'
+        gene_weight = self.config.gene_weights.get(weights_name)
 
-        self.desc = self.config.config.get(self.section_name, 'desc')
-        self.bins = int(self.config.config.get(self.section_name, 'bins'))
-        self.xscale = self.config.config.get(self.section_name, 'xscale')
-        self.yscale = self.config.config.get(self.section_name, 'yscale')
-        self.filename = self.config.config.get(self.section_name, 'file')
+        self.desc = gene_weight.get('desc')
+        self.bins = gene_weight.get('bins')
+        self.xscale = gene_weight.get('xscale')
+        self.yscale = gene_weight.get('yscale')
+        self.filename = gene_weight.get('file')
 
-        if self.config.config.has_option(self.section_name, 'range'):
-            self.range = tuple(map(float, self.config.config.get(
-                self.section_name, 'range').split(',')))
+        if 'range' in gene_weight:
+            self.range = tuple(map(float, gene_weight.get('range')))
         else:
             self.range = None
 
@@ -133,30 +133,24 @@ class Weights(GenomicValues):
         return self.df
 
     @staticmethod
-    def load_gene_weights(name, dae_config=None):
+    def load_gene_weights(name, config=None):
         """
         Creates and loads a gene weights instance by gene weights name.
         """
-        assert name in Weights.list_gene_weights(dae_config)
-        w = Weights(name)
+        assert name in Weights.list_gene_weights(config)
+        w = Weights(name, config=config)
         return w
 
     @staticmethod
-    def list_gene_weights(dae_config=None):
+    def list_gene_weights(config=None):
         """
         Lists all available gene weights configured in `geneInfo.conf`.
         """
-        if dae_config is None:
-            dae_config = DAEConfig()
+        if config is None:
+            config = GeneInfoConfig.from_config()
 
-        config = ConfigParser({
-            'wd': dae_config.dae_data_dir,
-        })
-        config.read(dae_config.gene_info_conf)
-
-        weights = config.get('geneWeights', 'weights')
-        names = [n.strip() for n in weights.split(',')]
-        return names
+        weights = config.geneWeights.weights
+        return weights
 
 
 class WeightsLoader(object):
@@ -169,7 +163,7 @@ class WeightsLoader(object):
     def __init__(self, config=None, *args, **kwargs):
         super(WeightsLoader, self).__init__(*args, **kwargs)
         if config is None:
-            config = GeneInfoConfig()
+            config = GeneInfoConfig.from_config()
         self.config = config
 
         self.weights = OrderedDict()
@@ -188,14 +182,14 @@ class WeightsLoader(object):
         return result
 
     def _load(self):
-        weights = self.config.config.get('geneWeights', 'weights')
-        if weights == '':
+        gene_weights = self.config.gene_weights
+        if gene_weights is None:
             return
+        weights = gene_weights.weights
 
-        names = [n.strip() for n in weights.split(',')]
-        for name in names:
-            w = Weights(name)
-            self.weights[name] = w
+        for weight in weights:
+            w = Weights(weight, config=self.config)
+            self.weights[weight] = w
 
     def __getitem__(self, weight_name):
         if weight_name not in self.weights:

@@ -6,16 +6,13 @@ Created on Apr 16, 2018
 from __future__ import print_function, absolute_import
 from __future__ import unicode_literals
 
-# pytestmark = pytest.mark.skip('removed used interface')
-# pytestmark = pytest.mark.usefixtures("gene_info_cache_dir")
-
 """
-Denovo Gene Sets are configured into 'geneInfo.conf'. There is a section
-'geneTerms.denovo', that specifies available denovo gene sets.
+Denovo Gene Sets are configured into study configuration. There is a section
+'denovoGeneSets', that specifies available denovo gene sets.
 
-Dataset, that are available for build denovo gene sets are specified in
-'dataset.pedigreeSelectors' list. Each entry in the list specifies a dataset,
-a pedigree selector to be used for splitting the denovo gene set.
+People Groups, that are available for build denovo gene sets are specified in
+'peopleGroups' list. Each entry in the list specifies a people group,
+to be used for splitting the denovo gene set.
 
 The configuration contains two groups of criteris, that could be used
 for specifying denovo gene set:
@@ -31,11 +28,10 @@ For example `LGDs.WE.Triple` combines `LGDs` effect criteria, `WE` study type
 criteria and `Triple` recurrency criteria.
 
 ```
-[geneTerms.denovo]
-webFormatStr=key| (|count|)
-webLabel=Denovo
+[denovoGeneSets]
+peopleGroups = phenotype
 
-standardCriterias=effectTypes,gender
+standardCriterias = effectTypes,gender
 standardCriterias.effectTypes.segments=LGDs:LGDs,Missense:missense,Synonymous:synonymous
 standardCriterias.gender.segments=Female:F,Male:M,Unspecified:U
 
@@ -48,18 +44,13 @@ geneSetsNames=LGDs,LGDs.Male,LGDs.Female,LGDs.Recurrent,LGDs.Single,LGDs.Triple,
 """
 
 
-def test_example2_denovo_gene_sets(gscs):
-    # gsc = DenovoGeneSetsCollection()
-    # gsc.load()
-    denovo = gscs.get_gene_sets_collection('denovo')
-    print(dir(denovo))
-
-    denovo_sets = denovo.get_gene_sets({
+def test_example2_denovo_gene_sets(denovo_gene_sets_facade):
+    denovo_sets = denovo_gene_sets_facade.get_denovo_gene_sets('denovo', {
         'f1_group': {'phenotype': ['autism']}})
     assert denovo_sets
     print(denovo_sets)
 
-    denovo_sets2 = denovo.get_gene_sets({
+    denovo_sets2 = denovo_gene_sets_facade.get_denovo_gene_sets('denovo', {
         'f1_group': {'phenotype': ['autism', 'unaffected']}})
     assert len(denovo_sets) <= \
         len(denovo_sets2)

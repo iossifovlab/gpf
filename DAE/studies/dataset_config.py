@@ -99,6 +99,26 @@ class DatasetConfig(StudyConfigBase):
         assert self.studies
         self.studies_configs = []
 
+    @property
+    def people_group(self):
+        people_group_config = self.people_group_config
+        if people_group_config:
+            return people_group_config.people_group
+        return []
+
+    @property
+    def people_group_config(self):
+        if 'peopleGroupConfig' in self and self['peopleGroupConfig']:
+            return self['peopleGroupConfig']
+        return _same_value_attribute(self.studies_configs, 'peopleGroupConfig')
+
+    @property
+    def genotype_browser_config(self):
+        if 'genotypeBrowserConfig' in self and self['genotypeBrowserConfig']:
+            return self['genotypeBrowserConfig']
+        return _same_value_attribute(
+            self.studies_configs, 'genotypeBrowserConfig')
+
     @classmethod
     def from_config(cls, config):
         config_section = config['dataset']

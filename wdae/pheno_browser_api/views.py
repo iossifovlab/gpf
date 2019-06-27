@@ -120,7 +120,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
                 m['values_domain'] = ""
             m['measure_type'] = m['measure_type'].name
 
-            m['regressions'] = db.get_regressions(m['measure_id']) or []
+            m['regressions'] = db.get_regression_values(m['measure_id']) or []
 
             for reg in m['regressions']:
                 reg = dict(reg)
@@ -135,7 +135,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
             'base_image_url': browser_images_url,
             'measures': res,
             'has_descriptions': db.has_descriptions,
-            'regression_names': db.regression_names
+            'regression_names': db.regression_display_names
         })
 
 
