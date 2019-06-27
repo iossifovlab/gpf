@@ -5,15 +5,17 @@ import traceback
 import logging
 
 from gene.config import GeneInfoConfig
-from GeneTerms import loadGeneTerm
+from gene.GeneTerms import loadGeneTerm
 
 LOGGER = logging.getLogger(__name__)
 
 
-class GeneSetsCollection(GeneInfoConfig):
+class GeneSetsCollection(object):
 
-    def __init__(self, gene_sets_collection_id, dae_config=None):
-        super(GeneSetsCollection, self).__init__(config=dae_config)
+    def __init__(self, gene_sets_collection_id, config=None):
+        if config is None:
+            config = GeneInfoConfig.from_config()
+        self.config = config
 
         assert gene_sets_collection_id != 'denovo'
         self.gsc_id = gene_sets_collection_id
@@ -22,15 +24,15 @@ class GeneSetsCollection(GeneInfoConfig):
 
     def _load(self):
         try:
-            gene_sets_collection = self.gene_info.getGeneTerms(self.gsc_id)
+            gene_sets_collection = self.config.getGeneTerms(self.gsc_id)
         except Exception:
             traceback.print_exc()
             gene_sets_collection = loadGeneTerm(self.gsc_id)
 
         if gene_sets_collection.geneNS == 'id':
             def rF(x):
-                if x in self.gene_info.genes:
-                    return self.gene_info.genes[x].sym
+                if x in self.config.gene_info.genes:
+                    return self.config.gene_info.genes[x].sym
             gene_sets_collection.renameGenes("sym", rF)
 
         if gene_sets_collection.geneNS != 'sym':
@@ -85,18 +87,17 @@ class GeneSetsCollections(object):
 
     def __init__(self, variants_db, config=None):
         if config is None:
-            config = GeneInfoConfig(config=self.variants_db.dae_config)
-
+            config = GeneInfoConfig.from_config(variants_db.dae_config)
         self.config = config
+
         self.variants_db = variants_db
         self.gene_sets_collections = {}
 
     def get_collections_descriptions(self, permitted_datasets=None):
         gene_sets_collections_desc = []
-        for gsc_id in self.config.gene_info.getGeneTermIds():
-            label = self.config.gene_info.getGeneTermAtt(gsc_id, "webLabel")
-            formatStr = self.config.gene_info.getGeneTermAtt(
-                gsc_id, "webFormatStr")
+        for gsc_id in self.config.getGeneTermIds():
+            label = self.config.getGeneTermAtt(gsc_id, "webLabel")
+            formatStr = self.config.getGeneTermAtt(gsc_id, "webFormatStr")
             if not label or not formatStr:
                 continue
             gene_sets_types = self.get_gene_sets_collection(gsc_id) \
@@ -120,8 +121,7 @@ class GeneSetsCollections(object):
         ])
 
     def _load_gene_sets_collection(self, gene_sets_collection_id, load=True):
-        gsc = GeneSetsCollection(
-            gene_sets_collection_id, dae_config=self.variants_db.dae_config)
+        gsc = GeneSetsCollection(gene_sets_collection_id, config=self.config)
 
         if load:
             gsc.load()

@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 import os
 import pytest
 
-from gene.config import DenovoGeneSetCollectionConfig
+from gene.denovo_gene_set_collection_config import \
+    DenovoGeneSetCollectionConfig
 from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 
 from configurable_entities.configuration import DAEConfig
@@ -16,24 +17,24 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def dae_config_fixture():
     dae_config = DAEConfig(fixtures_dir())
     return dae_config
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def variants_db_fixture(dae_config_fixture):
     vdb = VariantsDb(dae_config_fixture)
     return vdb
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def studies_manager(dae_config_fixture):
     return StudiesManager(dae_config_fixture)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def mock_studies_manager(db, mocker, studies_manager):
     studies_manager.reload_dataset()
     mocker.patch(
@@ -44,16 +45,13 @@ def mock_studies_manager(db, mocker, studies_manager):
         return_value=studies_manager)
 
 
-@pytest.fixture()
-def calc_gene_sets(denovo_gene_sets):
+@pytest.fixture(scope='function')
+def calc_gene_sets(request, denovo_gene_sets):
     for dgs in denovo_gene_sets:
         dgs.load(build_cache=True)
 
     print("PRECALCULATION COMPLETE")
 
-
-@pytest.fixture()
-def cleanup_gene_sets(request, denovo_gene_sets):
     def remove_gene_sets():
         for dgs in denovo_gene_sets:
             os.remove(dgs.config.denovo_gene_set_cache_file('phenotype'))
@@ -68,7 +66,7 @@ def get_denovo_gene_sets_by_id(variants_db_fixture, dgs_id):
         variants_db_fixture.get(dgs_id), denovo_gene_set_config)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def denovo_gene_sets(variants_db_fixture):
     return [
         get_denovo_gene_sets_by_id(variants_db_fixture, 'f1_group'),

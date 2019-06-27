@@ -4,7 +4,6 @@ Created on Feb 16, 2017
 @author: lubo
 '''
 from __future__ import unicode_literals
-from gene.gene_set_collections import GeneSetsCollections
 import pytest
 
 pytestmark = pytest.mark.skip('depends on real data')

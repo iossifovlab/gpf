@@ -11,7 +11,9 @@ import pytest
 
 from utils.fixtures import change_environment
 
-from gene.config import GeneInfoConfig, DenovoGeneSetCollectionConfig
+from gene.config import GeneInfoConfig
+from gene.denovo_gene_set_collection_config import \
+    DenovoGeneSetCollectionConfig
 from gene.gene_set_collections import GeneSetsCollections
 from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 from gene.denovo_gene_set_collection_facade import \
@@ -40,9 +42,9 @@ def mock_property(mocker):
     return result
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def gene_info_config(dae_config_fixture):
-    return GeneInfoConfig(dae_config_fixture)
+    return GeneInfoConfig.from_config(dae_config_fixture)
 
 
 @pytest.fixture  # noqa
@@ -71,23 +73,20 @@ def gene_info_cache_dir():
     shutil.rmtree(cache_dir)
 
 
-@pytest.fixture()
-def calc_gene_sets(denovo_gene_sets, denovo_gene_set_f4):
+@pytest.fixture(scope='session')
+def calc_gene_sets(request, denovo_gene_sets, denovo_gene_set_f4):
     for dgs in denovo_gene_sets + [denovo_gene_set_f4]:
         dgs.load(build_cache=True)
 
     print("PRECALCULATION COMPLETE")
 
-
-@pytest.fixture(scope="session")
-def cleanup_gene_sets(request, denovo_gene_sets, denovo_gene_set_f4):
     def remove_gene_sets():
         for dgs in denovo_gene_sets + [denovo_gene_set_f4]:
             os.remove(dgs.config.denovo_gene_set_cache_file('phenotype'))
     request.addfinalizer(remove_gene_sets)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def weights_loader(gene_info_config):
     return WeightsLoader(config=gene_info_config)
 
