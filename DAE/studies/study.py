@@ -38,6 +38,9 @@ class StudyBase(object):
     def get_pedigree_values(self, column):
         raise NotImplementedError()
 
+    def get_people_with_people_group(self, people_group, people_group_value):
+        raise NotImplementedError()
+
 
 class Study(StudyBase):
 
@@ -65,3 +68,10 @@ class Study(StudyBase):
 
     def get_pedigree_values(self, column):
         return set(self.backend.ped_df[column])
+
+    def get_people_with_people_group(self, people_group, people_group_value):
+        pedigree_df = self.backend.ped_df
+        people_ids = pedigree_df[
+            pedigree_df[people_group].apply(str) == str(people_group_value)]
+
+        return set(people_ids['person_id'])
