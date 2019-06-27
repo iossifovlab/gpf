@@ -5,7 +5,10 @@ Created on Nov 7, 2016
 '''
 from __future__ import unicode_literals
 from builtins import object
+
 import itertools
+
+from variants.attributes import Sex
 
 
 def filter_denovo_one_event_per_family(vs):
@@ -22,35 +25,40 @@ def filter_denovo_one_event_per_family(vs):
     seen = set()
     res = []
     for v in vs:
-        syms = set([ge['sym'].upper() for ge in v.requestedGeneEffects])
-        not_seen = [gs for gs in syms if (v.familyId + gs) not in seen]
+        syms = set([ge.symbol.upper() for aa in v.alt_alleles
+                    for ge in aa.effect.genes])
+        not_seen = [gs for gs in syms if (v.family_id + gs) not in seen]
         if not not_seen:
             continue
         for gs in not_seen:
-            seen.add(v.familyId + gs)
+            seen.add(v.family_id + gs)
         res.append(not_seen)
 
     return res
 
 
 def filter_denovo_one_gene_per_recurrent_events(vs):
-    gn_sorted = sorted([[ge['sym'].upper(), v] for v in vs
-                        for ge in v.requestedGeneEffects])
+    gn_sorted = sorted([[
+        ge.symbol.upper(), v] for v in vs for aa in v.alt_alleles
+        for ge in aa.effect.genes
+    ])
     sym_2_vars = {sym: [t[1] for t in tpi]
                   for sym, tpi in itertools.groupby(gn_sorted,
                                                     key=lambda x: x[0])}
-    sym_2_fn = {sym: len(set([v.familyId for v in vs]))
+    sym_2_fn = {sym: len(set([v.family_id for v in vs]))
                 for sym, vs in list(sym_2_vars.items())}
     return [[gs] for gs, fn in list(sym_2_fn.items()) if fn > 1]
 
 
 def filter_denovo_one_gene_per_events(vs):
-    gn_sorted = sorted([[ge['sym'].upper(), v] for v in vs
-                        for ge in v.requestedGeneEffects])
+    gn_sorted = sorted([[
+        ge.symbol.upper(), v] for v in vs for aa in v.alt_alleles
+        for ge in aa.effect.genes
+    ])
     sym_2_vars = {sym: [t[1] for t in tpi]
                   for sym, tpi in itertools.groupby(gn_sorted,
                                                     key=lambda x: x[0])}
-    sym_2_fn = {sym: len(set([v.familyId for v in vs]))
+    sym_2_fn = {sym: len(set([v.family_id for v in vs]))
                 for sym, vs in list(sym_2_vars.items())}
     return [[gs] for gs, _fn in list(sym_2_fn.items())]
 
@@ -107,17 +115,13 @@ def overlap_enrichment_result_dict(enrichment_results, gene_syms):
 
 class CounterBase(object):
 
-    @property
-    def name(self):
-        raise NotImplemented()
-
-#     def get_variants(self, denovo_studies, in_child, effect_types):
-#         variants = []
-#         for st in denovo_studies:
-#             vs = st.get_denovo_variants(
-#                 inChild=in_child, effectTypes=effect_types)
-#             variants.append(vs)
-#         return list(itertools.chain(*variants))
+    # def get_variants(self, denovo_studies, in_child, effect_types):
+    #     variants = []
+    #     for st in denovo_studies:
+    #         vs = st.get_denovo_variants(
+    #             inChild=in_child, effectTypes=effect_types)
+    #         variants.append(vs)
+    #     return list(itertools.chain(*variants))
 
     def events(self, variants):
         raise NotImplementedError()
@@ -145,14 +149,13 @@ class CounterBase(object):
 
 class EventsCounter(CounterBase):
 
-    @property
-    def name(self):
-        return 'enrichmentEventsCounting'
-
     def events(self, variants):
-        male_variants = [v for v in variants if v.inChS[3] == 'M']
-        female_variants = [v for v in variants if v.inChS[3] == 'F']
-        unspecified_variants = [v for v in variants if v.inChS[3] == 'U']
+        male_variants = [v for v in variants for aa in v.alt_alleles
+                         if Sex.male in aa.variant_in_sexes]
+        female_variants = [v for v in variants for aa in v.alt_alleles
+                           if Sex.female in aa.variant_in_sexes]
+        unspecified_variants = [v for v in variants for aa in v.alt_alleles
+                                if Sex.unspecified in aa.variant_in_sexes]
 
         all_events = filter_denovo_one_event_per_family(
             variants)
@@ -172,10 +175,6 @@ class EventsCounter(CounterBase):
 
 
 class GeneEventsCounter(CounterBase):
-
-    @property
-    def name(self):
-        return 'enrichmentGeneCounting'
 
     def events(self, variants):
         male_variants = [v for v in variants if v.inChS[3] == 'M']
