@@ -55,7 +55,6 @@ class EnrichmentConfig(ConfigurableEntityConfig):
     @classmethod
     def _get_model_selectors(
             cls, enrichment_config, property_key, selected_property):
-        print(enrichment_config)
         model_selector_elements = enrichment_config.get(
             selected_property, None)
 
