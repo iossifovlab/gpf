@@ -15,7 +15,7 @@ from gene.gene_set_collections import GeneSetsCollections
 from gene.denovo_gene_set_collection_facade import \
     DenovoGeneSetCollectionFacade
 
-from enrichment_tool.enrichment_facade import EnrichmentFacade
+from enrichment_tool.background_facade import BackgroundFacade
 
 from datasets_api.models import Dataset
 
@@ -65,7 +65,7 @@ class StudiesManager(object):
         self.denovo_gene_set_collection_facade = \
             DenovoGeneSetCollectionFacade(self.vdb)
 
-        self.enrichment_facade = EnrichmentFacade(self.vdb)
+        self.background_facade = BackgroundFacade(self.vdb)
 
     def get_variants_db(self):
         if self.vdb is None:
@@ -103,9 +103,9 @@ class StudiesManager(object):
         self.get_variants_db()
         return self.denovo_gene_set_collection_facade
 
-    def get_enrichment_facade(self):
+    def get_background_facade(self):
         self.get_variants_db()
-        return self.enrichment_facade
+        return self.background_facade
 
 
 _studies_manager = None

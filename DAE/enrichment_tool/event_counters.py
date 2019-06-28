@@ -115,6 +115,13 @@ def overlap_enrichment_result_dict(enrichment_results, gene_syms):
 
 class CounterBase(object):
 
+    @staticmethod
+    def counters():
+        return {
+            'enrichmentEventsCounting': EventsCounter,
+            'enrichmentGeneCounting': GeneEventsCounter
+        }
+
     # def get_variants(self, denovo_studies, in_child, effect_types):
     #     variants = []
     #     for st in denovo_studies:
@@ -177,9 +184,12 @@ class EventsCounter(CounterBase):
 class GeneEventsCounter(CounterBase):
 
     def events(self, variants):
-        male_variants = [v for v in variants if v.inChS[3] == 'M']
-        female_variants = [v for v in variants if v.inChS[3] == 'F']
-        unspecified_variants = [v for v in variants if v.inChS[3] == 'U']
+        male_variants = [v for v in variants for aa in v.alt_alleles
+                         if Sex.male in aa.variant_in_sexes]
+        female_variants = [v for v in variants for aa in v.alt_alleles
+                           if Sex.female in aa.variant_in_sexes]
+        unspecified_variants = [v for v in variants for aa in v.alt_alleles
+                                if Sex.unspecified in aa.variant_in_sexes]
 
         all_events = filter_denovo_one_gene_per_events(variants)
         rec_events = filter_denovo_one_gene_per_recurrent_events(variants)

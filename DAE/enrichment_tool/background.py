@@ -28,6 +28,14 @@ from enrichment_tool.event_counters import overlap_enrichment_result_dict
 
 class BackgroundBase(object):
 
+    @staticmethod
+    def backgrounds():
+        return {
+            # 'synonymousBackgroundModel': SynonymousBackground,
+            'codingLenBackgroundModel': CodingLenBackground,
+            # 'samochaBackgroundModel': SamochaBackground
+        }
+
     def __init__(self, name, config, use_cache=False):
         self.background = None
         self.name = name

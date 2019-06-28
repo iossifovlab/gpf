@@ -23,6 +23,9 @@ from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from datasets_api.studies_manager import get_studies_manager
 
+from enrichment_tool.tool import EnrichmentTool
+from enrichment_tool.event_counters import CounterBase
+
 # from memory_profiler import profile
 # fp = open('memory_profiler_basic_mean.log', 'w+')
 # precision = 5
@@ -33,11 +36,11 @@ LOGGER = logging.getLogger(__name__)
 class EnrichmentModelsView(APIView):
 
     def __init__(self):
-        self.enrichment_facade = get_studies_manager().get_enrichment_facade()
+        self.background_facade = get_studies_manager().get_background_facade()
 
     def get_from_config(self, dataset_id, key):
         enrichment_config = \
-            self.enrichment_facade.get_all_study_enrichment_configs(dataset_id)
+            self.background_facade.get_study_enrichment_config(dataset_id)
 
         if enrichment_config is None:
             return []
@@ -63,7 +66,7 @@ class EnrichmentTestView(APIView):
 
     def __init__(self):
         self.variants_db = get_studies_manager().get_variants_db()
-        self.enrichment_facade = get_studies_manager().get_enrichment_facade()
+        self.background_facade = get_studies_manager().get_background_facade()
 
         self.gene_info_config = get_studies_manager().get_gene_info_config()
 
@@ -103,8 +106,23 @@ class EnrichmentTestView(APIView):
         dataset_id = query.get('datasetId', None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        enrichment_config = \
+            self.background_facade.get_study_enrichment_config(dataset_id)
         background_name = query.get('enrichmentBackgroundModel', None)
-        counting_name = query.get('enrichmentCountingModel', None)
+        if background_name is None or not self.background_facade.\
+                has_background(dataset_id, background_name):
+            background_name = enrichment_config.default_background_model
+        counting_name = query.get(
+            'enrichmentCountingModel',
+            enrichment_config.get('defaultCountingModel', None)
+        )
+
+        backgorund = self.background_facade.get_study_background(
+            dataset_id, background_name)
+        counter = CounterBase.counters()[counting_name]()
+        enrichment_tool = EnrichmentTool(
+            enrichment_config, backgorund, counter)
 
         dataset = self.variants_db.get(dataset_id)
         if not dataset:
@@ -117,10 +135,6 @@ class EnrichmentTestView(APIView):
         desc = self.enrichment_description(query)
         desc = '{} ({})'.format(desc, len(gene_syms))
         try:
-            enrichment_tool = self.enrichment_facade.get_enrichment_tool(
-                dataset_id, background_name, counting_name)
-            enrichment_config = enrichment_tool.config
-
             if enrichment_tool.background is None:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
 
