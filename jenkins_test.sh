@@ -29,6 +29,7 @@ py.test --traceconfig -v --cov-config coveragerc \
     DAE/common/tests/ \
     DAE/common_reports/tests \
     DAE/configurable_entities/tests \
+    DAE/enrichment_tool/tests \
     DAE/gene/tests \
     DAE/pedigrees/tests \
     DAE/pheno/tests \
