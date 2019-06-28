@@ -1,23 +1,21 @@
 from __future__ import print_function
 from __future__ import unicode_literals
+import traceback
+import json
+import logging
 from builtins import str
+from collections import Counter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-from users_api.authentication import SessionAuthenticationWithoutCSRF
 from rest_framework.exceptions import NotAuthenticated
-import traceback
-from pheno_tool.tool import PhenoTool
-from functools import partial
 from django.http.response import StreamingHttpResponse
-import json
+from pheno_tool.tool import PhenoTool, PhenoToolHelper
 from variants.attributes import Sex
-import logging
 from gene_sets.expand_gene_set_decorator import expand_gene_set
-from functools import reduce
-from collections import Counter
-
+from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.studies_manager import get_studies_manager
+
 
 logger = logging.getLogger(__name__)
 
@@ -45,45 +43,6 @@ class PhenoToolView(APIView):
             "pValue": result[sex].pvalue
         }
 
-    @staticmethod
-    def get_people_variants(data, dataset):
-        people_variants = {}
-        lgds = False
-
-        if 'LGDs' in data['effectTypes']:
-            lgds = True
-            oldeffecttypes = list(data['effectTypes'])
-            data['effectTypes'].pop(data['effectTypes'].index('LGDs'))
-            data['effectTypes'].extend(['splice-site', 'frame-shift',
-                                        'nonsense', 'no-frame-shift-newStop'])
-
-        for variant in dataset.query_variants(**data):
-            for allele in variant.matched_alleles:
-                if allele.effect.worst not in people_variants:
-                    people_variants[allele.effect.worst] = Counter()
-                for person in allele.variant_in_members:
-                    if person:
-                        people_variants[allele.effect.worst][person] += 1
-
-        if lgds:
-            data['effectTypes'] = oldeffecttypes
-            people_variants['lgds'] = Counter()
-            if 'splice-site' in people_variants:
-                people_variants['lgds'] += people_variants['splice-site']
-                del(people_variants['splice-site'])
-            if 'frame-shift' in people_variants:
-                people_variants['lgds'] += people_variants['frame-shift']
-                del(people_variants['frame-shift'])
-            if 'nonsense' in people_variants:
-                people_variants['lgds'] += people_variants['nonsense']
-                del(people_variants['nonsense'])
-            if 'no-frame-shift-newStop' in people_variants:
-                people_variants['lgds'] += \
-                    people_variants['no-frame-shift-newStop']
-                del(people_variants['no-frame-shift-newStop'])
-
-        return people_variants
-
     @classmethod
     def calc_by_effect(cls, effect, tool, people_variants):
         result = tool.calc(people_variants, sex_split=True)
@@ -94,13 +53,16 @@ class PhenoToolView(APIView):
         }
 
     def prepare_pheno_tool(self, data):
-        study_wrapper = self._variants_db.get_wdae_wrapper(data['datasetId'])
+        helper = PhenoToolHelper(
+            self._variants_db.get_wdae_wrapper(data['datasetId'])
+        )
         tool = PhenoTool(
-            study_wrapper.pheno_db,
+            helper.study.pheno_db,
             measure_id=data['measureId'],
+            _person_ids=helper.study_persons(),
             normalize_by=data['normalizeBy']
         )
-        return study_wrapper, tool
+        return helper, tool
 
     @staticmethod
     def _align_NA_results(results):
@@ -125,27 +87,25 @@ class PhenoToolView(APIView):
         else:
             return "{} ~ {}".format(
                 measure_id,
-                " + ".join(normalize_by)
+                " + ".join(list(map(lambda x: x['display_name'],
+                                    normalize_by)))
             )
 
     @expand_gene_set
     def post(self, request):
         data = request.data
         try:
-            dataset, tool = self.prepare_pheno_tool(data)
-            people_variants = self.get_people_variants(data, dataset)
+            helper, tool = self.prepare_pheno_tool(data)
+            people_variants = helper.study_variants(data)
 
-            data['effectTypes'] = list(map(lambda x: str.lower(x),
-                                           data['effectTypes']))
-
-            results = [self.calc_by_effect(
-                       effect, tool, people_variants.get(effect, Counter()))
+            results = [self.calc_by_effect(effect, tool,
+                       people_variants.get(effect.lower(), Counter()))
                        for effect in data['effectTypes']]
             self._align_NA_results(results)
 
             response = {
                 "description": self._build_report_description(
-                    tool.measure_id, tool.normalize_by),
+                    tool.measure_id, data['normalizeBy']),
                 "results": results
             }
             return Response(response)
@@ -162,42 +122,38 @@ class PhenoToolView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class PhenoToolDownload(PhenoToolView):  # TODO Restore to working condition
+class PhenoToolDownload(PhenoToolView):
     def _parse_query_params(self, data):
         res = {str(k): str(v) for k, v in list(data.items())}
         assert 'queryData' in res
         query = json.loads(res['queryData'])
         return query
 
-    def join_effect_type_df(self, tool, data, dataset, acc, effect):
-        data['effectTypes'] = [effect]
-
-        variants = dataset.get_variants(safe=True, **data)
-        variants_df = GenotypeHelper.to_persons_variants_df(variants)
-        variants_df.rename(columns={'variants': effect}, inplace=True)
-
-        result = acc.join(variants_df, on="person_id")
-        result.fillna(0, inplace=True)
-        return result
-
     @expand_gene_set
     def post(self, request):
         data = self._parse_query_params(request.data)
-        effectTypes = data['effectTypes']
         try:
-            dataset, tool, normalize_by = self.prepare_pheno_tool(data)
-            join_func = partial(self.join_effect_type_df, tool, data, dataset)
-            result_df = reduce(join_func, effectTypes,
-                               tool.list_of_subjects_df())
+            helper, tool = self.prepare_pheno_tool(data)
 
-            if normalize_by != []:
-                column_name = "{} ~ {}".format(data['measureId'],
-                                               " + ".join(normalize_by))
-                result_df.rename(columns={'normalized': column_name},
-                                 inplace=True)
+            result_df = tool.pheno_df.copy()
+            variants = helper.study_variants(data)
+
+            for effect in data['effectTypes']:
+                effect = effect.lower()
+                result_df = \
+                    PhenoTool.join_pheno_df_with_variants(result_df,
+                                                          variants[effect])
+                result_df = result_df.rename(
+                    columns={'variant_count': effect})
+
+            if tool.normalize_by:
+                column_name = "{} ~ {}".format(tool.measure_id,
+                                               " + ".join(tool.normalize_by))
+                result_df = result_df.rename(
+                    columns={'normalized': column_name})
 
             # Select & sort columns for output
-            effectTypesCount = len(effectTypes)
+            effectTypesCount = len(data['effectTypes'])
             columns = [col
                        for col in result_df.columns.tolist()
                        if col != "normalized" and col != "role"]

@@ -12,11 +12,12 @@ from rest_framework.exceptions import NotAuthenticated
 import traceback
 from genotype_browser.views import QueryBaseView
 import numpy as np
+import os
 from pheno.common import MeasureType
+from pheno_browser.db import DbManager
 import logging
 
 logger = logging.getLogger(__name__)
-
 
 
 class PhenoMeasuresView(QueryBaseView):
@@ -152,6 +153,44 @@ class PhenoMeasurePartitionsView(QueryBaseView):
                    "right": {"count": len(rdf), "percent": old_div(len(rdf), total)}}
             return Response(res)
 
+        except NotAuthenticated:
+            logger.exception("error while processing genotype query")
+            traceback.print_exc()
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        except Exception:
+            logger.exception("error while processing genotype query")
+            traceback.print_exc()
+
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class PhenoMeasureRegressionsView(QueryBaseView):
+
+    def __init__(self):
+        super(PhenoMeasureRegressionsView, self).__init__()
+        self.pheno_config = self.variants_db.pheno_factory.config
+
+    def get_browser_dbfile(self, dbname):
+        browser_dbfile = self.pheno_config.get_browser_dbfile(dbname)
+        assert browser_dbfile is not None
+        assert os.path.exists(browser_dbfile)
+        return browser_dbfile
+
+    def get(self, request):
+        data = request.query_params
+        try:
+            dataset_id = data['datasetId']
+
+            db = DbManager(self.get_browser_dbfile(
+                self.variants_db.get_config(dataset_id).phenoDB))
+            db.build()
+
+            if db is None:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+            return Response(db.regression_display_names_with_ids,
+                            status=status.HTTP_200_OK)
         except NotAuthenticated:
             logger.exception("error while processing genotype query")
             traceback.print_exc()
