@@ -37,10 +37,12 @@ class PhenoToolHelper(object):
     def __init__(self, study):
         self.study = study
 
-    def study_persons(self, roles=[Role.prb]):
+    def study_persons(self, family_ids=[], roles=[Role.prb]):
         assert isinstance(roles, list)
         persons = list()
         for family in self.study.families.values():
+            if family_ids and family.family_id not in family_ids:
+                continue
             for person in family.members_in_order:
                 if person.role in roles and person.person_id not in persons:
                     persons.append(person.person_id)

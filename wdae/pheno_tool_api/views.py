@@ -59,7 +59,7 @@ class PhenoToolView(APIView):
         tool = PhenoTool(
             helper.study.pheno_db,
             measure_id=data['measureId'],
-            _person_ids=helper.study_persons(),
+            _person_ids=helper.study_persons(data.get('familyIds', [])),
             normalize_by=data['normalizeBy']
         )
         return helper, tool
