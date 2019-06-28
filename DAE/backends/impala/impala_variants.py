@@ -1,3 +1,5 @@
+from RegionOperations import collapse
+
 from variants.family import FamiliesBase, Family
 from backends.impala.parquet_io import ParquetSerializer
 
@@ -21,7 +23,10 @@ class ImpalaFamilyVariants(FamiliesBase):
             {where}
     """
 
-    def __init__(self, config, impala_connection):
+    GENE_REGIONS_HEURISTIC_CUTOFF = 20
+    GENE_REGIONS_HEURISTIC_EXTEND = 20000
+
+    def __init__(self, config, impala_connection, gene_models=None):
 
         super(ImpalaFamilyVariants, self).__init__()
 
@@ -33,6 +38,7 @@ class ImpalaFamilyVariants(FamiliesBase):
         self.families_build(self.ped_df, family_class=Family)
         self.schema = self.variants_schema()
         self.serializer = ParquetSerializer(self.families)
+        self.gene_models = gene_models
 
     def query_variants(self, **kwargs):
         with self.impala.cursor() as cursor:
@@ -180,8 +186,38 @@ class ImpalaFamilyVariants(FamiliesBase):
         transformer = QueryTreeToSQLBitwiseTransformer(column_name)
         return transformer.transform(parsed)
 
+    def get_gene_models(self):
+        if self.gene_models is None:
+            from DAE import genomesDB
+            self.gene_models = genomesDB.get_gene_models()
+        return self.gene_models
+
+    def _build_gene_regions_heuristic(self, query):
+        assert query.get('genes') is not None
+        genes = query.get('genes')
+        if len(genes) > 0 and len(genes) <= self.GENE_REGIONS_HEURISTIC_CUTOFF:
+            regions = query.get('regions')
+            if regions is None:
+                regions = []
+            gene_models = self.get_gene_models()
+            for gs in genes:
+                for gm in gene_models.gene_models_by_gene_name(gs):
+                    regions.append(
+                        Region(
+                            gm.chr,
+                            gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND,
+                            gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND))
+            if regions:
+                regions = collapse(regions)
+            query['regions'] = regions
+
     def _build_where(self, query):
         where = []
+        if query.get('genes') is not None:
+            self._build_gene_regions_heuristic(query)
+            where.append(self._build_iterable_string_attr_where(
+                'effect_gene', query['genes']
+            ))
         if query.get('regions'):
             where.append(self._build_regions_where(query['regions']))
         if query.get('family_ids') is not None:
@@ -195,10 +231,6 @@ class ImpalaFamilyVariants(FamiliesBase):
         if query.get('effect_types') is not None:
             where.append(self._build_iterable_string_attr_where(
                 'effect_type', query['effect_types']
-            ))
-        if query.get('genes') is not None:
-            where.append(self._build_iterable_string_attr_where(
-                'effect_gene', query['genes']
             ))
         if query.get("inheritance"):
             where.append(self._build_bitwise_attr_where(
