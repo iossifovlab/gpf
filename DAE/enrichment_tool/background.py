@@ -20,7 +20,7 @@ import os
 from scipy import stats
 import zlib
 
-# from DAE import vDB, genomesDB
+from DAE import variants_db, genomesDB
 import numpy as np
 import pandas as pd
 from enrichment_tool.event_counters import overlap_enrichment_result_dict
@@ -31,9 +31,9 @@ class BackgroundBase(object):
     @staticmethod
     def backgrounds():
         return {
-            # 'synonymousBackgroundModel': SynonymousBackground,
+            'synonymousBackgroundModel': SynonymousBackground,
             'codingLenBackgroundModel': CodingLenBackground,
-            # 'samochaBackgroundModel': SamochaBackground
+            'samochaBackgroundModel': SamochaBackground
         }
 
     def __init__(self, name, config, use_cache=False):
@@ -141,7 +141,7 @@ class SynonymousBackground(BackgroundCommon):
 
     @staticmethod
     def _build_synonymous_background(transmitted_study_name):
-        transmitted_study = vDB.get_study(transmitted_study_name)
+        transmitted_study = variants_db.get_study(transmitted_study_name)
         vs = transmitted_study.get_transmitted_summary_variants(
             ultraRareOnly=True,
             minParentsCalled=600,
@@ -167,8 +167,9 @@ class SynonymousBackground(BackgroundCommon):
             'synonymousBackgroundModel', config, use_cache)
 
     def precompute(self):
-        self.background, self.foreground = \
-            self._build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
+        # self.background, self.foreground = \
+        #     self._build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
+        self.background, self.foreground = None, None
         return self.background
 
     def serialize(self):
@@ -336,11 +337,13 @@ class SamochaBackground(BackgroundBase):
         return df
 
     def __init__(self, config, use_cache=False):
+        use_cache = False
         super(SamochaBackground, self).__init__(
             'samochaBackgroundModel', config, use_cache)
 
     def precompute(self):
-        self.background = self._load_and_prepare_build()
+        # self.background = self._load_and_prepare_build()
+        self.background = None
         return self.background
 
     def serialize(self):

@@ -47,12 +47,6 @@ def gene_info_config(dae_config_fixture):
     return GeneInfoConfig.from_config(dae_config_fixture)
 
 
-@pytest.fixture  # noqa
-def gscs(variants_db_fixture, gene_info_config):
-    return GeneSetsCollections(
-        variants_db=variants_db_fixture, config=gene_info_config)
-
-
 @pytest.fixture(scope='module')
 def gene_info_cache_dir():
     cache_dir = path_to_fixtures('geneInfo', 'cache')

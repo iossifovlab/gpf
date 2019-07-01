@@ -35,7 +35,7 @@ class BackgroundFacade(object):
 
         return self._enrichment_config_cache[study_id]
 
-    def get_all_study_ids(self, study_id):
+    def get_all_study_ids(self):
         self.load_cache()
 
         return list(self._background_cache.keys())

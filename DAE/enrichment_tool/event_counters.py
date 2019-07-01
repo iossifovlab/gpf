@@ -37,9 +37,9 @@ def filter_denovo_one_event_per_family(vs):
     return res
 
 
-def filter_denovo_one_gene_per_recurrent_events(vs):
-    gn_sorted = sorted([[
-        ge.symbol.upper(), v] for v in vs for aa in v.alt_alleles
+def get_sym_2_fn(vs):
+    gn_sorted = sorted([
+        [ge.symbol.upper(), v] for v in vs for aa in v.alt_alleles
         for ge in aa.effect.genes
     ])
     sym_2_vars = {sym: [t[1] for t in tpi]
@@ -47,19 +47,16 @@ def filter_denovo_one_gene_per_recurrent_events(vs):
                                                     key=lambda x: x[0])}
     sym_2_fn = {sym: len(set([v.family_id for v in vs]))
                 for sym, vs in list(sym_2_vars.items())}
+    return sym_2_fn
+
+
+def filter_denovo_one_gene_per_recurrent_events(vs):
+    sym_2_fn = get_sym_2_fn(vs)
     return [[gs] for gs, fn in list(sym_2_fn.items()) if fn > 1]
 
 
 def filter_denovo_one_gene_per_events(vs):
-    gn_sorted = sorted([[
-        ge.symbol.upper(), v] for v in vs for aa in v.alt_alleles
-        for ge in aa.effect.genes
-    ])
-    sym_2_vars = {sym: [t[1] for t in tpi]
-                  for sym, tpi in itertools.groupby(gn_sorted,
-                                                    key=lambda x: x[0])}
-    sym_2_fn = {sym: len(set([v.family_id for v in vs]))
-                for sym, vs in list(sym_2_vars.items())}
+    sym_2_fn = get_sym_2_fn(vs)
     return [[gs] for gs, _fn in list(sym_2_fn.items())]
 
 
@@ -94,13 +91,6 @@ class EnrichmentResult(object):
 
 def filter_overlapping_events(events, gene_syms):
     return [ev for ev in events if any([gs in gene_syms for gs in ev])]
-
-
-def overlap_enrichment_result(enrichment_result, gene_syms):
-    gene_syms = [gs.upper() for gs in gene_syms]
-
-    enrichment_result.overllaped = filter_overlapping_events(
-        enrichment_result.events, gene_syms)
 
 
 def overlap_enrichment_result_dict(enrichment_results, gene_syms):
@@ -164,14 +154,10 @@ class EventsCounter(CounterBase):
         unspecified_variants = [v for v in variants for aa in v.alt_alleles
                                 if Sex.unspecified in aa.variant_in_sexes]
 
-        all_events = filter_denovo_one_event_per_family(
-            variants)
-        rec_events = filter_denovo_one_gene_per_recurrent_events(
-            variants)
-        male_events = filter_denovo_one_event_per_family(
-            male_variants)
-        female_events = filter_denovo_one_event_per_family(
-            female_variants)
+        all_events = filter_denovo_one_event_per_family(variants)
+        rec_events = filter_denovo_one_gene_per_recurrent_events(variants)
+        male_events = filter_denovo_one_event_per_family(male_variants)
+        female_events = filter_denovo_one_event_per_family(female_variants)
         unspecified_events = filter_denovo_one_event_per_family(
             unspecified_variants)
 
