@@ -1,13 +1,7 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { Component, OnInit, forwardRef, Input } from '@angular/core';
 import { EnrichmentModelsService } from './enrichment-models.service';
 import { EnrichmentModels, EnrichmentModel } from './enrichment-models';
-import { IdDescription } from '../common/iddescription';
-import { Observable } from 'rxjs';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import {
-  toValidationObservable, validationErrorsToStringArray
-} from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
 
 @Component({
   selector: 'gpf-enrichment-models',
@@ -15,6 +9,9 @@ import { ValidationError } from 'class-validator';
   providers: [{provide: QueryStateProvider, useExisting: forwardRef(() => EnrichmentModelsComponent) }]
 })
 export class EnrichmentModelsComponent extends QueryStateWithErrorsProvider implements OnInit {
+  @Input()
+  private selectedDatasetId: string;
+
   enrichmentModels: EnrichmentModels;
   selectedEnrichmentModel = new EnrichmentModel();
 
@@ -25,7 +22,7 @@ export class EnrichmentModelsComponent extends QueryStateWithErrorsProvider impl
   }
 
   ngOnInit() {
-    this.enrichmentModelsService.getBackgroundModels()
+    this.enrichmentModelsService.getBackgroundModels(this.selectedDatasetId)
       .take(1)
       .subscribe(res => {
         this.enrichmentModels = res;
