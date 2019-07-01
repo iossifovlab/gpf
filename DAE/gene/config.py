@@ -17,7 +17,7 @@ from configurable_entities.configurable_entity_config import\
 from gene.gene_weight_config import GeneWeightConfig
 from gene.gene_term_config import GeneTermConfig
 from gene.chromosome_config import ChromosomeConfig
-from gene.GeneTerms import loadGeneTerm
+from gene.gene_term import loadGeneTerm
 
 
 class GeneInfoConfig(ConfigurableEntityConfig):

@@ -5,7 +5,7 @@ import traceback
 import logging
 
 from gene.config import GeneInfoConfig
-from gene.GeneTerms import loadGeneTerm
+from gene.gene_term import loadGeneTerm
 
 LOGGER = logging.getLogger(__name__)
 
