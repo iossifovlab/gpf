@@ -85,7 +85,7 @@ class GeneInfoDB(ConfigurableEntityConfig):
         super(GeneInfoDB, self).__init__(config, *args, **kwargs)
 
     @classmethod
-    def from_config(cls, config=None):
+    def from_config(cls, config):
         if config is None:
             return
 
