@@ -14,13 +14,10 @@ from variants.attributes import Inheritance, Role
 
 class GenotypeHelper(object):
 
-    def __init__(
-            self, dataset, people_group, people_group_value,
-            study_types=['WE', 'WG']):
+    def __init__(self, dataset, people_group, people_group_value):
         self.dataset = dataset
         self.people_group = people_group
         self.people_group_value = people_group_value
-        self.study_types = study_types
         self._children_stats = None
 
     def get_variants(self, effect_types):
@@ -35,8 +32,7 @@ class GenotypeHelper(object):
         variants = self.dataset.query_variants(
             inheritance=str(Inheritance.denovo.name),
             person_ids=people_with_people_group,
-            effect_types=set(effect_types),
-            studyTypes=['WE', 'WG']
+            effect_types=set(effect_types)
         )
 
         return list(variants)
