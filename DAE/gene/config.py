@@ -84,6 +84,9 @@ class GeneInfoDB(ConfigurableEntityConfig):
     def __init__(self, config=None, *args, **kwargs):
         super(GeneInfoDB, self).__init__(config, *args, **kwargs)
 
+        self._genes = None
+        self._nsTokens = None
+
     @classmethod
     def from_config(cls, config):
         if config is None:
@@ -93,20 +96,14 @@ class GeneInfoDB(ConfigurableEntityConfig):
 
     @property
     def genes(self):
-        try:
-            return self._genes
-        except AttributeError:
-            pass
-        self._parseNCBIGeneInfo()
+        if self._genes is None:
+            self._parseNCBIGeneInfo()
         return self._genes
 
     @property
     def nsTokens(self):
-        try:
-            return self._nsTokens
-        except AttributeError:
-            pass
-        self._parseNCBIGeneInfo()
+        if self._nsTokens is None:
+            self._parseNCBIGeneInfo()
         return self._nsTokens
 
     def _parseNCBIGeneInfo(self):
