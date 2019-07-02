@@ -21,10 +21,10 @@ class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
         assert self.enrichment_results is not None
         output = []
         for results in self.enrichment_results:
-            output.append(self.serialize_person_grouping(results))
+            output.append(self.serialize_people_groups(results))
         return output
 
-    def serialize_person_grouping(self, grouping_results):
+    def serialize_people_groups(self, grouping_results):
         output = {}
         output['selector'] = grouping_results['selector']
         output['peopleGroupId'] = grouping_results['peopleGroupId']

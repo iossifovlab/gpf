@@ -4,7 +4,15 @@ import os
 import pytest
 
 from configurable_entities.configuration import DAEConfig
+from studies.factory import VariantsDb
+
 from datasets_api.studies_manager import StudiesManager
+
+from enrichment_api.enrichment_builder import EnrichmentBuilder
+from enrichment_api.enrichment_serializer import EnrichmentSerializer
+
+from enrichment_tool.event_counters import EventsCounter
+from enrichment_tool.tool import EnrichmentTool
 
 
 def fixtures_dir():
@@ -16,6 +24,12 @@ def fixtures_dir():
 def dae_config_fixture():
     dae_config = DAEConfig(fixtures_dir())
     return dae_config
+
+
+@pytest.fixture()
+def variants_db_fixture(dae_config_fixture):
+    variants_db = VariantsDb(dae_config_fixture)
+    return variants_db
 
 
 @pytest.fixture()
@@ -35,3 +49,38 @@ def mock_studies_manager(db, mocker, studies_manager):
     mocker.patch(
         'datasets_api.permissions.get_studies_manager',
         return_value=studies_manager)
+
+
+@pytest.fixture()
+def background_facade(studies_manager):
+    return studies_manager.get_background_facade()
+
+
+@pytest.fixture()
+def f1_trio(variants_db_fixture):
+    f1_trio = variants_db_fixture.get('f1_trio')
+    return f1_trio
+
+
+@pytest.fixture()
+def enrichment_builder(f1_trio, background_facade):
+    enrichment_config = \
+        background_facade.get_study_enrichment_config('f1_trio')
+    backgorund = background_facade.get_study_background(
+        'f1_trio', 'codingLenBackgroundModel')
+    counter = EventsCounter()
+    enrichment_tool = EnrichmentTool(enrichment_config, backgorund, counter)
+    builder = EnrichmentBuilder(
+        f1_trio, enrichment_tool, ['SAMD11', 'PLEKHN1', 'POGZ'])
+
+    return builder
+
+
+@pytest.fixture()
+def enrichment_serializer(background_facade, enrichment_builder):
+    enrichment_config = \
+        background_facade.get_study_enrichment_config('f1_trio')
+    build = enrichment_builder.build()
+    serializer = EnrichmentSerializer(enrichment_config, build)
+
+    return serializer
