@@ -10,18 +10,17 @@ from rest_framework.views import APIView
 from rest_framework import status
 
 import logging
-import traceback
-
-from common.query_base import GeneSymsMixin
 
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
-from gene_sets.expand_gene_set_decorator import expand_gene_set
-
 from datasets_api.studies_manager import get_studies_manager
+
+from common.query_base import GeneSymsMixin
+
+from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 from enrichment_tool.tool import EnrichmentTool
 from enrichment_tool.event_counters import CounterBase
@@ -106,6 +105,9 @@ class EnrichmentTestView(APIView):
         dataset_id = query.get('datasetId', None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset = self.variants_db.get(dataset_id)
+        if not dataset:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         enrichment_config = \
             self.background_facade.get_study_enrichment_config(dataset_id)
@@ -124,33 +126,24 @@ class EnrichmentTestView(APIView):
         enrichment_tool = EnrichmentTool(
             enrichment_config, backgorund, counter)
 
-        dataset = self.variants_db.get(dataset_id)
-        if not dataset:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
         gene_syms = GeneSymsMixin.get_gene_syms(self.gene_info_config, **query)
         if gene_syms is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         desc = self.enrichment_description(query)
         desc = '{} ({})'.format(desc, len(gene_syms))
-        try:
-            if enrichment_tool.background is None:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
 
-            builder = EnrichmentBuilder(dataset, enrichment_tool, gene_syms)
-            results = builder.build()
-
-            serializer = EnrichmentSerializer(enrichment_config, results)
-            results = serializer.serialize()
-
-            enrichment = {
-                'desc': desc,
-                'result': results
-            }
-            return Response(enrichment)
-        except Exception:
-            LOGGER.exception('error while processing genotype query')
-            traceback.print_exc()
-
+        if enrichment_tool.background is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        builder = EnrichmentBuilder(dataset, enrichment_tool, gene_syms)
+        results = builder.build()
+
+        serializer = EnrichmentSerializer(enrichment_config, results)
+        results = serializer.serialize()
+
+        enrichment = {
+            'desc': desc,
+            'result': results
+        }
+        return Response(enrichment)
