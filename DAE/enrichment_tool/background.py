@@ -31,9 +31,9 @@ class BackgroundBase(object):
     @staticmethod
     def backgrounds():
         return {
-            'synonymousBackgroundModel': SynonymousBackground,
+            # 'synonymousBackgroundModel': SynonymousBackground,
             'codingLenBackgroundModel': CodingLenBackground,
-            'samochaBackgroundModel': SamochaBackground
+            # 'samochaBackgroundModel': SamochaBackground
         }
 
     def __init__(self, name, config, use_cache=False):
