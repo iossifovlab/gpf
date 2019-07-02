@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 # from enrichment_tool.background import SynonymousBackground, \
 #     CodingLenBackground, SamochaBackground
 from enrichment_tool.background import CodingLenBackground

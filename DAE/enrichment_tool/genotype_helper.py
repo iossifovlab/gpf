@@ -5,7 +5,7 @@ Created on Apr 24, 2017
 '''
 from __future__ import print_function, absolute_import
 from __future__ import unicode_literals
-from builtins import object
+from builtins import object, str
 
 from collections import Counter
 
