@@ -211,6 +211,20 @@ class ImpalaFamilyVariants(FamiliesBase):
                 regions = collapse(regions)
             query['regions'] = regions
 
+    def _build_rare_heuristic(self, query):
+        if 'rare' not in self.schema:
+            return ""
+        if query.get('ultra_rare'):
+            return "rare = 1"
+        if query.get('real_attr_filter'):
+            for name, (begin, end) in query.get('real_attr_filter'):
+                if name == 'af_allele_freq':
+                    if end <= 5.0:
+                        return "rare = 1"
+                    if begin > 5.0:
+                        return "rare = 0"
+        return ""
+
     def _build_where(self, query):
         where = []
         if query.get('genes') is not None:
@@ -257,12 +271,15 @@ class ImpalaFamilyVariants(FamiliesBase):
         if query.get('ultra_rare'):
             where.append(self._build_ultra_rare_where(query))
 
+        where.append(self._build_rare_heuristic(query))
+        where = [w for w in where if w]
         return where
 
     def build_query(self, config, **kwargs):
 
         where = self._build_where(kwargs)
         where_clause = ""
+
         if where:
             where_clause = self.WHERE.format(
                 where=" AND ".join([
