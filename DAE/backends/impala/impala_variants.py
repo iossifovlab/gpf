@@ -35,8 +35,10 @@ class ImpalaFamilyVariants(FamiliesBase):
 
         self.impala = impala_connection
         self.ped_df = self.load_pedigree()
+        self.pedigree_schema = self.pedigree_schema()
+
         self.families_build(self.ped_df, family_class=Family)
-        self.schema = self.variants_schema()
+        self.schema = self.variant_schema()
         self.serializer = ParquetSerializer(self.families)
         self.gene_models = gene_models
 
@@ -60,6 +62,7 @@ class ImpalaFamilyVariants(FamiliesBase):
 
                 matched_alleles = [int(a) for a in matched_alleles.split(',')]
                 v.set_matched_alleles(matched_alleles)
+
                 yield v
 
     def load_pedigree(self):
@@ -92,11 +95,25 @@ class ImpalaFamilyVariants(FamiliesBase):
 
         return ped_df
 
-    def variants_schema(self):
+    def variant_schema(self):
         with self.impala.cursor() as cursor:
             q = """
                 DESCRIBE {db}.{variant}
             """.format(db=self.config.db, variant=self.config.tables.variant)
+
+            cursor.execute(q)
+            df = as_pandas(cursor)
+            records = df[['name', 'type']].to_records()
+            schema = {
+                col_name: col_type for (_, col_name, col_type) in records
+            }
+            return schema
+
+    def pedigree_schema(self):
+        with self.impala.cursor() as cursor:
+            q = """
+                DESCRIBE {db}.{pedigree}
+            """.format(db=self.config.db, pedigree=self.config.tables.pedigree)
 
             cursor.execute(q)
             df = as_pandas(cursor)
@@ -225,6 +242,35 @@ class ImpalaFamilyVariants(FamiliesBase):
                         return "rare = 0"
         return ""
 
+    def _build_family_bin_heuristic(self, query):
+        if 'family_bin' not in self.schema:
+            return ""
+        if 'family_bin' not in self.pedigree_schema:
+            return ""
+        family_bins = set()
+        family_ids = query.get('family_ids')
+        if family_ids:
+            family_ids = set(family_ids)
+            family_bins.union(
+                set(self.ped_df[
+                        self.ped_df['family_id'].isin(family_ids)
+                    ].family_bin.values)
+            )
+        person_ids = query.get('person_ids')
+        if person_ids:
+            person_ids = set(person_ids)
+            family_bins.union(
+                set(self.ped_df[
+                        self.ped_df['person_id'].isin(person_ids)
+                    ].family_bin.values)
+            )
+
+        if family_bins:
+            w = ", ".join(family_bins)
+            return "family_bin IN {w}".format(w=w)
+
+        return ""
+
     def _build_where(self, query):
         where = []
         if query.get('genes') is not None:
@@ -272,6 +318,8 @@ class ImpalaFamilyVariants(FamiliesBase):
             where.append(self._build_ultra_rare_where(query))
 
         where.append(self._build_rare_heuristic(query))
+        where.append(self._build_family_bin_heuristic(query))
+
         where = [w for w in where if w]
         return where
 
