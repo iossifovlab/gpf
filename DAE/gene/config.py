@@ -4,6 +4,7 @@ Created on Feb 16, 2017
 @author: lubo
 '''
 from __future__ import unicode_literals
+from __future__ import print_function
 from future import standard_library
 standard_library.install_aliases()  # noqa
 
@@ -17,7 +18,7 @@ from configurable_entities.configurable_entity_config import\
 from gene.gene_weight_config import GeneWeightConfig
 from gene.gene_term_config import GeneTermConfig
 from gene.chromosome_config import ChromosomeConfig
-from gene.GeneTerms import loadGeneTerm
+from gene.gene_term import loadGeneTerm
 
 
 class GeneInfoConfig(ConfigurableEntityConfig):
@@ -84,8 +85,11 @@ class GeneInfoDB(ConfigurableEntityConfig):
     def __init__(self, config=None, *args, **kwargs):
         super(GeneInfoDB, self).__init__(config, *args, **kwargs)
 
+        self._genes = None
+        self._nsTokens = None
+
     @classmethod
-    def from_config(cls, config=None):
+    def from_config(cls, config):
         if config is None:
             return
 
@@ -93,20 +97,14 @@ class GeneInfoDB(ConfigurableEntityConfig):
 
     @property
     def genes(self):
-        try:
-            return self._genes
-        except AttributeError:
-            pass
-        self._parseNCBIGeneInfo()
+        if self._genes is None:
+            self._parseNCBIGeneInfo()
         return self._genes
 
     @property
     def nsTokens(self):
-        try:
-            return self._nsTokens
-        except AttributeError:
-            pass
-        self._parseNCBIGeneInfo()
+        if self._nsTokens is None:
+            self._parseNCBIGeneInfo()
         return self._nsTokens
 
     def _parseNCBIGeneInfo(self):

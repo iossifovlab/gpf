@@ -3,9 +3,9 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
+# from __future__ import unicode_literals
 from __future__ import division
 from __future__ import print_function, absolute_import
-# from __future__ import unicode_literals
 from future import standard_library
 standard_library.install_aliases()  # noqa
 
@@ -20,20 +20,29 @@ import os
 from scipy import stats
 import zlib
 
-# from DAE import vDB, genomesDB
-from enrichment_tool.config import BackgroundConfig
+from DAE import variants_db, genomesDB
 import numpy as np
 import pandas as pd
 from enrichment_tool.event_counters import overlap_enrichment_result_dict
 
 
-class BackgroundBase(BackgroundConfig):
+class BackgroundBase(object):
 
-    def __init__(self, name, use_cache=False):
-        super(BackgroundBase, self).__init__()
+    @staticmethod
+    def backgrounds():
+        return {
+            # 'synonymousBackgroundModel': SynonymousBackground,
+            'codingLenBackgroundModel': CodingLenBackground,
+            # 'samochaBackgroundModel': SamochaBackground
+        }
+
+    def __init__(self, name, config, use_cache=False):
         self.background = None
         self.name = name
         assert self.name is not None
+        self.config = config
+
+        self.cache_filename = self.config.enrichment_cache_file(self.name)
 
         if not use_cache:
             self.precompute()
@@ -41,12 +50,6 @@ class BackgroundBase(BackgroundConfig):
             if not self.cache_load():
                 self.precompute()
                 self.cache_save()
-
-    @property
-    def cache_filename(self):
-        return os.path.join(
-            self.cache_dir,
-            "{}.pckl".format(self.name))
 
     def cache_clear(self):
         assert self.name is not None
@@ -79,8 +82,8 @@ class BackgroundBase(BackgroundConfig):
 
 class BackgroundCommon(BackgroundBase):
 
-    def __init__(self, name, use_cache=False):
-        super(BackgroundCommon, self).__init__(name, use_cache)
+    def __init__(self, name, config, use_cache=False):
+        super(BackgroundCommon, self).__init__(name, config, use_cache)
 
     def _prob(self, gene_syms):
         return 1.0 * self._count(gene_syms) / self._total
@@ -138,7 +141,7 @@ class SynonymousBackground(BackgroundCommon):
 
     @staticmethod
     def _build_synonymous_background(transmitted_study_name):
-        transmitted_study = vDB.get_study(transmitted_study_name)
+        transmitted_study = variants_db.get_study(transmitted_study_name)
         vs = transmitted_study.get_transmitted_summary_variants(
             ultraRareOnly=True,
             minParentsCalled=600,
@@ -159,13 +162,14 @@ class SynonymousBackground(BackgroundCommon):
 
         return (background, foreground)
 
-    def __init__(self, use_cache=False):
+    def __init__(self, config, use_cache=False):
         super(SynonymousBackground, self).__init__(
-            'synonymousBackgroundModel', use_cache)
+            'synonymousBackgroundModel', config, use_cache)
 
     def precompute(self):
-        self.background, self.foreground = \
-            self._build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
+        # self.background, self.foreground = \
+        #     self._build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
+        self.background, self.foreground = None, None
         return self.background
 
     def serialize(self):
@@ -213,7 +217,7 @@ class CodingLenBackground(BackgroundCommon):
 
     @property
     def filename(self):
-        return self[self.name, 'file']
+        return self.config.backgrounds[self.name].filename
 
     def _load_and_prepare_build(self):
         filename = self.filename
@@ -227,9 +231,9 @@ class CodingLenBackground(BackgroundCommon):
                 back.append((row[1], int(row[2])))
         return back
 
-    def __init__(self, use_cache=False):
+    def __init__(self, config, use_cache=False):
         super(CodingLenBackground, self).__init__(
-            'codingLenBackgroundModel', use_cache)
+            'codingLenBackgroundModel', config, use_cache)
 
     def precompute(self):
         back = self._load_and_prepare_build()
@@ -319,7 +323,7 @@ class SamochaBackground(BackgroundBase):
 
     @property
     def filename(self):
-        return self[self.name, 'file']
+        return self.config.backgrounds[self.name].filename
 
     def _load_and_prepare_build(self):
         filename = self.filename
@@ -332,12 +336,14 @@ class SamochaBackground(BackgroundBase):
 
         return df
 
-    def __init__(self, use_cache=False):
+    def __init__(self, config, use_cache=False):
+        use_cache = False
         super(SamochaBackground, self).__init__(
-            'samochaBackgroundModel', use_cache)
+            'samochaBackgroundModel', config, use_cache)
 
     def precompute(self):
-        self.background = self._load_and_prepare_build()
+        # self.background = self._load_and_prepare_build()
+        self.background = None
         return self.background
 
     def serialize(self):

@@ -370,22 +370,21 @@ class GeneSymsMixin(object):
         if gene_symbols is None:
             return set([])
 
-        if isinstance(gene_symbols, str) or \
-                isinstance(gene_symbols, str):
+        if isinstance(gene_symbols, str):
             gene_symbols = gene_symbols.replace(',', ' ')
             gene_symbols = gene_symbols.split()
 
         return set([g.strip() for g in gene_symbols])
 
     @staticmethod
-    def get_gene_weights_query(**kwargs):
+    def get_gene_weights_query(gene_info_config, **kwargs):
         gene_weights = kwargs.get('geneWeights', None)
         if gene_weights is None:
             return None, None, None
         if 'weight' not in gene_weights:
             return None, None, None
         weights_id = gene_weights['weight']
-        if weights_id not in Weights.list_gene_weights():
+        if weights_id not in Weights.list_gene_weights(gene_info_config):
             return None, None, None
         range_start = gene_weights.get('rangeStart', None)
         range_end = gene_weights.get('rangeEnd', None)
@@ -404,6 +403,24 @@ class GeneSymsMixin(object):
             return None, None, None
         gene_sets_types = query.get('geneSetsTypes', [])
         return gene_sets_collection, gene_set, gene_sets_types
+
+    @classmethod
+    def get_gene_syms(cls, gene_info_config, **kwargs):
+        result = cls.get_gene_symbols(**kwargs) | \
+            cls.get_gene_weights(gene_info_config, **kwargs)
+
+        return result if result else None
+
+    @classmethod
+    def get_gene_weights(cls, gene_info_config, **kwargs):
+        weights_id, range_start, range_end = cls.get_gene_weights_query(
+            gene_info_config, **kwargs)
+        if not weights_id or \
+                weights_id not in Weights.list_gene_weights(gene_info_config):
+            return set([])
+
+        weights = Weights.load_gene_weights(weights_id, gene_info_config)
+        return weights.get_genes(wmin=range_start, wmax=range_end)
 
 
 class RegionsMixin(object):

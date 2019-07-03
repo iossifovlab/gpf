@@ -327,8 +327,8 @@ class DenovoGeneSetsCollection(object):
             cls, people_group, people_group_value, study, variants,
             search_args):
         cache = {}
-        people_with_people_group = cls._get_people_with_people_group(
-            study, people_group, people_group_value)
+        people_with_people_group = study.get_people_with_people_group(
+            people_group, people_group_value)
 
         for variant in variants:
             family_id = variant.family_id
@@ -358,15 +358,3 @@ class DenovoGeneSetsCollection(object):
                     cache.setdefault(gene.symbol, set()).add(family_id)
 
         return cache
-
-    @staticmethod
-    def _get_people_with_people_group(study, people_group, people_group_value):
-        person_with_people_group_ids = set()
-        for s in study.studies:
-            pedigree_df = s.backend.ped_df
-            people_ids = pedigree_df[
-                pedigree_df[people_group].apply(str) ==
-                str(people_group_value)]
-            person_with_people_group_ids.update(people_ids['person_id'])
-
-        return person_with_people_group_ids

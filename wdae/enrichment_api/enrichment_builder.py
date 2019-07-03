@@ -5,34 +5,25 @@ Created on Feb 17, 2017
 '''
 from __future__ import unicode_literals
 from builtins import object
-from enrichment_tool.tool import EnrichmentTool
-from enrichment_tool.genotype_helper import GenotypeHelper as GH
+
+from enrichment_tool.genotype_helper import GenotypeHelper
 
 
 class EnrichmentBuilder(object):
-    EFFECT_TYPES = [
-        'LGDs',
-        'missense',
-        'synonymous'
-    ]
 
-    def __init__(self, dataset, enrichment_model, gene_syms):
+    def __init__(self, dataset, enrichment_tool, gene_syms):
         self.dataset = dataset
-        self.enrichment_model = enrichment_model
         self.gene_syms = gene_syms
-        self.tool = EnrichmentTool(
-            self.enrichment_model['background'],
-            self.enrichment_model['counting']
-        )
+        self.tool = enrichment_tool
         self.results = None
 
-    def build_person_grouping_selector(
-            self, person_grouping, person_grouping_selector):
+    def build_people_group_selector(
+            self, effect_types, people_group, people_group_value):
 
-        gh = GH.from_dataset(
+        gh = GenotypeHelper(
             self.dataset,
-            person_grouping,
-            person_grouping_selector)
+            people_group,
+            people_group_value)
 
         children_stats = gh.get_children_stats()
         children_count = children_stats['M'] + \
@@ -42,7 +33,7 @@ class EnrichmentBuilder(object):
             return None
 
         results = {}
-        for effect_type in self.EFFECT_TYPES:
+        for effect_type in effect_types:
             enrichment_results = self.tool.calc(
                 effect_type,
                 self.gene_syms,
@@ -51,58 +42,31 @@ class EnrichmentBuilder(object):
 
             results[effect_type] = enrichment_results
         results['childrenStats'] = gh.get_children_stats()
-        # results['selector'] = person_grouping_selector
+        results['selector'] = people_group_value
         results['geneSymbols'] = list(self.gene_syms)
-        results['personGroupingId'] = person_grouping
-        results['personGroupingValue'] = person_grouping_selector
-        results['datasetId'] = self.dataset.dataset_id
+        results['peopleGroupId'] = people_group.id
+        results['peopleGroupValue'] = people_group_value
+        results['datasetId'] = self.dataset.id
+
         return results
 
     def build(self):
         results = []
-        enrichment_config = self.dataset.descriptor.get('enrichmentTool')
+        enrichment_config = self.tool.config
         assert enrichment_config is not None
-        person_grouping_id = enrichment_config['selector']
-        person_grouping = self.dataset.get_people_group(
-            default=False,
-            person_grouping=person_grouping_id)
 
-        for person_grouping_selector in person_grouping.domain:
-            res = self.build_person_grouping_selector(
-                person_grouping_id,
-                person_grouping_selector['id'])
+        effect_types = enrichment_config.effect_types
+
+        people_group_id = enrichment_config.people_groups[0]
+        people_group = self.dataset.config.people_group_config.\
+            get_people_group(people_group_id)
+
+        for people_group_selector in people_group.domain:
+            res = self.build_people_group_selector(
+                effect_types,
+                people_group,
+                people_group_selector['name'])
             if res:
-                res['personGroupingValue'] = person_grouping_selector['id']
-                res['selector'] = person_grouping_selector['name']
                 results.append(res)
         self.results = results
         return self.results
-
-#     def serialize_enrichment_result(self, result):
-#         assert isinstance(result, EnrichmentResult)
-#         res = {}
-#         res['name'] = result.name
-#         res['count'] = len(result.events)
-#         res['overlapped'] = len(result.overlapped)
-#         res['expected'] = result.expected
-#         res['pvalue'] = result.pvalue
-#         return res
-#
-#     def serialize_helper(self, result):
-#         if isinstance(result, EnrichmentResult):
-#             return self.serialize_enrichment_result(result)
-#         elif isinstance(result, list):
-#             return [
-#                 self.serialize_helper(v) for v in result
-#             ]
-#         elif isinstance(result, str) or isinstance(result, int) or \
-#                 isinstance(result, float):
-#             return result
-#         else:
-#             return dict([
-#                 (k, self.serialize_helper(v)) for k, v in result.items()
-#             ])
-#
-#     def serialize(self):
-#         assert self.results is not None
-#         return self.serialize_helper(self.results)

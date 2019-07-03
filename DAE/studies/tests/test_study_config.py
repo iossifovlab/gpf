@@ -68,6 +68,18 @@ def test_quads_f1_config_genotype_browser(
     assert genotype_browser_config[option_name] == expected_value
 
 
+def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
+    genotype_browser_config = quads_f1_config.genotype_browser_config
+
+    assert len(genotype_browser_config['presentInRole']) == 1
+    assert genotype_browser_config['presentInRole'][0].id == 'prb'
+    assert genotype_browser_config['presentInRole'][0].name == \
+        'Present in Probant and Sibling'
+    assert len(genotype_browser_config['presentInRole'][0].roles) == 2
+    assert genotype_browser_config['presentInRole'][0].roles[0] == 'Proband'
+    assert genotype_browser_config['presentInRole'][0].roles[1] == 'Sibling'
+
+
 @pytest.mark.parametrize(
     "option_name,expected_name,expected_source,expected_slots", [
         ("genotype", "genotype", "pedigree", [
