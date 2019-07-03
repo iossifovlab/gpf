@@ -16,7 +16,7 @@ import { FullscreenLoadingService } from '../fullscreen-loading/fullscreen-loadi
 })
 export class EnrichmentToolComponent extends QueryStateCollector implements OnInit {
   enrichmentResults: EnrichmentResults;
-  private selectedDatasetId: string;
+  public selectedDatasetId: string;
 
   constructor(
     private enrichmentQueryService: EnrichmentQueryService,
