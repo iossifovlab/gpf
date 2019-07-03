@@ -23,12 +23,6 @@ from common.query_base import EffectTypesMixin
 LOGGER = logging.getLogger(__name__)
 
 
-def decapitalize(string):
-    split = string.split('-')
-    split[0] = str.lower(split[0])
-    return '-'.join(split)
-
-
 class PhenoToolHelper(object):
     """
     Helper class for PhenoTool. Collects variants and person ids from a study.
@@ -40,41 +34,55 @@ class PhenoToolHelper(object):
 
     def __init__(self, study):
         self.study = study
-        self.effect_types = EffectTypesMixin()
+        self.effect_types_mixin = EffectTypesMixin()
+
+    def _package_effect_type_group(self, group, variants):
+        group = group.lower()
+        res = {group: Counter()}
+        group_effect_types = self.effect_types_mixin.build_effect_types(group)
+        for effect_type in group_effect_types:
+            if effect_type not in variants:
+                continue
+            for person_id in variants[effect_type]:
+                res[group][person_id] = 1
+        return res
 
     def study_persons(self, family_ids=[], roles=[Role.prb]):
         assert isinstance(family_ids, list)
         assert isinstance(roles, list)
-        persons = list()
-        for family in self.study.families.values():
-            if family_ids and family.family_id not in family_ids:
-                continue
+        persons = set()
+
+        if not family_ids:
+            family_ids = self.study.families.keys()
+
+        for family_id in family_ids:
+            family = self.study.families[family_id]
             for person in family.members_in_order:
-                if person.role in roles and person.person_id not in persons:
-                    persons.append(person.person_id)
+                if person.role in roles:
+                    persons.add(person.person_id)
         return persons
 
     def study_variants(self, data):
         assert 'effectTypes' in data
 
-        queried_effect_types = set(self.effect_types.get_effect_types(**data))
+        queried_effect_types = set(self.effect_types_mixin.
+                                   get_effect_types(**data))
         variants_by_effect = {effect: Counter() for effect in
                               queried_effect_types}
 
         for variant in self.study.query_variants(**data):
             for allele in variant.matched_alleles:
                 for person in filter(None, allele.variant_in_members):
-                    for effect in allele.effects.types & queried_effect_types:
-                        variants_by_effect[effect][person] = 1
+                    for effect in allele.effects.types:
+                        if effect in queried_effect_types:
+                            variants_by_effect[effect][person] = 1
 
-        if 'LGDs' in data['effectTypes']:
-            lgd_effects = self.effect_types.\
-                            get_effect_types(effectTypes=['LGDs'])
-            variants_by_effect['lgds'] = Counter()
-            for lgd_effect in lgd_effects:
-                if lgd_effect in variants_by_effect:
-                    for person_id in variants_by_effect[lgd_effect]:
-                        variants_by_effect['lgds'][person_id] = 1
+        for effect_type in data['effectTypes']:
+            effect_type = effect_type.lower()
+            if effect_type not in self.effect_types_mixin.EFFECT_GROUPS:
+                continue
+            variants_by_effect.update(self._package_effect_type_group(
+                                      effect_type, variants_by_effect))
 
         return variants_by_effect
 
