@@ -7,6 +7,9 @@ in the *Management* tab from the upper left corner menu
 Quick start guide
 -----------------
 
+How to create a new user?
++++++++++++++++++++++++++
+
 .. figure:: imgs/01-management-menu.png
    :scale: 50
    :alt: Management menu
@@ -32,8 +35,8 @@ Quick start guide
    the user belongs to; 5 -
 
 
-How to create new user?
-+++++++++++++++++++++++
+How to specify permissions for a given user?
+++++++++++++++++++++++++++++++++++++++++++++
 
 .. figure:: imgs/add-remove-group-num.png
    :scale: 50
@@ -41,9 +44,5 @@ How to create new user?
    :align: center
 
    Interface for editing user groups
-
-
-How to specify permissions for given user?
-++++++++++++++++++++++++++++++++++++++++++
 
 

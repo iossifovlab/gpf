@@ -9,13 +9,9 @@ GPF: Genotypes and Phenotypes in Families
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   getting_started
-   configurations
-   pedigree_generation
-   pheno
-   user_management
-   groups
-   datasets
-   users
+   gpf_user_interface
+   gpf_administration
+   dae_interface
+   wdae_interface
