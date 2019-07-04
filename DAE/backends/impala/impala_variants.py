@@ -42,6 +42,15 @@ class ImpalaFamilyVariants(FamiliesBase):
         self.serializer = ParquetSerializer(self.families)
         self.gene_models = gene_models
 
+    def count_variants(self, **kwargs):
+        with self.impala.cursor() as cursor:
+            query = self.build_count_query(self.config, **kwargs)
+            # print("COUNT QUERY:", query)
+            cursor.execute(query)
+            for row in cursor:
+                count = row[0]
+                return count
+
     def query_variants(self, **kwargs):
         with self.impala.cursor() as cursor:
             query = self.build_query(self.config, **kwargs)
@@ -321,11 +330,7 @@ class ImpalaFamilyVariants(FamiliesBase):
         where.append(self._build_family_bin_heuristic(query))
 
         where = [w for w in where if w]
-        return where
 
-    def build_query(self, config, **kwargs):
-
-        where = self._build_where(kwargs)
         where_clause = ""
 
         if where:
@@ -333,6 +338,13 @@ class ImpalaFamilyVariants(FamiliesBase):
                 where=" AND ".join([
                     "( {} )".format(w) for w in where])
             )
+
+        return where_clause
+
+    def build_query(self, config, **kwargs):
+
+        where_clause = self._build_where(kwargs)
+
         limit_clause = ""
         if kwargs.get("limit"):
             limit_clause = "LIMIT {}".format(kwargs.get("limit"))
@@ -367,3 +379,20 @@ class ImpalaFamilyVariants(FamiliesBase):
             db=config.db, variant=config.tables.variant,
             where_clause=where_clause,
             limit_clause=limit_clause)
+
+    def build_count_query(self, config, **kwargs):
+        where_clause = self._build_where(kwargs)
+
+        return """
+            SELECT
+                COUNT(
+                    DISTINCT
+                        bucket_index,
+                        summary_variant_index,
+                        family_variant_index
+                )
+            FROM {db}.{variant}
+            {where_clause}
+            """.format(
+            db=config.db, variant=config.tables.variant,
+            where_clause=where_clause)
