@@ -47,9 +47,8 @@ class ImpalaFamilyVariants(FamiliesBase):
             query = self.build_count_query(self.config, **kwargs)
             # print("COUNT QUERY:", query)
             cursor.execute(query)
-            for row in cursor:
-                count = row[0]
-                return count
+            row = next(cursor)
+            return row[0]
 
     def query_variants(self, **kwargs):
         with self.impala.cursor() as cursor:
@@ -251,6 +250,13 @@ class ImpalaFamilyVariants(FamiliesBase):
                         return "rare = 0"
         return ""
 
+    def _build_ultra_rare_heuristic(self, query):
+        if 'ultra_rare' not in self.schema:
+            return ""
+        if query.get('ultra_rare'):
+            return "ultra_rare = 1"
+        return ""
+
     def _build_family_bin_heuristic(self, query):
         if 'family_bin' not in self.schema:
             return ""
@@ -327,6 +333,7 @@ class ImpalaFamilyVariants(FamiliesBase):
             where.append(self._build_ultra_rare_where(query))
 
         where.append(self._build_rare_heuristic(query))
+        where.append(self._build_ultra_rare_heuristic(query))
         where.append(self._build_family_bin_heuristic(query))
 
         where = [w for w in where if w]
