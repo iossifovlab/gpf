@@ -97,7 +97,7 @@ class PhenoTool(object):
 
     `measure_id` -- a phenotype measure ID
 
-    `_person_ids` -- an optional list of person IDs to filter the phenotype
+    `person_ids_` -- an optional list of person IDs to filter the phenotype
     database with
 
     `normalize_by` -- list of continuous measure names. Default value is
@@ -107,13 +107,13 @@ class PhenoTool(object):
     is empty dictionary.
     """
 
-    def __init__(self, pheno_db, measure_id, _person_ids=[],
-                 normalize_by=[], pheno_filters=[]):
+    def __init__(self, pheno_db, measure_id, person_ids_=[],
+                 normalize_by=[], pheno_filters={}):
 
         self.pheno_db = pheno_db
         self.measure_id = measure_id
 
-        assert isinstance(pheno_filters, list)
+        assert isinstance(pheno_filters, dict)
         assert self.pheno_db.has_measure(measure_id)
         assert self.pheno_db.get_measure(self.measure_id).measure_type in \
             [MeasureType.continuous, MeasureType.ordinal]
@@ -127,7 +127,7 @@ class PhenoTool(object):
         all_measures = [self.measure_id] + self.normalize_by
 
         pheno_df = self.pheno_db.get_persons_values_df(
-            all_measures, person_ids=_person_ids, roles=[Role.prb])
+            all_measures, person_ids=person_ids_, roles=[Role.prb])
         self.pheno_df = pheno_df.dropna()
 
         for f in self.pheno_filters:
@@ -151,6 +151,10 @@ class PhenoTool(object):
         return normalize_by
 
     def _get_normalize_measure_id(self, normalize_measure):
+        assert isinstance(normalize_measure, dict)
+        assert all(['measure_name' in normalize_measure,
+                    'instrument_name' in normalize_measure])
+
         if not normalize_measure['instrument_name']:
             normalize_measure['instrument_name'] = \
                 self.measure_id.split('.')[0]
@@ -215,7 +219,7 @@ class PhenoTool(object):
     @classmethod
     def _calc_stats(cls, data, sex):
         if len(data) == 0:
-            result = PhenoResult(None, None)
+            result = PhenoResult()
             result.positive_count = 0
             result.positive_mean = 0
             result.positive_deviation = 0
@@ -249,7 +253,7 @@ class PhenoTool(object):
         negative = data[negative_sex_index].normalized.values
         p_val = cls._calc_pv(positive, negative)
 
-        result = PhenoResult(data, sex_index)
+        result = PhenoResult()
         result._set_positive_stats(*PhenoTool._calc_base_stats(positive))
         result._set_negative_stats(*PhenoTool._calc_base_stats(negative))
         result.pvalue = p_val
