@@ -139,6 +139,3 @@ Management Tools
    :maxdepth: 3
 
    user_management
-   users
-   groups
-   datasets
