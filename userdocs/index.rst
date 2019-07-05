@@ -7,6 +7,7 @@
 GPF: Genotypes and Phenotypes in Families
 =========================================
 
+This is a small test.
 
 .. toctree::
    :maxdepth: 3
