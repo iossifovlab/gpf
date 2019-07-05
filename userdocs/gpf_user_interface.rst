@@ -114,8 +114,24 @@ be entered in the fields below the histogram.
 
    Gene properties
 
+Family filters
+^^^^^^^^^^^^^^
+
+Specific families can be queried by using the "Family Ids" tab.
+Family ids can be listed as comma separated values.
+
+.. figure:: imgs/gpf_screenshots/gpf-genotype-browser-family-ids.png
+   :align: center
+
+   Family ids filter bar
+
 Phenotype filters
 ^^^^^^^^^^^^^^^^^
+
+Under the family filters section, the "Advanced" tab provides the ability to
+filter results by a given range for a specific phenotype measure. The measure is
+selected from a search bar, and the range is given as in `Gene properties`_.
+The phenotype filters depend on available phenotype information for the dataset.
 
 .. figure:: imgs/gpf_screenshots/gpf-genotype-browser-pheno-filters.png
    :align: center
@@ -130,6 +146,12 @@ Phenotype filters
 
 Genomic scores filters
 ^^^^^^^^^^^^^^^^^^^^^^
+
+Results can be filtered by their genomic scores' values as well.
+A genomic score is selected from a preconfigured list, and the histogram
+range selector from `Gene properties`_ and `Phenotype filters`_
+is used to determine the range.
+This filtering is dependent on variant annotation during genotype data import.
 
 .. figure:: imgs/gpf_screenshots/16-gpf-genomic-scores.png
    :align: center
