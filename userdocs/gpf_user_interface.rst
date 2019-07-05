@@ -28,24 +28,6 @@ The “Dataset Description” provides a high level description of the dataset.
 The description can contain the reason for building the dataset, its size and scope,
 its rules for access and usage, details of the technology used to generate the phenotypic and genotypic data, and relevant references.
 
-Dataset Statistics
-------------------
-
-"Dataset Statistics" shows the number of people by role (proband, mother, grandfather, etc),
-by primary diagnosis, or other relevant phenotypic parameters, as well as the number of families
-by pedigree structure and, if applicable, the rates of de novo variants by variant type and effect
-and by the person’s role and diagnosis (see Figures 3.a and 3.b).
-
-.. figure:: imgs/gpf_screenshots/gpf-pedigrees-blur.png
-   :align: center
-
-   Figure 3.a
-
-.. figure:: imgs/gpf_screenshots/gpf-denovo-variants.png
-   :align: center
-
-   Figure 3.b
-
 Genotype Browser
 ----------------
 
@@ -77,6 +59,88 @@ Figure 4 shows an example query.
 
    Figure 4
 
+
+The "Genotype Browser" also provides a graphical preview which displays variants at their location on the corresponding chromosome.
+
+.. figure:: imgs/gpf_screenshots/gpf-genotype-browser-graphical.png
+   :align: center
+
+   Graphical preview
+
+Genotype Browser Filters
+++++++++++++++++++++++++
+
+The "Genotype Browser", as already mentioned, provides filters for various
+properties of variants.
+
+.. figure:: imgs/gpf_screenshots/gpf-genotype-browser-general-filters.png
+   :align: center
+
+   General filters
+
+Gene sets filter
+^^^^^^^^^^^^^^^^
+
+The gene sets filter has support for various preconfigured sets of genes,
+published gene sets and De Novo variants gene sets. It provides a dropdown
+list of groups of gene sets and a simple search bar from which to select the
+desired gene set.
+
+.. figure:: imgs/gpf_screenshots/11-gpf-genotype-browser-gene-sets-edited.png
+   :align: center
+
+   Groups of gene sets
+
+.. figure:: imgs/gpf_screenshots/gpf-gene-sets-search.png
+   :align: center
+
+   Gene sets search bar
+
+.. figure:: imgs/gpf_screenshots/10-gpf-genotype-browser-gene-sets-denovo-combined.png
+   :align: center
+
+   De Novo gene sets
+
+Gene properties
+^^^^^^^^^^^^^^^
+
+The gene properties filter has support for filtering based on various
+preconfigured gene properties, which are presented as a histogram with two
+sliders. The sliders may be moved to select a particular range, or it may
+be entered in the fields below the histogram.
+
+.. figure:: imgs/gpf_screenshots/12-gpf-genotype-browser-gene-weights.png
+   :align: center
+
+   Gene properties
+
+Phenotype filters
+^^^^^^^^^^^^^^^^^
+
+.. figure:: imgs/gpf_screenshots/gpf-genotype-browser-pheno-filters.png
+   :align: center
+
+   Phenotype filters search bar
+
+.. figure:: imgs/gpf_screenshots/gpf-genotype-browser-pheno-filters-histogram.png
+   :align: center
+
+   Phenotype filters range selector
+
+
+Genomic scores filters
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. figure:: imgs/gpf_screenshots/16-gpf-genomic-scores.png
+   :align: center
+
+   Genomic score selector
+
+.. figure:: imgs/gpf_screenshots/08-gpf-genotype-browser-genomic-combined.png
+   :align: center
+
+   Genomic score range selector
+
 Phenotype Browser
 -----------------
 
@@ -106,10 +170,10 @@ datasets to tests hypotheses driven by their own research against the large amou
 
    Figure 6
 
-Pheno Tool
-----------
+Phenotype Tool
+--------------
 
-The “Pheno Tool” (see Figures 7.a and 7.b) is used to study correlation of variants in gene sets and phenotype measures.
+The “Phenotype Tool” (see Figures 7.a and 7.b) is used to study correlation of variants in gene sets and phenotype measures.
 A phenotype measure, optional measures to normalize by, and various filters are selected before producing a report.
 Additionally, gene sets, symbols and weights are available to filter results by.
 The result can be downloaded for later usage.
@@ -123,6 +187,24 @@ The result can be downloaded for later usage.
    :align: center
 
    Figure 7.b
+
+Dataset Statistics
+------------------
+
+"Dataset Statistics" shows the number of people by role (proband, mother, grandfather, etc),
+by primary diagnosis, or other relevant phenotypic parameters, as well as the number of families
+by pedigree structure and, if applicable, the rates of de novo variants by variant type and effect
+and by the person’s role and diagnosis (see Figures 3.a and 3.b).
+
+.. figure:: imgs/gpf_screenshots/gpf-pedigrees-blur.png
+   :align: center
+
+   Figure 3.a
+
+.. figure:: imgs/gpf_screenshots/gpf-denovo-variants.png
+   :align: center
+
+   Figure 3.b
 
 metaTools
 *********
