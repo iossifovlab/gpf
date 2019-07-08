@@ -10,7 +10,7 @@ Quick start guide
 How to create a new user?
 +++++++++++++++++++++++++
 
-.. figure:: imgs/01-management-menu.png
+.. figure:: imgs/user_management/01-management-menu.png
    :scale: 50
    :alt: Management menu
    :align: center
@@ -18,14 +18,14 @@ How to create a new user?
    Management menu
 
 
-.. figure:: imgs/02-user-management-menu.png
+.. figure:: imgs/user_management/02-user-management-menu.png
    :scale: 50
    :alt: User management menu
    :align: center
 
    User management menu
 
-.. figure:: imgs/03-users-list.png
+.. figure:: imgs/user_management/03-users-list.png
    :scale: 50
    :alt: User list table
    :align: center
@@ -38,7 +38,7 @@ How to create a new user?
 How to specify permissions for a given user?
 ++++++++++++++++++++++++++++++++++++++++++++
 
-.. figure:: imgs/add-remove-group-num.png
+.. figure:: imgs/user_management/add-remove-group-num.png
    :scale: 50
    :alt: Interface for editing user groups
    :align: center
@@ -58,7 +58,7 @@ Every user is represented by a row on the table shown in the *Users* category
 on the *Management* tab. The delete user, remove/reset password actions can be
 seen in the *Actions* column for every user in question.
 
-.. figure:: imgs/u-img1.png
+.. figure:: imgs/user_management/u-img1.png
    :width: 100px
    :alt: Interface for actions on users
    :align: center
@@ -95,7 +95,7 @@ Create user
 Admins can create new users and associate them with groups.
 The Create user button is located on the top right corner of the Users page.
 
-.. figure:: imgs/u-img2.png
+.. figure:: imgs/user_management/u-img2.png
    :width: 450px
    :alt: Create user interface
    :align: center
@@ -106,7 +106,7 @@ This button will open a page, where the new user's email, name or additional
 groups can be entered. After every mandatory field is filled, clicking the
 *Submit* button will create a new user.
 
-.. figure:: imgs/u-img3.png
+.. figure:: imgs/user_management/u-img3.png
    :width: 400px
    :alt: Create user dialog
    :align: center
@@ -117,7 +117,7 @@ After a new user is added, in order for them to log into their newly created
 account, an admin should reset the user’s password. See :ref:`reset-password`
 for more.
 
-.. figure:: imgs/u-img4.png
+.. figure:: imgs/user_management/u-img4.png
    :scale: 70%
    :alt: Has password checkbox
    :align: center
@@ -135,7 +135,7 @@ Any user's email or default groups cannot be changed but the *Name* of the
 user can. Clicking on any user's email address will lead to a page, where their
 user name can be changed.
 
-.. figure:: imgs/u-img5.png
+.. figure:: imgs/user_management/u-img5.png
    :width: 400px
    :alt: Edit user dialog
    :align: center
@@ -154,7 +154,7 @@ Search groups
 The search bar for groups is located on the upper left in the *Users* category
 in the *Management* tab.
 
-.. figure:: imgs/u-img6.png
+.. figure:: imgs/user_management/u-img6.png
    :width: 450px
    :alt: Management tab
    :align: center
@@ -169,7 +169,7 @@ Only admins can assign or remove groups.
 Interacting with users is achieved via the *Users* category in the *Management*
 tab from the menu.
 
-.. figure:: imgs/u-img7.png
+.. figure:: imgs/user_management/u-img7.png
    :width: 450px
    :alt: Select users management in management tab
    :align: center
@@ -179,7 +179,7 @@ tab from the menu.
 In order to assign a new group to a user, click on the blue link of the user’s
 email address.
 
-.. figure:: imgs/g-img1.png
+.. figure:: imgs/user_management/g-img1.png
    :width: 450px
    :alt: List of users
    :align: center
@@ -190,7 +190,7 @@ This will open a page, allowing for the selected user’s information to be edit
 Groups can be added by using the *Other Groups* dropdown menu option
 or removed by clicking the 'X' in the same menu option.
 
-.. figure:: imgs/add-remove-group.png
+.. figure:: imgs/user_management/add-remove-group.png
    :width: 400px
    :alt: Edit user groups
    :align: center
@@ -204,7 +204,7 @@ Remove group from user - shortcut
 Next to every user's groups, an 'X' symbol can be found. By clicking it, the
 selected group will be removed from the user.
 
-.. figure:: imgs/u-img9.png
+.. figure:: imgs/user_management/u-img9.png
    :width: 350px
    :alt: Remove groups from user
    :align: center
@@ -217,7 +217,7 @@ Default groups cannot be removed.
 Add/Remove groups from multiple users at once
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. figure:: imgs/u-img10.png
+.. figure:: imgs/user_management/u-img10.png
    :scale: 80%
    :alt: Select multiple users
    :align: center
@@ -231,7 +231,7 @@ will select none.
 After the desired users are selected, by choosing an option from the
 *Bulk edit* dropdown menu, groups can be either removed or added to them.
 
-.. figure:: imgs/u-img11.png
+.. figure:: imgs/user_management/u-img11.png
    :width: 400px
    :alt: Bulk edit of multiple users
    :align: center
@@ -252,7 +252,7 @@ simultaneously.
 When a new user or dataset is created, they are automatically assigned to
 groups with their corresponding names.
 
-.. figure:: imgs/g-img1.png
+.. figure:: imgs/user_management/g-img1.png
    :width: 450px
    :alt: Example of newly added user
    :align: center
@@ -275,7 +275,7 @@ Anonymous
 They lack permissions for accessing most of the datasets.
 Inaccessible datasets are shown in grey color.
 
-.. figure:: imgs/g-img2.png
+.. figure:: imgs/user_management/g-img2.png
    :width: 450px
    :alt: Example of a dataset accessible to all users
    :align: center
@@ -290,7 +290,7 @@ This group indicates which datasets should stay hidden (instead of showing them
 in grey color) in the dropdown menu on the dataset page for users
 without access permissions.
 
-.. figure:: imgs/g-img3.png
+.. figure:: imgs/user_management/g-img3.png
    :width: 450px
    :alt: Example of a hidden dataset
    :align: center
@@ -323,7 +323,7 @@ Sorting groups
 In the *Groups* tab on the *Management* menu, the groups column can be sorted
 by clicking on the arrows at the end of the *Group* column title.
 
-.. figure:: imgs/g-img4.png
+.. figure:: imgs/user_management/g-img4.png
    :width: 450px
    :alt: Interface for sotring groups
    :align: center
@@ -349,7 +349,7 @@ In the *Datasets* tab, by typing group names in the text bar in the
 'Groups with access' column, and then clicking 'Add', existing groups can
 be assigned to datasets.
 
-.. figure:: imgs/d-img1.png
+.. figure:: imgs/user_management/d-img1.png
    :width: 450px
    :alt: Example of changing groups of a dataset
    :align: center
