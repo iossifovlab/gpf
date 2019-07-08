@@ -12,7 +12,7 @@ This is a small test.
 .. toctree::
    :maxdepth: 3
 
-   gpf_user_interface
-   gpf_administration
-   dae_interface
-   wdae_interface
+   user_interface/gpf_user_interface
+   administration/gpf_administration
+   development/dae_interface
+   development/wdae_interface
