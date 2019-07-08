@@ -27,7 +27,7 @@ class PhenoFilterSet(PhenoFilter):
         measure_type = phdb.get_measure(measure_id).measure_type
         assert measure_type == MeasureType.categorical
 
-        assert isinstance(values_set, list) or isinstance(values_set, set)
+        assert type(values_set) in (list, set, tuple)
         self.value_set = values_set
 
     def apply(self, df):
