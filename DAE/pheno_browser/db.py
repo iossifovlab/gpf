@@ -191,6 +191,22 @@ class DbManager(object):
         return res
 
     @property
+    def regression_display_names_with_ids(self):
+        res = {}
+        s = select([self.regressions.c.regression_id,
+                    self.regressions.c.display_name,
+                    self.regressions.c.instrument_name,
+                    self.regressions.c.measure_name])
+        with self.engine.connect() as connection:
+            for row in connection.execute(s):
+                res[row.values()[0]] = {
+                    'display_name': row.values()[1],
+                    'instrument_name': row.values()[2],
+                    'measure_name': row.values()[3]
+                }
+        return res
+
+    @property
     def has_descriptions(self):
         with self.engine.connect() as connection:
             return bool(connection.execute(
