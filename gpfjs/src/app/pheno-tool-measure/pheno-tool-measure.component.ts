@@ -5,6 +5,8 @@ import { Observable, ReplaySubject } from 'rxjs';
 import { PhenoToolMeasure } from './pheno-tool-measure';
 import { StateRestoreService } from '../store/state-restore.service';
 import { ContinuousMeasure } from '../measures/measures';
+import { MeasuresService } from '../measures/measures.service';
+import { DatasetsService } from '../datasets/datasets.service';
 
 @Component({
   selector: 'gpf-pheno-tool-measure',
@@ -20,8 +22,12 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
 
   measuresLoaded$ = new ReplaySubject<Array<ContinuousMeasure>>();
 
+  regressions: Object = {};
+
   constructor(
-    private stateRestoreService: StateRestoreService
+    private stateRestoreService: StateRestoreService,
+    private measuresService: MeasuresService,
+    private datasetsService: DatasetsService
   ) {
     super();
   }
@@ -39,6 +45,16 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
           this.phenoToolMeasure.normalizeBy = state['normalizeBy'];
         }
       });
+
+
+    this.datasetsService.getSelectedDataset().subscribe(
+      dataset => {
+        if(dataset.phenoDB) {
+          this.measuresService.getRegressions(dataset.id).subscribe(
+            res => { this.regressions = res });
+        } else this.regressions = {};
+      }
+    );
   }
 
   getState() {
@@ -64,6 +80,10 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
           this.phenoToolMeasure.normalizeBy.filter(v => v !== value);
       }
     }
+  }
+
+  getRegressionNames() {
+    return Object.getOwnPropertyNames(this.regressions);
   }
 
 }

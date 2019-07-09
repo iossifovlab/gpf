@@ -7,23 +7,14 @@
     </div>
     <div class="col-lg-6">
       Normalized by:
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            [checked]="phenoToolMeasure.normalizeBy.indexOf('age') !== -1"
-            (change)="onNormalizeByChange('age', $event);">
-          age
-        </label>
-      </div>
-      <div>
-        <label>
-          <input
-            type="checkbox"
-            [checked]="phenoToolMeasure.normalizeBy.indexOf('non-verbal iq') !== -1"
-            (change)="onNormalizeByChange('non-verbal iq', $event);">
-          non verbal IQ
-        </label>
+      <div *ngFor="let reg of getRegressionNames()">
+          <label>
+              <input
+                type="checkbox"
+                [checked]="phenoToolMeasure.normalizeBy.indexOf(reg) !== -1"
+                (change)="onNormalizeByChange(regressions[reg], $event);">
+              {{ regressions[reg].display_name }}
+          </label>
       </div>
     </div>
 
