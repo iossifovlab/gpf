@@ -284,10 +284,8 @@ class RawFamilyVariants(FamiliesBase):
                 return False
         if kwargs.get('variant_type') is not None:
             query = kwargs['variant_type']
-            if allele.details is None:
-                return False
             if not query.match(
-                    [allele.details.variant_type]):
+                    [allele.variant_type]):
                 return False
         if kwargs.get('person_ids') is not None:
             if allele.is_reference_allele:

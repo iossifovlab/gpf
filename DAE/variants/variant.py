@@ -164,7 +164,7 @@ class VariantDetail(object):
         self.chrom = chrom
         self.cshl_position = position
         self.cshl_variant = variant
-        self.variant_type = VariantType.from_cshl_variant(self.cshl_variant)
+        self._variant_type = None
 
     def __repr__(self):
         return "{} {}".format(
@@ -174,6 +174,13 @@ class VariantDetail(object):
     @property
     def cshl_location(self):
         return "{}:{}".format(self.chrom, self.cshl_position)
+
+    @property
+    def variant_type(self):
+        if self._variant_type is None:
+            self._variant_type = VariantType.from_cshl_variant(
+                self.cshl_variant)
+        return self._variant_type
 
     @staticmethod
     def from_vcf(chrom, position, reference, alternative):
@@ -215,8 +222,8 @@ class SummaryAllele(VariantBase):
             self.attributes = {}
             self.update_attributes(attributes)
 
-        self.update_attributes({'variant_type': self.variant_type.value
-                                if self.variant_type else None})
+        # self.update_attributes({'variant_type': self.variant_type.value
+        #                         if self.variant_type else None})
 
     @property
     def frequency(self):
@@ -245,6 +252,18 @@ class SummaryAllele(VariantBase):
                 self.reference, self.alternative)
 
         return self.details.cshl_location
+
+    @property
+    def cshl_position(self):
+        if self.alternative is None:
+            return None
+
+        if self.details is None:
+            self.details = VariantDetail.from_vcf(
+                self.chromosome, self.position,
+                self.reference, self.alternative)
+
+        return self.details.cshl_position
 
     @property
     def variant_type(self):
@@ -390,7 +409,7 @@ class SummaryVariant(VariantBase):
         """
         returns set of variant types.
         """
-        return set([aa.details.variant_type for aa in self.alt_alleles])
+        return set([aa.variant_type for aa in self.alt_alleles])
 
     def get_attribute(self, item, default=None):
         return [sa.get_attribute(item, default) for sa in self.alleles]
