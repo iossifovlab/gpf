@@ -432,6 +432,7 @@ def data_import(
         vcf_configs = collect_vcf(vcfdirname)
 
         for vcf in vcf_configs:
+            print("importing vcf:", vcf.vcf)
             impala = build_impala_config(vcf)
             if not reimport and \
                     test_impala_helpers.check_table(

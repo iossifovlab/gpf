@@ -8,7 +8,8 @@ import numpy as np
 from utils.vcf_utils import GENOTYPE_TYPE
 
 from variants.variant import SummaryAllele, SummaryVariant
-from variants.family_variant import FamilyVariant
+
+from variants.family_variant import FamilyAllele, FamilyVariant
 from variants.effects import Effect
 
 
@@ -252,13 +253,15 @@ class ParquetSerializer(object):
         alleles = []
         for allele_index, (alt, effect, freq) in \
                 enumerate(zip(alternatives, effects, frequencies)):
-            allele = SummaryAllele(
+            allele = FamilyAllele(
                 chrom, position, reference,
                 alternative=alt,
+                summary_index=0,
                 allele_index=allele_index,
                 effect=effect,
-                attributes=freq)
+                attributes=freq,
+                family=family,
+                genotype=genotype)
             alleles.append(allele)
-        sv = SummaryVariant(alleles)
 
-        return FamilyVariant(sv, family, genotype)
+        return FamilyVariant(alleles, family, genotype)

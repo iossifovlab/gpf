@@ -199,7 +199,7 @@ class SummaryAllele(VariantBase):
             chromosome, position, reference, alternative)
 
         #: index of the summary variant this allele belongs to
-        self.summary_index = summary_index
+        # self.summary_index = summary_index
         #: index of the allele of summary variant
         self.allele_index = allele_index
 
@@ -313,45 +313,45 @@ class SummaryAllele(VariantBase):
 class SummaryVariant(VariantBase):
 
     def __init__(self, alleles):
+        # import traceback
+        # traceback.print_stack()
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
+        print("summary variant:", alleles)
 
-        self._matched_alleles = [a.allele_index for a in alleles]
+        # self._matched_alleles = [a.allele_index for a in alleles]
 
-        if not alleles[0].is_reference_allele:
-            ref_allele = SummaryAllele.create_reference_allele(alleles[0])
-            alleles = list(itertools.chain([ref_allele], alleles))
+        # if not alleles[0].is_reference_allele:
+        #     ref_allele = SummaryAllele.create_reference_allele(alleles[0])
+        #     alleles = list(itertools.chain([ref_allele], alleles))
 
         assert alleles[0].is_reference_allele
         #: list of all alleles in the variant
         self.alleles = alleles
-        #: the reference allele
-        self.ref_allele = alleles[0]
-        #: list of all alternative alleles
-        self.alt_alleles = alleles[1:]
-
-        self.allele_count = self.ref_allele.get_attribute("allele_count")
-        if self.allele_count is None:
-            self.allele_count = len(self.alleles)
+        self.allele_count = len(self.alleles)
 
         super(SummaryVariant, self).__init__(
             self.ref_allele.chromosome,
             self.ref_allele.position,
             self.ref_allele.reference)
 
-        self.summary_index = self.ref_allele.summary_index
+        # self.summary_index = self.ref_allele.summary_index
+
+    @property
+    def ref_allele(self):
+        """the reference allele"""
+        return self.alleles[0]
+
+    @property
+    def alt_alleles(self):
+        """list of all alternative alleles"""
+        return self.alleles[1:]
 
     def get_allele(self, allele_index):
         for allele in self.alleles:
             if allele.allele_index == allele_index:
                 return allele
         return None
-
-    # def allele_count(self):
-    #     if self._allele_count is None:
-    #         self._allele_count = len(self.alleles)
-    #
-    #     return self._allele_count
 
     @property
     def alternative(self):
@@ -383,6 +383,7 @@ class SummaryVariant(VariantBase):
         """
         0-base list of frequencies for variant.
         """
+        print("frequencies:", self.alleles)
         return [sa.frequency for sa in self.alleles]
 
     @property
@@ -449,5 +450,8 @@ class SummaryVariantFactory(object):
                     record,
                     transmission_type=transmission_type)
             alleles.append(sa)
+        if not alleles[0].is_reference_allele:
+            ref_allele = SummaryAllele.create_reference_allele(alleles[0])
+            alleles = list(itertools.chain([ref_allele], alleles))
 
         return SummaryVariant(alleles)

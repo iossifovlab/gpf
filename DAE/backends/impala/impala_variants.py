@@ -56,7 +56,6 @@ class ImpalaFamilyVariants(FamiliesBase):
             # print("FINAL QUERY: ", query)
             cursor.execute(query)
             for row in cursor:
-
                 chrom, position, reference, alternatives_data, \
                     effect_data, family_id, genotype_data, frequency_data, \
                     matched_alleles = row

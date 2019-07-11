@@ -42,12 +42,12 @@ def test_reference_variant_single_allele(
     assert v.frequencies[0] == pytest.approx(87.5)
     assert v.effects is None
 
-    sv = v.summary_variant
+    # sv = v.summary_variant
 
-    print(sv.frequencies)
-    assert len(sv.frequencies) == 2
-    assert sv.frequencies[0] == pytest.approx(87.5)
-    assert sv.frequencies[1] == pytest.approx(12.5)
+    # print(sv.frequencies)
+    # assert len(sv.frequencies) == 2
+    # assert sv.frequencies[0] == pytest.approx(87.5)
+    # assert sv.frequencies[1] == pytest.approx(12.5)
 
-    print(sv.effects)
-    assert len(sv.effects) == 1
+    # print(sv.effects)
+    # assert len(sv.effects) == 1
