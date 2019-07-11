@@ -317,7 +317,6 @@ class SummaryVariant(VariantBase):
         # traceback.print_stack()
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
-        print("summary variant:", alleles)
 
         # self._matched_alleles = [a.allele_index for a in alleles]
 
