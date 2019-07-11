@@ -98,19 +98,9 @@ class EnrichmentTestView(APIView):
 
         return None
 
-    @expand_gene_set
-    def post(self, request):
-        query = request.data
-
+    def get_enrichment_tool(self, enrichment_config, query):
         dataset_id = query.get('datasetId', None)
-        if dataset_id is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        dataset = self.variants_db.get(dataset_id)
-        if not dataset:
-            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        enrichment_config = \
-            self.background_facade.get_study_enrichment_config(dataset_id)
         background_name = query.get('enrichmentBackgroundModel', None)
         if background_name is None or not self.background_facade.\
                 has_background(dataset_id, background_name):
@@ -125,6 +115,23 @@ class EnrichmentTestView(APIView):
         counter = CounterBase.counters()[counting_name]()
         enrichment_tool = EnrichmentTool(
             enrichment_config, backgorund, counter)
+
+        return enrichment_tool
+
+    @expand_gene_set
+    def post(self, request):
+        query = request.data
+
+        dataset_id = query.get('datasetId', None)
+        if dataset_id is None:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        dataset = self.variants_db.get(dataset_id)
+        if not dataset:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        enrichment_config = \
+            self.background_facade.get_study_enrichment_config(dataset_id)
+        enrichment_tool = self.get_enrichment_tool(enrichment_config)
 
         gene_syms = GeneSymsMixin.get_gene_syms(self.gene_info_config, **query)
         if gene_syms is None:
