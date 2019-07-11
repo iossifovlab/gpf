@@ -20,7 +20,7 @@ import os
 from scipy import stats
 import zlib
 
-from DAE import variants_db, genomesDB
+from DAE import genomesDB
 import numpy as np
 import pandas as pd
 from enrichment_tool.event_counters import overlap_enrichment_result_dict
@@ -140,9 +140,9 @@ class SynonymousBackground(BackgroundCommon):
         return background
 
     @staticmethod
-    def _build_synonymous_background(transmitted_study_name):
-        transmitted_study = variants_db.get_study(transmitted_study_name)
-        vs = transmitted_study.get_transmitted_summary_variants(
+    def _build_synonymous_background(variants_db, study_name):
+        study = variants_db.get(study_name)
+        vs = study.query_variants(
             ultraRareOnly=True,
             minParentsCalled=600,
             effectTypes=["synonymous"])
@@ -162,14 +162,16 @@ class SynonymousBackground(BackgroundCommon):
 
         return (background, foreground)
 
-    def __init__(self, config, use_cache=False):
+    def __init__(self, config, variants_db=None, use_cache=False):
         super(SynonymousBackground, self).__init__(
             'synonymousBackgroundModel', config, use_cache)
+        assert variants_db is not None
+        self.variants_db = variants_db
 
     def precompute(self):
-        # self.background, self.foreground = \
-        #     self._build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
-        self.background, self.foreground = None, None
+        self.background, self.foreground = \
+            self._build_synonymous_background(
+                self.variants_db, self.TRANSMITTED_STUDY_NAME)
         return self.background
 
     def serialize(self):
@@ -231,7 +233,7 @@ class CodingLenBackground(BackgroundCommon):
                 back.append((row[1], int(row[2])))
         return back
 
-    def __init__(self, config, use_cache=False):
+    def __init__(self, config, variants_db=None, use_cache=False):
         super(CodingLenBackground, self).__init__(
             'codingLenBackgroundModel', config, use_cache)
 
@@ -336,8 +338,7 @@ class SamochaBackground(BackgroundBase):
 
         return df
 
-    def __init__(self, config, use_cache=False):
-        use_cache = False
+    def __init__(self, config, variants_db=None, use_cache=False):
         super(SamochaBackground, self).__init__(
             'samochaBackgroundModel', config, use_cache)
 
