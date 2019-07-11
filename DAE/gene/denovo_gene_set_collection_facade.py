@@ -37,11 +37,9 @@ class DenovoGeneSetCollectionFacade(object):
     def _get_gene_sets_types(gene_sets_types, permitted_datasets):
         return {
             k: {
-                pg_id: v
-                for pg_id, v in pg.items()
-                if v and (permitted_datasets is None or
-                          k in permitted_datasets)
+                pg_id: v for pg_id, v in pg.items() if v
             } for k, pg in gene_sets_types.items()
+            if permitted_datasets is None or k in permitted_datasets
         }
 
     def get_denovo_gene_set(
@@ -87,8 +85,8 @@ class DenovoGeneSetCollectionFacade(object):
 
         return len(self._denovo_gene_set_cache) != 0
 
-    def build_cache(self, denovo_gene_set_ids=None):
-        self.load_cache()
+    def build_cache(self, denovo_gene_set_ids=None, load=False):
+        self.load_cache(load=load)
 
         for dgs_id, dgs in self._denovo_gene_set_cache.items():
             if denovo_gene_set_ids and dgs_id not in denovo_gene_set_ids:

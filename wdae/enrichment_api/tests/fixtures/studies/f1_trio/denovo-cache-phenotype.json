@@ -1,0 +1,56 @@
+{
+    "autism": {
+        "LGDs": {
+            "Female": {},
+            "Male": {},
+            "Unspecified": {}
+        },
+        "Missense": {
+            "Female": {
+                "SAMD11": [
+                    "f1"
+                ]
+            },
+            "Male": {
+                "SAMD11": [
+                    "f2"
+                ]
+            },
+            "Unspecified": {}
+        },
+        "Synonymous": {
+            "Female": {
+                "SAMD11": [
+                    "f1"
+                ]
+            },
+            "Male": {
+                "SAMD11": [
+                    "f2"
+                ]
+            },
+            "Unspecified": {}
+        }
+    },
+    "unaffected": {
+        "LGDs": {
+            "Female": {},
+            "Male": {},
+            "Unspecified": {}
+        },
+        "Missense": {
+            "Female": {},
+            "Male": {},
+            "Unspecified": {}
+        },
+        "Synonymous": {
+            "Female": {
+                "PLEKHN1": [
+                    "f2"
+                ]
+            },
+            "Male": {},
+            "Unspecified": {}
+        }
+    }
+}

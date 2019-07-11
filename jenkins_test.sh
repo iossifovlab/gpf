@@ -15,10 +15,13 @@ py.test --traceconfig -v --cov-config coveragerc --reimport \
     --cov common \
     --cov common_reports \
     --cov configurable_entities \
+    --cov enrichment_tool \
     --cov gene \
     --cov pedigrees \
     --cov pheno \
+    --cov pheno_browser \
     --cov studies \
+    --cov tests \
     --cov tools \
     --cov utils \
     --cov variant_annotation \
@@ -29,6 +32,7 @@ py.test --traceconfig -v --cov-config coveragerc --reimport \
     DAE/common/tests/ \
     DAE/common_reports/tests \
     DAE/configurable_entities/tests \
+    DAE/enrichment_tool/tests \
     DAE/gene/tests \
     DAE/pedigrees/tests \
     DAE/pheno/tests \
@@ -43,19 +47,7 @@ py.test -v --cov-config coveragerc \
     --cov-append \
     --cov-report html:coverage/coverage.html \
     --cov-report xml:coverage/coverage.xml \
-    --cov annotation \
-    --cov backends \
-    --cov common \
-    --cov common_reports \
-    --cov configurable_entities \
-    --cov gene \
-    --cov pedigrees \
-    --cov pheno \
-    --cov studies \
-    --cov tools \
-    --cov utils \
-    --cov variant_annotation \
-    --cov variants \
+    --cov chromosome \
     --cov common_reports_api \
     --cov datasets_api \
     --cov enrichment_api \
@@ -69,17 +61,17 @@ py.test -v --cov-config coveragerc \
     --cov measures_api \
     --cov pheno_browser_api \
     --cov pheno_tool_api \
-    --cov precompute \
-    --cov preloaded \
+    --cov query_state_save \
+    --cov tests \
+    --cov tools \
     --cov users_api \
+    --cov wdae \
     wdae/datasets_api/tests \
+    wdae/enrichment_api/tests \
+    wdae/gene_sets/tests \
     wdae/genotype_browser/tests \
     wdae/pheno_browser_api/tests \
     wdae/gene_sets/tests
 
 
 chmod a+rwx -R coverage
-
-rm -rf \
-    wdae-api.log wdae-debug.log \
-    wdae_django_default.cache wdae_django_pre.cache

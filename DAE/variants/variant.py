@@ -86,11 +86,11 @@ class VariantBase(object):
         return not self.__eq__(other)
 
     def __lt__(self, other):
-        return int(self.chromosome) <= int(other.chromosome) and \
+        return self.chromosome <= other.chromosome and \
             self.position < other.position
 
     def __gt__(self, other):
-        return int(self.chromosome) >= int(other.chromosome) and \
+        return self.chromosome >= other.chromosome and \
             self.position > other.position
 
 
