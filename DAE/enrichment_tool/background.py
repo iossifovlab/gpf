@@ -9,21 +9,20 @@ from __future__ import print_function, absolute_import
 from future import standard_library
 standard_library.install_aliases()  # noqa
 
-from builtins import next
 from builtins import zip
 from past.utils import old_div
+
 import pickle
 import io
 from collections import Counter
-import csv
 import os
 from scipy import stats
 import zlib
-
-from DAE import genomesDB
 import numpy as np
 import pandas as pd
+
 from enrichment_tool.event_counters import overlap_enrichment_result_dict
+# from variants.attributes import Inheritance
 
 
 class BackgroundBase(object):
@@ -33,7 +32,7 @@ class BackgroundBase(object):
         return {
             # 'synonymousBackgroundModel': SynonymousBackground,
             'codingLenBackgroundModel': CodingLenBackground,
-            # 'samochaBackgroundModel': SamochaBackground
+            'samochaBackgroundModel': SamochaBackground
         }
 
     def __init__(self, name, config, use_cache=False):
@@ -143,6 +142,7 @@ class SynonymousBackground(BackgroundCommon):
     def _build_synonymous_background(variants_db, study_name):
         study = variants_db.get(study_name)
         vs = study.query_variants(
+            # inheritance=str(Inheritance.transmitted.name),
             ultraRareOnly=True,
             minParentsCalled=600,
             effectTypes=["synonymous"])
@@ -224,37 +224,37 @@ class CodingLenBackground(BackgroundCommon):
     def _load_and_prepare_build(self):
         filename = self.filename
         assert filename is not None
-        back = []
-        with open(filename, 'r') as f:
-            reader = csv.reader(f)
-            next(reader)
-            for row in reader:
-                assert len([row[1]]) <= 32, row[1]
-                back.append((row[1], int(row[2])))
-        return back
+
+        df = pd.read_csv(
+            filename,
+            usecols=['gene_upper', 'codingLenInTarget'], names=['sym', 'raw'],
+            dtype={'gene_upper': np.int32, 'codingLenInTarget': np.str_}
+        )
+
+        return df
 
     def __init__(self, config, variants_db=None, use_cache=False):
         super(CodingLenBackground, self).__init__(
             'codingLenBackgroundModel', config, use_cache)
 
     def precompute(self):
-        back = self._load_and_prepare_build()
-        self.background = np.array(
-            back,
-            dtype=[('sym', "|U32"), ('raw', '>i4')])
+        self.background = self._load_and_prepare_build()
         return self.background
 
     def serialize(self):
+        ndarray = self.background[['sym', 'raw']].values
         fout = io.BytesIO()
-        np.save(fout, self.background)
+        np.save(fout, ndarray)
 
-        b = zlib.compress(fout.getvalue())
-        return {'background': b}
+        data = zlib.compress(fout.getvalue())
+        return {'background': data}
 
     def deserialize(self, data):
         b = data['background']
         fin = io.BytesIO(zlib.decompress(b))
-        self.background = np.load(fin)
+        ndarray = np.load(fin)
+
+        self.background = pd.DataFrame(ndarray, columns=['sym', 'raw'])
 
     def _count(self, gene_syms):
         vpred = np.vectorize(lambda sym: sym in gene_syms)
@@ -284,45 +284,6 @@ def poisson_test(observed, expected):
 
 class SamochaBackground(BackgroundBase):
 
-    def _load_and_prepare_gender_count(self, df):
-        GM = genomesDB.get_gene_models()  # @UndefinedVariable
-
-        df['F'] = pd.Series(2, index=df.index)
-        df['M'] = pd.Series(2, index=df.index)
-        df['U'] = pd.Series(2, index=df.index)
-
-        for gene_name in df['gene']:
-            gene_loc = df['gene'] == gene_name
-            gms = GM.gene_models_by_gene_name(gene_name)
-            chromes = []
-            for tm in gms:
-                chromes.append(tm.chr)
-            if 'X' in chromes:
-                df.loc[gene_loc, 'F'] = 2
-                df.loc[gene_loc, 'M'] = 1
-            elif 'Y' in chromes:
-                df.loc[gene_loc, 'F'] = 0
-                df.loc[gene_loc, 'M'] = 1
-        return df
-
-    def _load_and_prepare_probabilities(self, df):
-        df.fillna(-99, inplace=True)
-        df['P_LGDS'] = pd.Series(1E-99, index=df.index)
-        df['P_MISSENSE'] = pd.Series(1E-99, index=df.index)
-        df['P_SYNONYMOUS'] = pd.Series(1E-99, index=df.index)
-
-        df['P_LGDS'] = np.power(10, df['nonsense'].values) + \
-            np.power(10.0, df['splice-site'].values) + \
-            np.power(10.0, df['frame-shift'].values)
-        df['P_MISSENSE'] = np.power(10, df['missense'].values)
-        df['P_SYNONYMOUS'] = np.power(10, df['synonymous'].values)
-
-        return df
-
-    def _load_and_prepare_gene_upper(self, df):
-        df['gene'] = df['gene'].str.upper()
-        return df
-
     @property
     def filename(self):
         return self.config.backgrounds[self.name].filename
@@ -332,9 +293,6 @@ class SamochaBackground(BackgroundBase):
         assert filename is not None
 
         df = pd.read_csv(filename)
-        # df = self._load_and_prepare_gender_count(df)
-        # df = self._load_and_prepare_probabilities(df)
-        # df = self._load_and_prepare_gene_upper(df)
 
         return df
 
@@ -343,13 +301,12 @@ class SamochaBackground(BackgroundBase):
             'samochaBackgroundModel', config, use_cache)
 
     def precompute(self):
-        # self.background = self._load_and_prepare_build()
-        self.background = None
+        self.background = self._load_and_prepare_build()
         return self.background
 
     def serialize(self):
-        ndarray = self.background.as_matrix(
-            ['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS'])
+        ndarray = self.background[
+            ['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS']].values
         fout = io.BytesIO()
         np.save(fout, ndarray)
 
