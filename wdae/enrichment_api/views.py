@@ -131,7 +131,7 @@ class EnrichmentTestView(APIView):
 
         enrichment_config = \
             self.background_facade.get_study_enrichment_config(dataset_id)
-        enrichment_tool = self.get_enrichment_tool(enrichment_config)
+        enrichment_tool = self.get_enrichment_tool(enrichment_config, query)
 
         gene_syms = GeneSymsMixin.get_gene_syms(self.gene_info_config, **query)
         if gene_syms is None:

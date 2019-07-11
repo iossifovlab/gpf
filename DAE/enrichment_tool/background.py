@@ -227,9 +227,14 @@ class CodingLenBackground(BackgroundCommon):
 
         df = pd.read_csv(
             filename,
-            usecols=['gene_upper', 'codingLenInTarget'], names=['sym', 'raw'],
-            dtype={'gene_upper': np.int32, 'codingLenInTarget': np.str_}
+            usecols=['gene_upper', 'codingLenInTarget'],
+            dtype={'gene_upper': np.str_, 'codingLenInTarget': np.int32}
         )
+
+        df = df.rename(columns={
+            'gene_upper': 'sym',
+            'codingLenInTarget': 'raw'
+        })
 
         return df
 
