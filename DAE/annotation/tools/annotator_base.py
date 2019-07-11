@@ -207,7 +207,6 @@ class VCFBuilder(VariantBuilder):
         summary = SummaryAllele(
             chrom, int(position), ref, alt
         )
-        print(summary)
         return summary
 
 
