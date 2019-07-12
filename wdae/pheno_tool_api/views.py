@@ -61,7 +61,9 @@ class PhenoToolView(APIView):
             helper.pheno_filter_persons(data.get('phenoFilters'))
         study_persons = helper.study_persons(data.get('familyIds', []))
 
-        person_ids = set(study_persons) & set(pheno_filter_persons)
+        person_ids = set(study_persons)
+        if pheno_filter_persons:
+            person_ids &= set(pheno_filter_persons)
 
         tool = PhenoTool(
             helper.study.pheno_db,

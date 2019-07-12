@@ -64,7 +64,7 @@ class PhenoToolHelper(object):
 
     def pheno_filter_persons(self, pheno_filters):
         if not pheno_filters:
-            return set()
+            return None
 
         assert isinstance(pheno_filters, list)
 
