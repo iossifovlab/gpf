@@ -4,6 +4,7 @@ from builtins import str
 import io
 import zlib
 import numpy as np
+import pandas as pd
 
 from variants.attributes import Inheritance
 
@@ -23,12 +24,12 @@ def test_precompute(f1_trio_coding_len_background):
     background = f1_trio_coding_len_background.precompute()
 
     assert len(background) == 3
-    assert background[0]['sym'] == 'SAMD11'
-    assert background[0]['raw'] == 3
-    assert background[1]['sym'] == 'PLEKHN1'
-    assert background[1]['raw'] == 7
-    assert background[2]['sym'] == 'POGZ'
-    assert background[2]['raw'] == 13
+    assert background.iloc[0]['sym'] == 'SAMD11'
+    assert background.iloc[0]['raw'] == 3
+    assert background.iloc[1]['sym'] == 'PLEKHN1'
+    assert background.iloc[1]['raw'] == 7
+    assert background.iloc[2]['sym'] == 'POGZ'
+    assert background.iloc[2]['raw'] == 13
 
 
 def test_serialize(f1_trio_coding_len_background):
@@ -38,15 +39,16 @@ def test_serialize(f1_trio_coding_len_background):
     assert len(serialized) == 1
 
     fin = io.BytesIO(zlib.decompress(serialized['background']))
-    background = np.load(fin)
+    ndarray = np.load(fin)
+    background = pd.DataFrame(ndarray, columns=['sym', 'raw'])
 
     assert len(background) == 3
-    assert background[0]['sym'] == 'SAMD11'
-    assert background[0]['raw'] == 3
-    assert background[1]['sym'] == 'PLEKHN1'
-    assert background[1]['raw'] == 7
-    assert background[2]['sym'] == 'POGZ'
-    assert background[2]['raw'] == 13
+    assert background.iloc[0]['sym'] == 'SAMD11'
+    assert background.iloc[0]['raw'] == 3
+    assert background.iloc[1]['sym'] == 'PLEKHN1'
+    assert background.iloc[1]['raw'] == 7
+    assert background.iloc[2]['sym'] == 'POGZ'
+    assert background.iloc[2]['raw'] == 13
 
 
 def test_deserialize(f1_trio_coding_len_background):
@@ -56,12 +58,12 @@ def test_deserialize(f1_trio_coding_len_background):
     background = f1_trio_coding_len_background.background
 
     assert len(background) == 3
-    assert background[0]['sym'] == 'SAMD11'
-    assert background[0]['raw'] == 3
-    assert background[1]['sym'] == 'PLEKHN1'
-    assert background[1]['raw'] == 7
-    assert background[2]['sym'] == 'POGZ'
-    assert background[2]['raw'] == 13
+    assert background.iloc[0]['sym'] == 'SAMD11'
+    assert background.iloc[0]['raw'] == 3
+    assert background.iloc[1]['sym'] == 'PLEKHN1'
+    assert background.iloc[1]['raw'] == 7
+    assert background.iloc[2]['sym'] == 'POGZ'
+    assert background.iloc[2]['raw'] == 13
 
 
 def test_calc_stats(f1_trio, f1_trio_coding_len_background):
