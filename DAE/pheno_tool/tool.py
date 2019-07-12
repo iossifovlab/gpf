@@ -14,7 +14,7 @@ import pandas as pd
 import statsmodels.api as sm
 from scipy.stats.stats import ttest_ind
 
-from pheno_tool.pheno_common import PhenoFilterBuilder, PhenoResult
+from pheno_tool.pheno_common import PhenoResult
 from pheno.common import MeasureType
 from variants.attributes import Role, Sex
 from common.query_base import EffectTypesMixin
@@ -156,7 +156,8 @@ class PhenoTool(object):
 
         normalize_id = '.'.join([normalize_measure['instrument_name'],
                                  normalize_measure['measure_name']])
-        if self.pheno_db.has_measure(normalize_id):
+        if self.pheno_db.has_measure(normalize_id) and \
+           normalize_id != self.measure_id:
             return normalize_id
         else:
             return None
