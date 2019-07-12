@@ -9,10 +9,16 @@ export class NumberWithExpPipe extends DecimalPipe implements PipeTransform {
       return value;
     }
 
-    if (value >= 0.0001 || value === 0.0) {
+    let digitArgs = digits.split('.');
+    let minIntegerDigits = +digitArgs[0] || 1;
+    digitArgs = digitArgs[1].split('-');
+    let minFractionDigits = +digitArgs[0] || 0;
+    let maxFractionDigits = +digitArgs[1] || 3;
+
+    if (value >= Math.pow(10, -maxFractionDigits) || value === 0.0) {
       return super.transform(value, digits);
     } else {
-      return value.toExponential(1);
+      return value.toExponential(minFractionDigits);
     }
   }
 }

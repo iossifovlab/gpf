@@ -8,13 +8,15 @@
     <div class="col-lg-6">
       Normalized by:
       <div *ngFor="let reg of getRegressionNames()">
-          <label>
-              <input
-                type="checkbox"
-                [checked]="phenoToolMeasure.normalizeBy.indexOf(reg) !== -1"
-                (change)="onNormalizeByChange(regressions[reg], $event);">
-              {{ regressions[reg].display_name }}
-          </label>
+          <div *ngIf="phenoToolMeasure.measure != null && (regressions[reg].instrument_name + '.' + regressions[reg].measure_name) != phenoToolMeasure.measure.name">
+              <label>
+                  <input
+                    type="checkbox"
+                    [checked]="phenoToolMeasure.normalizeBy.indexOf(reg) !== -1"
+                    (change)="onNormalizeByChange(regressions[reg], $event);">
+                  {{ regressions[reg].display_name }}
+              </label>
+          </div>
       </div>
     </div>
 
