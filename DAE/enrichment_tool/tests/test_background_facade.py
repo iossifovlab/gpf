@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 # from enrichment_tool.background import SynonymousBackground, \
 #     CodingLenBackground, SamochaBackground
-from enrichment_tool.background import CodingLenBackground
+from enrichment_tool.background import CodingLenBackground, SamochaBackground
 
 
 def test_get_study_background(background_facade):
@@ -12,8 +12,8 @@ def test_get_study_background(background_facade):
     assert isinstance(background_facade.get_study_background(
         'f1_trio', 'codingLenBackgroundModel'), CodingLenBackground)
 
-    # assert isinstance(background_facade.get_study_background(
-    #     'f1_trio', 'samochaBackgroundModel'), SamochaBackground)
+    assert isinstance(background_facade.get_study_background(
+        'f1_trio', 'samochaBackgroundModel'), SamochaBackground)
 
     assert background_facade.get_study_background('f1_trio', 'Model') is None
     assert background_facade.get_study_background('f1', 'Model') is None
@@ -23,13 +23,13 @@ def test_get_all_study_backgrounds(background_facade):
     backgrounds = background_facade.get_all_study_backgrounds('f1_trio')
 
     # assert len(backgrounds) == 3
-    assert len(backgrounds) == 1
+    assert len(backgrounds) == 2
     # assert isinstance(
     #     backgrounds['synonymousBackgroundModel'], SynonymousBackground)
     assert isinstance(
         backgrounds['codingLenBackgroundModel'], CodingLenBackground)
-    # assert isinstance(
-    #     backgrounds['samochaBackgroundModel'], SamochaBackground)
+    assert isinstance(
+        backgrounds['samochaBackgroundModel'], SamochaBackground)
 
     assert background_facade.get_all_study_backgrounds('f1') is None
 
@@ -50,8 +50,8 @@ def test_has_background(background_facade):
     assert background_facade.has_background(
         'f1_trio', 'codingLenBackgroundModel') is True
 
-    # assert background_facade.has_background(
-    #     'f1_trio', 'samochaBackgroundModel') is True
+    assert background_facade.has_background(
+        'f1_trio', 'samochaBackgroundModel') is True
 
     assert background_facade.has_background('f1_trio', 'Model') is False
     assert background_facade.has_background('f1', 'Model') is False
