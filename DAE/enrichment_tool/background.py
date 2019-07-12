@@ -225,16 +225,13 @@ class CodingLenBackground(BackgroundCommon):
         filename = self.filename
         assert filename is not None
 
-        df = pd.read_csv(
-            filename,
-            usecols=['gene_upper', 'codingLenInTarget'],
-            dtype={'gene_upper': np.str_, 'codingLenInTarget': np.int32}
-        )
+        df = pd.read_csv(filename, usecols=['gene_upper', 'codingLenInTarget'])
 
         df = df.rename(columns={
             'gene_upper': 'sym',
             'codingLenInTarget': 'raw'
         })
+        df = df.astype(dtype={'sym': np.str_, 'raw': np.int32})
 
         return df
 
@@ -259,7 +256,10 @@ class CodingLenBackground(BackgroundCommon):
         fin = io.BytesIO(zlib.decompress(b))
         ndarray = np.load(fin)
 
-        self.background = pd.DataFrame(ndarray, columns=['sym', 'raw'])
+        background = pd.DataFrame(ndarray, columns=['sym', 'raw'])
+
+        self.background = \
+            background.astype(dtype={'sym': np.str_, 'raw': np.int32})
 
     def _count(self, gene_syms):
         vpred = np.vectorize(lambda sym: sym in gene_syms)
