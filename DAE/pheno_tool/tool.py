@@ -62,6 +62,15 @@ class PhenoToolHelper(object):
                     persons.add(person.person_id)
         return persons
 
+    def pheno_filter_persons(self, pheno_filters):
+        if not pheno_filters:
+            return set()
+
+        assert isinstance(pheno_filters, list)
+
+        return self.study._transform_pheno_filters_to_people_ids(
+            pheno_filters)
+
     def study_variants(self, data):
         assert 'effectTypes' in data
 
@@ -102,25 +111,19 @@ class PhenoTool(object):
 
     `normalize_by` -- list of continuous measure names. Default value is
     an empty list
-
-    `pheno_filters` -- dictionary of measure IDs and filter specifiers. Default
-    is empty dictionary.
     """
 
     def __init__(self, pheno_db, measure_id, person_ids_=[],
-                 normalize_by=[], pheno_filters={}):
+                 normalize_by=[]):
 
         self.pheno_db = pheno_db
         self.measure_id = measure_id
 
-        assert isinstance(pheno_filters, dict)
         assert self.pheno_db.has_measure(measure_id)
         assert self.pheno_db.get_measure(self.measure_id).measure_type in \
             [MeasureType.continuous, MeasureType.ordinal]
 
         self.normalize_by = self._init_normalize_measures(normalize_by)
-        self.pheno_filters = \
-            pheno_filters and self._init_pheno_filters(pheno_filters)
 
         # TODO currently filtering only for probands, expand with additional
         # options via PeopleGroup
@@ -128,17 +131,9 @@ class PhenoTool(object):
 
         pheno_df = self.pheno_db.get_persons_values_df(
             all_measures, person_ids=person_ids_, roles=[Role.prb])
-        self.pheno_df = pheno_df.dropna()
 
-        for f in self.pheno_filters:
-            self.pheno_df = f.apply(self.pheno_df)
-        self.pheno_df = self._normalize_df(self.pheno_df, self.measure_id,
+        self.pheno_df = self._normalize_df(pheno_df.dropna(), self.measure_id,
                                            self.normalize_by)
-
-    def _init_pheno_filters(self, pheno_filters):
-        filter_builder = PhenoFilterBuilder(self.pheno_db)
-        return [filter_builder.make_filter(m, c)
-                for m, c in list(pheno_filters.items())]
 
     def _init_normalize_measures(self, normalize_by):
         normalize_by = [self._get_normalize_measure_id(normalize_measure)
@@ -184,7 +179,7 @@ class PhenoTool(object):
         if not normalize_by:
             dn = pd.Series(
                 index=df.index, data=df[measure_id].values)
-            df['normalized'] = dn
+            df.loc[:, 'normalized'] = dn
             return df
         else:
             X = sm.add_constant(df[normalize_by])
@@ -193,7 +188,7 @@ class PhenoTool(object):
             fitted = model.fit()
 
             dn = pd.Series(index=df.index, data=fitted.resid)
-            df['normalized'] = dn
+            df.loc[:, 'normalized'] = dn
             return df
 
     @staticmethod

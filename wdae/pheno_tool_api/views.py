@@ -56,10 +56,17 @@ class PhenoToolView(APIView):
         helper = PhenoToolHelper(
             self._variants_db.get_wdae_wrapper(data['datasetId'])
         )
+
+        pheno_filter_persons = \
+            helper.pheno_filter_persons(data.get('phenoFilters'))
+        study_persons = helper.study_persons(data.get('familyIds', []))
+
+        person_ids = set(study_persons) & set(pheno_filter_persons)
+
         tool = PhenoTool(
             helper.study.pheno_db,
             measure_id=data['measureId'],
-            person_ids_=helper.study_persons(data.get('familyIds', [])),
+            person_ids_=person_ids,
             normalize_by=data['normalizeBy']
         )
         return helper, tool
