@@ -94,11 +94,7 @@ class PhenoToolView(APIView):
         if not normalize_by:
             return measure_id
         else:
-            return "{} ~ {}".format(
-                measure_id,
-                " + ".join(list(map(lambda x: x['display_name'],
-                                    normalize_by)))
-            )
+            return "{} ~ {}".format(measure_id, " + ".join(normalize_by))
 
     @expand_gene_set
     def post(self, request):
@@ -114,7 +110,7 @@ class PhenoToolView(APIView):
 
             response = {
                 "description": self._build_report_description(
-                    tool.measure_id, data['normalizeBy']),
+                    tool.measure_id, tool.normalize_by),
                 "results": results
             }
             return Response(response)
@@ -148,16 +144,16 @@ class PhenoToolDownload(PhenoToolView):
             variants = helper.study_variants(data)
 
             for effect in data['effectTypes']:
-                effect = effect.lower()
                 result_df = \
                     PhenoTool.join_pheno_df_with_variants(result_df,
-                                                          variants[effect])
+                                                          variants[effect.lower()])
                 result_df = result_df.rename(
                     columns={'variant_count': effect})
 
             if tool.normalize_by:
-                column_name = "{} ~ {}".format(tool.measure_id,
-                                               " + ".join(tool.normalize_by))
+                column_name = \
+                    self._build_report_description(tool.measure_id,
+                                                   tool.normalize_by)
                 result_df = result_df.rename(
                     columns={'normalized': column_name})
 
