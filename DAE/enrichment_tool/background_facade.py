@@ -50,6 +50,30 @@ class BackgroundFacade(object):
             return False
         return True
 
+    def generate_study_background(self, study_id, background_id):
+        self.load_cache({study_id})
+
+        if study_id not in self._background_cache and \
+                background_id not in self._background_cache[study_id]:
+            return None
+
+        background = self._background_cache[study_id][background_id]
+        background.cache_clear()
+        background.precompute(generate_cache=True)
+
+    def generate_studies_background(self, study_ids, background_id):
+        for study_id in study_ids:
+            self.generate_background(study_id, background_id)
+
+    def generate_studies_backgrounds(self, study_ids, background_ids):
+        for study_id in study_ids:
+            for background_id in background_ids:
+                self.generate_background(study_id, background_id)
+
+    def generate_all_study_backgrounds(self):
+        for study_id in self.get_all_study_ids():
+            self.generate_background(study_id)
+
     def load_cache(self, study_ids=None):
         if study_ids is None:
             study_ids = set(self.variants_db.get_all_ids())
