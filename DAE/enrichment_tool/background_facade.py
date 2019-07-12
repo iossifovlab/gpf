@@ -88,4 +88,4 @@ class BackgroundFacade(object):
 
         self._background_cache[study_id][background_id] = \
             BackgroundBase.backgrounds()[background_id](
-                enrichment_config, self.variants_db, use_cache=True)
+                enrichment_config, self.variants_db)        
