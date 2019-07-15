@@ -1,4 +1,0 @@
-WDAE Interface
-==============
-
-stub

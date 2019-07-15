@@ -8,5 +8,4 @@ This is a small test.
 
    user_interface/gpf_user_interface
    administration/gpf_administration
-   development/gpf/DAE/docs/index
-   development/wdae_interface
+   development/gpf_development
