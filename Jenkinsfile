@@ -42,7 +42,7 @@ pipeline {
                 $class: 'GitSCM', 
                 branches: [[name: '*/variants']], 
                 doGenerateSubmoduleConfigurations: false, 
-                extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'gpf']], 
+                extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'userdocs/development/gpf']],
                 submoduleCfg: [], 
                 userRemoteConfigs: [[
                     credentialsId: 'dea7a214-d183-4735-a7d5-ed8076dd0e0d', 

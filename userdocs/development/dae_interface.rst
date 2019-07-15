@@ -1,4 +1,0 @@
-DAE Interface
-=============
-
-stub
