@@ -2,7 +2,7 @@ enrichment_tool package
 =======================
 
 Example usage of :ref:`EnrichmentTool` class
--------------
+--------------------------------------------
 
 First select studies to use::
 

@@ -144,7 +144,7 @@ and as dictionaries::
 
 
 Example usage of :ref:`PhenoTool` class with pheno filters
------------------------------------------
+----------------------------------------------------------
 
 The `PhenoTool` class supports different ways to specify which individuals are
 subject to the calculations. We can use `roles`, `measure_id`, `normalize_by` and 
@@ -207,7 +207,7 @@ Using `pheno_filters` we can also specify ranges of values for given measurement
     Out[53]: 145
 
 Example with `vineland_ii`
----------------------------
+--------------------------
 
 Example for iterating on many measures::
 
@@ -265,15 +265,6 @@ pheno_tool.tool module
     :members:
     :undoc-members:
     :show-inheritance:
-
-pheno_tool.genotype_helper module
-----------------------
-
-.. automodule:: pheno_tool.genotype_helper
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 
 Module contents
 ---------------
