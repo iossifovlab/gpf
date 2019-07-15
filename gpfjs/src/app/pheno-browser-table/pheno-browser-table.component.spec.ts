@@ -140,7 +140,7 @@ describe('PhenoBrowserTableComponent; one regression', () => {
       expect(regressionColumns.length).toEqual(1);
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('Regression by age'));
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('age P Value'));
-      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('1.0e-6'));
+      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('1.00e-6'));
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('0.2'));
     });
   });
