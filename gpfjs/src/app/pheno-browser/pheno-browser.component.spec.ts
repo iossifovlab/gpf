@@ -216,7 +216,7 @@ describe('PhenoBrowserComponent', () => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('i1'));
-      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('1.0e-6'));
+      expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('1.00e-6'));
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('0.2'));
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('test_measure'));
       expect(fixture.nativeElement.textContent).toEqual(jasmine.stringMatching('ordinal'));
@@ -227,7 +227,7 @@ describe('PhenoBrowserComponent', () => {
   it('should color p values appropriately', async(() => {
     fixture.detectChanges();
     fixture.whenStable().then(() => {
-      const lowPValueElement = fixture.debugElement.queryAll((dE) => dE.nativeElement.innerText == '1.0e-6')[0].children[0];
+      const lowPValueElement = fixture.debugElement.queryAll((dE) => dE.nativeElement.innerText == '1.00e-6')[0].children[0];
       const highPValueElement = fixture.debugElement.queryAll((dE) => dE.nativeElement.innerText == '0.20')[0].children[0];
       expect(lowPValueElement.nativeElement.style.backgroundColor).toEqual('rgba(255, 0, 0, 0.8)');
       expect(highPValueElement.nativeElement.style.backgroundColor).toEqual('rgba(255, 255, 255, 0.8)');
