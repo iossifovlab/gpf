@@ -351,32 +351,6 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         self._variant_in_members = None
         self._matched_alleles = []
 
-        # assert summary_variant is not None
-        # assert isinstance(summary_variant, SummaryVariant)
-
-        # self.summary_variant = summary_variant
-        # self.gt = np.copy(genotype)
-
-        # alleles = [
-        #     FamilyAllele(self.ref_allele, family, self.gt)
-        # ]
-
-        # for allele_index in self.calc_alt_alleles(self.gt):
-        #     summary_allele = self.get_allele(allele_index)
-        #     if summary_allele is None:
-        #         continue
-        #     fa = FamilyAllele(summary_allele, family, genotype)
-
-        #     alleles.append(fa)
-
-        # #: list of all family alleles that affect the family variant
-        # # self.summary_alleles = self.alleles
-        # self.alleles = alleles
-        # #: reference family allele fot the give family variant
-        # self.ref_allele = alleles[0]
-        # #: list of all alternative family alleles that affect family variant
-        # self.alt_alleles = alleles[1:]
-
     @staticmethod
     def from_sumary_variant(summary_variant, family, genotype):
         assert summary_variant is not None
@@ -384,10 +358,6 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
         gt = np.copy(genotype)
 
-        # for allele_index in FamilyVariant.calc_alt_alleles(gt):
-        #     summary_allele = summary_variant.get_allele(allele_index)
-        #     if summary_allele is None:
-        #         continue
         alleles = []
         for summary_allele in summary_variant.alleles:
             fa = FamilyAllele.from_summary_allele(
@@ -396,7 +366,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         return FamilyVariant(alleles, family, gt)
 
     def set_matched_alleles(self, alleles_indexes):
-        self._matched_alleles = alleles_indexes
+        self._matched_alleles = sorted(alleles_indexes)
 
     @property
     def matched_alleles(self):

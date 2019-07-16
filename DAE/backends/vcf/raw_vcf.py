@@ -375,12 +375,10 @@ class RawFamilyVariants(FamiliesBase):
             alleles_matched = []
             for allele in alleles:
                 if self.filter_allele(allele, **kwargs):
+                    if allele.allele_index == 0 and not return_reference:
+                        continue
                     alleles_matched.append(allele.allele_index)
             if alleles_matched:
-                if len(alleles_matched) == 1 and \
-                        alleles_matched[0] == 0 and \
-                        not return_reference:
-                    continue
                 v.set_matched_alleles(alleles_matched)
                 yield v
 

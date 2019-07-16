@@ -27,7 +27,7 @@ def count_variants(
     return len(vs)
 
 
-@pytest.mark.xfail(reason='return_reference not supported in Impala')
+@pytest.mark.xfail(reason='all unknown genotype not supported in impala')
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_impala",
@@ -53,7 +53,6 @@ def test_f2_all_unknown(
     assert c == count
 
 
-@pytest.mark.xfail(reason='return_reference not supported in Impala')
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_impala",

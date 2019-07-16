@@ -77,7 +77,6 @@ def test_full_variants_iterator(
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_impala",
 ])
 @pytest.mark.parametrize("fixture_name", [
     "backends/trios2_11541",
