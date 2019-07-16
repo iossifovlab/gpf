@@ -37,23 +37,6 @@ def test_init_with_person_ids(fake_pheno_db):
         set(['f1.p1', 'f3.p1', 'f5.p1', 'f7.p1'])
 
 
-def test_init_with_pheno_filters(fake_pheno_db):
-    pheno_tool = PhenoTool(fake_pheno_db, 'i1.m1',
-                           pheno_filters={'i1.m1': (50, 70)})
-    assert len(pheno_tool.pheno_df['person_id']) == 11
-
-
-def test_init_with_pheno_filters_invalid_type(fake_pheno_db):
-    with pytest.raises(AssertionError):
-        PhenoTool(fake_pheno_db, 'i1.m1', pheno_filters=None)
-    with pytest.raises(AssertionError):
-        PhenoTool(fake_pheno_db, 'i1.m1', pheno_filters=str())
-    with pytest.raises(AssertionError):
-        PhenoTool(fake_pheno_db, 'i1.m1', pheno_filters=list())
-    with pytest.raises(AssertionError):
-        PhenoTool(fake_pheno_db, 'i1.m1', pheno_filters=set())
-
-
 def test_init_normalize_measures(fake_pheno_db):
     pheno_tool = PhenoTool(fake_pheno_db, 'i1.m1')
     norm_measures = [
@@ -110,6 +93,13 @@ def test_get_normalize_measure_id_with_instrument_name(fake_pheno_db):
     measure_id = pheno_tool._get_normalize_measure_id(
         {'measure_name': 'm7', 'instrument_name': 'i1'})
     assert measure_id == 'i1.m7'
+
+
+def test_get_normalize_measure_id_same_measure(fake_pheno_db):
+    pheno_tool = PhenoTool(fake_pheno_db, 'i1.m1')
+    measure_id = pheno_tool._get_normalize_measure_id(
+        {'measure_name': 'm1', 'instrument_name': 'i1'})
+    assert measure_id == None
 
 
 @pytest.mark.parametrize('measure_name,instrument_name', [

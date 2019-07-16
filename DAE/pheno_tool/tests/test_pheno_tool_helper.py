@@ -31,6 +31,10 @@ def mocked_query_variants(**kwargs):
         yield Box(v)
 
 
+def mocked_pheno_filter_transform(pheno_filters):
+    return None
+
+
 mocked_study = Box({
     'families': {
         'fam1': {
@@ -61,7 +65,8 @@ mocked_study = Box({
             ]
         }
     },
-    'query_variants': mocked_query_variants
+    'query_variants': mocked_query_variants,
+    '_transform_pheno_filters_to_people_ids': mocked_pheno_filter_transform
 })
 
 
@@ -92,6 +97,28 @@ def test_study_persons_invalid_family_ids():
     helper = PhenoToolHelper(mocked_study)
     with pytest.raises(AssertionError):
         helper.study_persons(family_ids='fam1')
+
+
+def test_pheno_filter_persons(mocker):
+    helper = PhenoToolHelper(mocked_study)
+    mocker.spy(mocked_study, '_transform_pheno_filters_to_people_ids')
+    helper.pheno_filter_persons([1])
+    mocked_study._transform_pheno_filters_to_people_ids.\
+        assert_called_once_with([1])
+
+
+def test_pheno_filter_persons_none_or_empty():
+    helper = PhenoToolHelper(mocked_study)
+    assert helper.pheno_filter_persons(None) == None
+    assert helper.pheno_filter_persons(list()) == None
+
+
+def test_pheno_filter_persons_invalid_input_type():
+    helper = PhenoToolHelper(mocked_study)
+    with pytest.raises(AssertionError):
+        helper.pheno_filter_persons(dict)
+    with pytest.raises(AssertionError):
+        helper.pheno_filter_persons(tuple)
 
 
 def test_study_variants():
