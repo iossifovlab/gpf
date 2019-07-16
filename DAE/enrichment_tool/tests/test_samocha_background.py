@@ -16,8 +16,8 @@ def test_filename(f1_trio_samocha_background):
         '/studies/f1_trio/enrichment/samochaBackgroundModel.csv'
 
 
-def test_precompute(f1_trio_samocha_background):
-    background = f1_trio_samocha_background.precompute()
+def test_load(f1_trio_samocha_background):
+    background = f1_trio_samocha_background.load()
 
     assert len(background) == 3
 

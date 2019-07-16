@@ -40,7 +40,7 @@ class BackgroundBase(object):
 
         self.cache_filename = self.config.enrichment_cache_file(self.name)
 
-        self.precompute()
+        self.load()
 
     def cache_clear(self):
         assert self.name is not None
@@ -148,13 +148,11 @@ class SynonymousBackground(BackgroundCommon):
         assert variants_db is not None
         self.variants_db = variants_db
 
-    def precompute(self, generate_cache=False):
-        if not self.is_cache_exist() or generate_cache is True:
-            self.background, self.foreground = \
-                self._build_synonymous_background()
-        else:
-            self.background, self.foreground = self._load_and_prepare_build()
+    def generate_cache(self):
+        self.background, self.foreground = self._build_synonymous_background()
 
+    def load(self):
+        self.background, self.foreground = self._load_and_prepare_build()
         return self.background
 
     def _count_foreground_events(self, gene_syms):
@@ -209,7 +207,7 @@ class CodingLenBackground(BackgroundCommon):
         super(CodingLenBackground, self).__init__(
             'codingLenBackgroundModel', config)
 
-    def precompute(self, generate_cache=False):
+    def load(self):
         self.background = self._load_and_prepare_build()
         return self.background
 
@@ -260,7 +258,7 @@ class SamochaBackground(BackgroundBase):
         super(SamochaBackground, self).__init__(
             'samochaBackgroundModel', config)
 
-    def precompute(self, generate_cache=False):
+    def load(self):
         self.background = self._load_and_prepare_build()
         return self.background
 

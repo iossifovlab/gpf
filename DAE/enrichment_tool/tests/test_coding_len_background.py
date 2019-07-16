@@ -17,8 +17,8 @@ def test_filename(f1_trio_coding_len_background):
         '/studies/f1_trio/enrichment/codingLenBackgroundModel.csv'
 
 
-def test_precompute(f1_trio_coding_len_background):
-    background = f1_trio_coding_len_background.precompute()
+def test_load(f1_trio_coding_len_background):
+    background = f1_trio_coding_len_background.load()
 
     assert len(background) == 3
     assert background.iloc[0]['sym'] == 'SAMD11'
@@ -96,7 +96,7 @@ def test_use_cache(f1_trio_enrichment_config):
     background = coding_len_background_without_cache.background
 
     assert coding_len_background_without_cache.is_ready is True
-    b1 = coding_len_background_without_cache.precompute()
+    b1 = coding_len_background_without_cache.load()
     assert np.all(background == b1)
     assert coding_len_background_without_cache.is_ready is True
 
@@ -104,7 +104,7 @@ def test_use_cache(f1_trio_enrichment_config):
 
     assert coding_len_background.is_ready is True
 
-    b2 = coding_len_background.precompute()
+    b2 = coding_len_background.load()
     assert np.all(background == b2)
     assert np.all(b1 == b2)
 
