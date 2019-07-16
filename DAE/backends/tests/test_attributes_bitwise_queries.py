@@ -1,7 +1,7 @@
 import pytest
 from ..attributes_query import \
     QueryTreeToSQLBitwiseTransformer, \
-    inheritance_query
+    inheritance_query, PARSER, inheritance_converter, BitwiseTreeTransformer
 
 
 @pytest.mark.parametrize("query,expected", [
@@ -16,3 +16,25 @@ def test_bitwise_query(query, expected):
     result = transformer.transform(parsed)
     print(result)
     assert expected == result
+
+
+@pytest.mark.parametrize("query", [
+    "not (mendelian or denovo)"
+    # "mendelian",
+    # "not mendelian",
+    # "mendelian or denovo",
+    # "mendelian or not denovo",
+    # "not (mendelian or denovo)",
+    # "not (mendelian and denovo)",
+    # "not (mendelian or not denovo)",
+    # "not (mendelian and not denovo)",
+])
+def test_experiments_with_bitwise_grammar(query):
+    tree = PARSER.parse(query)
+    print("")
+    print(tree.pretty())
+    print("")
+
+    transformer = BitwiseTreeTransformer(inheritance_converter)
+    res = transformer.transform(tree)
+    print(res)
