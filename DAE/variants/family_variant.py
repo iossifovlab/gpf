@@ -194,10 +194,10 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
             gt = np.copy(self.gt)
 
             if allele_index is not None:
-                gt[gt != allele_index] = 0
-            else:
-                gt[gt == -1] = 0
-            noindex = np.sum(gt, axis=0) == 0
+                gt[gt != allele_index] = -1
+
+            index = np.any(gt == allele_index, axis=0)
+            noindex = np.logical_not(index)
             self._variant_in_members = np.copy(self.members_ids)
             self._variant_in_members[noindex] = None
         return self._variant_in_members

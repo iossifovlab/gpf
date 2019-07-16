@@ -95,11 +95,6 @@ class VariantFactory(SummaryVariantFactory):
         return VariantFactory.from_summary_variant(
             summary_variant, family, gt)
 
-    @staticmethod
-    def family_variant_from_gt(summary_variant, family, gt):
-        return VariantFactory.from_summary_variant(
-            summary_variant, family, gt=gt)
-
 
 class RawFamilyVariants(FamiliesBase):
 

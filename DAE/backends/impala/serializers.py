@@ -7,8 +7,6 @@ import numpy as np
 
 from utils.vcf_utils import GENOTYPE_TYPE
 
-from variants.variant import SummaryAllele, SummaryVariant
-
 from variants.family_variant import FamilyAllele, FamilyVariant
 from variants.effects import Effect
 
@@ -104,7 +102,7 @@ class ParquetSerializer(object):
 
     def serialize_effects(self, allele, effect_data):
         if allele.is_reference_allele:
-            return self.effect_gene(None, None, effect_data)
+            return [self.effect_gene(None, None, effect_data)]
         return [
             self.effect_gene(eg.effect, eg.symbol, effect_data)
             for eg in allele.effect.genes
@@ -180,6 +178,8 @@ class ParquetSerializer(object):
     @staticmethod
     def deserialize_variant_alternatives(data):
         res = [None]
+        if data is None:
+            return res
         res.extend(data.split(","))
         return res
 
@@ -192,6 +192,8 @@ class ParquetSerializer(object):
     @staticmethod
     def deserialize_variant_effects(data):
         res = [None]
+        if data is None:
+            return res
         res.extend([Effect.from_string(e) for e in data.split("#")])
         return res
 

@@ -331,6 +331,9 @@ class ImpalaFamilyVariants(FamiliesBase):
         if query.get('ultra_rare'):
             where.append(self._build_ultra_rare_where(query))
 
+        if not query.get("return_reference"):
+            where.append("allele_index > 0")
+
         where.append(self._build_rare_heuristic(query))
         where.append(self._build_ultra_rare_heuristic(query))
         where.append(self._build_family_bin_heuristic(query))
@@ -354,7 +357,6 @@ class ImpalaFamilyVariants(FamiliesBase):
         limit_clause = ""
         if kwargs.get("limit"):
             limit_clause = "LIMIT {}".format(kwargs.get("limit"))
-
         return """
             SELECT
                 chrom,
