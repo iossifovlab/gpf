@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+
 def test_build(db, enrichment_builder):
     assert enrichment_builder
     build = enrichment_builder.build()
@@ -11,10 +14,10 @@ def test_build(db, enrichment_builder):
 
 def test_build_people_group_selector(db, enrichment_builder, f1_trio):
     assert enrichment_builder
-    prople_group = f1_trio.config.people_group_config.\
+    people_group = f1_trio.config.people_group_config.\
         get_people_group('phenotype')
     build = enrichment_builder.build_people_group_selector(
-        ['missense'], prople_group, 'autism')
+        ['missense'], people_group, 'autism')
 
     assert build
     assert len(build['childrenStats']) == 2

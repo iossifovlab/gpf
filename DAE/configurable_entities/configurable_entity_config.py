@@ -244,7 +244,7 @@ class ConfigurableEntityConfig(object):
     def _get_selectors(
             cls, config, selector_group, selector_getter,
             selector_elements=None):
-        selector = {}
+        selector = OrderedDict()
         for key, value in config.items():
             option_type, option_fullname = cls._split_section(key)
             if (option_type != selector_group and selector_group is not None) \
