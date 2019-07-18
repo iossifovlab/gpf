@@ -4,14 +4,52 @@ import operator
 from collections import namedtuple
 
 import numpy as np
+import pyarrow as pa
 
 from utils.vcf_utils import GENOTYPE_TYPE
+from annotation.tools.file_io_parquet import ParquetSchema
 
 from variants.family_variant import FamilyAllele, FamilyVariant
 from variants.effects import Effect
 
 
 class ParquetSerializer(object):
+
+    BASE_SCHEMA = pa.schema([
+        pa.field("bucket_index", pa.int32()),
+        pa.field("summary_variant_index", pa.int64()),
+        pa.field("allele_index", pa.int8()),
+        pa.field("chrom", pa.string()),
+        pa.field("position", pa.int32()),
+        pa.field("reference", pa.string()),
+        pa.field("alternative", pa.string()),
+        pa.field("variant_type", pa.int8()),
+        pa.field("worst_effect", pa.string()),
+        pa.field("alternatives_data", pa.string()),
+
+        pa.field("effect_type", pa.string()),
+        pa.field("effect_gene", pa.string()),
+        pa.field("effect_data", pa.string()),
+
+        pa.field("family_variant_index", pa.int64()),
+        pa.field("family_id", pa.string()),
+        pa.field("is_denovo", pa.bool_()),
+
+        pa.field("variant_sexes", pa.int8()),
+        pa.field("variant_roles", pa.int32()),
+        pa.field("variant_inheritance", pa.int16()),
+
+        pa.field("variant_in_member", pa.string()),
+        pa.field("genotype_data", pa.string()),
+
+        pa.field('af_parents_called_count', pa.int32()),
+        pa.field('af_parents_called_percent', pa.float32()),
+        pa.field('af_allele_count', pa.int32()),
+        pa.field('af_allele_freq', pa.float32()),
+        pa.field('frequency_data', pa.string()),
+        pa.field('genomic_scores_data', pa.string()),
+
+    ])
 
     summary = namedtuple(
         'summary', [
@@ -65,11 +103,34 @@ class ParquetSerializer(object):
         ]
     )
 
-    def __init__(
-            self, include_reference=True, annotation_schema=None):
-        # self.families = families
+    def __init__(self, include_reference=True, schema=None):
+        assert isinstance(schema, ParquetSchema)
+
         self.include_reference = include_reference
-        self.annotation_schema = annotation_schema
+        self.schema = schema
+        self._setup_genomic_scores()
+
+    def _setup_genomic_scores(self):
+        base_schema = ParquetSchema.from_arrow(
+            ParquetSerializer.BASE_SCHEMA)
+        genomic_scores_schema = ParquetSchema.diff_schemas(
+            self.schema, base_schema)
+        if 'genomic_scores_data' in genomic_scores_schema.columns:
+            del genomic_scores_schema.columns['genomic_scores_data']
+
+        self.genomic_scores_schema = genomic_scores_schema.to_arrow()
+        print("genomic scores schema names:", self.genomic_scores_schema.names)
+
+        self.genomic_scores_count = len(self.genomic_scores_schema.names)
+        fields = [
+                *(self.genomic_scores_schema.names),
+                'genomic_scores_data'
+        ]
+        print("genomic scores fields:", fields)
+        self.genomic_scores = namedtuple(
+            'genomic_scores', fields
+        )
+        print("genomic scores namedtuple:", self.genomic_scores)
 
     def serialize_summary(
             self, summary_variant_index, allele, alternatives_data):
@@ -146,6 +207,48 @@ class ParquetSerializer(object):
                 'af_parents_called_percent': result[row, 1],
                 'af_allele_count': int(result[row, 2]),
                 'af_allele_freq': result[row, 3],
+            }
+            attributes.append(a)
+
+        return attributes
+
+    def serialize_genomic_scores(self, allele, genomic_scores_data):
+        values = []
+        for gs in self.genomic_scores_schema.names:
+            values.append(allele.get_attribute(gs))
+        values.append(genomic_scores_data)
+
+        genomic_scores = self.genomic_scores(*values)
+        return genomic_scores
+
+    def serialize_variant_genomic_scores(self, v):
+        if self.genomic_scores_count == 0:
+            return None
+        result = np.zeros(
+            (len(v.alleles), self.genomic_scores_count),
+            dtype=np.float32)
+        for row, allele in enumerate(v.alleles):
+            for col, gs in enumerate(self.genomic_scores_schema.names):
+                result[row, col] = allele.get_attribute(gs)
+        flat = result.flatten(order='F')
+        buff = flat.tobytes()
+        data = str(buff, 'latin1')
+        return data
+
+    def deserialize_variant_genomic_scores(self, data):
+        if data is None:
+            return None
+        buff = bytes(data, 'latin1')
+        flat = np.frombuffer(buff, dtype=np.float32)
+        assert len(flat) % self.genomic_scores_count == 0
+
+        rows = len(flat) // self.genomic_scores_count
+        result = flat.reshape([rows, self.genomic_scores_count], order='F')
+        attributes = []
+        for row in range(rows):
+            a = {
+                gs: result[row, col]
+                for col, gs in enumerate(self.genomic_scores_schema.names)
             }
             attributes.append(a)
 
@@ -233,35 +336,51 @@ class ParquetSerializer(object):
     def deserialize_variant(
             self, family,
             chrom, position, reference, alternatives_data,
-            effect_data, genotype_data, frequency_data):
-        effects = ParquetSerializer.deserialize_variant_effects(
+            effect_data, genotype_data, frequency_data,
+            genomic_scores_data):
+
+        effects = self.deserialize_variant_effects(
             effect_data)
-        alternatives = ParquetSerializer.deserialize_variant_alternatives(
+        alternatives = self.deserialize_variant_alternatives(
             alternatives_data
         )
         assert len(effects) == len(alternatives)
         # family = self.families.get(family_id)
         assert family is not None
 
-        genotype = ParquetSerializer.deserialize_variant_genotype(
+        genotype = self.deserialize_variant_genotype(
             genotype_data)
         rows, cols = genotype.shape
         assert cols == len(family)
 
-        frequencies = ParquetSerializer.deserialize_variant_frequency(
+        frequencies = self.deserialize_variant_frequency(
             frequency_data)
         assert len(frequencies) == len(alternatives)
 
+        genomic_scores = self.deserialize_variant_genomic_scores(
+            genomic_scores_data
+        )
         alleles = []
-        for allele_index, (alt, effect, freq) in \
-                enumerate(zip(alternatives, effects, frequencies)):
+        print("deserialized genomic scores:", genomic_scores)
+        if genomic_scores is None:
+            values = zip(alternatives, effects, frequencies)
+        else:
+            assert len(frequencies) == len(genomic_scores)
+            attributes = [
+                f.update(g) for (f, g) in zip(frequencies, genomic_scores)
+            ]
+            values = zip(
+                    alternatives, effects, attributes)
+
+        for allele_index, (alt, effect, attr) in enumerate(values):
+
             allele = FamilyAllele(
                 chrom, position, reference,
                 alternative=alt,
                 summary_index=0,
                 allele_index=allele_index,
                 effect=effect,
-                attributes=freq,
+                attributes=attr,
                 family=family,
                 genotype=genotype)
             alleles.append(allele)

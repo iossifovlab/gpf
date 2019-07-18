@@ -107,7 +107,7 @@ def test_variants_parquet_io(
                 db=db, variant="variant",
                 where_clause="",
                 limit_clause=""))
-        
+
         parquet_serializer = ParquetSerializer()
 
         for row in cursor:

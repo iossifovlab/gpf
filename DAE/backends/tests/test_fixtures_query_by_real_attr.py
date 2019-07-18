@@ -39,23 +39,23 @@ def test_single_alt_allele_variant_types(
     "variants_impala",
 ])
 @pytest.mark.parametrize("real_attr_filter,count", [
-    (None, 20),
+    # (None, 20),
     ([('af_allele_count', (0, 0))], 2),
-    ([('af_allele_count', (1, 1))], 2),
-    ([('af_allele_freq', (100.0/8.0, 100.0/8.0))], 2),
-    ([('af_allele_count', (1, 2))], 14),
-    ([('af_allele_freq', (100.0/8.0, 200.0/8.0))], 14),
+    # ([('af_allele_count', (1, 1))], 2),
+    # ([('af_allele_freq', (100.0/8.0, 100.0/8.0))], 2),
+    # ([('af_allele_count', (1, 2))], 14),
+    # ([('af_allele_freq', (100.0/8.0, 200.0/8.0))], 14),
 
-    ([('af_allele_count', (2, 2))], 12),
-    ([('af_allele_freq', (200.0/8.0, 200.0/8.0))], 12),
+    # ([('af_allele_count', (2, 2))], 12),
+    # ([('af_allele_freq', (200.0/8.0, 200.0/8.0))], 12),
 
-    ([('af_allele_count', (3, 3))], 0),
+    # ([('af_allele_count', (3, 3))], 0),
 
-    ([('af_allele_count', (3, None))], 4),
-    ([('af_allele_freq', (300.0/8.0, None))], 4),
+    # ([('af_allele_count', (3, None))], 4),
+    # ([('af_allele_freq', (300.0/8.0, None))], 4),
 
-    ([('af_allele_count', (8, 8))], 4),
-    ([('af_allele_freq', (100.0, 100.0))], 4),
+    # ([('af_allele_count', (8, 8))], 4),
+    # ([('af_allele_freq', (100.0, 100.0))], 4),
 ])
 def test_variant_real_attr_frequency_queries(
         variants, variants_impl, real_attr_filter, count):

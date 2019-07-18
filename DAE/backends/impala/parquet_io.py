@@ -8,6 +8,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from annotation.tools.file_io_parquet import ParquetSchema
 from backends.impala.serializers import ParquetSerializer
 
 
@@ -58,69 +59,42 @@ class ParquetData(object):
 
 class VariantsParquetWriter(object):
 
-    SCHEMA = pa.schema([
-        pa.field("bucket_index", pa.int32()),
-        pa.field("summary_variant_index", pa.int64()),
-        pa.field("allele_index", pa.int8()),
-        pa.field("chrom", pa.string()),
-        pa.field("position", pa.int32()),
-        pa.field("reference", pa.string()),
-        pa.field("alternative", pa.string()),
-        pa.field("variant_type", pa.int8()),
-        pa.field("worst_effect", pa.string()),
-        pa.field("alternatives_data", pa.string()),
-
-        pa.field("effect_type", pa.string()),
-        pa.field("effect_gene", pa.string()),
-        pa.field("effect_data", pa.string()),
-
-        pa.field("family_variant_index", pa.int64()),
-        pa.field("family_id", pa.string()),
-        pa.field("is_denovo", pa.bool_()),
-
-        pa.field("variant_sexes", pa.int8()),
-        pa.field("variant_roles", pa.int32()),
-        pa.field("variant_inheritance", pa.int16()),
-
-        pa.field("variant_in_member", pa.string()),
-        pa.field("genotype_data", pa.string()),
-
-        pa.field('af_parents_called_count', pa.int32()),
-        pa.field('af_parents_called_percent', pa.float32()),
-        pa.field('af_allele_count', pa.int32()),
-        pa.field('af_allele_freq', pa.float32()),
-        pa.field('frequency_data', pa.string()),
-
-    ])
-
-    EXCLUDE = [
+    ANNOTATION_EXCLUDE = [
         'effect_gene_genes',
         'effect_gene_types',
         'effect_genes',
         'effect_details_transcript_ids',
         'effect_details_details',
         'effect_details',
+        'OLD_effectType',
+        'OLD_effectGene',
+        'OLD_effectDetails',
     ]
 
-    def __init__(self, full_variants_iterator, annotation_schema=None):
+    def __init__(self, full_variants_iterator, annotation_pipeline=None):
         self.full_variants_iterator = full_variants_iterator
 
-        if annotation_schema is not None:
-            # base_schema = ParquetSchema.from_arrow(self.SCHEMA)
-            # print("base_schema:", base_schema)
-            # print("annotation_schema:", annotation_schema)
-            print("!!!ANNOTATION SCHEMA NOT APPLIED!!!")
-            # schema = ParquetSchema.merge_schemas(
-            #     base_schema, annotation_schema).to_arrow()
-            schema = self.SCHEMA
+        if annotation_pipeline is None:
+            self.schema = self.SCHEMA
+            self.genomic_scores_schema = None
         else:
-            schema = self.SCHEMA
+            annotation_schema = ParquetSchema.from_arrow(
+                ParquetSerializer.BASE_SCHEMA)
+            annotation_pipeline.collect_annotator_schema(annotation_schema)
+            for schema_key in self.ANNOTATION_EXCLUDE:
+                if schema_key in annotation_schema:
+                    del annotation_schema[schema_key]
+
+            self.schema = annotation_schema.to_arrow()
+
+        self.parquet_serializer = ParquetSerializer(
+            schema=annotation_schema
+        )
 
         self.start = time.time()
-        self.data = ParquetData(schema)
+        self.data = ParquetData(self.schema)
 
     def variants_table(self, bucket_index=0, rows=10000):
-        parquet_serializer = ParquetSerializer()
         print("row group size:", rows)
 
         family_variant_index = 0
@@ -130,43 +104,56 @@ class VariantsParquetWriter(object):
 
             for family_variant in family_variants:
                 family_variant_index += 1
-                effect_data = parquet_serializer.serialize_variant_effects(
-                    family_variant.effects
-                )
+                effect_data = \
+                    self.parquet_serializer.serialize_variant_effects(
+                        family_variant.effects
+                    )
                 alternatives_data = family_variant.alternative
-                genotype_data = parquet_serializer.serialize_variant_genotype(
-                    family_variant.gt
-                )
+                genotype_data = \
+                    self.parquet_serializer.serialize_variant_genotype(
+                        family_variant.gt
+                    )
                 frequency_data = \
-                    parquet_serializer.serialize_variant_frequency(
+                    self.parquet_serializer.serialize_variant_frequency(
+                        family_variant
+                    )
+                genomic_scores_data = \
+                    self.parquet_serializer.serialize_variant_genomic_scores(
                         family_variant
                     )
 
                 repetition = 0
                 for family_allele in family_variant.alleles:
-                    summary = parquet_serializer.serialize_summary(
-                        summary_variant_index, family_allele,
-                        alternatives_data
-                    )
-                    frequency = parquet_serializer.serialize_alelle_frequency(
-                        family_allele, frequency_data
-                    )
-                    effect_genes = parquet_serializer.serialize_effects(
-                        family_allele, effect_data)
-                    family = parquet_serializer.serialize_family(
+                    summary = \
+                        self.parquet_serializer.serialize_summary(
+                            summary_variant_index, family_allele,
+                            alternatives_data
+                        )
+                    frequency = \
+                        self.parquet_serializer.serialize_alelle_frequency(
+                            family_allele, frequency_data
+                        )
+                    genomic_scores = \
+                        self.parquet_serializer.serialize_genomic_scores(
+                            family_allele, genomic_scores_data
+                        )
+                    effect_genes = \
+                        self.parquet_serializer.serialize_effects(
+                            family_allele, effect_data)
+                    family = self.parquet_serializer.serialize_family(
                         family_variant_index, family_allele, genotype_data)
-                    member = parquet_serializer.serialize_members(
+                    member = self.parquet_serializer.serialize_members(
                         family_variant_index, family_allele)
 
-                    for (s, freq, e, f, m) in itertools.product(
-                            [summary], [frequency], effect_genes,
-                            [family], member):
+                    for (s, freq, gs, e, f, m) in itertools.product(
+                            [summary], [frequency], [genomic_scores],
+                            effect_genes, [family], member):
 
                         repetition += 1
 
                         self.data.data_append('bucket_index', bucket_index)
 
-                        for d in (s, freq, e, f, m):
+                        for d in (s, freq, gs, e, f, m):
                             for key, val in d._asdict().items():
                                 self.data.data_append(key, val)
                 histogram[repetition] += 1
@@ -208,42 +195,9 @@ class VariantsParquetWriter(object):
             self, filename=None, bucket_index=1, rows=100000,
             filesystem=None):
 
-        compression = {
-            b"bucket_index": "SNAPPY",
-            b"summary_variant_index": "SNAPPY",
-            b"allele_index": "SNAPPY",
-            b"chrom": "SNAPPY",
-            b"position": "SNAPPY",
-            b"reference": "SNAPPY",
-            b"alternative": "SNAPPY",
-            b"variant_type": "SNAPPY",
-            b"worst_effect": "SNAPPY",
-            b"af_parents_called_count": "SNAPPY",
-            b"af_parents_called_percent": "SNAPPY",
-            b"af_allele_count": "SNAPPY",
-            b"af_allele_freq": "SNAPPY",
-
-            b"effect_type": "SNAPPY",
-            b"effect_gene": "SNAPPY",
-
-            b"family_variant_index": "SNAPPY",
-            b"family_id": "SNAPPY",
-            b"is_denovo": "SNAPPY",
-
-            b"variant_sexes": "SNAPPY",
-            b"variant_roles": "SNAPPY",
-            b"variant_sexes": "SNAPPY",
-            b"variant_inheritance": "SNAPPY",
-            b"variant_in_member": "SNAPPY",
-
-            b"alternatives_data": "SNAPPY",
-            b"effect_data": "SNAPPY",
-            b"genotype_data": "SNAPPY",
-        }
-
         writer = pq.ParquetWriter(
             filename, self.data.schema,
-            compression=compression, filesystem=filesystem)
+            compression='snappy', filesystem=filesystem)
 
         try:
             for table in self.variants_table(

@@ -3,10 +3,6 @@ Created on Feb 8, 2018
 
 @author: lubo
 '''
-from __future__ import print_function, absolute_import
-from __future__ import unicode_literals
-from builtins import str
-
 import os
 
 import numpy as np

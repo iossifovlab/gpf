@@ -21,22 +21,31 @@ class ParquetSchema(Schema):
         ('float64', (float, pa.float64())),
         ('int', (int, pa.uint32())),
         ('int8', (int, pa.int8())),
+        ('tinyint', (int, pa.int8())),
         ('int16', (int, pa.int16())),
+        ('smallint', (int, pa.int16())),
         ('int32', (int, pa.int32())),
         ('int64', (int, pa.int64())),
+        ('bigint', (int, pa.int64())),
         ('list(str)', (str, pa.list_(pa.string()))),
         ('list(float)', (float, pa.list_(pa.float64()))),
         ('list(int)', (int, pa.list_(pa.uint32()))),
         ('bool', (bool, pa.bool_())),
+        ('boolean', (bool, pa.bool_())),
         ('binary', (bytes, pa.binary())),
+        ('string', (bytes, pa.string())),
     ])
 
-    def __init__(self):
-        super(ParquetSchema, self).__init__()
+    def __init__(self, schema_dict={}):
+        super(ParquetSchema, self).__init__(schema_dict)
+        self.columns = {
+            key: ParquetSchema.produce_type(val)
+            for key, val in self.columns.items()
+        }
 
     @classmethod
     def produce_type(cls, type_name):
-        assert type_name in cls.type_map
+        assert type_name in cls.type_map, type_name
         return Box({'type_name': type_name,
                     'type_py': cls.type_map[type_name][0],
                     'type_pa': cls.type_map[type_name][1]},

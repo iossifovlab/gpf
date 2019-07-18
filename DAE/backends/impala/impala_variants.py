@@ -1,5 +1,6 @@
 from RegionOperations import collapse
 
+from annotation.tools.file_io_parquet import ParquetSchema
 from variants.family import FamiliesBase, Family
 from backends.impala.parquet_io import ParquetSerializer
 
@@ -39,7 +40,7 @@ class ImpalaFamilyVariants(FamiliesBase):
 
         self.families_build(self.ped_df, family_class=Family)
         self.schema = self.variant_schema()
-        self.serializer = ParquetSerializer(self.families)
+        self.serializer = ParquetSerializer(schema=self.schema)
         self.gene_models = gene_models
 
     def count_variants(self, **kwargs):
@@ -53,18 +54,20 @@ class ImpalaFamilyVariants(FamiliesBase):
     def query_variants(self, **kwargs):
         with self.impala.cursor() as cursor:
             query = self.build_query(self.config, **kwargs)
-            # print("FINAL QUERY: ", query)
+            print("FINAL QUERY: ", query)
             cursor.execute(query)
             for row in cursor:
                 chrom, position, reference, alternatives_data, \
-                    effect_data, family_id, genotype_data, frequency_data, \
+                    effect_data, family_id, genotype_data, \
+                    frequency_data, genomic_scores_data, \
                     matched_alleles = row
 
                 family = self.families.get(family_id)
                 v = self.serializer.deserialize_variant(
                     family,
                     chrom, position, reference, alternatives_data,
-                    effect_data, genotype_data, frequency_data
+                    effect_data, genotype_data,
+                    frequency_data, genomic_scores_data
                 )
 
                 matched_alleles = [int(a) for a in matched_alleles.split(',')]
@@ -114,7 +117,8 @@ class ImpalaFamilyVariants(FamiliesBase):
             schema = {
                 col_name: col_type for (_, col_name, col_type) in records
             }
-            return schema
+
+            return ParquetSchema(schema)
 
     def pedigree_schema(self):
         with self.impala.cursor() as cursor:
@@ -135,12 +139,14 @@ class ImpalaFamilyVariants(FamiliesBase):
             real_attr_filter = query['real_attr_filter']
             query = []
             for attr_name, attr_range in real_attr_filter:
+                print(attr_name, "|", self.schema, "|", attr_name in self.schema)
+
                 if attr_name not in self.schema:
                     query.append('false')
                     continue
                 assert attr_name in self.schema
-                assert self.schema[attr_name] == 'float' or \
-                    self.schema[attr_name] == 'int', \
+                assert self.schema[attr_name].type_py == float or \
+                    self.schema[attr_name].type_py == int, \
                     self.schema[attr_name]
                 left, right = attr_range
                 if left is None:
@@ -367,6 +373,7 @@ class ImpalaFamilyVariants(FamiliesBase):
                 family_id,
                 genotype_data,
                 frequency_data,
+                genomic_scores_data,
                 GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
             FROM {db}.{variant}
             {where_clause}
@@ -381,7 +388,8 @@ class ImpalaFamilyVariants(FamiliesBase):
                 effect_data,
                 family_id,
                 genotype_data,
-                frequency_data
+                frequency_data,
+                genomic_scores_data
             {limit_clause}
             """.format(
             db=config.db, variant=config.tables.variant,

@@ -13,8 +13,6 @@ import argparse
 
 from configurable_entities.configuration import DAEConfig
 
-from annotation.tools.file_io_parquet import ParquetSchema
-
 from backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
 
@@ -79,15 +77,12 @@ def import_vcf(
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
-    annotation_schema = ParquetSchema()
-    annotation_pipeline.collect_annotator_schema(annotation_schema)
-
     return variants_iterator_to_parquet(
         fvars,
         impala_config,
         bucket_index=bucket_index,
         rows=rows,
-        annotation_schema=annotation_schema,
+        annotation_pipeline=annotation_pipeline,
         filesystem=filesystem
     )
 
