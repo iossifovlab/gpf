@@ -14,8 +14,8 @@ class Schema(object):
                 ('list(float)', float),
                 ('list(int)', int)])
 
-    def __init__(self, schema_dict={}):
-        self.columns = schema_dict
+    def __init__(self):
+        self.columns = OrderedDict()
 
     @classmethod
     def produce_type(cls, type_name):

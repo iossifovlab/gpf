@@ -74,19 +74,15 @@ class VariantsParquetWriter(object):
     def __init__(self, full_variants_iterator, annotation_pipeline=None):
         self.full_variants_iterator = full_variants_iterator
 
-        if annotation_pipeline is None:
-            self.schema = self.SCHEMA
-            self.genomic_scores_schema = None
-        else:
-            annotation_schema = ParquetSchema.from_arrow(
-                ParquetSerializer.BASE_SCHEMA)
+        annotation_schema = ParquetSchema.from_arrow(
+            ParquetSerializer.BASE_SCHEMA)
+        if annotation_pipeline is not None:
             annotation_pipeline.collect_annotator_schema(annotation_schema)
             for schema_key in self.ANNOTATION_EXCLUDE:
                 if schema_key in annotation_schema:
                     del annotation_schema[schema_key]
 
-            self.schema = annotation_schema.to_arrow()
-
+        self.schema = annotation_schema.to_arrow()
         self.parquet_serializer = ParquetSerializer(
             schema=annotation_schema
         )

@@ -37,10 +37,10 @@ class ParquetSchema(Schema):
     ])
 
     def __init__(self, schema_dict={}):
-        super(ParquetSchema, self).__init__(schema_dict)
+        super(ParquetSchema, self).__init__()
         self.columns = {
             key: ParquetSchema.produce_type(val)
-            for key, val in self.columns.items()
+            for key, val in schema_dict.items()
         }
 
     @classmethod

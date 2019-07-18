@@ -87,6 +87,7 @@ def test_variants_parquet_io(
                 family_id,
                 genotype_data,
                 frequency_data,
+                genomic_scores_data,
                 GROUP_CONCAT(DISTINCT CAST(allele_index AS string))
             FROM {db}.{variant}
             {where_clause}
@@ -101,36 +102,44 @@ def test_variants_parquet_io(
                 effect_data,
                 family_id,
                 genotype_data,
-                frequency_data
+                frequency_data,
+                genomic_scores_data
             {limit_clause}
             """.format(
                 db=db, variant="variant",
                 where_clause="",
                 limit_clause=""))
 
-        parquet_serializer = ParquetSerializer()
+        parquet_serializer = variants_writer.parquet_serializer
 
         for row in cursor:
             print(row)
 
             chrom, position, reference, alternatives_data, \
-                effect_data, family_id, genotype_data, frequency_data, \
+                effect_data, family_id, genotype_data, \
+                frequency_data, genomic_scores_data, \
                 matched_alleles = row
 
             family = fvars.families[family_id]
             print(family)
 
             print(genotype_data)
-            gt = ParquetSerializer.deserialize_variant_genotype(
+            gt = parquet_serializer.deserialize_variant_genotype(
                 genotype_data)
             print(gt)
 
-            frequencies = ParquetSerializer.deserialize_variant_frequency(
+            frequencies = parquet_serializer.deserialize_variant_frequency(
                 frequency_data)
             print(frequencies)
 
+            genomic_scores = \
+                parquet_serializer.deserialize_variant_genomic_scores(
+                    genomic_scores_data)
+            print(genomic_scores)
+
             v = parquet_serializer.deserialize_variant(
                 family, chrom, position, reference, alternatives_data,
-                effect_data, genotype_data, frequency_data
+                effect_data, genotype_data,
+                frequency_data, genomic_scores_data
             )
             print(v)
