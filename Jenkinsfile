@@ -11,7 +11,7 @@ pipeline {
     PYTHONPATH = "$DAE_SOURCE_DIR:$DAE_SOURCE_DIR/tools:$PYTHONPATH"
   }
   options { 
-    disableConcurrentBuilds() 
+    disableConcurrentBuilds()
   }
   triggers {
     cron('@weekly')
@@ -37,52 +37,54 @@ pipeline {
       }
     }
     stage('Build') {
-        steps {
-            checkout([
-                $class: 'GitSCM', 
-                branches: [[name: '*/variants']], 
-                doGenerateSubmoduleConfigurations: false, 
-                extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'userdocs/development/gpf']],
-                submoduleCfg: [], 
-                userRemoteConfigs: [[
-                    credentialsId: 'dea7a214-d183-4735-a7d5-ed8076dd0e0d', 
-                    url: 'git@github.com:seqpipe/gpf.git'
-                ]]
-            ])
-            sh '''
-              echo $HOME
-              echo $WORKSPACE
-              pwd
+      steps {
+        checkout([
+          $class: 'GitSCM', 
+          branches: [[name: '*/variants']], 
+          doGenerateSubmoduleConfigurations: false, 
+          extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'userdocs/development/gpf']],
+          submoduleCfg: [], 
+          userRemoteConfigs: [[
+            credentialsId: 'dea7a214-d183-4735-a7d5-ed8076dd0e0d', 
+            url: 'git@github.com:seqpipe/gpf.git'
+          ]]
+        ])
+        sh '''
+          echo $HOME
+          echo $WORKSPACE
+          pwd
 
-              ./doc_build.sh
-            '''
-            
-            sh '''
+          ./doc_build.sh
+        '''
+        
+        sh '''
 
-            '''
-        }
+        '''
+      }
     }
-
   }
   post {
     success {
-        slackSend (
-          color: '#00FF00',
-          message: "SUCCESSFUL: Job '${env.JOB_NAME} " +
-                   "[${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
-        )
-        archive 'gpf-html.tar.gz'
-        fingerprint 'gpf-html.tar.gz'
-        archive 'gpf-user-html.tar.gz'
-        fingerprint 'gpf-user-html.tar.gz'
+      options { 
+        timeout(time: 5, unit: 'MINUTES')
+      }
+      slackSend (
+        color: '#00FF00',
+        message: "SUCCESSFUL: Job '${env.JOB_NAME} " +
+                  "[${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
+      )
+      archive 'gpf-html.tar.gz'
+      fingerprint 'gpf-html.tar.gz'
+      archive 'gpf-user-html.tar.gz'
+      fingerprint 'gpf-user-html.tar.gz'
 
-        sh '''
-            echo $HOME
-            echo $WORKSPACE
-            pwd
-            hostname
-            ansible-playbook -i doc_inventory doc_publish.yml
-        '''
+      sh '''
+        echo $HOME
+        echo $WORKSPACE
+        pwd
+        hostname
+        ansible-playbook -i doc_inventory doc_publish.yml
+      '''
     }
     failure {
       slackSend (
