@@ -79,7 +79,7 @@ pipeline {
       timeout(time: 5, unit: 'MINUTES') {
         script {
           currentBuild.result = "UNSTABLE"
-          sleep 5m
+          sleep(time:5, unit:"MINUTES")
           sh '''
             echo $HOME
             echo $WORKSPACE
