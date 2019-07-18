@@ -77,18 +77,13 @@ pipeline {
       fingerprint 'gpf-user-html.tar.gz'
 
       timeout(time: 5, unit: 'MINUTES') {
-        script {
-          currentBuild.result = "UNSTABLE"
-          sleep(time:5, unit:"MINUTES")
-          sh '''
-            echo $HOME
-            echo $WORKSPACE
-            pwd
-            hostname
-            ansible-playbook -i doc_inventory doc_publish.yml
-          '''
-          currentBuild.result = "SUCCESS"
-        }
+        sh '''
+          echo $HOME
+          echo $WORKSPACE
+          pwd
+          hostname
+          ansible-playbook -i doc_inventory doc_publish.yml
+        '''
       }
     }
     failure {
