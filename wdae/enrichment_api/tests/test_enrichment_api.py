@@ -18,18 +18,20 @@ def test_enrichment_models(admin_client):
 
     assert len(result['background']) == 3
     background = result['background']
+    background.sort(key=lambda x: x['name'])
     assert len(background[0]) == 2
-    assert background[0]['name'] == 'synonymousBackgroundModel'
-    assert background[0]['desc'] == 'Synonymous Background Model'
+    assert background[0]['name'] == 'codingLenBackgroundModel'
+    assert background[0]['desc'] == 'Coding Len Background Model'
     assert len(background[1]) == 2
-    assert background[1]['name'] == 'codingLenBackgroundModel'
-    assert background[1]['desc'] == 'Coding Len Background Model'
+    assert background[1]['name'] == 'samochaBackgroundModel'
+    assert background[1]['desc'] == 'Samocha Background Model'
     assert len(background[2]) == 2
-    assert background[2]['name'] == 'samochaBackgroundModel'
-    assert background[2]['desc'] == 'Samocha Background Model'
+    assert background[2]['name'] == 'synonymousBackgroundModel'
+    assert background[2]['desc'] == 'Synonymous Background Model'
 
     assert len(result['counting']) == 2
     counting = result['counting']
+    counting.sort(key=lambda x: x['name'])
     assert len(counting[0]) == 2
     assert counting[0]['name'] == 'enrichmentEventsCounting'
     assert counting[0]['desc'] == 'Enrichment Events Counting'

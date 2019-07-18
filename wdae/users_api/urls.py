@@ -5,7 +5,7 @@ Created on Aug 10, 2016
 '''
 from __future__ import unicode_literals
 
-from django.conf.urls import url, include
+from django.conf.urls import url
 
 from rest_framework.routers import SimpleRouter
 from users_api import views
@@ -22,4 +22,3 @@ urlpatterns = [
     url(r'users/change_password', views.change_password),
     url(r'users/check_verif_path', views.check_verif_path),
 ] + router.urls
-

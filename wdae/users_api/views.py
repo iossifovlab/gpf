@@ -191,8 +191,7 @@ def login(request):
                                                 password=password)
         if user is not None and user.is_active:
             django.contrib.auth.login(request, user)
-            LOGGER.info(log_filter(request, "login success: " +
-                                str(username)))
+            LOGGER.info(log_filter(request, "login success: " + str(username)))
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     LOGGER.info(log_filter(request, "login failure: " +

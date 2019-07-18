@@ -8,7 +8,7 @@ from configurable_entities.configuration import DAEConfig
 from studies.factory import VariantsDb
 
 from enrichment_tool.config import EnrichmentConfig
-from enrichment_tool.background import CodingLenBackground
+from enrichment_tool.background import CodingLenBackground, SamochaBackground
 from enrichment_tool.background_facade import BackgroundFacade
 
 
@@ -43,6 +43,11 @@ def f1_trio(variants_db_fixture):
 @pytest.fixture(scope='session')
 def f1_trio_coding_len_background(f1_trio_enrichment_config):
     return CodingLenBackground(f1_trio_enrichment_config)
+
+
+@pytest.fixture(scope='session')
+def f1_trio_samocha_background(f1_trio_enrichment_config):
+    return SamochaBackground(f1_trio_enrichment_config)
 
 
 @pytest.fixture(scope='session')
