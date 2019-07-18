@@ -65,9 +65,6 @@ pipeline {
   }
   post {
     success {
-      options { 
-        timeout(time: 5, unit: 'MINUTES')
-      }
       slackSend (
         color: '#00FF00',
         message: "SUCCESSFUL: Job '${env.JOB_NAME} " +
@@ -78,13 +75,15 @@ pipeline {
       archive 'gpf-user-html.tar.gz'
       fingerprint 'gpf-user-html.tar.gz'
 
-      sh '''
-        echo $HOME
-        echo $WORKSPACE
-        pwd
-        hostname
-        ansible-playbook -i doc_inventory doc_publish.yml
-      '''
+      timeout(time: 5, unit: 'MINUTES') {
+        sh '''
+          echo $HOME
+          echo $WORKSPACE
+          pwd
+          hostname
+          ansible-playbook -i doc_inventory doc_publish.yml
+        '''
+      }
     }
     failure {
       slackSend (
