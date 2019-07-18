@@ -65,35 +65,28 @@ pipeline {
   }
   post {
     success {
+      slackSend (
+        color: '#00FF00',
+        message: "SUCCESSFUL: Job '${env.JOB_NAME} " +
+                  "[${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
+      )
+
       archive 'gpf-html.tar.gz'
       fingerprint 'gpf-html.tar.gz'
       archive 'gpf-user-html.tar.gz'
       fingerprint 'gpf-user-html.tar.gz'
 
-      try {
-        timeout(time: 5, unit: 'MINUTES') {
-          sleep 5m
-          sh '''
-            echo $HOME
-            echo $WORKSPACE
-            pwd
-            hostname
-            ansible-playbook -i doc_inventory doc_publish.yml
-          '''
-        }
-
-        slackSend (
-          color: '#00FF00',
-          message: "SUCCESSFUL: Job '${env.JOB_NAME} " +
-                    "[${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
-        )
-      } catch(org.jenkinsci.plugins.workflow.steps.FlowInterruptedException err) {
+      timeout(time: 5, unit: 'MINUTES') {
         currentBuild.result = "UNSTABLE"
-        slackSend (
-          color: '#FFFF00',
-          message: "UNSTABLE: Job '${env.JOB_NAME} " +
-                    "[${env.BUILD_NUMBER}]' (${env.BUILD_URL})"
-        )
+        sleep 5m
+        sh '''
+          echo $HOME
+          echo $WORKSPACE
+          pwd
+          hostname
+          ansible-playbook -i doc_inventory doc_publish.yml
+        '''
+        currentBuild.result = "SUCCESS"
       }
     }
     failure {
