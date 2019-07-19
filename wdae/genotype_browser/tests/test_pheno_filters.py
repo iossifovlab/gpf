@@ -70,7 +70,7 @@ def test_simple_query(db, admin_client):
     assert status.HTTP_200_OK == response.status_code
     res = response.data
 
-    assert 4 == len(res["rows"])
+    assert 2 == len(res["rows"])
 
 
 @pytest.mark.parametrize("pheno_filters,variants_count,pheno_values", [
