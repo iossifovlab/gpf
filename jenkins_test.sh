@@ -35,13 +35,14 @@ py.test --traceconfig -v --cov-config coveragerc --reimport \
     DAE/enrichment_tool/tests \
     DAE/gene/tests \
     DAE/pedigrees/tests \
-    DAE/pheno/tests \
-    DAE/pheno_browser/tests \
     DAE/studies/tests \
     DAE/tools/tests \
     DAE/utils/tests \
     DAE/variant_annotation/tests \
-    DAE/variants/tests/ && \
+    DAE/variants/tests/ 
+    # DAE/pheno/tests \
+    # DAE/pheno_browser/tests \
+
 # py.test -v --cov-config coveragerc \
 #     --junitxml=coverage/wdae-junit.xml \
 #     --cov-append \
