@@ -81,3 +81,4 @@ rm -rf \
 	wdae-api.log wdae-debug.log \
 	wdae_django_default.cache wdae_django_pre.cache
 
+find . -name "*.pyc" -delete
