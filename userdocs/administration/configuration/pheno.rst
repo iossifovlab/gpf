@@ -1,5 +1,5 @@
 Phenotype Database Configuration
-=================================
+================================
 
 The configuration file for a single phenotype database follows the general
 INI format. Its name can be freely chosen, however, it *must* contain a

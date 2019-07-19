@@ -1,3 +1,5 @@
+.. _peopleGroup:
+
 People Group Section
 ====================
 
