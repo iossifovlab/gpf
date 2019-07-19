@@ -23,7 +23,7 @@ pipeline {
         sh '''
           export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
 
-          docker-compose -f docker-compose3.yml up -d
+          docker-compose -f docker-compose.yml up -d
 
         '''
       }
