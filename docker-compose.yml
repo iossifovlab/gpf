@@ -4,20 +4,15 @@ services:
 
     image: seqpipe/seqpipe-docker-impala:latest    
 
-    # volumes:
-    #   - type: bind
-    #     source: /home/lubo/Work/seq-pipeline/fast/seqpipe_impala/data
-    #     target: /data
-
   tests:
-    image: seqpipe/python3-base
+    image: iossifovlab/gpf-base
     volumes:
       - type: bind
         source: .
         target: /code
 
       - type: bind
-        source: ./test_data
+        source: ./data-hg19-startup
         target: /data
 
       - type: bind

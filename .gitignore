@@ -44,3 +44,5 @@ tmp/
 DAE/pyflakes.report
 test_data
 denovo-cache
+data-hg19-startup.tar.gz
+data-hg19-startup

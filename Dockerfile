@@ -8,7 +8,7 @@ RUN apt-get update --fix-missing && \
 	apt-get clean
 
 ADD ./python3-environment.yml /
-ADD ./docker-containers/python3-base/etc/core-site.xml /core-site.xml
+ADD ./docker-container/etc/core-site.xml /core-site.xml
 
 RUN conda env update -n base -f /python3-environment.yml && \
     conda install -c conda-forge pyarrow=0.13.0 && \
@@ -36,7 +36,7 @@ RUN wget http://it.apache.contactlab.it/hadoop/core/hadoop-${HADOOP_VER}/hadoop-
 RUN tar -xvf hadoop-$HADOOP_VER.tar.gz -C ..; \
     mv ../hadoop-${HADOOP_VER} $HADOOP_HOME
 
-ADD ./docker-containers/python3-base/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
+ADD ./docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 
