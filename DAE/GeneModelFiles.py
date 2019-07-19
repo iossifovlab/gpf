@@ -3,7 +3,7 @@
 # July 12th 2013
 # written by Ewa
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 from __future__ import unicode_literals
 from builtins import zip
 from builtins import map

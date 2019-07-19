@@ -61,7 +61,7 @@ class BaseAnnotationRequest(object):
         if position > self.transcript_model.cds[1]:
             return None
         prot_pos = self._get_coding_nucleotide_position(position)
-        return old_div(prot_pos,3) + 1
+        return old_div(prot_pos, 3) + 1
 
     def _get_sequence(self, start_position, end_position):
         self.logger.debug("_get_sequence %d-%d", start_position, end_position)
@@ -210,11 +210,11 @@ class PositiveStrandAnnotationRequest(BaseAnnotationRequest):
         start = self._get_coding_nucleotide_position(start_pos)
         end = self._get_coding_nucleotide_position(end_pos)
 
-        return old_div(start,3) + 1, old_div(end,3) + 1
+        return old_div(start, 3) + 1, old_div(end, 3) + 1
 
     def get_protein_length(self):
         return old_div(self._get_coding_nucleotide_position(
-            self.transcript_model.cds[1]),3)
+            self.transcript_model.cds[1]), 3)
 
     def in_start_codons(self, codon):
         seq = self._get_sequence(self.transcript_model.cds[0],
@@ -306,11 +306,11 @@ class NegativeStrandAnnotationRequest(BaseAnnotationRequest):
         end = self._get_coding_nucleotide_position(start_pos)
         start = self._get_coding_nucleotide_position(end_pos)
 
-        return old_div(start,3) + 1, old_div(end,3) + 1
+        return old_div(start, 3) + 1, old_div(end, 3) + 1
 
     def get_protein_length(self):
         return old_div(self._get_coding_nucleotide_position(
-            self.transcript_model.cds[0]),3)
+            self.transcript_model.cds[0]), 3)
 
     def in_start_codons(self, codon):
         seq = self._get_sequence(self.transcript_model.cds[1] - 2,

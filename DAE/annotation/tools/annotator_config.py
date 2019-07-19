@@ -1,4 +1,6 @@
 from importlib import import_module
+from DAE import genomesDB
+from annotation.tools.utils import handle_header
 
 
 class AnnotatorConfig(object):
@@ -46,55 +48,14 @@ class AnnotatorConfig(object):
         return clazz
 
     @staticmethod
-    def instantiate(section_config, schema):
+    def instantiate(section_config):
         clazz = AnnotatorConfig._name_to_class(section_config.annotator_name)
         assert clazz is not None
-        return clazz(section_config, schema)
+        return clazz(section_config)
 
     @staticmethod
-    def cli_options():
+    def cli_options(dae_config):
         return [
-            ('infile', {
-                'nargs': '?',
-                'action': 'store',
-                'default': '-',
-                'help': 'path to input file; defaults to stdin'
-            }),
-            ('outfile', {
-                'nargs': '?',
-                'action': 'store',
-                'default': '-',
-                'help': 'path to output file; defaults to stdout'
-            }),
-            ('--mode', {
-                'help': 'annotator mode; available modes are '
-                '`replace` and `append`',
-                'default': '"replace"',
-                'action': 'store'
-            }),
-            ('--direct', {
-                'help': 'use direct access to score files',
-                'default': True,
-                'action': 'store_true'
-            }),
-            ('--sequential', {
-                'help': 'use sequential access to score files',
-                'default': False,
-                'action': 'store_true'
-            }),
-            ('--region', {
-                'help': 'work only in the specified region',
-                'default': None,
-                'action': 'store'
-            }),
-            ('--read-parquet', {
-                'help': 'read from a parquet file',
-                'action': 'store_true'
-            }),
-            ('--write-parquet', {
-                'help': 'write to a parquet file',
-                'action': 'store_true'
-            })
         ]
 
 
@@ -111,6 +72,9 @@ class VariantAnnotatorConfig(AnnotatorConfig):
 
     def _setup_defaults(self):
         if self.options.vcf:
+            assert not self.options.v, \
+                [self.name, self.annotator_name, self.options.v]
+
             if self.options.c is None:
                 self.options.c = 'CHROM'
             if self.options.p is None:
@@ -125,25 +89,25 @@ class VariantAnnotatorConfig(AnnotatorConfig):
             if self.options.v is None:
                 self.options.v = 'variant'
         if self.options.Graw is None:
-            from DAE import genomesDB
             self.genome_file = genomesDB.get_genome_file()
         else:
             self.genome_file = self.options.Graw
         assert self.genome_file is not None
 
     @staticmethod
-    def cli_options():
-        options = AnnotatorConfig.cli_options()
+    def cli_options(dae_config):
+        options = AnnotatorConfig.cli_options(dae_config)
 
         options.extend([
             ('-c', {
-                'help': 'chromosome column number/name'
+                'help': 'chromosome column number/name [default: %(default)s]'
             }),
             ('-p', {
-                'help': 'position column number/name'
+                'help': 'position column number/name [default: %(default)s]'
             }),
             ('-x', {
-                'help': 'location (chr:position) column number/name'
+                'help': 'location (chr:position) column number/name '
+                '[default: %(default)s]'
             }),
             ('-v', {
                 'help': 'variant (CSHL format) column number/name'
@@ -155,12 +119,14 @@ class VariantAnnotatorConfig(AnnotatorConfig):
                 'help': 'alternative column number/name'
             }),
             ('--vcf', {
-                'help': 'if the variant description uses VCF convention',
+                'help': 'if the variant description uses VCF convention '
+                '[default: %(default)s]',
                 'default': False,
                 'action': 'store_true'
             }),
             ('--Graw', {
-                'help': 'genome file location'
+                'help': 'genome file location [default: %(default)s]',
+                'default': genomesDB.get_genome_file(),
             }),
         ])
         return options
@@ -169,9 +135,7 @@ class VariantAnnotatorConfig(AnnotatorConfig):
 class LineConfig(object):
 
     def __init__(self, source_header):
-        self.source_header = [
-            col.strip('#') for col in source_header
-        ]
+        self.source_header = handle_header(source_header)
 
     def build(self, source_line):
         return dict(zip(self.source_header, source_line))

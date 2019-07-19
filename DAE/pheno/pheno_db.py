@@ -3,16 +3,18 @@ Created on Sep 10, 2016
 
 @author: lubo
 '''
-from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import object
 import pandas as pd
 from sqlalchemy.sql import select, text
 from sqlalchemy import not_
 
 from collections import defaultdict, OrderedDict
 
-from VariantsDB import Person, Family
+from variants.family import Person, Family
 from pheno.db import DbManager
 from pheno.common import MeasureType
+from variants.attributes import Sex, Status, Role
 
 
 class Instrument(object):
@@ -23,7 +25,7 @@ class Instrument(object):
 
     * `instrument_name`
 
-    * `masures` -- dictionary of all measures in the instrument
+    * `measures` -- dictionary of all measures in the instrument
     """
 
     def __init__(self, name):
@@ -223,14 +225,14 @@ class PhenoDB(object):
         families = defaultdict(list)
         persons = self.get_persons()
 
-        for p in persons.values():
+        for p in list(persons.values()):
             families[p.atts['family_id']].append(p)
 
         self.persons = persons
         self.families = {}
 
-        for family_id, members in families.items():
-            f = Family()
+        for family_id, members in list(families.items()):
+            f = Family(family_id)
             f.memberInOrder = members
             f.familyId = family_id
             self.families[family_id] = f
@@ -261,7 +263,7 @@ class PhenoDB(object):
         Each row of the returned data frame represnts a person from phenotype
         database.
 
-        Columns returned are: `person_id`, `family_id`, `role`, `gender`.
+        Columns returned are: `person_id`, `family_id`, `role`, `sex`.
         """
 
         columns = [
@@ -269,7 +271,7 @@ class PhenoDB(object):
             self.db.person.c.person_id,
             self.db.person.c.role,
             self.db.person.c.status,
-            self.db.person.c.gender,
+            self.db.person.c.sex,
         ]
         s = select(columns)
         s = s.select_from(
@@ -286,8 +288,8 @@ class PhenoDB(object):
                 self.db.family.c.family_id.in_(family_ids)
             )
         df = pd.read_sql(s, self.db.engine)
-
-        return df[['person_id', 'family_id', 'role', 'gender', 'status']]
+        # df.rename(columns={'sex': 'sex'}, inplace=True)
+        return df[['person_id', 'family_id', 'role', 'sex', 'status']]
 
     def get_persons(self, roles=None, person_ids=None, family_ids=None):
         """Returns individuals data from phenotype database.
@@ -314,10 +316,17 @@ class PhenoDB(object):
             family_id = row['family_id']
 
             p = Person(row)
-            p.personId = person_id
-            p.familyId = family_id
+            p.person_id = person_id
+            p.family_id = family_id
+            assert row['role'] in Role, \
+                "{} not a valid role".format(row['role'])
+            assert row['sex'] in Sex, \
+                "{} not a valid sex".format(row['sex'])
+            assert row['status'] in Status, \
+                "{} not a valid status".format(row['status'])
+            # FIXME:
             p.role = row['role']
-            p.gender = row['gender']
+            p.sex = row['sex']
             p.status = row['status']
 
             persons[person_id] = p
@@ -327,7 +336,7 @@ class PhenoDB(object):
         """
         Returns a measure by measure_id.
         """
-        assert measure_id in self.measures
+        assert measure_id in self.measures, measure_id
         return self.measures[measure_id]
 
     def _build_default_filter_clause(self, m, default_filter):
@@ -354,7 +363,7 @@ class PhenoDB(object):
         columns = [
             self.db.family.c.family_id,
             self.db.person.c.person_id,
-            self.db.person.c.gender,
+            self.db.person.c.sex,
             self.db.person.c.status,
             value_table.c.value,
         ]
@@ -416,7 +425,7 @@ class PhenoDB(object):
         individuals IDs and column named as `measure_id` values of the measure.
         """
 
-        assert measure_id in self.measures
+        assert measure_id in self.measures, measure_id
         measure = self.measures[measure_id]
 
         df = self._raw_get_measure_values_df(
@@ -561,7 +570,7 @@ class PhenoDB(object):
         assert instrument_name in self.instruments
         instrument = self.instruments[instrument_name]
         measure_ids = [
-            m.measure_id for m in instrument.measures.values()
+            m.measure_id for m in list(instrument.measures.values())
         ]
         return measure_ids
 

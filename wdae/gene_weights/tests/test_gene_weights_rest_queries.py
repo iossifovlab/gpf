@@ -7,7 +7,7 @@ from rest_framework import status
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
 from datasets_api.models import Dataset
 import copy
-from datasets.tests.requests import EXAMPLE_QUERY_SD, EXAMPLE_QUERY_SSC
+from datasets.tests_old.requests import EXAMPLE_QUERY_SD, EXAMPLE_QUERY_SSC
 
 
 class Test(BaseAuthenticatedUserTest):
@@ -26,7 +26,7 @@ class Test(BaseAuthenticatedUserTest):
             "rangeStart": 1.0,
             "rangeEnd": 5.0
         }
-        data["pedigreeSelector"] = {
+        data["peopleGroup"] = {
             'id': "phenotype",
             "checkedValues": ["autism", ]
         }
@@ -51,7 +51,7 @@ class Test(BaseAuthenticatedUserTest):
             "rangeStart": 16530,
             "rangeEnd": 16754
         }
-        data["pedigreeSelector"] = {
+        data["peopleGroup"] = {
             'id': "phenotype",
             "checkedValues": ["autism", ]
         }
@@ -127,7 +127,7 @@ class Test(BaseAuthenticatedUserTest):
             "rangeStart": 25.0,
             "rangeEnd": 30.0
         }
-        data["pedigreeSelector"] = {
+        data["peopleGroup"] = {
             'id': "phenotype",
             "checkedValues": ["autism", "unaffected"]
         }
@@ -145,7 +145,7 @@ class Test(BaseAuthenticatedUserTest):
     def test_sd_rest_call_by_gene_syms(self):
         data = copy.deepcopy(EXAMPLE_QUERY_SD)
         data["geneSymbols"] = 'AHNAK2,MUC16'
-        data["pedigreeSelector"] = {
+        data["peopleGroup"] = {
             'id': "phenotype",
             "checkedValues": ["autism", "unaffected"]
         }

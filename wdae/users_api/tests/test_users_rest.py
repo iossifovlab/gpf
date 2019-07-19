@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import filter
 from rest_framework import status
 from django.contrib.auth.models import Group
 from users_api.models import WdaeUser
@@ -97,7 +99,10 @@ def test_new_user_is_not_active(admin_client, users_endpoint):
     new_users = admin_client.get(users_endpoint).data
     assert len(new_users) == len(old_users) + 1
 
-    new_user = filter(lambda u: u['email'] == data['email'], new_users)[0]
+    new_user = next(
+        filter(lambda u: u['email'] == data['email'], new_users),
+            None
+    )
     assert not new_user['hasPassword']
 
 
@@ -472,7 +477,7 @@ def test_bulk_adding_users_to_existing_group(
         assert not user.groups.filter(name=empty_group.name).exists()
 
     data = {
-        'userIds': map(lambda u: u.id, three_new_users),
+        'userIds': [u.id for u in three_new_users],
         'group': empty_group.name
     }
 
@@ -488,7 +493,7 @@ def test_bulk_adding_users_to_new_group(
         admin_client, users_bulk_add_group_url, three_new_users):
     group_name = 'some random name'
     data = {
-        'userIds': map(lambda u: u.id, three_new_users),
+        'userIds': [u.id for u in three_new_users],
         'group': group_name
     }
 
@@ -505,7 +510,7 @@ def test_bulk_adding_users_to_new_group(
 def test_bulk_adding_with_duplicate_user_ids_fails(
         admin_client, users_bulk_add_group_url, three_new_users):
     data = {
-        'userIds': map(lambda u: u.id, three_new_users),
+        'userIds': [u.id for u in three_new_users],
         'group': 'some random name'
     }
     data['userIds'].append(three_new_users[0].id)
@@ -522,7 +527,7 @@ def test_bulk_adding_with_duplicate_user_ids_doesnt_create_new_group(
         admin_client, users_bulk_add_group_url, three_new_users):
     group_name = 'some random name'
     data = {
-        'userIds': map(lambda u: u.id, three_new_users),
+        'userIds': [u.id for u in three_new_users],
         'group': group_name
     }
     data['userIds'].append(three_new_users[0].id)
@@ -537,7 +542,7 @@ def test_bulk_adding_unknown_user_ids_fails(
         admin_client, users_bulk_add_group_url, three_new_users):
     group_name = 'some random name'
     data = {
-        'userIds': map(lambda u: u.id, three_new_users),
+        'userIds': [u.id for u in three_new_users],
         'group': group_name
     }
     data['userIds'].append(424242)
@@ -552,7 +557,7 @@ def test_bulk_remove_group_works(
         admin_client, users_bulk_remove_group_url, three_users_in_a_group):
     users, group = three_users_in_a_group
     data = {
-        'userIds': map(lambda u: u.id, users),
+        'userIds': [u.id for u in users],
         'group': group.name
     }
 
@@ -571,7 +576,7 @@ def test_bulk_remove_with_user_without_the_group_works(
     assert not active_user.groups.filter(name=group.name).exists()
 
     data = {
-        'userIds': map(lambda u: u.id, users),
+        'userIds': [u.id for u in users],
         'group': group.name
     }
     data['userIds'].append(active_user.id)
@@ -589,7 +594,7 @@ def test_bulk_remove_unknown_group_fails(
         admin_client, users_bulk_remove_group_url, three_users_in_a_group):
     users, _ = three_users_in_a_group
     data = {
-        'userIds': map(lambda u: u.id, users),
+        'userIds': [u.id for u in users],
         'group': 'alabala'
     }
 

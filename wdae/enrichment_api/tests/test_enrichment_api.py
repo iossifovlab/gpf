@@ -1,142 +1,193 @@
-'''
-Created on Feb 17, 2017
+import pytest
 
-@author: lubo
-'''
-from __future__ import print_function
-
-from rest_framework import status
-from users_api.tests.base_tests import BaseAuthenticatedUserTest
+import json
 
 
-class Test(BaseAuthenticatedUserTest):
+pytestmark = pytest.mark.usefixtures('mock_studies_manager')
 
-    def test_gene_set_denovo_main_autism_candidates_denovo_db(self):
-        data = {
-            'datasetId': 'TESTdenovo_db',
-            'enrichmentBackgroundModel': 'synonymousBackgroundModel',
-            'enrichmentCountingModel': 'enrichmentGeneCounting',
-            'geneSet': {
-                'geneSetsCollection': 'main',
-                'geneSet': 'autism candidates from Iossifov PNAS 2015',
+
+def test_enrichment_models(admin_client):
+    response = admin_client.get('/api/v3/enrichment/models/f1_trio')
+
+    assert response
+    assert response.status_code == 200
+
+    result = response.data
+    assert result
+    assert len(result) == 2
+
+    assert len(result['background']) == 3
+    background = result['background']
+    background.sort(key=lambda x: x['name'])
+    assert len(background[0]) == 2
+    assert background[0]['name'] == 'codingLenBackgroundModel'
+    assert background[0]['desc'] == 'Coding Len Background Model'
+    assert len(background[1]) == 2
+    assert background[1]['name'] == 'samochaBackgroundModel'
+    assert background[1]['desc'] == 'Samocha Background Model'
+    assert len(background[2]) == 2
+    assert background[2]['name'] == 'synonymousBackgroundModel'
+    assert background[2]['desc'] == 'Synonymous Background Model'
+
+    assert len(result['counting']) == 2
+    counting = result['counting']
+    counting.sort(key=lambda x: x['name'])
+    assert len(counting[0]) == 2
+    assert counting[0]['name'] == 'enrichmentEventsCounting'
+    assert counting[0]['desc'] == 'Enrichment Events Counting'
+    assert len(counting[1]) == 2
+    assert counting[1]['name'] == 'enrichmentGeneCounting'
+    assert counting[1]['desc'] == 'Enrichment Gene Counting'
+
+
+def test_enrichment_models_missing_study(admin_client):
+    response = admin_client.get('/api/v3/enrichment/models/f1')
+
+    assert response
+    assert response.status_code == 200
+
+    result = response.data
+    assert result
+    assert len(result) == 2
+    assert len(result['background']) == 0
+    assert len(result['counting']) == 0
+
+
+def test_enrichment_test_missing_dataset_id(admin_client):
+    url = '/api/v3/enrichment/test'
+    query = {
+        'enrichmentBackgroundModel': 'synonymousBackgroundModel',
+        'enrichmentCountingModel': 'enrichmentGeneCounting',
+        'geneSymbols': [
+            'POGZ'
+        ]
+    }
+    response = admin_client.post(
+        url, json.dumps(query), content_type='application/json', format='json')
+
+    assert response
+    assert response.status_code == 400
+
+
+def test_enrichment_test_missing_study(admin_client):
+    url = '/api/v3/enrichment/test'
+    query = {
+        'datasetId': 'f1',
+        'enrichmentBackgroundModel': 'synonymousBackgroundModel',
+        'enrichmentCountingModel': 'enrichmentGeneCounting',
+        'geneSymbols': [
+            'POGZ'
+        ]
+    }
+    response = admin_client.post(
+        url, json.dumps(query), content_type='application/json', format='json')
+
+    assert response
+    assert response.status_code == 404
+
+
+def test_enrichment_test_missing_gene_symbols(admin_client):
+    url = '/api/v3/enrichment/test'
+    query = {
+        'datasetId': 'f1_trio',
+        'enrichmentBackgroundModel': 'synonymousBackgroundModel',
+        'enrichmentCountingModel': 'enrichmentGeneCounting',
+    }
+    response = admin_client.post(
+        url, json.dumps(query), content_type='application/json', format='json')
+
+    assert response
+    assert response.status_code == 400
+
+
+def test_enrichment_test_gene_symbols(admin_client):
+    url = '/api/v3/enrichment/test'
+    query = {
+        'datasetId': 'f1_trio',
+        'enrichmentBackgroundModel': 'codingLenBackgroundModel',
+        'enrichmentCountingModel': 'enrichmentGeneCounting',
+        'geneSymbols': [
+            'SAMD11',
+            'PLEKHN1',
+            'POGZ'
+        ]
+    }
+    response = admin_client.post(
+        url, json.dumps(query), content_type='application/json', format='json')
+
+    assert response
+    assert response.status_code == 200
+
+    result = response.data
+    assert len(result) == 2
+
+    assert result['desc'][:14] == 'Gene Symbols: '
+    assert result['desc'][:14] == 'Gene Symbols: '
+    assert result['desc'][-4:] == ' (3)'
+    assert sorted(result['desc'][14:-4].split(',')) == \
+        sorted(['SAMD11', 'PLEKHN1', 'POGZ'])
+
+    assert len(result['result']) == 2
+    assert len(result['result'][0]) == 6
+    assert result['result'][0]['selector'] == 'autism'
+    assert result['result'][0]['peopleGroupId'] == 'phenotype'
+    assert len(result['result'][0]['childrenStats']) == 2
+    assert result['result'][0]['childrenStats']['M'] == 1
+    assert result['result'][0]['childrenStats']['F'] == 1
+    assert result['result'][0]['LGDs']['all']['count'] == 0
+    assert result['result'][0]['LGDs']['rec']['count'] == 0
+    assert result['result'][0]['LGDs']['male']['count'] == 0
+    assert result['result'][0]['LGDs']['female']['count'] == 0
+    assert result['result'][0]['missense']['all']['count'] == 1
+    assert result['result'][0]['missense']['rec']['count'] == 1
+    assert result['result'][0]['missense']['male']['count'] == 1
+    assert result['result'][0]['missense']['female']['count'] == 1
+    assert result['result'][0]['synonymous']['all']['count'] == 1
+    assert result['result'][0]['synonymous']['rec']['count'] == 1
+    assert result['result'][0]['synonymous']['male']['count'] == 1
+    assert result['result'][0]['synonymous']['female']['count'] == 1
+
+    assert len(result['result'][1]) == 6
+    assert result['result'][1]['selector'] == 'unaffected'
+    assert result['result'][1]['peopleGroupId'] == 'phenotype'
+    assert len(result['result'][1]['childrenStats']) == 1
+    assert result['result'][1]['childrenStats']['F'] == 1
+    assert result['result'][1]['LGDs']['all']['count'] == 0
+    assert result['result'][1]['LGDs']['rec']['count'] == 0
+    assert result['result'][1]['LGDs']['male']['count'] == 0
+    assert result['result'][1]['LGDs']['female']['count'] == 0
+    assert result['result'][1]['missense']['all']['count'] == 0
+    assert result['result'][1]['missense']['rec']['count'] == 0
+    assert result['result'][1]['missense']['male']['count'] == 0
+    assert result['result'][1]['missense']['female']['count'] == 0
+    assert result['result'][1]['synonymous']['all']['count'] == 1
+    assert result['result'][1]['synonymous']['rec']['count'] == 0
+    assert result['result'][1]['synonymous']['male']['count'] == 0
+    assert result['result'][1]['synonymous']['female']['count'] == 1
+
+
+def test_enrichment_test_gene_set(admin_client):
+    url = '/api/v3/enrichment/test'
+    query = {
+        'datasetId': 'f1_trio',
+        'enrichmentBackgroundModel': 'codingLenBackgroundModel',
+        'enrichmentCountingModel': 'enrichmentGeneCounting',
+        'geneSet': {
+            'geneSetsCollection': 'denovo',
+            'geneSet': 'Missense',
+            'geneSetsTypes': {
+                'f1_trio': {'phenotype': ['autism']}
             }
         }
-        url = '/api/v3/enrichment/test'
+    }
+    response = admin_client.post(
+        url, json.dumps(query), content_type='application/json', format='json')
 
-        response = self.client.post(url, data, format='json')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
-        data = response.data
+    assert response
+    assert response.status_code == 200
 
-        assert data['result']
+    result = response.data
+    assert len(result) == 2
 
-        res = data['result'][0]
-        self.assertEquals(0, res['LGDs']['all']['count'])
-        self.assertEquals(0, res['LGDs']['rec']['count'])
-
-        res = data['result'][3]
-        self.assertEquals('autism', res['selector'])
-        self.assertEquals(78, res['LGDs']['all']['count'])
-        self.assertEquals(8, res['LGDs']['rec']['count'])
-
-        res = data['result'][-1]
-        self.assertEquals('unaffected', res['selector'])
-        self.assertEquals(19, res['LGDs']['all']['count'])
-
-    def test_bad_request(self):
-        data = {
-            'enrichmentBackgroundModel': 'synonymousBackgroundModel',
-            'enrichmentCountingModel': 'enrichmentGeneCounting',
-        }
-        url = '/api/v3/enrichment/test'
-
-        response = self.client.post(url, data, format='json')
-        self.assertEquals(status.HTTP_400_BAD_REQUEST, response.status_code)
-
-    def test_gene_set_denovo_lgds_rec_sd(self):
-        data = {
-            'datasetId': 'SD_TEST',
-            'enrichmentBackgroundModel': 'synonymousBackgroundModel',
-            'enrichmentCountingModel': 'enrichmentGeneCounting',
-            'geneSet': {
-                'geneSetsCollection': 'denovo',
-                'geneSet': 'LGDs.Recurrent',
-                'geneSetsTypes': {
-                    'SD_TEST': ['autism']
-                }
-            }
-        }
-        url = '/api/v3/enrichment/test'
-
-        response = self.client.post(url, data, format='json')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
-        data = response.data
-
-        # self.assertEquals(546, data['result'][0]['LGDs']['all']['count'])
-        self.assertEquals(551, data['result'][0]['LGDs']['all']['count'])
-        self.assertEquals(39, data['result'][0]['LGDs']['rec']['count'])
-
-    def test_gene_set_denovo_main_autism_candidates_sd(self):
-        data = {
-            'datasetId': 'SD_TEST',
-            'enrichmentBackgroundModel': 'synonymousBackgroundModel',
-            'enrichmentCountingModel': 'enrichmentGeneCounting',
-            'geneSet': {
-                'geneSetsCollection': 'main',
-                'geneSet': 'autism candidates from Iossifov PNAS 2015',
-            }
-        }
-        url = '/api/v3/enrichment/test'
-
-        response = self.client.post(url, data, format='json')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
-        data = response.data
-
-        # self.assertEquals(546, data['result'][0]['LGDs']['all']['count'])
-        self.assertEquals(551, data['result'][0]['LGDs']['all']['count'])
-        self.assertEquals(39, data['result'][0]['LGDs']['rec']['count'])
-
-        self.assertEquals('unaffected', data['result'][5]['selector'])
-        self.assertEquals(220, data['result'][5]['LGDs']['all']['count'])
-
-    def test_gene_set_denovo_lgds_rec_ssc(self):
-        data = {
-            'datasetId': 'SSC',
-            'enrichmentBackgroundModel': 'synonymousBackgroundModel',
-            'enrichmentCountingModel': 'enrichmentGeneCounting',
-            'geneSet': {
-                'geneSetsCollection': 'denovo',
-                'geneSet': 'LGDs.Recurrent',
-                'geneSetsTypes': {
-                    'SD_TEST': ['autism']
-                }
-            }
-        }
-        url = '/api/v3/enrichment/test'
-
-        response = self.client.post(url, data, format='json')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
-        data = response.data
-
-        # self.assertEquals(386, data['result'][0]['LGDs']['all']['count'])
-        self.assertEquals(391, data['result'][0]['LGDs']['all']['count'])
-        self.assertEquals(28, data['result'][0]['LGDs']['rec']['count'])
-        self.assertEquals(
-            "Gene Set: LGDs.Recurrent (SD_TEST:autism) (45)", data['desc'])
-
-    def test_gene_syms_description(self):
-        data = {
-            'datasetId': 'SSC',
-            'enrichmentBackgroundModel': 'synonymousBackgroundModel',
-            'enrichmentCountingModel': 'enrichmentGeneCounting',
-            "geneSymbols": [
-                "POGZ"
-            ]
-        }
-        url = '/api/v3/enrichment/test'
-
-        response = self.client.post(url, data, format='json')
-        self.assertEquals(status.HTTP_200_OK, response.status_code)
-        data = response.data
-
-        self.assertEquals(
-            "Gene Symbols: POGZ (1)", data['desc'])
+    assert result['desc'] == \
+        'Gene Set: Missense (f1_trio:phenotype:autism) (1)'

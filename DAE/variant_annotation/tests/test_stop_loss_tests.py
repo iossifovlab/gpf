@@ -2,10 +2,10 @@ from __future__ import unicode_literals
 import unittest
 import pytest
 from variant_annotation.annotator import Variant
-from mocks import ExonMock
-from mocks import TranscriptModelMock
-from mocks import ReferenceGenomeMock
-from mocks import AnnotatorMock
+from .mocks import ExonMock
+from .mocks import TranscriptModelMock
+from .mocks import ReferenceGenomeMock
+from .mocks import AnnotatorMock
 from variant_annotation.effect_checkers.stop_loss \
     import StopLossEffectChecker
 from variant_annotation.annotation_request import AnnotationRequestFactory

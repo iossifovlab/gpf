@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 import sys
 import os
@@ -8,32 +8,53 @@ import pyarrow.parquet as pq
 from box import Box
 from annotation.tools.schema import Schema
 from annotation.tools.file_io_tsv import AbstractFormat
+from collections import OrderedDict
 
 
 class ParquetSchema(Schema):
 
     # New types only need to be added here.
-    type_map = {'str': (str, pa.string()),
-                'float': (float, pa.float64()),
-                'int': (int, pa.int32()),
-                'int8': (int, pa.int8()),
-                'int16': (int, pa.int16()),
-                'int64': (int, pa.int64()),
-                'list(str)': (str, pa.list_(pa.string())),
-                'list(float)': (float, pa.list_(pa.float64())),
-                'list(int)': (int, pa.list_(pa.float32()))}
+    type_map = OrderedDict([
+        ('str', (str, pa.string())),
+        ('float', (float, pa.float32())),
+        ('float32', (float, pa.float32())),
+        ('float64', (float, pa.float64())),
+        ('int', (int, pa.uint32())),
+        ('int8', (int, pa.int8())),
+        ('tinyint', (int, pa.int8())),
+        ('int16', (int, pa.int16())),
+        ('smallint', (int, pa.int16())),
+        ('int32', (int, pa.int32())),
+        ('int64', (int, pa.int64())),
+        ('bigint', (int, pa.int64())),
+        ('list(str)', (str, pa.list_(pa.string()))),
+        ('list(float)', (float, pa.list_(pa.float64()))),
+        ('list(int)', (int, pa.list_(pa.uint32()))),
+        ('bool', (bool, pa.bool_())),
+        ('boolean', (bool, pa.bool_())),
+        ('binary', (bytes, pa.binary())),
+        ('string', (bytes, pa.string())),
+    ])
 
-    def __init__(self):
+    def __init__(self, schema_dict={}):
         super(ParquetSchema, self).__init__()
+        self.columns = {
+            key: ParquetSchema.produce_type(val)
+            for key, val in schema_dict.items()
+        }
 
     @classmethod
     def produce_type(cls, type_name):
-        assert type_name in cls.type_map
+        assert type_name in cls.type_map, type_name
         return Box({'type_name': type_name,
                     'type_py': cls.type_map[type_name][0],
                     'type_pa': cls.type_map[type_name][1]},
                    default_box=True,
                    default_box_attr=None)
+
+    def create_column(self, col_name, col_type):
+        if col_name not in self.columns:
+            self.columns[col_name] = ParquetSchema.produce_type(col_type)
 
     @classmethod
     def convert(cls, schema):
@@ -41,11 +62,9 @@ class ParquetSchema(Schema):
             return schema
         assert isinstance(schema, Schema)
         pq_schema = ParquetSchema()
-        pq_schema.columns = schema.columns
-        for col in pq_schema.columns:
-            type_name = pq_schema.columns[col].type_name
-            pq_schema.columns[col] = \
-                ParquetSchema.produce_type(type_name)
+        for col_name, col_type in schema.columns.items():
+            pq_schema.columns[col_name] = \
+                ParquetSchema.produce_type(col_type.type_name)
         return pq_schema
 
     @classmethod
@@ -64,17 +83,15 @@ class ParquetSchema(Schema):
     def from_arrow(cls, pa_schema):
         new_schema = ParquetSchema()
         for col in pa_schema:
+            found = False
             for type_name, types in new_schema.type_map.items():
                 if col.type == types[1]:
                     new_schema.columns[col.name] = cls.produce_type(type_name)
+                    found = True
                     break
-        if len(new_schema.columns) != len(pa_schema):
-            print(("An error occured during conversion of the"
-                   " Parquet file's schema. This is most likely caused"
-                   " by a missing type counterpart in"
-                   " type_map (ParquetSchema class)."),
-                  file=sys.stderr)
-            sys.exit(-1)
+            assert found, col
+
+        assert len(new_schema.columns) == len(pa_schema)
         return new_schema
 
     def to_arrow(self):
@@ -103,14 +120,14 @@ class ParquetReader(AbstractFormat):
 
     def _setup(self):
         assert self.options.infile != '-'
-        assert os.path.exists(self.options.infile)
+        assert os.path.exists(self.options.infile), self.options.infile
         self.pqfile = pq.ParquetFile(self.options.infile)
         self.schema = ParquetSchema.from_parquet(self.pqfile.schema)
-        self.header = list(self.schema.columns.keys())
         self.row_group_count = self.pqfile.num_row_groups
         self._read_row_group()
 
     def _cleanup(self):
+        # self.pqfile.close()
         print('Read', self.linecount, 'lines.', file=sys.stderr)
 
     def _read_row_group(self):
@@ -205,9 +222,7 @@ class ParquetWriter(AbstractFormat):
             sys.exit(-1)
 
     def header_write(self, header):
-        self.header = header
-        for col in self.header:
-            self.column_buffer[col.replace('#', '')] = []
+        pass
 
     def _write_buffer(self):
         buffer_table = []
@@ -219,15 +234,17 @@ class ParquetWriter(AbstractFormat):
 
         for col_name, col_data in self.column_buffer.items():
             col_type = self.schema.columns[col_name].type_py
+            pa_type = self.schema.columns[col_name].type_pa
             col = pa.column(col_name,
                             pa.array(self.coerce_column(col_name,
                                                         col_data,
-                                                        col_type)))
+                                                        col_type),
+                                     type=pa_type))
             buffer_table.append(col)
 
         self.pq_writer.write_table(pa.Table.from_arrays(
-                                     buffer_table,
-                                     schema=self.schema.to_arrow()))
+                                   buffer_table,
+                                   schema=self.schema.to_arrow()))
 
         for col in self.column_buffer.keys():
             self.column_buffer[col] = []
@@ -237,7 +254,7 @@ class ParquetWriter(AbstractFormat):
         if self.buffer_line == self.buffer_size:
             self._write_buffer()
         for col in range(0, len(line)):
-            self.column_buffer[self.header[col]].append(line[col])
+            self.column_buffer[self.schema.col_names[col]].append(line[col])
         self.linecount += 1
         self.buffer_line += 1
 

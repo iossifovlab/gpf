@@ -3,12 +3,22 @@ Created on Jul 5, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from rest_framework import permissions
+
+from datasets_api.studies_manager import get_studies_manager
 from datasets_api.models import Dataset
 from guardian.utils import get_anonymous_user
-from preloaded import register
+
 
 class IsDatasetAllowed(permissions.BasePermission):
+
+    def has_permission(self, request, view):
+        if 'dataset_id' not in request.query_params:
+            return True
+
+        return self.has_object_permission(
+            request, view, request.query_params['dataset_id'])
 
     def has_object_permission(self, request, view, dataset_id):
         return self.user_has_permission(request.user, dataset_id)
@@ -21,8 +31,9 @@ class IsDatasetAllowed(permissions.BasePermission):
 
     @staticmethod
     def permitted_datasets(user):
-        dataset_ids = register.get('datasets').get_config().get_dataset_ids()
-        return filter(
+        dataset_ids = get_studies_manager().get_variants_db().get_all_ids()
+
+        return list(filter(
             lambda dataset_id: IsDatasetAllowed.user_has_permission(
                 user, dataset_id),
-            dataset_ids)
+            dataset_ids))

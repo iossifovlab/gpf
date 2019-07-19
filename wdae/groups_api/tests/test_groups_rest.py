@@ -1,4 +1,5 @@
-import pytest
+from __future__ import print_function
+from builtins import next
 
 from guardian.models import Group
 from guardian import shortcuts

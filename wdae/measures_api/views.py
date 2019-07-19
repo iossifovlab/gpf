@@ -3,17 +3,21 @@ Created on Mar 30, 2017
 
 @author: lubo
 '''
+from __future__ import division
+from __future__ import unicode_literals
+from past.utils import old_div
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import NotAuthenticated
 import traceback
 from genotype_browser.views import QueryBaseView
 import numpy as np
+import os
 from pheno.common import MeasureType
+from pheno_browser.db import DbManager
 import logging
 
 logger = logging.getLogger(__name__)
-
 
 
 class PhenoMeasuresView(QueryBaseView):
@@ -23,7 +27,7 @@ class PhenoMeasuresView(QueryBaseView):
 
         try:
             dataset_id = data['datasetId']
-            dataset = self.datasets_factory.get_dataset(dataset_id)
+            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
             assert dataset is not None
 
             if dataset.pheno_db is None:
@@ -40,7 +44,7 @@ class PhenoMeasuresView(QueryBaseView):
                         'min': m.min_value,
                         'max': m.max_value,
                     }
-                    for m in res.values()
+                    for m in list(res.values())
                 ]
             elif measure_type == 'categorical':
                 res = [
@@ -48,7 +52,7 @@ class PhenoMeasuresView(QueryBaseView):
                         'measure': m.measure_id,
                         'domain': m.values_domain.split(',')
                     }
-                    for m in res.values()
+                    for m in list(res.values())
                 ]
             return Response(res, status=status.HTTP_200_OK)
         except NotAuthenticated:
@@ -69,7 +73,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
         data = request.data
         try:
             dataset_id = data['datasetId']
-            dataset = self.datasets_factory.get_dataset(dataset_id)
+            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
 
             assert dataset is not None
             assert dataset.pheno_db is not None
@@ -96,7 +100,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
                 "max": max(bins),
                 "bars": bars,
                 "bins": bins,
-                "step": (measure.max_value - measure.min_value) / 1000.0,
+                "step": old_div((measure.max_value - measure.min_value), 1000.0),
             }
             return Response(result, status=status.HTTP_200_OK)
 
@@ -117,7 +121,7 @@ class PhenoMeasurePartitionsView(QueryBaseView):
         data = request.data
         try:
             dataset_id = data['datasetId']
-            dataset = self.datasets_factory.get_dataset(dataset_id)
+            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
             assert dataset is not None
             assert dataset.pheno_db is not None
             assert "measure" in data
@@ -144,11 +148,49 @@ class PhenoMeasurePartitionsView(QueryBaseView):
             mdf = df[np.logical_and(df[pheno_measure] >= mmin,
                                     df[pheno_measure] < mmax)]
 
-            res = {"left": {"count": len(ldf), "percent": len(ldf) / total},
-                   "mid": {"count": len(mdf), "percent": len(mdf) / total},
-                   "right": {"count": len(rdf), "percent": len(rdf) / total}}
+            res = {"left": {"count": len(ldf), "percent": old_div(len(ldf), total)},
+                   "mid": {"count": len(mdf), "percent": old_div(len(mdf), total)},
+                   "right": {"count": len(rdf), "percent": old_div(len(rdf), total)}}
             return Response(res)
 
+        except NotAuthenticated:
+            logger.exception("error while processing genotype query")
+            traceback.print_exc()
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
+
+        except Exception:
+            logger.exception("error while processing genotype query")
+            traceback.print_exc()
+
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class PhenoMeasureRegressionsView(QueryBaseView):
+
+    def __init__(self):
+        super(PhenoMeasureRegressionsView, self).__init__()
+        self.pheno_config = self.variants_db.pheno_factory.config
+
+    def get_browser_dbfile(self, dbname):
+        browser_dbfile = self.pheno_config.get_browser_dbfile(dbname)
+        assert browser_dbfile is not None
+        assert os.path.exists(browser_dbfile)
+        return browser_dbfile
+
+    def get(self, request):
+        data = request.query_params
+        try:
+            dataset_id = data['datasetId']
+
+            db = DbManager(self.get_browser_dbfile(
+                self.variants_db.get_config(dataset_id).phenoDB))
+            db.build()
+
+            if db is None:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+            return Response(db.regression_display_names_with_ids,
+                            status=status.HTTP_200_OK)
         except NotAuthenticated:
             logger.exception("error while processing genotype query")
             traceback.print_exc()

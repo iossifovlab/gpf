@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 import pytest
 import pandas as pd
@@ -11,7 +11,6 @@ from .conftest import relative_to_this_test_folder
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.score_annotator import NPScoreAnnotator, \
     PositionScoreAnnotator
-from annotation.tools.schema import Schema
 
 
 indels1_cadd_expected = """
@@ -69,8 +68,7 @@ def test_np_score_annotator_indels(
     )
 
     with variants_io(infile, options) as io_manager:
-        score_annotator = NPScoreAnnotator(config,
-                                           io_manager.reader.schema)
+        score_annotator = NPScoreAnnotator(config)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -139,8 +137,7 @@ def test_position_score_annotator_indels(
     )
 
     with variants_io(infile, options) as io_manager:
-        score_annotator = PositionScoreAnnotator(config,
-                                                 io_manager.reader.schema)
+        score_annotator = PositionScoreAnnotator(config)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -169,10 +166,6 @@ def test_position_score_annotator_indels(
 def test_np_score_annotator_indels_test_score(
         chrom, pos, ref, alt, t1, t2, t3):
 
-    schema = Schema.from_dict({'str': 'chrom,ref,alt',
-                               'int': 'pos',
-                               'float': 't1,t2,t3'})
-
     score_filename = \
         "fixtures/TESTCADD/TESTwhole_genome_SNVs.tsv.gz"
 
@@ -199,7 +192,7 @@ def test_np_score_annotator_indels_test_score(
         virtuals=[]
     )
 
-    score_annotator = NPScoreAnnotator(config, schema)
+    score_annotator = NPScoreAnnotator(config)
     assert score_annotator is not None
 
     line = {
@@ -226,10 +219,6 @@ def test_np_score_annotator_indels_test_score(
 ])
 def test_position_score_annotator_indels_test_score(
         chrom, pos, ref, alt, t1, t2, t3):
-    
-    schema = Schema.from_dict({'str': 'chrom,ref,alt',
-                               'int': 'pos',
-                               'float': 't1,t2,t3'})
 
     score_filename = \
         "fixtures/TESTphyloP100way/TESTphyloP100way.bedGraph.gz"
@@ -257,7 +246,7 @@ def test_position_score_annotator_indels_test_score(
         virtuals=[]
     )
 
-    score_annotator = PositionScoreAnnotator(config, schema)
+    score_annotator = PositionScoreAnnotator(config)
     assert score_annotator is not None
 
     line = {

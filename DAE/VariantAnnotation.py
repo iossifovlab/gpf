@@ -2,6 +2,8 @@
 
 # October 25th 2013
 # written by Ewa
+from __future__ import unicode_literals
+
 LOF = ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop']
 nonsyn = ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop',
           'missense', 'noStart', 'noEnd', 'no-frame-shift']
@@ -43,15 +45,15 @@ def get_effect_types(types=True, groups=False):
          'CNVs'
          ]
 
-    if types is True:
-        if groups is False:
-            return(T)
+    if types:
+        if not groups:
+            return T
         A = list(G)
         A.extend(T)
         return(A)
-    if groups is True:
-        return(G)
-    return([])
+    if groups:
+        return G
+    return []
 
 
 def get_effect_types_set(s):
@@ -62,7 +64,6 @@ def get_effect_types_set(s):
     Groups = {
         'LGDs': LOF,
         'LoF': LOF,
-        'nonsynonymous': nonsyn,
         'introns': ['intron', "non-coding-intron", "5'UTR-intron",
                     "3'UTR-intron"],
         'UTRs': ["3'UTR", "5'UTR", "5'UTR-intron", "3'UTR-intron"],

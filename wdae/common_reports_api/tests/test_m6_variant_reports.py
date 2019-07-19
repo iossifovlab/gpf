@@ -3,6 +3,7 @@ Created on Jul 28, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import unittest
 from common_reports_api.variants import CommonBase, ChildrenCounter, \
     FamiliesReport, FamiliesCounters, DenovoEventsCounter, \

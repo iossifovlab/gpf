@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 from builtins import chr
 from builtins import range
 from builtins import object
+
+
 class ExonMock(object):
     def __init__(self, start, stop, frame):
         self.start = start
@@ -19,6 +21,8 @@ class TranscriptModelMock(object):
         self.chr = "1"
         self.gene = "B"
         self.trID = "123"
+        self.trOrigId = "123"
+
         if coding is None:
             self.coding = self.exons
         else:

@@ -1,10 +1,13 @@
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import object
 from VariantAnnotation import Effect
 import subprocess
 import csv
 import re
 
 
-class VariantAnnotation:
+class VariantAnnotation(object):
     @staticmethod
     def amino_acids_decode(code):
         amino_acids_dict = {
@@ -118,7 +121,7 @@ class VariantAnnotation:
 
     @classmethod
     def parse_extron(cls, effect_type, effect_desc):
-        print("AA", effect_desc)
+        print(("AA", effect_desc))
         effect = Effect()
         additional_info = effect_desc.split(":")
         for info in additional_info:
@@ -133,7 +136,7 @@ class VariantAnnotation:
 
     @classmethod
     def parse_extrons(cls, extron_row):
-        print("BB", extron_row)
+        print(("BB", extron_row))
         effects_details = [x for x in extron_row[2].split(",") if x]
         effect_type = cls.effect_type_convert(extron_row[1])
 

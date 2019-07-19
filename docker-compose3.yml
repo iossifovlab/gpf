@@ -1,0 +1,35 @@
+version: '3.7'
+services:
+  impala:
+
+    image: seqpipe/seqpipe-docker-impala:latest    
+
+    # volumes:
+    #   - type: bind
+    #     source: /home/lubo/Work/seq-pipeline/fast/seqpipe_impala/data
+    #     target: /data
+
+  tests:
+    image: seqpipe/python3-base
+    volumes:
+      - type: bind
+        source: .
+        target: /code
+
+      - type: bind
+        source: ./test_data
+        target: /data
+
+      - type: bind
+        source: /data01/lubo/data/seq-pipeline/genomic-scores-hg19
+        target: /genomic-scores-hg19
+      
+      - type: bind
+        source: /data01/lubo/data/seq-pipeline/genomic-scores-hg38
+        target: /genomic-scores-hg38
+
+    env_file: scripts/test_env
+    entrypoint: ["/code/scripts/wait-for-it.sh", "impala:21050", 
+      "--timeout=120", "--", 
+      "tail -f /dev/null"]
+      # "/code/jenkins_tests.sh"]

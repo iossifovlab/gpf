@@ -3,10 +3,13 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import object
+from builtins import str
 import itertools
 from gene.weights import Weights
+from variants.attributes import Status, Role
 import re
-# from gene.gene_set_collections import GeneSetsCollections
 
 
 class EffectTypesMixin(object):
@@ -39,13 +42,12 @@ class EffectTypesMixin(object):
         "Splice-site": ["splice-site"],
         "Missense": ["missense"],
         "No-frame-shift": ["no-frame-shift"],
-        "Non-frame-shift": ["no-frame-shift"],
         "No-frame-shift-newStop": ["no-frame-shift-newStop"],
         "noStart": ["noStart"],
         "noEnd": ["noEnd"],
         "Synonymous": ["synonymous"],
         "Non coding": ["non-coding"],
-        "Intron": ["intron", 'non-coding-intron'],
+        "Intron": ["intron", "non-coding-intron"],
         "Intergenic": ["intergenic"],
         "3'-UTR": ["3'UTR", "3'UTR-intron"],
         "5'-UTR": ["5'UTR", "5'UTR-intron"],
@@ -64,13 +66,14 @@ class EffectTypesMixin(object):
         "synonymous": "Synonymous",
         "non-coding": "Non coding",
         "intron": "Intron",
-        'non-coding-intron': 'Intron',
+        "non-coding-intron": "Intron",
     }
     EFFECT_GROUPS = {
         "coding": [
             "Nonsense",
             "Frame-shift",
             "Splice-site",
+            "No-frame-shift-newStop",
             "Missense",
             "No-frame-shift",
             "noStart",
@@ -98,6 +101,7 @@ class EffectTypesMixin(object):
             "Nonsense",
             "Frame-shift",
             "Splice-site",
+            "No-frame-shift-newStop",
             "Missense",
             "No-frame-shift",
             "noStart",
@@ -125,29 +129,26 @@ class EffectTypesMixin(object):
         return list(itertools.chain.from_iterable(etl))
 
     def build_effect_types(self, effect_types, safe=True):
-        if isinstance(effect_types, str) or \
-                isinstance(effect_types, unicode):
-            effect_types = effect_types.replace(',', ' ')
-            effect_types = effect_types.split()
+        if isinstance(effect_types, str):
+            effect_types = effect_types.split(',')
         etl = [et.strip() for et in effect_types]
         etl = self._build_effect_types_groups(etl)
         etl = self._build_effect_types_list(etl)
         if safe:
-            assert all([et in self.EFFECT_TYPES for et in etl]), etl
+            assert all([et in self.EFFECT_TYPES for et in etl])
         else:
             etl = [et for et in etl if et in self.EFFECT_TYPES]
         return etl
 
     def build_effect_types_naming(self, effect_types, safe=True):
-        if isinstance(effect_types, str) or \
-                isinstance(effect_types, unicode):
-            effect_types = effect_types.replace(',', ' ')
-            effect_types = effect_types.split()
+        if isinstance(effect_types, str):
+            effect_types = effect_types.split(',')
         assert isinstance(effect_types, list)
         if safe:
             assert all([
                 et in self.EFFECT_TYPES or
-                et in self.EFFECT_TYPES_MAPPING.keys() for et in effect_types])
+                et in list(self.EFFECT_TYPES_MAPPING.keys())
+                for et in effect_types])
         return [
             self.EFFECT_TYPES_UI_NAMING.get(et, et) for et in effect_types
         ]
@@ -207,9 +208,9 @@ class StudyTypesMixin(object):
             return None
         study_types = [st.lower() for st in study_types]
         if safe:
-            assert all([vt in self.STUDY_TYPES for vt in study_types])
+            assert all([st in self.STUDY_TYPES for st in study_types])
         study_types = [
-            st for st in study_types if vt in self.STUDY_TYPES
+            st for st in study_types if st in self.STUDY_TYPES
         ]
         if not study_types:
             return None
@@ -369,22 +370,21 @@ class GeneSymsMixin(object):
         if gene_symbols is None:
             return set([])
 
-        if isinstance(gene_symbols, str) or \
-                isinstance(gene_symbols, unicode):
+        if isinstance(gene_symbols, str):
             gene_symbols = gene_symbols.replace(',', ' ')
             gene_symbols = gene_symbols.split()
 
         return set([g.strip() for g in gene_symbols])
 
     @staticmethod
-    def get_gene_weights_query(**kwargs):
+    def get_gene_weights_query(gene_info_config, **kwargs):
         gene_weights = kwargs.get('geneWeights', None)
         if gene_weights is None:
             return None, None, None
         if 'weight' not in gene_weights:
             return None, None, None
         weights_id = gene_weights['weight']
-        if weights_id not in Weights.list_gene_weights():
+        if weights_id not in Weights.list_gene_weights(gene_info_config):
             return None, None, None
         range_start = gene_weights.get('rangeStart', None)
         range_end = gene_weights.get('rangeEnd', None)
@@ -404,12 +404,30 @@ class GeneSymsMixin(object):
         gene_sets_types = query.get('geneSetsTypes', [])
         return gene_sets_collection, gene_set, gene_sets_types
 
+    @classmethod
+    def get_gene_syms(cls, gene_info_config, **kwargs):
+        result = cls.get_gene_symbols(**kwargs) | \
+            cls.get_gene_weights(gene_info_config, **kwargs)
+
+        return result if result else None
+
+    @classmethod
+    def get_gene_weights(cls, gene_info_config, **kwargs):
+        weights_id, range_start, range_end = cls.get_gene_weights_query(
+            gene_info_config, **kwargs)
+        if not weights_id or \
+                weights_id not in Weights.list_gene_weights(gene_info_config):
+            return set([])
+
+        weights = Weights.load_gene_weights(weights_id, gene_info_config)
+        return weights.get_genes(wmin=range_start, wmax=range_end)
+
 
 class RegionsMixin(object):
-    REGION_REGEXP1 = re.compile("([1-9,X][0-9]?):(\d+)-(\d+)")
+    REGION_REGEXP1 = re.compile("([1-9,X][0-9]?):(\\d+)-(\\d+)")
     REGION_REGEXP2 = re.compile(
-        "^(chr)?(\d+|[Xx]):([\d]{1,3}(,?[\d]{3})*)"
-        "(-([\d]{1,3}(,?[\d]{3})*))?$")
+        "^(chr)?(\\d+|[Xx]):([\\d]{1,3}(,?[\\d]{3})*)"
+        "(-([\\d]{1,3}(,?[\\d]{3})*))?$")
 
     @classmethod
     def get_regions(cls, **kwargs):
@@ -417,7 +435,7 @@ class RegionsMixin(object):
             return None
         regions = kwargs['regions']
         if isinstance(regions, str) or \
-                isinstance(regions, unicode):
+                isinstance(regions, str):
             regions = regions.split()
         result = []
         for region in regions:
@@ -477,6 +495,42 @@ class GenomicScoresMixin(object):
         return genomic_scores_filter
 
 
+class RolesMixin(object):
+
+    @staticmethod
+    def get_roles_filter(safe=True, **kwargs):
+        roles = kwargs.get('roles', None)
+        assert roles is None or isinstance(roles, list)
+
+        if roles:
+            roles = {Role[role] for role in roles if role in Role.__members__}
+
+        return roles
+
+
+class StatusMixin(object):
+
+    AFFECTED_MAPPING = {
+        "affected": [Status.affected],
+        "unaffected": [Status.unaffected],
+        "affected and unaffected": [Status.affected, Status.unaffected],
+    }
+
+    @staticmethod
+    def get_status_filter(safe=True, **kwargs):
+        status = kwargs.get('status', None)
+
+        assert status is None or isinstance(status, list)
+
+        if status:
+            status = [
+                StatusMixin.AFFECTED_MAPPING[s]
+                for s in status if s in StatusMixin.AFFECTED_MAPPING
+            ]
+
+        return status
+
+
 class QueryBase(
         EffectTypesMixin,
         VariantTypesMixin,
@@ -488,7 +542,9 @@ class QueryBase(
         RegionsMixin,
         RarityMixin,
         FamiliesMixin,
-        GenomicScoresMixin):
+        GenomicScoresMixin,
+        RolesMixin,
+        StatusMixin):
 
     IN_CHILD_TYPES = [
         'prb',

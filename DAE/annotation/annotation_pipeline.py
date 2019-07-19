@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 from builtins import open
 
 import os
@@ -21,7 +21,8 @@ from annotation.tools.annotator_base import AnnotatorBase, \
     CompositeVariantAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.file_io import IOType, IOManager
-from annotation.tools.schema import Schema
+
+from configurable_entities.configuration import DAEConfig
 
 
 class PipelineConfig(VariantAnnotatorConfig):
@@ -49,15 +50,8 @@ class PipelineConfig(VariantAnnotatorConfig):
             virtuals=[]
         )
         result.pipeline_sections = []
-        result.cleanup_columns = []
-
-        if 'cleanup' in configuration:
-            result.cleanup_columns = \
-                result._parse_cleanup_section(configuration['cleanup'])
 
         for section_name, section_config in configuration.items():
-            if section_name == 'cleanup':
-                continue
             section_config = result._parse_config_section(
                 section_name, section_config, options)
             result.pipeline_sections.append(section_config)
@@ -86,7 +80,7 @@ class PipelineConfig(VariantAnnotatorConfig):
     @staticmethod
     def _parse_config_section(section_name, section, options):
         # section = Box(section, default_box=True, default_box_attr=None)
-        assert 'annotator' in section
+        assert 'annotator' in section, [section_name, section]
 
         annotator_name = section['annotator']
         options = dict(options.to_dict())
@@ -120,10 +114,18 @@ class PipelineConfig(VariantAnnotatorConfig):
         )
 
     @staticmethod
-    def _parse_cleanup_section(section):
-        if 'columns' in section:
-            cleanup_columns = section['columns'].split(',')
-            return cleanup_columns
+    def cli_options(dae_config):
+        options = [
+            ('--config', {
+                'help': 'config file location; default is "annotation.conf" '
+                'in the instance data directory $DAE_DB_DIR '
+                '[default: %(default)s]',
+                'default': dae_config.annotation_conf,
+                'action': 'store'
+            }),
+        ]
+        options.extend(VariantAnnotatorConfig.cli_options(dae_config))
+        return options
 
 
 def run_tabix(filename):
@@ -149,23 +151,18 @@ def run_tabix(filename):
 
 class PipelineAnnotator(CompositeVariantAnnotator):
 
-    def __init__(self, config, schema):
-        super(PipelineAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(PipelineAnnotator, self).__init__(config)
 
     @staticmethod
-    def build(options, config_file, variants_schema, defaults={}):
+    def build(options, config_file, defaults={}):
         pipeline_config = PipelineConfig.build(options, config_file, defaults)
         assert pipeline_config.pipeline_sections
-        assert variants_schema.columns
 
-        for col in pipeline_config.cleanup_columns:
-            if col in variants_schema.columns:
-                del(variants_schema.columns[col])
-
-        pipeline = PipelineAnnotator(pipeline_config, variants_schema)
+        pipeline = PipelineAnnotator(pipeline_config)
         for section_config in pipeline_config.pipeline_sections:
             annotator = VariantAnnotatorConfig.instantiate(
-                section_config, pipeline.schema
+                section_config
             )
             pipeline.add_annotator(annotator)
             output_columns = [
@@ -177,8 +174,6 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
     def add_annotator(self, annotator):
         assert isinstance(annotator, AnnotatorBase)
-        self.schema = Schema.merge_schemas(self.schema,
-                                           annotator.schema)
         self.config.virtual_columns.extend(annotator.config.virtual_columns)
         self.annotators.append(annotator)
 
@@ -187,41 +182,78 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         for annotator in self.annotators:
             annotator.line_annotation(aline)
 
-    def get_output_schema(self):
-        output_schema = Schema()
-        output_schema = Schema.merge_schemas(output_schema, self.schema)
+    def collect_annotator_schema(self, schema):
+        super(PipelineAnnotator, self).collect_annotator_schema(schema)
         if self.config.virtual_columns:
             for vcol in self.config.virtual_columns:
-                if vcol in output_schema.columns:
-                    del(output_schema.columns[vcol])
-        return output_schema
+                schema.remove_column(vcol)
+
+
+def main_cli_options(dae_config):
+    options = PipelineConfig.cli_options(dae_config)
+    options.extend([
+            ('infile', {
+                'nargs': '?',
+                'action': 'store',
+                'default': '-',
+                'help': 'path to input file; defaults to stdin '
+                '[default: %(default)s]'
+            }),
+            ('outfile', {
+                'nargs': '?',
+                'action': 'store',
+                'default': '-',
+                'help': 'path to output file; defaults to stdout '
+                '[default: %(default)s]'
+            }),
+            ('--region', {
+                'help': 'work only in the specified region '
+                '[default: %(default)s]',
+                'default': None,
+                'action': 'store'
+            }),
+            ('--read-parquet', {
+                'help': 'read from a parquet file [default: %(default)s]',
+                'action': 'store_true',
+                'default': False,
+            }),
+            ('--write-parquet', {
+                'help': 'write to a parquet file [default: %(default)s]',
+                'action': 'store_true',
+                'default': False,
+            }),
+            ('--notabix', {
+                'help': 'skip running bgzip and tabix on the annotated files '
+                '[default: %(default)s]',
+                'default': False,
+                'action': 'store_true',
+            }),
+            ('--mode', {
+                'help': 'annotator mode; available modes are '
+                '`replace` and `append` [default: %(default)s]',
+                'default': '"replace"',
+                'action': 'store'
+            }),
+    ])
+    return options
 
 
 def pipeline_main(argv):
+    dae_config = DAEConfig()
+
     desc = "Program to annotate variants combining multiple annotating tools"
     parser = argparse.ArgumentParser(
-        description=desc, conflict_handler='resolve')
-    parser.add_argument(
-        '--config', help='config file location; default is "annotation.conf" '
-        'in the instance data directory $DAE_DB_DIR',
-        action='store')
+        description=desc, conflict_handler='resolve',
+        formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    for name, args in VariantAnnotatorConfig.cli_options():
+    for name, args in main_cli_options(dae_config):
         parser.add_argument(name, **args)
-
-    parser.add_argument(
-        '--notabix', help='skip running bgzip and tabix on the annotated files',
-        action='store_true', default=False
-    )
 
     options = parser.parse_args()
     if options.config is not None:
         config_filename = options.config
     else:
-        dae_db_dir = os.environ.get("DAE_DB_DIR", None)
-        assert dae_db_dir is not None
-
-        config_filename = os.path.join(dae_db_dir, "annotation.conf")
+        config_filename = dae_config.annotation_conf
 
     assert os.path.exists(config_filename), config_filename
 
@@ -239,12 +271,11 @@ def pipeline_main(argv):
 
     start = time.time()
 
-    with IOManager(options, reader_type, writer_type) as io_manager:
-        pipeline = PipelineAnnotator.build(options, config_filename,
-                                           io_manager.reader.schema)
-        assert pipeline is not None
+    pipeline = PipelineAnnotator.build(
+        options, config_filename, defaults=dae_config.annotation_defaults)
+    assert pipeline is not None
 
-        io_manager.writer.schema = pipeline.get_output_schema()
+    with IOManager(options, reader_type, writer_type) as io_manager:
         pipeline.annotate_file(io_manager)
 
     print("# PROCESSING DETAILS:", file=sys.stderr)

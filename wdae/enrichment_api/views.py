@@ -3,20 +3,27 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
-from django.conf import settings
+from __future__ import unicode_literals
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-import preloaded
-import traceback
-import precompute
-from enrichment_tool.event_counters import EventsCounter, GeneEventsCounter
-from common.query_base import GeneSymsMixin
-from enrichment_api.enrichment_builder import EnrichmentBuilder
-from users_api.authentication import SessionAuthenticationWithoutCSRF
-from enrichment_api.enrichment_serializer import EnrichmentSerializer
+
 import logging
+
+from enrichment_api.enrichment_builder import EnrichmentBuilder
+from enrichment_api.enrichment_serializer import EnrichmentSerializer
+
+from users_api.authentication import SessionAuthenticationWithoutCSRF
+
+from datasets_api.studies_manager import get_studies_manager
+
+from common.query_base import GeneSymsMixin
+
 from gene_sets.expand_gene_set_decorator import expand_gene_set
+
+from enrichment_tool.tool import EnrichmentTool
+from enrichment_tool.event_counters import CounterBase
 
 # from memory_profiler import profile
 # fp = open('memory_profiler_basic_mean.log', 'w+')
@@ -25,160 +32,125 @@ from gene_sets.expand_gene_set_decorator import expand_gene_set
 LOGGER = logging.getLogger(__name__)
 
 
-class EnrichmentModelsMixin(object):
-    BACKGROUND_MODELS = [
-        {
-            'name': 'synonymousBackgroundModel',
-            'desc':
-            'Background model based on synonymous variants in transmitted'
-        },
-        {
-            'name': 'codingLenBackgroundModel',
-            'desc': 'Genes coding lenght background model'
-        },
-        {
-            'name': 'samochaBackgroundModel',
-            'desc': 'Background model described in Samocha et al',
-        }
-    ]
+class EnrichmentModelsView(APIView):
 
-    COUNTING_MODELS = [
-        {
-            'name': 'enrichmentEventsCounting',
-            'desc': 'Counting events'
-        },
-        {
-            'name': 'enrichmentGeneCounting',
-            'desc': 'Counting affected genes'
-        },
-    ]
+    def __init__(self):
+        self.background_facade = get_studies_manager().get_background_facade()
 
-    def get_default_background_name(self):
-        config = settings.ENRICHMENT_CONFIG
-        background_name = config['enrichmentBackgroundModel']
-        return background_name
+    def get_from_config(self, dataset_id, key):
+        enrichment_config = \
+            self.background_facade.get_study_enrichment_config(dataset_id)
 
-    def get_default_counting_name(self):
-        config = settings.ENRICHMENT_CONFIG
-        counting_name = config['enrichmentCountingModel']
-        return counting_name
+        if enrichment_config is None:
+            return []
 
-    def get_background_model(self, query):
-        background_name = query.get('enrichmentBackgroundModel', None)
-        if background_name is None:
-            background_name = self.get_default_background_name()
-        if precompute.register.has_key(background_name):  # @IgnorePep8
-            background = precompute.register.get(background_name)
-        else:
-            background_name = self.get_default_background_name()
-            background = precompute.register.get(background_name)
-        return background
+        return [
+            {
+                'name': el['name'],
+                'desc': el['desc']
+            } for el in enrichment_config[key].values()
+        ]
 
-    def get_counting_model(self, query):
-        counting_name = query.get('enrichmentCountingModel', None)
-        if counting_name is None:
-            counting_name = self.get_default_counting_name()
-
-        if counting_name == 'enrichmentEventsCounting':
-            counter_model = EventsCounter()
-        elif counting_name == 'enrichmentGeneCounting':
-            counter_model = GeneEventsCounter()
-        else:
-            raise KeyError('wrong denovo counter: {}'.format(counting_name))
-        return counter_model
-
-    def get_enrichment_model(self, query):
-        return {
-            'background': self.get_background_model(query),
-            'counting': self.get_counting_model(query),
-        }
-
-
-class EnrichmentModelsView(APIView, EnrichmentModelsMixin):
-
-    def get(self, request):
+    def get(self, request, dataset_id=None):
         result = {
-            'background': self.BACKGROUND_MODELS,
-            'counting': self.COUNTING_MODELS,
+            'background': self.get_from_config(dataset_id, 'backgrounds'),
+            'counting': self.get_from_config(dataset_id, 'counting'),
         }
         return Response(result)
 
 
-class EnrichmentTestView(APIView, EnrichmentModelsMixin):
+class EnrichmentTestView(APIView):
 
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
-        register = preloaded.register
-        self.datasets = register.get('datasets')
-        assert self.datasets is not None
+        self.variants_db = get_studies_manager().get_variants_db()
+        self.background_facade = get_studies_manager().get_background_facade()
 
-        self.datasets_config = self.datasets.get_config()
-        self.datasets_factory = self.datasets.get_factory()
+        self.gene_info_config = get_studies_manager().get_gene_info_config()
 
     def enrichment_description(self, query):
         gene_set = query.get('geneSet')
         if gene_set:
-            desc = "Gene Set: {}".format(
-                gene_set)
+            desc = 'Gene Set: {}'.format(gene_set)
             return desc
+
         weights_id, range_start, range_end = \
-            GeneSymsMixin.get_gene_weights_query(**query)
+            GeneSymsMixin.get_gene_weights_query(
+                self.gene_info_config, **query)
         if weights_id:
             if range_start and range_end:
-                desc = "Gene Weights: {} from {} upto {}".format(
+                desc = 'Gene Weights: {} from {} upto {}'.format(
                     weights_id, range_start, range_end)
             elif range_start:
-                desc = "Gene Weights: {} from {}".format(
+                desc = 'Gene Weights: {} from {}'.format(
                     weights_id, range_start)
             elif range_end:
-                desc = "Gene Weights: {} upto {}".format(
-                    weights_id, range_end)
+                desc = 'Gene Weights: {} upto {}'.format(weights_id, range_end)
             else:
-                desc = "Gene Weights: {}".format(weights_id)
+                desc = 'Gene Weights: {}'.format(weights_id)
             return desc
+
         gene_syms = GeneSymsMixin.get_gene_symbols(**query)
         if gene_syms:
-            desc = "Gene Symbols: {}".format(
-                ",".join(gene_syms))
+            desc = 'Gene Symbols: {}'.format(','.join(gene_syms))
             return desc
+
         return None
+
+    def get_enrichment_tool(self, enrichment_config, query):
+        dataset_id = query.get('datasetId', None)
+
+        background_name = query.get('enrichmentBackgroundModel', None)
+        if background_name is None or not self.background_facade.\
+                has_background(dataset_id, background_name):
+            background_name = enrichment_config.default_background_model
+        counting_name = query.get(
+            'enrichmentCountingModel',
+            enrichment_config.get('defaultCountingModel', None)
+        )
+
+        backgorund = self.background_facade.get_study_background(
+            dataset_id, background_name)
+        counter = CounterBase.counters()[counting_name]()
+        enrichment_tool = EnrichmentTool(
+            enrichment_config, backgorund, counter)
+
+        return enrichment_tool
 
     @expand_gene_set
     def post(self, request):
         query = request.data
+
         dataset_id = query.get('datasetId', None)
         if dataset_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        dataset_desc = self.datasets_config.get_dataset_desc(dataset_id)
-        if not dataset_desc:
+        dataset = self.variants_db.get(dataset_id)
+        if not dataset:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        dataset = self.datasets_factory.get_dataset(dataset_id)
+        enrichment_config = \
+            self.background_facade.get_study_enrichment_config(dataset_id)
+        enrichment_tool = self.get_enrichment_tool(enrichment_config, query)
 
-        gene_syms = dataset.get_gene_syms(**query)
+        gene_syms = GeneSymsMixin.get_gene_syms(self.gene_info_config, **query)
         if gene_syms is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
         desc = self.enrichment_description(query)
-        desc = "{} ({})".format(desc, len(gene_syms))
-        try:
-            enrichment_model = self.get_enrichment_model(query)
-            builder = EnrichmentBuilder(
-                dataset,
-                enrichment_model,
-                gene_syms)
-            results = builder.build()
-            serializer = EnrichmentSerializer(results)
-            results = serializer.serialize()
+        desc = '{} ({})'.format(desc, len(gene_syms))
 
-            enrichment = {
-                'desc': desc,
-                'result': results
-            }
-            return Response(enrichment)
-        except Exception:
-            LOGGER.exception("error while processing genotype query")
-            traceback.print_exc()
-
+        if enrichment_tool.background is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        builder = EnrichmentBuilder(dataset, enrichment_tool, gene_syms)
+        results = builder.build()
+
+        serializer = EnrichmentSerializer(enrichment_config, results)
+        results = serializer.serialize()
+
+        enrichment = {
+            'desc': desc,
+            'result': results
+        }
+        return Response(enrichment)

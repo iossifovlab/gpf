@@ -1,9 +1,12 @@
-import ConfigParser
+from future import standard_library
+standard_library.install_aliases()  # noqa
+
+from configparser import ConfigParser
 from box import Box
 from collections import OrderedDict
 
-from genomic_values import GenomicValues
-from Config import Config
+from gene.genomic_values import GenomicValues
+from configurable_entities.configuration import DAEConfig
 import common.config
 
 
@@ -14,7 +17,8 @@ class Scores(GenomicValues):
 
         self.config = config
         self.genomic_values_col = 'scores'
-        assert self.section_name in self.config, [self.section_name, self.config]
+        assert self.section_name in self.config,\
+            [self.section_name, self.config]
 
         self.desc = self.config[self.section_name].desc
         self.bins = int(self.config[self.section_name].bins)
@@ -42,15 +46,17 @@ class Scores(GenomicValues):
 
 class ScoreLoader(object):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, daeConfig=None, *args, **kwargs):
         super(ScoreLoader, self).__init__(*args, **kwargs)
-        self.daeConfig = Config()
+        if daeConfig is None:
+            daeConfig = DAEConfig()
+        self.daeConfig = daeConfig
 
-        config = ConfigParser.SafeConfigParser({
-            'wd': self.daeConfig.daeDir
+        config = ConfigParser({
+            'wd': self.daeConfig.dae_data_dir
         })
         config.optionxform = str
-        config.read(self.daeConfig.genomicScoresDBconfFile)
+        config.read(self.daeConfig.genomic_scores_conf)
         self.config = Box(common.config.to_dict(config),
                           default_box=True, default_box_attr=None)
 
@@ -58,8 +64,23 @@ class ScoreLoader(object):
 
         self._load()
 
+    def get_scores(self):
+        result = []
+
+        for score_name in self.scores:
+            score = self[score_name]
+
+            assert score.df is not None
+
+            result.append(score)
+
+        return result
+
     def _load(self):
         scores = self.config.genomicScores.scores
+        if scores == '':
+            return
+
         names = [s.strip() for s in scores.split(',')]
         for name in names:
             s = Scores(name, self.config)

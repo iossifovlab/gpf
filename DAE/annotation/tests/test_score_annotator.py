@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 import pytest
 import pandas as pd
@@ -11,6 +11,11 @@ from .conftest import relative_to_this_test_folder
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.score_annotator import PositionScoreAnnotator, \
     PositionMultiScoreAnnotator, NPScoreAnnotator
+try:
+    bigwig_enabled = True
+    from annotation.tools.score_file_io_bigwig import BigWigAccess  # noqa
+except ImportError:
+    bigwig_enabled = False
 
 
 input2_phast_exptected = \
@@ -63,8 +68,7 @@ def test_variant_score_annotator_simple(
     print(type(config.options))
 
     with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = PositionScoreAnnotator(config,
-                                                 io_manager.reader.schema)
+        score_annotator = PositionScoreAnnotator(config)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -111,8 +115,7 @@ def test_variant_multi_score_annotator_simple(
     print(type(config.options))
 
     with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = PositionMultiScoreAnnotator(config,
-                                                      io_manager.reader.schema)
+        score_annotator = PositionMultiScoreAnnotator(config)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -161,8 +164,7 @@ def test_variant_multi_score_annotator_multi(
     print(type(config.options))
 
     with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = PositionMultiScoreAnnotator(config,
-                                                      io_manager.reader.schema)
+        score_annotator = PositionMultiScoreAnnotator(config)
         assert score_annotator is not None
 
         captured = capsys.readouterr()
@@ -220,8 +222,7 @@ def test_variant_score_annotator_cadd(
     print(type(config.options))
 
     with variants_io("fixtures/input2.tsv") as io_manager:
-        score_annotator = NPScoreAnnotator(config,
-                                           io_manager.reader.schema)
+        score_annotator = NPScoreAnnotator(config)
         assert score_annotator is not None
 
         captured = capsys.readouterr()

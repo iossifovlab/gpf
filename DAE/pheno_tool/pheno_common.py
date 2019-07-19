@@ -3,7 +3,8 @@ Created on Nov 29, 2016
 
 @author: lubo
 '''
-from collections import Counter
+from __future__ import unicode_literals
+from builtins import object
 
 import numpy as np
 from pheno.common import MeasureType
@@ -26,7 +27,7 @@ class PhenoFilterSet(PhenoFilter):
         measure_type = phdb.get_measure(measure_id).measure_type
         assert measure_type == MeasureType.categorical
 
-        assert isinstance(values_set, list) or isinstance(values_set, set)
+        assert type(values_set) in (list, set, tuple)
         self.value_set = values_set
 
     def apply(self, df):
@@ -75,10 +76,7 @@ class PhenoFilterBuilder(object):
 
 class PhenoResult(object):
 
-    def __init__(self, df, index=None):
-        self.df = df
-        self.genotypes_df = self._select_genotype(df, index)
-        self.phenotypes_df = self._select_phenotype(df, index)
+    def __init__(self):
         self.pvalue = np.nan
         self.positive_count = np.nan
         self.positive_mean = np.nan
@@ -86,29 +84,6 @@ class PhenoResult(object):
         self.negative_count = np.nan
         self.negative_mean = np.nan
         self.negative_deviation = np.nan
-
-    @staticmethod
-    def _select_genotype(df, index):
-        if df is None:
-            return None
-        gdf = df[['person_id', 'gender', 'role', 'variants']]
-        if index is not None:
-            gdf = gdf[index]
-        return gdf
-
-    @staticmethod
-    def _select_phenotype(df, index):
-        if df is None:
-            return None
-
-        columns = list(df.columns)
-        del columns[columns.index('variants')]
-        del columns[columns.index('family_id')]
-
-        pdf = df[columns]
-        if index is not None:
-            pdf = pdf[index]
-        return pdf
 
     def _set_positive_stats(self, p_count, p_mean, p_std):
         self.positive_count = p_count
@@ -119,25 +94,6 @@ class PhenoResult(object):
         self.negative_count = n_count
         self.negative_mean = n_mean
         self.negative_deviation = n_std
-
-    @property
-    def genotypes(self):
-        result = Counter()
-        if self.genotypes_df is None:
-            return result
-
-        for _index, row in self.genotypes_df.iterrows():
-            result[row['person_id']] = row['variants']
-        return result
-
-    @property
-    def phenotypes(self):
-        result = {}
-        if self.phenotypes_df is None:
-            return None
-        for _index, row in self.phenotypes_df.iterrows():
-            result[row['person_id']] = row.to_dict()
-        return result
 
     def __repr__(self):
         return "PhenoResult: pvalue={:.3g}; pos={} (neg={})".format(

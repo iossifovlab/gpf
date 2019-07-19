@@ -3,27 +3,19 @@ Created on May 22, 2017
 
 @author: lubo
 '''
-
+from __future__ import unicode_literals
 from django.conf.urls import url
 
-from common_reports_api.views import VariantReportsView, \
-    FamiliesDataDownloadView, ReportStudies, \
-    StudiesSummaries, DenovoStudiesList,\
-    TransmittedStudiesList
-
+from common_reports_api import views
 
 urlpatterns = [
-    url(r'^/variant_reports/(?P<study_name>.+)$',
-        VariantReportsView.as_view()),
+    url(r'^$',
+        views.StudiesSummariesView.as_view(),
+        name="common_reports_all"),
+    url(r'^/studies/(?P<common_report_id>.+)$',
+        views.VariantReportsView.as_view(),
+        name="common_report"),
 
-    url(r'^/families_data/(?P<study_name>.+)$',
-        FamiliesDataDownloadView.as_view()),
-
-    url(r'^/report_studies$', ReportStudies.as_view()),
-
-    url(r'^/studies_summaries$', StudiesSummaries.as_view()),
-
-    url(r'^/denovo_studies$', DenovoStudiesList.as_view()),
-    url(r'^/transmitted_studies$', TransmittedStudiesList.as_view()),
-
+    url(r'^/families_data/(?P<common_report_id>.+)$',
+        views.FamiliesDataDownloadView.as_view()),
 ]

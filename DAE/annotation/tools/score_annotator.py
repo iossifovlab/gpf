@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 import sys
 import os
@@ -11,19 +11,15 @@ from variants.attributes import VariantType
 from annotation.tools.annotator_base import VariantAnnotatorBase, \
     CompositeVariantAnnotator
 from annotation.tools.annotator_config import VariantAnnotatorConfig
-
-from annotation.tools.score_file_io import DirectAccess, \
-    IterativeAccess
-from annotation.tools.schema import Schema
+from annotation.tools.score_file_io import ScoreFile
 
 
 class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(VariantScoreAnnotatorBase, self).__init__(config, schema)
+    def __init__(self, config):
+        super(VariantScoreAnnotatorBase, self).__init__(config)
 
         self._init_score_file()
-        self._init_schema()
 
         assert len(self.config.native_columns) >= 1
         self.score_names = self.config.native_columns
@@ -31,41 +27,28 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
         assert all([
             sn in self.score_file.score_names for sn in self.score_names]), \
             (self.score_names, self.score_file.score_names,
-             self.score_file.filename)
+             self.score_file.score_filename)
 
     def _init_score_file(self):
-        if not self.config.options.scores_file:
-            print("You should provide a score file location.", file=sys.stderr)
-            sys.exit(1)
+        assert self.config.options.scores_file, \
+            [self.config.name, self.config.annotator_name]
 
         scores_filename = os.path.abspath(self.config.options.scores_file)
         assert os.path.exists(scores_filename), scores_filename
 
-        if self.config.options.direct:
-            self.score_file = DirectAccess(
-                self.config.options,
-                scores_filename,
-                self.config.options.scores_config_file)
-        else:
-            self.score_file = IterativeAccess(
-                self.config.options,
-                scores_filename,
-                self.config.options.scores_config_file)
-        self.score_file._setup()
+        self.score_file = ScoreFile(scores_filename,
+                                    self.config.options.scores_config_file)
 
-        self.no_score_value = self.score_file.config.noScoreValue
-        if self.no_score_value.lower() in set(['na', 'none']):
-            self.no_score_value = None
-
-    def _init_schema(self):
+    def collect_annotator_schema(self, schema):
+        super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
         for native, output in self.config.columns_config.items():
-            self.schema.columns[output] = \
-                    self.score_file.schema.columns[native]
+            type_name = self.score_file.schema.columns[native].type_name
+            schema.create_column(output, type_name)
 
     def _scores_not_found(self, aline):
         values = {
             self.config.columns_config[score_name]:
-            self.no_score_value
+            self.score_file.no_score_value
             for score_name in self.score_names}
         aline.update(values)
 
@@ -95,8 +78,8 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
 class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(PositionScoreAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(PositionScoreAnnotator, self).__init__(config)
 
     def do_annotate(self, aline, variant):
         if variant is None:
@@ -117,7 +100,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
             values = scores[score_name]
             assert len(values) > 0
             if len(values) == 1:
-                aline[column_name] = values[0]
+                aline[column_name] = float(values[0])
             else:
                 total_sum = sum([
                     c * float(v) for (c, v) in zip(counts, values)])
@@ -126,8 +109,8 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
 
 class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(NPScoreAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(NPScoreAnnotator, self).__init__(config)
         assert self.score_file.ref_name is not None
         assert self.score_file.alt_name is not None
         self.ref_name = self.score_file.ref_name
@@ -205,8 +188,8 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
 
 class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
 
-    def __init__(self, config, schema):
-        super(PositionMultiScoreAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(PositionMultiScoreAnnotator, self).__init__(config)
         assert self.config.options.scores_directory is not None
 
         for score_name in self.config.columns_config.keys():
@@ -223,7 +206,8 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
         return filenames[0]
 
     def _build_annotator_for(self, score_name):
-        assert os.path.exists(self.config.options.scores_directory)
+        assert os.path.exists(self.config.options.scores_directory), \
+            self.config.options.scores_directory
 
         score_filename = self._get_score_file(score_name)
         options = Box(
@@ -242,6 +226,5 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
             virtuals=[]
         )
 
-        annotator = PositionScoreAnnotator(variant_config, self.schema)
-        self.schema = Schema.merge_schemas(self.schema, annotator.schema)
+        annotator = PositionScoreAnnotator(variant_config)
         return annotator

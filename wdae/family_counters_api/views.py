@@ -3,6 +3,7 @@ Created on Apr 13, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 from rest_framework import status
 from rest_framework.response import Response
 from genotype_browser.views import QueryBaseView
@@ -19,7 +20,7 @@ Example:
 
         {
             "datasetId": "SSC",
-            "pedigreeSelector": {
+            "peopleGroup": {
                 "id": "phenotype",
                 "checkedValues": ["autism", "unaffected"]
             },
@@ -54,27 +55,30 @@ Example:
         super(FamilyCounters, self).__init__()
 
     def post(self, request):
+        # FIXME:
+        # It uses old interface
+        return Response([], status=status.HTTP_200_OK)
         data = request.data
         try:
             dataset_id = data['datasetId']
-            dataset = self.datasets_factory.get_dataset(dataset_id)
+            dataset = self.get_dataset(dataset_id)
             self.check_object_permissions(request, dataset_id)
 
             family_ids = dataset.get_family_ids(**data)
             if family_ids is None:
-                family_ids = dataset.families.keys()
+                family_ids = list(dataset.families.keys())
 
-            pedigree_selector = dataset.get_pedigree_selector(**data)
-            pedigree_selector_id = pedigree_selector['id']
+            people_group = dataset.get_people_group(**data)
+            people_group_id = people_group['id']
 
             res = {}
-            for s in pedigree_selector['domain']:
+            for s in people_group['domain']:
                 res[s['id']] = {
                     'count': {'M': 0, 'F': 0, 'all': 0},
                     'color': s['color'],
                     'name': s['name']
                 }
-            s = pedigree_selector['default']
+            s = people_group['default']
             res[s['id']] = {
                 'count': {'M': 0, 'F': 0, 'all': 0},
                 'color': s['color'],
@@ -86,11 +90,11 @@ Example:
                 if fam is None:
                     continue
                 for p in fam.memberInOrder[2:]:
-                    family_group = p.atts[pedigree_selector_id]
+                    family_group = p.atts[people_group_id]
                     res[family_group]['count']['all'] += 1
-                    res[family_group]['count'][p.gender] += 1
+                    res[family_group]['count'][p.gender.name] += 1
 
-            res = [res[s['id']] for s in pedigree_selector['domain']]
+            res = [res[s['id']] for s in people_group['domain']]
             return Response(res, status=status.HTTP_200_OK)
         except NotAuthenticated:
             LOGGER.exception("error while processing genotype query")

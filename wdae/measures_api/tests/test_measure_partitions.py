@@ -3,6 +3,7 @@ Created on Mar 30, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
 
 
 from rest_framework.test import APITestCase

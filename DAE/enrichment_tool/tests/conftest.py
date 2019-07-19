@@ -1,94 +1,55 @@
-'''
-Created on Nov 8, 2016
+from __future__ import unicode_literals
 
-@author: lubo
-'''
 import pytest
-from DAE import vDB
-from datasets.config import DatasetsConfig
-from datasets.datasets_factory import DatasetsFactory
-from enrichment_tool.background import SamochaBackground, SynonymousBackground
-from gene.gene_set_collections import GeneSetsCollection
+
+import os
+
+from configurable_entities.configuration import DAEConfig
+from studies.factory import VariantsDb
+
+from enrichment_tool.config import EnrichmentConfig
+from enrichment_tool.background import CodingLenBackground, SamochaBackground
+from enrichment_tool.background_facade import BackgroundFacade
+
+
+def fixtures_dir():
+    return os.path.abspath(
+        os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
 @pytest.fixture(scope='session')
-def gene_set():
-    # gt = get_gene_sets_symNS('main')
-    # gene_set = gt.t2G['chromatin modifiers'].keys()
-    gsc = GeneSetsCollection('main')
-    gsc.load()
-    gene_set = gsc.get_gene_set('chromatin modifiers')
-
-    return gene_set['syms']
+def dae_config_fixture():
+    dae_config = DAEConfig(fixtures_dir())
+    return dae_config
 
 
 @pytest.fixture(scope='session')
-def denovo_studies():
-    studies = vDB.get_studies('TEST WHOLE EXOME')
-    return [st for st in studies if 'WE' == st.get_attr('study.type')]
+def variants_db_fixture(dae_config_fixture):
+    vdb = VariantsDb(dae_config_fixture)
+    return vdb
 
 
 @pytest.fixture(scope='session')
-def autism_studies(denovo_studies):
-    return [st for st in denovo_studies
-            if 'autism' == st.get_attr('study.phenotype')]
+def f1_trio_enrichment_config(variants_db_fixture):
+    return EnrichmentConfig.from_config(
+        variants_db_fixture.get_config('f1_trio'))
 
 
 @pytest.fixture(scope='session')
-def schizophrenia_studies(denovo_studies):
-    return [st for st in denovo_studies
-            if 'schizophrenia' == st.get_attr('study.phenotype')]
+def f1_trio(variants_db_fixture):
+    return variants_db_fixture.get('f1_trio')
 
 
 @pytest.fixture(scope='session')
-def unaffected_studies(denovo_studies):
-    return denovo_studies
-
-
-# @pytest.fixture(scope='module')
-# def children_stats(request):
-#     denovo_studies = DenovoStudies()
-#     return ChildrenStats.build(denovo_studies)
+def f1_trio_coding_len_background(f1_trio_enrichment_config):
+    return CodingLenBackground(f1_trio_enrichment_config)
 
 
 @pytest.fixture(scope='session')
-def datasets_config():
-    return DatasetsConfig()
+def f1_trio_samocha_background(f1_trio_enrichment_config):
+    return SamochaBackground(f1_trio_enrichment_config)
 
 
 @pytest.fixture(scope='session')
-def datasets_factory(datasets_config):
-    return DatasetsFactory(datasets_config)
-
-
-@pytest.fixture(scope='session')
-def ssc(datasets_factory):
-    return datasets_factory.get_dataset('SSC')
-
-
-@pytest.fixture(scope='session')
-def vip(datasets_factory):
-    return datasets_factory.get_dataset('SVIP')
-
-
-@pytest.fixture(scope='session')
-def sd(datasets_factory):
-    return datasets_factory.get_dataset('SD_TEST')
-
-
-@pytest.fixture(scope='session')
-def denovo_db(datasets_factory):
-    return datasets_factory.get_dataset('TESTdenovo_db')
-
-
-@pytest.fixture(scope='module')
-def samocha_background():
-    bg = SamochaBackground()
-    bg.precompute()
-    return bg
-
-
-@pytest.fixture(scope='module')
-def synonymous_background():
-    bg = SynonymousBackground(use_cache=True)
-    return bg
+def background_facade(variants_db_fixture):
+    return BackgroundFacade(variants_db_fixture)

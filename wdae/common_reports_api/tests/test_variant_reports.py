@@ -33,14 +33,14 @@ class Test(BaseAuthenticatedUserTest):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         data = response.data['denovo_report']
-        pprint(data.keys())
+        pprint(list(data.keys()))
 
     def test_denovo_children_counters2(self):
         response = self.client.get(self.URL2)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         data = response.data['denovo_report']
-        pprint(data.keys())
+        pprint(list(data.keys()))
 
         self.assertEquals(
             data['phenotypes'],

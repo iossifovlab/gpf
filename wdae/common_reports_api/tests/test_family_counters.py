@@ -3,6 +3,7 @@ Created on Mar 1, 2018
 
 @author: lubo
 '''
+from __future__ import print_function
 from common_reports_api.variants import FamiliesReport
 
 

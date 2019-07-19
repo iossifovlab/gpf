@@ -3,19 +3,16 @@ from box import Box
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.lift_over_annotator import LiftOverAnnotator
 from annotation.annotation_pipeline import PipelineAnnotator
-from annotation.tools.schema import Schema
 
 from .conftest import relative_to_this_test_folder
 
 
-@pytest.mark.parametrize("location,lift_over,expected", [
-    ("chr1:10000", lambda c, p: [(c, p+1000)], "chr1:11000"),
-    ("chr1:10000", lambda c, p: [(c, p+1000), (c, p+2000)], "chr1:11000"),
-    ("chr1:10000", lambda c, p: [], None),
+@pytest.mark.parametrize("chrom,pos,lift_over,expected", [
+    ("chr1", 10000, lambda c, p: [(c, p+1000)], "chr1:11000"),
+    ("chr1", 10000, lambda c, p: [(c, p+1000), (c, p+2000)], "chr1:11000"),
+    ("chr1", 10000, lambda c, p: [], None),
 ])
-def test_lift_over(mocker, location, lift_over, expected):
-
-    schema = Schema.from_dict({'str': 'location'})
+def test_lift_over(mocker, chrom, pos, lift_over, expected):
 
     options = Box({
         'mode': 'replace',
@@ -24,7 +21,8 @@ def test_lift_over(mocker, location, lift_over, expected):
         "direct": True,
         "region": None,
         "chain_file": "fake_chain_file",
-        "x": "location",
+        "c": "chrom",
+        "p": "pos",
     }, default_box=True, default_box_attr=None)
 
     columns = {
@@ -44,14 +42,15 @@ def test_lift_over(mocker, location, lift_over, expected):
             "annotation.tools.lift_over_annotator."
             "LiftOverAnnotator.build_lift_over"):
 
-        annotator = LiftOverAnnotator(config, schema)
+        annotator = LiftOverAnnotator(config)
         assert annotator is not None
 
         annotator.lift_over = mocker.Mock()
         annotator.lift_over.convert_coordinate = lift_over
 
         aline = {
-            'location': location,
+            'chrom': chrom,
+            'pos': pos,
         }
 
         annotator.do_annotate(aline, None)
@@ -67,8 +66,6 @@ def test_lift_over(mocker, location, lift_over, expected):
 ])
 def test_pipeline_with_liftover(
         mocker, location, lift_over, expected_location):
-    
-    schema = Schema.from_dict({'str': 'location'})
 
     options = Box({
             "default_arguments": None,
@@ -85,7 +82,7 @@ def test_pipeline_with_liftover(
             "LiftOverAnnotator.build_lift_over"):
 
         pipeline = PipelineAnnotator.build(
-            options, filename, schema, defaults={
+            options, filename, defaults={
                 "fixtures_dir": relative_to_this_test_folder("fixtures/")
             })
         assert pipeline is not None
@@ -101,7 +98,7 @@ def test_pipeline_with_liftover(
         pos = int(pos)
 
         aline = {
-            'location': location,
+            # 'location': location,
             'CHROM': chrom,
             'POS': pos,
             'REF': 'A',

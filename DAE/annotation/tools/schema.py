@@ -1,3 +1,4 @@
+import copy
 from collections import OrderedDict
 from box import Box
 
@@ -24,20 +25,41 @@ class Schema(object):
                    default_box=True,
                    default_box_attr=None)
 
+    def create_column(self, col_name, col_type):
+        if col_name not in self.columns:
+            self.columns[col_name] = Schema.produce_type(col_type)
+
+    def remove_column(self, col_name):
+        if col_name in self.columns:
+            del(self.columns[col_name])
+
+    def order_as(self, ordered_col_names):
+        ordered_schema = Schema()
+        for col in ordered_col_names:
+            assert col in self.columns, [col, self.col_names]
+            ordered_schema.columns[col] = self.columns[col]
+        return ordered_schema
+
     @classmethod
     def from_dict(cls, schema_dict):
         new_schema = Schema()
         assert type(schema_dict) is dict
         for col_type in cls.type_map.keys():
             if col_type not in schema_dict:
+                # TODO Should this skip the faulty col_type
+                # or exit with an error? (or just print out an error?)
                 continue
-            col_list = schema_dict[col_type]\
-                .replace(' ', '')\
-                .replace('\t', '')\
-                .replace('\n', '')
-            for col in col_list.split(','):
-                new_schema.columns[col] = cls.produce_type(col_type)
+            for col in schema_dict[col_type].split(','):
+                new_schema.create_column(col.strip(), col_type)
         return new_schema
+
+    @classmethod
+    def from_df(cls, df):
+        schema_dict = dict(zip(
+            df.columns,
+            [dt.name for dt in df.dtypes]
+        ))
+        print(schema_dict)
 
     @staticmethod
     def merge_schemas(left, right):
@@ -52,8 +74,29 @@ class Schema(object):
         merged_schema.columns.update(missing_columns)
         return merged_schema
 
+    @staticmethod
+    def diff_schemas(left, right):
+        result = copy.deepcopy(left)
+        for key in right.columns:
+            if key in result.columns:
+                del result.columns[key]
+        return result
+
+    @property
+    def col_names(self):
+        return list(self.columns.keys())
+
     def __str__(self):
         ret_str = ""
         for col, col_type in self.columns.items():
             ret_str += '{} -> [{}]\n'.format(col, col_type.type_py)
         return ret_str
+
+    def __contains__(self, key):
+        return key in self.columns
+
+    def __delitem__(self, key):
+        del self.columns[key]
+
+    def __getitem__(self, key):
+        return self.columns.__getitem__(key)

@@ -3,6 +3,7 @@ Created on Jun 12, 2015
 
 @author: lubo
 '''
+from __future__ import unicode_literals
 import logging
 
 LOGGER = logging.getLogger('wdae.api')
@@ -12,7 +13,7 @@ def log_filter(request, message):
     request_method = getattr(request, 'method', '-')
     path_info = getattr(request, 'path_info', '-')
     username = 'guest'
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         username = request.user.email
 
     # Headers

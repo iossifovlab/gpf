@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 from builtins import open
 
 import os
@@ -198,7 +198,7 @@ class MakefileBuilder(VariantDBConfig):
 
     COMMAND = (
         '{target}: {output_dir} {input_file}\n\t(SGE_RREQ="{sge_rreq}" time'
-        ' annotation_pipeline.py {args}'
+        ' annotation_pipeline.py --notabix {args}'
         ' "{input_file}" "$@"'
         ' 2> "{log_prefix}-err{job_sufix}.txt")'
         ' 2> "{log_prefix}-time{job_sufix}.txt"\n')
@@ -247,7 +247,8 @@ class MakefileBuilder(VariantDBConfig):
                         region_index=region_index,
                         contig=contig)
                 target = self.escape_target(output_basename + part_sufix)
-                args = '--mode=replace --config {config} -c chr -p position' \
+                args = '--mode=replace --config {config} --sequential ' \
+                    '-c chr -p position' \
                     ' --Graw {genome_file}' \
                     ' --region={chr}:{begin_pos}-{end_pos}'.format(
                         config=self.annotation_config,
@@ -365,7 +366,8 @@ class MakefileBuilder(VariantDBConfig):
 
         options = parser.parse_args(argv)
         assert options.annotation_config is not None
-        assert os.path.exists(options.annotation_config)
+        assert os.path.exists(options.annotation_config), \
+            options.annotation_config
 
         assert options.genome_file is not None
         assert os.path.exists(options.genome_file)

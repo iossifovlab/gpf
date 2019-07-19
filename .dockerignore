@@ -1,0 +1,4 @@
+**/*.pyc
+containers/
+coverage/
+test_data

@@ -3,12 +3,15 @@ Created on Jul 24, 2017
 
 @author: lubo
 '''
+from __future__ import unicode_literals
+from builtins import object
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
     ForeignKey
 from sqlalchemy.sql import select
 
-from pheno.common import Gender, Status, Role, MeasureType
+from variants.attributes import Sex, Status, Role
+from pheno.common import MeasureType
 from sqlalchemy.sql.schema import UniqueConstraint, PrimaryKeyConstraint
 
 
@@ -44,7 +47,7 @@ class DbManager(object):
             Column('role', Enum(Role), nullable=False),
             Column('status', Enum(Status),
                    nullable=False, default=Status.unaffected),
-            Column('gender', Enum(Gender), nullable=False),
+            Column('sex', Enum(Sex), nullable=False),
             Column('sample_id', String(16), nullable=True),
             UniqueConstraint('family_id', 'person_id', name='person_key'),
         )
@@ -100,7 +103,7 @@ class DbManager(object):
         )
 
     def get_value_table(self, value_type):
-        if isinstance(value_type, unicode) or isinstance(value_type, str):
+        if isinstance(value_type, str) or isinstance(value_type, str):
             value_type = MeasureType.from_str(value_type)
 
         if value_type == MeasureType.continuous:
@@ -128,7 +131,7 @@ class DbManager(object):
             self.family.c.family_id,
             self.person.c.role,
             self.person.c.status,
-            self.person.c.gender,
+            self.person.c.sex,
         ])
         s = s.select_from(self.person.join(self.family))
         with self.engine.connect() as connection:

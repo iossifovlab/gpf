@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from django.core.management.base import BaseCommand, CommandError
-from import_base import ImportUsersBase
+from .import_base import ImportUsersBase
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 
@@ -36,12 +37,12 @@ class Command(BaseCommand, ImportUsersBase):
             help='Sets the password of the user',
         )
 
-        parser.add_argument('email')
+        parser.add_argument(
+            'email',
+            help='The emails of the new user'
+        )
 
     def handle(self, *args, **options):
-        # if(len(args) != 1):
-        #     raise CommandError('Exactly one argument required')
-
         UserModel = get_user_model()
         if UserModel.objects.filter(email=options['email']).exists():
             raise CommandError('User exists')

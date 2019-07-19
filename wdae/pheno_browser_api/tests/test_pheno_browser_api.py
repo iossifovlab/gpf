@@ -3,71 +3,96 @@ Created on Apr 21, 2017
 
 @author: lubo
 '''
-
-from rest_framework import status
-from users_api.tests.base_tests import BaseAuthenticatedUserTest
+import pytest
 
 
-class Test(BaseAuthenticatedUserTest):
+pytestmark = pytest.mark.usefixtures("mock_studies_manager")
 
-    URL = "/api/v3/pheno_browser/instruments"
-    MEASURES_URL = "/api/v3/pheno_browser/measures"
-    DOWNLOAD_URL = "/api/v3/pheno_browser/download"
 
-    def test_instruments_missing_dataset_id(self):
-        response = self.client.get(self.URL)
-        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+URL = "/api/v3/pheno_browser/instruments"
+MEASURES_URL = "/api/v3/pheno_browser/measures"
+DOWNLOAD_URL = "/api/v3/pheno_browser/download"
 
-    def test_instruments_ssc(self):
-        url = "{}?dataset_id=SSC".format(self.URL)
-        response = self.client.get(url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertIn('default', response.data)
-        self.assertIn('instruments', response.data)
-        self.assertEquals(103, len(response.data['instruments']))
 
-    def test_measures_ssc_commonly_used(self):
-        url = "{}?dataset_id=SSC&instrument=ssc_commonly_used".format(
-            self.MEASURES_URL)
-        response = self.client.get(url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertIn('base_image_url', response.data)
-        self.assertIn('measures', response.data)
+def test_instruments_missing_dataset_id(admin_client):
+    response = admin_client.get(URL)
 
-    def test_instruments_svip(self):
-        url = "{}?dataset_id=SVIP".format(self.URL)
-        response = self.client.get(url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertIn('default', response.data)
-        self.assertIn('instruments', response.data)
-        self.assertEquals(71, len(response.data['instruments']))
+    assert response.status_code == 400
 
-    def test_measures_svip_diagnosis_summary(self):
-        url = "{}?dataset_id=SVIP&instrument=diagnosis_summary".format(
-            self.MEASURES_URL)
-        response = self.client.get(url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertIn('base_image_url', response.data)
-        self.assertIn('measures', response.data)
 
-        self.assertEquals(169, len(response.data['measures']))
+def test_instruments_missing_dataset_id_forbidden(user_client):
+    response = user_client.get(URL)
 
-    def test_measures_svip_bad_json(self):
-        problem_urls = [
-            "{}?dataset_id=SVIP&instrument=svip_neuro_exam",
-            "{}?dataset_id=SVIP&instrument=svip_subjects",
-        ]
-        urls = [u.format(self.MEASURES_URL)for u in problem_urls]
+    assert response.status_code == 400
 
-        for url in urls:
-            response = self.client.get(url)
-            self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-    def test_download_svip_diagnosis_summary(self):
-        url = "{}?dataset_id=SVIP&instrument=diagnosis_summary".format(
-            self.DOWNLOAD_URL)
-        response = self.client.get(url)
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
+def test_instruments(admin_client):
+    url = "{}?dataset_id=quads_f1_ds".format(URL)
+    response = admin_client.get(url)
 
-        header = response.content.split()[0].split(',')
-        self.assertEquals(header[0], 'person_id')
+    assert response.status_code == 200
+    assert 'default' in response.data
+    assert 'instruments' in response.data
+    assert len(response.data['instruments']) == 3
+
+
+def test_instruments_forbidden(user_client):
+    url = "{}?dataset_id=quads_f1_ds".format(URL)
+    response = user_client.get(url)
+
+    assert response.status_code == 403
+
+    header = response.data
+    assert len(header.keys()) == 1
+    assert header['detail'] == \
+        'You do not have permission to perform this action.'
+
+
+def test_measures(admin_client):
+    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
+        MEASURES_URL)
+    response = admin_client.get(url)
+
+    assert response.status_code == 200
+    assert 'base_image_url' in response.data
+    assert 'measures' in response.data
+    assert 'has_descriptions' in response.data
+    assert len(response.data['measures']) == 4
+
+
+def test_measures_forbidden(user_client, user):
+    print(user.groups.all())
+    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
+        MEASURES_URL)
+    response = user_client.get(url)
+
+    assert response.status_code == 403
+
+    header = response.data
+    assert len(header.keys()) == 1
+    assert header['detail'] == \
+        'You do not have permission to perform this action.'
+
+
+def test_download(admin_client):
+    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
+        DOWNLOAD_URL)
+    response = admin_client.get(url)
+
+    assert response.status_code == 200
+
+    header = response.content.decode("utf-8").split()[0].split(',')
+    assert header[0] == 'person_id'
+
+
+def test_download_forbidden(user_client):
+    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
+        DOWNLOAD_URL)
+    response = user_client.get(url)
+
+    assert response.status_code == 403
+
+    header = response.data
+    assert len(header.keys()) == 1
+    assert header['detail'] == \
+        'You do not have permission to perform this action.'

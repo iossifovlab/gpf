@@ -76,6 +76,9 @@ class VariantAnnotator(object):
     def annotate(self, variant):
         effects = []
         logger = logging.getLogger(__name__)
+        if variant.chromosome not in self.gene_models._utrModels:
+            effects.append(EffectFactory.create_effect("intergenic"))
+            return effects
 
         for key in self.gene_models._utrModels[variant.chromosome]:
             if (variant.position <= key[1] + self.promoter_len and
@@ -90,6 +93,7 @@ class VariantAnnotator(object):
                     logger.debug("")
                     if effect is not None:
                         effects.append(effect)
+
         if len(effects) == 0:
             effects.append(EffectFactory.create_effect("intergenic"))
         return effects

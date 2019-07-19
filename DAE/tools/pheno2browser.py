@@ -4,19 +4,19 @@
 pheno2browser -- prepares a DAE pheno browser data
 
 '''
-from __future__ import print_function
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()
+from __future__ import print_function, unicode_literals, absolute_import
+
+from future import standard_library; standard_library.install_aliases()  # noqa
+from builtins import str
+
 import sys
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import traceback
 from pheno import pheno_db
-from pheno.pheno_regression import PhenoRegression
+from pheno.pheno_regression import PhenoRegressions
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
 import hashlib
-from builtins import str
 
 
 class CLIError(Exception):
@@ -70,23 +70,14 @@ def calc_dbfile_hashsum(dbfilename):
     return hashsum
 
 
-def build_pheno_browser(
-        dbfile, pheno_name, output_dir,
-        age, nonverbal_iq):
+def build_pheno_browser(dbfile, pheno_name, output_dir, regression_conf_path):
     phenodb = pheno_db.PhenoDB(dbfile=dbfile)
     phenodb.load()
 
-    age = PhenoRegression.build_common_normalization_config(
-        pheno_name, age)
-    nonverbal_iq = PhenoRegression.build_common_normalization_config(
-        pheno_name, nonverbal_iq)
-    pheno_regression = PhenoRegression(
-        phenodb,
-        age,
-        nonverbal_iq
-    )
-    prep = PreparePhenoBrowserBase(
-        pheno_name, phenodb, pheno_regression, output_dir)
+    pheno_regressions = PhenoRegressions(regression_conf_path)
+
+    prep = PreparePhenoBrowserBase(pheno_name, phenodb,
+                                   output_dir, pheno_regressions)
     prep.run()
 
     # hashsum = calc_dbfile_hashsum(dbfile)
@@ -138,17 +129,9 @@ USAGE
             metavar='path')
 
         parser.add_argument(
-            '--age',
-            dest="age",
-            help="pheno measure ID represenging age at assesment",
+            '--regression',
+            help=("path to a regression configuration file"),
             type=str
-        )
-
-        parser.add_argument(
-            '--nonverbal_iq',
-            dest="nonverbal_iq",
-            help="pheno measure ID representing non-verbal IQ measure",
-            type=str,
         )
 
         # Process arguments
@@ -167,9 +150,7 @@ USAGE
                 "pheno db file name must be specified")
 
         build_pheno_browser(
-            args.dbfile, args.pheno_name, args.output,
-            age=args.age, nonverbal_iq=args.nonverbal_iq
-        )
+            args.dbfile, args.pheno_name, args.output, args.regression)
 
         return 0
     except KeyboardInterrupt:

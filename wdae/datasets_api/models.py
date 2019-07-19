@@ -1,6 +1,8 @@
+from __future__ import unicode_literals
+from builtins import object
 from django.db import models
 from django.contrib.auth.models import Group
-from guardian.shortcuts import assign_perm, remove_perm
+from guardian.shortcuts import assign_perm
 from helpers.logger import LOGGER
 
 
@@ -9,7 +11,7 @@ class Dataset(models.Model):
 
     DEFAULT_GROUPS_FOR_DATASET = ["any_dataset"]
 
-    class Meta:
+    class Meta(object):
         permissions = (
             ('view', 'View dataset'),
         )
@@ -28,7 +30,7 @@ class Dataset(models.Model):
         groups = datasetObject.default_groups
         if authorized_groups is not None:
             groups += authorized_groups
-        LOGGER.error("recreating groups: {}".format(groups))
+        LOGGER.info("recreating groups: {}".format(groups))
         for group_name in set(groups):
             group, _created = Group.objects.get_or_create(name=group_name)
             assign_perm('view', group, datasetObject)

@@ -3,26 +3,32 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
-import itertools
+from __future__ import print_function
+from __future__ import unicode_literals
+from builtins import map
+from builtins import str
 
+from django.http.response import StreamingHttpResponse
 from rest_framework import views, status
 from rest_framework.response import Response
-from django.http.response import StreamingHttpResponse
+from rest_framework.exceptions import NotAuthenticated
 
-from users_api.authentication import SessionAuthenticationWithoutCSRF
+import json
+import logging
+import traceback
+import itertools
 
 from helpers.logger import log_filter
 from helpers.logger import LOGGER
+from helpers.dae_query import join_line, columns_to_labels
 
-import traceback
-import preloaded
-from rest_framework.exceptions import NotAuthenticated
-import json
-from query_variants import join_line, generate_web_response, generate_response
+from datasets_api.studies_manager import get_studies_manager
 from datasets_api.permissions import IsDatasetAllowed
-from datasets.metadataset import MetaDataset
-import logging
+from users_api.authentication import SessionAuthenticationWithoutCSRF
+
+from studies.helpers import get_variants_web_preview, get_variants_web_download
 from gene_sets.expand_gene_set_decorator import expand_gene_set
+
 
 logger = logging.getLogger(__name__)
 
@@ -31,13 +37,19 @@ class QueryBaseView(views.APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
     permission_classes = (IsDatasetAllowed,)
 
-    def __init__(self):
-        register = preloaded.register
-        self.datasets = register.get('datasets')
-        assert self.datasets is not None
+    datasets_cache = {}
 
-        self.datasets_config = self.datasets.get_config()
-        self.datasets_factory = self.datasets.get_factory()
+    def get_dataset_wdae_wrapper(self, dataset_id):
+        if dataset_id not in self.datasets_cache:
+            self.datasets_cache[dataset_id] =\
+                self.variants_db.get_wdae_wrapper(dataset_id)
+
+        return self.datasets_cache[dataset_id]
+
+    def __init__(self):
+        self.variants_db = get_studies_manager()\
+            .get_variants_db()
+        self.weights_loader = get_studies_manager().get_weights_loader()
 
 
 class QueryPreviewView(QueryBaseView):
@@ -49,27 +61,6 @@ class QueryPreviewView(QueryBaseView):
     def __init__(self):
         super(QueryPreviewView, self).__init__()
 
-    def __prepare_variants_response(self, cols, rows):
-        limitted_rows = []
-        count = 0
-        for row in rows:
-            count += 1
-            if count <= self.MAX_SHOWN_VARIANTS:
-                limitted_rows.append(row)
-            if count > self.MAX_VARIANTS:
-                break
-
-        if count <= self.MAX_VARIANTS:
-            count = str(count)
-        else:
-            count = 'more than {}'.format(self.MAX_VARIANTS)
-
-        return {
-            'count': count,
-            'cols': cols,
-            'rows': limitted_rows
-        }
-
     @expand_gene_set
     def post(self, request):
         LOGGER.info(log_filter(request, "query v3 preview request: " +
@@ -80,21 +71,15 @@ class QueryPreviewView(QueryBaseView):
             dataset_id = data['datasetId']
             self.check_object_permissions(request, dataset_id)
 
-            if dataset_id == MetaDataset.ID:
-                dataset_ids = self.datasets_config.get_dataset_ids()
-                dataset_ids.remove(MetaDataset.ID)
-                data['dataset_ids'] = filter(
-                    lambda dataset_id: IsDatasetAllowed.user_has_permission(
-                        request.user, dataset_id),
-                    dataset_ids)
+            dataset = self.get_dataset_wdae_wrapper(dataset_id)
 
-            dataset = self.datasets_factory.get_dataset(dataset_id)
+            # LOGGER.info("dataset " + str(dataset))
+            response = get_variants_web_preview(
+                dataset, data, self.weights_loader,
+                max_variants_count=self.MAX_SHOWN_VARIANTS,
+                variants_hard_max=self.MAX_VARIANTS)
 
-            response = self.__prepare_variants_response(
-                **generate_web_response(
-                    dataset.get_variants(safe=True, **data),
-                    dataset.get_preview_columns()))
-
+            # pprint.pprint(response)
             response['legend'] = dataset.get_legend(safe=True, **data)
 
             return Response(response, status=status.HTTP_200_OK)
@@ -118,22 +103,12 @@ class QueryDownloadView(QueryBaseView):
     def _parse_query_params(self, data):
         print(data)
 
-        res = {str(k): str(v) for k, v in data.items()}
+        res = {str(k): str(v) for k, v in list(data.items())}
         assert 'queryData' in res
         query = json.loads(res['queryData'])
         return query
 
     DOWNLOAD_LIMIT = 10000
-
-    @staticmethod
-    def __limit(variants, limit):
-        count = 0
-        for variant in variants:
-            if count <= limit:
-                yield variant
-                count += 1
-            else:
-                break
 
     @expand_gene_set
     def post(self, request):
@@ -146,35 +121,34 @@ class QueryDownloadView(QueryBaseView):
         try:
             self.check_object_permissions(request, data['datasetId'])
 
-            if data['datasetId'] == MetaDataset.ID:
-                dataset_ids = self.datasets_config.get_dataset_ids()
-                dataset_ids.remove(MetaDataset.ID)
-                data['dataset_ids'] = filter(
-                    lambda dataset_id: IsDatasetAllowed.user_has_permission(
-                        user, dataset_id),
-                    dataset_ids)
+            dataset = self.get_dataset_wdae_wrapper(data['datasetId'])
 
-            dataset = self.datasets_factory.get_dataset(data['datasetId'])
-
-            columns = dataset.get_download_columns()
+            columns = dataset.download_columns
             try:
                 columns.remove('pedigree')
             except ValueError:
                 pass
 
-            variants_data = generate_response(
-                dataset.get_variants(safe=True, **data),
-                columns, dataset.get_column_labels())
-
+            download_limit = None
             if not (user.is_authenticated() and user.has_unlimitted_download):
-                variants_data = self.__limit(variants_data,
-                                             self.DOWNLOAD_LIMIT)
+                download_limit = self.DOWNLOAD_LIMIT
+
+            variants_data = get_variants_web_download(
+                dataset, data, self.weights_loader,
+                max_variants_count=download_limit,
+                variants_hard_max=self.DOWNLOAD_LIMIT
+            )
+
+            columns = columns_to_labels(
+                variants_data['cols'], dataset.get_column_labels())
+            rows = variants_data['rows']
 
             response = StreamingHttpResponse(
-                itertools.imap(join_line, variants_data),
+                map(join_line, itertools.chain([columns], rows)),
                 content_type='text/tsv')
 
-            response['Content-Disposition'] = 'attachment; filename=variants.tsv'
+            response['Content-Disposition'] =\
+                'attachment; filename=variants.tsv'
             response['Expires'] = '0'
             return response
         except NotAuthenticated:
@@ -187,5 +161,3 @@ class QueryDownloadView(QueryBaseView):
             traceback.print_exc()
 
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        return response

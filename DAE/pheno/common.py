@@ -3,44 +3,50 @@ Created on May 24, 2017
 
 @author: lubo
 '''
+from __future__ import print_function
+from __future__ import unicode_literals
 import enum
 from box import Box
 from pprint import pprint
+from collections import OrderedDict
+from copy import deepcopy
+from variants.attributes import Role
 
 
-class Gender(enum.Enum):
-    M = 1
-    F = 2
+# class Gender(enum.Enum):
+#     M = 1
+#     F = 2
+#     U = 3
 
 
-class Status(enum.Enum):
-    affected = 2
-    unaffected = 1
+# class Status(enum.Enum):
+#     affected = 2
+#     unaffected = 1
 
 
-class Role(enum.Enum):
-    unknown = 0
-    mom = 10
-    dad = 20
-    step_mom = 23
-    step_dad = 13
-    parent = 1
-    prb = 30
-    sib = 40
-    child = 50
-    spouse = 2
-    maternal_cousin = 14
-    paternal_cousin = 24
-    maternal_uncle = 11
-    maternal_aunt = 12
-    paternal_uncle = 21
-    paternal_aunt = 22
-    maternal_half_sibling = 41
-    paternal_half_sibling = 42
-    maternal_grandmother = -11
-    maternal_grandfather = -12
-    paternal_grandmother = -21
-    paternal_grandfather = -22
+# class Role(enum.Enum):
+#     unknown = 0
+#     mom = 10
+#     dad = 20
+#     step_mom = 23
+#     step_dad = 13
+#     parent = 1
+#     prb = 30
+#     sib = 40
+#     child = 50
+#     spouse = 2
+#     maternal_cousin = 14
+#     paternal_cousin = 24
+#     maternal_uncle = 11
+#     maternal_aunt = 12
+#     paternal_uncle = 21
+#     paternal_aunt = 22
+#     maternal_half_sibling = 41
+#     paternal_half_sibling = 42
+#     maternal_grandmother = -11
+#     maternal_grandfather = -12
+#     paternal_grandmother = -21
+#     paternal_grandfather = -22
 
 
 class MeasureType(enum.Enum):
@@ -93,7 +99,7 @@ class RoleMapping(object):
     }
 
     INTERNAL = {
-        key: value for key, value in Role.__members__.items()
+        key: value for key, value in list(Role.__members__.items())
     }
 
     VIP = {
@@ -108,6 +114,30 @@ class RoleMapping(object):
         'Half sibling': Role.maternal_half_sibling,
         'Aunt': Role.maternal_aunt,
     }
+
+
+ROLES_GRAPHS_DEFINITION = OrderedDict([
+    ("probands", [Role.prb]),
+    ("siblings", [Role.sib]),
+    ("parents", [Role.mom, Role.dad]),
+    ("grandparents", [
+        Role.paternal_grandfather, Role.paternal_grandmother,
+        Role.maternal_grandfather, Role.maternal_grandmother
+    ]),
+    ("parental siblings", [
+        Role.paternal_uncle, Role.paternal_aunt,
+        Role.maternal_uncle, Role.maternal_aunt
+    ]),
+    ("step parents", [Role.step_mom, Role.step_dad]),
+    ("half siblings", [
+        Role.paternal_half_sibling, Role.maternal_half_sibling
+    ]),
+    ("children", [Role.child])
+])
+
+
+ROLES_FILTER_DEFINITION = deepcopy(ROLES_GRAPHS_DEFINITION)
+ROLES_FILTER_DEFAULT_ROLES = ['probands', 'siblings', 'parents']
 
 
 def default_config():
@@ -163,7 +193,7 @@ def check_config_pheno_db(config):
         return False
     ordinal = config.classification.ordinal.min_rank
     if ordinal < categorical:
-        print('ordianl min rank expected to be >= categorical min rank')
+        print('ordinal min rank expected to be >= categorical min rank')
         return False
     continuous = config.classification.continuous.min_rank
     if continuous < ordinal:

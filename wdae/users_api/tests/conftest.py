@@ -1,9 +1,8 @@
+from builtins import range
 import pytest
 
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import Group
-
-from rest_framework.test import APIClient
 
 
 @pytest.fixture()
@@ -87,10 +86,3 @@ def three_users_in_a_group(db, three_new_users, empty_group):
         user.refresh_from_db()
 
     return three_new_users, empty_group
-
-
-@pytest.fixture()
-def logged_in_user(active_user):
-    client = APIClient()
-    client.login(email=active_user.email, password='secret')
-    return active_user, client

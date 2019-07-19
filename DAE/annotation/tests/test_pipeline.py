@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 import pytest
 import pandas as pd
@@ -129,15 +129,6 @@ input2_score2_expected = \
 1:10922\tsub(G->C)\t0.245\t0.391539\t6.522
 """
 
-input2_cleanup_expected = \
-    """POS\tALT
-10918\tA
-10919\tC
-10920\tT
-10921\tC
-10922\tC
-"""
-
 
 @pytest.mark.parametrize("config_file,expected", [
     ("fixtures/copy_annotator.conf", input2_copy_expected),
@@ -160,7 +151,7 @@ def test_build_pipeline(
     captured = capsys.readouterr()
     with variants_io("fixtures/input2.tsv") as io_manager:
         pipeline = PipelineAnnotator.build(
-            options, filename, io_manager.reader.schema,
+            options, filename,
             defaults={
                 "fixtures_dir": relative_to_this_test_folder("fixtures/")
             })
@@ -218,7 +209,7 @@ def test_pipeline_change_variants_position(variants_io, capsys, expected_df):
 
     with variants_io("fixtures/input2.tsv") as io_manager:
         pipeline = PipelineAnnotator.build(
-            options, filename, io_manager.reader.schema,
+            options, filename,
             defaults={
                 "fixtures_dir": relative_to_this_test_folder("fixtures/")
             })
@@ -233,45 +224,5 @@ def test_pipeline_change_variants_position(variants_io, capsys, expected_df):
     pd.testing.assert_frame_equal(
         expected_df(captured.out),
         expected_df(expected_change_variants_position),
-        check_less_precise=3,
-        check_names=False)
-
-
-def test_cleanup_section(expected_df, variants_io, capsys):
-
-    config_file = 'fixtures/cleanup_conf.conf'
-    expected = input2_cleanup_expected
-
-    options = Box({
-            "default_arguments": None,
-            "vcf": True,
-            "mode": "replace"
-        },
-        default_box=True,
-        default_box_attr=None)
-
-    filename = relative_to_this_test_folder(config_file)
-
-    captured = capsys.readouterr()
-    with variants_io("fixtures/input2.tsv") as io_manager:
-        pipeline = PipelineAnnotator.build(
-            options, filename, io_manager.reader.schema,
-            defaults={
-                "fixtures_dir": relative_to_this_test_folder("fixtures/")
-            })
-        assert pipeline is not None
-        pipeline.annotate_file(io_manager)
-    captured = capsys.readouterr()
-
-    print(captured.err)
-    print(captured.out)
-
-    cap_df = expected_df(captured.out)
-
-    print(cap_df)
-    print(expected_df(expected))
-
-    pd.testing.assert_frame_equal(
-        cap_df, expected_df(expected),
         check_less_precise=3,
         check_names=False)

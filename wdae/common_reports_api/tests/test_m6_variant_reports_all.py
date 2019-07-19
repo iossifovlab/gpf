@@ -5,8 +5,10 @@ Created on Jul 31, 2015
 '''
 import unittest
 from common_reports_api.variants import VariantReports
+from tests.pytest_marks import slow
 
 
+@slow
 class Test(unittest.TestCase):
     TEST_WHOLE_EXOME = [
         'SD_TEST',

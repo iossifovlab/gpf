@@ -3,6 +3,13 @@ Created on Nov 16, 2017
 
 @author: lubo
 '''
+from __future__ import division
+from __future__ import unicode_literals
+from builtins import str
+from builtins import map
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import numpy as np
 import pandas as pd
 import itertools
@@ -98,8 +105,9 @@ class ClassifierReport(object):
         counts = Counter()
         for val in self.string_values:
             counts[val] += 1
-        distribution = [(val, count) for (val, count) in counts.items()]
-        distribution = sorted(distribution, key=lambda (_val, count): -count)
+        distribution = [(val, count) for (val, count) in list(counts.items())]
+        distribution = sorted(
+            distribution, key=lambda _val_count: -_val_count[1])
         distribution = distribution[:self.DISTRIBUTION_CUTOFF]
         distribution = [
             (val[:self.MAX_CHARS], count)
@@ -166,11 +174,11 @@ def convert_to_string(val):
     if is_nan(val):
         return None
 
-    if type(val) in set([str, unicode]) or \
-            isinstance(val, str) or isinstance(val, unicode):
-        return unicode(remove_annoying_characters(val).decode('utf-8'))
+    if type(val) in set([str, str]) or \
+            isinstance(val, str) or isinstance(val, str):
+        return str(remove_annoying_characters(val))
     else:
-        return unicode(val)
+        return str(val)
 
 
 class MeasureClassifier(object):
@@ -197,7 +205,7 @@ class MeasureClassifier(object):
         if len(report.string_values) == 0:
             report.value_max_len = 0
         else:
-            report.value_max_len = max(map(len, report.string_values))
+            report.value_max_len = max(list(map(len, report.string_values)))
 
         assert report.count_total == \
             report.count_with_values + report.count_without_values
@@ -240,7 +248,7 @@ class MeasureClassifier(object):
         if len(report.string_values) == 0:
             report.value_max_len = 0
         else:
-            report.value_max_len = max(map(len, report.string_values))
+            report.value_max_len = max(list(map(len, report.string_values)))
         assert report.count_total == \
             report.count_with_values + report.count_without_values
         assert report.count_with_values == \
@@ -293,8 +301,9 @@ class MeasureClassifier(object):
         if rep.count_with_values < conf.min_individuals:
             return MeasureType.raw
 
-        non_numeric = (1.0 * rep.count_with_non_numeric_values) / \
-            rep.count_with_values
+        non_numeric = old_div(
+            (1.0 * rep.count_with_non_numeric_values),
+            rep.count_with_values)
 
         if non_numeric <= conf.non_numeric_cutoff:
             if rep.count_unique_numeric_values >= conf.continuous.min_rank:

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from rest_framework.routers import SimpleRouter
 from groups_api.views import GroupsViewSet
 from groups_api.views import GrantPermissionToGroupView

@@ -7,8 +7,10 @@ from rest_framework import status
 from precompute import register
 from common_reports_api.serializers import StudyVariantReportsSerializer
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
+from tests.pytest_marks import slow
 
 
+@slow
 class Test(BaseAuthenticatedUserTest):
 
     def test_get_ok(self):

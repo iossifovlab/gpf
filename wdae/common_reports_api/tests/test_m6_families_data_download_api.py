@@ -6,8 +6,10 @@ Created on Aug 3, 2015
 import unittest
 from rest_framework import status
 from users_api.tests.base_tests import BaseAuthenticatedUserTest
+from tests.pytest_marks import slow
 
 
+@slow
 class Test(BaseAuthenticatedUserTest):
 
     def test_get_ok(self):

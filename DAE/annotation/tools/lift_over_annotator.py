@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 
 import gzip
 
@@ -14,12 +13,12 @@ from annotation.tools.schema import Schema
 
 class LiftOverAnnotator(VariantAnnotatorBase):
 
-    def __init__(self, config, schema):
-        super(LiftOverAnnotator, self).__init__(config, schema)
+    def __init__(self, config):
+        super(LiftOverAnnotator, self).__init__(config)
 
         self.chrom = self.config.options.c
         self.pos = self.config.options.p
-        if self.config.options.x is not None:
+        if not self.config.options.vcf:
             self.location = self.config.options.x
         else:
             self.location = None
@@ -32,12 +31,14 @@ class LiftOverAnnotator(VariantAnnotatorBase):
 
         self.lift_over = self.build_lift_over(self.config.options.chain_file)
 
+    def collect_annotator_schema(self, schema):
+        super(LiftOverAnnotator, self).collect_annotator_schema(schema)
         for key, value in self.columns_config.items():
             if key == 'new_x' or key == 'new_c':
-                self.schema.columns[value] = \
+                schema.columns[value] = \
                     Schema.produce_type('str')
             elif key == 'new_p':
-                self.schema.columns[value] = \
+                schema.columns[value] = \
                     Schema.produce_type('str')
 
     @staticmethod
@@ -49,7 +50,7 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         return LiftOver(chain_file)
 
     def do_annotate(self, aline, variant):
-        if self.location in aline:
+        if self.location and self.location in aline:
             location = aline[self.location]
             chrom, pos = location.split(":")
             pos = int(pos)
@@ -61,7 +62,17 @@ class LiftOverAnnotator(VariantAnnotatorBase):
         liftover_pos = pos - 1
         converted_coordinates = self.lift_over.convert_coordinate(
             chrom, liftover_pos)
-        if len(converted_coordinates) == 0:
+
+        if converted_coordinates is None:
+            print("position: chrom=", chrom, "; pos=", pos,
+                  "(0-pos=", liftover_pos, ")",
+                  "can not be converted into target reference genome",
+                  file=sys.stderr)
+            new_c = None
+            new_p = None
+            new_x = None
+
+        elif len(converted_coordinates) == 0:
             print("position: chrom=", chrom, "; pos=", pos,
                   "(0-pos=", liftover_pos, ")",
                   "can not be converted into target reference genome",

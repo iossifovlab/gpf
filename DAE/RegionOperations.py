@@ -37,7 +37,7 @@ def rgns2BedFile(rgns, bedFN):
 class Region(object):
 
     REGION_REGEXP2 = re.compile(
-        r"^(chr)?(\d+|[XxYy]):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$")
+        r"^(chr)?(\d+|[XxYy]):([\d]{1,3}(,?[\d]{3})*)(-([\d]{1,3}(,?[\d]{3})*))?$")  # noqa
 
     def __init__(self, chrom=None, start=None, stop=None, chr=None):
 
@@ -62,7 +62,12 @@ class Region(object):
             str(self.start) + "," + str(self.stop) + ")"
 
     def __str__(self):
-        return self.chrom + ":" + str(self.start) + "-" + str(self.stop)
+        if self.start is None:
+            return self.chrom
+        elif self.end is None:
+            return "{}:{}".format(self.chrom, self.start)
+        else:
+            return self.chrom + ":" + str(self.start) + "-" + str(self.stop)
 
     def __hash__(self):
         return str(self).__hash__()

@@ -1,0 +1,46 @@
+'''
+Created on Jul 5, 2018
+
+@author: lubo
+'''
+from __future__ import print_function, unicode_literals, absolute_import
+
+import pytest
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_vcf",
+    "variants_impala",
+])
+@pytest.mark.parametrize("fixture_name,person_ids,count", [
+
+    ("backends/trios2_11600", None, 1),
+    ("backends/trios2_11600", ['dad2'], 1),
+    ("backends/trios2_11600", ['dad1'], 0),
+    ("backends/trios2_11600", ['ch2'], 1),
+    ("backends/trios2_11600", ['ch1'], 0),
+    ("backends/trios2", ['mom1'], 8),
+    ("backends/trios2", ['dad1'], 7),
+    ("backends/trios2", ['mom2'], 7),
+    ("backends/trios2", ['ch1'], 2),
+    ("backends/trios2", ['ch2'], 2),
+    ("backends/trios2", ['mom2', 'ch2'], 8),
+    ("backends/trios2", ['mom1', 'dad1'], 9),
+    ("backends/generated_people", None, 2),
+    ("backends/generated_people", ['prb1'], 1),
+    ("backends/generated_people", ['prb2'], 1),
+    ("backends/generated_people", ['prb1', 'prb2'], 2),
+])
+def test_fixture_query_by_person_ids(
+        variants_impl, variants, fixture_name, person_ids, count):
+    vvars = variants_impl(variants)(fixture_name)
+    assert vvars is not None
+
+    vs = vvars.query_variants(
+        person_ids=person_ids,
+        return_reference=False,
+        return_unknown=False
+    )
+    vs = list(vs)
+    print(vs)
+    assert len(vs) == count

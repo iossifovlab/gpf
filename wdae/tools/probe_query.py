@@ -4,8 +4,17 @@ Created on Nov 6, 2015
 @author: lubo
 
 '''
+from __future__ import print_function
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import zip
+from past.utils import old_div
+from builtins import object
 import requests
-import StringIO
+import io
 import csv
 import copy
 from multiprocessing.pool import ThreadPool
@@ -14,9 +23,9 @@ from multiprocessing.pool import ThreadPool
 def run_request(url, params):
     req = requests.post(url, params, verify=False)
 
-    fin = StringIO.StringIO(req.text)
+    fin = Stringio.StringIO(req.text)
     csvin = csv.reader(fin)
-    header = csvin.next()
+    header = next(csvin)
 
     return (req.status_code, header, csvin)
 
@@ -51,9 +60,9 @@ class TestRequest(object):
         res = requests.post(self.url, self.params, verify=False)
         assert 200 == res.status_code
 
-        fin = StringIO.StringIO(res.text)
+        fin = Stringio.StringIO(res.text)
         csvin = csv.reader(fin)
-        self.header = csvin.next()
+        self.header = next(csvin)
         result = []
         for line in csvin:
             result.append(line)
@@ -67,7 +76,7 @@ class TestRequest(object):
 
     def test_request(self):
         result = self._request()
-        lines = map(lambda (x, y): x == y, zip(self.result, result))
+        lines = [x_y[0] == x_y[1] for x_y in zip(self.result, result)]
         return all(lines)
 
 
@@ -75,7 +84,7 @@ class AsyncSSCTest(object):
     params = {
         "denovoStudies": "ALL SSC",
         "effectTypes": "Frame-shift,Intergenic,Intron,Missense,"
-        "Non coding,Non-frame-shift,Nonsense,Splice-site,"
+        "Non coding,No-frame-shift,Nonsense,Splice-site,"
         "Synonymous,noEnd,noStart,3'UTR,5'UTR,CNV+,CNV-,3'-UTR,5'-UTR",
         "families": "familyIds",
         "familyIds": "11110",
@@ -102,7 +111,7 @@ class AsyncSSCTest(object):
             req.initial_request()
 
     def async_requests(self, count=10, pool_size=2):
-        repeat = count / len(self.reqs) + 1
+        repeat = old_div(count, len(self.reqs)) + 1
         reqs = (self.reqs * repeat)[:count]
 
         pool = ThreadPool(processes=pool_size)

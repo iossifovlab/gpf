@@ -1,3 +1,9 @@
+from __future__ import print_function, absolute_import
+from __future__ import unicode_literals
+from builtins import next
+from builtins import map
+from builtins import range
+from builtins import object
 import networkx as nx
 import itertools
 from collections import deque
@@ -55,7 +61,7 @@ class Realization(object):
         self._cached_vertex_degree = _cached_vertex_degree
 
         if _graph_neighbors_cache is None:
-            print "_graph_neighbors_cache recomputed"
+            # print("_graph_neighbors_cache recomputed")
             _graph_neighbors_cache = {
                 v: set(self.graph.neighbors(v))
                 for v in self.graph.nodes()
@@ -66,7 +72,7 @@ class Realization(object):
     def copy(self):
         return Realization(
             self.graph, self.forbidden_graph,
-            map(copy.copy, self.intervals),
+            list(map(copy.copy, self.intervals)),
             copy.copy(self.domain),
             self.max_width,
             self._cached_active_vertices,
@@ -205,7 +211,7 @@ class Realization(object):
         return interval1.right < interval2.left
 
     def is_maximal(self, index):
-        for i, v in enumerate(self.domain):
+        for i, _ in enumerate(self.domain):
             if i != index and self.is_in_interval_order(index, i):
                 return False
 
@@ -302,7 +308,10 @@ class SandwichSolver(object):
     @staticmethod
     def solve(sandwich_instance):
         forbidden_graph = sandwich_instance.forbidden_graph
-        print(max(sandwich_instance.required_graph.degree().values()))
+        # print(max(sandwich_instance.required_graph.degree().values()))
+
+        if len(sandwich_instance.required_graph.edges()) == 0:
+            return SandwichSolver.try_solve(sandwich_instance)
         for count in range(0, len(forbidden_graph.edges())):
             for edges_to_remove in itertools.combinations(
                     sorted(forbidden_graph.edges()),
@@ -310,7 +319,7 @@ class SandwichSolver(object):
                 # if count == 2:
                 #     return
 
-                print("removing", edges_to_remove)
+                # print(("removing", edges_to_remove))
 
                 current_forbidden_graph = copy_graph(forbidden_graph)
                 current_forbidden_graph.remove_edges_from(edges_to_remove)
@@ -323,7 +332,7 @@ class SandwichSolver(object):
                 result = SandwichSolver.try_solve(current_instance)
 
                 if result:
-                    print("removed:", count)  # , edges_to_remove)
+                    # print(("removed:", count))  # , edges_to_remove)
                     return result
 
     @staticmethod
@@ -338,8 +347,8 @@ class SandwichSolver(object):
                     sandwich_instance.forbidden_graph,
                     [IntervalForVertex(vertex)],
                     [vertex],
-                    _graph_neighbors_cache=
-                    initial_realization[0]._graph_neighbors_cache
+                    _graph_neighbors_cache=initial_realization[0]
+                    ._graph_neighbors_cache
                     if i > 0 else None
                 )
             )
@@ -350,12 +359,18 @@ class SandwichSolver(object):
 
         vertices_length = len(sandwich_instance.vertices)
 
+        if vertices_length == 1:
+            realization = realizations_queue.pop()
+            return realization.intervals
+
         while len(realizations_queue) > 0:
             realization = realizations_queue.pop()
             current_iteration += 1
 
             # if current_iteration == 100000:
-            #     print("Bailing at {} iterations...".format(current_iteration))
+            #     print(
+            #         "Bailing at {} iterations...".format(current_iteration)
+            #     )
             #     return None
 
             other_vertices = sandwich_instance.vertices \
@@ -375,7 +390,7 @@ class SandwichSolver(object):
                 cloned_realization.force_extend(vertex)
 
                 if len(cloned_realization.domain) == vertices_length:
-                    print("iterations count", current_iteration)
+                    # print(("iterations count", current_iteration))
                     return cloned_realization.intervals
                 else:
                     domain_string = repr(cloned_realization)

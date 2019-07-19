@@ -1,4 +1,7 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
+
+from builtins import map
+from builtins import object
 import abc
 import itertools
 import argparse
@@ -6,9 +9,8 @@ import csv
 from collections import defaultdict
 from pheno.prepare.individuals2ped import \
     IndividualUnit, MatingUnit
-from pheno.common import Status
-from pheno.common import Gender
-from pheno.common import Role
+from future.utils import with_metaclass
+from variants.attributes import Role, Sex, Status
 
 
 class PedigreeError(Exception):
@@ -27,13 +29,13 @@ class NoProband(PedigreeError):
 class PedigreeMember(object):
 
     def __init__(
-            self, family_id, individual_id, mother_id, father_id, gender,
+            self, family_id, individual_id, mother_id, father_id, sex,
             status, role):
         self.family_id = family_id
         self.individual_id = individual_id
         self.mother_id = mother_id
         self.father_id = father_id
-        self.gender = gender
+        self.sex = sex
         self.status = status
         self.role = role
 
@@ -50,9 +52,7 @@ class PedigreeMember(object):
         return self.role != Role.unknown
 
 
-class CsvPedigreeReader(object):
-    __metaclass__ = abc.ABCMeta
-
+class CsvPedigreeReader(with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def convert_individual_id(self, family_id, individual_id):
         raise NotImplementedError()
@@ -62,7 +62,7 @@ class CsvPedigreeReader(object):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def convert_gender(self, gender):
+    def convert_sex(self, sex):
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -83,7 +83,7 @@ class CsvPedigreeReader(object):
         for row in reader:
             kwargs = {
                 field: row[column]
-                for (column, field) in self.COLUMNS_TO_FIELDS.items()
+                for (column, field) in list(self.COLUMNS_TO_FIELDS.items())
             }
 
             kwargs["individual_id"] = self.convert_individual_id(
@@ -94,7 +94,7 @@ class CsvPedigreeReader(object):
                 kwargs["family_id"], kwargs["father_id"])
 
             kwargs["status"] = self.convert_status(kwargs["status"])
-            kwargs["gender"] = self.convert_gender(kwargs["gender"])
+            kwargs["sex"] = self.convert_sex(kwargs["sex"])
             kwargs["role"] = Role.unknown
 
             individual = PedigreeMember(**kwargs)
@@ -119,15 +119,15 @@ class SPARKCsvPedigreeReader(CsvPedigreeReader):
             "personId": "individual_id",
             "momId": "mother_id",
             "dadId": "father_id",
-            "gender": "gender",
+            "sex": "sex",
             "status": "status"
         }
 
     def convert_status(self, val):
         return Status.affected if int(val) == 2 else Status.unaffected
 
-    def convert_gender(self, val):
-        return Gender.M if int(val) == 1 else Gender.F
+    def convert_sex(self, val):
+        return Sex.male if int(val) == 1 else Sex.female
 
     def convert_individual_id(self, _family_id, individual_id):
         return individual_id
@@ -142,7 +142,7 @@ class AGRERawCsvPedigreeReader(CsvPedigreeReader):
             "Person": "individual_id",
             "Mother": "mother_id",
             "Father": "father_id",
-            "Sex": "gender",
+            "Sex": "sex",
             "Scored Affected Status": "status"
         }
 
@@ -152,11 +152,11 @@ class AGRERawCsvPedigreeReader(CsvPedigreeReader):
         else:
             return Status.unaffected
 
-    def convert_gender(self, val):
+    def convert_sex(self, val):
         if val == "Female":
-            return Gender.F
+            return Sex.female
         elif val == "Male":
-            return Gender.M
+            return Sex.male
         else:
             raise ValueError("unexpected sex: {}".format(val))
 
@@ -178,21 +178,21 @@ class VIPCsvPedigreeReader(CsvPedigreeReader):
             "sfari_id": "individual_id",
             "mother": "mother_id",
             "father": "father_id",
-            "sex": "gender",
+            "sex": "sex",
             "genetic_status_16p": "status"
         }
 
-    GENDER_TO_ENUM = {
-        "male": Gender.M,
-        "female": Gender.F
+    SEX_TO_ENUM = {
+        "male": Sex.male,
+        "female": Sex.female
     }
 
     def convert_status(self, status):
         return Status.unaffected if status == 'negative' \
             else Status.affected
 
-    def convert_gender(self, gender):
-        return self.GENDER_TO_ENUM[gender]
+    def convert_sex(self, sex):
+        return self.SEX_TO_ENUM[sex]
 
     def convert_individual_id(self, _family_id, individual_id):
         return individual_id
@@ -270,9 +270,9 @@ class PedigreeToFamily(object):
                         or individual.individual.has_role()):
                     continue
 
-                if individual.individual.gender == Gender.M:
+                if individual.individual.sex == Sex.male:
                     individual.individual.assign_role(Role.paternal_uncle)
-                if individual.individual.gender == Gender.F:
+                if individual.individual.sex == Sex.female:
                     individual.individual.assign_role(Role.paternal_aunt)
 
                 self._assign_roles_paternal_cousin(individual)
@@ -307,9 +307,9 @@ class PedigreeToFamily(object):
                         or individual.individual.has_role()):
                     continue
 
-                if individual.individual.gender == Gender.M:
+                if individual.individual.sex == Sex.male:
                     individual.individual.assign_role(Role.maternal_uncle)
-                if individual.individual.gender == Gender.F:
+                if individual.individual.sex == Sex.female:
                     individual.individual.assign_role(Role.maternal_aunt)
 
                 self._assign_roles_maternal_cousin(individual)
@@ -389,13 +389,15 @@ class PedigreeToFamily(object):
         return sorted(affected, key=lambda x: x.individual.individual_id)[0]
 
     def get_affected(self, individuals):
-        return filter(
-            lambda x: x.individual.status == Status.affected, individuals)
+        return [
+            x for x in individuals
+            if x.individual.status == Status.affected
+        ]
 
     def build_families(self, families):
         pedigrees = {}
 
-        for family_name, members in families.items():
+        for family_name, members in list(families.items()):
             try:
                 pedigree = self.to_family(members, family_name)
                 pedigrees[family_name] = pedigree
@@ -425,8 +427,8 @@ class FamilyToCsv(object):
             writer = csv.writer(csv_file, delimiter="\t")
             writer.writerow([
                 "familyId", "personId", "dadId", "momId",
-                "gender", "status", "role"])
-            writer.writerows(map(self.get_row, pedigrees))
+                "sex", "status", "role"])
+            writer.writerows(list(map(self.get_row, pedigrees)))
 
     @staticmethod
     def get_row(individual):
@@ -435,7 +437,7 @@ class FamilyToCsv(object):
             individual.get_individual_id(),
             individual.get_father_id(),
             individual.get_mother_id(),
-            individual.get_gender(),
+            individual.get_sex(),
             individual.get_status(),
             individual.get_role()
         ]
@@ -454,7 +456,7 @@ def main():
     reader = None
     if args.pheno == 'spark':
         reader = SPARKCsvPedigreeReader()
-    elif args.pheno == 'vip':
+    elif args.pheno == 'svip':
         reader = VIPCsvPedigreeReader()
     elif args.pheno == 'agre':
         reader = AGRERawCsvPedigreeReader()
@@ -465,11 +467,11 @@ def main():
 
     pedigrees = {}
 
-    for family_name, members in families.items():
+    for family_name, members in list(families.items()):
         pedigree = AGREPedigreeToFamily().to_family(members)
         pedigrees[family_name] = pedigree
 
-    pedigrees_list = list(itertools.chain(*pedigrees.values()))
+    pedigrees_list = list(itertools.chain(*list(pedigrees.values())))
 
     FamilyToCsv(args.output).write_pedigrees(pedigrees_list)
 

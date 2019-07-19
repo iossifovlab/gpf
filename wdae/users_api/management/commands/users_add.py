@@ -1,8 +1,10 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import csv
 from users_api.models import WdaeUser
 from django.contrib.auth.models import BaseUserManager
 from django.core.management.base import BaseCommand, CommandError
-from import_base import ImportUsersBase
+from .import_base import ImportUsersBase
 
 
 class Command(ImportUsersBase, BaseCommand):

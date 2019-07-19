@@ -1,15 +1,17 @@
+from __future__ import unicode_literals
+from builtins import object
 import unittest
 from variant_annotation.mutation import TranscriptModelWrapper
 
 
-class ExonMock:
+class ExonMock(object):
     def __init__(self, start, stop, frame):
         self.start = start
         self.stop = stop
         self.frame = frame
 
 
-class TranscriptModelMock:
+class TranscriptModelMock(object):
     def __init__(self, strand, cds_start, cds_end, exons):
         self.strand = strand
         self.cds = [cds_start, cds_end]
