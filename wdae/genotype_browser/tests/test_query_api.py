@@ -34,8 +34,8 @@ def test_simple_query_preview(db, admin_client):
     assert 'legend' in res
 
     assert 8 == len(res['legend'])
-    assert 4 == int(res['count'])
-    assert 4 == len(res['rows'])
+    assert 2 == int(res['count'])
+    assert 2 == len(res['rows'])
 
 
 def test_missing_dataset(db, user_client):
