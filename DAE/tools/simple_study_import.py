@@ -179,7 +179,8 @@ if __name__ == "__main__":
         denovo_parquet = import_dae_denovo(
             dae_config, annotation_pipeline,
             argv.pedigree, argv.denovo,
-            output=output, family_format='pedigree')
+            output=output, family_format='pedigree',
+            study_id=study_id)
     if argv.denovo is None and argv.vcf is not None:
         assert denovo_parquet is None
         assert vcf_parquet is not None
