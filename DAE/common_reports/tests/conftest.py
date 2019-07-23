@@ -93,12 +93,6 @@ def dataset_facade(dataset_definitions, dataset_factory, pheno_factory):
 
 
 @pytest.fixture(scope='session')
-def dae_config_fixture():
-    dae_config = DAEConfig(fixtures_dir())
-    return dae_config
-
-
-@pytest.fixture(scope='session')
 def vdb_fixture(dae_config_fixture):
     vdb = VariantsDb(dae_config_fixture)
     return vdb
