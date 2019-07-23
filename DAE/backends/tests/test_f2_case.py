@@ -166,7 +166,7 @@ def test_f2_non_canonical_omission(
     ([Region("1", 906086, 906086)],
      "denovo", False, False, 1),  # find denovo
     ([Region("1", 906086, 906086)],
-     "not denovo and not omission", False, False, 1),
+     "not denovo or not omission", False, False, 1),
     ([Region("1", 906086, 906086)],
      None, True, True, 1),  # find all
     ([Region("1", 906086, 906086)],
