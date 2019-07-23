@@ -218,9 +218,20 @@ def pedigree_parquet_schema():
         pa.field("status", pa.int8()),
         pa.field("role", pa.int32()),
         pa.field("sample_id", pa.string()),
+        pa.field("generated", pa.bool_()),
+        pa.field("layout", pa.string()),
     ]
 
     return pa.schema(fields)
+
+
+def add_missing_parquet_fields(pps, ped_df):
+    missing_fields = set(ped_df.columns.values) - set(pps.names)
+
+    for column in missing_fields:
+        pps = pps.append(pa.field(column, pa.string()))
+
+    return pps
 
 
 def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
@@ -229,6 +240,13 @@ def save_ped_df_to_parquet(ped_df, filename, filesystem=None):
     ped_df.role = ped_df.role.apply(lambda r: r.value)
     ped_df.sex = ped_df.sex.apply(lambda s: s.value)
     ped_df.status = ped_df.status.apply(lambda s: s.value)
+    if 'generated' not in ped_df:
+        ped_df['generated'] = False
+    if 'layout' not in ped_df:
+        ped_df['layout'] = None
 
-    table = pa.Table.from_pandas(ped_df, schema=pedigree_parquet_schema())
+    pps = pedigree_parquet_schema()
+    pps = add_missing_parquet_fields(pps, ped_df)
+
+    table = pa.Table.from_pandas(ped_df, schema=pps)
     pq.write_table(table, filename, filesystem=filesystem)

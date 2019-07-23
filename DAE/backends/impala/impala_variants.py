@@ -101,7 +101,8 @@ class ImpalaFamilyVariants(FamiliesBase):
         ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
         ped_df.status = ped_df.status.apply(lambda v: Status(v))
         if 'layout' in ped_df:
-            ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
+            ped_df.layout = ped_df.layout.apply(
+                lambda v: v.split(':')[-1] if v is not None else v)
 
         return ped_df
 
@@ -135,31 +136,31 @@ class ImpalaFamilyVariants(FamiliesBase):
             return schema
 
     def _build_real_attr_where(self, query):
-            assert query.get("real_attr_filter")
-            real_attr_filter = query['real_attr_filter']
-            query = []
-            for attr_name, attr_range in real_attr_filter:
-                print(attr_name, "|", self.schema, "|", attr_name in self.schema)
+        assert query.get("real_attr_filter")
+        real_attr_filter = query['real_attr_filter']
+        query = []
+        for attr_name, attr_range in real_attr_filter:
+            print(attr_name, "|", self.schema, "|", attr_name in self.schema)
 
-                if attr_name not in self.schema:
-                    query.append('false')
-                    continue
-                assert attr_name in self.schema
-                assert self.schema[attr_name].type_py == float or \
-                    self.schema[attr_name].type_py == int, \
-                    self.schema[attr_name]
-                left, right = attr_range
-                if left is None:
-                    assert right is not None
-                    query.append("({} <= {})".format(attr_name, right))
-                elif right is None:
-                    assert left is not None
-                    query.append("({} >= {})".format(attr_name, left))
-                else:
-                    query.append(
-                        "({attr} >= {left} AND {attr} <= {right})".format(
-                            attr=attr_name, left=left, right=right))
-            return ' AND '.join(query)
+            if attr_name not in self.schema:
+                query.append('false')
+                continue
+            assert attr_name in self.schema
+            assert self.schema[attr_name].type_py == float or \
+                self.schema[attr_name].type_py == int, \
+                self.schema[attr_name]
+            left, right = attr_range
+            if left is None:
+                assert right is not None
+                query.append("({} <= {})".format(attr_name, right))
+            elif right is None:
+                assert left is not None
+                query.append("({} >= {})".format(attr_name, left))
+            else:
+                query.append(
+                    "({attr} >= {left} AND {attr} <= {right})".format(
+                        attr=attr_name, left=left, right=right))
+        return ' AND '.join(query)
 
     def _build_ultra_rare_where(self, query):
         assert query.get("ultra_rare")

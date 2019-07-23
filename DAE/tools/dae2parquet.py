@@ -6,6 +6,8 @@ Created on Jul 23, 2018
 @author: lubo
 '''
 from __future__ import print_function
+
+import os
 import sys
 
 import pysam
@@ -115,8 +117,8 @@ def dae_build_makefile(dae_config, argv):
 def import_dae_denovo(
         dae_config, annotation_pipeline,
         families_filename, variants_filename,
-        family_format='pedigree', output='.', bucket_index=0,
-        defaults={}):
+        family_format='pedigree', output='.', rows=10000,
+        bucket_index=0, defaults={}, study_id=None, filesystem=None):
 
     config = Configure.from_dict({
         "denovo": {
@@ -144,15 +146,25 @@ def import_dae_denovo(
 
     assert output is not None
 
+    if study_id is None:
+        filename = os.path.basename(families_filename)
+        study_id = os.path.splitext(filename)[0]
+        print(filename, os.path.splitext(filename), study_id)
+
+    impala_config = Configure.from_prefix_impala(
+        output, bucket_index=bucket_index, db=None, study_id=study_id).impala
+    print("converting into ", impala_config, file=sys.stderr)
+
     annotation_schema = ParquetSchema()
     annotation_pipeline.collect_annotator_schema(annotation_schema)
 
     return variants_iterator_to_parquet(
         fvars,
-        output,
+        impala_config,
         bucket_index=bucket_index,
-        rows=argv.rows,
-        annotation_schema=annotation_schema
+        rows=rows,
+        annotation_pipeline=annotation_pipeline,
+        filesystem=filesystem
     )
 
 
@@ -282,8 +294,11 @@ if __name__ == "__main__":
     if argv.type == 'denovo':
         import_dae_denovo(
             dae_config, annotation_pipeline,
-            argv.families, argv.variants, family_format=argv.family_format,
-            output=argv.output, bucket_index=0)
+            argv.families, argv.variants,
+            family_format=argv.family_format,
+            output=argv.output,
+            rows=argv.rows, bucket_index=0
+        )
     elif argv.type == 'dae':
         dae_build_transmitted(
             dae_config, annotation_pipeline, argv,
