@@ -210,6 +210,8 @@ class Inheritance(enum.Enum):
     missing = 1 << 6
     unknown = 1 << 7
 
+    MASK = 127
+
     @staticmethod
     def from_name(name):
         assert name in Inheritance.__members__

@@ -142,7 +142,7 @@ def test_f1_all_unknown(
     ([Region("1", 905951, 905951)], "mendelian", ["missense"], 0),
     ([Region("1", 905951, 905951)], "not denovo", None, 1),
     ([Region("1", 905951, 905951)], "not omission", None, 1),
-    ([Region("1", 905951, 905951)], "not denovo and not omission", None, 1),
+    ([Region("1", 905951, 905951)], "not denovo or not omission", None, 1),
 ])
 def test_f1_unknown_and_reference(
         variants_impl, variants,
@@ -201,7 +201,6 @@ def test_f1_cannonical_omission(
     assert c == count
 
 
-@pytest.mark.xfail(reason="bitwise sql transformer shold be fixed")
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_impala",

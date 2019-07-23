@@ -1,5 +1,3 @@
-from RegionOperations import collapse
-
 from annotation.tools.file_io_parquet import ParquetSchema
 from variants.family import FamiliesBase, Family
 from backends.impala.parquet_io import ParquetSerializer
@@ -7,12 +5,14 @@ from backends.impala.parquet_io import ParquetSerializer
 from impala.util import as_pandas
 
 from RegionOperations import Region
+import RegionOperations
 
 from ..attributes_query import \
     QueryTreeToSQLBitwiseTransformer, \
     role_query, sex_query, \
-    inheritance_query,\
     variant_type_query
+from ..attributes_query_inheritance import InheritanceTransformer, \
+    inheritance_parser
 
 from variants.attributes import Role, Status, Sex
 
@@ -216,6 +216,12 @@ class ImpalaFamilyVariants(FamiliesBase):
         transformer = QueryTreeToSQLBitwiseTransformer(column_name)
         return transformer.transform(parsed)
 
+    def _build_inheritance_where(self, column_name, query_value):
+        tree = inheritance_parser.parse(query_value)
+        transformer = InheritanceTransformer(column_name)
+        res = transformer.transform(tree)
+        return res
+
     def get_gene_models(self):
         if self.gene_models is None:
             from DAE import genomesDB
@@ -238,7 +244,7 @@ class ImpalaFamilyVariants(FamiliesBase):
                             gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND,
                             gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND))
             if regions:
-                regions = collapse(regions)
+                regions = RegionOperations.collapse(regions)
             query['regions'] = regions
 
     def _build_rare_heuristic(self, query):
@@ -313,9 +319,8 @@ class ImpalaFamilyVariants(FamiliesBase):
                 'effect_type', query['effect_types']
             ))
         if query.get("inheritance"):
-            where.append(self._build_bitwise_attr_where(
-                'variant_inheritance', query['inheritance'],
-                inheritance_query
+            where.append(self._build_inheritance_where(
+                'variant_inheritance', query['inheritance']
             ))
         if query.get("roles"):
             where.append(self._build_bitwise_attr_where(
