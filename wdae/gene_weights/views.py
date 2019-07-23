@@ -131,7 +131,16 @@ class GeneWeightsPartitionsView(views.APIView):
         mdf = df[np.logical_and(
             df[weight_name] >= wmin, df[weight_name] < wmax)]
 
-        res = {"left": {"count": len(ldf), "percent": old_div(len(ldf), total)},
-               "mid": {"count": len(mdf), "percent": old_div(len(mdf), total)},
-               "right": {"count": len(rdf), "percent": old_div(len(rdf), total)}}
+        res = {
+            "left": {
+                "count": len(ldf),
+                "percent": old_div(len(ldf), total)
+            }, "mid": {
+                "count": len(mdf),
+                "percent": old_div(len(mdf), total)
+            }, "right": {
+                "count": len(rdf),
+                "percent": old_div(len(rdf), total)
+            }
+        }
         return Response(res)
