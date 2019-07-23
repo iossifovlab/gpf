@@ -19,7 +19,6 @@ import numpy as np
 from datasets_api.studies_manager import get_studies_manager
 
 from users_api.authentication import SessionAuthenticationWithoutCSRF
-# from query_variants import join_line
 from helpers.dae_query import join_line
 
 

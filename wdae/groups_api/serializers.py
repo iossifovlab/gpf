@@ -28,7 +28,8 @@ class GroupRetrieveSerializer(GroupSerializer):
         fields = ('id', 'name', 'users', 'datasets')
 
     def get_datasets(self, group):
-        datasets = shortcuts.get_objects_for_group(group, 'view', klass=Dataset)
+        datasets = shortcuts.get_objects_for_group(
+            group, 'view', klass=Dataset)
         return [d.dataset_id for d in datasets]
 
 
