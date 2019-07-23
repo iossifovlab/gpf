@@ -1,5 +1,3 @@
-from RegionOperations import collapse
-
 from annotation.tools.file_io_parquet import ParquetSchema
 from variants.family import FamiliesBase, Family
 from backends.impala.parquet_io import ParquetSerializer
@@ -7,6 +5,7 @@ from backends.impala.parquet_io import ParquetSerializer
 from impala.util import as_pandas
 
 from RegionOperations import Region
+import RegionOperations
 
 from ..attributes_query import \
     QueryTreeToSQLBitwiseTransformer, \
@@ -218,13 +217,9 @@ class ImpalaFamilyVariants(FamiliesBase):
         return transformer.transform(parsed)
 
     def _build_inheritance_where(self, column_name, query_value):
-        print("_build_inheritance_where", column_name, query_value)
-
         tree = inheritance_parser.parse(query_value)
-        print(tree)
         transformer = InheritanceTransformer(column_name)
         res = transformer.transform(tree)
-        print("RES:", type(res), res)
         return res
 
     def get_gene_models(self):
@@ -249,7 +244,7 @@ class ImpalaFamilyVariants(FamiliesBase):
                             gm.tx[0] - self.GENE_REGIONS_HEURISTIC_EXTEND,
                             gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND))
             if regions:
-                regions = collapse(regions)
+                regions = RegionOperations.collapse(regions)
             query['regions'] = regions
 
     def _build_rare_heuristic(self, query):
