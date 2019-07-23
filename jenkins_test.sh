@@ -43,36 +43,36 @@ py.test --traceconfig -v --cov-config coveragerc --reimport \
     # DAE/pheno/tests \
     # DAE/pheno_browser/tests \
 
-# py.test -v --cov-config coveragerc \
-#     --junitxml=coverage/wdae-junit.xml \
-#     --cov-append \
-#     --cov-report html:coverage/coverage.html \
-#     --cov-report xml:coverage/coverage.xml \
-#     --cov chromosome \
-#     --cov common_reports_api \
-#     --cov datasets_api \
-#     --cov enrichment_api \
-#     --cov family_counters_api \
-#     --cov gene_sets \
-#     --cov gene_weights \
-#     --cov genomic_scores_api \
-#     --cov genotype_browser \
-#     --cov groups_api \
-#     --cov helpers \
-#     --cov measures_api \
-#     --cov pheno_browser_api \
-#     --cov pheno_tool_api \
-#     --cov query_state_save \
-#     --cov tests \
-#     --cov tools \
-#     --cov users_api \
-#     --cov wdae \
-#     wdae/datasets_api/tests \
-#     wdae/enrichment_api/tests \
-#     wdae/gene_sets/tests \
-#     wdae/genotype_browser/tests \
-#     wdae/pheno_browser_api/tests \
-#     wdae/gene_sets/tests
+py.test -v --cov-config coveragerc \
+    --junitxml=coverage/wdae-junit.xml \
+    --cov-append \
+    --cov-report html:coverage/coverage.html \
+    --cov-report xml:coverage/coverage.xml \
+    --cov chromosome \
+    --cov common_reports_api \
+    --cov datasets_api \
+    --cov enrichment_api \
+    --cov family_counters_api \
+    --cov gene_sets \
+    --cov gene_weights \
+    --cov genomic_scores_api \
+    --cov genotype_browser \
+    --cov groups_api \
+    --cov helpers \
+    --cov measures_api \
+    --cov pheno_browser_api \
+    --cov pheno_tool_api \
+    --cov query_state_save \
+    --cov tests \
+    --cov tools \
+    --cov users_api \
+    --cov wdae \
+    wdae/datasets_api/tests \
+    wdae/enrichment_api/tests \
+    wdae/gene_sets/tests \
+    wdae/genotype_browser/tests \
+    wdae/pheno_browser_api/tests \
+    wdae/gene_sets/tests
 
 
 chmod a+rwx -R coverage
