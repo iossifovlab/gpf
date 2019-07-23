@@ -91,6 +91,8 @@ def transform_variants_to_lists(variants, preview_columns, people_group):
 
     for v in variants:
         for aa in v.matched_alleles:
+            assert not aa.is_reference_allele
+
             row_variant = []
             for column in preview_columns:
                 try:
@@ -99,8 +101,7 @@ def transform_variants_to_lists(variants, preview_columns, people_group):
                     elif column == 'pedigree':
                         row_variant.append(generate_pedigree(aa, people_group))
                     else:
-                        attribute =\
-                            aa.get_attribute(column, '')
+                        attribute = aa.get_attribute(column, '')
                         if not isinstance(attribute, str):
                             if attribute is None or math.isnan(attribute):
                                 attribute = ''

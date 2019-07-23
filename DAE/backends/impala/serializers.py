@@ -119,18 +119,15 @@ class ParquetSerializer(object):
             del genomic_scores_schema.columns['genomic_scores_data']
 
         self.genomic_scores_schema = genomic_scores_schema.to_arrow()
-        print("genomic scores schema names:", self.genomic_scores_schema.names)
 
         self.genomic_scores_count = len(self.genomic_scores_schema.names)
         fields = [
                 *(self.genomic_scores_schema.names),
                 'genomic_scores_data'
         ]
-        print("genomic scores fields:", fields)
         self.genomic_scores = namedtuple(
             'genomic_scores', fields
         )
-        print("genomic scores namedtuple:", self.genomic_scores)
 
     def serialize_summary(
             self, summary_variant_index, allele, alternatives_data):
@@ -361,14 +358,14 @@ class ParquetSerializer(object):
             genomic_scores_data
         )
         alleles = []
-        print("deserialized genomic scores:", genomic_scores)
         if genomic_scores is None:
             values = zip(alternatives, effects, frequencies)
         else:
             assert len(frequencies) == len(genomic_scores)
-            attributes = [
-                f.update(g) for (f, g) in zip(frequencies, genomic_scores)
-            ]
+            attributes = []
+            for (f, g) in zip(frequencies, genomic_scores):
+                f.update(g)
+                attributes.append(f)
             values = zip(
                     alternatives, effects, attributes)
 
