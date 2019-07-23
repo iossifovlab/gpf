@@ -101,7 +101,8 @@ class ImpalaFamilyVariants(FamiliesBase):
         ped_df.sex = ped_df.sex.apply(lambda v: Sex(v))
         ped_df.status = ped_df.status.apply(lambda v: Status(v))
         if 'layout' in ped_df:
-            ped_df.layout = ped_df.layout.apply(lambda v: v.split(':')[-1])
+            ped_df.layout = ped_df.layout.apply(
+                lambda v: v.split(':')[-1] if v is not None else v)
 
         return ped_df
 
