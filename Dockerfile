@@ -12,6 +12,7 @@ ADD ./docker-container/etc/core-site.xml /core-site.xml
 
 RUN conda env update -n base -f /python3-environment.yml && \
     conda install -c conda-forge pyarrow=0.13.0 && \
+	conda install -y flake8 && \
 	conda clean --all -y && \
 	# FIXME: should setup env with local versions somewhere else
 	pip install git+git://github.com/seqpipe/cyvcf2 && \

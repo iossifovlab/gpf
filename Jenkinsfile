@@ -29,6 +29,16 @@ pipeline {
       }
     }
 
+    stage('Lint') {
+      steps {
+        sh '''
+          export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+
+          docker-compose -f docker-compose.yml exec -T flake8 --format=pylint --exclude "--exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*"" /code > ./pyflakes.report || echo "pylint exited with $?"
+        '''
+      }
+    }
+
     stage('Test') {
       steps {
         sh """
@@ -48,6 +58,10 @@ pipeline {
       junit 'coverage/wdae-junit.xml, coverage/dae-junit.xml'
       step([$class: 'CoberturaPublisher',
            coberturaReportFile: 'coverage/coverage.xml'])
+      warnings(
+        parserConfigurations: [[parserName: 'PyLint', pattern: 'pyflakes.report']],
+        excludePattern: '.*site-packages.*'
+      )
     }
     success {
       slackSend (
