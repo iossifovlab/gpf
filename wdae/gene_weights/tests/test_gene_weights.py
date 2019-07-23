@@ -1,39 +1,30 @@
-'''
-Created on Dec 10, 2015
+import pytest
 
-@author: lubo
-'''
-import unittest
-from gene_weights.weights import Weights
+pytestmark = pytest.mark.usefixtures("mock_studies_manager")
 
 
-class GeneWeightsTest(unittest.TestCase):
+def test_weights_created(weights_loader):
+    assert weights_loader is not None
 
-    def setUp(self):
-        self.weights = Weights()
-        self.weights.load()
 
-    def tearDown(self):
-        pass
+def test_lgd_rank_available(weights_loader):
+    assert 'LGD_rank' in weights_loader
 
-    def test_weights_created(self):
-        self.assertIsNotNone(self.weights)
 
-    def test_lgd_rank_available(self):
-        self.assertTrue(self.weights.has_weight('LGD_rank'))
+def test_get_lgd_rank(weights_loader):
+    w = weights_loader['LGD_rank']
 
-    def test_get_lgd_rank(self):
-        w = self.weights.get_weight('LGD_rank')
-        self.assertIsNotNone(w)
-        self.assertAlmostEqual(1.0, w.min(), delta=0.01)
-        self.assertAlmostEqual(18394.5, w.max(), delta=0.01)
+    assert w is not None
+    assert w.min() == pytest.approx(1.0, 0.01)
+    assert w.max() == pytest.approx(18394.5, 0.01)
 
-    def test_get_genes_by_weight(self):
-        g = self.weights.get_genes_by_weight('LGD_rank', 1.5, 5.0)
-        self.assertEqual(3, len(g))
 
-        g = self.weights.get_genes_by_weight('LGD_rank', -1, 5.0)
-        self.assertEqual(4, len(g))
+def test_get_genes_by_weight(weights_loader):
+    g = weights_loader['LGD_rank'].get_genes(1.5, 5.0)
+    assert len(g) == 3
 
-        g = self.weights.get_genes_by_weight('LGD_rank', 1.0, 5.0)
-        self.assertEqual(4, len(g))
+    g = weights_loader['LGD_rank'].get_genes(-1, 5.0)
+    assert len(g) == 4
+
+    g = weights_loader['LGD_rank'].get_genes(1.0, 5.0)
+    assert len(g) == 4

@@ -1,49 +1,53 @@
-'''
-Created on Jan 28, 2016
+import pytest
 
-@author: lubo
-'''
-from rest_framework.test import APITestCase
+import json
+
+pytestmark = pytest.mark.usefixtures("mock_studies_manager")
 
 
-class Test(APITestCase):
+def test_gene_weights_partitions(user_client):
+    url = "/api/v3/gene_weights/partitions"
+    data = {
+        "weight": "LGD_rank",
+        "min": 1.5,
+        "max": 5.0,
+    }
+    response = user_client.post(
+        url, json.dumps(data), content_type='application/json', format='json')
+    assert response.status_code == 200
 
-    def test_gene_weights_partitions(self):
-        url = "/api/v3/gene_weights/partitions"
-        data = {
-            "weight": "LGD_rank",
-            "min": 1.5,
-            "max": 5.0,
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(200, response.status_code)
 
-    def test_gene_weights_partitions_rvis(self):
-        url = "/api/v3/gene_weights/partitions"
-        data = {
-            "weight": "RVIS_rank",
-            "min": 1,
-            "max": 100,
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(200, response.status_code)
+def test_gene_weights_partitions_rvis(user_client):
+    url = "/api/v3/gene_weights/partitions"
+    data = {
+        "weight": "RVIS_rank",
+        "min": 1,
+        "max": 100,
+    }
+    response = user_client.post(
+        url, json.dumps(data), content_type='application/json', format='json')
+    assert response.status_code == 200
 
-    def test_bad_gene_weight_partition(self):
-        url = "/api/v3/gene_weights/partitions"
-        data = {
-            "weight": "ala-bala",
-            "min": -8,
-            "max": -3,
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(404, response.status_code)
 
-    def test_full_patition(self):
-        url = "/api/v3/gene_weights/partitions"
-        data = {
-            "weight": "RVIS_rank",
-            "min": 0,
-            "max": 1000,
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(200, response.status_code)
+def test_bad_gene_weight_partition(user_client):
+    url = "/api/v3/gene_weights/partitions"
+    data = {
+        "weight": "ala-bala",
+        "min": -8,
+        "max": -3,
+    }
+    response = user_client.post(
+        url, json.dumps(data), content_type='application/json', format='json')
+    assert response.status_code == 404
+
+
+def test_full_patition(user_client):
+    url = "/api/v3/gene_weights/partitions"
+    data = {
+        "weight": "RVIS_rank",
+        "min": 0,
+        "max": 1000,
+    }
+    response = user_client.post(
+        url, json.dumps(data), content_type='application/json', format='json')
+    assert response.status_code == 200
