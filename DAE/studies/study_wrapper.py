@@ -349,6 +349,10 @@ class StudyWrapper(object):
             people_group = people_group_config.get_people_group(
                 pedigree_selector_query['id'])
 
+            if set(people_group['values']) & \
+                    set(pedigree_selector_query['checkedValues']):
+                return kwargs
+
             for family in self.families.values():
                 family_members_with_phenotype = set(
                     [person.person_id for person in
