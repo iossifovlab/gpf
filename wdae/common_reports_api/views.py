@@ -68,27 +68,17 @@ class VariantReportsView(APIView):
         self.common_reports_facade =\
             get_studies_manager().get_common_report_facade()
 
-    def get_studies_info(self, common_reports):
-        return [
-            {
-                'id': common_report.get(
-                    'id', common_report.get('study_name', '')),
-                'study_name': common_report.get('study_name', ''),
-                'study_description': common_report.get('study_description', '')
-            } for common_report in common_reports
-        ]
-
     def get(self, request, common_report_id=None):
         assert common_report_id
 
         common_report = self.common_reports_facade.get_common_report(
             common_report_id)
 
-        common_report['is_downloadable'] =\
-            IsDatasetAllowed.user_has_permission(
-                request.user, common_report_id)
-
         if common_report:
+            common_report['is_downloadable'] =\
+                IsDatasetAllowed.user_has_permission(
+                    request.user, common_report_id)
+
             return Response(common_report)
         return Response(
             {
