@@ -86,7 +86,7 @@ def weights_loader(gene_info_config):
 
 @pytest.fixture(scope='session')
 def dae_config_fixture():
-    dae_config = DAEConfig(fixtures_dir())
+    dae_config = DAEConfig.make_config(fixtures_dir())
     return dae_config
 
 

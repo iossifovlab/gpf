@@ -99,7 +99,7 @@ def main(argv):
     try:
         # Setup argument parser
 
-        dae_conf = DAEConfig()
+        dae_conf = DAEConfig.make_config()
 
         parser = pheno_cli_parser()
         args = parser.parse_args(argv)

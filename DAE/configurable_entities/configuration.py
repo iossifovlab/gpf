@@ -66,16 +66,25 @@ class DAEConfig(object):
     DEFAULT_CONFIGURATION_SECTION = 'defaultConfiguration'
 
     def __init__(
-        self, dae_data_dir=None,
-        dae_scores_hg19_dir=None, dae_scores_hg38_dir=None,
-            dae_conf_filename="DAE.conf", environment_override=True):
+        self, dae_data_dir, dae_scores_hg19_dir, dae_scores_hg38_dir,
+            sections):
+        self._dae_data_dir = dae_data_dir
+        self._dae_scores_hg19_dir = dae_scores_hg19_dir
+        self._dae_scores_hg38_dir = dae_scores_hg38_dir
+        self.sections = sections
 
+    @classmethod
+    def make_config(
+        cls, dae_data_dir=None, dae_scores_hg19_dir=None,
+        dae_scores_hg38_dir=None, dae_conf_filename="DAE.conf",
+        environment_override=True, impala_host=None, impala_port=None,
+            impala_db=None, hdfs_host=None, hdfs_port=None):
         if dae_data_dir is None:
             dae_data_dir = os.environ.get('DAE_DB_DIR', None)
         assert dae_data_dir is not None
-        self._dae_data_dir = os.path.abspath(dae_data_dir)
-        assert os.path.exists(self._dae_data_dir)
-        assert os.path.isdir(self._dae_data_dir)
+        dae_data_dir = os.path.abspath(dae_data_dir)
+        assert os.path.exists(dae_data_dir)
+        assert os.path.isdir(dae_data_dir)
 
         if environment_override:
             dae_scores_hg19_dir = os.environ.get(
@@ -85,27 +94,34 @@ class DAEConfig(object):
                 'DAE_GENOMIC_SCORES_HG38',
                 dae_scores_hg19_dir)
 
-        self._dae_scores_hg19_dir = None
         if dae_scores_hg19_dir is not None:
-            self._dae_scores_hg19_dir = os.path.abspath(
-                dae_scores_hg19_dir)
-            assert os.path.exists(self._dae_scores_hg19_dir)
-            assert os.path.isdir(self._dae_scores_hg19_dir)
+            dae_scores_hg19_dir = os.path.abspath(dae_scores_hg19_dir)
+            assert os.path.exists(dae_scores_hg19_dir)
+            assert os.path.isdir(dae_scores_hg19_dir)
 
-        self._dae_scores_hg38_dir = None
         if dae_scores_hg38_dir is not None:
-            self._dae_scores_hg38_dir = os.path.abspath(
-                dae_scores_hg38_dir)
-            assert os.path.exists(self._dae_scores_hg38_dir)
-            assert os.path.isdir(self._dae_scores_hg38_dir)
+            dae_scores_hg38_dir = os.path.abspath(dae_scores_hg38_dir)
+            assert os.path.exists(dae_scores_hg38_dir)
+            assert os.path.isdir(dae_scores_hg38_dir)
 
-        self.dae_conf_filename = dae_conf_filename
+        filename = os.path.join(dae_data_dir, dae_conf_filename)
+        sections = ConfigSectionDefinition(filename, work_dir=dae_data_dir)
+        assert sections is not None
 
-        filename = os.path.join(self.dae_data_dir, self.dae_conf_filename)
-        self.sections = ConfigSectionDefinition(
-            filename, work_dir=self.dae_data_dir
+        if impala_host is not None:
+            pass
+        if impala_port is not None:
+            pass
+        if impala_db is not None:
+            pass
+        if hdfs_host is not None:
+            pass
+        if hdfs_port is not None:
+            pass
+
+        return DAEConfig(
+            dae_data_dir, dae_scores_hg19_dir, dae_scores_hg38_dir, sections
         )
-        assert self.sections is not None
 
     def _get_config_value(self, section_id, attr_name, default_value=None):
         if section_id not in self.sections.get_all_section_ids():

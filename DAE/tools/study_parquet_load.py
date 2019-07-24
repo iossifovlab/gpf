@@ -41,7 +41,7 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 def load_study_parquet(
         dae_config=None, study_ids=None, parquet_directories=None):
     if dae_config is None:
-        dae_config = DAEConfig()
+        dae_config = DAEConfig.make_config()
     variants_db = VariantsDb(dae_config)
 
     if study_ids is None:

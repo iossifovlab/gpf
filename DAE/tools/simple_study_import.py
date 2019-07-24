@@ -151,7 +151,7 @@ def generate_common_report(dae_config, study_id):
 
 
 if __name__ == "__main__":
-    dae_config = DAEConfig()
+    dae_config = DAEConfig.make_config()
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
     if argv.id is not None:
         study_id = argv.id
