@@ -8,10 +8,6 @@ from __future__ import print_function, unicode_literals, absolute_import
 from io import StringIO
 
 import pytest
-import os
-import tempfile
-
-import logging
 
 from variants.family import Family, FamiliesBase
 from variants.family_variant import FamilyVariant
@@ -24,7 +20,6 @@ from ..vcf.annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 @pytest.fixture(scope='session')
 def allele_freq_annotator():
     return VcfAlleleFrequencyAnnotator()
-
 
 
 PED1 = """
