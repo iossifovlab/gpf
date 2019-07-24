@@ -14,7 +14,8 @@ from backends.import_commons import construct_import_annotation_pipeline
 
 from tools.vcf2parquet import import_vcf
 from tools.dae2parquet import import_dae_denovo
-from backends.impala.impala_backend import ImpalaBackend
+from backends.impala.impala_helpers import ImpalaHelpers
+from backends.impala.hdfs_helpers import HdfsHelpers
 
 
 def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
@@ -75,10 +76,11 @@ file_format = impala
 
 
 def impala_load_study(dae_config, study_id, parquet_directory):
-    backend = ImpalaBackend(
-        dae_config.impala_host, dae_config.impala_port,
-        dae_config.hdfs_host, dae_config.hdfs_port)
-
+    impala_helpers = ImpalaHelpers(
+        dae_config.impala_host, dae_config.impala_port)
+    hdfs_helpers = HdfsHelpers(
+        dae_config.hdfs_host, dae_config.hdfs_port
+    )
     variant_glob = os.path.join(
         parquet_directory,
         "{}_variant*.parquet".format(study_id))
@@ -87,8 +89,8 @@ def impala_load_study(dae_config, study_id, parquet_directory):
         "{}_pedigree.parquet".format(study_id))
 
     hdfs_dirname = os.path.join(dae_config.hdfs_base_dir, study_id)
-    if not backend.hdfs.exists(hdfs_dirname):
-        backend.hdfs.mkdir(hdfs_dirname)
+    if not hdfs_helpers.hdfs.exists(hdfs_dirname):
+        hdfs_helpers.hdfs.mkdir(hdfs_dirname)
 
     variant_files = []
     for variant_filename in glob.glob(variant_glob):
@@ -96,7 +98,7 @@ def impala_load_study(dae_config, study_id, parquet_directory):
         basename = os.path.basename(variant_filename)
         hdfs_filename = os.path.join(hdfs_dirname, basename)
         variant_files.append(hdfs_filename)
-        backend.hdfs.put(variant_filename, hdfs_filename)
+        hdfs_helpers.put(variant_filename, hdfs_filename)
 
     pedigree_files = []
     for pedigree_filename in glob.glob(pedigree_glob):
@@ -104,7 +106,7 @@ def impala_load_study(dae_config, study_id, parquet_directory):
         basename = os.path.basename(pedigree_filename)
         hdfs_filename = os.path.join(hdfs_dirname, basename)
         pedigree_files.append(hdfs_filename)
-        backend.hdfs.put(pedigree_filename, hdfs_filename)
+        hdfs_helpers.put(pedigree_filename, hdfs_filename)
 
     dbname = dae_config.impala_db
     pedigree_table = "{}_pedigree".format(study_id)
@@ -112,14 +114,14 @@ def impala_load_study(dae_config, study_id, parquet_directory):
     variant_glob = os.path.join(
         hdfs_dirname, "{}_variant*.parquet".format(study_id)
     )
-    with backend.impala.cursor() as cursor:
+    with impala_helpers.connection.cursor() as cursor:
         cursor.execute("""
             CREATE DATABASE IF NOT EXISTS {db}
         """.format(db=dbname))
 
-        backend.import_pedigree_file(
+        impala_helpers.import_pedigree_file(
             cursor, dbname, pedigree_table, pedigree_files[0])
-        backend.import_variant_files(
+        impala_helpers.import_variant_files(
             cursor, dbname, variant_table, variant_files)
 
 
@@ -179,7 +181,8 @@ if __name__ == "__main__":
         denovo_parquet = import_dae_denovo(
             dae_config, annotation_pipeline,
             argv.pedigree, argv.denovo,
-            output=output, family_format='pedigree')
+            output=output, family_format='pedigree',
+            study_id=study_id)
     if argv.denovo is None and argv.vcf is not None:
         assert denovo_parquet is None
         assert vcf_parquet is not None

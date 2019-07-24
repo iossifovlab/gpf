@@ -119,6 +119,7 @@ class ParquetSerializer(object):
             del genomic_scores_schema.columns['genomic_scores_data']
 
         self.genomic_scores_schema = genomic_scores_schema.to_arrow()
+
         self.genomic_scores_count = len(self.genomic_scores_schema.names)
         fields = [
                 *(self.genomic_scores_schema.names),
@@ -371,9 +372,10 @@ class ParquetSerializer(object):
             values = zip(alternatives, effects, frequencies)
         else:
             assert len(frequencies) == len(genomic_scores)
-            attributes = [
-                f.update(g) for (f, g) in zip(frequencies, genomic_scores)
-            ]
+            attributes = []
+            for (f, g) in zip(frequencies, genomic_scores):
+                f.update(g)
+                attributes.append(f)
             values = zip(
                     alternatives, effects, attributes)
 

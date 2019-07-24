@@ -2,12 +2,9 @@ from __future__ import unicode_literals
 from django.conf.urls import url, include
 from django.contrib import admin
 
-from gpfjs.views import index
 
 admin.autodiscover()
 urlpatterns = [
-    url(r'^$', index),
-    url(r'^gpfjs/.*$', index),
     #     url(r'^api/v2/pheno_reports', include('pheno_report.urls')),
     #     url(r'^api/v2/gene_weights', include('gene_weights.urls')),
     #     url(r'^api/v2/ssc_pheno_families', include('pheno_families.urls')),
