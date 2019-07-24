@@ -297,6 +297,13 @@ class ImpalaFamilyVariants(FamiliesBase):
 
         return ""
 
+    def _build_return_reference_and_return_unknown(self, query):
+        if not query.get("return_reference"):
+            return "allele_index > 0"
+        elif not query.get("return_unknown"):
+            return "allele_index >= 0"
+        return ""
+
     def _build_where(self, query):
         where = []
         if query.get('genes') is not None:
@@ -342,9 +349,7 @@ class ImpalaFamilyVariants(FamiliesBase):
         if query.get('ultra_rare'):
             where.append(self._build_ultra_rare_where(query))
 
-        if not query.get("return_reference"):
-            where.append("allele_index > 0")
-
+        where.append(self._build_return_reference_and_return_unknown(query))
         where.append(self._build_rare_heuristic(query))
         where.append(self._build_ultra_rare_heuristic(query))
         where.append(self._build_family_bin_heuristic(query))

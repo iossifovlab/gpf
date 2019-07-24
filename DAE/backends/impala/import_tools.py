@@ -20,6 +20,7 @@ def variants_iterator_to_parquet(
 
     start = time.time()
     variants_writer = VariantsParquetWriter(
+        fvars.families,
         fvars.full_variants_iterator(),
         annotation_pipeline=annotation_pipeline)
     print("[DONE] going to create variants writer...")

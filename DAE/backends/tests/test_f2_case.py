@@ -27,7 +27,6 @@ def count_variants(
     return len(vs)
 
 
-@pytest.mark.xfail(reason='all unknown genotype not supported in impala')
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_impala",

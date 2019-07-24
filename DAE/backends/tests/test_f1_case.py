@@ -15,34 +15,6 @@ from variants.attributes import Inheritance
 from ..attributes_query import inheritance_query
 
 
-@pytest.mark.parametrize("query,positive,negative", [
-    ("denovo",
-     [Inheritance.denovo],
-     [Inheritance.omission]),
-    ("denovo",
-     [Inheritance.denovo, Inheritance.omission],
-     [Inheritance.omission, Inheritance.mendelian]),
-    ("denovo or omission",
-     [Inheritance.denovo],
-     [Inheritance.mendelian]),
-    ("denovo or omission",
-     [Inheritance.denovo, Inheritance.unknown],
-     [Inheritance.mendelian, Inheritance.unknown]),
-    ("not denovo and not omission",
-     [Inheritance.mendelian, Inheritance.unknown],
-     [Inheritance.denovo, Inheritance.unknown]),
-    ("not omission",
-     [Inheritance.denovo, Inheritance.unknown],
-     [Inheritance.omission, Inheritance.unknown]),
-])
-def test_f1_inheritance_query(query, positive, negative):
-    query = inheritance_query.\
-        transform_tree_to_matcher(
-            inheritance_query.transform_query_string_to_tree(query))
-    assert query.match(positive)
-    assert not query.match(negative)
-
-
 def test_f1_check_all_variants_effects(variants_vcf):
     vvars = variants_vcf("backends/f1_test")
     assert vvars is not None
@@ -109,7 +81,6 @@ def test_f1_simple(
     assert len(vs) == count
 
 
-@pytest.mark.xfail(reason="all unknown genotype not supported in impala")
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_impala",
@@ -245,7 +216,6 @@ def test_f1_partially_known_denovo(
     assert c == count
 
 
-@pytest.mark.xfail(reason="all unknown genotype not supported in impala")
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_impala",
@@ -261,7 +231,7 @@ def test_f1_all_unknown_901923(
         variants_impl, variants,
         regions, inheritance, effect_types, count):
 
-    vvars = variants_impl(variants)("fixtures/f1_test_901923")
+    vvars = variants_impl(variants)("backends/f1_test_901923")
     assert vvars is not None
 
     vs = vvars.query_variants(

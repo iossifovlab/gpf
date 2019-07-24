@@ -8,6 +8,8 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from utils.vcf_utils import GENOTYPE_TYPE
+from variants.family_variant import FamilyAllele, FamilyVariant
 from annotation.tools.file_io_parquet import ParquetSchema
 from backends.impala.serializers import ParquetSerializer
 
@@ -71,7 +73,9 @@ class VariantsParquetWriter(object):
         'OLD_effectDetails',
     ]
 
-    def __init__(self, full_variants_iterator, annotation_pipeline=None):
+    def __init__(
+            self, families, full_variants_iterator, annotation_pipeline=None):
+        self.families = families
         self.full_variants_iterator = full_variants_iterator
 
         annotation_schema = ParquetSchema.from_arrow(
@@ -90,69 +94,125 @@ class VariantsParquetWriter(object):
         self.start = time.time()
         self.data = ParquetData(self.schema)
 
+    def _setup_reference_allele(self, summary_variant, family):
+        genotype = -1 * np.ones(
+            shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+
+        ra = summary_variant.ref_allele
+        reference_allele = FamilyAllele.from_summary_allele(
+            ra, family, genotype)
+        return reference_allele
+
+    def _setup_all_unknown_allele(self, summary_variant, family):
+        genotype = -1 * np.ones(
+            shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+
+        ra = summary_variant.ref_allele
+        unknown_allele = FamilyAllele(
+            ra.chromosome,
+            ra.position,
+            ra.reference,
+            ra.reference,
+            None,  # summary_allele.summary_index,
+            -1,
+            ra.effect,
+            {},
+            family,
+            genotype
+        )
+        return unknown_allele
+
+    def _setup_all_unknown_variant(self, summary_variant, family_id):
+        family = self.families[family_id]
+        genotype = -1 * np.ones(
+            shape=(2, len(family)), dtype=GENOTYPE_TYPE)
+        alleles = [
+            self._setup_reference_allele(summary_variant, family),
+            self._setup_all_unknown_allele(summary_variant, family)
+        ]
+        return FamilyVariant(
+            alleles, family, genotype
+        )
+
+    def _process_family_variant(
+        self, bucket_index,  summary_variant_index, family_variant_index,
+        family_variant):
+
+        effect_data = \
+            self.parquet_serializer.serialize_variant_effects(
+                family_variant.effects
+            )
+        alternatives_data = family_variant.alternative
+        genotype_data = \
+            self.parquet_serializer.serialize_variant_genotype(
+                family_variant.gt
+            )
+        frequency_data = \
+            self.parquet_serializer.serialize_variant_frequency(
+                family_variant
+            )
+        genomic_scores_data = \
+            self.parquet_serializer.serialize_variant_genomic_scores(
+                family_variant
+            )
+
+        for family_allele in family_variant.alleles:
+            summary = \
+                self.parquet_serializer.serialize_summary(
+                    summary_variant_index, family_allele,
+                    alternatives_data
+                )
+            frequency = \
+                self.parquet_serializer.serialize_alelle_frequency(
+                    family_allele, frequency_data
+                )
+            genomic_scores = \
+                self.parquet_serializer.serialize_genomic_scores(
+                    family_allele, genomic_scores_data
+                )
+            effect_genes = \
+                self.parquet_serializer.serialize_effects(
+                    family_allele, effect_data)
+            family = self.parquet_serializer.serialize_family(
+                family_variant_index, family_allele, genotype_data)
+            member = self.parquet_serializer.serialize_members(
+                family_variant_index, family_allele)
+
+            for (s, freq, gs, e, f, m) in itertools.product(
+                    [summary], [frequency], [genomic_scores],
+                    effect_genes, [family], member):
+
+
+                self.data.data_append('bucket_index', bucket_index)
+
+                for d in (s, freq, gs, e, f, m):
+                    for key, val in d._asdict().items():
+                        self.data.data_append(key, val)
+
+
     def variants_table(self, bucket_index=0, rows=10000):
-        print("row group size:", rows)
 
         family_variant_index = 0
-        histogram = defaultdict(lambda: 0)
-        for summary_variant_index, (_, family_variants) in \
+        for summary_variant_index, (sumary_variant, family_variants) in \
                 enumerate(self.full_variants_iterator):
 
             for family_variant in family_variants:
                 family_variant_index += 1
-                effect_data = \
-                    self.parquet_serializer.serialize_variant_effects(
-                        family_variant.effects
+
+                if family_variant.is_unknown():
+                    # handle all unknown variants
+                    unknown_variant = self._setup_all_unknown_variant(
+                        sumary_variant, family_variant.family_id)
+                    self._process_family_variant(
+                        bucket_index, summary_variant_index,
+                        family_variant_index,
+                        unknown_variant
                     )
-                alternatives_data = family_variant.alternative
-                genotype_data = \
-                    self.parquet_serializer.serialize_variant_genotype(
-                        family_variant.gt
-                    )
-                frequency_data = \
-                    self.parquet_serializer.serialize_variant_frequency(
-                        family_variant
-                    )
-                genomic_scores_data = \
-                    self.parquet_serializer.serialize_variant_genomic_scores(
-                        family_variant
-                    )
-
-                repetition = 0
-                for family_allele in family_variant.alleles:
-                    summary = \
-                        self.parquet_serializer.serialize_summary(
-                            summary_variant_index, family_allele,
-                            alternatives_data
-                        )
-                    frequency = \
-                        self.parquet_serializer.serialize_alelle_frequency(
-                            family_allele, frequency_data
-                        )
-                    genomic_scores = \
-                        self.parquet_serializer.serialize_genomic_scores(
-                            family_allele, genomic_scores_data
-                        )
-                    effect_genes = \
-                        self.parquet_serializer.serialize_effects(
-                            family_allele, effect_data)
-                    family = self.parquet_serializer.serialize_family(
-                        family_variant_index, family_allele, genotype_data)
-                    member = self.parquet_serializer.serialize_members(
-                        family_variant_index, family_allele)
-
-                    for (s, freq, gs, e, f, m) in itertools.product(
-                            [summary], [frequency], [genomic_scores],
-                            effect_genes, [family], member):
-
-                        repetition += 1
-
-                        self.data.data_append('bucket_index', bucket_index)
-
-                        for d in (s, freq, gs, e, f, m):
-                            for key, val in d._asdict().items():
-                                self.data.data_append(key, val)
-                histogram[repetition] += 1
+                else:
+                    self._process_family_variant(
+                        bucket_index, summary_variant_index,
+                        family_variant_index,
+                        family_variant)
 
             if family_variant_index % 1000 == 0:
                 elapsed = time.time() - self.start
@@ -182,10 +242,6 @@ class VariantsParquetWriter(object):
             format(
                 family_variant_index, elapsed),
             file=sys.stderr)
-        print("-------------------------------------------", file=sys.stderr)
-        for r, c in histogram.items():
-            print(r, c, file=sys.stderr)
-        print("-------------------------------------------", file=sys.stderr)
 
     def save_variants_to_parquet(
             self, filename=None, bucket_index=1, rows=100000,

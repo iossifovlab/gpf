@@ -329,7 +329,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         assert genotype is not None
         assert isinstance(family, Family)
         assert isinstance(family_alleles, list)
-        assert all([isinstance(a, FamilyAllele) for a in family_alleles])
+        assert all([isinstance(a, FamilyAllele) for a in family_alleles]), \
+            family_alleles
 
         SummaryVariant.__init__(self, family_alleles)
         FamilyDelegate.__init__(self, family)
@@ -409,8 +410,8 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
     def is_unknown(self):
         """
-        Returns True if all known alleles in the family variant are
-        `reference`.
+        Returns True if all alleles in the family variant are
+        `unknown`.
         """
         return np.all(self.gt == -1)
 
@@ -460,7 +461,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         :return: list of all alternative allele indexes present into
         genotype passed.
         """
-        return sorted(list(set(gt.flatten()).difference({-1, 0})))
+        return sorted(list(set(gt.flatten()).difference({0})))
 
     @staticmethod
     def calc_alleles(gt):
