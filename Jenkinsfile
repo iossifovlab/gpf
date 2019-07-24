@@ -35,7 +35,7 @@ pipeline {
           export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
 
           docker-compose -f docker-compose.yml exec -T tests /code/scripts/wait-for-it.sh impala:21050 --timeout=240
-          docker-compose -f docker-compose.yml exec -T tests flake8 --format=pylint --exclude "--exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*"" /code > ./pyflakes.report || echo "pylint exited with $?"
+          docker-compose -f docker-compose.yml exec -T tests flake8 --format=pylint --exclude "--exclude "*old*,*tmp*,*temp*,data-hg19*,gpf*"" /code > ./pyflakes.report || echo "pylint exited with ${?}"
 
           docker-compose -f docker-compose.yml down
         """
