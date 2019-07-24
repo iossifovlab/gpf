@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from guardian.models import Group
+# from guardian.models import Group
 from django.db.models import Count, Q
 from rest_framework import viewsets
 from rest_framework import permissions
@@ -47,7 +47,8 @@ class GrantPermissionToGroupView(views.APIView):
         serializer = PermissionChangeSerializer(data=request.data)
         if not serializer.is_valid():
             print(serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         dataset = Dataset.objects.get(dataset_id=serializer.data['datasetId'])
         group = Group.objects.get(name=serializer.data['groupName'])
@@ -74,4 +75,3 @@ class RevokePermissionToGroupView(views.APIView):
         remove_perm('view', group, dataset)
 
         return Response(status=status.HTTP_200_OK)
-

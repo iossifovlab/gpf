@@ -202,3 +202,6 @@ class WeightsLoader(object):
 
     def __contains__(self, weight_name):
         return weight_name in self.weights
+
+    def __len__(self):
+        return len(self.weights)
