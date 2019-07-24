@@ -50,7 +50,9 @@ def test_variants_parquet_io(
         test_impala_helpers):
     fvars = variants_vcf("backends/effects_trio_dad")
 
-    variants_writer = VariantsParquetWriter(fvars.full_variants_iterator())
+    variants_writer = VariantsParquetWriter(
+        fvars.families,
+        fvars.full_variants_iterator())
     variants_writer.save_variants_to_parquet(
         temp_filename
     )

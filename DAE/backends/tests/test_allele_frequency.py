@@ -12,16 +12,16 @@ from utils.vcf_utils import mat2str
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    # "variants_impala",
+    "variants_impala",
 ])
 @pytest.mark.parametrize("region,count,freq0,freq1", [
-    # (Region('1', 11539, 11539), 2, 75.0, 25.0),
-    # (Region('1', 11540, 11540), 2, 75.0, 25.0),
-    # (Region('1', 11541, 11541), 1, 87.5, 12.5),
-    # (Region('1', 11542, 11542), 1, 87.5, 12.5),
-    # (Region('1', 11550, 11550), 0, 100.0, 0.0),
-    # (Region('1', 11553, 11553), 2, 100.0, 0.0),
-    # (Region('1', 11551, 11551), 2, 0.0, 100.0),
+    (Region('1', 11539, 11539), 2, 75.0, 25.0),
+    (Region('1', 11540, 11540), 2, 75.0, 25.0),
+    (Region('1', 11541, 11541), 1, 87.5, 12.5),
+    (Region('1', 11542, 11542), 1, 87.5, 12.5),
+    (Region('1', 11550, 11550), 0, 100.0, 0.0),
+    (Region('1', 11553, 11553), 2, 100.0, 0.0),
+    (Region('1', 11551, 11551), 2, 0.0, 100.0),
     (Region('1', 11552, 11552), 2, 0.0, 100.0),
 ])
 def test_variant_frequency_single(

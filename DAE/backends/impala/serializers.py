@@ -131,8 +131,6 @@ class ParquetSerializer(object):
 
     def serialize_summary(
             self, summary_variant_index, allele, alternatives_data):
-        # if not self.include_reference and allele.is_reference_allele:
-        #     return None
         if allele.is_reference_allele:
             return self.summary(
                 summary_variant_index,
@@ -160,6 +158,8 @@ class ParquetSerializer(object):
 
     def serialize_effects(self, allele, effect_data):
         if allele.is_reference_allele:
+            return [self.effect_gene(None, None, effect_data)]
+        if allele.allele_index == -1:
             return [self.effect_gene(None, None, effect_data)]
         return [
             self.effect_gene(eg.effect, eg.symbol, effect_data)
@@ -196,14 +196,22 @@ class ParquetSerializer(object):
         assert len(flat) % 4 == 0
 
         rows = len(flat) // 4
-        result = flat.reshape([rows, 4], order='F')
+        res = flat.reshape([rows, 4], order='F')
         attributes = []
         for row in range(rows):
+            af_parents_called_count = \
+                int(res[row, 0]) if not np.isnan(res[row, 0]) else None
+            af_parents_called_percent = \
+                res[row, 1] if not np.isnan(res[row, 1]) else None
+            af_allele_count = \
+                int(res[row, 2]) if not np.isnan(res[row, 2]) else None
+            af_allele_freq = \
+                res[row, 3] if not np.isnan(res[row, 3]) else None
             a = {
-                'af_parents_called_count': int(result[row, 0]),
-                'af_parents_called_percent': result[row, 1],
-                'af_allele_count': int(result[row, 2]),
-                'af_allele_freq': result[row, 3],
+                'af_parents_called_count': af_parents_called_count,
+                'af_parents_called_percent': af_parents_called_percent,
+                'af_allele_count': af_allele_count,
+                'af_allele_freq': af_allele_freq,
             }
             attributes.append(a)
 
@@ -295,6 +303,7 @@ class ParquetSerializer(object):
         if data is None:
             return res
         res.extend([Effect.from_string(e) for e in data.split("#")])
+
         return res
 
     def serialize_family(
@@ -341,6 +350,7 @@ class ParquetSerializer(object):
         alternatives = self.deserialize_variant_alternatives(
             alternatives_data
         )
+
         assert len(effects) == len(alternatives)
         # family = self.families.get(family_id)
         assert family is not None

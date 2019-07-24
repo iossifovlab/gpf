@@ -17,6 +17,9 @@ class EffectGene(object):
 
     @staticmethod
     def from_string(data):
+        if not data:
+            return None
+
         parts = [p.strip() for p in data.split(":")]
         if len(parts) == 2:
             return EffectGene(parts[0], parts[1])
@@ -64,6 +67,9 @@ class EffectTranscript(object):
 
     @staticmethod
     def from_string(data):
+        if not data:
+            return None
+
         parts = [p.strip() for p in data.split(":")]
         assert len(parts) == 2
         return EffectTranscript(parts[0], parts[1])
@@ -102,9 +108,11 @@ class Effect(object):
         self._effect_types = None
 
     def __repr__(self):
+        effects = "|".join([str(g) for g in self.genes])
+        transcripts = "|".join([
+            str(t) for t in self.transcripts.values()])
         return '{}!{}!{}'.format(
-            self.worst, "|".join([str(g) for g in self.genes]),
-            "|".join([str(t) for t in self.transcripts.values()]))
+            self.worst, effects, transcripts)
 
     def __str__(self):
         return repr(self)
@@ -139,11 +147,15 @@ class Effect(object):
             EffectGene.from_string(eg.strip())
             for eg in parts[1].split("|")
         ]
+        effect_genes = [eg for eg in filter(None, effect_genes)]
         transcripts = [
             EffectTranscript.from_string(et.strip())
             for et in parts[2].split("|")
         ]
+        transcripts = filter(None, transcripts)
         transcripts = {
             t.transcript_id: t for t in transcripts
         }
+        if not effect_genes and not transcripts:
+            return None
         return Effect(worst, effect_genes, transcripts)

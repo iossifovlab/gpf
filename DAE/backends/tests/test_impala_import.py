@@ -9,6 +9,7 @@ def test_impala_import_annotation(
     fvars = vcf_import_raw
 
     parquet_writer = VariantsParquetWriter(
+        fvars.families,
         fvars.full_variants_iterator(),
         annotation_pipeline_internal)
 
