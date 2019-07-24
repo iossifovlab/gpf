@@ -105,5 +105,3 @@ def test_query_with_pheno_filters(
         rows_values.append(row_values)
 
     assert rows_values == pheno_values
-
-

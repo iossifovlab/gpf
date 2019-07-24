@@ -39,7 +39,7 @@ def test_tabix():
         for v in summary_iterator:
             print(v)
             break
-        
+
         for v in toomany_iterator:
             print(v)
             break

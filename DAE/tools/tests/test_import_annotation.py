@@ -1,17 +1,5 @@
 import pandas as pd
 
-from box import Box
-
-from annotation.tools.file_io_parquet import ParquetReader
-
-from backends.configure import Configure
-from backends.vcf.raw_vcf import RawFamilyVariants
-from backends.vcf.annotate_allele_frequencies import \
-    VcfAlleleFrequencyAnnotator
-from backends.impala.import_tools import variants_iterator_to_parquet
-
-from .conftest import relative_to_this_test_folder
-
 
 def test_annotation_pipeline(
         annotation_pipeline_vcf, vcf_variants_io, capsys, result_df):

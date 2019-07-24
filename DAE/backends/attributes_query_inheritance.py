@@ -58,6 +58,7 @@ class Atom:
     def __init__(self, value):
         self.value = value
 
+
 class Expression:
     def __init__(self, expression):
         self.expression = expression

@@ -215,4 +215,3 @@ if __name__ == "__main__":
             argv.pedigree, argv.vcf,
             region=argv.region, bucket_index=argv.bucket_index,
             output=argv.output)
-

@@ -8,17 +8,17 @@ import itertools
 import collections
 import vcf as PyVCF  # @UnresolvedImport
 from pprint import pprint
-from vcf.parser import _Contig, _Format, _Info, _Filter, _Call  # @UnresolvedImport
+from vcf.parser import _Contig, _Format, _Info, _Filter, _Call  \
+    # @UnresolvedImport
 from vcf.model import make_calldata_tuple  # @UnresolvedImport
-import copy
 
 
 GA = genomesDB.get_genome()  # @UndefinedVariable
 gmDB = genomesDB.get_gene_models()  # @UndefinedVariable
 
-subRE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
-insRE = re.compile('^ins\(([ACGT]+)\)$')
-delRE = re.compile('^del\((\d+)\)$')
+subRE = re.compile(r'^sub\(([ACGT])->([ACGT])\)$')
+insRE = re.compile(r'^ins\(([ACGT]+)\)$')
+delRE = re.compile(r'^del\((\d+)\)$')
 
 
 class DaeToVcf(object):
@@ -174,7 +174,8 @@ class DaeToVcf(object):
     def _print_variant_info_about_person(variant, person_id):
         variant = variant
         members_in_order = variant.memberInOrder
-        member1_index = (i for i, v in enumerate(members_in_order) if v.personId == person_id).next()
+        member1_index = (i for i, v in enumerate(members_in_order)
+                         if v.personId == person_id).next()
         print('family {}'.format(variant.familyId))
         print('variant {} {}'.format(variant.location, variant.variant))
         print(
@@ -315,9 +316,11 @@ class VcfWriter(object):
             metadata={'fileformat': 'VCFv4.2'},
             formats={
                 'GT': [1, 'String', 'Genotype'],
-                'AD': ['.', 'Integer',
-                       'Allelic depths for the ref and alt alleles in the order'
-                       ' listed']
+                'AD': [
+                    '.', 'Integer',
+                    'Allelic depths for the ref and alt alleles in the order '
+                    'listed'
+                ]
             },
             samples=samples,
             contigs=contigs,
@@ -459,8 +462,8 @@ def vcfVarFormat(loc, var):
 
     mD = delRE.match(var)
     if mD:
-        l = int(mD.group(1))
-        reference = GA.getSequence(chr, pos-1, pos+l-1)
+        length = int(mD.group(1))
+        reference = GA.getSequence(chr, pos-1, pos+length-1)
         return chr, pos-1, reference, reference[0]
 
     raise NotImplementedError('weird variant: ' + var)

@@ -144,9 +144,8 @@ class PhenoToolDownload(PhenoToolView):
             variants = helper.study_variants(data)
 
             for effect in data['effectTypes']:
-                result_df = \
-                    PhenoTool.join_pheno_df_with_variants(result_df,
-                                                          variants[effect.lower()])
+                result_df = PhenoTool.join_pheno_df_with_variants(
+                    result_df, variants[effect.lower()])
                 result_df = result_df.rename(
                     columns={'variant_count': effect})
 

@@ -32,7 +32,7 @@ def configuration():
 
     config_parser = ConfigParser()
     config_parser.optionxform = str
-    
+
     with open(filename, "r", encoding="utf8") as infile:
         config_parser.read_file(infile)
         return config_parser

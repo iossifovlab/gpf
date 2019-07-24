@@ -67,9 +67,9 @@ def getGQ(dx):
         return [dx['GQ']]
     except KeyError:
         if ('QR' in dx) and ('QA' in dx):
-                return [dx['QR']] + list(dx['QA'])
+            return [dx['QR']] + list(dx['QA'])
         else:
-                return []
+            return []
 
 
 def getCount(sx):
@@ -88,7 +88,7 @@ def getCount(sx):
         # NV Number of reads containing variant in this sample
         # print data.ref, data.alts, dx['GT'], dx['NR'], dx['NV']
         if len(sx['NR']) == 1 and len(sx['NV']) == 1:
-                return [sx['NR'][0] - sx['NV'][0], sx['NV'][0]]
+            return [sx['NR'][0] - sx['NV'][0], sx['NV'][0]]
         # the other cases are difficult to figure out what those numbers
         # ar mean
 
@@ -192,7 +192,7 @@ class Reader(object):
             else:
                 self.file = open(fname, 'r')
         except IOError:
-                pass
+            pass
 
     def exists(self):
         try:
@@ -227,7 +227,7 @@ class ReaderStat(Reader):
         Reader.__init__(self, fname)
 
         if not self.exists():
-                return
+            return
 
         self.head = self.file.readline().strip('\n')
         hdr = self.head.split('\t')
@@ -247,15 +247,15 @@ class ReaderStat(Reader):
 
     def readLine(self):
         while self.file:
-                self.cLine = self.file.readline().strip('\n')
-                if len(self.cLine) < 1 or self.cLine[0] != '#':
-                    break
+            self.cLine = self.file.readline().strip('\n')
+            if len(self.cLine) < 1 or self.cLine[0] != '#':
+                break
 
         if self.cLine == '' or not self.file:
-                self.cLine = ''
-                self.cTerm = []
-                self.cId = ''
-                return False
+            self.cLine = ''
+            self.cTerm = []
+            self.cId = ''
+            return False
 
         self.cTerms = self.cLine.split('\t')
         self.cID = ':'.join([self.cTerms[n] for n in self.idxID])
@@ -314,9 +314,9 @@ class Writer(object):
 
 def tooManyFile(xstr):
     if xstr.endswith('.txt.gz') or xstr.endswith('.txt.bgz'):
-            xloc = 3
+        xloc = 3
     else:
-            xloc = 2
+        xloc = 2
 
     terms = xstr.split('.')
     terms[len(terms)-xloc] += '-TOOMANY'

@@ -299,12 +299,6 @@ def composite_dataset_wrapper(composite_dataset, pheno_factory):
 
 
 @pytest.fixture(scope='module')
-def dae_config_fixture():
-    dae_config = DAEConfig(fixtures_dir())
-    return dae_config
-
-
-@pytest.fixture(scope='module')
 def variants_db_fixture(dae_config_fixture):
     vdb = VariantsDb(dae_config_fixture)
     return vdb

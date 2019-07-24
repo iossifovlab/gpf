@@ -37,7 +37,7 @@ def test_failed_auth(user, client):
     }
 
     response = client.post(
-        
+
         url, json.dumps(data), content_type='application/json', format='json')
     assert response.status_code == status.HTTP_404_NOT_FOUND
 

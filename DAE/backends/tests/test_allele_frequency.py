@@ -76,5 +76,3 @@ def test_variant_frequency_multi_alleles(
         elif len(v.frequencies) > 2:
             assert freq1 == pytest.approx(v.frequencies[1], 1e-2)
             assert freq2 == pytest.approx(v.frequencies[2], 1e-2)
-
-

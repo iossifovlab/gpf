@@ -119,4 +119,3 @@ class Configure(ConfigBox):
         }
 
         return Configure(conf)
-
