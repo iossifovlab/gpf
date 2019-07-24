@@ -38,7 +38,7 @@ def parse_cli_arguments(argv=sys.argv[1:]):
     return parser_args
 
 
-def main(study_ids=None, parquet_directories=None):
+def load_study_parquet(study_ids=None, parquet_directories=None):
     dae_config = DAEConfig()
     variants_db = VariantsDb(dae_config)
 
@@ -79,4 +79,5 @@ if __name__ == "__main__":
         if argv.parquet_directories is not None:
             parquet_directories = argv.parquet_directories.split(',')
 
-    main(study_ids=study_ids, parquet_directories=parquet_directories)
+    load_study_parquet(
+        study_ids=study_ids, parquet_directories=parquet_directories)
