@@ -15,7 +15,7 @@ pipeline {
   }
   triggers {
     cron('@weekly')
-    upstream(upstreamProjects: 'seqpipe/gpf/variants', threshold: hudson.model.Result.SUCCESS)
+    upstream(upstreamProjects: 'iossifovlab/gpf/master', threshold: hudson.model.Result.SUCCESS)
   }
   stages {
     stage ('Start') {
@@ -40,13 +40,13 @@ pipeline {
       steps {
         checkout([
           $class: 'GitSCM', 
-          branches: [[name: '*/variants']], 
+          branches: [[name: '*/master']],
           doGenerateSubmoduleConfigurations: false, 
           extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'userdocs/development/gpf']],
           submoduleCfg: [], 
           userRemoteConfigs: [[
             credentialsId: 'dea7a214-d183-4735-a7d5-ed8076dd0e0d', 
-            url: 'git@github.com:seqpipe/gpf.git'
+            url: 'git@github.com:iossifovlab/gpf.git'
           ]]
         ])
         sh '''
