@@ -38,8 +38,10 @@ def parse_cli_arguments(argv=sys.argv[1:]):
     return parser_args
 
 
-def load_study_parquet(study_ids=None, parquet_directories=None):
-    dae_config = DAEConfig()
+def load_study_parquet(
+        dae_config=None, study_ids=None, parquet_directories=None):
+    if dae_config is None:
+        dae_config = DAEConfig()
     variants_db = VariantsDb(dae_config)
 
     if study_ids is None:
