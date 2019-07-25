@@ -80,12 +80,12 @@ def build_pheno_browser(dbfile, pheno_name, output_dir, regression_conf_path):
                                    output_dir, pheno_regressions)
     prep.run()
 
-    hashsum = calc_dbfile_hashsum(dbfile)
-    hashfile = os.path.join(
-        output_dir,
-        '{}.hash'.format(pheno_name))
-    with open(hashfile, 'w') as f:
-        f.write(hashsum)
+    # hashsum = calc_dbfile_hashsum(dbfile)
+    # hashfile = os.path.join(
+    #     output_dir,
+    #     '{}.hash'.format(pheno_name))
+    # with open(hashfile, 'w') as f:
+    #     f.write(hashsum)
 
 
 def main(argv=None):  # IGNORE:C0111
@@ -154,7 +154,7 @@ USAGE
 
         return 0
     except KeyboardInterrupt:
-        return 0
+        return 1
     except Exception as e:
         traceback.print_exc()
         print()

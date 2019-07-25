@@ -12,9 +12,6 @@ class Configure(ConfigBox):
 
     def __init__(self, data, **kwargs):
         super(Configure, self).__init__(data, **kwargs)
-        # assert os.path.exists(self.pedigree), self.pedigree
-        # assert os.path.exists(self.vcf), self.vcf
-        # assert os.path.exists(self.annotation), self.annotation
 
     @staticmethod
     def array_from_enabled_dir(enabled_dir):
@@ -78,10 +75,18 @@ class Configure(ConfigBox):
         return Configure(conf)
 
     @staticmethod
-    def from_prefix_parquet(prefix, bucket_index=0, suffix=None):
-        # assert os.path.exists(prefix)
-        # assert os.path.isdir(prefix)
+    def from_prefix_impala(
+            prefix, db=None, study_id=None, bucket_index=0, suffix=None):
+
         assert bucket_index >= 0
+
+        basename = os.path.basename(os.path.abspath(prefix))
+        if study_id is None:
+            study_id = basename
+        assert study_id
+
+        if db is None:
+            db = study_id
 
         if suffix is None and bucket_index == 0:
             filesuffix = ""
@@ -92,38 +97,25 @@ class Configure(ConfigBox):
         else:
             filesuffix = "_{:0>6}{}".format(bucket_index, suffix)
 
-        summary_filename = os.path.join(
-            prefix, "summary{}.parquet".format(filesuffix))
-        family_filename = os.path.join(
-            prefix, "family{}.parquet".format(filesuffix))
-        member_filename = os.path.join(
-            prefix, "member{}.parquet".format(filesuffix))
-        effect_gene_filename = os.path.join(
-            prefix, "effect_gene{}.parquet".format(filesuffix))
+        variant_filename = os.path.join(
+            prefix, "{}_variant{}.parquet".format(
+                study_id, filesuffix))
         pedigree_filename = os.path.join(
-            prefix, "pedigree{}.parquet".format(filesuffix))
+            prefix, "{}_pedigree{}.parquet".format(
+                study_id, filesuffix))
 
         conf = {
-            'parquet': {
-                'summary_variant': summary_filename,
-                'family_variant': family_filename,
-                'member_variant': member_filename,
-                'effect_gene_variant': effect_gene_filename,
-                'pedigree': pedigree_filename
+            'impala': {
+                'files': {
+                    'variant': variant_filename,
+                    'pedigree': pedigree_filename,
+                },
+                'db': db,
+                'tables': {
+                    'variant': '{}_variant'.format(study_id),
+                    'pedigree': '{}_pedigree'.format(study_id),
+                }
             }
         }
 
         return Configure(conf)
-
-    @staticmethod
-    def parquet_prefix_exists(prefix, bucket_index=0, suffix=None):
-        if not os.path.exists(prefix) or not os.path.isdir(prefix):
-            return False
-        conf = Configure.from_prefix_parquet(prefix, bucket_index, suffix)
-        conf = conf.parquet
-
-        return os.path.exists(conf.summary_variant) and \
-            os.path.exists(conf.family_variant) and \
-            os.path.exists(conf.member_variant) and \
-            os.path.exists(conf.effect_gene_variant) and \
-            os.path.exists(conf.pedigree)

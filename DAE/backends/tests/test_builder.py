@@ -12,14 +12,13 @@ from ..configure import Configure
 
 from ..vcf.builder import variants_builder as VB
 
-from .conftest import relative_to_this_test_folder
 import sys
 
 
-def test_variants_build_multi(temp_dirname):
+def test_variants_build_multi(temp_dirname, fixture_dirname):
 
     conf = Configure.from_prefix_vcf(
-        relative_to_this_test_folder("fixtures/trios_multi"))
+        fixture_dirname("backends/trios_multi"))
     conf = conf.vcf
 
     shutil.copy(conf.pedigree, temp_dirname)
@@ -35,9 +34,9 @@ def test_variants_build_multi(temp_dirname):
     assert os.path.exists(conf.annotation)
 
 
-def test_variants_builder(temp_dirname):
+def test_variants_builder(temp_dirname, fixture_dirname):
     conf = Configure.from_prefix_vcf(
-        relative_to_this_test_folder("fixtures/effects_trio"))
+        fixture_dirname("backends/effects_trio"))
     conf = conf.vcf
 
     shutil.copy(conf.pedigree, temp_dirname)
@@ -64,10 +63,10 @@ def test_variants_builder(temp_dirname):
     assert vs is not None
 
 
-def test_variants_build_twice(temp_dirname):
+def test_variants_build_twice(temp_dirname, fixture_dirname):
 
     conf = Configure.from_prefix_vcf(
-        relative_to_this_test_folder("fixtures/trios_multi"))
+        fixture_dirname("backends/trios_multi"))
     conf = conf.vcf
 
     shutil.copy(conf.pedigree, temp_dirname)

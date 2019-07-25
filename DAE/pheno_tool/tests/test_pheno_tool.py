@@ -99,7 +99,7 @@ def test_get_normalize_measure_id_same_measure(fake_pheno_db):
     pheno_tool = PhenoTool(fake_pheno_db, 'i1.m1')
     measure_id = pheno_tool._get_normalize_measure_id(
         {'measure_name': 'm1', 'instrument_name': 'i1'})
-    assert measure_id == None
+    assert measure_id is None
 
 
 @pytest.mark.parametrize('measure_name,instrument_name', [

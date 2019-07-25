@@ -5,6 +5,7 @@ from builtins import object
 import enum
 
 from lark import Lark, InlineTransformer
+from lark.visitors import Interpreter
 from lark.reconstruct import Reconstructor
 from functools import reduce
 
@@ -382,6 +383,52 @@ class QueryTreeToSQLListTransformer(QueryTreeToSQLTransformer):
             reduce((lambda x, y: x + ", " + y), arg) + "))"
 
 
+class QueryTreeToSQLBitwiseTransformer(QueryTreeToSQLTransformer):
+
+    def ContainsNode(self, arg):
+        res = "(BITAND({}, {}) != 0)".format(
+            self.column_name,
+            self.token_converter(arg))
+        return res
+
+    def LessThanNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def GreaterThanNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def LessThanEqNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def GreaterThanEqNode(self, arg):
+        raise NotImplementedError("unexpected bitwise query")
+
+    def ElementOfNode(self, arg):
+        res = "(BITAND({}, {}) != 0)".format(
+            self.column_name,
+            self.token_converter(arg))
+        return res
+
+    def EqualsNode(self, arg):
+        return self.column_name + " = " + self.token_converter(arg)
+
+    def NotNode(self, children):
+        assert len(children) == 1
+        return "(NOT ({}))".format(children[0])
+
+    def AndNode(self, children):
+        res = reduce(
+            lambda x, y: "({}) AND ({})".format(x, y),
+            children)
+        return res
+
+    def OrNode(self, children):
+        res = reduce(
+            lambda x, y: "({}) OR ({})".format(x, y),
+            children)
+        return res
+
+
 # class RegionsQueryToSQLTransformer(object):
 #
 #     def __init__(self):
@@ -426,3 +473,57 @@ class StringListQueryToTreeTransformer(object):
     def parse_and_transform(self, expression):
         assert isinstance(expression, list)
         return ElementOfNode(expression)
+
+
+class BitwiseTreeTransformer(Interpreter):
+
+    def __init__(self, token_converter):
+        super(BitwiseTreeTransformer, self).__init__()
+        self.parser = PARSER
+        self.token_converter = token_converter
+
+    def less_than(self, *args):
+        raise NotImplementedError()
+
+    def more_than(self, *args):
+        raise NotImplementedError()
+
+    def less_than_eq(self, *args):
+        raise NotImplementedError()
+
+    def more_than_eq(self, *args):
+        raise NotImplementedError()
+
+    def eq(self, *args):
+        raise NotImplementedError()
+
+    def arg(self, *args):
+        print("arg:", *args)
+        return ContainsNode(args[0])
+
+    def simple_arg(self, *args):
+        print("simple_arg:", *args)
+        return self.token_converter(args[0])
+
+    def negation(self, *args):
+        print("negation:", *args)
+        return NotNode(args[0])
+
+    def logical_and(self, *args):
+        print("logical_and:", *args)
+        return AndNode(args)
+
+    def logical_or(self, *args):
+        print("logical_or:", *args)
+        return OrNode(args)
+
+    def start(self, *args):
+        print("start:", *args)
+        assert len(args) == 1
+        return args[0]
+
+    def any(self, *args):
+        return OrNode(args)
+
+    def all(self, *args):
+        return AndNode(args)

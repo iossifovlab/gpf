@@ -17,7 +17,7 @@ from RegionOperations import Region
     (Region('1', 11515, 11515), 1, 75.0, 25.0),
 ])
 def test_variant_attributes(variants_vcf, region, count, freq0, freq1):
-    fvars = variants_vcf("fixtures/inheritance_trio")
+    fvars = variants_vcf("backends/inheritance_trio")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == count

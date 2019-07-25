@@ -68,4 +68,3 @@ class SomeSuperuserLeftValidator(object):
 
         self.is_update = instance is not None
         self.user_instance = instance
-

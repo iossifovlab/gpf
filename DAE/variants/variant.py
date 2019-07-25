@@ -50,6 +50,10 @@ class VariantBase(object):
         self._alternative = alternative
 
     @property
+    def chrom(self):
+        return self.chromosome
+
+    @property
     def alternative(self):
         """
         alternative DNA string; comma separated string when multiple
@@ -148,6 +152,10 @@ class AltAlleleItems(object):
     def __str__(self):
         return str(self.items)
 
+    def __eq__(self, other):
+        return len(self.items) == len(other.items) and \
+            all([s == o for (s, o) in zip(self.items, other.items)])
+
 
 class VariantDetail(object):
     def __init__(self, chrom, position, variant, length):
@@ -156,7 +164,7 @@ class VariantDetail(object):
         self.chrom = chrom
         self.cshl_position = position
         self.cshl_variant = variant
-        self.variant_type = VariantType.from_cshl_variant(self.cshl_variant)
+        self._variant_type = None
 
     def __repr__(self):
         return "{} {}".format(
@@ -166,6 +174,13 @@ class VariantDetail(object):
     @property
     def cshl_location(self):
         return "{}:{}".format(self.chrom, self.cshl_position)
+
+    @property
+    def variant_type(self):
+        if self._variant_type is None:
+            self._variant_type = VariantType.from_cshl_variant(
+                self.cshl_variant)
+        return self._variant_type
 
     @staticmethod
     def from_vcf(chrom, position, reference, alternative):
@@ -186,25 +201,19 @@ class SummaryAllele(VariantBase):
                  summary_index=None,
                  allele_index=0,
                  effect=None,
-                 frequency=None,
                  attributes=None):
         super(SummaryAllele, self).__init__(
             chromosome, position, reference, alternative)
 
         #: index of the summary variant this allele belongs to
-        self.summary_index = summary_index
+        # self.summary_index = summary_index
         #: index of the allele of summary variant
         self.allele_index = allele_index
 
-        if alternative is None:
-            self.details = None
-        else:
-            self.details = VariantDetail.from_vcf(
-                chromosome, position, reference, alternative)
+        self.details = None
+
         #: variant effect of the allele; None for the reference allele.
         self.effect = effect
-        #: frequency of the allele
-        self.frequency = frequency
 
         if attributes is None:
             #: allele additional attributes
@@ -213,29 +222,60 @@ class SummaryAllele(VariantBase):
             self.attributes = {}
             self.update_attributes(attributes)
 
-        self.update_attributes({'variant_type': self.variant_type.value
-                                if self.variant_type else None})
+        # self.update_attributes({'variant_type': self.variant_type.value
+        #                         if self.variant_type else None})
+
+    @property
+    def frequency(self):
+        return self.get_attribute('af_allele_freq')
 
     @property
     def cshl_variant(self):
-        if self.details is not None:
-            return self.details.cshl_variant
-        else:
+        if self.alternative is None:
             return None
+        if self.details is None:
+
+            self.details = VariantDetail.from_vcf(
+                self.chromosome, self.position,
+                self.reference, self.alternative)
+
+        return self.details.cshl_variant
 
     @property
     def cshl_location(self):
-        if self.details is not None:
-            return self.details.cshl_location
-        else:
+        if self.alternative is None:
             return None
+
+        if self.details is None:
+            self.details = VariantDetail.from_vcf(
+                self.chromosome, self.position,
+                self.reference, self.alternative)
+
+        return self.details.cshl_location
+
+    @property
+    def cshl_position(self):
+        if self.alternative is None:
+            return None
+
+        if self.details is None:
+            self.details = VariantDetail.from_vcf(
+                self.chromosome, self.position,
+                self.reference, self.alternative)
+
+        return self.details.cshl_position
 
     @property
     def variant_type(self):
-        if self.details is not None:
-            return self.details.variant_type
-        else:
+        if self.alternative is None:
             return None
+
+        if self.details is None:
+            self.details = VariantDetail.from_vcf(
+                self.chromosome, self.position,
+                self.reference, self.alternative)
+
+        return self.details.variant_type
 
     @property
     def effects(self):
@@ -292,33 +332,32 @@ class SummaryAllele(VariantBase):
 class SummaryVariant(VariantBase):
 
     def __init__(self, alleles):
+        # import traceback
+        # traceback.print_stack()
         assert len(alleles) >= 1
         assert len(set([sa.position for sa in alleles])) == 1
-
-        self._matched_alleles = [a.allele_index for a in alleles]
-
-        if not alleles[0].is_reference_allele:
-            ref_allele = SummaryAllele.create_reference_allele(alleles[0])
-            alleles = list(itertools.chain([ref_allele], alleles))
 
         assert alleles[0].is_reference_allele
         #: list of all alleles in the variant
         self.alleles = alleles
-        #: the reference allele
-        self.ref_allele = alleles[0]
-        #: list of all alternative alleles
-        self.alt_alleles = alleles[1:]
-
-        self.allele_count = self.ref_allele.get_attribute("allele_count")
-        if self.allele_count is None:
-            self.allele_count = len(self.alleles)
+        self.allele_count = len(self.alleles)
 
         super(SummaryVariant, self).__init__(
             self.ref_allele.chromosome,
             self.ref_allele.position,
             self.ref_allele.reference)
 
-        self.summary_index = self.ref_allele.summary_index
+        # self.summary_index = self.ref_allele.summary_index
+
+    @property
+    def ref_allele(self):
+        """the reference allele"""
+        return self.alleles[0]
+
+    @property
+    def alt_alleles(self):
+        """list of all alternative alleles"""
+        return self.alleles[1:]
 
     def get_allele(self, allele_index):
         for allele in self.alleles:
@@ -326,15 +365,14 @@ class SummaryVariant(VariantBase):
                 return allele
         return None
 
-    # def allele_count(self):
-    #     if self._allele_count is None:
-    #         self._allele_count = len(self.alleles)
-    #
-    #     return self._allele_count
-
     @property
     def alternative(self):
         if not self.alt_alleles:
+            return None
+        if any([aa.alternative is None for aa in self.alt_alleles]):
+            assert all([
+                aa.alternative is None
+                for aa in self.alt_alleles])
             return None
         return ','.join([aa.alternative for aa in self.alt_alleles])
 
@@ -362,6 +400,7 @@ class SummaryVariant(VariantBase):
         """
         0-base list of frequencies for variant.
         """
+        print("frequencies:", self.alleles)
         return [sa.frequency for sa in self.alleles]
 
     @property
@@ -369,7 +408,7 @@ class SummaryVariant(VariantBase):
         """
         returns set of variant types.
         """
-        return set([aa.details.variant_type for aa in self.alt_alleles])
+        return set([aa.variant_type for aa in self.alt_alleles])
 
     def get_attribute(self, item, default=None):
         return [sa.get_attribute(item, default) for sa in self.alleles]
@@ -415,7 +454,6 @@ class SummaryVariantFactory(object):
             summary_index=record['summary_variant_index'],
             allele_index=record['allele_index'],
             effect=effects,
-            frequency=record['af_allele_freq'],
             attributes=record)
 
     @staticmethod
@@ -429,5 +467,8 @@ class SummaryVariantFactory(object):
                     record,
                     transmission_type=transmission_type)
             alleles.append(sa)
+        if not alleles[0].is_reference_allele:
+            ref_allele = SummaryAllele.create_reference_allele(alleles[0])
+            alleles = list(itertools.chain([ref_allele], alleles))
 
         return SummaryVariant(alleles)

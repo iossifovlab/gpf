@@ -7,14 +7,16 @@ from __future__ import print_function, unicode_literals, absolute_import
 
 import pytest
 from utils.vcf_utils import mat2str
+from backends.impala.parquet_io import VariantsParquetWriter
 
 
 # @pytest.mark.xfail(reason="frequencies should probably be removed")
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
+    "variants_impala",
 ])
 @pytest.mark.parametrize("fixture_name", [
-    "fixtures/trios2_11541",
+    "backends/trios2_11541",
 ])
 def test_reference_variant_single_allele(
         variants_impl, variants, fixture_name):
@@ -42,12 +44,53 @@ def test_reference_variant_single_allele(
     assert v.frequencies[0] == pytest.approx(87.5)
     assert v.effects is None
 
-    sv = v.summary_variant
+    # sv = v.summary_variant
 
-    print(sv.frequencies)
-    assert len(sv.frequencies) == 2
-    assert sv.frequencies[0] == pytest.approx(87.5)
-    assert sv.frequencies[1] == pytest.approx(12.5)
+    # print(sv.frequencies)
+    # assert len(sv.frequencies) == 2
+    # assert sv.frequencies[0] == pytest.approx(87.5)
+    # assert sv.frequencies[1] == pytest.approx(12.5)
 
-    print(sv.effects)
-    assert len(sv.effects) == 1
+    # print(sv.effects)
+    # assert len(sv.effects) == 1
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_vcf",
+    # "variants_impala",
+])
+@pytest.mark.parametrize("fixture_name", [
+    "backends/trios2_11541",
+])
+def test_full_variants_iterator(
+        variants_impl, variants, fixture_name):
+
+    fvars = variants_impl(variants)(fixture_name)
+    assert fvars is not None
+
+    full_iterator = fvars.full_variants_iterator()
+    for sv, fvs in full_iterator:
+        print(sv)
+        for fv in fvs:
+            print(fv)
+
+
+@pytest.mark.parametrize("variants", [
+    "variants_vcf",
+])
+@pytest.mark.parametrize("fixture_name", [
+    "backends/trios2_11541",
+])
+def test_full_variants_iterator_parquet_storage(
+        variants_impl, variants, fixture_name):
+
+    fvars = variants_impl(variants)(fixture_name)
+    assert fvars is not None
+
+    full_iterator = fvars.full_variants_iterator()
+
+    parquet_writer = VariantsParquetWriter(fvars.families, full_iterator)
+
+    table_iterator = parquet_writer.variants_table()
+    for t in table_iterator:
+        print(t)

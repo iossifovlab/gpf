@@ -9,6 +9,7 @@ standard_library.install_aliases()  # noqa
 
 import os
 from copy import deepcopy
+from collections import OrderedDict
 
 from configurable_entities.configurable_entity_config import \
     ConfigurableEntityConfig
@@ -62,7 +63,7 @@ class EnrichmentConfig(ConfigurableEntityConfig):
             enrichment_config, property_key, cls._get_model,
             model_selector_elements
         )
-        model_selector = {ms['id']: ms for ms in model_selector}
+        model_selector = OrderedDict([(ms['id'], ms) for ms in model_selector])
 
         return model_selector
 

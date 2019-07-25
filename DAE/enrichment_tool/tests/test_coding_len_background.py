@@ -1,8 +1,6 @@
 from __future__ import unicode_literals
 from builtins import str
 
-import io
-import zlib
 import numpy as np
 
 from variants.attributes import Inheritance
@@ -19,49 +17,16 @@ def test_filename(f1_trio_coding_len_background):
         '/studies/f1_trio/enrichment/codingLenBackgroundModel.csv'
 
 
-def test_precompute(f1_trio_coding_len_background):
-    background = f1_trio_coding_len_background.precompute()
+def test_load(f1_trio_coding_len_background):
+    background = f1_trio_coding_len_background.load()
 
     assert len(background) == 3
-    assert background[0]['sym'] == 'SAMD11'
-    assert background[0]['raw'] == 3
-    assert background[1]['sym'] == 'PLEKHN1'
-    assert background[1]['raw'] == 7
-    assert background[2]['sym'] == 'POGZ'
-    assert background[2]['raw'] == 13
-
-
-def test_serialize(f1_trio_coding_len_background):
-    f1_trio_coding_len_background.precompute()
-    serialized = f1_trio_coding_len_background.serialize()
-
-    assert len(serialized) == 1
-
-    fin = io.BytesIO(zlib.decompress(serialized['background']))
-    background = np.load(fin)
-
-    assert len(background) == 3
-    assert background[0]['sym'] == 'SAMD11'
-    assert background[0]['raw'] == 3
-    assert background[1]['sym'] == 'PLEKHN1'
-    assert background[1]['raw'] == 7
-    assert background[2]['sym'] == 'POGZ'
-    assert background[2]['raw'] == 13
-
-
-def test_deserialize(f1_trio_coding_len_background):
-    f1_trio_coding_len_background.precompute()
-    serialized = f1_trio_coding_len_background.serialize()
-    f1_trio_coding_len_background.deserialize(serialized)
-    background = f1_trio_coding_len_background.background
-
-    assert len(background) == 3
-    assert background[0]['sym'] == 'SAMD11'
-    assert background[0]['raw'] == 3
-    assert background[1]['sym'] == 'PLEKHN1'
-    assert background[1]['raw'] == 7
-    assert background[2]['sym'] == 'POGZ'
-    assert background[2]['raw'] == 13
+    assert background.iloc[0]['sym'] == 'SAMD11'
+    assert background.iloc[0]['raw'] == 3
+    assert background.iloc[1]['sym'] == 'PLEKHN1'
+    assert background.iloc[1]['raw'] == 7
+    assert background.iloc[2]['sym'] == 'POGZ'
+    assert background.iloc[2]['raw'] == 13
 
 
 def test_calc_stats(f1_trio, f1_trio_coding_len_background):
@@ -128,20 +93,19 @@ def test_use_cache(f1_trio_enrichment_config):
     coding_len_background_without_cache = CodingLenBackground(
         f1_trio_enrichment_config)
 
-    coding_len_background_without_cache.cache_clear()
+    background = coding_len_background_without_cache.background
 
     assert coding_len_background_without_cache.is_ready is True
-    assert coding_len_background_without_cache.cache_load() is False
-    assert coding_len_background_without_cache.cache_clear() is False
+    b1 = coding_len_background_without_cache.load()
+    assert np.all(background == b1)
     assert coding_len_background_without_cache.is_ready is True
 
-    coding_len_background = CodingLenBackground(
-        f1_trio_enrichment_config, use_cache=True)
+    coding_len_background = CodingLenBackground(f1_trio_enrichment_config)
 
     assert coding_len_background.is_ready is True
 
-    assert coding_len_background.cache_load() is True
-    assert coding_len_background.cache_clear() is True
-    assert coding_len_background.cache_clear() is False
+    b2 = coding_len_background.load()
+    assert np.all(background == b2)
+    assert np.all(b1 == b2)
 
     assert coding_len_background.is_ready is True

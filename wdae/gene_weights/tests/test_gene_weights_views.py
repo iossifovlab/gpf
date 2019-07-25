@@ -1,37 +1,36 @@
-'''
-Created on Dec 10, 2015
+import pytest
 
-@author: lubo
-'''
-from __future__ import print_function
-from rest_framework.test import APITestCase
+import json
+
+pytestmark = pytest.mark.usefixtures("mock_studies_manager")
 
 
-class GeneWeightsListViewTest(APITestCase):
+def test_gene_weights_list_view(user_client):
+    url = "/api/v3/gene_weights"
+    response = user_client.get(url)
+    assert response.status_code == 200
 
-    def test_gene_weights_list_view(self):
-        url = "/api/v3/gene_weights"
-        response = self.client.get(url)
-        self.assertEqual(200, response.status_code)
-        self.assertEqual(9, len(response.data))
-        for w in response.data:
-            self.assertIn('desc', w)
-            self.assertIn('weight', w)
-            self.assertIn('bars', w)
-            self.assertIn('bins', w)
+    data = response.data
+    print([d['weight'] for d in data])
+    assert len(data) == 5
+
+    for w in response.data:
+        assert 'desc' in w
+        assert 'weight' in w
+        assert 'bars' in w
+        assert 'bins' in w
 
 
-class GeneWeightsGetGenesViewTest(APITestCase):
+def test_gene_weights_get_genes_view(user_client):
+    url = "/api/v3/gene_weights/genes"
+    data = {
+        "weight": "LGD_rank",
+        "min": 1.5,
+        "max": 5.0,
+    }
+    response = user_client.post(
+        url, json.dumps(data), content_type='application/json', format='json')
+    assert response.status_code == 200
+    print(response.data)
 
-    def test_gene_weights_get_genes_view(self):
-        url = "/api/v3/gene_weights/genes"
-        data = {
-            "weight": "LGD_rank",
-            "min": 1.5,
-            "max": 5.0,
-        }
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(200, response.status_code)
-        print(response.data)
-
-        self.assertEqual(3, len(response.data))
+    assert len(response.data) == 3

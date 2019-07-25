@@ -9,9 +9,9 @@ import csv
 GA = genomesDB.get_genome()
 gmDB = genomesDB.get_gene_models()
 
-subRE = re.compile('^sub\(([ACGT])->([ACGT])\)$')
-insRE = re.compile('^ins\(([ACGT]+)\)$')
-delRE = re.compile('^del\((\d+)\)$')
+subRE = re.compile(r'^sub\(([ACGT])->([ACGT])\)$')
+insRE = re.compile(r'^ins\(([ACGT]+)\)$')
+delRE = re.compile(r'^del\((\d+)\)$')
 
 
 def vcfVarFormat(loc, var):

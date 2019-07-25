@@ -64,4 +64,4 @@ def test_empty_query(ustudy_vcf):
 
     vs = ustudy_vcf.query_variants(regions=[Region("1", 13500, 13999)])
     with pytest.raises(StopIteration):
-        _v = next(vs)
+        next(vs)

@@ -7,6 +7,31 @@ from ..attributes_query_builder import is_token, and_node, or_node, \
     is_tree, not_node, token, is_and, is_not, eq_node, any_node, all_node, \
     arg_node, simple_arg_node
 
+from ..attributes_query import PARSER as attributes_query_parser, \
+    QueryTransformerMatcher
+from ..attributes_query import \
+    parser_with_ambiguity as attributes_query_parser_with_ambiguity
+
+
+@pytest.fixture()
+def parser():
+    return attributes_query_parser
+
+
+@pytest.fixture()
+def parser_with_ambiguity():
+    return attributes_query_parser_with_ambiguity
+
+
+@pytest.fixture()
+def transformer_matcher():
+    return QueryTransformerMatcher()
+
+
+@pytest.fixture()
+def transformer_matcher_class():
+    return QueryTransformerMatcher
+
 
 def test_can_match_simple_query(parser):
     assert parser.parse("some") is not None
@@ -35,6 +60,7 @@ def test_and_parses_no_whitespaces_correctly(parser, expr):
     "some    and          other"
 ])
 def test_and_parses_whitespaces_correctly(parser, expr):
+    print(expr)
     tree = parser.parse(expr)
     print(tree.pretty())
     print(tree)

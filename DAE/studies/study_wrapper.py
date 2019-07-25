@@ -20,7 +20,12 @@ class StudyWrapper(object):
 
     def __init__(self, study, pheno_factory, *args, **kwargs):
         super(StudyWrapper, self).__init__(*args, **kwargs)
+        assert study is not None
+
         self.study = study
+        self.config = study.config
+        assert self.config is not None
+
         self._init_wdae_config()
         self.pheno_factory = pheno_factory
         self._init_pheno(self.pheno_factory)
@@ -180,7 +185,8 @@ class StudyWrapper(object):
 
             if len(people_ids_to_query) == 0:
                 return
-
+            assert not kwargs.get('person_ids'), \
+                "Rethink how to combine person ids"
             kwargs['person_ids'] = list(people_ids_to_query)
 
         variants_from_studies = itertools.islice(
@@ -342,6 +348,10 @@ class StudyWrapper(object):
 
             people_group = people_group_config.get_people_group(
                 pedigree_selector_query['id'])
+
+            if set(people_group['values']) == \
+                    set(pedigree_selector_query['checkedValues']):
+                return kwargs
 
             for family in self.families.values():
                 family_members_with_phenotype = set(

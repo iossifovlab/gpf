@@ -6,14 +6,17 @@ from studies.study_definition import SingleFileStudiesDefinition
 class StudyFacade(object):
 
     def __init__(
-            self, pheno_factory, study_definition=None, study_factory=None):
+            self, dae_config, pheno_factory,
+            study_definition=None, study_factory=None):
+
+        self.dae_config = dae_config
         self._study_cache = {}
         self._study_wrapper_cache = {}
 
         if study_definition is None:
             study_definition = SingleFileStudiesDefinition()
         if study_factory is None:
-            study_factory = StudyFactory()
+            study_factory = StudyFactory(dae_config)
 
         self.study_definition = study_definition
         self.study_factory = study_factory

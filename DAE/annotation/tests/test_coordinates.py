@@ -28,6 +28,6 @@ def test_dae2vcf(
     summary = SummaryAllele('chr1', pos, ref, alt)
     assert summary is not None
 
-    assert summary.details.cshl_position == check_cshl_pos
-    assert summary.details.cshl_location == "chr1:{}".format(check_cshl_pos)
-    assert summary.details.cshl_variant == variant
+    assert summary.cshl_position == check_cshl_pos
+    assert summary.cshl_location == "chr1:{}".format(check_cshl_pos)
+    assert summary.cshl_variant == variant

@@ -19,7 +19,6 @@ import numpy as np
 from datasets_api.studies_manager import get_studies_manager
 
 from users_api.authentication import SessionAuthenticationWithoutCSRF
-# from query_variants import join_line
 from helpers.dae_query import join_line
 
 
@@ -132,7 +131,16 @@ class GeneWeightsPartitionsView(views.APIView):
         mdf = df[np.logical_and(
             df[weight_name] >= wmin, df[weight_name] < wmax)]
 
-        res = {"left": {"count": len(ldf), "percent": old_div(len(ldf), total)},
-               "mid": {"count": len(mdf), "percent": old_div(len(mdf), total)},
-               "right": {"count": len(rdf), "percent": old_div(len(rdf), total)}}
+        res = {
+            "left": {
+                "count": len(ldf),
+                "percent": old_div(len(ldf), total)
+            }, "mid": {
+                "count": len(mdf),
+                "percent": old_div(len(mdf), total)
+            }, "right": {
+                "count": len(rdf),
+                "percent": old_div(len(rdf), total)
+            }
+        }
         return Response(res)

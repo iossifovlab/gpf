@@ -18,7 +18,7 @@ def test_simple_query_preview(db, admin_client):
     assert status.HTTP_200_OK == response.status_code
     res = response.data
 
-    assert 4 == len(res['rows'])
+    assert 2 == len(res['rows'])
 
 
 def test_query_preview_have_pheno_columns(db, admin_client):
@@ -48,7 +48,7 @@ def test_query_preview_have_pheno_column_values(db, admin_client):
     assert status.HTTP_200_OK == response.status_code
     res = response.data
 
-    assert len(res['rows']) == 4
+    assert len(res['rows']) == 2
     for row in enumerate(res['rows']):
         for value in row[-4:]:
             assert value is not None

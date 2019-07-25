@@ -56,18 +56,6 @@ class AnnotatorConfig(object):
     @staticmethod
     def cli_options(dae_config):
         return [
-            ('--direct', {
-                'help': 'use direct access to score files '
-                '[default: %(default)s]',
-                'default': True,
-                'action': 'store_true'
-            }),
-            ('--sequential', {
-                'help': 'use sequential access to score files '
-                '[default: %(default)s]',
-                'default': False,
-                'action': 'store_true'
-            }),
         ]
 
 

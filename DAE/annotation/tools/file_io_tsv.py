@@ -332,9 +332,8 @@ class TabixReaderVariants(TabixReader):
         super(TabixReaderVariants, self)._setup()
 
         if self.options.vcf and self.options.region:
-                pos_index = self.schema.col_names.index(self.options.p)
-                self.region_helper = RegionHelper(self.options.region,
-                                                  pos_index)
+            pos_index = self.schema.col_names.index(self.options.p)
+            self.region_helper = RegionHelper(self.options.region, pos_index)
         else:
             self.region_helper = NoRegionHelper()
 

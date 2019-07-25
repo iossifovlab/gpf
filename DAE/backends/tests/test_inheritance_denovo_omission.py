@@ -6,7 +6,7 @@ from variants.family_variant import FamilyAllele as FA
 
 
 def test_inheritance_trio_denovo_omissions(variants_vcf):
-    fvars = variants_vcf("fixtures/inheritance_trio_denovo_omission")
+    fvars = variants_vcf("backends/inheritance_trio_denovo_omission")
     vs = list(fvars.query_variants())
 
     for v in vs:
@@ -18,7 +18,7 @@ def test_inheritance_trio_denovo_omissions(variants_vcf):
 
 
 def test_inheritance_trio(variants_vcf):
-    fvars = variants_vcf("fixtures/inheritance_trio")
+    fvars = variants_vcf("backends/inheritance_trio")
     vs = list(fvars.query_variants())
 
     for v in vs:

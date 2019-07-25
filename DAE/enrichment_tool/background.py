@@ -9,21 +9,17 @@ from __future__ import print_function, absolute_import
 from future import standard_library
 standard_library.install_aliases()  # noqa
 
-from builtins import next
 from builtins import zip
 from past.utils import old_div
-import pickle
-import io
+
 from collections import Counter
-import csv
 import os
 from scipy import stats
-import zlib
-
-from DAE import variants_db, genomesDB
 import numpy as np
 import pandas as pd
+
 from enrichment_tool.event_counters import overlap_enrichment_result_dict
+# from variants.attributes import Inheritance
 
 
 class BackgroundBase(object):
@@ -33,10 +29,10 @@ class BackgroundBase(object):
         return {
             # 'synonymousBackgroundModel': SynonymousBackground,
             'codingLenBackgroundModel': CodingLenBackground,
-            # 'samochaBackgroundModel': SamochaBackground
+            'samochaBackgroundModel': SamochaBackground
         }
 
-    def __init__(self, name, config, use_cache=False):
+    def __init__(self, name, config):
         self.background = None
         self.name = name
         assert self.name is not None
@@ -44,12 +40,7 @@ class BackgroundBase(object):
 
         self.cache_filename = self.config.enrichment_cache_file(self.name)
 
-        if not use_cache:
-            self.precompute()
-        else:
-            if not self.cache_load():
-                self.precompute()
-                self.cache_save()
+        self.load()
 
     def cache_clear(self):
         assert self.name is not None
@@ -58,22 +49,8 @@ class BackgroundBase(object):
         os.remove(self.cache_filename)
         return True
 
-    def cache_save(self):
-        assert self.name is not None
-        with open(self.cache_filename, 'wb') as output:
-            data = self.serialize()
-            pickle.dump(data, output, protocol=2)
-
-    def cache_load(self):
-        if not os.path.exists(self.cache_filename):
-            return False
-
-        with open(self.cache_filename, 'rb') as infile:
-            print(self.cache_filename)
-            data = pickle.load(infile)
-            self.deserialize(data)
-
-        return True
+    def is_cache_exist(self):
+        return True if os.path.exists(self.cache_filename) else False
 
     @property
     def is_ready(self):
@@ -82,8 +59,8 @@ class BackgroundBase(object):
 
 class BackgroundCommon(BackgroundBase):
 
-    def __init__(self, name, config, use_cache=False):
-        super(BackgroundCommon, self).__init__(name, config, use_cache)
+    def __init__(self, name, config):
+        super(BackgroundCommon, self).__init__(name, config)
 
     def _prob(self, gene_syms):
         return 1.0 * self._count(gene_syms) / self._total
@@ -139,10 +116,10 @@ class SynonymousBackground(BackgroundCommon):
                 background[gene_sym] += 1
         return background
 
-    @staticmethod
-    def _build_synonymous_background(transmitted_study_name):
-        transmitted_study = variants_db.get_study(transmitted_study_name)
-        vs = transmitted_study.get_transmitted_summary_variants(
+    def _build_synonymous_background(self):
+        study = self.variants_db.get(self.TRANSMITTED_STUDY_NAME)
+        vs = study.query_variants(
+            # inheritance=str(Inheritance.transmitted.name),
             ultraRareOnly=True,
             minParentsCalled=600,
             effectTypes=["synonymous"])
@@ -162,28 +139,21 @@ class SynonymousBackground(BackgroundCommon):
 
         return (background, foreground)
 
-    def __init__(self, config, use_cache=False):
+    def _load_and_prepare_build(self):
+        pass
+
+    def __init__(self, config, variants_db=None):
         super(SynonymousBackground, self).__init__(
-            'synonymousBackgroundModel', config, use_cache)
+            'synonymousBackgroundModel', config)
+        assert variants_db is not None
+        self.variants_db = variants_db
 
-    def precompute(self):
-        # self.background, self.foreground = \
-        #     self._build_synonymous_background(self.TRANSMITTED_STUDY_NAME)
-        self.background, self.foreground = None, None
+    def generate_cache(self):
+        self.background, self.foreground = self._build_synonymous_background()
+
+    def load(self):
+        self.background, self.foreground = self._load_and_prepare_build()
         return self.background
-
-    def serialize(self):
-        b = zlib.compress(pickle.dumps(self.background, protocol=2))
-        f = zlib.compress(pickle.dumps(self.foreground, protocol=2))
-        return {'background': b,
-                'foreground': f}
-
-    def deserialize(self, data):
-        b = data['background']
-        self.background = pickle.loads(zlib.decompress(b))
-
-        f = data['foreground']
-        self.foreground = pickle.loads(zlib.decompress(f))
 
     def _count_foreground_events(self, gene_syms):
         count = 0
@@ -222,37 +192,24 @@ class CodingLenBackground(BackgroundCommon):
     def _load_and_prepare_build(self):
         filename = self.filename
         assert filename is not None
-        back = []
-        with open(filename, 'r') as f:
-            reader = csv.reader(f)
-            next(reader)
-            for row in reader:
-                assert len([row[1]]) <= 32, row[1]
-                back.append((row[1], int(row[2])))
-        return back
 
-    def __init__(self, config, use_cache=False):
+        df = pd.read_csv(filename, usecols=['gene_upper', 'codingLenInTarget'])
+
+        df = df.rename(columns={
+            'gene_upper': 'sym',
+            'codingLenInTarget': 'raw'
+        })
+        df = df.astype(dtype={'sym': np.str_, 'raw': np.int32})
+
+        return df
+
+    def __init__(self, config, variants_db=None):
         super(CodingLenBackground, self).__init__(
-            'codingLenBackgroundModel', config, use_cache)
+            'codingLenBackgroundModel', config)
 
-    def precompute(self):
-        back = self._load_and_prepare_build()
-        self.background = np.array(
-            back,
-            dtype=[('sym', "|U32"), ('raw', '>i4')])
+    def load(self):
+        self.background = self._load_and_prepare_build()
         return self.background
-
-    def serialize(self):
-        fout = io.BytesIO()
-        np.save(fout, self.background)
-
-        b = zlib.compress(fout.getvalue())
-        return {'background': b}
-
-    def deserialize(self, data):
-        b = data['background']
-        fin = io.BytesIO(zlib.decompress(b))
-        self.background = np.load(fin)
 
     def _count(self, gene_syms):
         vpred = np.vectorize(lambda sym: sym in gene_syms)
@@ -282,45 +239,6 @@ def poisson_test(observed, expected):
 
 class SamochaBackground(BackgroundBase):
 
-    def _load_and_prepare_gender_count(self, df):
-        GM = genomesDB.get_gene_models()  # @UndefinedVariable
-
-        df['F'] = pd.Series(2, index=df.index)
-        df['M'] = pd.Series(2, index=df.index)
-        df['U'] = pd.Series(2, index=df.index)
-
-        for gene_name in df['gene']:
-            gene_loc = df['gene'] == gene_name
-            gms = GM.gene_models_by_gene_name(gene_name)
-            chromes = []
-            for tm in gms:
-                chromes.append(tm.chr)
-            if 'X' in chromes:
-                df.loc[gene_loc, 'F'] = 2
-                df.loc[gene_loc, 'M'] = 1
-            elif 'Y' in chromes:
-                df.loc[gene_loc, 'F'] = 0
-                df.loc[gene_loc, 'M'] = 1
-        return df
-
-    def _load_and_prepare_probabilities(self, df):
-        df.fillna(-99, inplace=True)
-        df['P_LGDS'] = pd.Series(1E-99, index=df.index)
-        df['P_MISSENSE'] = pd.Series(1E-99, index=df.index)
-        df['P_SYNONYMOUS'] = pd.Series(1E-99, index=df.index)
-
-        df['P_LGDS'] = np.power(10, df['nonsense'].values) + \
-            np.power(10.0, df['splice-site'].values) + \
-            np.power(10.0, df['frame-shift'].values)
-        df['P_MISSENSE'] = np.power(10, df['missense'].values)
-        df['P_SYNONYMOUS'] = np.power(10, df['synonymous'].values)
-
-        return df
-
-    def _load_and_prepare_gene_upper(self, df):
-        df['gene'] = df['gene'].str.upper()
-        return df
-
     @property
     def filename(self):
         return self.config.backgrounds[self.name].filename
@@ -329,40 +247,20 @@ class SamochaBackground(BackgroundBase):
         filename = self.filename
         assert filename is not None
 
-        df = pd.read_csv(filename)
-        # df = self._load_and_prepare_gender_count(df)
-        # df = self._load_and_prepare_probabilities(df)
-        # df = self._load_and_prepare_gene_upper(df)
+        df = pd.read_csv(
+            filename,
+            usecols=['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS']
+        )
 
         return df
 
-    def __init__(self, config, use_cache=False):
-        use_cache = False
+    def __init__(self, config, variants_db=None):
         super(SamochaBackground, self).__init__(
-            'samochaBackgroundModel', config, use_cache)
+            'samochaBackgroundModel', config)
 
-    def precompute(self):
-        # self.background = self._load_and_prepare_build()
-        self.background = None
+    def load(self):
+        self.background = self._load_and_prepare_build()
         return self.background
-
-    def serialize(self):
-        ndarray = self.background.as_matrix(
-            ['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS'])
-        fout = io.BytesIO()
-        np.save(fout, ndarray)
-
-        data = zlib.compress(fout.getvalue())
-        return {'background': data}
-
-    def deserialize(self, data):
-        b = data['background']
-        fin = io.BytesIO(zlib.decompress(b))
-        ndarray = np.load(fin)
-
-        self.background = pd.DataFrame(
-            ndarray,
-            columns=['gene', 'F', 'M', 'P_LGDS', 'P_MISSENSE', 'P_SYNONYMOUS'])
 
     def calc_stats(self, effect_type, enrichment_results,
                    gene_set, children_stats):

@@ -45,35 +45,35 @@ class Role(enum.Enum):
     }
 
     maternal_grandmother = 1
-    maternal_grandfather = 2
-    paternal_grandmother = 3
-    paternal_grandfather = 4
+    maternal_grandfather = 1 << 1
+    paternal_grandmother = 1 << 2
+    paternal_grandfather = 1 << 3
 
-    mom = 10
-    dad = 11
-    parent = 12
+    mom = 1 << 4
+    dad = 1 << 5
+    parent = 1 << 6
 
-    prb = 20
-    sib = 21
-    child = 22
+    prb = 1 << 7
+    sib = 1 << 8
+    child = 1 << 9
 
-    maternal_half_sibling = 30
-    paternal_half_sibling = 31
-    half_sibling = 32
+    maternal_half_sibling = 1 << 10
+    paternal_half_sibling = 1 << 11
+    half_sibling = 1 << 12
 
-    maternal_aunt = 50
-    maternal_uncle = 51
-    paternal_aunt = 52
-    paternal_uncle = 53
+    maternal_aunt = 1 << 16
+    maternal_uncle = 1 << 17
+    paternal_aunt = 1 << 18
+    paternal_uncle = 1 << 19
 
-    maternal_cousin = 60
-    paternal_cousin = 61
+    maternal_cousin = 1 << 20
+    paternal_cousin = 1 << 21
 
-    step_mom = 70
-    step_dad = 71
-    spouse = 72
+    step_mom = 1 << 22
+    step_dad = 1 << 23
+    spouse = 1 << 24
 
-    unknown = 100
+    unknown = 0
 
     @property
     def display_name(self):
@@ -202,13 +202,15 @@ class Status(enum.Enum):
 
 class Inheritance(enum.Enum):
     reference = 1
-    mendelian = 2
-    denovo = 4
-    possible_denovo = 5
-    omission = 8
-    other = 16
-    missing = 32
-    unknown = 64
+    mendelian = 1 << 1
+    denovo = 1 << 2
+    possible_denovo = 1 << 3
+    omission = 1 << 4
+    other = 1 << 5
+    missing = 1 << 6
+    unknown = 1 << 7
+
+    MASK = 127
 
     @staticmethod
     def from_name(name):
@@ -225,10 +227,10 @@ class Inheritance(enum.Enum):
 class VariantType(enum.Enum):
     invalid = 0
     substitution = 1
-    insertion = 2
-    deletion = 3
-    complex = 4
-    CNV = 5
+    insertion = 1 << 1
+    deletion = 1 << 2
+    complex = 1 << 3
+    CNV = 1 << 4
 
     @staticmethod
     def from_name(name):

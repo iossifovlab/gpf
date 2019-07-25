@@ -19,4 +19,3 @@ class QueryState(models.Model):
         blank=False, null=False, max_length=10,
         choices=PAGE_TYPES)
     uuid = models.UUIDField(default=uuid.uuid4)
-

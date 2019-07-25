@@ -109,8 +109,8 @@ def test_pheno_filter_persons(mocker):
 
 def test_pheno_filter_persons_none_or_empty():
     helper = PhenoToolHelper(mocked_study)
-    assert helper.pheno_filter_persons(None) == None
-    assert helper.pheno_filter_persons(list()) == None
+    assert helper.pheno_filter_persons(None) is None
+    assert helper.pheno_filter_persons(list()) is None
 
 
 def test_pheno_filter_persons_invalid_input_type():

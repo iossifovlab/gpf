@@ -15,27 +15,26 @@ from variants.effects import EffectGene
 
 # pytestmark = pytest.mark.xfail
 
-
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    "variants_thrift",
+    "variants_impala",
 ])
 @pytest.mark.parametrize(
     "position,inheritance,effect_types,return_reference,matched_alleles",
     [
         (878152, None, None, True, [0, 1, 2]),
-        # (878152, None, None, False, [1, 2]),
+        (878152, None, None, False, [1, 2]),
         (878152, "denovo", ["missense"], True, [2]),
         (878152, "mendelian", ["synonymous"], True, [1]),
         (878152, "mendelian", None, True, [0, 1]),
-        # (878152, "mendelian", None, False, [0, 1]),
+        (878152, "mendelian", None, False, [1]),
     ])
 def test_f1_matched_alleles(
         variants_impl, variants,
         position, inheritance, effect_types, return_reference,
         matched_alleles):
 
-    vvars = variants_impl(variants)("fixtures/f1_test")
+    vvars = variants_impl(variants)("backends/f1_test")
     assert vvars is not None
 
     vs = vvars.query_variants(
@@ -49,12 +48,13 @@ def test_f1_matched_alleles(
 
     v = vs[0]
     print(v, v.effects, v.matched_alleles)
+    print(v.matched_alleles_indexes, "==", matched_alleles)
     assert v.matched_alleles_indexes == matched_alleles
 
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    "variants_thrift",
+    "variants_impala",
 ])
 @pytest.mark.parametrize(
     "position,inheritance,effect_types,return_reference,"
@@ -62,16 +62,16 @@ def test_f1_matched_alleles(
     [
         (878152, None, None, True,
          [(0, []), (1, []), (2, [])]),
-        # (878152, None, None, False,
-        #  [(0, []), (1, []), (2, [])]),
+        (878152, None, None, True,
+         [(0, []), (1, []), (2, [])]),
         (878152, "denovo", ["missense"], True,
          [(2, [EffectGene('SAMD11', 'missense')])]),
         (878152, "mendelian", ["synonymous"], True,
          [(1, [EffectGene('SAMD11', 'synonymous')])]),
         (878152, "mendelian", None, True,
          [(0, []), (1, [])]),
-        # (878152, "mendelian", None, False,
-        #  [(0, []), (1, [])]),
+        (878152, "mendelian", None, True,
+         [(0, []), (1, [])]),
         (878152, None, ["missense", "synonymous"], True,
          [(1, [EffectGene('SAMD11', 'synonymous')]),
           (2, [EffectGene('SAMD11', 'missense')])]),
@@ -81,7 +81,7 @@ def test_f1_requested_effects(
         position, inheritance, effect_types, return_reference,
         matched_alleles_effects):
 
-    vvars = variants_impl(variants)("fixtures/f1_test")
+    vvars = variants_impl(variants)("backends/f1_test")
     assert vvars is not None
 
     vs = vvars.query_variants(

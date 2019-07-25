@@ -1,32 +1,8 @@
-from guardian.models import Group
 import pytest
-from django.core.urlresolvers import reverse
+
+from guardian.models import Group
 
 from datasets_api.models import Dataset
-
-
-@pytest.fixture()
-def groups_endpoint():
-    return reverse('groups-list')
-
-
-@pytest.fixture()
-def groups_instance_url():
-    return group_url
-
-
-def group_url(group_id):
-    return reverse('groups-detail', kwargs={'pk': group_id})
-
-
-@pytest.fixture()
-def grant_permission_url():
-    return reverse('grant_permission')
-
-
-@pytest.fixture()
-def revoke_permission_url():
-    return reverse('revoke_permission')
 
 
 @pytest.fixture()

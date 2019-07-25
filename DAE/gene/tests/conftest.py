@@ -14,7 +14,6 @@ from utils.fixtures import change_environment
 from gene.config import GeneInfoConfig
 from gene.denovo_gene_set_collection_config import \
     DenovoGeneSetCollectionConfig
-from gene.gene_set_collections import GeneSetsCollections
 from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 from gene.denovo_gene_set_collection_facade import \
     DenovoGeneSetCollectionFacade

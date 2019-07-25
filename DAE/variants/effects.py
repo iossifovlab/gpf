@@ -15,8 +15,24 @@ class EffectGene(object):
         self.symbol = symbol
         self.effect = effect
 
+    @staticmethod
+    def from_string(data):
+        if not data:
+            return None
+
+        parts = [p.strip() for p in data.split(":")]
+        if len(parts) == 2:
+            return EffectGene(parts[0], parts[1])
+        elif len(parts) == 1:
+            return EffectGene(symbol=None, effect=parts[0])
+        else:
+            raise ValueError("unexpected effect gene format: {}".format(data))
+
     def __repr__(self):
-        return "{}:{}".format(self.symbol, self.effect)
+        if self.symbol is None:
+            return self.effect
+        else:
+            return "{}:{}".format(self.symbol, self.effect)
 
     def __str__(self):
         return self.__repr__()
@@ -38,14 +54,6 @@ class EffectGene(object):
         return result
 
     @classmethod
-    def from_string(cls, data):
-        return cls.from_tuple(data.split(":"))
-
-    @staticmethod
-    def to_string(gene_effects):
-        return str(gene_effects)
-
-    @classmethod
     def from_tuple(cls, t):
         (symbol, effect) = tuple(t)
         return EffectGene(symbol, effect)
@@ -57,11 +65,26 @@ class EffectTranscript(object):
         self.transcript_id = transcript_id
         self.details = details
 
+    @staticmethod
+    def from_string(data):
+        if not data:
+            return None
+
+        parts = [p.strip() for p in data.split(":")]
+        assert len(parts) == 2
+        return EffectTranscript(parts[0], parts[1])
+
     def __repr__(self):
         return "{}:{}".format(self.transcript_id, self.details)
 
     def __str__(self):
         return self.__repr__()
+
+    def __eq__(self, other):
+        assert isinstance(other, EffectTranscript)
+
+        return self.transcript_id == other.transcript_id and \
+            self.details == other.details
 
     @classmethod
     def from_tuple(cls, t):
@@ -80,16 +103,26 @@ class EffectTranscript(object):
 class Effect(object):
     def __init__(self, worst_effect, gene_effects, effect_transcripts):
         self.worst = worst_effect
-        self.genes = EffectGene.from_gene_effects(gene_effects)
-        self.transcripts = EffectTranscript.from_effect_transcripts(
-            effect_transcripts)
+        self.genes = gene_effects
+        self.transcripts = effect_transcripts
         self._effect_types = None
 
     def __repr__(self):
-        return '{}:{}'.format(self.worst, EffectGene.to_string(self.genes))
+        effects = "|".join([str(g) for g in self.genes])
+        transcripts = "|".join([
+            str(t) for t in self.transcripts.values()])
+        return '{}!{}!{}'.format(
+            self.worst, effects, transcripts)
 
     def __str__(self):
         return repr(self)
+
+    def __eq__(self, other):
+        assert isinstance(other, Effect)
+
+        return self.worst == other.worst and \
+            self.genes == other.genes and \
+            self.transcripts == other.transcripts
 
     @property
     def types(self):
@@ -101,4 +134,28 @@ class Effect(object):
 
     @classmethod
     def from_effects(cls, effect_type, effect_genes, transcripts):
+        transcripts = EffectTranscript.from_effect_transcripts(transcripts)
+        effect_genes = EffectGene.from_gene_effects(effect_genes)
         return Effect(effect_type, effect_genes, transcripts)
+
+    @staticmethod
+    def from_string(data):
+        parts = data.split("!")
+        assert len(parts) == 3
+        worst = parts[0].strip()
+        effect_genes = [
+            EffectGene.from_string(eg.strip())
+            for eg in parts[1].split("|")
+        ]
+        effect_genes = [eg for eg in filter(None, effect_genes)]
+        transcripts = [
+            EffectTranscript.from_string(et.strip())
+            for et in parts[2].split("|")
+        ]
+        transcripts = filter(None, transcripts)
+        transcripts = {
+            t.transcript_id: t for t in transcripts
+        }
+        if not effect_genes and not transcripts:
+            return None
+        return Effect(worst, effect_genes, transcripts)

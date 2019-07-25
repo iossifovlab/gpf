@@ -1,9 +1,9 @@
-chrom	position	reference	alternative	summary_variant_index	allele_index	allele_count	effect_type	effect_gene_genes	effect_gene_types	effect_details_transcript_ids	effect_details_details	af_parents_called_count	af_parents_called_percent	af_allele_count	af_allele_freq
-1	11539	T		0	0	2						2	100	3	75
-1	11539	T	G	0	1	2	intergenic	intergenic	intergenic	intergenic	intergenic	2	100	1	25
-1	11540	T		1	0	2						2	100	3	75
-1	11540	T	G	1	1	2	intergenic	intergenic	intergenic	intergenic	intergenic	2	100	1	25
-1	11541	T		2	0	2						2	100	3	75
-1	11541	T	G	2	1	2	intergenic	intergenic	intergenic	intergenic	intergenic	2	100	1	25
-1	11542	T		3	0	2						2	100	3	75
-1	11542	T	G	3	1	2	intergenic	intergenic	intergenic	intergenic	intergenic	2	100	1	25
+CSHL:chr	CSHL:location	CSHL:position	CSHL:variant	VCF:alt	VCF:chr	VCF:position	VCF:ref	af_allele_count	af_allele_freq	af_parents_called_count	af_parents_called_percent	allele_count	allele_index	alternative	chrom	effect_details	effect_details_details	effect_details_transcript_ids	effect_gene_genes	effect_gene_types	effect_genes	effect_type	position	reference	summary_variant_index	
+								3	75	2	100	2	0		1								11539	T	0	
+1	1:11539	11539.0	sub(T->G)	G	1	11539.0	T	1	25	2	100	2	1	G	1	['intergenic:intergenic:intergenic']	intergenic	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	11539	T	0	['intergenic']
+								3	75	2	100	2	0		1								11540	T	1	
+1	1:11540	11540.0	sub(T->G)	G	1	11540.0	T	1	25	2	100	2	1	G	1	['intergenic:intergenic:intergenic']	intergenic	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	11540	T	1	['intergenic']
+								3	75	2	100	2	0		1								11541	T	2	
+1	1:11541	11541.0	sub(T->G)	G	1	11541.0	T	1	25	2	100	2	1	G	1	['intergenic:intergenic:intergenic']	intergenic	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	11541	T	2	['intergenic']
+								3	75	2	100	2	0		1								11542	T	3	
+1	1:11542	11542.0	sub(T->G)	G	1	11542.0	T	1	25	2	100	2	1	G	1	['intergenic:intergenic:intergenic']	intergenic	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	11542	T	3	['intergenic']

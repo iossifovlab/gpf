@@ -1,10 +1,10 @@
 from __future__ import print_function
-
+import pytest
 from box import Box
 
 from configurable_entities.configuration import DAEConfig
 from annotation.tools.file_io_parquet import ParquetReader
-from backends.thrift.import_tools import construct_import_annotation_pipeline
+from backends.import_commons import construct_import_annotation_pipeline
 
 from backends.configure import Configure
 
@@ -12,6 +12,7 @@ from tools.vcf2parquet import parse_cli_arguments, import_vcf, \
     generate_makefile
 
 
+@pytest.mark.xfail(reason="annotation on import not ready for Impala")
 def test_vcf2parquet_vcf(
         vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname,
@@ -66,6 +67,7 @@ def test_vcf2parquet_vcf(
     assert schema['effect_details'].type_name == 'list(str)'
 
 
+@pytest.mark.xfail(reason="annotation on import not ready for Impala")
 def test_vcf2parquet_make(
         vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname,

@@ -1,7 +1,7 @@
-chrom	position	reference	alternative	summary_variant_index	allele_index	allele_count	effect_type	effect_gene_genes	effect_gene_types	effect_details_transcript_ids	effect_details_details	af_parents_called_count	af_parents_called_percent	af_allele_count	af_allele_freq
-1	11601	T		0	0	2						2	100	2	50
-1	11601	T	TAC	0	1	2	intergenic	intergenic	intergenic	intergenic	intergenic	2	100	2	50
-1	11602	T		1	0	2						2	100	2	50
-1	11602	T	G	1	1	2	intergenic	intergenic	intergenic	intergenic	intergenic	2	100	2	50
-1	11603	TAC		2	0	2						2	100	2	50
-1	11603	TAC	T	2	1	2	intergenic	intergenic	intergenic	intergenic	intergenic	2	100	2	50
+CSHL:chr	CSHL:location	CSHL:position	CSHL:variant	VCF:alt	VCF:chr	VCF:position	VCF:ref	af_allele_count	af_allele_freq	af_parents_called_count	af_parents_called_percent	allele_count	allele_index	alternative	chrom	effect_details	effect_details_details	effect_details_transcript_ids	effect_gene_genes	effect_gene_types	effect_genes	effect_type	position	reference	summary_variant_index	
+								2	50	2	100	2	0		1								11601	T	0	
+1	1:11602	11602.0	ins(AC)	TAC	1	11601.0	T	2	50	2	100	2	1	TAC	1	['intergenic:intergenic:intergenic']	intergenic	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	11601	T	0	['intergenic']
+								2	50	2	100	2	0		1								11602	T	1	
+1	1:11602	11602.0	sub(T->G)	G	1	11602.0	T	2	50	2	100	2	1	G	1	['intergenic:intergenic:intergenic']	intergenic	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	11602	T	1	['intergenic']
+								2	50	2	100	2	0		1								11603	TAC	2	
+1	1:11604	11604.0	del(2)	T	1	11603.0	TAC	2	50	2	100	2	1	T	1	['intergenic:intergenic:intergenic']	intergenic	intergenic	intergenic	intergenic	['intergenic:intergenic']	intergenic	11603	TAC	2	['intergenic']

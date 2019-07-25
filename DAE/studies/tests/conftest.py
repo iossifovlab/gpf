@@ -35,6 +35,12 @@ def datasets_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures/datasets'))
 
 
+@pytest.fixture(scope='session')
+def dae_config_fixture():
+    dae_config = DAEConfig(fixtures_dir())
+    return dae_config
+
+
 @pytest.fixture(scope='module')
 def study_configs(study_definition):
     return list(study_definition.configs.values())
@@ -49,13 +55,15 @@ def study_definitions(dae_config_fixture):
 
 
 @pytest.fixture(scope='module')
-def study_factory():
-    return StudyFactory()
+def study_factory(dae_config_fixture):
+    return StudyFactory(dae_config_fixture)
 
 
 @pytest.fixture(scope='module')
-def study_facade(study_factory, study_definitions, pheno_factory):
+def study_facade(
+        dae_config_fixture, study_factory, study_definitions, pheno_factory):
     return StudyFacade(
+        dae_config_fixture,
         pheno_factory,
         study_factory=study_factory, study_definition=study_definitions)
 
@@ -288,12 +296,6 @@ def composite_dataset(dataset_factory, dataset_definitions):
 @pytest.fixture(scope='module')
 def composite_dataset_wrapper(composite_dataset, pheno_factory):
     return StudyWrapper(composite_dataset, pheno_factory)
-
-
-@pytest.fixture(scope='module')
-def dae_config_fixture():
-    dae_config = DAEConfig(fixtures_dir())
-    return dae_config
 
 
 @pytest.fixture(scope='module')

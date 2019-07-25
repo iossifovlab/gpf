@@ -289,4 +289,4 @@ class PreparePhenoBrowserBase(object):
                 db.save(var)
                 if self.pheno_regressions:
                     for regression in self.handle_regressions(measure):
-                            db.save_regression_values(regression)
+                        db.save_regression_values(regression)

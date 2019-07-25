@@ -23,8 +23,10 @@ from cyvcf2 import VCF
 from backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 from backends.vcf.builder import get_genome
-from backends.thrift.import_tools import annotation_pipeline_cli_options, \
-    construct_import_annotation_pipeline, variants_iterator_to_parquet
+from backends.import_commons import annotation_pipeline_cli_options, \
+    construct_import_annotation_pipeline
+
+from backends.impala.import_tools import variants_iterator_to_parquet
 
 # import multiprocessing
 # import functools
@@ -48,9 +50,11 @@ def create_vcf_variants(config, region=None):
 def import_vcf(
         dae_config, annotation_pipeline,
         pedigree_filename, vcf_filename,
-        region=None, bucket_index=1, output='.'):
-    assert os.path.exists(vcf_filename)
-    assert os.path.exists(pedigree_filename)
+        region=None, bucket_index=1, rows=10000, output='.',
+        study_id=None, filesystem=None):
+
+    assert os.path.exists(vcf_filename), vcf_filename
+    assert os.path.exists(pedigree_filename), pedigree_filename
 
     vcf_config = Configure.from_dict({
             'vcf': {
@@ -60,15 +64,26 @@ def import_vcf(
             },
         })
 
+    if study_id is None:
+        filename = os.path.basename(pedigree_filename)
+        study_id = os.path.splitext(filename)[0]
+        print(filename, os.path.splitext(filename), study_id)
+
+    impala_config = Configure.from_prefix_impala(
+        output, bucket_index=bucket_index, db=None, study_id=study_id).impala
+    print("converting into ", impala_config, file=sys.stderr)
+
     fvars = create_vcf_variants(vcf_config, region)
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
     return variants_iterator_to_parquet(
         fvars,
-        output,
-        bucket_index,
-        annotation_pipeline
+        impala_config,
+        bucket_index=bucket_index,
+        rows=rows,
+        annotation_pipeline=annotation_pipeline,
+        filesystem=filesystem
     )
 
 
@@ -113,6 +128,24 @@ def parser_common_arguments(dae_config, parser):
         help='output filepath prefix. '
         'If none specified, current directory is used [default: %(default)s]'
     )
+
+
+# def parse_vcf_arguments(dae_config, subparsers):
+#     parser = subparsers.add_parser('vcf')
+#     parser_common_arguments(dae_config, parser)
+
+#     parser.add_argument(
+#         '--region', type=str,
+#         dest='region', metavar='region',
+#         default=None,
+#         help='region to convert [default: %(default)s]'
+#     )
+
+#     parser.add_argument(
+#         '-b', '--bucket-index', type=int, default=1,
+#         dest='bucket_index', metavar='bucket index',
+#         help='bucket index [default: %(default)s]'
+#     )
 
 
 def parse_vcf_arguments(dae_config, subparsers):

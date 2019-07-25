@@ -6,7 +6,7 @@ export PYTHONPATH=${DAE_SOURCE_DIR}:$PYTHONPATH
 export PYTHONPATH=${DAE_SOURCE_DIR}/tools:$PYTHONPATH
 
 rm -rf coverage/ && mkdir coverage && \
-py.test --traceconfig -v --cov-config coveragerc \
+py.test --traceconfig -v --cov-config coveragerc --reimport \
     --junitxml=coverage/dae-junit.xml \
     --cov-report html:coverage/coverage.html \
     --cov-report xml:coverage/coverage.xml \
@@ -35,13 +35,14 @@ py.test --traceconfig -v --cov-config coveragerc \
     DAE/enrichment_tool/tests \
     DAE/gene/tests \
     DAE/pedigrees/tests \
-    DAE/pheno/tests \
-    DAE/pheno_browser/tests \
     DAE/studies/tests \
     DAE/tools/tests \
     DAE/utils/tests \
     DAE/variant_annotation/tests \
-    DAE/variants/tests/ && \
+    DAE/variants/tests/ 
+    # DAE/pheno/tests \
+    # DAE/pheno_browser/tests \
+
 py.test -v --cov-config coveragerc \
     --junitxml=coverage/wdae-junit.xml \
     --cov-append \
@@ -66,8 +67,13 @@ py.test -v --cov-config coveragerc \
     --cov tools \
     --cov users_api \
     --cov wdae \
-    wdae/datasets_api/tests \
-    wdae/enrichment_api/tests \
-    wdae/gene_sets/tests \
-    wdae/genotype_browser/tests \
-    wdae/pheno_browser_api/tests
+    wdae/
+
+
+chmod a+rwx -R coverage
+
+rm -rf \
+	wdae-api.log wdae-debug.log \
+	wdae_django_default.cache wdae_django_pre.cache
+
+find . -name "*.pyc" -delete

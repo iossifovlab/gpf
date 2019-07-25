@@ -136,10 +136,10 @@ class VariantBuilder(object):
             }
         else:
             data = {
-                'CSHL:location': summary.details.cshl_location,
+                'CSHL:location': summary.cshl_location,
                 'CSHL:chr': summary.chromosome,
-                'CSHL:position': summary.details.cshl_position,
-                'CSHL:variant': summary.details.cshl_variant,
+                'CSHL:position': summary.cshl_position,
+                'CSHL:variant': summary.cshl_variant,
                 'VCF:chr': summary.chromosome,
                 'VCF:position': summary.position,
                 'VCF:ref': summary.reference,

@@ -203,7 +203,8 @@ class PhenoDB(object):
         instruments = OrderedDict()
 
         df = self._get_measures_df()
-        instrument_names = df.instrument_name.unique()
+        instrument_names = list(df.instrument_name.unique())
+        instrument_names = sorted(instrument_names)
 
         for instrument_name in instrument_names:
             instrument = Instrument(instrument_name)

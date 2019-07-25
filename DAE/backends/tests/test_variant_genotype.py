@@ -17,7 +17,7 @@ from RegionOperations import Region
     (Region('1', 905956, 905956), ("frame-shift", "missense")),
 ])
 def test_multi_alt_allele_genotype(variants_vcf, region, worst_effect):
-    fvars = variants_vcf("fixtures/effects_trio")
+    fvars = variants_vcf("backends/effects_trio")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == 1
@@ -39,7 +39,7 @@ def test_multi_alt_allele_genotype(variants_vcf, region, worst_effect):
     (Region('1', 905956, 905956), ("frame-shift", "missense")),
 ])
 def test_multi_alt_allele_genotype2(variants_vcf, region, worst_effect):
-    fvars = variants_vcf("fixtures/effects_trio_multi")
+    fvars = variants_vcf("backends/effects_trio_multi")
     vs = list(fvars.query_variants(
         regions=[region]))
     assert len(vs) == 1
@@ -60,7 +60,7 @@ def test_multi_alt_allele_genotype2(variants_vcf, region, worst_effect):
     (Region('1', 11505, 11505), np.array([[0, 1], [0, 2], [0, 3]])),
 ])
 def test_trios_multi_alt_allele_genotype2(variants_vcf, region, gt):
-    fvars = variants_vcf("fixtures/trios_multi")
+    fvars = variants_vcf("backends/trios_multi")
     vs = list(fvars.query_variants(
         regions=[region],
         return_reference=True,

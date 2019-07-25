@@ -100,7 +100,8 @@ class PhenoMeasureHistogramView(QueryBaseView):
                 "max": max(bins),
                 "bars": bars,
                 "bins": bins,
-                "step": old_div((measure.max_value - measure.min_value), 1000.0),
+                "step": old_div(
+                    (measure.max_value - measure.min_value), 1000.0),
             }
             return Response(result, status=status.HTTP_200_OK)
 
@@ -148,9 +149,18 @@ class PhenoMeasurePartitionsView(QueryBaseView):
             mdf = df[np.logical_and(df[pheno_measure] >= mmin,
                                     df[pheno_measure] < mmax)]
 
-            res = {"left": {"count": len(ldf), "percent": old_div(len(ldf), total)},
-                   "mid": {"count": len(mdf), "percent": old_div(len(mdf), total)},
-                   "right": {"count": len(rdf), "percent": old_div(len(rdf), total)}}
+            res = {
+                "left": {
+                    "count": len(ldf),
+                    "percent": old_div(len(ldf), total)
+                }, "mid": {
+                    "count": len(mdf),
+                    "percent": old_div(len(mdf), total)
+                }, "right": {
+                    "count": len(rdf),
+                    "percent": old_div(len(rdf), total)
+                }
+            }
             return Response(res)
 
         except NotAuthenticated:

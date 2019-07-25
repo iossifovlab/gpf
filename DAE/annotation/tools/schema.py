@@ -1,3 +1,4 @@
+import copy
 from collections import OrderedDict
 from box import Box
 
@@ -73,6 +74,14 @@ class Schema(object):
         merged_schema.columns.update(missing_columns)
         return merged_schema
 
+    @staticmethod
+    def diff_schemas(left, right):
+        result = copy.deepcopy(left)
+        for key in right.columns:
+            if key in result.columns:
+                del result.columns[key]
+        return result
+
     @property
     def col_names(self):
         return list(self.columns.keys())
@@ -84,7 +93,10 @@ class Schema(object):
         return ret_str
 
     def __contains__(self, key):
-        return self.columns.__contains__(key)
+        return key in self.columns
+
+    def __delitem__(self, key):
+        del self.columns[key]
 
     def __getitem__(self, key):
         return self.columns.__getitem__(key)

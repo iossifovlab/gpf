@@ -3,14 +3,12 @@ Created on Feb 8, 2018
 
 @author: lubo
 '''
-from __future__ import print_function, absolute_import
-from __future__ import unicode_literals
-from builtins import str
-
 import os
 
 import numpy as np
 import pandas as pd
+
+from utils.vcf_utils import GENOTYPE_TYPE
 
 from variants.family import FamiliesBase
 from variants.family import Family
@@ -79,23 +77,19 @@ class VariantFactory(SummaryVariantFactory):
 
     @staticmethod
     def from_summary_variant(sv, family, gt):
-        return FamilyVariant(sv, family, gt)
+        return FamilyVariant.from_sumary_variant(sv, family, gt)
 
     @staticmethod
     def family_variant_from_vcf(summary_variant, family, vcf):
         assert vcf is not None
         # assert isinstance(family, VcfFamily)
 
-        gt = np.copy(vcf.gt_idxs[family.alleles])
+        gt = vcf.gt_idxs[family.alleles].\
+            astype(GENOTYPE_TYPE, casting='same_kind')
         gt = gt.reshape([2, len(family)], order='F')
 
         return VariantFactory.from_summary_variant(
             summary_variant, family, gt)
-
-    @staticmethod
-    def family_variant_from_gt(summary_variant, family, gt):
-        return VariantFactory.from_summary_variant(
-            summary_variant, family, gt=gt)
 
 
 class RawFamilyVariants(FamiliesBase):
@@ -269,6 +263,11 @@ class RawFamilyVariants(FamiliesBase):
         if kwargs.get('real_attr_filter') is not None:
             if not self.filter_real_attr(allele, kwargs['real_attr_filter']):
                 return False
+        if kwargs.get('ultra_rare'):
+            if not self.filter_real_attr(
+                    allele, [("af_allele_count", (1, 1))]):
+                return False
+
         if kwargs.get('genes') is not None or \
                 kwargs.get('effect_types') is not None:
             if not self.filter_gene_effects(
@@ -276,10 +275,8 @@ class RawFamilyVariants(FamiliesBase):
                 return False
         if kwargs.get('variant_type') is not None:
             query = kwargs['variant_type']
-            if allele.details is None:
-                return False
             if not query.match(
-                    [allele.details.variant_type]):
+                    [allele.variant_type]):
                 return False
         if kwargs.get('person_ids') is not None:
             if allele.is_reference_allele:
@@ -374,12 +371,10 @@ class RawFamilyVariants(FamiliesBase):
             alleles_matched = []
             for allele in alleles:
                 if self.filter_allele(allele, **kwargs):
+                    if allele.allele_index == 0 and not return_reference:
+                        continue
                     alleles_matched.append(allele.allele_index)
             if alleles_matched:
-                if len(alleles_matched) == 1 and \
-                        alleles_matched[0] == 0 and \
-                        not return_reference:
-                    continue
                 v.set_matched_alleles(alleles_matched)
                 yield v
 

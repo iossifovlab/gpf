@@ -12,7 +12,7 @@ from RegionOperations import Region
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    "variants_thrift",
+    "variants_impala",
 ])
 @pytest.mark.parametrize("regions,effect,count", [
     ([Region('1', 865582, 865691)], "synonymous", 3),
@@ -24,7 +24,7 @@ from RegionOperations import Region
 ])
 def test_single_alt_allele_effects(
         variants_impl, variants, regions, effect, count):
-    fvars = variants_impl(variants)("fixtures/effects_trio")
+    fvars = variants_impl(variants)("backends/effects_trio")
     vs = list(fvars.query_variants(
         regions=regions,
         effect_types=[effect]))
@@ -35,10 +35,10 @@ def test_single_alt_allele_effects(
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    "variants_thrift",
+    "variants_impala",
 ])
 def test_no_missense_effects(variants_impl, variants):
-    fvars = variants_impl(variants)("fixtures/effects_trio_nomissense")
+    fvars = variants_impl(variants)("backends/effects_trio_nomissense")
     vs = list(fvars.query_variants(
         effect_types=["missense"]))
     assert len(vs) == 0
@@ -46,7 +46,7 @@ def test_no_missense_effects(variants_impl, variants):
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    "variants_thrift",
+    "variants_impala",
 ])
 @pytest.mark.parametrize("effect,count", [
     ("missense", 3),
@@ -54,7 +54,7 @@ def test_no_missense_effects(variants_impl, variants):
     ("synonymous", 1),
 ])
 def test_multi_alt_allele_effects(variants_impl, variants, effect, count):
-    fvars = variants_impl(variants)("fixtures/effects_trio_multi")
+    fvars = variants_impl(variants)("backends/effects_trio_multi")
     vs = list(fvars.query_variants(
         effect_types=[effect]
     ))
@@ -65,7 +65,7 @@ def test_multi_alt_allele_effects(variants_impl, variants, effect, count):
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    "variants_thrift",
+    "variants_impala",
 ])
 @pytest.mark.parametrize("regions,effects,genes,count", [
     (None, None, None, 10),
@@ -82,7 +82,7 @@ def test_multi_alt_allele_effects(variants_impl, variants, effect, count):
 ])
 def test_single_alt_allele_genes(
         variants_impl, variants, regions, effects, genes, count):
-    fvars = variants_impl(variants)("fixtures/effects_trio")
+    fvars = variants_impl(variants)("backends/effects_trio")
     vs = list(fvars.query_variants(
         regions=regions,
         effect_types=effects,
@@ -95,7 +95,7 @@ def test_single_alt_allele_genes(
 
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
-    "variants_thrift",
+    "variants_impala",
 ])
 @pytest.mark.parametrize("regions,effects,genes,count", [
     (None, None, None, 10),
@@ -104,7 +104,7 @@ def test_single_alt_allele_genes(
 ])
 def test_empty_lists(
         variants_impl, variants, regions, effects, genes, count):
-    fvars = variants_impl(variants)("fixtures/effects_trio")
+    fvars = variants_impl(variants)("backends/effects_trio")
     vs = list(fvars.query_variants(
         regions=regions,
         effect_types=effects,

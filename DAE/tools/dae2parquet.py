@@ -6,6 +6,8 @@ Created on Jul 23, 2018
 @author: lubo
 '''
 from __future__ import print_function
+
+import os
 import sys
 
 import pysam
@@ -13,15 +15,19 @@ import argparse
 
 from configurable_entities.configuration import DAEConfig
 
+from annotation.tools.file_io_parquet import ParquetSchema
+
 from backends.vcf.builder import get_genome
 from backends.configure import Configure
-from backends.thrift.raw_dae import RawDAE, RawDenovo
+from backends.dae.raw_dae import RawDAE, RawDenovo
 
 from backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 
-from backends.thrift.import_tools import annotation_pipeline_cli_options, \
-    construct_import_annotation_pipeline, variants_iterator_to_parquet
+from backends.import_commons import annotation_pipeline_cli_options, \
+    construct_import_annotation_pipeline
+
+from backends.impala.import_tools import variants_iterator_to_parquet
 
 
 def get_contigs(tabixfilename):
@@ -29,7 +35,9 @@ def get_contigs(tabixfilename):
         return tbx.contigs
 
 
-def dae_build_transmitted(dae_config, argv, defaults={}):
+def dae_build_transmitted(
+        dae_config, annotation_pipeline, argv, defaults={}):
+
     config = Configure.from_dict({
         "dae": {
             'summary_filename': argv.summary,
@@ -47,7 +55,8 @@ def dae_build_transmitted(dae_config, argv, defaults={}):
         config.dae.toomany_filename,
         config.dae.family_filename,
         region=argv.region,
-        genome=genome)
+        genome=genome,
+        annotator=annotation_pipeline)
 
     if argv.family_format == 'simple':
         fvars.load_simple_families()
@@ -58,14 +67,19 @@ def dae_build_transmitted(dae_config, argv, defaults={}):
             argv.family_format
         ))
 
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults=defaults)
+    annotation_schema = ParquetSchema()
+    annotation_pipeline.collect_annotator_schema(annotation_schema)
+
+    impala_config = Configure.from_prefix_impala(
+        argv.output, bucket_index=argv.bucket_index,
+        db=None, study_id=None).impala
 
     variants_iterator_to_parquet(
         fvars,
-        argv.output,
-        argv.bucket_index,
-        annotation_pipeline
+        impala_config,
+        bucket_index=argv.bucket_index,
+        rows=argv.rows,
+        annotation_schema=annotation_schema
     )
 
 
@@ -74,23 +88,38 @@ def dae_build_makefile(dae_config, argv):
     genome = get_genome(genome_file=None)
     build_contigs = build_contig_regions(genome, argv.len)
 
+    family_format = ""
+    if argv.family_format == 'simple':
+        family_format = "-f simple"
+    elif argv.family_format == 'pedigree':
+        family_format = "-f simple"
+    else:
+        raise ValueError("unexpected family format: {}".format(
+            argv.family_format
+        ))
+
     contigs_makefile_generate(
         build_contigs,
         data_contigs,
         argv.output,
-        'dae2parquet.py dae',
+        'dae2parquet.py dae {family_format}'.format(
+            family_format=family_format),
         argv.annotation_config,
         "{family_filename} {summary_filename} {toomany_filename}".format(
             family_filename=argv.families,
             summary_filename=argv.summary,
-            toomany_filename=argv.toomany)
+            toomany_filename=argv.toomany),
+        rows=argv.rows,
+        log_directory=argv.log
     )
 
 
 def import_dae_denovo(
         dae_config, annotation_pipeline,
         families_filename, variants_filename,
-        family_format='pedigree', output='.', bucket_index=0):
+        family_format='pedigree', output='.', rows=10000,
+        bucket_index=0, defaults={}, study_id=None, filesystem=None):
+
     config = Configure.from_dict({
         "denovo": {
             'denovo_filename': variants_filename,
@@ -117,11 +146,25 @@ def import_dae_denovo(
 
     assert output is not None
 
+    if study_id is None:
+        filename = os.path.basename(families_filename)
+        study_id = os.path.splitext(filename)[0]
+        print(filename, os.path.splitext(filename), study_id)
+
+    impala_config = Configure.from_prefix_impala(
+        output, bucket_index=bucket_index, db=None, study_id=study_id).impala
+    print("converting into ", impala_config, file=sys.stderr)
+
+    annotation_schema = ParquetSchema()
+    annotation_pipeline.collect_annotator_schema(annotation_schema)
+
     return variants_iterator_to_parquet(
         fvars,
-        output,
-        bucket_index,
-        annotation_pipeline=annotation_pipeline
+        impala_config,
+        bucket_index=bucket_index,
+        rows=rows,
+        annotation_pipeline=annotation_pipeline,
+        filesystem=filesystem
     )
 
 
@@ -182,6 +225,13 @@ def init_transmitted_common(dae_config, parser):
         help=''
     )
 
+    parser.add_argument(
+        '-r', '--rows', type=int,
+        default=100000,
+        dest='rows', metavar='rows',
+        help='row group size'
+    )
+
 
 def init_parser_dae(dae_config, subparsers):
     parser_dae = subparsers.add_parser('dae')
@@ -206,6 +256,13 @@ def init_parser_make(dae_config, subparsers):
         default=None,
         dest='len', metavar='len',
         help='split contigs in regions with length <len>'
+    )
+
+    parser.add_argument(
+        '--log', type=str,
+        default=None,
+        dest='log', metavar='<log dir>',
+        help='directory to store log files'
     )
 
 
@@ -237,10 +294,14 @@ if __name__ == "__main__":
     if argv.type == 'denovo':
         import_dae_denovo(
             dae_config, annotation_pipeline,
-            argv.families, argv.variants, family_format=argv.family_format,
-            output=argv.output, bucket_index=0)
+            argv.families, argv.variants,
+            family_format=argv.family_format,
+            output=argv.output,
+            rows=argv.rows, bucket_index=0
+        )
     elif argv.type == 'dae':
         dae_build_transmitted(
-            dae_config, argv, defaults=dae_config.annotation_defaults)
+            dae_config, annotation_pipeline, argv,
+            defaults=dae_config.annotation_defaults)
     elif argv.type == 'make':
         dae_build_makefile(dae_config, argv)

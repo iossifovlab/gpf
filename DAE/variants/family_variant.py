@@ -6,8 +6,6 @@ Created on Jul 9, 2018
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from builtins import range
-from builtins import object
 import numpy as np
 
 from variants.variant import SummaryVariant, SummaryAllele
@@ -56,30 +54,38 @@ class FamilyDelegate(object):
 
 class FamilyAllele(SummaryAllele, FamilyDelegate):
 
-    def __init__(self, summary_allele, family, genotype):
+    def __init__(
+            self,
+            chromosome,
+            position,
+            reference,
+            alternative,
+            summary_index,
+            allele_index,
+            effect,
+            attributes,
+            family,
+            genotype):
         assert isinstance(family, Family)
-        assert isinstance(summary_allele, SummaryAllele)
         SummaryAllele.__init__(
             self,
-            summary_allele.chromosome,
-            summary_allele.position,
-            summary_allele.reference,
-            summary_allele.alternative,
-            summary_allele.summary_index,
-            summary_allele.allele_index,
-            summary_allele.effect,
-            summary_allele.frequency,
-            summary_allele.attributes)
+            chromosome,
+            position,
+            reference,
+            alternative,
+            summary_index,
+            allele_index,
+            effect,
+            attributes)
+
         FamilyDelegate.__init__(self, family)
 
         #: summary allele that corresponds to this allele in family variant
         # self.summary_allele = summary_allele
         self.gt = genotype
+        assert self.gt.dtype == GENOTYPE_TYPE
         self._best_st = None
 
-        FamilyDelegate.__init__(self, family)
-
-        self._inheritance = None
         self._inheritance_in_members = None
         self._variant_in_members = None
         self._variant_in_members_objects = None
@@ -87,6 +93,22 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         self._variant_in_sexes = None
 
         self.matched_gene_effects = []
+
+    @staticmethod
+    def from_summary_allele(summary_allele, family, genotype):
+        assert isinstance(summary_allele, SummaryAllele)
+        return FamilyAllele(
+            summary_allele.chromosome,
+            summary_allele.position,
+            summary_allele.reference,
+            summary_allele.alternative,
+            None,  # summary_allele.summary_index,
+            summary_allele.allele_index,
+            summary_allele.effect,
+            summary_allele.attributes,
+            family,
+            genotype
+        )
 
     def __repr__(self):
         if not self.alternative:
@@ -170,11 +192,12 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
         if self._variant_in_members is None:
             allele_index = getattr(self, "allele_index", None)
             gt = np.copy(self.gt)
+
             if allele_index is not None:
-                gt[gt != allele_index] = 0
-            else:
-                gt[gt == -1] = 0
-            noindex = np.sum(gt, axis=0) == 0
+                gt[gt != allele_index] = -1
+
+            index = np.any(gt == allele_index, axis=0)
+            noindex = np.logical_not(index)
             self._variant_in_members = np.copy(self.members_ids)
             self._variant_in_members[noindex] = None
         return self._variant_in_members
@@ -301,45 +324,50 @@ class FamilyAllele(SummaryAllele, FamilyDelegate):
 
 class FamilyVariant(SummaryVariant, FamilyDelegate):
 
-    def __init__(self, summary_variant, family, genotype):
-        assert summary_variant is not None
-        assert isinstance(summary_variant, SummaryVariant)
+    def __init__(self, family_alleles, family, genotype):
         assert family is not None
         assert genotype is not None
         assert isinstance(family, Family)
-        SummaryVariant.__init__(self, summary_variant.alleles)
-        FamilyDelegate.__init__(self, family)
+        assert isinstance(family_alleles, list)
+        assert all([isinstance(a, FamilyAllele) for a in family_alleles]), \
+            family_alleles
 
-        self.summary_variant = summary_variant
+        SummaryVariant.__init__(self, family_alleles)
+        FamilyDelegate.__init__(self, family)
         self.gt = np.copy(genotype)
+        self.summary_alleles = self.alleles
 
         alleles = [
-            FamilyAllele(self.ref_allele, family, self.gt)
+            self.alleles[0]
         ]
-
-        for allele_index in self.calc_alt_alleles(self.gt):
-            summary_allele = self.get_allele(allele_index)
-            if summary_allele is None:
+        for ai in self.calc_alt_alleles(self.gt):
+            allele = self.get_allele(ai)
+            if allele is None:
                 continue
-            fa = FamilyAllele(summary_allele, family, genotype)
-
-            alleles.append(fa)
-
-        #: list of all family alleles that affect the family variant
-        self.summary_alleles = self.alleles
+            alleles.append(allele)
         self.alleles = alleles
-        #: reference family allele fot the give family variant
-        self.ref_allele = alleles[0]
-        #: list of all alternative family alleles that affect family variant
-        self.alt_alleles = alleles[1:]
 
         self._best_st = None
         self._inheritance_in_members = None
         self._variant_in_members = None
         self._matched_alleles = []
 
+    @staticmethod
+    def from_sumary_variant(summary_variant, family, genotype):
+        assert summary_variant is not None
+        assert isinstance(summary_variant, SummaryVariant)
+
+        gt = np.copy(genotype)
+
+        alleles = []
+        for summary_allele in summary_variant.alleles:
+            fa = FamilyAllele.from_summary_allele(
+                summary_allele, family, gt)
+            alleles.append(fa)
+        return FamilyVariant(alleles, family, gt)
+
     def set_matched_alleles(self, alleles_indexes):
-        self._matched_alleles = alleles_indexes
+        self._matched_alleles = sorted(alleles_indexes)
 
     @property
     def matched_alleles(self):
@@ -382,29 +410,10 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
 
     def is_unknown(self):
         """
-        Returns True if all known alleles in the family variant are
-        `reference`.
+        Returns True if all alleles in the family variant are
+        `unknown`.
         """
         return np.all(self.gt == -1)
-
-    # @property
-    # def inheritance_in_members(self):
-    #     if self._inheritance_in_members is None:
-    #         self._inheritance_in_members = set()
-    #         for allele in self.alleles:
-    #             self._inheritance_in_members = \
-    #                 self._inheritance_in_members | \
-    #                 set(allele.inheritance_in_members)
-    #     return self._inheritance_in_members
-
-    # @property
-    # def variant_in_members(self):
-    #     if self._variant_in_members is None:
-    #         self._variant_in_members = set()
-    #         for allele in self.alt_alleles:
-    #             self._variant_in_members = self._variant_in_members | \
-    #                 allele.variant_in_members
-    #     return self._variant_in_members
 
     def __repr__(self):
         if not self.alternative:
@@ -452,7 +461,7 @@ class FamilyVariant(SummaryVariant, FamilyDelegate):
         :return: list of all alternative allele indexes present into
         genotype passed.
         """
-        return sorted(list(set(gt.flatten()).difference({-1, 0})))
+        return sorted(list(set(gt.flatten()).difference({0})))
 
     @staticmethod
     def calc_alleles(gt):
