@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import unicode_literals
-from builtins import map
-from builtins import str
-from builtins import object
 import sys
 import abc
 import itertools
@@ -12,7 +8,6 @@ import csv
 from collections import defaultdict, OrderedDict
 from variants.attributes import Role, Status, Sex
 from pheno.common import RoleMapping
-from future.utils import with_metaclass
 
 
 class Individual(object):

@@ -1,6 +1,3 @@
-from future import standard_library
-standard_library.install_aliases()  # noqa
-
 from configparser import ConfigParser
 from box import Box
 from collections import OrderedDict

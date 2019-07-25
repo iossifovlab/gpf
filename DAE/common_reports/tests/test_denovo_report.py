@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from common_reports.denovo_report import EffectCell, EffectRow, \
     DenovoReportTable, DenovoReport
 

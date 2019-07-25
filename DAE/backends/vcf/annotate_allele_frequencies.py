@@ -3,12 +3,6 @@ Created on Mar 5, 2018
 
 @author: lubo
 '''
-from __future__ import print_function, absolute_import, unicode_literals
-
-from __future__ import division
-from builtins import object
-from past.utils import old_div
-
 import pandas as pd
 import numpy as np
 
@@ -92,15 +86,15 @@ class VcfAlleleFrequencyAnnotator(VcfAnnotatorBase):
         gt = self.get_variant_full_genotype(allele)
 
         n_parents_called = gt.shape[1]
-        percent_parents_called = old_div((
-            100.0 * n_parents_called), n_independent_parents)
+        percent_parents_called = \
+            (100.0 * n_parents_called) / n_independent_parents
 
         allele_index = allele['allele_index']
         n_alleles = np.sum(gt == allele_index)
         allele_freq = 0.0
         if n_parents_called > 0:
-            allele_freq = old_div(
-                (100.0 * n_alleles), (2.0 * n_parents_called))
+            allele_freq = \
+                (100.0 * n_alleles) / (2.0 * n_parents_called)
 
         return n_parents_called, percent_parents_called, \
             n_alleles, allele_freq

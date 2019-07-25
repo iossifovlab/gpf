@@ -1,9 +1,3 @@
-from __future__ import print_function, absolute_import
-from __future__ import unicode_literals
-from builtins import next
-from builtins import map
-from builtins import range
-from builtins import object
 import networkx as nx
 import itertools
 from collections import deque

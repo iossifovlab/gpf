@@ -3,12 +3,10 @@ Created on Jul 5, 2018
 
 @author: lubo
 '''
-from __future__ import print_function, unicode_literals, absolute_import
-
 import pytest
 
 
-# @pytest.mark.xfail(reason='import of genomic scores are broken in impala')
+@pytest.mark.xfail(reason='import of genomic scores are broken in impala')
 @pytest.mark.parametrize("variants", [
     'vcf_import_raw',
 ])

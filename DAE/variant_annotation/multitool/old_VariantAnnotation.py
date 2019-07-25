@@ -3,13 +3,6 @@
 # October 25th 2013
 # written by Ewa
 
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from builtins import str
-from builtins import range
-from past.utils import old_div
-from builtins import object
 import os, sys, optparse
 from subprocess import call
 import re
@@ -258,7 +251,7 @@ class Variant(object):
                 for i in gm._utrModels[self.chr][key]:
 
                     if self.seq == None and self.type != "deletion":
-                        worstForEachTranscript.append(["unknown", [i.gene, old_div(i.CDS_len(),3)], i.strand, i.trID])
+                        worstForEachTranscript.append(["unknown", [i.gene, i.CDS_len() // 3], i.strand, i.trID])
                         continue
 
                     what_hit = i.what_region(self.chr, self.pos, self.pos_last, prom = promoter_len)
@@ -278,7 +271,7 @@ class Variant(object):
                     if what_hit == "all":
                         if i.is_coding() == True:
                             transcript_length =  i.CDS_len()
-                            protLength = old_div(transcript_length,3)
+                            protLength = transcript_length // 3
                             worstForEachTranscript.append([what_hit, [i.gene, protLength], i.strand, i.trID])
                         else:
                             worstForEachTranscript.append(["non-coding", [i.gene, i.total_len()], i.strand, i.trID])
@@ -608,7 +601,7 @@ class Variant(object):
 
                         if what_hit == "CDS":
                             transcript_length =  i.CDS_len()
-                            protLength = old_div(transcript_length,3)
+                            protLength = transcript_length // 3
                             worstForEachTranscript.append(["CDS",[i.gene, self.type, protLength],i.strand, i.trID])
                             continue
                         if what_hit == "intronic":
@@ -1192,7 +1185,7 @@ def checkProteinPosition(tm, pos, length, type, cds_reg):
 
     # protein length
     transcript_length = tm.CDS_len()
-    protLength = old_div(transcript_length,3) - 1
+    protLength = transcript_length // 3 - 1
     if (transcript_length%3) != 0:
         protLength += 1
 
@@ -1215,7 +1208,7 @@ def checkProteinPosition(tm, pos, length, type, cds_reg):
                 break
 
             minAA += j.stop - j.start + 1
-    minAA = old_div(minAA,3) + 1
+    minAA = minAA // 3 + 1
 
     return(str(minAA) + "/" + str(protLength))
 
@@ -1336,7 +1329,7 @@ def prepareIntronHit(tm, pos, length, cds_reg):
     protLength = 0
     for i in cds_reg:
         protLength += i.stop - i.start + 1
-    protLength = old_div(protLength,3)
+    protLength = protLength // 3
 
     whichAA = -1
 
@@ -1348,7 +1341,7 @@ def prepareIntronHit(tm, pos, length, cds_reg):
             whichAA += cds_reg[i].stop - cds_reg[i].start + 1
             intronLength = cds_reg[i+1].start - cds_reg[i].stop - 1
             if tm.strand == "+":
-                whichAA = old_div(whichAA,3) + 1
+                whichAA = whichAA // 3 + 1
                 whichIntron = i + 1
                 if cds_reg[i+1].start - pos - length + 1 < pos - cds_reg[i].stop:
                     indelside = "3'"
@@ -1357,7 +1350,7 @@ def prepareIntronHit(tm, pos, length, cds_reg):
                     indelside = "5'"
                     distance = pos - cds_reg[i].stop
             else:
-                whichAA = protLength - old_div(whichAA,3)
+                whichAA = protLength - whichAA // 3
                 whichIntron = howManyIntrons - i
                 if cds_reg[i+1].start - pos - length + 1 < pos - cds_reg[i].stop:
                     indelside = "5'"
@@ -1524,13 +1517,13 @@ def checkEndChange_Snp(codon, pos, seq, strand, code):
 def firstOrLastCodonOutput_Snps(tm, pos, worstEffect):
 
     if worstEffect == "noEnd" or  worstEffect == "noStart":
-        protLength = old_div(tm.CDS_len(),3)
+        protLength = tm.CDS_len() // 3
         hit =[tm.gene, str(protLength)]
     elif worstEffect == "synonymous":
-        p = old_div(tm.CDS_len(),3)
+        p = tm.CDS_len() // 3
         hit = [tm.gene, 'End', 'End', str(p)+"/"+str(p)]
     elif worstEffect == "missense":
-        p = old_div(tm.CDS_len(),3)
+        p = tm.CDS_len() // 3
         hit = [tm.gene, '?', '?', str(p)+"/"+str(p)]
     else:
         print("incorrect mut type: " + worstEffect)
@@ -1551,7 +1544,7 @@ def dealWithFirstCodon_Snps(tm, pos, altNt, refGenome, code):
             altAA = cod2aa(altCodon, code)
             worstEffect = mutationType(refAA, altAA)
             #worstEffect = "missense"
-            p = old_div(tm.CDS_len(),3)
+            p = tm.CDS_len() // 3
             hit = [tm.gene, refAA, altAA, "1/"+str(p)]
             #hit = [gene, '?', '?', pos, pos, "1/"+str(p)]
             return([worstEffect, hit])
@@ -1571,7 +1564,7 @@ def dealWithLastCodon_Snps(tm, pos, altNt, refGenome, code):
     else:
         if not _in_start_codons(complement(getSeq(refGenome, tm.chr, tm.cds[1]-2, tm.cds[1]))[::-1], code):
             worstEffect = "missense"
-            p = old_div(tm.CDS_len(),3)
+            p = tm.CDS_len() // 3
             hit = [tm.gene, '?', '?', "1/"+str(p)]
             return([worstEffect, hit])
         else:
@@ -1586,7 +1579,7 @@ def firstOrLastCodonOutput_Indel(tm, pos, worstEffect, type, cds_reg, length):
         protPos = checkProteinPosition(tm, pos, length, type, cds_reg)
         hit = [tm.gene, protPos]
     elif worstEffect == "noEnd" or worstEffect == "noStart":
-        protLength = old_div(tm.CDS_len(),3)
+        protLength = tm.CDS_len() // 3
         hit =[tm.gene, str(protLength)]
     elif worstEffect == "3'UTR" or worstEffect == "5'UTR":
         d = distanceFromCoding(pos, tm)
@@ -2073,14 +2066,14 @@ def checkForNewStop_Ins(pos, seq, tm, length, refGenome, code):
             preCodon = findCodingBase(tm, pos, -1, refGenome  ) +  seq[:2]
             postCodon = seq[-1] + findCodingBase(tm, pos, 0 , refGenome ) + findCodingBase(tm, pos, 1, refGenome  )
             if length > 3:
-                for i in range(0, old_div(length,3)-1):
+                for i in range(0, length // 3 - 1):
                     if _in_stop_codons(seq[i*3 + 2: i*3 + 5], code):
                         return(True)
         else:
             preCodon = findCodingBase(tm, pos, -2 , refGenome ) + findCodingBase(tm, pos, -1 , refGenome ) + seq[0]
             postCodon = seq[-2:] + findCodingBase(tm, pos, 0 , refGenome )
             if length > 3:
-                for i in range(0, old_div(length,3)-1):
+                for i in range(0, length // 3 - 1):
                     if _in_stop_codons(seq[i*3 + 1: i*3 + 4], code):
                         return(True)
 
@@ -2093,14 +2086,14 @@ def checkForNewStop_Ins(pos, seq, tm, length, refGenome, code):
             postCodon = complement(seq[0] + findCodingBase(tm, pos, -1 , refGenome ) + findCodingBase(tm, pos, -2 , refGenome ))
 
             if length > 3:
-                for i in range(0, old_div(length,3)-1):
+                for i in range(0, length // 3 - 1):
                     if _in_stop_codons(complement(seq[i*3+1:i*3+4])[::-1], code):
                         return(True)
         else:
             preCodon = complement(findCodingBase(tm, pos, 1 , refGenome ) + findCodingBase(tm, pos, 0 , refGenome ) + seq[-1])
             postCodon = complement(seq[1::-1] + findCodingBase(tm, pos, -1 , refGenome ))
             if length > 3:
-                for i in range(0, old_div(length,3)-1):
+                for i in range(0, length // 3 - 1):
                     if _in_stop_codons(complement(seq[i*3+2:i*3+5])[::-1], code):
                         return(True)
 

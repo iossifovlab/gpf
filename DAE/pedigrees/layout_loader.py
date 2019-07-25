@@ -1,7 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
 
 from pedigrees.pedigrees import FamilyConnections
 from pedigrees.layout import Layout, IndividualWithCoordinates, layout_parser

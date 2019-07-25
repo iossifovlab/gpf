@@ -1,6 +1,3 @@
-from __future__ import print_function, unicode_literals, absolute_import
-from builtins import str
-
 import pytest
 
 from ..attributes_query_builder import is_token, and_node, or_node, \

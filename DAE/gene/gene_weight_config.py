@@ -1,7 +1,3 @@
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()  # noqa
-
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
 

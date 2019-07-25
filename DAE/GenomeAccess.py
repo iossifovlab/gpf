@@ -3,12 +3,6 @@
 # June 6th 2013
 # by Ewa
 
-from __future__ import print_function, absolute_import
-from __future__ import division
-from __future__ import unicode_literals
-from builtins import next
-from past.utils import old_div
-from builtins import object
 import sys
 import os
 
@@ -201,10 +195,10 @@ class GenomicSequence_Ivan(object):
 
         self.__f.seek(
             self._Indexing[chrom]['startBit'] + start - 1 +
-            old_div((start-1), self._Indexing[chrom]['seqLineLength']))
+            (start-1) / self._Indexing[chrom]['seqLineLength'])
 
         ll = stop-start+1
-        x = 1 + old_div(ll, self._Indexing[chrom]['seqLineLength'])
+        x = 1 + ll / self._Indexing[chrom]['seqLineLength']
 
         w = self.__f.read(ll + x)
         w = w.replace("\n", "")[:ll]

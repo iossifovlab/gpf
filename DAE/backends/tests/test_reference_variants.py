@@ -3,14 +3,11 @@ Created on Jun 15, 2018
 
 @author: lubo
 '''
-from __future__ import print_function, unicode_literals, absolute_import
-
 import pytest
 from utils.vcf_utils import mat2str
 from backends.impala.parquet_io import VariantsParquetWriter
 
 
-# @pytest.mark.xfail(reason="frequencies should probably be removed")
 @pytest.mark.parametrize("variants", [
     "variants_vcf",
     "variants_impala",

@@ -1,10 +1,4 @@
 #!/usr/bin/env python
-from __future__ import print_function
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from builtins import str
-from builtins import map
-from builtins import object
 import abc
 from collections import defaultdict
 import argparse
@@ -12,7 +6,6 @@ from functools import reduce
 import pandas as pd
 
 from pedigrees.interval_sandwich import SandwichInstance
-from future.utils import with_metaclass
 from variants.attributes import Role, Sex
 
 

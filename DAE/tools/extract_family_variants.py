@@ -9,12 +9,6 @@ Created on Jan 19, 2018
 
 @contact:    lubomir.chorbadjiev@gmail.com
 '''
-from __future__ import print_function
-from __future__ import unicode_literals
-
-from builtins import str
-from builtins import zip
-from builtins import object
 import sys
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter

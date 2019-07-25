@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from box import Box
 
 from enrichment_tool.tests.conftest import fixtures_dir

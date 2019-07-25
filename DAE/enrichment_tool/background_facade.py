@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from enrichment_tool.config import EnrichmentConfig
 from enrichment_tool.background import BackgroundBase
 

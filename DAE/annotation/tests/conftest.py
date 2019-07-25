@@ -2,7 +2,6 @@ import pytest
 import os
 
 import pandas as pd
-from builtins import str
 from io import StringIO
 
 from box import Box

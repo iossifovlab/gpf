@@ -1,8 +1,3 @@
-from __future__ import unicode_literals
-from builtins import str
-from builtins import next
-from builtins import range
-from builtins import object
 import csv
 import pysam
 import gzip

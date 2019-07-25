@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from builtins import map
-from builtins import object
 import abc
 import itertools
 import argparse
@@ -9,7 +7,6 @@ import csv
 from collections import defaultdict
 from pheno.prepare.individuals2ped import \
     IndividualUnit, MatingUnit
-from future.utils import with_metaclass
 from variants.attributes import Role, Sex, Status
 
 

@@ -3,8 +3,6 @@ Created on Apr 16, 2018
 
 @author: lubo
 '''
-from __future__ import print_function, absolute_import
-from __future__ import unicode_literals
 
 """
 Denovo Gene Sets are configured into study configuration. There is a section

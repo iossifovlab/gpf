@@ -3,10 +3,6 @@ Created on Apr 10, 2017
 
 @author: lubo
 '''
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import str
-from builtins import object
 import os
 import matplotlib as mpl; mpl.use('PS')  # noqa
 import numpy as np

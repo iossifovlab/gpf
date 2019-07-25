@@ -3,13 +3,6 @@ Created on Nov 16, 2017
 
 @author: lubo
 '''
-from __future__ import division
-from __future__ import unicode_literals
-from builtins import str
-from builtins import map
-from builtins import range
-from past.utils import old_div
-from builtins import object
 import numpy as np
 import pandas as pd
 import itertools
@@ -301,9 +294,9 @@ class MeasureClassifier(object):
         if rep.count_with_values < conf.min_individuals:
             return MeasureType.raw
 
-        non_numeric = old_div(
-            (1.0 * rep.count_with_non_numeric_values),
-            rep.count_with_values)
+        non_numeric = \
+            (1.0 * rep.count_with_non_numeric_values) / \
+            rep.count_with_values
 
         if non_numeric <= conf.non_numeric_cutoff:
             if rep.count_unique_numeric_values >= conf.continuous.min_rank:

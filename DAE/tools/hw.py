@@ -1,12 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from builtins import zip
-from builtins import map
-from builtins import range
-from past.utils import old_div
 import optparse
 
 import numpy as np
@@ -41,8 +34,8 @@ def xMF(xstr, pp):
         if(z[0][1] + z[1][1] < 2):
             diplo_flag[1] = False
 
-    cnt[0][0] = old_div(pp, 2) - cnt[0][1] - cnt[0][2]
-    cnt[1][0] = old_div(pp, 2) - cnt[1][1] - cnt[1][2]
+    cnt[0][0] = pp / 2 - cnt[0][1] - cnt[0][2]
+    cnt[1][0] = pp /2 - cnt[1][1] - cnt[1][2]
 
     return cnt, diplo_flag
 
@@ -58,11 +51,11 @@ def randomSampling(cnt, genF, smpl_size=10000, flagX=False):
     T = sum([1.*(c-e)*(c-e)/e for c, e in zip(cnt, eCnt)])
 
     if flagX:
-        p = old_div((1.0*cnt[1] + 2.*cnt[2]), (1.5*s))
+        p = (1.0 * cnt[1] + 2.0 * cnt[2]) / (1.5 * s)
         q = 1. - p
 
-        v = rnd.multinomial(old_div(s, 2), [q*q, 2*p*q, p*p], size=smpl_size)
-        w = rnd.multinomial(old_div(s, 2), [q, p, 0], size=smpl_size)
+        v = rnd.multinomial( s / 2, [q*q, 2*p*q, p*p], size=smpl_size)
+        w = rnd.multinomial( s / 2, [q, p, 0], size=smpl_size)
 
         x = v + w
     else:
@@ -71,7 +64,7 @@ def randomSampling(cnt, genF, smpl_size=10000, flagX=False):
     w = (x - eCnt)*(x - eCnt) / (1.*eCnt)
     n = sum(sum(w, 1) > T)
 
-    pv = old_div((1.*n), smpl_size)
+    pv = (1.0 * n) / smpl_size
     return pv
 
 
@@ -79,7 +72,7 @@ def G_test(cnt, eCnt):
     df = len(cnt) - 2
 
     T = sum([
-        2. * c * np.log(old_div(c, e))
+        2. * c * np.log(c / e)
         for c, e in zip(cnt, eCnt) if c != 0
     ])
     pv = 1. - stats.chi2.cdf(sum(T), df)
@@ -126,7 +119,7 @@ def Test(cnt, eCnt, genF, X=False):
 def pval_count_autosome(cnt):
     # cnt: [RR, RA, AA]
     N = sum(cnt)
-    p = old_div((1.0*cnt[1] + 2.*cnt[2]), (2.*N))
+    p = (1.0 * cnt[1] + 2.0 * cnt[2]) / (2.*N)
 
     genF = [(1-p)*(1-p), 2.*(1-p)*p, p*p]
     eCnt = [N*x for x in genF]
@@ -140,11 +133,11 @@ def pval_count_X(cnt):
     # cnt: [RR, RA, AA]
     # or   [R, A, '']
     N = sum(cnt)
-    p = old_div((1.0*cnt[1] + 2.*cnt[2]), (1.5*N))
+    p = (1.0 * cnt[1] + 2.0 * cnt[2]) / (1.5 * N)
 
     genF = [
-        (1-p)*(1-p)/2.+old_div((1-p), 2.),
-        (1-p)*p + old_div(p, 2.), p*p/2.
+        (1-p) * (1-p) / 2.0 + (1-p) / 2.,
+        (1-p)*p + p / 2.0, p * p / 2.
     ]
     eCnt = [N*x for x in genF]
 

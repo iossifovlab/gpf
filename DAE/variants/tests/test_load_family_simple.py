@@ -3,8 +3,6 @@ Created on Jul 23, 2018
 
 @author: lubo
 '''
-from __future__ import print_function, unicode_literals, absolute_import
-
 import os
 import pytest
 

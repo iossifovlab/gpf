@@ -1,4 +1,3 @@
-from builtins import open
 from pedigrees.layout_saver import LayoutSaver
 import pedigrees.layout_saver
 

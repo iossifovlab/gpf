@@ -3,10 +3,6 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-from future import standard_library
-standard_library.install_aliases()  # noqa
-
 import os
 from copy import deepcopy
 from collections import OrderedDict

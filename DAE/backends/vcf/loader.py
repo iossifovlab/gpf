@@ -3,12 +3,6 @@ Created on Feb 7, 2018
 
 @author: lubo
 '''
-from __future__ import print_function, absolute_import
-
-from builtins import object
-# from builtins import str
-from builtins import open
-
 import os
 
 from cyvcf2 import VCF

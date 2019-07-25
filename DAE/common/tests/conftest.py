@@ -3,10 +3,8 @@ Created on Feb 10, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 import os
 import pytest
-from builtins import open
 
 from configparser import ConfigParser
 

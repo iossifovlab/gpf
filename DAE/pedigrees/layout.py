@@ -1,8 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-from builtins import object
-from past.utils import old_div
 from collections import defaultdict
 from functools import reduce
 import re
@@ -30,11 +25,11 @@ class IndividualWithCoordinates(object):
 
     @property
     def x_center(self):
-        return self.x + old_div(self.size, 2.0)
+        return self.x + self.size / 2.0
 
     @property
     def y_center(self):
-        return self.y + old_div(self.size, 2.0)
+        return self.y + self.size / 2.0
 
     def __repr__(self):
         return "({}, {})".format(self.x, self.y)
@@ -182,9 +177,9 @@ class Layout(object):
                     are_next_to_eachother = (i == 0)
                     if (individual.individual.are_mates(
                             other_individual.individual)):
-                        middle_x = old_div(
-                            (individual.x_center + other_individual.x_center),
-                            2.0)
+                        middle_x = \
+                            (individual.x_center 
+                             + other_individual.x_center)/2.0
                         if are_next_to_eachother:
                             self.lines.append(Line(
                                 individual.x + individual.size,
@@ -206,10 +201,9 @@ class Layout(object):
                         self.lines.append(line)
 
                         percent_x = \
-                            old_div(
-                                (middle_x - individual.x_center),
+                                (middle_x - individual.x_center) / \
                                 (other_individual.x_center -
-                                 individual.x_center))
+                                 individual.x_center)
                         center_y = line.inverse_curve_y_at(percent_x)
 
                         self.lines.append(Line(
@@ -377,12 +371,12 @@ class Layout(object):
     def _center_children_of_parents(self, mating_unit):
         children = self._get_first_and_last_children_positions(mating_unit)
 
-        children_center = old_div((children[0].x + children[1].x), 2.0)
+        children_center = (children[0].x + children[1].x) / 2.0
 
         mother = self._id_to_position[mating_unit.mother]
         father = self._id_to_position[mating_unit.father]
 
-        parents_center = old_div((father.x + mother.x), 2.0)
+        parents_center = (father.x + mother.x) / 2.0
 
         offset = parents_center - children_center
 
@@ -406,7 +400,7 @@ class Layout(object):
         start_x = self._id_to_position[some_child].x
         end_x = self._id_to_position[sibship[len(sibship) - 1]].x
 
-        children_center = old_div((start_x + end_x), 2.0)
+        children_center = (start_x + end_x) / 2.0
 
         mother = some_child.parents.mother
         father = some_child.parents.father
@@ -418,7 +412,7 @@ class Layout(object):
         if mother_position.x > father_position.x:
             ordered_parents = [father_position, mother_position]
 
-        parents_center = old_div((mother_position.x + father_position.x), 2.0)
+        parents_center = (mother_position.x + father_position.x) / 2.0
 
         offset = children_center - parents_center
         if offset > 0:

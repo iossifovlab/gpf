@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from __future__ import division
-
 import numpy as np
 from copy import deepcopy
 from collections import OrderedDict

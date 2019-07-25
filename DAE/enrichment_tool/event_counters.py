@@ -3,9 +3,6 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-from builtins import object
-
 import itertools
 
 from variants.attributes import Sex

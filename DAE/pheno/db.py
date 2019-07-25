@@ -3,8 +3,6 @@ Created on Jul 24, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-from builtins import object
 from sqlalchemy import MetaData, create_engine
 from sqlalchemy import Table, Column, Integer, String, Float, Enum, \
     ForeignKey

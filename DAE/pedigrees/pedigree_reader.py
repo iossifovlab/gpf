@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import csv
 from collections import OrderedDict
 from pedigrees.pedigrees import Pedigree, PedigreeMember
