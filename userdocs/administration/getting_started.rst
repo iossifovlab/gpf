@@ -26,7 +26,7 @@ from Github:
 
 .. code-block:: bash
 
-    git clone --single-branch --branch variants git@github.com:seqpipe/gpf.git
+    git clone --single-branch --branch variants git@github.com:iossifovlab/gpf.git
 
 
 Setup GPF Development Environment
