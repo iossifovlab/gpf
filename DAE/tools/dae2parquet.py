@@ -36,7 +36,8 @@ def get_contigs(tabixfilename):
 
 
 def dae_build_transmitted(
-        dae_config, annotation_pipeline, argv, defaults={}):
+        dae_config, annotation_pipeline, argv, defaults={},
+        study_id=None, filesystem=None):
 
     config = Configure.from_dict({
         "dae": {
@@ -72,14 +73,15 @@ def dae_build_transmitted(
 
     impala_config = Configure.from_prefix_impala(
         argv.output, bucket_index=argv.bucket_index,
-        db=None, study_id=None).impala
+        db=None, study_id=study_id).impala
 
     variants_iterator_to_parquet(
         fvars,
         impala_config,
         bucket_index=argv.bucket_index,
         rows=argv.rows,
-        annotation_schema=annotation_schema
+        annotation_pipeline=annotation_pipeline,
+        filesystem=filesystem
     )
 
 
@@ -154,9 +156,6 @@ def import_dae_denovo(
     impala_config = Configure.from_prefix_impala(
         output, bucket_index=bucket_index, db=None, study_id=study_id).impala
     print("converting into ", impala_config, file=sys.stderr)
-
-    annotation_schema = ParquetSchema()
-    annotation_pipeline.collect_annotator_schema(annotation_schema)
 
     return variants_iterator_to_parquet(
         fvars,
