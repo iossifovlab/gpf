@@ -1,5 +1,4 @@
 
-
 export PATH=${DAE_SOURCE_DIR}/tools:$PATH
 export PATH=${DAE_SOURCE_DIR}/tests:$PATH
 export PATH=${DAE_SOURCE_DIR}/annotation:$PATH
