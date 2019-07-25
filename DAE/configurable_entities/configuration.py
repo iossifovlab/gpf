@@ -130,7 +130,7 @@ class DAEConfig(object):
             if sections.configs.get(cls.GENOMIC_SCORES_SECTION, None) is None:
                 sections.configs[cls.GENOMIC_SCORES_SECTION] = {}
             sections.configs[cls.GENOMIC_SCORES_SECTION]['scores_hg38_dir'] = \
-                dae_scores_hg19_dir
+                dae_scores_hg38_dir
 
         if impala_host is not None:
             if sections.configs.get(cls.IMPALA_SECTION, None) is None:
