@@ -38,47 +38,8 @@ The pedigree data may require preparation beforehand. This section describes the
 
 In some cases, the initial pedigree file must be expanded with additional individuals in order to correctly form some families. Following that, individuals must be connected to their parents from the newly added individuals.
 
-Next, we need to replace the values in the role, sex and status columns with those used by the GPF system.
-
-The following are valid status values:
-
-- '0': unknown
-- '1': unaffected
-- '2': affected
-
-Any other value will indicate unknown status.
-
-The following are valid sex values:
-
-- '0' or 'U' or 'unspecified'
-- '1' or 'M' or 'male'
-- '2' or 'F' or 'female'
-
-The following are valid role names: 
-
-- maternal_grandmother
-- maternal_grandfather
-- paternal_grandmother
-- paternal_grandfather
-- mom
-- dad
-- parent
-- prb
-- sib
-- child
-- maternal_half_sibling
-- paternal_half_sibling
-- half_sibling
-- maternal_aunt
-- maternal_uncle
-- paternal_aunt
-- paternal_uncle
-- maternal_cousin
-- paternal_cousin
-- step_mom
-- step_dad
-- spouse
-- unknown
+Next, we need to replace the values in the sex, role and status columns with those used by the GPF system -
+:ref:`sex <allowed_values_sex>`, :ref:`role <allowed_values_role>`, :ref:`status <allowed_values_status>`.
 
 Adding the layout column
 ########################
