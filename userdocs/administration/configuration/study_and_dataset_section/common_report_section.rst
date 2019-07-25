@@ -40,49 +40,8 @@ effect_groups
 This property defines a list of effect groups for the ``De Novo Variants``
 section of the common report. The effect groups are part of the variants
 query. Possible options for the effect groups and effect types that they contain
-are:
+are listed :ref:`here <allowed_values_gene_effect_groups>`.
 
-* Coding
-    * Nonsense
-    * Frame-shift
-    * Splice-site
-    * No-frame-shift-newStop
-    * Missense
-    * No-frame-shift
-    * noStart
-    * noEnd
-    * Synonymous
-
-* Noncoding
-    * Non coding
-    * Intron
-    * Intergenic
-    * 3'-UTR
-    * 5'-UTR
-
-* CNV
-    * CNV+
-    * CNV
-
-* LGDs
-    * Frame-shift
-    * Nonsense
-    * Splice-site
-    * No-frame-shift-newStop
-
-* Nonsynonymous
-    * Nonsense
-    * Frame-shift
-    * Splice-site
-    * No-frame-shift-newStop
-    * Missense
-    * No-frame-shift
-    * noStart
-    * noEnd
-
-* UTRs
-    * 3'-UTR
-    * 5'-UTR
 
 effect_types
 ------------
@@ -93,58 +52,20 @@ effect_types
 
 This property defines a list of effect types for the ``De Novo Variants`` section
 of the common report. The effect types are part of the variants query.
-Possible options for effect types are:
+Possible options for effect types are listed :ref:`here <allowed_values_gene_effect_types>`.
 
-* 3'UTR
 
-* 3'UTR-intron
-
-* 5'UTR
-
-* 5'UTR-intron
-
-* frame-shift
-
-* intergenic
-
-* intron
-
-* missense
-
-* no-frame-shift
-
-* no-frame-shift-newStop
-
-* noEnd
-
-* noStart
-
-* non-coding
-
-* non-coding-intron
-
-* nonsense
-
-* splice-site
-
-* synonymous
-
-* CDS
-
-* CNV+
-
-* CNV-
 
 draw_all_families
 -----------------
 
 .. code-block:: ini
 
-  draw_all_families = {<yes/Yes/true/True> or <no/No/false/False>}
+  draw_all_families = {boolean}
 
 This property defines whether to draw all families in the
 ``Families by pedigree`` section of the common report. This property takes
-one of the boolean values shown above.
+a :ref:`boolean <allowed_values_booleans>` value.
 
 count_of_families_for_show_id
 -----------------------------
@@ -163,7 +84,7 @@ enabled
 
 .. code-block:: ini
 
-  enabled = {<yes/Yes/true/True> or <no/No/false/False>}
+  enabled = {boolean}
 
 This property enables the common report functionality for the study.
-It takes one of the boolean values shown above.
+This property takes a :ref:`boolean <allowed_values_booleans>` value.

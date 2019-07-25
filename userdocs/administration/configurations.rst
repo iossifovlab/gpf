@@ -13,3 +13,4 @@ System Configuration
    configuration/pheno
    configuration/regression
    configuration/study_and_dataset_configuration
+   configuration/allowed_values

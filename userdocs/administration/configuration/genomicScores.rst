@@ -66,7 +66,6 @@ yscale
   yscale = {linear / log}
 
 The scale for the Y axis of the score's histogram.
-Must be either ``linear`` or ``log``.
 
 xscale
 ######
@@ -76,7 +75,6 @@ xscale
   xscale = {linear / log}
 
 The scale for the X axis of the score's histogram.
-Must be either ``linear`` or ``log``.
 
 range
 #####
