@@ -1,6 +1,3 @@
-from __future__ import print_function
-from builtins import next
-
 import json
 
 from guardian.models import Group

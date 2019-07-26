@@ -1,4 +1,3 @@
-# from __future__ import unicode_literals
 import pandas as pd
 
 from rest_framework.views import APIView

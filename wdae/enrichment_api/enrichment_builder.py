@@ -3,9 +3,6 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-from builtins import object
-
 from enrichment_tool.genotype_helper import GenotypeHelper
 
 

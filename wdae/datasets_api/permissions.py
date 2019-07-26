@@ -3,7 +3,6 @@ Created on Jul 5, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 from rest_framework import permissions
 
 from datasets_api.studies_manager import get_studies_manager

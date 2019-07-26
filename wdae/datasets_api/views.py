@@ -3,7 +3,6 @@ Created on Jan 20, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status

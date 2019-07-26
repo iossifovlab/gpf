@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from datasets_api.studies_manager import get_studies_manager
 
 from common.query_base import GeneSymsMixin

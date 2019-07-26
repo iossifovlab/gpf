@@ -3,9 +3,6 @@ Created on Mar 30, 2017
 
 @author: lubo
 '''
-from __future__ import division
-from __future__ import unicode_literals
-from past.utils import old_div
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import NotAuthenticated
@@ -100,8 +97,8 @@ class PhenoMeasureHistogramView(QueryBaseView):
                 "max": max(bins),
                 "bars": bars,
                 "bins": bins,
-                "step": old_div(
-                    (measure.max_value - measure.min_value), 1000.0),
+                "step": \
+                    (measure.max_value - measure.min_value) / 1000.0,
             }
             return Response(result, status=status.HTTP_200_OK)
 
@@ -152,13 +149,13 @@ class PhenoMeasurePartitionsView(QueryBaseView):
             res = {
                 "left": {
                     "count": len(ldf),
-                    "percent": old_div(len(ldf), total)
+                    "percent": len(ldf) / total
                 }, "mid": {
                     "count": len(mdf),
-                    "percent": old_div(len(mdf), total)
+                    "percent": len(mdf) / total
                 }, "right": {
                     "count": len(rdf),
-                    "percent": old_div(len(rdf), total)
+                    "percent": len(rdf) / total
                 }
             }
             return Response(res)

@@ -3,12 +3,6 @@ Created on Dec 10, 2015
 
 @author: lubo
 '''
-from __future__ import division
-from __future__ import unicode_literals
-from builtins import map
-from builtins import str
-from past.utils import old_div
-
 from rest_framework import views, status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
@@ -134,13 +128,13 @@ class GeneWeightsPartitionsView(views.APIView):
         res = {
             "left": {
                 "count": len(ldf),
-                "percent": old_div(len(ldf), total)
+                "percent": len(ldf) / total
             }, "mid": {
                 "count": len(mdf),
-                "percent": old_div(len(mdf), total)
+                "percent": len(mdf) / total
             }, "right": {
                 "count": len(rdf),
-                "percent": old_div(len(rdf), total)
+                "percent": len(rdf) / total
             }
         }
         return Response(res)

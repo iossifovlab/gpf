@@ -1,9 +1,6 @@
-from __future__ import print_function
-from __future__ import unicode_literals
 import traceback
 import json
 import logging
-from builtins import str
 from collections import Counter
 from rest_framework.response import Response
 from rest_framework.views import APIView

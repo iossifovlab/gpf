@@ -3,7 +3,6 @@ Created on Aug 10, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 from django.db import IntegrityError, transaction
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager, Group

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-from builtins import object
 from django.db import models
 from django.contrib.auth.models import Group
 from guardian.shortcuts import assign_perm
