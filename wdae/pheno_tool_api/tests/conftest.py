@@ -12,7 +12,7 @@ def fixtures_dir():
 
 @pytest.fixture(scope='session')
 def mock_dae_config():
-    return DAEConfig(fixtures_dir())
+    return DAEConfig.make_config(fixtures_dir())
 
 
 @pytest.fixture(scope='session')
