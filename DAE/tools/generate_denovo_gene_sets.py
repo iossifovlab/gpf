@@ -22,7 +22,7 @@ def main(options=None):
 
     args = parser.parse_args(options)
 
-    config = DAEConfig()
+    config = DAEConfig.make_config()
     variants_db = VariantsDb(config)
     dgscf = DenovoGeneSetCollectionFacade(variants_db)
 

@@ -20,7 +20,7 @@ class PhenoFactory(object):
     def __init__(self, dae_config=None):
         super(PhenoFactory, self).__init__()
         if dae_config is None:
-            dae_config = DAEConfig()
+            dae_config = DAEConfig.make_config()
 
         self.config = PhenoConfig.from_dae_config(dae_config)
 
