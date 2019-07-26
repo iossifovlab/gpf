@@ -2,6 +2,8 @@ FROM continuumio/miniconda3
 
 ARG SOURCE_DIR="."
 
+WORKDIR ${SOURCE_DIR}
+
 RUN mkdir /data && mkdir /spark-home && mkdir /code
 
 RUN apt-get update --fix-missing && \ 
