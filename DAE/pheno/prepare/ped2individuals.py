@@ -49,7 +49,7 @@ class PedigreeMember(object):
         return self.role != Role.unknown
 
 
-class CsvPedigreeReader(with_metaclass(abc.ABCMeta, object)):
+class CsvPedigreeReader(abc.ABCMeta, object):
     @abc.abstractmethod
     def convert_individual_id(self, family_id, individual_id):
         raise NotImplementedError()

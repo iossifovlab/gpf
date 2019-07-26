@@ -190,7 +190,7 @@ class MatingUnit(object):
         self.father.mating_units.append(self)
 
 
-class CsvIndividualsReader(with_metaclass(abc.ABCMeta, object)):
+class CsvIndividualsReader(abc.ABCMeta, object):
     @abc.abstractmethod
     def convert_individual_id(self, family_id, individual_id):
         raise NotImplementedError()

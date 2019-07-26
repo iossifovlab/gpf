@@ -346,7 +346,7 @@ class FamilyConnections(object):
                     for mu in list(self.id_to_mating_unit.values())])
 
 
-class IndividualGroup(with_metaclass(abc.ABCMeta, object)):
+class IndividualGroup(abc.ABCMeta, object):
     @abc.abstractmethod
     def individual_set(self):
         return {}

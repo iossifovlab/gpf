@@ -38,6 +38,16 @@ def save_annotation_to_csv(annot_df, filename, sep="\t"):
     )
 
 
+class VCFVariantWrapper(object):
+    def __init__(self, v):
+        self.v = v
+        gt = np.array(v.genotypes, dtype=np.int8)
+        gt = gt[:, 0:2]
+        self.gt = gt.T
+    
+    def __getattr__(self, name):
+        return getattr(self.v, name)
+
 class VCFWrapper(object):
 
     def __init__(self, filename, region=None):
@@ -61,9 +71,11 @@ class VCFWrapper(object):
     def vars(self):
         if self._vars is None:
             if self.region:
-                self._vars = list(self.vcf(self.region))
+                self._vars = list(
+                    map(VCFVariantWrapper, self.vcf(self.region)))
             else:
-                self._vars = list(self.vcf)
+                self._vars = list(
+                    map(VCFVariantWrapper, self.vcf))
         return self._vars
 
 

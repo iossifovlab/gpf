@@ -13,7 +13,7 @@ pipeline {
     stage('Setup') {
       steps {
         sh """
-            ./jenkins_build_container.sh
+            docker build . -f Dockerfile -t iossifovlab/gpf-base:${BRANCH_NAME}
         """
       }
     }

@@ -1,31 +1,13 @@
-FROM continuumio/miniconda3
-
-RUN mkdir /data && mkdir /spark-home && mkdir /code
+FROM amd64/ubuntu:18.04
 
 RUN apt-get update --fix-missing && \ 
 	apt-get install -y build-essential default-libmysqlclient-dev gcc \
-        libgl1-mesa-glx openjdk-8-jdk-headless procps vim libsasl2-dev && \
+        libgl1-mesa-glx openjdk-8-jdk-headless procps vim libsasl2-dev \
+        wget && \
 	apt-get clean
 
-ADD ./python3-environment.yml /
-ADD ./docker-container/etc/core-site.xml /core-site.xml
-
-RUN conda env update -n base -f /python3-environment.yml && \
-    conda install -c conda-forge pyarrow=0.13.0 && \
-	conda install -y flake8 && \
-	conda clean --all -y && \
-	# FIXME: should setup env with local versions somewhere else
-	pip install git+git://github.com/seqpipe/cyvcf2 && \
-	rm -r ~/.cache/pip
-
-ENV DAE_SOURCE_DIR="/code/DAE"
-ENV DAE_DB_DIR="/data"
-ENV PYTHONPATH="$DAE_SOURCE_DIR:$PYTHONPATH"
-
-ENV SPARK_HOME="/spark-home"
-ENV THRIFTSERVER_PORT="60008"
-
 # HADOOP
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 ENV HADOOP_VER 3.0.2
 
 ENV HADOOP_HOME /opt/hadoop
@@ -33,14 +15,39 @@ ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
 
 ENV PATH $HADOOP_HOME/bin:$PATH
 
-RUN wget http://it.apache.contactlab.it/hadoop/core/hadoop-${HADOOP_VER}/hadoop-${HADOOP_VER}.tar.gz
-RUN tar -xvf hadoop-$HADOOP_VER.tar.gz -C ..; \
+RUN wget --quiet http://it.apache.contactlab.it/hadoop/core/hadoop-${HADOOP_VER}/hadoop-${HADOOP_VER}.tar.gz
+RUN tar -xf hadoop-$HADOOP_VER.tar.gz -C ..; \
     mv ../hadoop-${HADOOP_VER} $HADOOP_HOME
 
 ADD ./docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
 
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 
+# ANACONDA
+
+RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2019.07-Linux-x86_64.sh -O /anaconda.sh && \
+    /bin/bash /anaconda.sh -b -p /opt/conda && \
+    rm /anaconda.sh
+
+RUN /opt/conda/bin/conda init
+
+ADD ./conda-environment.yml /
+
+RUN /opt/conda/bin/conda create -c conda-forge -c bioconda \
+    --name gpf --file /conda-environment.yml
+RUN echo "conda activate gpf" >> ~/.bashrc
+
+# PIP
+RUN /opt/conda/envs/gpf/bin/pip install reusables
+
+RUN mkdir /data && mkdir /code
+
+
+ENV DAE_SOURCE_DIR="/code/DAE"
+ENV DAE_DB_DIR="/data"
+ENV PYTHONPATH="$DAE_SOURCE_DIR:$PYTHONPATH"
+
+ENV DAE_IMIPALA_HOST="impala"
+ENV DAE_IMPALA_PORT=21050
 
 WORKDIR /code
 

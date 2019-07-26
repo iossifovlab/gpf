@@ -5,7 +5,7 @@ services:
     image: seqpipe/seqpipe-docker-impala:latest    
 
   tests:
-    image: iossifovlab/gpf-base
+    image: iossifovlab/gpf-base:bump-up-dependencies
     volumes:
       - type: bind
         source: .

@@ -7,9 +7,6 @@ import pandas as pd
 import numpy as np
 
 
-from .raw_vcf import samples_to_alleles_index
-
-
 class VcfAnnotatorBase(object):
 
     def setup(self, family_variants):
@@ -72,9 +69,13 @@ class VcfAlleleFrequencyAnnotator(VcfAnnotatorBase):
 
     def get_variant_full_genotype(self, allele):
         vcf_variant = self.get_vcf_variant(allele)
-        gt = vcf_variant.gt_idxs[
-            samples_to_alleles_index(self.independent_index)]
-        gt = gt.reshape([2, len(self.independent_index)], order='F')
+        # gt = vcf_variant.gt_idxs[
+        #     samples_to_alleles_index(self.independent_index)]
+        # gt = gt.reshape([2, len(self.independent_index)], order='F')
+
+        gt = vcf_variant.gt
+        gt = gt[:, self.independent_index]
+
         unknown = np.any(gt == -1, axis=0)
         gt = gt[:, np.logical_not(unknown)]
 

@@ -198,7 +198,7 @@ class GenomicSequence_Ivan(object):
             (start-1) / self._Indexing[chrom]['seqLineLength'])
 
         ll = stop-start+1
-        x = 1 + ll / self._Indexing[chrom]['seqLineLength']
+        x = 1 + ll // self._Indexing[chrom]['seqLineLength']
 
         w = self.__f.read(ll + x)
         w = w.replace("\n", "")[:ll]
