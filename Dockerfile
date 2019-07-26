@@ -27,9 +27,10 @@ ADD ./docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
 
 RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2019.07-Linux-x86_64.sh -O /anaconda.sh && \
     /bin/bash /anaconda.sh -b -p /opt/conda && \
+    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/ && \
     rm /anaconda.sh
 
-RUN /opt/conda/bin/conda init
+RUN /opt/conda/bin/conda init bash
 
 ADD ./conda-environment.yml /
 
@@ -46,6 +47,7 @@ RUN mkdir /data && mkdir /code
 ENV DAE_SOURCE_DIR="/code/DAE"
 ENV DAE_DB_DIR="/data"
 ENV PYTHONPATH="$DAE_SOURCE_DIR:$PYTHONPATH"
+ENV PATH /opt/conda/envs/gpf/bin:/opt/conda/bin:$PATH
 
 ENV DAE_IMIPALA_HOST="impala"
 ENV DAE_IMPALA_PORT=21050
