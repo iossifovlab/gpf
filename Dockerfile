@@ -10,14 +10,15 @@ RUN apt-get update --fix-missing && \
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 ENV HADOOP_VER 3.0.2
 
+RUN wget --quiet http://it.apache.contactlab.it/hadoop/core/hadoop-${HADOOP_VER}/hadoop-${HADOOP_VER}.tar.gz
+RUN tar -xf hadoop-$HADOOP_VER.tar.gz -C ..; \
+    mv ../hadoop-${HADOOP_VER} /opt/hadoop
+
 ENV HADOOP_HOME /opt/hadoop
 ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
 
 ENV PATH $HADOOP_HOME/bin:$PATH
-
-RUN wget --quiet http://it.apache.contactlab.it/hadoop/core/hadoop-${HADOOP_VER}/hadoop-${HADOOP_VER}.tar.gz
-RUN tar -xf hadoop-$HADOOP_VER.tar.gz -C ..; \
-    mv ../hadoop-${HADOOP_VER} $HADOOP_HOME
+ENV LD_LIBRARY_PATH $HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
 
 ADD ./docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
 
