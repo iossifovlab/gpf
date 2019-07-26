@@ -250,7 +250,7 @@ class OffsetLayoutDrawer(object):
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
                     axes.add_patch(mpatches.Circle(
-                        coords, individual.size // 2,
+                        coords, individual.size / 2,
                         facecolor=individual_color, edgecolor="black"))
 
                     cx = coords[0]
