@@ -37,7 +37,7 @@ def datasets_dir():
 
 @pytest.fixture(scope='session')
 def dae_config_fixture():
-    dae_config = DAEConfig(fixtures_dir())
+    dae_config = DAEConfig.make_config(fixtures_dir())
     return dae_config
 
 

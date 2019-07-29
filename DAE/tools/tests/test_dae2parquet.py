@@ -28,7 +28,7 @@ def test_dae2parquet_denovo(
         dae_denovo_config.family_filename,
         dae_denovo_config.denovo_filename,
     ]
-    dae_config = DAEConfig()
+    dae_config = DAEConfig.make_config()
 
     argv = parse_cli_arguments(dae_config, argv)
 
@@ -86,7 +86,7 @@ def test_dae2parquet_transmitted(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
     ]
-    dae_config = DAEConfig()
+    dae_config = DAEConfig.make_config()
 
     argv = parse_cli_arguments(dae_config, argv)
 
@@ -145,7 +145,7 @@ def test_dae2parquet_make(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
     ]
-    dae_config = DAEConfig()
+    dae_config = DAEConfig.make_config()
 
     argv = parse_cli_arguments(dae_config, argv)
 
@@ -171,7 +171,7 @@ def dae_iossifov2014_thrift(
             config.family_filename,
             config.denovo_filename,
         ]
-        dae_config = DAEConfig()
+        dae_config = DAEConfig.make_config()
 
         argv = parse_cli_arguments(dae_config, argv)
 

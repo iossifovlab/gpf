@@ -61,7 +61,8 @@ pipeline {
            coberturaReportFile: 'coverage/coverage.xml'])
       warnings(
         parserConfigurations: [[parserName: 'PyLint', pattern: 'pyflakes.report']],
-        excludePattern: '.*site-packages.*'
+        excludePattern: '.*site-packages.*',
+        usePreviousBuildAsReference: true,
       )
     }
     success {

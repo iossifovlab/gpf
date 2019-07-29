@@ -20,7 +20,7 @@ def fixturedir():
 @pytest.fixture
 def dae_config(fixturedir):
     filename = "dae_test.conf"
-    config = DAEConfig(
+    config = DAEConfig.make_config(
         dae_data_dir=fixturedir, dae_conf_filename=filename,
         environment_override=False)
     return config
@@ -111,3 +111,126 @@ def test_dae_config_hdfs(fixturedir, dae_config):
     assert dae_config.hdfs_host == 'localhost'
     assert dae_config.hdfs_port == 8020
     assert dae_config.hdfs_base_dir == '/tmp/test_data'
+
+
+def test_dae_config_override_environment(monkeypatch, fixturedir):
+    scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
+    scores_hg38_dir = os.path.join(fixturedir, 'genomic_scores_db/hg38')
+
+    envs = {
+        'DAE_GENOMIC_SCORES_HG19': scores_hg19_dir,
+        'DAE_GENOMIC_SCORES_HG38': scores_hg38_dir,
+        'DAE_IMPALA_HOST': '127.0.0.1',
+        'DAE_IMPALA_PORT': '1024',
+        'DAE_IMPALA_DB': 'test-impala-db',
+        'DAE_HDFS_HOST': '10.0.0.1',
+        'DAE_HDFS_PORT': '2048'
+    }
+    monkeypatch.setattr(os, 'environ', envs)
+
+    filename = "dae_test.conf"
+    config = DAEConfig.make_config(
+        dae_data_dir=fixturedir, dae_conf_filename=filename,
+        environment_override=True
+    )
+
+    assert config.dae_data_dir == fixturedir
+
+    assert config.genomic_scores_hg19_dir == scores_hg19_dir
+    assert config.genomic_scores_hg38_dir == scores_hg38_dir
+    assert config.impala_host == '127.0.0.1'
+    assert config.impala_port == 1024
+    assert config.impala_db == 'test-impala-db'
+    assert config.hdfs_host == '10.0.0.1'
+    assert config.hdfs_port == 2048
+
+
+def test_dae_config_non_override_environment(monkeypatch, fixturedir):
+    scores_dir = os.path.join(fixturedir, 'genomic_scores_db')
+    scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
+    scores_hg38_dir = os.path.join(fixturedir, 'genomic_scores_db/hg38')
+
+    envs = {
+        'DAE_GENOMIC_SCORES_HG19': scores_hg19_dir,
+        'DAE_GENOMIC_SCORES_HG38': scores_hg38_dir,
+        'DAE_IMPALA_HOST': '127.0.0.1',
+        'DAE_IMPALA_PORT': '1024',
+        'DAE_IMPALA_DB': 'test-impala-db',
+        'DAE_HDFS_HOST': '10.0.0.1',
+        'DAE_HDFS_PORT': '2048'
+    }
+    monkeypatch.setattr(os, 'environ', envs)
+
+    filename = "dae_test.conf"
+    config = DAEConfig.make_config(
+        dae_data_dir=fixturedir, dae_conf_filename=filename,
+        environment_override=False
+    )
+
+    assert config.dae_data_dir == fixturedir
+
+    assert config.genomic_scores_hg19_dir == scores_dir
+    assert config.genomic_scores_hg38_dir == scores_dir
+    assert config.impala_host is None
+    assert config.impala_port == 21050
+    assert config.impala_db == 'gpf_variant_db'
+    assert config.hdfs_host == 'localhost'
+    assert config.hdfs_port == 8020
+
+
+def test_dae_config_override_params(fixturedir):
+    scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
+    scores_hg38_dir = os.path.join(fixturedir, 'genomic_scores_db/hg38')
+    filename = "dae_test.conf"
+    config = DAEConfig.make_config(
+        dae_data_dir=fixturedir, dae_conf_filename=filename,
+        environment_override=False, dae_scores_hg19_dir=scores_hg19_dir,
+        dae_scores_hg38_dir=scores_hg38_dir, impala_host='127.0.0.1',
+        impala_port='1024', impala_db='test-impala-db', hdfs_host='10.0.0.1',
+        hdfs_port='2048'
+    )
+
+    assert config.dae_data_dir == fixturedir
+
+    assert config.genomic_scores_hg19_dir == scores_hg19_dir
+    assert config.genomic_scores_hg38_dir == scores_hg38_dir
+    assert config.impala_host == '127.0.0.1'
+    assert config.impala_port == 1024
+    assert config.impala_db == 'test-impala-db'
+    assert config.hdfs_host == '10.0.0.1'
+    assert config.hdfs_port == 2048
+
+
+def test_dae_config_override_environment_and_params(monkeypatch, fixturedir):
+    scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
+    scores_hg38_dir = os.path.join(fixturedir, 'genomic_scores_db/hg38')
+
+    envs = {
+        'DAE_GENOMIC_SCORES_HG19': 'scores_hg19_dir',
+        'DAE_GENOMIC_SCORES_HG38': 'scores_hg38_dir',
+        'DAE_IMPALA_HOST': '0.0.0.1',
+        'DAE_IMPALA_PORT': '0001',
+        'DAE_IMPALA_DB': 'impala-db',
+        'DAE_HDFS_HOST': '1.0.0.1',
+        'DAE_HDFS_PORT': '0000'
+    }
+    monkeypatch.setattr(os, 'environ', envs)
+
+    filename = "dae_test.conf"
+    config = DAEConfig.make_config(
+        dae_data_dir=fixturedir, dae_conf_filename=filename,
+        environment_override=True, dae_scores_hg19_dir=scores_hg19_dir,
+        dae_scores_hg38_dir=scores_hg38_dir, impala_host='127.0.0.1',
+        impala_port='1024', impala_db='test-impala-db', hdfs_host='10.0.0.1',
+        hdfs_port='2048'
+    )
+
+    assert config.dae_data_dir == fixturedir
+
+    assert config.genomic_scores_hg19_dir == scores_hg19_dir
+    assert config.genomic_scores_hg38_dir == scores_hg38_dir
+    assert config.impala_host == '127.0.0.1'
+    assert config.impala_port == 1024
+    assert config.impala_db == 'test-impala-db'
+    assert config.hdfs_host == '10.0.0.1'
+    assert config.hdfs_port == 2048

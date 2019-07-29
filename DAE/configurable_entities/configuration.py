@@ -66,46 +66,101 @@ class DAEConfig(object):
     DEFAULT_CONFIGURATION_SECTION = 'defaultConfiguration'
 
     def __init__(
-        self, dae_data_dir=None,
-        dae_scores_hg19_dir=None, dae_scores_hg38_dir=None,
-            dae_conf_filename="DAE.conf", environment_override=True):
+        self, dae_data_dir, dae_scores_hg19_dir, dae_scores_hg38_dir,
+            sections):
+        self._dae_data_dir = dae_data_dir
+        self._dae_scores_hg19_dir = dae_scores_hg19_dir
+        self._dae_scores_hg38_dir = dae_scores_hg38_dir
+        self.sections = sections
 
+    @classmethod
+    def make_config(
+        cls, dae_data_dir=None, dae_scores_hg19_dir=None,
+        dae_scores_hg38_dir=None, dae_conf_filename="DAE.conf",
+        environment_override=True, impala_host=None, impala_port=None,
+            impala_db=None, hdfs_host=None, hdfs_port=None):
         if dae_data_dir is None:
             dae_data_dir = os.environ.get('DAE_DB_DIR', None)
         assert dae_data_dir is not None
-        self._dae_data_dir = os.path.abspath(dae_data_dir)
-        assert os.path.exists(self._dae_data_dir)
-        assert os.path.isdir(self._dae_data_dir)
+        dae_data_dir = os.path.abspath(dae_data_dir)
+        assert os.path.exists(dae_data_dir)
+        assert os.path.isdir(dae_data_dir)
 
         if environment_override:
-            dae_scores_hg19_dir = os.environ.get(
-                'DAE_GENOMIC_SCORES_HG19',
-                dae_scores_hg19_dir)
-            dae_scores_hg38_dir = os.environ.get(
-                'DAE_GENOMIC_SCORES_HG38',
-                dae_scores_hg19_dir)
+            if dae_scores_hg19_dir is None:
+                dae_scores_hg19_dir = os.environ.get(
+                    'DAE_GENOMIC_SCORES_HG19', None)
 
-        self._dae_scores_hg19_dir = None
+            if dae_scores_hg38_dir is None:
+                dae_scores_hg38_dir = os.environ.get(
+                    'DAE_GENOMIC_SCORES_HG38', None)
+
+            if impala_host is None:
+                impala_host = os.environ.get('DAE_IMPALA_HOST', None)
+
+            if impala_port is None:
+                impala_port = os.environ.get('DAE_IMPALA_PORT', None)
+
+            if impala_db is None:
+                impala_db = os.environ.get('DAE_IMPALA_DB', None)
+
+            if hdfs_host is None:
+                hdfs_host = os.environ.get('DAE_HDFS_HOST', None)
+
+            if hdfs_port is None:
+                hdfs_port = os.environ.get('DAE_HDFS_PORT', None)
+
+        filename = os.path.join(dae_data_dir, dae_conf_filename)
+        sections = ConfigSectionDefinition(filename, work_dir=dae_data_dir)
+        assert sections is not None
+
         if dae_scores_hg19_dir is not None:
-            self._dae_scores_hg19_dir = os.path.abspath(
-                dae_scores_hg19_dir)
-            assert os.path.exists(self._dae_scores_hg19_dir)
-            assert os.path.isdir(self._dae_scores_hg19_dir)
+            dae_scores_hg19_dir = os.path.abspath(dae_scores_hg19_dir)
+            assert os.path.exists(dae_scores_hg19_dir)
+            assert os.path.isdir(dae_scores_hg19_dir)
+            if sections.configs.get(cls.GENOMIC_SCORES_SECTION, None) is None:
+                sections.configs[cls.GENOMIC_SCORES_SECTION] = {}
+            sections.configs[cls.GENOMIC_SCORES_SECTION]['scores_hg19_dir'] = \
+                dae_scores_hg19_dir
 
-        self._dae_scores_hg38_dir = None
         if dae_scores_hg38_dir is not None:
-            self._dae_scores_hg38_dir = os.path.abspath(
-                dae_scores_hg38_dir)
-            assert os.path.exists(self._dae_scores_hg38_dir)
-            assert os.path.isdir(self._dae_scores_hg38_dir)
+            dae_scores_hg38_dir = os.path.abspath(dae_scores_hg38_dir)
+            assert os.path.exists(dae_scores_hg38_dir)
+            assert os.path.isdir(dae_scores_hg38_dir)
+            if sections.configs.get(cls.GENOMIC_SCORES_SECTION, None) is None:
+                sections.configs[cls.GENOMIC_SCORES_SECTION] = {}
+            sections.configs[cls.GENOMIC_SCORES_SECTION]['scores_hg38_dir'] = \
+                dae_scores_hg38_dir
 
-        self.dae_conf_filename = dae_conf_filename
+        if impala_host is not None:
+            if sections.configs.get(cls.IMPALA_SECTION, None) is None:
+                sections.configs[cls.IMPALA_SECTION] = {}
+            sections.configs[cls.IMPALA_SECTION][cls.IMPALA_HOST] = impala_host
 
-        filename = os.path.join(self.dae_data_dir, self.dae_conf_filename)
-        self.sections = ConfigSectionDefinition(
-            filename, work_dir=self.dae_data_dir
+        if impala_port is not None:
+            if sections.configs.get(cls.IMPALA_SECTION, None) is None:
+                sections.configs[cls.IMPALA_SECTION] = {}
+            sections.configs[cls.IMPALA_SECTION][cls.IMPALA_PORT] = impala_port
+
+        if impala_db is not None:
+            if sections.configs.get(cls.IMPALA_SECTION, None) is None:
+                sections.configs[cls.IMPALA_SECTION] = {}
+            sections.configs[cls.IMPALA_SECTION][cls.IMPALA_DB] = impala_db
+
+        if hdfs_host is not None:
+            if sections.configs.get(cls.HDFS_SECTION, None) is None:
+                sections.configs[cls.HDFS_SECTION] = {}
+            sections.configs[cls.HDFS_SECTION][cls.HDFS_HOST] = hdfs_host
+
+        if hdfs_port is not None:
+            if sections.configs.get(cls.HDFS_SECTION, None) is None:
+                sections.configs[cls.HDFS_SECTION] = {}
+            sections.configs[
+                cls.HDFS_SECTION][cls.HDFS_PORT] = hdfs_port
+
+        return DAEConfig(
+            dae_data_dir, dae_scores_hg19_dir, dae_scores_hg38_dir, sections
         )
-        assert self.sections is not None
 
     def _get_config_value(self, section_id, attr_name, default_value=None):
         if section_id not in self.sections.get_all_section_ids():
@@ -211,23 +266,13 @@ class DAEConfig(object):
 
     @property
     def genomic_scores_hg19_dir(self):
-        if self._dae_scores_hg19_dir:
-            return self._dae_scores_hg19_dir
-        else:
-            return self._get_config_value(
-                self.GENOMIC_SCORES_SECTION,
-                'scores_hg19_dir',
-                self._dae_scores_hg19_dir)
+        return self._get_config_value(
+            self.GENOMIC_SCORES_SECTION, 'scores_hg19_dir', None)
 
     @property
     def genomic_scores_hg38_dir(self):
-        if self._dae_scores_hg38_dir:
-            return self._dae_scores_hg38_dir
-        else:
-            return self._get_config_value(
-                self.GENOMIC_SCORES_SECTION,
-                'scores_hg38_dir',
-                self._dae_scores_hg38_dir)
+        return self._get_config_value(
+            self.GENOMIC_SCORES_SECTION, 'scores_hg38_dir', None)
 
     def annotation_section(self):
         return self.sections.get_section_config(self.ANNOTATION_SECTION)

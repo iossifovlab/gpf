@@ -24,8 +24,8 @@ class PhenoToolView(APIView):
     def __init__(self):
         self._variants_db = get_studies_manager().get_variants_db()
 
-    @classmethod
-    def get_result_by_sex(cls, result, sex):
+    @staticmethod
+    def get_result_by_sex(result, sex):
         return {
             "negative": {
                 "count": result[sex].negative_count,
@@ -50,9 +50,13 @@ class PhenoToolView(APIView):
         }
 
     def prepare_pheno_tool(self, data):
-        helper = PhenoToolHelper(
-            self._variants_db.get_wdae_wrapper(data['datasetId'])
-        )
+        study_wrapper = self._variants_db.get_wdae_wrapper(data['datasetId'])
+
+        if not (study_wrapper and
+                study_wrapper.pheno_db.has_measure(data['measureId'])):
+            return None, None
+
+        helper = PhenoToolHelper(study_wrapper)
 
         pheno_filter_persons = \
             helper.pheno_filter_persons(data.get('phenoFilters'))
@@ -98,6 +102,10 @@ class PhenoToolView(APIView):
         data = request.data
         try:
             helper, tool = self.prepare_pheno_tool(data)
+
+            if not (helper and tool):
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
             people_variants = helper.study_variants(data)
 
             results = [self.calc_by_effect(effect, tool,

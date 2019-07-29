@@ -236,7 +236,7 @@ def main_cli_options(dae_config):
 
 
 def pipeline_main(argv):
-    dae_config = DAEConfig()
+    dae_config = DAEConfig.make_config()
 
     desc = "Program to annotate variants combining multiple annotating tools"
     parser = argparse.ArgumentParser(

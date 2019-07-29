@@ -35,7 +35,7 @@ class StudiesManager(object):
 
     def __init__(self, dae_config=None):
         if dae_config is None:
-            dae_config = DAEConfig()
+            dae_config = DAEConfig.make_config()
         self.dae_config = dae_config
         self.vdb = None
 

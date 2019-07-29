@@ -35,7 +35,7 @@ class PhenoConfig(object):
     @staticmethod
     def from_file(filename=None):
         if filename is None:
-            dae_config = DAEConfig()
+            dae_config = DAEConfig.make_config()
             return PhenoConfig.from_dae_config(dae_config)
         return PhenoConfig([pheno_confbox(filename)])
 

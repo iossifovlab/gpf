@@ -30,6 +30,7 @@ class PhenoToolHelper(object):
     """
 
     def __init__(self, study):
+        assert study
         self.study = study
         self.effect_types_mixin = EffectTypesMixin()
 
