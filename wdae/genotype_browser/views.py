@@ -3,11 +3,6 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import map
-from builtins import str
-
 from django.http.response import StreamingHttpResponse
 from rest_framework import views, status
 from rest_framework.response import Response

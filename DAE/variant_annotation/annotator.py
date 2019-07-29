@@ -1,6 +1,3 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from builtins import object
 from .gene_codes import NuclearCode
 from .effect_checkers.coding import CodingEffectChecker
 from .effect_checkers.promoter import PromoterEffectChecker

@@ -3,7 +3,6 @@ Created on Jun 3, 2015
 
 @author: lubo
 '''
-from __future__ import absolute_import
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 import csv

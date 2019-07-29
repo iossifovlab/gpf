@@ -1,6 +1,3 @@
-from future import standard_library
-standard_library.install_aliases()  # noqa
-
 from configparser import ConfigParser
 from box import Box
 from collections import OrderedDict
@@ -49,7 +46,7 @@ class ScoreLoader(object):
     def __init__(self, daeConfig=None, *args, **kwargs):
         super(ScoreLoader, self).__init__(*args, **kwargs)
         if daeConfig is None:
-            daeConfig = DAEConfig()
+            daeConfig = DAEConfig.make_config()
         self.daeConfig = daeConfig
 
         config = ConfigParser({

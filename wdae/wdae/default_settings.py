@@ -1,5 +1,3 @@
-from __future__ import print_function
-from __future__ import unicode_literals
 # Django settings for wdae project.
 import os
 

@@ -3,9 +3,6 @@ Created on Aug 10, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-from builtins import str
-from builtins import object
 import uuid
 
 from django.db import models, transaction

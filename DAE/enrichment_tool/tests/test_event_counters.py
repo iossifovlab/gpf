@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from builtins import str
-
 from variants.attributes import Inheritance
 
 from enrichment_tool.event_counters import \

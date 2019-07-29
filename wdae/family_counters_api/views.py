@@ -3,7 +3,6 @@ Created on Apr 13, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 from rest_framework import status
 from rest_framework.response import Response
 from genotype_browser.views import QueryBaseView

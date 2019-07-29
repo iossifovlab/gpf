@@ -3,8 +3,6 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-
 import pytest
 from common.query_base import EffectTypesMixin
 

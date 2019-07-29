@@ -3,10 +3,6 @@ Created on Dec 8, 2016
 
 @author: lubo
 '''
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
-from builtins import object
 from configurable_entities.configuration import DAEConfig
 from pheno.utils.configuration import PhenoConfig
 import logging
@@ -20,7 +16,7 @@ class PhenoFactory(object):
     def __init__(self, dae_config=None):
         super(PhenoFactory, self).__init__()
         if dae_config is None:
-            dae_config = DAEConfig()
+            dae_config = DAEConfig.make_config()
 
         self.config = PhenoConfig.from_dae_config(dae_config)
 

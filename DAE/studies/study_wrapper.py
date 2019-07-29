@@ -1,8 +1,5 @@
-from __future__ import unicode_literals, print_function, absolute_import
-
 import copy
 import functools
-from builtins import str
 
 import itertools
 

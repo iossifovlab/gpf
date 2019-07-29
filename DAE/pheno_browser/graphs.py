@@ -3,13 +3,6 @@ Created on Apr 10, 2017
 
 @author: lubo
 """
-from __future__ import division
-from __future__ import unicode_literals
-from builtins import zip
-from builtins import str
-from builtins import range
-from past.utils import old_div
-from builtins import object
 import textwrap
 import matplotlib as mpl; mpl.use("PS")  # noqa
 
@@ -202,7 +195,7 @@ def gender_palette():
 
 
 def set_figure_size(figure, x_count):
-    scale = old_div(3.0, 4.0)
+    scale = 3.0 / 4.0
     figure.set_size_inches((8 + x_count) * scale, 8 * scale)
 
 

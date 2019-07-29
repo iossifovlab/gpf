@@ -3,9 +3,6 @@ Created on Nov 29, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-from builtins import object
-
 import numpy as np
 from pheno.common import MeasureType
 

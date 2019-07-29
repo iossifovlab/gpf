@@ -3,7 +3,6 @@ Created on Mar 29, 2018
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 import os
 import shutil
 
@@ -86,7 +85,7 @@ def weights_loader(gene_info_config):
 
 @pytest.fixture(scope='session')
 def dae_config_fixture():
-    dae_config = DAEConfig(fixtures_dir())
+    dae_config = DAEConfig.make_config(fixtures_dir())
     return dae_config
 
 

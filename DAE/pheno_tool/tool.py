@@ -3,9 +3,6 @@ Created on Nov 9, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-
-from builtins import object
 from collections import Counter
 
 import logging
@@ -33,6 +30,7 @@ class PhenoToolHelper(object):
     """
 
     def __init__(self, study):
+        assert study
         self.study = study
         self.effect_types_mixin = EffectTypesMixin()
 

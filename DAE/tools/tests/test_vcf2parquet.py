@@ -1,4 +1,3 @@
-from __future__ import print_function
 import pytest
 from box import Box
 
@@ -26,7 +25,7 @@ def test_vcf2parquet_vcf(
         vcf_import_config.vcf
     ]
 
-    dae_config = DAEConfig()
+    dae_config = DAEConfig.make_config()
     argv = parse_cli_arguments(dae_config, argv)
     assert argv.type == 'vcf'
 
@@ -81,7 +80,7 @@ def test_vcf2parquet_make(
         vcf_import_config.vcf
     ]
 
-    dae_config = DAEConfig()
+    dae_config = DAEConfig.make_config()
     argv = parse_cli_arguments(dae_config, argv)
     assert argv.type == 'make'
 

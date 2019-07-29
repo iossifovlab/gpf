@@ -3,9 +3,6 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-from builtins import object
-from builtins import str
 import itertools
 from gene.weights import Weights
 from variants.attributes import Status, Role

@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 
-from __future__ import print_function, absolute_import
-# from builtins import str
 import sys
 import os
 
 import pysam
 import numpy as np
 import pandas as pd
-import reusables
 from collections import defaultdict
 from box import ConfigBox
+from configparser import ConfigParser
 
 from annotation.tools.file_io_tsv import TSVFormat, TabixReader, \
         handle_chrom_prefix
@@ -72,7 +70,11 @@ class ScoreFile(object):
 
         if config_filename is None:
             config_filename = "{}.conf".format(self.score_filename)
-        self.config = ConfigBox(reusables.config_dict(config_filename))
+        cfgparser = ConfigParser()
+        cfgparser.read(config_filename)
+        self.config = {section: {key: val for key, val in content.items()}
+                       for section, content in cfgparser.items()}
+        self.config = ConfigBox(self.config)
         assert 'header' in self.config.general
         assert 'score' in self.config.columns
 

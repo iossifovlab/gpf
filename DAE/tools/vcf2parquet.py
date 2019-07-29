@@ -5,8 +5,6 @@ Created on Jun 4, 2018
 
 @author: lubo
 '''
-from __future__ import print_function
-
 import os
 import sys
 import argparse
@@ -201,7 +199,7 @@ def generate_makefile(dae_config, argv):
 
 
 if __name__ == "__main__":
-    dae_config = DAEConfig()
+    dae_config = DAEConfig.make_config()
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
 
     if argv.type == 'make':

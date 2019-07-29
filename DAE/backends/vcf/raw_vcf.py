@@ -41,9 +41,9 @@ def parse_gene_effect(effect):
     return split_gene_effect(effect)
 
 
-def samples_to_alleles_index(samples):
-    return np.stack([2 * samples, 2 * samples + 1]). \
-        reshape([1, 2 * len(samples)], order='F')[0]
+# def samples_to_alleles_index(samples):
+#     return np.stack([2 * samples, 2 * samples + 1]). \
+#         reshape([1, 2 * len(samples)], order='F')[0]
 
 
 class VcfFamily(Family):
@@ -54,7 +54,6 @@ class VcfFamily(Family):
         family = Family.from_df(family_id, ped_df)
 
         family.samples = ped_df['sampleIndex'].values
-        family.alleles = samples_to_alleles_index(family.samples)
 
         return family
 
@@ -68,10 +67,6 @@ class VcfFamily(Family):
             self.ped_df['personId'].isin(set(person_ids))
         ]['sampleIndex'].values
 
-    def vcf_alleles_index(self, person_ids):
-        p = self.vcf_samples_index(person_ids)
-        return samples_to_alleles_index(p)
-
 
 class VariantFactory(SummaryVariantFactory):
 
@@ -84,9 +79,12 @@ class VariantFactory(SummaryVariantFactory):
         assert vcf is not None
         # assert isinstance(family, VcfFamily)
 
-        gt = vcf.gt_idxs[family.alleles].\
-            astype(GENOTYPE_TYPE, casting='same_kind')
-        gt = gt.reshape([2, len(family)], order='F')
+        # gt = vcf.gt_idxs[family.alleles].\
+        #     astype(GENOTYPE_TYPE, casting='same_kind')
+        # gt = gt.reshape([2, len(family)], order='F')
+
+        gt = vcf.gt[:, family.samples]
+        assert gt.shape == (2, len(family))
 
         return VariantFactory.from_summary_variant(
             summary_variant, family, gt)

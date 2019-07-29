@@ -3,11 +3,6 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()  # noqa
-
 import sys
 from box import Box
 
@@ -32,7 +27,7 @@ class GeneInfoConfig(ConfigurableEntityConfig):
     @classmethod
     def from_config(cls, dae_config=None):
         if dae_config is None:
-            dae_config = DAEConfig()
+            dae_config = DAEConfig.make_config()
 
         config = cls.read_config(
             dae_config.gene_info_conf, dae_config.dae_data_dir)

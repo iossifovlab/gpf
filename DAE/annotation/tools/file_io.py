@@ -1,5 +1,3 @@
-from __future__ import print_function, absolute_import
-
 from annotation.tools.file_io_tsv import TSVFormat, \
         TSVReader, TSVWriter, TabixReaderVariants, TSVGzipReader
 try:

@@ -1,0 +1,45 @@
+familyId	personId	dadId	momId	sex	status
+nuclear	dad	0	0	1	1
+nuclear	mom	0	0	2	1
+nuclear	prb	dad	mom	1	2
+nuclear	sib	dad	mom	2	1
+
+nuclear_with_outsider	dad	0	0	1	1
+nuclear_with_outsider	mom	0	0	2	1
+nuclear_with_outsider	prb	dad	mom	1	2
+nuclear_with_outsider	sib	dad	mom	2	1
+nuclear_with_outsider	outsider	0	0	2	1
+
+extended	dad	p_grandad	p_grandmom	1	1
+extended	mom	m_grandad	m_grandmom	2	1
+extended	prb	dad	mom	1	2
+extended	sib	dad	mom	2	1
+extended	stepmom	0	0	2	1
+extended	mh_sibling	stepdad	mom	1	1
+extended	stepdad	0	0	1	1
+extended	ph_sibling	dad	stepmom	1	1
+extended	p_grandad	0	0	1	1
+extended	p_grandmom	0	0	2	1
+extended	m_grandad	0	0	1	1
+extended	m_grandmom	0	0	2	1
+extended	m_uncle	m_grandad	m_grandmom	1	1
+extended	m_aunt	m_grandad	m_grandmom	2	1
+extended	p_uncle	p_grandad	p_grandmom	1	1
+extended	p_aunt	p_grandad	p_grandmom	2	1
+extended	p_cousin1	p_uncle	0	1	1
+extended	p_cousin2	0	p_aunt	1	1
+extended	m_cousin1	m_uncle	0	1	1
+extended	m_cousin2	0	m_aunt	1	1
+extended	child	prb	0	1	1
+
+nuclear_no_father	mom	0	0	2	1
+nuclear_no_father	prb	0	mom	1	2
+nuclear_no_father	sib	0	mom	2	1
+
+nuclear_no_mother	dad	0	0	1	1
+nuclear_no_mother	prb	dad	0	1	2
+nuclear_no_mother	sib	dad	0	2	1
+
+nuclear_no_proband	dad	0	0	1	0
+nuclear_no_proband	mom	0	0	2	0
+nuclear_no_proband	sib	dad	mom	2	0

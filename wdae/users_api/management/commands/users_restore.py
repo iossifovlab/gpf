@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import csv
 from users_api.models import WdaeUser
 from django.core.management.base import BaseCommand, CommandError

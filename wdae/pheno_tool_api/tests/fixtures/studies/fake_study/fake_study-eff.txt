@@ -1,0 +1,7 @@
+chrom	position	reference	alternative	summary_variant_index	allele_index	allele_count	effect_type	effect_gene_genes	effect_gene_types	effect_details_transcript_ids	effect_details_details	af_parents_called_count	af_parents_called_percent	af_allele_count	af_allele_freq	effect_details	effect_genes
+1	11539	T		0	0	2						2	100	2	50		
+1	11539	T	G	0	1	2	missense	missense	missense	missense	missense	2	100	2	50	['missense:missense:missense']	['missense:missense']
+2	11540	T		1	0	2						2	100	2	50		
+2	11540	TAC	T	1	1	2	synonymous	synonymous	synonymous	synonymous	synonymous	2	100	2	50	['synonymous:synonymous:synonymous']	['synonymous:synonymous']
+3	11541	T		2	0	2						2	100	2	50		
+3	11541	T	TAC	2	1	2	frame-shift	frame-shift	frame-shift	frame-shift	frame-shift	2	100	2	50	['frame-shift:frame-shift:frame-shift']	['frame-shift:frame-shift']

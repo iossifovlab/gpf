@@ -1,5 +1,3 @@
-from __future__ import print_function, unicode_literals, absolute_import
-
 import numpy as np
 
 from variants.family_variant import FamilyAllele as FA

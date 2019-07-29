@@ -2,8 +2,6 @@
 
 # Oct 9th 2013
 # written by Ewa
-from __future__ import print_function
-
 import sys
 import optparse
 import os.path

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-from builtins import object
 from ..old_VariantAnnotation import annotate_variant, effect_description
 from ..simple_effect import SimpleEffect
 

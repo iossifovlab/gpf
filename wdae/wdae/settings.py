@@ -3,8 +3,6 @@ Created on Sep 2, 2015
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-
 from .default_settings import *  # @UnusedWildImport
 
 ALLOWED_HOSTS += ['localhost']

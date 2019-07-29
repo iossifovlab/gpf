@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 
 def test_build(db, enrichment_builder):
     assert enrichment_builder

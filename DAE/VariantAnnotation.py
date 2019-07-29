@@ -2,7 +2,7 @@
 
 # October 25th 2013
 # written by Ewa
-from __future__ import unicode_literals
+
 
 LOF = ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop']
 nonsyn = ['splice-site', 'frame-shift', 'nonsense', 'no-frame-shift-newStop',

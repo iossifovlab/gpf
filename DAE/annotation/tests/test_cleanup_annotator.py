@@ -1,4 +1,3 @@
-from __future__ import print_function, absolute_import
 from box import Box
 
 from annotation.tools.cleanup_annotator import CleanupAnnotator

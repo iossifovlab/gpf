@@ -5,8 +5,6 @@ Created on Jul 23, 2018
 
 @author: lubo
 '''
-from __future__ import print_function
-
 import os
 import sys
 
@@ -284,7 +282,7 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
 
 
 if __name__ == "__main__":
-    dae_config = DAEConfig()
+    dae_config = DAEConfig.make_config()
 
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
     annotation_pipeline = construct_import_annotation_pipeline(

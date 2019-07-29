@@ -3,10 +3,6 @@ Created on Apr 24, 2017
 
 @author: lubo
 '''
-from __future__ import print_function, absolute_import
-from __future__ import unicode_literals
-from builtins import object, str
-
 from collections import Counter
 
 from variants.attributes import Inheritance, Role

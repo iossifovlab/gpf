@@ -3,7 +3,6 @@ Created on Feb 6, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 from django.conf.urls import url
 from genotype_browser import views
 
