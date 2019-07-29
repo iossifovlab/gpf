@@ -20,8 +20,7 @@ ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
 ENV PATH $HADOOP_HOME/bin:$PATH
 ENV LD_LIBRARY_PATH $HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
 
-ADD ./scripts/configs/docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
-
+ADD ${SOURCE_DIR}//scripts/configs/docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
 
 # ANACONDA
 
@@ -32,7 +31,7 @@ RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2019.07-Linux-x86_6
 
 RUN /opt/conda/bin/conda init bash
 
-ADD ./conda-environment.yml /
+ADD ${SOURCE_DIR}/conda-environment.yml /
 
 RUN /opt/conda/bin/conda create -c conda-forge -c bioconda \
     --name gpf --file /conda-environment.yml
@@ -53,6 +52,5 @@ ENV DAE_IMPALA_HOST "impala"
 ENV DAE_IMPALA_PORT 21050
 
 WORKDIR /code
-
 
 SHELL ["/bin/bash", "-c"]
