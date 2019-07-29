@@ -1,5 +1,7 @@
 FROM continuumio/miniconda3
 
+ARG SOURCE_DIR="."
+
 RUN mkdir /data && mkdir /spark-home && mkdir /code
 
 RUN apt-get update --fix-missing && \ 
@@ -7,8 +9,8 @@ RUN apt-get update --fix-missing && \
         libgl1-mesa-glx openjdk-8-jdk-headless procps vim libsasl2-dev && \
 	apt-get clean
 
-ADD ./python3-environment.yml /
-ADD ./docker-container/etc/core-site.xml /core-site.xml
+ADD ${SOURCE_DIR}/python3-environment.yml /
+ADD ${SOURCE_DIR}/docker-container/etc/core-site.xml /core-site.xml
 
 RUN conda env update -n base -f /python3-environment.yml && \
     conda install -c conda-forge pyarrow=0.13.0 && \
@@ -37,7 +39,7 @@ RUN wget http://it.apache.contactlab.it/hadoop/core/hadoop-${HADOOP_VER}/hadoop-
 RUN tar -xvf hadoop-$HADOOP_VER.tar.gz -C ..; \
     mv ../hadoop-${HADOOP_VER} $HADOOP_HOME
 
-ADD ./docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
+ADD ${SOURCE_DIR}/docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
 

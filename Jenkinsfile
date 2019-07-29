@@ -1,20 +1,50 @@
 pipeline {
-  agent any
+  agent {
+    label 'dory'
+  }
+  options { 
+    disableConcurrentBuilds()
+  }
+  triggers {
+    pollSCM('* * * * *')
+    cron('H 2 * * *')
+  }
+  environment {
+    DOCKER_IMAGE="iossifovlab/gpf-base:${env.BRANCH_NAME}"
+
+    SOURCE_DIR="${env.WORKSPACE}"
+    DAE_DB_DIR="${env.WORKSPACE}/data-hg19-startup"
+    DAE_GENOMIC_SCORES_HG19="/data01/lubo/data/seq-pipeline/genomic-scores-hg19"
+    DAE_GENOMIC_SCORES_HG38="/data01/lubo/data/seq-pipeline/genomic-scores-hg19"
+
+    DOCKER_SOURCE_DIR="/code"
+    DOCKER_DAE_DB_DIR="/data"
+    DOCKER_DAE_GENOMIC_SCORES_HG19="/genomic-scores-hg19"
+    DOCKER_DAE_GENOMIC_SCORES_HG38="/genomic-scores-hg38"
+  }
   stages {
+    stage ('Start') {
+      steps {
+        slackSend (
+          color: '#FFFF00',
+          message: "STARTED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
+        )
+      }
+    }
 
     stage('Data') {
       steps {
         sh '''
-            ./jenkins_data.sh
+          ./jenkins_data.sh
         '''
       }
     }
 
     stage('Setup') {
       steps {
-        sh """
-            ./jenkins_build_container.sh
-        """
+        script {
+          docker.build("${DOCKER_IMAGE}", ". -f ${SOURCE_DIR}/Dockerfile")
+        }
       }
     }
 
@@ -24,7 +54,6 @@ pipeline {
           export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
 
           docker-compose -f docker-compose.yml up -d
-
         '''
       }
     }
@@ -47,9 +76,6 @@ pipeline {
 
           docker-compose -f docker-compose.yml exec -T tests /code/scripts/wait-for-it.sh impala:21050 --timeout=240
           docker-compose -f docker-compose.yml exec -T tests /code/jenkins_test.sh
-
-          docker-compose -f docker-compose.yml down
-
         """
       }
     }
@@ -57,26 +83,28 @@ pipeline {
   post {
     always {
       junit 'coverage/wdae-junit.xml, coverage/dae-junit.xml'
-      step([$class: 'CoberturaPublisher',
-           coberturaReportFile: 'coverage/coverage.xml'])
+      step([$class: 'CoberturaPublisher', coberturaReportFile: 'coverage/coverage.xml'])
       warnings(
         parserConfigurations: [[parserName: 'PyLint', pattern: 'pyflakes.report']],
         excludePattern: '.*site-packages.*',
         usePreviousBuildAsReference: true,
       )
+      sh """
+        export PATH=$HOME/anaconda3/envs/gpf3/bin:$PATH
+        
+        docker-compose -f docker-compose.yml down
+      """
     }
     success {
       slackSend (
         color: '#00FF00',
-        message: "SUCCESSFUL: Job '${env.JOB_NAME} " +
-                 "[${env.BUILD_NUMBER}]' ${env.BUILD_URL} (${params.PythonVersion})"
+        message: "SUCCESSFUL: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
       )
     }
     failure {
       slackSend (
         color: '#FF0000',
-        message: "FAILED: Job '${env.JOB_NAME} " +
-                 "[${env.BUILD_NUMBER}]' ${env.BUILD_URL} (${params.PythonVersion})"
+        message: "FAILED: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' ${env.BUILD_URL}"
       )
     }
   }
