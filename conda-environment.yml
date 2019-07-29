@@ -133,3 +133,4 @@ flake8=3.7.7
 pytest-cov=2.7.1
 pytest-mock=1.10.4
 pylint=2.3.1
+docker-compose=1.24

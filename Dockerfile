@@ -20,7 +20,7 @@ ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
 ENV PATH $HADOOP_HOME/bin:$PATH
 ENV LD_LIBRARY_PATH $HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
 
-ADD ./docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
+ADD ./scripts/configs/docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
 
 
 # ANACONDA
@@ -49,8 +49,8 @@ ENV DAE_DB_DIR="/data"
 ENV PYTHONPATH="$DAE_SOURCE_DIR:$PYTHONPATH"
 ENV PATH /opt/conda/envs/gpf/bin:/opt/conda/bin:$PATH
 
-ENV DAE_IMIPALA_HOST="impala"
-ENV DAE_IMPALA_PORT=21050
+ENV DAE_IMPALA_HOST "impala"
+ENV DAE_IMPALA_PORT 21050
 
 WORKDIR /code
 
