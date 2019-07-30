@@ -54,7 +54,7 @@ class ImpalaFamilyVariants(FamiliesBase):
     def query_variants(self, **kwargs):
         with self.impala.cursor() as cursor:
             query = self.build_query(self.config, **kwargs)
-            print("FINAL QUERY: ", query)
+            # print("FINAL QUERY: ", query)
             cursor.execute(query)
             for row in cursor:
                 chrom, position, reference, alternatives_data, \
@@ -118,7 +118,6 @@ class ImpalaFamilyVariants(FamiliesBase):
             schema = {
                 col_name: col_type for (_, col_name, col_type) in records
             }
-
             return ParquetSchema(schema)
 
     def pedigree_schema(self):
@@ -140,8 +139,6 @@ class ImpalaFamilyVariants(FamiliesBase):
         real_attr_filter = query['real_attr_filter']
         query = []
         for attr_name, attr_range in real_attr_filter:
-            print(attr_name, "|", self.schema, "|", attr_name in self.schema)
-
             if attr_name not in self.schema:
                 query.append('false')
                 continue

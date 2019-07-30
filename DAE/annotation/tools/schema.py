@@ -53,14 +53,6 @@ class Schema(object):
                 new_schema.create_column(col.strip(), col_type)
         return new_schema
 
-    @classmethod
-    def from_df(cls, df):
-        schema_dict = dict(zip(
-            df.columns,
-            [dt.name for dt in df.dtypes]
-        ))
-        print(schema_dict)
-
     @staticmethod
     def merge_schemas(left, right):
         merged_schema = Schema()
