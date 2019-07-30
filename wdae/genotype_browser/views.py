@@ -125,7 +125,7 @@ class QueryDownloadView(QueryBaseView):
                 pass
 
             download_limit = None
-            if not (user.is_authenticated() and user.has_unlimitted_download):
+            if not (user.is_authenticated and user.has_unlimitted_download):
                 download_limit = self.DOWNLOAD_LIMIT
 
             variants_data = get_variants_web_download(

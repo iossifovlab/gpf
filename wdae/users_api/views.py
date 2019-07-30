@@ -205,7 +205,7 @@ def logout(request):
 @api_view(['GET'])
 def get_user_info(request):
     user = request.user
-    if user.is_authenticated():
+    if user.is_authenticated:
         return Response({'loggedIn': True, 'email': user.email,
                          'isAdministrator': user.is_staff},
                         status.HTTP_200_OK)

@@ -5,7 +5,7 @@ Created on Feb 16, 2017
 '''
 import pytest
 
-from django.utils.http import urlencode
+from urllib.parse import urlencode
 from rest_framework import status
 
 import json
