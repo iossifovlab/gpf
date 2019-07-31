@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from django.core.management.base import BaseCommand, CommandError
 from .import_base import ImportUsersBase
 from django.contrib.auth import get_user_model

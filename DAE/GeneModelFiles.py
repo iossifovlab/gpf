@@ -3,13 +3,6 @@
 # July 12th 2013
 # written by Ewa
 
-from __future__ import print_function, absolute_import
-from __future__ import unicode_literals
-from builtins import zip
-from builtins import map
-from builtins import str
-from builtins import range
-from builtins import object
 from RegionOperations import Region, \
     collapse_noChr
 import gzip

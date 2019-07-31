@@ -3,7 +3,6 @@ Created on Feb 20, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 from common.query_base import RegionsMixin
 
 regions = [

@@ -3,9 +3,6 @@ Created on Feb 13, 2018
 
 @author: lubo
 '''
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import enum
 
 

@@ -3,8 +3,6 @@ Created on Jul 23, 2018
 
 @author: lubo
 '''
-from __future__ import print_function, absolute_import, unicode_literals
-
 import numpy as np
 from utils.vcf_utils import str2mat, best2gt, GENOTYPE_TYPE, mat2str
 

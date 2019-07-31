@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from __future__ import division
-
 import pandas as pd
 from collections import defaultdict, OrderedDict
 

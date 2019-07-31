@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from __future__ import division
-
 from collections import OrderedDict
 
 from common_reports.people_counter import PeopleCounters

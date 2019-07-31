@@ -1,12 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
-from __future__ import division
-from __future__ import unicode_literals
-
-from builtins import range
-from past.utils import old_div
-from builtins import object
 import os
 import sys
 import gzip
@@ -270,7 +263,7 @@ class ReaderStat(Reader):
             for x in ['all.nParCalled', 'all.nAltAlls']
         ]
         w = [
-            old_div(float(self.cTerms[self.dct[x]]), 100.)
+            float(self.cTerms[self.dct[x]]) / 100.
             for x in ['all.prcntParCalled', 'all.altFreq']
         ]
 

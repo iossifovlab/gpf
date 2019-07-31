@@ -3,15 +3,7 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-
-
-from future import standard_library; standard_library.install_aliases()  # noqa
-
-from builtins import object
 from collections import OrderedDict
-from past.utils import old_div
-
 import numpy as np
 
 from gene.genomic_values import GenomicValues
@@ -54,7 +46,7 @@ class Weights(GenomicValues):
         self.histogram_bins, self.histogram_bars = self.bins_bars()
 
     def bins_bars(self):
-        step = old_div((self.max() - self.min()), (self.bins - 1))
+        step = 1.0 * (self.max() - self.min()) / (self.bins - 1)
         dec = - np.log10(step)
         dec = dec if dec >= 0 else 0
         dec = int(dec)
@@ -64,7 +56,7 @@ class Weights(GenomicValues):
 
         if self.xscale == "log":
             # Max numbers of items in first bin
-            max_count = old_div(self.values().size, self.bins)
+            max_count = self.values().size / self.bins
 
             # Find a bin small enough to fit max_count items
             for bleft in range(-1, -200, -1):

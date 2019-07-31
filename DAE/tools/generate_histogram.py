@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import unicode_literals
-
-from future import standard_library
-standard_library.install_aliases()  # noqa
-
 import argparse
 import sys
 import time
@@ -14,7 +9,6 @@ import pandas as pd
 import numpy as np
 
 from configparser import ConfigParser
-from builtins import object, str
 from box import Box
 import matplotlib as mpl; mpl.use('PS')  # noqa
 import matplotlib.pyplot as plt; plt.ioff()  # noqa

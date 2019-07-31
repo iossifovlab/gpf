@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from builtins import str
-
 from enrichment_tool.tool import EnrichmentTool
 from enrichment_tool.event_counters import EventsCounter
 from enrichment_tool.genotype_helper import GenotypeHelper

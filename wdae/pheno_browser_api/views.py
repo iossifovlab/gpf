@@ -3,8 +3,6 @@ Created on Apr 21, 2017
 
 @author: lubo
 '''
-from __future__ import print_function
-from __future__ import unicode_literals
 import os
 import numpy as np
 
@@ -103,6 +101,9 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         instrument = request.query_params.get('instrument', None)
         search_term = request.query_params.get('search', None)
 
+        if instrument and instrument not in dataset.pheno_db.instruments:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
         browser_dbfile = self.get_browser_dbfile(
             dataset.config.phenoDB)
         browser_images_url = self.get_browser_images_url(
@@ -156,9 +157,11 @@ class PhenoMeasuresDownload(PhenoBrowserBaseView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         instrument = request.query_params.get('instrument', None)
-        if instrument is None:
+        if not instrument:
             instruments = list(dataset.pheno_db.instruments.keys())
             instrument = instruments[0]
+        elif instrument not in dataset.pheno_db.instruments:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         df = dataset.pheno_db.get_instrument_values_df(instrument)
         df_csv = df.to_csv(index=False, encoding="utf-8")

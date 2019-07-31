@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from builtins import object
-
 import hgvs
 import hgvs.location
 import hgvs.posedit

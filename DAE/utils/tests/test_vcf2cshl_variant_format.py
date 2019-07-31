@@ -3,9 +3,6 @@ Created on Mar 12, 2018
 
 @author: lubo
 '''
-from __future__ import print_function
-from __future__ import unicode_literals
-
 from utils.vcf_utils import vcf2cshl, trim_str_back
 from utils.dae_utils import dae2vcf_variant
 

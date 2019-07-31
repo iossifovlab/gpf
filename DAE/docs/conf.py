@@ -29,7 +29,6 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-from __future__ import unicode_literals
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.todo',

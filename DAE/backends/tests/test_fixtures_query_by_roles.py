@@ -3,9 +3,6 @@ Created on Jul 2, 2018
 
 @author: lubo
 '''
-from __future__ import print_function, unicode_literals, absolute_import
-from __future__ import unicode_literals
-
 import pytest
 
 from RegionOperations import Region

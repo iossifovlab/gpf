@@ -1,8 +1,3 @@
-from __future__ import unicode_literals
-
-from builtins import object
-from builtins import open
-
 from configparser import ConfigParser
 
 from GenomeAccess import openRef

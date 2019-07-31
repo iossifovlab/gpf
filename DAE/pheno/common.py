@@ -3,50 +3,12 @@ Created on May 24, 2017
 
 @author: lubo
 '''
-from __future__ import print_function
-from __future__ import unicode_literals
 import enum
 from box import Box
 from pprint import pprint
 from collections import OrderedDict
 from copy import deepcopy
 from variants.attributes import Role
-
-
-# class Gender(enum.Enum):
-#     M = 1
-#     F = 2
-#     U = 3
-
-
-# class Status(enum.Enum):
-#     affected = 2
-#     unaffected = 1
-
-
-# class Role(enum.Enum):
-#     unknown = 0
-#     mom = 10
-#     dad = 20
-#     step_mom = 23
-#     step_dad = 13
-#     parent = 1
-#     prb = 30
-#     sib = 40
-#     child = 50
-#     spouse = 2
-#     maternal_cousin = 14
-#     paternal_cousin = 24
-#     maternal_uncle = 11
-#     maternal_aunt = 12
-#     paternal_uncle = 21
-#     paternal_aunt = 22
-#     maternal_half_sibling = 41
-#     paternal_half_sibling = 42
-#     maternal_grandmother = -11
-#     maternal_grandfather = -12
-#     paternal_grandmother = -21
-#     paternal_grandfather = -22
 
 
 class MeasureType(enum.Enum):

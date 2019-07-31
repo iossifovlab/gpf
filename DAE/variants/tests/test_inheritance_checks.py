@@ -3,8 +3,6 @@ Created on Feb 27, 2018
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-
 import numpy as np
 from variants.family_variant import FamilyAllele as FV
 

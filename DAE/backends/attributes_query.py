@@ -1,7 +1,3 @@
-from __future__ import unicode_literals, absolute_import, print_function
-
-from builtins import str
-from builtins import object
 import enum
 
 from lark import Lark, InlineTransformer

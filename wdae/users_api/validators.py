@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from builtins import map
-from builtins import object
 from rest_framework import serializers
 from users_api.models import WdaeUser
 from django.contrib.auth.models import Group

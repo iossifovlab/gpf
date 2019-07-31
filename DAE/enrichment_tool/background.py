@@ -3,15 +3,6 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-# from __future__ import unicode_literals
-from __future__ import division
-from __future__ import print_function, absolute_import
-from future import standard_library
-standard_library.install_aliases()  # noqa
-
-from builtins import zip
-from past.utils import old_div
-
 from collections import Counter
 import os
 from scipy import stats
@@ -300,9 +291,8 @@ class SamochaBackground(BackgroundBase):
         children_count = children_stats['M'] + children_stats['U'] \
             + children_stats['F']
         # p = (p_boys + p_girls) / 2.0
-        p = old_div(((children_stats['M'] + children_stats['U']) * p_boys +
-                     children_stats['F'] * p_girls),
-                    (children_count))
+        p = 1.0 * ((children_stats['M'] + children_stats['U']) * p_boys +
+                children_stats['F'] * p_girls) / (children_count)
 #         result.rec_expected = \
 #             (children_stats['M'] + children_stats['F']) * p * p
         if len(rec_result.events) == 0 or len(all_result.events) == 0:

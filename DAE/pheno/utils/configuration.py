@@ -3,8 +3,6 @@ Created on Aug 23, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-
 import os
 from box import ConfigBox
 

@@ -3,9 +3,6 @@ Created on Nov 8, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-from builtins import object
-
 
 class EnrichmentTool(object):
 

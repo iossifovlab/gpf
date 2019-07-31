@@ -1,7 +1,3 @@
-from __future__ import division
-from __future__ import unicode_literals
-from past.utils import old_div
-from builtins import object
 from copy import deepcopy
 import math
 from itertools import zip_longest
@@ -254,7 +250,7 @@ class OffsetLayoutDrawer(object):
                     coords = [individual.x_center + self._x_offset,
                               individual.y_center + self._y_offset]
                     axes.add_patch(mpatches.Circle(
-                        coords, old_div(individual.size, 2),
+                        coords, individual.size / 2,
                         facecolor=individual_color, edgecolor="black"))
 
                     cx = coords[0]

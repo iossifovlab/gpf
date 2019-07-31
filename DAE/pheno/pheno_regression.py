@@ -3,7 +3,6 @@ Created on Sep 18, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 from configparser import ConfigParser
 from os.path import isfile
 

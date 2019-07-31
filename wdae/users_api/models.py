@@ -3,9 +3,6 @@ Created on Aug 10, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-from builtins import str
-from builtins import object
 import uuid
 
 from django.db import models, transaction
@@ -344,7 +341,7 @@ pre_delete.connect(group_pre_delete, Group, weak=False)
 
 class VerificationPath(models.Model):
     path = models.CharField(max_length=255, unique=True)
-    user = models.OneToOneField(WdaeUser)
+    user = models.OneToOneField(WdaeUser, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.path)

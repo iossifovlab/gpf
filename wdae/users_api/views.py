@@ -3,7 +3,6 @@ Created on Aug 10, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 from django.db import IntegrityError, transaction
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager, Group
@@ -206,7 +205,7 @@ def logout(request):
 @api_view(['GET'])
 def get_user_info(request):
     user = request.user
-    if user.is_authenticated():
+    if user.is_authenticated:
         return Response({'loggedIn': True, 'email': user.email,
                          'isAdministrator': user.is_staff},
                         status.HTTP_200_OK)

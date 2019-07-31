@@ -1,8 +1,5 @@
 #!/bin/env python
 
-from __future__ import print_function, absolute_import
-from __future__ import unicode_literals
-from builtins import object
 from collections import defaultdict
 import glob
 import os

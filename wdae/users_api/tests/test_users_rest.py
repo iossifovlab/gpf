@@ -1,6 +1,3 @@
-from __future__ import print_function
-from builtins import filter
-
 import json
 
 from rest_framework import status

@@ -1,5 +1,3 @@
-from builtins import str
-
 from configurable_entities.configurable_entity_config import\
     ConfigurableEntityConfig
 

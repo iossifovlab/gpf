@@ -3,10 +3,6 @@ Created on Feb 13, 2018
 
 @author: lubo
 '''
-from __future__ import print_function
-from __future__ import unicode_literals
-
-from builtins import object
 import numpy as np
 import pandas as pd
 from variants.attributes import Role, Sex, Status

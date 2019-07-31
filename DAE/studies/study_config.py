@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import os
 
 from studies.study_wdae_config import StudyWdaeMixin

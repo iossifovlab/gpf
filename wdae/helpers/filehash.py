@@ -3,7 +3,6 @@ Created on May 24, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 import hashlib
 
 

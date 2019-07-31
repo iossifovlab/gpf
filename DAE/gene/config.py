@@ -3,11 +3,6 @@ Created on Feb 16, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()  # noqa
-
 import sys
 from box import Box
 

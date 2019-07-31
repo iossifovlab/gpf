@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
 from variant_annotation.annotator import VariantAnnotator
 from ..simple_effect import SimpleEffect
 from .base import BaseAdapter
