@@ -134,22 +134,6 @@ def test_effect_annotator_df(variant_effect_annotator):
     assert list(res_df.effect_type.values) == list(df['effect_type'].values)
 
 
-def test_schema_experiment():
-    # df = pd.read_csv(
-    #     relative_to_this_test_folder("fixtures/effects_trio_multi-eff.txt"),
-    #     dtype={
-    #         'chrom': str,
-    #         'position': np.int32,
-    #     },
-    #     sep='\t')
-
-    filename = relative_to_this_test_folder(
-        "fixtures/effects_trio_multi-eff.txt")
-    df = RawVariantsLoader.load_annotation_file(filename)
-    print(df)
-    print(Schema.from_df(df))
-
-
 def test_effect_annotators_compare(
         effect_annotator, variant_effect_annotator, variants_io, capsys):
     assert effect_annotator is not None

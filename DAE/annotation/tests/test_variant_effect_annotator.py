@@ -79,8 +79,6 @@ def test_effect_annotator_df(effect_annotator):
         'effect_details_details',
     ]
     df[columns] = df[columns].fillna('')
-    # print(df)
-    print(Schema.from_df(df))
 
     res_df = effect_annotator.annotate_df(df)
     columns += [
@@ -108,19 +106,3 @@ def test_effect_annotator_df(effect_annotator):
     #     list(res_df.effect_details_transcript_ids_1.values)
     # assert list(res_df.effect_details_details.values) == \
     #     list(res_df.effect_details_details_1.values)
-
-
-def test_schema_experiment():
-    # df = pd.read_csv(
-    #     relative_to_this_test_folder("fixtures/effects_trio_multi-eff.txt"),
-    #     dtype={
-    #         'chrom': str,
-    #         'position': np.int32,
-    #     },
-    #     sep='\t')
-
-    filename = relative_to_this_test_folder(
-        "fixtures/effects_trio_multi-eff.txt")
-    df = RawVariantsLoader.load_annotation_file(filename)
-    print(df)
-    print(Schema.from_df(df))

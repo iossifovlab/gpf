@@ -1,3 +1,5 @@
+import numba
+
 from annotation.tools.file_io_parquet import ParquetSchema
 from variants.family import FamiliesBase, Family
 from backends.impala.parquet_io import ParquetSerializer
@@ -51,9 +53,29 @@ class ImpalaFamilyVariants(FamiliesBase):
             row = next(cursor)
             return row[0]
 
-    def query_variants(self, **kwargs):
+    # @numba.jit(nopython=True)
+    def query_variants(
+            self, regions=None, genes=None, effect_types=None,
+            family_ids=None, person_ids=None,
+            inheritance=None, roles=None, sexes=None,
+            variant_type=None, real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None):
+
         with self.impala.cursor() as cursor:
-            query = self.build_query(self.config, **kwargs)
+            query = self.build_query(
+                self.config,
+                regions=regions, genes=genes, effect_types=effect_types,
+                family_ids=family_ids, person_ids=person_ids,
+                inheritance=inheritance, roles=roles, sexes=sexes,
+                variant_type=variant_type, real_attr_filter=real_attr_filter,
+                ultra_rare=ultra_rare,
+                return_reference=return_reference,
+                return_unknown=return_unknown,
+                limit=limit)
+
             print("FINAL QUERY: ", query)
             cursor.execute(query)
             for row in cursor:
@@ -135,12 +157,11 @@ class ImpalaFamilyVariants(FamiliesBase):
             }
             return schema
 
-    def _build_real_attr_where(self, query):
-        assert query.get("real_attr_filter")
-        real_attr_filter = query['real_attr_filter']
+    def _build_real_attr_where(self, real_attr_filter):
+        print("real_attr_filter:", real_attr_filter)
+
         query = []
         for attr_name, attr_range in real_attr_filter:
-            print(attr_name, "|", self.schema, "|", attr_name in self.schema)
 
             if attr_name not in self.schema:
                 query.append('false')
@@ -162,16 +183,15 @@ class ImpalaFamilyVariants(FamiliesBase):
                         attr=attr_name, left=left, right=right))
         return ' AND '.join(query)
 
-    def _build_ultra_rare_where(self, query):
-        assert query.get("ultra_rare")
-        return self._build_real_attr_where({
-            "real_attr_filter": [("af_allele_count", (1, 1))]
-            })
+    def _build_ultra_rare_where(self, ultra_rare):
+        assert ultra_rare
+        return self._build_real_attr_where(
+            real_attr_filter=[("af_allele_count", (1, 1))])
 
-    def _build_regions_where(self, query_values):
-        assert isinstance(query_values, list)
+    def _build_regions_where(self, regions):
+        assert isinstance(regions, list), regions
         where = []
-        for region in query_values:
+        for region in regions:
             assert isinstance(region, Region)
             where.append(
                "(`chrom` = {q}{chrom}{q} AND `position` >= {start} AND "
@@ -229,11 +249,9 @@ class ImpalaFamilyVariants(FamiliesBase):
             self.gene_models = genomesDB.get_gene_models()
         return self.gene_models
 
-    def _build_gene_regions_heuristic(self, query):
-        assert query.get('genes') is not None
-        genes = query.get('genes')
+    def _build_gene_regions_heuristic(self, genes, regions):
+        assert genes is not None
         if len(genes) > 0 and len(genes) <= self.GENE_REGIONS_HEURISTIC_CUTOFF:
-            regions = query.get('regions')
             if regions is None:
                 regions = []
             gene_models = self.get_gene_models()
@@ -246,15 +264,15 @@ class ImpalaFamilyVariants(FamiliesBase):
                             gm.tx[1] + self.GENE_REGIONS_HEURISTIC_EXTEND))
             if regions:
                 regions = RegionOperations.collapse(regions)
-            query['regions'] = regions
+            return regions
 
-    def _build_rare_heuristic(self, query):
+    def _build_rare_heuristic(self, ultra_rare, real_attr_filter):
         if 'rare' not in self.schema:
             return ""
-        if query.get('ultra_rare'):
+        if ultra_rare:
             return "rare = 1"
-        if query.get('real_attr_filter'):
-            for name, (begin, end) in query.get('real_attr_filter'):
+        if real_attr_filter:
+            for name, (begin, end) in real_attr_filter:
                 if name == 'af_allele_freq':
                     if end <= 5.0:
                         return "rare = 1"
@@ -262,20 +280,19 @@ class ImpalaFamilyVariants(FamiliesBase):
                         return "rare = 0"
         return ""
 
-    def _build_ultra_rare_heuristic(self, query):
+    def _build_ultra_rare_heuristic(self, ultra_rare):
         if 'ultra_rare' not in self.schema:
             return ""
-        if query.get('ultra_rare'):
+        if ultra_rare:
             return "ultra_rare = 1"
         return ""
 
-    def _build_family_bin_heuristic(self, query):
+    def _build_family_bin_heuristic(self, family_ids, person_ids):
         if 'family_bin' not in self.schema:
             return ""
         if 'family_bin' not in self.pedigree_schema:
             return ""
         family_bins = set()
-        family_ids = query.get('family_ids')
         if family_ids:
             family_ids = set(family_ids)
             family_bins.union(
@@ -283,7 +300,6 @@ class ImpalaFamilyVariants(FamiliesBase):
                         self.ped_df['family_id'].isin(family_ids)
                     ].family_bin.values)
             )
-        person_ids = query.get('person_ids')
         if person_ids:
             person_ids = set(person_ids)
             family_bins.union(
@@ -298,62 +314,74 @@ class ImpalaFamilyVariants(FamiliesBase):
 
         return ""
 
-    def _build_return_reference_and_return_unknown(self, query):
-        if not query.get("return_reference"):
+    def _build_return_reference_and_return_unknown(
+            self, return_reference=None, return_unknown=None):
+        if not return_reference:
             return "allele_index > 0"
-        elif not query.get("return_unknown"):
+        elif not return_unknown:
             return "allele_index >= 0"
         return ""
 
-    def _build_where(self, query):
+    def _build_where(
+            self,
+            regions=None, genes=None, effect_types=None,
+            family_ids=None, person_ids=None,
+            inheritance=None, roles=None, sexes=None,
+            variant_type=None, real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None
+            ):
         where = []
-        if query.get('genes') is not None:
-            self._build_gene_regions_heuristic(query)
+        if genes is not None:
+            regions = self._build_gene_regions_heuristic(genes, regions)
             where.append(self._build_iterable_string_attr_where(
-                'effect_gene', query['genes']
+                'effect_gene', genes
             ))
-        if query.get('regions'):
-            where.append(self._build_regions_where(query['regions']))
-        if query.get('family_ids') is not None:
+        if regions is not None:
+            where.append(self._build_regions_where(regions))
+        if family_ids is not None:
             where.append(self._build_iterable_string_attr_where(
-                'family_id', query['family_ids']
+                'family_id', family_ids
             ))
-        if query.get('person_ids') is not None:
+        if person_ids is not None:
             where.append(self._build_iterable_string_attr_where(
-                'variant_in_member', query['person_ids']
+                'variant_in_member', person_ids
             ))
-        if query.get('effect_types') is not None:
+        if effect_types is not None:
             where.append(self._build_iterable_string_attr_where(
-                'effect_type', query['effect_types']
+                'effect_type', effect_types
             ))
-        if query.get("inheritance"):
+        if inheritance is not None:
             where.append(self._build_inheritance_where(
-                'variant_inheritance', query['inheritance']
+                'variant_inheritance', inheritance
             ))
-        if query.get("roles"):
+        if roles is not None:
             where.append(self._build_bitwise_attr_where(
-                'variant_roles', query['roles'],
+                'variant_roles', roles,
                 role_query
             ))
-        if query.get("sexes"):
+        if sexes is not None:
             where.append(self._build_bitwise_attr_where(
-                'variant_sexes', query['sexes'],
+                'variant_sexes', sexes,
                 sex_query
             ))
-        if query.get("variant_type"):
+        if variant_type is not None:
             where.append(self._build_bitwise_attr_where(
-                'variant_type', query['variant_type'],
+                'variant_type', variant_type,
                 variant_type_query
             ))
-        if query.get('real_attr_filter'):
-            where.append(self._build_real_attr_where(query))
-        if query.get('ultra_rare'):
-            where.append(self._build_ultra_rare_where(query))
+        if real_attr_filter is not None:
+            where.append(self._build_real_attr_where(real_attr_filter))
+        if ultra_rare:
+            where.append(self._build_ultra_rare_where(ultra_rare))
 
-        where.append(self._build_return_reference_and_return_unknown(query))
-        where.append(self._build_rare_heuristic(query))
-        where.append(self._build_ultra_rare_heuristic(query))
-        where.append(self._build_family_bin_heuristic(query))
+        where.append(self._build_return_reference_and_return_unknown(
+            return_reference, return_unknown
+        ))
+        where.append(self._build_rare_heuristic(ultra_rare, real_attr_filter))
+        where.append(self._build_ultra_rare_heuristic(ultra_rare))
+        where.append(self._build_family_bin_heuristic(family_ids, person_ids))
 
         where = [w for w in where if w]
 
@@ -367,13 +395,29 @@ class ImpalaFamilyVariants(FamiliesBase):
 
         return where_clause
 
-    def build_query(self, config, **kwargs):
+    def build_query(
+            self, config,
+            regions=None, genes=None, effect_types=None,
+            family_ids=None, person_ids=None,
+            inheritance=None, roles=None, sexes=None,
+            variant_type=None, real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None,
+            limit=None):
 
-        where_clause = self._build_where(kwargs)
+        where_clause = self._build_where(
+            regions=regions, genes=genes, effect_types=effect_types,
+            family_ids=family_ids, person_ids=person_ids,
+            inheritance=inheritance, roles=roles, sexes=sexes,
+            variant_type=variant_type, real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            return_reference=return_reference,
+            return_unknown=return_unknown)
 
         limit_clause = ""
-        if kwargs.get("limit"):
-            limit_clause = "LIMIT {}".format(kwargs.get("limit"))
+        if limit:
+            limit_clause = "LIMIT {}".format(limit)
         return """
             SELECT
                 chrom,
@@ -407,8 +451,23 @@ class ImpalaFamilyVariants(FamiliesBase):
             where_clause=where_clause,
             limit_clause=limit_clause)
 
-    def build_count_query(self, config, **kwargs):
-        where_clause = self._build_where(kwargs)
+    def build_count_query(
+            self, config,
+            regions=None, genes=None, effect_types=None,
+            family_ids=None, person_ids=None,
+            inheritance=None, roles=None, sexes=None,
+            variant_type=None, real_attr_filter=None,
+            ultra_rare=None,
+            return_reference=None,
+            return_unknown=None):
+        where_clause = self._build_where(
+            regions=regions, genes=genes, effect_types=effect_types,
+            family_ids=family_ids, person_ids=person_ids,
+            inheritance=inheritance, roles=roles, sexes=sexes,
+            variant_type=variant_type, real_attr_filter=real_attr_filter,
+            ultra_rare=ultra_rare,
+            return_reference=return_reference,
+            return_unknown=return_unknown)
 
         return """
             SELECT
