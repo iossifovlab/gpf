@@ -137,7 +137,6 @@ class ImpalaFamilyVariants(FamiliesBase):
             schema = {
                 col_name: col_type for (_, col_name, col_type) in records
             }
-
             return ParquetSchema(schema)
 
     def pedigree_schema(self):
@@ -157,7 +156,6 @@ class ImpalaFamilyVariants(FamiliesBase):
     def _build_real_attr_where(self, real_attr_filter):
         query = []
         for attr_name, attr_range in real_attr_filter:
-
             if attr_name not in self.schema:
                 query.append('false')
                 continue

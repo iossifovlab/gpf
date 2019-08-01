@@ -74,9 +74,18 @@ class VariantsParquetWriter(object):
     ]
 
     def __init__(
-            self, families, full_variants_iterator, annotation_pipeline=None):
+            self, families, full_variants_iterator,
+            annotation_pipeline=None,
+            return_reference=True,
+            return_unknown=True):
+
         self.families = families
         self.full_variants_iterator = full_variants_iterator
+        self.return_reference = return_reference
+        self.return_unknown = return_unknown
+
+        if self.return_unknown:
+            assert self.return_reference
 
         annotation_schema = ParquetSchema.from_arrow(
             ParquetSerializer.BASE_SCHEMA)
@@ -157,6 +166,9 @@ class VariantsParquetWriter(object):
             )
 
         for family_allele in family_variant.alleles:
+            if family_allele.is_reference_allele and not self.return_reference:
+                continue
+
             summary = \
                 self.parquet_serializer.serialize_summary(
                     summary_variant_index, family_allele,
@@ -200,6 +212,8 @@ class VariantsParquetWriter(object):
                 family_variant_index += 1
 
                 if family_variant.is_unknown():
+                    if not self.return_unknown:
+                        continue
                     # handle all unknown variants
                     unknown_variant = self._setup_all_unknown_variant(
                         sumary_variant, family_variant.family_id)

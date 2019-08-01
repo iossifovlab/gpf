@@ -7,7 +7,8 @@ from backends.impala.parquet_io import VariantsParquetWriter, \
 
 def variants_iterator_to_parquet(
         fvars, impala_config, bucket_index=0, rows=100000,
-        annotation_pipeline=None, filesystem=None):
+        annotation_pipeline=None, filesystem=None,
+        no_reference=False):
 
     if fvars.is_empty():
         print("empty bucket {} done".format(impala_config.files.variant),
@@ -22,7 +23,9 @@ def variants_iterator_to_parquet(
     variants_writer = VariantsParquetWriter(
         fvars.families,
         fvars.full_variants_iterator(),
-        annotation_pipeline=annotation_pipeline)
+        annotation_pipeline=annotation_pipeline,
+        return_reference=not no_reference,
+        return_unknown=not no_reference)
     print("[DONE] going to create variants writer...")
 
     variants_writer.save_variants_to_parquet(

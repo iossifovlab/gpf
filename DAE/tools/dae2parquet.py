@@ -29,12 +29,13 @@ from backends.impala.import_tools import variants_iterator_to_parquet
 
 
 def get_contigs(tabixfilename):
-    with pysam.Tabixfile(tabixfilename) as tbx:  # noqa
+    with pysam.Tabixfile(tabixfilename) as tbx:
         return tbx.contigs
 
 
 def dae_build_transmitted(
-        dae_config, annotation_pipeline, argv, defaults={}):
+        dae_config, annotation_pipeline, argv, defaults={},
+        study_id=None, filesystem=None):
 
     config = Configure.from_dict({
         "dae": {
@@ -42,8 +43,6 @@ def dae_build_transmitted(
             'toomany_filename': argv.toomany,
             'family_filename': argv.families
         }})
-
-    # contigs = ['chr21', 'chr22']
 
     assert argv.output is not None
     genome = get_genome(genome_file=None)
@@ -70,14 +69,16 @@ def dae_build_transmitted(
 
     impala_config = Configure.from_prefix_impala(
         argv.output, bucket_index=argv.bucket_index,
-        db=None, study_id=None).impala
+        db=None, study_id=study_id).impala
 
     variants_iterator_to_parquet(
         fvars,
         impala_config,
         bucket_index=argv.bucket_index,
         rows=argv.rows,
-        annotation_schema=annotation_schema
+        annotation_pipeline=annotation_pipeline,
+        filesystem=filesystem,
+        no_reference=argv.no_reference
     )
 
 
@@ -95,13 +96,17 @@ def dae_build_makefile(dae_config, argv):
         raise ValueError("unexpected family format: {}".format(
             argv.family_format
         ))
+    no_reference = ""
+    if argv.no_reference:
+        no_reference = "--no-reference"
 
     contigs_makefile_generate(
         build_contigs,
         data_contigs,
         argv.output,
-        'dae2parquet.py dae {family_format}'.format(
-            family_format=family_format),
+        'dae2parquet.py dae {family_format} {no_reference}'.format(
+            family_format=family_format,
+            no_reference=no_reference),
         argv.annotation_config,
         "{family_filename} {summary_filename} {toomany_filename}".format(
             family_filename=argv.families,
@@ -153,9 +158,6 @@ def import_dae_denovo(
         output, bucket_index=bucket_index, db=None, study_id=study_id).impala
     print("converting into ", impala_config, file=sys.stderr)
 
-    annotation_schema = ParquetSchema()
-    annotation_pipeline.collect_annotator_schema(annotation_schema)
-
     return variants_iterator_to_parquet(
         fvars,
         impala_config,
@@ -194,6 +196,11 @@ def init_parser_dae_common(dae_config, parser):
         dest='family_format',
         help='families file format - `pedigree` or `simple`; '
         '[default: %(default)s]'
+    )
+
+    parser.add_argument(
+        '--no-reference', action="store_true", default=None,
+        help="Skip reference alleles and all unknown alleles"
     )
 
 
