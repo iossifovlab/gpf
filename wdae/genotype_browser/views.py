@@ -63,7 +63,7 @@ class QueryPreviewView(QueryBaseView):
 
         data = request.data
         try:
-            dataset_id = data['datasetId']
+            dataset_id = data.pop('datasetId')
             self.check_object_permissions(request, dataset_id)
 
             dataset = self.get_dataset_wdae_wrapper(dataset_id)
@@ -114,9 +114,11 @@ class QueryDownloadView(QueryBaseView):
         user = request.user
 
         try:
-            self.check_object_permissions(request, data['datasetId'])
+            dataset_id = data.pop('datasetId')
 
-            dataset = self.get_dataset_wdae_wrapper(data['datasetId'])
+            self.check_object_permissions(request, dataset_id)
+
+            dataset = self.get_dataset_wdae_wrapper(dataset_id)
 
             columns = dataset.download_columns
             try:
