@@ -75,7 +75,7 @@ class QueryPreviewView(QueryBaseView):
                 variants_hard_max=self.MAX_VARIANTS)
 
             # pprint.pprint(response)
-            response['legend'] = dataset.get_legend(safe=True, **data)
+            response['legend'] = dataset.get_legend(**data)
 
             return Response(response, status=status.HTTP_200_OK)
         except NotAuthenticated:
