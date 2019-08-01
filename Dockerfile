@@ -1,5 +1,7 @@
 FROM amd64/ubuntu:18.04
 
+ARG SOURCE_DIR="."
+
 RUN apt-get update --fix-missing && \ 
 	apt-get install -y build-essential default-libmysqlclient-dev gcc \
         libgl1-mesa-glx openjdk-8-jdk-headless procps vim libsasl2-dev \
