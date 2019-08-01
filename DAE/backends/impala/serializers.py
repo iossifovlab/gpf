@@ -51,6 +51,14 @@ class ParquetSerializer(object):
 
     ])
 
+    GENOMIC_SCORES_SCHEMA_CLEAN_UP = [
+        'family_bin',
+        'rare',
+        'genomic_scores_data',
+        'frequency_bin',
+
+    ]
+
     summary = namedtuple(
         'summary', [
             'summary_variant_index',
@@ -115,8 +123,9 @@ class ParquetSerializer(object):
             ParquetSerializer.BASE_SCHEMA)
         genomic_scores_schema = ParquetSchema.diff_schemas(
             self.schema, base_schema)
-        if 'genomic_scores_data' in genomic_scores_schema.columns:
-            del genomic_scores_schema.columns['genomic_scores_data']
+        for field_name in self.GENOMIC_SCORES_SCHEMA_CLEAN_UP:
+            if field_name in genomic_scores_schema.columns:
+                del genomic_scores_schema.columns[field_name]
 
         self.genomic_scores_schema = genomic_scores_schema.to_arrow()
 
@@ -245,7 +254,8 @@ class ParquetSerializer(object):
             return None
         buff = bytes(data, 'latin1')
         flat = np.frombuffer(buff, dtype=np.float32)
-        assert len(flat) % self.genomic_scores_count == 0
+        assert len(flat) % self.genomic_scores_count == 0, \
+            self.genomic_scores_schema
 
         rows = len(flat) // self.genomic_scores_count
         result = flat.reshape([rows, self.genomic_scores_count], order='F')

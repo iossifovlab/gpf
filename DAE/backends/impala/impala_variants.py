@@ -1,5 +1,3 @@
-import numba
-
 from annotation.tools.file_io_parquet import ParquetSchema
 from variants.family import FamiliesBase, Family
 from backends.impala.parquet_io import ParquetSerializer
@@ -53,7 +51,6 @@ class ImpalaFamilyVariants(FamiliesBase):
             row = next(cursor)
             return row[0]
 
-    # @numba.jit(nopython=True)
     def query_variants(
             self, regions=None, genes=None, effect_types=None,
             family_ids=None, person_ids=None,
@@ -76,7 +73,7 @@ class ImpalaFamilyVariants(FamiliesBase):
                 return_unknown=return_unknown,
                 limit=limit)
 
-            print("FINAL QUERY: ", query)
+            # print("FINAL QUERY: ", query)
             cursor.execute(query)
             for row in cursor:
                 chrom, position, reference, alternatives_data, \
@@ -158,8 +155,6 @@ class ImpalaFamilyVariants(FamiliesBase):
             return schema
 
     def _build_real_attr_where(self, real_attr_filter):
-        print("real_attr_filter:", real_attr_filter)
-
         query = []
         for attr_name, attr_range in real_attr_filter:
 
@@ -459,7 +454,9 @@ class ImpalaFamilyVariants(FamiliesBase):
             variant_type=None, real_attr_filter=None,
             ultra_rare=None,
             return_reference=None,
-            return_unknown=None):
+            return_unknown=None,
+            limit=None):
+
         where_clause = self._build_where(
             regions=regions, genes=genes, effect_types=effect_types,
             family_ids=family_ids, person_ids=person_ids,
