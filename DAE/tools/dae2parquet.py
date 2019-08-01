@@ -302,7 +302,7 @@ if __name__ == "__main__":
             argv.families, argv.variants,
             family_format=argv.family_format,
             output=argv.output,
-            rows=argv.rows, bucket_index=0
+            bucket_index=0
         )
     elif argv.type == 'dae':
         dae_build_transmitted(
