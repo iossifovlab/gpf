@@ -24,6 +24,7 @@ import pytest
     ("backends/trios2", ['ch2'], 2),
     ("backends/trios2", ['mom2', 'ch2'], 8),
     ("backends/trios2", ['mom1', 'dad1'], 9),
+    ("backends/trios2", ['mom1'] * 10101 + ['dad1'], 9),
     ("backends/generated_people", None, 2),
     ("backends/generated_people", ['prb1'], 1),
     ("backends/generated_people", ['prb2'], 1),
