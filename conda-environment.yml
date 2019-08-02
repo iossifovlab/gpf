@@ -135,3 +135,4 @@ pytest-mock=1.10.4
 pylint=2.3.1
 docker-compose=1.24
 tqdm=4.32.1
+seaborn=0.9.0
