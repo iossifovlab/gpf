@@ -203,6 +203,13 @@ def init_parser_dae_common(dae_config, parser):
         help="Skip reference alleles and all unknown alleles"
     )
 
+    parser.add_argument(
+        '-r', '--rows', type=int,
+        default=100000,
+        dest='rows', metavar='rows',
+        help='row group size'
+    )
+
 
 def init_parser_denovo(dae_config, subparsers):
     parser_denovo = subparsers.add_parser('denovo')
@@ -228,13 +235,6 @@ def init_transmitted_common(dae_config, parser):
         'toomany', type=str,
         metavar='<toomany filename>',
         help=''
-    )
-
-    parser.add_argument(
-        '-r', '--rows', type=int,
-        default=100000,
-        dest='rows', metavar='rows',
-        help='row group size'
     )
 
 
@@ -302,7 +302,7 @@ if __name__ == "__main__":
             argv.families, argv.variants,
             family_format=argv.family_format,
             output=argv.output,
-            bucket_index=0
+            rows=argv.rows, bucket_index=0
         )
     elif argv.type == 'dae':
         dae_build_transmitted(
