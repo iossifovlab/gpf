@@ -27,6 +27,8 @@ class ImpalaFamilyVariants(FamiliesBase):
     GENE_REGIONS_HEURISTIC_CUTOFF = 20
     GENE_REGIONS_HEURISTIC_EXTEND = 20000
 
+    MAX_CHILD_NUMBER = 9999
+
     def __init__(self, config, impala_connection, gene_models=None):
 
         super(ImpalaFamilyVariants, self).__init__()
@@ -215,10 +217,19 @@ class ImpalaFamilyVariants(FamiliesBase):
                     val=val.replace("'", "\\'"))
                 for val in query_values]
 
-            where = ' {column_name} in ( {values} ) '.format(
-                column_name=column_name,
-                values=','.join(values))
-            return where
+            where = []
+            for i in range(0, len(values), self.MAX_CHILD_NUMBER):
+                chunk_values = values[i:i + self.MAX_CHILD_NUMBER]
+
+                w = ' {column_name} in ( {values} ) '.format(
+                    column_name=column_name,
+                    values=','.join(chunk_values))
+
+                where.append(w)
+
+            where_clause=" OR ".join([
+                    "( {} )".format(w) for w in where])
+            return where_clause
 
     def _build_bitwise_attr_where(
             self, column_name, query_value, query_transformer):
