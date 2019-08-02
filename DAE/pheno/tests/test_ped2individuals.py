@@ -3,16 +3,12 @@ Created on Oct 16, 2017
 
 @author: lubo
 """
-from __future__ import print_function
-from __future__ import unicode_literals
-from builtins import object
 import abc
 import pytest
 from pheno.prepare.ped2individuals import PedigreeToFamily, NoProband
 from collections import defaultdict
 from variants.attributes import Role, Sex, Status
 import itertools
-from future.utils import with_metaclass
 
 
 @pytest.fixture(scope="module")
@@ -24,7 +20,7 @@ def assert_role_at_index(individuals, index, role):
     assert individuals[index].individual.role == role
 
 
-class BaseFamily(with_metaclass(abc.ABCMeta, object)):
+class BaseFamily(object, metaclass=abc.ABCMeta):
     FAMILY_ID = 'some_family'
 
     def family_members(self, families):
