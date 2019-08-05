@@ -1,13 +1,13 @@
 import pytest
 
 
-def test_study_config_simple(study_definitions):
-    assert study_definitions is not None
-    assert study_definitions.study_ids
+def test_study_config_simple(study_configs):
+    assert study_configs is not None
+    assert list(study_configs.keys())
 
 
-def test_study_config_year(study_definitions):
-    study_config = study_definitions.get_study_config('inheritance_trio')
+def test_study_config_year(study_configs):
+    study_config = study_configs.get('inheritance_trio')
     assert study_config is not None
     assert study_config.year == ''
 

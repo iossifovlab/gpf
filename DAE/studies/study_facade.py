@@ -1,24 +1,31 @@
 from studies.study_wrapper import StudyWrapper
 from studies.study_factory import StudyFactory
-from studies.study_definition import SingleFileStudiesDefinition
+from studies.study_config import StudyConfig
+
+from configuration.dae_config_parser import DAEConfigParser
 
 
 class StudyFacade(object):
 
     def __init__(
             self, dae_config, pheno_factory,
-            study_definition=None, study_factory=None):
+            study_configs=None, study_factory=None):
 
         self.dae_config = dae_config
         self._study_cache = {}
         self._study_wrapper_cache = {}
 
-        if study_definition is None:
-            study_definition = SingleFileStudiesDefinition()
+        if study_configs is None:
+            study_configs = DAEConfigParser.single_file_configuration(
+                None,
+                None,
+                StudyConfig,
+                default_conf=None
+            )
         if study_factory is None:
             study_factory = StudyFactory(dae_config)
 
-        self.study_definition = study_definition
+        self.study_configs = study_configs
         self.study_factory = study_factory
         self.pheno_factory = pheno_factory
 
@@ -50,15 +57,14 @@ class StudyFacade(object):
     def get_all_study_ids(self):
         return [
             conf.id
-            for conf in
-            self.study_definition.get_all_study_configs()
+            for conf in list(self.study_configs.values())
         ]
 
     def get_all_study_configs(self):
-        return self.study_definition.get_all_study_configs()
+        return list(self.study_configs.values())
 
     def get_study_config(self, study_id):
-        return self.study_definition.get_study_config(study_id)
+        return self.study_configs.get(study_id)
 
     def load_cache(self, study_ids=None):
         if study_ids is None:
@@ -73,7 +79,7 @@ class StudyFacade(object):
                 self._load_study_in_cache(study_id)
 
     def _load_study_in_cache(self, study_id):
-        conf = self.study_definition.get_study_config(study_id)
+        conf = self.study_configs.get(study_id)
         if not conf:
             return
 

@@ -2,10 +2,10 @@ import os
 import pytest
 
 from pheno.pheno_factory import PhenoFactory
-from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
 from studies.study_facade import StudyFacade
 from studies.study_wrapper import StudyWrapper
+from studies.study_config import StudyConfig
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
 from studies.dataset_config import DatasetConfig
@@ -41,16 +41,13 @@ def dae_config_fixture():
 
 
 @pytest.fixture(scope='module')
-def study_configs(study_definition):
-    return list(study_definition.configs.values())
-
-
-@pytest.fixture(scope='module')
-def study_definitions(dae_config_fixture):
-    return DirectoryEnabledStudiesDefinition(
-        studies_dir=studies_dir(),
-        work_dir=fixtures_dir(),
-        default_conf=dae_config_fixture.default_configuration_conf)
+def study_configs(dae_config_fixture):
+    return DAEConfigParser.directory_configurations(
+        dae_config_fixture.studies_dir,
+        StudyConfig,
+        dae_config_fixture.dae_data_dir,
+        default_conf=dae_config_fixture.default_configuration_conf
+    )
 
 
 @pytest.fixture(scope='module')
@@ -60,25 +57,25 @@ def study_factory(dae_config_fixture):
 
 @pytest.fixture(scope='module')
 def study_facade(
-        dae_config_fixture, study_factory, study_definitions, pheno_factory):
+        dae_config_fixture, study_factory, study_configs, pheno_factory):
     return StudyFacade(
         dae_config_fixture,
         pheno_factory,
-        study_factory=study_factory, study_definition=study_definitions)
+        study_factory=study_factory, study_configs=study_configs)
 
 
 @pytest.fixture(scope='module')
-def quads_f1_config(study_definitions):
-    return study_definitions.get_study_config('quads_f1')
+def quads_f1_config(study_configs):
+    return study_configs.get('quads_f1')
 
 
 @pytest.fixture(scope='module')
-def quads_f2_config(study_definitions):
-    return study_definitions.get_study_config('quads_f2')
+def quads_f2_config(study_configs):
+    return study_configs.get('quads_f2')
 
 
-def load_study(study_factory, study_definitions, study_name):
-    config = study_definitions.get_study_config(study_name)
+def load_study(study_factory, study_configs, study_name):
+    config = study_configs.get(study_name)
 
     result = study_factory.make_study(config)
     assert result is not None
@@ -86,38 +83,38 @@ def load_study(study_factory, study_definitions, study_name):
 
 
 @pytest.fixture(scope='module')
-def inheritance_trio(study_factory, study_definitions):
-    return load_study(study_factory, study_definitions, 'inheritance_trio')
+def inheritance_trio(study_factory, study_configs):
+    return load_study(study_factory, study_configs, 'inheritance_trio')
 
 
 @pytest.fixture(scope='module')
-def quads_f1(study_factory, study_definitions):
-    return load_study(study_factory, study_definitions, 'quads_f1')
+def quads_f1(study_factory, study_configs):
+    return load_study(study_factory, study_configs, 'quads_f1')
 
 
 @pytest.fixture(scope='module')
-def quads_f2(study_factory, study_definitions):
-    return load_study(study_factory, study_definitions, 'quads_f2')
+def quads_f2(study_factory, study_configs):
+    return load_study(study_factory, study_configs, 'quads_f2')
 
 
 @pytest.fixture(scope='module')
-def quads_variant_types(study_factory, study_definitions):
-    return load_study(study_factory, study_definitions, 'quads_variant_types')
+def quads_variant_types(study_factory, study_configs):
+    return load_study(study_factory, study_configs, 'quads_variant_types')
 
 
 @pytest.fixture(scope='module')
-def quads_two_families(study_factory, study_definitions):
-    return load_study(study_factory, study_definitions, 'quads_two_families')
+def quads_two_families(study_factory, study_configs):
+    return load_study(study_factory, study_configs, 'quads_two_families')
 
 
 @pytest.fixture(scope='module')
-def quads_in_child(study_factory, study_definitions):
-    return load_study(study_factory, study_definitions, 'quads_in_child')
+def quads_in_child(study_factory, study_configs):
+    return load_study(study_factory, study_configs, 'quads_in_child')
 
 
 @pytest.fixture(scope='module')
-def quads_in_parent(study_factory, study_definitions):
-    return load_study(study_factory, study_definitions, 'quads_in_parent')
+def quads_in_parent(study_factory, study_configs):
+    return load_study(study_factory, study_configs, 'quads_in_parent')
 
 
 @pytest.fixture(scope='module')

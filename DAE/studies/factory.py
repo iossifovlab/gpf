@@ -2,9 +2,9 @@ from pheno.pheno_factory import PhenoFactory
 
 from configuration.dae_config_parser import DAEConfigParser
 
-from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
 from studies.study_facade import StudyFacade
+from studies.study_config import StudyConfig
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
 from studies.dataset_config import DatasetConfig
@@ -16,10 +16,12 @@ class VariantsDb(object):
             self, dae_config,
             pheno_factory=None, thrift_connection=None):
         self.dae_config = dae_config
-        self.studies_definitions = DirectoryEnabledStudiesDefinition(
-            studies_dir=dae_config.studies_dir,
-            work_dir=dae_config.dae_data_dir,
-            default_conf=dae_config.default_configuration_conf)
+        self.study_configs = DAEConfigParser.directory_configurations(
+            dae_config.studies_dir,
+            StudyConfig,
+            dae_config.dae_data_dir,
+            default_conf=dae_config.default_configuration_conf
+        )
 
         study_factory = StudyFactory(dae_config, thrift_connection)
 
@@ -29,7 +31,7 @@ class VariantsDb(object):
 
         self.study_facade = StudyFacade(
             self.dae_config,
-            self.pheno_factory, self.studies_definitions, study_factory)
+            self.pheno_factory, self.study_configs, study_factory)
 
         self.dataset_configs = DAEConfigParser.directory_configurations(
             dae_config.datasets_dir,
@@ -56,7 +58,7 @@ class VariantsDb(object):
             "Overlapping studies and datasets ids: {}".format(overlapping)
 
     def get_studies_ids(self):
-        return self.studies_definitions.study_ids
+        return self.study_facade.get_all_study_ids()
 
     def get_study_config(self, study_id):
         return self.study_facade.get_study_config(study_id)
@@ -77,7 +79,7 @@ class VariantsDb(object):
         return self.study_facade.get_all_study_configs()
 
     def get_datasets_ids(self):
-        return list(self.dataset_configs.keys())
+        return self.dataset_facade.get_all_dataset_ids()
 
     def get_dataset_config(self, dataset_id):
         return self.dataset_facade.get_dataset_config(dataset_id)
@@ -99,9 +101,6 @@ class VariantsDb(object):
 
     def get_all_ids(self):
         return self.get_studies_ids() + self.get_datasets_ids()
-
-    # def get_all_names(self):
-    #     return self.get_studies_names() + self.get_datasets_names()
 
     def get_config(self, id):
         study_config = self.get_study_config(id)

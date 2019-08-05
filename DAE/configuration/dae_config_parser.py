@@ -1,9 +1,7 @@
 import os
-import abc
 
 
 class DAEConfigParser(object):
-    __metaclass__ = abc.ABCMeta
 
     ENABLED_DIR = '.'
 
@@ -71,8 +69,9 @@ class DAEConfigParser(object):
                 )
         return config_paths
 
-    def single_file_configurable_entity_definition(
-            self, config_path, work_dir, configurable_entity_config_class,
+    @staticmethod
+    def single_file_configuration(
+            config_path, work_dir, configurable_entity_config_class,
             default_values=None, default_conf=None):
         if default_values is None:
             default_values = {}
@@ -82,9 +81,11 @@ class DAEConfigParser(object):
             default_values, default_conf)
 
         if config and id in config:
-            self.configs = {config.id: config}
+            configs = {config.id: config}
         else:
-            self.configs = config
+            configs = config
+
+        return configs
 
     @classmethod
     def load_entity_config(

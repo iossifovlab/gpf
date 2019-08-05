@@ -24,9 +24,11 @@ class ConfigSectionDefinition(DAEConfigParser):
             work_dir = os.environ.get("DAE_DB_DIR")
         assert work_dir is not None
 
-        self.single_file_configurable_entity_definition(
+        configs = ConfigSectionDefinition.single_file_configuration(
             config_path, work_dir, ConfigSectionConfig,
             {'wd': work_dir, 'work_dir': work_dir})
+
+        self.configs = configs
 
     @property
     def section_ids(self):
