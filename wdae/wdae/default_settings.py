@@ -166,7 +166,6 @@ INSTALLED_APPS = [
     'pheno_browser_api',
     'common_reports_api',
     'pheno_tool_api',
-
     'users_api',
     'groups_api',
 

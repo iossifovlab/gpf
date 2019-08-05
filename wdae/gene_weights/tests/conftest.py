@@ -2,10 +2,11 @@ import os
 import pytest
 
 from dae.configurable_entities.configuration import DAEConfig
-from datasets_api.studies_manager import StudiesManager
 
 from dae.gene.config import GeneInfoConfig
 from dae.gene.weights import WeightsLoader
+
+from datasets_api.studies_manager import StudiesManager
 
 
 def fixtures_dir():
