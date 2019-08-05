@@ -102,19 +102,19 @@ class VariantsDb(object):
     def get_all_ids(self):
         return self.get_studies_ids() + self.get_datasets_ids()
 
-    def get_config(self, id):
-        study_config = self.get_study_config(id)
-        dataset_config = self.get_dataset_config(id)
+    def get_config(self, config_id):
+        study_config = self.get_study_config(config_id)
+        dataset_config = self.get_dataset_config(config_id)
         return study_config if study_config else dataset_config
 
-    def get(self, id):
-        study = self.get_study(id)
-        dataset = self.get_dataset(id)
+    def get(self, object_id):
+        study = self.get_study(object_id)
+        dataset = self.get_dataset(object_id)
         return study if study else dataset
 
-    def get_wdae_wrapper(self, id):
-        study_wdae_wrapper = self.get_study_wdae_wrapper(id)
-        dataset_wdae_wrapper = self.get_dataset_wdae_wrapper(id)
+    def get_wdae_wrapper(self, wdae_wrapper_id):
+        study_wdae_wrapper = self.get_study_wdae_wrapper(wdae_wrapper_id)
+        dataset_wdae_wrapper = self.get_dataset_wdae_wrapper(wdae_wrapper_id)
         return study_wdae_wrapper\
             if study_wdae_wrapper else dataset_wdae_wrapper
 

@@ -27,19 +27,16 @@ class DatasetFactory(object):
         self._fill_studies_configs(dataset_config)
 
         studies = []
-        for study_name in dataset_config.studies:
-            study = self.study_facade.get_study(study_name)
+        for study_id in dataset_config.studies:
+            study = self.study_facade.get_study(study_id)
 
             if not study:
                 raise ValueError(
                     "Unknown study: {}, known studies: [{}]".format(
                         dataset_config.studies,
-                        ",".join(self.study_facade.study_all_study_ids())
+                        ",".join(self.study_facade.get_all_study_ids())
                     ))
             studies.append(study)
         assert studies
 
-        return Dataset(
-            dataset_config,
-            studies
-        )
+        return Dataset(dataset_config, studies)
