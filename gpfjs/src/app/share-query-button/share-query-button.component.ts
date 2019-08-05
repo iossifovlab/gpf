@@ -5,11 +5,11 @@ import { QueryService } from '../query/query.service';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-  selector: 'gpf-save-query-button',
-  templateUrl: './save-query-button.component.html',
-  styleUrls: ['./save-query-button.component.css']
+  selector: 'gpf-share-query-button',
+  templateUrl: './share-query-button.component.html',
+  styleUrls: ['./share-query-button.component.css']
 })
-export class SaveQueryButtonComponent implements OnInit {
+export class ShareQueryButtonComponent implements OnInit {
 
   @Input()
   queryType: string;
