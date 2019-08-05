@@ -17,7 +17,7 @@ from datasets_api.studies_manager import get_studies_manager
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.permissions import IsDatasetAllowed
 
-from pheno_browser.db import DbManager
+from dae.pheno_browser.db import DbManager
 
 
 class PhenoBrowserBaseView(APIView):

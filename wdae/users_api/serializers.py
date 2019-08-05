@@ -3,8 +3,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import transaction
 
-from users_api.validators import ProtectedGroupsValidator
-from users_api.validators import SomeSuperuserLeftValidator
+from .validators import ProtectedGroupsValidator
+from .validators import SomeSuperuserLeftValidator
 
 
 class CreatableSlugRelatedField(serializers.SlugRelatedField):

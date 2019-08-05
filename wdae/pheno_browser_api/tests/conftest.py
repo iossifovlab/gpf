@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from configurable_entities.configuration import DAEConfig
+from dae.configurable_entities.configuration import DAEConfig
 from datasets_api.studies_manager import StudiesManager
 
 

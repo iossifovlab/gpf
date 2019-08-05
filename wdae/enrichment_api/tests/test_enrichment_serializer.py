@@ -1,6 +1,6 @@
 import pytest
 
-from enrichment_tool.event_counters import EnrichmentResult
+from dae.enrichment_tool.event_counters import EnrichmentResult
 
 
 def test_serialize(db, enrichment_serializer):

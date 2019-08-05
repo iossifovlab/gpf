@@ -9,19 +9,19 @@ from rest_framework import status
 
 import logging
 
-from enrichment_api.enrichment_builder import EnrichmentBuilder
-from enrichment_api.enrichment_serializer import EnrichmentSerializer
+from .enrichment_builder import EnrichmentBuilder
+from .enrichment_serializer import EnrichmentSerializer
 
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 from datasets_api.studies_manager import get_studies_manager
 
-from common.query_base import GeneSymsMixin
+from dae.common.query_base import GeneSymsMixin
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
-from enrichment_tool.tool import EnrichmentTool
-from enrichment_tool.event_counters import CounterBase
+from dae.enrichment_tool.tool import EnrichmentTool
+from dae.enrichment_tool.event_counters import CounterBase
 
 # from memory_profiler import profile
 # fp = open('memory_profiler_basic_mean.log', 'w+')

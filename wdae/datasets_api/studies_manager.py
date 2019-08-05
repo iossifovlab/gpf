@@ -1,20 +1,20 @@
-from configurable_entities.configuration import DAEConfig
+from dae.configurable_entities.configuration import DAEConfig
 
-from studies.factory import VariantsDb
+from dae.studies.factory import VariantsDb
 
-from common_reports.common_report_facade import CommonReportFacade
+from dae.common_reports.common_report_facade import CommonReportFacade
 
-from gene.config import GeneInfoConfig
-from gene.scores import ScoreLoader
-from gene.weights import WeightsLoader
+from dae.gene.config import GeneInfoConfig
+from dae.gene.scores import ScoreLoader
+from dae.gene.weights import WeightsLoader
 
-from gene.gene_set_collections import GeneSetsCollections
-from gene.denovo_gene_set_collection_facade import \
+from dae.gene.gene_set_collections import GeneSetsCollections
+from dae.gene.denovo_gene_set_collection_facade import \
     DenovoGeneSetCollectionFacade
 
-from enrichment_tool.background_facade import BackgroundFacade
+from dae.enrichment_tool.background_facade import BackgroundFacade
 
-from datasets_api.models import Dataset
+from .models import Dataset
 
 from threading import Lock
 

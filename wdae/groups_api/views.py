@@ -6,10 +6,10 @@ from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import status
 
-from groups_api.serializers import GroupSerializer
-from groups_api.serializers import GroupRetrieveSerializer
-from groups_api.serializers import PermissionChangeSerializer
-from groups_api.serializers import PermissionRevokeSerializer
+from .serializers import GroupSerializer
+from .serializers import GroupRetrieveSerializer
+from .serializers import PermissionChangeSerializer
+from .serializers import PermissionRevokeSerializer
 from datasets_api.models import Dataset
 from django.contrib.auth.models import Group
 from guardian.shortcuts import assign_perm

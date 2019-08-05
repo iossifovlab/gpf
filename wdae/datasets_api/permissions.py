@@ -5,8 +5,8 @@ Created on Jul 5, 2017
 '''
 from rest_framework import permissions
 
-from datasets_api.studies_manager import get_studies_manager
-from datasets_api.models import Dataset
+from .studies_manager import get_studies_manager
+from .models import Dataset
 from guardian.utils import get_anonymous_user
 
 

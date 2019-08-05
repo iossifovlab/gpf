@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from users_api.models import WdaeUser
+from .models import WdaeUser
 from django.contrib.auth.models import Group
 
 

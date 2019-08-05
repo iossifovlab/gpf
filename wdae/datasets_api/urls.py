@@ -4,7 +4,7 @@ Created on Jan 20, 2017
 @author: lubo
 '''
 from django.conf.urls import url
-from datasets_api import views
+from . import views
 
 
 urlpatterns = [

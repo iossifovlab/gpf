@@ -39,7 +39,7 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected):
         virtuals=[],
     )
     with mocker.patch(
-            "annotation.tools.lift_over_annotator."
+            "dae.annotation.tools.lift_over_annotator."
             "LiftOverAnnotator.build_lift_over"):
 
         annotator = LiftOverAnnotator(config)
@@ -78,7 +78,7 @@ def test_pipeline_with_liftover(
         "fixtures/lift_over_test_annotator.conf")
 
     with mocker.patch(
-            "annotation.tools.lift_over_annotator."
+            "dae.annotation.tools.lift_over_annotator."
             "LiftOverAnnotator.build_lift_over"):
 
         pipeline = PipelineAnnotator.build(

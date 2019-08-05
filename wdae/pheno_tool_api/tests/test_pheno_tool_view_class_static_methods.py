@@ -1,7 +1,7 @@
 import pytest
-from variants.attributes import Sex
+from dae.variants.attributes import Sex
 from pheno_tool_api.views import PhenoToolView
-from pheno_tool.pheno_common import PhenoResult
+from dae.pheno_tool.pheno_common import PhenoResult
 
 
 def test_pheno_tool_view_build_report_description():

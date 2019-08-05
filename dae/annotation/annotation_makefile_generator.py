@@ -30,7 +30,7 @@ class VariantDBConfig(object):
             config_parser.read_file(infile)
             for section in config_parser.sections():
                 if section.startswith('study.'):
-                    study = common.config._section_tree(
+                    study = dae.common.config._section_tree(
                         section, config_parser)
                     config[section] = study
         return config

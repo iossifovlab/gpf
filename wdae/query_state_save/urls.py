@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from query_state_save.views import QueryStateSaveView, QueryStateLoadView
+from .views import QueryStateSaveView, QueryStateLoadView
 
 urlpatterns = [
     url(r'^/save', QueryStateSaveView.as_view(), name="save-query"),

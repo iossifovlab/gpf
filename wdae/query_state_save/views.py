@@ -6,8 +6,8 @@ from rest_framework import views
 from rest_framework.response import Response
 from rest_framework import status
 
-from query_state_save.models import QueryState
-from query_state_save.serializers import QueryStateSerializer
+from .models import QueryState
+from .serializers import QueryStateSerializer
 
 
 class QueryStateSaveView(views.APIView):

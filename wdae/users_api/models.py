@@ -15,8 +15,9 @@ from django.utils import timezone
 from django.conf import settings
 from guardian.conf import settings as guardian_settings
 from django.contrib.auth.models import Group
-from helpers.logger import LOGGER
 from django.db.models.signals import m2m_changed, post_delete, pre_delete
+
+from helpers.logger import LOGGER
 
 
 class WdaeUserManager(BaseUserManager):

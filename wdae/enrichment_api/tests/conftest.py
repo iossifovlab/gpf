@@ -1,16 +1,16 @@
 import os
 import pytest
 
-from configurable_entities.configuration import DAEConfig
-from studies.factory import VariantsDb
+from dae.configurable_entities.configuration import DAEConfig
+from dae.studies.factory import VariantsDb
 
 from datasets_api.studies_manager import StudiesManager
 
 from enrichment_api.enrichment_builder import EnrichmentBuilder
 from enrichment_api.enrichment_serializer import EnrichmentSerializer
 
-from enrichment_tool.event_counters import EventsCounter
-from enrichment_tool.tool import EnrichmentTool
+from dae.enrichment_tool.event_counters import EventsCounter
+from dae.enrichment_tool.tool import EnrichmentTool
 
 
 def fixtures_dir():

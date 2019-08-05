@@ -5,7 +5,7 @@ Created on Aug 10, 2016
 from django.conf.urls import url
 
 from rest_framework.routers import SimpleRouter
-from users_api import views
+from . import views
 
 router = SimpleRouter(trailing_slash=False)
 router.register(r'users', views.UserViewSet, basename='users')

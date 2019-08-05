@@ -2,10 +2,10 @@ import pytest
 
 import os
 
-from studies.factory import VariantsDb
-from configurable_entities.configuration import DAEConfig
+from dae.studies.factory import VariantsDb
+from dae.configurable_entities.configuration import DAEConfig
 
-from common_reports.common_report_facade import CommonReportFacade
+from dae.common_reports.common_report_facade import CommonReportFacade
 
 from datasets_api.studies_manager import StudiesManager
 

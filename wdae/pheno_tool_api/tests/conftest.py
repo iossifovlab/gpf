@@ -1,7 +1,7 @@
 import pytest
 import os
-from configurable_entities.configuration import DAEConfig
-from studies.factory import VariantsDb
+from dae.configurable_entities.configuration import DAEConfig
+from dae.studies.factory import VariantsDb
 from datasets_api.studies_manager import StudiesManager
 
 

@@ -10,8 +10,8 @@ import traceback
 from genotype_browser.views import QueryBaseView
 import numpy as np
 import os
-from pheno.common import MeasureType
-from pheno_browser.db import DbManager
+from dae.pheno.common import MeasureType
+from dae.pheno_browser.db import DbManager
 import logging
 
 logger = logging.getLogger(__name__)

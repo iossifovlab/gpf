@@ -8,10 +8,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from guardian.shortcuts import get_groups_with_perms
 
-from datasets_api.studies_manager import get_studies_manager
-from datasets_api.models import Dataset
+from .studies_manager import get_studies_manager
+from .models import Dataset
 from groups_api.serializers import GroupSerializer
-from common.query_base import StatusMixin
+from dae.common.query_base import StatusMixin
 
 
 class DatasetView(APIView):

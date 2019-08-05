@@ -2,7 +2,7 @@ import dae.common.config
 
 
 def test_config_to_dict(configuration):
-    result = common.config.to_dict(configuration)
+    result = dae.common.config.to_dict(configuration)
     assert result is not None
 
     sections = list(result.keys())

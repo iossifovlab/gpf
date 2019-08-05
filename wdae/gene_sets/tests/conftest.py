@@ -1,12 +1,13 @@
 import os
 import pytest
 
-from gene.denovo_gene_set_collection_config import \
+from dae.gene.denovo_gene_set_collection_config import \
     DenovoGeneSetCollectionConfig
-from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
+from dae.gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 
-from configurable_entities.configuration import DAEConfig
-from studies.factory import VariantsDb
+from dae.configurable_entities.configuration import DAEConfig
+from dae.studies.factory import VariantsDb
+
 from datasets_api.studies_manager import StudiesManager
 
 

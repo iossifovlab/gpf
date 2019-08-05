@@ -54,7 +54,7 @@ class ScoreLoader(object):
         })
         config.optionxform = str
         config.read(self.daeConfig.genomic_scores_conf)
-        self.config = Box(common.config.to_dict(config),
+        self.config = Box(dae.common.config.to_dict(config),
                           default_box=True, default_box_attr=None)
 
         self.scores = OrderedDict()

@@ -3,7 +3,7 @@ Created on Feb 17, 2017
 
 @author: lubo
 '''
-from enrichment_tool.genotype_helper import GenotypeHelper
+from dae.enrichment_tool.genotype_helper import GenotypeHelper
 
 
 class EnrichmentBuilder(object):

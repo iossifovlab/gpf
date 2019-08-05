@@ -18,12 +18,12 @@ from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework import permissions
 from rest_framework import filters
-from users_api.authentication import \
+from .authentication import \
     SessionAuthenticationWithUnauthenticatedCSRF
-from users_api.models import VerificationPath
-from users_api.serializers import UserSerializer
-from users_api.serializers import UserWithoutEmailSerializer
-from users_api.serializers import BulkGroupOperationSerializer
+from .models import VerificationPath
+from .serializers import UserSerializer
+from .serializers import UserWithoutEmailSerializer
+from .serializers import BulkGroupOperationSerializer
 from helpers.logger import log_filter, LOGGER
 
 

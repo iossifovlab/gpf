@@ -37,7 +37,7 @@ class DenovoGeneSetCollectionConfig(ConfigurableEntityConfig):
         # TODO: Remove this when study.query_variants can support non
         # expand_effect_types as LGDs
         if standard_criteria_id == 'effect_types':
-            from studies.helpers import expand_effect_types
+            from dae.studies.helpers import expand_effect_types
             value = expand_effect_types(value)
         elif standard_criteria_id == 'sexes':
             value = [Sex.from_name(v) for v in value]

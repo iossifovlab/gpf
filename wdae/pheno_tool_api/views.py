@@ -7,8 +7,8 @@ from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.exceptions import NotAuthenticated
 from django.http.response import StreamingHttpResponse
-from pheno_tool.tool import PhenoTool, PhenoToolHelper
-from variants.attributes import Sex
+from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
+from dae.variants.attributes import Sex
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.studies_manager import get_studies_manager

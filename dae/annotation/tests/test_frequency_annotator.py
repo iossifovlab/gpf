@@ -26,7 +26,7 @@ def test_frequency_annotator(mocker, variants_io, expected_df, capsys):
     genome = mocker.Mock()
     genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
 
-    with mocker.patch('GenomeAccess.openRef') as genome_mock:
+    with mocker.patch('dae.GenomeAccess.openRef') as genome_mock:
         genome_mock.return_value = genome
 
         options = Box({

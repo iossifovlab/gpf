@@ -21,7 +21,7 @@ from datasets_api.studies_manager import get_studies_manager
 from datasets_api.permissions import IsDatasetAllowed
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
-from studies.helpers import get_variants_web_preview, get_variants_web_download
+from dae.studies.helpers import get_variants_web_preview, get_variants_web_download
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 
 

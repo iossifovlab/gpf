@@ -20,7 +20,7 @@ def pheno_confbox(conf_path):
         defaults={'wd': os.path.dirname(conf_path)})
     with open(conf_path, "r") as f:
         config_parser.read_file(f)
-    return ConfigBox(common.config.to_dict(config_parser))
+    return ConfigBox(dae.common.config.to_dict(config_parser))
 
 
 class PhenoConfig(object):
