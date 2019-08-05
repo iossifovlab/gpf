@@ -1,10 +1,9 @@
-from configuration.config_base import\
-    ConfigurableEntityConfig
+from configuration.config_base import ConfigBase
 
 from variants.attributes import Role
 
 
-class GenotypeBrowserConfig(ConfigurableEntityConfig):
+class GenotypeBrowserConfig(ConfigBase):
 
     CAST_TO_BOOL = (
         'hasPresentInParent',

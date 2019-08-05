@@ -1,11 +1,10 @@
 import os
 
 from studies.study_wdae_config import StudyWdaeMixin
-from configuration.config_base import\
-    ConfigurableEntityConfig
+from configuration.config_base import ConfigBase
 
 
-class StudyConfigBase(ConfigurableEntityConfig, StudyWdaeMixin):
+class StudyConfigBase(ConfigBase, StudyWdaeMixin):
 
     SPLIT_STR_SETS = (
         'phenotypes',

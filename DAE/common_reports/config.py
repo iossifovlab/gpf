@@ -4,8 +4,7 @@ from box import Box
 from collections import OrderedDict
 from copy import deepcopy
 
-from configuration.config_base import\
-    ConfigurableEntityConfig
+from configuration.config_base import ConfigBase
 
 
 class CommonReportsConfig(object):
@@ -27,7 +26,7 @@ class CommonReportsConfig(object):
         self.path = config.file
 
 
-class CommonReportsParseConfig(ConfigurableEntityConfig):
+class CommonReportsParseConfig(ConfigBase):
 
     SPLIT_STR_LISTS = ('peopleGroups', 'effect_groups', 'effect_types')
     CAST_TO_BOOL = ('draw_all_families', 'enabled')

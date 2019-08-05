@@ -1,8 +1,7 @@
-from configuration.config_base import \
-    ConfigurableEntityConfig
+from configuration.config_base import ConfigBase
 
 
-class PeopleGroupConfig(ConfigurableEntityConfig):
+class PeopleGroupConfig(ConfigBase):
 
     SPLIT_STR_LISTS = [
         'selectedPeopleGroupValues'

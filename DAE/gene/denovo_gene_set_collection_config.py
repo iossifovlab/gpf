@@ -1,12 +1,11 @@
 import os
 from copy import deepcopy
 
-from configuration.config_base import\
-    ConfigurableEntityConfig
+from configuration.config_base import ConfigBase
 from variants.attributes import Sex
 
 
-class DenovoGeneSetCollectionConfig(ConfigurableEntityConfig):
+class DenovoGeneSetCollectionConfig(ConfigBase):
     SPLIT_STR_LISTS = (
         'peopleGroups',
         'standardCriterias',

@@ -1,8 +1,7 @@
-from configuration.config_base import\
-    ConfigurableEntityConfig
+from configuration.config_base import ConfigBase
 
 
-class GeneWeightConfig(ConfigurableEntityConfig):
+class GeneWeightConfig(ConfigBase):
     SPLIT_STR_LISTS = (
         'weights',
         'range',

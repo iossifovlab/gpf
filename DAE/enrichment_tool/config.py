@@ -7,11 +7,10 @@ import os
 from copy import deepcopy
 from collections import OrderedDict
 
-from configuration.config_base import \
-    ConfigurableEntityConfig
+from configuration.config_base import ConfigBase
 
 
-class EnrichmentConfig(ConfigurableEntityConfig):
+class EnrichmentConfig(ConfigBase):
 
     SPLIT_STR_LISTS = (
         'peopleGroups',

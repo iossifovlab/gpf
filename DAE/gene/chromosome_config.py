@@ -1,8 +1,7 @@
-from configuration.config_base import\
-    ConfigurableEntityConfig
+from configuration.config_base import ConfigBase
 
 
-class ChromosomeConfig(ConfigurableEntityConfig):
+class ChromosomeConfig(ConfigBase):
 
     def __init__(self, config=None, *args, **kwargs):
         super(ChromosomeConfig, self).__init__(config, *args, **kwargs)

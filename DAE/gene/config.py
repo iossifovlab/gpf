@@ -7,8 +7,7 @@ import sys
 from box import Box
 
 from configuration.configuration import DAEConfig
-from configuration.config_base import\
-    ConfigurableEntityConfig
+from configuration.config_base import ConfigBase
 
 from gene.gene_weight_config import GeneWeightConfig
 from gene.gene_term_config import GeneTermConfig
@@ -16,7 +15,7 @@ from gene.chromosome_config import ChromosomeConfig
 from gene.gene_term import loadGeneTerm
 
 
-class GeneInfoConfig(ConfigurableEntityConfig):
+class GeneInfoConfig(ConfigBase):
     """
     Helper class for accessing DAE and geneInfo configuration.
     """
@@ -75,7 +74,7 @@ class GeneInfoConfig(ConfigurableEntityConfig):
         return gt
 
 
-class GeneInfoDB(ConfigurableEntityConfig):
+class GeneInfoDB(ConfigBase):
 
     def __init__(self, config=None, *args, **kwargs):
         super(GeneInfoDB, self).__init__(config, *args, **kwargs)

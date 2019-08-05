@@ -17,7 +17,7 @@ class CaseSensitiveConfigParser(ConfigParser):
         return str(option)
 
 
-class ConfigurableEntityConfig(object):
+class ConfigBase(object):
 
     NEW_KEYS_NAMES = {}
     CONCAT_OPTIONS = {}
@@ -28,7 +28,7 @@ class ConfigurableEntityConfig(object):
     ELEMENTS_TO_COPY = {}
 
     def __init__(self, config, *args, **kwargs):
-        super(ConfigurableEntityConfig, self).__init__(*args, **kwargs)
+        super(ConfigBase, self).__init__(*args, **kwargs)
         self.config = ConfigBox(config, camel_killer_box=True)
 
     def bool(self, item, default=None):
@@ -49,7 +49,7 @@ class ConfigurableEntityConfig(object):
 
     def __getattr__(self, key):
         if key == 'config':
-            return super(ConfigurableEntityConfig, self).__getattr__(key)
+            return super(ConfigBase, self).__getattr__(key)
         return self.config.__getattr__(key)
 
     def __contains__(self, key):
@@ -79,7 +79,7 @@ class ConfigurableEntityConfig(object):
     def __setattr__(self, key, value):
         if key == 'config':
             return\
-                super(ConfigurableEntityConfig, self).__setattr__(key, value)
+                super(ConfigBase, self).__setattr__(key, value)
         return self.config.__setattr__(key, value)
 
     def __delitem__(self, key):

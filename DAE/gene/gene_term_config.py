@@ -1,8 +1,7 @@
-from configuration.config_base import\
-    ConfigurableEntityConfig
+from configuration.config_base import ConfigBase
 
 
-class GeneTermConfig(ConfigurableEntityConfig):
+class GeneTermConfig(ConfigBase):
 
     def __init__(self, config, *args, **kwargs):
         super(GeneTermConfig, self).__init__(config, *args, **kwargs)
