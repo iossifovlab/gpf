@@ -4,15 +4,8 @@ import os
 from copy import deepcopy
 from collections import OrderedDict
 
-from studies.study_definition import DirectoryEnabledStudiesDefinition
-from studies.study_factory import StudyFactory
-from studies.study_facade import StudyFacade
-from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
-from studies.dataset_factory import DatasetFactory
-from studies.dataset_facade import DatasetFacade
 from studies.factory import VariantsDb
 from configuration.configuration import DAEConfig
-from pheno.pheno_factory import PhenoFactory
 
 from common_reports.filter import Filter, FilterObject, FilterObjects
 from common_reports.people_group_info import PeopleGroupsInfo
@@ -42,55 +35,6 @@ def dae_config_fixture():
 
 
 @pytest.fixture(scope='session')
-def study_definitions(dae_config_fixture):
-    return DirectoryEnabledStudiesDefinition(
-        studies_dir=studies_dir(),
-        work_dir=fixtures_dir(),
-        default_conf=dae_config_fixture.default_configuration_conf)
-
-
-@pytest.fixture(scope='session')
-def study_factory(dae_config_fixture):
-    return StudyFactory(dae_config_fixture)
-
-
-@pytest.fixture(scope='session')
-def pheno_factory(dae_config_fixture):
-    return PhenoFactory(dae_config_fixture)
-
-
-@pytest.fixture(scope='session')
-def study_facade(
-        dae_config_fixture, study_factory, study_definitions, pheno_factory):
-    return StudyFacade(
-        dae_config_fixture, pheno_factory,
-        study_factory=study_factory,
-        study_definition=study_definitions)
-
-
-@pytest.fixture(scope='session')
-def dataset_definitions(study_facade, dae_config_fixture):
-    return DirectoryEnabledDatasetsDefinition(
-        study_facade,
-        datasets_dir=datasets_dir(),
-        work_dir=fixtures_dir(),
-        default_conf=dae_config_fixture.default_configuration_conf)
-
-
-@pytest.fixture(scope='session')
-def dataset_factory(study_facade):
-    return DatasetFactory(study_facade=study_facade)
-
-
-@pytest.fixture(scope='session')
-def dataset_facade(dataset_definitions, dataset_factory, pheno_factory):
-    return DatasetFacade(
-        dataset_definitions=dataset_definitions,
-        dataset_factory=dataset_factory,
-        pheno_factory=pheno_factory)
-
-
-@pytest.fixture(scope='session')
 def vdb_fixture(dae_config_fixture):
     vdb = VariantsDb(dae_config_fixture)
     return vdb
@@ -104,43 +48,43 @@ def common_report_facade(vdb_fixture):
 
 
 @pytest.fixture(scope='session')
-def study1(study_facade):
-    return study_facade.get_study_wdae_wrapper("Study1")
+def study1(vdb_fixture):
+    return vdb_fixture.get_study_wdae_wrapper("Study1")
 
 
 @pytest.fixture(scope='session')
-def study2(study_facade):
-    return study_facade.get_study_wdae_wrapper("Study2")
+def study2(vdb_fixture):
+    return vdb_fixture.get_study_wdae_wrapper("Study2")
 
 
 @pytest.fixture(scope='session')
-def study4(study_facade):
-    return study_facade.get_study_wdae_wrapper("study4")
+def study4(vdb_fixture):
+    return vdb_fixture.get_study_wdae_wrapper("study4")
 
 
 @pytest.fixture(scope='session')
-def dataset1(dataset_facade):
-    return dataset_facade.get_dataset_wdae_wrapper("Dataset1")
+def dataset1(vdb_fixture):
+    return vdb_fixture.get_dataset_wdae_wrapper("Dataset1")
 
 
 @pytest.fixture(scope='session')
-def study1_config(study_facade):
-    return study_facade.get_study_config("Study1")
+def study1_config(vdb_fixture):
+    return vdb_fixture.get_study_config("Study1")
 
 
 @pytest.fixture(scope='session')
-def dataset2_config(dataset_facade):
-    return dataset_facade.get_dataset_config("Dataset2")
+def dataset2_config(vdb_fixture):
+    return vdb_fixture.get_dataset_config("Dataset2")
 
 
 @pytest.fixture(scope='session')
-def dataset3_config(dataset_facade):
-    return dataset_facade.get_dataset_config("Dataset3")
+def dataset3_config(vdb_fixture):
+    return vdb_fixture.get_dataset_config("Dataset3")
 
 
 @pytest.fixture(scope='session')
-def dataset4_config(dataset_facade):
-    return dataset_facade.get_dataset_config("Dataset4")
+def dataset4_config(vdb_fixture):
+    return vdb_fixture.get_dataset_config("Dataset4")
 
 
 @pytest.fixture(scope='session')
