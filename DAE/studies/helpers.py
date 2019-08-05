@@ -155,7 +155,7 @@ def generate_pedigree(allele, people_group):
 def get_variants_web(
         dataset, query, genotype_attrs, weights_loader,
         variants_hard_max=2000):
-    variants = dataset.query_variants(weights_loader, safe=True, **query)
+    variants = dataset.query_variants(weights_loader, **query)
     people_group_id = query.get('peopleGroup', {}).get('id', None)
     people_group_config = dataset.config.people_group_config
     people_group = []

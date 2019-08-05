@@ -8,7 +8,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from utils.vcf_utils import GENOTYPE_TYPE
+# from utils.vcf_utils import GENOTYPE_TYPE
 
 from variants.family import FamiliesBase
 from variants.family import Family
