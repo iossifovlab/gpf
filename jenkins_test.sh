@@ -27,48 +27,33 @@ py.test --traceconfig -v --cov-config coveragerc --reimport \
     --cov utils \
     --cov variant_annotation \
     --cov variants \
-    DAE/tests/ \
-    DAE/annotation/tests \
-    DAE/backends/tests \
-    DAE/common/tests/ \
-    DAE/common_reports/tests \
-    DAE/configurable_entities/tests \
-    DAE/enrichment_tool/tests \
-    DAE/gene/tests \
-    DAE/pedigrees/tests \
-    DAE/studies/tests \
-    DAE/tools/tests \
-    DAE/utils/tests \
-    DAE/variant_annotation/tests \
-    DAE/variants/tests/ 
-    # DAE/pheno/tests \
-    # DAE/pheno_browser/tests \
+    dae
 
-py.test -v --cov-config coveragerc \
-    --junitxml=coverage/wdae-junit.xml \
-    --cov-append \
-    --cov-report html:coverage/coverage.html \
-    --cov-report xml:coverage/coverage.xml \
-    --cov chromosome \
-    --cov common_reports_api \
-    --cov datasets_api \
-    --cov enrichment_api \
-    --cov family_counters_api \
-    --cov gene_sets \
-    --cov gene_weights \
-    --cov genomic_scores_api \
-    --cov genotype_browser \
-    --cov groups_api \
-    --cov helpers \
-    --cov measures_api \
-    --cov pheno_browser_api \
-    --cov pheno_tool_api \
-    --cov query_state_save \
-    --cov tests \
-    --cov tools \
-    --cov users_api \
-    --cov wdae \
-    wdae/
+# py.test -v --cov-config coveragerc \
+#     --junitxml=coverage/wdae-junit.xml \
+#     --cov-append \
+#     --cov-report html:coverage/coverage.html \
+#     --cov-report xml:coverage/coverage.xml \
+#     --cov chromosome \
+#     --cov common_reports_api \
+#     --cov datasets_api \
+#     --cov enrichment_api \
+#     --cov family_counters_api \
+#     --cov gene_sets \
+#     --cov gene_weights \
+#     --cov genomic_scores_api \
+#     --cov genotype_browser \
+#     --cov groups_api \
+#     --cov helpers \
+#     --cov measures_api \
+#     --cov pheno_browser_api \
+#     --cov pheno_tool_api \
+#     --cov query_state_save \
+#     --cov tests \
+#     --cov tools \
+#     --cov users_api \
+#     --cov wdae \
+#     wdae/
 
 
 chmod a+rwx -R coverage
