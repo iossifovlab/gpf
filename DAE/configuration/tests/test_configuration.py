@@ -1,8 +1,8 @@
 import os
 import pytest
 
-from configuration.configuration import ConfigSectionDefinition, \
-    DAEConfig
+from configuration.configuration import DAEConfig, ConfigSectionConfig
+from configuration.dae_config_parser import DAEConfigParser
 
 
 def relative_to_this_test_folder(path):
@@ -27,12 +27,15 @@ def dae_config(fixturedir):
 
 
 def test_configuration_sections_simple(fixturedir):
-    definitions = ConfigSectionDefinition(
-        "test_config.conf", work_dir=fixturedir
+    sections = DAEConfigParser.single_file_configuration(
+        "test_config.conf",
+        fixturedir,
+        ConfigSectionConfig,
+        {'wd': fixturedir, 'work_dir': fixturedir}
     )
-    assert definitions is not None
+    assert sections is not None
 
-    genomes_config = definitions.get_section_config("genomes")
+    genomes_config = sections.get("genomes")
     assert genomes_config is not None
 
     assert genomes_config.conf_file is not None
@@ -41,7 +44,7 @@ def test_configuration_sections_simple(fixturedir):
     assert genomes_config.confFile is not None
     assert "genomes.conf" in genomes_config.confFile
 
-    gene_info = definitions.get_section_config("geneInfo")
+    gene_info = sections.get("geneInfo")
     assert gene_info is not None
 
     assert gene_info.conf_file is not None
