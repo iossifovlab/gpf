@@ -6,11 +6,11 @@ Created on Aug 23, 2016
 import os
 from box import ConfigBox
 
-from configurable_entities.configurable_entity_config import \
+from configuration.config_base import \
     CaseSensitiveConfigParser
-from configurable_entities.configuration import DAEConfig
-from configurable_entities.configurable_entity_definition import \
-        ConfigurableEntityDefinition
+from configuration.configuration import DAEConfig
+from configuration.dae_config_parser import \
+        DAEConfigParser
 
 import common.config
 
@@ -28,7 +28,7 @@ class PhenoConfig(object):
     @staticmethod
     def from_dae_config(dae_config):
         configs = [pheno_confbox(conf_path)
-                   for conf_path in ConfigurableEntityDefinition.
+                   for conf_path in DAEConfigParser.
                    _collect_config_paths(dae_config.pheno_dir)]
         return PhenoConfig(configs)
 

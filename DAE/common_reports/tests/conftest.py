@@ -11,7 +11,7 @@ from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
 from studies.factory import VariantsDb
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 from pheno.pheno_factory import PhenoFactory
 
 from common_reports.filter import Filter, FilterObject, FilterObjects

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import argparse
 
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 from gene.denovo_gene_set_collection_facade import \
     DenovoGeneSetCollectionFacade
 from studies.factory import VariantsDb

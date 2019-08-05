@@ -15,7 +15,7 @@ py.test --traceconfig -v --cov-config coveragerc --reimport \
     --cov backends \
     --cov common \
     --cov common_reports \
-    --cov configurable_entities \
+    --cov configuration \
     --cov enrichment_tool \
     --cov gene \
     --cov pedigrees \
@@ -32,7 +32,7 @@ py.test --traceconfig -v --cov-config coveragerc --reimport \
     DAE/backends/tests \
     DAE/common/tests/ \
     DAE/common_reports/tests \
-    DAE/configurable_entities/tests \
+    DAE/configuration/tests \
     DAE/enrichment_tool/tests \
     DAE/gene/tests \
     DAE/pedigrees/tests \

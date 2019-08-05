@@ -20,7 +20,7 @@ from gene.weights import WeightsLoader
 
 from utils.fixtures import path_to_fixtures as _path_to_fixtures
 # Used by pytest
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 from studies.factory import VariantsDb
 
 

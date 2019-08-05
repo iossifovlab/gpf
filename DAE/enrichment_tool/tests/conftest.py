@@ -2,7 +2,7 @@ import pytest
 
 import os
 
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 from studies.factory import VariantsDb
 
 from enrichment_tool.config import EnrichmentConfig

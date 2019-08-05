@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 from datasets_api.studies_manager import StudiesManager
 
 from gene.config import GeneInfoConfig

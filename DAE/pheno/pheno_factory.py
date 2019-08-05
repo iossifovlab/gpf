@@ -3,7 +3,7 @@ Created on Dec 8, 2016
 
 @author: lubo
 '''
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 from pheno.utils.configuration import PhenoConfig
 import logging
 

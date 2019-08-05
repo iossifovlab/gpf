@@ -9,7 +9,7 @@ import os
 import sys
 import argparse
 
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 
 from backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator

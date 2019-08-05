@@ -2,7 +2,7 @@
 import argparse
 
 from studies.factory import VariantsDb
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 
 from common_reports.common_report_facade import CommonReportFacade
 

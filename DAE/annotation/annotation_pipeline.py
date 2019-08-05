@@ -19,7 +19,7 @@ from annotation.tools.annotator_base import AnnotatorBase, \
 from annotation.tools.annotator_config import VariantAnnotatorConfig
 from annotation.tools.file_io import IOType, IOManager
 
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 
 
 class PipelineConfig(VariantAnnotatorConfig):

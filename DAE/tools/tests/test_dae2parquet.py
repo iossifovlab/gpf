@@ -2,7 +2,7 @@ import pytest
 
 from box import Box
 
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 from tools.dae2parquet import parse_cli_arguments, import_dae_denovo, \
     dae_build_transmitted, dae_build_makefile
 

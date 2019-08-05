@@ -1,6 +1,6 @@
 from GenomesDB import GenomesDB
 
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 
 dae_config = DAEConfig.make_config()
 

@@ -8,7 +8,7 @@ import pytest
 import tempfile
 import shutil
 import os
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 
 
 def relative_to_this_folder(path):

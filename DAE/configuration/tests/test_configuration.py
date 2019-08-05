@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from configurable_entities.configuration import ConfigSectionDefinition, \
+from configuration.configuration import ConfigSectionDefinition, \
     DAEConfig
 
 

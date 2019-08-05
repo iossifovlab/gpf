@@ -7,7 +7,7 @@ import glob
 from box import Box
 from collections import OrderedDict
 from common.config import to_dict, flatten_dict
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 from annotation.annotation_pipeline import PipelineConfig
 
 

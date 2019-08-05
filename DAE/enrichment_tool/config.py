@@ -7,7 +7,7 @@ import os
 from copy import deepcopy
 from collections import OrderedDict
 
-from configurable_entities.configurable_entity_config import \
+from configuration.config_base import \
     ConfigurableEntityConfig
 
 

@@ -1,11 +1,11 @@
 import abc
 
-from configurable_entities.configurable_entity_definition import\
-    ConfigurableEntityDefinition
+from configuration.dae_config_parser import\
+    DAEConfigParser
 from studies.dataset_config import DatasetConfig
 
 
-class DatasetsDefinition(ConfigurableEntityDefinition):
+class DatasetsDefinition(DAEConfigParser):
     __metaclass__ = abc.ABCMeta
 
     @property

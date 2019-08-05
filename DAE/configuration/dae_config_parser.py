@@ -2,7 +2,7 @@ import os
 import abc
 
 
-class ConfigurableEntityDefinition(object):
+class DAEConfigParser(object):
     __metaclass__ = abc.ABCMeta
 
     ENABLED_DIR = '.'
@@ -37,11 +37,11 @@ class ConfigurableEntityDefinition(object):
         enabled_dir = os.path.abspath(enabled_dir)
 
         configs = []
-        config_paths = ConfigurableEntityDefinition\
+        config_paths = DAEConfigParser\
             ._collect_config_paths(enabled_dir, fail_silently)
 
         for config_path in config_paths:
-            config = ConfigurableEntityDefinition.load_entity_config(
+            config = DAEConfigParser.load_entity_config(
                 config_path, enabled_dir, configurable_entity_config_class,
                 default_values, default_conf)
 
@@ -74,7 +74,7 @@ class ConfigurableEntityDefinition(object):
         if default_values is None:
             default_values = {}
 
-        config = ConfigurableEntityDefinition.load_entity_config(
+        config = DAEConfigParser.load_entity_config(
             config_path, work_dir, configurable_entity_config_class,
             default_values, default_conf)
 

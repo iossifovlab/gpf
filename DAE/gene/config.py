@@ -6,8 +6,8 @@ Created on Feb 16, 2017
 import sys
 from box import Box
 
-from configurable_entities.configuration import DAEConfig
-from configurable_entities.configurable_entity_config import\
+from configuration.configuration import DAEConfig
+from configuration.config_base import\
     ConfigurableEntityConfig
 
 from gene.gene_weight_config import GeneWeightConfig

@@ -3,7 +3,7 @@ from box import Box
 from collections import OrderedDict
 
 from gene.genomic_values import GenomicValues
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 import common.config
 
 

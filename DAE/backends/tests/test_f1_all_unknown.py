@@ -1,4 +1,4 @@
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 from backends.import_commons import \
     construct_import_annotation_pipeline
 from backends.impala.parquet_io import VariantsParquetWriter

@@ -63,7 +63,7 @@ class QueryPreviewView(QueryBaseView):
 
         data = request.data
         try:
-            dataset_id = data['datasetId']
+            dataset_id = data.pop('datasetId')
             self.check_object_permissions(request, dataset_id)
 
             dataset = self.get_dataset_wdae_wrapper(dataset_id)

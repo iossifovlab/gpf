@@ -1,4 +1,4 @@
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 
 from studies.factory import VariantsDb
 

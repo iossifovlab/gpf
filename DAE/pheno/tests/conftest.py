@@ -15,7 +15,7 @@ from pheno.common import default_config
 from pheno.utils.configuration import PhenoConfig
 from box import Box
 
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 
 
 def relative_to_this_folder(path):

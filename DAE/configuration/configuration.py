@@ -1,8 +1,8 @@
 import os
 
-from configurable_entities.configurable_entity_definition import\
-    ConfigurableEntityDefinition
-from configurable_entities.configurable_entity_config import \
+from configuration.dae_config_parser import\
+    DAEConfigParser
+from configuration.config_base import \
     ConfigurableEntityConfig
 
 
@@ -16,7 +16,7 @@ class ConfigSectionConfig(ConfigurableEntityConfig):
         return ConfigSectionConfig(config)
 
 
-class ConfigSectionDefinition(ConfigurableEntityDefinition):
+class ConfigSectionDefinition(DAEConfigParser):
 
     def __init__(self, config_path, work_dir):
         super(ConfigSectionDefinition, self).__init__()

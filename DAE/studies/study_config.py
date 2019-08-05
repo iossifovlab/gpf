@@ -1,7 +1,7 @@
 import os
 
 from studies.study_wdae_config import StudyWdaeMixin
-from configurable_entities.configurable_entity_config import\
+from configuration.config_base import\
     ConfigurableEntityConfig
 
 

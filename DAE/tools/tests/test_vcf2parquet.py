@@ -1,7 +1,7 @@
 import pytest
 from box import Box
 
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 from annotation.tools.file_io_parquet import ParquetReader
 from backends.import_commons import construct_import_annotation_pipeline
 

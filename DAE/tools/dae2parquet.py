@@ -11,7 +11,7 @@ import sys
 import pysam
 import argparse
 
-from configurable_entities.configuration import DAEConfig
+from configuration.configuration import DAEConfig
 
 from annotation.tools.file_io_parquet import ParquetSchema
 
