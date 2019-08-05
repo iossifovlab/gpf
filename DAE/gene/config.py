@@ -8,6 +8,7 @@ from box import Box
 
 from configuration.configuration import DAEConfig
 from configuration.config_base import ConfigBase
+from configuration.dae_config_parser import DAEConfigParser
 
 from gene.gene_weight_config import GeneWeightConfig
 from gene.gene_term_config import GeneTermConfig
@@ -28,7 +29,7 @@ class GeneInfoConfig(ConfigBase):
         if dae_config is None:
             dae_config = DAEConfig.make_config()
 
-        config = cls.read_config(
+        config = DAEConfigParser.read_config(
             dae_config.gene_info_conf, dae_config.dae_data_dir)
 
         config = Box(config)

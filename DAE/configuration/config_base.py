@@ -1,20 +1,5 @@
-import os
-
-from configparser import ConfigParser
 from box import ConfigBox
 from collections import OrderedDict
-
-
-class CaseSensitiveConfigParser(ConfigParser):
-    """
-    Modified ConfigParser that allows case sensitive options.
-    """
-
-    def optionxform(self, option):
-        """
-        The default implementation returns a lower-case version of options.
-        """
-        return str(option)
 
 
 class ConfigBase(object):
@@ -93,44 +78,6 @@ class ConfigBase(object):
 
     def to_dict(self):
         return self.config.to_dict()
-
-    @classmethod
-    def read_config(
-            cls, config_file, work_dir, default_values=None,
-            default_conf=None):
-        if default_values is None:
-            default_values = {}
-
-        if not os.path.exists(config_file):
-            config_file = os.path.join(work_dir, config_file)
-        assert os.path.exists(config_file), config_file
-
-        default_values['work_dir'] = work_dir
-        default_values['wd'] = work_dir
-
-        config_parser = CaseSensitiveConfigParser(
-            defaults=default_values,
-            allow_no_value=True,
-            strict=True)
-
-        # print("READING CONFIG FROM '", config_file, "'", file=sys.stderr)
-        # print("traceback: ---------------------------------------------")
-        # traceback.print_stack(file=sys.stderr)
-        # print("traceback: ---------------------------------------------")
-
-        if default_conf is not None:
-            assert os.path.exists(default_conf)
-            with open(default_conf, 'r') as f:
-                config_parser.read_file(f)
-
-        with open(config_file, 'r') as f:
-            config_parser.read_file(f)
-
-        config = OrderedDict(
-            (section, OrderedDict(config_parser.items(section)))
-            for section in config_parser.sections())
-
-        return config
 
     @classmethod
     def parse(cls, config_section):

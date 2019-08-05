@@ -6,9 +6,9 @@ Created on Aug 23, 2016
 import os
 from box import ConfigBox
 
-from configuration.config_base import CaseSensitiveConfigParser
 from configuration.configuration import DAEConfig
-from configuration.dae_config_parser import DAEConfigParser
+from configuration.dae_config_parser import CaseSensitiveConfigParser, \
+    DAEConfigParser
 
 import common.config
 
