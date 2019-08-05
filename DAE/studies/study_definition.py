@@ -26,8 +26,11 @@ class SingleFileStudiesDefinition(StudyDefinition):
         assert work_dir is not None
         assert config_file is not None
 
-        self.single_file_configurable_entity_definition(
-            config_file, work_dir, StudyConfig, default_conf=default_conf)
+        configs = SingleFileStudiesDefinition. \
+            single_file_configurable_entity_definition(
+                config_file, work_dir, StudyConfig, default_conf=default_conf)
+
+        self.configs = configs
 
 
 class DirectoryEnabledStudiesDefinition(StudyDefinition):
@@ -39,5 +42,7 @@ class DirectoryEnabledStudiesDefinition(StudyDefinition):
         assert studies_dir is not None
         assert work_dir is not None
 
-        self.directory_enabled_configurable_entity_definition(
+        configs = DirectoryEnabledStudiesDefinition.directory_configurations(
             studies_dir, StudyConfig, work_dir, default_conf=default_conf)
+
+        self.configs = configs

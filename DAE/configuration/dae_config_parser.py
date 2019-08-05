@@ -24,8 +24,9 @@ class DAEConfigParser(object):
     def get_all_configurable_entity_configs(self):
         return list(self.configs.values())
 
-    def directory_enabled_configurable_entity_definition(
-            self, configurable_entities_dir, configurable_entity_config_class,
+    @classmethod
+    def directory_configurations(
+            cls, configurable_entities_dir, configurable_entity_config_class,
             work_dir, default_values=None, default_conf=None,
             fail_silently=False):
         if default_values is None:
@@ -33,7 +34,7 @@ class DAEConfigParser(object):
         assert isinstance(configurable_entities_dir, str),\
             type(configurable_entities_dir)
 
-        enabled_dir = os.path.join(configurable_entities_dir, self.ENABLED_DIR)
+        enabled_dir = os.path.join(configurable_entities_dir, cls.ENABLED_DIR)
         enabled_dir = os.path.abspath(enabled_dir)
 
         configs = []
@@ -48,7 +49,9 @@ class DAEConfigParser(object):
             if config:
                 configs.append(config)
 
-        self.configs = {config.id: config for config in configs}
+        configs = {config.id: config for config in configs}
+
+        return configs
 
     @classmethod
     def _collect_config_paths(cls, dirname, fail_silently=False):

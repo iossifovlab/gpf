@@ -3,8 +3,8 @@ import pytest
 import sys
 
 
-def test_dataset_definitions_simple(dataset_definitions):
-    assert dataset_definitions is not None
+def test_dataset_configs_simple(dataset_configs):
+    assert dataset_configs is not None
 
 
 @pytest.mark.parametrize("option_name,expected_value", [

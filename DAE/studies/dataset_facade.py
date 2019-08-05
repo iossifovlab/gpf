@@ -3,11 +3,11 @@ from studies.study_wrapper import StudyWrapper
 
 class DatasetFacade(object):
 
-    def __init__(self, dataset_definitions, dataset_factory, pheno_factory):
+    def __init__(self, dataset_configs, dataset_factory, pheno_factory):
         self._dataset_cache = {}
         self._dataset_wrapper_cache = {}
 
-        self.dataset_definition = dataset_definitions
+        self.dataset_configs = dataset_configs
         self.dataset_factory = dataset_factory
         self.pheno_factory = pheno_factory
 
@@ -40,14 +40,18 @@ class DatasetFacade(object):
     def get_all_dataset_ids(self):
         return [
             conf.id
-            for conf in self.dataset_definition.get_all_dataset_configs()
+            for conf in list(self.dataset_configs.values())
         ]
 
     def get_all_dataset_configs(self):
-        return self.dataset_definition.get_all_dataset_configs()
+        self.load_cache()
+
+        return list(self.dataset_configs.values())
 
     def get_dataset_config(self, dataset_id):
-        return self.dataset_definition.get_dataset_config(dataset_id)
+        self.load_cache({dataset_id})
+
+        return self.dataset_configs.get(dataset_id)
 
     def load_cache(self, dataset_ids=None):
         if dataset_ids is None:
@@ -62,7 +66,7 @@ class DatasetFacade(object):
                 self._load_dataset_in_cache(dataset_id)
 
     def _load_dataset_in_cache(self, dataset_id):
-        conf = self.dataset_definition.get_dataset_config(dataset_id)
+        conf = self.dataset_configs.get(dataset_id)
         if not conf:
             return
 

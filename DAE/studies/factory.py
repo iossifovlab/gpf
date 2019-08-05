@@ -1,10 +1,13 @@
 from pheno.pheno_factory import PhenoFactory
+
+from configuration.dae_config_parser import DAEConfigParser
+
 from studies.study_definition import DirectoryEnabledStudiesDefinition
 from studies.study_factory import StudyFactory
 from studies.study_facade import StudyFacade
-from studies.dataset_definition import DirectoryEnabledDatasetsDefinition
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
+from studies.dataset_config import DatasetConfig
 
 
 class VariantsDb(object):
@@ -28,15 +31,17 @@ class VariantsDb(object):
             self.dae_config,
             self.pheno_factory, self.studies_definitions, study_factory)
 
-        self.datasets_definitions = DirectoryEnabledDatasetsDefinition(
-            self.study_facade,
-            datasets_dir=dae_config.datasets_dir,
-            work_dir=dae_config.dae_data_dir,
-            default_conf=dae_config.default_configuration_conf)
+        self.dataset_configs = DAEConfigParser.directory_configurations(
+            dae_config.datasets_dir,
+            DatasetConfig,
+            dae_config.dae_data_dir,
+            default_conf=dae_config.default_configuration_conf,
+            fail_silently=True
+        )
         self.dataset_factory = DatasetFactory(
             self.study_facade)
         self.dataset_facade = DatasetFacade(
-            self.datasets_definitions, self.dataset_factory,
+            self.dataset_configs, self.dataset_factory,
             self.pheno_factory)
 
         self._configuration_check()
@@ -72,10 +77,7 @@ class VariantsDb(object):
         return self.study_facade.get_all_study_configs()
 
     def get_datasets_ids(self):
-        return self.datasets_definitions.dataset_ids
-
-    # def get_datasets_names(self):
-    #     return self.datasets_definitions.get_all_dataset_names()
+        return list(self.dataset_configs.keys())
 
     def get_dataset_config(self, dataset_id):
         return self.dataset_facade.get_dataset_config(dataset_id)
