@@ -5,12 +5,12 @@
 import sys
 import optparse
 import os.path
-import GenomeAccess
-from GeneModelFiles import load_gene_models
-from variant_annotation.annotator import VariantAnnotator as VariantAnnotation
+from dae import GenomeAccess
+from dae.GeneModelFiles import load_gene_models
+from dae.variant_annotation.annotator import VariantAnnotator as VariantAnnotation
 import time
 import datetime
-from DAE import genomesDB
+from dae.DAE import genomesDB
 
 
 start = time.time()
