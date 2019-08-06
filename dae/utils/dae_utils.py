@@ -12,7 +12,7 @@ DEL_RE = re.compile(r'^del\((\d+)\)$')
 
 def dae2vcf_variant(chrom, position, var, genome=None):
     if genome is None:
-        from DAE import genomesDB
+        from dae.DAE import genomesDB
         genome = genomesDB.get_genome()
 
     match = SUB_COMPLEX_RE.match(var)

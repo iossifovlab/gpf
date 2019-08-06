@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-import abc
 import itertools
 import argparse
 import csv
@@ -190,27 +189,23 @@ class MatingUnit(object):
         self.father.mating_units.append(self)
 
 
-class CsvIndividualsReader(abc.ABCMeta, object):
-    @abc.abstractmethod
+class CsvIndividualsReader:
     def convert_individual_id(self, family_id, individual_id):
         raise NotImplementedError()
 
-    @abc.abstractmethod
     def convert_status(self, status):
         raise NotImplementedError()
 
-    @abc.abstractmethod
     def convert_role(self, role):
         raise NotImplementedError()
 
-    @abc.abstractmethod
     def convert_sex(self, sex):
         raise NotImplementedError()
 
     def convert_family_id(self, family_id):
         return family_id
 
-    @abc.abstractproperty
+    @property
     def FIELDS_TO_COLUMNS(self):
         raise NotImplementedError()
 

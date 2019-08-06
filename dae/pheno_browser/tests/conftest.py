@@ -41,7 +41,7 @@ def fake_dae_conf():
 
 @pytest.fixture(scope='session')
 def fake_pheno_factory(fake_dae_conf):
-    from pheno.pheno_factory import PhenoFactory
+    from dae.pheno.pheno_factory import PhenoFactory
     return PhenoFactory(fake_dae_conf)
 
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import abc
 import itertools
 import argparse
 import csv
@@ -49,20 +48,17 @@ class PedigreeMember(object):
         return self.role != Role.unknown
 
 
-class CsvPedigreeReader(abc.ABCMeta, object):
-    @abc.abstractmethod
+class CsvPedigreeReader:
     def convert_individual_id(self, family_id, individual_id):
         raise NotImplementedError()
 
-    @abc.abstractmethod
     def convert_status(self, status):
         raise NotImplementedError()
 
-    @abc.abstractmethod
     def convert_sex(self, sex):
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
     def COLUMNS_TO_FIELDS(self):
         raise NotImplementedError()
 
