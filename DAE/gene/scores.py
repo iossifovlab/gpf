@@ -9,8 +9,7 @@ import common.config
 
 class Scores(GenomicValues):
     def __init__(self, scores_name, config, *args, **kwargs):
-        super(Scores, self).__init__('genomicScores.{}'.format(scores_name),
-                                     *args, **kwargs)
+        super(Scores, self).__init__(scores_name, *args, **kwargs)
 
         self.config = config
         self.genomic_values_col = 'scores'
@@ -54,8 +53,9 @@ class ScoreLoader(object):
         })
         config.optionxform = str
         config.read(self.daeConfig.genomic_scores_conf)
-        self.config = Box(common.config.to_dict(config),
-                          default_box=True, default_box_attr=None)
+        self.config = Box(
+            common.config.to_dict(config), default_box=True,
+            default_box_attr=None, camel_killer_box=True)
 
         self.scores = OrderedDict()
 

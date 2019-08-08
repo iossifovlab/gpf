@@ -8,7 +8,8 @@ import pytest
 
 
 def test_weights_default(gene_info_config):
-    w = Weights('RVIS_rank', config=gene_info_config)
+    config = gene_info_config.gene_weights.get('RVIS_rank')
+    w = Weights(config)
     df = w.to_df()
     # df = w.load_weights()
     assert df is not None
@@ -17,7 +18,8 @@ def test_weights_default(gene_info_config):
 
 
 # def test_weights_min_max(gene_info_config):
-#     w = Weights('LGD_rank', config=gene_info_config)
+#     config = gene_info_config.gene_weights.get('LGD_rank')
+#     w = Weights(config)
 #     # w.load_weights()
 #
 #     assert 1.0 == w.weights().min()
@@ -25,7 +27,8 @@ def test_weights_default(gene_info_config):
 
 
 def test_weights_get_genes(gene_info_config):
-    w = Weights('LGD_rank', config=gene_info_config)
+    config = gene_info_config.gene_weights.get('LGD_rank')
+    w = Weights(config)
     # w.load_weights()
 
     genes = w.get_genes(1.5, 5.0)
@@ -39,18 +42,18 @@ def test_weights_get_genes(gene_info_config):
 
 
 def test_list_gene_weights(gene_info_config):
-    names = Weights.list_gene_weights(config=gene_info_config)
+    names = Weights.list_gene_weights(gene_info_config.gene_weights)
     assert names is not None
 
     assert 'LGD_rank' in names
 
 
 def test_load_gene_weights(gene_info_config):
-    w = Weights.load_gene_weights('LGD_rank', config=gene_info_config)
+    w = Weights.load_gene_weights('LGD_rank', gene_info_config.gene_weights)
     assert w is not None
     assert isinstance(w, Weights)
 
 
 def test_load_gene_weights_throws(gene_info_config):
     with pytest.raises(AssertionError):
-        Weights.load_gene_weights('ala bala', config=gene_info_config)
+        Weights.load_gene_weights('ala bala', gene_info_config.gene_weights)

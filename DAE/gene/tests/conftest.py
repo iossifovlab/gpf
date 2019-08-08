@@ -10,7 +10,7 @@ import pytest
 
 from utils.fixtures import change_environment
 
-from gene.config import GeneInfoConfig
+from gene.config import GeneInfoConfigParser
 from gene.denovo_gene_set_collection_config import \
     DenovoGeneSetCollectionConfig
 from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
@@ -42,7 +42,10 @@ def mock_property(mocker):
 
 @pytest.fixture(scope='session')
 def gene_info_config(dae_config_fixture):
-    return GeneInfoConfig.from_config(dae_config_fixture)
+    gene_info_config = GeneInfoConfigParser.read_file_configuration(
+        dae_config_fixture.gene_info_conf, dae_config_fixture.dae_data_dir)
+    gene_info_config = GeneInfoConfigParser.parse(gene_info_config)
+    return gene_info_config
 
 
 @pytest.fixture(scope='module')
@@ -80,7 +83,7 @@ def calc_gene_sets(request, denovo_gene_sets, denovo_gene_set_f4):
 
 @pytest.fixture(scope='session')
 def weights_loader(gene_info_config):
-    return WeightsLoader(config=gene_info_config)
+    return WeightsLoader(config=gene_info_config.gene_weights)
 
 
 @pytest.fixture(scope='session')

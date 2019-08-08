@@ -7,7 +7,6 @@ from collections import OrderedDict
 import numpy as np
 
 from gene.genomic_values import GenomicValues
-from gene.config import GeneInfoConfig
 
 
 class Weights(GenomicValues):
@@ -18,25 +17,20 @@ class Weights(GenomicValues):
     in `geneInfo.conf`.
     """
 
-    def __init__(
-            self, weights_name, config=None, *args, **kwargs):
-        super(Weights, self).__init__('geneWeights.{}'.format(weights_name),
-                                      *args, **kwargs)
-        if config is None:
-            config = GeneInfoConfig.from_config()
+    def __init__(self, config, *args, **kwargs):
+        super(Weights, self).__init__(config.name, *args, **kwargs)
         self.config = config
 
         self.genomic_values_col = 'gene'
-        gene_weight = self.config.gene_weights.get(weights_name)
 
-        self.desc = gene_weight.get('desc')
-        self.bins = gene_weight.get('bins')
-        self.xscale = gene_weight.get('xscale')
-        self.yscale = gene_weight.get('yscale')
-        self.filename = gene_weight.get('file')
+        self.desc = self.config.get('desc')
+        self.bins = self.config.get('bins')
+        self.xscale = self.config.get('xscale')
+        self.yscale = self.config.get('yscale')
+        self.filename = self.config.get('file')
 
-        if 'range' in gene_weight:
-            self.range = tuple(map(float, gene_weight.get('range')))
+        if 'range' in self.config:
+            self.range = tuple(map(float, self.config.get('range')))
         else:
             self.range = None
 
@@ -125,23 +119,21 @@ class Weights(GenomicValues):
         return self.df
 
     @staticmethod
-    def load_gene_weights(name, config=None):
+    def load_gene_weights(name, config):
         """
         Creates and loads a gene weights instance by gene weights name.
         """
         assert name in Weights.list_gene_weights(config)
-        w = Weights(name, config=config)
+        weight_config = config.get(name)
+        w = Weights(weight_config)
         return w
 
     @staticmethod
-    def list_gene_weights(config=None):
+    def list_gene_weights(config):
         """
         Lists all available gene weights configured in `geneInfo.conf`.
         """
-        if config is None:
-            config = GeneInfoConfig.from_config()
-
-        weights = config.geneWeights.weights
+        weights = config.weights
         return weights
 
 
@@ -152,10 +144,8 @@ class WeightsLoader(object):
     Used by Web interface.
     """
 
-    def __init__(self, config=None, *args, **kwargs):
+    def __init__(self, config, *args, **kwargs):
         super(WeightsLoader, self).__init__(*args, **kwargs)
-        if config is None:
-            config = GeneInfoConfig.from_config()
         self.config = config
 
         self.weights = OrderedDict()
@@ -174,13 +164,11 @@ class WeightsLoader(object):
         return result
 
     def _load(self):
-        gene_weights = self.config.gene_weights
-        if gene_weights is None:
-            return
-        weights = gene_weights.weights
+        weights = self.config.weights
 
         for weight in weights:
-            w = Weights(weight, config=self.config)
+            weight_config = self.config.get(weight)
+            w = Weights(weight_config)
             self.weights[weight] = w
 
     def __getitem__(self, weight_name):

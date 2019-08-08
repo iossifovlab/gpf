@@ -4,7 +4,7 @@ from studies.factory import VariantsDb
 
 from common_reports.common_report_facade import CommonReportFacade
 
-from gene.config import GeneInfoConfig
+from gene.config import GeneInfoConfigParser
 from gene.scores import ScoreLoader
 from gene.weights import WeightsLoader
 
@@ -54,8 +54,11 @@ class StudiesManager(object):
             Dataset.recreate_dataset_perm(study_id, [])
 
         self.score_loader = ScoreLoader(daeConfig=self.dae_config)
-        self.gene_info_config = GeneInfoConfig.from_config(self.dae_config)
-        self.weights_loader = WeightsLoader(config=self.gene_info_config)
+        gene_info_config = GeneInfoConfigParser.read_file_configuration(
+            self.dae_config.gene_info_conf, self.dae_config.dae_data_dir)
+        self.gene_info_config = GeneInfoConfigParser.parse(gene_info_config)
+        self.weights_loader = WeightsLoader(
+            config=self.gene_info_config.gene_weights)
 
         self.gene_sets_collections = GeneSetsCollections(
             self.vdb, self.gene_info_config)

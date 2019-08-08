@@ -3,10 +3,9 @@ import pandas as pd
 
 class GenomicValues(object):
 
-    def __init__(self, section_name, *args, **kwargs):
+    def __init__(self, name, *args, **kwargs):
         super(GenomicValues, self).__init__(*args, **kwargs)
-        self.section_name = section_name
-        self.name = self.section_name.split('.')[-1]
+        self.name = name
 
         self.df = None
         self._dict = None

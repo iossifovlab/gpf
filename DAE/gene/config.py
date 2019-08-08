@@ -6,44 +6,29 @@ Created on Feb 16, 2017
 import sys
 from box import Box
 
-from configuration.configuration import DAEConfig
-from configuration.config_base import ConfigBase
 from configuration.dae_config_parser import DAEConfigParser
 
-from gene.gene_weight_config import GeneWeightConfig
-from gene.gene_term_config import GeneTermConfig
+from gene.gene_weight_config_parser import GeneWeightConfigParser
+from gene.gene_term_config_parser import GeneTermConfigParser
 from gene.chromosome_config import ChromosomeConfig
 from gene.gene_term import loadGeneTerm
 
 
-class GeneInfoConfig(ConfigBase):
+class GeneInfoConfigParser(DAEConfigParser):
     """
     Helper class for accessing DAE and geneInfo configuration.
     """
 
-    def __init__(self, config=None, *args, **kwargs):
-        super(GeneInfoConfig, self).__init__(config, *args, **kwargs)
-
     @classmethod
-    def from_config(cls, dae_config=None):
-        if dae_config is None:
-            dae_config = DAEConfig.make_config()
-
-        config = DAEConfigParser.read_config(
-            dae_config.gene_info_conf, dae_config.dae_data_dir)
-
-        config = Box(config)
-
-        parsed_config = {}
-
-        parsed_config['geneInfo'] = GeneInfoDB.from_config(
-            config.get('GeneInfo', None))
-        parsed_config['geneWeights'] = GeneWeightConfig.from_config(config)
-        parsed_config['geneTerms'] = GeneTermConfig.from_config(config)
-        parsed_config['chromosomes'] = ChromosomeConfig.from_config(
+    def parse(cls, config):
+        config[GeneInfoDB.SECTION] = \
+            GeneInfoDB.parse(config.get(GeneInfoDB.SECTION, None))
+        config['geneWeights'] = GeneWeightConfigParser.parse(config)
+        config['geneTerms'] = GeneTermConfigParser.parse(config)
+        config['chromosomes'] = ChromosomeConfig.from_config(
             config.get('chromosomes', None))
 
-        return GeneInfoConfig(parsed_config)
+        return config
 
     def getGeneTermIds(self):
         return self.gene_terms.keys()
@@ -75,7 +60,9 @@ class GeneInfoConfig(ConfigBase):
         return gt
 
 
-class GeneInfoDB(ConfigBase):
+class GeneInfoDB(DAEConfigParser):
+
+    SECTION = 'geneInfo'
 
     def __init__(self, config=None, *args, **kwargs):
         super(GeneInfoDB, self).__init__(config, *args, **kwargs)
@@ -84,24 +71,16 @@ class GeneInfoDB(ConfigBase):
         self._nsTokens = None
 
     @classmethod
-    def from_config(cls, config):
+    def parse(cls, config):
         if config is None:
             return
 
-        return GeneInfoDB(config)
+        config['genes'] = cls._parseNCBIGeneInfo()
+        config['nsTokens'] = cls._parseNCBIGeneInfo()
 
-    @property
-    def genes(self):
-        if self._genes is None:
-            self._parseNCBIGeneInfo()
-        return self._genes
+        return config
 
-    @property
-    def nsTokens(self):
-        if self._nsTokens is None:
-            self._parseNCBIGeneInfo()
-        return self._nsTokens
-
+    @staticmethod
     def _parseNCBIGeneInfo(self):
         self._genes = {}
         self._nsTokens = {}

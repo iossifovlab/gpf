@@ -1,7 +1,7 @@
 import traceback
 import logging
 
-from gene.config import GeneInfoConfig
+from gene.config import GeneInfoConfigParser
 from gene.gene_term import loadGeneTerm
 
 LOGGER = logging.getLogger(__name__)
@@ -9,9 +9,7 @@ LOGGER = logging.getLogger(__name__)
 
 class GeneSetsCollection(object):
 
-    def __init__(self, gene_sets_collection_id, config=None):
-        if config is None:
-            config = GeneInfoConfig.from_config()
+    def __init__(self, gene_sets_collection_id, config):
         self.config = config
 
         assert gene_sets_collection_id != 'denovo'
@@ -84,7 +82,11 @@ class GeneSetsCollections(object):
 
     def __init__(self, variants_db, config=None):
         if config is None:
-            config = GeneInfoConfig.from_config(variants_db.dae_config)
+            gene_info_config = GeneInfoConfigParser.read_file_configuration(
+                variants_db.dae_config.gene_info_conf,
+                variants_db.dae_config.dae_data_dir
+            )
+            config = GeneInfoConfigParser.parse(gene_info_config)
         self.config = config
 
         self.variants_db = variants_db

@@ -4,7 +4,7 @@ import pytest
 from configuration.configuration import DAEConfig
 from datasets_api.studies_manager import StudiesManager
 
-from gene.config import GeneInfoConfig
+from gene.config import GeneInfoConfigParser
 from gene.weights import WeightsLoader
 
 
@@ -38,7 +38,9 @@ def mock_studies_manager(db, mocker, studies_manager):
 
 @pytest.fixture()
 def weights_loader(dae_config_fixture):
-    gene_info_config = GeneInfoConfig.from_config(dae_config_fixture)
-    weights_loader = WeightsLoader(config=gene_info_config)
+    gene_info_config = GeneInfoConfigParser.read_file_configuration(
+        dae_config_fixture.gene_info_conf, dae_config_fixture.dae_data_dir)
+    gene_info_config = GeneInfoConfigParser.parse(gene_info_config)
+    weights_loader = WeightsLoader(config=gene_info_config.gene_weights)
 
     return weights_loader

@@ -11,7 +11,7 @@ from studies.dataset_facade import DatasetFacade
 from studies.dataset_config import DatasetConfig
 from studies.factory import VariantsDb
 
-from gene.config import GeneInfoConfig
+from gene.config import GeneInfoConfigParser
 from gene.weights import WeightsLoader
 
 # from utils.fixtures import change_environment
@@ -159,12 +159,15 @@ def pheno_factory(dae_config_fixture):
 
 @pytest.fixture(scope='module')
 def gene_info_config(dae_config_fixture):
-    return GeneInfoConfig.from_config(dae_config_fixture)
+    gene_info_config = GeneInfoConfigParser.read_file_configuration(
+        dae_config_fixture.gene_info_conf, dae_config_fixture.dae_data_dir)
+    gene_info_config = GeneInfoConfigParser.parse(gene_info_config)
+    return gene_info_config
 
 
 @pytest.fixture(scope='module')
 def weights_loader(gene_info_config):
-    return WeightsLoader(config=gene_info_config)
+    return WeightsLoader(config=gene_info_config.gene_weights)
 
 
 @pytest.fixture(scope='module')
