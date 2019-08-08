@@ -1,7 +1,5 @@
 import pytest
 
-import sys
-
 
 def test_dataset_configs_simple(dataset_configs):
     assert dataset_configs is not None
@@ -56,7 +54,6 @@ def test_dataset_quads_composite_attr(
     assert getattr(config, option_name) == expected_value
 
 
-@pytest.mark.xfail(sys.version_info < (3,), reason="requires python3")
 def test_composite_dataset_config_people_group(composite_dataset_config):
     assert composite_dataset_config is not None
 
