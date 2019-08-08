@@ -158,7 +158,7 @@ def get_variants_web(
     variants = dataset.query_variants(weights_loader, safe=True, **query)
     people_group_id = query.get('peopleGroup', {}).get('id', None)
     people_group = dataset.get_people_group(people_group_id)
-    if people_group is None:
+    if not people_group:
     people_group = []
 
     variants = add_gene_weight_columns(

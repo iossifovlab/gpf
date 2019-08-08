@@ -3,6 +3,9 @@ import os
 from itertools import chain, product
 import logging
 
+from gene.denovo_gene_set_collection_config import \
+    DenovoGeneSetCollectionConfigParser
+
 from variants.attributes import Inheritance, Status
 
 LOGGER = logging.getLogger(__name__)
@@ -30,7 +33,8 @@ class DenovoGeneSetsCollection(object):
 
     def _load_cache_from_json(self, build_cache=False):
         for people_group_id, _ in self.denovo_gene_sets.items():
-            cache_dir = self.config.denovo_gene_set_cache_file(people_group_id)
+            cache_dir = DenovoGeneSetCollectionConfigParser. \
+                denovo_gene_set_cache_file(self.config, people_group_id)
             if not os.path.exists(cache_dir):
                 if not build_cache:
                     raise EnvironmentError(
@@ -63,7 +67,8 @@ class DenovoGeneSetsCollection(object):
         cache = self._convert_cache_innermost_types(
             study_cache, set, list, sort_values=True)
 
-        cache_dir = self.config.denovo_gene_set_cache_file(people_group_id)
+        cache_dir = DenovoGeneSetCollectionConfigParser. \
+            denovo_gene_set_cache_file(self.config, people_group_id)
         if not os.path.exists(os.path.dirname(cache_dir)):
             os.makedirs(os.path.dirname(cache_dir))
         with open(cache_dir, "w") as f:
@@ -124,7 +129,7 @@ class DenovoGeneSetsCollection(object):
 
     def get_gene_sets_legend(self, people_group_id):
         gene_sets_pg = self.study.get_people_group(people_group_id)
-        if gene_sets_pg is None:
+        if not gene_sets_pg:
             return []
 
         return gene_sets_pg['domain']

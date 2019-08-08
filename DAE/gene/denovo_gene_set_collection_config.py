@@ -1,11 +1,20 @@
 import os
+from box import Box
 from copy import deepcopy
 
-from configuration.config_base import ConfigBase
+from configuration.dae_config_parser import DAEConfigParser
 from variants.attributes import Sex
 
 
-class DenovoGeneSetCollectionConfig(ConfigBase):
+class classproperty(property):
+    def __get__(self, obj, objtype=None):
+        return super(classproperty, self).__get__(objtype)
+
+
+class DenovoGeneSetCollectionConfigParser(DAEConfigParser):
+
+    SECTION = 'denovoGeneSets'
+
     SPLIT_STR_LISTS = (
         'peopleGroups',
         'standardCriterias',
@@ -16,13 +25,21 @@ class DenovoGeneSetCollectionConfig(ConfigBase):
 
     CAST_TO_BOOL = ('enabled')
 
-    def __init__(self, config, *args, **kwargs):
-        super(DenovoGeneSetCollectionConfig, self).__init__(
-            config, *args, **kwargs)
+    @classproperty
+    def PARSE_TO_DICT(cls):
+        return {
+            'standardCriterias': {
+                'group': 'standardCriterias',
+                'getter': cls._get_standard_criterias,
+                'selected': 'standardCriteriasColumns',
+                'default': []
+            }
+        }
 
-    def denovo_gene_set_cache_file(self, people_group_id=''):
+    @staticmethod
+    def denovo_gene_set_cache_file(config, people_group_id=''):
         cache_path = os.path.join(
-            os.path.split(self.config_file)[0],
+            os.path.split(config.config_file)[0],
             'denovo-cache-' + people_group_id + '.json'
         )
 
@@ -101,24 +118,27 @@ class DenovoGeneSetCollectionConfig(ConfigBase):
         return denovo_gene_sets
 
     @classmethod
-    def from_config(cls, config):
-        study_config = config.study_config
-        config_section = deepcopy(study_config.get('denovoGeneSets', None))
-        if config_section is None:
+    def parse(cls, config):
+        if config is None:
             return None
 
-        config_section = cls.parse(config_section)
+        study_config = config.study_config
+        if study_config is None:
+            return None
 
-        if config.get('enabled', True) is False:
+        config_section = deepcopy(study_config.get(
+            DenovoGeneSetCollectionConfigParser.SECTION, None))
+        if config_section is None:
+            return None
+        config_section = Box(config_section, camel_killer_box=True)
+
+        config_section = super(
+            DenovoGeneSetCollectionConfigParser, cls).parse(config_section)
+
+        if config_section.get('enabled', True) is False:
             return None
 
         config_section['id'] = config.id
-
-        standard_criterias_elements = \
-            config_section.get('standardCriteriasColumns', None)
-        config_section['standardCriterias'] = cls._get_selectors(
-            config_section, 'standardCriterias', cls._get_standard_criterias,
-            standard_criterias_elements)
 
         config_section['recurrencyCriterias'] = cls._get_recurrency_criterias(
             config_section.get('recurrencyCriteria.segments', []))
@@ -128,8 +148,10 @@ class DenovoGeneSetCollectionConfig(ConfigBase):
             return None
 
         config_section['denovoGeneSets'] = cls._get_denovo_gene_sets(
-            config.people_group, config_section['peopleGroups'])
+            config.people_group_config.people_group,
+            config_section['peopleGroups']
+        )
 
         config_section['configFile'] = study_config.config_file
 
-        return DenovoGeneSetCollectionConfig(config_section)
+        return config_section

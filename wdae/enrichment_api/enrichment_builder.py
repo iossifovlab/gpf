@@ -58,12 +58,13 @@ class EnrichmentBuilder(object):
         people_group = self.dataset.config.people_group_config.\
             get_people_group(people_group_id)
 
-        for people_group_selector in people_group.domain:
-            res = self.build_people_group_selector(
-                effect_types,
-                people_group,
-                people_group_selector['name'])
-            if res:
-                results.append(res)
+        if people_group:
+            for people_group_selector in people_group.domain:
+                res = self.build_people_group_selector(
+                    effect_types,
+                    people_group,
+                    people_group_selector['name'])
+                if res:
+                    results.append(res)
         self.results = results
         return self.results

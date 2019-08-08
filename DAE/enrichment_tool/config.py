@@ -101,6 +101,5 @@ class EnrichmentConfigParser(DAEConfigParser):
             cls._get_model_selectors(enrichment_config['backgrounds'])
         enrichment_config['counting'] = \
             cls._get_model_selectors(enrichment_config['counting'])
-        enrichment_config['enrichment_cache_file'] = cls.enrichment_cache_file
 
         return enrichment_config

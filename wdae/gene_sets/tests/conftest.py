@@ -2,7 +2,7 @@ import os
 import pytest
 
 from gene.denovo_gene_set_collection_config import \
-    DenovoGeneSetCollectionConfig
+    DenovoGeneSetCollectionConfigParser
 from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 
 from configuration.configuration import DAEConfig
@@ -52,12 +52,13 @@ def calc_gene_sets(request, denovo_gene_sets):
 
     def remove_gene_sets():
         for dgs in denovo_gene_sets:
-            os.remove(dgs.config.denovo_gene_set_cache_file('phenotype'))
+            os.remove(DenovoGeneSetCollectionConfigParser.
+                      denovo_gene_set_cache_file(dgs.config, 'phenotype'))
     request.addfinalizer(remove_gene_sets)
 
 
 def get_denovo_gene_sets_by_id(variants_db_fixture, dgs_id):
-    denovo_gene_set_config = DenovoGeneSetCollectionConfig.from_config(
+    denovo_gene_set_config = DenovoGeneSetCollectionConfigParser.parse(
         variants_db_fixture.get_config(dgs_id))
 
     return DenovoGeneSetsCollection(

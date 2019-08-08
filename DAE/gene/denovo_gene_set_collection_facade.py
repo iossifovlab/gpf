@@ -1,5 +1,6 @@
 from gene.denovo_gene_set_collection_config import \
-    DenovoGeneSetCollectionConfig
+    DenovoGeneSetCollectionConfigParser
+\
 from gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 
 
@@ -107,8 +108,9 @@ class DenovoGeneSetCollectionFacade(object):
                 self._load_denovo_gene_set_in_cache(denovo_gene_set_id, load)
 
     def _load_denovo_gene_set_config_in_cache(self, denovo_gene_set_id):
-        denovo_gene_set_config = DenovoGeneSetCollectionConfig.from_config(
-            self.variants_db.get_config(denovo_gene_set_id))
+        denovo_gene_set_config = \
+            DenovoGeneSetCollectionConfigParser.parse(
+                self.variants_db.get_config(denovo_gene_set_id))
         if denovo_gene_set_config is None:
             return
 
