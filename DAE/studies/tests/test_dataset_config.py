@@ -89,12 +89,7 @@ def test_composite_dataset_config_genotype_browser(composite_dataset_config):
 def test_composite_dataset_config_enrichment_tool(composite_dataset_config):
     assert composite_dataset_config is not None
 
-    assert composite_dataset_config.enrichment_tool is not None
-
-    enrichment_tool = composite_dataset_config.enrichment_tool
-
-    assert enrichment_tool.selector == 'phenotype'
-    assert enrichment_tool.study_types == 'WE'
+    assert composite_dataset_config.enrichment_tool is True
 
 
 def test_composite_dataset_config_authorized_groups(composite_dataset_config):
