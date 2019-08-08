@@ -15,9 +15,9 @@ def test_dataset_configs_simple(dataset_configs):
     ("phenotypeTool", False),
     ("phenotypeBrowser", False),
     ("year", ""),
-    ("years", []),
-    ("pub_med", ""),
-    ("pub_meds", [])
+    # ("years", []),
+    # ("pub_med", ""),
+    # ("pub_meds", [])
 ])
 def test_dataset_quads_composite_dict(
         quads_composite_dataset_config, option_name, expected_value):
@@ -41,9 +41,9 @@ def test_dataset_quads_composite_dict(
     ("phenotype_tool", False),
     ("phenotype_browser", False),
     ("year", ""),
-    ("years", []),
-    ("pub_med", ""),
-    ("pub_meds", [])
+    # ("years", []),
+    # ("pub_med", ""),
+    # ("pub_meds", [])
 ])
 def test_dataset_quads_composite_attr(
         quads_composite_dataset_config, option_name, expected_value):
@@ -108,8 +108,8 @@ def test_composite_dataset_config_people_group_overwrite(
     assert quads_composite_dataset_config.people_group_config is not None
     assert quads_composite_dataset_config.people_group_config.people_group \
         is not None
-    people_group = quads_composite_dataset_config.people_group_config\
-                                                 .people_group
+    people_group = quads_composite_dataset_config. \
+        people_group_config.people_group
 
     assert len(people_group) == 1
     pg = people_group[0]
@@ -118,11 +118,12 @@ def test_composite_dataset_config_people_group_overwrite(
 
 
 def test_composite_dataset_config_genotype_browser_overwrite(
-        quads_composite_dataset_config):
+        quads_composite_dataset_config, study_facade):
 
     assert quads_composite_dataset_config is not None
 
-    study_config = quads_composite_dataset_config.studies_configs[0]
+    study_config = study_facade.get_study_config(
+        quads_composite_dataset_config.studies[0])
 
     assert quads_composite_dataset_config.genotype_browser is True
     genotype_browser_config = \
@@ -134,6 +135,6 @@ def test_composite_dataset_config_genotype_browser_overwrite(
     download_columns = genotype_browser_config.download_columns
     print(download_columns)
 
-    assert download_columns.to_list() == \
+    assert download_columns == \
         ['family', 'phenotype', 'variant', 'best', 'fromparent',
          'inchild', 'effect', 'count', 'geneeffect', 'effectdetails']

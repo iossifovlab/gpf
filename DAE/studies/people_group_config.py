@@ -1,30 +1,29 @@
-from configuration.config_base import ConfigBase
+from configuration.dae_config_parser import DAEConfigParser
 
 
-class PeopleGroupConfig(ConfigBase):
+class classproperty(property):
+    def __get__(self, obj, objtype=None):
+        return super(classproperty, self).__get__(objtype)
+
+
+class PeopleGroupConfig(DAEConfigParser):
+
+    SECTION = 'peopleGroup'
 
     SPLIT_STR_LISTS = [
         'selectedPeopleGroupValues'
     ]
 
-    def __init__(self, config, *args, **kwargs):
-        super(PeopleGroupConfig, self).__init__(config, *args, **kwargs)
-
-    @property
-    def people_group(self):
-        if 'peopleGroup' in self:
-            return self['peopleGroup']
-        return []
-
-    def get_people_group(self, people_group_id):
-        if not people_group_id:
-            return self.people_group[0] if self.people_group else {}
-
-        people_group_with_id = list(filter(
-            lambda people_group: people_group.get('id') == people_group_id,
-            self.people_group))
-
-        return people_group_with_id[0] if people_group_with_id else {}
+    @classproperty
+    def PARSE_TO_DICT(cls):
+        return {
+            'peopleGroup': {
+                'group': None,
+                'getter': cls._get_people_group,
+                'selected': 'selectedPeopleGroupValues',
+                'default': []
+            }
+        }
 
     @staticmethod
     def _people_group_selectors_split_dict(dict_to_split):
@@ -46,41 +45,18 @@ class PeopleGroupConfig(ConfigBase):
             cls, people_group_type, people_group_options, study_config):
         people_group = {}
 
+        people_group['id'] = people_group_type
         people_group['name'] = \
             study_config.pop(people_group_type + '.name', None)
         people_group['source'] = \
             study_config.get(people_group_type + '.source', None)
-        people_group['id'] = people_group_type
-        people_group['default'] =\
-            cls._people_group_selectors_split_dict(
+        people_group['default'] = cls._people_group_selectors_split_dict(
                 study_config.pop(people_group_type + '.default'))
-        people_group['domain'] =\
-            cls._split_dict_lists(
-                study_config.pop(people_group_type + '.domain'))
-        people_group['values'] =\
-            cls._get_values(people_group['domain'])
+        people_group['domain'] = cls._split_dict_lists(
+            study_config.pop(people_group_type + '.domain'))
+        people_group['values'] = cls._get_values(people_group['domain'])
 
         yield people_group
-
-    @classmethod
-    def from_config(cls, config):
-        config_section = config.get('peopleGroup', None)
-        if config_section is None:
-            return None
-
-        config_section = cls.parse(config_section)
-
-        people_group_elements = config_section.get(
-            'selectedPeopleGroupValues', None)
-        people_group = cls._get_selectors(
-            config_section, None, cls._get_people_group,
-            people_group_elements
-        )
-
-        if people_group:
-            config_section['peopleGroup'] = people_group
-
-        return PeopleGroupConfig(config_section)
 
     @staticmethod
     def _get_description_keys():
@@ -88,9 +64,10 @@ class PeopleGroupConfig(ConfigBase):
             'peopleGroup'
         ]
 
-    def get_config_description(self):
-        keys = self._get_description_keys()
-        config = self.to_dict()
+    @classmethod
+    def get_config_description(cls, config):
+        keys = cls._get_description_keys()
+        config = config.to_dict()
 
         result = {key: config.get(key, None) for key in keys}
 

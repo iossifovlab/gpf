@@ -5,18 +5,16 @@ from pheno.pheno_factory import PhenoFactory
 from studies.study_factory import StudyFactory
 from studies.study_facade import StudyFacade
 from studies.study_wrapper import StudyWrapper
-from studies.study_config import StudyConfig
+from studies.study_config_parser import StudyConfigParser
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
-from studies.dataset_config import DatasetConfig
+from studies.dataset_config_parser import DatasetConfigParser
 from studies.factory import VariantsDb
 
 from gene.config import GeneInfoConfigParser
 from gene.weights import WeightsLoader
 
-# from utils.fixtures import change_environment
 from configuration.configuration import DAEConfig
-from configuration.dae_config_parser import DAEConfigParser
 
 
 def fixtures_dir():
@@ -42,12 +40,14 @@ def dae_config_fixture():
 
 @pytest.fixture(scope='module')
 def study_configs(dae_config_fixture):
-    return DAEConfigParser.directory_configurations(
+    study_configs = StudyConfigParser.read_directory_configurations(
         dae_config_fixture.studies_dir,
-        StudyConfig,
         dae_config_fixture.dae_data_dir,
         default_conf=dae_config_fixture.default_configuration_conf
     )
+    return {
+        sc[StudyConfigParser.SECTION].id: sc for sc in study_configs
+    }
 
 
 @pytest.fixture(scope='module')
@@ -61,17 +61,17 @@ def study_facade(
     return StudyFacade(
         dae_config_fixture,
         pheno_factory,
-        study_factory=study_factory, study_configs=study_configs)
+        study_factory=study_factory, study_configs=study_configs.values())
 
 
 @pytest.fixture(scope='module')
-def quads_f1_config(study_configs):
-    return study_configs.get('quads_f1')
+def quads_f1_config(study_facade):
+    return study_facade.get_study_config('quads_f1')
 
 
 @pytest.fixture(scope='module')
-def quads_f2_config(study_configs):
-    return study_configs.get('quads_f2')
+def quads_f2_config(study_facade):
+    return study_facade.get_study_config('quads_f2')
 
 
 def load_study(study_factory, study_configs, study_name):
@@ -172,18 +172,21 @@ def weights_loader(gene_info_config):
 
 @pytest.fixture(scope='module')
 def dataset_configs(dae_config_fixture):
-    return DAEConfigParser.directory_configurations(
+    dataset_configs = DatasetConfigParser.read_directory_configurations(
         datasets_dir(),
-        DatasetConfig,
         fixtures_dir(),
         default_conf=dae_config_fixture.default_configuration_conf,
         fail_silently=True
     )
+    return {
+        dc[DatasetConfigParser.SECTION].id: dc for dc in dataset_configs
+    }
 
 
 @pytest.fixture(scope='module')
 def dataset_facade(dataset_configs, dataset_factory, pheno_factory):
-    return DatasetFacade(dataset_configs, dataset_factory, pheno_factory)
+    return DatasetFacade(
+        dataset_configs.values(), dataset_factory, pheno_factory)
 
 
 @pytest.fixture(scope='module')

@@ -9,13 +9,13 @@ class StudyBase(object):
         self.id = self.config.id
         self.name = self.config.name
         # self.phenotypes = self.config.phenotypes
-        self.has_denovo = self.config.has_denovo
-        self.has_transmitted = self.config.has_transmitted
-        self.has_complex = self.config.has_complex
-        self.has_cnv = self.config.has_cnv
-        self.study_type = self.config.study_type
-        self.year = self.config.year
-        self.pub_med = self.config.pub_med
+        self.has_denovo = self.config.get('has_denovo', None)
+        self.has_transmitted = self.config.get('has_transmitted', None)
+        self.has_complex = self.config.get('has_complex', None)
+        self.has_cnv = self.config.get('has_cnv', None)
+        self.study_type = self.config.get('study_type', None)
+        self.year = self.config.get('year', None)
+        self.pub_med = self.config.get('pub_med', '')
 
         if os.path.exists(self.config.description):
             with open(self.config.description) as desc:
@@ -23,16 +23,31 @@ class StudyBase(object):
         else:
             self.description = self.config.description
 
-        self.study_types = self.config.study_types
-        self.years = self.config.years
-        self.pub_meds = self.config.pub_meds
-        self.order = self.config.order
+    @property
+    def years(self):
+        return [self.config.year] if self.config.year else []
+
+    @property
+    def pub_meds(self):
+        return [self.config.pub_med] if self.config.pub_med else []
+
+    @property
+    def study_types(self):
+        return {self.config.study_type} if self.config.study_type else set()
+
+    @property
+    def ids(self):
+        return [self.config.id]
+
+    @property
+    def names(self):
+        return [self.config.name]
+
+    def query_variants(self, **kwargs):
+        raise NotImplementedError()
 
     @property
     def families(self):
-        raise NotImplementedError()
-
-    def query_variants(self, **kwargs):
         raise NotImplementedError()
 
     def get_pedigree_values(self, column):
@@ -40,6 +55,21 @@ class StudyBase(object):
 
     def get_people_with_people_group(self, people_group, people_group_value):
         raise NotImplementedError()
+
+    def get_people_group(self, people_group_id):
+        if 'peopleGroupConfig' not in self.config and \
+                'peopleGroup' not in self.config.people_group_config:
+            return None
+
+        people_groups = self.config.people_group_config.people_group
+        if not people_group_id:
+            return people_groups[0] if people_groups else {}
+
+        people_group_with_id = list(filter(
+            lambda people_group: people_group.get('id') == people_group_id,
+            people_groups))
+
+        return people_group_with_id[0] if people_group_with_id else {}
 
 
 class Study(StudyBase):
@@ -52,10 +82,6 @@ class Study(StudyBase):
         self.studies = [self]
         self.study_names = ",".join(study.name for study in self.studies)
 
-    @property
-    def families(self):
-        return self.backend.families
-
     def query_variants(self, **kwargs):
         if 'studyFilters' in kwargs and \
                 self.name not in kwargs['studyFilters']:
@@ -65,6 +91,10 @@ class Study(StudyBase):
                 for allele in variant.alleles:
                     allele.update_attributes({'studyName': self.name})
                 yield variant
+
+    @property
+    def families(self):
+        return self.backend.families
 
     def get_pedigree_values(self, column):
         return set(self.backend.ped_df[column])

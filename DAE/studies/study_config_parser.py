@@ -1,10 +1,10 @@
 import os
 
 from studies.study_wdae_config import StudyWdaeMixin
-from configuration.config_base import ConfigBase
+from configuration.dae_config_parser import DAEConfigParser
 
 
-class StudyConfigBase(ConfigBase, StudyWdaeMixin):
+class StudyConfigParserBase(DAEConfigParser, StudyWdaeMixin):
 
     SPLIT_STR_SETS = (
         'phenotypes',
@@ -26,97 +26,60 @@ class StudyConfigBase(ConfigBase, StudyWdaeMixin):
         'authorizedGroups'
     ]
 
-    def __init__(self, section_config, *args, **kwargs):
-        super(StudyConfigBase, self).__init__(section_config, *args, **kwargs)
-
-        assert self.id
-
-        if section_config.get('name') is None:
-            self.name = self.id
-
-        assert self.name
-        assert 'description' in self
-        assert self.work_dir
-
-    @property
-    def people_group(self):
-        if 'peopleGroupConfig' in self and self['peopleGroupConfig']:
-            return self['peopleGroupConfig'].people_group
-        return []
-
-    @property
-    def people_group_config(self):
-        if 'peopleGroupConfig' in self and self['peopleGroupConfig']:
-            return self['peopleGroupConfig']
-        return None
-
-    @property
-    def genotype_browser_config(self):
-        if 'genotypeBrowserConfig' in self and self['genotypeBrowserConfig']:
-            return self['genotypeBrowserConfig']
-        return None
-
-
-class StudyConfig(StudyConfigBase):
-
-    def __init__(self, config, *args, **kwargs):
-        super(StudyConfig, self).__init__(config, *args, **kwargs)
-
-        assert self.name
-        assert self.prefix
-        # assert self.pedigree_file
-        assert self.file_format
-        assert self.work_dir
-        # assert self.phenotypes
-        assert 'studyType' in self
-        assert 'hasComplex' in self
-        assert 'hasCNV' in self
-        assert 'hasDenovo' in self
-        assert 'hasTransmitted' in self
-        self.make_prefix_absolute_path()
-
-    def make_prefix_absolute_path(self):
-
-        if not os.path.isabs(self.prefix):
-            config_filename = self.study_config.config_file
-            dirname = os.path.dirname(config_filename)
-            self.prefix = os.path.abspath(
-                os.path.join(dirname, self.prefix))
-
-    @property
-    def years(self):
-        return [self.year] if self.year else []
-
-    @property
-    def pub_meds(self):
-        return [self.pub_med] if self.pub_med else []
-
-    @property
-    def study_types(self):
-        return {self.study_type} if self.study_type else set()
-
-    @property
-    def ids(self):
-        return [self.id]
-
-    @property
-    def names(self):
-        return [self.name]
-
     @classmethod
-    def from_config(cls, config):
-        config_section = config['study']
-        config_section = cls.parse(config_section)
+    def parse(cls, config):
+        config = super(StudyConfigParserBase, cls).parse(config)
+        if config is None:
+            return None
 
-        if 'enabled' in config_section:
-            if config_section['enabled'] == 'false':
-                return None
-
+        config_section = config[cls.SECTION]
         cls._fill_wdae_config(config_section, config)
 
-        config_section['authorizedGroups'] = config_section.get(
-            'authorizedGroups', [config_section.get('id', '')])
+        assert config_section.id
 
-        # config_section['studies'] = [config_section['id']]
+        if config_section.get('name') is None:
+            config_section.name = config_section.id
 
-        return StudyConfig(config_section)
+        assert config_section.name
+        assert 'description' in config_section
+        assert config_section.work_dir
+
+        return config_section
+
+
+class StudyConfigParser(StudyConfigParserBase):
+
+    SECTION = 'study'
+
+    @classmethod
+    def parse(cls, config):
+        config = super(StudyConfigParser, cls).parse(config)
+        if config is None:
+            return None
+
+        cls.make_prefix_absolute_path(config)
+
+        config.authorizedGroups = config.get(
+            'authorizedGroups', [config.get('id', '')])
+
+        assert config.name
+        assert config.prefix
+        # assert config.pedigree_file
+        assert config.file_format
+        assert config.work_dir
+        # assert config.phenotypes
+        assert 'studyType' in config
+        assert 'hasComplex' in config
+        assert 'hasCNV' in config
+        assert 'hasDenovo' in config
+        assert 'hasTransmitted' in config
+
+        return config
+
+    @staticmethod
+    def make_prefix_absolute_path(config):
+        if not os.path.isabs(config.prefix):
+            config_filename = config.study_config.config_file
+            dirname = os.path.dirname(config_filename)
+            config.prefix = os.path.abspath(
+                os.path.join(dirname, config.prefix))

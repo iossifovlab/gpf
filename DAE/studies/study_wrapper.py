@@ -37,8 +37,8 @@ class StudyWrapper(object):
 
         present_in_role = []
 
-        genotype_browser_config = self.config.genotype_browser_config
-        if genotype_browser_config:
+        if 'genotypeBrowserConfig' in self.config:
+            genotype_browser_config = self.config.genotype_browser_config
             preview_columns = genotype_browser_config['previewColumnsSlots']
             download_columns = genotype_browser_config['downloadColumnsSlots']
             if genotype_browser_config['phenoColumns']:
@@ -59,7 +59,10 @@ class StudyWrapper(object):
         self.gene_weights_columns = gene_weights_columns
         self.column_labels = column_labels
 
-        self.people_group = self.config.people_group
+        if 'peopleGroupConfig' in self.config:
+            self.people_group = self.config.people_group_config.people_group
+        else:
+            self.people_group = []
         self.present_in_role = present_in_role
 
         if len(self.people_group) != 0:
@@ -79,8 +82,8 @@ class StudyWrapper(object):
         if pheno_db:
             self.pheno_db = pheno_factory.get_pheno_db(pheno_db)
 
-            genotype_browser_config = self.config.genotype_browser_config
-            if genotype_browser_config:
+            if 'genotypeBrowserConfig' in self.config:
+                genotype_browser_config = self.config.genotype_browser_config
                 pheno_filters = genotype_browser_config.phenoFilters
                 if pheno_filters:
                     self.pheno_filters_in_config = {
@@ -194,9 +197,9 @@ class StudyWrapper(object):
             yield variant
 
     def _add_roles_columns(self, variant):
-        genotype_browser_config = self.config.genotype_browser_config
-        if genotype_browser_config is None:
+        if 'genotypeBrowserConfig' not in self.config:
             return variant
+        genotype_browser_config = self.config.genotype_browser_config
 
         # assert isinstance(genotype_browser_config, dict), \
         #   type(genotype_browser_config)
@@ -246,8 +249,7 @@ class StudyWrapper(object):
         return result
 
     def _add_pheno_columns(self, variants_iterable):
-        genotype_browser_config = self.config.genotype_browser_config
-        if self.pheno_db is None or genotype_browser_config is None:
+        if self.pheno_db is None or 'genotypeBrowserConfig' not in self.config:
             for variant in variants_iterable:
                 yield variant
 
@@ -336,32 +338,31 @@ class StudyWrapper(object):
         return set(selection['selection'])
 
     def _add_people_with_phenotype(self, kwargs):
-        people_group_config = self.config.people_group_config
         people_with_phenotype = set()
-        if 'peopleGroup' in kwargs and \
-                kwargs['peopleGroup'] is not None and \
-                people_group_config is not None:
+
+        if 'peopleGroup' in kwargs and kwargs['peopleGroup'] is not None:
             pedigree_selector_query = kwargs.pop('peopleGroup')
 
-            people_group = people_group_config.get_people_group(
+            people_group = self.study.get_people_group(
                 pedigree_selector_query['id'])
 
-            if set(people_group['values']) == \
-                    set(pedigree_selector_query['checkedValues']):
-                return kwargs
+            if people_group:
+                if set(people_group['values']) == \
+                        set(pedigree_selector_query['checkedValues']):
+                    return kwargs
 
-            for family in self.families.values():
-                family_members_with_phenotype = set(
-                    [person.person_id for person in
-                        family.get_people_with_phenotypes(
-                            people_group['source'],
-                            pedigree_selector_query['checkedValues'])])
-                people_with_phenotype.update(family_members_with_phenotype)
+                for family in self.families.values():
+                    family_members_with_phenotype = set(
+                        [person.person_id for person in
+                            family.get_people_with_phenotypes(
+                                people_group['source'],
+                                pedigree_selector_query['checkedValues'])])
+                    people_with_phenotype.update(family_members_with_phenotype)
 
-            if 'person_ids' in kwargs:
-                people_with_phenotype.intersection(kwargs['person_ids'])
+                if 'person_ids' in kwargs:
+                    people_with_phenotype.intersection(kwargs['person_ids'])
 
-            kwargs['person_ids'] = list(people_with_phenotype)
+                kwargs['person_ids'] = list(people_with_phenotype)
 
         return kwargs
 

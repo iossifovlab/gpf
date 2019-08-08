@@ -1,8 +1,6 @@
 from studies.study_wrapper import StudyWrapper
 from studies.study_factory import StudyFactory
-from studies.study_config import StudyConfig
-
-from configuration.dae_config_parser import DAEConfigParser
+from studies.study_config_parser import StudyConfigParser
 
 
 class StudyFacade(object):
@@ -15,17 +13,12 @@ class StudyFacade(object):
         self._study_cache = {}
         self._study_wrapper_cache = {}
 
-        if study_configs is None:
-            study_configs = DAEConfigParser.single_file_configuration(
-                None,
-                None,
-                StudyConfig,
-                default_conf=None
-            )
         if study_factory is None:
             study_factory = StudyFactory(dae_config)
 
-        self.study_configs = study_configs
+        self.study_configs = {
+            sc[StudyConfigParser.SECTION].id: sc for sc in study_configs
+        }
         self.study_factory = study_factory
         self.pheno_factory = pheno_factory
 
@@ -55,16 +48,19 @@ class StudyFacade(object):
         return list(self._study_wrapper_cache.values())
 
     def get_all_study_ids(self):
-        return [
-            conf.id
-            for conf in list(self.study_configs.values())
-        ]
+        return list(self.study_configs.keys())
 
     def get_all_study_configs(self):
-        return list(self.study_configs.values())
+        self.load_cache()
+
+        return [study.config for study in self._study_cache.values()]
 
     def get_study_config(self, study_id):
-        return self.study_configs.get(study_id)
+        self.load_cache({study_id})
+        if study_id not in self._study_cache:
+            return None
+
+        return self._study_cache.get(study_id).config
 
     def load_cache(self, study_ids=None):
         if study_ids is None:
@@ -84,6 +80,8 @@ class StudyFacade(object):
             return
 
         study = self.study_factory.make_study(conf)
+        if study is None:
+            return
         self._study_cache[study_id] = study
         self._study_wrapper_cache[study_id] = \
             StudyWrapper(study, self.pheno_factory)

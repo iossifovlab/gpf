@@ -1,11 +1,12 @@
 import functools
+from box import BoxList
 
 from studies.study_config_parser import StudyConfigParserBase
 
 
 def _set_union_attribute(studies_configs, option_name):
     return functools.reduce(
-        lambda acc, st: acc | getattr(st, option_name),
+        lambda acc, st: acc | frozenset(getattr(st, option_name)),
         studies_configs,
         set())
 
@@ -57,8 +58,8 @@ class DatasetConfigParser(StudyConfigParserBase):
     COMPOSITE_ATTRIBUTES = {
         # 'phenotypes': _set_union_attribute,
 
-        'genotypeBrowser': _same_value_attribute,
-        'genotype_browser': _same_value_attribute,
+        'genotypeBrowser': _boolean_and_attribute,
+        'genotype_browser': _boolean_and_attribute,
 
         'phenotypeTool': _boolean_and_attribute,
         'phenotypeBrowser': _boolean_and_attribute,
@@ -78,11 +79,11 @@ class DatasetConfigParser(StudyConfigParserBase):
         'peopleGroupConfig': _same_value_attribute,
         'people_group_config': _same_value_attribute,
 
-        'enrichmentTool': _same_value_attribute,
-        'enrichment_tool': _same_value_attribute,
+        'enrichmentTool': _boolean_and_attribute,
+        'enrichment_tool': _boolean_and_attribute,
 
-        'authorizedGroups': _same_value_attribute,
-        'authorized_groups': _same_value_attribute,
+        'authorizedGroups': _set_union_attribute,
+        'authorized_groups': _set_union_attribute,
 
         'years': _list_extend_attribute,
         'pub_meds': _list_extend_attribute,
@@ -95,67 +96,39 @@ class DatasetConfigParser(StudyConfigParserBase):
         'pub_med': _strings_join_attribute,
     }
 
-    def __init__(self, config, *args, **kwargs):
-        super(DatasetConfigParser, self).__init__(config, *args, **kwargs)
-
-        assert self.studies
-        self.studies_configs = []
-
-    @property
-    def people_group(self):
-        people_group_config = self.people_group_config
-        if people_group_config:
-            return people_group_config.people_group
-        return []
-
-    @property
-    def people_group_config(self):
-        if 'peopleGroupConfig' in self and self['peopleGroupConfig']:
-            return self['peopleGroupConfig']
-        return _same_value_attribute(self.studies_configs, 'peopleGroupConfig')
-
-    @property
-    def genotype_browser_config(self):
-        if 'genotypeBrowserConfig' in self and self['genotypeBrowserConfig']:
-            return self['genotypeBrowserConfig']
-        return _same_value_attribute(
-            self.studies_configs, 'genotypeBrowserConfig')
-
     @classmethod
-    def from_config(cls, config):
-        config_section = config['dataset']
-        config_section = cls.parse(config_section)
-
-        if 'enabled' in config_section:
-            if config_section['enabled'] == 'false':
-                return None
-
-        cls._fill_wdae_config(config_section, config)
-
-        return DatasetConfigParser(config_section)
-
-    def __getattr__(self, option_name):
-        try:
-            return super(DatasetConfigParser, self).__getattr__(option_name)
-        except AttributeError:
-            return self._combine_studies_attributes(option_name)
-
-    def __getitem__(self, option_name):
-        try:
-            return super(DatasetConfigParser, self).__getitem__(option_name)
-        except Exception:
-            return self._combine_studies_attributes(option_name)
-
-    def _combine_studies_attributes(self, option_name):
-        # assert len(self.studies) == len(self.studies_configs)
-        # assert all([st.id in self.studies for st in self.studies_configs])
-        # assert all([
-        #     (option_name in st) or hasattr(st, option_name)
-        #     for st in self.studies_configs
-        # ]), option_name
-
-        if option_name not in self.COMPOSITE_ATTRIBUTES:
+    def parse(cls, config, study_configs):
+        config = super(DatasetConfigParser, cls).parse(config)
+        if config is None:
             return None
 
-        combiner = self.COMPOSITE_ATTRIBUTES[option_name]
-        return combiner(self.studies_configs, option_name)
+        config = cls._combine_studies_attributes(config, study_configs)
+
+        config.authorizedGroups = BoxList(config.get(
+            'authorizedGroups', [config.get('id', '')]))
+
+        assert config.studies
+
+        return config
+
+    @classmethod
+    def _combine_studies_attributes(cls, config, study_configs):
+        assert len(config.studies) == len(study_configs)
+        assert all([st.id in config.studies for st in study_configs])
+
+        study_config_keys = [
+            set(study_config.keys()) for study_config in study_configs
+        ]
+        option_names = set.intersection(*study_config_keys)
+
+        for option_name in option_names:
+            if option_name in config:
+                continue
+
+            if option_name not in cls.COMPOSITE_ATTRIBUTES:
+                continue
+
+            combiner = cls.COMPOSITE_ATTRIBUTES[option_name]
+            config[option_name] = combiner(study_configs, option_name)
+
+        return config

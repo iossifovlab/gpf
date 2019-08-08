@@ -1,7 +1,9 @@
 import logging
 
+from box import Box
+
 from studies.dataset import Dataset
-from studies.dataset_config import DatasetConfig
+from studies.dataset_config_parser import DatasetConfigParser
 
 
 LOGGER = logging.getLogger(__name__)
@@ -14,17 +16,22 @@ class DatasetFactory(object):
 
         self.study_facade = study_facade
 
-    def _fill_studies_configs(self, dataset_config):
+    def _get_studies_configs(self, dataset_config):
         studies_configs = []
-        for study_id in dataset_config.studies:
+        for study_id in DatasetConfigParser._split_str_option_list(
+                dataset_config[DatasetConfigParser.SECTION].studies):
             study_config = self.study_facade.get_study_config(study_id)
             studies_configs.append(study_config)
-        dataset_config.studies_configs = studies_configs
+        return studies_configs
 
     def make_dataset(self, dataset_config):
-        assert isinstance(dataset_config, DatasetConfig), type(dataset_config)
+        assert isinstance(dataset_config, Box), type(dataset_config)
 
-        self._fill_studies_configs(dataset_config)
+        study_configs = self._get_studies_configs(dataset_config)
+        dataset_config = \
+            DatasetConfigParser.parse(dataset_config, study_configs)
+        if dataset_config is None:
+            return None
 
         studies = []
         for study_id in dataset_config.studies:

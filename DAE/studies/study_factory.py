@@ -1,6 +1,8 @@
 import os
 
 from studies.study import Study
+from studies.study_config_parser import StudyConfigParser
+
 from backends.vcf.raw_vcf import RawFamilyVariants
 from backends.configure import Configure
 
@@ -50,6 +52,10 @@ class StudyFactory(object):
         return connection
 
     def make_study(self, study_config):
+        study_config = StudyConfigParser.parse(study_config)
+        if study_config is None:
+            return None
+
         if study_config.file_format not in self.FILE_FORMATS:
             raise ValueError(
                 "Unknown study format: {}\nKnown ones: {}"
@@ -63,7 +69,6 @@ class StudyFactory(object):
             variants = ImpalaFamilyVariants(impala_config, impala_connection)
             return Study(study_config, variants)
         else:
-            variants = RawFamilyVariants(
-                prefix=study_config.prefix)
+            variants = RawFamilyVariants(prefix=study_config.prefix)
 
             return Study(study_config, variants)

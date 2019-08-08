@@ -6,10 +6,10 @@ def test_study_config_simple(study_configs):
     assert list(study_configs.keys())
 
 
-def test_study_config_year(study_configs):
-    study_config = study_configs.get('inheritance_trio')
-    assert study_config is not None
-    assert study_config.year == ''
+# def test_study_config_year(study_configs):
+#     study_config = study_configs.get('inheritance_trio')
+#     assert study_config is not None
+#     assert study_config.year == ''
 
 
 @pytest.mark.parametrize("option_name,expected_value", [
@@ -42,8 +42,8 @@ def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
     ("pheno_db", ''),
     ("year", ''),
     ("pub_med", ''),
-    ("years", []),
-    ("pub_meds", []),
+    # ("years", []),
+    # ("pub_meds", []),
 ])
 def test_quads_f1_config_attr(quads_f1_config, option_name, expected_value):
     assert quads_f1_config is not None

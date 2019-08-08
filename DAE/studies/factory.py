@@ -1,13 +1,11 @@
 from pheno.pheno_factory import PhenoFactory
 
-from configuration.dae_config_parser import DAEConfigParser
-
 from studies.study_factory import StudyFactory
 from studies.study_facade import StudyFacade
-from studies.study_config import StudyConfig
+from studies.study_config_parser import StudyConfigParser
 from studies.dataset_factory import DatasetFactory
 from studies.dataset_facade import DatasetFacade
-from studies.dataset_config import DatasetConfig
+from studies.dataset_config_parser import DatasetConfigParser
 
 
 class VariantsDb(object):
@@ -16,9 +14,8 @@ class VariantsDb(object):
             self, dae_config,
             pheno_factory=None, thrift_connection=None):
         self.dae_config = dae_config
-        self.study_configs = DAEConfigParser.directory_configurations(
+        study_configs = StudyConfigParser.read_directory_configurations(
             dae_config.studies_dir,
-            StudyConfig,
             dae_config.dae_data_dir,
             default_conf=dae_config.default_configuration_conf
         )
@@ -30,21 +27,20 @@ class VariantsDb(object):
         self.pheno_factory = pheno_factory
 
         self.study_facade = StudyFacade(
-            self.dae_config,
-            self.pheno_factory, self.study_configs, study_factory)
+            self.dae_config, self.pheno_factory, study_configs, study_factory)
 
-        self.dataset_configs = DAEConfigParser.directory_configurations(
-            dae_config.datasets_dir,
-            DatasetConfig,
-            dae_config.dae_data_dir,
-            default_conf=dae_config.default_configuration_conf,
-            fail_silently=True
-        )
-        self.dataset_factory = DatasetFactory(
-            self.study_facade)
+        dataset_configs = \
+            DatasetConfigParser.read_directory_configurations(
+                dae_config.datasets_dir,
+                dae_config.dae_data_dir,
+                default_conf=dae_config.default_configuration_conf,
+                fail_silently=True
+            )
+
+        self.dataset_factory = DatasetFactory(self.study_facade)
         self.dataset_facade = DatasetFacade(
-            self.dataset_configs, self.dataset_factory,
-            self.pheno_factory)
+            dataset_configs, self.dataset_factory, self.pheno_factory
+        )
 
         self._configuration_check()
 
