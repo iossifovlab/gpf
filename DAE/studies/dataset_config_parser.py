@@ -1,6 +1,6 @@
 import functools
 
-from studies.study_config import StudyConfigBase
+from studies.study_config_parser import StudyConfigParserBase
 
 
 def _set_union_attribute(studies_configs, option_name):
@@ -46,9 +46,11 @@ def _strings_join_attribute(studies_configs, option_name):
     return ','.join(res)
 
 
-class DatasetConfig(StudyConfigBase):
+class DatasetConfigParser(StudyConfigParserBase):
 
-    SPLIT_STR_LISTS = StudyConfigBase.SPLIT_STR_LISTS + [
+    SECTION = 'dataset'
+
+    SPLIT_STR_LISTS = StudyConfigParserBase.SPLIT_STR_LISTS + [
         'studies',
     ]
 
@@ -58,10 +60,10 @@ class DatasetConfig(StudyConfigBase):
         'genotypeBrowser': _same_value_attribute,
         'genotype_browser': _same_value_attribute,
 
-        'phenotypeGenotypeTool': _boolean_and_attribute,
+        'phenotypeTool': _boolean_and_attribute,
         'phenotypeBrowser': _boolean_and_attribute,
 
-        'phenotype_genotype_tool': _boolean_and_attribute,
+        'phenotype_tool': _boolean_and_attribute,
         'phenotype_browser': _boolean_and_attribute,
 
         'hasTransmitted': _boolean_or_attribute,
@@ -94,7 +96,7 @@ class DatasetConfig(StudyConfigBase):
     }
 
     def __init__(self, config, *args, **kwargs):
-        super(DatasetConfig, self).__init__(config, *args, **kwargs)
+        super(DatasetConfigParser, self).__init__(config, *args, **kwargs)
 
         assert self.studies
         self.studies_configs = []
@@ -130,17 +132,17 @@ class DatasetConfig(StudyConfigBase):
 
         cls._fill_wdae_config(config_section, config)
 
-        return DatasetConfig(config_section)
+        return DatasetConfigParser(config_section)
 
     def __getattr__(self, option_name):
         try:
-            return super(DatasetConfig, self).__getattr__(option_name)
+            return super(DatasetConfigParser, self).__getattr__(option_name)
         except AttributeError:
             return self._combine_studies_attributes(option_name)
 
     def __getitem__(self, option_name):
         try:
-            return super(DatasetConfig, self).__getitem__(option_name)
+            return super(DatasetConfigParser, self).__getitem__(option_name)
         except Exception:
             return self._combine_studies_attributes(option_name)
 

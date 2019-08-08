@@ -18,7 +18,7 @@ def test_study_config_year(study_configs):
     ("name", "QUADS_F1"),
     ("id", "quads_f1"),
     ("description", "QUADS F1"),
-    ("phenotypeGenotypeTool", True),
+    ("phenotypeTool", True),
     ("phenotypeBrowser", False),
     ("phenoDB", ""),
 ])
@@ -34,10 +34,10 @@ def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
     ("name", "QUADS_F1"),
     ("id", "quads_f1"),
     ("description", "QUADS F1"),
-    ("phenotypeGenotypeTool", True),
+    ("phenotypeTool", True),
     ("phenotypeBrowser", False),
 
-    ("phenotype_genotype_tool", True),
+    ("phenotype_tool", True),
     ("phenotype_browser", False),
     ("pheno_db", ''),
     ("year", ''),

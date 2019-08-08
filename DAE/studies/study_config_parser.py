@@ -16,7 +16,7 @@ class StudyConfigBase(ConfigBase, StudyWdaeMixin):
         'hasDenovo',
         'hasTransmitted',
         'phenotypeBrowser',
-        'phenotypeGenotypeTool',
+        'phenotypeTool',
         'enrichmentTool',
         'genotypeBrowser',
         'commonReport'
@@ -25,10 +25,6 @@ class StudyConfigBase(ConfigBase, StudyWdaeMixin):
     SPLIT_STR_LISTS = [
         'authorizedGroups'
     ]
-
-    NEW_KEYS_NAMES = {
-        'phenoGenoTool': 'phenotypeGenotypeTool'
-    }
 
     def __init__(self, section_config, *args, **kwargs):
         super(StudyConfigBase, self).__init__(section_config, *args, **kwargs)
@@ -82,7 +78,7 @@ class StudyConfig(StudyConfigBase):
     def make_prefix_absolute_path(self):
 
         if not os.path.isabs(self.prefix):
-            config_filename = self.config.study_config.config_file
+            config_filename = self.study_config.config_file
             dirname = os.path.dirname(config_filename)
             self.prefix = os.path.abspath(
                 os.path.join(dirname, self.prefix))
