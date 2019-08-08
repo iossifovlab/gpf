@@ -1,6 +1,6 @@
 import os
 
-from common_reports.config import CommonReportsParseConfig
+from common_reports.config import CommonReportsConfigParser
 
 
 def test_common_reports_config(
@@ -10,11 +10,11 @@ def test_common_reports_config(
     assert common_reports_config.filter_info == filter_info
     assert common_reports_config.effect_groups == ['Missense']
     assert common_reports_config.effect_types == ['Frame-shift']
-    assert common_reports_config.path == '/path/to/common_report'
+    assert common_reports_config.file_path == '/path/to/common_report'
 
 
 def test_common_reports_parse_config(study1_config):
-    common_reports_config = CommonReportsParseConfig.from_config(study1_config)
+    common_reports_config = CommonReportsConfigParser.parse(study1_config)
 
     assert common_reports_config.id == 'Study1'
 
@@ -45,27 +45,27 @@ def test_common_reports_parse_config(study1_config):
     assert common_reports_config.effect_groups == []
     assert common_reports_config.effect_types == \
         ['Frame-shift', 'Missense']
-    assert common_reports_config.path == \
+    assert common_reports_config.file_path == \
         os.path.join(os.path.dirname(os.path.realpath(__file__)),
                      'fixtures/studies/Study1/common_report.json')
 
 
 def test_common_reports_parse_config_missing_config(dataset2_config):
     common_reports_parse_config = \
-        CommonReportsParseConfig.from_config(dataset2_config)
+        CommonReportsConfigParser.parse(dataset2_config)
 
     assert common_reports_parse_config is None
 
 
 def test_common_reports_parse_config_disabled(dataset3_config):
     common_reports_parse_config = \
-        CommonReportsParseConfig.from_config(dataset3_config)
+        CommonReportsConfigParser.parse(dataset3_config)
 
     assert common_reports_parse_config is None
 
 
 def test_common_reports_parse_config_missing_groups(dataset4_config):
     common_reports_parse_config = \
-        CommonReportsParseConfig.from_config(dataset4_config)
+        CommonReportsConfigParser.parse(dataset4_config)
 
     assert common_reports_parse_config is None

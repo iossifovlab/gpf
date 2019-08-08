@@ -9,11 +9,11 @@ class StudyBase(object):
         self.id = self.config.id
         self.name = self.config.name
         # self.phenotypes = self.config.phenotypes
-        self.has_denovo = self.config.get('has_denovo', None)
-        self.has_transmitted = self.config.get('has_transmitted', None)
-        self.has_complex = self.config.get('has_complex', None)
-        self.has_cnv = self.config.get('has_cnv', None)
-        self.study_type = self.config.get('study_type', None)
+        self.has_denovo = self.config.get('hasDenovo', None)
+        self.has_transmitted = self.config.get('hasTransmitted', None)
+        self.has_complex = self.config.get('hasComplex', None)
+        self.has_cnv = self.config.get('hasCNV', None)
+        self.study_type = self.config.get('studyType', None)
         self.year = self.config.get('year', None)
         self.pub_med = self.config.get('pub_med', '')
 
@@ -33,7 +33,9 @@ class StudyBase(object):
 
     @property
     def study_types(self):
-        return {self.config.study_type} if self.config.study_type else set()
+        print(self.config.keys())
+        return {self.config.study_type} \
+            if self.config.get('studyType', None) else set()
 
     @property
     def ids(self):

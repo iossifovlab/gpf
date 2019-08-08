@@ -1,35 +1,25 @@
 import os
 
-from box import Box
 from collections import OrderedDict
 from copy import deepcopy
 
-from configuration.config_base import ConfigBase
+from configuration.dae_config_parser import DAEConfigParser
 
 
-class CommonReportsConfig(object):
-    """
-    Helper class for accessing DAE and commonReports configuration.
-    """
+class CommonReportsConfigParser(DAEConfigParser):
 
-    def __init__(
-            self, cr_id, config, people_groups_info, filter_info):
-        self.config = config
+    SECTION = 'commonReport'
 
-        self.id = cr_id
+    SPLIT_STR_LISTS = (
+        'peopleGroups',
+        'effect_groups',
+        'effect_types'
+    )
 
-        self.people_groups_info = people_groups_info
-        self.filter_info = filter_info
-        self.effect_groups = self.config.get('effect_groups', [])
-        self.effect_types = self.config.get('effect_types', [])
-
-        self.path = config.file
-
-
-class CommonReportsParseConfig(ConfigBase):
-
-    SPLIT_STR_LISTS = ('peopleGroups', 'effect_groups', 'effect_types')
-    CAST_TO_BOOL = ('draw_all_families', 'enabled')
+    CAST_TO_BOOL = (
+        'draw_all_families',
+        'enabled'
+    )
 
     @classmethod
     def _get_people_groups(cls, config, people_groups):
@@ -68,38 +58,40 @@ class CommonReportsParseConfig(ConfigBase):
         ])
 
     @classmethod
-    def from_config(cls, study_config):
-        if not study_config:
-            return None
-
-        cr_id = study_config.id
-        config = deepcopy(
-            study_config.study_config.get('commonReport', None))
-        config_file = study_config.study_config.get('config_file', '')
-
+    def parse(cls, config):
         if config is None:
+            return
+        study_config = config.study_config
+        config_section = \
+            deepcopy(study_config.get(CommonReportsConfigParser.SECTION, None))
+        config_section = \
+            super(CommonReportsConfigParser, cls).parse(config_section)
+        if not config_section:
+            return None
+        if config_section.get('enabled', True) is False:
             return None
 
-        config = cls.parse(config)
-        config = Box(config, camel_killer_box=True)
-
-        if config.get('enabled', True) is False:
-            return None
-
-        people_group = study_config.people_group
+        people_group = config.people_group_config.people_group
 
         people_groups_info = \
-            cls._get_people_groups(config, people_group)
-        filter_info = cls._parse_data(config, cr_id)
+            cls._get_people_groups(config_section, people_group)
+        filter_info = cls._parse_data(config_section, config.id)
         if filter_info is None:
             return None
 
+        config_section.id = config.id
+
+        config_section.effect_types = config_section.get('effect_types', [])
+        config_section.effect_groups = config_section.get('effect_groups', [])
+
+        config_file = study_config.get('config_file', '')
         assert os.path.exists(config_file)
-
-        if config.get('file') is None:
+        if config_section.get('file_path') is None:
             dirname = os.path.dirname(config_file)
-            filename = os.path.join(dirname, 'common_report.json')
-            config.file = filename
+            file_path = os.path.join(dirname, 'common_report.json')
+            config_section.file_path = file_path
 
-        return CommonReportsConfig(
-            cr_id, config, people_groups_info, filter_info)
+        config_section.people_groups_info = people_groups_info
+        config_section.filter_info = filter_info
+
+        return config_section

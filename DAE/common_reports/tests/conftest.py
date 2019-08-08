@@ -1,6 +1,7 @@
 import pytest
 
 import os
+from box import Box
 from copy import deepcopy
 from collections import OrderedDict
 
@@ -9,7 +10,6 @@ from configuration.configuration import DAEConfig
 
 from common_reports.filter import Filter, FilterObject, FilterObjects
 from common_reports.people_group_info import PeopleGroupsInfo
-from common_reports.config import CommonReportsConfig
 from common_reports.common_report_facade import CommonReportFacade
 
 
@@ -104,7 +104,7 @@ def filter_info(groups):
 
 @pytest.fixture(scope='session')
 def people_groups(study1_config):
-    people_group = study1_config.people_group
+    people_group = study1_config.people_group_config.people_group
 
     people_groups = OrderedDict()
     for pg in people_group:
@@ -161,19 +161,20 @@ def denovo_variants_ds1(dataset1):
 def common_reports_config(study1, study1_config, people_groups, filter_info):
     common_report_config = \
         deepcopy(study1_config.study_config.get('commonReport', None))
-    common_report_config['file'] = '/path/to/common_report'
+    common_report_config['id'] = 'Study1'
+    common_report_config['file_path'] = '/path/to/common_report'
     common_report_config['effect_groups'] = ['Missense']
     common_report_config['effect_types'] = ['Frame-shift']
+    common_report_config['people_groups_info'] = people_groups
+    common_report_config['filter_info'] = filter_info
 
-    return CommonReportsConfig(
-        study1.id, common_report_config, people_groups, filter_info
-    )
+    return Box(common_report_config, camel_killer_box=True)
 
 
 @pytest.fixture(scope='module')
 def remove_common_reports(common_report_facade):
     all_configs = common_report_facade.get_all_common_report_configs()
-    temp_files = [config.path for config in all_configs]
+    temp_files = [config.file_path for config in all_configs]
 
     for temp_file in temp_files:
         if os.path.exists(temp_file):
