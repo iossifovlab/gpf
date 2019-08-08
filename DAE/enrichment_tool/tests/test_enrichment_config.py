@@ -2,12 +2,13 @@ from box import Box
 
 from enrichment_tool.tests.conftest import fixtures_dir
 
-from enrichment_tool.config import EnrichmentConfig
+from enrichment_tool.config import EnrichmentConfigParser
 
 
 def test_enrichment_cache_file(f1_trio_enrichment_config):
-    assert f1_trio_enrichment_config.enrichment_cache_file('tool') == \
-        fixtures_dir() + '/studies/f1_trio/enrichment-tool.pckl'
+    assert EnrichmentConfigParser.enrichment_cache_file(
+        f1_trio_enrichment_config, 'tool') == \
+            fixtures_dir() + '/studies/f1_trio/enrichment-tool.pckl'
 
 
 def test_enrichment_config_people_groups(f1_trio_enrichment_config):
@@ -87,16 +88,17 @@ def test_enrichment_config_empty():
         'study_config': {
             'enrichment': {
                 'enabled': False
-            }
+            },
+            'config_file': '/conf/enrichement.conf'
         }
     })
 
-    assert EnrichmentConfig.from_config(config) is None
+    assert EnrichmentConfigParser.parse(config) is None
 
     config.study_config.enrichment = None
-    assert EnrichmentConfig.from_config(config) is None
+    assert EnrichmentConfigParser.parse(config) is None
 
     config.study_config = None
-    assert EnrichmentConfig.from_config(config) is None
+    assert EnrichmentConfigParser.parse(config) is None
 
-    assert EnrichmentConfig.from_config(None) is None
+    assert EnrichmentConfigParser.parse(None) is None

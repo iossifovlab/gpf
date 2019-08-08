@@ -2,6 +2,7 @@ import os
 
 from collections import OrderedDict
 from copy import deepcopy
+from box import Box
 
 from configuration.dae_config_parser import DAEConfigParser
 
@@ -64,6 +65,7 @@ class CommonReportsConfigParser(DAEConfigParser):
         study_config = config.study_config
         config_section = \
             deepcopy(study_config.get(CommonReportsConfigParser.SECTION, None))
+        config_section = Box(config_section, camel_killer_parser=True)        
         config_section = \
             super(CommonReportsConfigParser, cls).parse(config_section)
         if not config_section:

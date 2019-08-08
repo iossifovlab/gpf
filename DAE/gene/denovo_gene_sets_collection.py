@@ -123,12 +123,8 @@ class DenovoGeneSetsCollection(object):
         return innermost_cache
 
     def get_gene_sets_legend(self, people_group_id):
-        people_group_config = self.study.config.people_group_config
-        if people_group_config is None:
-            return []
-
-        gene_sets_pg = people_group_config.get_people_group(people_group_id)
-        if len(gene_sets_pg) == 0:
+        gene_sets_pg = self.study.get_people_group(people_group_id)
+        if gene_sets_pg is None:
             return []
 
         return gene_sets_pg['domain']

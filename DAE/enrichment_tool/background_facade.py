@@ -1,4 +1,4 @@
-from enrichment_tool.config import EnrichmentConfig
+from enrichment_tool.config import EnrichmentConfigParser
 from enrichment_tool.background import BackgroundBase
 
 
@@ -64,7 +64,7 @@ class BackgroundFacade(object):
                     self._load_background_in_cache(study_id, background_id)
 
     def _load_enrichment_config_in_cache(self, study_id):
-        enrichment_config = EnrichmentConfig.from_config(
+        enrichment_config = EnrichmentConfigParser.parse(
             self.variants_db.get_config(study_id))
         if enrichment_config is None:
             return

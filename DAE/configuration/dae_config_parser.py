@@ -253,7 +253,7 @@ class DAEConfigParser(object):
         for key, options in cls.PARSE_TO_DICT.items():
             elements = None
             if 'selected' in options:
-                elements = config.pop(options['selected'], None)
+                elements = config.get(options['selected'], None)
             selectors = cls._get_selectors(
                 config, options['group'], options['getter'], elements
             )

@@ -4,13 +4,21 @@ Created on Nov 7, 2016
 @author: lubo
 '''
 import os
+from box import Box
 from copy import deepcopy
 from collections import OrderedDict
 
-from configuration.config_base import ConfigBase
+from configuration.dae_config_parser import DAEConfigParser
 
 
-class EnrichmentConfig(ConfigBase):
+class classproperty(property):
+    def __get__(self, obj, objtype=None):
+        return super(classproperty, self).__get__(objtype)
+
+
+class EnrichmentConfigParser(DAEConfigParser):
+
+    SECTION = 'enrichment'
 
     SPLIT_STR_LISTS = (
         'peopleGroups',
@@ -19,12 +27,26 @@ class EnrichmentConfig(ConfigBase):
         'effect_types'
     )
 
-    def __init__(self, config, *args, **kwargs):
-        super(EnrichmentConfig, self).__init__(config, *args, **kwargs)
+    @classproperty
+    def PARSE_TO_DICT(cls):
+        return {
+            'backgrounds': {
+                'group': 'background',
+                'getter': cls._get_model,
+                'selected': 'selectedBackgroundValues',
+                'default': []
+            }, 'counting': {
+                'group': 'counting',
+                'getter': cls._get_model,
+                'selected': 'selectedCountingValues',
+                'default': []
+            }
+        }
 
-    def enrichment_cache_file(self, name=''):
+    @staticmethod
+    def enrichment_cache_file(config, name=''):
         cache_file = os.path.join(
-            os.path.split(self.config_file)[0],
+            os.path.split(config.config_file)[0],
             'enrichment-{}.pckl'.format(name)
         )
 
@@ -41,49 +63,44 @@ class EnrichmentConfig(ConfigBase):
             model['filename'] = None
         else:
             model['filename'] = os.path.join(
-                os.path.split(config['configFile'])[0],
+                os.path.split(config.config_file)[0],
                 'enrichment/{}'.format(model_file)
             )
         model['desc'] = config.pop(model_type + '.desc', None)
 
         yield model
 
-    @classmethod
-    def _get_model_selectors(
-            cls, enrichment_config, property_key, selected_property):
-        model_selector_elements = enrichment_config.get(
-            selected_property, None)
-
-        model_selector = cls._get_selectors(
-            enrichment_config, property_key, cls._get_model,
-            model_selector_elements
-        )
-        model_selector = OrderedDict([(ms['id'], ms) for ms in model_selector])
-
-        return model_selector
+    @staticmethod
+    def _get_model_selectors(model_selector):
+        return OrderedDict([(ms['id'], ms) for ms in model_selector])
 
     @classmethod
-    def from_config(cls, config):
+    def parse(cls, config):
         if config is None:
             return
+
         study_config = config.study_config
         if study_config is None:
             return
-        enrichment_config = \
-            deepcopy(study_config.get('enrichment', None))
+
+        enrichment_config = deepcopy(study_config.get(
+            EnrichmentConfigParser.SECTION, None))
         if enrichment_config is None:
             return
+        enrichment_config = Box(enrichment_config, camel_killer_box=True)
 
-        enrichment_config = cls.parse(enrichment_config)
+        enrichment_config['config_file'] = study_config.config_file
+
+        enrichment_config = \
+            super(EnrichmentConfigParser, cls).parse(enrichment_config)
 
         if enrichment_config.get('enabled', True) is False:
             return None
 
-        enrichment_config['configFile'] = study_config.config_file
+        enrichment_config['backgrounds'] = \
+            cls._get_model_selectors(enrichment_config['backgrounds'])
+        enrichment_config['counting'] = \
+            cls._get_model_selectors(enrichment_config['counting'])
+        enrichment_config['enrichment_cache_file'] = cls.enrichment_cache_file
 
-        enrichment_config['backgrounds'] = cls._get_model_selectors(
-            enrichment_config, 'background', 'selectedBackgroundValues')
-        enrichment_config['counting'] = cls._get_model_selectors(
-            enrichment_config, 'counting', 'selectedCountingValues')
-
-        return EnrichmentConfig(enrichment_config)
+        return enrichment_config

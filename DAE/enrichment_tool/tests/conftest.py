@@ -5,7 +5,7 @@ import os
 from configuration.configuration import DAEConfig
 from studies.factory import VariantsDb
 
-from enrichment_tool.config import EnrichmentConfig
+from enrichment_tool.config import EnrichmentConfigParser
 from enrichment_tool.background import CodingLenBackground, SamochaBackground
 from enrichment_tool.background_facade import BackgroundFacade
 
@@ -29,7 +29,7 @@ def variants_db_fixture(dae_config_fixture):
 
 @pytest.fixture(scope='session')
 def f1_trio_enrichment_config(variants_db_fixture):
-    return EnrichmentConfig.from_config(
+    return EnrichmentConfigParser.parse(
         variants_db_fixture.get_config('f1_trio'))
 
 

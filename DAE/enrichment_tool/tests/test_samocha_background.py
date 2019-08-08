@@ -46,7 +46,7 @@ def test_calc_stats(f1_trio, f1_trio_samocha_background):
     event_counter = EventsCounter()
     enrichment_events = event_counter.events(variants)
 
-    pg = f1_trio.config.people_group_config.get_people_group('phenotype')
+    pg = f1_trio.get_people_group('phenotype')
     gh = GenotypeHelper(f1_trio, pg, 'autism')
     children_stats = gh.get_children_stats()
 

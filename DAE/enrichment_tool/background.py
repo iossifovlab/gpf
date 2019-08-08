@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from enrichment_tool.event_counters import overlap_enrichment_result_dict
+from enrichment_tool.config import EnrichmentConfigParser
 # from variants.attributes import Inheritance
 
 
@@ -29,7 +30,8 @@ class BackgroundBase(object):
         assert self.name is not None
         self.config = config
 
-        self.cache_filename = self.config.enrichment_cache_file(self.name)
+        self.cache_filename = EnrichmentConfigParser.enrichment_cache_file(
+            self.config, self.name)
 
         self.load()
 
@@ -291,8 +293,10 @@ class SamochaBackground(BackgroundBase):
         children_count = children_stats['M'] + children_stats['U'] \
             + children_stats['F']
         # p = (p_boys + p_girls) / 2.0
-        p = 1.0 * ((children_stats['M'] + children_stats['U']) * p_boys +
-                children_stats['F'] * p_girls) / (children_count)
+        p = 1.0 * (
+            (children_stats['M'] + children_stats['U']) * p_boys +
+            children_stats['F'] * p_girls
+        ) / (children_count)
 #         result.rec_expected = \
 #             (children_stats['M'] + children_stats['F']) * p * p
         if len(rec_result.events) == 0 or len(all_result.events) == 0:
