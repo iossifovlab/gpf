@@ -83,10 +83,9 @@ class DAEConfig(object):
                 hdfs_port = os.environ.get('DAE_HDFS_PORT', None)
 
         filename = os.path.join(dae_data_dir, dae_conf_filename)
-        sections = DAEConfigParser.single_file_configuration(
+        sections = DAEConfigParser.read_file_configuration(
             filename,
             dae_data_dir,
-            ConfigSectionConfig,
             {'wd': dae_data_dir, 'work_dir': dae_data_dir}
         )
         assert sections is not None

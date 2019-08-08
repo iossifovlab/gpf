@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from configuration.configuration import DAEConfig, ConfigSectionConfig
+from configuration.configuration import DAEConfig
 from configuration.dae_config_parser import DAEConfigParser
 
 
@@ -27,10 +27,9 @@ def dae_config(fixturedir):
 
 
 def test_configuration_sections_simple(fixturedir):
-    sections = DAEConfigParser.single_file_configuration(
+    sections = DAEConfigParser.read_file_configuration(
         "test_config.conf",
         fixturedir,
-        ConfigSectionConfig,
         {'wd': fixturedir, 'work_dir': fixturedir}
     )
     assert sections is not None
