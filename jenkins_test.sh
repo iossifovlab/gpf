@@ -7,13 +7,16 @@ export PYTHONPATH=${DAE_SOURCE_DIR}/dae/tools:$PYTHONPATH
 
 rm -rf coverage/ && mkdir coverage
 
+cd dae && pip install -e . && cd -
+cd wdae && pip install -e . && cd -
+
 py.test -v --cov-config coveragerc \
     --reimport \
     --junitxml=coverage/dae-junit.xml \
     --cov-report=html:./coverage/coverage.html \
     --cov-report=xml:./coverage/coverage.xml \
     --cov dae/ \
-    dae/
+    dae/dae/
 
 py.test -v --cov-config coveragerc \
     --junitxml=coverage/wdae-junit.xml \
@@ -21,7 +24,7 @@ py.test -v --cov-config coveragerc \
     --cov-report=html:./coverage/coverage.html \
     --cov-report=xml:./coverage/coverage.xml \
     --cov wdae/ \
-    wdae/
+    wdae/wdae
 
 
 chmod a+rwx -R coverage
