@@ -1,6 +1,7 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
+# conda create -c conda-forge -c bioconda -n <env name> --file <this file>
 cyvcf2=0.11.5
 impyla=0.15.0
 lark-parser=0.6.7
