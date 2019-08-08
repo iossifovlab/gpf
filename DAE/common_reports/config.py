@@ -81,7 +81,7 @@ class CommonReportsParseConfig(ConfigBase):
             return None
 
         config = cls.parse(config)
-        config = Box(config)
+        config = Box(config, camel_killer_box=True)
 
         if config.get('enabled', True) is False:
             return None
