@@ -12,8 +12,8 @@ from dae.studies.helpers import expand_effect_types
 from dae.backends.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, ContainsNode
 
-from studies.genotype_browser_config import GenotypeBrowserConfig
-from studies.people_group_config import PeopleGroupConfig
+from dae.studies.genotype_browser_config import GenotypeBrowserConfig
+from dae.studies.people_group_config import PeopleGroupConfig
 
 
 class StudyWrapper(object):

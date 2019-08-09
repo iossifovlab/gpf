@@ -1,8 +1,8 @@
 import os
 import pytest
 
-from configuration.configuration import DAEConfig
-from configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
 def relative_to_this_test_folder(path):
