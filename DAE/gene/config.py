@@ -10,7 +10,6 @@ from configuration.dae_config_parser import DAEConfigParser
 
 from gene.gene_weight_config_parser import GeneWeightConfigParser
 from gene.gene_term_config_parser import GeneTermConfigParser
-from gene.chromosome_config import ChromosomeConfig
 from gene.gene_term import loadGeneTerm
 
 
@@ -25,8 +24,8 @@ class GeneInfoConfigParser(DAEConfigParser):
             GeneInfoDB.parse(config.get(GeneInfoDB.SECTION, None))
         config['geneWeights'] = GeneWeightConfigParser.parse(config)
         config['geneTerms'] = GeneTermConfigParser.parse(config)
-        config['chromosomes'] = ChromosomeConfig.from_config(
-            config.get('chromosomes', None))
+        config['chromosomes'] = \
+            DAEConfigParser.parse(config.get('chromosomes', None))
 
         return config
 

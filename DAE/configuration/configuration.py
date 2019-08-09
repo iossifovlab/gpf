@@ -1,17 +1,6 @@
 import os
 
 from configuration.dae_config_parser import DAEConfigParser
-from configuration.config_base import ConfigBase
-
-
-class ConfigSectionConfig(ConfigBase):
-
-    def __init__(self, config, *args, **kwargs):
-        super(ConfigSectionConfig, self).__init__(config, *args, **kwargs)
-
-    @classmethod
-    def from_config(cls, config):
-        return ConfigSectionConfig(config)
 
 
 class DAEConfig(object):
