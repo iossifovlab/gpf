@@ -12,6 +12,9 @@ from studies.helpers import expand_effect_types
 from backends.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, ContainsNode
 
+from studies.genotype_browser_config import GenotypeBrowserConfig
+from studies.people_group_config import PeopleGroupConfig
+
 
 class StudyWrapper(object):
 
@@ -586,9 +589,10 @@ class StudyWrapper(object):
 
     @staticmethod
     def _get_configs_keys():
-        return [
-            'genotypeBrowserConfig', 'peopleGroupConfig'
-        ]
+        return {
+            'genotypeBrowserConfig': GenotypeBrowserConfig,
+            'peopleGroupConfig': PeopleGroupConfig
+        }
 
     def get_dataset_description(self):
         keys = self._get_description_keys()
@@ -626,13 +630,14 @@ class StudyWrapper(object):
                 measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
-    def _filter_configs(self, dataset_description, config_keys=[]):
-        for config_key in config_keys:
+    def _filter_configs(self, dataset_description, config_keys={}):
+        for config_key, parser in config_keys.items():
             config = dataset_description.get(config_key, None)
             if not config:
                 return
 
-            dataset_description[config_key] = config.get_config_description()
+            dataset_description[config_key] = \
+                parser.get_config_description(config)
 
     def get_column_labels(self):
         return self.column_labels

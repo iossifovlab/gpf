@@ -287,9 +287,10 @@ class GenotypeBrowserConfig(DAEConfigParser):
             'phenoColumns', 'downloadColumns'
         ]
 
-    def get_config_description(self):
-        keys = self._get_description_keys()
-        config = self.to_dict()
+    @classmethod
+    def get_config_description(cls, config):
+        keys = cls._get_description_keys()
+        config = config.to_dict()
 
         result = {key: config.get(key, None) for key in keys}
 
