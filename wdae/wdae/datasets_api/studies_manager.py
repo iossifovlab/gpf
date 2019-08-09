@@ -54,9 +54,9 @@ class StudiesManager(object):
             Dataset.recreate_dataset_perm(study_id, [])
 
         self.score_loader = ScoreLoader(daeConfig=self.dae_config)
-        gene_info_config = GeneInfoConfigParser.read_file_configuration(
-            self.dae_config.gene_info_conf, self.dae_config.dae_data_dir)
-        self.gene_info_config = GeneInfoConfigParser.parse(gene_info_config)
+        self.gene_info_config = \
+            GeneInfoConfigParser.read_and_parse_file_configuration(
+                self.dae_config.gene_info_conf, self.dae_config.dae_data_dir)
         self.weights_loader = WeightsLoader(
             config=self.gene_info_config.gene_weights)
 

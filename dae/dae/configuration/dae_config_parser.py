@@ -29,15 +29,45 @@ class DAEConfigParser(object):
     PARSE_TO_DICT = {}
 
     @classmethod
+    def read_and_parse_directory_configurations(
+            cls, configurations_dir, work_dir, default_values=None,
+            default_conf=None, fail_silently=False):
+        configs = cls.read_directory_configurations(
+            configurations_dir, work_dir, default_values=default_values,
+            default_conf=default_conf, fail_silently=fail_silently
+        )
+
+        parsed_configs = []
+
+        for config in configs:
+            parsed_config = cls.parse(config)
+            parsed_configs.append(parsed_config)
+
+        return parsed_configs
+
+    @classmethod
+    def read_and_parse_file_configuration(
+            cls, config_file, work_dir, default_values=None,
+            default_conf=None):
+        config = cls.read_file_configuration(
+            config_file, work_dir, default_values=default_values,
+            default_conf=default_conf
+        )
+
+        config = cls.parse(config)
+
+        return config
+
+    @classmethod
     def read_directory_configurations(
             cls, configurations_dir, work_dir, default_values=None,
-            default_conf=None, fail_silently=False, enabled_dir='.'):
+            default_conf=None, fail_silently=False):
         if default_values is None:
             default_values = {}
         assert isinstance(configurations_dir, str),\
             type(configurations_dir)
 
-        enabled_dir = os.path.join(configurations_dir, enabled_dir)
+        enabled_dir = os.path.join(configurations_dir, cls.ENABLED_DIR)
         enabled_dir = os.path.abspath(enabled_dir)
 
         configs = []

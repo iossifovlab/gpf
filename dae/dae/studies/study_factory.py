@@ -52,7 +52,6 @@ class StudyFactory(object):
         return connection
 
     def make_study(self, study_config):
-        study_config = StudyConfigParser.parse(study_config)
         if study_config is None:
             return None
 

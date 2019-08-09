@@ -42,9 +42,8 @@ def mock_property(mocker):
 
 @pytest.fixture(scope='session')
 def gene_info_config(dae_config_fixture):
-    gene_info_config = GeneInfoConfigParser.read_file_configuration(
+    gene_info_config = GeneInfoConfigParser.read_and_parse_file_configuration(
         dae_config_fixture.gene_info_conf, dae_config_fixture.dae_data_dir)
-    gene_info_config = GeneInfoConfigParser.parse(gene_info_config)
     return gene_info_config
 
 

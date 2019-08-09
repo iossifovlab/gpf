@@ -1,6 +1,5 @@
 from dae.studies.study_wrapper import StudyWrapper
 from dae.studies.study_factory import StudyFactory
-from dae.studies.study_config_parser import StudyConfigParser
 
 
 class StudyFacade(object):
@@ -16,9 +15,7 @@ class StudyFacade(object):
         if study_factory is None:
             study_factory = StudyFactory(dae_config)
 
-        self.study_configs = {
-            sc[StudyConfigParser.SECTION].id: sc for sc in study_configs
-        }
+        self.study_configs = {sc.id: sc for sc in study_configs}
         self.study_factory = study_factory
         self.pheno_factory = pheno_factory
 

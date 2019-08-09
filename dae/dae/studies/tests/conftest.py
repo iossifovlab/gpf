@@ -40,14 +40,12 @@ def dae_config_fixture():
 
 @pytest.fixture(scope='module')
 def study_configs(dae_config_fixture):
-    study_configs = StudyConfigParser.read_directory_configurations(
+    study_configs = StudyConfigParser.read_and_parse_directory_configurations(
         dae_config_fixture.studies_dir,
         dae_config_fixture.dae_data_dir,
         default_conf=dae_config_fixture.default_configuration_conf
     )
-    return {
-        sc[StudyConfigParser.SECTION].id: sc for sc in study_configs
-    }
+    return {sc.id: sc for sc in study_configs}
 
 
 @pytest.fixture(scope='module')
@@ -159,9 +157,8 @@ def pheno_factory(dae_config_fixture):
 
 @pytest.fixture(scope='module')
 def gene_info_config(dae_config_fixture):
-    gene_info_config = GeneInfoConfigParser.read_file_configuration(
+    gene_info_config = GeneInfoConfigParser.read_and_parse_file_configuration(
         dae_config_fixture.gene_info_conf, dae_config_fixture.dae_data_dir)
-    gene_info_config = GeneInfoConfigParser.parse(gene_info_config)
     return gene_info_config
 
 

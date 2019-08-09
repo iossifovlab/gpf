@@ -14,11 +14,12 @@ class VariantsDb(object):
             self, dae_config,
             pheno_factory=None, thrift_connection=None):
         self.dae_config = dae_config
-        study_configs = StudyConfigParser.read_directory_configurations(
-            dae_config.studies_dir,
-            dae_config.dae_data_dir,
-            default_conf=dae_config.default_configuration_conf
-        )
+        study_configs = \
+            StudyConfigParser.read_and_parse_directory_configurations(
+                dae_config.studies_dir,
+                dae_config.dae_data_dir,
+                default_conf=dae_config.default_configuration_conf
+            )
 
         study_factory = StudyFactory(dae_config, thrift_connection)
 
