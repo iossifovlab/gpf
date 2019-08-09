@@ -42,9 +42,7 @@ class CommonReportFacade(object):
     def get_all_common_report_ids(self):
         self.load_cache()
 
-        return [
-            config.id for config in self._common_report_config_cache.values()
-        ]
+        return list(self._common_report_config_cache.keys())
 
     def generate_common_report(self, common_report_id):
         self.load_cache({common_report_id})
