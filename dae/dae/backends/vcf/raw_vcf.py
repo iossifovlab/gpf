@@ -15,9 +15,9 @@ from dae.variants.family import Family
 from dae.variants.variant import SummaryVariantFactory
 from dae.variants.family_variant import FamilyVariant, FamilyAllele
 
-from .loader import RawVariantsLoader
-from ..configure import Configure
-from ..attributes_query import role_query, sex_query, \
+from dae.backends.vcf.loader import RawVariantsLoader
+from dae.backends.configure import Configure
+from dae.backends.attributes_query import role_query, sex_query, \
     inheritance_query,\
     variant_type_query
 

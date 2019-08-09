@@ -64,7 +64,7 @@ class QueryPreviewView(QueryBaseView):
 
         data = request.data
         try:
-            dataset_id = data['datasetId']
+            dataset_id = data.pop('datasetId')
             self.check_object_permissions(request, dataset_id)
 
             dataset = self.get_dataset_wdae_wrapper(dataset_id)
@@ -76,7 +76,7 @@ class QueryPreviewView(QueryBaseView):
                 variants_hard_max=self.MAX_VARIANTS)
 
             # pprint.pprint(response)
-            response['legend'] = dataset.get_legend(safe=True, **data)
+            response['legend'] = dataset.get_legend(**data)
 
             return Response(response, status=status.HTTP_200_OK)
         except NotAuthenticated:
@@ -115,9 +115,11 @@ class QueryDownloadView(QueryBaseView):
         user = request.user
 
         try:
-            self.check_object_permissions(request, data['datasetId'])
+            dataset_id = data.pop('datasetId')
 
-            dataset = self.get_dataset_wdae_wrapper(data['datasetId'])
+            self.check_object_permissions(request, dataset_id)
+
+            dataset = self.get_dataset_wdae_wrapper(dataset_id)
 
             columns = dataset.download_columns
             try:
