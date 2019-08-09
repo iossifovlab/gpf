@@ -172,7 +172,8 @@ INSTALLED_APPS = [
 
     # 'gpfjs',
     'chromosome',
-    'query_state_save'
+    'query_state_save',
+    'user_queries',
 ]
 
 AUTH_USER_MODEL = 'users_api.WdaeUser'
