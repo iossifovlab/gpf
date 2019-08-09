@@ -45,7 +45,7 @@ RUN /opt/conda/envs/gpf/bin/pip install reusables
 RUN mkdir /data && mkdir /code
 
 
-ENV DAE_SOURCE_DIR="/code/DAE"
+ENV DAE_SOURCE_DIR="/code"
 ENV DAE_DB_DIR="/data"
 ENV PYTHONPATH="$DAE_SOURCE_DIR:$PYTHONPATH"
 ENV PATH /opt/conda/envs/gpf/bin:/opt/conda/bin:$PATH
