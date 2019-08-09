@@ -19,7 +19,8 @@ class GeneSetsCollection(object):
 
     def _load(self):
         try:
-            gene_sets_collection = self.config.getGeneTerms(self.gsc_id)
+            gene_sets_collection = \
+                GeneInfoConfigParser.getGeneTerms(self.config, self.gsc_id)
         except Exception:
             traceback.print_exc()
             gene_sets_collection = loadGeneTerm(self.gsc_id)
@@ -94,9 +95,11 @@ class GeneSetsCollections(object):
 
     def get_collections_descriptions(self, permitted_datasets=None):
         gene_sets_collections_desc = []
-        for gsc_id in self.config.getGeneTermIds():
-            label = self.config.getGeneTermAtt(gsc_id, "webLabel")
-            formatStr = self.config.getGeneTermAtt(gsc_id, "webFormatStr")
+        for gsc_id in self.config.gene_terms.keys():
+            label = GeneInfoConfigParser.getGeneTermAtt(
+                self.config, gsc_id, "webLabel")
+            formatStr = GeneInfoConfigParser.getGeneTermAtt(
+                self.config, gsc_id, "webFormatStr")
             if not label or not formatStr:
                 continue
             gene_sets_types = self.get_gene_sets_collection(gsc_id) \

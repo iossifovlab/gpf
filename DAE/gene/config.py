@@ -30,16 +30,15 @@ class GeneInfoConfigParser(DAEConfigParser):
 
         return config
 
-    def getGeneTermIds(self):
-        return self.gene_terms.keys()
+    @staticmethod
+    def getGeneTermAtt(config, gt_id, attName):
+        if gt_id in config.gene_terms and \
+                config.gene_terms[gt_id].get(attName, None):
+            return config.gene_terms[gt_id][attName]
 
-    def getGeneTermAtt(self, gt_id, attName):
-        if gt_id in self.gene_terms and \
-                self.gene_terms[gt_id].get(attName, None):
-            return self.gene_terms[gt_id][attName]
-
-    def getGeneTerms(self, gt_id='main', inNS='sym'):
-        fl = self.gene_terms[gt_id].file
+    @classmethod
+    def getGeneTerms(cls, config, gt_id='main', inNS='sym'):
+        fl = config.gene_terms[gt_id].file
         gt = loadGeneTerm(fl)
         if not inNS:
             return gt
@@ -47,12 +46,14 @@ class GeneInfoConfigParser(DAEConfigParser):
             return gt
         if gt.geneNS == 'id' and inNS == 'sym':
             def rF(x):
-                if x in self.gene_info.genes:
-                    return self.gene_info.genes[x].sym
+                if x in config.gene_info.genes:
+                    return config.gene_info.genes[x].sym
             gt.renameGenes('sym', rF)
         elif gt.geneNS == 'sym' and inNS == 'id':
             gt.renameGenes(
-                'id', lambda x: self.gene_info.getCleanGeneId('sym', x))
+                'id',
+                lambda x: GeneInfoDB.getCleanGeneId(config.gene_info, 'sym', x)
+            )
         else:
             raise Exception(
                 'Unknown name space for the ' + gt_id + ' gene terms: |'
@@ -64,27 +65,23 @@ class GeneInfoDB(DAEConfigParser):
 
     SECTION = 'geneInfo'
 
-    def __init__(self, config=None, *args, **kwargs):
-        super(GeneInfoDB, self).__init__(config, *args, **kwargs)
-
-        self._genes = None
-        self._nsTokens = None
-
     @classmethod
     def parse(cls, config):
         if config is None:
             return
 
-        config['genes'] = cls._parseNCBIGeneInfo()
-        config['nsTokens'] = cls._parseNCBIGeneInfo()
+        genes, ns_tokens = cls._parseNCBIGeneInfo(config)
+
+        config['genes'] = genes
+        config['nsTokens'] = ns_tokens
 
         return config
 
-    @staticmethod
-    def _parseNCBIGeneInfo(self):
-        self._genes = {}
-        self._nsTokens = {}
-        with open(self.gene_info_file) as f:
+    @classmethod
+    def _parseNCBIGeneInfo(cls, config):
+        genes = {}
+        nsTokens = {}
+        with open(config.gene_info_file) as f:
             for line in f:
                 if line[0] == "#":
                     # print "COMMENT: ", line
@@ -92,7 +89,7 @@ class GeneInfoDB(DAEConfigParser):
                 cs = line.strip().split("\t")
                 if len(cs) != 15:
                     raise Exception(
-                        'Unexpected line in the ' + self.gene_info_file)
+                        'Unexpected line in the ' + config.gene_info_file)
 
                 # Format: tax_id GeneID Symbol LocusTag Synonyms dbXrefs
                 # chromosome map_location description
@@ -112,30 +109,34 @@ class GeneInfoDB(DAEConfigParser):
                 gi.syns = set(Synonyms.split("|"))
                 gi.desc = description
 
-                if (gi.id in self._genes):
+                if (gi.id in genes):
                     raise Exception(
                         'The gene ' + gi.id + ' is repeated twice in the ' +
-                        self.gene_info_file + ' file')
+                        config.gene_info_file + ' file')
 
-                self._genes[gi.id] = gi
-                self._addNSTokenToGeneInfo("id", gi.id, gi)
-                self._addNSTokenToGeneInfo("sym", gi.sym, gi)
+                genes[gi.id] = gi
+                cls._addNSTokenToGeneInfo(nsTokens, "id", gi.id, gi)
+                cls._addNSTokenToGeneInfo(nsTokens, "sym", gi.sym, gi)
                 for s in gi.syns:
-                    self._addNSTokenToGeneInfo("syns", s, gi)
-        print("loaded ", len(self._genes), "genes", file=sys.stderr)
+                    cls._addNSTokenToGeneInfo(nsTokens, "syns", s, gi)
+        print("loaded ", len(genes), "genes", file=sys.stderr)
 
-    def _addNSTokenToGeneInfo(self, ns, token, gi):
-        if ns not in self._nsTokens:
-            self._nsTokens[ns] = {}
-        tokens = self._nsTokens[ns]
+        return genes, nsTokens
+
+    @staticmethod
+    def _addNSTokenToGeneInfo(nsTokens, ns, token, gi):
+        if ns not in nsTokens:
+            nsTokens[ns] = {}
+        tokens = nsTokens[ns]
         if token not in tokens:
             tokens[token] = []
         tokens[token].append(gi)
 
-    def getCleanGeneId(self, ns, t):
-        if ns not in self.nsTokens:
+    @staticmethod
+    def getCleanGeneId(config, ns, t):
+        if ns not in config.nsTokens:
             return
-        allTokens = self.nsTokens[ns]
+        allTokens = config.nsTokens[ns]
         if t not in allTokens:
             return
         if len(allTokens[t]) != 1:
