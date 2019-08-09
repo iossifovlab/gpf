@@ -37,7 +37,7 @@ def common_report_facade(vdb_fixture):
 @pytest.fixture(scope='module')
 def use_common_reports(common_report_facade):
     all_configs = common_report_facade.get_all_common_report_configs()
-    temp_files = [config.path for config in all_configs]
+    temp_files = [config.file_path for config in all_configs]
 
     for temp_file in temp_files:
         if os.path.exists(temp_file):

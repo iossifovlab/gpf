@@ -570,7 +570,7 @@ class StudyWrapper(object):
         return present_in_role[0] if present_in_role else {}
 
     def _get_dataset_config_options(self, config):
-        config['studyTypes'] = self.config.study_types
+        config['studyTypes'] = self.study.study_types
         config['description'] = self.study.description
 
         return config

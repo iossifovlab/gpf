@@ -21,7 +21,8 @@ class DatasetFactory(object):
         for study_id in DatasetConfigParser._split_str_option_list(
                 dataset_config[DatasetConfigParser.SECTION].studies):
             study_config = self.study_facade.get_study_config(study_id)
-            studies_configs.append(study_config)
+            if study_config:
+                studies_configs.append(study_config)
         return studies_configs
 
     def make_dataset(self, dataset_config):

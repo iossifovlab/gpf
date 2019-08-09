@@ -12,8 +12,7 @@ def test_build(db, enrichment_builder):
 
 def test_build_people_group_selector(db, enrichment_builder, f1_trio):
     assert enrichment_builder
-    people_group = f1_trio.config.people_group_config.\
-        get_people_group('phenotype')
+    people_group = f1_trio.get_people_group('phenotype')
     build = enrichment_builder.build_people_group_selector(
         ['missense'], people_group, 'autism')
 
