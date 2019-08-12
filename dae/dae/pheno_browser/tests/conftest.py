@@ -36,7 +36,7 @@ def output_dir(request):
 
 @pytest.fixture(scope='session')
 def fake_dae_conf():
-    return DAEConfig.make_config(fixtures_dir())
+    return DAEConfig.read_and_parse_file_configuration(work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='session')

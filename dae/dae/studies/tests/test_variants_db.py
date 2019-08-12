@@ -6,9 +6,9 @@ from ..factory import VariantsDb
 
 def test_variants_db_studies_simple(dae_config_fixture):
     assert dae_config_fixture is not None
-    assert dae_config_fixture.studies_dir is not None
+    assert dae_config_fixture.studies_db.dir is not None
 
-    assert dae_config_fixture.studies_dir == \
+    assert dae_config_fixture.studies_db.dir == \
         os.path.join(fixtures_dir(), "studies")
 
     vdb = VariantsDb(dae_config_fixture)
@@ -17,9 +17,9 @@ def test_variants_db_studies_simple(dae_config_fixture):
 
 def test_variants_db_datasets_simple(dae_config_fixture):
     assert dae_config_fixture is not None
-    assert dae_config_fixture.datasets_dir is not None
+    assert dae_config_fixture.datasets_db.dir is not None
 
-    assert dae_config_fixture.datasets_dir == \
+    assert dae_config_fixture.datasets_db.dir == \
         os.path.join(fixtures_dir(), "datasets")
 
     vdb = VariantsDb(dae_config_fixture)

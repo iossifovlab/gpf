@@ -41,7 +41,7 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 def load_study_parquet(
         dae_config=None, study_ids=None, parquet_directories=None):
     if dae_config is None:
-        dae_config = DAEConfig.make_config()
+        dae_config = DAEConfig.read_and_parse_file_configuration()
     variants_db = VariantsDb(dae_config)
 
     if study_ids is None:
@@ -63,11 +63,11 @@ def load_study_parquet(
 
     for study_id, parquet_directory in zip(study_ids, parquet_directories):
         print('Loading `{}` study in impala `{}` db'.format(
-            study_id, dae_config.impala_db))
+            study_id, dae_config.impala.db))
         start = time.time()
         impala_load_study(dae_config, study_id, parquet_directory)
         print("Loaded `{}` study in impala `{}` db for {:.2f} sec".format(
-            study_id, dae_config.impala_db, time.time() - start),
+            study_id, dae_config.impala.db, time.time() - start),
             file=sys.stderr)
 
 

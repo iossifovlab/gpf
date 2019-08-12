@@ -5,7 +5,7 @@ from dae.backends.impala.parquet_io import VariantsParquetWriter
 
 def test_f1_all_unknown_import(variants_vcf, temp_filename):
     fvars = variants_vcf("backends/f1_test_901923")
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfig.read_and_parse_file_configuration()
     annotation_pipeline = construct_import_annotation_pipeline(dae_config)
 
     variants_writer = VariantsParquetWriter(

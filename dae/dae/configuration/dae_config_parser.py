@@ -30,11 +30,14 @@ class DAEConfigParser(object):
 
     @classmethod
     def read_and_parse_directory_configurations(
-            cls, configurations_dir, work_dir, default_values=None,
-            default_conf=None, fail_silently=False):
+            cls, configurations_dir, work_dir, defaults=None,
+            fail_silently=False):
+        if defaults is None:
+            defaults = {}
+
         configs = cls.read_directory_configurations(
-            configurations_dir, work_dir, default_values=default_values,
-            default_conf=default_conf, fail_silently=fail_silently
+            configurations_dir, work_dir, defaults=defaults,
+            fail_silently=fail_silently
         )
 
         parsed_configs = []
@@ -47,11 +50,12 @@ class DAEConfigParser(object):
 
     @classmethod
     def read_and_parse_file_configuration(
-            cls, config_file, work_dir, default_values=None,
-            default_conf=None):
+            cls, config_file, work_dir, defaults=None):
+        if defaults is None:
+            defaults = {}
+
         config = cls.read_file_configuration(
-            config_file, work_dir, default_values=default_values,
-            default_conf=default_conf
+            config_file, work_dir, defaults=defaults
         )
 
         config = cls.parse(config)
@@ -60,12 +64,12 @@ class DAEConfigParser(object):
 
     @classmethod
     def read_directory_configurations(
-            cls, configurations_dir, work_dir, default_values=None,
-            default_conf=None, fail_silently=False):
-        if default_values is None:
-            default_values = {}
-        assert isinstance(configurations_dir, str),\
-            type(configurations_dir)
+            cls, configurations_dir, work_dir, defaults=None,
+            fail_silently=False):
+        if defaults is None:
+            defaults = {}
+
+        assert isinstance(configurations_dir, str), type(configurations_dir)
 
         enabled_dir = os.path.join(configurations_dir, cls.ENABLED_DIR)
         enabled_dir = os.path.abspath(enabled_dir)
@@ -75,7 +79,8 @@ class DAEConfigParser(object):
 
         for config_path in config_paths:
             config = cls.read_file_configuration(
-                config_path, enabled_dir, default_values, default_conf)
+                config_path, enabled_dir, defaults
+            )
 
             if config:
                 configs.append(config)
@@ -83,19 +88,19 @@ class DAEConfigParser(object):
         return configs
 
     @classmethod
-    def read_file_configuration(
-            cls, config_file, work_dir, default_values=None,
-            default_conf=None):
-        if default_values is None:
-            default_values = {}
+    def read_file_configuration(cls, config_file, work_dir, defaults=None):
+        if defaults is None:
+            defaults = {}
 
-        config = cls.read_config(
-            config_file, work_dir, default_values, default_conf)
+        config = cls.read_config(config_file, work_dir, defaults)
 
         if config is None:
             return None
 
-        config = Box(config, camel_killer_box=True)
+        config = Box(
+            config, camel_killer_box=True, default_box=True,
+            default_box_attr=None
+        )
 
         config['config_file'] = config_file
 
@@ -104,6 +109,7 @@ class DAEConfigParser(object):
     @classmethod
     def _collect_config_paths(cls, dirname, fail_silently=False):
         config_paths = []
+        print(dirname)
         if not os.path.exists(dirname):
             if fail_silently:
                 return []
@@ -120,11 +126,14 @@ class DAEConfigParser(object):
         return config_paths
 
     @classmethod
-    def read_config(
-            cls, config_file, work_dir, default_values=None,
-            default_conf=None):
-        if default_values is None:
-            default_values = {}
+    def read_config(cls, config_file, work_dir, defaults=None):
+        if defaults is None:
+            defaults = {}
+
+        default_values = defaults.get('values', {})
+        default_sections = defaults.get('sections', {})
+        default_override = defaults.get('override', {})
+        default_conf = defaults.get('conf', None)
 
         if not os.path.exists(config_file):
             config_file = os.path.join(work_dir, config_file)
@@ -139,6 +148,9 @@ class DAEConfigParser(object):
             strict=True
         )
 
+        if default_sections:
+            config_parser.read_dict(default_sections)
+
         if default_conf is not None:
             assert os.path.exists(default_conf)
             with open(default_conf, 'r') as f:
@@ -146,6 +158,9 @@ class DAEConfigParser(object):
 
         with open(config_file, 'r') as f:
             config_parser.read_file(f)
+
+        if default_override:
+            config_parser.read_dict(default_override)
 
         config = OrderedDict(
             (section, OrderedDict(config_parser.items(section)))
@@ -159,13 +174,27 @@ class DAEConfigParser(object):
         return config
 
     @classmethod
-    def parse(cls, config):
+    def parse_sections(cls, config):
+        sections = config.keys()
+        for section in sections:
+            config = cls.parse(config, section)
+
+        return config
+
+    @classmethod
+    def parse(cls, config, section=None):
         if not config:
             return None
-        if cls.SECTION in config:
-            config_section = config[cls.SECTION]
+        if section is None:
+            section = cls.SECTION
+
+        if section in config:
+            config_section = config[section]
         else:
             config_section = config
+
+        if not config_section:
+            return None
 
         config_section = cls._split_str_lists(config_section)
         config_section = cls._split_str_sets(config_section)
@@ -173,8 +202,8 @@ class DAEConfigParser(object):
         config_section = cls._cast_to_int(config_section)
         config_section = cls._parse_to_dict(config_section)
 
-        if cls.SECTION in config:
-            config[cls.SECTION] = config_section
+        if section in config:
+            config[section] = config_section
         else:
             config = config_section
 

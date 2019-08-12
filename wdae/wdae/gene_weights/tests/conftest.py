@@ -16,7 +16,8 @@ def fixtures_dir():
 
 @pytest.fixture()
 def dae_config_fixture():
-    dae_config = DAEConfig.make_config(fixtures_dir())
+    dae_config = DAEConfig.read_and_parse_file_configuration(
+        work_dir=fixtures_dir())
     return dae_config
 
 
@@ -40,7 +41,9 @@ def mock_studies_manager(db, mocker, studies_manager):
 @pytest.fixture()
 def weights_loader(dae_config_fixture):
     gene_info_config = GeneInfoConfigParser.read_and_parse_file_configuration(
-        dae_config_fixture.gene_info_conf, dae_config_fixture.dae_data_dir)
+        dae_config_fixture.gene_info_db.conf_file,
+        dae_config_fixture.dae_data_dir
+    )
     weights_loader = WeightsLoader(config=gene_info_config.gene_weights)
 
     return weights_loader

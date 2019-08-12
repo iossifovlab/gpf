@@ -78,7 +78,7 @@ class GenotypeBrowserConfig(DAEConfigParser):
             pheno_filter_type, pheno_filter_options, study_config):
         pheno_filter = {}
 
-        mf = study_config.pop(pheno_filter_type + '.filter', None)
+        mf = study_config.get(pheno_filter_type + '.filter', None)
         mf = mf.split(':')
         if mf[0] == 'single':
             filter_type, role, measure = mf
@@ -95,9 +95,9 @@ class GenotypeBrowserConfig(DAEConfigParser):
             }
 
         pheno_filter['name'] = \
-            study_config.pop(pheno_filter_type + '.name', None)
+            study_config.get(pheno_filter_type + '.name', None)
         pheno_filter['measureType'] = \
-            study_config.pop(pheno_filter_type + '.type', None)
+            study_config.get(pheno_filter_type + '.type', None)
         pheno_filter['measureFilter'] = \
             Box(measure_filter, camel_killer_box=True)
 
@@ -107,7 +107,7 @@ class GenotypeBrowserConfig(DAEConfigParser):
     def _get_pheno_column(
             cls, pheno_column_type, pheno_column_options, study_config):
         slots = cls._split_str_option_list(
-            study_config.pop(pheno_column_type + '.slots', None))
+            study_config.get(pheno_column_type + '.slots', None))
 
         column_slots = []
         for slot in slots:
@@ -125,7 +125,7 @@ class GenotypeBrowserConfig(DAEConfigParser):
 
         _, pheno_column['id'] = cls._split_section(pheno_column_type)
         pheno_column['name'] = \
-            study_config.pop(pheno_column_type + '.name', None)
+            study_config.get(pheno_column_type + '.name', None)
         pheno_column['slots'] = column_slots
 
         yield pheno_column
@@ -134,7 +134,7 @@ class GenotypeBrowserConfig(DAEConfigParser):
     def _get_genotype_column(
             cls, genotype_column_type, genotype_column_options, study_config):
         slots = cls._split_str_option_list(
-            study_config.pop(genotype_column_type + '.slots', None))
+            study_config.get(genotype_column_type + '.slots', None))
 
         column_slots = []
         for slot in slots or []:
@@ -160,9 +160,9 @@ class GenotypeBrowserConfig(DAEConfigParser):
 
         _, genotype_column['id'] = cls._split_section(genotype_column_type)
         genotype_column['name'] = \
-            study_config.pop(genotype_column_type + '.name', None)
+            study_config.get(genotype_column_type + '.name', None)
         genotype_column['source'] = \
-            study_config.pop(genotype_column_type + '.source', None)
+            study_config.get(genotype_column_type + '.source', None)
         genotype_column['slots'] = column_slots
 
         yield genotype_column
@@ -174,8 +174,8 @@ class GenotypeBrowserConfig(DAEConfigParser):
 
         _, in_roles_column['id'] = cls._split_section(in_roles_column_type)
         in_roles_column['roles'] = cls._split_str_option_list(
-            study_config.pop(in_roles_column_type + '.roles', None))
-        in_roles_column['destination'] = study_config.pop(
+            study_config.get(in_roles_column_type + '.roles', None))
+        in_roles_column['destination'] = study_config.get(
             in_roles_column_type + '.destination', in_roles_column['id'])
 
         yield in_roles_column
@@ -186,12 +186,12 @@ class GenotypeBrowserConfig(DAEConfigParser):
         present_in_role = {}
 
         present_in_role['name'] = \
-            study_config.pop(present_in_role_type + '.name', None)
+            study_config.get(present_in_role_type + '.name', None)
         _, present_in_role['id'] = cls._split_section(present_in_role_type)
         present_in_role['roles'] = \
             [
                 Role.from_name(el.strip()).display_name
-                for el in study_config.pop(
+                for el in study_config.get(
                    present_in_role_type + '.roles').split(',')
             ]
 

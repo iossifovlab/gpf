@@ -13,7 +13,8 @@ def fixtures_dir():
 
 @pytest.fixture()
 def dae_config_fixture():
-    dae_config = DAEConfig.make_config(fixtures_dir())
+    dae_config = DAEConfig.read_and_parse_file_configuration(
+        work_dir=fixtures_dir())
     return dae_config
 
 

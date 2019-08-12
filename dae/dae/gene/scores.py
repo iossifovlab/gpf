@@ -45,14 +45,14 @@ class ScoreLoader(object):
     def __init__(self, daeConfig=None, *args, **kwargs):
         super(ScoreLoader, self).__init__(*args, **kwargs)
         if daeConfig is None:
-            daeConfig = DAEConfig.make_config()
+            daeConfig = DAEConfig.read_and_parse_file_configuration()
         self.daeConfig = daeConfig
 
         config = ConfigParser({
             'wd': self.daeConfig.dae_data_dir
         })
         config.optionxform = str
-        config.read(self.daeConfig.genomic_scores_conf)
+        config.read(self.daeConfig.genomic_scores_db.conf_file)
         self.config = Box(
             dae.common.config.to_dict(config), default_box=True,
             default_box_attr=None, camel_killer_box=True

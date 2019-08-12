@@ -142,7 +142,7 @@ def construct_import_annotation_pipeline(dae_config, argv=None, defaults={}):
             argv.annotation_config is not None:
         config_filename = argv.annotation_config
     else:
-        config_filename = dae_config.annotation_conf
+        config_filename = dae_config.annotation.conf_file
 
     assert os.path.exists(config_filename), config_filename
     options = {}
@@ -174,7 +174,7 @@ def annotation_pipeline_cli_options(dae_config):
             'help': 'config file location; default is "annotation.conf" '
             'in the instance data directory $DAE_DB_DIR '
             '[default: %(default)s]',
-            'default': dae_config.annotation_conf,
+            'default': dae_config.annotation.conf_file,
             'action': 'store',
             'dest': 'annotation_config',
         }),

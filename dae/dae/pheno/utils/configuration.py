@@ -27,13 +27,13 @@ class PhenoConfig(object):
     def from_dae_config(dae_config):
         configs = [pheno_confbox(conf_path)
                    for conf_path in DAEConfigParser.
-                   _collect_config_paths(dae_config.pheno_dir)]
+                   _collect_config_paths(dae_config.pheno_db.dir)]
         return PhenoConfig(configs)
 
     @staticmethod
     def from_file(filename=None):
         if filename is None:
-            dae_config = DAEConfig.make_config()
+            dae_config = DAEConfig.read_and_parse_file_configuration()
             return PhenoConfig.from_dae_config(dae_config)
         return PhenoConfig([pheno_confbox(filename)])
 

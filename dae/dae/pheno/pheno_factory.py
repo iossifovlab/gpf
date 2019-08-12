@@ -17,7 +17,7 @@ class PhenoFactory(object):
     def __init__(self, dae_config=None):
         super(PhenoFactory, self).__init__()
         if dae_config is None:
-            dae_config = DAEConfig.make_config()
+            dae_config = DAEConfig.read_and_parse_file_configuration()
 
         self.config = PhenoConfig.from_dae_config(dae_config)
 

@@ -130,7 +130,10 @@ class DenovoGeneSetCollectionConfigParser(DAEConfigParser):
             DenovoGeneSetCollectionConfigParser.SECTION, None))
         if config_section is None:
             return None
-        config_section = Box(config_section, camel_killer_box=True)
+        config_section = Box(
+            config_section, camel_killer_box=True, default_box=True,
+            default_box_attr=None
+        )
 
         config_section = super(
             DenovoGeneSetCollectionConfigParser, cls).parse(config_section)

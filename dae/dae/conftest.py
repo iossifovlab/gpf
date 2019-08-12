@@ -85,8 +85,8 @@ def annotation_pipeline_config():
 
 @pytest.fixture(scope='session')
 def annotation_pipeline_default_config():
-    dae_config = DAEConfig.make_config()
-    return dae_config.annotation_conf
+    dae_config = DAEConfig.read_and_parse_file_configuration()
+    return dae_config.annotation.conf_file
 
 
 @pytest.fixture(scope='session')
@@ -414,7 +414,7 @@ def data_import(
     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     test_hdfs.mkdir(temp_dirname)
 
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfig.read_and_parse_file_configuration()
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config)
 

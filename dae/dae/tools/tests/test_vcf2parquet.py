@@ -25,7 +25,7 @@ def test_vcf2parquet_vcf(
         vcf_import_config.vcf
     ]
 
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfig.read_and_parse_file_configuration()
     argv = parse_cli_arguments(dae_config, argv)
     assert argv.type == 'vcf'
 
@@ -80,7 +80,7 @@ def test_vcf2parquet_make(
         vcf_import_config.vcf
     ]
 
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfig.read_and_parse_file_configuration()
     argv = parse_cli_arguments(dae_config, argv)
     assert argv.type == 'make'
 

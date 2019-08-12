@@ -16,9 +16,9 @@ class VariantsDb(object):
         self.dae_config = dae_config
         study_configs = \
             StudyConfigParser.read_and_parse_directory_configurations(
-                dae_config.studies_dir,
+                dae_config.studies_db.dir,
                 dae_config.dae_data_dir,
-                default_conf=dae_config.default_configuration_conf
+                defaults={'conf': dae_config.default_configuration.conf_file}
             )
 
         study_factory = StudyFactory(dae_config, thrift_connection)
@@ -32,9 +32,9 @@ class VariantsDb(object):
 
         dataset_configs = \
             DatasetConfigParser.read_directory_configurations(
-                dae_config.datasets_dir,
+                dae_config.datasets_db.dir,
                 dae_config.dae_data_dir,
-                default_conf=dae_config.default_configuration_conf,
+                defaults={'conf': dae_config.default_configuration.conf_file},
                 fail_silently=True
             )
 

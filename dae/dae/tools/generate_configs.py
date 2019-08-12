@@ -29,7 +29,7 @@ class PipelineConfigWrapper(PipelineConfig):
     def build(config_file):
         options = Box({}, default_box=True, default_box_attr=None)
 
-        dae_config = DAEConfig.make_config()
+        dae_config = DAEConfig.read_and_parse_file_configuration()
         defaults = dae_config.annotation_defaults
 
         configuration = PipelineConfig._parse_pipeline_config(

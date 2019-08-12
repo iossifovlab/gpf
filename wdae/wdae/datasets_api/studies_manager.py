@@ -35,7 +35,7 @@ class StudiesManager(object):
 
     def __init__(self, dae_config=None):
         if dae_config is None:
-            dae_config = DAEConfig.make_config()
+            dae_config = DAEConfig.read_and_parse_file_configuration()
         self.dae_config = dae_config
         self.vdb = None
 
@@ -56,7 +56,9 @@ class StudiesManager(object):
         self.score_loader = ScoreLoader(daeConfig=self.dae_config)
         self.gene_info_config = \
             GeneInfoConfigParser.read_and_parse_file_configuration(
-                self.dae_config.gene_info_conf, self.dae_config.dae_data_dir)
+                self.dae_config.gene_info_db.conf_file,
+                self.dae_config.dae_data_dir
+            )
         self.weights_loader = WeightsLoader(
             config=self.gene_info_config.gene_weights)
 

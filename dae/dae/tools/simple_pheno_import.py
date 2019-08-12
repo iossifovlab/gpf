@@ -99,7 +99,7 @@ def main(argv):
     try:
         # Setup argument parser
 
-        dae_conf = DAEConfig.make_config()
+        dae_conf = DAEConfig.read_and_parse_file_configuration()
 
         parser = pheno_cli_parser()
         args = parser.parse_args(argv)
@@ -114,7 +114,7 @@ def main(argv):
             raise ValueError()
 
         pheno_db_dir = os.path.join(
-            dae_conf.pheno_dir,
+            dae_conf.pheno_db.dir,
             args.pheno_name
         )
 

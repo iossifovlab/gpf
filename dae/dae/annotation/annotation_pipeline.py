@@ -117,7 +117,7 @@ class PipelineConfig(VariantAnnotatorConfig):
                 'help': 'config file location; default is "annotation.conf" '
                 'in the instance data directory $DAE_DB_DIR '
                 '[default: %(default)s]',
-                'default': dae_config.annotation_conf,
+                'default': dae_config.annotation.conf_file,
                 'action': 'store'
             }),
         ]
@@ -236,7 +236,7 @@ def main_cli_options(dae_config):
 
 
 def pipeline_main(argv):
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfig.read_and_parse_file_configuration()
 
     desc = "Program to annotate variants combining multiple annotating tools"
     parser = argparse.ArgumentParser(
@@ -250,7 +250,7 @@ def pipeline_main(argv):
     if options.config is not None:
         config_filename = options.config
     else:
-        config_filename = dae_config.annotation_conf
+        config_filename = dae_config.annotation.conf_file
 
     assert os.path.exists(config_filename), config_filename
 

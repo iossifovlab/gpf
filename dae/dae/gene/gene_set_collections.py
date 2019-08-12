@@ -84,7 +84,7 @@ class GeneSetsCollections(object):
     def __init__(self, variants_db, config=None):
         if config is None:
             config = GeneInfoConfigParser.read_and_parse_file_configuration(
-                variants_db.dae_config.gene_info_conf,
+                variants_db.dae_config.gene_info_db.conf_file,
                 variants_db.dae_config.dae_data_dir
             )
         self.config = config
