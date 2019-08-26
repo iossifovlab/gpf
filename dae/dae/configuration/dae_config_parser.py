@@ -174,26 +174,28 @@ class DAEConfigParser(object):
         return config
 
     @classmethod
-    def parse_sections(cls, config):
-        sections = config.keys()
+    def parse(cls, config):
+        if not config:
+            return None
+
+        sections = list(config.keys())
+        if cls.SECTION:
+            sections = [cls.SECTION]
+
         for section in sections:
-            config = cls.parse(config, section)
+            config_section = config[section]
+
+            config_section = cls.parse_section(config_section)
+            if config_section is None:
+                continue
+
+            config[section] = config_section
 
         return config
 
     @classmethod
-    def parse(cls, config, section=None):
-        if not config:
-            return None
-        if section is None:
-            section = cls.SECTION
-
-        if section in config:
-            config_section = config[section]
-        else:
-            config_section = config
-
-        if not config_section:
+    def parse_section(cls, config_section):
+        if config_section is None:
             return None
 
         config_section = cls._split_str_lists(config_section)
@@ -201,13 +203,9 @@ class DAEConfigParser(object):
         config_section = cls._cast_to_bool(config_section)
         config_section = cls._cast_to_int(config_section)
         config_section = cls._parse_to_dict(config_section)
+        config_section = cls._convert_list_to_dict(config_section)
 
-        if section in config:
-            config[section] = config_section
-        else:
-            config = config_section
-
-        return config
+        return config_section
 
     @staticmethod
     def _str_to_bool(val):
