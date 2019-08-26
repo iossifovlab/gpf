@@ -2,7 +2,6 @@ import os
 
 from collections import OrderedDict
 from copy import deepcopy
-from box import Box
 
 from dae.configuration.dae_config_parser import DAEConfigParser
 
@@ -63,13 +62,11 @@ class CommonReportsConfigParser(DAEConfigParser):
         if config is None:
             return
         study_config = config.study_config
+        config_section = deepcopy(study_config.get(cls.SECTION, None))
         config_section = \
-            deepcopy(study_config.get(CommonReportsConfigParser.SECTION, None))
-        config_section = \
-            super(CommonReportsConfigParser, cls).parse(config_section)
+            super(CommonReportsConfigParser, cls).parse_section(config_section)
         if not config_section:
             return None
-        config_section = Box(config_section, camel_killer_parser=True)
         if config_section.get('enabled', True) is False:
             return None
 

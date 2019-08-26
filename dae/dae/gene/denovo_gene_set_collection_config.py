@@ -1,5 +1,4 @@
 import os
-from box import Box
 from copy import deepcopy
 
 from dae.configuration.dae_config_parser import DAEConfigParser
@@ -26,7 +25,7 @@ class DenovoGeneSetCollectionConfigParser(DAEConfigParser):
     CAST_TO_BOOL = ('enabled')
 
     @classproperty
-    def PARSE_TO_DICT(cls):
+    def PARSE_TO_LIST(cls):
         return {
             'standardCriterias': {
                 'group': 'standardCriterias',
@@ -128,15 +127,10 @@ class DenovoGeneSetCollectionConfigParser(DAEConfigParser):
 
         config_section = deepcopy(study_config.get(
             DenovoGeneSetCollectionConfigParser.SECTION, None))
+        config_section = super(DenovoGeneSetCollectionConfigParser, cls). \
+            parse_section(config_section)
         if config_section is None:
             return None
-        config_section = Box(
-            config_section, camel_killer_box=True, default_box=True,
-            default_box_attr=None
-        )
-
-        config_section = super(
-            DenovoGeneSetCollectionConfigParser, cls).parse(config_section)
 
         if config_section.get('enabled', True) is False:
             return None

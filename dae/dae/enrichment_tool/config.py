@@ -4,7 +4,6 @@ Created on Nov 7, 2016
 @author: lubo
 '''
 import os
-from box import Box
 from copy import deepcopy
 from collections import OrderedDict
 
@@ -28,7 +27,7 @@ class EnrichmentConfigParser(DAEConfigParser):
     )
 
     @classproperty
-    def PARSE_TO_DICT(cls):
+    def PARSE_TO_LIST(cls):
         return {
             'backgrounds': {
                 'group': 'background',
@@ -56,9 +55,9 @@ class EnrichmentConfigParser(DAEConfigParser):
     def _get_model(model_type, model_options, config):
         model = {}
 
-        model['name'] = config.pop(model_type + '.name', None)
+        model['name'] = config.get(model_type + '.name', None)
         model['id'] = model['name']
-        model_file = config.pop(model_type + '.file', None)
+        model_file = config.get(model_type + '.file', None)
         if model_file is None:
             model['filename'] = None
         else:
@@ -66,7 +65,7 @@ class EnrichmentConfigParser(DAEConfigParser):
                 os.path.split(config.config_file)[0],
                 'enrichment/{}'.format(model_file)
             )
-        model['desc'] = config.pop(model_type + '.desc', None)
+        model['desc'] = config.get(model_type + '.desc', None)
 
         yield model
 
@@ -83,16 +82,13 @@ class EnrichmentConfigParser(DAEConfigParser):
         if study_config is None:
             return
 
-        enrichment_config = deepcopy(study_config.get(
-            EnrichmentConfigParser.SECTION, None))
+        enrichment_config = deepcopy(study_config.get(cls.SECTION, None))
         if enrichment_config is None:
             return
-        enrichment_config = Box(enrichment_config, camel_killer_box=True)
-
         enrichment_config['config_file'] = study_config.config_file
 
         enrichment_config = \
-            super(EnrichmentConfigParser, cls).parse(enrichment_config)
+            super(EnrichmentConfigParser, cls).parse_section(enrichment_config)
 
         if enrichment_config.get('enabled', True) is False:
             return None
