@@ -1,30 +1,23 @@
-from configparser import ConfigParser
-from box import Box
 from collections import OrderedDict
 
 from dae.gene.genomic_values import GenomicValues
-from dae.configuration.configuration import DAEConfig
-import dae.common.config
 
 
 class Scores(GenomicValues):
-    def __init__(self, scores_name, config, *args, **kwargs):
-        super(Scores, self).__init__(scores_name, *args, **kwargs)
+    def __init__(self, config, *args, **kwargs):
+        super(Scores, self).__init__(config.name, *args, **kwargs)
 
         self.config = config
         self.genomic_values_col = 'scores'
-        assert self.section_name in self.config,\
-            [self.section_name, self.config]
 
-        self.desc = self.config[self.section_name].desc
-        self.bins = int(self.config[self.section_name].bins)
-        self.xscale = self.config[self.section_name].xscale
-        self.yscale = self.config[self.section_name].yscale
-        self.filename = self.config[self.section_name].file
-        self.help_filename = self.config[self.section_name].help_file
-        if self.config[self.section_name].range:
-            self.range = tuple(map(
-                float, self.config[self.section_name].range.split(',')))
+        self.desc = self.config.desc
+        self.bins = self.config.bins
+        self.xscale = self.config.xscale
+        self.yscale = self.config.yscale
+        self.filename = self.config.file
+        self.help_filename = self.config.help_file
+        if self.config.range:
+            self.range = tuple(map(float, self.config.range))
         else:
             self.range = None
         if self.help_filename:
@@ -42,21 +35,9 @@ class Scores(GenomicValues):
 
 class ScoreLoader(object):
 
-    def __init__(self, daeConfig=None, *args, **kwargs):
+    def __init__(self, config, *args, **kwargs):
         super(ScoreLoader, self).__init__(*args, **kwargs)
-        if daeConfig is None:
-            daeConfig = DAEConfig.read_and_parse_file_configuration()
-        self.daeConfig = daeConfig
-
-        config = ConfigParser({
-            'wd': self.daeConfig.dae_data_dir
-        })
-        config.optionxform = str
-        config.read(self.daeConfig.genomic_scores_db.conf_file)
-        self.config = Box(
-            dae.common.config.to_dict(config), default_box=True,
-            default_box_attr=None, camel_killer_box=True
-        )
+        self.config = config
 
         self.scores = OrderedDict()
 
@@ -65,24 +46,21 @@ class ScoreLoader(object):
     def get_scores(self):
         result = []
 
-        for score_name in self.scores:
-            score = self[score_name]
-
+        for _, score in self.scores.items():
             assert score.df is not None
-
             result.append(score)
 
         return result
 
     def _load(self):
-        scores = self.config.genomicScores.scores
-        if scores == '':
-            return
-
-        names = [s.strip() for s in scores.split(',')]
-        for name in names:
-            s = Scores(name, self.config)
-            self.scores[name] = s
+        print(self.config.genomic_scores.scores)
+        for score_name in self.config.genomic_scores.scores:
+            print(self.config.scores)
+            print(score_name)
+            score_config = self.config.scores.get(score_name)
+            print(score_config)
+            s = Scores(score_config)
+            self.scores[score_name] = s
 
     def __getitem__(self, score_name):
         if score_name not in self.scores:

@@ -11,12 +11,14 @@ import pytest
 from dae.utils.fixtures import change_environment
 
 from dae.gene.config import GeneInfoConfigParser
+from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.denovo_gene_set_collection_config import \
     DenovoGeneSetCollectionConfigParser
 from dae.gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 from dae.gene.denovo_gene_set_collection_facade import \
     DenovoGeneSetCollectionFacade
 from dae.gene.weights import WeightsLoader
+from dae.gene.scores import ScoreLoader
 
 from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 # Used by pytest
@@ -86,6 +88,19 @@ def calc_gene_sets(request, denovo_gene_sets, denovo_gene_set_f4):
 @pytest.fixture(scope='session')
 def weights_loader(gene_info_config):
     return WeightsLoader(config=gene_info_config.gene_weights)
+
+
+@pytest.fixture(scope='session')
+def score_config(dae_config_fixture):
+    return ScoreConfigParser.read_and_parse_file_configuration(
+        dae_config_fixture.genomic_scores_db.conf_file,
+        dae_config_fixture.dae_data_dir
+    )
+
+
+@pytest.fixture(scope='session')
+def score_loader(score_config):
+    return ScoreLoader(score_config)
 
 
 @pytest.fixture(scope='session')

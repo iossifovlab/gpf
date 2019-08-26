@@ -7,6 +7,7 @@ from dae.common_reports.common_report_facade import CommonReportFacade
 from dae.gene.config import GeneInfoConfigParser
 from dae.gene.scores import ScoreLoader
 from dae.gene.weights import WeightsLoader
+from dae.gene.score_config_parser import ScoreConfigParser
 
 from dae.gene.gene_set_collections import GeneSetsCollections
 from dae.gene.denovo_gene_set_collection_facade import \
@@ -53,7 +54,12 @@ class StudiesManager(object):
         for study_id in self.vdb.get_all_ids():
             Dataset.recreate_dataset_perm(study_id, [])
 
-        self.score_loader = ScoreLoader(daeConfig=self.dae_config)
+        score_config = ScoreConfigParser.read_and_parse_file_configuration(
+            self.dae_config.genomic_scores_db.conf_file,
+            self.dae_config.dae_data_dir
+        )
+        self.score_loader = ScoreLoader(score_config)
+
         self.gene_info_config = \
             GeneInfoConfigParser.read_and_parse_file_configuration(
                 self.dae_config.gene_info_db.conf_file,
