@@ -4,11 +4,11 @@ Created on May 4, 2017
 @author: lubo
 '''
 from dae.enrichment_tool.event_counters import EnrichmentResult
-from dae.common.query_base import EffectTypesMixin, ChildGenderMixin
+from dae.common.query_base import EffectTypesMixin
 from functools import reduce
 
 
-class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
+class EnrichmentSerializer(EffectTypesMixin):
 
     def __init__(self, enrichment_config, results):
         super(EnrichmentSerializer, self).__init__()
@@ -99,9 +99,16 @@ class EnrichmentSerializer(EffectTypesMixin, ChildGenderMixin):
         return self._serialize_gender_filter(
             grouping_results, effect_type, result)
 
+    def _get_child_gender(self, gender):
+        assert gender in ['all', 'male', 'female', 'unspecified']
+        if gender == 'all':
+            return ['male', 'female', 'unspecified']
+        else:
+            return [gender]
+
     def _serialize_gender_filter(self, grouping_results, effect_type, result):
         assert result.name in set(['all', 'male', 'female'])
-        gender = self.build_child_gender(result.name)
+        gender = self._get_child_gender(result.name)
         output = self.serialize_enrichment_result(result)
         output['countFilter'] = self.serialize_common_filter(
             grouping_results, effect_type, result, gender=gender)

@@ -6,9 +6,7 @@ Created on Feb 10, 2017
 import os
 import pytest
 
-from configparser import ConfigParser
-
-from dae.common.query_base import VariantTypesMixin
+from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
 
 
 def relative_to_this_test_folder(path):
@@ -18,18 +16,12 @@ def relative_to_this_test_folder(path):
     )
 
 
-@pytest.fixture(scope='session')
-def variant_types(request):
-    return VariantTypesMixin()
-
-
 @pytest.fixture
 def configuration():
     filename = relative_to_this_test_folder(
         "fixtures/config_test.conf")
 
-    config_parser = ConfigParser()
-    config_parser.optionxform = str
+    config_parser = CaseSensitiveConfigParser()
 
     with open(filename, "r", encoding="utf8") as infile:
         config_parser.read_file(infile)
