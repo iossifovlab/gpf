@@ -3,28 +3,38 @@ Created on Sep 18, 2017
 
 @author: lubo
 '''
-from configparser import ConfigParser
-from os.path import isfile
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
-class PhenoRegressions(dict):
+class classproperty(property):
+    def __get__(self, obj, objtype=None):
+        return super(classproperty, self).__get__(objtype)
 
-    def __init__(self, confpath):
-        conf_parser = ConfigParser()
-        assert(isfile(confpath))
-        conf_parser.read(confpath)
 
-        for sec in conf_parser.sections():
-            parts = sec.split('.')
-            if parts[0] == 'regression':
-                assert parts[1] not in self
-                self[parts[1]] = dict(conf_parser[sec])
+class PhenoRegressions(DAEConfigParser):
 
-    def has_measure(self, measure_name, instrument_name):
-        for _, reg in self.items():
-            if measure_name == reg['measure_name']:
-                if instrument_name and reg['instrument_name'] and \
-                        instrument_name != reg['instrument_name']:
-                    continue
-                return True
-        return False
+    @classproperty
+    def PARSE_TO_LIST(cls):
+        return {
+            'regression': {
+                'group': 'regression',
+                'getter': cls._get_regression,
+            }
+        }
+
+    CONVERT_LIST_TO_DICT = (
+        'regression',
+    )
+
+    @staticmethod
+    def _get_regression(regression_type, regression_options, pheno_config):
+        regression = pheno_config.get(regression_type, dict())
+        regression['id'] = regression_type.split('.')[-1]
+
+        yield regression
+
+    @classmethod
+    def parse(cls, config):
+        config = super(PhenoRegressions, cls).parse_section(config)
+
+        return config

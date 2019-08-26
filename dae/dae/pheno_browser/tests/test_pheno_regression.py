@@ -3,34 +3,58 @@ Created on Apr 10, 2017
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 from dae.pheno.pheno_regression import PhenoRegressions
+from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
 
 
 def test_pheno_regressions_from_conf_path(regressions_conf):
-    regs = PhenoRegressions(regressions_conf)
+    regs = PhenoRegressions.read_and_parse_file_configuration(
+        regressions_conf, None)
     expected_regs = {
-        'reg1': {'instrument_name': 'i1',
-                 'measure_name': 'regressor1',
-                 'jitter': '0.1'},
-        'reg2': {'instrument_name': 'i1',
-                 'measure_name': 'regressor2',
-                 'jitter': '0.2'},
-        'reg3': {'instrument_name': '',
-                 'measure_name': 'common_regressor',
-                 'jitter': '0.3'},
-        'reg4': {'instrument_name': 'i2',
-                 'measure_name': 'regressor1',
-                 'jitter': '0.4'},
+        'reg1': {
+            'id': 'reg1',
+            'instrument_name': 'i1',
+            'measure_name': 'regressor1',
+            'jitter': '0.1',
+            'work_dir': '',
+            'wd': ''
+        },
+        'reg2': {
+            'id': 'reg2',
+            'instrument_name': 'i1',
+            'measure_name': 'regressor2',
+            'jitter': '0.2',
+            'work_dir': '',
+            'wd': ''
+        },
+        'reg3': {
+            'id': 'reg3',
+            'instrument_name': '',
+            'measure_name': 'common_regressor',
+            'jitter': '0.3',
+            'work_dir': '',
+            'wd': ''
+        },
+        'reg4': {
+            'id': 'reg4',
+            'instrument_name': 'i2',
+            'measure_name': 'regressor1',
+            'jitter': '0.4',
+            'work_dir': '',
+            'wd': ''
+        },
     }
 
     for reg_name, expected_reg in expected_regs.items():
-        assert reg_name in regs
-        assert regs[reg_name] == expected_reg
+        assert reg_name in regs.regression
+        assert regs.regression[reg_name] == expected_reg
 
 
-def test_pheno_regressions_has_measure(regressions_conf):
-    regs = PhenoRegressions(regressions_conf)
+def test_has_regression_measure(fphdb, output_dir, regressions_conf):
+    reg = PhenoRegressions.read_and_parse_file_configuration(
+        regressions_conf, None)
+    prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
+
     expected_reg_measures = [
      ('regressor1', 'i1'),
      ('regressor2', 'i1'),
@@ -41,4 +65,4 @@ def test_pheno_regressions_has_measure(regressions_conf):
     ]
 
     for e in expected_reg_measures:
-        assert regs.has_measure(*e)
+        assert prep._has_regression_measure(*e)

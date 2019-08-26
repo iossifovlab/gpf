@@ -84,8 +84,9 @@ def test_build_regression(mocker, fphdb, output_dir):
     mocked_linregres = \
         mocker.patch('dae.pheno_browser.prepare_data.draw_linregres',
                      side_effect=fake_linregres)
-    mocker.patch('dae.pheno_browser.prepare_data.PreparePhenoBrowserBase.save_fig',
-                 side_effect=fake_savefig)
+    mocker.patch(
+        'dae.pheno_browser.prepare_data.PreparePhenoBrowserBase.save_fig',
+        side_effect=fake_savefig)
     mocker.patch('dae.pheno_browser.prepare_data.'
                  'PreparePhenoBrowserBase._augment_measure_values_df',
                  side_effect=fake_augment_df)
@@ -194,7 +195,8 @@ def test_handle_regressions(mocker, fphdb, output_dir, fphdb_desc_conf):
                           'PreparePhenoBrowserBase.build_regression',
                           side_effect=fake_build_regression)
 
-    reg = PhenoRegressions(fphdb_desc_conf)
+    reg = PhenoRegressions.read_and_parse_file_configuration(
+        fphdb_desc_conf, None)
     prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
     regressand = fphdb.get_measure('i1.m1')
 
@@ -214,7 +216,8 @@ def test_handle_regressions(mocker, fphdb, output_dir, fphdb_desc_conf):
 
 def test_handle_regressions_non_continuous_or_ordinal_measure(
         fphdb, output_dir, fphdb_desc_conf):
-    reg = PhenoRegressions(fphdb_desc_conf)
+    reg = PhenoRegressions.read_and_parse_file_configuration(
+        fphdb_desc_conf, None)
     prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
     regressand_categorical = fphdb.get_measure('i1.m5')
     regressand_raw = fphdb.get_measure('i1.m6')
@@ -228,7 +231,8 @@ def test_handle_regressions_non_continuous_or_ordinal_measure(
 
 def test_handle_regressions_regressand_is_regressor(
         fphdb, output_dir, fphdb_desc_conf):
-    reg = PhenoRegressions(fphdb_desc_conf)
+    reg = PhenoRegressions.read_and_parse_file_configuration(
+        fphdb_desc_conf, None)
     prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
     regressand = fphdb.get_measure('i1.age')
 
@@ -246,7 +250,8 @@ def test_handle_regressions_default_jitter(
                           'PreparePhenoBrowserBase.build_regression',
                           side_effect=fake_build_regression)
 
-    reg = PhenoRegressions(fphdb_desc_conf)
+    reg = PhenoRegressions.read_and_parse_file_configuration(
+        fphdb_desc_conf, None)
     prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
     regressand = fphdb.get_measure('i1.m1')
     for i in prep.handle_regressions(regressand):

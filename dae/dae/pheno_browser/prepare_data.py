@@ -242,22 +242,31 @@ class PreparePhenoBrowserBase(object):
 
         return res
 
+    def _has_regression_measure(self, measure_name, instrument_name):
+        for _, reg in self.pheno_regressions.regression.items():
+            if measure_name == reg.measure_name:
+                if instrument_name and reg.instrument_name and \
+                        instrument_name != reg.instrument_name:
+                    continue
+                return True
+        return False
+
     def handle_regressions(self, measure):
         if measure.measure_type not in [MeasureType.continuous,
                                         MeasureType.ordinal]:
             return
         res = {'measure_id': measure.measure_id}
-        for reg_id, reg in self.pheno_regressions.items():
-            reg_measure = self._get_measure_by_name(reg['measure_name'],
-                                                    reg['instrument_name'] or
+        for _, reg in self.pheno_regressions.regression.items():
+            reg_measure = self._get_measure_by_name(reg.measure_name,
+                                                    reg.instrument_name or
                                                     measure.instrument_name)
             if not reg_measure:
                 continue
-            if self.pheno_regressions.has_measure(measure.measure_name,
-                                                  measure.instrument_name):
+            if self._has_regression_measure(
+                    measure.measure_name, measure.instrument_name):
                 continue
 
-            res['regression_id'] = reg_id
+            res['regression_id'] = reg.id
             jitter = float(reg.get('jitter', 0.1))
             res.update(self.build_regression(measure, reg_measure, jitter))
             if res.get('pvalue_regression_male') is not None or \
@@ -269,12 +278,12 @@ class PreparePhenoBrowserBase(object):
         db.build()
 
         if self.pheno_regressions:
-            for reg_id, reg_data in self.pheno_regressions.items():
+            for _, reg_data in self.pheno_regressions.regression.items():
                 db.save_regression({
-                    'regression_id': reg_id,
-                    'instrument_name': reg_data['instrument_name'],
-                    'measure_name': reg_data['measure_name'],
-                    'display_name': reg_data['display_name']
+                    'regression_id': reg_data.id,
+                    'instrument_name': reg_data.instrument_name,
+                    'measure_name': reg_data.measure_name,
+                    'display_name': reg_data.display_name
                 })
 
         for instrument in list(self.pheno_db.instruments.values()):
