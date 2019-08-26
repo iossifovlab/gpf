@@ -26,7 +26,8 @@ class DAEConfigParser(object):
     SPLIT_STR_SETS = ()
     CAST_TO_BOOL = ()
     CAST_TO_INT = ()
-    PARSE_TO_DICT = {}
+    PARSE_TO_LIST = {}
+    CONVERT_LIST_TO_DICT = ()
 
     @classmethod
     def read_and_parse_directory_configurations(
@@ -307,7 +308,10 @@ class DAEConfigParser(object):
 
     @classmethod
     def _parse_to_dict(cls, config):
-        for key, options in cls.PARSE_TO_DICT.items():
+        if config is None or not isinstance(config, dict):
+            return config
+
+        for key, options in cls.PARSE_TO_LIST.items():
             elements = None
             if 'selected' in options:
                 elements = config.get(options['selected'], None)
@@ -320,5 +324,19 @@ class DAEConfigParser(object):
             else:
                 if 'default' in options:
                     config[key] = options['default']
+
+        return config
+
+    @classmethod
+    def _convert_list_to_dict(cls, config):
+        for key in cls.CONVERT_LIST_TO_DICT:
+            if key in config:
+                converted_dict = Box(
+                    {el['id']: el for el in config[key] if 'id' in el},
+                    camel_killer_box=True, default_box=True,
+                    default_box_attr=None
+                )
+                if len(config[key]) == len(converted_dict):
+                    config[key] = converted_dict
 
         return config
