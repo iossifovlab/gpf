@@ -24,13 +24,13 @@ RUN /opt/conda/bin/conda create -c conda-forge -c bioconda -c iossifovlab \
 RUN echo "conda activate gpf" >> ~/.bashrc
 
 # HADOOP CONFIG
+ENV JAVA_HOME /opt/conda/envs/gpf
 ENV HADOOP_HOME /opt/conda/envs/gpf
-ENV HADOOP_CONF_DIR $HADOOP_HOME/etc/hadoop
+ENV HADOOP_CONF_DIR /opt/conda/envs/gpf/etc/hadoop
 
 # ENV PATH $HADOOP_HOME/bin:$PATH
-# ENV LD_LIBRARY_PATH $HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
 
-ADD ${SOURCE_DIR}//scripts/configs/docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
+ADD ${SOURCE_DIR}/scripts/configs/docker-container/etc/core-site.xml ${HADOOP_CONF_DIR}/core-site.xml
 
 # PIP
 
@@ -41,6 +41,9 @@ ENV DAE_SOURCE_DIR="/code"
 ENV DAE_DB_DIR="/data"
 ENV PYTHONPATH="$DAE_SOURCE_DIR:$PYTHONPATH"
 ENV PATH /opt/conda/envs/gpf/bin:/opt/conda/bin:$PATH
+
+ENV LD_LIBRARY_PATH=/opt/conda/envs/gpf/jre/lib/amd64:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH $HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
 
 ENV DAE_IMPALA_HOST "impala"
 ENV DAE_IMPALA_PORT 21050
