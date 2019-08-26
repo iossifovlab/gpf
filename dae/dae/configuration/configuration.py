@@ -87,20 +87,22 @@ class DAEConfig(DAEConfigParser):
             config_file, work_dir, defaults=defaults
         )
 
-        config = cls.parse_sections(config, dae_data_dir=work_dir)
+        config = cls.parse(config, dae_data_dir=work_dir)
 
         return config
 
     @classmethod
-    def parse_sections(cls, config, dae_data_dir=None):
-        config = super(DAEConfig, cls).parse_sections(config)
+    def parse(cls, config, dae_data_dir=None):
+        config = super(DAEConfig, cls).parse(config)
 
         assert config is not None
 
-        if config.genomic_scores_db.scores_hg19_dir:
+        if config.genomic_scores_db and \
+                config.genomic_scores_db.scores_hg19_dir:
             assert os.path.exists(config.genomic_scores_db.scores_hg19_dir)
             assert os.path.isdir(config.genomic_scores_db.scores_hg19_dir)
-        if config.genomic_scores_db.scores_hg38_dir:
+        if config.genomic_scores_db and \
+                config.genomic_scores_db.scores_hg38_dir:
             assert os.path.exists(config.genomic_scores_db.scores_hg38_dir)
             assert os.path.isdir(config.genomic_scores_db.scores_hg38_dir)
 
@@ -108,8 +110,12 @@ class DAEConfig(DAEConfigParser):
         config['annotation_defaults'] = {
             'wd': config.dae_data_dir,
             'data_dir': config.dae_data_dir,
-            'scores_hg19_dir': config.genomic_scores_db.scores_hg19_dir,
-            'scores_hg38_dir': config.genomic_scores_db.scores_hg38_dir,
+            'scores_hg19_dir':
+                config.genomic_scores_db.scores_hg19_dir
+                if config.genomic_scores_db else None,
+            'scores_hg38_dir':
+                config.genomic_scores_db.scores_hg38_dir
+                if config.genomic_scores_db else None,
         }
 
         return config
