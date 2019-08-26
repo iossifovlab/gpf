@@ -70,7 +70,7 @@ def build_pheno_browser(dbfile, pheno_name, output_dir, regression_conf_path):
     phenodb.load()
 
     pheno_regressions = PhenoRegressions.read_and_parse_file_configuration(
-        regression_conf_path, None)
+        regression_conf_path, '')
 
     prep = PreparePhenoBrowserBase(pheno_name, phenodb,
                                    output_dir, pheno_regressions)
