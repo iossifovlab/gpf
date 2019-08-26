@@ -4,6 +4,7 @@ Created on Dec 8, 2016
 @author: lubo
 '''
 
+
 def test_pheno_factory_simple(fake_pheno_factory):
     assert fake_pheno_factory.config is not None
 

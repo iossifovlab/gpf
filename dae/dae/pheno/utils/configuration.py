@@ -4,103 +4,54 @@ Created on Aug 23, 2016
 @author: lubo
 '''
 import os
-from box import ConfigBox
 
-from dae.configuration.configuration import DAEConfig
-from dae.configuration.dae_config_parser import CaseSensitiveConfigParser, \
-    DAEConfigParser
-
-import dae.common.config
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
-def pheno_confbox(conf_path):
-    config_parser = CaseSensitiveConfigParser(
-        defaults={'wd': os.path.dirname(conf_path)})
-    with open(conf_path, "r") as f:
-        config_parser.read_file(f)
-    return ConfigBox(dae.common.config.to_dict(config_parser))
-
-
-class PhenoConfig(object):
+class PhenoConfig(DAEConfigParser):
 
     @staticmethod
-    def from_dae_config(dae_config):
-        configs = [pheno_confbox(conf_path)
-                   for conf_path in DAEConfigParser.
-                   _collect_config_paths(dae_config.pheno_db.dir)]
-        return PhenoConfig(configs)
+    def _assert_pheno_paths(configs):
+        for _, config in configs.items():
+            if config.dbfile is not None:
+                assert os.path.isfile(config.dbfile), config.dbfile
+            if config.browser_dbfile is not None:
+                assert os.path.isfile(config.browser_dbfile), \
+                    config.browser_dbfile
+            if config.browser_images_dir is not None:
+                assert os.path.isdir(config.browser_images_dir), \
+                    config.browser_images_dir
 
-    @staticmethod
-    def from_file(filename=None):
-        if filename is None:
-            dae_config = DAEConfig.read_and_parse_file_configuration()
-            return PhenoConfig.from_dae_config(dae_config)
-        return PhenoConfig([pheno_confbox(filename)])
+    @classmethod
+    def read_directory_configurations(
+            cls, configurations_dir, work_dir=None, defaults=None,
+            fail_silently=False):
+        config_files = [
+            (conf_path, os.path.dirname(conf_path))
+            for conf_path in cls._collect_config_paths(configurations_dir)
+        ]
 
-    def __init__(self, configs):
-        class PhenoConfDict(dict):
-            """
-                Custom dict that additionally prints the
-                dict's keys when a key lookup fails.
-            """
-            def __missing__(self, key):
-                raise KeyError(key, self.keys())
+        configs = [
+            cls.read_file_configuration(config_file, work_dir)
+            for config_file, work_dir in config_files
+        ]
+        configs = {
+            config.name: config for config in configs if config
+        }
 
-        self.pheno_configs = PhenoConfDict()
-        for conf in configs:
-            if 'phenoDB' in conf:
-                name = conf['phenoDB'].name
-                self.pheno_configs[name] = conf['phenoDB']
-                if 'dbfile' in conf['phenoDB']:
-                    assert os.path.isfile(self.get_dbfile(name)), \
-                            self.get_dbfile(name)
-                else:
-                    conf['phenoDB'].dbfile = None
-                if 'browser_dbfile' in conf['phenoDB']:
-                    assert os.path.isfile(self.get_browser_dbfile(name)), \
-                            self.get_browser_dbfile(name)
-                else:
-                    conf['phenoDB'].browser_dbfile = None
-                if 'browser_images_dir' in conf['phenoDB']:
-                    assert os.path.isdir(
-                            self.get_browser_images_dir(name)), \
-                                self.get_browser_images_dir(name)
-                else:
-                    conf['phenoDB'].browser_images_dir = None
+        cls._assert_pheno_paths(configs)
 
-    def __contains__(self, dbname):
-        return dbname in self.pheno_configs
+        return configs
 
-    @property
-    def db_names(self):
-        return list(self.pheno_configs.keys())
-
-    def get_dbfile(self, dbname):
-        if self.pheno_configs[dbname].dbfile is None:
+    @classmethod
+    def read_file_configuration(cls, config_file, work_dir, defaults=None):
+        config = super(PhenoConfig, cls).read_file_configuration(
+            config_file, work_dir, defaults=None)
+        if not config or not config.pheno_db:
             return None
-        return os.path.join(self.pheno_configs[dbname].wd,
-                            self.pheno_configs[dbname].dbfile)
 
-    def get_dbconfig(self, dbname):
-        return self.pheno_configs[dbname]
+        config = config.pheno_db
 
-    def get_age(self, dbname):
-        return self.pheno_configs[dbname].get('age', None)
+        cls._assert_pheno_paths({config.name: config})
 
-    def get_nonverbal_iq(self, dbname):
-        return self.pheno_configs[dbname].get('nonverbal_iq', None)
-
-    def get_browser_dbfile(self, dbname):
-        if self.pheno_configs[dbname].browser_dbfile is None:
-            return None
-        return os.path.join(self.pheno_configs[dbname].wd,
-                            self.pheno_configs[dbname].browser_dbfile)
-
-    def get_browser_images_dir(self, dbname):
-        if self.pheno_configs[dbname].browser_images_dir is None:
-            return None
-        return os.path.join(self.pheno_configs[dbname].wd,
-                            self.pheno_configs[dbname].browser_images_dir)
-
-    def get_browser_images_url(self, dbname):
-        return self.pheno_configs[dbname].get('browser_images_url', None)
+        return config

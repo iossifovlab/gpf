@@ -5,28 +5,27 @@ from dae.pheno.utils.configuration import PhenoConfig
 
 def test_pheno_config_loading(fake_pheno_config):
     assert all([db in ['fake', 'dummy_1', 'dummy_2']
-                for db in fake_pheno_config.db_names])
+                for db in list(fake_pheno_config.keys())])
 
 
 def test_missing_but_specified_files(dummy_pheno_missing_files_conf):
     with pytest.raises(AssertionError):
-        PhenoConfig.from_file(dummy_pheno_missing_files_conf)
+        PhenoConfig.read_file_configuration(
+            dummy_pheno_missing_files_conf,
+            os.path.dirname(dummy_pheno_missing_files_conf)
+        )
 
 
 def test_existing_attributes(fake_pheno_config):
-    assert os.path.isfile(fake_pheno_config.get_dbfile('dummy_1'))
-    assert os.path.isfile(fake_pheno_config.get_browser_dbfile('dummy_1'))
-    assert os.path.isdir(fake_pheno_config.get_browser_images_dir('dummy_1'))
-    assert fake_pheno_config.get_browser_images_url('dummy_1') == \
+    assert os.path.isfile(fake_pheno_config['dummy_1'].dbfile)
+    assert os.path.isfile(fake_pheno_config['dummy_1'].browser_dbfile)
+    assert os.path.isdir(fake_pheno_config['dummy_1'].browser_images_dir)
+    assert fake_pheno_config['dummy_1'].browser_images_url == \
         'static/dummy-images'
-    assert fake_pheno_config.get_age('dummy_1') == 'i1:age'
-    assert fake_pheno_config.get_nonverbal_iq('dummy_1') == 'i1:iq'
 
 
 def test_missing_attributes(fake_pheno_config):
-    assert fake_pheno_config.get_dbfile('dummy_2') is None
-    assert fake_pheno_config.get_browser_dbfile('dummy_2') is None
-    assert fake_pheno_config.get_browser_images_dir('dummy_2') is None
-    assert fake_pheno_config.get_browser_images_url('dummy_2') is None
-    assert fake_pheno_config.get_age('dummy_2') is None
-    assert fake_pheno_config.get_nonverbal_iq('dummy_2') is None
+    assert fake_pheno_config['dummy_2'].dbfile is None
+    assert fake_pheno_config['dummy_2'].browser_dbfile is None
+    assert fake_pheno_config['dummy_2'].browser_images_dir is None
+    assert fake_pheno_config['dummy_2'].browser_images_url is None

@@ -3,7 +3,6 @@ Created on Nov 21, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 import pytest
 import os
 import pandas as pd
@@ -110,7 +109,8 @@ def dummy_pheno_missing_files_conf():
 
 @pytest.fixture(scope='session')
 def fake_pheno_config(fake_dae_conf):
-    return PhenoConfig.from_dae_config(fake_dae_conf)
+    return PhenoConfig.read_directory_configurations(
+        fake_dae_conf.pheno_db.dir)
 
 
 @pytest.fixture(scope='session')

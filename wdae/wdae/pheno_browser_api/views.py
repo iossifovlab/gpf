@@ -36,20 +36,20 @@ class PhenoBrowserBaseView(APIView):
         return dbdir
 
     def get_browser_dbfile(self, dbname):
-        browser_dbfile = self.pheno_config.get_browser_dbfile(dbname)
+        browser_dbfile = self.pheno_config[dbname].browser_dbfile
         assert browser_dbfile is not None
         assert os.path.exists(browser_dbfile)
         return browser_dbfile
 
     def get_browser_images_dir(self, dbname):
-        browser_images_dir = self.pheno_config.get_browser_images_dir(dbname)
+        browser_images_dir = self.pheno_config[dbname].browser_images_dir
         assert browser_images_dir is not None
         assert os.path.exists(browser_images_dir)
         assert os.path.isdir(browser_images_dir)
         return browser_images_dir
 
     def get_browser_images_url(self, dbname):
-        browser_images_url = self.pheno_config.get_browser_images_url(dbname)
+        browser_images_url = self.pheno_config[dbname].browser_images_url
         assert browser_images_url is not None
         return browser_images_url
 
@@ -104,8 +104,7 @@ class PhenoMeasuresView(PhenoBrowserBaseView):
         if instrument and instrument not in dataset.pheno_db.instruments:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        browser_dbfile = self.get_browser_dbfile(
-            dataset.config.phenoDB)
+        browser_dbfile = self.get_browser_dbfile(dataset.config.phenoDB)
         browser_images_url = self.get_browser_images_url(
             dataset.config.phenoDB)
 

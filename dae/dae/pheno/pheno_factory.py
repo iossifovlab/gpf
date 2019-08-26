@@ -19,19 +19,20 @@ class PhenoFactory(object):
         if dae_config is None:
             dae_config = DAEConfig.read_and_parse_file_configuration()
 
-        self.config = PhenoConfig.from_dae_config(dae_config)
+        self.config = PhenoConfig.read_directory_configurations(
+            dae_config.pheno_db.dir)
 
     def get_dbfile(self, dbname):
-        return self.config.get_dbfile(dbname)
+        return self.config[dbname].dbfile
 
     def get_dbconfig(self, dbname):
-        return self.config.get_dbconfig(dbname)
+        return self.config[dbname]
 
     def has_pheno_db(self, dbname):
         return dbname in self.config
 
     def get_pheno_db_names(self):
-        return self.config.db_names
+        return list(self.config.keys())
 
     def get_pheno_db(self, dbname):
         if not self.has_pheno_db(dbname):
