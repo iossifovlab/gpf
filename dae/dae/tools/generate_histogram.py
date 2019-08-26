@@ -8,12 +8,12 @@ from os.path import exists
 import pandas as pd
 import numpy as np
 
-from configparser import ConfigParser
 from box import Box
 import matplotlib as mpl; mpl.use('PS')  # noqa
 import matplotlib.pyplot as plt; plt.ioff()  # noqa
 
 import dae.common.config
+from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
 
 
 def get_argument_parser():
@@ -232,10 +232,9 @@ def main():
 
     opts = get_argument_parser().parse_args()
 
-    config = ConfigParser()
-    config.optionxform = str
+    config = CaseSensitiveConfigParser()
     config.read(opts.config)
-    config = Box(common.config.to_dict(config),
+    config = Box(dae.common.config.to_dict(config),
                  default_box=True, default_box_attr=None)
 
     score_histograms_info = []

@@ -1,14 +1,15 @@
 import argparse
 import os
 import sys
-import configparser
 import glob
 
 from box import Box
 from collections import OrderedDict
-from common.config import to_dict, flatten_dict
-from configuration.configuration import DAEConfig
-from annotation.annotation_pipeline import PipelineConfig
+
+from dae.common.config import to_dict, flatten_dict
+from dae.configuration.configuration import DAEConfig
+from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
+from dae.annotation.annotation_pipeline import PipelineConfig
 
 
 class PipelineConfigWrapper(PipelineConfig):
@@ -188,10 +189,8 @@ class ConfigGenerator(object):
         generated_config_dict['GENOMIC_SCORES_DOWNLOAD'] = \
             ConfigGenerator.group_and_format(self.pipeline_config.all_scores)
 
-        generated_config = \
-            configparser.ConfigParser(allow_no_value=True,
-                                      interpolation=None)
-        generated_config.optionxform = str
+        generated_config = CaseSensitiveConfigParser(
+            allow_no_value=True, interpolation=None)
         with open(template_name, 'r', encoding='utf8') as template:
             generated_config.read_file(template)
 
@@ -203,10 +202,8 @@ class ConfigGenerator(object):
     def generate_genomic_scores(self):
         default_dir = '%(wd)s/genomicScores'
 
-        generated_config = \
-            configparser.ConfigParser(allow_no_value=True,
-                                      interpolation=None)
-        generated_config.optionxform = str
+        generated_config = CaseSensitiveConfigParser(
+            allow_no_value=True, interpolation=None)
 
         generated_config.add_section('genomicScores')
         generated_config['genomicScores']['dir'] = default_dir
@@ -231,8 +228,7 @@ class ConfigGenerator(object):
     @staticmethod
     def get_score_config(score_dir):
         for conf_file_path in glob.glob(os.path.join(score_dir, '*.conf')):
-            conf = configparser.ConfigParser()
-            conf.optionxform = str
+            conf = CaseSensitiveConfigParser()
             with open(conf_file_path, 'r') as conf_file:
                 conf.read_file(conf_file)
             yield conf
