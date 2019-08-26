@@ -9,7 +9,7 @@ class classproperty(property):
 class GeneTermConfigParser(DAEConfigParser):
 
     @classproperty
-    def PARSE_TO_DICT(cls):
+    def PARSE_TO_LIST(cls):
         return {
             'geneTerms': {
                 'group': 'geneTerms',
@@ -17,6 +17,10 @@ class GeneTermConfigParser(DAEConfigParser):
                 'default': []
             }
         }
+
+    CONVERT_LIST_TO_DICT = (
+        'geneTerms',
+    )
 
     @staticmethod
     def _get_gene_term(gene_term_type, gene_term_options, config):
@@ -32,12 +36,10 @@ class GeneTermConfigParser(DAEConfigParser):
 
     @classmethod
     def parse(cls, config):
-        config = super(GeneTermConfigParser, cls).parse(config)
+        config = super(GeneTermConfigParser, cls).parse_section(config)
         if config is None:
             return None
 
-        gene_term_config = {
-            gt['id']: gt for gt in config['geneTerms']
-        }
+        gene_term_config = config['geneTerms']
 
         return gene_term_config

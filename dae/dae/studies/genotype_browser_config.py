@@ -43,7 +43,7 @@ class GenotypeBrowserConfig(DAEConfigParser):
     ]
 
     @classproperty
-    def PARSE_TO_DICT(cls):
+    def PARSE_TO_LIST(cls):
         return {
             'phenoFilters': {
                 'group': 'phenoFilters',
@@ -96,6 +96,7 @@ class GenotypeBrowserConfig(DAEConfigParser):
 
         pheno_filter['name'] = \
             study_config.get(pheno_filter_type + '.name', None)
+        pheno_filter['id'] = pheno_filter['name']
         pheno_filter['measureType'] = \
             study_config.get(pheno_filter_type + '.type', None)
         pheno_filter['measureFilter'] = \

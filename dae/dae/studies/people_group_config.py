@@ -15,7 +15,7 @@ class PeopleGroupConfig(DAEConfigParser):
     ]
 
     @classproperty
-    def PARSE_TO_DICT(cls):
+    def PARSE_TO_LIST(cls):
         return {
             'peopleGroup': {
                 'group': None,
