@@ -198,6 +198,8 @@ class DAEConfigParser(object):
     def parse_section(cls, config_section):
         if config_section is None:
             return None
+        if not isinstance(config_section, dict):
+            return config_section
 
         config_section = cls._split_str_lists(config_section)
         config_section = cls._split_str_sets(config_section)
