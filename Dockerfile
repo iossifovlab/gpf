@@ -3,10 +3,11 @@ FROM amd64/ubuntu:18.04
 ARG SOURCE_DIR="."
 
 RUN apt-get update --fix-missing && \ 
-	apt-get install -y build-essential default-libmysqlclient-dev gcc \
+	apt-get install -y build-essential gcc \
         libgl1-mesa-glx procps vim libsasl2-dev \
         wget && \
 	apt-get clean
+
 
 # ANACONDA
 
@@ -42,8 +43,8 @@ ENV DAE_DB_DIR="/data"
 ENV PYTHONPATH="$DAE_SOURCE_DIR:$PYTHONPATH"
 ENV PATH /opt/conda/envs/gpf/bin:/opt/conda/bin:$PATH
 
-ENV LD_LIBRARY_PATH=/opt/conda/envs/gpf/jre/lib/amd64:$LD_LIBRARY_PATH
-ENV LD_LIBRARY_PATH $HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
+# ENV LD_LIBRARY_PATH=/opt/conda/envs/gpf/jre/lib/amd64:$LD_LIBRARY_PATH
+# ENV LD_LIBRARY_PATH $HADOOP_HOME/lib/native/:$LD_LIBRARY_PATH
 
 ENV DAE_IMPALA_HOST "impala"
 ENV DAE_IMPALA_PORT 21050
