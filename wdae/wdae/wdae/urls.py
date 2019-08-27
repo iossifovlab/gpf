@@ -2,7 +2,6 @@ from django.conf.urls import url, include
 
 # from gpfjs.views import index
 
-admin.autodiscover()
 urlpatterns = [
 
     url(r'^api/v3/datasets', include('datasets_api.urls')),
