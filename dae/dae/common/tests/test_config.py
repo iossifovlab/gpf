@@ -1,5 +1,3 @@
-import pytest
-
 import dae.common.config
 
 from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
@@ -83,7 +81,6 @@ def test_config_to_dict_selectors():
     }
 
 
-@pytest.mark.skip()
 def test_config_to_dict_section_selectors():
     config_parser = CaseSensitiveConfigParser()
     selector_dict = {
@@ -112,7 +109,7 @@ def test_config_to_dict_section_selectors():
     assert len(list(result['Section1'].keys())) == 2
     assert list(result['Section1'].keys()) == ['First', 'Second']
 
-    assert len(list(result['Section1']['First'].keys())) == 4
+    assert len(list(result['Section1']['First'].keys())) == 3
     assert list(result['Section1']['First'].keys()) == [
         'Property', 'Selector1', 'property3'
     ]

@@ -16,15 +16,8 @@ class Scores(GenomicValues):
         self.yscale = self.config.yscale
         self.filename = self.config.file
         self.help_filename = self.config.help_file
-        if self.config.range:
-            self.range = tuple(map(float, self.config.range))
-        else:
-            self.range = None
-        if self.help_filename:
-            with open(self.help_filename, 'r') as f:
-                self.help = f.read()
-        else:
-            self.help = ''
+        self.range = self.config.range
+        self.help = self.config.help
 
         self._load_data()
         self.df.fillna(value=0, inplace=True)
@@ -53,12 +46,8 @@ class ScoreLoader(object):
         return result
 
     def _load(self):
-        print(self.config.genomic_scores.scores)
         for score_name in self.config.genomic_scores.scores:
-            print(self.config.scores)
-            print(score_name)
-            score_config = self.config.scores.get(score_name)
-            print(score_config)
+            score_config = self.config.genomic_scores.get(score_name)
             s = Scores(score_config)
             self.scores[score_name] = s
 

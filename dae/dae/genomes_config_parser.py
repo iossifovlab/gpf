@@ -3,73 +3,38 @@ from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.RegionOperations import Region
 
 
-class classproperty(property):
-    def __get__(self, obj, objtype=None):
-        return super(classproperty, self).__get__(objtype)
-
-
 class GenomesConfigParser(DAEConfigParser):
 
-    @classproperty
-    def PARSE_TO_LIST(cls):
-        return {
-            'regions': {
-                'group': 'regions',
-                'getter': cls._get_regions,
-            }, 'genome': {
-                'group': 'genome',
-                'getter': cls._get_genome,
-            }, 'mito_genome': {
-                'group': 'mito_genome',
-                'getter': cls._get_genome,
-            }, 'geneModel': {
-                'group': 'geneModel',
-                'getter': cls._get_gene_model,
-            }
-        }
-
-    CONVERT_LIST_TO_DICT = (
-        'regions',
-        'genome',
-        'mito_genome',
-        'geneModel',
-    )
-
     @classmethod
-    def _get_regions(cls, regions_type, regions_options, genomes_db_config):
-        regions = {}
+    def _get_regions(cls, regions):
+        new_regions = {}
+        for region_id, region in regions.items():
+            new_region = {}
+            new_region['id'] = region_id
 
-        regions['id'] = regions_type.split('.')[-1]
+            reg = cls._split_str_option_list(region)
+            new_region['region'] = [Region.from_str(r) for r in reg]
 
-        region = cls._split_str_option_list(
-            genomes_db_config.get(regions_type, ''))
+            new_regions[region_id] = new_region
 
-        regions['region'] = [Region.from_str(reg) for reg in region]
-
-        yield regions
-
-    @staticmethod
-    def _get_genome(genome_type, genome_options, genomes_db_config):
-        genome = genomes_db_config.get(genome_type, dict())
-        genome['id'] = genome_type.split('.')[-1]
-
-        yield genome
+        return new_regions
 
     @staticmethod
-    def _get_gene_model(
-            gene_model_type, gene_model_options, genomes_db_config):
-        for gmo in gene_model_options:
-            gene_model = {}
+    def _get_genomes(genomes):
+        for genome_id, genome in genomes.items():
+            genome['id'] = genome_id
+            for gene_model_id, gene_model in \
+                    genome.get('geneModel', {}).items():
+                gene_model['id'] = gene_model_id
 
-            gene_model['id'] = gene_model_type.split('.')[-1]
-            gene_model['file'] = genomes_db_config.get(
-                f'{gene_model_type}.{gmo}', dict())
-
-            yield gene_model
+        return genomes
 
     @classmethod
     def parse(cls, config):
         config = super(GenomesConfigParser, cls).parse(config)
-        config = super(GenomesConfigParser, cls).parse_section(config)
+
+        config['genome'] = cls._get_genomes(config.get('genome', {}))
+        config['mito_genome'] = cls._get_genomes(config.get('mito_genome', {}))
+        config['PARs']['regions'] = cls._get_regions(config['PARs']['regions'])
 
         return config

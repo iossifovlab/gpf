@@ -1,6 +1,5 @@
 import os
 from box import Box
-from collections import OrderedDict
 from configparser import ConfigParser
 
 import dae.common.config
@@ -28,8 +27,6 @@ class DAEConfigParser(object):
     SPLIT_STR_SETS = ()
     CAST_TO_BOOL = ()
     CAST_TO_INT = ()
-    PARSE_TO_LIST = {}
-    CONVERT_LIST_TO_DICT = ()
 
     @classmethod
     def read_and_parse_directory_configurations(
@@ -205,8 +202,6 @@ class DAEConfigParser(object):
         config_section = cls._split_str_sets(config_section)
         config_section = cls._cast_to_bool(config_section)
         config_section = cls._cast_to_int(config_section)
-        config_section = cls._parse_to_dict(config_section)
-        config_section = cls._convert_list_to_dict(config_section)
 
         return config_section
 
@@ -223,56 +218,6 @@ class DAEConfigParser(object):
             return []
         else:
             return []
-
-    @staticmethod
-    def _split_section(section):
-        index = section.find('.')
-        if index == -1:
-            return (section, None)
-        section_type = section[:index]
-        section_name = section[index + 1:]
-        return (section_type, section_name)
-
-    @classmethod
-    def _get_selectors(
-            cls, config, selector_group, selector_getter,
-            selector_elements=None):
-        selector = OrderedDict()
-        for key, value in config.items():
-            option_type, option_fullname = cls._split_section(key)
-            if (option_type != selector_group and selector_group is not None) \
-                    or option_fullname is None:
-                continue
-
-            if selector_elements is not None:
-                ot, of = cls._split_section(option_fullname)
-                if of is None:
-                    if option_type not in selector_elements:
-                        continue
-                else:
-                    if ot not in selector_elements:
-                        continue
-
-            selector_key = ''
-            if selector_group is not None:
-                selector_type, selector_option =\
-                    cls._split_section(option_fullname)
-                selector_key = selector_group + '.' + selector_type
-            else:
-                selector_type, selector_option = option_type, option_fullname
-                selector_key = selector_type
-
-            if selector_key not in selector:
-                selector[selector_key] = [selector_option]
-            else:
-                selector[selector_key].append(selector_option)
-
-        selectors = []
-        for selector_type, selector_options in selector.items():
-            for s in selector_getter(selector_type, selector_options, config):
-                selectors.append(s)
-
-        return selectors
 
     @classmethod
     def _split_str_lists(cls, config):
@@ -305,40 +250,5 @@ class DAEConfigParser(object):
         for key in cls.CAST_TO_INT:
             if key in config:
                 config[key] = int(config[key])
-
-        return config
-
-    @classmethod
-    def _parse_to_dict(cls, config):
-        if config is None or not isinstance(config, dict):
-            return config
-
-        for key, options in cls.PARSE_TO_LIST.items():
-            elements = None
-            if 'selected' in options:
-                elements = config.get(options['selected'], None)
-            selectors = cls._get_selectors(
-                config, options['group'], options['getter'], elements
-            )
-
-            if selectors:
-                config[key] = selectors
-            else:
-                if 'default' in options:
-                    config[key] = options['default']
-
-        return config
-
-    @classmethod
-    def _convert_list_to_dict(cls, config):
-        for key in cls.CONVERT_LIST_TO_DICT:
-            if key in config:
-                converted_dict = Box(
-                    {el['id']: el for el in config[key] if 'id' in el},
-                    camel_killer_box=True, default_box=True,
-                    default_box_attr=None
-                )
-                if len(config[key]) == len(converted_dict):
-                    config[key] = converted_dict
 
         return config
