@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
-import { Observable, Scheduler } from 'rxjs';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
+// tslint:disable-next-line:import-blacklist
+import { Observable, ReplaySubject } from 'rxjs';
+import { Scheduler } from 'rxjs-compat';
+
+import { take } from 'rxjs/operators';
 // import { Router } from '@angular/router';
 
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/subscribeOn';
+
+
 
 @Injectable()
 export class StateRestoreService {
@@ -33,7 +35,7 @@ export class StateRestoreService {
 
   onParamsUpdate(jsonEncodedState: string) {
     if (jsonEncodedState && jsonEncodedState.length > 0) {
-      let currentState = JSON.parse(jsonEncodedState);
+      const currentState = JSON.parse(jsonEncodedState);
       this.pushNewState(currentState);
     }
   }

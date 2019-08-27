@@ -1,21 +1,24 @@
 import { Injectable } from '@angular/core';
 
-import { Response, Headers, Http, RequestOptions } from '@angular/http';
+import { Headers, Http, RequestOptions } from '@angular/http';
 import { FamilyObjectArray } from './family-counters';
 
+// tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 // import '../rxjs-operators';
 
-import { ConfigService } from '../config/config.service';
+import { CookieService } from 'ngx-cookie';
 
 @Injectable()
 export class FamilyCountersService {
-  private familyCountersUrl = "family_counters/counters";
+  private familyCountersUrl = 'family_counters/counters';
   constructor(
     private http: Http) {}
 
   private getOptions(): RequestOptions {
-    let options = new RequestOptions({ withCredentials: true });
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return options;
   }
@@ -24,8 +27,8 @@ export class FamilyCountersService {
     return this.http.post(this.familyCountersUrl, filters, this.getOptions())
       .map((response) => FamilyObjectArray.fromJsonArray(response.json()))
       .catch((err) => {
-        console.log("Family counter:", err);
+        console.log('Family counter:', err);
         return Observable.of(null);
-      })
+      });
   }
 }

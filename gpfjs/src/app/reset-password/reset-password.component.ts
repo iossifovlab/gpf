@@ -1,6 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild, AfterViewInit } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { ActivatedRoute, Params, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UsersService } from '../users/users.service';
 
 @Component({
@@ -8,13 +8,13 @@ import { UsersService } from '../users/users.service';
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.css']
 })
-export class ResetPasswordComponent {
+export class ResetPasswordComponent implements AfterViewInit {
   @ViewChild('content') content;
   password: string;
   confirmPassword: string;
   verifPath: string;
 
-  resetPasswordError = "";
+  resetPasswordError = '';
   verifPathValid = false;
 
   private modalView;
@@ -27,17 +27,16 @@ export class ResetPasswordComponent {
   ) { }
 
   ngAfterViewInit() {
-    this.verifPath = this.route.snapshot.params["validateString"];
+    this.verifPath = this.route.snapshot.params['validateString'];
     this.modalView = this.modalService.open(this.content);
 
     this.usersService.checkVerification(this.verifPath).subscribe(
       (res) => {
         if (res) {
           this.verifPathValid = true;
-        }
-        else {
+        } else {
           this.verifPathValid = false;
-          this.resetPasswordError = "Invalid verification URL";
+          this.resetPasswordError = 'Invalid verification URL';
         }
     });
 
@@ -47,12 +46,12 @@ export class ResetPasswordComponent {
       }, (reason) => {
         this.router.navigate([{ outlets: { popup: null }}]);
       }
-    )
+    );
   }
 
   resetPassword() {
-    if (this.password != this.confirmPassword) {
-      this.resetPasswordError = "Passwords don't match";
+    if (this.password !== this.confirmPassword) {
+      this.resetPasswordError = 'Passwords don\'t match';
       return;
     }
 
@@ -61,12 +60,11 @@ export class ResetPasswordComponent {
         if (res) {
           this.password = null;
           this.confirmPassword = null;
-          this.resetPasswordError = "";
+          this.resetPasswordError = '';
 
           this.modalView.close();
-        }
-        else {
-          this.resetPasswordError = "Reset Password Failed";
+        } else {
+          this.resetPasswordError = 'Reset Password Failed';
         }
 
     });

@@ -1,13 +1,11 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
+import { Headers, Http, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs';
 
-import { IdDescription } from '../common/iddescription';
-import { IdName } from '../common/idname';
 import { GeneSetsCollection, GeneSet } from './gene-sets';
 import { ConfigService } from '../config/config.service';
 
-import 'rxjs/add/operator/map';
+
 
 @Injectable()
 export class GeneSetsService {
@@ -20,8 +18,8 @@ export class GeneSetsService {
   ) { }
 
   getGeneSetsCollections(): Observable<GeneSetsCollection[]> {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
     return this.http
       .get(this.geneSetsCollectionsUrl, options)
       .map(res => {
@@ -30,8 +28,8 @@ export class GeneSetsService {
   }
 
   getGeneSets(selectedGeneSetsCollection: string, searchTerm: string, geneSetsTypes: Object): Observable<GeneSet[]> {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let options = new RequestOptions({ headers: headers, withCredentials: true });
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
     return this.http
       .post(this.geneSetsSearchUrl, {
         geneSetsCollection: selectedGeneSetsCollection,

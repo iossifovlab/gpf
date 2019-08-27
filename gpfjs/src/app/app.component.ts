@@ -1,4 +1,5 @@
-import { Component, trigger, transition, style, animate } from '@angular/core';
+import { Component } from '@angular/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { Dataset } from './datasets/datasets';
 import { environment } from '../environments/environment';
 

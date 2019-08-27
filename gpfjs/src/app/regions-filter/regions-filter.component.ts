@@ -1,10 +1,7 @@
 import { RegionsFilter } from './regions-filter';
 import { Component, OnInit, forwardRef } from '@angular/core';
 
-import { Observable } from 'rxjs';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
 import { StateRestoreService } from '../store/state-restore.service';
 
 @Component({
@@ -36,8 +33,8 @@ export class RegionsFilterComponent extends QueryStateWithErrorsProvider impleme
   getState() {
     return this.validateAndGetState(this.regionsFilter)
       .map(state => {
-        let regionsFilter: string = state.regionsFilter;
-        let result = regionsFilter
+        const regionsFilter: string = state.regionsFilter;
+        const result = regionsFilter
           .split(/[\s]/)
           .map(s => s.replace(/[,]/g, ''))
           .filter(s => s !== '');

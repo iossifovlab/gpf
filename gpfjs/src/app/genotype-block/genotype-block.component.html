@@ -1,5 +1,6 @@
 <div class="genotype-block form-block">
 	<div class="row row-eq-height">
+
 		<div *ngIf="hasPedigreeSelector | async" class="col-lg-3">
 			<gpf-pedigree-selector [pedigrees]="pedigrees | async"></gpf-pedigree-selector>
 		</div>
@@ -8,6 +9,11 @@
 		</div>
 		<div *ngIf="hasPresentInParent | async" class="col-lg-3">
 			<gpf-present-in-parent></gpf-present-in-parent>
+		</div>
+		<div class="col-lg-3 panel-row" *ngIf="hasPresentInRole | async">
+			<div>
+				<gpf-present-in-role *ngFor="let pir of presentInRole | async" [presentInRole]="pir"></gpf-present-in-role>
+			</div>
 		</div>
 
 		<div class="col-lg-2 panel-row">

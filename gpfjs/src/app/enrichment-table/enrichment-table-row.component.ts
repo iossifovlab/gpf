@@ -1,7 +1,6 @@
-import { Component, Input, Directive } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import {
-  EnrichmentResults, EnrichmentEffectResult, EnrichmentTestResult,
-  GenotypePreviewWithDatasetId
+  EnrichmentEffectResult, EnrichmentTestResult, GenotypePreviewWithDatasetId
 } from '../enrichment-query/enrichment-result';
 import { PValueIntensityPipe } from '../utils/p-value-intensity.pipe';
 import { QueryService } from '../query/query.service';
@@ -21,21 +20,21 @@ export class EnrichmentTableRowComponent {
   ) {}
 
   goToQuery(genotypePreview: GenotypePreviewWithDatasetId) {
-    // Create new window now because we are in a 'click' event callback, update 
-    // it's url later. Otherwise this window.open is treated as a pop-up and 
+    // Create new window now because we are in a 'click' event callback, update
+    // it's url later. Otherwise this window.open is treated as a pop-up and
     // being blocked by most browsers.
     // https://stackoverflow.com/a/22470171/2316754
-    let newWindow = window.open("", "_blank");
+    const newWindow = window.open('', '_blank');
     this.queryService.saveQuery(genotypePreview, 'genotype')
       .take(1)
       .subscribe(urlObject => {
-        let url = this.queryService.getLoadUrlFromResponse(urlObject);
+        const url = this.queryService.getLoadUrlFromResponse(urlObject);
         newWindow.location.assign(url);
       });
   }
 
   getBackgroundColor(testResult: EnrichmentTestResult) {
-    let intensity = this.pValueIntensityPipe.transform(testResult.pvalue);
+    const intensity = this.pValueIntensityPipe.transform(testResult.pvalue);
 
     if (testResult.overlapped > testResult.expected) {
       return `rgba(255, ${intensity}, ${intensity}, 0.8)`;

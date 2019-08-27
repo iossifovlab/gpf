@@ -1,19 +1,19 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
+import { Observable } from 'rxjs';
 
-import { Chromosome, ChromosomeBand } from './chromosome';
+import { Chromosome } from './chromosome';
 
 @Injectable()
 export class ChromosomeService {
 
-  chromosomeUrl: string = 'chromosomes/';
+  chromosomeUrl = 'chromosomes/';
 
   constructor(private http: Http) { }
 
-  getChromosomes(): Promise<Chromosome[]> {
+  getChromosomes(): Observable<Chromosome[]> {
     return this.http
       .get(this.chromosomeUrl)
-      .map(response => Chromosome.fromJsonArray(response.json()))
-      .toPromise();
+      .map(response => Chromosome.fromJsonArray(response.json()));
   }
 }

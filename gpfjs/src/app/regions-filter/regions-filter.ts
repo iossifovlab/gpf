@@ -4,5 +4,4 @@ import { Validate } from 'class-validator';
 export class RegionsFilter {
   @Validate(RegionsFilterValidator)
   regionsFilter = '';
-};
-
+}

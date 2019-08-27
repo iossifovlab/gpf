@@ -1,4 +1,4 @@
-import { Input, Component, OnInit } from '@angular/core';
+import { Input, Component } from '@angular/core';
 import { PedigreeData } from '../genotype-preview-model/genotype-preview';
 
 
@@ -6,10 +6,6 @@ import { PedigreeData } from '../genotype-preview-model/genotype-preview';
   selector: '[gpf-pedigree-chart-member]',
   templateUrl: './pedigree-chart-member.component.html'
 })
-export class PedigreeChartMemberComponent  {
-  @Input() pedigreeData: PedigreeData
+export class PedigreeChartMemberComponent {
+  @Input() pedigreeData: PedigreeData;
 }
-
-
-
-

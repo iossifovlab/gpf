@@ -1,9 +1,8 @@
-import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions, URLSearchParams } from '@angular/http';
-import { Observable } from 'rxjs';
 
-import 'rxjs/add/operator/toPromise';
-import { ReplaySubject } from 'rxjs';
+// tslint:disable-next-line:import-blacklist
+import {throwError as observableThrowError,  Observable ,  ReplaySubject } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Headers, Http, RequestOptions, URLSearchParams } from '@angular/http';
 
 import { ConfigService } from '../config/config.service';
 import { User } from './users';
@@ -32,7 +31,9 @@ export class UsersService {
   }
 
   logout(): Observable<boolean> {
-    let options = new RequestOptions({ withCredentials: true });
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return this.http.post(this.logoutUrl, {}, options)
       .map(res => {
@@ -41,7 +42,9 @@ export class UsersService {
   }
 
   login(username: string, password: string): Observable<boolean> {
-    let options = new RequestOptions({ withCredentials: true });
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return this.http.post(this.loginUrl, { username: username, password: password }, options)
       .map(res => {
@@ -61,7 +64,7 @@ export class UsersService {
   }
 
   getUserInfo(): Observable<any> {
-    let options = new RequestOptions({ withCredentials: true });
+    const options = new RequestOptions({ withCredentials: true });
 
     return this.http
       .get(this.userInfoUrl, options)
@@ -75,7 +78,9 @@ export class UsersService {
   }
 
   register(email: string, name: string, researcherId: string): Observable<boolean> {
-    let options = new RequestOptions({ withCredentials: true });
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return this.http.post(this.registerUrl, {
       email: email,
@@ -86,24 +91,28 @@ export class UsersService {
         return true;
       })
       .catch(error => {
-        return Observable.throw(new Error(error.json().error_msg));
+        return observableThrowError(new Error(error.json().error_msg));
       });
   }
 
   resetPassword(email: string): Observable<boolean> {
-    let options = new RequestOptions({ withCredentials: true });
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return this.http.post(this.resetPasswordUrl, { email: email }, options)
       .map(res => {
         return true;
       })
       .catch(error => {
-        return Observable.throw(new Error(error.json().error_msg));
+        return observableThrowError(new Error(error.json().error_msg));
       });
   }
 
   changePassword(password: string, verifPath: string): Observable<boolean> {
-    let options = new RequestOptions({ withCredentials: true });
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return this.http.post(this.changePasswordUrl, {
       password: password, verifPath: verifPath
@@ -117,7 +126,9 @@ export class UsersService {
   }
 
   checkVerification(verifPath: string): Observable<boolean> {
-    let options = new RequestOptions({ withCredentials: true });
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return this.http.post(this.checkVerificationUrl, {
       verifPath: verifPath
@@ -131,44 +142,50 @@ export class UsersService {
   }
 
   getAllUsers() {
-    let options = new RequestOptions({ withCredentials: true });
+    const options = new RequestOptions({ withCredentials: true });
 
     return this.http.get(this.usersUrl, options)
       .map(response => User.fromJsonArray(response.json()));
   }
 
   getUser(id: number) {
-    let options = new RequestOptions({ withCredentials: true });
-    let url = `${this.usersUrl}/${id}`;
+    const options = new RequestOptions({ withCredentials: true });
+    const url = `${this.usersUrl}/${id}`;
 
     return this.http.get(url, options)
       .map(response => User.fromJson(response.json()));
   }
 
   updateUser(user: User) {
-    let dto = {
+    const dto = {
       id: user.id,
       name: user.name,
       groups: user.groups,
       hasPassword: user.hasPassword,
     };
     if (!user.id) {
-      return Observable.throw('Unknown id...');
+      return observableThrowError('Unknown id...');
     }
-    let options = new RequestOptions({
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({
+      headers: headers,
       withCredentials: true
     });
-    let url = `${this.usersUrl}/${user.id}`;
+    const url = `${this.usersUrl}/${user.id}`;
 
     return this.http.put(url, dto, options);
   }
 
   createUser(user: User) {
     if (user.id) {
-      return Observable.throw('Create should not have user id');
+      return observableThrowError('Create should not have user id');
     }
 
-    let options = new RequestOptions({
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({
+      headers: headers,
       withCredentials: true
     });
 
@@ -178,45 +195,45 @@ export class UsersService {
 
   deleteUser(user: User) {
     if (!user.id) {
-      return Observable.throw('No user id');
+      return observableThrowError('No user id');
     }
-    let url = `${this.usersUrl}/${user.id}`;
-    let options = new RequestOptions({ withCredentials: true });
+    const url = `${this.usersUrl}/${user.id}`;
+    const options = new RequestOptions({ withCredentials: true });
 
     return this.http.delete(url, options);
   }
 
   removeUserPassword(user: User) {
     if (!user.id) {
-      return Observable.throw('No user id');
+      return observableThrowError('No user id');
     }
-    let url = `${this.usersUrl}/${user.id}/password_remove`;
-    let options = new RequestOptions({ withCredentials: true });
+    const url = `${this.usersUrl}/${user.id}/password_remove`;
+    const options = new RequestOptions({ withCredentials: true });
 
     return this.http.post(url, null, options);
   }
 
   resetUserPassword(user: User) {
     if (!user.id) {
-      return Observable.throw('No user id');
+      return observableThrowError('No user id');
     }
-    let url = `${this.usersUrl}/${user.id}/password_reset`;
-    let options = new RequestOptions({ withCredentials: true });
+    const url = `${this.usersUrl}/${user.id}/password_reset`;
+    const options = new RequestOptions({ withCredentials: true });
 
     return this.http.post(url, null, options);
   }
 
   removeUserGroup(user: User, group: string) {
-    let clone = user.clone();
+    const clone = user.clone();
     clone.groups = clone.groups.filter(grp => grp !== group);
     return this.updateUser(clone);
   }
 
   searchUsersByGroup(searchTerm: string) {
-    let searchParams = new URLSearchParams();
+    const searchParams = new URLSearchParams();
     searchParams.set('search', searchTerm);
 
-    let options = new RequestOptions({
+    const options = new RequestOptions({
       withCredentials: true,
       search: searchParams
     });
@@ -226,9 +243,9 @@ export class UsersService {
   }
 
   bulkAddGroup(users: User[], group: string) {
-    let options = new RequestOptions({ withCredentials: true });
+    const options = new RequestOptions({ withCredentials: true });
 
-    let data = {
+    const data = {
       userIds: users.map(u => u.id),
       group: group
     };
@@ -237,9 +254,9 @@ export class UsersService {
   }
 
   bulkRemoveGroup(users: User[], group: string) {
-    let options = new RequestOptions({ withCredentials: true });
+    const options = new RequestOptions({ withCredentials: true });
 
-    let data = {
+    const data = {
       userIds: users.map(u => u.id),
       group: group
     };

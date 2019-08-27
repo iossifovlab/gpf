@@ -4,7 +4,7 @@ import { Dataset } from '../datasets/datasets';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
 
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
 import { NgbTabChangeEvent } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({

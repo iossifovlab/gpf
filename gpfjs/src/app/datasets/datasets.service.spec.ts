@@ -24,20 +24,19 @@ const mockDatasetResponse: Dataset = {
   studyTypes: ['WE'],
   phenoDB: 'vip',
 
+  genotypeBrowser: true,
   phenotypeGenotypeTool: true,
   enrichmentTool: false,
   phenotypeBrowser: true,
+  commonReport: true,
 
-  genotypeBrowser: {
-    hasDenovo: true,
+  genotypeBrowserConfig: {
     hasCNV: false,
     hasAdvancedFamilyFilters: false,
-    hasTransmitted: true,
     hasPedigreeSelector: true,
     hasStudyTypes: false,
-    mainForm: 'vip'
   },
-  pedigreeSelectors: [
+  peopleGroups: [
     {
       id: '16pstatus',
       name: '16p Status',
@@ -187,7 +186,7 @@ describe('DatasetService', () => {
 
       service.getDataset('VIP').subscribe(res => {
         expect(res.id).toEqual('VIP');
-        expect(res.pedigreeSelectors.length).toBe(2);
+        expect(res.peopleGroups.length).toBe(2);
       });
 
     })

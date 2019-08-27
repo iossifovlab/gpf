@@ -1,11 +1,12 @@
-import { Component, OnInit, Input, forwardRef } from '@angular/core';
+import { Component, OnInit, forwardRef } from '@angular/core';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
+// tslint:disable-next-line:import-blacklist
 import { Observable, ReplaySubject } from 'rxjs';
-import { validationErrorsToStringArray, toValidationObservable } from '../utils/to-observable-with-validation';
-import { PhenoToolMeasure }  from './pheno-tool-measure';
-import { ValidationError } from 'class-validator';
+import { PhenoToolMeasure } from './pheno-tool-measure';
 import { StateRestoreService } from '../store/state-restore.service';
 import { ContinuousMeasure } from '../measures/measures';
+import { MeasuresService } from '../measures/measures.service';
+import { DatasetsService } from '../datasets/datasets.service';
 
 @Component({
   selector: 'gpf-pheno-tool-measure',
@@ -19,10 +20,14 @@ import { ContinuousMeasure } from '../measures/measures';
 export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider implements OnInit {
   phenoToolMeasure = new PhenoToolMeasure();
 
-  measuresLoaded$ = new ReplaySubject<Array<ContinuousMeasure>>()
+  measuresLoaded$ = new ReplaySubject<Array<ContinuousMeasure>>();
+
+  regressions: Object = {};
 
   constructor(
-    private stateRestoreService: StateRestoreService
+    private stateRestoreService: StateRestoreService,
+    private measuresService: MeasuresService,
+    private datasetsService: DatasetsService
   ) {
     super();
   }
@@ -34,12 +39,22 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
       .take(1)
       .subscribe(([state, measures]) => {
         if (state['measureId'] && state['normalizeBy']) {
-          this.phenoToolMeasure.measure = 
+          this.phenoToolMeasure.measure =
             measures.find(m => m.name === state['measureId']);
 
           this.phenoToolMeasure.normalizeBy = state['normalizeBy'];
         }
       });
+
+
+    this.datasetsService.getSelectedDataset().subscribe(
+      dataset => {
+        if(dataset.phenoDB) {
+          this.measuresService.getRegressions(dataset.id).subscribe(
+            res => { this.regressions = res });
+        } else this.regressions = {};
+      }
+    );
   }
 
   getState() {
@@ -65,6 +80,10 @@ export class PhenoToolMeasureComponent extends QueryStateWithErrorsProvider impl
           this.phenoToolMeasure.normalizeBy.filter(v => v !== value);
       }
     }
+  }
+
+  getRegressionNames() {
+    return Object.getOwnPropertyNames(this.regressions);
   }
 
 }

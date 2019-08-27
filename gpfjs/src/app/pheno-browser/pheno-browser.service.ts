@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Http, Headers, Response, URLSearchParams, RequestOptions, RequestOptionsArgs } from '@angular/http';
+import { Http, Headers, Response, URLSearchParams, RequestOptions } from '@angular/http';
 
+// tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
@@ -20,14 +21,16 @@ export class PhenoBrowserService {
   ) {}
 
   private getOptions(): RequestOptions {
-    let options = new RequestOptions({ withCredentials: true });
+    const csrfToken = this.cookieService.get('csrftoken');
+    const headers = new Headers({ 'X-CSRFToken': csrfToken });
+    const options = new RequestOptions({ headers: headers, withCredentials: true });
 
     return options;
   }
 
   getInstruments(datasetId: string): Observable<PhenoInstruments> {
 
-    let options = this.getOptions();
+    const options = this.getOptions();
     options.search = new URLSearchParams();
 
     options.search.set('dataset_id', datasetId);
@@ -37,13 +40,14 @@ export class PhenoBrowserService {
       .map((response: Response) => response.json() as PhenoInstruments);
   }
 
-  getMeasures(datasetId: string, instrument: PhenoInstrument): Observable<PhenoMeasures> {
+  getMeasures(datasetId: string, instrument: PhenoInstrument, search: string): Observable<PhenoMeasures> {
 
-    let options = this.getOptions();
+    const options = this.getOptions();
     options.search = new URLSearchParams();
 
     options.search.set('dataset_id', datasetId);
     options.search.set('instrument', instrument);
+    options.search.set('search', search);
 
     return this.http
       .get(this.measuresUrl, options)
@@ -53,6 +57,6 @@ export class PhenoBrowserService {
 
   getDownloadLink(instrument: PhenoInstrument, datasetId: string) {
     return `${this.config.baseUrl}${this.downloadUrl}`
-           + `?dataset_id=${datasetId}&instrument=${instrument}`
+           + `?dataset_id=${datasetId}&instrument=${instrument}`;
   }
 }

@@ -38,7 +38,7 @@ export class GenotypePreviewChromosomesComponent implements OnInit, OnChanges {
   constructor(private chromosomeService: ChromosomeService) { }
 
   ngOnInit() {
-    this.chromosomeService.getChromosomes().then(chromosomes => {
+    this.chromosomeService.getChromosomes().subscribe((chromosomes) => {
       this.chromosomes = chromosomes;
       // TODO chromosomes 1 left part & 2 right part are the longest
       this.leftLargestLength = this.chromosomes[0].leftWidth() + this.chromosomes[1].rightWidth();
@@ -62,5 +62,4 @@ export class GenotypePreviewChromosomesComponent implements OnInit, OnChanges {
       this.rightColumnWidth = this.width / 3;
     }
   }
-
 }

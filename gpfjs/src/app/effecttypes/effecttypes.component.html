@@ -16,6 +16,9 @@
         (click)="selectButtonGroup('NONSYNONYMOUS')"
         class="btn btn-default">Nonsynonymous</button>
       <button
+        (click)="selectButtonGroup('CODING')"
+        class="btn btn-default">Coding</button>
+      <button
         (click)="selectButtonGroup('UTRS')"
         class="btn btn-default">UTRs</button>
     </div>
@@ -26,10 +29,10 @@
         [effectTypesLabels]="codingColumn"
         [effectTypes]="effectTypes"
         (effectTypeEvent)="onEffectTypeChange($event)"
-        class="col-lg-6">
+        class="col-lg-8">
       </gpf-effecttypes-column>
 
-      <div class="col-lg-6">
+      <div class="col-lg-4">
       <gpf-effecttypes-column
         [columnName]="'Noncoding'"
         [effectTypesLabels]="nonCodingColumn"

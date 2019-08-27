@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+
+import {throwError as observableThrowError,  Observable } from 'rxjs';
 import { ValidationError, validate } from 'class-validator';
 
 export function toValidationObservable<T>(obj: T): Observable<T> {
@@ -8,9 +8,9 @@ export function toValidationObservable<T>(obj: T): Observable<T> {
       if (errors.length === 0) {
         return Observable.of(obj);
       }
-      return Observable.throw(errors);
+      return observableThrowError(errors);
     });
-};
+}
 
 
 export function validationErrorsToStringArray(validationErrors: ValidationError[]): Array<string> | Array<Array<string>> {
@@ -35,9 +35,9 @@ export function validationErrorsToStringArray(validationErrors: ValidationError[
 }
 
 function getSingleError(elem) {
-  let result = new Array<string>();
+  const result = new Array<string>();
 
-  for (let object in elem.constraints) {
+  for (const object in elem.constraints) {
     if (elem.constraints.hasOwnProperty(object)) {
       result.push(elem.constraints[object]);
     }
@@ -47,12 +47,12 @@ function getSingleError(elem) {
 }
 
 function getMultipleErrors(elem) {
-  let result = new Array<Array<string>>();
+  const result = new Array<Array<string>>();
 
-  for (let elemOuter of elem.children) {
-    let errors = new Array<string>();
+  for (const elemOuter of elem.children) {
+    const errors = new Array<string>();
 
-    for (let elemInner of elemOuter.children) {
+    for (const elemInner of elemOuter.children) {
       errors.push(...getSingleError(elemInner));
     }
 

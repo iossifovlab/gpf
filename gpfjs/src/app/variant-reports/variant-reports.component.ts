@@ -1,14 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 
 import { VariantReportsService } from './variant-reports.service';
-import { Studies, Study, VariantReport, ChildrenCounter,
-         FamilyCounter, PedigreeCounter, DenovoReport, DeNovoData
-        } from './variant-reports';
-
-export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
+import { VariantReport, FamilyCounter, PedigreeCounter, EffectTypeTable,
+         DeNovoData, PedigreeTable, PeopleCounter, PeopleSex } from './variant-reports';
 
 @Component({
   selector: 'gpf-variant-reports',
@@ -16,12 +13,18 @@ export const SELECTED_REPORT_QUERY_PARAM = 'selectedReport';
   styleUrls: ['./variant-reports.component.css']
 })
 export class VariantReportsComponent implements OnInit {
+  @ViewChild('families_pedigree') familiesPedigree: ElementRef;
+  @ViewChild('legend') legend: ElementRef;
+  familiesPedigreeTop: number;
+  familiesPedigreeBottom: number;
+  legendTop: number;
 
-
-  reports$: Observable<Studies>;
-  selectedReport$ = new Subject<Study>();
+  currentPeopleCounter: PeopleCounter;
+  currentPedigreeTable: PedigreeTable;
+  currentDenovoReport: EffectTypeTable;
 
   variantReport$: Observable<VariantReport>;
+  pedigreeTables: PedigreeTable[];
 
   constructor(
     private variantReportsService: VariantReportsService,
@@ -30,60 +33,53 @@ export class VariantReportsComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.reports$ = this.variantReportsService.getStudies().share();
-
-    this.variantReport$ = this.selectedReport$
-      .switchMap(study => this.variantReportsService.getVariantReport(study))
-      .do(study => this.setSelectedReportParam(study.studyName))
-      .share();
-
-    this.loadReportFromParams();
-  }
-
-  private setSelectedReportParam(studyName) {
-    this.route.params
+    let datasetId$ = this.route.parent.params
       .take(1)
-      .subscribe(params => {
-        if (!params[SELECTED_REPORT_QUERY_PARAM] ||
-          params[SELECTED_REPORT_QUERY_PARAM] !== studyName) {
-            let param = {};
-            param[SELECTED_REPORT_QUERY_PARAM] = studyName;
+      .map(params => <string>params['dataset']);
 
-            this.router.navigate(['/reports/reports', param]);
-          }
-      });
+    this.variantReport$ = datasetId$.switchMap(datasetId =>
+      this.variantReportsService.getVariantReport(datasetId)).share();
+
+    this.variantReport$.take(1).subscribe(params => {
+      this.pedigreeTables = params.familyReport.familiesCounters.map(
+        familiesCounters => new PedigreeTable(
+            this.chunkPedigrees(familiesCounters.familyCounter),
+            familiesCounters.phenotypes, familiesCounters.groupName,
+            familiesCounters.legend
+          )
+        );
+
+      this.currentPeopleCounter = params.familyReport.peopleCounters[0];
+      this.currentPedigreeTable = this.pedigreeTables[0];
+      this.currentDenovoReport = params.denovoReport.tables[0];
+    });
   }
 
-  private loadReportFromParams() {
-    Observable.combineLatest([
-        this.reports$,
-        this.route.params
-      ])
-      .take(1)
-      .subscribe(([reports, params]) => {
-        if (params[SELECTED_REPORT_QUERY_PARAM]) {
-          let report = reports.studies
-            .find(study => study.name === params[SELECTED_REPORT_QUERY_PARAM]);
-          if (report) {
-            this.selectReport(report);
-          }
-        }
-      });
+  @HostListener('window:scroll', ['$event'])
+  @HostListener('click', ['$event'])
+  onWindowScroll(event) {
+    if (this.familiesPedigree && this.familiesPedigree.nativeElement) {
+      this.familiesPedigreeTop = this.familiesPedigree.nativeElement.getBoundingClientRect().top;
+      this.familiesPedigreeBottom = this.familiesPedigree.nativeElement.getBoundingClientRect().bottom;
+    }
 
+    if (this.legend && this.legend.nativeElement) {
+      this.legendTop = this.legend.nativeElement.getBoundingClientRect().top;
+    }
   }
 
-  selectReport(study: Study) {
-    this.selectedReport$.next(study);
+  getPeopleSexValue(peopleSex: string) {
+    return PeopleSex[peopleSex];
   }
 
-  orderByColumnOrder(childrenCounters: (ChildrenCounter | DeNovoData)[], columns: string[], strict = false) {
+  orderByColumnOrder(childrenCounters: DeNovoData[], columns: string[], strict = false) {
     let columnsLookup = new Map<string, number>(
       columns.map((value, index): [string, number] => [value, index])
     );
 
     let filteredChildrenCounters = childrenCounters
       .filter(
-        childCounters => columnsLookup.has(childCounters.phenotype));
+        childCounters => columnsLookup.has(childCounters.column));
 
     if (strict && filteredChildrenCounters.length !== columns.length) {
       return [];
@@ -91,8 +87,8 @@ export class VariantReportsComponent implements OnInit {
 
     return filteredChildrenCounters.sort(
       (child1, child2) => {
-        let index1 = columnsLookup.get(child1.phenotype);
-        let index2 = columnsLookup.get(child2.phenotype);
+        let index1 = columnsLookup.get(child1.column);
+        let index2 = columnsLookup.get(child2.column);
         return index1 - index2;
       }
     );
@@ -125,7 +121,6 @@ export class VariantReportsComponent implements OnInit {
           return acc;
         },
         []);
-
   }
 
   getRows(effectGroups: string[], effectTypes: string[]) {
@@ -137,14 +132,14 @@ export class VariantReportsComponent implements OnInit {
     return [];
   }
 
-  getEffectTypeOrderByColumOrder(effectTypeName: string, denovoReport: DenovoReport) {
-    let effectType = denovoReport.row
+  getEffectTypeOrderByColumOrder(effectTypeName: string, table: EffectTypeTable, phenotypes: string[]) {
+    let effectType = table.rows
       .find(et => et.effectType === effectTypeName);
 
     if (!effectType) {
       return [];
     }
-    return this.orderByColumnOrder(effectType.data, denovoReport.phenotypes);
+    return this.orderByColumnOrder(effectType.data, phenotypes);
   }
 
   getDownloadLink(variantReport: VariantReport) {

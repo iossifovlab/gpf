@@ -1,7 +1,5 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { Component, forwardRef, Input } from '@angular/core';
 
-import { IdDescription } from '../common/iddescription';
-import { Observable } from 'rxjs';
 import { QueryStateCollector } from '../query/query-state-provider';
 
 @Component({
@@ -10,5 +8,6 @@ import { QueryStateCollector } from '../query/query-state-provider';
   providers: [{provide: QueryStateCollector, useExisting: forwardRef(() => EnrichmentModelsBlockComponent) }]
 })
 export class EnrichmentModelsBlockComponent extends QueryStateCollector  {
-
+  @Input()
+  private selectedDatasetId: string;
 }

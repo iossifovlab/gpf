@@ -7,7 +7,7 @@
     <li class="nav-item" *ngFor="let tab of tabs">
       <a [id]="tab.id" class="nav-link" [class.active]="tab.id === activeId" [class.disabled]="tab.disabled"
         href (click)="!!select(tab.id)" role="tab" [attr.aria-controls]="tab.id + '-panel'" [attr.aria-expanded]="tab.id === activeId">
-        {{tab.title}}<ng-template [ngTemplateOutlet]="tab.titleTpl?.templateRef"></ng-template>
+        {{ tab.title }}<ng-template [ngTemplateOutlet]="tab.titleTpl?.templateRef"></ng-template>
       </a>
     </li>
   </ul>

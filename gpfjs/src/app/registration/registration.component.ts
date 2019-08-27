@@ -12,7 +12,7 @@ export class RegistrationComponent implements OnInit {
   name: string;
   researcherId: string;
 
-  registerError = "";
+  registerError = '';
 
   constructor(
     readonly activeModal: NgbActiveModal,
@@ -31,7 +31,7 @@ export class RegistrationComponent implements OnInit {
           this.email = null;
           this.name = null;
           this.researcherId = null;
-          this.registerError = "";
+          this.registerError = '';
 
           this.activeModal.close('Close click');
         }
@@ -39,9 +39,8 @@ export class RegistrationComponent implements OnInit {
       (error: any) => {
         if (error) {
           this.registerError = error;
-        }
-        else {
-          this.registerError = "Registration Failed";
+        } else {
+          this.registerError = 'Registration Failed';
         }
       }
     );

@@ -2,11 +2,8 @@ import { ConfigService } from '../config/config.service';
 import { GeneSetsState } from './gene-sets-state';
 import { Component, OnInit, forwardRef } from '@angular/core';
 import { GeneSetsService } from './gene-sets.service';
-import { GeneSetsCollection, GeneSet } from './gene-sets';
-import { Subject } from 'rxjs/Subject';
-import { Observable } from 'rxjs/Observable';
-import { validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
+import { GeneSetsCollection, GeneSet, GeneSetType } from './gene-sets';
+import { Subject ,  Observable } from 'rxjs';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
 import { StateRestoreService } from '../store/state-restore.service';
 
@@ -22,7 +19,6 @@ import { StateRestoreService } from '../store/state-restore.service';
 export class GeneSetsComponent extends QueryStateWithErrorsProvider implements OnInit {
   geneSetsCollections: Array<GeneSetsCollection>;
   geneSets: Array<GeneSet>;
-  private internalSelectedGeneSetsCollection: GeneSetsCollection;
   private searchQuery: string;
   private geneSetsState = new GeneSetsState();
 
@@ -42,7 +38,7 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
       .take(1)
       .subscribe(state => {
         if (state['geneSet'] && state['geneSet']['geneSetsCollection']) {
-          for (let geneSetCollection of this.geneSetsCollections) {
+          for (const geneSetCollection of this.geneSetsCollections) {
             if (geneSetCollection.name === state['geneSet']['geneSetsCollection']) {
               this.geneSetsState.geneSetsCollection = geneSetCollection;
 
@@ -59,15 +55,17 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
   }
 
   restoreGeneTypes(geneSetsTypes, geneSetCollection: GeneSetsCollection) {
-    let geneTypes = geneSetCollection.types
-      .filter(geneType => geneType.datasetId in geneSetsTypes);
+    const geneTypes = geneSetCollection.types
+      .filter(geneType => geneType.datasetId in geneSetsTypes &&
+              geneType.peopleGroupId in geneSetsTypes[geneType.datasetId]);
     if (geneTypes.length !== 0) {
       this.geneSetsState.geneSetsTypes = Object.create(null);
-      for (let geneType of geneTypes) {
-        let datasetId = geneType.datasetId;
-        for (let phenotype of geneType.phenotypes) {
-          if (geneSetsTypes[datasetId].indexOf(phenotype.id) > -1) {
-            this.geneSetsState.select(datasetId, phenotype.id);
+      for (const geneType of geneTypes) {
+        const datasetId = geneType.datasetId;
+        const peopleGroupId = geneType.peopleGroupId;
+        for (const peopleGroup of geneType.peopleGroupLegend) {
+          if (geneSetsTypes[datasetId][peopleGroupId].indexOf(peopleGroup.id) > -1) {
+            this.geneSetsState.select(datasetId, peopleGroupId, peopleGroup.id);
           }
         }
       }
@@ -102,7 +100,7 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
             if (!state['geneSet'] || !state['geneSet']['geneSet']) {
               return;
             }
-            for (let geneSet of this.geneSets) {
+            for (const geneSet of this.geneSets) {
               if (geneSet.name === state['geneSet']['geneSet']) {
                 this.geneSetsState.geneSet = geneSet;
               }
@@ -140,16 +138,16 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
     }
   }
 
-  isSelectedGeneType(datasetId: string, geneType: string): boolean {
-    return this.geneSetsState.isSelected(datasetId, geneType);
+  isSelectedGeneType(datasetId: string, peopleGroupId: string, geneType: string): boolean {
+    return this.geneSetsState.isSelected(datasetId, peopleGroupId, geneType);
   }
 
-  setSelectedGeneType(datasetId: string, geneType: string, value: boolean) {
+  setSelectedGeneType(datasetId: string, peopleGroupId: string, geneType: string, value: boolean) {
     this.selectedGeneSet = null;
     if (value) {
-      this.geneSetsState.select(datasetId, geneType);
+      this.geneSetsState.select(datasetId, peopleGroupId, geneType);
     } else {
-      this.geneSetsState.deselect(datasetId, geneType);
+      this.geneSetsState.deselect(datasetId, peopleGroupId, geneType);
     }
   }
 
@@ -164,8 +162,9 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
     this.geneSets = [];
 
     if (selectedGeneSetsCollection.types.length > 0) {
-      let geneSetType = selectedGeneSetsCollection.types[0];
-      this.setSelectedGeneType(geneSetType.datasetId, geneSetType.phenotypes[0].id, true);
+      const geneSetType = selectedGeneSetsCollection.types[0];
+      this.setSelectedGeneType(geneSetType.datasetId, geneSetType.peopleGroupId,
+                               geneSetType.peopleGroupLegend[0].id, true);
     }
     this.onSearch();
   }
@@ -180,6 +179,10 @@ export class GeneSetsComponent extends QueryStateWithErrorsProvider implements O
 
   getDownloadLink(selectedGeneSet: GeneSet): string {
     return `${this.config.baseUrl}${selectedGeneSet.download}`;
+  }
+
+  getGeneSetName(geneType: GeneSetType, lenght: number): string {
+    return `${geneType.datasetName} : ${geneType.peopleGroupName}`.slice(0, lenght);
   }
 
   getState() {

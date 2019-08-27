@@ -11,7 +11,7 @@
               type="button"
               id="dropdownMenuButton"
               aria-haspopup="true"
-              aria-expanded="false">{{selectedDataset.name}}
+              aria-expanded="false">{{ selectedDataset.name }}
             </button>
             <div
               ngbDropdownMenu
@@ -30,7 +30,7 @@
       <li *ngIf="selectedDataset.description" class="nav-item">
         <a class="nav-link" routerLink="description" routerLinkActive="active">Dataset Description</a>
       </li>
-      <li *ngIf="selectedDataset.genotypeBrowser" class="nav-item">
+      <li *ngIf="selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig" class="nav-item">
         <a class="nav-link" routerLink="browser" routerLinkActive="active">Genotype Browser</a>
       </li>
       <li *ngIf="selectedDataset.phenotypeBrowser" class="nav-item">
@@ -41,6 +41,9 @@
       </li>
       <li *ngIf="selectedDataset.phenotypeGenotypeTool" class="nav-item">
         <a class="nav-link" routerLink="phenoTool" routerLinkActive="active">Phenotype Tool</a>
+      </li>
+      <li *ngIf="selectedDataset.commonReport" class="nav-item">
+        <a class="nav-link" routerLink="commonReport" routerLinkActive="active">Common Report</a>
       </li>
     </ul>
   </nav>

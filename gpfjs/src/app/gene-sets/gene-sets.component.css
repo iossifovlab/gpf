@@ -12,3 +12,7 @@
     display: block;
     margin-top: 15px;
 }
+    
+::ng-deep .card-header {
+    padding: .1rem .2rem;
+}

@@ -1,0 +1,10 @@
+<div>
+  <div class="row">
+    <div class="col-2" *ngFor="let familyName of familyKeys">
+      <div class="row mt-3 justify-content-center">
+        <h4 style="">{{ familyName }}</h4>
+      </div>
+      <gpf-pedigree-chart  [family]="families[familyName]" ></gpf-pedigree-chart>
+    </div>
+  </div>
+</div>

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Http, RequestOptions, URLSearchParams, Headers } from '@angular/http';
 import { ConfigService } from '../config/config.service';
 import { Observable } from 'rxjs';
-import { ContinuousMeasure, HistogramData } from './measures'
+import { ContinuousMeasure, HistogramData } from './measures';
 import { Partitions } from '../gene-weights/gene-weights';
 
 @Injectable()
@@ -10,6 +10,7 @@ export class MeasuresService {
   private continuousMeasuresUrl = 'measures/type/continuous';
   private measureHistogramUrl = 'measures/histogram';
   private measurePartitionsUrl = 'measures/partitions';
+  private regressionsUrl = 'measures/regressions';
 
   constructor(
     private http: Http,
@@ -53,5 +54,14 @@ export class MeasuresService {
       .map(res => {
         return Partitions.fromJson(res.json());
       });
+  }
+
+  getRegressions(datasetId: string) {
+    let params: URLSearchParams = new URLSearchParams();
+    params.set('datasetId', datasetId);
+    let requestOptions = new RequestOptions();
+    requestOptions.search = params;
+
+    return this.http.get(this.regressionsUrl, requestOptions).map(res => { return res.json() });
   }
 }

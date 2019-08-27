@@ -41,3 +41,6 @@ package-lock.json
 .DS_Store
 Thumbs.db
 *.swp
+
+# npm package-lock
+package-lock.json

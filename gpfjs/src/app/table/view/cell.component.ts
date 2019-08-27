@@ -1,4 +1,4 @@
-import { Input, Component, ViewContainerRef, ComponentFactoryResolver, HostListener } from '@angular/core';
+import { Input, Component } from '@angular/core';
 import { GpfTableColumnComponent } from '../component/column.component';
 
 @Component({

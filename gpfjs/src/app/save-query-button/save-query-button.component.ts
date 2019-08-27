@@ -1,10 +1,6 @@
-import { 
-  Component, OnInit, Input, Output, EventEmitter, Host, ViewChild
- } from '@angular/core';
+import { Component, OnInit, Input, ViewChild } from '@angular/core';
 import { QueryStateCollector } from '../query/query-state-provider';
 import { DatasetsService } from '../datasets/datasets.service';
-import { SaveQuery } from '../query/common-query-data';
-import { GenotypeBrowserComponent } from '../genotype-browser/genotype-browser.component';
 import { QueryService } from '../query/query.service';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 
@@ -25,28 +21,28 @@ export class SaveQueryButtonComponent implements OnInit {
   private urlUUID: string;
   private url: string;
   private savedUrlUUID: string;
-  buttonValue = "Copy";
+  buttonValue = 'Copy';
 
   constructor(
-  	private datasetsService: DatasetsService,
+    private datasetsService: DatasetsService,
     private queryService: QueryService,
     // should be provided by a parent component..
-  	private parentComponent: QueryStateCollector 
+    private parentComponent: QueryStateCollector
   ) { }
 
   ngOnInit() {
   }
 
     saveIfOpened(opened: boolean) {
-      if(opened) {
-        this.buttonValue = "Copy";
+      if (opened) {
+        this.buttonValue = 'Copy';
         this.parentComponent.getCurrentState()
           .take(1)
           .subscribe(state => {
               this.queryService.saveQuery(state, this.queryType)
                   .take(1)
                   .subscribe(response => {
-                      this.urlUUID = response["uuid"];
+                      this.urlUUID = response['uuid'];
                   });
           },
           error => {
@@ -56,7 +52,7 @@ export class SaveQueryButtonComponent implements OnInit {
       } else {
         this.resetState();
       }
-      
+
     }
 
     private resetState() {
@@ -69,19 +65,19 @@ export class SaveQueryButtonComponent implements OnInit {
             return '';
         }
 
-        if (this.savedUrlUUID != this.urlUUID) {            
+        if (this.savedUrlUUID !== this.urlUUID) {
             this.url = this.queryService.getLoadUrl(this.urlUUID);
             this.savedUrlUUID = this.urlUUID;
         }
 
         return this.url;
-        
+
     }
 
     copyToClipboard(input) {
-      input.select()
-      document.execCommand("Copy");
-      this.buttonValue = "Copied";
+      input.select();
+      document.execCommand('Copy');
+      this.buttonValue = 'Copied';
     }
 
 }

@@ -19,6 +19,38 @@
 }
 
 .variants-report-content {
-    width: 100%;
-    padding: 30px;
+  width: 100%;
+  padding: 30px;
+}
+
+.variants-report-selector {
+  width: 20%;
+  padding: 20px;
+}
+
+.pedigree-icon {
+  margin-bottom: -1px;
+  margin-right: 3px;
+  margin-left: 3px;
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 0.1px solid #aaaaaa;
+}
+
+th.rotate > div {
+  position: relative;
+  height: 210px;
+  width: auto;
+  margin: auto;
+  margin-top: 0;
+  margin-bottom: 0;
+  writing-mode: tb-rl;
+  filter: flipv fliph;
+  transform: rotate(180deg);
+}
+
+th.rotate {
+  padding-bottom: 10px;
+  vertical-align: bottom;
 }

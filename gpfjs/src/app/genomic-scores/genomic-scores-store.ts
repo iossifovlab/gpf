@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, Min, Max, ValidateIf, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsNumber, ValidateIf, ValidateNested } from 'class-validator';
 import { IsLessThanOrEqual } from '../utils/is-less-than-validator';
 import { IsMoreThanOrEqual } from '../utils/is-more-than-validator';
 
@@ -40,17 +40,17 @@ export class GenomicScoreState {
         if (score) {
             this.score = score;
             this.changeDomain(score);
-        } else { 
+        } else {
             this.score = null;
         }
         this.rangeStart = null;
         this.rangeEnd = null;
     }
-};
+}
 
 export class GenomicScoresState {
     @ValidateNested({
         each: true
     })
     genomicScoresState: GenomicScoreState[] = [];
-};
+}

@@ -8,25 +8,30 @@ export class GeneSetsState {
   @IsNotEmpty()
   geneSet: GeneSet;
 
-  select(datasetId: string, phenotype: string) {
-    if (datasetId in this.geneSetsTypes) {
-      this.geneSetsTypes[datasetId].push(phenotype);
+  select(datasetId: string, peopleGroupId: string, phenotype: string) {
+    if (datasetId in this.geneSetsTypes && peopleGroupId in this.geneSetsTypes[datasetId]) {
+      this.geneSetsTypes[datasetId][peopleGroupId].push(phenotype);
     } else {
-      Object.assign(this.geneSetsTypes, { [datasetId]: [phenotype] });
-    }
-  }
-
-  deselect(datasetId: string, phenotype: string) {
-    if (datasetId in this.geneSetsTypes) {
-      let index = this.geneSetsTypes[datasetId].indexOf(phenotype);
-      if (index > -1) {
-        this.geneSetsTypes[datasetId].splice(index, 1);
+      if (datasetId in this.geneSetsTypes) {
+        Object.assign(this.geneSetsTypes[datasetId], { [peopleGroupId]: [phenotype] });
+      } else {
+        Object.assign(this.geneSetsTypes, { [datasetId]: { [peopleGroupId]: [phenotype] } });
       }
     }
   }
 
-  isSelected(datasetId: string, phenotype: string) : boolean {
-    return datasetId in this.geneSetsTypes &&
-        this.geneSetsTypes[datasetId].indexOf(phenotype) != -1;
+  deselect(datasetId: string, peopleGroupId: string, phenotype: string) {
+    if (datasetId in this.geneSetsTypes && peopleGroupId in this.geneSetsTypes[datasetId]) {
+      const index = this.geneSetsTypes[datasetId][peopleGroupId].indexOf(phenotype);
+      if (index > -1) {
+        this.geneSetsTypes[datasetId][peopleGroupId].splice(index, 1);
+      }
+    }
   }
-};
+
+  isSelected(datasetId: string, peopleGroupId: string, phenotype: string): boolean {
+    return datasetId in this.geneSetsTypes &&
+        peopleGroupId in this.geneSetsTypes[datasetId] &&
+        this.geneSetsTypes[datasetId][peopleGroupId].indexOf(phenotype) !== -1;
+  }
+}

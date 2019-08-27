@@ -1,4 +1,3 @@
-import { IdDescription } from '../common/iddescription';
 import { IdName } from '../common/idname';
 import { UserGroup } from '../users-groups/users-groups';
 import * as _ from 'lodash';
@@ -65,25 +64,32 @@ export class PedigreeSelector extends IdName {
   }
 }
 
-export class GenomicMetric {
-  static fromJson(json: any): GenomicMetric {
-    return new GenomicMetric(
+export class PresentInRole {
+  static fromJson(json: any): PresentInRole {
+    if (!json) {
+      return undefined;
+    }
+
+    return new PresentInRole(
       json['id'],
-      json['name']
+      json['name'],
+      json['roles'],
     );
   }
-
-  static fromJsonArray(jsonArray: Array<Object>): Array<GenomicMetric> {
+  static fromJsonArray(jsonArray: Array<Object>): Array<PresentInRole> {
     if (!jsonArray) {
       return undefined;
     }
-    return jsonArray.map((json) => GenomicMetric.fromJson(json));
+
+    return jsonArray.map((json) => PresentInRole.fromJson(json));
   }
 
   constructor(
     readonly id: string,
     readonly name: string,
-  ) {}
+    readonly roles: string[]
+  ) {
+  }
 }
 
 export class AdditionalColumnSlot {
@@ -186,19 +192,19 @@ export class GenotypeBrowser {
       json['hasPedigreeSelector'],
       json['hasPresentInChild'],
       json['hasPresentInParent'],
+      json['hasPresentInRole'],
       json['hasCNV'],
       json['hasComplex'],
       json['hasFamilyFilters'],
       json['hasStudyFilters'],
       json['hasStudyTypes'],
-      json['mainForm'],
-      json['genesBlockShowAll'],
+      json['hasGraphicalPreview'],
       json['previewColumns'],
-      [...AdditionalColumn.fromJsonArray(json['genotypeColumns']),
-       ...AdditionalColumn.fromJsonArray(json['phenoColumns'])],
+      json['rolesFilterOptions'],
+      [...AdditionalColumn.fromJsonArray(json['genotypeColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
       PhenoFilter.fromJsonArray(json['familyStudyFilters']),
-      GenomicMetric.fromJsonArray(json['genomicMetrics'])
+      PresentInRole.fromJsonArray(json['presentInRole']),
     );
   }
 
@@ -206,24 +212,36 @@ export class GenotypeBrowser {
     readonly hasPedigreeSelector: boolean,
     readonly hasPresentInChild: boolean,
     readonly hasPresentInParent: boolean,
+    readonly hasPresentInRole: boolean,
     readonly hasCNV: boolean,
     readonly hasComplex: boolean,
     readonly hasFamilyFilters: boolean,
     readonly hasStudyFilters: boolean,
     readonly hasStudyTypes: boolean,
-    readonly mainForm: string,
-    readonly genesBlockShowAll: boolean,
+    readonly hasGraphicalPreview: boolean,
     readonly previewColumnsIds: string[],
+    readonly rolesFilterOptions: string[],
     readonly allColumns: Array<AdditionalColumn>,
     readonly phenoFilters: Array<PhenoFilter>,
     readonly familyStudyFilters: Array<PhenoFilter>,
-    readonly genomicMetrics: Array<GenomicMetric>,
+    readonly presentInRole: PresentInRole[],
   ) {
     this.columns = _.filter(this.allColumns,
       (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);
   }
+}
 
+export class PeopleGroup {
 
+  static fromJson(json: any): PeopleGroup {
+    return new PeopleGroup(
+      PedigreeSelector.fromJsonArray(json['peopleGroup'])
+    );
+  }
+
+  constructor(
+    readonly pedigreeSelectors: PedigreeSelector[],
+  ) { }
 }
 
 export class Dataset extends IdName {
@@ -239,11 +257,13 @@ export class Dataset extends IdName {
       json['studies'],
       json['studyTypes'],
       json['phenoDB'],
+      json['genotypeBrowser'],
       json['phenotypeGenotypeTool'],
       json['enrichmentTool'],
       json['phenotypeBrowser'],
-      GenotypeBrowser.fromJson(json['genotypeBrowser']),
-      PedigreeSelector.fromJsonArray(json['pedigreeSelectors']),
+      json['commonReport'],
+      json['genotypeBrowserConfig'] ? GenotypeBrowser.fromJson(json['genotypeBrowserConfig']) : null,
+      json['peopleGroupConfig'] ? PeopleGroup.fromJson(json['peopleGroupConfig']) : null,
       UserGroup.fromJsonArray(json['groups']),
     );
   }
@@ -264,14 +284,16 @@ export class Dataset extends IdName {
     readonly description: string,
     readonly name: string,
     readonly accessRights: boolean,
-    readonly studies: string,
+    readonly studies: string[],
     readonly studyTypes: string[],
     readonly phenoDB: string,
+    readonly genotypeBrowser: boolean,
     readonly phenotypeGenotypeTool: boolean,
     readonly enrichmentTool: boolean,
     readonly phenotypeBrowser: boolean,
-    readonly genotypeBrowser: GenotypeBrowser,
-    readonly pedigreeSelectors: PedigreeSelector[],
+    readonly commonReport: boolean,
+    readonly genotypeBrowserConfig: GenotypeBrowser,
+    readonly peopleGroupConfig: PeopleGroup,
     readonly groups: UserGroup[]
   ) {
     super(id, name);

@@ -65,7 +65,9 @@ import { FullscreenLoadingService } from './fullscreen-loading/fullscreen-loadin
 
 import { EncodeUriComponentPipe } from './utils/encode-uri-component.pipe';
 
-import { RouterModule, Routes, Router } from '@angular/router';
+import { RouteReuseStrategy, RouterModule, Routes } from '@angular/router';
+import { TaggingRouteReuseStrategy } from 'app/route-reuse.strategy';
+
 import { StateRestoreService } from './store/state-restore.service';
 import { PhenoFiltersComponent } from './pheno-filters/pheno-filters.component';
 import { FamilyFiltersBlockComponent } from './family-filters-block/family-filters-block.component';
@@ -102,7 +104,6 @@ import { StudiesSummariesService } from './studies-summaries/studies-summaries.s
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { CommonReportsComponent } from './common-reports/common-reports.component';
 import { VariantReportsComponent } from './variant-reports/variant-reports.component';
 import { VariantReportsService } from './variant-reports/variant-reports.service';
 import { DatasetDescriptionComponent } from './dataset-description/dataset-description.component';
@@ -111,7 +112,7 @@ import { GenomicScoresComponent } from './genomic-scores/genomic-scores.componen
 import { GenomicScoresBlockComponent } from './genomic-scores-block/genomic-scores-block.component';
 import { GenomicScoresBlockService } from './genomic-scores-block/genomic-scores-block.service';
 
-import { MarkdownModule } from 'angular2-markdown';
+import { NgxMdModule } from 'ngx-md';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { UserInfoPipe } from './users/user-info.pipe';
 import { UsersTableComponent } from './users-table/users-table.component';
@@ -133,19 +134,27 @@ import { ChromosomeService } from './chromosome-service/chromosome.service';
 import { ChromosomeComponent } from './chromosome/chromosome.component';
 import { RedirectOnErrorHttpService } from './config/redirect-on-error.service';
 import { GenotypeBrowserSingleViewComponent } from './genotype-browser-single-view/genotype-browser-single-view.component';
-import { GenotypeBrowserMetaViewComponent } from './genotype-browser-meta-view/genotype-browser-meta-view.component';
 import { GenotypePreviewFieldComponent } from './genotype-preview-field/genotype-preview-field.component';
 import { ErrorsAlertComponent } from './errors-alert/errors-alert.component';
 import { SmallRemoveButtonComponent } from './small-remove-button/small-remove-button.component';
 import { SaveQueryButtonComponent } from './save-query-button/save-query-button.component';
 import { LoadQueryComponent } from './load-query/load-query.component';
+import { PerfectlyDrawablePedigreeComponent } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.component';
+import { PedigreeMockService } from './perfectly-drawable-pedigree/pedigree-mock.service';
+import { NonPdpPedigreesComponent } from './non-pdp-pedigrees/non-pdp-pedigrees.component';
+import { PerfectlyDrawablePedigreeService } from './perfectly-drawable-pedigree/perfectly-drawable-pedigree.service';
 import { StudyFiltersBlockComponent } from './study-filters-block/study-filters-block.component';
 import { StudyFilterComponent } from './study-filter/study-filter.component';
 import { AddButtonComponent } from './add-button/add-button.component';
 import { RemoveButtonComponent } from './remove-button/remove-button.component';
 import { PopupComponent } from './popup/popup.component';
+import { PresentInRoleComponent } from './present-in-role/present-in-role.component';
 
 const appRoutes: Routes = [
+  {
+    path: 'pedigrees',
+    component: NonPdpPedigreesComponent
+  },
   {
     path: 'datasets',
     component: DatasetsComponent
@@ -153,6 +162,9 @@ const appRoutes: Routes = [
   {
     path: 'datasets/:dataset',
     component: DatasetsComponent,
+    data: {
+      reuse: false
+    },
     children: [
       {
         path: 'browser',
@@ -175,38 +187,14 @@ const appRoutes: Routes = [
         component: DatasetDescriptionComponent
       },
       {
-        path: '**',
-        redirectTo: 'browser'
-      }
-    ]
-  },
-  {
-    path: 'all-datasets',
-    children : [
-      {
-        path: 'browser',
-        component: GenotypeBrowserMetaViewComponent
-      }
-    ]
-  },
-  {
-    path: 'reports',
-    component: CommonReportsComponent,
-    children: [
-      {
-        path: '',
-        pathMatch: 'full',
-        redirectTo: 'summary',
-      },
-      {
-        path: 'summary',
-        component: StudiesSummariesComponent
-      },
-      {
-        path: 'reports',
+        path: 'commonReport',
         component: VariantReportsComponent
       }
     ]
+  },
+  {
+    path: 'reports/summary',
+    component: StudiesSummariesComponent
   },
   {
     path: 'management',
@@ -310,7 +298,6 @@ const appRoutes: Routes = [
     PhenoBrowserTableComponent,
     PValueIntensityPipe,
     StudiesSummariesComponent,
-    CommonReportsComponent,
     VariantReportsComponent,
     DatasetDescriptionComponent,
     GenomicScoresComponent,
@@ -330,17 +317,19 @@ const appRoutes: Routes = [
     GenotypePreviewChromosomesComponent,
     ChromosomeComponent,
     GenotypeBrowserSingleViewComponent,
-    GenotypeBrowserMetaViewComponent,
     GenotypePreviewFieldComponent,
     ErrorsAlertComponent,
     SaveQueryButtonComponent,
     LoadQueryComponent,
+    PerfectlyDrawablePedigreeComponent,
+    NonPdpPedigreesComponent,
     SmallRemoveButtonComponent,
     StudyFiltersBlockComponent,
     StudyFilterComponent,
     AddButtonComponent,
     RemoveButtonComponent,
     PopupComponent,
+    PresentInRoleComponent,
   ],
   imports: [
     BrowserModule,
@@ -352,7 +341,7 @@ const appRoutes: Routes = [
     HistogramModule,
     RouterModule.forRoot(appRoutes),
     BrowserAnimationsModule,
-    MarkdownModule.forRoot(),
+    NgxMdModule.forRoot(),
     Select2Module,
     ConfirmationPopoverModule.forRoot({
       confirmButtonType: 'danger'
@@ -385,6 +374,12 @@ const appRoutes: Routes = [
     ChromosomeService,
     { provide: Http, useClass: RedirectOnErrorHttpService,
       deps: [XHRBackend, RequestOptions, Injector]},
+    PedigreeMockService,
+    PerfectlyDrawablePedigreeService,
+    {
+      provide: RouteReuseStrategy,
+      useClass: TaggingRouteReuseStrategy
+    }
   ],
 
   entryComponents: [

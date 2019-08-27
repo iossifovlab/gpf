@@ -1,14 +1,11 @@
 import { Component, OnInit, OnChanges, SimpleChanges, Input } from '@angular/core';
 import { MeasuresService } from '../measures/measures.service';
 import { HistogramData } from '../measures/measures';
-import { ContinuousFilterState, PhenoFiltersState } from '../pheno-filters/pheno-filters';
+import { ContinuousFilterState, ContinuousSelection } from '../pheno-filters/pheno-filters';
 import { StateRestoreService } from '../store/state-restore.service';
-import { Observable } from 'rxjs/Observable';
-import { Subject }           from 'rxjs/Subject';
+// tslint:disable-next-line:import-blacklist
+import { Observable ,  Subject } from 'rxjs';
 import { Partitions } from '../gene-weights/gene-weights';
-import { validateOrReject } from 'class-validator';
-import { plainToClass } from 'class-transformer';
-import { ValidationError } from 'class-validator';
 
 @Component({
   selector: 'gpf-continuous-filter',
@@ -53,43 +50,46 @@ export class ContinuousFilterComponent implements OnInit, OnChanges {
     if (this.datasetId && this.measureName) {
       this.measuresService.getMeasureHistogram(this.datasetId, this.measureName)
         .subscribe(histogramData => {
+          const selection = (this.continuousFilterState.selection as ContinuousSelection);
           this.histogramData = histogramData;
-          if (!this.continuousFilterState.mmin) {
-            this.continuousFilterState.mmin = histogramData.min;
+          if (!selection.min) {
+            selection.min = histogramData.min;
           }
-          if (!this.continuousFilterState.mmax) {
-            this.continuousFilterState.mmax = histogramData.max;
+          if (!selection.max) {
+            selection.max = histogramData.max;
           }
         });
     }
   }
 
   set rangeStart(value) {
-    this.continuousFilterState.mmin = value;
+    const selection = (this.continuousFilterState.selection as ContinuousSelection);
+    selection.min = value;
     this.rangeChanges.next([
       this.datasetId,
       this.measureName,
-      this.continuousFilterState.mmin,
-      this.continuousFilterState.mmax
+      selection.min,
+      selection.max
     ]);
   }
 
   get rangeStart(): number {
-    return this.continuousFilterState.mmin;
+    return (this.continuousFilterState.selection as ContinuousSelection).min;
   }
 
   set rangeEnd(value) {
-    this.continuousFilterState.mmax = value;
+    const selection = (this.continuousFilterState.selection as ContinuousSelection);
+    selection.max = value;
     this.rangeChanges.next([
       this.datasetId,
       this.measureName,
-      this.continuousFilterState.mmin,
-      this.continuousFilterState.mmax
+      selection.min,
+      selection.max
     ]);
   }
 
   get rangeEnd(): number {
-    return this.continuousFilterState.mmax;
+    return (this.continuousFilterState.selection as ContinuousSelection).max;
   }
 
 }

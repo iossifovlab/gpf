@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 
 import { Observable } from 'rxjs';
 
-import { UserGroup } from '../users-groups/users-groups'
+import { UserGroup } from '../users-groups/users-groups';
 import { UsersGroupsService } from '../users-groups/users-groups.service';
 
 @Component({

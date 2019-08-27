@@ -1,19 +1,10 @@
-import { Input, Component, OnInit, ViewChild, ViewEncapsulation, Output,
-         EventEmitter, OnChanges, SimpleChanges, ChangeDetectorRef, forwardRef
-       } from '@angular/core';
-import { FormControl } from '@angular/forms';
+import { Component, OnInit, ViewEncapsulation, ChangeDetectorRef, forwardRef } from '@angular/core';
 import { GeneWeights, Partitions } from './gene-weights';
 import { GeneWeightsService } from './gene-weights.service';
-import { ReplaySubject }           from 'rxjs/ReplaySubject';
-import { Observable }        from 'rxjs/Observable';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/distinctUntilChanged';
-import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/observable/of';
+// tslint:disable-next-line:import-blacklist
+import { ReplaySubject ,  Observable } from 'rxjs';
+
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
 import { StateRestoreService } from '../store/state-restore.service';
 import { ConfigService } from '../config/config.service';
 
@@ -74,7 +65,7 @@ export class GeneWeightsComponent extends QueryStateWithErrorsProvider implement
     this.geneWeightsState.weight = selectedGeneWeights;
     this.geneWeightsState.rangeStart = null;
     this.geneWeightsState.rangeEnd = null;
-    this.geneWeightsState.changeDomain(selectedGeneWeights)
+    this.geneWeightsState.changeDomain(selectedGeneWeights);
     this.updateLabels();
   }
 
@@ -95,7 +86,7 @@ export class GeneWeightsComponent extends QueryStateWithErrorsProvider implement
       .take(1)
       .subscribe(state => {
         if (state['geneWeights'] && state['geneWeights']['weight']) {
-          for (let geneWeight of this.geneWeightsArray) {
+          for (const geneWeight of this.geneWeightsArray) {
             if (geneWeight.weight === state['geneWeights']['weight']) {
               this.selectedGeneWeights = geneWeight;
             }

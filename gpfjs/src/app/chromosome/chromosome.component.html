@@ -1,5 +1,5 @@
 <div class="chromosome">
-  <div class="chromosome-name">{{chromosome.id}}</div>
+  <div class="chromosome-name">{{ chromosome.id }}</div>
   <svg [attr.width]="svgWidth" [attr.height]="svgHeight">
     <g>
       <defs>
@@ -19,17 +19,18 @@
       <rect [attr.height]="chromosomeHeight" [attr.width]="rightWidth" [attr.x]="startingPoint + leftWidth" [attr.y]="variantSignWidth * maxStackIndex" rx="5" ry="15" stroke="black" stroke-width="1" style="fill: grey;">
       </rect>
 
-      <rect *ngFor="let band of leftBands" [attr.clip-path]="'url(#colorClipLeft' + chromosome.id + ')'" [attr.height]="band.height" [attr.width]="band.width" [attr.x]="band.x" [attr.y]="band.y" [style.fill]="band.color">
-        <title>{{band.tooltip}}</title>
+      <rect *ngFor="let band of leftBands" [id]="'leftBand' + chromosome.id + band.tooltip" [attr.clip-path]="'url(#colorClipLeft' + chromosome.id + ')'" [attr.height]="band.height" [attr.width]="band.width" [attr.x]="band.x" [attr.y]="band.y" [style.fill]="band.color">
+        <title>{{ band.tooltip }}</title>
       </rect>
 
-      <rect *ngFor="let band of rightBands" [attr.clip-path]="'url(#colorClipRight' + chromosome.id + ')'" [attr.height]="band.height" [attr.width]="band.width" [attr.x]="band.x" [attr.y]="band.y" [style.fill]="band.color">
-        <title>{{band.tooltip}}</title>
+      <rect *ngFor="let band of rightBands" [id]="'rightBand' + chromosome.id + band.tooltip" [attr.clip-path]="'url(#colorClipRight' + chromosome.id + ')'" [attr.height]="band.height" [attr.width]="band.width" [attr.x]="band.x" [attr.y]="band.y" [style.fill]="band.color">
+        <title>{{ band.tooltip }}</title>
       </rect>
 
       <a *ngFor="let variant of variants"
         [attr.xlink:href]="variant.genomeBrowserUrl"
         target="_blank"
+        [id]="'variant' + variant.location"
         on-mouseover="hoveredVariant = variant"
         [ngbPopover]="popoverContent"
         triggers="mouseenter:mouseleave"
@@ -62,7 +63,7 @@
     </g>
   </svg>
   <ng-template #popoverContent>
-    <div>{{hoveredVariant.genes}}</div>
-    <div>{{hoveredVariant.location}}</div>
+    <div>{{ hoveredVariant.genes }}</div>
+    <div>{{ hoveredVariant.location }}</div>
   </ng-template>
 </div>

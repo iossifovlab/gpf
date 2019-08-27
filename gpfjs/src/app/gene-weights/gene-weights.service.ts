@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Headers, Http, Response, RequestOptions } from '@angular/http';
+import { Headers, Http, RequestOptions } from '@angular/http';
+// tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
 
-import { IdDescription } from '../common/iddescription';
-import { IdName } from '../common/idname';
 import { GeneWeights, Partitions } from './gene-weights';
 import { ConfigService } from '../config/config.service';
 
-import 'rxjs/add/operator/map';
+
 
 @Injectable()
 export class GeneWeightsService {
@@ -28,8 +27,8 @@ export class GeneWeightsService {
   }
 
   getPartitions(weight: string, min: number, max: number): Observable<Partitions> {
-    let headers = new Headers({ 'Content-Type': 'application/json' });
-    let options = new RequestOptions({ headers: headers });
+    const headers = new Headers({ 'Content-Type': 'application/json' });
+    const options = new RequestOptions({ headers: headers });
     return this.http
       .post(this.geneWeightsPartitionsUrl, {weight: weight, min: min, max: max}, options)
       .map(res => {

@@ -31,9 +31,10 @@
             <gpf-table-content>
                 <span *gpfTableCellContent="let data">
                   <a target="_blank"
-                    [routerLink]="['/reports/reports', getQueryParamObject(data[columnNameToFieldName(column)])]">
+                    [routerLink]="'/datasets/' + data['id'] + '/commonReport'">
                     {{ data[columnNameToFieldName(column)] }}
                   </a>
+                  <i *ngIf="data['description'].length > 0" class="clickable fa fa-question-circle-o fa" aria-hidden="false" (click)="showDescription(data['description'])"></i>
                 </span>
             </gpf-table-content>
         </ng-container>

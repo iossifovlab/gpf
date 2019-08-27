@@ -46,20 +46,25 @@ export class GeneSet {
 export class GeneSetType {
 
   static fromJsonArray(jsonArray: Array<Object>): Array<GeneSetType> {
-    let result: Array<GeneSetType> = [];
-    for (let geneSetType of jsonArray) {
+    const result: Array<GeneSetType> = [];
+    for (const geneSetType of jsonArray) {
       result.push(GeneSetType.fromJson(geneSetType));
     }
     return result;
   }
 
   static fromJson(json: any): GeneSetType {
-    return new GeneSetType(json.datasetId, json.datasetName, json.phenotypes);
+    return new GeneSetType(
+      json.datasetId, json.datasetName, json.peopleGroupId,
+      json.peopleGroupName, json.peopleGroupLegend
+    );
   }
 
   constructor(
     readonly datasetId: string,
     readonly datasetName: string,
-    readonly phenotypes: Array<any>
+    readonly peopleGroupId: string,
+    readonly peopleGroupName: string,
+    readonly peopleGroupLegend: Array<any>
   ) { }
 }

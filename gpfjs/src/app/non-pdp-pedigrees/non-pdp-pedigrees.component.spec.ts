@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CommonReportsComponent } from './common-reports.component';
+import { NonPdpPedigreesComponent } from './non-pdp-pedigrees.component';
 
-describe('CommonReportsComponent', () => {
-  let component: CommonReportsComponent;
-  let fixture: ComponentFixture<CommonReportsComponent>;
+describe('NonPdpPedigreesComponent', () => {
+  let component: NonPdpPedigreesComponent;
+  let fixture: ComponentFixture<NonPdpPedigreesComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ CommonReportsComponent ]
+      declarations: [ NonPdpPedigreesComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(CommonReportsComponent);
+    fixture = TestBed.createComponent(NonPdpPedigreesComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

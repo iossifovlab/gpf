@@ -1,11 +1,7 @@
-import { Component, OnInit, Input, Output, EventEmitter, forwardRef } from '@angular/core';
-
-import { Observable } from 'rxjs';
+import { Component, OnInit, Input, forwardRef } from '@angular/core';
 
 import { EffectTypes, CODING, NONCODING, CNV, ALL, LGDS, NONSYNONYMOUS, UTRS } from './effecttypes';
 import { QueryStateProvider, QueryStateWithErrorsProvider } from '../query/query-state-provider';
-import { toValidationObservable, validationErrorsToStringArray } from '../utils/to-observable-with-validation';
-import { ValidationError } from 'class-validator';
 import { StateRestoreService } from '../store/state-restore.service';
 
 
@@ -57,12 +53,13 @@ export class EffecttypesComponent extends QueryStateWithErrorsProvider implement
     this.effectTypesButtons.set('ALL', ALL);
     this.effectTypesButtons.set('NONE', []);
     this.effectTypesButtons.set('LGDS', LGDS);
+    this.effectTypesButtons.set('CODING', CODING);
     this.effectTypesButtons.set('NONSYNONYMOUS', NONSYNONYMOUS);
     this.effectTypesButtons.set('UTRS', UTRS);
   }
 
   selectButtonGroup(groupId: string): void {
-    let effectTypes: string[] = this.effectTypesButtons.get(groupId);
+    const effectTypes: string[] = this.effectTypesButtons.get(groupId);
     this.selectEffectTypesSet(effectTypes);
   }
 
