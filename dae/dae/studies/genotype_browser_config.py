@@ -28,7 +28,6 @@ class GenotypeBrowserConfig(DAEConfigParser):
     )
 
     SPLIT_STR_LISTS = [
-        'phenoFilters',
         'baseColumns',
         'basePreviewColumns',
         'baseDownloadColumns',
