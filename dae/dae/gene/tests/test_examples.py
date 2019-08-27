@@ -29,7 +29,6 @@ criteria and `Triple` recurrency criteria.
 [denovoGeneSets]
 peopleGroups = phenotype
 
-standardCriterias = effectTypes,gender
 standardCriterias.effectTypes.segments=LGDs:LGDs,Missense:missense,Synonymous:synonymous
 standardCriterias.gender.segments=Female:F,Male:M,Unspecified:U
 
