@@ -3,6 +3,8 @@ from box import Box
 from collections import OrderedDict
 from configparser import ConfigParser
 
+import dae.common.config
+
 
 class CaseSensitiveConfigParser(ConfigParser):
     """
@@ -163,9 +165,7 @@ class DAEConfigParser(object):
         if default_override:
             config_parser.read_dict(default_override)
 
-        config = OrderedDict(
-            (section, OrderedDict(config_parser.items(section)))
-            for section in config_parser.sections())
+        config = dae.common.config.to_dict(config_parser)
 
         if cls.SECTION in config:
             if 'enabled' in config[cls.SECTION]:

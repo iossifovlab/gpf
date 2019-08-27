@@ -5,14 +5,8 @@ Created on Nov 7, 2016
 '''
 import os
 from copy import deepcopy
-from collections import OrderedDict
 
 from dae.configuration.dae_config_parser import DAEConfigParser
-
-
-class classproperty(property):
-    def __get__(self, obj, objtype=None):
-        return super(classproperty, self).__get__(objtype)
 
 
 class EnrichmentConfigParser(DAEConfigParser):
@@ -26,22 +20,6 @@ class EnrichmentConfigParser(DAEConfigParser):
         'effect_types'
     )
 
-    @classproperty
-    def PARSE_TO_LIST(cls):
-        return {
-            'backgrounds': {
-                'group': 'background',
-                'getter': cls._get_model,
-                'selected': 'selectedBackgroundValues',
-                'default': []
-            }, 'counting': {
-                'group': 'counting',
-                'getter': cls._get_model,
-                'selected': 'selectedCountingValues',
-                'default': []
-            }
-        }
-
     @staticmethod
     def enrichment_cache_file(config, name=''):
         cache_file = os.path.join(
@@ -52,26 +30,32 @@ class EnrichmentConfigParser(DAEConfigParser):
         return cache_file
 
     @staticmethod
-    def _get_model(model_type, model_options, config):
-        model = {}
+    def _get_model(config, group, selected):
+        selected_elements = config.get(selected, None)
+        models = {}
 
-        model['name'] = config.get(model_type + '.name', None)
-        model['id'] = model['name']
-        model_file = config.get(model_type + '.file', None)
-        if model_file is None:
-            model['filename'] = None
-        else:
-            model['filename'] = os.path.join(
-                os.path.split(config.config_file)[0],
-                'enrichment/{}'.format(model_file)
-            )
-        model['desc'] = config.get(model_type + '.desc', None)
+        for model_id in config.get(group, {}).keys():
+            if selected_elements and model_id not in selected_elements:
+                continue
 
-        yield model
+            model = config[group][model_id]
+            if not isinstance(model, dict):
+                continue
 
-    @staticmethod
-    def _get_model_selectors(model_selector):
-        return OrderedDict([(ms['id'], ms) for ms in model_selector])
+            model['id'] = model['name']
+
+            model_file = model.get('file', None)
+            if model_file is None:
+                model['filename'] = None
+            else:
+                model['filename'] = os.path.join(
+                    os.path.split(config.config_file)[0],
+                    'enrichment/{}'.format(model_file)
+                )
+
+            models[model_id] = model
+
+        return models
 
     @classmethod
     def parse(cls, config):
@@ -93,9 +77,9 @@ class EnrichmentConfigParser(DAEConfigParser):
         if enrichment_config.get('enabled', True) is False:
             return None
 
-        enrichment_config['backgrounds'] = \
-            cls._get_model_selectors(enrichment_config['backgrounds'])
-        enrichment_config['counting'] = \
-            cls._get_model_selectors(enrichment_config['counting'])
+        enrichment_config['backgrounds'] = cls._get_model(
+            enrichment_config, 'background', 'selectedBackgroundValues')
+        enrichment_config['counting'] = cls._get_model(
+            enrichment_config, 'counting', 'selectedCountingValues')
 
         return enrichment_config

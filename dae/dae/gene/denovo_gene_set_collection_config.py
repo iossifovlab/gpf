@@ -5,35 +5,19 @@ from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.variants.attributes import Sex
 
 
-class classproperty(property):
-    def __get__(self, obj, objtype=None):
-        return super(classproperty, self).__get__(objtype)
-
-
 class DenovoGeneSetCollectionConfigParser(DAEConfigParser):
 
     SECTION = 'denovoGeneSets'
 
     SPLIT_STR_LISTS = (
         'peopleGroups',
-        'standardCriterias',
+        # 'standardCriterias',
         'standardCriteriasColumns',
-        'recurrencyCriteria.segments',
+        # 'recurrencyCriteria.segments',
         'geneSetsNames'
     )
 
     CAST_TO_BOOL = ('enabled')
-
-    @classproperty
-    def PARSE_TO_LIST(cls):
-        return {
-            'standardCriterias': {
-                'group': 'standardCriterias',
-                'getter': cls._get_standard_criterias,
-                'selected': 'standardCriteriasColumns',
-                'default': []
-            }
-        }
 
     @staticmethod
     def denovo_gene_set_cache_file(config, people_group_id=''):
@@ -66,29 +50,38 @@ class DenovoGeneSetCollectionConfigParser(DAEConfigParser):
     @classmethod
     def _split_dict_lists(cls, standard_criteria_id, dict_to_split):
         options = [
-            cls._standard_criterias_split_dict(
-                standard_criteria_id, el.strip())
-            for el in dict_to_split.split(',')
+            cls._standard_criterias_split_dict(standard_criteria_id, el)
+            for el in cls._split_str_option_list(dict_to_split)
         ]
         return options
 
     @classmethod
-    def _get_standard_criterias(
-            cls, standard_criteria_type, standard_criteria_options,
-            study_config):
-        standard_criteria_id = standard_criteria_type.split('.')[-1]
+    def _get_standard_criterias(cls, config):
+        result = []
 
-        standard_criterias = cls._split_dict_lists(
-            standard_criteria_id,
-            study_config.pop(standard_criteria_type + '.segments')
-        )
+        standard_criterias = config.get('standardCriterias', {})
+        selected_standard_criterias = config.standard_criterias_columns
 
-        yield standard_criterias
+        for sc_id, sc in standard_criterias.items():
+            if selected_standard_criterias and \
+                    sc_id not in selected_standard_criterias:
+                continue
 
-    @staticmethod
-    def _get_recurrency_criterias(recurrency_criteria_segments):
+            standard_criteria = cls._split_dict_lists(
+                sc_id, sc.pop('segments')
+            )
+
+            result.append(standard_criteria)
+
+        config['standardCriterias'] = result
+
+        return config
+
+    @classmethod
+    def _get_recurrency_criterias(cls, recurrency_criteria_segments):
         recurrency_criterias = {}
-        for recurrency_criteria_str in recurrency_criteria_segments:
+        for recurrency_criteria_str in \
+                cls._split_str_option_list(recurrency_criteria_segments):
             name, from_count, to_count = \
                 recurrency_criteria_str.strip().split(':')
             recurrency_criterias[name] = {
@@ -137,8 +130,10 @@ class DenovoGeneSetCollectionConfigParser(DAEConfigParser):
 
         config_section['id'] = config.id
 
+        config_section = cls._get_standard_criterias(config_section)
+
         config_section['recurrencyCriterias'] = cls._get_recurrency_criterias(
-            config_section.get('recurrencyCriteria.segments', []))
+            config_section.get('recurrencyCriteria', {}).get('segments', []))
 
         if 'peopleGroups' not in config_section or not \
                 config_section['peopleGroups']:
