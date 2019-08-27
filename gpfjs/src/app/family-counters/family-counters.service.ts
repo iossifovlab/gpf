@@ -13,7 +13,8 @@ import { CookieService } from 'ngx-cookie';
 export class FamilyCountersService {
   private familyCountersUrl = 'family_counters/counters';
   constructor(
-    private http: Http) {}
+    private http: Http,
+    private cookieService: CookieService) {}
 
   private getOptions(): RequestOptions {
     const csrfToken = this.cookieService.get('csrftoken');

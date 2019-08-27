@@ -3,6 +3,7 @@ import { Http, Headers, Response, URLSearchParams, RequestOptions } from '@angul
 
 // tslint:disable-next-line:import-blacklist
 import { Observable } from 'rxjs';
+import { CookieService } from 'ngx-cookie';
 
 import { PhenoInstruments, PhenoInstrument, PhenoMeasures } from './pheno-browser';
 
@@ -17,6 +18,7 @@ export class PhenoBrowserService {
 
   constructor(
     private http: Http,
+    private cookieService: CookieService,
     private config: ConfigService
   ) {}
 

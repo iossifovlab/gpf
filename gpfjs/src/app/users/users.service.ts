@@ -5,6 +5,7 @@ import { Injectable } from '@angular/core';
 import { Headers, Http, RequestOptions, URLSearchParams } from '@angular/http';
 
 import { ConfigService } from '../config/config.service';
+import { CookieService } from 'ngx-cookie';
 import { User } from './users';
 
 @Injectable()
@@ -25,7 +26,8 @@ export class UsersService {
 
   constructor(
     private http: Http,
-    private config: ConfigService
+    private config: ConfigService,
+    private cookieService: CookieService
   ) {
 
   }

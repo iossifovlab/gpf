@@ -48,6 +48,7 @@ import { MinValidatorDirective, MaxValidatorDirective } from './utils/min-max.va
 
 import { StudyTypesComponent } from './study-types/study-types.component';
 
+import { CookieModule } from 'ngx-cookie';
 
 import { GenotypeBrowserComponent } from './genotype-browser/genotype-browser.component';
 import { GpfTabsetComponent } from './tabset/tabset.component';
@@ -340,6 +341,7 @@ const appRoutes: Routes = [
     PedigreeChartModule,
     HistogramModule,
     RouterModule.forRoot(appRoutes),
+    CookieModule.forRoot(),
     BrowserAnimationsModule,
     NgxMdModule.forRoot(),
     Select2Module,
