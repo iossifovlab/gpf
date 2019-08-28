@@ -1,6 +1,6 @@
 from django.conf.urls import url, include
 
-# from gpfjs.views import index
+# gpfjs
 
 urlpatterns = [
 
