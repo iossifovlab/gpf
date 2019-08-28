@@ -6,7 +6,6 @@ from dae.RegionOperations import Region
 
 from box import Box
 
-from dae.annotation.tools.annotator_config import AnnotatorConfig
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
 from .configure import Configure
@@ -166,21 +165,3 @@ def construct_import_annotation_pipeline(dae_config, argv=None, defaults=None):
         options, config_filename, dae_config.dae_data_dir,
         defaults=annotation_defaults)
     return pipeline
-
-
-def annotation_pipeline_cli_options(dae_config):
-    options = []
-    options.extend([
-        ('--annotation', {
-            'help': 'config file location; default is "annotation.conf" '
-            'in the instance data directory $DAE_DB_DIR '
-            '[default: %(default)s]',
-            'default': dae_config.annotation.conf_file,
-            'action': 'store',
-            'dest': 'annotation_config',
-        }),
-    ])
-    options.extend(
-        AnnotatorConfig.cli_options(dae_config)
-    )
-    return options

@@ -3,10 +3,10 @@ import pandas as pd
 
 from box import Box
 
-from dae.annotation.annotation_pipeline import PipelineConfig, \
-    PipelineAnnotator
+from dae.annotation.annotation_pipeline import PipelineAnnotator
+from dae.annotation.tools.annotator_config import VariantAnnotatorConfig, \
+    PipelineConfigParser
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase
-
 
 from .conftest import relative_to_this_test_folder
 
@@ -16,7 +16,7 @@ from .conftest import relative_to_this_test_folder
 #     ("default:False,direct:True", {"direct": True, "default": False}),
 # ])
 # def test_parse_default_options(data, expected):
-#     result = PipelineConfig._parse_default_options(data)
+#     result = VariantAnnotatorConfig._parse_default_options(data)
 #     assert result == expected
 
 @pytest.fixture
@@ -28,8 +28,8 @@ def test_parse_pipeline_config():
     filename = relative_to_this_test_folder(
         "fixtures/annotation_test.conf")
     work_dir = relative_to_this_test_folder("fixtures")
-    configuration = PipelineConfig._parse_pipeline_config(filename, work_dir)
-    print(configuration)
+    configuration = PipelineConfigParser.read_and_parse_file_configuration(
+        filename, work_dir)
 
     assert len(list(configuration.keys())) == 5
     assert list(configuration.keys()) == [
@@ -41,7 +41,8 @@ def error_pipeline_sections_configuration():
     filename = relative_to_this_test_folder(
         "fixtures/error_annotation_sections.conf")
     work_dir = relative_to_this_test_folder("fixtures")
-    configuration = PipelineConfig._parse_pipeline_config(filename, work_dir)
+    configuration = PipelineConfigParser.read_and_parse_file_configuration(
+        filename, work_dir)
 
     return configuration
 
@@ -51,7 +52,8 @@ def pipeline_sections_configuration():
     filename = relative_to_this_test_folder(
         "fixtures/annotation_test.conf")
     work_dir = relative_to_this_test_folder("fixtures")
-    configuration = PipelineConfig._parse_pipeline_config(filename, work_dir)
+    configuration = PipelineConfigParser.read_and_parse_file_configuration(
+        filename, work_dir)
 
     assert len(list(configuration.keys())) == 5
     assert list(configuration.keys()) == [
@@ -64,7 +66,7 @@ def test_parse_error_pipeline_section_missing_annotator(
     error_configuration = error_pipeline_sections_configuration
 
     with pytest.raises(AssertionError):
-        PipelineConfig._parse_config_section(
+        VariantAnnotatorConfig._parse_config_section(
             "Step0",
             error_configuration["Step0"],
             empty_options)
@@ -74,11 +76,11 @@ def test_parse_annotation_section_sections(
         pipeline_sections_configuration, empty_options):
     configuration = pipeline_sections_configuration
 
-    section1 = PipelineConfig._parse_config_section(
+    section1 = VariantAnnotatorConfig._parse_config_section(
         "Step1", configuration["Step1"], empty_options)
     assert section1.name == "Step1"
 
-    section3 = PipelineConfig._parse_config_section(
+    section3 = VariantAnnotatorConfig._parse_config_section(
         "Step3", configuration["Step3"], empty_options)
     assert section3.name == "Step3"
 
@@ -95,7 +97,7 @@ def test_build_pipeline_configuration():
     filename = relative_to_this_test_folder("fixtures/annotation_test.conf")
     work_dir = relative_to_this_test_folder("fixtures")
 
-    config = PipelineConfig.build(options, filename, work_dir)
+    config = VariantAnnotatorConfig.build(options, filename, work_dir)
     assert config is not None
 
     for section in config.pipeline_sections:

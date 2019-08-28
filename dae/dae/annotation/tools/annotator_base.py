@@ -5,9 +5,9 @@ import pandas as pd
 
 from copy import deepcopy
 
-from dae.annotation.tools.annotator_config import LineMapper, \
-    AnnotatorConfig, \
-    VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.utils import LineMapper
+
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.variants.variant import SummaryAllele
 import dae.GenomeAccess
@@ -20,7 +20,7 @@ class AnnotatorBase(object):
     """
 
     def __init__(self, config):
-        assert isinstance(config, AnnotatorConfig)
+        assert isinstance(config, VariantAnnotatorConfig)
 
         self.config = config
 

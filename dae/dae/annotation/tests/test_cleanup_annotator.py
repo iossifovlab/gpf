@@ -1,7 +1,7 @@
 from box import Box
 
 from dae.annotation.tools.cleanup_annotator import CleanupAnnotator
-from dae.annotation.tools.annotator_config import AnnotatorConfig
+from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
 
 expected_cleanup_output = """location
 4:4372372973
@@ -14,7 +14,7 @@ Y:4372
 def test_cleanup_annotator(capsys, variants_io):
     opts = Box({}, default_box=True, default_box_attr=None)
 
-    section_config = AnnotatorConfig(
+    section_config = VariantAnnotatorConfig(
         name="cleanup",
         annotator_name="cleanup_annotator.CleanupAnnotator",
         options=opts,

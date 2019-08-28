@@ -5,7 +5,7 @@ from .conftest import relative_to_this_test_folder
 from box import Box
 from dae.annotation.tools.annotator_base import AnnotatorBase, \
     CopyAnnotator
-from dae.annotation.tools.annotator_config import AnnotatorConfig
+from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
 
 from dae.annotation.tools.file_io import IOManager, IOType
 
@@ -50,7 +50,7 @@ def test_create_file_io():
 def test_annotator_base_simple():
     opts = Box({}, default_box=True, default_box_attr=None)
 
-    section_config = AnnotatorConfig(
+    section_config = VariantAnnotatorConfig(
         name="base",
         annotator_name="annotator_base.AnnotatorBase",
         options=opts,
@@ -68,7 +68,7 @@ def test_annotator_base_simple():
 def test_copy_annotator_simple(capsys, variants_io1):
     opts = Box({}, default_box=True, default_box_attr=None)
 
-    section_config = AnnotatorConfig(
+    section_config = VariantAnnotatorConfig(
         name="copy",
         annotator_name="annotator_base.CopyAnnotator",
         options=opts,
@@ -96,7 +96,7 @@ def test_copy_annotator_simple(capsys, variants_io1):
 def test_copy_annotator_multi(capsys, variants_io_m, expected_df):
     opts = Box({}, default_box=True, default_box_attr=None)
 
-    section_config = AnnotatorConfig(
+    section_config = VariantAnnotatorConfig(
         name="copy",
         annotator_name="annotator_base.CopyAnnotator",
         options=opts,

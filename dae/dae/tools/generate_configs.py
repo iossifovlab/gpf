@@ -7,12 +7,15 @@ from box import Box
 from collections import OrderedDict
 
 from dae.common.config import to_dict, flatten_dict
+
+from dae.annotation.annotation_pipeline import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import PipelineConfigParser
+
 from dae.configuration.configuration import DAEConfig
 from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
-from dae.annotation.annotation_pipeline import PipelineConfig
 
 
-class PipelineConfigWrapper(PipelineConfig):
+class PipelineConfigWrapper(VariantAnnotatorConfig):
 
     non_freq_scores = []
     freq_scores = []
@@ -33,7 +36,7 @@ class PipelineConfigWrapper(PipelineConfig):
         dae_config = DAEConfig.read_and_parse_file_configuration()
         defaults = dae_config.annotation_defaults
 
-        configuration = PipelineConfig._parse_pipeline_config(
+        configuration = PipelineConfigParser.read_and_parse_file_configuration(
             config_file, dae_config.dae_data_dir, defaults
         )
 
