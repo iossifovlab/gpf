@@ -145,7 +145,8 @@ class DAEConfigParser(object):
         config_parser = CaseSensitiveConfigParser(
             defaults=default_values,
             allow_no_value=True,
-            strict=True
+            strict=True,
+            delimiters=('=')
         )
 
         if default_sections:

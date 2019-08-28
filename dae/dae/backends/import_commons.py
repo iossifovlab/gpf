@@ -136,7 +136,7 @@ def contigs_makefile_generate(
     print("\n\n".join(makefile), file=outfile)
 
 
-def construct_import_annotation_pipeline(dae_config, argv=None, defaults={}):
+def construct_import_annotation_pipeline(dae_config, argv=None, defaults=None):
 
     if argv is not None and 'annotation_config' in argv and \
             argv.annotation_config is not None:
@@ -159,11 +159,12 @@ def construct_import_annotation_pipeline(dae_config, argv=None, defaults={}):
     })
     options = Box(options, default_box=True, default_box_attr=None)
 
-    annotation_defaults = dae_config.annotation_defaults
+    annotation_defaults = {'values': dae_config.annotation_defaults}
     annotation_defaults.update(defaults)
 
     pipeline = PipelineAnnotator.build(
-        options, config_filename, defaults=annotation_defaults)
+        options, config_filename, dae_config.dae_data_dir,
+        defaults=annotation_defaults)
     return pipeline
 
 

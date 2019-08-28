@@ -30,9 +30,9 @@ def test_vcf2parquet_vcf(
     assert argv.type == 'vcf'
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults={
+        dae_config, argv, defaults={'values': {
             "scores_dirname": annotation_scores_dirname,
-        })
+        }})
 
     import_vcf(
         dae_config, annotation_pipeline,

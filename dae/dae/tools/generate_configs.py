@@ -34,7 +34,7 @@ class PipelineConfigWrapper(PipelineConfig):
         defaults = dae_config.annotation_defaults
 
         configuration = PipelineConfig._parse_pipeline_config(
-            config_file, defaults
+            config_file, dae_config.dae_data_dir, defaults
         )
 
         result = PipelineConfigWrapper(

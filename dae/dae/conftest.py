@@ -109,12 +109,14 @@ def annotation_pipeline_vcf():
         default_box=True,
         default_box_attr=None)
 
+    work_dir = relative_to_this_test_folder("fixtures/")
+
     pipeline = PipelineAnnotator.build(
-        options, filename,
-        defaults={
+        options, filename, work_dir,
+        defaults={'values': {
             "scores_dirname": relative_to_this_test_folder(
                 "fixtures/annotation_pipeline/")
-        })
+        }})
     return pipeline
 
 
@@ -136,10 +138,10 @@ def annotation_pipeline_internal():
 
     pipeline = PipelineAnnotator.build(
         options, filename,
-        defaults={
+        defaults={'values': {
             "scores_dirname": relative_to_this_test_folder(
                 "fixtures/annotation_pipeline/")
-        })
+        }})
     return pipeline
 
 
@@ -415,8 +417,7 @@ def data_import(
     test_hdfs.mkdir(temp_dirname)
 
     dae_config = DAEConfig.read_and_parse_file_configuration()
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config)
+    annotation_pipeline = construct_import_annotation_pipeline(dae_config)
 
     def fin():
         test_hdfs.delete(temp_dirname, recursive=True)

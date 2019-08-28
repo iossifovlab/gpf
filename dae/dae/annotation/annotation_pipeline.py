@@ -4,22 +4,20 @@ import os
 import sys
 import time
 import datetime
-import re
 import argparse
 import subprocess
 
 from box import Box
 from ast import literal_eval
-from configparser import ConfigParser
 from collections import OrderedDict
 
-import dae.common.config
 from dae.annotation.tools.annotator_base import AnnotatorBase, \
     CompositeVariantAnnotator
 from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
 from dae.annotation.tools.file_io import IOType, IOManager
 
 from dae.configuration.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
 class PipelineConfig(VariantAnnotatorConfig):
@@ -34,9 +32,9 @@ class PipelineConfig(VariantAnnotatorConfig):
         self.optionxform = str
 
     @staticmethod
-    def build(options, config_file, defaults={}):
+    def build(options, config_file, work_dir, defaults=None):
         configuration = PipelineConfig._parse_pipeline_config(
-            config_file, defaults
+            config_file, work_dir, defaults
         )
 
         result = PipelineConfig(
@@ -55,23 +53,10 @@ class PipelineConfig(VariantAnnotatorConfig):
         return result
 
     @staticmethod
-    def _parse_pipeline_config(filename, defaults={}):
-        class PipelineConfigParser(ConfigParser):
-            """Modified ConfigParser.SafeConfigParser that
-            allows ':' in keys and only '=' as separator.
-            """
-            OPTCRE = re.compile(
-                r'(?P<option>[^=\s][^=]*)'          # allow only =
-                r'\s*(?P<vi>[=])\s*'                # for option separator
-                r'(?P<value>.*)$'
-                )
-            optionxform = str
-
-        config_parser = PipelineConfigParser(defaults=defaults)
-
-        with open(filename, "r", encoding="utf8") as infile:
-            config_parser.read_file(infile)
-            config = dae.common.config.to_dict(config_parser)
+    def _parse_pipeline_config(filename, work_dir, defaults=None):
+        config = DAEConfigParser.read_file_configuration(
+            filename, work_dir, defaults)
+        config.pop('config_file')
         return config
 
     @staticmethod
@@ -152,8 +137,9 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         super(PipelineAnnotator, self).__init__(config)
 
     @staticmethod
-    def build(options, config_file, defaults={}):
-        pipeline_config = PipelineConfig.build(options, config_file, defaults)
+    def build(options, config_file, work_dir, defaults=None):
+        pipeline_config = PipelineConfig.build(
+            options, config_file, work_dir, defaults)
         assert pipeline_config.pipeline_sections
 
         pipeline = PipelineAnnotator(pipeline_config)
@@ -269,7 +255,8 @@ def pipeline_main(argv):
     start = time.time()
 
     pipeline = PipelineAnnotator.build(
-        options, config_filename, defaults=dae_config.annotation_defaults)
+        options, config_filename, dae_config.dae_data_dir,
+        defaults={'values': dae_config.annotation_defaults})
     assert pipeline is not None
 
     with IOManager(options, reader_type, writer_type) as io_manager:

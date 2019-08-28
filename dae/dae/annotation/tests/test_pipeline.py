@@ -3,7 +3,8 @@ import pandas as pd
 
 from box import Box
 
-from dae.annotation.annotation_pipeline import PipelineConfig, PipelineAnnotator
+from dae.annotation.annotation_pipeline import PipelineConfig, \
+    PipelineAnnotator
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase
 
 
@@ -26,7 +27,8 @@ def empty_options():
 def test_parse_pipeline_config():
     filename = relative_to_this_test_folder(
         "fixtures/annotation_test.conf")
-    configuration = PipelineConfig._parse_pipeline_config(filename)
+    work_dir = relative_to_this_test_folder("fixtures")
+    configuration = PipelineConfig._parse_pipeline_config(filename, work_dir)
     print(configuration)
 
     assert len(list(configuration.keys())) == 5
@@ -38,7 +40,8 @@ def test_parse_pipeline_config():
 def error_pipeline_sections_configuration():
     filename = relative_to_this_test_folder(
         "fixtures/error_annotation_sections.conf")
-    configuration = PipelineConfig._parse_pipeline_config(filename)
+    work_dir = relative_to_this_test_folder("fixtures")
+    configuration = PipelineConfig._parse_pipeline_config(filename, work_dir)
 
     return configuration
 
@@ -47,7 +50,8 @@ def error_pipeline_sections_configuration():
 def pipeline_sections_configuration():
     filename = relative_to_this_test_folder(
         "fixtures/annotation_test.conf")
-    configuration = PipelineConfig._parse_pipeline_config(filename)
+    work_dir = relative_to_this_test_folder("fixtures")
+    configuration = PipelineConfig._parse_pipeline_config(filename, work_dir)
 
     assert len(list(configuration.keys())) == 5
     assert list(configuration.keys()) == [
@@ -88,11 +92,10 @@ def test_build_pipeline_configuration():
         default_box=True,
         default_box_attr=None)
 
-    filename = relative_to_this_test_folder(
-        "fixtures/annotation_test.conf")
+    filename = relative_to_this_test_folder("fixtures/annotation_test.conf")
+    work_dir = relative_to_this_test_folder("fixtures")
 
-    config = PipelineConfig.build(
-        options, filename)
+    config = PipelineConfig.build(options, filename, work_dir)
     assert config is not None
 
     for section in config.pipeline_sections:
@@ -148,11 +151,11 @@ def test_build_pipeline(
 
     captured = capsys.readouterr()
     with variants_io("fixtures/input2.tsv") as io_manager:
+        work_dir = relative_to_this_test_folder("fixtures/")
         pipeline = PipelineAnnotator.build(
-            options, filename,
-            defaults={
-                "fixtures_dir": relative_to_this_test_folder("fixtures/")
-            })
+            options, filename, work_dir,
+            defaults={'values': {"fixtures_dir": work_dir}}
+        )
         assert pipeline is not None
         pipeline.annotate_file(io_manager)
     captured = capsys.readouterr()
@@ -206,11 +209,11 @@ def test_pipeline_change_variants_position(variants_io, capsys, expected_df):
         "fixtures/variant_coordinates_change.conf")
 
     with variants_io("fixtures/input2.tsv") as io_manager:
+        work_dir = relative_to_this_test_folder("fixtures/")
         pipeline = PipelineAnnotator.build(
-            options, filename,
-            defaults={
-                "fixtures_dir": relative_to_this_test_folder("fixtures/")
-            })
+            options, filename, work_dir,
+            defaults={'values': {"fixtures_dir": work_dir}}
+        )
         assert pipeline is not None
 
         pipeline.annotate_file(io_manager)

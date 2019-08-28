@@ -80,11 +80,12 @@ def test_pipeline_with_liftover(
     with mocker.patch(
             "dae.annotation.tools.lift_over_annotator."
             "LiftOverAnnotator.build_lift_over"):
+        work_dir = relative_to_this_test_folder("fixtures/")
 
         pipeline = PipelineAnnotator.build(
-            options, filename, defaults={
-                "fixtures_dir": relative_to_this_test_folder("fixtures/")
-            })
+            options, filename, work_dir,
+            defaults={'values': {"fixtures_dir": work_dir}}
+        )
         assert pipeline is not None
         assert len(pipeline.annotators) == 3
 
