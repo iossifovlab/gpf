@@ -1,7 +1,6 @@
 from box import Box
 from ast import literal_eval
 from collections import OrderedDict
-from importlib import import_module
 
 from dae.DAE import genomesDB
 
@@ -50,38 +49,6 @@ def annotation_config_cli_options(dae_config):
     ]
 
     return options
-
-
-class AnnotatorConfig(object):
-
-    @staticmethod
-    def _split_class_name(class_fullname):
-        splitted = class_fullname.split('.')
-        module_path = splitted[:-1]
-        assert len(module_path) >= 1
-        if len(module_path) == 1:
-            res = ["dae", "annotation", "tools"]
-            res.extend(module_path)
-            module_path = res
-
-        module_name = '.'.join(module_path)
-        class_name = splitted[-1]
-
-        return module_name, class_name
-
-    @staticmethod
-    def _name_to_class(class_fullname):
-        module_name, class_name = \
-            AnnotatorConfig._split_class_name(class_fullname)
-        module = import_module(module_name)
-        clazz = getattr(module, class_name)
-        return clazz
-
-    @staticmethod
-    def instantiate(section_config):
-        clazz = AnnotatorConfig._name_to_class(section_config.annotator_name)
-        assert clazz is not None
-        return clazz(section_config)
 
 
 class VariantAnnotatorConfig(object):
