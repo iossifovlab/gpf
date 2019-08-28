@@ -1,10 +1,9 @@
-import dae.common.config
-
+from dae.configuration.utils import parser_to_dict
 from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
 
 
 def test_config_to_dict(configuration):
-    result = dae.common.config.to_dict(configuration)
+    result = parser_to_dict(configuration)
     assert result is not None
 
     sections = list(result.keys())
@@ -36,7 +35,7 @@ def test_config_to_dict_selectors():
     }
 
     config_parser.read_dict(selector_dict)
-    result = dae.common.config.to_dict(config_parser)
+    result = parser_to_dict(config_parser)
     assert result is not None
 
     assert len(list(result.keys())) == 2
@@ -100,7 +99,7 @@ def test_config_to_dict_section_selectors():
     }
 
     config_parser.read_dict(selector_dict)
-    result = dae.common.config.to_dict(config_parser)
+    result = parser_to_dict(config_parser)
     assert result is not None
 
     assert len(list(result.keys())) == 2

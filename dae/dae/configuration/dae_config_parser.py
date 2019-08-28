@@ -2,7 +2,7 @@ import os
 from box import Box
 from configparser import ConfigParser
 
-import dae.common.config
+from dae.configuration.utils import parser_to_dict
 
 
 class CaseSensitiveConfigParser(ConfigParser):
@@ -163,7 +163,7 @@ class DAEConfigParser(object):
         if default_override:
             config_parser.read_dict(default_override)
 
-        config = dae.common.config.to_dict(config_parser)
+        config = parser_to_dict(config_parser)
 
         if cls.SECTION in config:
             if 'enabled' in config[cls.SECTION]:

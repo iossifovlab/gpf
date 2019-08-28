@@ -12,7 +12,7 @@ from box import Box
 import matplotlib as mpl; mpl.use('PS')  # noqa
 import matplotlib.pyplot as plt; plt.ioff()  # noqa
 
-import dae.common.config
+from dae.configuration.utils import parser_to_dict
 from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
 
 
@@ -234,7 +234,7 @@ def main():
 
     config = CaseSensitiveConfigParser()
     config.read(opts.config)
-    config = Box(dae.common.config.to_dict(config),
+    config = Box(parser_to_dict(config),
                  default_box=True, default_box_attr=None)
 
     score_histograms_info = []

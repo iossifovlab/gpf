@@ -12,7 +12,7 @@ def _section_tree(config):
     return section_tree
 
 
-def to_dict(config):
+def parser_to_dict(config):
     config = OrderedDict(
         (section, OrderedDict(config.items(section)))
         for section in config.sections()

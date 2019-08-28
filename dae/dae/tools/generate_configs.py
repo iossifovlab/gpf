@@ -6,13 +6,12 @@ import glob
 from box import Box
 from collections import OrderedDict
 
-from dae.common.config import to_dict, flatten_dict
-
 from dae.annotation.annotation_pipeline import VariantAnnotatorConfig
 from dae.annotation.tools.annotator_config import PipelineConfigParser
 
 from dae.configuration.configuration import DAEConfig
 from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
+from dae.configuration.utils import parser_to_dict, flatten_dict
 
 
 class PipelineConfigWrapper(VariantAnnotatorConfig):
@@ -214,7 +213,7 @@ class ConfigGenerator(object):
         for score_dir in self.pipeline_config.score_dirs():
             for conf in ConfigGenerator.get_score_config(score_dir):
                 if 'histograms' in conf:
-                    hist_dict = to_dict(conf)['histograms']
+                    hist_dict = parser_to_dict(conf)['histograms']
                     for score_col in hist_dict:
                         if score_col == 'default':
                             continue
