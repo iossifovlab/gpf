@@ -136,8 +136,10 @@ def annotation_pipeline_internal():
         default_box=True,
         default_box_attr=None)
 
+    work_dir = relative_to_this_test_folder("fixtures/")
+
     pipeline = PipelineAnnotator.build(
-        options, filename,
+        options, filename, work_dir,
         defaults={'values': {
             "scores_dirname": relative_to_this_test_folder(
                 "fixtures/annotation_pipeline/")
