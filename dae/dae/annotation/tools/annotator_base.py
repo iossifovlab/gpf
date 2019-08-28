@@ -5,7 +5,7 @@ import pandas as pd
 
 from copy import deepcopy
 
-from dae.annotation.tools.annotator_config import LineConfig, \
+from dae.annotation.tools.annotator_config import LineMapper, \
     AnnotatorConfig, \
     VariantAnnotatorConfig
 from dae.utils.dae_utils import dae2vcf_variant
@@ -49,7 +49,7 @@ class AnnotatorBase(object):
         self.collect_annotator_schema(self.schema)
         file_io_manager.writer.schema = self.schema
 
-        line_config = LineConfig(file_io_manager.header)
+        line_mapper = LineMapper(file_io_manager.header)
         if self.mode == 'replace':
             self.config.output_columns = \
                 [col for col in self.schema.columns
@@ -63,7 +63,7 @@ class AnnotatorBase(object):
             if '#' in line[0]:
                 file_io_manager.line_write(line)
                 continue
-            annotation_line = line_config.build(line)
+            annotation_line = line_mapper.map(line)
             # print(annotation_line)
 
             try:
@@ -220,7 +220,7 @@ class VariantAnnotatorBase(AnnotatorBase):
         if self.config.options.vcf:
             self.variant_builder = VCFBuilder(self.config, self.genome)
         else:
-            self.genome = GenomeAccess.openRef(self.config.genome_file)
+            self.genome = dae.GenomeAccess.openRef(self.config.genome_file)
             assert self.genome is not None
             self.variant_builder = DAEBuilder(self.config, self.genome)
 

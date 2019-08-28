@@ -1,6 +1,5 @@
 from importlib import import_module
 from dae.DAE import genomesDB
-from dae.annotation.tools.utils import handle_header
 
 from dae.configuration.dae_config_parser import DAEConfigParser
 
@@ -132,15 +131,6 @@ class VariantAnnotatorConfig(AnnotatorConfig):
             }),
         ])
         return options
-
-
-class LineConfig(object):
-
-    def __init__(self, source_header):
-        self.source_header = handle_header(source_header)
-
-    def build(self, source_line):
-        return dict(zip(self.source_header, source_line))
 
 
 class ScoreConfigParser(DAEConfigParser):
