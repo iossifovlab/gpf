@@ -136,6 +136,8 @@ def contigs_makefile_generate(
 
 
 def construct_import_annotation_pipeline(dae_config, argv=None, defaults=None):
+    if defaults is None:
+        defaults = {}
 
     if argv is not None and 'annotation_config' in argv and \
             argv.annotation_config is not None:
