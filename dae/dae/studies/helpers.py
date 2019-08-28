@@ -8,7 +8,7 @@ import logging
 
 from dae.utils.vcf_utils import mat2str
 from dae.utils.dae_utils import split_iterable
-from dae.common.query_base import EffectTypesMixin
+from dae.utils.query_base import EffectTypesMixin
 
 LOGGER = logging.getLogger(__name__)
 

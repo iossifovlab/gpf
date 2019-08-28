@@ -1,6 +1,6 @@
 from datasets_api.studies_manager import get_studies_manager
 
-from dae.common.query_base import GeneSymsMixin
+from dae.utils.query_base import GeneSymsMixin
 from datasets_api.permissions import IsDatasetAllowed
 
 

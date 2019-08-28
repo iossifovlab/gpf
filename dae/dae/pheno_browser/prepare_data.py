@@ -18,7 +18,7 @@ from dae.pheno_browser.graphs import draw_linregres
 from dae.pheno_browser.graphs import draw_measure_violinplot
 from dae.pheno_browser.graphs import draw_categorical_violin_distribution
 from dae.pheno_browser.graphs import draw_ordinal_violin_distribution
-from dae.common.progress import progress, progress_nl
+from dae.utils.progress import progress, progress_nl
 
 
 class PreparePhenoBrowserBase(object):
