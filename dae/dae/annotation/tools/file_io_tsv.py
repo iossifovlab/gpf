@@ -176,7 +176,7 @@ class TSVReader(TSVFormat):
         if self.options.vcf:
             self._skip_metalines()
 
-        self.schema = Schema.from_dict({'str': ','.join(self._header_read())})
+        self.schema = Schema.from_dict({'str': self._header_read()})
 
     def _skip_metalines(self):
         self.seek_pos = self.infile.tell()
@@ -246,7 +246,7 @@ class TSVGzipReader(TSVReader):
         if self.options.vcf:
             self._skip_metalines()
 
-        self.schema = Schema.from_dict({'str': ','.join(self._header_read())})
+        self.schema = Schema.from_dict({'str': self._header_read()})
 
 
 class TabixReader(TSVFormat):
@@ -282,7 +282,7 @@ class TabixReader(TSVFormat):
         self._has_chrom_prefix = contig_name.startswith('chr')
 
         self._region_reset(self.region)
-        self.schema = Schema.from_dict({'str': ','.join(self._header_read())})
+        self.schema = Schema.from_dict({'str': self._header_read()})
 
     def _header_read(self):
         if self.schema:

@@ -2,6 +2,8 @@ from importlib import import_module
 from dae.DAE import genomesDB
 from dae.annotation.tools.utils import handle_header
 
+from dae.configuration.dae_config_parser import DAEConfigParser
+
 
 class AnnotatorConfig(object):
 
@@ -139,3 +141,21 @@ class LineConfig(object):
 
     def build(self, source_line):
         return dict(zip(self.source_header, source_line))
+
+
+class ScoreConfigParser(DAEConfigParser):
+
+    SPLIT_STR_LISTS = (
+        'header',
+        'score',
+        'str',
+        'float',
+        'int',
+        'list(str)',
+        'list(float)',
+        'list(int)',
+    )
+
+    CAST_TO_BOOL = (
+        'chr_prefix',
+    )

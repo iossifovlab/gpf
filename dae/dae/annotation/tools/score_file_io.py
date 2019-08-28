@@ -7,12 +7,13 @@ import pysam
 import numpy as np
 import pandas as pd
 from collections import defaultdict
-from box import ConfigBox
-from configparser import ConfigParser
 
 from dae.annotation.tools.file_io_tsv import TSVFormat, TabixReader, \
         handle_chrom_prefix
 from dae.annotation.tools.schema import Schema
+
+from dae.annotation.tools.annotator_config import ScoreConfigParser
+
 try:
     bigwig_enabled = True
     from dae.annotation.tools.score_file_io_bigwig import BigWigAccess
@@ -70,16 +71,13 @@ class ScoreFile(object):
 
         if config_filename is None:
             config_filename = "{}.conf".format(self.score_filename)
-        cfgparser = ConfigParser()
-        cfgparser.read(config_filename)
-        self.config = {section: {key: val for key, val in content.items()}
-                       for section, content in cfgparser.items()}
-        self.config = ConfigBox(self.config)
+
+        self.config = ScoreConfigParser.read_and_parse_file_configuration(
+            config_filename, '')
         assert 'header' in self.config.general
         assert 'score' in self.config.columns
-
-        self.header = self.config.general.list('header')
-        self.score_names = self.config.columns.list('score')
+        self.header = self.config.general.header
+        self.score_names = self.config.columns.score
 
         self.schema = Schema.from_dict(dict(self.config.schema)) \
                             .order_as(self.header)
@@ -95,12 +93,12 @@ class ScoreFile(object):
             self.schema.col_names.index(self.pos_end_name)
 
         if 'chr_prefix' in self.config.general:
-            self.chr_prefix = self.config.general.bool('chr_prefix')
+            self.chr_prefix = self.config.general.chr_prefix
         else:
             self.chr_prefix = False
 
-        if 'noscorevalue' in self.config.general:
-            self.no_score_value = self.config.general.noscorevalue
+        if 'noScoreValue' in self.config.general:
+            self.no_score_value = self.config.general.no_score_value
         else:
             self.no_score_value = 'na'
         if self.no_score_value.lower() in set(['na', 'none']):
