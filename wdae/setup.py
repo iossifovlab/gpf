@@ -25,7 +25,7 @@ setuptools.setup(
     include_package_data=True,
     package_dir={'':'wdae'},
     package_data={
-        'gpfjs': ['static/gpfjs/*'],
+        'gpfjs': ['static/gpfjs/*', 'static/gpfjs/assets/*'],
     },    
     scripts=['wdae/manage.py'],
     # entry_points={
