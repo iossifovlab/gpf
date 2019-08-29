@@ -5,7 +5,7 @@ from box import Box
 
 from .conftest import relative_to_this_test_folder
 
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_annotator import PositionScoreAnnotator
 
 
@@ -61,12 +61,14 @@ def test_regions_parameterized(
         'TEST{}'.format(score_name): "RESULT_{}".format(score_name),
     }
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="score_annotator.VariantScoreAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     with variants_io("fixtures/input3.tsv.gz", options) as io_manager:
@@ -129,12 +131,14 @@ def test_regions_parameterized_missing_scores(
         'TEST{}'.format(score_name): "RESULT_{}".format(score_name),
     }
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="score_annotator.VariantScoreAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     with variants_io("fixtures/input3.tsv.gz", options) as io_manager:
@@ -180,12 +184,14 @@ def test_regions_simple(
         'TEST{}'.format(score_name): "RESULT_{}".format(score_name),
     }
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="score_annotator.VariantScoreAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     with variants_io("fixtures/input3.tsv.gz", options) as io_manager:

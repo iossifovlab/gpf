@@ -6,8 +6,8 @@ import glob
 from box import Box
 from collections import OrderedDict
 
-from dae.annotation.annotation_pipeline import VariantAnnotatorConfig
-from dae.annotation.tools.annotator_config import PipelineConfigParser
+from dae.annotation.tools.annotator_config import AnnotationConfigParser, \
+    VariantAnnotatorConfig
 
 from dae.configuration.configuration import DAEConfig
 from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
@@ -28,16 +28,17 @@ class PipelineConfigWrapper(VariantAnnotatorConfig):
             columns_config, virtuals
         )
 
-    @staticmethod
-    def build(config_file):
+    @classmethod
+    def build(cls, config_file):
         options = Box({}, default_box=True, default_box_attr=None)
 
         dae_config = DAEConfig.read_and_parse_file_configuration()
         defaults = dae_config.annotation_defaults
 
-        configuration = PipelineConfigParser.read_and_parse_file_configuration(
-            config_file, dae_config.dae_data_dir, defaults
-        )
+        configuration = \
+            AnnotationConfigParser.read_and_parse_file_configuration(
+                config_file, dae_config.dae_data_dir, defaults
+            )
 
         result = PipelineConfigWrapper(
             name="pipeline",
@@ -49,7 +50,7 @@ class PipelineConfigWrapper(VariantAnnotatorConfig):
         result.pipeline_sections = []
 
         for section_name, section_config in configuration.items():
-            section_config = result._parse_config_section(
+            section_config = cls.parse_section(
                 section_name, section_config, options)
             result.pipeline_sections.append(section_config)
 

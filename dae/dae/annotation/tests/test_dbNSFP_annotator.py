@@ -3,7 +3,7 @@ from box import Box
 
 from .conftest import relative_to_this_test_folder
 from dae.annotation.tools.dbnsfp_annotator import dbNSFPAnnotator
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 
 expected_result_dbNSFP = \
     """RESULT_dbNSFP\tRESULT_dbNSFP_2
@@ -42,12 +42,14 @@ def test_dbNSFP_annotator(mocker, variants_io, expected_df, capsys):
             'score2': 'RESULT_dbNSFP_2'
         }
 
-        config = VariantAnnotatorConfig(
+        config = AnnotationConfigParser.parse(
+            Box({}),
             name="test_annotator",
             annotator_name="dbNSFP_annotator.dbNSFPAnnotator",
             options=options,
             columns_config=columns_config,
-            virtuals=[]
+            virtuals=[],
+            parse_sections=False
         )
 
         with variants_io("fixtures/multi_chrom_input.tsv") as io_manager:

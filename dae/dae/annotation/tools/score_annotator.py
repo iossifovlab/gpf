@@ -8,7 +8,7 @@ from dae.variants.attributes import VariantType
 
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase, \
     CompositeVariantAnnotator
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_file_io import ScoreFile
 
 
@@ -216,12 +216,14 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
             score_name: self.config.columns_config[score_name]
         }
 
-        variant_config = VariantAnnotatorConfig(
+        variant_config = AnnotationConfigParser.parse(
+            Box({}),
             name="{}.{}".format(self.config.name, score_name),
             annotator_name="score_annotator.VariantScoreAnnotator",
             options=options,
             columns_config=columns_config,
-            virtuals=[]
+            virtuals=[],
+            parse_sections=False
         )
 
         annotator = PositionScoreAnnotator(variant_config)

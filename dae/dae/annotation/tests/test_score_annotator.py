@@ -6,7 +6,7 @@ from box import Box
 
 from .conftest import relative_to_this_test_folder
 
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_annotator import PositionScoreAnnotator, \
     PositionMultiScoreAnnotator, NPScoreAnnotator
 try:
@@ -55,12 +55,14 @@ def test_variant_score_annotator_simple(
         'TESTphastCons100way': "RESULT_phastCons100way",
     }
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="score_annotator.VariantScoreAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
     print(config.options)
     print(type(config.options))
@@ -102,12 +104,14 @@ def test_variant_multi_score_annotator_simple(
         'TESTphastCons100way': "RESULT_phastCons100way",
     }
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="score_annotator.VariantScoreAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
     print(config.options)
     print(type(config.options))
@@ -151,12 +155,14 @@ def test_variant_multi_score_annotator_multi(
         ('TESTphyloP100way', "RESULT_phyloP100way"),
     ])
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="score_annotator.VariantScoreAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
     print(config.options)
     print(type(config.options))
@@ -209,12 +215,14 @@ def test_variant_score_annotator_cadd(
         ('PHRED', "RESULT_PHRED"),
     ])
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="score_annotator.VariantScoreAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
     print(config.options)
     print(type(config.options))

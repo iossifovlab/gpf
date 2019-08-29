@@ -51,85 +51,71 @@ def annotation_config_cli_options(dae_config):
     return options
 
 
-class VariantAnnotatorConfig(object):
+class AnnotationConfigParser(DAEConfigParser):
 
-    def __init__(
-            self, name, annotator_name, options,
-            columns_config, virtuals):
-        self.name = name
-        self.annotator_name = annotator_name
-        self.options = options
-        self.columns_config = columns_config
-
-        self.native_columns = list(columns_config.keys())
-        self.virtual_columns = list(virtuals)
-        assert all([
-            c in self.columns_config.values()
-            for c in self.virtual_columns])
-
-        self.output_columns = [
-            c for c in self.columns_config.values()
-            if c not in self.virtual_columns
-        ]
-
-        self._setup_defaults()
-
-        self.pipeline_sections = []
-
-    def _setup_defaults(self):
-        if self.options.vcf:
-            assert not self.options.v, \
-                [self.name, self.annotator_name, self.options.v]
-
-            if self.options.c is None:
-                self.options.c = 'CHROM'
-            if self.options.p is None:
-                self.options.p = 'POS'
-            if self.options.r is None:
-                self.options.r = 'REF'
-            if self.options.a is None:
-                self.options.a = 'ALT'
-        else:
-            if self.options.x is None and self.options.c is None:
-                self.options.x = 'location'
-            if self.options.v is None:
-                self.options.v = 'variant'
-        if self.options.Graw is None:
-            self.genome_file = genomesDB.get_genome_file()
-        else:
-            self.genome_file = self.options.Graw
-        assert self.genome_file is not None
-
-    @staticmethod
-    def build(options, config_file, work_dir, defaults=None):
-        configuration = PipelineConfigParser.read_and_parse_file_configuration(
+    @classmethod
+    def read_and_parse_file_configuration(
+            cls, options, config_file, work_dir, defaults=None):
+        config = super(AnnotationConfigParser, cls).read_file_configuration(
             config_file, work_dir, defaults
         )
 
-        result = VariantAnnotatorConfig(
+        config = cls.parse(
+            config,
             name="pipeline",
             annotator_name="annotation_pipeline.Pipeline",
             options=options,
             columns_config=OrderedDict(),
             virtuals=[]
         )
-        result.pipeline_sections = []
 
-        for section_name, section_config in configuration.items():
-            section_config = result._parse_config_section(
-                section_name, section_config, options)
-            result.pipeline_sections.append(section_config)
-        return result
+        return config
 
-    @staticmethod
-    def _parse_config_section(section_name, section, options):
-        # section = Box(section, default_box=True, default_box_attr=None)
-        assert 'annotator' in section, [section_name, section]
+    @classmethod
+    def parse(
+            cls, config, name, annotator_name, options, columns_config,
+            virtuals, parse_sections=True):
+        config.name = name
+        config.annotator_name = annotator_name
+        config.options = options
+        config.columns_config = columns_config
 
-        annotator_name = section['annotator']
+        config.native_columns = list(columns_config.keys())
+        config.virtual_columns = list(virtuals)
+        assert all([
+            c in config.columns_config.values()
+            for c in config.virtual_columns])
+
+        config.output_columns = [
+            c for c in config.columns_config.values()
+            if c not in config.virtual_columns
+        ]
+
+        config.pipeline_sections = []
+
+        config = cls._setup_defaults(config)
+
+        if parse_sections:
+            for section_name, config_section in config.items():
+                if not isinstance(config_section, dict):
+                    continue
+                if 'annotator' not in config_section:
+                    continue
+
+                config_section = cls.parse_section(
+                    section_name, config_section, options)
+                config.pipeline_sections.append(config_section)
+
+        return config
+
+    @classmethod
+    def parse_section(cls, section_name, config_section, options):
+        assert 'annotator' in config_section, [section_name, config_section]
+
+        annotator_name = config_section['annotator']
         options = dict(options.to_dict())
-        if 'options' in section:
-            for key, val in section['options'].items():
+        if 'options' in config_section:
+            for key, val in config_section['options'].items():
                 try:
                     val = literal_eval(val)
                 except Exception:
@@ -138,31 +124,53 @@ class VariantAnnotatorConfig(object):
 
         options = Box(options, default_box=True, default_box_attr=None)
 
-        if 'columns' in section:
-            columns_config = OrderedDict(section['columns'])
+        if 'columns' in config_section:
+            columns_config = OrderedDict(config_section['columns'])
         else:
             columns_config = OrderedDict()
 
-        if 'virtuals' not in section:
+        if 'virtuals' not in config_section:
             virtuals = []
         else:
             virtuals = [
-                c.strip() for c in section['virtuals'].split(',')
+                c.strip() for c in config_section['virtuals'].split(',')
             ]
-        return VariantAnnotatorConfig(
+        config_section = cls.parse(
+            config_section,
             name=section_name,
             annotator_name=annotator_name,
             options=options,
             columns_config=columns_config,
-            virtuals=virtuals
+            virtuals=virtuals,
+            parse_sections=False
         )
 
+        return config_section
 
-class PipelineConfigParser(DAEConfigParser):
+    @staticmethod
+    def _setup_defaults(config):
+        if config.options.vcf:
+            assert not config.options.v, \
+                [config.name, config.annotator_name, config.options.v]
 
-    @classmethod
-    def parse(cls, config):
-        config.pop('config_file')
+            if config.options.c is None:
+                config.options.c = 'CHROM'
+            if config.options.p is None:
+                config.options.p = 'POS'
+            if config.options.r is None:
+                config.options.r = 'REF'
+            if config.options.a is None:
+                config.options.a = 'ALT'
+        else:
+            if config.options.x is None and config.options.c is None:
+                config.options.x = 'location'
+            if config.options.v is None:
+                config.options.v = 'variant'
+        if config.options.Graw is None:
+            config.genome_file = genomesDB.get_genome_file()
+        else:
+            config.genome_file = config.options.Graw
+        assert config.genome_file is not None
 
         return config
 

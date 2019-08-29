@@ -2,9 +2,8 @@ import pytest
 
 from box import Box
 
-from ..tools.annotator_config import VariantAnnotatorConfig
+from ..tools.annotator_config import AnnotationConfigParser
 from ..tools.effect_annotator import VariantEffectAnnotator
-from ..tools.schema import Schema
 
 from .conftest import relative_to_this_test_folder
 
@@ -36,12 +35,14 @@ def effect_annotator():
         'effect_details_details': 'effect_details_details_1'
     }
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="effect_annotator.VariantEffectAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     annotator = VariantEffectAnnotator(config)

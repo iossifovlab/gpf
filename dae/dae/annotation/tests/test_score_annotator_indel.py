@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from .conftest import relative_to_this_test_folder
 
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_annotator import NPScoreAnnotator, \
     PositionScoreAnnotator
 
@@ -57,12 +57,14 @@ def test_np_score_annotator_indels(
         ('PHRED', "RESULT_PHRED"),
     ])
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="score_annotator.NPScoreAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     with variants_io(infile, options) as io_manager:
@@ -126,12 +128,14 @@ def test_position_score_annotator_indels(
         'TESTphyloP100way': "RESULT_phyloP100way",
     }
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="score_annotator.NPScoreAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     with variants_io(infile, options) as io_manager:
@@ -182,12 +186,14 @@ def test_np_score_annotator_indels_test_score(
         ('TEST3', "TEST3"),
     ])
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="score_annotator.NPScoreAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     score_annotator = NPScoreAnnotator(config)
@@ -236,12 +242,14 @@ def test_position_score_annotator_indels_test_score(
         ('TEST3', "TEST3"),
     ])
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="score_annotator.NPScoreAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     score_annotator = PositionScoreAnnotator(config)

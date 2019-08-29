@@ -43,7 +43,7 @@ class EffectAnnotatorBase(VariantAnnotatorBase):
                     assert self.config.options.Graw is not None
                     genome_file = self.config.options.Graw
                 assert os.path.exists(genome_file)
-                genome = GenomeAccess.openRef(genome_file)
+                genome = dae.GenomeAccess.openRef(genome_file)
 
         assert genome is not None
 

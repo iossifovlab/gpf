@@ -11,7 +11,7 @@ from box import Box
 
 from dae.annotation.tools.annotator_base import AnnotatorBase, \
     CompositeVariantAnnotator
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.file_io import IOType, IOManager
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 from dae.annotation.tools.utils import AnnotatorInitializer
@@ -47,8 +47,10 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
     @staticmethod
     def build(options, config_file, work_dir, defaults=None):
-        pipeline_config = VariantAnnotatorConfig.build(
-            options, config_file, work_dir, defaults)
+        pipeline_config = \
+            AnnotationConfigParser.read_and_parse_file_configuration(
+                options, config_file, work_dir, defaults
+            )
         assert pipeline_config.pipeline_sections
 
         pipeline = PipelineAnnotator(pipeline_config)

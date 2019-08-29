@@ -1,7 +1,7 @@
 import pytest
 from box import Box
 from .conftest import relative_to_this_test_folder
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.vcf_info_extractor import VCFInfoExtractor
 from dae.annotation.tools.file_io import IOManager, IOType
 
@@ -30,7 +30,8 @@ def test_vcf_info_extractor(capsys, vcf_io):
         "mode": "overwrite",
     }, default_box=True, default_box_attr=None)
 
-    section_config = VariantAnnotatorConfig(
+    section_config = AnnotationConfigParser.parse(
+        Box({}),
         name="vcf info extract test",
         annotator_name="vcf_info_extractor.VCFInfoExtractor",
         options=opts,
@@ -40,7 +41,8 @@ def test_vcf_info_extractor(capsys, vcf_io):
             "AT": "extracted-AT",
             "AZ": "extracted-AZ"
         },
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     with vcf_io as io_manager:

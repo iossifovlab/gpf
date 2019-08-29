@@ -5,13 +5,10 @@ import numpy as np
 
 from box import Box
 
-from ..tools.annotator_config import VariantAnnotatorConfig
+from ..tools.annotator_config import AnnotationConfigParser
 from ..tools.effect_annotator import EffectAnnotator, VariantEffectAnnotator
-from ..tools.schema import Schema
 
 from .conftest import relative_to_this_test_folder
-
-from dae.backends.vcf.loader import RawVariantsLoader
 
 
 @pytest.fixture(scope='session')
@@ -35,12 +32,14 @@ def effect_annotator():
         'effect_details': 'effect_details'
     }
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="effect_annotator.EffectAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     annotator = EffectAnnotator(config)
@@ -73,12 +72,14 @@ def variant_effect_annotator():
         'effect_details_details': 'effect_details_details',
     }
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="test_annotator",
         annotator_name="effect_annotator.VariantEffectAnnotator",
         options=options,
         columns_config=columns_config,
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     annotator = VariantEffectAnnotator(config)

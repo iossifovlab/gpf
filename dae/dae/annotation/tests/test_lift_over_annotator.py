@@ -1,6 +1,6 @@
 import pytest
 from box import Box
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.lift_over_annotator import LiftOverAnnotator
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
@@ -31,12 +31,14 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected):
         # "new_p": "hg19_pos",
     }
 
-    config = VariantAnnotatorConfig(
+    config = AnnotationConfigParser.parse(
+        Box({}),
         name="Test Lift Over Annotator",
         annotator_name="lift_over_annotator.LiftOverAnnotator",
         options=options,
         columns_config=columns,
         virtuals=[],
+        parse_sections=False
     )
     with mocker.patch(
             "dae.annotation.tools.lift_over_annotator."

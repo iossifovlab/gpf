@@ -5,7 +5,7 @@ from .conftest import relative_to_this_test_folder
 from box import Box
 from dae.annotation.tools.annotator_base import AnnotatorBase, \
     CopyAnnotator
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 
 from dae.annotation.tools.file_io import IOManager, IOType
 
@@ -50,7 +50,8 @@ def test_create_file_io():
 def test_annotator_base_simple():
     opts = Box({}, default_box=True, default_box_attr=None)
 
-    section_config = VariantAnnotatorConfig(
+    section_config = AnnotationConfigParser.parse(
+        Box({}),
         name="base",
         annotator_name="annotator_base.AnnotatorBase",
         options=opts,
@@ -58,7 +59,8 @@ def test_annotator_base_simple():
             "CSHL:chr": "chr",
             "CSHL:position": "pos"
         },
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     annotator = AnnotatorBase(section_config)
@@ -68,7 +70,8 @@ def test_annotator_base_simple():
 def test_copy_annotator_simple(capsys, variants_io1):
     opts = Box({}, default_box=True, default_box_attr=None)
 
-    section_config = VariantAnnotatorConfig(
+    section_config = AnnotationConfigParser.parse(
+        Box({}),
         name="copy",
         annotator_name="annotator_base.CopyAnnotator",
         options=opts,
@@ -76,7 +79,8 @@ def test_copy_annotator_simple(capsys, variants_io1):
             "location": "loc1",
             "variant": "var1"
         },
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     with variants_io1 as io_manager:
@@ -96,7 +100,8 @@ def test_copy_annotator_simple(capsys, variants_io1):
 def test_copy_annotator_multi(capsys, variants_io_m, expected_df):
     opts = Box({}, default_box=True, default_box_attr=None)
 
-    section_config = VariantAnnotatorConfig(
+    section_config = AnnotationConfigParser.parse(
+        Box({}),
         name="copy",
         annotator_name="annotator_base.CopyAnnotator",
         options=opts,
@@ -104,7 +109,8 @@ def test_copy_annotator_multi(capsys, variants_io_m, expected_df):
             "location": "loc1",
             "variant": "var1"
         },
-        virtuals=[]
+        virtuals=[],
+        parse_sections=False
     )
 
     df = pd.read_csv(
