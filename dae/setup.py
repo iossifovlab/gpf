@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="gpf_dae",
-    version="3.0.0a1",
+    version="3.0.0dev",
     author="Lubomir Chorbadjiev",
     author_email="lubomir.chorbadjiev@gmail.com",
     description="GPF: Genotypes and Phenotypes in Families",
@@ -25,6 +25,13 @@ setuptools.setup(
     include_package_data=True,
     scripts=[
         'dae/tools/annotate_variant.py',
+        'dae/tools/dae2parquet.py',
+        'dae/tools/generate_common_report.py',
+        'dae/tools/generate_denovo_gene_sets.py',
+        'dae/tools/simple_pheno_import.py',
+        'dae/tools/simple_study_import.py',
+        'dae/tools/study_parquet_load.py',
+        'dae/tools/vcf2parquet.py',
         'dae/annotation/annotation_pipeline.py',
     ],
 

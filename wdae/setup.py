@@ -27,7 +27,7 @@ setuptools.setup(
     package_data={
         'gpfjs': ['static/gpfjs/*', 'static/gpfjs/assets/*'],
     },    
-    scripts=['wdae/manage.py'],
+    scripts=['wdae/wdaemanage.py'],
     # entry_points={
     #     'console_scripts': [
     #         'scgview=scgv.qtmain:main',
