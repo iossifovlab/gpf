@@ -65,8 +65,7 @@ def effect_annotator_builder(
             'options': options,
             'columns': columns,
             'annotator': 'effect_annotator.VariantEffectAnnotator',
-        }),
-        parse_sections=False
+        })
     )
 
     annotator = VariantEffectAnnotator(
