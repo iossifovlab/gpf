@@ -27,7 +27,7 @@ class AnnotatorInitializer(object):
 
     @classmethod
     def instantiate(cls, annotator_config):
-        clazz = cls._name_to_class(annotator_config.annotator_name)
+        clazz = cls._name_to_class(annotator_config.annotator)
         assert clazz is not None
         return clazz(annotator_config)
 

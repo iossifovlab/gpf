@@ -29,7 +29,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
     def _init_score_file(self):
         assert self.config.options.scores_file, \
-            [self.config.name, self.config.annotator_name]
+            [self.config.annotator, self.config.annotator]
 
         scores_filename = os.path.abspath(self.config.options.scores_file)
         assert os.path.exists(scores_filename), scores_filename
@@ -39,13 +39,13 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
 
     def collect_annotator_schema(self, schema):
         super(VariantScoreAnnotatorBase, self).collect_annotator_schema(schema)
-        for native, output in self.config.columns_config.items():
+        for native, output in self.config.columns.items():
             type_name = self.score_file.schema.columns[native].type_name
             schema.create_column(output, type_name)
 
     def _scores_not_found(self, aline):
         values = {
-            self.config.columns_config[score_name]:
+            self.config.columns[score_name]:
             self.score_file.no_score_value
             for score_name in self.score_names}
         aline.update(values)
@@ -94,7 +94,7 @@ class PositionScoreAnnotator(VariantScoreAnnotatorBase):
         total_count = sum(counts)
 
         for score_name in self.score_names:
-            column_name = self.config.columns_config[score_name]
+            column_name = self.config.columns[score_name]
             values = scores[score_name]
             assert len(values) > 0
             if len(values) == 1:
@@ -127,7 +127,7 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
             self._scores_not_found(res)
         else:
             for score_name in self.score_names:
-                column_name = self.config.columns_config[score_name]
+                column_name = self.config.columns[score_name]
                 res[column_name] = matched_df[score_name].mean()
         return res
 
@@ -146,7 +146,7 @@ class NPScoreAnnotator(VariantScoreAnnotatorBase):
         count = group_df['COUNT'].sum()
         res = {}
         for score_name in self.score_names:
-            column_name = self.config.columns_config[score_name]
+            column_name = self.config.columns[score_name]
             total_df = group_df[score_name] * group_df['COUNT']
             res[column_name] = total_df.sum()/count
 
@@ -190,7 +190,7 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
         super(PositionMultiScoreAnnotator, self).__init__(config)
         assert self.config.options.scores_directory is not None
 
-        for score_name in self.config.columns_config.keys():
+        for score_name in self.config.columns.keys():
             annotator = self._build_annotator_for(score_name)
             self.add_annotator(annotator)
 
@@ -212,18 +212,16 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
             self.config.options.to_dict(),
             default_box=True, default_box_attr=None)
         options.scores_file = score_filename
-        columns_config = {
-            score_name: self.config.columns_config[score_name]
+        columns = {
+            score_name: self.config.columns[score_name]
         }
 
-        variant_config = AnnotationConfigParser.parse(
-            Box({}),
-            name="{}.{}".format(self.config.name, score_name),
-            annotator_name="score_annotator.VariantScoreAnnotator",
-            options=options,
-            columns_config=columns_config,
-            virtuals=[],
-            parse_sections=False
+        variant_config = AnnotationConfigParser.parse_section(
+            Box({
+                'options': options,
+                'columns': columns,
+                'annotator': 'score_annotator.VariantScoreAnnotator'
+            })
         )
 
         annotator = PositionScoreAnnotator(variant_config)

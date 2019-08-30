@@ -25,7 +25,7 @@ def effect_annotator():
         # "v": "CSHL:variant",
     }, default_box=True, default_box_attr=None)
 
-    columns_config = {
+    columns = {
         'effect_type': 'effect_type_1',
         'effect_genes': 'effect_genes_1',
         'effect_gene_genes': 'effect_gene_genes_1',
@@ -35,14 +35,12 @@ def effect_annotator():
         'effect_details_details': 'effect_details_details_1'
     }
 
-    config = AnnotationConfigParser.parse(
-        Box({}),
-        name="test_annotator",
-        annotator_name="effect_annotator.VariantEffectAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[],
-        parse_sections=False
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'effect_annotator.VariantEffectAnnotator'
+        })
     )
 
     annotator = VariantEffectAnnotator(config)

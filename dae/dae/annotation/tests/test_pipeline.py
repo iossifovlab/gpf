@@ -55,25 +55,29 @@ def pipeline_sections_configuration():
 def test_parse_error_pipeline_section_missing_annotator(
         error_pipeline_sections_configuration, empty_options):
     error_configuration = error_pipeline_sections_configuration
+    configuration = error_configuration["Step0"]
+    configuration['options'] = empty_options
 
     with pytest.raises(AssertionError):
-        AnnotationConfigParser.parse_section(
-            "Step0",
-            error_configuration["Step0"],
-            empty_options)
+        AnnotationConfigParser.parse_section(configuration)
 
 
 def test_parse_annotation_section_sections(
         pipeline_sections_configuration, empty_options):
     configuration = pipeline_sections_configuration
 
-    section1 = AnnotationConfigParser.parse_section(
-        "Step1", configuration["Step1"], empty_options)
-    assert section1.name == "Step1"
+    step1_configuration = configuration["Step1"]
+    step1_configuration['options'] = empty_options
 
-    section3 = AnnotationConfigParser.parse_section(
-        "Step3", configuration["Step3"], empty_options)
-    assert section3.name == "Step3"
+    section1 = AnnotationConfigParser.parse_section(step1_configuration)
+    assert section1.annotator == \
+        "relabel_chromosome.RelabelChromosomeAnnotator"
+
+    step3_configuration = configuration["Step3"]
+    step3_configuration['options'] = empty_options
+
+    section3 = AnnotationConfigParser.parse_section(step3_configuration)
+    assert section3.annotator == "annotator_base.CopyAnnotator"
 
 
 def test_build_pipeline_configuration():
@@ -93,8 +97,8 @@ def test_build_pipeline_configuration():
     )
     assert config is not None
 
-    for section in config.pipeline_sections:
-        print(section.name, "->", section.output_columns)
+    for section in config.sections:
+        print(section.annotator, "->", section.output_columns)
 
     # assert config.output_length() == 21
     # assert config.default_options.region is None

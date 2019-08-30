@@ -99,13 +99,13 @@ class CopyAnnotator(AnnotatorBase):
         super(CopyAnnotator, self).__init__(config)
 
     def collect_annotator_schema(self, schema):
-        for key, value in self.config.columns_config.items():
+        for key, value in self.config.columns.items():
             assert key in schema.columns, [key, schema.columns]
             schema.columns[value] = schema.columns[key]
 
     def line_annotation(self, annotation_line, variant=None):
         data = {}
-        for key, value in self.config.columns_config.items():
+        for key, value in self.config.columns.items():
             data[value] = annotation_line[key]
         annotation_line.update(data)
 

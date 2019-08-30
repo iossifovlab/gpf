@@ -30,19 +30,17 @@ def test_vcf_info_extractor(capsys, vcf_io):
         "mode": "overwrite",
     }, default_box=True, default_box_attr=None)
 
-    section_config = AnnotationConfigParser.parse(
-        Box({}),
-        name="vcf info extract test",
-        annotator_name="vcf_info_extractor.VCFInfoExtractor",
-        options=opts,
-        columns_config={
-            "AC": "extracted-AC",
-            "AB": "extracted-AB",
-            "AT": "extracted-AT",
-            "AZ": "extracted-AZ"
-        },
-        virtuals=[],
-        parse_sections=False
+    section_config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': opts,
+            'columns': {
+                'AC': 'extracted-AC',
+                'AB': 'extracted-AB',
+                'AT': 'extracted-AT',
+                'AZ': 'extracted-AZ'
+            },
+            'annotator': 'vcf_info_extractor.VCFInfoExtractor'
+        })
     )
 
     with vcf_io as io_manager:

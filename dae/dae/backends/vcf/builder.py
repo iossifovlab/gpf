@@ -50,7 +50,7 @@ def effect_annotator_builder(
         'p': 'position',
     }, default_box=True, default_box_attr=None)
 
-    columns_config = {
+    columns = {
         'effect_type': 'effect_type',
         'effect_genes': 'effect_genes',
         'effect_gene_genes': 'effect_gene_genes',
@@ -61,12 +61,11 @@ def effect_annotator_builder(
     }
 
     config = AnnotationConfigParser.parse(
-        Box({}),
-        name="test_annotator",
-        annotator_name="effect_annotator.VariantEffectAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[],
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'effect_annotator.VariantEffectAnnotator',
+        }),
         parse_sections=False
     )
 

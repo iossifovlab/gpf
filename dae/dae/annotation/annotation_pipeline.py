@@ -51,10 +51,10 @@ class PipelineAnnotator(CompositeVariantAnnotator):
             AnnotationConfigParser.read_and_parse_file_configuration(
                 options, config_file, work_dir, defaults
             )
-        assert pipeline_config.pipeline_sections
+        assert pipeline_config.sections
 
         pipeline = PipelineAnnotator(pipeline_config)
-        for section_config in pipeline_config.pipeline_sections:
+        for section_config in pipeline_config.sections:
             annotator = AnnotatorInitializer.instantiate(section_config)
             pipeline.add_annotator(annotator)
             output_columns = [

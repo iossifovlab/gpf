@@ -23,15 +23,15 @@ class LiftOverAnnotator(VariantAnnotatorBase):
             assert self.chrom is not None
             assert self.pos is not None
 
-        self.columns_config = self.config.columns_config
-        assert 'new_x' in self.columns_config or \
-            ('new_c' in self.columns_config and 'new_p' in self.columns_config)
+        self.columns = self.config.columns
+        assert 'new_x' in self.columns or \
+            ('new_c' in self.columns and 'new_p' in self.columns)
 
         self.lift_over = self.build_lift_over(self.config.options.chain_file)
 
     def collect_annotator_schema(self, schema):
         super(LiftOverAnnotator, self).collect_annotator_schema(schema)
-        for key, value in self.columns_config.items():
+        for key, value in self.columns.items():
             if key == 'new_x' or key == 'new_c':
                 schema.columns[value] = \
                     Schema.produce_type('str')
@@ -90,68 +90,9 @@ class LiftOverAnnotator(VariantAnnotatorBase):
             new_p = converted_coordinates[0][1] + 1
             new_x = '{}:{}'.format(new_c, new_p)
 
-        if 'new_x' in self.columns_config:
-            aline[self.columns_config['new_x']] = new_x
-        if 'new_c' in self.columns_config:
-            aline[self.columns_config['new_c']] = new_c
-        if 'new_p' in self.columns_config:
-            aline[self.columns_config['new_p']] = new_p
-
-
-# def get_argument_parser():
-#     """
-#     LiftOverAnnotator options::
-
-#         usage: lift_over_variants.py [-h] [-v] [-c C] [-p P]
-#                             [-x X] -F FILE [-H]
-#                             [--new-c NEW_C] [--new-p NEW_P] [--new-x NEW_X]
-#                             [infile] [outfile]
-
-#         Program to annotate variants (substitutions & indels & cnvs)
-
-#         positional arguments:
-#           infile                path to input file; defaults to stdin
-#           outfile               path to output file; defaults to stdout
-
-#         optional arguments:
-#           -h, --help            show this help message and exit
-#           -v, --version         show program's version number and exit
-#           -c C                  chromosome column number/name
-#           -p P                  position column number/name
-#           -x X                  location (chr:pos) column number/name
-#           -F FILE, --file FILE  lift over description file path
-#           -H                    no header in the input file
-#           --new-c NEW_C         name for the generated chromosome column
-#           --new-p NEW_P         name for the generated position column
-#           --new-x NEW_X         name for the generated location (chr:pos)
-#                                 column
-#     """
-#     desc = """Program to annotate variants (substitutions & indels & cnvs)"""
-#     parser = argparse.ArgumentParser(
-#         version='%prog version 2.2 10/October/2013', description=desc)
-#     parser.add_argument(
-#         '-c', help='chromosome column number/name', action='store')
-#     parser.add_argument(
-#         '-p', help='position column number/name', action='store')
-#     parser.add_argument(
-#         '-x', help='location (chr:pos) column number/name', action='store')
-#     parser.add_argument(
-#         '-F', '--file', help='lift over description file path',
-#         required=True, action='store')
-#     parser.add_argument(
-#         '-H', help='no header in the input file', default=False,
-#         action='store_true', dest='no_header')
-#     parser.add_argument(
-#         '--new-c', help='name for the generated chromosome column',
-#         default='chrLiftOver', action='store')
-#     parser.add_argument(
-#         '--new-p', help='name for the generated position column',
-#         default='positionLiftOver', action='store')
-#     parser.add_argument(
-#         '--new-x', help='name for the generated location (chr:pos) column',
-#         default='locationLiftOver', action='store')
-#     return parser
-
-
-# if __name__ == "__main__":
-#     main(get_argument_parser(), LiftOverAnnotator)
+        if 'new_x' in self.columns:
+            aline[self.columns['new_x']] = new_x
+        if 'new_c' in self.columns:
+            aline[self.columns['new_c']] = new_c
+        if 'new_p' in self.columns:
+            aline[self.columns['new_p']] = new_p

@@ -14,16 +14,14 @@ Y:4372
 def test_cleanup_annotator(capsys, variants_io):
     opts = Box({}, default_box=True, default_box_attr=None)
 
-    section_config = AnnotationConfigParser.parse(
-        Box({}),
-        name="cleanup",
-        annotator_name="cleanup_annotator.CleanupAnnotator",
-        options=opts,
-        columns_config={
-            "cleanup": "id, variant",
-        },
-        virtuals=[],
-        parse_sections=False
+    section_config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': opts,
+            'columns': {
+                'cleanup': 'id, variant',
+            },
+            'annotator': 'cleanup_annotator.CleanupAnnotator'
+        })
     )
 
     with variants_io('fixtures/input.tsv') as io_manager:

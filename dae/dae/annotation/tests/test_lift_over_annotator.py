@@ -31,14 +31,12 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected):
         # "new_p": "hg19_pos",
     }
 
-    config = AnnotationConfigParser.parse(
-        Box({}),
-        name="Test Lift Over Annotator",
-        annotator_name="lift_over_annotator.LiftOverAnnotator",
-        options=options,
-        columns_config=columns,
-        virtuals=[],
-        parse_sections=False
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'lift_over_annotator.LiftOverAnnotator'
+        })
     )
     with mocker.patch(
             "dae.annotation.tools.lift_over_annotator."

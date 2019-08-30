@@ -50,17 +50,15 @@ def test_create_file_io():
 def test_annotator_base_simple():
     opts = Box({}, default_box=True, default_box_attr=None)
 
-    section_config = AnnotationConfigParser.parse(
-        Box({}),
-        name="base",
-        annotator_name="annotator_base.AnnotatorBase",
-        options=opts,
-        columns_config={
-            "CSHL:chr": "chr",
-            "CSHL:position": "pos"
-        },
-        virtuals=[],
-        parse_sections=False
+    section_config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': opts,
+            'columns': {
+                'CSHL:chr': 'chr',
+                'CSHL:position': 'pos'
+            },
+            'annotator': 'annotator_base.AnnotatorBase'
+        })
     )
 
     annotator = AnnotatorBase(section_config)
@@ -70,17 +68,15 @@ def test_annotator_base_simple():
 def test_copy_annotator_simple(capsys, variants_io1):
     opts = Box({}, default_box=True, default_box_attr=None)
 
-    section_config = AnnotationConfigParser.parse(
-        Box({}),
-        name="copy",
-        annotator_name="annotator_base.CopyAnnotator",
-        options=opts,
-        columns_config={
-            "location": "loc1",
-            "variant": "var1"
-        },
-        virtuals=[],
-        parse_sections=False
+    section_config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': opts,
+            'columns': {
+                'location': 'loc1',
+                'variant': 'var1'
+            },
+            'annotator': 'annotator_base.CopyAnnotator'
+        })
     )
 
     with variants_io1 as io_manager:
@@ -100,17 +96,15 @@ def test_copy_annotator_simple(capsys, variants_io1):
 def test_copy_annotator_multi(capsys, variants_io_m, expected_df):
     opts = Box({}, default_box=True, default_box_attr=None)
 
-    section_config = AnnotationConfigParser.parse(
-        Box({}),
-        name="copy",
-        annotator_name="annotator_base.CopyAnnotator",
-        options=opts,
-        columns_config={
-            "location": "loc1",
-            "variant": "var1"
-        },
-        virtuals=[],
-        parse_sections=False
+    section_config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': opts,
+            'columns': {
+                'location': 'loc1',
+                'variant': 'var1'
+            },
+            'annotator': 'annotator_base.CopyAnnotator'
+        })
     )
 
     df = pd.read_csv(

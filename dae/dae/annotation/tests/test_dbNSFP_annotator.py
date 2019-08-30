@@ -37,19 +37,17 @@ def test_dbNSFP_annotator(mocker, variants_io, expected_df, capsys):
             "dbNSFP_config": "test_missense_config.conf"
         }, default_box=True, default_box_attr=None)
 
-        columns_config = {
+        columns = {
             'score': 'RESULT_dbNSFP',
             'score2': 'RESULT_dbNSFP_2'
         }
 
-        config = AnnotationConfigParser.parse(
-            Box({}),
-            name="test_annotator",
-            annotator_name="dbNSFP_annotator.dbNSFPAnnotator",
-            options=options,
-            columns_config=columns_config,
-            virtuals=[],
-            parse_sections=False
+        config = AnnotationConfigParser.parse_section(
+            Box({
+                'options': options,
+                'columns': columns,
+                'annotator': 'dbNSFP_annotator.dbNSFPAnnotator'
+            })
         )
 
         with variants_io("fixtures/multi_chrom_input.tsv") as io_manager:

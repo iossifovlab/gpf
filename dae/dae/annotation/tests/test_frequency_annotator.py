@@ -38,19 +38,17 @@ def test_frequency_annotator(mocker, variants_io, expected_df, capsys):
                     "fixtures/TESTFreq/test_freq.tsv.gz")
         }, default_box=True, default_box_attr=None)
 
-        columns_config = {
+        columns = {
             'all_altFreq': 'RESULT_FREQ',
             'all_altFreq2': 'RESULT_FREQ_2'
         }
 
-        config = AnnotationConfigParser.parse(
-            Box({}),
-            name="test_annotator",
-            annotator_name="frequency_annotator.FrequencyAnnotator",
-            options=options,
-            columns_config=columns_config,
-            virtuals=[],
-            parse_sections=False
+        config = AnnotationConfigParser.parse_section(
+            Box({
+                'options': options,
+                'columns': columns,
+                'annotator': 'frequency_annotator.FrequencyAnnotator'
+            })
         )
 
         with variants_io("fixtures/freq_test_1.tsv") as io_manager:

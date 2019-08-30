@@ -90,14 +90,14 @@ def test_bigwig_access_indels(expected_df, capsys, variants_io):
             "fixtures/TESTbigwig/TEST_bigwig_score.bw")
     }, default_box=True, default_box_attr=None)
 
-    config = AnnotationConfigParser.parse(
-        Box({}),
-        name="test_bigwig_annotator",
-        annotator_name="score_annotator.PositionScoreAnnotator",
-        options=options,
-        columns_config={'TEST_bigwig_score': "RESULT_bigwig_score"},
-        virtuals=[],
-        parse_sections=False
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': {
+                'TEST_bigwig_score': 'RESULT_bigwig_score'
+            },
+            'annotator': 'score_annotator.PositionScoreAnnotator'
+        })
     )
     print(config.options)
     print(type(config.options))
