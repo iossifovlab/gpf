@@ -7,13 +7,13 @@ import time
 import glob
 import shutil
 
-from configurable_entities.configuration import DAEConfig
-from backends.import_commons import construct_import_annotation_pipeline
+from dae.configurable_entities.configuration import DAEConfig
+from dae.backends.import_commons import construct_import_annotation_pipeline
 
-from tools.vcf2parquet import import_vcf
-from tools.dae2parquet import import_dae_denovo
-from backends.impala.impala_helpers import ImpalaHelpers
-from backends.impala.hdfs_helpers import HdfsHelpers
+from dae.tools.vcf2parquet import import_vcf
+from dae.tools.dae2parquet import import_dae_denovo
+from dae.backends.impala.impala_helpers import ImpalaHelpers
+from dae.backends.impala.hdfs_helpers import HdfsHelpers
 
 
 def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
