@@ -1,9 +1,9 @@
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 from dae.RegionOperations import Region
 
 
-class GenomesConfigParser(DAEConfigParser):
+class GenomesDBConfigParser(ConfigParserBase):
 
     @classmethod
     def _get_regions(cls, regions):
@@ -31,7 +31,7 @@ class GenomesConfigParser(DAEConfigParser):
 
     @classmethod
     def parse(cls, config):
-        config = super(GenomesConfigParser, cls).parse(config)
+        config = super(GenomesDBConfigParser, cls).parse(config)
 
         config['genome'] = cls._get_genomes(config.get('genome', {}))
         config['mito_genome'] = cls._get_genomes(config.get('mito_genome', {}))

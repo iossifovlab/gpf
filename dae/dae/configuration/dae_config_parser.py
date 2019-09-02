@@ -17,7 +17,7 @@ class CaseSensitiveConfigParser(ConfigParser):
         return str(option)
 
 
-class DAEConfigParser(object):
+class ConfigParserBase(object):
 
     ENABLED_DIR = '.'
 

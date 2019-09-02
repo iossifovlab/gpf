@@ -1,7 +1,7 @@
 import traceback
 import logging
 
-from dae.gene.config import GeneInfoConfigParser
+from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.gene_term import loadGeneTerm
 
 LOGGER = logging.getLogger(__name__)

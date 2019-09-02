@@ -6,14 +6,14 @@ Created on Feb 16, 2017
 import sys
 from box import Box
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 from dae.gene.gene_weight_config_parser import GeneWeightConfigParser
 from dae.gene.gene_term_config_parser import GeneTermConfigParser
 from dae.gene.gene_term import loadGeneTerm
 
 
-class GeneInfoConfigParser(DAEConfigParser):
+class GeneInfoConfigParser(ConfigParserBase):
     """
     Helper class for accessing DAE and geneInfo configuration.
     """
@@ -25,7 +25,7 @@ class GeneInfoConfigParser(DAEConfigParser):
         config['geneWeights'] = GeneWeightConfigParser.parse(config)
         config['geneTerms'] = GeneTermConfigParser.parse(config)
         config['chromosomes'] = \
-            DAEConfigParser.parse(config.get('chromosomes', None))
+            ConfigParserBase.parse(config.get('chromosomes', None))
 
         return config
 
@@ -60,7 +60,7 @@ class GeneInfoConfigParser(DAEConfigParser):
         return gt
 
 
-class GeneInfoDB(DAEConfigParser):
+class GeneInfoDB(ConfigParserBase):
 
     SECTION = 'geneInfo'
 

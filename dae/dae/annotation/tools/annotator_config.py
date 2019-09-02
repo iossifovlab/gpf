@@ -1,6 +1,6 @@
 from dae.DAE import genomesDB
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 
 def annotation_config_cli_options(dae_config):
@@ -47,7 +47,7 @@ def annotation_config_cli_options(dae_config):
     return options
 
 
-class AnnotationConfigParser(DAEConfigParser):
+class AnnotationConfigParser(ConfigParserBase):
 
     SPLIT_STR_LISTS = (
         'virtual_columns',
@@ -148,7 +148,7 @@ class AnnotationConfigParser(DAEConfigParser):
         return config
 
 
-class ScoreConfigParser(DAEConfigParser):
+class ScoreFileConfigParser(ConfigParserBase):
 
     SPLIT_STR_LISTS = (
         'header',

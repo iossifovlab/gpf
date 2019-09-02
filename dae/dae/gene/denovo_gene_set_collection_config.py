@@ -1,11 +1,11 @@
 import os
 from copy import deepcopy
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 from dae.variants.attributes import Sex
 
 
-class DenovoGeneSetCollectionConfigParser(DAEConfigParser):
+class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
 
     SECTION = 'denovoGeneSets'
 

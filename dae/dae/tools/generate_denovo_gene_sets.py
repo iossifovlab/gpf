@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import argparse
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 from dae.gene.denovo_gene_set_collection_facade import \
     DenovoGeneSetCollectionFacade
 from dae.studies.factory import VariantsDb
@@ -22,7 +22,7 @@ def main(options=None):
 
     args = parser.parse_args(options)
 
-    config = DAEConfig.read_and_parse_file_configuration()
+    config = DAEConfigParser.read_and_parse_file_configuration()
     variants_db = VariantsDb(config)
     dgscf = DenovoGeneSetCollectionFacade(variants_db)
 

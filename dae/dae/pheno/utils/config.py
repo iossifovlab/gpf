@@ -5,10 +5,10 @@ Created on Aug 23, 2016
 '''
 import os
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 
-class PhenoConfig(DAEConfigParser):
+class PhenoConfigParser(ConfigParserBase):
 
     @staticmethod
     def _assert_pheno_paths(configs):
@@ -45,7 +45,7 @@ class PhenoConfig(DAEConfigParser):
 
     @classmethod
     def read_file_configuration(cls, config_file, work_dir, defaults=None):
-        config = super(PhenoConfig, cls).read_file_configuration(
+        config = super(PhenoConfigParser, cls).read_file_configuration(
             config_file, work_dir, defaults=None)
         if not config or not config.pheno_db:
             return None

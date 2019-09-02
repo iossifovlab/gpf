@@ -6,10 +6,10 @@ Created on Nov 7, 2016
 import os
 from copy import deepcopy
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 
-class EnrichmentConfigParser(DAEConfigParser):
+class EnrichmentConfigParser(ConfigParserBase):
 
     SECTION = 'enrichment'
 

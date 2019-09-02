@@ -7,7 +7,7 @@ import time
 import glob
 import shutil
 
-from configuration.configuration import DAEConfig
+from configuration.configuration import DAEConfigParser
 from backends.import_commons import construct_import_annotation_pipeline
 
 from tools.vcf2parquet import import_vcf
@@ -149,7 +149,7 @@ def generate_common_report(dae_config, study_id):
 
 
 if __name__ == "__main__":
-    dae_config = DAEConfig.read_and_parse_file_configuration()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
     if argv.id is not None:
         study_id = argv.id

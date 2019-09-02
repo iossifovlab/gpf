@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 from dae.studies.factory import VariantsDb
 
 from datasets_api.studies_manager import StudiesManager
@@ -20,7 +20,7 @@ def fixtures_dir():
 
 @pytest.fixture()
 def dae_config_fixture():
-    dae_config = DAEConfig.read_and_parse_file_configuration(
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
         work_dir=fixtures_dir())
     return dae_config
 

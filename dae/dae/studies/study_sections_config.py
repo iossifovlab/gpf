@@ -1,32 +1,33 @@
-from dae.studies.people_group_config import PeopleGroupConfig
-from dae.studies.genotype_browser_config import GenotypeBrowserConfig
+from dae.studies.people_group_config_parser import PeopleGroupConfigParser
+from dae.studies.genotype_browser_config_parser import \
+    GenotypeBrowserConfigParser
 
 
-class StudyWdaeMixin(object):
+class StudySectionsConfigMixin(object):
 
     @classmethod
     def _fill_people_group_config(cls, config_section, config):
-        if PeopleGroupConfig.SECTION not in config:
+        if PeopleGroupConfigParser.SECTION not in config:
             return None
-        people_group_config = PeopleGroupConfig.parse(config)
+        people_group_config = PeopleGroupConfigParser.parse(config)
         if people_group_config is not None and \
-                PeopleGroupConfig.SECTION in people_group_config:
+                PeopleGroupConfigParser.SECTION in people_group_config:
             people_group_config = \
-                people_group_config[PeopleGroupConfig.SECTION]
+                people_group_config[PeopleGroupConfigParser.SECTION]
             if 'peopleGroup' in people_group_config:
                 config_section['peopleGroupConfig'] = people_group_config
 
     @classmethod
     def _fill_genotype_browser_config(cls, config_section, config):
-        if GenotypeBrowserConfig.SECTION not in config:
+        if GenotypeBrowserConfigParser.SECTION not in config:
             return None
-        genotype_browser_config = GenotypeBrowserConfig.parse(config)
+        genotype_browser_config = GenotypeBrowserConfigParser.parse(config)
         if genotype_browser_config is not None and \
                 config_section.get('genotypeBrowser', False) is True:
             config_section['genotypeBrowserConfig'] = genotype_browser_config
 
     @classmethod
-    def _fill_wdae_config(cls, config_section, config):
+    def _fill_sections_config(cls, config_section, config):
         cls._fill_people_group_config(config_section, config)
         cls._fill_genotype_browser_config(config_section, config)
 

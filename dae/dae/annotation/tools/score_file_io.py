@@ -12,7 +12,7 @@ from dae.annotation.tools.file_io_tsv import TSVFormat, TabixReader, \
         handle_chrom_prefix
 from dae.annotation.tools.schema import Schema
 
-from dae.annotation.tools.annotator_config import ScoreConfigParser
+from dae.annotation.tools.annotator_config import ScoreFileConfigParser
 
 try:
     bigwig_enabled = True
@@ -72,7 +72,7 @@ class ScoreFile(object):
         if config_filename is None:
             config_filename = "{}.conf".format(self.score_filename)
 
-        self.config = ScoreConfigParser.read_and_parse_file_configuration(
+        self.config = ScoreFileConfigParser.read_and_parse_file_configuration(
             config_filename, '')
         assert 'header' in self.config.general
         assert 'score' in self.config.columns

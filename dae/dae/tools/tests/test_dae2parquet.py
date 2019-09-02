@@ -2,7 +2,7 @@ import pytest
 
 from box import Box
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 from dae.tools.dae2parquet import parse_cli_arguments, import_dae_denovo, \
     dae_build_transmitted, dae_build_makefile
 
@@ -28,7 +28,7 @@ def test_dae2parquet_denovo(
         dae_denovo_config.family_filename,
         dae_denovo_config.denovo_filename,
     ]
-    dae_config = DAEConfig.read_and_parse_file_configuration()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
     argv = parse_cli_arguments(dae_config, argv)
 
@@ -86,7 +86,7 @@ def test_dae2parquet_transmitted(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
     ]
-    dae_config = DAEConfig.read_and_parse_file_configuration()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
     argv = parse_cli_arguments(dae_config, argv)
 
@@ -145,7 +145,7 @@ def test_dae2parquet_make(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
     ]
-    dae_config = DAEConfig.read_and_parse_file_configuration()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
     argv = parse_cli_arguments(dae_config, argv)
 
@@ -171,7 +171,7 @@ def dae_iossifov2014_thrift(
             config.family_filename,
             config.denovo_filename,
         ]
-        dae_config = DAEConfig.read_and_parse_file_configuration()
+        dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
         argv = parse_cli_arguments(dae_config, argv)
 

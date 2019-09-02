@@ -6,7 +6,7 @@ from copy import deepcopy
 from collections import OrderedDict
 
 from dae.studies.factory import VariantsDb
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 
 from dae.common_reports.filter import Filter, FilterObject, FilterObjects
 from dae.common_reports.people_group_info import PeopleGroupsInfo
@@ -30,7 +30,7 @@ def datasets_dir():
 
 @pytest.fixture(scope='session')
 def dae_config_fixture():
-    dae_config = DAEConfig.read_and_parse_file_configuration(
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
         work_dir=fixtures_dir())
     return dae_config
 

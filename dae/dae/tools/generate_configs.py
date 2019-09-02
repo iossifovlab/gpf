@@ -9,7 +9,7 @@ from collections import OrderedDict
 from dae.annotation.tools.annotator_config import AnnotationConfigParser, \
     VariantAnnotatorConfig
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
 from dae.configuration.utils import parser_to_dict, flatten_dict
 
@@ -32,7 +32,7 @@ class PipelineConfigWrapper(VariantAnnotatorConfig):
     def build(cls, config_file):
         options = Box({}, default_box=True, default_box_attr=None)
 
-        dae_config = DAEConfig.read_and_parse_file_configuration()
+        dae_config = DAEConfigParser.read_and_parse_file_configuration()
         defaults = dae_config.annotation_defaults
 
         configuration = \

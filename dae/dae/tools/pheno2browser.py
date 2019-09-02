@@ -9,7 +9,7 @@ import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import traceback
 from pheno import pheno_db
-from pheno.pheno_regression import PhenoRegressions
+from pheno.pheno_regression_config_parser import PhenoRegressionConfigParser
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
 import hashlib
 
@@ -69,8 +69,10 @@ def build_pheno_browser(dbfile, pheno_name, output_dir, regression_conf_path):
     phenodb = pheno_db.PhenoDB(dbfile=dbfile)
     phenodb.load()
 
-    pheno_regressions = PhenoRegressions.read_and_parse_file_configuration(
-        regression_conf_path, '')
+    pheno_regressions = \
+        PhenoRegressionConfigParser.read_and_parse_file_configuration(
+            regression_conf_path, ''
+        )
 
     prep = PreparePhenoBrowserBase(pheno_name, phenodb,
                                    output_dir, pheno_regressions)

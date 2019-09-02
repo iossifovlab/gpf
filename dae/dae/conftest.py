@@ -10,7 +10,7 @@ from io import StringIO
 
 from box import Box
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
@@ -85,7 +85,7 @@ def annotation_pipeline_config():
 
 @pytest.fixture(scope='session')
 def annotation_pipeline_default_config():
-    dae_config = DAEConfig.read_and_parse_file_configuration()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
     return dae_config.annotation.conf_file
 
 
@@ -418,7 +418,7 @@ def data_import(
     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     test_hdfs.mkdir(temp_dirname)
 
-    dae_config = DAEConfig.read_and_parse_file_configuration()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
     annotation_pipeline = construct_import_annotation_pipeline(dae_config)
 
     def fin():

@@ -1,7 +1,7 @@
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 
-class ScoreConfigParser(DAEConfigParser):
+class ScoreConfigParser(ConfigParserBase):
 
     CAST_TO_INT = (
         'bins',

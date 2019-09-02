@@ -1,7 +1,7 @@
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 
-class PeopleGroupConfig(DAEConfigParser):
+class PeopleGroupConfigParser(ConfigParserBase):
 
     SECTION = 'peopleGroup'
 
@@ -65,7 +65,7 @@ class PeopleGroupConfig(DAEConfigParser):
 
     @classmethod
     def parse(cls, config):
-        config = super(PeopleGroupConfig, cls).parse(config)
+        config = super(PeopleGroupConfigParser, cls).parse(config)
         config[cls.SECTION]['peopleGroup'] = \
             cls._get_people_groups(config[cls.SECTION])
 

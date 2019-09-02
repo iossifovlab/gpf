@@ -1,10 +1,10 @@
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 
 from dae.studies.factory import VariantsDb
 
 from dae.common_reports.common_report_facade import CommonReportFacade
 
-from dae.gene.config import GeneInfoConfigParser
+from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.scores import ScoreLoader
 from dae.gene.weights import WeightsLoader
 from dae.gene.score_config_parser import ScoreConfigParser
@@ -36,7 +36,7 @@ class StudiesManager(object):
 
     def __init__(self, dae_config=None):
         if dae_config is None:
-            dae_config = DAEConfig.read_and_parse_file_configuration()
+            dae_config = DAEConfigParser.read_and_parse_file_configuration()
         self.dae_config = dae_config
         self.vdb = None
 

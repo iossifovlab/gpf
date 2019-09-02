@@ -3,12 +3,13 @@ Created on Apr 10, 2017
 
 @author: lubo
 '''
-from dae.pheno.pheno_regression import PhenoRegressions
+from dae.pheno.pheno_regression_config_parser import \
+    PhenoRegressionConfigParser
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
 
 
 def test_pheno_regressions_from_conf_path(regressions_conf):
-    regs = PhenoRegressions.read_and_parse_file_configuration(
+    regs = PhenoRegressionConfigParser.read_and_parse_file_configuration(
         regressions_conf, '')
     expected_regs = {
         'reg1': {
@@ -51,7 +52,7 @@ def test_pheno_regressions_from_conf_path(regressions_conf):
 
 
 def test_has_regression_measure(fphdb, output_dir, regressions_conf):
-    reg = PhenoRegressions.read_and_parse_file_configuration(
+    reg = PhenoRegressionConfigParser.read_and_parse_file_configuration(
         regressions_conf, '')
     prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
 

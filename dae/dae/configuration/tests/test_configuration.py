@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 
 
 def relative_to_this_test_folder(path):
@@ -19,13 +19,13 @@ def fixturedir():
 @pytest.fixture
 def dae_config(fixturedir):
     filename = "dae_test.conf"
-    config = DAEConfig.read_and_parse_file_configuration(
+    config = DAEConfigParser.read_and_parse_file_configuration(
         config_file=filename, work_dir=fixturedir, environment_override=False)
     return config
 
 
 def test_configuration_sections_simple(fixturedir):
-    sections = DAEConfig.read_and_parse_file_configuration(
+    sections = DAEConfigParser.read_and_parse_file_configuration(
         "test_config.conf",
         fixturedir
     )
@@ -129,7 +129,7 @@ def test_dae_config_override_environment(monkeypatch, fixturedir):
     monkeypatch.setattr(os, 'environ', envs)
 
     filename = "dae_test.conf"
-    config = DAEConfig.read_and_parse_file_configuration(
+    config = DAEConfigParser.read_and_parse_file_configuration(
         config_file=filename, work_dir=fixturedir, environment_override=True
     )
 
@@ -161,7 +161,7 @@ def test_dae_config_non_override_environment(monkeypatch, fixturedir):
     monkeypatch.setattr(os, 'environ', envs)
 
     filename = "dae_test.conf"
-    config = DAEConfig.read_and_parse_file_configuration(
+    config = DAEConfigParser.read_and_parse_file_configuration(
         config_file=filename, work_dir=fixturedir, environment_override=False
     )
 
@@ -195,7 +195,7 @@ def test_dae_config_override_params(fixturedir):
         }
     }
 
-    config = DAEConfig.read_and_parse_file_configuration(
+    config = DAEConfigParser.read_and_parse_file_configuration(
         config_file=filename, work_dir=fixturedir,
         defaults={'override': default_sections}, environment_override=False
     )
@@ -242,7 +242,7 @@ def test_dae_config_override_environment_and_params(monkeypatch, fixturedir):
         }
     }
 
-    config = DAEConfig.read_and_parse_file_configuration(
+    config = DAEConfigParser.read_and_parse_file_configuration(
         config_file=filename, work_dir=fixturedir,
         defaults={'override': default_sections}, environment_override=True
     )

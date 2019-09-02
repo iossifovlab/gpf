@@ -5,7 +5,7 @@ from dae.gene.denovo_gene_set_collection_config import \
     DenovoGeneSetCollectionConfigParser
 from dae.gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 from dae.studies.factory import VariantsDb
 
 from datasets_api.studies_manager import StudiesManager
@@ -18,7 +18,7 @@ def fixtures_dir():
 
 @pytest.fixture(scope='function')
 def dae_config_fixture():
-    dae_config = DAEConfig.read_and_parse_file_configuration(
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
         work_dir=fixtures_dir())
     return dae_config
 

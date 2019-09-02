@@ -16,7 +16,7 @@ from dae.annotation.tools.file_io import IOType, IOManager
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 from dae.annotation.tools.utils import AnnotatorInitializer
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 
 
 def run_tabix(filename):
@@ -131,7 +131,7 @@ def main_cli_options(dae_config):
 
 
 def pipeline_main(argv):
-    dae_config = DAEConfig.read_and_parse_file_configuration()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
     desc = "Program to annotate variants combining multiple annotating tools"
     parser = argparse.ArgumentParser(

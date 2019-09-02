@@ -11,10 +11,10 @@ from dae.pheno.prepare.individuals2ped import InternalCsvIndividualsReader
 import tempfile
 import shutil
 from dae.pheno.common import default_config
-from dae.pheno.utils.configuration import PhenoConfig
+from dae.pheno.utils.config import PhenoConfigParser
 from box import Box
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 
 
 def relative_to_this_folder(path):
@@ -64,7 +64,7 @@ def fixtures_dir():
 
 @pytest.fixture(scope='session')
 def fake_dae_conf():
-    return DAEConfig.read_and_parse_file_configuration(work_dir=fixtures_dir())
+    return DAEConfigParser.read_and_parse_file_configuration(work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='session')
@@ -109,7 +109,7 @@ def dummy_pheno_missing_files_conf():
 
 @pytest.fixture(scope='session')
 def fake_pheno_config(fake_dae_conf):
-    return PhenoConfig.read_directory_configurations(
+    return PhenoConfigParser.read_directory_configurations(
         fake_dae_conf.pheno_db.dir)
 
 

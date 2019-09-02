@@ -1,10 +1,10 @@
 import os
 
-from dae.studies.study_wdae_config import StudyWdaeMixin
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.studies.study_sections_config import StudySectionsConfigMixin
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 
-class StudyConfigParserBase(DAEConfigParser, StudyWdaeMixin):
+class StudyConfigParserBase(ConfigParserBase, StudySectionsConfigMixin):
 
     SPLIT_STR_SETS = (
         'phenotypes',
@@ -33,7 +33,7 @@ class StudyConfigParserBase(DAEConfigParser, StudyWdaeMixin):
             return None
 
         config_section = config[cls.SECTION]
-        cls._fill_wdae_config(config_section, config)
+        cls._fill_sections_config(config_section, config)
 
         assert config_section.id
 

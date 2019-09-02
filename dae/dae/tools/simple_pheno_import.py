@@ -12,7 +12,7 @@ from pheno.common import default_config, dump_config, check_config_pheno_db
 from pheno.prepare.ped_prepare import PrepareVariables
 from tools.pheno2browser import build_pheno_browser
 
-from configuration.configuration import DAEConfig
+from configuration.configuration import DAEConfigParser
 
 
 def pheno_cli_parser():
@@ -99,7 +99,7 @@ def main(argv):
     try:
         # Setup argument parser
 
-        dae_conf = DAEConfig.read_and_parse_file_configuration()
+        dae_conf = DAEConfigParser.read_and_parse_file_configuration()
 
         parser = pheno_cli_parser()
         args = parser.parse_args(argv)

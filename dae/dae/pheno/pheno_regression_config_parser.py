@@ -3,10 +3,10 @@ Created on Sep 18, 2017
 
 @author: lubo
 '''
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 
-class PhenoRegressions(DAEConfigParser):
+class PhenoRegressionConfigParser(ConfigParserBase):
 
     @staticmethod
     def _get_regression(regression):
@@ -17,7 +17,7 @@ class PhenoRegressions(DAEConfigParser):
 
     @classmethod
     def parse(cls, config):
-        config = super(PhenoRegressions, cls).parse_section(config)
+        config = super(PhenoRegressionConfigParser, cls).parse_section(config)
 
         config['regression'] = cls._get_regression(config['regression'])
 

@@ -3,10 +3,10 @@ import os
 from collections import OrderedDict
 from copy import deepcopy
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 
-class CommonReportsConfigParser(DAEConfigParser):
+class CommonReportsConfigParser(ConfigParserBase):
 
     SECTION = 'commonReport'
 

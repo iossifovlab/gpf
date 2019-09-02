@@ -11,10 +11,10 @@ from dae.studies.dataset_facade import DatasetFacade
 from dae.studies.dataset_config_parser import DatasetConfigParser
 from dae.studies.factory import VariantsDb
 
-from dae.gene.config import GeneInfoConfigParser
+from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.weights import WeightsLoader
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 
 
 def fixtures_dir():
@@ -34,7 +34,7 @@ def datasets_dir():
 
 @pytest.fixture(scope='session')
 def dae_config_fixture():
-    dae_config = DAEConfig.read_and_parse_file_configuration(
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
         work_dir=fixtures_dir())
     return dae_config
 

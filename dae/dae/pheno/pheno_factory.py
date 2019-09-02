@@ -5,8 +5,8 @@ Created on Dec 8, 2016
 '''
 import logging
 
-from dae.configuration.configuration import DAEConfig
-from dae.pheno.utils.configuration import PhenoConfig
+from dae.configuration.configuration import DAEConfigParser
+from dae.pheno.utils.config import PhenoConfigParser
 
 
 LOGGER = logging.getLogger(__name__)
@@ -17,9 +17,9 @@ class PhenoFactory(object):
     def __init__(self, dae_config=None):
         super(PhenoFactory, self).__init__()
         if dae_config is None:
-            dae_config = DAEConfig.read_and_parse_file_configuration()
+            dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
-        self.config = PhenoConfig.read_directory_configurations(
+        self.config = PhenoConfigParser.read_directory_configurations(
             dae_config.pheno_db.dir)
 
     def get_dbfile(self, dbname):

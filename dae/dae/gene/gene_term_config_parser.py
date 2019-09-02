@@ -1,7 +1,7 @@
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 
-class GeneTermConfigParser(DAEConfigParser):
+class GeneTermConfigParser(ConfigParserBase):
 
     @staticmethod
     def _get_gene_term(gene_terms):

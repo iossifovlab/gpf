@@ -12,8 +12,9 @@ from dae.studies.helpers import expand_effect_types
 from dae.backends.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, ContainsNode
 
-from dae.studies.genotype_browser_config import GenotypeBrowserConfig
-from dae.studies.people_group_config import PeopleGroupConfig
+from dae.studies.genotype_browser_config_parser import \
+    GenotypeBrowserConfigParser
+from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 
 
 class StudyWrapper(object):
@@ -590,8 +591,8 @@ class StudyWrapper(object):
     @staticmethod
     def _get_configs_keys():
         return {
-            'genotypeBrowserConfig': GenotypeBrowserConfig,
-            'peopleGroupConfig': PeopleGroupConfig
+            'genotypeBrowserConfig': GenotypeBrowserConfigParser,
+            'peopleGroupConfig': PeopleGroupConfigParser
         }
 
     def get_dataset_description(self):

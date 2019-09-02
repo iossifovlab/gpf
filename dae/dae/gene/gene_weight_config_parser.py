@@ -1,7 +1,7 @@
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 
-class GeneWeightConfigParser(DAEConfigParser):
+class GeneWeightConfigParser(ConfigParserBase):
 
     SPLIT_STR_LISTS = (
         'weights',

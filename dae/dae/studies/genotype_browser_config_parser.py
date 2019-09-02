@@ -1,11 +1,11 @@
 from box import Box
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 from dae.variants.attributes import Role
 
 
-class GenotypeBrowserConfig(DAEConfigParser):
+class GenotypeBrowserConfigParser(ConfigParserBase):
 
     SECTION = 'genotypeBrowser'
 
@@ -247,7 +247,7 @@ class GenotypeBrowserConfig(DAEConfigParser):
 
     @classmethod
     def parse(cls, config):
-        config = super(GenotypeBrowserConfig, cls).parse(config)
+        config = super(GenotypeBrowserConfigParser, cls).parse(config)
 
         config_section = config.get('genotypeBrowser', None)
         if config_section is None:

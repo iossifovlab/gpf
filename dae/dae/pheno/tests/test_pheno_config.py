@@ -1,6 +1,6 @@
 import os
 import pytest
-from dae.pheno.utils.configuration import PhenoConfig
+from dae.pheno.utils.config import PhenoConfigParser
 
 
 def test_pheno_config_loading(fake_pheno_config):
@@ -10,7 +10,7 @@ def test_pheno_config_loading(fake_pheno_config):
 
 def test_missing_but_specified_files(dummy_pheno_missing_files_conf):
     with pytest.raises(AssertionError):
-        PhenoConfig.read_file_configuration(
+        PhenoConfigParser.read_file_configuration(
             dummy_pheno_missing_files_conf,
             os.path.dirname(dummy_pheno_missing_files_conf)
         )

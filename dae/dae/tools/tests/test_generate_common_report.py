@@ -2,7 +2,7 @@ import pytest
 
 import os
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 from dae.tools.generate_common_report import main
 
 
@@ -13,7 +13,7 @@ def fixtures_dir():
 
 @pytest.fixture(scope='session')
 def dae_config_fixture():
-    dae_config = DAEConfig.read_and_parse_file_configuration(
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
         work_dir=fixtures_dir())
     return dae_config
 

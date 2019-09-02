@@ -1,10 +1,10 @@
 
 import os
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.dae_config_parser import ConfigParserBase
 
 
-class DAEConfig(DAEConfigParser):
+class DAEConfigParser(ConfigParserBase):
 
     CAST_TO_INT = (
         'port',
@@ -83,7 +83,7 @@ class DAEConfig(DAEConfigParser):
         sections.update(default_sections)
         defaults['sections'] = sections
 
-        config = super(DAEConfig, cls).read_file_configuration(
+        config = super(DAEConfigParser, cls).read_file_configuration(
             config_file, work_dir, defaults=defaults
         )
 
@@ -93,7 +93,7 @@ class DAEConfig(DAEConfigParser):
 
     @classmethod
     def parse(cls, config, dae_data_dir=None):
-        config = super(DAEConfig, cls).parse(config)
+        config = super(DAEConfigParser, cls).parse(config)
 
         assert config is not None
 

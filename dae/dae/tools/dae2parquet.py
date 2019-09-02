@@ -11,7 +11,7 @@ import sys
 import pysam
 import argparse
 
-from dae.configuration.configuration import DAEConfig
+from dae.configuration.configuration import DAEConfigParser
 
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
@@ -290,7 +290,7 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
 
 
 if __name__ == "__main__":
-    dae_config = DAEConfig.read_and_parse_file_configuration()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
     annotation_pipeline = construct_import_annotation_pipeline(
