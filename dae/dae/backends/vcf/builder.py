@@ -60,7 +60,7 @@ def effect_annotator_builder(
         'effect_details_details': 'effect_details_details'
     }
 
-    config = AnnotationConfigParser.parse(
+    config = AnnotationConfigParser.parse_section(
         Box({
             'options': options,
             'columns': columns,
