@@ -4,7 +4,7 @@
 import sys
 import os
 import traceback
-import configparser
+from configparser import ConfigParser
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
@@ -64,7 +64,7 @@ def pheno_cli_parser():
 
 
 def generate_pheno_db_config(args):
-    config = configparser.ConfigParser()
+    config = ConfigParser()
     config['phenoDB'] = {}
     section = config['phenoDB']
     section['name'] = args.pheno_name

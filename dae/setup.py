@@ -26,6 +26,7 @@ setuptools.setup(
     scripts=[
         'dae/tools/annotate_variant.py',
         'dae/annotation/annotation_pipeline.py',
+        'dae/tools/generate_histogram.py',
     ],
 
     classifiers=[

@@ -8,12 +8,10 @@ from os.path import exists
 import pandas as pd
 import numpy as np
 
-from box import Box
 import matplotlib as mpl; mpl.use('PS')  # noqa
 import matplotlib.pyplot as plt; plt.ioff()  # noqa
 
-from dae.configuration.utils import parser_to_dict
-from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
+from dae.gene.score_config_parser import ScoreConfigParser
 
 
 def get_argument_parser():
@@ -232,33 +230,29 @@ def main():
 
     opts = get_argument_parser().parse_args()
 
-    config = CaseSensitiveConfigParser()
-    config.read(opts.config)
-    config = Box(parser_to_dict(config),
-                 default_box=True, default_box_attr=None)
+    config = ScoreConfigParser.read_and_parse_file_configuration(
+        opts.config, '')
 
     score_histograms_info = []
-
-    scores = config.genomicScores.scores.split(',')
 
     score_columns = opts.scores
     if score_columns is not None:
         score_columns = [int(el) if el.isdigit() else el
                          for el in score_columns.split(',')]
     else:
-        score_columns = scores
+        score_columns = config.genomic_scores.scores
 
-    for score, score_column in zip(scores, score_columns):
-        histogram_info = config['genomicScores.{}'.format(score)]
+    for score, score_column in \
+            zip(config.genomic_scores.scores, score_columns):
+        histogram_info = config.genomic_scores[score]
 
+        bin_range = None
         if histogram_info.range:
-            bin_range = list(map(float, histogram_info.bin_range.split(',')))
-        else:
-            bin_range = None
+            bin_range = list(map(float, histogram_info.range))
 
         score_histograms_info.append(ScoreHistogramInfo(
             score, score_column, histogram_info.file, histogram_info.xscale,
-            histogram_info.yscale, int(histogram_info.bins), bin_range))
+            histogram_info.yscale, histogram_info.bins, bin_range))
 
     if opts.infile == '-':
         sys.stderr.write("You must provide input file!\n")
