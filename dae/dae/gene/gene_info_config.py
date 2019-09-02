@@ -9,7 +9,6 @@ from box import Box
 from dae.configuration.dae_config_parser import ConfigParserBase
 
 from dae.gene.gene_weight_config_parser import GeneWeightConfigParser
-from dae.gene.gene_term_config_parser import GeneTermConfigParser
 from dae.gene.gene_term import loadGeneTerm
 
 
@@ -23,9 +22,6 @@ class GeneInfoConfigParser(ConfigParserBase):
         config[GeneInfoDB.SECTION] = \
             GeneInfoDB.parse(config.get(GeneInfoDB.SECTION, None))
         config['geneWeights'] = GeneWeightConfigParser.parse(config)
-        config['geneTerms'] = GeneTermConfigParser.parse(config)
-        config['chromosomes'] = \
-            ConfigParserBase.parse(config.get('chromosomes', None))
 
         return config
 
