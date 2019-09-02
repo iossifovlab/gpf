@@ -97,8 +97,8 @@ class DenovoGeneSetsCollection(object):
 
         variants = self.study.query_variants(
             inheritance=str(Inheritance.denovo.name),
-            status='{} or {}'.format(
-                Status.affected.name, Status.unaffected.name)
+            # status='{} or {}'.format(
+            #     Status.affected.name, Status.unaffected.name)
         )
         variants = list(variants)
 
