@@ -3,17 +3,14 @@ Created on Apr 10, 2017
 
 @author: lubo
 '''
-from dae.pheno.pheno_regression_config_parser import \
-    PhenoRegressionConfigParser
+from dae.configuration.configuration import ConfigParserBase
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
 
 
 def test_pheno_regressions_from_conf_path(regressions_conf):
-    regs = PhenoRegressionConfigParser.read_and_parse_file_configuration(
-        regressions_conf, '')
+    regs = ConfigParserBase.read_file_configuration(regressions_conf, '')
     expected_regs = {
         'reg1': {
-            'id': 'reg1',
             'instrument_name': 'i1',
             'measure_name': 'regressor1',
             'jitter': '0.1',
@@ -21,7 +18,6 @@ def test_pheno_regressions_from_conf_path(regressions_conf):
             'wd': ''
         },
         'reg2': {
-            'id': 'reg2',
             'instrument_name': 'i1',
             'measure_name': 'regressor2',
             'jitter': '0.2',
@@ -29,7 +25,6 @@ def test_pheno_regressions_from_conf_path(regressions_conf):
             'wd': ''
         },
         'reg3': {
-            'id': 'reg3',
             'instrument_name': '',
             'measure_name': 'common_regressor',
             'jitter': '0.3',
@@ -37,7 +32,6 @@ def test_pheno_regressions_from_conf_path(regressions_conf):
             'wd': ''
         },
         'reg4': {
-            'id': 'reg4',
             'instrument_name': 'i2',
             'measure_name': 'regressor1',
             'jitter': '0.4',
@@ -52,8 +46,7 @@ def test_pheno_regressions_from_conf_path(regressions_conf):
 
 
 def test_has_regression_measure(fphdb, output_dir, regressions_conf):
-    reg = PhenoRegressionConfigParser.read_and_parse_file_configuration(
-        regressions_conf, '')
+    reg = ConfigParserBase.read_file_configuration(regressions_conf, '')
     prep = PreparePhenoBrowserBase('fake', fphdb, output_dir, reg)
 
     expected_reg_measures = [

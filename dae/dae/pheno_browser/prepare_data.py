@@ -278,9 +278,9 @@ class PreparePhenoBrowserBase(object):
         db.build()
 
         if self.pheno_regressions:
-            for _, reg_data in self.pheno_regressions.regression.items():
+            for reg_id, reg_data in self.pheno_regressions.regression.items():
                 db.save_regression({
-                    'regression_id': reg_data.id,
+                    'regression_id': reg_id,
                     'instrument_name': reg_data.instrument_name,
                     'measure_name': reg_data.measure_name,
                     'display_name': reg_data.display_name

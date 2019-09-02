@@ -9,9 +9,10 @@ import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import traceback
 from pheno import pheno_db
-from pheno.pheno_regression_config_parser import PhenoRegressionConfigParser
 from pheno_browser.prepare_data import PreparePhenoBrowserBase
 import hashlib
+
+from dae.configuration.configuration import ConfigParserBase
 
 
 class CLIError(Exception):
@@ -70,9 +71,7 @@ def build_pheno_browser(dbfile, pheno_name, output_dir, regression_conf_path):
     phenodb.load()
 
     pheno_regressions = \
-        PhenoRegressionConfigParser.read_and_parse_file_configuration(
-            regression_conf_path, ''
-        )
+        ConfigParserBase.read_file_configuration(regression_conf_path, '')
 
     prep = PreparePhenoBrowserBase(pheno_name, phenodb,
                                    output_dir, pheno_regressions)
