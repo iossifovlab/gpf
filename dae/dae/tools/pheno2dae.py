@@ -10,9 +10,9 @@ import os
 from argparse import ArgumentParser
 # from argparse import ArgumentDefaultsHelpFormatter
 import traceback
-from pheno.common import dump_config,\
+from dae.pheno.common import dump_config,\
     check_config_pheno_db, default_config
-from pheno.prepare.ped_prepare import PrepareVariables
+from dae.pheno.prepare.ped_prepare import PrepareVariables
 
 
 class CLIError(Exception):
