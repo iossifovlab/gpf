@@ -103,6 +103,8 @@ class AnnotationConfigParser(DAEConfigParser):
         config_section = \
             super(AnnotationConfigParser, cls).parse_section(config_section)
 
+        config_section['sections'] = []
+
         config_section.columns = config_section.get('columns', {})
 
         config_section.native_columns = list(config_section.columns.keys())
@@ -116,6 +118,10 @@ class AnnotationConfigParser(DAEConfigParser):
             c for c in config_section.columns.values()
             if c not in config_section.virtual_columns
         ]
+
+        if config_section.options.dbNSFP_filename:
+            config_section.options.dbNSFP_filename = \
+                config_section.options.dbNSFP_filename.replace('*', '{}')
 
         return config_section
 

@@ -12,9 +12,6 @@ class dbNSFPAnnotator(NPScoreAnnotator):
                              config.options.dbNSFP_filename))
         assert self.dbNSFP_files
 
-        config.options.dbNSFP_filename = \
-            config.options.dbNSFP_filename.replace('*', '{}')
-
         config.options.scores_config_file = os.path.join(
                 config.options.dbNSFP_path,
                 config.options.dbNSFP_config)
