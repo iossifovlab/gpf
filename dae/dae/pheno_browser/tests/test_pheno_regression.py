@@ -3,7 +3,7 @@ Created on Apr 10, 2017
 
 @author: lubo
 '''
-from dae.configuration.configuration import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
 
 

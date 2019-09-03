@@ -5,7 +5,7 @@ import pandas as pd
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
 
 from dae.variants.attributes import Role, Sex
-from dae.configuration.configuration import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 
 
 def test_augment_measure(fphdb, output_dir):

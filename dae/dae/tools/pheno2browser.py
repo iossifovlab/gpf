@@ -13,7 +13,7 @@ import hashlib
 from dae.pheno import pheno_db
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
 
-from dae.configuration.configuration import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 
 
 class CLIError(Exception):
