@@ -14,7 +14,7 @@ from dae.pheno.common import default_config
 from dae.pheno.utils.config import PhenoConfigParser
 from box import Box
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
 def relative_to_this_folder(path):
@@ -64,7 +64,8 @@ def fixtures_dir():
 
 @pytest.fixture(scope='session')
 def fake_dae_conf():
-    return DAEConfigParser.read_and_parse_file_configuration(work_dir=fixtures_dir())
+    return DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='session')

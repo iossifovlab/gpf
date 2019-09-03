@@ -3,7 +3,7 @@ import pytest
 import os
 
 from dae.studies.factory import VariantsDb
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.common_reports.common_report_facade import CommonReportFacade
 

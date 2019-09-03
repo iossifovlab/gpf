@@ -3,7 +3,7 @@ import os
 from collections import OrderedDict
 from copy import deepcopy
 
-from dae.configuration.dae_config_parser import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 
 
 class CommonReportsConfigParser(ConfigParserBase):

@@ -1,4 +1,4 @@
-from dae.configuration.dae_config_parser import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 
 
 class GeneWeightConfigParser(ConfigParserBase):

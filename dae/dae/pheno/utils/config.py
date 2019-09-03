@@ -5,7 +5,7 @@ Created on Aug 23, 2016
 '''
 import os
 
-from dae.configuration.dae_config_parser import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 
 
 class PhenoConfigParser(ConfigParserBase):

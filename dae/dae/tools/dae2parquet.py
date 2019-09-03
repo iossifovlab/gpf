@@ -11,7 +11,7 @@ import sys
 import pysam
 import argparse
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.annotation.tools.annotator_config import annotation_config_cli_options

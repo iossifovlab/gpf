@@ -5,7 +5,7 @@ Created on Dec 8, 2016
 '''
 import logging
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.pheno.utils.config import PhenoConfigParser
 
 

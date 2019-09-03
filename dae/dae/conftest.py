@@ -10,7 +10,7 @@ from io import StringIO
 
 from box import Box
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 

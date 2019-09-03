@@ -7,7 +7,7 @@ import time
 import glob
 import shutil
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.tools.vcf2parquet import import_vcf

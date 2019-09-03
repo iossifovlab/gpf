@@ -14,7 +14,7 @@ from dae.studies.factory import VariantsDb
 from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.weights import WeightsLoader
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
 def fixtures_dir():

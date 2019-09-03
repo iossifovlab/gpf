@@ -6,7 +6,7 @@ Created on Feb 16, 2017
 import sys
 from box import Box
 
-from dae.configuration.dae_config_parser import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 
 from dae.gene.gene_weight_config_parser import GeneWeightConfigParser
 from dae.gene.gene_term import loadGeneTerm

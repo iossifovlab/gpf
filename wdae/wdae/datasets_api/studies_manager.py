@@ -1,4 +1,4 @@
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.studies.factory import VariantsDb
 

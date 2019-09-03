@@ -6,7 +6,7 @@ Created on Feb 10, 2017
 import os
 import pytest
 
-from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
+from dae.configuration.config_parser_base import CaseSensitiveConfigParser
 
 
 def relative_to_this_test_folder(path):

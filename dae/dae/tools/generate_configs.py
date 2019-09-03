@@ -9,8 +9,8 @@ from collections import OrderedDict
 from dae.annotation.tools.annotator_config import AnnotationConfigParser, \
     VariantAnnotatorConfig
 
-from dae.configuration.configuration import DAEConfigParser
-from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.config_parser_base import CaseSensitiveConfigParser
 from dae.configuration.utils import parser_to_dict, flatten_dict
 
 

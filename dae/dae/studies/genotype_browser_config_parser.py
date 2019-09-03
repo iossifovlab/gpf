@@ -1,6 +1,6 @@
 from box import Box
 
-from dae.configuration.dae_config_parser import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 
 from dae.variants.attributes import Role
 

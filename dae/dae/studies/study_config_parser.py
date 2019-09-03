@@ -1,7 +1,7 @@
 import os
 
 from dae.studies.study_sections_config import StudySectionsConfigMixin
-from dae.configuration.dae_config_parser import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 
 
 class StudyConfigParserBase(ConfigParserBase, StudySectionsConfigMixin):

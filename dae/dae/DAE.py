@@ -1,6 +1,6 @@
 from dae.GenomesDB import GenomesDB
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 dae_config = DAEConfigParser.read_and_parse_file_configuration()
 

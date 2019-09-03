@@ -2,7 +2,7 @@ import pytest
 
 import os
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.tools.generate_common_report import main
 
 

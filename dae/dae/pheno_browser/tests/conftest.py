@@ -8,7 +8,7 @@ import pytest
 import tempfile
 import shutil
 import os
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
 def relative_to_this_folder(path):

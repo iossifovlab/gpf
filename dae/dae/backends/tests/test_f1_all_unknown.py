@@ -1,4 +1,4 @@
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.backends.import_commons import construct_import_annotation_pipeline
 from dae.backends.impala.parquet_io import VariantsParquetWriter
 

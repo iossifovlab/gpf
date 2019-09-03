@@ -12,7 +12,7 @@ from dae.pheno.common import default_config, dump_config, check_config_pheno_db
 from dae.pheno.prepare.ped_prepare import PrepareVariables
 from dae.tools.pheno2browser import build_pheno_browser
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
 def pheno_cli_parser():

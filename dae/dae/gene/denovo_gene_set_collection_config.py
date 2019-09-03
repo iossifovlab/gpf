@@ -1,7 +1,7 @@
 import os
 from copy import deepcopy
 
-from dae.configuration.dae_config_parser import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 from dae.variants.attributes import Sex
 
 

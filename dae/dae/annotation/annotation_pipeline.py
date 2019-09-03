@@ -16,7 +16,7 @@ from dae.annotation.tools.file_io import IOType, IOManager
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 from dae.annotation.tools.utils import AnnotatorInitializer
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
 def run_tabix(filename):

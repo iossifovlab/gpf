@@ -1,255 +1,121 @@
+
 import os
-from box import Box
-from configparser import ConfigParser
 
-from dae.configuration.utils import parser_to_dict
+from dae.configuration.config_parser_base import ConfigParserBase
 
 
-class CaseSensitiveConfigParser(ConfigParser):
-    """
-    Modified ConfigParser that allows case sensitive options.
-    """
+class DAEConfigParser(ConfigParserBase):
 
-    def optionxform(self, option):
-        """
-        The default implementation returns a lower-case version of options.
-        """
-        return str(option)
+    CAST_TO_INT = (
+        'port',
+    )
 
+    DEFAULT_SECTION_VALUES = {
+        'Impala': {
+            'db': 'gpf_variant_db',
+            'port': '21050'
+        }, 'HDFS': {
+            'baseDir': '/tmp',
+            'port': '0'
+        }
+    }
 
-class ConfigParserBase(object):
+    @staticmethod
+    def get_environment_override_values():
+        impala_db = os.environ.get('DAE_IMPALA_DB', None)
+        impala_host = os.environ.get('DAE_IMPALA_HOST', None)
+        impala_port = os.environ.get('DAE_IMPALA_PORT', None)
+        hdfs_host = os.environ.get('DAE_HDFS_HOST', None)
+        hdfs_port = os.environ.get('DAE_HDFS_PORT', None)
+        genomic_scores_hg19 = os.environ.get('DAE_GENOMIC_SCORES_HG19', None)
+        genomic_scores_hg38 = os.environ.get('DAE_GENOMIC_SCORES_HG38', None)
 
-    ENABLED_DIR = '.'
+        environment_override = {}
+        if impala_db or impala_host or impala_port:
+            environment_override['Impala'] = {}
+            if impala_db:
+                environment_override['Impala']['db'] = impala_db
+            if impala_host:
+                environment_override['Impala']['host'] = impala_host
+            if impala_port:
+                environment_override['Impala']['port'] = impala_port
 
-    SECTION = None
+        if hdfs_host or hdfs_port:
+            environment_override['HDFS'] = {}
+            if hdfs_host:
+                environment_override['HDFS']['host'] = hdfs_host
+            if hdfs_port:
+                environment_override['HDFS']['port'] = hdfs_port
 
-    SPLIT_STR_LISTS = ()
-    SPLIT_STR_SETS = ()
-    CAST_TO_BOOL = ()
-    CAST_TO_INT = ()
+        if genomic_scores_hg19 or genomic_scores_hg38:
+            environment_override['genomicScoresDB'] = {}
+            if genomic_scores_hg19:
+                environment_override['genomicScoresDB']['scores_hg19_dir'] = \
+                    genomic_scores_hg19
+            if genomic_scores_hg38:
+                environment_override['genomicScoresDB']['scores_hg38_dir'] = \
+                    genomic_scores_hg38
 
-    @classmethod
-    def read_and_parse_directory_configurations(
-            cls, configurations_dir, work_dir, defaults=None,
-            fail_silently=False):
-        if defaults is None:
-            defaults = {}
-
-        configs = cls.read_directory_configurations(
-            configurations_dir, work_dir, defaults=defaults,
-            fail_silently=fail_silently
-        )
-
-        parsed_configs = []
-
-        for config in configs:
-            parsed_config = cls.parse(config)
-            parsed_configs.append(parsed_config)
-
-        return parsed_configs
+        return environment_override
 
     @classmethod
     def read_and_parse_file_configuration(
-            cls, config_file, work_dir, defaults=None):
+            cls, config_file='DAE.conf', work_dir=None, defaults=None,
+            environment_override=True):
         if defaults is None:
             defaults = {}
 
-        config = cls.read_file_configuration(
+        if work_dir is None:
+            work_dir = os.environ.get('DAE_DB_DIR', None)
+        assert work_dir is not None
+        work_dir = os.path.abspath(work_dir)
+        assert os.path.exists(work_dir)
+        assert os.path.isdir(work_dir)
+
+        if environment_override:
+            override = cls.get_environment_override_values()
+            default_override = defaults.get('override', {})
+            override.update(default_override)
+            defaults['override'] = override
+
+        sections = cls.DEFAULT_SECTION_VALUES
+        default_sections = defaults.get('sections', {})
+        sections.update(default_sections)
+        defaults['sections'] = sections
+
+        config = super(DAEConfigParser, cls).read_file_configuration(
             config_file, work_dir, defaults=defaults
         )
 
-        config = cls.parse(config)
+        config = cls.parse(config, dae_data_dir=work_dir)
 
         return config
 
     @classmethod
-    def read_directory_configurations(
-            cls, configurations_dir, work_dir, defaults=None,
-            fail_silently=False):
-        if defaults is None:
-            defaults = {}
+    def parse(cls, config, dae_data_dir=None):
+        config = super(DAEConfigParser, cls).parse(config)
 
-        assert isinstance(configurations_dir, str), type(configurations_dir)
+        assert config is not None
 
-        enabled_dir = os.path.join(configurations_dir, cls.ENABLED_DIR)
-        enabled_dir = os.path.abspath(enabled_dir)
+        if config.genomic_scores_db and \
+                config.genomic_scores_db.scores_hg19_dir:
+            assert os.path.exists(config.genomic_scores_db.scores_hg19_dir)
+            assert os.path.isdir(config.genomic_scores_db.scores_hg19_dir)
+        if config.genomic_scores_db and \
+                config.genomic_scores_db.scores_hg38_dir:
+            assert os.path.exists(config.genomic_scores_db.scores_hg38_dir)
+            assert os.path.isdir(config.genomic_scores_db.scores_hg38_dir)
 
-        configs = []
-        config_paths = cls._collect_config_paths(enabled_dir, fail_silently)
-
-        for config_path in config_paths:
-            config = cls.read_file_configuration(
-                config_path, enabled_dir, defaults
-            )
-
-            if config:
-                configs.append(config)
-
-        return configs
-
-    @classmethod
-    def read_file_configuration(cls, config_file, work_dir, defaults=None):
-        if defaults is None:
-            defaults = {}
-
-        config = cls.read_config(config_file, work_dir, defaults)
-
-        if config is None:
-            return None
-
-        config = Box(
-            config, camel_killer_box=True, default_box=True,
-            default_box_attr=None
-        )
-
-        config['config_file'] = config_file
-
-        return config
-
-    @classmethod
-    def _collect_config_paths(cls, dirname, fail_silently=False):
-        config_paths = []
-        print(dirname)
-        if not os.path.exists(dirname):
-            if fail_silently:
-                return []
-            raise RuntimeError(dirname)
-        for path in os.listdir(dirname):
-            p = os.path.join(dirname, path)
-            if os.path.isdir(p):
-                subpaths = cls._collect_config_paths(p, fail_silently)
-                config_paths.extend(subpaths)
-            elif path.endswith('.conf'):
-                config_paths.append(
-                    os.path.join(dirname, path)
-                )
-        return config_paths
-
-    @classmethod
-    def read_config(cls, config_file, work_dir, defaults=None):
-        if defaults is None:
-            defaults = {}
-
-        default_values = defaults.get('values', {})
-        default_sections = defaults.get('sections', {})
-        default_override = defaults.get('override', {})
-        default_conf = defaults.get('conf', None)
-
-        if not os.path.exists(config_file):
-            config_file = os.path.join(work_dir, config_file)
-        assert os.path.exists(config_file), config_file
-
-        default_values['work_dir'] = work_dir
-        default_values['wd'] = work_dir
-
-        config_parser = CaseSensitiveConfigParser(
-            defaults=default_values,
-            allow_no_value=True,
-            strict=True,
-            delimiters=('=')
-        )
-
-        if default_sections:
-            config_parser.read_dict(default_sections)
-
-        if default_conf is not None:
-            assert os.path.exists(default_conf)
-            with open(default_conf, 'r') as f:
-                config_parser.read_file(f)
-
-        with open(config_file, 'r') as f:
-            config_parser.read_file(f)
-
-        if default_override:
-            config_parser.read_dict(default_override)
-
-        config = parser_to_dict(config_parser)
-
-        if cls.SECTION in config:
-            if 'enabled' in config[cls.SECTION]:
-                if cls._str_to_bool(config[cls.SECTION]['enabled']) is False:
-                    return None
-
-        return config
-
-    @classmethod
-    def parse(cls, config):
-        if not config:
-            return None
-
-        sections = list(config.keys())
-        if cls.SECTION:
-            sections = [cls.SECTION]
-
-        for section in sections:
-            config_section = config[section]
-
-            config_section = cls.parse_section(config_section)
-            if config_section is None:
-                continue
-
-            config[section] = config_section
-
-        return config
-
-    @classmethod
-    def parse_section(cls, config_section):
-        if config_section is None:
-            return None
-        if not isinstance(config_section, dict):
-            return config_section
-
-        config_section = cls._split_str_lists(config_section)
-        config_section = cls._split_str_sets(config_section)
-        config_section = cls._cast_to_bool(config_section)
-        config_section = cls._cast_to_int(config_section)
-
-        return config_section
-
-    @staticmethod
-    def _str_to_bool(val):
-        true_values = ['yes', 'Yes', 'True', 'true']
-        return True if val in true_values else False
-
-    @staticmethod
-    def _split_str_option_list(str_option):
-        if str_option is not None and str_option != '':
-            return [el.strip() for el in str_option.split(',')]
-        elif str_option == '':
-            return []
-        else:
-            return []
-
-    @classmethod
-    def _split_str_lists(cls, config):
-        for key in cls.SPLIT_STR_LISTS:
-            if key not in config:
-                continue
-            config[key] = cls._split_str_option_list(config[key])
-
-        return config
-
-    @classmethod
-    def _split_str_sets(cls, config):
-        for key in cls.SPLIT_STR_SETS:
-            if key not in config:
-                continue
-            config[key] = set(cls._split_str_option_list(config[key]))
-
-        return config
-
-    @classmethod
-    def _cast_to_bool(cls, config):
-        for key in cls.CAST_TO_BOOL:
-            if key in config:
-                config[key] = cls._str_to_bool(config[key])
-
-        return config
-
-    @classmethod
-    def _cast_to_int(cls, config):
-        for key in cls.CAST_TO_INT:
-            if key in config:
-                config[key] = int(config[key])
+        config['dae_data_dir'] = dae_data_dir
+        config['annotation_defaults'] = {
+            'wd': config.dae_data_dir,
+            'data_dir': config.dae_data_dir,
+            'scores_hg19_dir':
+                config.genomic_scores_db.scores_hg19_dir
+                if config.genomic_scores_db else None,
+            'scores_hg38_dir':
+                config.genomic_scores_db.scores_hg38_dir
+                if config.genomic_scores_db else None,
+        }
 
         return config

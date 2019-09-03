@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.weights import WeightsLoader

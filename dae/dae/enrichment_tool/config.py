@@ -6,7 +6,7 @@ Created on Nov 7, 2016
 import os
 from copy import deepcopy
 
-from dae.configuration.dae_config_parser import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 
 
 class EnrichmentConfigParser(ConfigParserBase):

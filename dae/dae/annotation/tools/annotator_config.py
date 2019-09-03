@@ -1,6 +1,6 @@
 from dae.DAE import genomesDB
 
-from dae.configuration.dae_config_parser import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase
 
 
 def annotation_config_cli_options(dae_config):

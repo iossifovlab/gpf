@@ -1,5 +1,5 @@
 from dae.configuration.utils import parser_to_dict
-from dae.configuration.dae_config_parser import CaseSensitiveConfigParser
+from dae.configuration.config_parser_base import CaseSensitiveConfigParser
 
 
 def test_config_to_dict(configuration):

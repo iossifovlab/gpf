@@ -5,7 +5,7 @@ from dae.gene.denovo_gene_set_collection_config import \
     DenovoGeneSetCollectionConfigParser
 from dae.gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
 
-from dae.configuration.configuration import DAEConfigParser
+from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.studies.factory import VariantsDb
 
 from datasets_api.studies_manager import StudiesManager
