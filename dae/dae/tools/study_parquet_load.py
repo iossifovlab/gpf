@@ -51,7 +51,7 @@ def load_study_parquet(
         study_ids = []
         parquet_directories = []
         for study_id in temp_study_ids:
-            study_config = variants_db.get_study_config(study_id)
+            study_config = variants_db.study_configs[study_id]
 
             if study_config.file_format != 'impala':
                 continue

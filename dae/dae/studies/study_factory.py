@@ -1,7 +1,9 @@
 import os
+from box import Box
 
 from dae.studies.study import Study
-from dae.studies.study_config_parser import StudyConfigParser
+from dae.studies.dataset import Dataset
+from dae.studies.dataset_config_parser import DatasetConfigParser
 
 from dae.backends.vcf.raw_vcf import RawFamilyVariants
 from dae.backends.configure import Configure
@@ -14,11 +16,11 @@ class StudyFactory(object):
 
     FILE_FORMATS = set(['vcf', 'impala'])
 
-    def __init__(self, dae_config, thrift_connection=None):
-        self.thrift_connection = thrift_connection
+    def __init__(self, dae_config, variants_db):
         self.dae_config = dae_config
+        self.variants_db = variants_db
 
-    def impala_configuration(self, study_config):
+    def _impala_configuration(self, study_config):
         assert study_config.file_format == 'impala'
         prefix = study_config.prefix
         if 'pedigree_file' in study_config:
@@ -45,11 +47,20 @@ class StudyFactory(object):
         }
         return Configure(conf)
 
-    def make_impala_connection(self):
+    def _make_impala_connection(self):
         connection = ImpalaHelpers.get_impala(
             self.dae_config.impala.host, self.dae_config.impala.port)
 
         return connection
+
+    def _get_studies_configs(self, dataset_config):
+        studies_configs = []
+        for study_id in DatasetConfigParser._split_str_option_list(
+                dataset_config[DatasetConfigParser.SECTION].studies):
+            study_config = self.variants_db.get_study_config(study_id)
+            if study_config:
+                studies_configs.append(study_config)
+        return studies_configs
 
     def make_study(self, study_config):
         if study_config is None:
@@ -63,11 +74,35 @@ class StudyFactory(object):
             )
 
         if study_config.file_format == 'impala':
-            impala_config = self.impala_configuration(study_config).impala
-            impala_connection = self.make_impala_connection()
+            impala_config = self._impala_configuration(study_config).impala
+            impala_connection = self._make_impala_connection()
             variants = ImpalaFamilyVariants(impala_config, impala_connection)
             return Study(study_config, variants)
         else:
             variants = RawFamilyVariants(prefix=study_config.prefix)
 
             return Study(study_config, variants)
+
+    def make_dataset(self, dataset_config):
+        assert isinstance(dataset_config, Box), type(dataset_config)
+
+        study_configs = self._get_studies_configs(dataset_config)
+        dataset_config = \
+            DatasetConfigParser.parse(dataset_config, study_configs)
+        if dataset_config is None:
+            return None
+
+        studies = []
+        for study_id in dataset_config.studies:
+            study = self.variants_db.get_study(study_id)
+
+            if not study:
+                raise ValueError(
+                    "Unknown study: {}, known studies: [{}]".format(
+                        dataset_config.studies,
+                        ",".join(self.variants_db.get_all_study_ids())
+                    ))
+            studies.append(study)
+        assert studies
+
+        return Dataset(dataset_config, studies)

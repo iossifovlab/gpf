@@ -1,5 +1,5 @@
-def test_dataset_facade_simple(dataset_facade):
-    assert sorted(dataset_facade.get_all_dataset_ids()) == \
+def test_dataset_facade_simple(variants_db_fixture):
+    assert sorted(variants_db_fixture.get_datasets_ids()) == \
         sorted([
             'quads_in_parent_ds', 'composite_dataset_ds', 'quads_in_child_ds',
             'quads_composite_ds', 'inheritance_trio_ds',
@@ -8,17 +8,17 @@ def test_dataset_facade_simple(dataset_facade):
         ])
 
 
-def test_dataset_facade_get_dataset(dataset_facade):
-    dataset = dataset_facade.get_dataset('quads_in_parent_ds')
+def test_dataset_facade_get_dataset(variants_db_fixture):
+    dataset = variants_db_fixture.get_dataset('quads_in_parent_ds')
     assert dataset is not None
     assert dataset.id == 'quads_in_parent_ds'
 
 
-def test_dataset_facade_get_all_dataset_configs(dataset_facade):
-    configs = dataset_facade.get_all_dataset_configs()
+def test_dataset_facade_get_all_dataset_configs(variants_db_fixture):
+    configs = variants_db_fixture.get_all_dataset_configs()
     assert len(configs) == 9
 
 
-def test_dataset_facade_get_all_datasets(dataset_facade):
-    datasets = dataset_facade.get_all_datasets()
+def test_dataset_facade_get_all_datasets(variants_db_fixture):
+    datasets = variants_db_fixture.get_all_datasets()
     assert len(datasets) == 9

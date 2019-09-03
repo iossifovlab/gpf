@@ -119,11 +119,11 @@ def test_composite_dataset_config_people_group_overwrite(
 
 
 def test_composite_dataset_config_genotype_browser_overwrite(
-        quads_composite_dataset_config, study_facade):
+        quads_composite_dataset_config, variants_db_fixture):
 
     assert quads_composite_dataset_config is not None
 
-    study_config = study_facade.get_study_config(
+    study_config = variants_db_fixture.get_study_config(
         quads_composite_dataset_config.studies[0])
 
     assert quads_composite_dataset_config.genotype_browser is True

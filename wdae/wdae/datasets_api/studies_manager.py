@@ -83,9 +83,6 @@ class StudiesManager(object):
 
         return self.vdb
 
-    def get_dataset_facade(self):
-        return self.get_variants_db().dataset_facade
-
     def get_common_report_facade(self):
         self.get_variants_db()
         return self.common_reports.common_report_facade
