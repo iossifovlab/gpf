@@ -5,7 +5,7 @@ from box import Box
 from copy import deepcopy
 from collections import OrderedDict
 
-from dae.studies.factory import VariantsDb
+from dae.studies.variants_db import VariantsDb
 from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.common_reports.filter import Filter, FilterObject, FilterObjects

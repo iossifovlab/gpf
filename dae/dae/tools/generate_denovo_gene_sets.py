@@ -4,7 +4,7 @@ import argparse
 from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.gene.denovo_gene_set_collection_facade import \
     DenovoGeneSetCollectionFacade
-from dae.studies.factory import VariantsDb
+from dae.studies.variants_db import VariantsDb
 
 
 def main(options=None):

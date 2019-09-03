@@ -23,7 +23,7 @@ from dae.gene.scores import ScoreLoader
 from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 # Used by pytest
 from dae.configuration.dae_config_parser import DAEConfigParser
-from dae.studies.factory import VariantsDb
+from dae.studies.variants_db import VariantsDb
 
 
 def fixtures_dir():

@@ -1,7 +1,7 @@
 import os
 
-from .conftest import fixtures_dir
-from ..factory import VariantsDb
+from dae.studies.tests.conftest import fixtures_dir
+from dae.studies.variants_db import VariantsDb
 
 
 def test_variants_db_studies_simple(dae_config_fixture):

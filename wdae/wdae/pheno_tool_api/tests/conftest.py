@@ -2,7 +2,7 @@ import pytest
 import os
 
 from dae.configuration.dae_config_parser import DAEConfigParser
-from dae.studies.factory import VariantsDb
+from dae.studies.variants_db import VariantsDb
 from datasets_api.studies_manager import StudiesManager
 
 

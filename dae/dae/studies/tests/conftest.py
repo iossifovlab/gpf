@@ -6,7 +6,7 @@ from dae.studies.study_factory import StudyFactory
 from dae.studies.study_wrapper import StudyWrapper
 from dae.studies.study_config_parser import StudyConfigParser
 from dae.studies.dataset_config_parser import DatasetConfigParser
-from dae.studies.factory import VariantsDb
+from dae.studies.variants_db import VariantsDb
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.weights import WeightsLoader

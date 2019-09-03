@@ -7,7 +7,7 @@ import time
 from copy import deepcopy
 
 from dae.configuration.dae_config_parser import DAEConfigParser
-from dae.studies.factory import VariantsDb
+from dae.studies.variants_db import VariantsDb
 
 from dae.tools.simple_study_import import impala_load_study
 
