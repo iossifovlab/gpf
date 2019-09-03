@@ -175,51 +175,170 @@ by GPF annotation pipeline and GPF import tools.
     the appropriate example and adjust it according to your needs.
 
 
-Update `setenv.sh` Script
-#########################
+Import a Demo Dataset
+#####################
 
-Inside the GPF source directory, there is a file named
-``setenv_template.sh``:
+In the GPF startup data instance there are some demo studies already
+imported and configured:
 
-.. code-block:: bash
-
-    # specifies where Apache Spark is installed
-    export SPARK_HOME=<path to spark distribution>/spark-2.4
-
-    # configure paths to genomic scores databases
-    # export DAE_GENOMIC_SCORES_HG19=<path to>/genomic-scores-hg19
-    # export DAE_GENOMIC_SCORES_HG38=<path to>/genomic-scores-hg38
-
-    # specifies where the source directory for GPF DAE is
-    export DAE_SOURCE_DIR=<path to gpf>/gpf/DAE
-    # specifies the location of the GPF data instance
-    export DAE_DB_DIR=<path to work data>/data-hg19
-
-    # activates GPF conda environment
-    conda activate gpf3
-
-    # setups GPF paths
-    source $DAE_SOURCE_DIR/setdae.sh
-
-
-You should copy it as a separate file named ``setenv.sh`` and edit it according
-you own setup.
+    * `multi` with a couple of variants in a multigenerational family
+    * ...
 
 .. note::
+    You can download some more publicly available studies, which are prepared to be
+    included into the GPF startup data instance.
 
-    If you plan to use genomic scores annotation you need to comment out
-    setting of `DAE_GENOMIC_SCORES_HG19` and `DAE_GENOMIC_SCORES_HG38`
-    environment variables and edit them accordingly.
+To demonstrate how to import new study data into the GPF data instance, we
+will reproduce the necessary steps for importing the `comp` study data.
+
+Start or Configure Apache Impala
+++++++++++++++++++++++++++++++++
+
+By default GPF usese Apache Impala as backend for storing genomic variants.
+The GPF import tools import studies data into impala. To make using GPF
+more easy we provide a docker container with Apache Impala. To run it, you
+can use::
+
+    docker run --rm \
+        --hostname impala \
+        -p 9870:9870 \
+        -p 9864:9864 \
+        -p 8020:8020 \
+        -p 8042:8042 \
+        -p 8088:8088 \
+        -p 8188:8188 \
+        -p 19888:19888 \
+        -p 21000:21000 \
+        -p 21050:21050 \
+        -p 22000:22000 \
+        -p 25000:25000 \
+        -p 25010:25010 \
+        -p 25020:25020 \
+        seqpipe/seqpipe-docker-impala:latest
+
+Simple study import
++++++++++++++++++++
+
+Usualy to import study data into GPF instance could take a lot of steps. To
+make initial bootstraping easier you can use `simple_study_import.py` tool
+that combines all the necessary steps in one tool.
+
+`simple_study_import.py` tool
+*****************************
+
+This tool supports variants import from two input formats:
+
+* VCF format
+
+* DAE de Novo list of variants
+
+To see the available options supported by this tools use::
+
+    simple_study_import.py --help
+
+that will output short help message::
+
+    usage: simple_study_import.py [-h] [--id <study ID>] [--vcf <VCF filename>]
+                                [--denovo <de Novo variants filename>]
+                                [-o <output directory>]
+                                <pedigree filename>
+
+    simple import of new study data
+
+    positional arguments:
+    <pedigree filename>   families file in pedigree format
+
+    optional arguments:
+    -h, --help            show this help message and exit
+    --id <study ID>       unique study ID to use
+    --vcf <VCF filename>  VCF file to import
+    --denovo <de Novo variants filename>
+                            DAE denovo variants file
+    -o <output directory>, --out <output directory>
+                            output directory. If none specified, "data/" directory
+                            is used [default: data/]
+
+Example import of VCF variants
+******************************
+
+Let say you have pedigree file `comp.ped` describing family information,
+a VCF file `comp.vcf` with transmitted variants and a list of de Novo variants
+`comp.tsv`. This example data could be found inside `$DAE_DB_DIR/studies/comp`
+of the GPF startup data instance `data-hg19-startup`.
+
+To import this data as a study into GPF instance:
+
+* go into `studies` directory of GPF instance data folder::
+
+    cd $DAE_DB_DIR/studies/comp
 
 
-When you are ready, you need to source your ``setenv.sh`` file:
+* run `simple_study_import.py` to import the data; this tool expects there
+  arguments - study ID to use, pedigree file name and VCF file name::
 
-.. code-block:: bash
-
-    source ./setenv.sh
+        simple_study_import.py comp.ped --denovo comp.tsv --vcf comp.vcf
 
 
-Example Usage of GPF Python Interface
+Example import of de Novo variants
+**********************************
+
+As an example of importing study with de Novo variants you can use data
+from::
+
+    wget -c https://iossifovlab.com/distribution/public/studies/iossifov_2014-latest.tar.gz
+
+Untar this data::
+
+    tar zxf iossifov_2014-latest.tar.gz
+
+and run `simple_study_import.py` tool::
+
+    cd iossifov_2014/
+    simple_study_import.py --id iossifov_2014 \
+        --denovo IossifovWE2014.tsv \
+        IossifovWE2014.ped
+
+To see the imported variants restartd the GPF development web server and find
+`iossifov_2014` study.
+
+
+
+Generate Variant Reports (optional)
++++++++++++++++++++++++++++++++++++
+
+To generate families and de Novo variants report, you should use
+`generate_common_report.py`. This tool supports the option `--show-studies` to
+list all studies and datasets configured in the GPF instance::
+
+    generate_common_report.py --show-studies
+
+To generate the families and variants reports for a given configured study
+or dataset, you
+should use `--studies` option. For example, to generate the families and
+variants reports for the `quad` study, you should use::
+
+    generate_common_report.py --studies comp
+
+
+Generate Denovo Gene Sets (optional)
+++++++++++++++++++++++++++++++++++++
+
+To generate de Novo Gene sets, you should use the
+`generate_denovo_gene_sets.py` tool. This tool supports the option
+`--show-studies` to list all studies and datasets configured in the
+GPF instance::
+
+    generate_denovo_gene_sets.py --show-studies
+
+To generate the de Novo gene sets for a given configured study
+or dataset, you
+should use `--studies` option. For example, to generate the de Novo
+gene sets for the `quad` study, you should use::
+
+    generate_denovo_gene_sets.py --studies comp
+
+
+Example Usage of GPF Python Interface [FIXME]
 #####################################
 
 Simplest way to start using GPF system python API is to import `variants_db`
@@ -304,180 +423,6 @@ Or if you are interested in 'missinse' variants only in people with role
     >> 3
 
 For more information see:
-
-
-Start GPF Web UI
-################
-
-Initial Setup of GPF Web UI
-+++++++++++++++++++++++++++
-
-Initial setup of GPF Web UI requires several steps:
-
-* Initial setup of the local database to serve GFP Web UI. Since GPF Web UI is
-    a Django application, it uses ``sqlite3`` for development purposes.
-    To set it up, enter the ``gpf/wdae`` directory and run migrations::
-
-        cd gpf/wdae
-        ./manage.py migrate
-
-* The next step is to create development users. Enter the
-    ``gpf/wdae`` directory and run ``create_dev_users.sh``::
-
-        ./create_dev_users.sh
-
-    This script creates two users for development purposes -
-    ``admin@iossifovlab.com`` and ``researche@iossifovlab.com``. The
-    password for both users is ``secret``.
-
-
-Start GPF Web UI
-++++++++++++++++
-
-To start the GPF Web UI, you need to run the Django development server.
-Enter the ``gpf/wdae`` directory and run::
-
-        ./manage.py runserver 0.0.0.0:8000
-
-
-To check that everything works, you can open following URL in your browser::
-
-    http://localhost:8000
-
-.. note::
-    If you run the development server on a computer that is different from your
-    host machine, you should replace `localhost` with the name or IP of your
-    server.
-
-.. note::
-    Before running your development server you will need a running Apache
-    Spark Thrift server.
-
-Import a Demo Dataset
-#####################
-
-In the GPF startup data instance there are some demo studies already
-imported and configured:
-
-    * `quad` with a couple of variants in a single quad family
-    * `multi` with a couple of variants in a multigenerational family
-    * ...
-
-.. note::
-    You can download some more publicly available studies, which are prepared to be
-    included into the GPF startup data instance.
-
-To demonstrate how to import new study data into the GPF data instance, we
-will reproduce the necessary steps for importing the `quad` study data.
-
-Simple study import
-+++++++++++++++++++
-
-Usualy to import study data into GPF instance could take a lot of steps. To
-make initial bootstraping easier you can use `simple_study_import.py` tool
-that combines all the necessary steps in one tool.
-
-`simple_study_import.py` tool
-*****************************
-
-This tool supports variants import from two input formats:
-
-* VCF format
-
-* DAE de Novo list of variants
-
-To see the available options supported by this tools use::
-
-    simple_study_import.py --help
-
-that will output short help message::
-
-    usage: simple_study_import.py [-h] [--id <study ID>] [--vcf <VCF filename>]
-                                [--denovo <de Novo variants filename>]
-                                [-o <output directory>]
-                                <pedigree filename>
-
-    simple import of new study data
-
-    positional arguments:
-    <pedigree filename>   families file in pedigree format
-
-    optional arguments:
-    -h, --help            show this help message and exit
-    --id <study ID>       unique study ID to use
-    --vcf <VCF filename>  VCF file to import
-    --denovo <de Novo variants filename>
-                            DAE denovo variants file
-    -o <output directory>, --out <output directory>
-                            output directory. If none specified, "data/" directory
-                            is used [default: data/]
-
-
-
-Example import of VCF variants
-******************************
-
-Let say you have pedigree file `comp.ped` describing family information,
-a VCF file `comp.vcf` with transmitted variants and a list of de Novo variants
-`comp.tsv`. This example data could be found inside `$DAE_DB_DIR/studies/comp`
-of the GPF startup data instance `data-hg19-startup`.
-
-To import this data as a study into GPF instance:
-
-* go into `studies` directory of GPF instance data folder::
-
-    cd $DAE_DB_DIR/studies/comp
-
-
-* run `simple_study_import.py` to import the data; this tool expects there
-  arguments - study ID to use, pedigree file name and VCF file name::
-
-        simple_study_import.py comp.ped --denovo comp.tsv --vcf comp.vcf
-
-
-
-Generate Variant Reports (optional)
-+++++++++++++++++++++++++++++++++++
-
-To generate families and de Novo variants report, you should use
-`generate_common_report.py`. This tool supports the option `--show-studies` to
-list all studies and datasets configured in the GPF instance::
-
-    generate_common_report.py --show-studies
-
-To generate the families and variants reports for a given configured study
-or dataset, you
-should use `--studies` option. For example, to generate the families and
-variants reports for the `quad` study, you should use::
-
-    generate_common_report.py --studies comp
-
-
-Generate Denovo Gene Sets (optional)
-++++++++++++++++++++++++++++++++++++
-
-To generate de Novo Gene sets, you should use the
-`generate_denovo_gene_sets.py` tool. This tool supports the option
-`--show-studies` to list all studies and datasets configured in the
-GPF instance::
-
-    generate_denovo_gene_sets.py --show-studies
-
-To generate the de Novo gene sets for a given configured study
-or dataset, you
-should use `--studies` option. For example, to generate the de Novo
-gene sets for the `quad` study, you should use::
-
-    generate_denovo_gene_sets.py --studies comp
-
-
-Start GPF Web UI
-++++++++++++++++
-
-After importing a new study into the GPF data instance, you need to restart the
-GPF web UI. Stop the Django develompent server and start it again::
-
-        ./manage.py runserver 0.0.0.0:8000
 
 
 Work with Phenotype Data
