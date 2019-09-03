@@ -6,27 +6,13 @@ Prerequisites [WIP]
 ###################
 
 .. note::
-    git
     wget
-    gcc
-    zlib
 
 If you are using Ubuntu, you can run:
 
 .. code-block:: bash
 
-    sudo apt-get install git wget build-essential zlib1g-dev libsasl2-dev
-
-
-Clone the GPF Repository
-########################
-
-To start using the GPF system, you need to clone the GPF source code repository
-from Github:
-
-.. code-block:: bash
-
-    git clone --single-branch --branch variants git@github.com:iossifovlab/gpf.git
+    sudo apt-get wget
 
 
 Setup GPF Development Environment
@@ -47,113 +33,107 @@ Download Anaconda from  Anaconda distribution page
 
 .. code-block:: bash
 
-    wget -c https://repo.anaconda.com/archive/Anaconda3-2018.12-Linux-x86_64.sh
+    wget -c https://repo.anaconda.com/archive/Anaconda3-2019.07-Linux-x86_64.sh
 
 and install it in your local environment, following the installer instructions:
 
 .. code-block:: bash
 
-    sh Anaconda3-2018.12-Linux-x86_64.sh
+    sh Anaconda3-2019.07-Linux-x86_64.sh
 
-Create GPF environment
-**********************
+Install GPF conda package
+*************************
 
-Most of the dependencies for GPF are described in Anaconda environment
-description files located inside of the GPF source repository:
-
-.. code-block:: bash
-
-    gpf/python2-environment.yml
-    gpf/python3-environment.yml
-
-You can use these files to create a GPF Python development environment.
-For example, if you want to create a Python 3 development conda environment,
-use:
+Create `gpf` environment:
 
 .. code-block:: bash
 
-    conda env create -n gpf3 -f gpf/python3-environment.yml
+    conda create -n gpf
 
 To use this environment, you need to execute the following command:
 
 .. code-block:: bash
 
-    conda activate gpf3
+    conda activate gpf
 
-Additionally, you will need to install `cyvcf2`. Clone the following
-repository:
-
-.. code-block:: bash
-
-    git clone https://github.com/seqpipe/cyvcf2.git
-
-Enter the `cyvcf2` directory and run pip install:
+Install `gpf_wdae` conda package into already activated `gpf`
+environment:
 
 .. code-block:: bash
 
-    cd cyvcf2
-    pip install .
-    cd ..
+    conda install -c conda-forge -c bioconda -c iossifovlab gpf_wdae
 
+This command is going to install GPF and all dependencies of GPF.
 
-Install Spark
-+++++++++++++
-
-After creating a GPF environment, you should have Java JDK 8 installed in your
-environment. Since Apache Spark runs on Java JDK 8, please verify your
-version of Java JDK:
-
-.. code-block:: bash
-
-    java -version
-
-...which should display something similar to the following:
-
-.. code-block:: bash
-
-    openjdk version "1.8.0_152-release"
-    OpenJDK Runtime Environment (build 1.8.0_152-release-1056-b12)
-    OpenJDK 64-Bit Server VM (build 25.152-b12, mixed mode)
-
-
-Download Apache Spark distribution and extract it:
-
-.. code-block:: bash
-
-    wget -c https://www-us.apache.org/dist/spark/spark-2.4.0/spark-2.4.0-bin-hadoop2.7.tgz
-    tar zxvf spark-2.4.0-bin-hadoop2.7.tgz
-
-Start Apache Spark Thrift server:
-
-.. code-block:: bash
-
-    cd spark-2.4.0-bin-hadoop2.7/sbin
-    ./start-thriftserver.sh
-
-
-Get Startup Data Instance [WIP]
-###############################
+Bootstrap GPF
+#############
 
 To start working with GPF, you will need a startup data instance. There are
 two GPF startup instances that are aligned with different versions of the
 reference human genome - for HG19 and HG38.
 
-If you plan to work with variants aligned to the HG19 reference genome, you
-will need a `data-hg19-startup` instance.
+Besides the startup data instance some initial bootstrapping of GPF is also
+necessary.
+
+To make bootstraping easier a script `wdae_bootstrap.sh` is provided that
+prepares GPF for initial start.
+
+The bootstrap script creates a working directory where the data will be
+stored. You can provide the name of the working directory as a parameter
+to the boostrap script. For example, if you want the working directory to
+be named `gpf_test` use following command:
+
 
 .. code-block:: bash
 
-    wget -c https://iossifovlab.com/distribution/public/data-hg19-startup.tar.gz
+    wdae_bootstrap.sh gpf_test
 
-This command will copy the necessary data into your working directory. To
-use you need to untar it:
+As a result directory named `gpf_test` should be created with following
+structure:
 
 .. code-block:: bash
 
-    tar zxvf data-hg19-startup.tar.gz
+    gpf_test
+    ├── annotation.conf
+    ├── DAE.conf
+    ├── defaultConfiguration.conf
+    ├── geneInfo
+    ├── geneInfo.conf
+    ├── genomes
+    ├── genomesDB.conf
+    ├── genomicScores
+    ├── genomicScores.conf
+    ├── genomic-scores-hg19
+    ├── genomic-scores-hg38
+    ├── pheno
+    ├── studies
+    └── wdae
 
-This command is going to create  directory `data-hg19-startup` that contains
-preconfigured GPF data for HG19.
+Run GPF web server
+##################
+
+Enter into `gpf_test/wdae` and source `setenv.sh` file:
+
+.. code-block:: bash
+
+    cd gpf_test/wdae
+    souce ./setenv.sh
+
+And now you are ready to run GPF development web server:
+
+.. code-block:: bash
+
+    wdaemanage.py runserver 0.0.0.0:8000
+
+You can browse the development server using the IP of the host you running
+and port 8000. For example, if you are running the GPF develompent server
+locally you can use following URL:
+
+.. code-block:: bash
+
+    http://localhost:8000
+
+
 
 
 Get Genomic Scores Database (optional)
