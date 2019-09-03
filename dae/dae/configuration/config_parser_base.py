@@ -109,7 +109,6 @@ class ConfigParserBase(object):
     @classmethod
     def _collect_config_paths(cls, dirname, fail_silently=False):
         config_paths = []
-        print(dirname)
         if not os.path.exists(dirname):
             if fail_silently:
                 return []

@@ -33,7 +33,6 @@ class StudyBase(object):
 
     @property
     def study_types(self):
-        print(self.config.keys())
         return {self.config.study_type} \
             if self.config.get('studyType', None) else set()
 
