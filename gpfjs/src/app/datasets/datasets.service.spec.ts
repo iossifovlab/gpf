@@ -25,7 +25,7 @@ const mockDatasetResponse: Dataset = {
   phenoDB: 'vip',
 
   genotypeBrowser: true,
-  phenotypeGenotypeTool: true,
+  phenotypeTool: true,
   enrichmentTool: false,
   phenotypeBrowser: true,
   commonReport: true,
