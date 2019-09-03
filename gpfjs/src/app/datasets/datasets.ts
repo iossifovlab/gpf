@@ -203,7 +203,7 @@ export class GenotypeBrowser {
       json['rolesFilterOptions'],
       [...AdditionalColumn.fromJsonArray(json['genotypeColumns'])],
       PhenoFilter.fromJsonArray(json['phenoFilters']),
-      PhenoFilter.fromJsonArray(json['familyStudyFilters']),
+      PhenoFilter.fromJsonArray(json['familyFilters']),
       PresentInRole.fromJsonArray(json['presentInRole']),
     );
   }
@@ -223,7 +223,7 @@ export class GenotypeBrowser {
     readonly rolesFilterOptions: string[],
     readonly allColumns: Array<AdditionalColumn>,
     readonly phenoFilters: Array<PhenoFilter>,
-    readonly familyStudyFilters: Array<PhenoFilter>,
+    readonly familyFilters: Array<PhenoFilter>,
     readonly presentInRole: PresentInRole[],
   ) {
     this.columns = _.filter(this.allColumns,
