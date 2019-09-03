@@ -22,6 +22,7 @@ class GeneInfoConfigParser(ConfigParserBase):
         config[GeneInfoDB.SECTION] = \
             GeneInfoDB.parse(config.get(GeneInfoDB.SECTION, None))
         config['geneWeights'] = GeneWeightConfigParser.parse(config)
+        config['geneTerms'] = config.get('geneTerms', {})
 
         return config
 
