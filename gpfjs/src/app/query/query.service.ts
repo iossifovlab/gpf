@@ -16,8 +16,13 @@ import { Location } from '@angular/common';
 @Injectable()
 export class QueryService {
   private genotypePreviewUrl = 'genotype_browser/preview';
+
   private saveQueryEndpoint = 'query_state/save';
   private loadQueryEndpoint = 'query_state/load';
+  private deleteQueryEndpoint = 'query_state/delete';
+
+  private userSaveQueryEndpoint = 'user_queries/save';
+  private userCollectQueriesEndpoint = 'user_queries/collect';
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
 
@@ -71,6 +76,15 @@ export class QueryService {
 
   }
 
+  deleteQuery(uuid:string) {
+    const options = new RequestOptions({
+        headers: this.headers,
+        withCredentials: true
+    });
+
+    return this.http.post(this.deleteQueryEndpoint, { uuid: uuid }, options)
+  }
+
   getLoadUrl(uuid: string) {
     let pathname = this.router.createUrlTree(
       ['load-query', uuid]).toString();
@@ -80,5 +94,27 @@ export class QueryService {
 
   getLoadUrlFromResponse(response: {}) {
     return this.getLoadUrl(response['uuid']);
+  }
+
+  saveUserQuery(uuid: string, query_name: string, query_description: string) {
+    const options = new RequestOptions({
+      headers: this.headers, withCredentials: true
+    });
+
+    const data = {
+      query_uuid: uuid,
+      name: query_name,
+      description: query_description
+    };
+
+    return this.http
+      .post(this.userSaveQueryEndpoint, data, options);
+  }
+
+  collectUserSavedQueries() {
+    const options = new RequestOptions({withCredentials: true});
+    return this.http
+      .get(this.userCollectQueriesEndpoint, options)
+      .map(response => response.json());
   }
 }

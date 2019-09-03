@@ -150,6 +150,9 @@ import { AddButtonComponent } from './add-button/add-button.component';
 import { RemoveButtonComponent } from './remove-button/remove-button.component';
 import { PopupComponent } from './popup/popup.component';
 import { PresentInRoleComponent } from './present-in-role/present-in-role.component';
+import { SaveQueryComponent } from './save-query/save-query.component';
+import { SavedQueriesTableComponent } from './saved-queries-table/saved-queries-table.component';
+import { SavedQueriesComponent } from './saved-queries/saved-queries.component';
 
 const appRoutes: Routes = [
   {
@@ -227,6 +230,10 @@ const appRoutes: Routes = [
   {
     path: 'load-query/:uuid',
     component: LoadQueryComponent
+  },
+  {
+    path: 'queries',
+    component: SavedQueriesComponent
   },
   {
     path: '**',
@@ -331,6 +338,9 @@ const appRoutes: Routes = [
     RemoveButtonComponent,
     PopupComponent,
     PresentInRoleComponent,
+    SaveQueryComponent,
+    SavedQueriesTableComponent,
+    SavedQueriesComponent,
   ],
   imports: [
     BrowserModule,

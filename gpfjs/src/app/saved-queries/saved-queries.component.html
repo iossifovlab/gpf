@@ -1,0 +1,36 @@
+<div class="container">
+    <div class="form-block">
+      <div class="card">
+        <gpf-tabset #queryTypeTabset>
+          <div class="gpf-tabset-left" style="width:200px">
+            Saved queries
+          </div>
+
+          <ngb-tab id="genotype" title="Genotype browser">
+            <ng-template ngbTabContent>
+              <gpf-saved-queries-table [queries]="genotypeQueries"></gpf-saved-queries-table>
+            </ng-template>
+          </ngb-tab>
+
+          <ngb-tab id="phenotype" title="Phenotype browser">
+            <ng-template ngbTabContent>
+              <gpf-saved-queries-table [queries]="phenotypeQueries"></gpf-saved-queries-table>
+            </ng-template>
+          </ngb-tab>
+
+          <ngb-tab id="phenotool" title="Phenotype tool">
+            <ng-template ngbTabContent>
+              <gpf-saved-queries-table [queries]="phenotoolQueries"></gpf-saved-queries-table>
+            </ng-template>
+          </ngb-tab>
+
+          <ngb-tab id="enrichment" title="Enrichment tool">
+            <ng-template ngbTabContent>
+              <gpf-saved-queries-table [queries]="enrichmentQueries"></gpf-saved-queries-table>
+            </ng-template>
+          </ngb-tab>
+
+        </gpf-tabset>
+      </div>
+    </div>
+</div>
