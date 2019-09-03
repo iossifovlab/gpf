@@ -30,6 +30,7 @@ setuptools.setup(
     scripts=[
         'wdae/wdaemanage.py',
         'wdae/wdae_create_dev_users.sh',
+        'wdae/wdae_bootstrap.sh',
     ],
     # entry_points={
     #     'console_scripts': [

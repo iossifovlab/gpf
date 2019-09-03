@@ -143,7 +143,7 @@ def generate_study_config(dae_config, study_id, argv):
 
 
 def generate_common_report(dae_config, study_id):
-    from tools.generate_common_report import main
+    from dae.tools.generate_common_report import main
     argv = ['--studies', study_id]
     main(dae_config, argv)
 
