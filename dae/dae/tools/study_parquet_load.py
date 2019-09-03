@@ -6,10 +6,10 @@ import argparse
 import time
 from copy import deepcopy
 
-from configuration.configuration import DAEConfigParser
-from studies.factory import VariantsDb
+from dae.configuration.configuration import DAEConfigParser
+from dae.studies.factory import VariantsDb
 
-from tools.simple_study_import import impala_load_study
+from dae.tools.simple_study_import import impala_load_study
 
 
 def parse_cli_arguments(argv=sys.argv[1:]):
@@ -31,7 +31,7 @@ def parse_cli_arguments(argv=sys.argv[1:]):
         metavar='<parquet directories>',
         dest="parquet_directories",
         help='list of parquet directories corresponding to study IDs '
-             '[default: `study_config_directory/study_id/study_id`]'
+             '[default: `<study_config_directory>/<study_id>/parquet`]'
     )
 
     parser_args = parser.parse_args(argv)
@@ -58,7 +58,7 @@ def load_study_parquet(
             study_ids.append(study_id)
 
             parquet_directory = os.path.join(
-                study_config.work_dir, study_config.id, study_config.id)
+                study_config.work_dir, study_config.id, 'parquet')
             parquet_directories.append(parquet_directory)
 
     for study_id, parquet_directory in zip(study_ids, parquet_directories):

@@ -24,7 +24,13 @@ setuptools.setup(
     ),
     include_package_data=True,
     package_dir={'':'wdae'},
-    scripts=['wdae/manage.py'],
+    package_data={
+        'gpfjs': ['static/gpfjs/*', 'static/gpfjs/assets/*'],
+    },    
+    scripts=[
+        'wdae/wdaemanage.py',
+        'wdae/wdae_create_dev_users.sh',
+    ],
     # entry_points={
     #     'console_scripts': [
     #         'scgview=scgv.qtmain:main',

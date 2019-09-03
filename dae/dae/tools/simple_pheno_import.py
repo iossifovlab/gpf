@@ -8,11 +8,11 @@ from configparser import ConfigParser
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
-from pheno.common import default_config, dump_config, check_config_pheno_db
-from pheno.prepare.ped_prepare import PrepareVariables
-from tools.pheno2browser import build_pheno_browser
+from dae.pheno.common import default_config, dump_config, check_config_pheno_db
+from dae.pheno.prepare.ped_prepare import PrepareVariables
+from dae.tools.pheno2browser import build_pheno_browser
 
-from configuration.configuration import DAEConfigParser
+from dae.configuration.configuration import DAEConfigParser
 
 
 def pheno_cli_parser():

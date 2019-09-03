@@ -8,9 +8,10 @@ import sys
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import traceback
-from pheno import pheno_db
-from pheno_browser.prepare_data import PreparePhenoBrowserBase
 import hashlib
+
+from dae.pheno import pheno_db
+from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
 
 from dae.configuration.configuration import ConfigParserBase
 
