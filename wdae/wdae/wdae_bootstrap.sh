@@ -23,7 +23,7 @@ mkdir $INSTALL_DIRNAME && \
 # rm $DATA_ARCHIVE
 
 cd $INSTALL_DIRNAME
-DAE_DB_DIR=`pwd`
+export DAE_DB_DIR=`pwd`
 echo "GPF data directory in use: $DAE_DB_DIR"
 
 mkdir -p genomic-scores-hg19
