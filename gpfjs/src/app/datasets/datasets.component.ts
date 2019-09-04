@@ -18,6 +18,7 @@ export class DatasetsComponent implements OnInit {
   registerAlertVisible = false;
   datasets$: Observable<Dataset[]>;
   selectedDataset$: Observable<Dataset>;
+  permissionDeniedPrompt: string;
   @Output() selectedDatasetChange = new EventEmitter<Dataset>();
 
   constructor(
@@ -62,6 +63,10 @@ export class DatasetsComponent implements OnInit {
           this.selectedDatasetChange.emit(selectedDataset);
         }
       });
+
+    this.datasetsService.getPermissionDeniedPrompt().subscribe(
+      aprompt => this.permissionDeniedPrompt = aprompt
+    );
   }
 
   findFirstTool(selectedDataset: Dataset) {
