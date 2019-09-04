@@ -112,6 +112,10 @@ class StudiesManager(object):
         self.get_variants_db()
         return self.background_facade
 
+    def get_permission_denied_prompt(self):
+        return self.dae_config.gpfjs.permission_denied_prompt \
+            if 'permission_denied_prompt' in self.dae_config else None
+
 
 _studies_manager = None
 _studies_manager_lock = Lock()

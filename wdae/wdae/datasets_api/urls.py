@@ -8,6 +8,9 @@ from . import views
 
 
 urlpatterns = [
+    url(r'^/deniedPrompt$',
+        views.PermissionDeniedPromptView.as_view(),
+        name="denied_prompt"),
     url(r'^$',
         views.DatasetView.as_view(),
         name="dataset_all"),

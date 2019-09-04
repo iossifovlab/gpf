@@ -3,6 +3,7 @@ Created on Jan 20, 2017
 
 @author: lubo
 '''
+import os
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -60,3 +61,20 @@ class DatasetView(APIView):
                     'error': 'Dataset {} not found'.format(dataset_id)
                 },
                 status=status.HTTP_404_NOT_FOUND)
+
+
+class PermissionDeniedPromptView(APIView):
+
+    def __init__(self):
+        filepath = get_studies_manager().get_permission_denied_prompt()
+        if filepath:
+            assert os.path.exists(filepath)
+            with open(filepath, 'r') as prompt_file:
+                self.permission_denied_prompt = prompt_file.read()
+        else:
+            self.permission_denied_prompt = \
+                ('This is a default permission denied prompt.'
+                 ' Please log in or register.')
+
+    def get(self, request):
+        return Response({'data': self.permission_denied_prompt})
