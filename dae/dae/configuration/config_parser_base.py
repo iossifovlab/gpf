@@ -27,6 +27,7 @@ class ConfigParserBase(object):
     SPLIT_STR_SETS = ()
     CAST_TO_BOOL = ()
     CAST_TO_INT = ()
+    FILTER_SELECTORS = {}
 
     @classmethod
     def read_and_parse_directory_configurations(
@@ -205,6 +206,7 @@ class ConfigParserBase(object):
         config_section = cls._split_str_sets(config_section)
         config_section = cls._cast_to_bool(config_section)
         config_section = cls._cast_to_int(config_section)
+        config_section = cls._filter_selectors(config_section)
 
         return config_section
 
@@ -253,5 +255,31 @@ class ConfigParserBase(object):
         for key in cls.CAST_TO_INT:
             if key in config:
                 config[key] = int(config[key])
+
+        return config
+
+    @classmethod
+    def _filter_selectors(cls, config):
+        for key, selected in cls.FILTER_SELECTORS.items():
+            if key not in config:
+                continue
+
+            selected_elements = \
+                config.get(selected, None) if selected else None
+            selectors = {}
+
+            for selector_id, selector in config[key].items():
+                if not isinstance(selector, dict):
+                    continue
+
+                if selected_elements and selector_id not in selected_elements:
+                    continue
+
+                if 'id' not in selector:
+                    selector['id'] = selector_id
+
+                selectors[selector_id] = selector
+
+            config[key] = selectors
 
         return config

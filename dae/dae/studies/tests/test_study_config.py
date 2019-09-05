@@ -100,6 +100,8 @@ def test_quads_f1_config_genotype_browser_genotype_column(
         expected_slots):
     genotype_browser_config = quads_f1_config.genotype_browser_config
 
+    assert len(genotype_browser_config['genotypeColumns']) == 13
+
     genotype_column = list(filter(
         lambda gc: gc['id'] == option_name,
         genotype_browser_config['genotypeColumns']

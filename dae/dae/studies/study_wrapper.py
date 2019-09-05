@@ -72,7 +72,7 @@ class StudyWrapper(object):
         if len(self.people_group) != 0:
             self.legend = {
                 ps['id']: ps['domain'] + [ps['default']]
-                for ps in self.people_group
+                for ps in self.people_group.values()
             }
         else:
             self.legend = {}
@@ -208,7 +208,7 @@ class StudyWrapper(object):
         # assert isinstance(genotype_browser_config, dict), \
         #   type(genotype_browser_config)
 
-        roles_columns = genotype_browser_config.rolesColumns
+        roles_columns = genotype_browser_config.roles_columns
 
         if not roles_columns:
             return variant

@@ -3,7 +3,6 @@ import pytest
 import os
 from box import Box
 from copy import deepcopy
-from collections import OrderedDict
 
 from dae.studies.variants_db import VariantsDb
 from dae.configuration.dae_config_parser import DAEConfigParser
@@ -105,13 +104,7 @@ def filter_info(groups):
 
 @pytest.fixture(scope='session')
 def people_groups(study1_config):
-    people_group = study1_config.people_group_config.people_group
-
-    people_groups = OrderedDict()
-    for pg in people_group:
-        people_groups[pg['id']] = pg
-
-    return people_groups
+    return study1_config.people_group_config.people_group
 
 
 @pytest.fixture(scope='session')

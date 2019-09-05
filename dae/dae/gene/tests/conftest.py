@@ -141,3 +141,9 @@ def denovo_gene_set_f4(variants_db_fixture):
 @pytest.fixture(scope='session')
 def denovo_gene_sets_facade(variants_db_fixture):
     return DenovoGeneSetCollectionFacade(variants_db_fixture)
+
+
+@pytest.fixture(scope='session')
+def f4_trio_denovo_gene_sets_config(variants_db_fixture):
+    return DenovoGeneSetCollectionConfigParser.parse(
+        variants_db_fixture.get_config('f4_trio'))

@@ -28,15 +28,23 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         'baseDownloadColumns',
         'previewColumns',
         'downloadColumns',
-        'pheno.columns',
+        'selectedPhenoValues',
         'familyFilters',
-        'phenoFilters.filters',
-        'genotype.columns',
-        'inRoles.columns',
+        'selectedPhenoFiltersValues',
+        'selectedGenotypeValues',
+        'selectedInRolesValues',
         'selectedPresentInRoleValues',
         'roles',
         'columns',
     ]
+
+    FILTER_SELECTORS = {
+        'phenoFilters': 'selectedPhenoFiltersValues',
+        'pheno': 'selectedPhenoValues',
+        'genotype': 'selectedGenotypeValues',
+        'inRoles': 'selectedInRolesValues',
+        'presentInRole': 'selectedPresentInRoleValues'
+    }
 
     @classmethod
     def _get_pheno_filter(cls, config):
@@ -45,14 +53,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
 
         pheno_filters = []
 
-        selected_filters = cls._split_str_option_list(config.filters)
-
         for pheno_filter_id, pheno_filter in config.items():
-            if not isinstance(pheno_filter, dict):
-                continue
-            if selected_filters and pheno_filter_id not in selected_filters:
-                continue
-
             mf = pheno_filter.filter
             mf = mf.split(':')
             if mf[0] == 'single':
@@ -81,14 +82,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
     def _get_pheno_column(cls, config):
         pheno_columns = []
 
-        selected_columns = cls._split_str_option_list(config.columns)
-
-        for pheno_id, pheno in config.items():
-            if not isinstance(pheno, dict):
-                continue
-            if selected_columns and pheno_id not in selected_columns:
-                continue
-
+        for _, pheno in config.items():
             slots = cls._split_str_option_list(pheno.slots)
 
             column_slots = []
@@ -103,7 +97,6 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
                         'source': '{}.{}'.format(role, source),
                     })
 
-            pheno['id'] = pheno_id
             pheno['slots'] = column_slots
 
             pheno_columns.append(pheno)
@@ -114,14 +107,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
     def _get_genotype_column(cls, config):
         genotype_column = []
 
-        selected_columns = cls._split_str_option_list(config.columns)
-
-        for genotype_id, genotype in config.items():
-            if not isinstance(genotype, dict):
-                continue
-            if selected_columns and genotype_id not in selected_columns:
-                continue
-
+        for _, genotype in config.items():
             slots = cls._split_str_option_list(genotype.slots)
 
             column_slots = []
@@ -144,7 +130,6 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
                         'format': label_format
                     })
 
-            genotype['id'] = genotype_id
             genotype['slots'] = column_slots
 
             genotype_column.append(genotype)
@@ -155,16 +140,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
     def _get_in_roles_column(cls, in_roles):
         in_roles_column = []
 
-        selected_in_roles = cls._split_str_option_list(
-            in_roles.get('columns', None))
-
-        for in_role_id, in_role in in_roles.items():
-            if not isinstance(in_role, dict):
-                continue
-            if selected_in_roles and in_role_id not in selected_in_roles:
-                continue
-
-            in_role['id'] = in_role_id
+        for _, in_role in in_roles.items():
             in_role['roles'] = cls._split_str_option_list(in_role['roles'])
             in_role['destination'] = in_role.get('destination', in_role['id'])
 
@@ -175,16 +151,10 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
     @classmethod
     def _get_present_in_role(cls, config):
         present_in_role = config.get('presentInRole', {})
-        selected_present_in_role = config.selected_present_in_role_values
 
         present_in_roles = []
 
         for pir_id, pir in present_in_role.items():
-            if selected_present_in_role and \
-                    pir_id not in selected_present_in_role:
-                continue
-
-            pir['id'] = pir_id
             pir['roles'] = [
                 Role.from_name(el.strip()).display_name
                 for el in cls._split_str_option_list(pir['roles'])
@@ -257,9 +227,9 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
             cls._get_pheno_filter(config_section.get('phenoFilters', None))
 
         config_section['genotypeColumns'] = \
-            cls._get_genotype_column(config_section.pop('genotype', {}))
+            cls._get_genotype_column(config_section.get('genotype', {}))
         config_section['phenoColumns'] = \
-            cls._get_pheno_column(config_section.pop('pheno', {}))
+            cls._get_pheno_column(config_section.get('pheno', {}))
 
         config_section['genotypeColumns'] += config_section['phenoColumns']
         config_section['previewColumnsSlots'] = \

@@ -20,6 +20,11 @@ class EnrichmentConfigParser(ConfigParserBase):
         'effect_types'
     )
 
+    FILTER_SELECTORS = {
+        'background': 'selectedBackgroundValues',
+        'counting': 'selectedCountingValues',
+    }
+
     @staticmethod
     def enrichment_cache_file(config, name=''):
         cache_file = os.path.join(
@@ -30,17 +35,11 @@ class EnrichmentConfigParser(ConfigParserBase):
         return cache_file
 
     @staticmethod
-    def _get_model(config, group, selected):
-        selected_elements = config.get(selected, None)
+    def _get_model(config, group):
         models = {}
 
         for model_id in config.get(group, {}).keys():
-            if selected_elements and model_id not in selected_elements:
-                continue
-
             model = config[group][model_id]
-            if not isinstance(model, dict):
-                continue
 
             model['id'] = model['name']
 
@@ -76,9 +75,9 @@ class EnrichmentConfigParser(ConfigParserBase):
         if not enrichment_config:
             return None
 
-        enrichment_config['backgrounds'] = cls._get_model(
-            enrichment_config, 'background', 'selectedBackgroundValues')
-        enrichment_config['counting'] = cls._get_model(
-            enrichment_config, 'counting', 'selectedCountingValues')
+        enrichment_config['backgrounds'] = \
+            cls._get_model(enrichment_config, 'background')
+        enrichment_config['counting'] = \
+            cls._get_model(enrichment_config, 'counting')
 
         return enrichment_config

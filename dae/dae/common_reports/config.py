@@ -23,10 +23,10 @@ class CommonReportsConfigParser(ConfigParserBase):
     @classmethod
     def _get_people_groups(cls, config, people_groups):
         people_groups_info = OrderedDict()
-        for people_group in people_groups:
-            if people_group['id'] not in config.peopleGroups:
+        for people_group_id, people_group in people_groups.items():
+            if people_group_id not in config.peopleGroups:
                 continue
-            people_groups_info[people_group['id']] = people_group
+            people_groups_info[people_group_id] = people_group
 
         return people_groups_info
 

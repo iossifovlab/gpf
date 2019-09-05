@@ -11,11 +11,13 @@ class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
 
     SPLIT_STR_LISTS = (
         'peopleGroups',
-        # 'standardCriterias',
-        'standardCriteriasColumns',
-        # 'recurrencyCriteria.segments',
+        'selectedStandardCriteriasValues',
         'geneSetsNames'
     )
+
+    FILTER_SELECTORS = {
+        'standardCriterias': 'selectedStandardCriteriasValues'
+    }
 
     @staticmethod
     def denovo_gene_set_cache_file(config, people_group_id=''):
@@ -58,16 +60,10 @@ class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
         result = []
 
         standard_criterias = config.get('standardCriterias', {})
-        selected_standard_criterias = config.standard_criterias_columns
 
         for sc_id, sc in standard_criterias.items():
-            if selected_standard_criterias and \
-                    sc_id not in selected_standard_criterias:
-                continue
-
-            standard_criteria = cls._split_dict_lists(
-                sc_id, sc.pop('segments')
-            )
+            standard_criteria = \
+                cls._split_dict_lists(sc_id, sc.pop('segments'))
 
             result.append(standard_criteria)
 
@@ -80,8 +76,7 @@ class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
         recurrency_criterias = {}
         for recurrency_criteria_str in \
                 cls._split_str_option_list(recurrency_criteria_segments):
-            name, from_count, to_count = \
-                recurrency_criteria_str.strip().split(':')
+            name, from_count, to_count = recurrency_criteria_str.split(':')
             recurrency_criterias[name] = {
                 'from': int(from_count),
                 'to': int(to_count)
@@ -101,7 +96,7 @@ class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
             pg.id: {
                 'name': pg.name,
                 'source': pg.source
-            } for pg in people_group
+            } for pg in people_group.values()
             if pg.id in people_groups
         }
 

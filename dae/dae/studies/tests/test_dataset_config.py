@@ -61,7 +61,7 @@ def test_composite_dataset_config_people_group(composite_dataset_config):
     people_group = composite_dataset_config.people_group_config.people_group
 
     assert len(people_group) == 1
-    pg = people_group[0]
+    pg = people_group.phenotype
 
     assert pg.name == 'Phenotype'
 
@@ -101,7 +101,7 @@ def test_composite_dataset_config_people_group_overwrite(
         people_group_config.people_group
 
     assert len(people_group) == 1
-    pg = people_group[0]
+    pg = people_group.phenotype
     assert pg.name == 'Phenotype'
     assert len(pg['values']) == 6
 

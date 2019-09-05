@@ -49,13 +49,11 @@ class StudyBase(object):
 
         people_groups = self.config.people_group_config.people_group
         if not people_group_id:
-            return people_groups[0] if people_groups else {}
+            return people_groups.values()[0] if people_groups else {}
 
-        people_group_with_id = list(filter(
-            lambda people_group: people_group.get('id') == people_group_id,
-            people_groups))
+        people_group_with_id = people_groups.get(people_group_id, {})
 
-        return people_group_with_id[0] if people_group_with_id else {}
+        return people_group_with_id
 
 
 class Study(StudyBase):
