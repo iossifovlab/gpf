@@ -160,16 +160,18 @@ def weights_loader(gene_info_config):
 
 
 @pytest.fixture(scope='module')
-def dataset_configs(dae_config_fixture):
-    dataset_configs = DatasetConfigParser.read_directory_configurations(
-        datasets_dir(),
-        fixtures_dir(),
-        defaults={'conf': dae_config_fixture.default_configuration.conf_file},
-        fail_silently=True
-    )
-    return {
-        dc[DatasetConfigParser.SECTION].id: dc for dc in dataset_configs
-    }
+def dataset_configs(dae_config_fixture, study_configs):
+    dataset_configs = \
+        DatasetConfigParser.read_and_parse_directory_configurations(
+            datasets_dir(),
+            fixtures_dir(),
+            study_configs,
+            defaults={
+                'conf': dae_config_fixture.default_configuration.conf_file
+            },
+            fail_silently=True
+        )
+    return {dc.id: dc for dc in dataset_configs}
 
 
 @pytest.fixture(scope='module')

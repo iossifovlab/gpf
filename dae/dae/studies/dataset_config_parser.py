@@ -99,7 +99,7 @@ class DatasetConfigParser(StudyConfigParserBase):
     @classmethod
     def _get_dataset_study_configs(cls, dataset_config, study_configs):
         dataset_study_configs = []
-        for study_id in DatasetConfigParser._split_str_option_list(
+        for study_id in cls._split_str_option_list(
                 dataset_config[cls.SECTION].studies):
             study_config = study_configs[study_id]
             if study_config:
