@@ -7,7 +7,7 @@ if [ -z $INSTALL_DIRNAME ]; then
     export INSTALL_DIRNAME=data-hg19-startup
 fi
 
-if [ ! -d '$INSTALL_DIRNAME' ];
+if [ -d '$INSTALL_DIRNAME' ];
 then
     echo "Directory $INSTALL_DIRNAME alreay exists. Exiting..."
     exit 1
@@ -23,8 +23,11 @@ mkdir $INSTALL_DIRNAME && \
 # rm $DATA_ARCHIVE
 
 cd $INSTALL_DIRNAME
-DAE_DB_DIR=`pwd`
+export DAE_DB_DIR=`pwd`
 echo "GPF data directory in use: $DAE_DB_DIR"
+
+mkdir -p genomic-scores-hg19
+mkdir -p genomic-scores-hg38
 
 mkdir wdae
 cd wdae
@@ -37,6 +40,8 @@ cat <<EOF > setenv.sh
 #!/bin/bash
 
 export DAE_DB_DIR=$DAE_DB_DIR
+export DAE_GENOMIC_SCORES_HG19=$DAE_DB_DIR/genomic-scores-hg19
+export DAE_GENOMIC_SCORES_HG38=$DAE_DB_DIR/genomic-scores-hg38
 
 EOF
 

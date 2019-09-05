@@ -28,8 +28,7 @@ class VariantScoreAnnotatorBase(VariantAnnotatorBase):
              self.score_file.score_filename)
 
     def _init_score_file(self):
-        assert self.config.options.scores_file, \
-            [self.config.annotator, self.config.annotator]
+        assert self.config.options.scores_file, self.config.annotator
 
         scores_filename = os.path.abspath(self.config.options.scores_file)
         assert os.path.exists(scores_filename), scores_filename

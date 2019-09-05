@@ -250,18 +250,18 @@ Example for iterating on many measures::
         result[measure_id] = cols
     
 ..
-    pheno_tool.family_filters module
+    dae.pheno_tool.family_filters module
     --------------------------------
     
-    .. automodule:: pheno_tool.family_filters
+    .. automodule:: dae.pheno_tool.family_filters
         :members:
         :undoc-members:
         :show-inheritance:
 
-pheno_tool.tool module
+dae.pheno_tool.tool module
 ----------------------
 
-.. automodule:: pheno_tool.tool
+.. automodule:: dae.pheno_tool.tool
     :members:
     :undoc-members:
     :show-inheritance:
@@ -269,7 +269,7 @@ pheno_tool.tool module
 Module contents
 ---------------
 
-.. automodule:: pheno_tool
+.. automodule:: dae.pheno_tool
     :members:
     :undoc-members:
     :show-inheritance:

@@ -83,16 +83,16 @@ You can access individuals and measures values as a joined data frame by using
     10           1.0        -1.0
 
 
-.. automodule:: pheno
+.. automodule:: dae.pheno
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-pheno.pheno_db module
+dae.pheno.pheno_db module
 ---------------------
 
-.. automodule:: pheno.pheno_db
+.. automodule:: dae.pheno.pheno_db
     :members:
     :undoc-members:
     :show-inheritance:

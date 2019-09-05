@@ -51,7 +51,7 @@ Example usage of `variants` package::
 VariantBase - a base class for variants
 ---------------------------------------
     
-.. autoclass:: variants.variant.VariantBase
+.. autoclass:: dae.variants.variant.VariantBase
     :members:
     :undoc-members:
     :special-members: __init__, __eq__, __ne__, __lt__, __gt__
@@ -60,7 +60,7 @@ VariantBase - a base class for variants
 SummaryAllele - a base class for representing alleles
 -----------------------------------------------------
     
-.. autoclass:: variants.variant.SummaryAllele
+.. autoclass:: dae.variants.variant.SummaryAllele
     :members:
     :undoc-members:
     :special-members: __init__
@@ -70,7 +70,7 @@ SummaryAllele - a base class for representing alleles
 SummaryVariant - representation of summary variants
 ---------------------------------------------------
 
-.. autoclass:: variants.variant.SummaryVariant
+.. autoclass:: dae.variants.variant.SummaryVariant
     :members:
     :special-members: __init__, __getitem__, __contains__ 
     :undoc-members:
@@ -79,7 +79,7 @@ SummaryVariant - representation of summary variants
 FamilyInheritanceMixture - common inheritance methods
 -----------------------------------------------------
 
-.. autoclass:: variants.family_variant.FamilyInheritanceMixture
+.. autoclass:: dae.variants.family_variant.FamilyInheritanceMixture
     :members:
     :undoc-members:
     :inherited-members:
@@ -89,7 +89,7 @@ FamilyInheritanceMixture - common inheritance methods
 FamilyAllele - representation of family allele
 ----------------------------------------------
 
-.. autoclass:: variants.family_variant.FamilyAllele
+.. autoclass:: dae.variants.family_variant.FamilyAllele
     :members:
     :special-members: __getattr__
     :undoc-members:
@@ -98,7 +98,7 @@ FamilyAllele - representation of family allele
 FamilyVariant - representation of family variants
 -------------------------------------------------
 
-.. autoclass:: variants.family_variant.FamilyVariant
+.. autoclass:: dae.variants.family_variant.FamilyVariant
     :members:
     :special-members: __getattr__
     :undoc-members:
@@ -109,7 +109,7 @@ FamilyVariant - representation of family variants
 variants.family module
 ----------------------
 
-.. automodule:: variants.family
+.. automodule:: dae.variants.family
     :members:
     :undoc-members:
     :show-inheritance:
@@ -117,7 +117,7 @@ variants.family module
 Family - representation of a family
 -----------------------------------
     
-.. autoclass:: variants.family.Family
+.. autoclass:: dae.variants.family.Family
     :members:
     :undoc-members:
     :special-members: __init__, __len__
@@ -126,7 +126,7 @@ Family - representation of a family
 VcfFamily - family specialization for VCF variants
 --------------------------------------------------
     
-.. autoclass:: variants.raw_vcf.VcfFamily
+.. autoclass:: dae.variants.raw_vcf.VcfFamily
     :members:
     :undoc-members:
     :special-members: __init__
@@ -136,7 +136,7 @@ VcfFamily - family specialization for VCF variants
 RawFamilyVariants - query interface for VCF variants
 ----------------------------------------------------
 
-.. autoclass:: variants.raw_vcf.RawFamilyVariants
+.. autoclass:: dae.variants.raw_vcf.RawFamilyVariants
     :members:
     :undoc-members:
     :inherited-members:
@@ -259,7 +259,7 @@ Functions from `parquet_io` module
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-.. automodule:: variants.parquet_io
+.. automodule:: dae.variants
     :members:
     :undoc-members:
 

@@ -14,7 +14,7 @@ from dae.annotation.tools.annotator_base import AnnotatorBase, \
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.file_io import IOType, IOManager
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
-from dae.annotation.tools.utils import AnnotatorInitializer
+from dae.annotation.tools.utils import AnnotatorFactory
 
 from dae.configuration.dae_config_parser import DAEConfigParser
 
@@ -55,7 +55,7 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
         pipeline = PipelineAnnotator(pipeline_config)
         for section_config in pipeline_config.sections:
-            annotator = AnnotatorInitializer.instantiate(section_config)
+            annotator = AnnotatorFactory.make_annotator(section_config)
             pipeline.add_annotator(annotator)
             output_columns = [
                 col for col in annotator.config.output_columns

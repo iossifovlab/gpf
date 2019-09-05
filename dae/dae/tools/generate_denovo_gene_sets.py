@@ -7,7 +7,7 @@ from dae.gene.denovo_gene_set_collection_facade import \
 from dae.studies.variants_db import VariantsDb
 
 
-def main(options=None):
+def main(dae_config=None, argv=None):
     description = 'Generate genovo gene sets tool'
     parser = argparse.ArgumentParser(description=description)
 
@@ -20,10 +20,12 @@ def main(options=None):
         'names for generating denovo gene sets. Default to all.',
         default=None, action='store')
 
-    args = parser.parse_args(options)
+    args = parser.parse_args(argv)
 
-    config = DAEConfigParser.read_and_parse_file_configuration()
-    variants_db = VariantsDb(config)
+    if dae_config is None:
+        dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    variants_db = VariantsDb(dae_config)
+
     dgscf = DenovoGeneSetCollectionFacade(variants_db)
 
     if args.show_studies:

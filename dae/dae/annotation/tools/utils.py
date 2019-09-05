@@ -1,7 +1,7 @@
 from importlib import import_module
 
 
-class AnnotatorInitializer(object):
+class AnnotatorFactory(object):
 
     @staticmethod
     def _split_class_name(class_fullname):
@@ -26,7 +26,7 @@ class AnnotatorInitializer(object):
         return clazz
 
     @classmethod
-    def instantiate(cls, annotator_config):
+    def make_annotator(cls, annotator_config):
         clazz = cls._name_to_class(annotator_config.annotator)
         assert clazz is not None
         return clazz(annotator_config)

@@ -148,6 +148,13 @@ def generate_common_report(dae_config, study_id):
     main(dae_config, argv)
 
 
+def generate_denovo_gene_sets(dae_config, study_id):
+    from dae.tools.generate_denovo_gene_sets import main
+    argv = ['--studies', study_id]
+
+    main(dae_config, argv)
+
+
 if __name__ == "__main__":
     dae_config = DAEConfigParser.read_and_parse_file_configuration()
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
@@ -200,5 +207,12 @@ if __name__ == "__main__":
         start = time.time()
         generate_common_report(dae_config, study_id)
         print("DONE: generating common reports in {:.2f} sec".format(
+            time.time() - start
+            ), file=sys.stderr)
+
+        print("generating de Novo gene sets...", file=sys.stderr)
+        start = time.time()
+        generate_denovo_gene_sets(dae_config, study_id)
+        print("DONE: generating de Novo gene sets in {:.2f} sec".format(
             time.time() - start
             ), file=sys.stderr)

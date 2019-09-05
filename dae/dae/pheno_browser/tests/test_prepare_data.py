@@ -204,6 +204,7 @@ def test_handle_regressions(mocker, fphdb, output_dir, fphdb_desc_conf):
 
     res = [r for r in prep.handle_regressions(regressand) if r is not None]
     assert len(res) == 2
+    assert sorted([r['regression_id'] for r in res]) == sorted(['age', 'nviq'])
 
     mocked.assert_called()
     measure, reg_measure, jitter = mocked.call_args_list[0][0]

@@ -69,34 +69,34 @@ Each value in the dictionary is an instance of the class :ref:`EnrichmentResult`
     Out[23]: 9.4660348870512223e-07
 
 
-enrichment_tool.background module
+dae.enrichment_tool.background module
 ---------------------------------
 
-.. automodule:: enrichment_tool.background
+.. automodule:: dae.enrichment_tool.background
     :members:
     :undoc-members:
     :show-inheritance:
 
-enrichment_tool.config module
+dae.enrichment_tool.config module
 -----------------------------
 
-.. automodule:: enrichment_tool.config
+.. automodule:: dae.enrichment_tool.config
     :members:
     :undoc-members:
     :show-inheritance:
 
-enrichment_tool.event_counters module
+dae.enrichment_tool.event_counters module
 -------------------------------------
 
-.. automodule:: enrichment_tool.event_counters
+.. automodule:: dae.enrichment_tool.event_counters
     :members:
     :undoc-members:
     :show-inheritance:
 
-enrichment_tool.tool module
+dae.enrichment_tool.tool module
 ---------------------------
 
-.. automodule:: enrichment_tool.tool
+.. automodule:: dae.enrichment_tool.tool
     :members:
     :undoc-members:
     :show-inheritance:
@@ -105,7 +105,7 @@ enrichment_tool.tool module
 Module contents
 ---------------
 
-.. automodule:: enrichment_tool
+.. automodule:: dae.enrichment_tool
     :members:
     :undoc-members:
     :show-inheritance:
