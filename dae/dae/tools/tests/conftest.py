@@ -1,11 +1,11 @@
-import os
-import shutil
-
 import pytest
 
+import os
+import shutil
 from box import Box
+
+from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.annotation.tools.file_io import IOManager, IOType
-# from utils.fixtures import change_environment
 from dae.utils.fixtures import change_environment
 
 
@@ -14,6 +14,13 @@ def relative_to_this_test_folder(path):
         os.path.dirname(os.path.realpath(__file__)),
         path
     )
+
+
+@pytest.fixture(scope='session')
+def dae_config_fixture():
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=relative_to_this_test_folder('fixtures'))
+    return dae_config
 
 
 @pytest.fixture
