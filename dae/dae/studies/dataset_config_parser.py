@@ -71,9 +71,6 @@ class DatasetConfigParser(StudyConfigParserBase):
         'has_transmitted': _boolean_or_attribute,
         'has_denovo': _boolean_or_attribute,
 
-        'genotypeBrowserConfig': _same_value_attribute,
-        'genotype_browser_config': _same_value_attribute,
-
         'peopleGroupConfig': _same_value_attribute,
         'people_group_config': _same_value_attribute,
 

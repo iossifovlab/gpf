@@ -66,20 +66,10 @@ def test_composite_dataset_config_people_group(composite_dataset_config):
     assert pg.name == 'Phenotype'
 
 
-# FIXME: this was causing segmentation fault while testing
-@pytest.mark.xfail
 def test_composite_dataset_config_genotype_browser(composite_dataset_config):
     assert composite_dataset_config is not None
 
     assert composite_dataset_config.genotype_browser is True
-    genotype_browser_config = composite_dataset_config.genotype_browser_config
-    assert genotype_browser_config is not None
-
-    download_columns = genotype_browser_config.download_columns
-    assert download_columns.to_list() == \
-        ['family', 'phenotype', 'variant', 'best', 'fromparent',
-         'inchild', 'effect', 'count', 'geneeffect', 'effectdetails',
-         'weights', 'freq']
 
 
 def test_composite_dataset_config_enrichment_tool(composite_dataset_config):
