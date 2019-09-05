@@ -7,9 +7,7 @@ from dae.studies.study import StudyBase
 class Dataset(StudyBase):
 
     def __init__(self, dataset_config, studies):
-        super(Dataset, self).__init__(dataset_config)
-        self.studies = studies
-        self.study_names = ",".join(study.name for study in self.studies)
+        super(Dataset, self).__init__(dataset_config, studies)
 
     def query_variants(self, **kwargs):
         return itertools.chain(*[

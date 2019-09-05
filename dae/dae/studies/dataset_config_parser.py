@@ -42,7 +42,7 @@ def _list_extend_attribute(studies_configs, option_name):
 
 def _strings_join_attribute(studies_configs, option_name):
     res = filter(
-        lambda r: r != '',
+        lambda r: r != '' and r is not None,
         [getattr(st, option_name) for st in studies_configs])
     return ','.join(res)
 
@@ -83,15 +83,18 @@ class DatasetConfigParser(StudyConfigParserBase):
         'authorizedGroups': _set_union_attribute,
         'authorized_groups': _set_union_attribute,
 
-        'years': _list_extend_attribute,
-        'pub_meds': _list_extend_attribute,
-        'names': _list_extend_attribute,
-        'ids': _list_extend_attribute,
-
-        'study_types': _set_union_attribute,
-
         'year': _strings_join_attribute,
+        'years': _list_extend_attribute,
+
         'pub_med': _strings_join_attribute,
+        'pubMed': _strings_join_attribute,
+        'pub_meds': _list_extend_attribute,
+        'pubMeds': _list_extend_attribute,
+
+        'study_type': _strings_join_attribute,
+        'studyType': _strings_join_attribute,
+        'study_types': _set_union_attribute,
+        'studyTypes': _set_union_attribute,
     }
 
     @classmethod

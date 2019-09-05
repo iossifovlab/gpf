@@ -5,18 +5,18 @@ def test_dataset_configs_simple(dataset_configs):
     assert dataset_configs is not None
 
 
-@pytest.mark.parametrize("option_name,expected_value", [
-    ("name", "QUADS_COMPOSITE"),
-    ("id", "quads_composite_ds"),
-    ("description", "QUADS COMPOSITE DESCRIPTION"),
-    ("studies", ['quads_in_child', 'quads_in_parent']),
+@pytest.mark.parametrize('option_name,expected_value', [
+    ('name', 'QUADS_COMPOSITE'),
+    ('id', 'quads_composite_ds'),
+    ('description', 'QUADS COMPOSITE DESCRIPTION'),
+    ('studies', ['quads_in_child', 'quads_in_parent']),
 
-    ("phenotypeTool", False),
-    ("phenotypeBrowser", False),
-    ("year", ""),
-    # ("years", []),
-    # ("pub_med", ""),
-    # ("pub_meds", [])
+    ('phenotypeTool', False),
+    ('phenotypeBrowser', False),
+    ('year', ''),
+    ('years', []),
+    ('pubMed', ''),
+    ('pub_meds', [])
 ])
 def test_dataset_quads_composite_dict(
         quads_composite_dataset_config, option_name, expected_value):
@@ -27,21 +27,21 @@ def test_dataset_quads_composite_dict(
     assert config[option_name] == expected_value
 
 
-@pytest.mark.parametrize("option_name,expected_value", [
-    ("name", "QUADS_COMPOSITE"),
-    ("id", "quads_composite_ds"),
-    ("description", "QUADS COMPOSITE DESCRIPTION"),
-    ("studies", ['quads_in_child', 'quads_in_parent']),
+@pytest.mark.parametrize('option_name,expected_value', [
+    ('name', 'QUADS_COMPOSITE'),
+    ('id', 'quads_composite_ds'),
+    ('description', 'QUADS COMPOSITE DESCRIPTION'),
+    ('studies', ['quads_in_child', 'quads_in_parent']),
 
-    ("phenotypeTool", False),
-    ("phenotypeBrowser", False),
+    ('phenotypeTool', False),
+    ('phenotypeBrowser', False),
 
-    ("phenotype_tool", False),
-    ("phenotype_browser", False),
-    ("year", ""),
-    # ("years", []),
-    # ("pub_med", ""),
-    # ("pub_meds", [])
+    ('phenotype_tool', False),
+    ('phenotype_browser', False),
+    ('year', ''),
+    ('years', []),
+    ('pub_med', ''),
+    ('pub_meds', [])
 ])
 def test_dataset_quads_composite_attr(
         quads_composite_dataset_config, option_name, expected_value):

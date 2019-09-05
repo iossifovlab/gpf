@@ -3,45 +3,31 @@ import os.path
 
 class StudyBase(object):
 
-    def __init__(self, config):
+    def __init__(self, config, studies):
+        self.studies = studies
+        self.study_names = ','.join(study.name for study in self.studies)
+
         self.config = config
 
         self.id = self.config.id
         self.name = self.config.name
-        self.has_denovo = self.config.get('hasDenovo', None)
-        self.has_transmitted = self.config.get('hasTransmitted', None)
-        self.has_complex = self.config.get('hasComplex', None)
-        self.has_cnv = self.config.get('hasCNV', None)
-        self.study_type = self.config.get('studyType', None)
-        self.year = self.config.get('year', None)
-        self.pub_med = self.config.get('pub_med', '')
+        self.has_denovo = self.config.has_denovo
+        self.has_transmitted = self.config.has_transmitted
+        self.has_complex = self.config.has_complex
+        self.has_cnv = self.config.hasCNV
+        self.study_type = self.config.study_type
+        self.year = self.config.year
+        self.pub_med = self.config.pub_med
+
+        self.study_types = self.config.study_types
+        self.years = self.config.years
+        self.pub_meds = self.config.pub_meds
 
         if os.path.exists(self.config.description):
             with open(self.config.description) as desc:
                 self.description = desc.read()
         else:
             self.description = self.config.description
-
-    @property
-    def years(self):
-        return [self.config.year] if self.config.year else []
-
-    @property
-    def pub_meds(self):
-        return [self.config.pub_med] if self.config.pub_med else []
-
-    @property
-    def study_types(self):
-        return {self.config.study_type} \
-            if self.config.get('studyType', None) else set()
-
-    @property
-    def ids(self):
-        return [self.config.id]
-
-    @property
-    def names(self):
-        return [self.config.name]
 
     def query_variants(self, **kwargs):
         raise NotImplementedError()
@@ -75,12 +61,9 @@ class StudyBase(object):
 class Study(StudyBase):
 
     def __init__(self, config, backend):
-        super(Study, self).__init__(config)
+        super(Study, self).__init__(config, [self])
 
         self.backend = backend
-
-        self.studies = [self]
-        self.study_names = ",".join(study.name for study in self.studies)
 
     def query_variants(self, **kwargs):
         if 'studyFilters' in kwargs and \
