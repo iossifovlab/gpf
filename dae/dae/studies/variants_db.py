@@ -1,5 +1,4 @@
 import os
-from box import Box
 
 from dae.pheno.pheno_factory import PhenoFactory
 
@@ -278,8 +277,6 @@ class VariantsDb(object):
             return Study(study_config, variants)
 
     def make_dataset(self, dataset_config):
-        assert isinstance(dataset_config, Box), type(dataset_config)
-
         if dataset_config is None:
             return None
 
