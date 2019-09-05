@@ -72,8 +72,8 @@ class DenovoGeneSetCollectionFacade(object):
 
         return result
 
-    def get_all_denovo_gene_set_ids(self):
-        self.load_cache()
+    def get_all_denovo_gene_set_ids(self, load=False):
+        self.load_cache(load=load)
 
         return [
             config.id for config in self._denovo_gene_set_config_cache.values()

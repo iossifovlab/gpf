@@ -56,10 +56,10 @@ Using `to_df` method we can get a data frame represenging all gene weights::
 
 
 
-gene.weights module
+dae.gene.weights module
 -------------------
 
-.. automodule:: gene.weights
+.. automodule:: dae.gene.weights
     :members:
     :undoc-members:
     :show-inheritance:
@@ -68,7 +68,7 @@ gene.weights module
 Module contents
 ---------------
 
-.. automodule:: gene
+.. automodule:: dae.gene
     :members:
     :undoc-members:
     :show-inheritance:
