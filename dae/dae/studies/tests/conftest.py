@@ -2,7 +2,6 @@ import os
 import pytest
 
 from dae.pheno.pheno_factory import PhenoFactory
-from dae.studies.study_factory import StudyFactory
 from dae.studies.study_wrapper import StudyWrapper
 from dae.studies.study_config_parser import StudyConfigParser
 from dae.studies.dataset_config_parser import DatasetConfigParser
@@ -43,11 +42,6 @@ def variants_db_fixture(dae_config_fixture):
 
 
 @pytest.fixture(scope='module')
-def study_factory(dae_config_fixture, variants_db_fixture):
-    return StudyFactory(dae_config_fixture, variants_db_fixture)
-
-
-@pytest.fixture(scope='module')
 def study_configs(dae_config_fixture):
     study_configs = StudyConfigParser.read_and_parse_directory_configurations(
         dae_config_fixture.studies_db.dir,
@@ -67,47 +61,48 @@ def quads_f2_config(variants_db_fixture):
     return variants_db_fixture.get_study_config('quads_f2')
 
 
-def load_study(study_factory, study_configs, study_name):
+def load_study(variants_db_fixture, study_configs, study_name):
     config = study_configs.get(study_name)
 
-    result = study_factory.make_study(config)
+    result = variants_db_fixture.make_study(config)
     assert result is not None
     return result
 
 
 @pytest.fixture(scope='module')
-def inheritance_trio(study_factory, study_configs):
-    return load_study(study_factory, study_configs, 'inheritance_trio')
+def inheritance_trio(variants_db_fixture, study_configs):
+    return load_study(variants_db_fixture, study_configs, 'inheritance_trio')
 
 
 @pytest.fixture(scope='module')
-def quads_f1(study_factory, study_configs):
-    return load_study(study_factory, study_configs, 'quads_f1')
+def quads_f1(variants_db_fixture, study_configs):
+    return load_study(variants_db_fixture, study_configs, 'quads_f1')
 
 
 @pytest.fixture(scope='module')
-def quads_f2(study_factory, study_configs):
-    return load_study(study_factory, study_configs, 'quads_f2')
+def quads_f2(variants_db_fixture, study_configs):
+    return load_study(variants_db_fixture, study_configs, 'quads_f2')
 
 
 @pytest.fixture(scope='module')
-def quads_variant_types(study_factory, study_configs):
-    return load_study(study_factory, study_configs, 'quads_variant_types')
+def quads_variant_types(variants_db_fixture, study_configs):
+    return load_study(
+        variants_db_fixture, study_configs, 'quads_variant_types')
 
 
 @pytest.fixture(scope='module')
-def quads_two_families(study_factory, study_configs):
-    return load_study(study_factory, study_configs, 'quads_two_families')
+def quads_two_families(variants_db_fixture, study_configs):
+    return load_study(variants_db_fixture, study_configs, 'quads_two_families')
 
 
 @pytest.fixture(scope='module')
-def quads_in_child(study_factory, study_configs):
-    return load_study(study_factory, study_configs, 'quads_in_child')
+def quads_in_child(variants_db_fixture, study_configs):
+    return load_study(variants_db_fixture, study_configs, 'quads_in_child')
 
 
 @pytest.fixture(scope='module')
-def quads_in_parent(study_factory, study_configs):
-    return load_study(study_factory, study_configs, 'quads_in_parent')
+def quads_in_parent(variants_db_fixture, study_configs):
+    return load_study(variants_db_fixture, study_configs, 'quads_in_parent')
 
 
 @pytest.fixture(scope='module')
@@ -187,18 +182,19 @@ def composite_dataset_config(variants_db_fixture):
     return variants_db_fixture.get_dataset_config('composite_dataset_ds')
 
 
-def load_dataset(study_factory, dataset_configs, dataset_name):
+def load_dataset(variants_db_fixture, dataset_configs, dataset_name):
     config = dataset_configs.get(dataset_name)
     assert config is not None, dataset_name
 
-    result = study_factory.make_dataset(config)
+    result = variants_db_fixture.make_dataset(config)
     assert result is not None
     return result
 
 
 @pytest.fixture(scope='module')
-def inheritance_trio_dataset(study_factory, dataset_configs):
-    return load_dataset(study_factory, dataset_configs, 'inheritance_trio_ds')
+def inheritance_trio_dataset(variants_db_fixture, dataset_configs):
+    return load_dataset(
+        variants_db_fixture, dataset_configs, 'inheritance_trio_ds')
 
 
 @pytest.fixture(scope='module')
@@ -207,9 +203,9 @@ def inheritance_trio_dataset_wrapper(inheritance_trio_dataset, pheno_factory):
 
 
 @pytest.fixture(scope='module')
-def quads_two_families_dataset(study_factory, dataset_configs):
+def quads_two_families_dataset(variants_db_fixture, dataset_configs):
     return load_dataset(
-        study_factory, dataset_configs, 'quads_two_families_ds')
+        variants_db_fixture, dataset_configs, 'quads_two_families_ds')
 
 
 @pytest.fixture(scope='module')
@@ -218,8 +214,8 @@ def quads_two_families_dataset_wrapper(quads_two_families_dataset):
 
 
 @pytest.fixture(scope='module')
-def quads_f1_dataset(study_factory, dataset_configs):
-    return load_dataset(study_factory, dataset_configs, 'quads_f1_ds')
+def quads_f1_dataset(variants_db_fixture, dataset_configs):
+    return load_dataset(variants_db_fixture, dataset_configs, 'quads_f1_ds')
 
 
 @pytest.fixture(scope='module')
@@ -228,8 +224,8 @@ def quads_f1_dataset_wrapper(quads_f1_dataset, pheno_factory):
 
 
 @pytest.fixture(scope='module')
-def quads_f2_dataset(study_factory, dataset_configs):
-    return load_dataset(study_factory, dataset_configs, 'quads_f2_ds')
+def quads_f2_dataset(variants_db_fixture, dataset_configs):
+    return load_dataset(variants_db_fixture, dataset_configs, 'quads_f2_ds')
 
 
 @pytest.fixture(scope='module')
@@ -238,9 +234,9 @@ def quads_f2_dataset_wrapper(quads_f2_dataset, pheno_factory):
 
 
 @pytest.fixture(scope='module')
-def quads_variant_types_dataset(study_factory, dataset_configs):
+def quads_variant_types_dataset(variants_db_fixture, dataset_configs):
     return load_dataset(
-        study_factory, dataset_configs, 'quads_variant_types_ds')
+        variants_db_fixture, dataset_configs, 'quads_variant_types_ds')
 
 
 @pytest.fixture(scope='module')
@@ -250,8 +246,9 @@ def quads_variant_types_dataset_wrapper(
 
 
 @pytest.fixture(scope='module')
-def quads_in_child_dataset(study_factory, dataset_configs):
-    return load_dataset(study_factory, dataset_configs, 'quads_in_child_ds')
+def quads_in_child_dataset(variants_db_fixture, dataset_configs):
+    return load_dataset(
+        variants_db_fixture, dataset_configs, 'quads_in_child_ds')
 
 
 @pytest.fixture(scope='module')
@@ -260,8 +257,9 @@ def quads_in_child_dataset_wrapper(quads_in_child_dataset, pheno_factory):
 
 
 @pytest.fixture(scope='module')
-def quads_in_parent_dataset(study_factory, dataset_configs):
-    return load_dataset(study_factory, dataset_configs, 'quads_in_parent_ds')
+def quads_in_parent_dataset(variants_db_fixture, dataset_configs):
+    return load_dataset(
+        variants_db_fixture, dataset_configs, 'quads_in_parent_ds')
 
 
 @pytest.fixture(scope='module')
@@ -270,8 +268,9 @@ def quads_in_parent_dataset_wrapper(quads_in_parent_dataset, pheno_factory):
 
 
 @pytest.fixture(scope='module')
-def composite_dataset(study_factory, dataset_configs):
-    return load_dataset(study_factory, dataset_configs, 'composite_dataset_ds')
+def composite_dataset(variants_db_fixture, dataset_configs):
+    return load_dataset(
+        variants_db_fixture, dataset_configs, 'composite_dataset_ds')
 
 
 @pytest.fixture(scope='module')

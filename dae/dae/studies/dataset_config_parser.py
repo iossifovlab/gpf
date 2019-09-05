@@ -97,6 +97,35 @@ class DatasetConfigParser(StudyConfigParserBase):
     }
 
     @classmethod
+    def _get_dataset_study_configs(cls, dataset_config, study_configs):
+        dataset_study_configs = []
+        for study_id in DatasetConfigParser._split_str_option_list(
+                dataset_config[cls.SECTION].studies):
+            study_config = study_configs[study_id]
+            if study_config:
+                dataset_study_configs.append(study_config)
+        return dataset_study_configs
+
+    @classmethod
+    def read_and_parse_directory_configurations(
+            cls, configurations_dir, work_dir, study_configs, defaults=None,
+            fail_silently=False):
+        configs = cls.read_directory_configurations(
+            configurations_dir, work_dir, defaults=defaults,
+            fail_silently=fail_silently
+        )
+
+        parsed_configs = []
+
+        for config in configs:
+            dataset_study_configs = \
+                cls._get_dataset_study_configs(config, study_configs)
+            parsed_config = cls.parse(config, dataset_study_configs)
+            parsed_configs.append(parsed_config)
+
+        return parsed_configs
+
+    @classmethod
     def parse(cls, config, study_configs):
         config = super(DatasetConfigParser, cls).parse(config)
         if config is None:

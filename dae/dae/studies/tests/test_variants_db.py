@@ -4,6 +4,20 @@ from dae.studies.tests.conftest import fixtures_dir
 from dae.studies.variants_db import VariantsDb
 
 
+def test_fixture_variants_db_can_be_loaded(variants_db_fixture):
+    assert variants_db_fixture is not None
+
+
+def test_variants_db_can_create_study_from_config(
+        study_configs, variants_db_fixture):
+    test_config = study_configs.get('quads_f1')
+
+    assert variants_db_fixture.make_study(test_config) is not None
+
+
+##############################################################
+
+
 def test_variants_db_studies_simple(dae_config_fixture):
     assert dae_config_fixture is not None
     assert dae_config_fixture.studies_db.dir is not None
