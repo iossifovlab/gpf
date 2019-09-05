@@ -17,8 +17,6 @@ class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
         'geneSetsNames'
     )
 
-    CAST_TO_BOOL = ('enabled')
-
     @staticmethod
     def denovo_gene_set_cache_file(config, people_group_id=''):
         cache_path = os.path.join(
@@ -123,9 +121,6 @@ class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
         config_section = super(DenovoGeneSetCollectionConfigParser, cls). \
             parse_section(config_section)
         if config_section is None:
-            return None
-
-        if config_section.get('enabled', True) is False:
             return None
 
         config_section['id'] = config.id

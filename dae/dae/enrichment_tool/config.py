@@ -73,8 +73,7 @@ class EnrichmentConfigParser(ConfigParserBase):
 
         enrichment_config = \
             super(EnrichmentConfigParser, cls).parse_section(enrichment_config)
-
-        if enrichment_config.get('enabled', True) is False:
+        if not enrichment_config:
             return None
 
         enrichment_config['backgrounds'] = cls._get_model(

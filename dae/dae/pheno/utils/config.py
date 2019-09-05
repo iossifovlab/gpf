@@ -10,6 +10,8 @@ from dae.configuration.config_parser_base import ConfigParserBase
 
 class PhenoConfigParser(ConfigParserBase):
 
+    SECTION = 'phenoDB'
+
     @staticmethod
     def _assert_pheno_paths(configs):
         for _, config in configs.items():

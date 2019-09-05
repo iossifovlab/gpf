@@ -13,12 +13,11 @@ class CommonReportsConfigParser(ConfigParserBase):
     SPLIT_STR_LISTS = (
         'peopleGroups',
         'effect_groups',
-        'effect_types'
+        'effect_types',
     )
 
     CAST_TO_BOOL = (
         'draw_all_families',
-        'enabled'
     )
 
     @classmethod
@@ -66,8 +65,6 @@ class CommonReportsConfigParser(ConfigParserBase):
         config_section = \
             super(CommonReportsConfigParser, cls).parse_section(config_section)
         if not config_section:
-            return None
-        if config_section.get('enabled', True) is False:
             return None
 
         people_group = config.people_group_config.people_group

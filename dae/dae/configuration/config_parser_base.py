@@ -197,6 +197,9 @@ class ConfigParserBase(object):
             return None
         if not isinstance(config_section, dict):
             return config_section
+        if 'enabled' in config_section:
+            if cls._str_to_bool(config_section['enabled']) is False:
+                return None
 
         config_section = cls._split_str_lists(config_section)
         config_section = cls._split_str_sets(config_section)
