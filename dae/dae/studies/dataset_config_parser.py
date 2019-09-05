@@ -56,8 +56,6 @@ class DatasetConfigParser(StudyConfigParserBase):
     ]
 
     COMPOSITE_ATTRIBUTES = {
-        # 'phenotypes': _set_union_attribute,
-
         'genotypeBrowser': _boolean_and_attribute,
         'genotype_browser': _boolean_and_attribute,
 

@@ -14,7 +14,6 @@ def test_study_config_simple(study_configs):
 
 @pytest.mark.parametrize("option_name,expected_value", [
     ("file_format", "vcf"),
-    ("phenotypes", {"autism"}),
     ("name", "QUADS_F1"),
     ("id", "quads_f1"),
     ("description", "QUADS F1"),
@@ -30,7 +29,6 @@ def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
 
 @pytest.mark.parametrize("option_name,expected_value", [
     ("file_format", "vcf"),
-    ("phenotypes", {"autism"}),
     ("name", "QUADS_F1"),
     ("id", "quads_f1"),
     ("description", "QUADS F1"),

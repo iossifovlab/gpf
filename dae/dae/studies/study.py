@@ -8,7 +8,6 @@ class StudyBase(object):
 
         self.id = self.config.id
         self.name = self.config.name
-        # self.phenotypes = self.config.phenotypes
         self.has_denovo = self.config.get('hasDenovo', None)
         self.has_transmitted = self.config.get('hasTransmitted', None)
         self.has_complex = self.config.get('hasComplex', None)

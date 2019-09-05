@@ -9,10 +9,6 @@ from dae.configuration.config_parser_base import ConfigParserBase
 
 class StudyConfigParserBase(ConfigParserBase):
 
-    SPLIT_STR_SETS = (
-        'phenotypes',
-    )
-
     CAST_TO_BOOL = (
         'hasComplex',
         'hasCNV',
@@ -110,7 +106,6 @@ class StudyConfigParser(StudyConfigParserBase):
         # assert config.pedigree_file
         assert config.file_format
         assert config.work_dir
-        # assert config.phenotypes
         assert 'studyType' in config
         assert 'hasComplex' in config
         assert 'hasCNV' in config
