@@ -4,10 +4,8 @@ import os.path
 class StudyBase(object):
 
     def __init__(self, config, studies):
-        self.studies = studies
-        self.study_names = ','.join(study.name for study in self.studies)
-
         self.config = config
+        self.studies = studies
 
         self.id = self.config.id
         self.name = self.config.name
@@ -28,6 +26,8 @@ class StudyBase(object):
                 self.description = desc.read()
         else:
             self.description = self.config.description
+
+        self.study_names = ','.join(study.name for study in self.studies)
 
     def query_variants(self, **kwargs):
         raise NotImplementedError()
