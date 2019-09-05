@@ -43,12 +43,11 @@ def variants_db_fixture(dae_config_fixture):
 
 @pytest.fixture(scope='module')
 def study_configs(dae_config_fixture):
-    study_configs = StudyConfigParser.read_and_parse_directory_configurations(
+    return StudyConfigParser.read_and_parse_directory_configurations(
         dae_config_fixture.studies_db.dir,
         dae_config_fixture.dae_data_dir,
         defaults={'conf': dae_config_fixture.default_configuration.conf_file}
     )
-    return {sc.id: sc for sc in study_configs}
 
 
 @pytest.fixture(scope='module')
@@ -161,17 +160,13 @@ def weights_loader(gene_info_config):
 
 @pytest.fixture(scope='module')
 def dataset_configs(dae_config_fixture, study_configs):
-    dataset_configs = \
-        DatasetConfigParser.read_and_parse_directory_configurations(
-            datasets_dir(),
-            fixtures_dir(),
-            study_configs,
-            defaults={
-                'conf': dae_config_fixture.default_configuration.conf_file
-            },
-            fail_silently=True
-        )
-    return {dc.id: dc for dc in dataset_configs}
+    return DatasetConfigParser.read_and_parse_directory_configurations(
+        datasets_dir(),
+        fixtures_dir(),
+        study_configs,
+        defaults={'conf': dae_config_fixture.default_configuration.conf_file},
+        fail_silently=True
+    )
 
 
 @pytest.fixture(scope='module')

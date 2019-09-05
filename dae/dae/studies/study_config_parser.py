@@ -52,6 +52,18 @@ class StudyConfigParser(StudyConfigParserBase):
     SECTION = 'study'
 
     @classmethod
+    def read_and_parse_directory_configurations(
+            cls, configurations_dir, work_dir, defaults=None,
+            fail_silently=False):
+        configs = super(StudyConfigParser, cls). \
+            read_and_parse_directory_configurations(
+                configurations_dir, work_dir, defaults=defaults,
+                fail_silently=fail_silently
+            )
+
+        return {c.id: c for c in configs}
+
+    @classmethod
     def parse(cls, config):
         config = super(StudyConfigParser, cls).parse(config)
         if config is None:

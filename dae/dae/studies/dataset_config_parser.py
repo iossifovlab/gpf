@@ -123,7 +123,7 @@ class DatasetConfigParser(StudyConfigParserBase):
             parsed_config = cls.parse(config, dataset_study_configs)
             parsed_configs.append(parsed_config)
 
-        return parsed_configs
+        return {pc.id: pc for pc in parsed_configs}
 
     @classmethod
     def parse(cls, config, study_configs):
