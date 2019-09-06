@@ -93,10 +93,8 @@ class DenovoGeneSet(object):
         return res
 
     def _generate_gene_set_for(self, people_group_id):
-        people_group = self.denovo_gene_sets[people_group_id]['source']
-
         people_group_values = [
-            str(p) for p in self.study.get_pedigree_values(people_group)
+            str(p) for p in self.study.get_pedigree_values(people_group_id)
         ]
 
         cache = {value: {} for value in people_group_values}
@@ -115,7 +113,7 @@ class DenovoGeneSet(object):
                 innermost_cache = self._init_criterias_cache(
                     cache[people_group_value], criterias_combination)
                 innermost_cache.update(self._add_genes_families(
-                    people_group, people_group_value, self.study, variants,
+                    people_group_id, people_group_value, self.study, variants,
                     search_args))
 
         return cache
