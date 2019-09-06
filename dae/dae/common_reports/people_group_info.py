@@ -62,9 +62,9 @@ class PeopleGroupInfo(object):
 
 class PeopleGroupsInfo(object):
 
-    def __init__(self, study, filter_info, people_groups_info):
+    def __init__(self, study, people_groups, people_groups_info):
         self.study = study
-        self.filter_info = filter_info
+        self.people_groups = people_groups
         self.people_groups_info = people_groups_info
 
         self.people_groups_info = self._get_people_groups_info()
@@ -74,7 +74,7 @@ class PeopleGroupsInfo(object):
             PeopleGroupInfo(
                 self.people_groups_info[people_group], people_group,
                 study=self.study)
-            for people_group in self.filter_info['people_groups']
+            for people_group in self.people_groups
         ]
 
     def get_first_people_group_info(self):

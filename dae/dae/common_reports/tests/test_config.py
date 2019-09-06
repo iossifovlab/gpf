@@ -4,10 +4,11 @@ from dae.common_reports.config import CommonReportsConfigParser
 
 
 def test_common_reports_config(
-        common_reports_config, people_groups, filter_info):
+        common_reports_config, people_groups, selected_people_groups, groups):
     assert common_reports_config.id == 'Study1'
     assert common_reports_config.people_groups_info == people_groups
-    assert common_reports_config.filter_info == filter_info
+    assert common_reports_config.people_groups == selected_people_groups
+    assert common_reports_config.groups == groups
     assert common_reports_config.effect_groups == ['Missense']
     assert common_reports_config.effect_types == ['Frame-shift']
     assert common_reports_config.file_path == '/path/to/common_report'
@@ -32,15 +33,14 @@ def test_common_reports_parse_config(study1_config):
         sorted(['id', 'name', 'color'])
     assert people_groups_info['source'] == 'study.phenotype'
 
-    filter_info = common_reports_config.filter_info
-
-    assert list(filter_info['people_groups']) == ['phenotype']
-    assert filter_info['groups']['Role'] == ['role']
-    assert filter_info['groups']['Diagnosis'] == ['phenotype']
-    assert filter_info['groups']['Role and Diagnosis'] == ['role', 'phenotype']
-    assert filter_info['draw_all_families'] is False
-    assert filter_info['families_count_show_id'] == 5
-    assert filter_info['id'] == 'Study1'
+    assert list(common_reports_config.people_groups) == ['phenotype']
+    assert common_reports_config.groups['Role'] == ['role']
+    assert common_reports_config.groups['Diagnosis'] == ['phenotype']
+    assert common_reports_config.groups['Role and Diagnosis'] == \
+        ['role', 'phenotype']
+    assert common_reports_config.draw_all_families is False
+    assert common_reports_config.families_count_show_id == 5
+    assert common_reports_config.id == 'Study1'
 
     assert common_reports_config.effect_groups == []
     assert common_reports_config.effect_types == \
