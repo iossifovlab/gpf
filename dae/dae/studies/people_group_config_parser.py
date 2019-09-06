@@ -62,6 +62,9 @@ class PeopleGroupConfigParser(ConfigParserBase):
 
     @classmethod
     def parse(cls, config):
+        if cls.SECTION not in config:
+            return None
+
         config[cls.SECTION]['peopleGroup'] = deepcopy(config[cls.SECTION])
         config = super(PeopleGroupConfigParser, cls).parse(config)
 

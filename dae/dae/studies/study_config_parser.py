@@ -47,9 +47,10 @@ class StudyConfigParserBase(ConfigParserBase):
 
     @classmethod
     def _fill_people_group_config(cls, config_section, config):
-        if PeopleGroupConfigParser.SECTION not in config:
-            return None
         people_group_config = PeopleGroupConfigParser.parse(config)
+        if not people_group_config:
+            return None
+
         if people_group_config is not None and \
                 PeopleGroupConfigParser.SECTION in people_group_config:
             people_group_config = \
@@ -59,11 +60,10 @@ class StudyConfigParserBase(ConfigParserBase):
 
     @classmethod
     def _fill_genotype_browser_config(cls, config_section, config):
-        if GenotypeBrowserConfigParser.SECTION not in config:
-            return None
         genotype_browser_config = GenotypeBrowserConfigParser.parse(config)
+
         if genotype_browser_config is not None and \
-                config_section.get('genotypeBrowser', False) is True:
+                config_section.genotype_browser:
             config_section['genotypeBrowserConfig'] = genotype_browser_config
 
     @classmethod

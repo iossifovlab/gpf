@@ -217,6 +217,8 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
 
     @classmethod
     def parse(cls, config):
+        if cls.SECTION not in config:
+            return None
         config = super(GenotypeBrowserConfigParser, cls).parse(config)
 
         config_section = config.get('genotypeBrowser', None)
