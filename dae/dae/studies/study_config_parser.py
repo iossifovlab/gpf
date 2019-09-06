@@ -80,11 +80,10 @@ class StudyConfigParser(StudyConfigParserBase):
 
     @classmethod
     def read_and_parse_directory_configurations(
-            cls, configurations_dir, work_dir, defaults=None,
-            fail_silently=False):
+            cls, configurations_dir, defaults=None, fail_silently=False):
         configs = super(StudyConfigParser, cls). \
             read_and_parse_directory_configurations(
-                configurations_dir, work_dir, defaults=defaults,
+                configurations_dir, defaults=defaults,
                 fail_silently=fail_silently
             )
 

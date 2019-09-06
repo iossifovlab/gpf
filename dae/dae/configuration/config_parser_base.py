@@ -31,14 +31,12 @@ class ConfigParserBase(object):
 
     @classmethod
     def read_and_parse_directory_configurations(
-            cls, configurations_dir, work_dir, defaults=None,
-            fail_silently=False):
+            cls, configurations_dir, defaults=None, fail_silently=False):
         if defaults is None:
             defaults = {}
 
         configs = cls.read_directory_configurations(
-            configurations_dir, work_dir, defaults=defaults,
-            fail_silently=fail_silently
+            configurations_dir, defaults=defaults, fail_silently=fail_silently
         )
 
         parsed_configs = []
@@ -65,8 +63,7 @@ class ConfigParserBase(object):
 
     @classmethod
     def read_directory_configurations(
-            cls, configurations_dir, work_dir, defaults=None,
-            fail_silently=False):
+            cls, configurations_dir, defaults=None, fail_silently=False):
         if defaults is None:
             defaults = {}
 

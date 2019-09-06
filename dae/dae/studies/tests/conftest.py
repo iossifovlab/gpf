@@ -45,7 +45,6 @@ def variants_db_fixture(dae_config_fixture):
 def study_configs(dae_config_fixture):
     return StudyConfigParser.read_and_parse_directory_configurations(
         dae_config_fixture.studies_db.dir,
-        dae_config_fixture.dae_data_dir,
         defaults={'conf': dae_config_fixture.default_configuration.conf_file}
     )
 
@@ -162,7 +161,6 @@ def weights_loader(gene_info_config):
 def dataset_configs(dae_config_fixture, study_configs):
     return DatasetConfigParser.read_and_parse_directory_configurations(
         datasets_dir(),
-        fixtures_dir(),
         study_configs,
         defaults={'conf': dae_config_fixture.default_configuration.conf_file},
         fail_silently=True

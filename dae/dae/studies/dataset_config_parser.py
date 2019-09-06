@@ -106,11 +106,10 @@ class DatasetConfigParser(StudyConfigParserBase):
 
     @classmethod
     def read_and_parse_directory_configurations(
-            cls, configurations_dir, work_dir, study_configs, defaults=None,
+            cls, configurations_dir, study_configs, defaults=None,
             fail_silently=False):
         configs = cls.read_directory_configurations(
-            configurations_dir, work_dir, defaults=defaults,
-            fail_silently=fail_silently
+            configurations_dir, defaults=defaults, fail_silently=fail_silently
         )
 
         parsed_configs = []
