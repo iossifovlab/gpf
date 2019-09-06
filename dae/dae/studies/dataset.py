@@ -34,8 +34,11 @@ class Dataset(StudyBase):
             lambda x, y: x | y,
             [st.get_pedigree_values(column) for st in self.studies], set())
 
-    def get_people_with_people_group(self, people_group, people_group_value):
+    def get_people_with_people_group(
+            self, people_group_id, people_group_value):
         return functools.reduce(
             lambda x, y: x | y,
-            [st.get_people_with_people_group(people_group, people_group_value)
-             for st in self.studies], set())
+            [st.get_people_with_people_group(
+             people_group_id, people_group_value) for st in self.studies],
+            set()
+        )

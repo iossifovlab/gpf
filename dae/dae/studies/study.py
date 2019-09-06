@@ -77,13 +77,13 @@ class Study(StudyBase):
     def families(self):
         return self.backend.families
 
-    def get_pedigree_values(self, people_group):
-        source = self.get_people_group(people_group).source
+    def get_pedigree_values(self, column):
+        return set(self.backend.ped_df[column])
 
-        return set(self.backend.ped_df[source])
-
-    def get_people_with_people_group(self, people_group, people_group_value):
-        source = self.get_people_group(people_group).source
+    def get_people_with_people_group(
+            self, people_group_id, people_group_value):
+        people_group = self.get_people_group(people_group_id)
+        source = people_group.source
 
         pedigree_df = self.backend.ped_df
         people_ids = pedigree_df[

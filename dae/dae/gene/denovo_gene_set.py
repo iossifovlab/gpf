@@ -93,8 +93,9 @@ class DenovoGeneSet(object):
         return res
 
     def _generate_gene_set_for(self, people_group_id):
+        people_group_source = self.denovo_gene_sets[people_group_id]['source']
         people_group_values = [
-            str(p) for p in self.study.get_pedigree_values(people_group_id)
+            str(p) for p in self.study.get_pedigree_values(people_group_source)
         ]
 
         cache = {value: {} for value in people_group_values}
