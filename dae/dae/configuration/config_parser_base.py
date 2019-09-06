@@ -263,20 +263,27 @@ class ConfigParserBase(object):
 
             selected_elements = \
                 config.get(selected, None) if selected else None
-            selectors = {}
 
-            for selector_id, selector in config[key].items():
-                if not isinstance(selector, dict):
-                    continue
+            def filter_selector(selector_key):
+                if not isinstance(config[key][selector_key], dict):
+                    return True
 
-                if selected_elements and selector_id not in selected_elements:
-                    continue
+                if selected_elements and selector_key not in selected_elements:
+                    return True
 
-                if 'id' not in selector:
-                    selector['id'] = selector_id
+                return False
 
-                selectors[selector_id] = selector
+            keys_to_delete = tuple(filter(filter_selector, config[key]))
 
-            config[key] = selectors
+            for delele_key in keys_to_delete:
+                config[key].pop(delele_key)
+
+            for selector_id in config[key].keys():
+                selector = config[key][selector_id]
+
+                if not selector.id:
+                    selector.id = selector_id
+
+                config[key][selector_id] = selector
 
         return config
