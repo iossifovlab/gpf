@@ -59,18 +59,9 @@ class DAEConfigParser(ConfigParserBase):
         return environment_override
 
     @classmethod
-    def read_and_parse_file_configuration(
-            cls, config_file='DAE.conf', work_dir=None, defaults=None,
-            environment_override=True):
+    def _get_defaults(cls, environment_override, defaults=None):
         if defaults is None:
             defaults = {}
-
-        if work_dir is None:
-            work_dir = os.environ.get('DAE_DB_DIR', None)
-        assert work_dir is not None
-        work_dir = os.path.abspath(work_dir)
-        assert os.path.exists(work_dir)
-        assert os.path.isdir(work_dir)
 
         if environment_override:
             override = cls.get_environment_override_values()
@@ -82,6 +73,21 @@ class DAEConfigParser(ConfigParserBase):
         default_sections = defaults.get('sections', {})
         sections.update(default_sections)
         defaults['sections'] = sections
+
+        return defaults
+
+    @classmethod
+    def read_and_parse_file_configuration(
+            cls, config_file='DAE.conf', work_dir=None, defaults=None,
+            environment_override=True):
+        if work_dir is None:
+            work_dir = os.environ.get('DAE_DB_DIR', None)
+        assert work_dir is not None
+        work_dir = os.path.abspath(work_dir)
+        assert os.path.exists(work_dir)
+        assert os.path.isdir(work_dir)
+
+        defaults = cls._get_defaults(environment_override, defaults)
 
         config = super(DAEConfigParser, cls).read_file_configuration(
             config_file, work_dir, defaults=defaults
