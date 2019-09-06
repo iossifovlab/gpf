@@ -21,7 +21,7 @@ class DAEConfigParser(ConfigParserBase):
     }
 
     @staticmethod
-    def get_environment_override_values():
+    def _get_environment_override_values():
         impala_db = os.environ.get('DAE_IMPALA_DB', None)
         impala_host = os.environ.get('DAE_IMPALA_HOST', None)
         impala_port = os.environ.get('DAE_IMPALA_PORT', None)
@@ -64,7 +64,7 @@ class DAEConfigParser(ConfigParserBase):
             defaults = {}
 
         if environment_override:
-            override = cls.get_environment_override_values()
+            override = cls._get_environment_override_values()
             default_override = defaults.get('override', {})
             override.update(default_override)
             defaults['override'] = override
