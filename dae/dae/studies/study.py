@@ -43,8 +43,8 @@ class StudyBase(object):
         raise NotImplementedError()
 
     def get_people_group(self, people_group_id):
-        if 'peopleGroupConfig' not in self.config and \
-                'peopleGroup' not in self.config.people_group_config:
+        if not self.config.people_group_config and \
+                not self.config.people_group_config.people_group:
             return None
 
         people_groups = self.config.people_group_config.people_group

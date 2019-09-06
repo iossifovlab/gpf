@@ -7,9 +7,7 @@ class PeopleGroupInfo(object):
             self, people_group_info, people_group, study=None,
             people_groups=[]):
         self.name = people_group_info['name']
-        self.domain_order = \
-            [domain['id'] for domain in people_group_info['domain']]
-        self.domain = people_group_info['values']
+        self.domain = people_group_info['domain']
         self.default = people_group_info['default']
         self.source = people_group_info['source']
 
@@ -35,11 +33,11 @@ class PeopleGroupInfo(object):
     def sort_people_groups_by_domain_order(self, people_groups):
         people_groups = sorted(people_groups)
 
-        missing_index = len(self.domain_order)
+        missing_index = len(self.domain.keys())
         people_groups_order = {}
         for people_group in people_groups:
-            if people_group in self.domain_order:
-                index = self.domain_order.index(people_group)
+            if people_group in list(self.domain.keys()):
+                index = list(self.domain.keys()).index(people_group)
             else:
                 index = missing_index
                 missing_index += 1

@@ -71,7 +71,7 @@ Example:
             people_group_id = people_group['id']
 
             res = {}
-            for s in people_group['domain']:
+            for s in people_group['domain'].values():
                 res[s['id']] = {
                     'count': {'M': 0, 'F': 0, 'all': 0},
                     'color': s['color'],
@@ -93,7 +93,7 @@ Example:
                     res[family_group]['count']['all'] += 1
                     res[family_group]['count'][p.gender.name] += 1
 
-            res = [res[s['id']] for s in people_group['domain']]
+            res = [res[pg_id] for pg_id in people_group['domain'].keys()]
             return Response(res, status=status.HTTP_200_OK)
         except NotAuthenticated:
             LOGGER.exception("error while processing genotype query")

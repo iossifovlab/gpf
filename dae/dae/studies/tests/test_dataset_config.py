@@ -103,7 +103,7 @@ def test_composite_dataset_config_people_group_overwrite(
     assert len(people_group) == 1
     pg = people_group.phenotype
     assert pg.name == 'Phenotype'
-    assert len(pg['values']) == 6
+    assert len(pg.domain) == 6
 
 
 def test_composite_dataset_config_genotype_browser_overwrite(

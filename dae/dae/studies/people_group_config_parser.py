@@ -6,14 +6,14 @@ from dae.configuration.config_parser_base import ConfigParserBase
 
 class PeopleGroupConfigParser(ConfigParserBase):
 
-    SECTION = 'peopleGroup'
+    SECTION = 'people_group'
 
     SPLIT_STR_LISTS = [
         'selectedPeopleGroupValues'
     ]
 
     FILTER_SELECTORS = {
-        'peopleGroup': 'selectedPeopleGroupValues'
+        'people_group': 'selectedPeopleGroupValues',
     }
 
     @staticmethod
@@ -35,40 +35,44 @@ class PeopleGroupConfigParser(ConfigParserBase):
         return {option['id']: option for option in options}
 
     @classmethod
-    def _get_people_groups(cls, config):
-        people_groups = {}
+    def _get_people_groups(cls, people_group_config):
+        for people_group_id in people_group_config.keys():
+            people_group = people_group_config[people_group_id]
 
-        for people_group_id, people_group in config.items():
-            people_group['default'] = cls._people_group_selectors_split_dict(
-                people_group['default'])
-            people_group['domain'] = cls._split_dict_lists(
-                people_group['domain'])
-            people_group['values'] = cls._get_values(people_group['domain'])
+            people_group.default = cls._people_group_selectors_split_dict(
+                people_group.default)
+            people_group.domain = \
+                cls._get_values(cls._split_dict_lists(people_group.domain))
 
-            people_groups[people_group_id] = people_group
+            people_group_config[people_group_id] = people_group
 
-        return Box(
-            people_groups, camel_killer_box=True, default_box=True,
-            default_box_attr=None
-        )
+        return people_group_config
 
     @classmethod
     def get_config_description(cls, config):
         config = config.to_dict()
 
-        result = {'peopleGroup': config.get('peopleGroup', {}).values()}
+        def domain_to_list(people_group):
+            people_group['domain'] = list(people_group['domain'].values())
+            return people_group
+
+        people_groups = config.get('people_group', {}).values()
+        people_groups = list(map(domain_to_list, people_groups))
+        result = {'people_group': people_groups}
 
         return result
 
     @classmethod
     def parse(cls, config):
-        if cls.SECTION not in config:
+        if not config or not config.get(cls.SECTION, None):
             return None
 
-        config[cls.SECTION]['peopleGroup'] = deepcopy(config[cls.SECTION])
-        config = super(PeopleGroupConfigParser, cls).parse(config)
+        config_section = deepcopy(config[cls.SECTION])
+        config_section.people_group = deepcopy(config_section)
+        config_section = \
+            super(PeopleGroupConfigParser, cls).parse_section(config_section)
 
-        config[cls.SECTION]['peopleGroup'] = \
-            cls._get_people_groups(config[cls.SECTION]['peopleGroup'])
+        config_section.people_group = \
+            cls._get_people_groups(config_section.people_group)
 
-        return config
+        return config_section

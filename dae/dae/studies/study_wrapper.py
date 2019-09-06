@@ -63,7 +63,7 @@ class StudyWrapper(object):
         self.gene_weights_columns = gene_weights_columns
         self.column_labels = column_labels
 
-        if 'peopleGroupConfig' in self.config:
+        if self.config.people_group_config:
             self.people_group = self.config.people_group_config.people_group
         else:
             self.people_group = []
@@ -71,7 +71,7 @@ class StudyWrapper(object):
 
         if len(self.people_group) != 0:
             self.legend = {
-                ps['id']: ps['domain'] + [ps['default']]
+                ps['id']: list(ps['domain'].values()) + [ps['default']]
                 for ps in self.people_group.values()
             }
         else:
@@ -351,7 +351,7 @@ class StudyWrapper(object):
                 pedigree_selector_query['id'])
 
             if people_group:
-                if set(people_group['values']) == \
+                if set(people_group.domain) == \
                         set(pedigree_selector_query['checkedValues']):
                     return kwargs
 
@@ -584,7 +584,7 @@ class StudyWrapper(object):
         return [
             'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
             'phenotypeTool', 'authorizedGroups', 'phenoDB',
-            'enrichmentTool', 'genotypeBrowser', 'peopleGroupConfig',
+            'enrichmentTool', 'genotypeBrowser', 'people_group_config',
             'genotypeBrowserConfig', 'commonReport', 'studyTypes', 'studies'
         ]
 
@@ -592,7 +592,7 @@ class StudyWrapper(object):
     def _get_configs_keys():
         return {
             'genotypeBrowserConfig': GenotypeBrowserConfigParser,
-            'peopleGroupConfig': PeopleGroupConfigParser
+            'people_group_config': PeopleGroupConfigParser
         }
 
     def get_dataset_description(self):

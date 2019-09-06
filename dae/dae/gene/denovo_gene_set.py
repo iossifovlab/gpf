@@ -132,7 +132,7 @@ class DenovoGeneSet(object):
         if not gene_set_pg:
             return []
 
-        return gene_set_pg['domain']
+        return list(gene_set_pg['domain'].values())
 
     def get_gene_sets_types_legend(self):
         return [
