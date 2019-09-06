@@ -5,7 +5,7 @@ from dae.configuration.config_parser_base import ConfigParserBase
 from dae.variants.attributes import Sex
 
 
-class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
+class DenovoGeneSetConfigParser(ConfigParserBase):
 
     SECTION = 'denovoGeneSets'
 
@@ -111,9 +111,8 @@ class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
         if study_config is None:
             return None
 
-        config_section = deepcopy(study_config.get(
-            DenovoGeneSetCollectionConfigParser.SECTION, None))
-        config_section = super(DenovoGeneSetCollectionConfigParser, cls). \
+        config_section = deepcopy(study_config.get(cls.SECTION, None))
+        config_section = super(DenovoGeneSetConfigParser, cls). \
             parse_section(config_section)
         if config_section is None:
             return None

@@ -18,38 +18,39 @@ def name_in_gene_sets(gene_sets, name, count=None):
     return False
 
 
-def test_denovo_gene_sets_exist(denovo_gene_sets_facade):
-    denovo = denovo_gene_sets_facade.has_denovo_gene_set('denovo')
+def test_denovo_gene_set_exist(denovo_gene_set_facade):
+    denovo = denovo_gene_set_facade.has_denovo_gene_set('denovo')
     assert denovo
 
 
-def test_main_gene_sets_missing(denovo_gene_sets_facade):
+def test_main_gene_set_missing(denovo_gene_set_facade):
     with pytest.raises(AssertionError):
-        denovo_gene_sets_facade.has_denovo_gene_set('main')
+        denovo_gene_set_facade.has_denovo_gene_set('main')
 
 
-def test_get_all_collections_descriptions(denovo_gene_sets_facade):
-    gene_sets_collections = \
-        denovo_gene_sets_facade.get_collections_descriptions()
-    assert gene_sets_collections['desc'] == 'Denovo'
-    assert gene_sets_collections['name'] == 'denovo'
-    assert gene_sets_collections['format'] == ['key', ' (|count|)']
-    assert len(gene_sets_collections['types']) == 4
+def test_get_all_descriptions(denovo_gene_set_facade):
+    gene_set_descriptions = denovo_gene_set_facade.get_descriptions()
+
+    assert gene_set_descriptions['desc'] == 'Denovo'
+    assert gene_set_descriptions['name'] == 'denovo'
+    assert gene_set_descriptions['format'] == ['key', ' (|count|)']
+    assert len(gene_set_descriptions['types']) == 4
 
 
-def test_get_f4_collections_descriptions(denovo_gene_sets_facade):
-    gene_sets_collections = \
-        denovo_gene_sets_facade.get_collections_descriptions(
-            permitted_datasets=['f4_trio'])
-    assert gene_sets_collections['desc'] == 'Denovo'
-    assert gene_sets_collections['name'] == 'denovo'
-    assert gene_sets_collections['format'] == ['key', ' (|count|)']
-    assert len(gene_sets_collections['types']) == 1
-    assert gene_sets_collections['types'][0]['datasetId'] == 'f4_trio'
-    assert gene_sets_collections['types'][0]['datasetName'] == 'f4_trio'
-    assert gene_sets_collections['types'][0]['peopleGroupId'] == 'phenotype'
-    assert gene_sets_collections['types'][0]['peopleGroupName'] == 'Phenotype'
-    assert len(gene_sets_collections['types'][0]['peopleGroupLegend']) == 6
+def test_get_f4_descriptions(denovo_gene_set_facade):
+    gene_set_descriptions = denovo_gene_set_facade.get_descriptions(
+        permitted_datasets=['f4_trio']
+    )
+
+    assert gene_set_descriptions['desc'] == 'Denovo'
+    assert gene_set_descriptions['name'] == 'denovo'
+    assert gene_set_descriptions['format'] == ['key', ' (|count|)']
+    assert len(gene_set_descriptions['types']) == 1
+    assert gene_set_descriptions['types'][0]['datasetId'] == 'f4_trio'
+    assert gene_set_descriptions['types'][0]['datasetName'] == 'f4_trio'
+    assert gene_set_descriptions['types'][0]['peopleGroupId'] == 'phenotype'
+    assert gene_set_descriptions['types'][0]['peopleGroupName'] == 'Phenotype'
+    assert len(gene_set_descriptions['types'][0]['peopleGroupLegend']) == 6
 
 
 @pytest.mark.parametrize('denovo_gene_set_id,people_groups,count', [
@@ -60,8 +61,8 @@ def test_get_f4_collections_descriptions(denovo_gene_sets_facade):
     ('Synonymous', ['autism', 'unaffected'], 2),
 ])
 def test_get_denovo_gene_set_f4(
-        denovo_gene_sets_facade, denovo_gene_set_id, people_groups, count):
-    dgs = denovo_gene_sets_facade.get_denovo_gene_set(
+        denovo_gene_set_facade, denovo_gene_set_id, people_groups, count):
+    dgs = denovo_gene_set_facade.get_denovo_gene_set(
         'denovo', denovo_gene_set_id,
         {'f4_trio': {'phenotype': people_groups}})
 
@@ -79,16 +80,16 @@ def test_get_denovo_gene_set_f4(
     ('Missense', ['unaffected']),
 ])
 def test_get_denovo_gene_set_f4_empty(
-        denovo_gene_sets_facade, denovo_gene_set_id, people_groups):
-    dgs = denovo_gene_sets_facade.get_denovo_gene_set(
+        denovo_gene_set_facade, denovo_gene_set_id, people_groups):
+    dgs = denovo_gene_set_facade.get_denovo_gene_set(
         'denovo', denovo_gene_set_id,
         {'f4_trio': {'phenotype': people_groups}})
 
     assert dgs is None
 
 
-def test_get_denovo_gene_sets_f4_autism(denovo_gene_sets_facade):
-    dgs = denovo_gene_sets_facade.get_denovo_gene_sets(
+def test_get_denovo_gene_sets_f4_autism(denovo_gene_set_facade):
+    dgs = denovo_gene_set_facade.get_denovo_gene_sets(
         'denovo', {'f4_trio': {'phenotype': ['autism']}})
 
     assert dgs is not None
@@ -99,8 +100,8 @@ def test_get_denovo_gene_sets_f4_autism(denovo_gene_sets_facade):
     assert name_in_gene_sets(dgs, 'Missense.Female', 1)
 
 
-def test_get_denovo_gene_sets_f4_unaffected(denovo_gene_sets_facade):
-    dgs = denovo_gene_sets_facade.get_denovo_gene_sets(
+def test_get_denovo_gene_sets_f4_unaffected(denovo_gene_set_facade):
+    dgs = denovo_gene_set_facade.get_denovo_gene_sets(
         'denovo', {'f4_trio': {'phenotype': ['unaffected']}})
 
     assert dgs is not None
@@ -108,8 +109,8 @@ def test_get_denovo_gene_sets_f4_unaffected(denovo_gene_sets_facade):
     assert name_in_gene_sets(dgs, 'Synonymous', 1)
 
 
-def test_get_denovo_gene_sets_f4_autism_unaffected(denovo_gene_sets_facade):
-    dgs = denovo_gene_sets_facade.get_denovo_gene_sets(
+def test_get_denovo_gene_sets_f4_autism_unaffected(denovo_gene_set_facade):
+    dgs = denovo_gene_set_facade.get_denovo_gene_sets(
         'denovo', {'f4_trio': {'phenotype': ['autism', 'unaffected']}})
 
     assert dgs is not None
@@ -120,23 +121,23 @@ def test_get_denovo_gene_sets_f4_autism_unaffected(denovo_gene_sets_facade):
     assert name_in_gene_sets(dgs, 'Missense.Female', 1)
 
 
-def test_all_denovo_gene_set_ids(denovo_gene_sets_facade):
-    assert sorted(denovo_gene_sets_facade.get_all_denovo_gene_set_ids()) == \
+def test_all_denovo_gene_set_ids(denovo_gene_set_facade):
+    assert sorted(denovo_gene_set_facade.get_all_denovo_gene_set_ids()) == \
         sorted(['f1_group', 'f2_group', 'f3_group', 'f4_trio'])
 
 
-def test_build_load_denovo_gene_set_cache(denovo_gene_sets_facade):
-    dgs = denovo_gene_sets_facade.get_denovo_gene_sets(
+def test_build_load_denovo_gene_set_cache(denovo_gene_set_facade):
+    dgs = denovo_gene_set_facade.get_denovo_gene_sets(
         'denovo', {'f4_trio': {'phenotype': ['autism', 'unaffected']}})
 
     assert dgs is not None
     assert len(dgs) == 4
 
-    denovo_gene_sets_facade.build_cache(['f4_trio'])
-    denovo_gene_sets_facade._denovo_gene_set_cache = {}
-    denovo_gene_sets_facade._denovo_gene_set_config_cache = {}
+    denovo_gene_set_facade.build_cache(['f4_trio'])
+    denovo_gene_set_facade._denovo_gene_set_cache = {}
+    denovo_gene_set_facade._denovo_gene_set_config_cache = {}
 
-    dgs = denovo_gene_sets_facade.get_denovo_gene_sets(
+    dgs = denovo_gene_set_facade.get_denovo_gene_sets(
         'denovo', {'f4_trio': {'phenotype': ['autism', 'unaffected']}})
 
     assert dgs is not None

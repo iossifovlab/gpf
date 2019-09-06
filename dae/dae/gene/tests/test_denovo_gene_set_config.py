@@ -2,31 +2,28 @@ from box import Box
 
 from dae.gene.tests.conftest import fixtures_dir
 
-from dae.gene.denovo_gene_set_collection_config import \
-    DenovoGeneSetCollectionConfigParser
+from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 
 from dae.studies.helpers import expand_effect_types
 from dae.variants.attributes import Sex
 
 
-def test_id(f4_trio_denovo_gene_sets_config):
-    assert f4_trio_denovo_gene_sets_config.id == 'f4_trio'
+def test_id(f4_trio_denovo_gene_set_config):
+    assert f4_trio_denovo_gene_set_config.id == 'f4_trio'
 
 
-def test_cache_file(f4_trio_denovo_gene_sets_config):
-    assert DenovoGeneSetCollectionConfigParser.denovo_gene_set_cache_file(
-        f4_trio_denovo_gene_sets_config, 'phenotype') == \
+def test_cache_file(f4_trio_denovo_gene_set_config):
+    assert DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
+        f4_trio_denovo_gene_set_config, 'phenotype') == \
             fixtures_dir() + '/studies/f4_trio/denovo-cache-phenotype.json'
 
 
-def test_people_groups(
-        f4_trio_denovo_gene_sets_config):
-    assert f4_trio_denovo_gene_sets_config.people_groups == ['phenotype']
+def test_people_groups(f4_trio_denovo_gene_set_config):
+    assert f4_trio_denovo_gene_set_config.people_groups == ['phenotype']
 
 
-def test_gene_sets_names(
-        f4_trio_denovo_gene_sets_config):
-    assert f4_trio_denovo_gene_sets_config.gene_sets_names == [
+def test_gene_sets_names(f4_trio_denovo_gene_set_config):
+    assert f4_trio_denovo_gene_set_config.gene_sets_names == [
         'LGDs', 'LGDs.Male', 'LGDs.Female', 'LGDs.Recurrent', 'LGDs.Single',
         'LGDs.Triple', 'LGDs.WE.Recurrent', 'LGDs.WE.Triple', 'Missense',
         'Missense.Single', 'Missense.Male', 'Missense.Female',
@@ -36,9 +33,8 @@ def test_gene_sets_names(
     ]
 
 
-def test_recurrency_criterias(
-        f4_trio_denovo_gene_sets_config):
-    recurrency_criterias = f4_trio_denovo_gene_sets_config.recurrency_criterias
+def test_recurrency_criterias(f4_trio_denovo_gene_set_config):
+    recurrency_criterias = f4_trio_denovo_gene_set_config.recurrency_criterias
 
     assert len(recurrency_criterias) == 3
 
@@ -52,11 +48,10 @@ def test_recurrency_criterias(
     assert recurrency_criterias['Recurrent']['to'] == -1
 
 
-def test_standard_criterias(
-        f4_trio_denovo_gene_sets_config):
-    standard_criterias = f4_trio_denovo_gene_sets_config.standard_criterias
+def test_standard_criterias(f4_trio_denovo_gene_set_config):
+    standard_criterias = f4_trio_denovo_gene_set_config.standard_criterias
     assert \
-        f4_trio_denovo_gene_sets_config.selected_standard_criterias_values == \
+        f4_trio_denovo_gene_set_config.selected_standard_criterias_values == \
         ['effect_types', 'sexes']
 
     assert len(standard_criterias) == 2
@@ -90,8 +85,8 @@ def test_standard_criterias(
     assert sexes[2]['value'] == [Sex.unspecified]
 
 
-def test_denovo_gene_sets(f4_trio_denovo_gene_sets_config):
-    denovo_gene_sets = f4_trio_denovo_gene_sets_config.denovo_gene_sets
+def test_denovo_gene_sets(f4_trio_denovo_gene_set_config):
+    denovo_gene_sets = f4_trio_denovo_gene_set_config.denovo_gene_sets
 
     assert len(denovo_gene_sets) == 1
 
@@ -109,19 +104,19 @@ def test_empty():
         }
     })
 
-    assert DenovoGeneSetCollectionConfigParser.parse(config) is None
+    assert DenovoGeneSetConfigParser.parse(config) is None
 
     config.study_config.enrichment = None
-    assert DenovoGeneSetCollectionConfigParser.parse(config) is None
+    assert DenovoGeneSetConfigParser.parse(config) is None
 
     config.study_config = None
-    assert DenovoGeneSetCollectionConfigParser.parse(config) is None
+    assert DenovoGeneSetConfigParser.parse(config) is None
 
-    assert DenovoGeneSetCollectionConfigParser.parse(None) is None
+    assert DenovoGeneSetConfigParser.parse(None) is None
 
 
 def test_missing_people_group(variants_db_fixture):
-    f1_trio_config = DenovoGeneSetCollectionConfigParser.parse(
+    f1_trio_config = DenovoGeneSetConfigParser.parse(
         variants_db_fixture.get_config('f1_study'))
 
     assert f1_trio_config is None

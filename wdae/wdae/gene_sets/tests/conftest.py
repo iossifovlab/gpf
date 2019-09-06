@@ -1,9 +1,8 @@
 import os
 import pytest
 
-from dae.gene.denovo_gene_set_collection_config import \
-    DenovoGeneSetCollectionConfigParser
-from dae.gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
+from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
+from dae.gene.denovo_gene_set import DenovoGeneSet
 
 from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.studies.variants_db import VariantsDb
@@ -54,23 +53,25 @@ def calc_gene_sets(request, denovo_gene_sets):
 
     def remove_gene_sets():
         for dgs in denovo_gene_sets:
-            os.remove(DenovoGeneSetCollectionConfigParser.
-                      denovo_gene_set_cache_file(dgs.config, 'phenotype'))
+            os.remove(DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
+                dgs.config, 'phenotype'))
     request.addfinalizer(remove_gene_sets)
 
 
-def get_denovo_gene_sets_by_id(variants_db_fixture, dgs_id):
-    denovo_gene_set_config = DenovoGeneSetCollectionConfigParser.parse(
-        variants_db_fixture.get_config(dgs_id))
+def get_denovo_gene_set_by_id(variants_db_fixture, dgs_id):
+    denovo_gene_set_config = DenovoGeneSetConfigParser.parse(
+        variants_db_fixture.get_config(dgs_id)
+    )
 
-    return DenovoGeneSetsCollection(
-        variants_db_fixture.get(dgs_id), denovo_gene_set_config)
+    return DenovoGeneSet(
+        variants_db_fixture.get(dgs_id), denovo_gene_set_config
+    )
 
 
 @pytest.fixture(scope='function')
 def denovo_gene_sets(variants_db_fixture):
     return [
-        get_denovo_gene_sets_by_id(variants_db_fixture, 'f1_group'),
-        get_denovo_gene_sets_by_id(variants_db_fixture, 'f2_group'),
-        get_denovo_gene_sets_by_id(variants_db_fixture, 'f3_group')
+        get_denovo_gene_set_by_id(variants_db_fixture, 'f1_group'),
+        get_denovo_gene_set_by_id(variants_db_fixture, 'f2_group'),
+        get_denovo_gene_set_by_id(variants_db_fixture, 'f3_group')
     ]

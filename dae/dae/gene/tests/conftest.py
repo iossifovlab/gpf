@@ -12,11 +12,9 @@ from dae.utils.fixtures import change_environment
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.score_config_parser import ScoreConfigParser
-from dae.gene.denovo_gene_set_collection_config import \
-    DenovoGeneSetCollectionConfigParser
-from dae.gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
-from dae.gene.denovo_gene_set_collection_facade import \
-    DenovoGeneSetCollectionFacade
+from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
+from dae.gene.denovo_gene_set import DenovoGeneSet
+from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
 from dae.gene.weights import WeightsLoader
 from dae.gene.scores import ScoreLoader
 
@@ -80,8 +78,8 @@ def calc_gene_sets(request, denovo_gene_sets, denovo_gene_set_f4):
 
     def remove_gene_sets():
         for dgs in denovo_gene_sets + [denovo_gene_set_f4]:
-            os.remove(DenovoGeneSetCollectionConfigParser.
-                      denovo_gene_set_cache_file(dgs.config, 'phenotype'))
+            os.remove(DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
+                dgs.config, 'phenotype'))
     request.addfinalizer(remove_gene_sets)
 
 
@@ -116,34 +114,36 @@ def variants_db_fixture(dae_config_fixture):
     return vdb
 
 
-def get_denovo_gene_sets_by_id(variants_db_fixture, dgs_id):
-    denovo_gene_set_config = DenovoGeneSetCollectionConfigParser.parse(
+def get_denovo_gene_set_by_id(variants_db_fixture, dgs_id):
+    denovo_gene_set_config = DenovoGeneSetConfigParser.parse(
         variants_db_fixture.get_config(dgs_id))
 
-    return DenovoGeneSetsCollection(
-        variants_db_fixture.get(dgs_id), denovo_gene_set_config)
+    return DenovoGeneSet(
+        variants_db_fixture.get(dgs_id), denovo_gene_set_config
+    )
 
 
 @pytest.fixture(scope='session')
 def denovo_gene_sets(variants_db_fixture):
     return [
-        get_denovo_gene_sets_by_id(variants_db_fixture, 'f1_group'),
-        get_denovo_gene_sets_by_id(variants_db_fixture, 'f2_group'),
-        get_denovo_gene_sets_by_id(variants_db_fixture, 'f3_group')
+        get_denovo_gene_set_by_id(variants_db_fixture, 'f1_group'),
+        get_denovo_gene_set_by_id(variants_db_fixture, 'f2_group'),
+        get_denovo_gene_set_by_id(variants_db_fixture, 'f3_group')
     ]
 
 
 @pytest.fixture(scope='session')
 def denovo_gene_set_f4(variants_db_fixture):
-    return get_denovo_gene_sets_by_id(variants_db_fixture, 'f4_trio')
+    return get_denovo_gene_set_by_id(variants_db_fixture, 'f4_trio')
 
 
 @pytest.fixture(scope='session')
-def denovo_gene_sets_facade(variants_db_fixture):
-    return DenovoGeneSetCollectionFacade(variants_db_fixture)
+def denovo_gene_set_facade(variants_db_fixture):
+    return DenovoGeneSetFacade(variants_db_fixture)
 
 
 @pytest.fixture(scope='session')
-def f4_trio_denovo_gene_sets_config(variants_db_fixture):
-    return DenovoGeneSetCollectionConfigParser.parse(
-        variants_db_fixture.get_config('f4_trio'))
+def f4_trio_denovo_gene_set_config(variants_db_fixture):
+    return DenovoGeneSetConfigParser.parse(
+        variants_db_fixture.get_config('f4_trio')
+    )
