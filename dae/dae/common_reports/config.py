@@ -30,7 +30,8 @@ class CommonReportsConfigParser(ConfigParserBase):
 
     @classmethod
     def parse(cls, config):
-        if config is None or cls.SECTION not in config.study_config:
+        if not config or not config.study_config or \
+                not config.study_config.get(cls.SECTION, None):
             return None
 
         study_config = config.study_config
