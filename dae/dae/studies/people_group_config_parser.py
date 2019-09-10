@@ -52,9 +52,9 @@ class PeopleGroupConfigParser(ConfigParserBase):
             people_group['domain'] = list(people_group['domain'].values())
             return people_group
 
-        people_groups = config.get('people_group', {}).values()
+        people_groups = config.get(cls.SECTION, {}).values()
         people_groups = list(map(domain_to_list, people_groups))
-        result = {'people_group': people_groups}
+        result = {cls.SECTION: people_groups}
 
         return result
 
