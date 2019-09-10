@@ -83,9 +83,6 @@ class DenovoGeneSetConfigParser(ConfigParserBase):
         if len(people_group) == 0:
             return None
 
-        if len(people_groups) == 0:
-            return None
-
         denovo_gene_sets = {
             pg.id: {
                 'name': pg.name,

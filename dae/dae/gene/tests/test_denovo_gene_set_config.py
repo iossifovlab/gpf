@@ -1,4 +1,5 @@
 from box import Box
+from copy import deepcopy
 
 from dae.gene.tests.conftest import fixtures_dir
 
@@ -116,6 +117,14 @@ def test_empty():
 
 
 def test_missing_people_group(variants_db_fixture):
+    f4_study_config = deepcopy(variants_db_fixture.get_config('f4_trio'))
+    f4_study_config.people_group_config.people_group = {}
+    f1_trio_config = DenovoGeneSetConfigParser.parse(f4_study_config)
+
+    assert f1_trio_config.denovo_gene_sets is None
+
+
+def test_missing_people_groups(variants_db_fixture):
     f1_trio_config = DenovoGeneSetConfigParser.parse(
         variants_db_fixture.get_config('f1_study'))
 
