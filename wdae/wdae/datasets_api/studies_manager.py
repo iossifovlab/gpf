@@ -1,3 +1,4 @@
+import os
 from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.studies.variants_db import VariantsDb
@@ -111,8 +112,16 @@ class StudiesManager(object):
         return self.background_facade
 
     def get_permission_denied_prompt(self):
-        return self.dae_config.gpfjs.permission_denied_prompt \
-            if 'permission_denied_prompt' in self.dae_config else None
+
+        if self.dae_config.gpfjs:
+            filepath = self.dae_config.gpfjs.permission_denied_prompt
+            assert os.path.exists(filepath), filepath
+            with open(filepath, 'r') as prompt_file:
+                contents = prompt_file.read()
+            return contents
+
+        return ('This is a default permission denied prompt.'
+                ' Please log in or register.')
 
 
 _studies_manager = None
