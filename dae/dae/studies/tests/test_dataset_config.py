@@ -5,19 +5,18 @@ def test_dataset_configs_simple(dataset_configs):
     assert dataset_configs is not None
 
 
-@pytest.mark.parametrize("option_name,expected_value", [
-    ("name", "QUADS_COMPOSITE"),
-    ("id", "quads_composite_ds"),
-    ("description", "QUADS COMPOSITE DESCRIPTION"),
-    ("studies", ['quads_in_child', 'quads_in_parent']),
-    # ("phenotypes", {'autism', 'schizophrenia', 'epilepsy'}),
+@pytest.mark.parametrize('option_name,expected_value', [
+    ('name', 'QUADS_COMPOSITE'),
+    ('id', 'quads_composite_ds'),
+    ('description', 'QUADS COMPOSITE DESCRIPTION'),
+    ('studies', ['quads_in_child', 'quads_in_parent']),
 
-    ("phenotypeTool", False),
-    ("phenotypeBrowser", False),
-    ("year", ""),
-    # ("years", []),
-    # ("pub_med", ""),
-    # ("pub_meds", [])
+    ('phenotypeTool', False),
+    ('phenotypeBrowser', False),
+    ('year', ''),
+    ('years', []),
+    ('pubMed', ''),
+    ('pub_meds', [])
 ])
 def test_dataset_quads_composite_dict(
         quads_composite_dataset_config, option_name, expected_value):
@@ -28,22 +27,21 @@ def test_dataset_quads_composite_dict(
     assert config[option_name] == expected_value
 
 
-@pytest.mark.parametrize("option_name,expected_value", [
-    ("name", "QUADS_COMPOSITE"),
-    ("id", "quads_composite_ds"),
-    ("description", "QUADS COMPOSITE DESCRIPTION"),
-    ("studies", ['quads_in_child', 'quads_in_parent']),
-    # ("phenotypes", {'autism', 'schizophrenia', 'epilepsy'}),
+@pytest.mark.parametrize('option_name,expected_value', [
+    ('name', 'QUADS_COMPOSITE'),
+    ('id', 'quads_composite_ds'),
+    ('description', 'QUADS COMPOSITE DESCRIPTION'),
+    ('studies', ['quads_in_child', 'quads_in_parent']),
 
-    ("phenotypeTool", False),
-    ("phenotypeBrowser", False),
+    ('phenotypeTool', False),
+    ('phenotypeBrowser', False),
 
-    ("phenotype_tool", False),
-    ("phenotype_browser", False),
-    ("year", ""),
-    # ("years", []),
-    # ("pub_med", ""),
-    # ("pub_meds", [])
+    ('phenotype_tool', False),
+    ('phenotype_browser', False),
+    ('year', ''),
+    ('years', []),
+    ('pub_med', ''),
+    ('pub_meds', [])
 ])
 def test_dataset_quads_composite_attr(
         quads_composite_dataset_config, option_name, expected_value):
@@ -63,25 +61,15 @@ def test_composite_dataset_config_people_group(composite_dataset_config):
     people_group = composite_dataset_config.people_group_config.people_group
 
     assert len(people_group) == 1
-    pg = people_group[0]
+    pg = people_group.phenotype
 
     assert pg.name == 'Phenotype'
 
 
-# FIXME: this was causing segmentation fault while testing
-# @pytest.mark.xfail
-# def test_composite_dataset_config_genotype_browser(composite_dataset_config):
-#     assert composite_dataset_config is not None
+def test_composite_dataset_config_genotype_browser(composite_dataset_config):
+    assert composite_dataset_config is not None
 
-#     assert composite_dataset_config.genotype_browser is True
-#     genotype_browser_config = composite_dataset_config.genotype_browser_config
-#     assert genotype_browser_config is not None
-
-#     download_columns = genotype_browser_config.download_columns
-#     assert download_columns.to_list() == \
-#         ['family', 'phenotype', 'variant', 'best', 'fromparent',
-#          'inchild', 'effect', 'count', 'geneeffect', 'effectdetails',
-#          'weights', 'freq']
+    assert composite_dataset_config.genotype_browser is True
 
 
 def test_composite_dataset_config_enrichment_tool(composite_dataset_config):
@@ -113,9 +101,9 @@ def test_composite_dataset_config_people_group_overwrite(
         people_group_config.people_group
 
     assert len(people_group) == 1
-    pg = people_group[0]
+    pg = people_group.phenotype
     assert pg.name == 'Phenotype'
-    assert len(pg['values']) == 6
+    assert len(pg.domain) == 6
 
 
 def test_composite_dataset_config_genotype_browser_overwrite(

@@ -11,25 +11,23 @@ def test_weights_default(gene_info_config):
     config = gene_info_config.gene_weights.get('RVIS_rank')
     w = Weights(config)
     df = w.to_df()
-    # df = w.load_weights()
+
     assert df is not None
 
     assert 'RVIS_rank' in df.columns
 
 
-# def test_weights_min_max(gene_info_config):
-#     config = gene_info_config.gene_weights.get('LGD_rank')
-#     w = Weights(config)
-#     # w.load_weights()
-#
-#     assert 1.0 == w.weights().min()
-#     assert 18394.5 == w.weights().max()
+def test_weights_min_max(gene_info_config):
+    config = gene_info_config.gene_weights.get('LGD_rank')
+    w = Weights(config)
+
+    assert 1.0 == w.min()
+    assert 18394.5 == w.max()
 
 
 def test_weights_get_genes(gene_info_config):
     config = gene_info_config.gene_weights.get('LGD_rank')
     w = Weights(config)
-    # w.load_weights()
 
     genes = w.get_genes(1.5, 5.0)
     assert 3 == len(genes)

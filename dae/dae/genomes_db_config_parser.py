@@ -6,22 +6,19 @@ from dae.RegionOperations import Region
 class GenomesDBConfigParser(ConfigParserBase):
 
     @classmethod
-    def _get_regions(cls, regions):
-        new_regions = {}
-        for region_id, region in regions.items():
-            new_region = {}
+    def _parse_regions(cls, regions):
+        for region_id in regions.keys():
+            region = regions[region_id]
 
             reg = cls._split_str_option_list(region)
-            new_region['region'] = [Region.from_str(r) for r in reg]
+            regions[region_id] = {'region': [Region.from_str(r) for r in reg]}
 
-            new_regions[region_id] = new_region
-
-        return new_regions
+        return regions
 
     @classmethod
     def parse(cls, config):
         config = super(GenomesDBConfigParser, cls).parse(config)
 
-        config['PARs']['regions'] = cls._get_regions(config['PARs']['regions'])
+        config.PARs.regions = cls._parse_regions(config.PARs.regions)
 
         return config

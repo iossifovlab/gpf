@@ -332,3 +332,8 @@ def test_regression_ids(output_dir):
 
     reg_ids = db.regression_ids
     assert reg_ids == ['test_regression_1', 'test_regression_2']
+
+
+def test_pheno_db_disabled(fake_pheno_factory):
+    assert not fake_pheno_factory.has_pheno_db('fake_disabled')
+    assert len(fake_pheno_factory.config) == 1

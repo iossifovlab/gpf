@@ -122,7 +122,7 @@ def get_person_color(member, people_group):
     source = people_group['source']
     people_group_attribute = member.get_attr(source)
     domain = list(filter(lambda d: d['name'] == people_group_attribute,
-                         people_group['domain']))
+                         people_group['domain'].values()))
 
     if domain and people_group_attribute:
         return domain[0]['color']

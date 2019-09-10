@@ -2,8 +2,7 @@
 import argparse
 
 from dae.configuration.dae_config_parser import DAEConfigParser
-from dae.gene.denovo_gene_set_collection_facade import \
-    DenovoGeneSetCollectionFacade
+from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
 from dae.studies.variants_db import VariantsDb
 
 
@@ -26,10 +25,10 @@ def main(dae_config=None, argv=None):
         dae_config = DAEConfigParser.read_and_parse_file_configuration()
     variants_db = VariantsDb(dae_config)
 
-    dgscf = DenovoGeneSetCollectionFacade(variants_db)
+    dgsf = DenovoGeneSetFacade(variants_db)
 
     if args.show_studies:
-        for study_id in dgscf.get_all_denovo_gene_set_ids():
+        for study_id in dgsf.get_all_denovo_gene_set_ids():
             print(study_id)
     else:
         filter_studies_ids = None
@@ -37,11 +36,11 @@ def main(dae_config=None, argv=None):
             studies = args.studies.split(',')
             filter_studies_ids = [
                 study_id
-                for study_id in dgscf.get_all_denovo_gene_set_ids()
+                for study_id in dgsf.get_all_denovo_gene_set_ids()
                 if study_id in studies
             ]
 
-        dgscf.build_cache(filter_studies_ids)
+        dgsf.build_cache(filter_studies_ids)
 
 
 if __name__ == '__main__':

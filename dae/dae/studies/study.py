@@ -1,48 +1,26 @@
-import os.path
-
-
 class StudyBase(object):
 
-    def __init__(self, config):
+    def __init__(self, config, studies):
         self.config = config
+        self.studies = studies
 
         self.id = self.config.id
         self.name = self.config.name
-        # self.phenotypes = self.config.phenotypes
-        self.has_denovo = self.config.get('hasDenovo', None)
-        self.has_transmitted = self.config.get('hasTransmitted', None)
-        self.has_complex = self.config.get('hasComplex', None)
-        self.has_cnv = self.config.get('hasCNV', None)
-        self.study_type = self.config.get('studyType', None)
-        self.year = self.config.get('year', None)
-        self.pub_med = self.config.get('pub_med', '')
+        self.has_denovo = self.config.has_denovo
+        self.has_transmitted = self.config.has_transmitted
+        self.has_complex = self.config.has_complex
+        self.has_cnv = self.config.hasCNV
+        self.study_type = self.config.study_type
+        self.year = self.config.year
+        self.pub_med = self.config.pub_med
 
-        if os.path.exists(self.config.description):
-            with open(self.config.description) as desc:
-                self.description = desc.read()
-        else:
-            self.description = self.config.description
+        self.study_types = self.config.study_types
+        self.years = self.config.years
+        self.pub_meds = self.config.pub_meds
 
-    @property
-    def years(self):
-        return [self.config.year] if self.config.year else []
+        self.description = self.config.description
 
-    @property
-    def pub_meds(self):
-        return [self.config.pub_med] if self.config.pub_med else []
-
-    @property
-    def study_types(self):
-        return {self.config.study_type} \
-            if self.config.get('studyType', None) else set()
-
-    @property
-    def ids(self):
-        return [self.config.id]
-
-    @property
-    def names(self):
-        return [self.config.name]
+        self.study_names = ','.join(study.name for study in self.studies)
 
     def query_variants(self, **kwargs):
         raise NotImplementedError()
@@ -58,30 +36,25 @@ class StudyBase(object):
         raise NotImplementedError()
 
     def get_people_group(self, people_group_id):
-        if 'peopleGroupConfig' not in self.config and \
-                'peopleGroup' not in self.config.people_group_config:
+        if not self.config.people_group_config and \
+                not self.config.people_group_config.people_group:
             return None
 
         people_groups = self.config.people_group_config.people_group
         if not people_group_id:
-            return people_groups[0] if people_groups else {}
+            return people_groups.values()[0] if people_groups else {}
 
-        people_group_with_id = list(filter(
-            lambda people_group: people_group.get('id') == people_group_id,
-            people_groups))
+        people_group_with_id = people_groups.get(people_group_id, {})
 
-        return people_group_with_id[0] if people_group_with_id else {}
+        return people_group_with_id
 
 
 class Study(StudyBase):
 
     def __init__(self, config, backend):
-        super(Study, self).__init__(config)
+        super(Study, self).__init__(config, [self])
 
         self.backend = backend
-
-        self.studies = [self]
-        self.study_names = ",".join(study.name for study in self.studies)
 
     def query_variants(self, **kwargs):
         if 'studyFilters' in kwargs and \
@@ -100,9 +73,13 @@ class Study(StudyBase):
     def get_pedigree_values(self, column):
         return set(self.backend.ped_df[column])
 
-    def get_people_with_people_group(self, people_group, people_group_value):
+    def get_people_with_people_group(
+            self, people_group_id, people_group_value):
+        people_group = self.get_people_group(people_group_id)
+        source = people_group.source
+
         pedigree_df = self.backend.ped_df
         people_ids = pedigree_df[
-            pedigree_df[people_group].apply(str) == str(people_group_value)]
+            pedigree_df[source].apply(str) == str(people_group_value)]
 
         return set(people_ids['person_id'])

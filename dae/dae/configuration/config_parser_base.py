@@ -27,17 +27,16 @@ class ConfigParserBase(object):
     SPLIT_STR_SETS = ()
     CAST_TO_BOOL = ()
     CAST_TO_INT = ()
+    FILTER_SELECTORS = {}
 
     @classmethod
     def read_and_parse_directory_configurations(
-            cls, configurations_dir, work_dir, defaults=None,
-            fail_silently=False):
+            cls, configurations_dir, defaults=None, fail_silently=False):
         if defaults is None:
             defaults = {}
 
         configs = cls.read_directory_configurations(
-            configurations_dir, work_dir, defaults=defaults,
-            fail_silently=fail_silently
+            configurations_dir, defaults=defaults, fail_silently=fail_silently
         )
 
         parsed_configs = []
@@ -64,8 +63,7 @@ class ConfigParserBase(object):
 
     @classmethod
     def read_directory_configurations(
-            cls, configurations_dir, work_dir, defaults=None,
-            fail_silently=False):
+            cls, configurations_dir, defaults=None, fail_silently=False):
         if defaults is None:
             defaults = {}
 
@@ -197,11 +195,15 @@ class ConfigParserBase(object):
             return None
         if not isinstance(config_section, dict):
             return config_section
+        if 'enabled' in config_section:
+            if cls._str_to_bool(config_section['enabled']) is False:
+                return None
 
         config_section = cls._split_str_lists(config_section)
         config_section = cls._split_str_sets(config_section)
         config_section = cls._cast_to_bool(config_section)
         config_section = cls._cast_to_int(config_section)
+        config_section = cls._filter_selectors(config_section)
 
         return config_section
 
@@ -211,9 +213,9 @@ class ConfigParserBase(object):
         return True if val in true_values else False
 
     @staticmethod
-    def _split_str_option_list(str_option):
+    def _split_str_option_list(str_option, separator=','):
         if str_option is not None and str_option != '':
-            return [el.strip() for el in str_option.split(',')]
+            return [el.strip() for el in str_option.split(separator)]
         elif str_option == '':
             return []
         else:
@@ -250,5 +252,38 @@ class ConfigParserBase(object):
         for key in cls.CAST_TO_INT:
             if key in config:
                 config[key] = int(config[key])
+
+        return config
+
+    @classmethod
+    def _filter_selectors(cls, config):
+        for key, selected in cls.FILTER_SELECTORS.items():
+            if key not in config:
+                continue
+
+            selected_elements = \
+                config.get(selected, None) if selected else None
+
+            def filter_selector(selector_key):
+                if not isinstance(config[key][selector_key], dict):
+                    return True
+
+                if selected_elements and selector_key not in selected_elements:
+                    return True
+
+                return False
+
+            keys_to_delete = tuple(filter(filter_selector, config[key]))
+
+            for delele_key in keys_to_delete:
+                config[key].pop(delele_key)
+
+            for selector_id in config[key].keys():
+                selector = config[key][selector_id]
+
+                if not selector.id:
+                    selector.id = selector_id
+
+                config[key][selector_id] = selector
 
         return config

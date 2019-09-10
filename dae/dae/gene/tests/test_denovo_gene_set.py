@@ -1,11 +1,11 @@
-def test_get_gene_sets_legend(denovo_gene_set_f4):
-    dgsl = denovo_gene_set_f4.get_gene_sets_legend('phenotype')
+def test_get_gene_set_legend(denovo_gene_set_f4):
+    dgsl = denovo_gene_set_f4.get_gene_set_legend('phenotype')
 
     assert len(dgsl) == 6
 
 
-def test_get_gene_sets_legend_missing(denovo_gene_set_f4):
-    dgsl = denovo_gene_set_f4.get_gene_sets_legend('missing')
+def test_get_gene_set_legend_missing(denovo_gene_set_f4):
+    dgsl = denovo_gene_set_f4.get_gene_set_legend('missing')
 
     assert len(dgsl) == 0
 

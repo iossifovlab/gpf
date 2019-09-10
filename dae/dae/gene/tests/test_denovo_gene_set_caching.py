@@ -5,7 +5,7 @@ Created on Feb 27, 2017
 '''
 import pytest
 
-from dae.gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
+from dae.gene.denovo_gene_set import DenovoGeneSet
 
 pytestmark = pytest.mark.usefixtures('gene_info_cache_dir', 'calc_gene_sets')
 
@@ -36,9 +36,10 @@ def test_load_cache(denovo_gene_sets):
 
 
 def test_f1_autism_get_gene_sets(denovo_gene_sets):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
-        gene_sets_types={'f1_group': {'phenotype': ['autism']}})
+        gene_sets_types={'f1_group': {'phenotype': ['autism']}}
+    )
 
     assert gene_sets
 
@@ -46,9 +47,10 @@ def test_f1_autism_get_gene_sets(denovo_gene_sets):
 
 
 def test_f1_affected_and_unaffected_get_gene_sets(denovo_gene_sets):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
-        gene_sets_types={'f1_group': {'phenotype': ['autism', 'unaffected']}})
+        gene_sets_types={'f1_group': {'phenotype': ['autism', 'unaffected']}}
+    )
 
     assert gene_sets
 
@@ -56,9 +58,10 @@ def test_f1_affected_and_unaffected_get_gene_sets(denovo_gene_sets):
 
 
 def test_f1_unaffected_get_gene_sets(denovo_gene_sets):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
-        gene_sets_types={'f1_group': {'phenotype': ['unaffected']}})
+        gene_sets_types={'f1_group': {'phenotype': ['unaffected']}}
+    )
 
     assert gene_sets
 
@@ -68,9 +71,10 @@ def test_f1_unaffected_get_gene_sets(denovo_gene_sets):
 
 
 def test_f1_single_get_gene_sets(denovo_gene_sets):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
-        gene_sets_types={'f1_group': {'phenotype': ['unaffected']}})
+        gene_sets_types={'f1_group': {'phenotype': ['unaffected']}}
+    )
 
     assert gene_sets
 
@@ -79,9 +83,10 @@ def test_f1_single_get_gene_sets(denovo_gene_sets):
 
 
 def test_synonymous_recurrency_get_gene_sets(denovo_gene_sets):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
-        gene_sets_types={'f2_group': {'phenotype': ['autism']}})
+        gene_sets_types={'f2_group': {'phenotype': ['autism']}}
+    )
 
     assert gene_sets
 
@@ -90,9 +95,10 @@ def test_synonymous_recurrency_get_gene_sets(denovo_gene_sets):
 
 
 def test_missense_recurrency_get_gene_sets(denovo_gene_sets):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
-        gene_sets_types={'f2_group': {'phenotype': ['unaffected']}})
+        gene_sets_types={'f2_group': {'phenotype': ['unaffected']}}
+    )
 
     assert gene_sets
 
@@ -101,9 +107,10 @@ def test_missense_recurrency_get_gene_sets(denovo_gene_sets):
 
 
 def test_synonymous_triple_get_gene_sets(denovo_gene_sets):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
-        gene_sets_types={'f3_group': {'phenotype': ['autism']}})
+        gene_sets_types={'f3_group': {'phenotype': ['autism']}}
+    )
 
     assert gene_sets
 
@@ -112,9 +119,10 @@ def test_synonymous_triple_get_gene_sets(denovo_gene_sets):
 
 
 def test_missense_triple_get_gene_sets(denovo_gene_sets):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
-        gene_sets_types={'f3_group': {'phenotype': ['unaffected']}})
+        gene_sets_types={'f3_group': {'phenotype': ['unaffected']}}
+    )
 
     assert gene_sets
 
@@ -124,9 +132,10 @@ def test_missense_triple_get_gene_sets(denovo_gene_sets):
 
 def test_missense_triple_get_gene_sets_affected_and_unaffected(
         denovo_gene_sets):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         denovo_gene_sets,
-        gene_sets_types={'f3_group': {'phenotype': ['autism', 'unaffected']}})
+        gene_sets_types={'f3_group': {'phenotype': ['autism', 'unaffected']}}
+    )
 
     assert gene_sets
 
@@ -135,9 +144,10 @@ def test_missense_triple_get_gene_sets_affected_and_unaffected(
 
 
 def test_autism_trio_get_gene_sets(denovo_gene_set_f4):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         [denovo_gene_set_f4],
-        gene_sets_types={'f4_trio': {'phenotype': ['autism']}})
+        gene_sets_types={'f4_trio': {'phenotype': ['autism']}}
+    )
 
     assert gene_sets
 
@@ -148,9 +158,10 @@ def test_autism_trio_get_gene_sets(denovo_gene_set_f4):
 
 
 def test_unaffected_trio_get_gene_sets(denovo_gene_set_f4):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         [denovo_gene_set_f4],
-        gene_sets_types={'f4_trio': {'phenotype': ['unaffected']}})
+        gene_sets_types={'f4_trio': {'phenotype': ['unaffected']}}
+    )
 
     assert gene_sets
 
@@ -158,9 +169,10 @@ def test_unaffected_trio_get_gene_sets(denovo_gene_set_f4):
 
 
 def test_affected_and_unaffected_trio_get_gene_sets(denovo_gene_set_f4):
-    gene_sets = DenovoGeneSetsCollection.get_gene_sets(
+    gene_sets = DenovoGeneSet.get_gene_sets(
         [denovo_gene_set_f4],
-        gene_sets_types={'f4_trio': {'phenotype': ['autism', 'unaffected']}})
+        gene_sets_types={'f4_trio': {'phenotype': ['autism', 'unaffected']}}
+    )
 
     assert gene_sets
 

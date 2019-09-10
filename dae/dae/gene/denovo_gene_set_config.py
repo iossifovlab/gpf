@@ -5,19 +5,19 @@ from dae.configuration.config_parser_base import ConfigParserBase
 from dae.variants.attributes import Sex
 
 
-class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
+class DenovoGeneSetConfigParser(ConfigParserBase):
 
     SECTION = 'denovoGeneSets'
 
     SPLIT_STR_LISTS = (
         'peopleGroups',
-        # 'standardCriterias',
-        'standardCriteriasColumns',
-        # 'recurrencyCriteria.segments',
+        'selectedStandardCriteriasValues',
         'geneSetsNames'
     )
 
-    CAST_TO_BOOL = ('enabled')
+    FILTER_SELECTORS = {
+        'standardCriterias': 'selectedStandardCriteriasValues'
+    }
 
     @staticmethod
     def denovo_gene_set_cache_file(config, people_group_id=''):
@@ -56,34 +56,21 @@ class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
         return options
 
     @classmethod
-    def _get_standard_criterias(cls, config):
-        result = []
+    def _parse_standard_criterias(cls, standard_criterias):
+        for sc_id in standard_criterias.keys():
+            sc = standard_criterias[sc_id]
+            standard_criteria = \
+                cls._split_dict_lists(sc_id, sc.pop('segments'))
+            standard_criterias[sc_id] = standard_criteria
 
-        standard_criterias = config.get('standardCriterias', {})
-        selected_standard_criterias = config.standard_criterias_columns
-
-        for sc_id, sc in standard_criterias.items():
-            if selected_standard_criterias and \
-                    sc_id not in selected_standard_criterias:
-                continue
-
-            standard_criteria = cls._split_dict_lists(
-                sc_id, sc.pop('segments')
-            )
-
-            result.append(standard_criteria)
-
-        config['standardCriterias'] = result
-
-        return config
+        return list(standard_criterias.values())
 
     @classmethod
-    def _get_recurrency_criterias(cls, recurrency_criteria_segments):
+    def _parse_recurrency_criterias(cls, recurrency_criteria_segments):
         recurrency_criterias = {}
         for recurrency_criteria_str in \
                 cls._split_str_option_list(recurrency_criteria_segments):
-            name, from_count, to_count = \
-                recurrency_criteria_str.strip().split(':')
+            name, from_count, to_count = recurrency_criteria_str.split(':')
             recurrency_criterias[name] = {
                 'from': int(from_count),
                 'to': int(to_count)
@@ -92,18 +79,18 @@ class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
         return recurrency_criterias
 
     @staticmethod
-    def _get_denovo_gene_sets(people_group, people_groups):
+    def _parse_denovo_gene_sets(people_group, people_groups):
         if len(people_group) == 0:
             return None
 
-        if not people_groups or (people_groups and len(people_groups) == 0):
+        if len(people_groups) == 0:
             return None
 
         denovo_gene_sets = {
             pg.id: {
                 'name': pg.name,
                 'source': pg.source
-            } for pg in people_group
+            } for pg in people_group.values()
             if pg.id in people_groups
         }
 
@@ -111,39 +98,32 @@ class DenovoGeneSetCollectionConfigParser(ConfigParserBase):
 
     @classmethod
     def parse(cls, config):
-        if config is None:
+        if not config or not config.study_config or \
+                not config.study_config.get(cls.SECTION, None):
             return None
 
         study_config = config.study_config
-        if study_config is None:
+        config_section = deepcopy(study_config.get(cls.SECTION, None))
+        config_section = \
+            super(DenovoGeneSetConfigParser, cls).parse_section(config_section)
+        if not config_section or not config_section.people_groups:
             return None
 
-        config_section = deepcopy(study_config.get(
-            DenovoGeneSetCollectionConfigParser.SECTION, None))
-        config_section = super(DenovoGeneSetCollectionConfigParser, cls). \
-            parse_section(config_section)
-        if config_section is None:
-            return None
+        config_section.id = config.id
 
-        if config_section.get('enabled', True) is False:
-            return None
-
-        config_section['id'] = config.id
-
-        config_section = cls._get_standard_criterias(config_section)
-
-        config_section['recurrencyCriterias'] = cls._get_recurrency_criterias(
-            config_section.get('recurrencyCriteria', {}).get('segments', []))
-
-        if 'peopleGroups' not in config_section or not \
-                config_section['peopleGroups']:
-            return None
-
-        config_section['denovoGeneSets'] = cls._get_denovo_gene_sets(
-            config.people_group_config.people_group,
-            config_section['peopleGroups']
+        config_section.standard_criterias = cls._parse_standard_criterias(
+            config_section.get('standardCriterias', {})
         )
 
-        config_section['configFile'] = study_config.config_file
+        config_section.recurrency_criterias = cls._parse_recurrency_criterias(
+            config_section.get('recurrencyCriteria', {}).get('segments', [])
+        )
+
+        config_section.denovo_gene_sets = cls._parse_denovo_gene_sets(
+            config.people_group_config.people_group,
+            config_section.people_groups
+        )
+
+        config_section.config_file = study_config.config_file
 
         return config_section

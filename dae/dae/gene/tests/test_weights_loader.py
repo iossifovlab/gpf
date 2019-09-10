@@ -20,3 +20,7 @@ def test_weights_rvis_rank(weights_loader):
 
 def test_weights_has_rvis_rank(weights_loader):
     assert 'RVIS_rank' in weights_loader
+
+
+def test_loaded_weights(weights_loader):
+    assert len(weights_loader) == 5

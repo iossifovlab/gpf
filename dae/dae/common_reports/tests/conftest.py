@@ -3,7 +3,6 @@ import pytest
 import os
 from box import Box
 from copy import deepcopy
-from collections import OrderedDict
 
 from dae.studies.variants_db import VariantsDb
 from dae.configuration.dae_config_parser import DAEConfigParser
@@ -96,27 +95,18 @@ def groups():
 
 
 @pytest.fixture(scope='session')
-def filter_info(groups):
-    return {
-        'people_groups': ['phenotype'],
-        'groups': groups
-    }
+def selected_people_groups(groups):
+    return ['phenotype']
 
 
 @pytest.fixture(scope='session')
 def people_groups(study1_config):
-    people_group = study1_config.people_group_config.people_group
-
-    people_groups = OrderedDict()
-    for pg in people_group:
-        people_groups[pg['id']] = pg
-
-    return people_groups
+    return study1_config.people_group_config.people_group
 
 
 @pytest.fixture(scope='session')
-def people_groups_info(study1, filter_info, people_groups):
-    return PeopleGroupsInfo(study1, filter_info, people_groups)
+def people_groups_info(study1, selected_people_groups, people_groups):
+    return PeopleGroupsInfo(study1, selected_people_groups, people_groups)
 
 
 @pytest.fixture(scope='session')
@@ -159,17 +149,24 @@ def denovo_variants_ds1(dataset1):
 
 
 @pytest.fixture(scope='session')
-def common_reports_config(study1, study1_config, people_groups, filter_info):
+def common_reports_config(
+        study1, study1_config, people_groups, selected_people_groups, groups):
     common_report_config = \
         deepcopy(study1_config.study_config.get('commonReport', None))
+    common_report_config.families_count_show_id = \
+        int(common_report_config.families_count_show_id)
     common_report_config['id'] = 'Study1'
     common_report_config['file_path'] = '/path/to/common_report'
     common_report_config['effect_groups'] = ['Missense']
     common_report_config['effect_types'] = ['Frame-shift']
     common_report_config['people_groups_info'] = people_groups
-    common_report_config['filter_info'] = filter_info
+    common_report_config['people_groups'] = selected_people_groups
+    common_report_config['groups'] = groups
 
-    return Box(common_report_config, camel_killer_box=True)
+    return Box(
+        common_report_config, camel_killer_box=True, default_box=True,
+        default_box_attr=None
+    )
 
 
 @pytest.fixture(scope='module')

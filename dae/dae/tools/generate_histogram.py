@@ -240,10 +240,10 @@ def main():
         score_columns = [int(el) if el.isdigit() else el
                          for el in score_columns.split(',')]
     else:
-        score_columns = config.genomic_scores.scores
+        score_columns = list(config.genomic_scores.keys())
 
     for score, score_column in \
-            zip(config.genomic_scores.scores, score_columns):
+            zip(config.genomic_scores.keys(), score_columns):
         histogram_info = config.genomic_scores[score]
 
         bin_range = None

@@ -9,10 +9,6 @@ from dae.configuration.config_parser_base import ConfigParserBase
 
 class StudyConfigParserBase(ConfigParserBase):
 
-    SPLIT_STR_SETS = (
-        'phenotypes',
-    )
-
     CAST_TO_BOOL = (
         'hasComplex',
         'hasCNV',
@@ -47,35 +43,34 @@ class StudyConfigParserBase(ConfigParserBase):
         assert 'description' in config_section
         assert config_section.work_dir
 
+        if os.path.exists(config_section.description):
+            with open(config_section.description) as desc:
+                config_section.description = desc.read()
+        else:
+            config_section.description = config_section.description
+
         return config_section
 
     @classmethod
     def _fill_people_group_config(cls, config_section, config):
-        if PeopleGroupConfigParser.SECTION not in config:
-            return None
         people_group_config = PeopleGroupConfigParser.parse(config)
-        if people_group_config is not None and \
-                PeopleGroupConfigParser.SECTION in people_group_config:
-            people_group_config = \
-                people_group_config[PeopleGroupConfigParser.SECTION]
-            if 'peopleGroup' in people_group_config:
-                config_section['peopleGroupConfig'] = people_group_config
+
+        if people_group_config and people_group_config.people_group:
+            config_section.peopleGroupConfig = people_group_config
 
     @classmethod
     def _fill_genotype_browser_config(cls, config_section, config):
-        if GenotypeBrowserConfigParser.SECTION not in config:
-            return None
         genotype_browser_config = GenotypeBrowserConfigParser.parse(config)
-        if genotype_browser_config is not None and \
-                config_section.get('genotypeBrowser', False) is True:
-            config_section['genotypeBrowserConfig'] = genotype_browser_config
+
+        if genotype_browser_config and config_section.genotype_browser:
+            config_section.genotypeBrowserConfig = genotype_browser_config
 
     @classmethod
     def _fill_sections_config(cls, config_section, config):
         cls._fill_people_group_config(config_section, config)
         cls._fill_genotype_browser_config(config_section, config)
 
-        config_section['studyConfig'] = config
+        config_section.study_config = config
 
 
 class StudyConfigParser(StudyConfigParserBase):
@@ -84,11 +79,10 @@ class StudyConfigParser(StudyConfigParserBase):
 
     @classmethod
     def read_and_parse_directory_configurations(
-            cls, configurations_dir, work_dir, defaults=None,
-            fail_silently=False):
+            cls, configurations_dir, defaults=None, fail_silently=False):
         configs = super(StudyConfigParser, cls). \
             read_and_parse_directory_configurations(
-                configurations_dir, work_dir, defaults=defaults,
+                configurations_dir, defaults=defaults,
                 fail_silently=fail_silently
             )
 
@@ -105,12 +99,16 @@ class StudyConfigParser(StudyConfigParserBase):
         config.authorizedGroups = config.get(
             'authorizedGroups', [config.get('id', '')])
 
+        config.years = [config.year] if config.year else []
+        config.pub_meds = [config.pub_med] if config.pub_med else []
+        config.studyTypes = \
+            {config.study_type} if config.get('studyType', None) else set()
+
         assert config.name
         assert config.prefix
         # assert config.pedigree_file
         assert config.file_format
         assert config.work_dir
-        # assert config.phenotypes
         assert 'studyType' in config
         assert 'hasComplex' in config
         assert 'hasCNV' in config

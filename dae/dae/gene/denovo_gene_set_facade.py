@@ -1,10 +1,8 @@
-from dae.gene.denovo_gene_set_collection_config import \
-    DenovoGeneSetCollectionConfigParser
-
-from dae.gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
+from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
+from dae.gene.denovo_gene_set import DenovoGeneSet
 
 
-class DenovoGeneSetCollectionFacade(object):
+class DenovoGeneSetFacade(object):
 
     def __init__(self, variants_db):
         self._denovo_gene_set_cache = {}
@@ -12,18 +10,17 @@ class DenovoGeneSetCollectionFacade(object):
 
         self.variants_db = variants_db
 
-    def get_collections_descriptions(self, permitted_datasets=None):
+    def get_descriptions(self, permitted_datasets=None):
         self.load_cache()
 
         gene_sets_types = []
-        for denovo_gene_set_id, denovo_genen_set in \
+        for denovo_gene_set_id, denovo_gene_set in \
                 self._denovo_gene_set_cache.items():
             if permitted_datasets is None or \
                     denovo_gene_set_id in permitted_datasets:
-                gene_sets_types += \
-                    denovo_genen_set.get_gene_sets_types_legend()
+                gene_sets_types += denovo_gene_set.get_gene_sets_types_legend()
 
-        gene_sets_collections_desc = (
+        gene_set_descriptions = (
             {
                 'desc': 'Denovo',
                 'name': 'denovo',
@@ -32,7 +29,7 @@ class DenovoGeneSetCollectionFacade(object):
             }
         )
 
-        return gene_sets_collections_desc
+        return gene_set_descriptions
 
     @staticmethod
     def _get_gene_sets_types(gene_sets_types, permitted_datasets):
@@ -52,9 +49,10 @@ class DenovoGeneSetCollectionFacade(object):
 
         denovo_gene_sets_types = self._get_gene_sets_types(
             gene_sets_types, permitted_datasets)
-        result = DenovoGeneSetsCollection.get_gene_set(
+        result = DenovoGeneSet.get_gene_set(
             denovo_gene_set_id, list(self._denovo_gene_set_cache.values()),
-            denovo_gene_sets_types)
+            denovo_gene_sets_types
+        )
 
         return result
 
@@ -67,8 +65,9 @@ class DenovoGeneSetCollectionFacade(object):
 
         denovo_gene_sets_types = self._get_gene_sets_types(
             gene_sets_types, permitted_datasets)
-        result = DenovoGeneSetsCollection.get_gene_sets(
-            list(self._denovo_gene_set_cache.values()), denovo_gene_sets_types)
+        result = DenovoGeneSet.get_gene_sets(
+            list(self._denovo_gene_set_cache.values()), denovo_gene_sets_types
+        )
 
         return result
 
@@ -108,9 +107,9 @@ class DenovoGeneSetCollectionFacade(object):
                 self._load_denovo_gene_set_in_cache(denovo_gene_set_id, load)
 
     def _load_denovo_gene_set_config_in_cache(self, denovo_gene_set_id):
-        denovo_gene_set_config = \
-            DenovoGeneSetCollectionConfigParser.parse(
-                self.variants_db.get_config(denovo_gene_set_id))
+        denovo_gene_set_config = DenovoGeneSetConfigParser.parse(
+            self.variants_db.get_config(denovo_gene_set_id)
+        )
         if denovo_gene_set_config is None:
             return
 
@@ -129,8 +128,8 @@ class DenovoGeneSetCollectionFacade(object):
         denovo_gene_set_config = \
             self._denovo_gene_set_config_cache[denovo_gene_set_id]
 
-        gsc = DenovoGeneSetsCollection(study, denovo_gene_set_config)
+        denovo_gene_set = DenovoGeneSet(study, denovo_gene_set_config)
         if load:
-            gsc.load()
+            denovo_gene_set.load()
 
-        self._denovo_gene_set_cache[denovo_gene_set_id] = gsc
+        self._denovo_gene_set_cache[denovo_gene_set_id] = denovo_gene_set

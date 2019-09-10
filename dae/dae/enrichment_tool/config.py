@@ -20,6 +20,11 @@ class EnrichmentConfigParser(ConfigParserBase):
         'effect_types'
     )
 
+    FILTER_SELECTORS = {
+        'background': 'selectedBackgroundValues',
+        'counting': 'selectedCountingValues',
+    }
+
     @staticmethod
     def enrichment_cache_file(config, name=''):
         cache_file = os.path.join(
@@ -30,56 +35,38 @@ class EnrichmentConfigParser(ConfigParserBase):
         return cache_file
 
     @staticmethod
-    def _get_model(config, group, selected):
-        selected_elements = config.get(selected, None)
-        models = {}
+    def _parse_model(model_config, config_file):
+        for model in model_config.values():
+            model.id = model.name
 
-        for model_id in config.get(group, {}).keys():
-            if selected_elements and model_id not in selected_elements:
-                continue
-
-            model = config[group][model_id]
-            if not isinstance(model, dict):
-                continue
-
-            model['id'] = model['name']
-
-            model_file = model.get('file', None)
-            if model_file is None:
-                model['filename'] = None
-            else:
-                model['filename'] = os.path.join(
-                    os.path.split(config.config_file)[0],
-                    'enrichment/{}'.format(model_file)
+            if model.file is not None:
+                model.filename = os.path.join(
+                    os.path.split(config_file)[0],
+                    'enrichment/{}'.format(model.file)
                 )
 
-            models[model_id] = model
-
-        return models
+        return model_config
 
     @classmethod
     def parse(cls, config):
-        if config is None:
-            return
-
-        study_config = config.study_config
-        if study_config is None:
-            return
-
-        enrichment_config = deepcopy(study_config.get(cls.SECTION, None))
-        if enrichment_config is None:
-            return
-        enrichment_config['config_file'] = study_config.config_file
-
-        enrichment_config = \
-            super(EnrichmentConfigParser, cls).parse_section(enrichment_config)
-
-        if enrichment_config.get('enabled', True) is False:
+        if not config or not config.study_config or \
+                not config.study_config.get(cls.SECTION, None):
             return None
 
-        enrichment_config['backgrounds'] = cls._get_model(
-            enrichment_config, 'background', 'selectedBackgroundValues')
-        enrichment_config['counting'] = cls._get_model(
-            enrichment_config, 'counting', 'selectedCountingValues')
+        study_config = config.study_config
+        config_section = deepcopy(study_config.get(cls.SECTION, None))
+        config_section.config_file = study_config.config_file
 
-        return enrichment_config
+        config_section = \
+            super(EnrichmentConfigParser, cls).parse_section(config_section)
+        if not config_section:
+            return None
+
+        config_section.backgrounds = cls._parse_model(
+            config_section.get('background', {}), config_section.config_file
+        )
+        config_section.counting = cls._parse_model(
+            config_section.get('counting', {}), config_section.config_file
+        )
+
+        return config_section

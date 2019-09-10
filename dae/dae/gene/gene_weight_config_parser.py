@@ -12,16 +12,19 @@ class GeneWeightConfigParser(ConfigParserBase):
         'bins',
     )
 
+    FILTER_SELECTORS = {
+        'geneWeights': 'selected_gene_weights_values',
+    }
+
     @classmethod
-    def _get_gene_weights(cls, gene_weights):
-        for gene_weight_id, gene_weight in gene_weights.items():
-            if not isinstance(gene_weight, dict):
-                continue
-
-            gene_weight['id'] = gene_weight_id
-            gene_weight['name'] = gene_weight_id
-
+    def _parse_gene_weights(cls, gene_weights):
         gene_weights = super(GeneWeightConfigParser, cls).parse(gene_weights)
+        if not gene_weights:
+            gene_weights = {}
+
+        for gene_weight in gene_weights.values():
+            if gene_weight.range:
+                gene_weight.range = tuple(map(float, gene_weight.range))
 
         return gene_weights
 
@@ -31,9 +34,10 @@ class GeneWeightConfigParser(ConfigParserBase):
         if config is None:
             return None
 
-        config['geneWeights'] = \
-            cls._get_gene_weights(config.get('geneWeights', {}))
+        selected_gene_weights_values = config.gene_weights.weights
+        config.selected_gene_weights_values = selected_gene_weights_values
+        config = super(GeneWeightConfigParser, cls).parse_section(config)
 
-        weight_config = config.get('geneWeights', {})
+        weight_config = cls._parse_gene_weights(config.gene_weights)
 
         return weight_config

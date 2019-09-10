@@ -3,15 +3,14 @@ import os
 from itertools import chain, product
 import logging
 
-from dae.gene.denovo_gene_set_collection_config import \
-    DenovoGeneSetCollectionConfigParser
+from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 
-from dae.variants.attributes import Inheritance, Status
+from dae.variants.attributes import Inheritance
 
 LOGGER = logging.getLogger(__name__)
 
 
-class DenovoGeneSetsCollection(object):
+class DenovoGeneSet(object):
 
     def __init__(self, study, config):
         self.study = study
@@ -29,12 +28,13 @@ class DenovoGeneSetsCollection(object):
     def load(self, build_cache=False):
         if len(self.cache) == 0:
             self._load_cache_from_json(build_cache=build_cache)
-        return DenovoGeneSetsCollection.get_gene_sets([self])
+        return DenovoGeneSet.get_gene_sets([self])
 
     def _load_cache_from_json(self, build_cache=False):
         for people_group_id, _ in self.denovo_gene_sets.items():
-            cache_dir = DenovoGeneSetCollectionConfigParser. \
-                denovo_gene_set_cache_file(self.config, people_group_id)
+            cache_dir = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
+                self.config, people_group_id
+            )
             if not os.path.exists(cache_dir):
                 if not build_cache:
                     raise EnvironmentError(
@@ -50,7 +50,7 @@ class DenovoGeneSetsCollection(object):
             if people_group_ids and \
                     people_group_id not in people_group_ids:
                 continue
-            study_cache = self._generate_gene_sets_for(people_group_id)
+            study_cache = self._generate_gene_set_for(people_group_id)
             self._save_cache(people_group_id, study_cache)
 
     def _load_cache(self, cache_dir):
@@ -67,8 +67,9 @@ class DenovoGeneSetsCollection(object):
         cache = self._convert_cache_innermost_types(
             study_cache, set, list, sort_values=True)
 
-        cache_dir = DenovoGeneSetCollectionConfigParser. \
-            denovo_gene_set_cache_file(self.config, people_group_id)
+        cache_dir = DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
+            self.config, people_group_id
+        )
         if not os.path.exists(os.path.dirname(cache_dir)):
             os.makedirs(os.path.dirname(cache_dir))
         with open(cache_dir, "w") as f:
@@ -91,11 +92,10 @@ class DenovoGeneSetsCollection(object):
 
         return res
 
-    def _generate_gene_sets_for(self, people_group_id):
-        people_group = self.denovo_gene_sets[people_group_id]['source']
-
+    def _generate_gene_set_for(self, people_group_id):
+        people_group_source = self.denovo_gene_sets[people_group_id]['source']
         people_group_values = [
-            str(p) for p in self.study.get_pedigree_values(people_group)
+            str(p) for p in self.study.get_pedigree_values(people_group_source)
         ]
 
         cache = {value: {} for value in people_group_values}
@@ -114,7 +114,7 @@ class DenovoGeneSetsCollection(object):
                 innermost_cache = self._init_criterias_cache(
                     cache[people_group_value], criterias_combination)
                 innermost_cache.update(self._add_genes_families(
-                    people_group, people_group_value, self.study, variants,
+                    people_group_id, people_group_value, self.study, variants,
                     search_args))
 
         return cache
@@ -127,12 +127,12 @@ class DenovoGeneSetsCollection(object):
 
         return innermost_cache
 
-    def get_gene_sets_legend(self, people_group_id):
-        gene_sets_pg = self.study.get_people_group(people_group_id)
-        if not gene_sets_pg:
+    def get_gene_set_legend(self, people_group_id):
+        gene_set_pg = self.study.get_people_group(people_group_id)
+        if not gene_set_pg:
             return []
 
-        return gene_sets_pg['domain']
+        return list(gene_set_pg['domain'].values())
 
     def get_gene_sets_types_legend(self):
         return [
@@ -141,7 +141,7 @@ class DenovoGeneSetsCollection(object):
                 'datasetName': self.study.name,
                 'peopleGroupId': people_group_id,
                 'peopleGroupName': people_group['name'],
-                'peopleGroupLegend': self.get_gene_sets_legend(people_group_id)
+                'peopleGroupLegend': self.get_gene_set_legend(people_group_id)
             }
             for people_group_id, people_group in self.denovo_gene_sets.items()
         ]
@@ -169,25 +169,25 @@ class DenovoGeneSetsCollection(object):
             return people_groups
 
     @staticmethod
-    def _get_gene_sets_names(dgsc):
-        if len(dgsc) == 0:
+    def _get_gene_sets_names(dgs):
+        if len(dgs) == 0:
             return []
 
-        gene_sets_names = frozenset(dgsc[0].gene_sets_names)
+        gene_sets_names = frozenset(dgs[0].gene_sets_names)
 
-        for d in dgsc:
+        for d in dgs:
             gene_sets_names = gene_sets_names.intersection(d.gene_sets_names)
 
         return list(gene_sets_names)
 
     @staticmethod
-    def _get_recurrency_criterias(dgsc):
-        if len(dgsc) == 0:
+    def _get_recurrency_criterias(dgs):
+        if len(dgs) == 0:
             return {}
 
-        recurrency_criterias = dgsc[0].recurrency_criterias
+        recurrency_criterias = dgs[0].recurrency_criterias
 
-        for d in dgsc:
+        for d in dgs:
             common_elements = frozenset(recurrency_criterias.keys()).\
                 intersection(d.recurrency_criterias.keys())
 
@@ -205,23 +205,22 @@ class DenovoGeneSetsCollection(object):
         return recurrency_criterias
 
     @staticmethod
-    def _get_cache(dgsc):
+    def _get_cache(dgs):
         cache = {}
 
-        for d in dgsc:
+        for d in dgs:
             cache[d.study.id] = d.cache
 
         return cache
 
     @classmethod
-    def get_gene_sets(
-            cls, denovo_gene_sets_collections, gene_sets_types={}):
+    def get_gene_sets(cls, denovo_gene_sets, gene_sets_types={}):
         gene_sets_types_desc = cls._format_description(gene_sets_types)
 
         result = []
-        for gsn in cls._get_gene_sets_names(denovo_gene_sets_collections):
+        for gsn in cls._get_gene_sets_names(denovo_gene_sets):
             gene_set_syms = cls._get_gene_set_syms(
-                gsn, denovo_gene_sets_collections, gene_sets_types)
+                gsn, denovo_gene_sets, gene_sets_types)
             if gene_set_syms:
                 result.append({
                     'name': gsn,
@@ -233,10 +232,9 @@ class DenovoGeneSetsCollection(object):
 
     @classmethod
     def get_gene_set(
-            cls, gene_set_id, denovo_gene_sets_collections,
-            gene_sets_types={}):
+            cls, gene_set_id, denovo_gene_sets, gene_sets_types={}):
         syms = cls._get_gene_set_syms(
-            gene_set_id, denovo_gene_sets_collections, gene_sets_types)
+            gene_set_id, denovo_gene_sets, gene_sets_types)
         if not syms:
             return None
 
@@ -251,8 +249,8 @@ class DenovoGeneSetsCollection(object):
         }
 
     @classmethod
-    def _get_gene_set_syms(cls, gene_set_id, dgsc, gene_sets_types):
-        rc = cls._get_recurrency_criterias(dgsc)
+    def _get_gene_set_syms(cls, gene_set_id, dgs, gene_sets_types):
+        rc = cls._get_recurrency_criterias(dgs)
         criterias = set(gene_set_id.split('.'))
         recurrency_criterias = criterias & set(rc.keys())
         standard_criterias = criterias - recurrency_criterias
@@ -266,7 +264,7 @@ class DenovoGeneSetsCollection(object):
                     people_group.items():
                 for people_group_value in people_group_values:
                     ds_pedigree_genes_families = cls._get_gene_families(
-                        cls._get_cache(dgsc),
+                        cls._get_cache(dgs),
                         {dataset_id, people_group_id, people_group_value}
                         | standard_criterias)
                     for gene, families in ds_pedigree_genes_families.items():

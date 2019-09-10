@@ -29,14 +29,12 @@ class VariantsDb(object):
         self.study_configs = \
             StudyConfigParser.read_and_parse_directory_configurations(
                 dae_config.studies_db.dir,
-                dae_config.dae_data_dir,
                 defaults={'conf': dae_config.default_configuration.conf_file}
             )
 
         self.dataset_configs = \
             DatasetConfigParser.read_and_parse_directory_configurations(
                 dae_config.datasets_db.dir,
-                dae_config.dae_data_dir,
                 self.study_configs,
                 defaults={'conf': dae_config.default_configuration.conf_file},
                 fail_silently=True

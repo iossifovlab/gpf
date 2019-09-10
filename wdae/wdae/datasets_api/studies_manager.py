@@ -10,8 +10,7 @@ from dae.gene.weights import WeightsLoader
 from dae.gene.score_config_parser import ScoreConfigParser
 
 from dae.gene.gene_set_collections import GeneSetsCollections
-from dae.gene.denovo_gene_set_collection_facade import \
-    DenovoGeneSetCollectionFacade
+from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
 
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
@@ -70,8 +69,7 @@ class StudiesManager(object):
 
         self.gene_sets_collections = GeneSetsCollections(
             self.vdb, self.gene_info_config)
-        self.denovo_gene_set_collection_facade = \
-            DenovoGeneSetCollectionFacade(self.vdb)
+        self.denovo_gene_set_facade = DenovoGeneSetFacade(self.vdb)
 
         self.background_facade = BackgroundFacade(self.vdb)
 
@@ -104,9 +102,9 @@ class StudiesManager(object):
         self.get_variants_db()
         return self.gene_sets_collections
 
-    def get_denovo_gene_set_collection_facade(self):
+    def get_denovo_gene_set_facade(self):
         self.get_variants_db()
-        return self.denovo_gene_set_collection_facade
+        return self.denovo_gene_set_facade
 
     def get_background_facade(self):
         self.get_variants_db()

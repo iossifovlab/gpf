@@ -58,7 +58,7 @@ class EnrichmentBuilder(object):
         people_group = self.dataset.get_people_group(people_group_id)
 
         if people_group:
-            for people_group_selector in people_group.domain:
+            for people_group_selector in people_group.domain.values():
                 res = self.build_people_group_selector(
                     effect_types,
                     people_group,

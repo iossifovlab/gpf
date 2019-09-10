@@ -13,3 +13,7 @@ def test_score_raw(score_loader):
 
 def test_scores_has_score_raw(score_loader):
     assert 'SCORE-raw' in score_loader
+
+
+def test_loaded_scores(score_loader):
+    assert len(score_loader.scores) == 3

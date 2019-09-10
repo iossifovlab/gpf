@@ -10,6 +10,8 @@ from dae.configuration.config_parser_base import ConfigParserBase
 
 class PhenoConfigParser(ConfigParserBase):
 
+    SECTION = 'phenoDB'
+
     @staticmethod
     def _assert_pheno_paths(configs):
         for _, config in configs.items():
@@ -24,8 +26,7 @@ class PhenoConfigParser(ConfigParserBase):
 
     @classmethod
     def read_directory_configurations(
-            cls, configurations_dir, work_dir=None, defaults=None,
-            fail_silently=False):
+            cls, configurations_dir, defaults=None, fail_silently=False):
         config_files = [
             (conf_path, os.path.dirname(conf_path))
             for conf_path in cls._collect_config_paths(configurations_dir)

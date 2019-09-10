@@ -42,7 +42,7 @@ def _list_extend_attribute(studies_configs, option_name):
 
 def _strings_join_attribute(studies_configs, option_name):
     res = filter(
-        lambda r: r != '',
+        lambda r: r != '' and r is not None,
         [getattr(st, option_name) for st in studies_configs])
     return ','.join(res)
 
@@ -56,8 +56,6 @@ class DatasetConfigParser(StudyConfigParserBase):
     ]
 
     COMPOSITE_ATTRIBUTES = {
-        # 'phenotypes': _set_union_attribute,
-
         'genotypeBrowser': _boolean_and_attribute,
         'genotype_browser': _boolean_and_attribute,
 
@@ -73,9 +71,6 @@ class DatasetConfigParser(StudyConfigParserBase):
         'has_transmitted': _boolean_or_attribute,
         'has_denovo': _boolean_or_attribute,
 
-        'genotypeBrowserConfig': _same_value_attribute,
-        'genotype_browser_config': _same_value_attribute,
-
         'peopleGroupConfig': _same_value_attribute,
         'people_group_config': _same_value_attribute,
 
@@ -85,15 +80,18 @@ class DatasetConfigParser(StudyConfigParserBase):
         'authorizedGroups': _set_union_attribute,
         'authorized_groups': _set_union_attribute,
 
-        'years': _list_extend_attribute,
-        'pub_meds': _list_extend_attribute,
-        'names': _list_extend_attribute,
-        'ids': _list_extend_attribute,
-
-        'study_types': _set_union_attribute,
-
         'year': _strings_join_attribute,
+        'years': _list_extend_attribute,
+
         'pub_med': _strings_join_attribute,
+        'pubMed': _strings_join_attribute,
+        'pub_meds': _list_extend_attribute,
+        'pubMeds': _list_extend_attribute,
+
+        'study_type': _strings_join_attribute,
+        'studyType': _strings_join_attribute,
+        'study_types': _set_union_attribute,
+        'studyTypes': _set_union_attribute,
     }
 
     @classmethod
@@ -108,11 +106,10 @@ class DatasetConfigParser(StudyConfigParserBase):
 
     @classmethod
     def read_and_parse_directory_configurations(
-            cls, configurations_dir, work_dir, study_configs, defaults=None,
+            cls, configurations_dir, study_configs, defaults=None,
             fail_silently=False):
         configs = cls.read_directory_configurations(
-            configurations_dir, work_dir, defaults=defaults,
-            fail_silently=fail_silently
+            configurations_dir, defaults=defaults, fail_silently=fail_silently
         )
 
         parsed_configs = []

@@ -40,6 +40,8 @@ def test_pheno_regressions_from_conf_path(regressions_conf):
         },
     }
 
+    assert len(regs.regression) == len(expected_regs)
+
     for reg_name, expected_reg in expected_regs.items():
         assert reg_name in regs.regression
         assert regs.regression[reg_name] == expected_reg
