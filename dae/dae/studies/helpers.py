@@ -158,6 +158,8 @@ def get_variants_web(
 
     if 'geneSet' in query:
         query.pop('geneSet')
+    if 'studyTypes' in query:
+        query.pop('studyTypes')
 
     variants = dataset.query_variants(weights_loader, **query)
     people_group_id = query.get('peopleGroup', {}).get('id', None)
