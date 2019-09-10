@@ -8,12 +8,21 @@ from box import Box
 from dae.annotation.tools.file_io import IOManager, IOType
 from dae.annotation.tools.score_file_io import ScoreFile, TabixAccess
 
+from dae.configuration.dae_config_parser import DAEConfigParser
+
 
 def relative_to_this_test_folder(path):
     return os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         path
     )
+
+
+@pytest.fixture(scope='session')
+def dae_config_fixture():
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=relative_to_this_test_folder('fixtures'))
+    return dae_config
 
 
 @pytest.fixture
