@@ -5,7 +5,7 @@ from dae.gene.genomic_values import GenomicValues
 
 class Scores(GenomicValues):
     def __init__(self, config, *args, **kwargs):
-        super(Scores, self).__init__(config.name, *args, **kwargs)
+        super(Scores, self).__init__(config.id, *args, **kwargs)
 
         self.config = config
         self.genomic_values_col = 'scores'
@@ -39,26 +39,25 @@ class ScoreLoader(object):
     def get_scores(self):
         result = []
 
-        for _, score in self.scores.items():
+        for score in self.scores.values():
             assert score.df is not None
             result.append(score)
 
         return result
 
     def _load(self):
-        for score_name in self.config.genomic_scores.scores:
-            score_config = self.config.genomic_scores.get(score_name)
+        for score_config in self.config.genomic_scores.values():
             s = Scores(score_config)
-            self.scores[score_name] = s
+            self.scores[score_config.id] = s
 
-    def __getitem__(self, score_name):
-        if score_name not in self.scores:
+    def __getitem__(self, score_id):
+        if score_id not in self.scores:
             raise KeyError()
 
-        res = self.scores[score_name]
+        res = self.scores[score_id]
         if res.df is None:
             res.load_scores()
         return res
 
-    def __contains__(self, score_name):
-        return score_name in self.scores
+    def __contains__(self, score_id):
+        return score_id in self.scores

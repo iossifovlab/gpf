@@ -20,7 +20,7 @@ def test_scores(score_config):
     config = score_config.genomic_scores.get('SCORE-raw_rankscore')
     s = Scores(config)
 
-    assert s.name == 'SCORE-raw_rankscore'
+    assert s.id == 'SCORE-raw_rankscore'
     assert s.desc == 'SCORE raw rankscore'
     assert len(s.values()) == 101
     assert s.values()[0] == 42.24
