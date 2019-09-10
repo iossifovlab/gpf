@@ -43,6 +43,12 @@ class StudyConfigParserBase(ConfigParserBase):
         assert 'description' in config_section
         assert config_section.work_dir
 
+        if os.path.exists(config_section.description):
+            with open(config_section.description) as desc:
+                config_section.description = desc.read()
+        else:
+            config_section.description = config_section.description
+
         return config_section
 
     @classmethod
@@ -95,7 +101,7 @@ class StudyConfigParser(StudyConfigParserBase):
 
         config.years = [config.year] if config.year else []
         config.pub_meds = [config.pub_med] if config.pub_med else []
-        config.study_types = \
+        config.studyTypes = \
             {config.study_type} if config.get('studyType', None) else set()
 
         assert config.name

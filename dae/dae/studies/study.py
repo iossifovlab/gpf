@@ -1,6 +1,3 @@
-import os.path
-
-
 class StudyBase(object):
 
     def __init__(self, config, studies):
@@ -21,11 +18,7 @@ class StudyBase(object):
         self.years = self.config.years
         self.pub_meds = self.config.pub_meds
 
-        if os.path.exists(self.config.description):
-            with open(self.config.description) as desc:
-                self.description = desc.read()
-        else:
-            self.description = self.config.description
+        self.description = self.config.description
 
         self.study_names = ','.join(study.name for study in self.studies)
 
