@@ -1,7 +1,7 @@
 #!/bin/sh
 
 
-wget -c https://iossifovlab.com/distribution/public/data-hg19-startup.tar.gz
+wget -c https://iossifovlab.com/distribution/public/data-hg19-startup-latest.tar.gz
 
 data_tar_time=`stat -c %Y data-hg19-startup.tar.gz`
 data_dir_time=`stat -c %Y data-hg19-startup`
