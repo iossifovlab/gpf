@@ -100,27 +100,9 @@ class ConfigParserBase(object):
             default_box_attr=None
         )
 
-        config['config_file'] = config_file
+        config.config_file = config_file
 
         return config
-
-    @classmethod
-    def _collect_config_paths(cls, dirname, fail_silently=False):
-        config_paths = []
-        if not os.path.exists(dirname):
-            if fail_silently:
-                return []
-            raise RuntimeError(dirname)
-        for path in os.listdir(dirname):
-            p = os.path.join(dirname, path)
-            if os.path.isdir(p):
-                subpaths = cls._collect_config_paths(p, fail_silently)
-                config_paths.extend(subpaths)
-            elif path.endswith('.conf'):
-                config_paths.append(
-                    os.path.join(dirname, path)
-                )
-        return config_paths
 
     @classmethod
     def read_config(cls, config_file, work_dir, defaults=None):
@@ -183,6 +165,7 @@ class ConfigParserBase(object):
 
             config_section = cls.parse_section(config_section)
             if config_section is None:
+                config.pop(section)
                 continue
 
             config[section] = config_section
@@ -207,6 +190,24 @@ class ConfigParserBase(object):
 
         return config_section
 
+    @classmethod
+    def _collect_config_paths(cls, dirname, fail_silently=False):
+        config_paths = []
+        if not os.path.exists(dirname):
+            if fail_silently:
+                return []
+            raise RuntimeError(dirname)
+        for path in os.listdir(dirname):
+            p = os.path.join(dirname, path)
+            if os.path.isdir(p):
+                subpaths = cls._collect_config_paths(p, fail_silently)
+                config_paths.extend(subpaths)
+            elif path.endswith('.conf'):
+                config_paths.append(
+                    os.path.join(dirname, path)
+                )
+        return config_paths
+
     @staticmethod
     def _str_to_bool(val):
         true_values = ['yes', 'Yes', 'True', 'true']
@@ -216,8 +217,6 @@ class ConfigParserBase(object):
     def _split_str_option_list(str_option, separator=','):
         if str_option is not None and str_option != '':
             return [el.strip() for el in str_option.split(separator)]
-        elif str_option == '':
-            return []
         else:
             return []
 
