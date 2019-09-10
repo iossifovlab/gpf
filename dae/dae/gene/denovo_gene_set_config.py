@@ -56,7 +56,7 @@ class DenovoGeneSetConfigParser(ConfigParserBase):
         return options
 
     @classmethod
-    def _get_standard_criterias(cls, standard_criterias):
+    def _parse_standard_criterias(cls, standard_criterias):
         for sc_id in standard_criterias.keys():
             sc = standard_criterias[sc_id]
             standard_criteria = \
@@ -66,7 +66,7 @@ class DenovoGeneSetConfigParser(ConfigParserBase):
         return list(standard_criterias.values())
 
     @classmethod
-    def _get_recurrency_criterias(cls, recurrency_criteria_segments):
+    def _parse_recurrency_criterias(cls, recurrency_criteria_segments):
         recurrency_criterias = {}
         for recurrency_criteria_str in \
                 cls._split_str_option_list(recurrency_criteria_segments):
@@ -79,7 +79,7 @@ class DenovoGeneSetConfigParser(ConfigParserBase):
         return recurrency_criterias
 
     @staticmethod
-    def _get_denovo_gene_sets(people_group, people_groups):
+    def _parse_denovo_gene_sets(people_group, people_groups):
         if len(people_group) == 0:
             return None
 
@@ -111,15 +111,15 @@ class DenovoGeneSetConfigParser(ConfigParserBase):
 
         config_section.id = config.id
 
-        config_section.standard_criterias = cls._get_standard_criterias(
+        config_section.standard_criterias = cls._parse_standard_criterias(
             config_section.get('standardCriterias', {})
         )
 
-        config_section.recurrency_criterias = cls._get_recurrency_criterias(
+        config_section.recurrency_criterias = cls._parse_recurrency_criterias(
             config_section.get('recurrencyCriteria', {}).get('segments', [])
         )
 
-        config_section.denovo_gene_sets = cls._get_denovo_gene_sets(
+        config_section.denovo_gene_sets = cls._parse_denovo_gene_sets(
             config.people_group_config.people_group,
             config_section.people_groups
         )

@@ -35,22 +35,15 @@ class EnrichmentConfigParser(ConfigParserBase):
         return cache_file
 
     @staticmethod
-    def _get_model(model_config, config_file):
-        for model_id in model_config.keys():
-            model = model_config[model_id]
+    def _parse_model(model_config, config_file):
+        for model in model_config.values():
+            model.id = model.name
 
-            model['id'] = model['name']
-
-            model_file = model.get('file', None)
-            if model_file is None:
-                model['filename'] = None
-            else:
-                model['filename'] = os.path.join(
+            if model.file is not None:
+                model.filename = os.path.join(
                     os.path.split(config_file)[0],
-                    'enrichment/{}'.format(model_file)
+                    'enrichment/{}'.format(model.file)
                 )
-
-            model_config[model_id] = model
 
         return model_config
 
@@ -69,10 +62,10 @@ class EnrichmentConfigParser(ConfigParserBase):
         if not config_section:
             return None
 
-        config_section.backgrounds = cls._get_model(
+        config_section.backgrounds = cls._parse_model(
             config_section.get('background', {}), config_section.config_file
         )
-        config_section.counting = cls._get_model(
+        config_section.counting = cls._parse_model(
             config_section.get('counting', {}), config_section.config_file
         )
 

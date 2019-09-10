@@ -50,15 +50,14 @@ class StudyConfigParserBase(ConfigParserBase):
         people_group_config = PeopleGroupConfigParser.parse(config)
 
         if people_group_config and people_group_config.people_group:
-            config_section.people_group_config = people_group_config
+            config_section.peopleGroupConfig = people_group_config
 
     @classmethod
     def _fill_genotype_browser_config(cls, config_section, config):
         genotype_browser_config = GenotypeBrowserConfigParser.parse(config)
 
-        if genotype_browser_config is not None and \
-                config_section.genotype_browser:
-            config_section['genotypeBrowserConfig'] = genotype_browser_config
+        if genotype_browser_config and config_section.genotype_browser:
+            config_section.genotypeBrowserConfig = genotype_browser_config
 
     @classmethod
     def _fill_sections_config(cls, config_section, config):

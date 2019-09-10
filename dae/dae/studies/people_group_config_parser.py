@@ -6,14 +6,14 @@ from dae.configuration.config_parser_base import ConfigParserBase
 
 class PeopleGroupConfigParser(ConfigParserBase):
 
-    SECTION = 'people_group'
+    SECTION = 'peopleGroup'
 
     SPLIT_STR_LISTS = [
         'selectedPeopleGroupValues'
     ]
 
     FILTER_SELECTORS = {
-        'people_group': 'selectedPeopleGroupValues',
+        'peopleGroup': 'selectedPeopleGroupValues',
     }
 
     @staticmethod
@@ -35,16 +35,12 @@ class PeopleGroupConfigParser(ConfigParserBase):
         return {option['id']: option for option in options}
 
     @classmethod
-    def _get_people_groups(cls, people_group_config):
-        for people_group_id in people_group_config.keys():
-            people_group = people_group_config[people_group_id]
-
+    def _parse_people_groups(cls, people_group_config):
+        for people_group in people_group_config.values():
             people_group.default = cls._people_group_selectors_split_dict(
                 people_group.default)
             people_group.domain = \
                 cls._get_values(cls._split_dict_lists(people_group.domain))
-
-            people_group_config[people_group_id] = people_group
 
         return people_group_config
 
@@ -68,11 +64,11 @@ class PeopleGroupConfigParser(ConfigParserBase):
             return None
 
         config_section = deepcopy(config[cls.SECTION])
-        config_section.people_group = deepcopy(config_section)
+        config_section.peopleGroup = deepcopy(config_section)
         config_section = \
             super(PeopleGroupConfigParser, cls).parse_section(config_section)
 
-        config_section.people_group = \
-            cls._get_people_groups(config_section.people_group)
+        config_section.peopleGroup = \
+            cls._parse_people_groups(config_section.people_group)
 
         return config_section

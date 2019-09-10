@@ -47,15 +47,13 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
     }
 
     @classmethod
-    def _get_pheno_filter(cls, config):
-        if config is None:
+    def _parse_pheno_filter(cls, pheno_filters):
+        if pheno_filters is None:
             return None
 
-        pheno_filters = []
-
-        for pheno_filter_id, pheno_filter in config.items():
+        for pheno_filter in pheno_filters.values():
             mf = pheno_filter.filter
-            mf = mf.split(':')
+            mf = cls._split_str_option_list(mf, separator=':')
             if mf[0] == 'single':
                 filter_type, role, measure = mf
                 measure_filter = {
@@ -70,24 +68,20 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
                     'role': role
                 }
 
-            pheno_filter['id'] = pheno_filter['name']
-            pheno_filter['measureType'] = pheno_filter.pop('type', None)
-            pheno_filter['measureFilter'] = measure_filter
+            pheno_filter.id = pheno_filter.name
+            pheno_filter.measureFilter = measure_filter
 
-            pheno_filters.append(pheno_filter)
-
-        return pheno_filters
+        return list(pheno_filters.values())
 
     @classmethod
-    def _get_pheno_column(cls, config):
-        pheno_columns = []
-
-        for _, pheno in config.items():
+    def _parse_pheno_column(cls, pheno_columns):
+        for pheno in pheno_columns.values():
             slots = cls._split_str_option_list(pheno.slots)
 
             column_slots = []
             for slot in slots:
-                role, source, label = slot.split(':')
+                role, source, label = \
+                    cls._split_str_option_list(slot, separator=':')
                 column_slots.append(
                     {
                         'id': '{}.{}'.format(role, source),
@@ -97,22 +91,18 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
                         'source': '{}.{}'.format(role, source),
                     })
 
-            pheno['slots'] = column_slots
+            pheno.slots = column_slots
 
-            pheno_columns.append(pheno)
-
-        return pheno_columns
+        return list(pheno_columns.values())
 
     @classmethod
-    def _get_genotype_column(cls, config):
-        genotype_column = []
-
-        for _, genotype in config.items():
-            slots = cls._split_str_option_list(genotype.slots)
+    def _parse_genotype_column(cls, genotype_columns):
+        for genotype_column in genotype_columns.values():
+            slots = cls._split_str_option_list(genotype_column.slots)
 
             column_slots = []
             for slot in slots or []:
-                slot_arr = [el.strip() for el in slot.split(':')]
+                slot_arr = cls._split_str_option_list(slot, separator=':')
                 if len(slot_arr) == 1:
                     source = slot_arr[0]
                     label = slot_arr[0]
@@ -130,44 +120,30 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
                         'format': label_format
                     })
 
-            genotype['slots'] = column_slots
+            genotype_column.slots = column_slots
 
-            genotype_column.append(genotype)
-
-        return genotype_column
+        return list(genotype_columns.values())
 
     @classmethod
-    def _get_in_roles_column(cls, in_roles):
-        in_roles_column = []
+    def _parse_in_roles_column(cls, in_roles):
+        for in_role in in_roles.values():
+            in_role.roles = cls._split_str_option_list(in_role.roles)
+            in_role.destination = in_role.get('destination', in_role.id)
 
-        for _, in_role in in_roles.items():
-            in_role['roles'] = cls._split_str_option_list(in_role['roles'])
-            in_role['destination'] = in_role.get('destination', in_role['id'])
-
-            in_roles_column.append(in_role)
-
-        return in_roles_column
+        return list(in_roles.values())
 
     @classmethod
-    def _get_present_in_role(cls, config):
-        present_in_role = config.get('presentInRole', {})
-
-        present_in_roles = []
-
-        for pir_id, pir in present_in_role.items():
-            pir['roles'] = [
-                Role.from_name(el.strip()).display_name
-                for el in cls._split_str_option_list(pir['roles'])
+    def _parse_present_in_role(cls, present_in_roles):
+        for pir in present_in_roles.values():
+            pir.roles = [
+                Role.from_name(el).display_name
+                for el in cls._split_str_option_list(pir.roles)
             ]
 
-            present_in_roles.append(pir)
-
-        config['presentInRole'] = present_in_roles
-
-        return config
+        return list(present_in_roles.values())
 
     @staticmethod
-    def _get_column_slots(genotype_columns, columns):
+    def _parse_column_slots(genotype_columns, columns):
         column_slots = []
         for column in columns:
             genotype_column = list(filter(
@@ -189,7 +165,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         return column_slots
 
     @staticmethod
-    def _get_column_labels(genotype_columns):
+    def _parse_column_labels(genotype_columns):
         column_labels = {}
         for gc in genotype_columns:
             if 'source' in gc and gc['source'] is not None:
@@ -202,7 +178,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         return column_labels
 
     @staticmethod
-    def _get_gene_weights_columns(genotype_columns):
+    def _parse_gene_weights_columns(genotype_columns):
         gene_weights_columns = list(filter(
             lambda gc: gc['id'] == 'weights', genotype_columns))
 
@@ -226,34 +202,35 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
             return False
 
         config_section['phenoFilters'] = \
-            cls._get_pheno_filter(config_section.get('phenoFilters', None))
+            cls._parse_pheno_filter(config_section.get('phenoFilters', None))
 
         config_section['genotypeColumns'] = \
-            cls._get_genotype_column(config_section.get('genotype', {}))
+            cls._parse_genotype_column(config_section.get('genotype', {}))
         config_section['phenoColumns'] = \
-            cls._get_pheno_column(config_section.get('pheno', {}))
+            cls._parse_pheno_column(config_section.get('pheno', {}))
 
         config_section['genotypeColumns'] += config_section['phenoColumns']
         config_section['previewColumnsSlots'] = \
-            cls._get_column_slots(
+            cls._parse_column_slots(
                 config_section.get('genotypeColumns', []),
                 config_section.get('previewColumns', []))
         config_section['downloadColumnsSlots'] = \
-            cls._get_column_slots(
+            cls._parse_column_slots(
                 config_section.get('genotypeColumns', []),
                 config_section.get('downloadColumns', []))
 
         config_section['columnLabels'] = \
-            cls._get_column_labels(
+            cls._parse_column_labels(
                 config_section.get('genotypeColumns', []))
 
         config_section['geneWeightsColumns'] = \
-            cls._get_gene_weights_columns(
+            cls._parse_gene_weights_columns(
                 config_section.get('genotypeColumns', []))
 
-        config_section = cls._get_present_in_role(config_section)
+        config_section['presentInRole'] = \
+            cls._parse_present_in_role(config_section.get('presentInRole', {}))
         config_section['rolesColumns'] = \
-            cls._get_in_roles_column(config_section.get('inRoles', {}))
+            cls._parse_in_roles_column(config_section.get('inRoles', {}))
 
         return Box(
             config_section, camel_killer_box=True, default_box=True,

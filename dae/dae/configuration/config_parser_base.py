@@ -213,9 +213,9 @@ class ConfigParserBase(object):
         return True if val in true_values else False
 
     @staticmethod
-    def _split_str_option_list(str_option):
+    def _split_str_option_list(str_option, separator=','):
         if str_option is not None and str_option != '':
-            return [el.strip() for el in str_option.split(',')]
+            return [el.strip() for el in str_option.split(separator)]
         elif str_option == '':
             return []
         else:
