@@ -26,17 +26,22 @@ class VariantsDb(object):
             pheno_factory = PhenoFactory(dae_config=dae_config)
         self.pheno_factory = pheno_factory
 
+        defaults = None
+        if dae_config.default_configuration and \
+                dae_config.default_configuration.conf_file:
+            defaults = {'conf': dae_config.default_configuration.conf_file}
+
         self.study_configs = \
             StudyConfigParser.read_and_parse_directory_configurations(
                 dae_config.studies_db.dir,
-                defaults={'conf': dae_config.default_configuration.conf_file}
+                defaults=defaults
             )
 
         self.dataset_configs = \
             DatasetConfigParser.read_and_parse_directory_configurations(
                 dae_config.datasets_db.dir,
                 self.study_configs,
-                defaults={'conf': dae_config.default_configuration.conf_file},
+                defaults=defaults,
                 fail_silently=True
             )
 
