@@ -5,7 +5,7 @@ from box import Box
 
 from .conftest import relative_to_this_test_folder
 
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_annotator import PositionScoreAnnotator
 
 
@@ -57,16 +57,16 @@ def test_regions_parameterized(
         "scores_file": relative_to_this_test_folder(score_filename)
     }, default_box=True, default_box_attr=None)
 
-    columns_config = {
+    columns = {
         'TEST{}'.format(score_name): "RESULT_{}".format(score_name),
     }
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="score_annotator.VariantScoreAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'score_annotator.VariantScoreAnnotator'
+        })
     )
 
     with variants_io("fixtures/input3.tsv.gz", options) as io_manager:
@@ -125,16 +125,16 @@ def test_regions_parameterized_missing_scores(
         "scores_file": relative_to_this_test_folder(score_filename)
     }, default_box=True, default_box_attr=None)
 
-    columns_config = {
+    columns = {
         'TEST{}'.format(score_name): "RESULT_{}".format(score_name),
     }
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="score_annotator.VariantScoreAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'score_annotator.VariantScoreAnnotator'
+        })
     )
 
     with variants_io("fixtures/input3.tsv.gz", options) as io_manager:
@@ -176,16 +176,16 @@ def test_regions_simple(
         "scores_file": relative_to_this_test_folder(score_filename)
     }, default_box=True, default_box_attr=None)
 
-    columns_config = {
+    columns = {
         'TEST{}'.format(score_name): "RESULT_{}".format(score_name),
     }
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="score_annotator.VariantScoreAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'score_annotator.VariantScoreAnnotator'
+        })
     )
 
     with variants_io("fixtures/input3.tsv.gz", options) as io_manager:

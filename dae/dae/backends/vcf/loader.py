@@ -44,9 +44,10 @@ class VCFVariantWrapper(object):
         gt = np.array(v.genotypes, dtype=np.int8)
         gt = gt[:, 0:2]
         self.gt = gt.T
-    
+
     def __getattr__(self, name):
         return getattr(self.v, name)
+
 
 class VCFWrapper(object):
 

@@ -2,7 +2,7 @@ import pytest
 
 from box import Box
 
-from dae.configurable_entities.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.tools.dae2parquet import parse_cli_arguments, import_dae_denovo, \
     dae_build_transmitted, dae_build_makefile
 
@@ -28,7 +28,7 @@ def test_dae2parquet_denovo(
         dae_denovo_config.family_filename,
         dae_denovo_config.denovo_filename,
     ]
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
     argv = parse_cli_arguments(dae_config, argv)
 
@@ -36,9 +36,9 @@ def test_dae2parquet_denovo(
     assert argv.type == 'denovo'
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults={
+        dae_config, argv, defaults={'values': {
             'scores_dirname': annotation_scores_dirname,
-        })
+        }})
 
     import_dae_denovo(
         dae_config, annotation_pipeline,
@@ -86,7 +86,7 @@ def test_dae2parquet_transmitted(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
     ]
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
     argv = parse_cli_arguments(dae_config, argv)
 
@@ -94,9 +94,9 @@ def test_dae2parquet_transmitted(
     assert argv.type == 'dae'
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults={
+        dae_config, argv, defaults={'values': {
             'scores_dirname': annotation_scores_dirname,
-        })
+        }})
 
     dae_build_transmitted(
         dae_config, annotation_pipeline, argv, defaults={
@@ -145,7 +145,7 @@ def test_dae2parquet_make(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
     ]
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
     argv = parse_cli_arguments(dae_config, argv)
 
@@ -171,7 +171,7 @@ def dae_iossifov2014_thrift(
             config.family_filename,
             config.denovo_filename,
         ]
-        dae_config = DAEConfig.make_config()
+        dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
         argv = parse_cli_arguments(dae_config, argv)
 
@@ -179,9 +179,9 @@ def dae_iossifov2014_thrift(
         assert argv.type == 'denovo'
 
         annotation_pipeline = construct_import_annotation_pipeline(
-            dae_config, argv, defaults={
+            dae_config, argv, defaults={'values': {
                 'scores_dirname': annotation_scores_dirname,
-            })
+            }})
 
         import_dae_denovo(
             dae_config, annotation_pipeline,

@@ -1,7 +1,7 @@
 import pytest
 from box import Box
 
-from dae.configurable_entities.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.annotation.tools.file_io_parquet import ParquetReader
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
@@ -25,14 +25,14 @@ def test_vcf2parquet_vcf(
         vcf_import_config.vcf
     ]
 
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
     argv = parse_cli_arguments(dae_config, argv)
     assert argv.type == 'vcf'
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults={
+        dae_config, argv, defaults={'values': {
             "scores_dirname": annotation_scores_dirname,
-        })
+        }})
 
     import_vcf(
         dae_config, annotation_pipeline,
@@ -80,7 +80,7 @@ def test_vcf2parquet_make(
         vcf_import_config.vcf
     ]
 
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
     argv = parse_cli_arguments(dae_config, argv)
     assert argv.type == 'make'
 

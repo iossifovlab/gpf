@@ -6,8 +6,8 @@ import argparse
 import time
 from copy import deepcopy
 
-from dae.configurable_entities.configuration import DAEConfig
-from dae.studies.factory import VariantsDb
+from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.studies.variants_db import VariantsDb
 
 from dae.tools.simple_study_import import impala_load_study
 
@@ -41,7 +41,7 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 def load_study_parquet(
         dae_config=None, study_ids=None, parquet_directories=None):
     if dae_config is None:
-        dae_config = DAEConfig.make_config()
+        dae_config = DAEConfigParser.read_and_parse_file_configuration()
     variants_db = VariantsDb(dae_config)
 
     if study_ids is None:
@@ -51,7 +51,7 @@ def load_study_parquet(
         study_ids = []
         parquet_directories = []
         for study_id in temp_study_ids:
-            study_config = variants_db.get_study_config(study_id)
+            study_config = variants_db.study_configs[study_id]
 
             if study_config.file_format != 'impala':
                 continue
@@ -63,11 +63,11 @@ def load_study_parquet(
 
     for study_id, parquet_directory in zip(study_ids, parquet_directories):
         print('Loading `{}` study in impala `{}` db'.format(
-            study_id, dae_config.impala_db))
+            study_id, dae_config.impala.db))
         start = time.time()
         impala_load_study(dae_config, study_id, parquet_directory)
         print("Loaded `{}` study in impala `{}` db for {:.2f} sec".format(
-            study_id, dae_config.impala_db, time.time() - start),
+            study_id, dae_config.impala.db, time.time() - start),
             file=sys.stderr)
 
 

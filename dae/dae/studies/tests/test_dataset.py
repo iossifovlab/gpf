@@ -7,4 +7,4 @@ def test_inheritance_trio_can_init(inheritance_trio_dataset):
 
 def test_inheritance_trio_description(inheritance_trio_dataset):
     assert inheritance_trio_dataset.description == \
-           "Sample description in markdown format.\n"
+        "Sample description in markdown format.\n"

@@ -4,125 +4,19 @@ import os
 import sys
 import time
 import datetime
-import re
 import argparse
 import subprocess
 
 from box import Box
-from ast import literal_eval
-from configparser import ConfigParser
-from collections import OrderedDict
 
-import dae.common.config
 from dae.annotation.tools.annotator_base import AnnotatorBase, \
     CompositeVariantAnnotator
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.file_io import IOType, IOManager
+from dae.annotation.tools.annotator_config import annotation_config_cli_options
+from dae.annotation.tools.utils import AnnotatorFactory
 
-from dae.configurable_entities.configuration import DAEConfig
-
-
-class PipelineConfig(VariantAnnotatorConfig):
-
-    def __init__(self, name, annotator_name, options,
-                 columns_config, virtuals):
-        super(PipelineConfig, self).__init__(
-            name, annotator_name, options,
-            columns_config, virtuals
-        )
-        self.pipeline_sections = []
-        self.optionxform = str
-
-    @staticmethod
-    def build(options, config_file, defaults={}):
-        configuration = PipelineConfig._parse_pipeline_config(
-            config_file, defaults
-        )
-
-        result = PipelineConfig(
-            name="pipeline",
-            annotator_name="annotation_pipeline.Pipeline",
-            options=options,
-            columns_config=OrderedDict(),
-            virtuals=[]
-        )
-        result.pipeline_sections = []
-
-        for section_name, section_config in configuration.items():
-            section_config = result._parse_config_section(
-                section_name, section_config, options)
-            result.pipeline_sections.append(section_config)
-        return result
-
-    @staticmethod
-    def _parse_pipeline_config(filename, defaults={}):
-        class PipelineConfigParser(ConfigParser):
-            """Modified ConfigParser.SafeConfigParser that
-            allows ':' in keys and only '=' as separator.
-            """
-            OPTCRE = re.compile(
-                r'(?P<option>[^=\s][^=]*)'          # allow only =
-                r'\s*(?P<vi>[=])\s*'                # for option separator
-                r'(?P<value>.*)$'
-                )
-            optionxform = str
-
-        config_parser = PipelineConfigParser(defaults=defaults)
-
-        with open(filename, "r", encoding="utf8") as infile:
-            config_parser.read_file(infile)
-            config = dae.common.config.to_dict(config_parser)
-        return config
-
-    @staticmethod
-    def _parse_config_section(section_name, section, options):
-        # section = Box(section, default_box=True, default_box_attr=None)
-        assert 'annotator' in section, [section_name, section]
-
-        annotator_name = section['annotator']
-        options = dict(options.to_dict())
-        if 'options' in section:
-            for key, val in section['options'].items():
-                try:
-                    val = literal_eval(val)
-                except Exception:
-                    pass
-                options[key] = val
-
-        options = Box(options, default_box=True, default_box_attr=None)
-
-        if 'columns' in section:
-            columns_config = OrderedDict(section['columns'])
-        else:
-            columns_config = OrderedDict()
-
-        if 'virtuals' not in section:
-            virtuals = []
-        else:
-            virtuals = [
-                c.strip() for c in section['virtuals'].split(',')
-            ]
-        return VariantAnnotatorConfig(
-            name=section_name,
-            annotator_name=annotator_name,
-            options=options,
-            columns_config=columns_config,
-            virtuals=virtuals
-        )
-
-    @staticmethod
-    def cli_options(dae_config):
-        options = [
-            ('--config', {
-                'help': 'config file location; default is "annotation.conf" '
-                'in the instance data directory $DAE_DB_DIR '
-                '[default: %(default)s]',
-                'default': dae_config.annotation_conf,
-                'action': 'store'
-            }),
-        ]
-        options.extend(VariantAnnotatorConfig.cli_options(dae_config))
-        return options
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
 def run_tabix(filename):
@@ -152,15 +46,16 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         super(PipelineAnnotator, self).__init__(config)
 
     @staticmethod
-    def build(options, config_file, defaults={}):
-        pipeline_config = PipelineConfig.build(options, config_file, defaults)
-        assert pipeline_config.pipeline_sections
+    def build(options, config_file, work_dir, defaults=None):
+        pipeline_config = \
+            AnnotationConfigParser.read_and_parse_file_configuration(
+                options, config_file, work_dir, defaults
+            )
+        assert pipeline_config.sections
 
         pipeline = PipelineAnnotator(pipeline_config)
-        for section_config in pipeline_config.pipeline_sections:
-            annotator = VariantAnnotatorConfig.instantiate(
-                section_config
-            )
+        for section_config in pipeline_config.sections:
+            annotator = AnnotatorFactory.make_annotator(section_config)
             pipeline.add_annotator(annotator)
             output_columns = [
                 col for col in annotator.config.output_columns
@@ -187,7 +82,7 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 
 
 def main_cli_options(dae_config):
-    options = PipelineConfig.cli_options(dae_config)
+    options = annotation_config_cli_options(dae_config)
     options.extend([
             ('infile', {
                 'nargs': '?',
@@ -236,7 +131,7 @@ def main_cli_options(dae_config):
 
 
 def pipeline_main(argv):
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
     desc = "Program to annotate variants combining multiple annotating tools"
     parser = argparse.ArgumentParser(
@@ -247,10 +142,10 @@ def pipeline_main(argv):
         parser.add_argument(name, **args)
 
     options = parser.parse_args()
-    if options.config is not None:
-        config_filename = options.config
+    if options.annotation_config is not None:
+        config_filename = options.annotation_config
     else:
-        config_filename = dae_config.annotation_conf
+        config_filename = dae_config.annotation.conf_file
 
     assert os.path.exists(config_filename), config_filename
 
@@ -269,7 +164,8 @@ def pipeline_main(argv):
     start = time.time()
 
     pipeline = PipelineAnnotator.build(
-        options, config_filename, defaults=dae_config.annotation_defaults)
+        options, config_filename, dae_config.dae_data_dir,
+        defaults={'values': dae_config.annotation_defaults})
     assert pipeline is not None
 
     with IOManager(options, reader_type, writer_type) as io_manager:

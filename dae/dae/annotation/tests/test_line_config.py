@@ -1,9 +1,9 @@
-from dae.annotation.tools.annotator_config import LineConfig
+from dae.annotation.tools.utils import LineMapper
 
 
 def test_line_config_simple():
-    lc = LineConfig(['a', 'b'])
-    res = lc.build([1, 2])
+    lm = LineMapper(['a', 'b'])
+    res = lm.map([1, 2])
 
     assert len(res) == 2
     assert res['a'] == 1
@@ -11,8 +11,8 @@ def test_line_config_simple():
 
 
 def test_line_config_multi():
-    lc = LineConfig(['a', 'b', 'a', 'b'])
-    res = lc.build([1, 2, 3, 4])
+    lm = LineMapper(['a', 'b', 'a', 'b'])
+    res = lm.map([1, 2, 3, 4])
 
     assert len(res) == 4
     assert res['a'] == 1
@@ -22,8 +22,8 @@ def test_line_config_multi():
 
 
 def test_line_config_multi2():
-    lc = LineConfig(['##a', 'b', 'a', 'b', 'c'])
-    res = lc.build([1, 2, 3, 4, 5])
+    lm = LineMapper(['##a', 'b', 'a', 'b', 'c'])
+    res = lm.map([1, 2, 3, 4, 5])
 
     assert len(res) == 5
     assert res['a'] == 1

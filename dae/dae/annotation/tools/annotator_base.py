@@ -3,11 +3,11 @@ import traceback
 
 import pandas as pd
 
+from box import Box
 from copy import deepcopy
 
-from dae.annotation.tools.annotator_config import LineConfig, \
-    AnnotatorConfig, \
-    VariantAnnotatorConfig
+from dae.annotation.tools.utils import LineMapper
+
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.variants.variant import SummaryAllele
 import dae.GenomeAccess
@@ -20,7 +20,7 @@ class AnnotatorBase(object):
     """
 
     def __init__(self, config):
-        assert isinstance(config, AnnotatorConfig)
+        assert isinstance(config, Box)
 
         self.config = config
 
@@ -49,7 +49,7 @@ class AnnotatorBase(object):
         self.collect_annotator_schema(self.schema)
         file_io_manager.writer.schema = self.schema
 
-        line_config = LineConfig(file_io_manager.header)
+        line_mapper = LineMapper(file_io_manager.header)
         if self.mode == 'replace':
             self.config.output_columns = \
                 [col for col in self.schema.columns
@@ -63,7 +63,7 @@ class AnnotatorBase(object):
             if '#' in line[0]:
                 file_io_manager.line_write(line)
                 continue
-            annotation_line = line_config.build(line)
+            annotation_line = line_mapper.map(line)
             # print(annotation_line)
 
             try:
@@ -99,20 +99,20 @@ class CopyAnnotator(AnnotatorBase):
         super(CopyAnnotator, self).__init__(config)
 
     def collect_annotator_schema(self, schema):
-        for key, value in self.config.columns_config.items():
+        for key, value in self.config.columns.items():
             assert key in schema.columns, [key, schema.columns]
             schema.columns[value] = schema.columns[key]
 
     def line_annotation(self, annotation_line, variant=None):
         data = {}
-        for key, value in self.config.columns_config.items():
+        for key, value in self.config.columns.items():
             data[value] = annotation_line[key]
         annotation_line.update(data)
 
 
 class VariantBuilder(object):
     def __init__(self, config, genome):
-        assert isinstance(config, VariantAnnotatorConfig)
+        assert isinstance(config, Box)
         self.config = config
         self.genome = genome
 
@@ -213,14 +213,14 @@ class VariantAnnotatorBase(AnnotatorBase):
     def __init__(self, config):
         super(VariantAnnotatorBase, self).__init__(config)
 
-        assert isinstance(config, VariantAnnotatorConfig)
+        assert isinstance(config, Box)
 
         self.genome = None
 
         if self.config.options.vcf:
             self.variant_builder = VCFBuilder(self.config, self.genome)
         else:
-            self.genome = GenomeAccess.openRef(self.config.genome_file)
+            self.genome = dae.GenomeAccess.openRef(self.config.genome_file)
             assert self.genome is not None
             self.variant_builder = DAEBuilder(self.config, self.genome)
 

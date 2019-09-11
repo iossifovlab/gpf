@@ -3,20 +3,12 @@ import pandas as pd
 
 from box import Box
 
-from dae.annotation.annotation_pipeline import PipelineConfig, PipelineAnnotator
+from dae.annotation.annotation_pipeline import PipelineAnnotator
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase
-
 
 from .conftest import relative_to_this_test_folder
 
-
-# @pytest.mark.parametrize('data,expected', [
-#     ("direct:True", {"direct": True}),
-#     ("default:False,direct:True", {"direct": True, "default": False}),
-# ])
-# def test_parse_default_options(data, expected):
-#     result = PipelineConfig._parse_default_options(data)
-#     assert result == expected
 
 @pytest.fixture
 def empty_options():
@@ -26,19 +18,22 @@ def empty_options():
 def test_parse_pipeline_config():
     filename = relative_to_this_test_folder(
         "fixtures/annotation_test.conf")
-    configuration = PipelineConfig._parse_pipeline_config(filename)
-    print(configuration)
+    work_dir = relative_to_this_test_folder("fixtures")
+    configuration = AnnotationConfigParser.read_file_configuration(
+        filename, work_dir)
 
-    assert len(list(configuration.keys())) == 5
+    assert len(list(configuration.keys())) == 6
     assert list(configuration.keys()) == [
-        "Step1", "Step2", "Step3", "Step4", "Step5", ]
+        "Step1", "Step2", "Step3", "Step4", "Step5", "config_file"]
 
 
 @pytest.fixture
 def error_pipeline_sections_configuration():
     filename = relative_to_this_test_folder(
         "fixtures/error_annotation_sections.conf")
-    configuration = PipelineConfig._parse_pipeline_config(filename)
+    work_dir = relative_to_this_test_folder("fixtures")
+    configuration = AnnotationConfigParser.read_file_configuration(
+        filename, work_dir)
 
     return configuration
 
@@ -47,36 +42,42 @@ def error_pipeline_sections_configuration():
 def pipeline_sections_configuration():
     filename = relative_to_this_test_folder(
         "fixtures/annotation_test.conf")
-    configuration = PipelineConfig._parse_pipeline_config(filename)
+    work_dir = relative_to_this_test_folder("fixtures")
+    configuration = AnnotationConfigParser.read_file_configuration(
+        filename, work_dir)
 
-    assert len(list(configuration.keys())) == 5
+    assert len(list(configuration.keys())) == 6
     assert list(configuration.keys()) == [
-        "Step1", "Step2", "Step3", "Step4", "Step5"]
+        "Step1", "Step2", "Step3", "Step4", "Step5", "config_file"]
     return configuration
 
 
 def test_parse_error_pipeline_section_missing_annotator(
         error_pipeline_sections_configuration, empty_options):
     error_configuration = error_pipeline_sections_configuration
+    configuration = error_configuration["Step0"]
+    configuration['options'] = empty_options
 
     with pytest.raises(AssertionError):
-        PipelineConfig._parse_config_section(
-            "Step0",
-            error_configuration["Step0"],
-            empty_options)
+        AnnotationConfigParser.parse_section(configuration)
 
 
 def test_parse_annotation_section_sections(
         pipeline_sections_configuration, empty_options):
     configuration = pipeline_sections_configuration
 
-    section1 = PipelineConfig._parse_config_section(
-        "Step1", configuration["Step1"], empty_options)
-    assert section1.name == "Step1"
+    step1_configuration = configuration["Step1"]
+    step1_configuration['options'] = empty_options
 
-    section3 = PipelineConfig._parse_config_section(
-        "Step3", configuration["Step3"], empty_options)
-    assert section3.name == "Step3"
+    section1 = AnnotationConfigParser.parse_section(step1_configuration)
+    assert section1.annotator == \
+        "relabel_chromosome.RelabelChromosomeAnnotator"
+
+    step3_configuration = configuration["Step3"]
+    step3_configuration['options'] = empty_options
+
+    section3 = AnnotationConfigParser.parse_section(step3_configuration)
+    assert section3.annotator == "annotator_base.CopyAnnotator"
 
 
 def test_build_pipeline_configuration():
@@ -88,15 +89,16 @@ def test_build_pipeline_configuration():
         default_box=True,
         default_box_attr=None)
 
-    filename = relative_to_this_test_folder(
-        "fixtures/annotation_test.conf")
+    filename = relative_to_this_test_folder("fixtures/annotation_test.conf")
+    work_dir = relative_to_this_test_folder("fixtures")
 
-    config = PipelineConfig.build(
-        options, filename)
+    config = AnnotationConfigParser.read_and_parse_file_configuration(
+        options, filename, work_dir
+    )
     assert config is not None
 
-    for section in config.pipeline_sections:
-        print(section.name, "->", section.output_columns)
+    for section in config.sections:
+        print(section.annotator, "->", section.output_columns)
 
     # assert config.output_length() == 21
     # assert config.default_options.region is None
@@ -148,11 +150,11 @@ def test_build_pipeline(
 
     captured = capsys.readouterr()
     with variants_io("fixtures/input2.tsv") as io_manager:
+        work_dir = relative_to_this_test_folder("fixtures/")
         pipeline = PipelineAnnotator.build(
-            options, filename,
-            defaults={
-                "fixtures_dir": relative_to_this_test_folder("fixtures/")
-            })
+            options, filename, work_dir,
+            defaults={'values': {"fixtures_dir": work_dir}}
+        )
         assert pipeline is not None
         pipeline.annotate_file(io_manager)
     captured = capsys.readouterr()
@@ -206,11 +208,11 @@ def test_pipeline_change_variants_position(variants_io, capsys, expected_df):
         "fixtures/variant_coordinates_change.conf")
 
     with variants_io("fixtures/input2.tsv") as io_manager:
+        work_dir = relative_to_this_test_folder("fixtures/")
         pipeline = PipelineAnnotator.build(
-            options, filename,
-            defaults={
-                "fixtures_dir": relative_to_this_test_folder("fixtures/")
-            })
+            options, filename, work_dir,
+            defaults={'values': {"fixtures_dir": work_dir}}
+        )
         assert pipeline is not None
 
         pipeline.annotate_file(io_manager)

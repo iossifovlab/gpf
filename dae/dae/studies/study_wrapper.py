@@ -1,4 +1,3 @@
-import copy
 import functools
 
 import itertools
@@ -11,6 +10,10 @@ from dae.variants.attributes import Role
 from dae.studies.helpers import expand_effect_types
 from dae.backends.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, ContainsNode
+
+from dae.studies.genotype_browser_config_parser import \
+    GenotypeBrowserConfigParser
+from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 
 
 class StudyWrapper(object):
@@ -37,20 +40,19 @@ class StudyWrapper(object):
 
         present_in_role = []
 
-        genotype_browser_config = self.config.genotype_browser_config
-        if genotype_browser_config:
-            preview_columns = genotype_browser_config['previewColumnsSlots']
-            download_columns = genotype_browser_config['downloadColumnsSlots']
-            if genotype_browser_config['phenoColumns']:
+        if self.config.genotype_browser_config:
+            genotype_browser_config = self.config.genotype_browser_config
+            preview_columns = genotype_browser_config.preview_columns_slots
+            download_columns = genotype_browser_config.download_columns_slots
+            if genotype_browser_config.pheno_columns:
                 pheno_columns = \
-                    [s for pc in genotype_browser_config['phenoColumns']
+                    [s for pc in genotype_browser_config.pheno_columns
                      for s in pc['slots']]
-            gene_weights_columns = \
-                genotype_browser_config['geneWeightsColumns']
+            gene_weights_columns = genotype_browser_config.gene_weights_columns
 
-            column_labels = genotype_browser_config['columnLabels']
+            column_labels = genotype_browser_config.column_labels
 
-            if 'presentInRole' in genotype_browser_config:
+            if genotype_browser_config.present_in_role:
                 present_in_role = genotype_browser_config.present_in_role
 
         self.preview_columns = preview_columns
@@ -59,13 +61,16 @@ class StudyWrapper(object):
         self.gene_weights_columns = gene_weights_columns
         self.column_labels = column_labels
 
-        self.people_group = self.config.people_group
+        if self.config.people_group_config:
+            self.people_group = self.config.people_group_config.people_group
+        else:
+            self.people_group = []
         self.present_in_role = present_in_role
 
         if len(self.people_group) != 0:
             self.legend = {
-                ps['id']: ps['domain'] + [ps['default']]
-                for ps in self.people_group
+                ps['id']: list(ps['domain'].values()) + [ps['default']]
+                for ps in self.people_group.values()
             }
         else:
             self.legend = {}
@@ -79,9 +84,9 @@ class StudyWrapper(object):
         if pheno_db:
             self.pheno_db = pheno_factory.get_pheno_db(pheno_db)
 
-            genotype_browser_config = self.config.genotype_browser_config
-            if genotype_browser_config:
-                pheno_filters = genotype_browser_config.phenoFilters
+            if self.config.genotype_browser_config:
+                genotype_browser_config = self.config.genotype_browser_config
+                pheno_filters = genotype_browser_config.pheno_filters
                 if pheno_filters:
                     self.pheno_filters_in_config = {
                         self._get_pheno_filter_key(pf.measureFilter)
@@ -194,37 +199,20 @@ class StudyWrapper(object):
             yield variant
 
     def _add_roles_columns(self, variant):
-        genotype_browser_config = self.config.genotype_browser_config
-        if genotype_browser_config is None:
+        if not self.config.genotype_browser_config:
             return variant
+        genotype_browser_config = self.config.genotype_browser_config
 
-        # assert isinstance(genotype_browser_config, dict), \
-        #   type(genotype_browser_config)
-
-        roles_columns = genotype_browser_config.rolesColumns
+        roles_columns = genotype_browser_config.roles_columns
 
         if not roles_columns:
             return variant
 
-        parsed_roles_columns = self._parse_roles_columns(roles_columns)
-
         for allele in variant.alt_alleles:
-            roles_values = self._get_all_roles_values(
-                allele, parsed_roles_columns)
+            roles_values = self._get_all_roles_values(allele, roles_columns)
             allele.update_attributes(roles_values)
 
         return variant
-
-    def _parse_roles_columns(self, roles_columns):
-        result = []
-        for roles_column in roles_columns:
-            roles_copy = copy.deepcopy(roles_column)
-            roles = roles_copy.roles
-            roles_copy.roles = [Role.from_name(role) for role in roles]
-
-            result.append(roles_copy)
-
-        return result
 
     def _get_all_roles_values(self, allele, roles_values):
         result = {}
@@ -246,8 +234,7 @@ class StudyWrapper(object):
         return result
 
     def _add_pheno_columns(self, variants_iterable):
-        genotype_browser_config = self.config.genotype_browser_config
-        if self.pheno_db is None or genotype_browser_config is None:
+        if self.pheno_db is None or not self.config.genotype_browser_config:
             for variant in variants_iterable:
                 yield variant
 
@@ -336,32 +323,31 @@ class StudyWrapper(object):
         return set(selection['selection'])
 
     def _add_people_with_phenotype(self, kwargs):
-        people_group_config = self.config.people_group_config
         people_with_phenotype = set()
-        if 'peopleGroup' in kwargs and \
-                kwargs['peopleGroup'] is not None and \
-                people_group_config is not None:
+
+        if 'peopleGroup' in kwargs and kwargs['peopleGroup'] is not None:
             pedigree_selector_query = kwargs.pop('peopleGroup')
 
-            people_group = people_group_config.get_people_group(
+            people_group = self.study.get_people_group(
                 pedigree_selector_query['id'])
 
-            if set(people_group['values']) == \
-                    set(pedigree_selector_query['checkedValues']):
-                return kwargs
+            if people_group:
+                if set(people_group.domain) == \
+                        set(pedigree_selector_query['checkedValues']):
+                    return kwargs
 
-            for family in self.families.values():
-                family_members_with_phenotype = set(
-                    [person.person_id for person in
-                        family.get_people_with_phenotypes(
-                            people_group['source'],
-                            pedigree_selector_query['checkedValues'])])
-                people_with_phenotype.update(family_members_with_phenotype)
+                for family in self.families.values():
+                    family_members_with_phenotype = set(
+                        [person.person_id for person in
+                            family.get_people_with_phenotypes(
+                                people_group['source'],
+                                pedigree_selector_query['checkedValues'])])
+                    people_with_phenotype.update(family_members_with_phenotype)
 
-            if 'person_ids' in kwargs:
-                people_with_phenotype.intersection(kwargs['person_ids'])
+                if 'person_ids' in kwargs:
+                    people_with_phenotype.intersection(kwargs['person_ids'])
 
-            kwargs['person_ids'] = list(people_with_phenotype)
+                kwargs['person_ids'] = list(people_with_phenotype)
 
         return kwargs
 
@@ -568,48 +554,40 @@ class StudyWrapper(object):
 
         return present_in_role[0] if present_in_role else {}
 
-    def _get_dataset_config_options(self, config):
-        config['studyTypes'] = self.config.study_types
-        config['description'] = self.study.description
-
-        return config
-
     @staticmethod
     def _get_description_keys():
         return [
             'id', 'name', 'description', 'data_dir', 'phenotypeBrowser',
-            'phenotypeGenotypeTool', 'authorizedGroups', 'phenoDB',
+            'phenotypeTool', 'authorizedGroups', 'phenoDB',
             'enrichmentTool', 'genotypeBrowser', 'peopleGroupConfig',
             'genotypeBrowserConfig', 'commonReport', 'studyTypes', 'studies'
         ]
 
     @staticmethod
-    def _get_configs_keys():
-        return [
-            'genotypeBrowserConfig', 'peopleGroupConfig'
-        ]
+    def _get_section_config_keys():
+        return {
+            'genotypeBrowserConfig': GenotypeBrowserConfigParser,
+            'peopleGroupConfig': PeopleGroupConfigParser
+        }
 
     def get_dataset_description(self):
         keys = self._get_description_keys()
         config = self.config
 
-        config = self._get_dataset_config_options(config)
-
         result = {key: config.get(key, None) for key in keys}
 
         self._augment_pheno_filters_domain(result)
-        configs = self._get_configs_keys()
-        self._filter_configs(result, configs)
+        section_configs = self._get_section_config_keys()
+        self._filter_section_configs(result, section_configs)
 
         return result
 
     def _augment_pheno_filters_domain(self, dataset_description):
-        genotype_browser_config = dataset_description.get(
-            'genotypeBrowserConfig', None)
+        genotype_browser_config = dataset_description['genotypeBrowserConfig']
         if not genotype_browser_config:
             return
 
-        pheno_filters = genotype_browser_config.get('phenoFilters', None)
+        pheno_filters = genotype_browser_config.pheno_filters
         if not pheno_filters:
             return
 
@@ -625,13 +603,14 @@ class StudyWrapper(object):
                 measure_filter['measure'])
             measure_filter['domain'] = measure.values_domain.split(",")
 
-    def _filter_configs(self, dataset_description, config_keys=[]):
-        for config_key in config_keys:
+    def _filter_section_configs(self, dataset_description, config_keys={}):
+        for config_key, parser in config_keys.items():
             config = dataset_description.get(config_key, None)
             if not config:
                 return
 
-            dataset_description[config_key] = config.get_config_description()
+            dataset_description[config_key] = \
+                parser.get_config_description(config)
 
     def get_column_labels(self):
         return self.column_labels

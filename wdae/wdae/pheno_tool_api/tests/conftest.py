@@ -1,7 +1,8 @@
 import pytest
 import os
-from dae.configurable_entities.configuration import DAEConfig
-from dae.studies.factory import VariantsDb
+
+from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.studies.variants_db import VariantsDb
 from datasets_api.studies_manager import StudiesManager
 
 
@@ -12,7 +13,8 @@ def fixtures_dir():
 
 @pytest.fixture(scope='session')
 def mock_dae_config():
-    return DAEConfig.make_config(fixtures_dir())
+    return DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='session')

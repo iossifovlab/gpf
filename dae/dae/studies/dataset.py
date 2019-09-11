@@ -7,9 +7,7 @@ from dae.studies.study import StudyBase
 class Dataset(StudyBase):
 
     def __init__(self, dataset_config, studies):
-        super(Dataset, self).__init__(dataset_config)
-        self.studies = studies
-        self.study_names = ",".join(study.name for study in self.studies)
+        super(Dataset, self).__init__(dataset_config, studies)
 
     def query_variants(self, **kwargs):
         return itertools.chain(*[
@@ -36,8 +34,11 @@ class Dataset(StudyBase):
             lambda x, y: x | y,
             [st.get_pedigree_values(column) for st in self.studies], set())
 
-    def get_people_with_people_group(self, people_group, people_group_value):
+    def get_people_with_people_group(
+            self, people_group_id, people_group_value):
         return functools.reduce(
             lambda x, y: x | y,
-            [st.get_people_with_people_group(people_group, people_group_value)
-             for st in self.studies], set())
+            [st.get_people_with_people_group(
+             people_group_id, people_group_value) for st in self.studies],
+            set()
+        )

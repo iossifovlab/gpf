@@ -1,24 +1,23 @@
 import pytest
 
 
-def test_study_config_simple(study_definitions):
-    assert study_definitions is not None
-    assert study_definitions.study_ids
+def test_study_config_simple(study_configs):
+    assert study_configs is not None
+    assert list(study_configs.keys())
 
 
-def test_study_config_year(study_definitions):
-    study_config = study_definitions.get_study_config('inheritance_trio')
+def test_study_config_year(study_configs):
+    study_config = study_configs.get('inheritance_trio')
     assert study_config is not None
     assert study_config.year == ''
 
 
 @pytest.mark.parametrize("option_name,expected_value", [
     ("file_format", "vcf"),
-    ("phenotypes", {"autism"}),
     ("name", "QUADS_F1"),
     ("id", "quads_f1"),
     ("description", "QUADS F1"),
-    ("phenotypeGenotypeTool", True),
+    ("phenotypeTool", True),
     ("phenotypeBrowser", False),
     ("phenoDB", ""),
 ])
@@ -30,14 +29,13 @@ def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
 
 @pytest.mark.parametrize("option_name,expected_value", [
     ("file_format", "vcf"),
-    ("phenotypes", {"autism"}),
     ("name", "QUADS_F1"),
     ("id", "quads_f1"),
     ("description", "QUADS F1"),
-    ("phenotypeGenotypeTool", True),
+    ("phenotypeTool", True),
     ("phenotypeBrowser", False),
 
-    ("phenotype_genotype_tool", True),
+    ("phenotype_tool", True),
     ("phenotype_browser", False),
     ("pheno_db", ''),
     ("year", ''),
@@ -101,6 +99,8 @@ def test_quads_f1_config_genotype_browser_genotype_column(
         quads_f1_config, option_name, expected_name, expected_source,
         expected_slots):
     genotype_browser_config = quads_f1_config.genotype_browser_config
+
+    assert len(genotype_browser_config['genotypeColumns']) == 13
 
     genotype_column = list(filter(
         lambda gc: gc['id'] == option_name,

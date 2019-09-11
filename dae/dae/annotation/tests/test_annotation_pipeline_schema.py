@@ -19,11 +19,12 @@ def test_pipeline_schema():
         default_box=True,
         default_box_attr=None)
 
+    work_dir = relative_to_this_test_folder("fixtures/")
+
     pipeline = PipelineAnnotator.build(
-        options, filename,
-        defaults={
-            "fixtures_dir": relative_to_this_test_folder("fixtures/")
-        })
+        options, filename, work_dir,
+        defaults={'values': {"fixtures_dir": work_dir}}
+    )
     assert pipeline is not None
     # print("pipeline annotators:", len(pipeline.annotators))
 

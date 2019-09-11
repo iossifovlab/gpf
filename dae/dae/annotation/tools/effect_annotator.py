@@ -22,7 +22,7 @@ class EffectAnnotatorBase(VariantAnnotatorBase):
         self.columns = OrderedDict()
         for col_name, col_type in self.COLUMNS_SCHEMA:
             self.columns[col_name] = \
-                self.config.columns_config.get(col_name, None)
+                self.config.columns.get(col_name, None)
 
     def collect_annotator_schema(self, schema):
         super(EffectAnnotatorBase, self).collect_annotator_schema(schema)
@@ -43,7 +43,7 @@ class EffectAnnotatorBase(VariantAnnotatorBase):
                     assert self.config.options.Graw is not None
                     genome_file = self.config.options.Graw
                 assert os.path.exists(genome_file)
-                genome = GenomeAccess.openRef(genome_file)
+                genome = dae.GenomeAccess.openRef(genome_file)
 
         assert genome is not None
 

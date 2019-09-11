@@ -8,12 +8,12 @@ class VCFInfoExtractor(AnnotatorBase):
         super(VCFInfoExtractor, self).__init__(config)
 
     def collect_annotator_schema(self, schema):
-        for info_key, output_col in self.config.columns_config.items():
+        for info_key, output_col in self.config.columns.items():
             schema.create_column(output_col, 'str')
 
     def line_annotation(self, annotation_line):
         info = annotation_line['INFO']
-        for info_key, output_col in self.config.columns_config.items():
+        for info_key, output_col in self.config.columns.items():
             annotation_line[output_col] = None
             match = re.search(r'\b({})\b'.format(info_key), info)
             if match is None:

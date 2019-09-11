@@ -1,6 +1,6 @@
 import pytest
 from box import Box
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.lift_over_annotator import LiftOverAnnotator
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
@@ -31,12 +31,12 @@ def test_lift_over(mocker, chrom, pos, lift_over, expected):
         # "new_p": "hg19_pos",
     }
 
-    config = VariantAnnotatorConfig(
-        name="Test Lift Over Annotator",
-        annotator_name="lift_over_annotator.LiftOverAnnotator",
-        options=options,
-        columns_config=columns,
-        virtuals=[],
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'lift_over_annotator.LiftOverAnnotator'
+        })
     )
     with mocker.patch(
             "dae.annotation.tools.lift_over_annotator."
@@ -80,11 +80,12 @@ def test_pipeline_with_liftover(
     with mocker.patch(
             "dae.annotation.tools.lift_over_annotator."
             "LiftOverAnnotator.build_lift_over"):
+        work_dir = relative_to_this_test_folder("fixtures/")
 
         pipeline = PipelineAnnotator.build(
-            options, filename, defaults={
-                "fixtures_dir": relative_to_this_test_folder("fixtures/")
-            })
+            options, filename, work_dir,
+            defaults={'values': {"fixtures_dir": work_dir}}
+        )
         assert pipeline is not None
         assert len(pipeline.annotators) == 3
 

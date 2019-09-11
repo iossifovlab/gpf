@@ -227,8 +227,7 @@ class ImpalaFamilyVariants(FamiliesBase):
 
                 where.append(w)
 
-            where_clause=" OR ".join([
-                    "( {} )".format(w) for w in where])
+            where_clause = " OR ".join(["( {} )".format(w) for w in where])
             return where_clause
 
     def _build_bitwise_attr_where(

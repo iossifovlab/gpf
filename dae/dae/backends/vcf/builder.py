@@ -15,7 +15,7 @@ from .raw_vcf import RawFamilyVariants
 from .annotate_allele_frequencies import VcfAlleleFrequencyAnnotator
 from .loader import RawVariantsLoader
 
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.effect_annotator import VariantEffectAnnotator
 
 
@@ -50,7 +50,7 @@ def effect_annotator_builder(
         'p': 'position',
     }, default_box=True, default_box_attr=None)
 
-    columns_config = {
+    columns = {
         'effect_type': 'effect_type',
         'effect_genes': 'effect_genes',
         'effect_gene_genes': 'effect_gene_genes',
@@ -60,12 +60,12 @@ def effect_annotator_builder(
         'effect_details_details': 'effect_details_details'
     }
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="effect_annotator.VariantEffectAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'effect_annotator.VariantEffectAnnotator',
+        })
     )
 
     annotator = VariantEffectAnnotator(

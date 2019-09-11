@@ -7,7 +7,7 @@ import time
 import glob
 import shutil
 
-from dae.configurable_entities.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.tools.vcf2parquet import import_vcf
@@ -75,9 +75,9 @@ file_format = impala
 
 def impala_load_study(dae_config, study_id, parquet_directory):
     impala_helpers = ImpalaHelpers(
-        dae_config.impala_host, dae_config.impala_port)
+        dae_config.impala.host, dae_config.impala.port)
     hdfs_helpers = HdfsHelpers(
-        dae_config.hdfs_host, dae_config.hdfs_port
+        dae_config.hdfs.host, dae_config.hdfs.port
     )
     variant_glob = os.path.join(
         parquet_directory,
@@ -86,7 +86,7 @@ def impala_load_study(dae_config, study_id, parquet_directory):
         parquet_directory,
         "{}_pedigree.parquet".format(study_id))
 
-    hdfs_dirname = os.path.join(dae_config.hdfs_base_dir, study_id)
+    hdfs_dirname = os.path.join(dae_config.hdfs.base_dir, study_id)
     if not hdfs_helpers.hdfs.exists(hdfs_dirname):
         hdfs_helpers.hdfs.mkdir(hdfs_dirname)
 
@@ -106,7 +106,7 @@ def impala_load_study(dae_config, study_id, parquet_directory):
         pedigree_files.append(hdfs_filename)
         hdfs_helpers.put(pedigree_filename, hdfs_filename)
 
-    dbname = dae_config.impala_db
+    dbname = dae_config.impala.db
     pedigree_table = "{}_pedigree".format(study_id)
     variant_table = "{}_variant".format(study_id)
     variant_glob = os.path.join(
@@ -127,7 +127,7 @@ def generate_study_config(dae_config, study_id, argv):
     assert study_id is not None
     assert argv.output is not None
 
-    dirname = os.path.join(dae_config.studies_dir, study_id)
+    dirname = os.path.join(dae_config.studies_db.dir, study_id)
     filename = os.path.join(dirname, "{}.conf".format(study_id))
 
     if os.path.exists(filename):
@@ -156,7 +156,7 @@ def generate_denovo_gene_sets(dae_config, study_id):
 
 
 if __name__ == "__main__":
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
     if argv.id is not None:
         study_id = argv.id
@@ -164,7 +164,7 @@ if __name__ == "__main__":
         study_id, _ = os.path.splitext(os.path.basename(argv.pedigree))
 
     output = os.path.join(
-        dae_config.studies_dir, study_id, argv.output
+        dae_config.studies_db.dir, study_id, argv.output
     )
     print("storing results into: ", output, file=sys.stderr)
     os.makedirs(output, exist_ok=True)

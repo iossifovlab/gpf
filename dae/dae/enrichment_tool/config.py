@@ -5,13 +5,13 @@ Created on Nov 7, 2016
 '''
 import os
 from copy import deepcopy
-from collections import OrderedDict
 
-from dae.configurable_entities.configurable_entity_config import \
-    ConfigurableEntityConfig
+from dae.configuration.config_parser_base import ConfigParserBase
 
 
-class EnrichmentConfig(ConfigurableEntityConfig):
+class EnrichmentConfigParser(ConfigParserBase):
+
+    SECTION = 'enrichment'
 
     SPLIT_STR_LISTS = (
         'peopleGroups',
@@ -20,71 +20,53 @@ class EnrichmentConfig(ConfigurableEntityConfig):
         'effect_types'
     )
 
-    def __init__(self, config, *args, **kwargs):
-        super(EnrichmentConfig, self).__init__(config, *args, **kwargs)
+    FILTER_SELECTORS = {
+        'background': 'selectedBackgroundValues',
+        'counting': 'selectedCountingValues',
+    }
 
-    def enrichment_cache_file(self, name=''):
+    @staticmethod
+    def enrichment_cache_file(config, name=''):
         cache_file = os.path.join(
-            os.path.split(self.config_file)[0],
+            os.path.split(config.config_file)[0],
             'enrichment-{}.pckl'.format(name)
         )
 
         return cache_file
 
     @staticmethod
-    def _get_model(model_type, model_options, config):
-        model = {}
+    def _parse_model(model_config, config_file):
+        for model in model_config.values():
+            model.id = model.name
 
-        model['name'] = config.pop(model_type + '.name', None)
-        model['id'] = model['name']
-        model_file = config.pop(model_type + '.file', None)
-        if model_file is None:
-            model['filename'] = None
-        else:
-            model['filename'] = os.path.join(
-                os.path.split(config['configFile'])[0],
-                'enrichment/{}'.format(model_file)
-            )
-        model['desc'] = config.pop(model_type + '.desc', None)
+            if model.file is not None:
+                model.filename = os.path.join(
+                    os.path.split(config_file)[0],
+                    'enrichment/{}'.format(model.file)
+                )
 
-        yield model
+        return model_config
 
     @classmethod
-    def _get_model_selectors(
-            cls, enrichment_config, property_key, selected_property):
-        model_selector_elements = enrichment_config.get(
-            selected_property, None)
-
-        model_selector = cls._get_selectors(
-            enrichment_config, property_key, cls._get_model,
-            model_selector_elements
-        )
-        model_selector = OrderedDict([(ms['id'], ms) for ms in model_selector])
-
-        return model_selector
-
-    @classmethod
-    def from_config(cls, config):
-        if config is None:
-            return
-        study_config = config.study_config
-        if study_config is None:
-            return
-        enrichment_config = \
-            deepcopy(study_config.get('enrichment', None))
-        if enrichment_config is None:
-            return
-
-        enrichment_config = cls.parse(enrichment_config)
-
-        if enrichment_config.get('enabled', True) is False:
+    def parse(cls, config):
+        if not config or not config.study_config or \
+                not config.study_config.get(cls.SECTION, None):
             return None
 
-        enrichment_config['configFile'] = study_config.config_file
+        study_config = config.study_config
+        config_section = deepcopy(study_config.get(cls.SECTION, None))
+        config_section.config_file = study_config.config_file
 
-        enrichment_config['backgrounds'] = cls._get_model_selectors(
-            enrichment_config, 'background', 'selectedBackgroundValues')
-        enrichment_config['counting'] = cls._get_model_selectors(
-            enrichment_config, 'counting', 'selectedCountingValues')
+        config_section = \
+            super(EnrichmentConfigParser, cls).parse_section(config_section)
+        if not config_section:
+            return None
 
-        return EnrichmentConfig(enrichment_config)
+        config_section.backgrounds = cls._parse_model(
+            config_section.get('background', {}), config_section.config_file
+        )
+        config_section.counting = cls._parse_model(
+            config_section.get('counting', {}), config_section.config_file
+        )
+
+        return config_section

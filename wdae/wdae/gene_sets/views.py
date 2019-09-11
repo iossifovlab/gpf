@@ -22,8 +22,7 @@ class GeneSetsBaseView(views.APIView):
 
     def __init__(self):
         self.gscs = get_studies_manager().get_gene_sets_collections()
-        self.dgscf = \
-            get_studies_manager().get_denovo_gene_set_collection_facade()
+        self.dgsf = get_studies_manager().get_denovo_gene_set_facade()
         print("datasets loaded in view")
 
 
@@ -36,10 +35,10 @@ class GeneSetsCollectionsView(GeneSetsBaseView):
         permitted_datasets = IsDatasetAllowed.permitted_datasets(request.user)
         gene_sets_collections = deepcopy(
             self.gscs.get_collections_descriptions(permitted_datasets))
-        denovo_gene_sets_collections = deepcopy(
-            self.dgscf.get_collections_descriptions(permitted_datasets))
+        denovo_gene_sets = \
+            deepcopy(self.dgsf.get_descriptions(permitted_datasets))
 
-        gene_sets_collections[1:1] = [denovo_gene_sets_collections]
+        gene_sets_collections[1:1] = [denovo_gene_sets]
         return Response(gene_sets_collections, status=status.HTTP_200_OK)
 
 
@@ -71,10 +70,10 @@ class GeneSetsView(GeneSetsBaseView):
         gene_sets_types = data.get('geneSetsTypes', [])
 
         if gene_sets_collection_id == 'denovo':
-            if not self.dgscf.has_denovo_gene_set(gene_sets_collection_id):
+            if not self.dgsf.has_denovo_gene_set(gene_sets_collection_id):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-            gene_sets = self.dgscf.get_denovo_gene_sets(
+            gene_sets = self.dgsf.get_denovo_gene_sets(
                 gene_sets_collection_id, gene_sets_types,
                 IsDatasetAllowed.permitted_datasets(request.user))
 
@@ -142,10 +141,10 @@ class GeneSetDownloadView(GeneSetsBaseView):
         permitted_datasets = IsDatasetAllowed.permitted_datasets(user)
 
         if gene_sets_collection_id == 'denovo':
-            if not self.dgscf.has_denovo_gene_set(gene_sets_collection_id):
+            if not self.dgsf.has_denovo_gene_set(gene_sets_collection_id):
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-            gene_set = self.dgscf.get_denovo_gene_set(
+            gene_set = self.dgsf.get_denovo_gene_set(
                 gene_sets_collection_id,
                 gene_set_id,
                 gene_sets_types,

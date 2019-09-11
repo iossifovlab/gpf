@@ -3,9 +3,10 @@ Created on Dec 8, 2016
 
 @author: lubo
 '''
-from dae.configurable_entities.configuration import DAEConfig
-from dae.pheno.utils.configuration import PhenoConfig
 import logging
+
+from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.pheno.utils.config import PhenoConfigParser
 
 
 LOGGER = logging.getLogger(__name__)
@@ -16,21 +17,22 @@ class PhenoFactory(object):
     def __init__(self, dae_config=None):
         super(PhenoFactory, self).__init__()
         if dae_config is None:
-            dae_config = DAEConfig.make_config()
+            dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
-        self.config = PhenoConfig.from_dae_config(dae_config)
+        self.config = PhenoConfigParser.read_directory_configurations(
+            dae_config.pheno_db.dir)
 
     def get_dbfile(self, dbname):
-        return self.config.get_dbfile(dbname)
+        return self.config[dbname].dbfile
 
     def get_dbconfig(self, dbname):
-        return self.config.get_dbconfig(dbname)
+        return self.config[dbname]
 
     def has_pheno_db(self, dbname):
         return dbname in self.config
 
     def get_pheno_db_names(self):
-        return self.config.db_names
+        return list(self.config.keys())
 
     def get_pheno_db(self, dbname):
         if not self.has_pheno_db(dbname):

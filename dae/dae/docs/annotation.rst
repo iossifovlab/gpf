@@ -119,8 +119,8 @@ Example annotation pipeline configuration file::
 
     columns.score=SSC-freq
 
-    # with virtuals anotation_pipeline add new column which removes after annotation
-    virtuals = score
+    # with virtual_columns anotation_pipeline add new column which removes after annotation
+    virtual_columns = score
 
 
 Add Annotator or Preannotator

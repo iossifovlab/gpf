@@ -9,7 +9,9 @@ import os
 import sys
 import argparse
 
-from dae.configurable_entities.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
+
+from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
 from dae.backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
@@ -21,8 +23,7 @@ from cyvcf2 import VCF
 from dae.backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 from dae.backends.vcf.builder import get_genome
-from dae.backends.import_commons import annotation_pipeline_cli_options, \
-    construct_import_annotation_pipeline
+from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.backends.impala.import_tools import variants_iterator_to_parquet
 
@@ -105,7 +106,7 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
 
 
 def parser_common_arguments(dae_config, parser):
-    options = annotation_pipeline_cli_options(dae_config)
+    options = annotation_config_cli_options(dae_config)
 
     for name, args in options:
         parser.add_argument(name, **args)
@@ -199,7 +200,7 @@ def generate_makefile(dae_config, argv):
 
 
 if __name__ == "__main__":
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
 
     if argv.type == 'make':

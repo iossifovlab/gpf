@@ -142,6 +142,7 @@ class Sex(enum.Enum):
 
 
 class Status(enum.Enum):
+
     unaffected = 1
     affected = 2
     unspecified = 0

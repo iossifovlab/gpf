@@ -1,16 +1,16 @@
-from dae.configurable_entities.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
 
-from dae.studies.factory import VariantsDb
+from dae.studies.variants_db import VariantsDb
 
 from dae.common_reports.common_report_facade import CommonReportFacade
 
-from dae.gene.config import GeneInfoConfig
+from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.scores import ScoreLoader
 from dae.gene.weights import WeightsLoader
+from dae.gene.score_config_parser import ScoreConfigParser
 
 from dae.gene.gene_set_collections import GeneSetsCollections
-from dae.gene.denovo_gene_set_collection_facade import \
-    DenovoGeneSetCollectionFacade
+from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
 
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
@@ -35,7 +35,7 @@ class StudiesManager(object):
 
     def __init__(self, dae_config=None):
         if dae_config is None:
-            dae_config = DAEConfig.make_config()
+            dae_config = DAEConfigParser.read_and_parse_file_configuration()
         self.dae_config = dae_config
         self.vdb = None
 
@@ -53,14 +53,23 @@ class StudiesManager(object):
         for study_id in self.vdb.get_all_ids():
             Dataset.recreate_dataset_perm(study_id, [])
 
-        self.score_loader = ScoreLoader(daeConfig=self.dae_config)
-        self.gene_info_config = GeneInfoConfig.from_config(self.dae_config)
-        self.weights_loader = WeightsLoader(config=self.gene_info_config)
+        score_config = ScoreConfigParser.read_and_parse_file_configuration(
+            self.dae_config.genomic_scores_db.conf_file,
+            self.dae_config.dae_data_dir
+        )
+        self.score_loader = ScoreLoader(score_config)
+
+        self.gene_info_config = \
+            GeneInfoConfigParser.read_and_parse_file_configuration(
+                self.dae_config.gene_info_db.conf_file,
+                self.dae_config.dae_data_dir
+            )
+        self.weights_loader = WeightsLoader(
+            config=self.gene_info_config.gene_weights)
 
         self.gene_sets_collections = GeneSetsCollections(
             self.vdb, self.gene_info_config)
-        self.denovo_gene_set_collection_facade = \
-            DenovoGeneSetCollectionFacade(self.vdb)
+        self.denovo_gene_set_facade = DenovoGeneSetFacade(self.vdb)
 
         self.background_facade = BackgroundFacade(self.vdb)
 
@@ -71,9 +80,6 @@ class StudiesManager(object):
             assert self.common_reports is not None
 
         return self.vdb
-
-    def get_dataset_facade(self):
-        return self.get_variants_db().dataset_facade
 
     def get_common_report_facade(self):
         self.get_variants_db()
@@ -96,9 +102,9 @@ class StudiesManager(object):
         self.get_variants_db()
         return self.gene_sets_collections
 
-    def get_denovo_gene_set_collection_facade(self):
+    def get_denovo_gene_set_facade(self):
         self.get_variants_db()
-        return self.denovo_gene_set_collection_facade
+        return self.denovo_gene_set_facade
 
     def get_background_facade(self):
         self.get_variants_db()

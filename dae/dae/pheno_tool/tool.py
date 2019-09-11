@@ -14,7 +14,7 @@ from scipy.stats.stats import ttest_ind
 from dae.pheno_tool.pheno_common import PhenoResult
 from dae.pheno.common import MeasureType
 from dae.variants.attributes import Role, Sex
-from dae.common.query_base import EffectTypesMixin
+from dae.utils.query_base import EffectTypesMixin
 
 
 LOGGER = logging.getLogger(__name__)
