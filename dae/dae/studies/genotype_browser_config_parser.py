@@ -28,10 +28,10 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         'baseDownloadColumns',
         'previewColumns',
         'downloadColumns',
-        'selectedPhenoValues',
+        'selectedPhenoColumnValues',
         'familyFilters',
         'selectedPhenoFiltersValues',
-        'selectedGenotypeValues',
+        'selectedGenotypeColumnValues',
         'selectedInRolesValues',
         'selectedPresentInRoleValues',
         'roles',
@@ -40,8 +40,8 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
 
     FILTER_SELECTORS = {
         'phenoFilters': 'selectedPhenoFiltersValues',
-        'pheno': 'selectedPhenoValues',
-        'genotype': 'selectedGenotypeValues',
+        'pheno': 'selectedPhenoColumnValues',
+        'genotype': 'selectedGenotypeColumnValues',
         'inRoles': 'selectedInRolesValues',
         'presentInRole': 'selectedPresentInRoleValues'
     }
