@@ -1,4 +1,3 @@
-import copy
 import functools
 
 import itertools
@@ -209,25 +208,11 @@ class StudyWrapper(object):
         if not roles_columns:
             return variant
 
-        parsed_roles_columns = self._parse_roles_columns(roles_columns)
-
         for allele in variant.alt_alleles:
-            roles_values = self._get_all_roles_values(
-                allele, parsed_roles_columns)
+            roles_values = self._get_all_roles_values(allele, roles_columns)
             allele.update_attributes(roles_values)
 
         return variant
-
-    def _parse_roles_columns(self, roles_columns):
-        result = []
-        for roles_column in roles_columns:
-            roles_copy = copy.deepcopy(roles_column)
-            roles = roles_copy.roles
-            roles_copy.roles = [Role.from_name(role) for role in roles]
-
-            result.append(roles_copy)
-
-        return result
 
     def _get_all_roles_values(self, allele, roles_values):
         result = {}

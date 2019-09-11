@@ -127,7 +127,10 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
     @classmethod
     def _parse_in_roles_column(cls, in_roles):
         for in_role in in_roles.values():
-            in_role.roles = cls._split_str_option_list(in_role.roles)
+            in_role.roles = [
+                Role.from_name(el)
+                for el in cls._split_str_option_list(in_role.roles)
+            ]
             in_role.destination = in_role.get('destination', in_role.id)
 
         return list(in_roles.values())
