@@ -73,7 +73,7 @@ export class DatasetsComponent implements OnInit {
       return 'phenotypeBrowser';
     } else if (selectedDataset.enrichmentTool) {
       return 'enrichment';
-    } else if (selectedDataset.phenotypeGenotypeTool) {
+    } else if (selectedDataset.phenotypeTool) {
       return 'phenoTool';
     } else if (selectedDataset) {
       return 'commonReport';
