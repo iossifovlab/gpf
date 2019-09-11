@@ -8,7 +8,7 @@ from . import views
 
 
 urlpatterns = [
-    url(r'^/deniedPrompt$',
+    url(r'^/denied_prompt$',
         views.PermissionDeniedPromptView.as_view(),
         name="denied_prompt"),
     url(r'^$',
