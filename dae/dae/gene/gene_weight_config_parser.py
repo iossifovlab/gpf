@@ -31,8 +31,8 @@ class GeneWeightConfigParser(ConfigParserBase):
     @classmethod
     def parse(cls, config):
         config = super(GeneWeightConfigParser, cls).parse(config)
-        if config is None:
-            return None
+        if config is None or config.gene_weights is None:
+            return {}
 
         selected_gene_weights_values = config.gene_weights.weights
         config.selected_gene_weights_values = selected_gene_weights_values
