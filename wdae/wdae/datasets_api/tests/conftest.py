@@ -11,7 +11,7 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def dae_config_fixture():
     dae_config = DAEConfigParser.read_and_parse_file_configuration(
         work_dir=fixtures_dir())

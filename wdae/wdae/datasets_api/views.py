@@ -60,3 +60,13 @@ class DatasetView(APIView):
                     'error': 'Dataset {} not found'.format(dataset_id)
                 },
                 status=status.HTTP_404_NOT_FOUND)
+
+
+class PermissionDeniedPromptView(APIView):
+
+    def __init__(self):
+        self.permission_denied_prompt = \
+            get_studies_manager().get_permission_denied_prompt()
+
+    def get(self, request):
+        return Response({'data': self.permission_denied_prompt})
