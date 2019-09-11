@@ -64,7 +64,7 @@ class StudyWrapper(object):
         if self.config.people_group_config:
             self.people_group = self.config.people_group_config.people_group
         else:
-            self.people_group = []
+            self.people_group = {}
         self.present_in_role = present_in_role
 
         if len(self.people_group) != 0:
@@ -119,7 +119,7 @@ class StudyWrapper(object):
     # TMM_ALL
     def query_variants(self, weights_loader=None, **kwargs):
         # print("kwargs in study group:", kwargs)
-        kwargs = self._add_people_with_phenotype(kwargs)
+        kwargs = self._add_people_with_people_group(kwargs)
 
         limit = None
         if 'limit' in kwargs:
@@ -322,32 +322,35 @@ class StudyWrapper(object):
             return tuple([selection['min'], selection['max']])
         return set(selection['selection'])
 
-    def _add_people_with_phenotype(self, kwargs):
-        people_with_phenotype = set()
+    def _add_people_with_people_group(self, kwargs):
+        people_with_people_group = set()
 
-        if 'peopleGroup' in kwargs and kwargs['peopleGroup'] is not None:
-            pedigree_selector_query = kwargs.pop('peopleGroup')
+        if 'peopleGroup' not in kwargs or kwargs['peopleGroup'] is None:
+            return kwargs
 
-            people_group = self.study.get_people_group(
-                pedigree_selector_query['id'])
+        people_group_query = kwargs.pop('peopleGroup')
 
-            if people_group:
-                if set(people_group.domain) == \
-                        set(pedigree_selector_query['checkedValues']):
-                    return kwargs
+        people_group = self.study.get_people_group(people_group_query['id'])
+        if not people_group:
+            return kwargs
 
-                for family in self.families.values():
-                    family_members_with_phenotype = set(
-                        [person.person_id for person in
-                            family.get_people_with_phenotypes(
-                                people_group['source'],
-                                pedigree_selector_query['checkedValues'])])
-                    people_with_phenotype.update(family_members_with_phenotype)
+        if set(people_group.domain) == \
+                set(people_group_query['checkedValues']):
+            return kwargs
 
-                if 'person_ids' in kwargs:
-                    people_with_phenotype.intersection(kwargs['person_ids'])
+        for family in self.families.values():
+            family_members_with_people_group = set([
+                person.person_id for person in
+                family.get_people_with_people_groups(
+                    people_group.source, people_group_query['checkedValues']
+                )
+            ])
+            people_with_people_group.update(family_members_with_people_group)
 
-                kwargs['person_ids'] = list(people_with_phenotype)
+        if 'person_ids' in kwargs:
+            people_with_people_group.intersection(kwargs['person_ids'])
+
+        kwargs['person_ids'] = list(people_with_people_group)
 
         return kwargs
 

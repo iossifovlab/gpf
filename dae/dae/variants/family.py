@@ -131,14 +131,16 @@ class Family(object):
         return list(filter(
             lambda m: m.role in roles, self.members_in_order))
 
-    def get_people_with_phenotype(self, phenotype_column, phenotype):
+    def get_people_with_people_group(
+            self, people_group_column, people_group_value):
         return list(filter(
-            lambda m: m.get_attr(phenotype_column) == phenotype,
+            lambda m: m.get_attr(people_group_column) == people_group_value,
             self.members_in_order))
 
-    def get_people_with_phenotypes(self, phenotype_column, phenotypes):
+    def get_people_with_people_groups(
+            self, people_group_column, people_group_values):
         return list(filter(
-            lambda m: m.get_attr(phenotype_column) in phenotypes,
+            lambda m: m.get_attr(people_group_column) in people_group_values,
             self.members_in_order))
 
     def get_people_with_property(self, column, value):

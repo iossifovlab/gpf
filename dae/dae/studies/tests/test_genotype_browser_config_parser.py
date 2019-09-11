@@ -11,15 +11,15 @@ def test_genotype_browser_parse_variables():
     )
     assert GenotypeBrowserConfigParser.SPLIT_STR_LISTS == [
         'baseColumns', 'basePreviewColumns', 'baseDownloadColumns',
-        'previewColumns', 'downloadColumns', 'selectedPhenoValues',
+        'previewColumns', 'downloadColumns', 'selectedPhenoColumnValues',
         'familyFilters', 'selectedPhenoFiltersValues',
-        'selectedGenotypeValues', 'selectedInRolesValues',
+        'selectedGenotypeColumnValues', 'selectedInRolesValues',
         'selectedPresentInRoleValues', 'roles', 'columns',
     ]
     assert GenotypeBrowserConfigParser.FILTER_SELECTORS == {
         'phenoFilters': 'selectedPhenoFiltersValues',
-        'pheno': 'selectedPhenoValues',
-        'genotype': 'selectedGenotypeValues',
+        'pheno': 'selectedPhenoColumnValues',
+        'genotype': 'selectedGenotypeColumnValues',
         'inRoles': 'selectedInRolesValues',
         'presentInRole': 'selectedPresentInRoleValues'
     }

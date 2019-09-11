@@ -82,6 +82,16 @@ def test_get_all_studies(variants_db_fixture):
 ##############################################################
 
 
+def test_get_datasets_ids(variants_db_fixture):
+    assert sorted(variants_db_fixture.get_datasets_ids()) == \
+        sorted([
+            'quads_in_parent_ds', 'composite_dataset_ds', 'quads_in_child_ds',
+            'quads_composite_ds', 'inheritance_trio_ds',
+            'quads_two_families_ds', 'quads_variant_types_ds', 'quads_f1_ds',
+            'quads_f2_ds'
+        ])
+
+
 def test_get_existing_dataset_config(variants_db_fixture):
     vdb = variants_db_fixture
     assert vdb.get_dataset_config('inheritance_trio_ds') is not None
@@ -89,6 +99,12 @@ def test_get_existing_dataset_config(variants_db_fixture):
 
 def test_get_non_existing_dataset_config(variants_db_fixture):
     assert variants_db_fixture.get_dataset_config('ala bala') is None
+
+
+def test_get_dataset(variants_db_fixture):
+    dataset = variants_db_fixture.get_dataset('quads_in_parent_ds')
+    assert dataset is not None
+    assert dataset.id == 'quads_in_parent_ds'
 
 
 def test_get_existing_dataset(variants_db_fixture):
@@ -121,6 +137,11 @@ def test_get_non_existing_dataset_wrapper(variants_db_fixture):
 def test_get_all_datasets(variants_db_fixture):
     datasets = variants_db_fixture.get_all_datasets()
     assert len(datasets) == 9
+
+
+def test_get_all_dataset_configs(variants_db_fixture):
+    configs = variants_db_fixture.get_all_dataset_configs()
+    assert len(configs) == 9
 
 
 ##############################################################
