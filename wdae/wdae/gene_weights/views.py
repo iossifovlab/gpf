@@ -24,7 +24,7 @@ class GeneWeightsListView(views.APIView):
     def get_gene_weights(self, weights):
         return [
             {
-                'weight': weight.name,
+                'weight': weight.id,
                 'desc': weight.desc,
                 'bars': weight.histogram_bars,
                 'bins': weight.histogram_bins,

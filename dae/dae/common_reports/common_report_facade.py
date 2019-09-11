@@ -1,7 +1,7 @@
 import os
 import json
 
-from dae.common_reports.config import CommonReportsParseConfig
+from dae.common_reports.config import CommonReportsConfigParser
 from dae.common_reports.common_report import CommonReport
 
 
@@ -42,9 +42,7 @@ class CommonReportFacade(object):
     def get_all_common_report_ids(self):
         self.load_cache()
 
-        return [
-            config.id for config in self._common_report_config_cache.values()
-        ]
+        return list(self._common_report_config_cache.keys())
 
     def generate_common_report(self, common_report_id):
         self.load_cache({common_report_id})
@@ -55,12 +53,12 @@ class CommonReportFacade(object):
         study = self.variants_db.get_wdae_wrapper(common_report_id)
         common_report_config = \
             self._common_report_config_cache[common_report_id]
-        path = common_report_config.path
+        file_path = common_report_config.file_path
         common_report = CommonReport(study, common_report_config)
 
-        if not os.path.exists(os.path.dirname(path)):
-            os.makedirs(os.path.dirname(path))
-        with open(path, 'w+') as crf:
+        if not os.path.exists(os.path.dirname(file_path)):
+            os.makedirs(os.path.dirname(file_path))
+        with open(file_path, 'w+') as crf:
             json.dump(common_report.to_dict(), crf)
 
         self._load_common_report_in_cache(common_report_id)
@@ -87,7 +85,7 @@ class CommonReportFacade(object):
                 self._load_common_report_in_cache(common_report_id)
 
     def _load_common_report_config_in_cache(self, common_report_id):
-        common_report_config = CommonReportsParseConfig.from_config(
+        common_report_config = CommonReportsConfigParser.parse(
             self.variants_db.get_config(common_report_id))
         if common_report_config is None:
             return
@@ -104,7 +102,7 @@ class CommonReportFacade(object):
         common_report_config = \
             self._common_report_config_cache[common_report_id]
 
-        common_reports_path = common_report_config.path
+        common_reports_path = common_report_config.file_path
 
         if not os.path.exists(common_reports_path):
             return

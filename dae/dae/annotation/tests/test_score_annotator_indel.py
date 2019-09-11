@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from .conftest import relative_to_this_test_folder
 
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_annotator import NPScoreAnnotator, \
     PositionScoreAnnotator
 
@@ -52,17 +52,17 @@ def test_np_score_annotator_indels(
         "scores_file": relative_to_this_test_folder(score_filename)
     }, default_box=True, default_box_attr=None)
 
-    columns_config = OrderedDict([
+    columns = OrderedDict([
         ('RawScore',  "RESULT_RawScore"),
         ('PHRED', "RESULT_PHRED"),
     ])
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="score_annotator.NPScoreAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'score_annotator.NPScoreAnnotator'
+        })
     )
 
     with variants_io(infile, options) as io_manager:
@@ -122,16 +122,16 @@ def test_position_score_annotator_indels(
         "scores_file": relative_to_this_test_folder(score_filename)
     }, default_box=True, default_box_attr=None)
 
-    columns_config = {
+    columns = {
         'TESTphyloP100way': "RESULT_phyloP100way",
     }
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="score_annotator.NPScoreAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'score_annotator.NPScoreAnnotator'
+        })
     )
 
     with variants_io(infile, options) as io_manager:
@@ -176,18 +176,18 @@ def test_np_score_annotator_indels_test_score(
         "scores_file": relative_to_this_test_folder(score_filename)
     }, default_box=True, default_box_attr=None)
 
-    columns_config = OrderedDict([
+    columns = OrderedDict([
         ('TEST',  "TEST"),
         ('TEST2', "TEST2"),
         ('TEST3', "TEST3"),
     ])
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="score_annotator.NPScoreAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'score_annotator.NPScoreAnnotator'
+        })
     )
 
     score_annotator = NPScoreAnnotator(config)
@@ -230,18 +230,18 @@ def test_position_score_annotator_indels_test_score(
         "scores_file": relative_to_this_test_folder(score_filename)
     }, default_box=True, default_box_attr=None)
 
-    columns_config = OrderedDict([
+    columns = OrderedDict([
         ('TEST',  "TEST"),
         ('TEST2', "TEST2"),
         ('TEST3', "TEST3"),
     ])
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="score_annotator.NPScoreAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'score_annotator.NPScoreAnnotator'
+        })
     )
 
     score_annotator = PositionScoreAnnotator(config)

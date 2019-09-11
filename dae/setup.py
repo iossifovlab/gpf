@@ -35,6 +35,7 @@ setuptools.setup(
         'dae/tools/study_parquet_load.py',
         'dae/tools/vcf2parquet.py',
         'dae/annotation/annotation_pipeline.py',
+        'dae/tools/generate_histogram.py',
     ],
 
     classifiers=[

@@ -18,7 +18,7 @@ class GenotypeHelper(object):
 
     def get_variants(self, effect_types):
         people_with_people_group = self.dataset.get_people_with_people_group(
-            self.people_group.source, self.people_group_value)
+            self.people_group.id, self.people_group_value)
 
         # TODO: Remove this when study.query_variants can support non
         # expand_effect_types as LGDs

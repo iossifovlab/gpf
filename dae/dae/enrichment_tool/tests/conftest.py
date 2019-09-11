@@ -2,11 +2,12 @@ import pytest
 
 import os
 
-from dae.configurable_entities.configuration import DAEConfig
-from dae.studies.factory import VariantsDb
+from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.studies.variants_db import VariantsDb
 
-from dae.enrichment_tool.config import EnrichmentConfig
-from dae.enrichment_tool.background import CodingLenBackground, SamochaBackground
+from dae.enrichment_tool.config import EnrichmentConfigParser
+from dae.enrichment_tool.background import CodingLenBackground, \
+    SamochaBackground
 from dae.enrichment_tool.background_facade import BackgroundFacade
 
 
@@ -17,7 +18,8 @@ def fixtures_dir():
 
 @pytest.fixture(scope='session')
 def dae_config_fixture():
-    dae_config = DAEConfig.make_config(fixtures_dir())
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=fixtures_dir())
     return dae_config
 
 
@@ -29,7 +31,7 @@ def variants_db_fixture(dae_config_fixture):
 
 @pytest.fixture(scope='session')
 def f1_trio_enrichment_config(variants_db_fixture):
-    return EnrichmentConfig.from_config(
+    return EnrichmentConfigParser.parse(
         variants_db_fixture.get_config('f1_trio'))
 
 

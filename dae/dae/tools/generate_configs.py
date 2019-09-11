@@ -1,17 +1,20 @@
 import argparse
 import os
 import sys
-import configparser
 import glob
 
 from box import Box
 from collections import OrderedDict
-from common.config import to_dict, flatten_dict
-from configurable_entities.configuration import DAEConfig
-from annotation.annotation_pipeline import PipelineConfig
+
+from dae.annotation.tools.annotator_config import AnnotationConfigParser, \
+    VariantAnnotatorConfig
+
+from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.configuration.config_parser_base import CaseSensitiveConfigParser
+from dae.configuration.utils import parser_to_dict, flatten_dict
 
 
-class PipelineConfigWrapper(PipelineConfig):
+class PipelineConfigWrapper(VariantAnnotatorConfig):
 
     non_freq_scores = []
     freq_scores = []
@@ -25,16 +28,17 @@ class PipelineConfigWrapper(PipelineConfig):
             columns_config, virtuals
         )
 
-    @staticmethod
-    def build(config_file):
+    @classmethod
+    def build(cls, config_file):
         options = Box({}, default_box=True, default_box_attr=None)
 
-        dae_config = DAEConfig.make_config()
+        dae_config = DAEConfigParser.read_and_parse_file_configuration()
         defaults = dae_config.annotation_defaults
 
-        configuration = PipelineConfig._parse_pipeline_config(
-            config_file, defaults
-        )
+        configuration = \
+            AnnotationConfigParser.read_and_parse_file_configuration(
+                config_file, dae_config.dae_data_dir, defaults
+            )
 
         result = PipelineConfigWrapper(
             name="pipeline",
@@ -46,7 +50,7 @@ class PipelineConfigWrapper(PipelineConfig):
         result.pipeline_sections = []
 
         for section_name, section_config in configuration.items():
-            section_config = result._parse_config_section(
+            section_config = cls.parse_section(
                 section_name, section_config, options)
             result.pipeline_sections.append(section_config)
 
@@ -188,10 +192,8 @@ class ConfigGenerator(object):
         generated_config_dict['GENOMIC_SCORES_DOWNLOAD'] = \
             ConfigGenerator.group_and_format(self.pipeline_config.all_scores)
 
-        generated_config = \
-            configparser.ConfigParser(allow_no_value=True,
-                                      interpolation=None)
-        generated_config.optionxform = str
+        generated_config = CaseSensitiveConfigParser(
+            allow_no_value=True, interpolation=None)
         with open(template_name, 'r', encoding='utf8') as template:
             generated_config.read_file(template)
 
@@ -203,10 +205,8 @@ class ConfigGenerator(object):
     def generate_genomic_scores(self):
         default_dir = '%(wd)s/genomicScores'
 
-        generated_config = \
-            configparser.ConfigParser(allow_no_value=True,
-                                      interpolation=None)
-        generated_config.optionxform = str
+        generated_config = CaseSensitiveConfigParser(
+            allow_no_value=True, interpolation=None)
 
         generated_config.add_section('genomicScores')
         generated_config['genomicScores']['dir'] = default_dir
@@ -214,7 +214,7 @@ class ConfigGenerator(object):
         for score_dir in self.pipeline_config.score_dirs():
             for conf in ConfigGenerator.get_score_config(score_dir):
                 if 'histograms' in conf:
-                    hist_dict = to_dict(conf)['histograms']
+                    hist_dict = parser_to_dict(conf)['histograms']
                     for score_col in hist_dict:
                         if score_col == 'default':
                             continue
@@ -231,8 +231,7 @@ class ConfigGenerator(object):
     @staticmethod
     def get_score_config(score_dir):
         for conf_file_path in glob.glob(os.path.join(score_dir, '*.conf')):
-            conf = configparser.ConfigParser()
-            conf.optionxform = str
+            conf = CaseSensitiveConfigParser()
             with open(conf_file_path, 'r') as conf_file:
                 conf.read_file(conf_file)
             yield conf

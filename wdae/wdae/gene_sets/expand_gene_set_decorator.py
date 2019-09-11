@@ -1,6 +1,6 @@
 from datasets_api.studies_manager import get_studies_manager
 
-from dae.common.query_base import GeneSymsMixin
+from dae.utils.query_base import GeneSymsMixin
 from datasets_api.permissions import IsDatasetAllowed
 
 
@@ -10,9 +10,8 @@ def expand_gene_set(request_function):
             gene_sets_collection_id, gene_set_id, gene_sets_types = \
                 GeneSymsMixin.get_gene_set_query(**request.data)
             if gene_sets_collection_id == 'denovo':
-                dgscf = get_studies_manager(). \
-                    get_denovo_gene_set_collection_facade()
-                gene_set = dgscf.get_denovo_gene_set(
+                dgsf = get_studies_manager().get_denovo_gene_set_facade()
+                gene_set = dgsf.get_denovo_gene_set(
                     gene_sets_collection_id,
                     gene_set_id,
                     gene_sets_types,

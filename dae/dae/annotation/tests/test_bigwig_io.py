@@ -5,7 +5,7 @@ from .conftest import relative_to_this_test_folder
 from box import Box
 from dae.annotation.tools.score_file_io import ScoreFile
 from dae.annotation.tools.score_annotator import PositionScoreAnnotator
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 try:
     bigwig_enabled = True
     from dae.annotation.tools.score_file_io_bigwig import \
@@ -90,12 +90,14 @@ def test_bigwig_access_indels(expected_df, capsys, variants_io):
             "fixtures/TESTbigwig/TEST_bigwig_score.bw")
     }, default_box=True, default_box_attr=None)
 
-    config = VariantAnnotatorConfig(
-        name="test_bigwig_annotator",
-        annotator_name="score_annotator.PositionScoreAnnotator",
-        options=options,
-        columns_config={'TEST_bigwig_score': "RESULT_bigwig_score"},
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': {
+                'TEST_bigwig_score': 'RESULT_bigwig_score'
+            },
+            'annotator': 'score_annotator.PositionScoreAnnotator'
+        })
     )
     print(config.options)
     print(type(config.options))

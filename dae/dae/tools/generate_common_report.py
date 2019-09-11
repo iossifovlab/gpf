@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import argparse
 
-from dae.studies.factory import VariantsDb
-from dae.configurable_entities.configuration import DAEConfig
+from dae.studies.variants_db import VariantsDb
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.common_reports.common_report_facade import CommonReportFacade
 
@@ -23,7 +23,7 @@ def main(dae_config=None, argv=None):
     args = parser.parse_args(argv)
 
     if dae_config is None:
-        dae_config = DAEConfig.make_config()
+        dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
     vdb = VariantsDb(dae_config)
     common_report_facade = CommonReportFacade(vdb)

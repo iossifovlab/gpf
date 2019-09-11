@@ -1,8 +1,7 @@
-from configparser import ConfigParser
-
 from dae.GenomeAccess import openRef
 from dae.GeneModelFiles import load_gene_models
-from dae.RegionOperations import Region
+
+from dae.genomes_db_config_parser import GenomesDBConfigParser
 
 '''
 GA = genomesDB.get_GA()
@@ -27,95 +26,67 @@ gmDB.....
 
 
 class GenomesDB(object):
-    def __init__(self, daeDir, confFile=None,):
 
-        self.daeDir = daeDir
-        if not confFile:
-            confFile = daeDir + "/genomesDB.conf"
+    def __init__(self, dae_dir, conf_file=None):
+        self.dae_dir = dae_dir
+        if not conf_file:
+            conf_file = dae_dir + '/genomesDB.conf'
 
-        self.config = ConfigParser({
-            'wd': daeDir,
-        })
-        self.config.optionxform = lambda x: x
-        with open(confFile, 'r', encoding="utf-8") as infile:
-            self.config.read_file(infile)
+        self.config = GenomesDBConfigParser.read_and_parse_file_configuration(
+            conf_file, dae_dir)
 
-        self.defaultGenome = self.config.get('genomes', 'defaultGenome')
-        self._geneModels = {}
-        self._mitoGeneModels = {}
+        self.default_genome = self.config.genomes.default_genome
+        self._gene_models = {}
+        self._mito_gene_models = {}
 
-    def get_genome_file(self, genomeId=None):
-        if not genomeId:
-            genomeId = self.defaultGenome
-        genomeFile = self.config.get('genome.' + genomeId, 'chrAllFile')
-        return genomeFile
+    def get_genome_file(self, genome_id=None):
+        if not genome_id:
+            genome_id = self.default_genome
+        genome_file = self.config.genome[genome_id].chr_all_file
+        return genome_file
 
-    def get_genome(self, genomeId=None):
-        genomeFile = self.get_genome_file(genomeId)
+    def get_genome(self, genome_id=None):
+        genome_file = self.get_genome_file(genome_id)
 
-        return openRef(genomeFile)
-
-    def get_pseudo_autosomal_regions(self):
-        pars_x = self.config.get("PARs", "regions.X")
-        pars_y = self.config.get("PARs", "regions.Y")
-
-        regions_x = []
-        regions_y = []
-        for reg in pars_x.split(','):
-            r = Region.from_str(reg.strip())
-            regions_x.append(r)
-
-        for reg in pars_y.split(','):
-            r = Region.from_str(reg.strip())
-            regions_y.append(r)
-
-        return regions_x, regions_y
+        return openRef(genome_file)
 
     def get_pars_x_test(self):
-        regions_x, _ = self.get_pseudo_autosomal_regions()
+        regions_x = self.config.PARs.regions.x.region
         return lambda chrom, pos: any([r.isin(chrom, pos) for r in regions_x])
 
     def get_pars_y_test(self):
-        _, regions_y = self.get_pseudo_autosomal_regions()
+        regions_y = self.config.PARs.regions.y.region
         return lambda chrom, pos: any([r.isin(chrom, pos) for r in regions_y])
 
-    def get_gene_models(self, geneModelId=None, genomeId=None):
-        if not genomeId:
-            genomeId = self.defaultGenome
-        if not geneModelId:
-            geneModelId = self.config.get(
-                'genome.' + genomeId, 'defaultGeneModel')
-        key = genomeId + geneModelId
-        if key not in self._geneModels:
-            geneModelFile = self.config.get(
-                'genome.' + genomeId, 'geneModel.' + geneModelId + '.file')
-            gmDb = load_gene_models(geneModelFile)
-            self._geneModels[key] = gmDb
-        return self._geneModels[key]
+    def get_gene_models(self, gene_model_id=None, genome_id=None):
+        if not genome_id:
+            genome_id = self.default_genome
+        if not gene_model_id:
+            gene_model_id = self.config.genome[genome_id].default_gene_model
+        key = genome_id + gene_model_id
+        if key not in self._gene_models:
+            gene_model_file = \
+                self.config.genome[genome_id].gene_model[gene_model_id].file
+            gmDb = load_gene_models(gene_model_file)
+            self._gene_models[key] = gmDb
+        return self._gene_models[key]
 
-    def get_mito_genome(self, mitoGenomeId=None):
-        if not mitoGenomeId:
-            mitoGenomeId = self.config.get(
-                'mito_genomes', 'defaultMitoGenome')
-        mitoGenomeFile = self.config.get(
-            'mito_genome.' + mitoGenomeId, 'chrAllFile')
-        return openRef(mitoGenomeFile)
+    def get_mito_genome(self, mito_genome_id=None):
+        if not mito_genome_id:
+            mito_genome_id = self.config.mito_genomes.default_mito_genome
+        mito_genome_file = self.config.mito_genome[mito_genome_id].chr_all_file
+        return openRef(mito_genome_file)
 
-    def get_mt_gene_models(self, mitoGeneModelId=None, mitoGenomeId=None):
-        if not mitoGenomeId:
-            mitoGenomeId = self.config.get('mito_genomes', 'defaultMitoGenome')
-        if not mitoGeneModelId:
-            mitoGeneModelId = self.config.get(
-                'mito_genome.' + mitoGenomeId, 'defaultGeneModel')
-        key = mitoGenomeId + mitoGeneModelId
-        if key not in self._mitoGeneModels:
-            mitoGeneModelFile = self.config.get(
-                'mito_genome.' + mitoGenomeId,
-                'geneModel.' + mitoGeneModelId + '.file')
-            mmDb = load_gene_models(mitoGeneModelFile)
-            self._mitoGeneModels[key] = mmDb
-        return self._mitoGeneModels[key]
-
-
-# GA = genomesDB.get_GA()
-# GA = genomesDB.getGA("hg19")
+    def get_mt_gene_models(self, mito_gene_model_id=None, mito_genome_id=None):
+        if not mito_genome_id:
+            mito_genome_id = self.config.mito_genomes.default_mito_genome
+        if not mito_gene_model_id:
+            mito_gene_model_id = \
+                self.config.mito_genome[mito_genome_id].default_gene_model
+        key = mito_genome_id + mito_gene_model_id
+        if key not in self._mito_gene_models:
+            mito_gene_model_file = self.config.mito_genome[mito_genome_id]. \
+                gene_model[mito_gene_model_id].file
+            mmDb = load_gene_models(mito_gene_model_file)
+            self._mito_gene_models[key] = mmDb
+        return self._mito_gene_models[key]

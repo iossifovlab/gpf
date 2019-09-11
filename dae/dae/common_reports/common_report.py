@@ -10,24 +10,25 @@ from dae.common_reports.filter import FilterObjects
 
 class CommonReport(object):
 
-    def __init__(self, study, common_report_config):
-        people_groups_info = common_report_config.people_groups_info
-        filter_info = common_report_config.filter_info
-        effect_groups = common_report_config.effect_groups
-        effect_types = common_report_config.effect_types
+    def __init__(self, study, config):
+        people_groups_info = config.people_groups_info
+        effect_groups = config.effect_groups
+        effect_types = config.effect_types
 
         self.study = study
         self.people_groups_info = PeopleGroupsInfo(
-            study, filter_info, people_groups_info)
+            study, config.people_groups, people_groups_info
+        )
 
         filter_objects = FilterObjects.get_filter_objects(
-            study, self.people_groups_info, filter_info['groups'])
+            study, self.people_groups_info, config.groups
+        )
 
         self.id = study.id
         self.families_report = FamiliesReport(
             study, self.people_groups_info, filter_objects,
-            filter_info.get('draw_all_families', False),
-            filter_info.get('families_count_show_id', None))
+            config.draw_all_families, config.families_count_show_id
+        )
         self.denovo_report = DenovoReport(
             study, effect_groups, effect_types, filter_objects)
         self.study_name = study.name

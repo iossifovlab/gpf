@@ -6,7 +6,7 @@ from box import Box
 
 from .conftest import relative_to_this_test_folder
 
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.score_annotator import PositionScoreAnnotator, \
     PositionMultiScoreAnnotator, NPScoreAnnotator
 try:
@@ -51,16 +51,16 @@ def test_variant_score_annotator_simple(
             "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
     }, default_box=True, default_box_attr=None)
 
-    columns_config = {
+    columns = {
         'TESTphastCons100way': "RESULT_phastCons100way",
     }
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="score_annotator.VariantScoreAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'score_annotator.VariantScoreAnnotator'
+        })
     )
     print(config.options)
     print(type(config.options))
@@ -98,16 +98,16 @@ def test_variant_multi_score_annotator_simple(
             "fixtures/")
     }, default_box=True, default_box_attr=None)
 
-    columns_config = {
+    columns = {
         'TESTphastCons100way': "RESULT_phastCons100way",
     }
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="score_annotator.VariantScoreAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'score_annotator.VariantScoreAnnotator'
+        })
     )
     print(config.options)
     print(type(config.options))
@@ -146,17 +146,17 @@ def test_variant_multi_score_annotator_multi(
             "fixtures/")
     }, default_box=True, default_box_attr=None)
 
-    columns_config = OrderedDict([
+    columns = OrderedDict([
         ('TESTphastCons100way',  "RESULT_phastCons100way"),
         ('TESTphyloP100way', "RESULT_phyloP100way"),
     ])
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="score_annotator.VariantScoreAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'score_annotator.VariantScoreAnnotator'
+        })
     )
     print(config.options)
     print(type(config.options))
@@ -204,17 +204,17 @@ def test_variant_score_annotator_cadd(
         "search_columns": "VCF:ref,VCF:alt",
     }, default_box=True, default_box_attr=None)
 
-    columns_config = OrderedDict([
+    columns = OrderedDict([
         ('RawScore',  "RESULT_RawScore"),
         ('PHRED', "RESULT_PHRED"),
     ])
 
-    config = VariantAnnotatorConfig(
-        name="test_annotator",
-        annotator_name="score_annotator.VariantScoreAnnotator",
-        options=options,
-        columns_config=columns_config,
-        virtuals=[]
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'score_annotator.VariantScoreAnnotator'
+        })
     )
     print(config.options)
     print(type(config.options))

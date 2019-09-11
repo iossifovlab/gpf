@@ -1,12 +1,11 @@
 import os
 import pytest
 
-from dae.gene.denovo_gene_set_collection_config import \
-    DenovoGeneSetCollectionConfig
-from dae.gene.denovo_gene_sets_collection import DenovoGeneSetsCollection
+from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
+from dae.gene.denovo_gene_set import DenovoGeneSet
 
-from dae.configurable_entities.configuration import DAEConfig
-from dae.studies.factory import VariantsDb
+from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.studies.variants_db import VariantsDb
 
 from datasets_api.studies_manager import StudiesManager
 
@@ -18,7 +17,8 @@ def fixtures_dir():
 
 @pytest.fixture(scope='function')
 def dae_config_fixture():
-    dae_config = DAEConfig.make_config(fixtures_dir())
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=fixtures_dir())
     return dae_config
 
 
@@ -53,22 +53,25 @@ def calc_gene_sets(request, denovo_gene_sets):
 
     def remove_gene_sets():
         for dgs in denovo_gene_sets:
-            os.remove(dgs.config.denovo_gene_set_cache_file('phenotype'))
+            os.remove(DenovoGeneSetConfigParser.denovo_gene_set_cache_file(
+                dgs.config, 'phenotype'))
     request.addfinalizer(remove_gene_sets)
 
 
-def get_denovo_gene_sets_by_id(variants_db_fixture, dgs_id):
-    denovo_gene_set_config = DenovoGeneSetCollectionConfig.from_config(
-        variants_db_fixture.get_config(dgs_id))
+def get_denovo_gene_set_by_id(variants_db_fixture, dgs_id):
+    denovo_gene_set_config = DenovoGeneSetConfigParser.parse(
+        variants_db_fixture.get_config(dgs_id)
+    )
 
-    return DenovoGeneSetsCollection(
-        variants_db_fixture.get(dgs_id), denovo_gene_set_config)
+    return DenovoGeneSet(
+        variants_db_fixture.get(dgs_id), denovo_gene_set_config
+    )
 
 
 @pytest.fixture(scope='function')
 def denovo_gene_sets(variants_db_fixture):
     return [
-        get_denovo_gene_sets_by_id(variants_db_fixture, 'f1_group'),
-        get_denovo_gene_sets_by_id(variants_db_fixture, 'f2_group'),
-        get_denovo_gene_sets_by_id(variants_db_fixture, 'f3_group')
+        get_denovo_gene_set_by_id(variants_db_fixture, 'f1_group'),
+        get_denovo_gene_set_by_id(variants_db_fixture, 'f2_group'),
+        get_denovo_gene_set_by_id(variants_db_fixture, 'f3_group')
     ]

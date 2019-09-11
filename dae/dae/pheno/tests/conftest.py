@@ -3,7 +3,6 @@ Created on Nov 21, 2016
 
 @author: lubo
 '''
-from __future__ import unicode_literals
 import pytest
 import os
 import pandas as pd
@@ -12,10 +11,10 @@ from dae.pheno.prepare.individuals2ped import InternalCsvIndividualsReader
 import tempfile
 import shutil
 from dae.pheno.common import default_config
-from dae.pheno.utils.configuration import PhenoConfig
+from dae.pheno.utils.config import PhenoConfigParser
 from box import Box
 
-from dae.configurable_entities.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
 def relative_to_this_folder(path):
@@ -65,7 +64,8 @@ def fixtures_dir():
 
 @pytest.fixture(scope='session')
 def fake_dae_conf():
-    return DAEConfig.make_config(fixtures_dir())
+    return DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='session')
@@ -110,7 +110,8 @@ def dummy_pheno_missing_files_conf():
 
 @pytest.fixture(scope='session')
 def fake_pheno_config(fake_dae_conf):
-    return PhenoConfig.from_dae_config(fake_dae_conf)
+    return PhenoConfigParser.read_directory_configurations(
+        fake_dae_conf.pheno_db.dir)
 
 
 @pytest.fixture(scope='session')

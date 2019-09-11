@@ -12,7 +12,7 @@ class GenomicScoresView(APIView):
     def get_genomic_scores(self, scores):
         return [
             {
-                'score': score.name,
+                'score': score.id,
                 'desc': score.desc,
                 'bars': score.values(),
                 'bins': score.get_scores(),

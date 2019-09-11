@@ -1,7 +1,7 @@
 import traceback
 import logging
 
-from dae.gene.config import GeneInfoConfig
+from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.gene_term import loadGeneTerm
 
 LOGGER = logging.getLogger(__name__)
@@ -9,9 +9,7 @@ LOGGER = logging.getLogger(__name__)
 
 class GeneSetsCollection(object):
 
-    def __init__(self, gene_sets_collection_id, config=None):
-        if config is None:
-            config = GeneInfoConfig.from_config()
+    def __init__(self, gene_sets_collection_id, config):
         self.config = config
 
         assert gene_sets_collection_id != 'denovo'
@@ -21,7 +19,8 @@ class GeneSetsCollection(object):
 
     def _load(self):
         try:
-            gene_sets_collection = self.config.getGeneTerms(self.gsc_id)
+            gene_sets_collection = \
+                GeneInfoConfigParser.getGeneTerms(self.config, self.gsc_id)
         except Exception:
             traceback.print_exc()
             gene_sets_collection = loadGeneTerm(self.gsc_id)
@@ -84,7 +83,10 @@ class GeneSetsCollections(object):
 
     def __init__(self, variants_db, config=None):
         if config is None:
-            config = GeneInfoConfig.from_config(variants_db.dae_config)
+            config = GeneInfoConfigParser.read_and_parse_file_configuration(
+                variants_db.dae_config.gene_info_db.conf_file,
+                variants_db.dae_config.dae_data_dir
+            )
         self.config = config
 
         self.variants_db = variants_db
@@ -92,9 +94,11 @@ class GeneSetsCollections(object):
 
     def get_collections_descriptions(self, permitted_datasets=None):
         gene_sets_collections_desc = []
-        for gsc_id in self.config.getGeneTermIds():
-            label = self.config.getGeneTermAtt(gsc_id, "webLabel")
-            formatStr = self.config.getGeneTermAtt(gsc_id, "webFormatStr")
+        for gsc_id in self.config.gene_terms.keys():
+            label = GeneInfoConfigParser.getGeneTermAtt(
+                self.config, gsc_id, "webLabel")
+            formatStr = GeneInfoConfigParser.getGeneTermAtt(
+                self.config, gsc_id, "webFormatStr")
             if not label or not formatStr:
                 continue
             gene_sets_types = self.get_gene_sets_collection(gsc_id) \

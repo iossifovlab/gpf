@@ -8,7 +8,7 @@ import logging
 
 from dae.utils.vcf_utils import mat2str
 from dae.utils.dae_utils import split_iterable
-from dae.common.query_base import EffectTypesMixin
+from dae.utils.query_base import EffectTypesMixin
 
 LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +122,7 @@ def get_person_color(member, people_group):
     source = people_group['source']
     people_group_attribute = member.get_attr(source)
     domain = list(filter(lambda d: d['name'] == people_group_attribute,
-                         people_group['domain']))
+                         people_group['domain'].values()))
 
     if domain and people_group_attribute:
         return domain[0]['color']
@@ -158,13 +158,14 @@ def get_variants_web(
 
     if 'geneSet' in query:
         query.pop('geneSet')
+    if 'studyTypes' in query:
+        query.pop('studyTypes')
 
     variants = dataset.query_variants(weights_loader, **query)
     people_group_id = query.get('peopleGroup', {}).get('id', None)
-    people_group_config = dataset.config.people_group_config
-    people_group = []
-    if people_group_config is not None:
-        people_group = people_group_config.get_people_group(people_group_id)
+    people_group = dataset.get_people_group(people_group_id)
+    if not people_group:
+        people_group = []
 
     variants = add_gene_weight_columns(
         weights_loader, variants, dataset.gene_weights_columns)

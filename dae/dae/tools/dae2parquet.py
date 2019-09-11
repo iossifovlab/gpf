@@ -11,9 +11,10 @@ import sys
 import pysam
 import argparse
 
-from dae.configurable_entities.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.annotation.tools.file_io_parquet import ParquetSchema
+from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
 from dae.backends.vcf.builder import get_genome
 from dae.backends.configure import Configure
@@ -22,8 +23,7 @@ from dae.backends.dae.raw_dae import RawDAE, RawDenovo
 from dae.backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
 
-from dae.backends.import_commons import annotation_pipeline_cli_options, \
-    construct_import_annotation_pipeline
+from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.backends.impala.import_tools import variants_iterator_to_parquet
 
@@ -175,7 +175,7 @@ def init_parser_dae_common(dae_config, parser):
         help='families file in pedigree format'
     )
 
-    options = annotation_pipeline_cli_options(dae_config)
+    options = annotation_config_cli_options(dae_config)
     for name, args in options:
         parser.add_argument(name, **args)
 
@@ -290,7 +290,7 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
 
 
 if __name__ == "__main__":
-    dae_config = DAEConfig.make_config()
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
 
     argv = parse_cli_arguments(dae_config, sys.argv[1:])
     annotation_pipeline = construct_import_annotation_pipeline(

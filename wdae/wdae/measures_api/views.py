@@ -97,8 +97,7 @@ class PhenoMeasureHistogramView(QueryBaseView):
                 "max": max(bins),
                 "bars": bars,
                 "bins": bins,
-                "step": \
-                    (measure.max_value - measure.min_value) / 1000.0,
+                "step": (measure.max_value - measure.min_value) / 1000.0,
             }
             return Response(result, status=status.HTTP_200_OK)
 
@@ -179,7 +178,7 @@ class PhenoMeasureRegressionsView(QueryBaseView):
         self.pheno_config = self.variants_db.pheno_factory.config
 
     def get_browser_dbfile(self, dbname):
-        browser_dbfile = self.pheno_config.get_browser_dbfile(dbname)
+        browser_dbfile = self.pheno_config[dbname].browser_dbfile
         assert browser_dbfile is not None
         assert os.path.exists(browser_dbfile)
         return browser_dbfile

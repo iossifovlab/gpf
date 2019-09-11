@@ -4,7 +4,7 @@ from box import Box
 
 from .conftest import relative_to_this_test_folder
 from dae.annotation.tools.frequency_annotator import FrequencyAnnotator
-from dae.annotation.tools.annotator_config import VariantAnnotatorConfig
+from dae.annotation.tools.annotator_config import AnnotationConfigParser
 
 
 expected_warnings = \
@@ -38,17 +38,17 @@ def test_frequency_annotator(mocker, variants_io, expected_df, capsys):
                     "fixtures/TESTFreq/test_freq.tsv.gz")
         }, default_box=True, default_box_attr=None)
 
-        columns_config = {
+        columns = {
             'all_altFreq': 'RESULT_FREQ',
             'all_altFreq2': 'RESULT_FREQ_2'
         }
 
-        config = VariantAnnotatorConfig(
-            name="test_annotator",
-            annotator_name="frequency_annotator.FrequencyAnnotator",
-            options=options,
-            columns_config=columns_config,
-            virtuals=[]
+        config = AnnotationConfigParser.parse_section(
+            Box({
+                'options': options,
+                'columns': columns,
+                'annotator': 'frequency_annotator.FrequencyAnnotator'
+            })
         )
 
         with variants_io("fixtures/freq_test_1.tsv") as io_manager:

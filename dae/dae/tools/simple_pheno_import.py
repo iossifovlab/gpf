@@ -4,7 +4,7 @@
 import sys
 import os
 import traceback
-import configparser
+from configparser import ConfigParser
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 
@@ -12,7 +12,7 @@ from dae.pheno.common import default_config, dump_config, check_config_pheno_db
 from dae.pheno.prepare.ped_prepare import PrepareVariables
 from dae.tools.pheno2browser import build_pheno_browser
 
-from dae.configurable_entities.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 
 def pheno_cli_parser():
@@ -64,7 +64,7 @@ def pheno_cli_parser():
 
 
 def generate_pheno_db_config(args):
-    config = configparser.ConfigParser()
+    config = ConfigParser()
     config['phenoDB'] = {}
     section = config['phenoDB']
     section['name'] = args.pheno_name
@@ -99,7 +99,7 @@ def main(argv):
     try:
         # Setup argument parser
 
-        dae_conf = DAEConfig.make_config()
+        dae_conf = DAEConfigParser.read_and_parse_file_configuration()
 
         parser = pheno_cli_parser()
         args = parser.parse_args(argv)
@@ -114,7 +114,7 @@ def main(argv):
             raise ValueError()
 
         pheno_db_dir = os.path.join(
-            dae_conf.pheno_dir,
+            dae_conf.pheno_db.dir,
             args.pheno_name
         )
 

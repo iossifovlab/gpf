@@ -10,7 +10,7 @@ from io import StringIO
 
 from box import Box
 
-from dae.configurable_entities.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
@@ -85,8 +85,8 @@ def annotation_pipeline_config():
 
 @pytest.fixture(scope='session')
 def annotation_pipeline_default_config():
-    dae_config = DAEConfig.make_config()
-    return dae_config.annotation_conf
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    return dae_config.annotation.conf_file
 
 
 @pytest.fixture(scope='session')
@@ -109,12 +109,14 @@ def annotation_pipeline_vcf():
         default_box=True,
         default_box_attr=None)
 
+    work_dir = relative_to_this_test_folder("fixtures/")
+
     pipeline = PipelineAnnotator.build(
-        options, filename,
-        defaults={
+        options, filename, work_dir,
+        defaults={'values': {
             "scores_dirname": relative_to_this_test_folder(
                 "fixtures/annotation_pipeline/")
-        })
+        }})
     return pipeline
 
 
@@ -134,12 +136,14 @@ def annotation_pipeline_internal():
         default_box=True,
         default_box_attr=None)
 
+    work_dir = relative_to_this_test_folder("fixtures/")
+
     pipeline = PipelineAnnotator.build(
-        options, filename,
-        defaults={
+        options, filename, work_dir,
+        defaults={'values': {
             "scores_dirname": relative_to_this_test_folder(
                 "fixtures/annotation_pipeline/")
-        })
+        }})
     return pipeline
 
 
@@ -414,9 +418,8 @@ def data_import(
     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     test_hdfs.mkdir(temp_dirname)
 
-    dae_config = DAEConfig.make_config()
-    annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config)
+    dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    annotation_pipeline = construct_import_annotation_pipeline(dae_config)
 
     def fin():
         test_hdfs.delete(temp_dirname, recursive=True)

@@ -1,9 +1,9 @@
 import os
 import pytest
 
-from dae.configurable_entities.configuration import DAEConfig
+from dae.configuration.dae_config_parser import DAEConfigParser
 
-from dae.gene.config import GeneInfoConfig
+from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.weights import WeightsLoader
 
 from datasets_api.studies_manager import StudiesManager
@@ -16,7 +16,8 @@ def fixtures_dir():
 
 @pytest.fixture()
 def dae_config_fixture():
-    dae_config = DAEConfig.make_config(fixtures_dir())
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=fixtures_dir())
     return dae_config
 
 
@@ -39,7 +40,10 @@ def mock_studies_manager(db, mocker, studies_manager):
 
 @pytest.fixture()
 def weights_loader(dae_config_fixture):
-    gene_info_config = GeneInfoConfig.from_config(dae_config_fixture)
-    weights_loader = WeightsLoader(config=gene_info_config)
+    gene_info_config = GeneInfoConfigParser.read_and_parse_file_configuration(
+        dae_config_fixture.gene_info_db.conf_file,
+        dae_config_fixture.dae_data_dir
+    )
+    weights_loader = WeightsLoader(config=gene_info_config.gene_weights)
 
     return weights_loader

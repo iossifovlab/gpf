@@ -2,8 +2,8 @@ import pytest
 
 import os
 
-from dae.studies.factory import VariantsDb
-from dae.configurable_entities.configuration import DAEConfig
+from dae.studies.variants_db import VariantsDb
+from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.common_reports.common_report_facade import CommonReportFacade
 
@@ -17,7 +17,8 @@ def fixtures_dir():
 
 @pytest.fixture(scope='session')
 def dae_config_fixture():
-    dae_config = DAEConfig.make_config(fixtures_dir())
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=fixtures_dir())
     return dae_config
 
 
@@ -37,7 +38,7 @@ def common_report_facade(vdb_fixture):
 @pytest.fixture(scope='module')
 def use_common_reports(common_report_facade):
     all_configs = common_report_facade.get_all_common_report_configs()
-    temp_files = [config.path for config in all_configs]
+    temp_files = [config.file_path for config in all_configs]
 
     for temp_file in temp_files:
         if os.path.exists(temp_file):

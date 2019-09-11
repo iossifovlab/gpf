@@ -25,8 +25,8 @@ def test_common_report_simple(vdb_fixture, common_report_facade):
     assert common_report.id == 'Study3'
 
     print(config.people_groups_info)
-    print(config.filter_info)
-    print(config.config.groups)
+    print(config.people_groups)
+    print(config.groups)
 
     assert common_report.denovo_report is not None
     print([t.group_name for t in common_report.denovo_report.tables])
