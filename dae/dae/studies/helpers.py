@@ -156,8 +156,10 @@ def get_variants_web(
         dataset, query, genotype_attrs, weights_loader,
         variants_hard_max=2000):
 
-    if 'geneSet' in query:
-        query.pop('geneSet')
+    # impala columns are lowercase
+    if 'genomicScores' in query:
+        for gs in query['genomicScores']:
+            gs['metric'] = gs['metric'].lower()
 
     variants = dataset.query_variants(weights_loader, **query)
     people_group_id = query.get('peopleGroup', {}).get('id', None)
