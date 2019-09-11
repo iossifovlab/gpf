@@ -11,6 +11,7 @@ import { ConfigService } from '../config/config.service';
 @Injectable()
 export class DatasetsService {
   private datasetUrl = 'datasets';
+  private permissionDeniedPromptUrl = 'datasets/denied_prompt';
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
@@ -94,5 +95,12 @@ export class DatasetsService {
 
   private reloadAllDatasets() {
     this.getDatasets().take(1).subscribe(() => {});
+  }
+
+  getPermissionDeniedPrompt() {
+    const options = new RequestOptions({ withCredentials: true });
+
+    return this.http.get(this.permissionDeniedPromptUrl, options)
+      .map(res => res.json().data);
   }
 }
