@@ -11,7 +11,7 @@ import { ConfigService } from '../config/config.service';
 @Injectable()
 export class DatasetsService {
   private datasetUrl = 'datasets';
-  private permissionDeniedPromptUrl = 'datasets/deniedPrompt';
+  private permissionDeniedPromptUrl = 'datasets/denied_prompt';
 
   private headers = new Headers({ 'Content-Type': 'application/json' });
   private datasets$ = new ReplaySubject<Array<Dataset>>(1);
