@@ -61,7 +61,22 @@ class Study(StudyBase):
                 self.name not in kwargs['studyFilters']:
             return
         else:
-            for variant in self.backend.query_variants(**kwargs):
+            for variant in self.backend.query_variants(
+                    regions=kwargs.get('regions'),
+                    genes=kwargs.get('genes'),
+                    effect_types=kwargs.get('effect_types'),
+                    family_ids=kwargs.get('family_ids'),
+                    person_ids=kwargs.get('person_ids'),
+                    inheritance=kwargs.get('inheritance'),
+                    roles=kwargs.get('roles'),
+                    sexes=kwargs.get('sexes'),
+                    variant_type=kwargs.get('variant_type'),
+                    real_attr_filter=kwargs.get('real_attr_filter'),
+                    ultra_rare=kwargs.get('ultra_rare'),
+                    return_reference=kwargs.get('return_reference'),
+                    return_unknown=kwargs.get('return_unknown'),
+                    limit=kwargs.get('limit')
+                    ):
                 for allele in variant.alleles:
                     allele.update_attributes({'studyName': self.name})
                 yield variant
