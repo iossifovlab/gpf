@@ -1,19 +1,34 @@
 #!/bin/bash
 
-DATA_ARCHIVE=data-hg19-startup-latest.tar.gz
-INSTALL_DIRNAME=$1
+set -e
 
-if [ -z $INSTALL_DIRNAME ]; then
-    export INSTALL_DIRNAME=data-hg19-startup
+REFERENCE_GENOME=$1
+INSTALL_DIRNAME=$2
+
+if [[ -z $REFERENCE_GENOME ]]; then
+    REFERENCE_GENOME=hg19
 fi
 
-if [ -d '$INSTALL_DIRNAME' ];
-then
-    echo "Directory $INSTALL_DIRNAME alreay exists. Exiting..."
+if [[ $REFERENCE_GENOME != 'hg19' &&  $REFERENCE_GENOME != 'hg38' ]]; then
+    echo "ERROR: Unsupported reference genome: $REFERENCE_GENOME. Exiting..."
     exit 1
 fi
 
+if [[ -z $INSTALL_DIRNAME ]]; then
+    export INSTALL_DIRNAME=data-${REFERENCE_GENOME}-startup
+fi
+
 echo "Bootstrapping GPF into '$INSTALL_DIRNAME'"
+
+if [[ -d "${INSTALL_DIRNAME}" ]]; then
+    echo "ERROR: Directory $INSTALL_DIRNAME alreay exists. Exiting..."
+    exit 1
+fi
+
+
+
+DATA_ARCHIVE=data-${REFERENCE_GENOME}-startup-latest.tar.gz
+
 
 wget -c https://iossifovlab.com/distribution/public/$DATA_ARCHIVE
 
