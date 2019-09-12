@@ -14,53 +14,6 @@ from datasets_api.permissions import IsDatasetAllowed
 from helpers.dae_query import join_line
 
 
-class StudiesSummariesView(APIView):
-
-    def __init__(self):
-        self.common_reports_facade =\
-            get_studies_manager().get_common_report_facade()
-
-    def get_studies_summaries(self, common_reports):
-        return {
-            'columns': [
-                'study name',
-                'phenotype',
-                'study type',
-                'study year',
-                'PubMed',
-                'families',
-                'number of probands',
-                'number of siblings',
-                'denovo',
-                'transmitted'
-            ],
-            'summaries': [{
-                'study name': common_report.get('study_name', ''),
-                'description': common_report.get('study_description', ''),
-                'phenotype': common_report.get('phenotype', ''),
-                'study type': common_report.get('study_type', ''),
-                'study year': common_report.get('study_year', ''),
-                'PubMed': common_report.get('pub_med', ''),
-                'families': common_report.get('families', ''),
-                'number of probands':
-                    common_report.get('number_of_probands', ''),
-                'number of siblings':
-                    common_report.get('number_of_siblings', ''),
-                'denovo': common_report.get('denovo', ''),
-                'transmitted': common_report.get('transmitted', ''),
-                'id': common_report.get(
-                    'id', common_report.get('study_name', ''))
-            } for common_report in common_reports]
-        }
-
-    def get(self, request):
-        common_reports =\
-            self.common_reports_facade.get_all_common_reports()
-
-        studies_summaries = self.get_studies_summaries(common_reports)
-        return Response(studies_summaries)
-
-
 class VariantReportsView(APIView):
 
     def __init__(self):
