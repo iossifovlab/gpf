@@ -16,6 +16,10 @@ class ScoreConfigParser(ConfigParserBase):
         'genomicScores': 'selected_genomic_score_values',
     }
 
+    IMPALA_IDENTIFIERS = (
+        'id',
+    )
+
     @classmethod
     def _parse_genomic_scores(cls, genomic_scores):
         genomic_scores = super(ScoreConfigParser, cls).parse(genomic_scores)

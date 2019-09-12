@@ -28,6 +28,7 @@ class ConfigParserBase(object):
     CAST_TO_BOOL = ()
     CAST_TO_INT = ()
     FILTER_SELECTORS = {}
+    IMPALA_IDENTIFIERS = ()
 
     @classmethod
     def read_and_parse_directory_configurations(
@@ -187,6 +188,7 @@ class ConfigParserBase(object):
         config_section = cls._cast_to_bool(config_section)
         config_section = cls._cast_to_int(config_section)
         config_section = cls._filter_selectors(config_section)
+        config_section = cls._verify_impala_identifiers(config_section)
 
         return config_section
 
@@ -285,4 +287,23 @@ class ConfigParserBase(object):
 
                 config[key][selector_id] = selector
 
+        return config
+
+    @classmethod
+    def _verify_impala_identifiers(cls, config):
+        for key in cls.IMPALA_IDENTIFIERS:
+            if key in config:
+                errmsg = "The value '{}' of key '{}' ".format(config[key], key)
+                assert 1 < len(config[key]) < 128, \
+                    errmsg + "must be between 1 and 128 symbols!"
+                assert config[key].isascii(), \
+                    errmsg + "must be ASCII!"
+                assert config[key].islower(), \
+                    errmsg + "must be lowercase!"
+                assert config[key].replace('_', '').isalnum(), \
+                    (errmsg + "must only contain"
+                     " alphanumeric symbols and underscores!")
+                assert config[key][0].isalpha(), \
+                    (errmsg + "must begin with an"
+                     " alphabetic character!")
         return config
