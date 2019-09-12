@@ -72,6 +72,8 @@ export class DatasetsComponent implements OnInit {
   findFirstTool(selectedDataset: Dataset) {
     if (selectedDataset.description) {
       return 'description';
+    } else if (selectedDataset.commonReport) {
+      return 'commonReport';
     } else if (selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig) {
       return 'browser';
     } else if (selectedDataset.phenotypeBrowser) {
@@ -80,9 +82,7 @@ export class DatasetsComponent implements OnInit {
       return 'enrichment';
     } else if (selectedDataset.phenotypeTool) {
       return 'phenoTool';
-    } else if (selectedDataset) {
-      return 'commonReport';
-    } else {
+    }  else {
       return '';
     }
   }
