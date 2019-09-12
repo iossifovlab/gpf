@@ -30,6 +30,9 @@
       <li *ngIf="selectedDataset.description" class="nav-item">
         <a class="nav-link" routerLink="description" routerLinkActive="active">Dataset Description</a>
       </li>
+      <li *ngIf="selectedDataset.commonReport" class="nav-item">
+        <a class="nav-link" routerLink="commonReport" routerLinkActive="active">Dataset Statistics</a>
+      </li>
       <li *ngIf="selectedDataset.genotypeBrowser && selectedDataset.genotypeBrowserConfig" class="nav-item">
         <a class="nav-link" routerLink="browser" routerLinkActive="active">Genotype Browser</a>
       </li>
@@ -41,9 +44,6 @@
       </li>
       <li *ngIf="selectedDataset.phenotypeTool" class="nav-item">
         <a class="nav-link" routerLink="phenoTool" routerLinkActive="active">Phenotype Tool</a>
-      </li>
-      <li *ngIf="selectedDataset.commonReport" class="nav-item">
-        <a class="nav-link" routerLink="commonReport" routerLinkActive="active">Common Report</a>
       </li>
     </ul>
   </nav>
