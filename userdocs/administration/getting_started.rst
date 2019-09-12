@@ -92,9 +92,15 @@ to the boostrap script. For example, if you want the working directory to
 be named `gpf_test`, use the following command:
 
 
-.. code-block:: bash
+    * For HG19:
+        .. code-block:: bash
 
-    wdae_bootstrap.sh gpf_test
+            wdae_bootstrap.sh hg19 gpf_test
+
+    * For HG38
+        .. code-block:: bash
+
+            wdae_bootstrap.sh hg38 gpf_test
 
 As a result, a directory named `gpf_test` should be created with following
 structure:
