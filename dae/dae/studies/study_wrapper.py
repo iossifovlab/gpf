@@ -34,7 +34,7 @@ class StudyWrapper(object):
 
         preview_columns = []
         download_columns = []
-        pheno_columns = {}
+        pheno_column_slots = []
         gene_weights_columns = []
         column_labels = {}
 
@@ -44,10 +44,8 @@ class StudyWrapper(object):
             genotype_browser_config = self.config.genotype_browser_config
             preview_columns = genotype_browser_config.preview_columns_slots
             download_columns = genotype_browser_config.download_columns_slots
-            if genotype_browser_config.pheno_columns:
-                pheno_columns = \
-                    [s for pc in genotype_browser_config.pheno_columns
-                     for s in pc['slots']]
+            if genotype_browser_config.pheno_column_slots:
+                pheno_column_slots = genotype_browser_config.pheno_column_slots
             gene_weights_columns = genotype_browser_config.gene_weights_columns
 
             column_labels = genotype_browser_config.column_labels
@@ -57,7 +55,7 @@ class StudyWrapper(object):
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
-        self.pheno_columns = pheno_columns
+        self.pheno_column_slots = pheno_column_slots
         self.gene_weights_columns = gene_weights_columns
         self.column_labels = column_labels
 
@@ -270,16 +268,13 @@ class StudyWrapper(object):
         pheno_column_dfs = []
         pheno_column_names = []
 
-        genotype_browser_config = self.config.genotype_browser_config
-        if genotype_browser_config:
-            for pheno_column in genotype_browser_config.phenoColumns:
-                for slot in pheno_column.slots:
-                    pheno_column_dfs.append(
-                        self.pheno_db.get_measure_values_df(
-                            slot.measure,
-                            family_ids=list(families),
-                            roles=[slot.role]))
-                    pheno_column_names.append(slot.source)
+        for slot in self.pheno_column_slots:
+            pheno_column_dfs.append(
+                self.pheno_db.get_measure_values_df(
+                    slot.measure,
+                    family_ids=list(families),
+                    roles=[slot.role]))
+            pheno_column_names.append(slot.source)
 
         return list(zip(pheno_column_dfs, pheno_column_names))
 

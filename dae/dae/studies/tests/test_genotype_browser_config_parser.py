@@ -31,8 +31,7 @@ def test_get_description_keys():
         'hasPresentInRole', 'hasCNV', 'hasComplex', 'hasFamilyFilters',
         'hasStudyFilters', 'hasStudyTypes', 'hasGraphicalPreview',
         'previewColumns', 'rolesFilterOptions', 'genotypeColumns',
-        'phenoFilters', 'familyFilters', 'presentInRole', 'phenoColumns',
-        'downloadColumns'
+        'phenoFilters', 'familyFilters', 'presentInRole', 'downloadColumns'
     ]
 
 
