@@ -31,7 +31,9 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
         '--id', type=str,
         metavar='<study ID>',
         dest="id",
-        help='unique study ID to use'
+        help='Unique study ID to use. '
+        'If not specified the basename of the family pedigree file is used '
+        'for study ID'
     )
 
     parser.add_argument(
