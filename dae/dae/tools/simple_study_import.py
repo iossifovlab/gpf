@@ -49,10 +49,11 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
     )
 
     parser.add_argument(
-        '-o', '--out', type=str, default='data/',
+        '-o', '--out', type=str, default=None,
         dest='output', metavar='<output directory>',
-        help='output directory. '
-        'If none specified, "data/" directory is used [default: %(default)s]'
+        help='output directory for storing intermediate parquet files. '
+        'If none specified, "parquet/" directory inside GPF instance '
+        'study directory is used [default: %(default)s]'
     )
 
     parser.add_argument(
@@ -125,9 +126,8 @@ def impala_load_study(dae_config, study_id, parquet_directory):
             cursor, dbname, variant_table, variant_files)
 
 
-def generate_study_config(dae_config, study_id, argv):
+def generate_study_config(dae_config, study_id, output):
     assert study_id is not None
-    assert argv.output is not None
 
     dirname = os.path.join(dae_config.studies_db.dir, study_id)
     filename = os.path.join(dirname, "{}.conf".format(study_id))
@@ -165,9 +165,12 @@ if __name__ == "__main__":
     else:
         study_id, _ = os.path.splitext(os.path.basename(argv.pedigree))
 
-    output = os.path.join(
-        dae_config.studies_db.dir, study_id, argv.output
-    )
+    if argv.output is None:
+        output = os.path.join(
+            dae_config.studies_db.dir, study_id, 'parquet'
+        )
+    else:
+        output = argv.output
     print("storing results into: ", output, file=sys.stderr)
     os.makedirs(output, exist_ok=True)
 
@@ -201,7 +204,7 @@ if __name__ == "__main__":
         )
         assert os.path.exists(pedigree_filename), pedigree_filename
 
-    generate_study_config(dae_config, study_id, argv)
+    generate_study_config(dae_config, study_id, output)
     impala_load_study(dae_config, study_id, output)
 
     if not argv.skip_reports:
