@@ -178,7 +178,7 @@ pipeline configuration file:
 
 .. code::
 
-    data-hg19-startup/annotation.conf
+    gpf_test/annotation.conf
 
 This configuration pipeline contains some examples on how to configure
 annotation with `MPC` and `CADD` genomic scores and
@@ -285,8 +285,7 @@ Example import of VCF variants
 Let's say you have a pedigree file ``comp.ped`` describing family information,
 a VCF file ``comp.vcf`` with transmitted variants and a list of de Novo
 variants ``comp.tsv``. This example data can be found inside
-``$DAE_DB_DIR/studies/comp`` of the GPF startup data instance
-`data-hg19-startup`.
+``$DAE_DB_DIR/studies/comp`` of the GPF startup data instance `gpf_test`.
 
 To import this data as a study into the GPF instance:
 
