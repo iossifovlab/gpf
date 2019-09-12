@@ -99,9 +99,6 @@ import { ResetPasswordComponent } from './reset-password/reset-password.componen
 import { PhenoBrowserModalContentComponent } from './pheno-browser-modal-content/pheno-browser-modal-content.component';
 import { PhenoBrowserTableComponent } from './pheno-browser-table/pheno-browser-table.component';
 
-import { StudiesSummariesComponent } from './studies-summaries/studies-summaries.component';
-import { StudiesSummariesService } from './studies-summaries/studies-summaries.service';
-
 import { PValueIntensityPipe } from './utils/p-value-intensity.pipe';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -192,10 +189,6 @@ const appRoutes: Routes = [
         component: VariantReportsComponent
       }
     ]
-  },
-  {
-    path: 'reports/summary',
-    component: StudiesSummariesComponent
   },
   {
     path: 'management',
@@ -298,7 +291,6 @@ const appRoutes: Routes = [
     PhenoBrowserModalContentComponent,
     PhenoBrowserTableComponent,
     PValueIntensityPipe,
-    StudiesSummariesComponent,
     VariantReportsComponent,
     DatasetDescriptionComponent,
     GenomicScoresComponent,
@@ -369,7 +361,6 @@ const appRoutes: Routes = [
     FamilyCountersService,
     PhenoBrowserService,
     PValueIntensityPipe,
-    StudiesSummariesService,
     VariantReportsService,
     GenomicScoresBlockService,
     UsersGroupsService,
