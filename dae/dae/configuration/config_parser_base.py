@@ -3,6 +3,7 @@ from box import Box
 from configparser import ConfigParser
 
 from dae.configuration.utils import parser_to_dict
+from dae.configuration.utils import IMPALA_RESERVED_WORDS
 
 
 class CaseSensitiveConfigParser(ConfigParser):
@@ -306,4 +307,6 @@ class ConfigParserBase(object):
                 assert config[key][0].isalpha(), \
                     (errmsg + "must begin with an"
                      " alphabetic character!")
+                assert config[key] not in IMPALA_RESERVED_WORDS, \
+                    errmsg + "is an Impala reserved word!"
         return config
