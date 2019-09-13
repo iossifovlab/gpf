@@ -353,14 +353,14 @@ To see the imported variants, restart the GPF development web server and find
 Example Usage of GPF Python Interface
 #####################################
 
-Simplest way to start using GPF's Python API is to import the ``VariantsDB``
+Simplest way to start using GPF's Python API is to import the ``VariantsDb``
 class and instantiate it with the default DAE configuration:
 
 .. code-block:: python3
 
-    from dae.studies.factory import VariantsDB
-    from dae.configurable_entities.configuration import DAEConfig
-    vdb = VariantsDB(DAEConfig.make_config())
+    from dae.DAE import dae_config
+    from dae.studies.variants_db import VariantsDb
+    vdb = VariantsDb(dae_config)
 
 This ``vdb`` factory object allows you to get all studies and datasets in the
 configured GPF instance. For example to list all studies configured in
