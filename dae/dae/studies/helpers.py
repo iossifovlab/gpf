@@ -152,20 +152,15 @@ def generate_pedigree(allele, people_group):
     return result
 
 
-def get_variants_web(
-        dataset, query, genotype_attrs, weights_loader,
-        variants_hard_max=2000):
-
-    variants = dataset.query_variants(weights_loader, **query)
+def get_variants_web(dataset, query, genotype_attrs, variants_hard_max=2000):
+    variants = dataset.query_variants(**query)
     people_group_id = query.get('peopleGroup', {}).get('id', None)
     people_group = dataset.get_people_group(people_group_id)
     if not people_group:
         people_group = []
 
-    variants = add_gene_weight_columns(
-        weights_loader, variants, dataset.gene_weights_columns)
-
-    rows = transform_variants_to_lists(variants, genotype_attrs, people_group)
+    rows = transform_variants_to_lists(
+        variants, list(genotype_attrs.values()), people_group)
 
     if variants_hard_max is not None:
         limited_rows = itertools.islice(rows, variants_hard_max+1)
@@ -177,11 +172,9 @@ def get_variants_web(
 
 
 def get_variants_web_preview(
-        dataset, query, weights_loader, max_variants_count=1000,
-        variants_hard_max=2000):
+        dataset, query, max_variants_count=1000, variants_hard_max=2000):
     web_preview = get_variants_web(
-        dataset, query, dataset.preview_columns, weights_loader,
-        variants_hard_max)
+        dataset, query, dataset.preview_columns, variants_hard_max)
 
     web_preview['rows'] = list(web_preview['rows'])
 
@@ -198,11 +191,9 @@ def get_variants_web_preview(
 
 
 def get_variants_web_download(
-        dataset, query, weights_loader, max_variants_count=1000,
-        variants_hard_max=2000):
+        dataset, query, max_variants_count=1000, variants_hard_max=2000):
     web_preview = get_variants_web(
-        dataset, query, dataset.download_columns, weights_loader,
-        variants_hard_max)
+        dataset, query, dataset.download_columns, variants_hard_max)
 
     web_preview['rows'] =\
         itertools.islice(web_preview['rows'], max_variants_count)

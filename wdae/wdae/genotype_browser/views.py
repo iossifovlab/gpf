@@ -43,9 +43,7 @@ class QueryBaseView(views.APIView):
         return self.datasets_cache[dataset_id]
 
     def __init__(self):
-        self.variants_db = get_studies_manager()\
-            .get_variants_db()
-        self.weights_loader = get_studies_manager().get_weights_loader()
+        self.variants_db = get_studies_manager().get_variants_db()
 
 
 class QueryPreviewView(QueryBaseView):
@@ -71,7 +69,7 @@ class QueryPreviewView(QueryBaseView):
 
             # LOGGER.info("dataset " + str(dataset))
             response = get_variants_web_preview(
-                dataset, data, self.weights_loader,
+                dataset, data,
                 max_variants_count=self.MAX_SHOWN_VARIANTS,
                 variants_hard_max=self.MAX_VARIANTS)
 
@@ -132,7 +130,7 @@ class QueryDownloadView(QueryBaseView):
                 download_limit = self.DOWNLOAD_LIMIT
 
             variants_data = get_variants_web_download(
-                dataset, data, self.weights_loader,
+                dataset, data,
                 max_variants_count=download_limit,
                 variants_hard_max=self.DOWNLOAD_LIMIT
             )

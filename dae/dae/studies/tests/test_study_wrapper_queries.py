@@ -288,14 +288,13 @@ def test_query_with_multiple_study_filters(inheritance_trio_wrapper):
     ({'weight': 'ala bala', 'rangeStart': 1000.0, 'rangeEnd': 2000.0}, 5),
 ])
 def test_query_gene_weights(
-        geneWeights, count, quads_f2_wrapper, weights_loader):
+        geneWeights, count, quads_f2_wrapper):
     variants = list(quads_f2_wrapper.query_variants(
-        weights_loader=weights_loader, geneWeights=geneWeights))
+        geneWeights=geneWeights))
 
     assert len(variants) == count
 
-    all_variants = list(quads_f2_wrapper.query_variants(
-        geneWeights=geneWeights))
+    all_variants = list(quads_f2_wrapper.query_variants())
 
     assert len(all_variants) == 5
 
