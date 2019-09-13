@@ -13,11 +13,9 @@ import logging
 import traceback
 import itertools
 
-from dae.studies.helpers import get_variants_web_preview, get_variants_web_download
-
 from helpers.logger import log_filter
 from helpers.logger import LOGGER
-from helpers.dae_query import join_line, columns_to_labels
+from helpers.dae_query import join_line
 
 from datasets_api.studies_manager import get_studies_manager
 from datasets_api.permissions import IsDatasetAllowed
@@ -68,8 +66,8 @@ class QueryPreviewView(QueryBaseView):
             dataset = self.get_dataset_wdae_wrapper(dataset_id)
 
             # LOGGER.info("dataset " + str(dataset))
-            response = get_variants_web_preview(
-                dataset, data,
+            response = dataset.get_variants_web_preview(
+                data,
                 max_variants_count=self.MAX_SHOWN_VARIANTS,
                 variants_hard_max=self.MAX_VARIANTS)
 
@@ -121,22 +119,20 @@ class QueryDownloadView(QueryBaseView):
 
             columns = dataset.download_columns
             try:
-                columns.remove('pedigree')
-            except ValueError:
+                columns.pop('pedigree')
+            except KeyError:
                 pass
 
             download_limit = None
             if not (user.is_authenticated and user.has_unlimitted_download):
                 download_limit = self.DOWNLOAD_LIMIT
 
-            variants_data = get_variants_web_download(
-                dataset, data,
+            variants_data = dataset.get_variants_web_download(
+                data,
                 max_variants_count=download_limit,
                 variants_hard_max=self.DOWNLOAD_LIMIT
             )
 
-            columns = columns_to_labels(
-                variants_data['cols'], dataset.get_column_labels())
             rows = variants_data['rows']
 
             response = StreamingHttpResponse(

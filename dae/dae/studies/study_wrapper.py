@@ -1,13 +1,17 @@
+import math
 import functools
-
 import itertools
+import traceback
+import numpy as np
+
+from dae.utils.vcf_utils import mat2str
+from dae.utils.dae_utils import split_iterable
+from dae.utils.effect_utils import expand_effect_types
 
 from dae.RegionOperations import Region
 from dae.pheno.common import MeasureType
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
-from dae.utils.dae_utils import split_iterable
 from dae.variants.attributes import Role
-from dae.utils.effect_utils import expand_effect_types
 from dae.backends.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, ContainsNode
 
@@ -15,7 +19,42 @@ from dae.studies.genotype_browser_config_parser import \
     GenotypeBrowserConfigParser
 from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 
-from dae.studies.helpers import gene_effect_get_genes
+
+def merge_dicts(*dicts):
+    result = {}
+    for dictionary in dicts:
+        result.update(dictionary)
+    return result
+
+
+def ge2str(eff):
+    return "|".join([
+        "{}:{}".format(g.symbol, g.effect) for g in eff.genes])
+
+
+def gd2str(eff):
+    return "|".join([
+        "{}:{}".format(t.transcript_id, t.details)
+        for t in eff.transcripts.values()])
+
+
+def gene_effect_get_worst_effect(gs):
+    if gs is None:
+        return ''
+    return ','.join([gs.worst])
+
+
+def gene_effect_get_genes(gs):
+    if gs is None:
+        return ''
+    genes_set = set([x.symbol for x in gs.genes])
+    genes = sorted(list(genes_set))
+
+    return ';'.join(genes)
+
+
+def get_standard_attr(property, aa):
+    return getattr(aa, property)
 
 
 class StudyWrapper(object):
@@ -113,6 +152,121 @@ class StudyWrapper(object):
         'effectTypes': 'effect_types',
         'regionS': 'regions',
     }
+
+    STANDARD_ATTRS = {
+        "family": "family_id",
+        "location": "cshl_location",
+        "variant": "cshl_variant",
+    }
+
+    STANDARD_ATTRS_LAMBDAS = {
+        key: functools.partial(get_standard_attr, val)
+        for key, val in STANDARD_ATTRS.items()
+    }
+
+    SPECIAL_ATTRS_FORMAT = {
+        "genotype": lambda aa: mat2str(aa.genotype),
+        "effects": lambda aa: ge2str(aa.effect),
+        "genes": lambda aa: gene_effect_get_genes(aa.effect),
+        "worst_effect":
+            lambda aa: gene_effect_get_worst_effect(aa.effect),
+        "effect_details":
+            lambda aa: gd2str(aa.effect),
+        "best_st":
+            lambda aa: mat2str(aa.best_st),
+        "family_structure":
+            lambda aa: "".join([
+                "{}{}".format(p.role.name, p.sex.short())
+                for p in aa.members_in_order])
+    }
+
+    SPECIAL_ATTRS = merge_dicts(
+        SPECIAL_ATTRS_FORMAT,
+        STANDARD_ATTRS_LAMBDAS
+    )
+
+    def generate_pedigree(self, allele, people_group):
+        result = []
+        best_st = np.sum(allele.gt == allele.allele_index, axis=0)
+
+        for index, member in enumerate(allele.members_in_order):
+            result.append(member.get_wdae_member(people_group, best_st[index]))
+
+        return result
+
+    def query_list_variants(self, sources, **kwargs):
+        people_group_id = kwargs.get('peopleGroup', {}).get('id', None)
+        people_group = self.get_people_group(people_group_id)
+        if not people_group:
+            people_group = {}
+
+        for v in self.query_variants(**kwargs):
+            for aa in v.matched_alleles:
+                assert not aa.is_reference_allele
+
+                row_variant = []
+                for source in sources:
+                    try:
+                        if source in self.SPECIAL_ATTRS:
+                            row_variant.append(self.SPECIAL_ATTRS[source](aa))
+                        elif source == 'pedigree':
+                            row_variant.append(
+                                self.generate_pedigree(aa, people_group)
+                            )
+                        else:
+                            attribute = aa.get_attribute(source, '')
+                            if not isinstance(attribute, str):
+                                if attribute is None or math.isnan(attribute):
+                                    attribute = ''
+                                elif math.isinf(attribute):
+                                    attribute = 'inf'
+                            row_variant.append(attribute)
+                    except (AttributeError, KeyError):
+                        traceback.print_exc()
+                        row_variant.append('')
+
+                yield row_variant
+
+    def get_variants_web(self, query, genotype_attrs, variants_hard_max=2000):
+        columns, sources = zip(*list(genotype_attrs.items()))
+        rows = self.query_list_variants(sources, **query)
+
+        if variants_hard_max is not None:
+            limited_rows = itertools.islice(rows, variants_hard_max+1)
+
+        return {
+            'cols': columns,
+            'rows': limited_rows
+        }
+
+    def get_variants_web_preview(
+            self, query, max_variants_count=1000, variants_hard_max=2000):
+        web_preview = self.get_variants_web(
+            query, self.preview_columns, variants_hard_max
+        )
+
+        web_preview['rows'] = list(web_preview['rows'])
+
+        if variants_hard_max is None or\
+                len(web_preview['rows']) < variants_hard_max:
+            count = str(len(web_preview['rows']))
+        else:
+            count = 'more than {}'.format(variants_hard_max)
+
+        web_preview['count'] = count
+        web_preview['rows'] = list(web_preview['rows'][:max_variants_count])
+
+        return web_preview
+
+    def get_variants_web_download(
+            self, query, max_variants_count=1000, variants_hard_max=2000):
+        web_preview = self.get_variants_web(
+            query, self.download_columns, variants_hard_max)
+
+        web_preview['rows'] =\
+            itertools.islice(web_preview['rows'], max_variants_count)
+
+        return web_preview
 
     # Not implemented:
     # callSet
