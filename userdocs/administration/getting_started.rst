@@ -187,8 +187,8 @@ can use::
         -p 25020:25020 \
         seqpipe/seqpipe-docker-impala:latest
 
-This command creates and starts Docker container named `gpf_impala`, that
-contains all the components needed for running Apache Impala.
+This command creates and starts Docker container named `gpf_impala`
+containing all the components needed for running Apache Impala.
 
 .. note::
     The option `-p` (`--port`) used in `docker run` command instructs the 
@@ -285,6 +285,7 @@ To import this data as a study into the GPF instance:
 * run ``simple_study_import.py`` to import the de Novo variants; this command 
   uses three arguments - study ID to use, pedigree file name and VCF file
   name::
+
         simple_study_import.py --id comp_denovo \
             --denovo comp.tsv \
             --vcf comp.vcf \
@@ -296,6 +297,7 @@ To import this data as a study into the GPF instance:
 * run ``simple_study_import.py`` to import all VCF and de Novo variants;
   this command uses four arguments - study ID to use, pedigree file name,
   VCF file name and de Novo variants file name::
+
         simple_study_import.py --id comp_all \
             --denovo comp.tsv \
             --vcf comp.vcf \
@@ -303,6 +305,25 @@ To import this data as a study into the GPF instance:
 
   This command creates a study with ID `comp_all` that contains all
   VCF and de Novo variants.
+
+
+.. note::
+    The expected format for the de Novo variants file is a tab separated
+    file that contains following columns:
+
+    - familyId - family Id matching a family from the pedigree file
+    - location - location of the variant
+    - variant - description of the variant
+    - bestState - best state of the variant in the family
+
+    Example::
+
+        familyId       location       variant        bestState
+        f1             1:865664       sub(G->A)      2 2 1 2/0 0 1 0
+        f1             1:865691       sub(C->T)      2 2 1 2/0 0 1 0
+        f2             1:865664       sub(G->A)      2 2 1 2/0 0 1 0
+        f2             1:865691       sub(C->T)      2 2 1 2/0 0 1 0        
+
 
 
 Example import of de Novo variants
