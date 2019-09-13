@@ -5,7 +5,7 @@ from dae.gene.tests.conftest import fixtures_dir
 
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 
-from dae.studies.helpers import expand_effect_types
+from dae.utils.effect_utils import expand_effect_types
 from dae.variants.attributes import Sex
 
 

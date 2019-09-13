@@ -7,7 +7,7 @@ from dae.pheno.common import MeasureType
 from dae.pheno_tool.pheno_common import PhenoFilterBuilder
 from dae.utils.dae_utils import split_iterable
 from dae.variants.attributes import Role
-from dae.studies.helpers import expand_effect_types
+from dae.utils.effect_utils import expand_effect_types
 from dae.backends.attributes_query import role_query, variant_type_converter, \
     sex_converter, AndNode, NotNode, OrNode, ContainsNode
 

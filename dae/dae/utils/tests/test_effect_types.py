@@ -4,7 +4,7 @@ Created on Feb 6, 2017
 @author: lubo
 '''
 import pytest
-from dae.utils.query_base import EffectTypesMixin
+from dae.utils.effect_utils import EffectTypesMixin
 
 
 @pytest.fixture(scope='session')

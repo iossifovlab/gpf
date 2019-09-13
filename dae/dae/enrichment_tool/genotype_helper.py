@@ -22,7 +22,7 @@ class GenotypeHelper(object):
 
         # TODO: Remove this when study.query_variants can support non
         # expand_effect_types as LGDs
-        from dae.studies.helpers import expand_effect_types
+        from dae.utils.effect_utils import expand_effect_types
         effect_types = expand_effect_types(effect_types)
 
         variants = self.dataset.query_variants(

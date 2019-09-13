@@ -210,27 +210,6 @@ def get_variants_web_download(
     return web_preview
 
 
-def expand_effect_types(effect_types):
-    if isinstance(effect_types, str):
-        effect_types = [effect_types]
-
-    effects = []
-    for effect in effect_types:
-        effect_lower = effect.lower()
-        if effect_lower in EffectTypesMixin.EFFECT_GROUPS:
-            effects += EffectTypesMixin.EFFECT_GROUPS[effect_lower]
-        else:
-            effects.append(effect)
-
-    result = []
-    for effect in effects:
-        if effect not in EffectTypesMixin.EFFECT_TYPES_MAPPING:
-            result.append(effect)
-        else:
-            result += EffectTypesMixin.EFFECT_TYPES_MAPPING[effect]
-    return result
-
-
 def add_gene_weight_columns(
         weights_loader, variants_iterable, gene_weights_columns):
     for variants_chunk in split_iterable(variants_iterable, 5000):
