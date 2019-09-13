@@ -15,10 +15,12 @@ from dae.studies.genotype_browser_config_parser import \
     GenotypeBrowserConfigParser
 from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 
+from dae.studies.helpers import gene_effect_get_genes
+
 
 class StudyWrapper(object):
 
-    def __init__(self, study, pheno_factory, *args, **kwargs):
+    def __init__(self, study, pheno_factory, weights_loader, *args, **kwargs):
         super(StudyWrapper, self).__init__(*args, **kwargs)
         assert study is not None
 
@@ -29,6 +31,8 @@ class StudyWrapper(object):
         self._init_wdae_config()
         self.pheno_factory = pheno_factory
         self._init_pheno(self.pheno_factory)
+
+        self.weights_loader = weights_loader
 
     def _init_wdae_config(self):
 
@@ -115,7 +119,7 @@ class StudyWrapper(object):
     # minParentsCalled
     # ultraRareOnly
     # TMM_ALL
-    def query_variants(self, weights_loader=None, **kwargs):
+    def query_variants(self, **kwargs):
         # print("kwargs in study group:", kwargs)
         kwargs = self._add_people_with_people_group(kwargs)
 
@@ -143,7 +147,7 @@ class StudyWrapper(object):
             self._transform_genomic_scores(kwargs)
 
         if 'geneWeights' in kwargs:
-            self._transform_gene_weights(weights_loader, kwargs)
+            self._transform_gene_weights(kwargs)
 
         for key in list(kwargs.keys()):
             if key in self.FILTER_RENAMES_MAP:
@@ -183,60 +187,40 @@ class StudyWrapper(object):
         variants_from_studies = itertools.islice(
             self.study.query_variants(**kwargs), limit)
 
-        for variant in self._add_pheno_columns(variants_from_studies):
-            variant = self._add_roles_columns(variant)
+        for variant in \
+                self._add_additional_columns(variants_from_studies):
             yield variant
 
-    def _add_roles_columns(self, variant):
-        if not self.config.genotype_browser_config:
-            return variant
-        genotype_browser_config = self.config.genotype_browser_config
-
-        roles_columns = genotype_browser_config.roles_columns
-
-        if not roles_columns:
-            return variant
-
-        for allele in variant.alt_alleles:
-            roles_values = self._get_all_roles_values(allele, roles_columns)
-            allele.update_attributes(roles_values)
-
-        return variant
-
-    def _get_all_roles_values(self, allele, roles_values):
-        result = {}
-        for roles_value in roles_values:
-            result[roles_value.destination] = "".join(self._get_roles_value(
-                allele, roles_value.roles))
-
-        return result
-
-    def _get_roles_value(self, allele, roles):
-        result = []
-        variant_in_members = allele.variant_in_members_objects
-
-        for role in roles:
-            for member in variant_in_members:
-                if member.role == role:
-                    result.append(str(role) + member.sex.short())
-
-        return result
-
-    def _add_pheno_columns(self, variants_iterable):
-        if self.pheno_db is None or not self.config.genotype_browser_config:
-            for variant in variants_iterable:
-                yield variant
+    def _add_additional_columns(self, variants_iterable):
+        roles_columns = None
+        if self.config.genotype_browser_config:
+            roles_columns = self.config.genotype_browser_config.roles_columns
 
         for variants_chunk in split_iterable(variants_iterable, 5000):
             families = {variant.family_id for variant in variants_chunk}
 
-            pheno_column_values = self._get_all_pheno_values(families)
+            pheno_column_values = None
+            if self.pheno_db and self.config.genotype_browser_config:
+                pheno_column_values = self._get_all_pheno_values(families)
 
             for variant in variants_chunk:
-                pheno_values = self._get_pheno_values_for_variant(
-                    variant, pheno_column_values)
+                pheno_values = None
+                if pheno_column_values:
+                    pheno_values = self._get_pheno_values_for_variant(
+                        variant, pheno_column_values)
+
                 for allele in variant.alt_alleles:
-                    allele.update_attributes(pheno_values)
+                    if pheno_values:
+                        allele.update_attributes(pheno_values)
+
+                    if roles_columns:
+                        roles_values = self._get_all_roles_values(
+                            allele, roles_columns)
+                        allele.update_attributes(roles_values)
+
+                    gene_weights_values = self._get_gene_weights_values(
+                        allele)
+                    allele.update_attributes(gene_weights_values)
 
                 yield variant
 
@@ -269,6 +253,42 @@ class StudyWrapper(object):
 
         return list(zip(pheno_column_dfs, pheno_column_names))
 
+    def _get_gene_weights_values(self, allele):
+        genes = gene_effect_get_genes(allele.effects).split(';')
+        gene = genes[0]
+
+        gene_weights_values = {}
+        for gwc in self.gene_weights_columns:
+            if gwc not in self.weights_loader:
+                continue
+
+            gene_weights = self.weights_loader[gwc]
+            if gene != '':
+                gene_weights_values[gwc] =\
+                    gene_weights.to_dict().get(gene, '')
+            else:
+                gene_weights_values[gwc] = ''
+
+        return gene_weights_values
+
+    def _get_all_roles_values(self, allele, roles_values):
+        result = {}
+        for roles_value in roles_values:
+            result[roles_value.destination] = "".join(self._get_roles_value(
+                allele, roles_value.roles))
+
+        return result
+
+    def _get_roles_value(self, allele, roles):
+        result = []
+        variant_in_members = allele.variant_in_members_objects
+
+        for role in roles:
+            for member in variant_in_members:
+                if member.role == role:
+                    result.append(str(role) + member.sex.short())
+
+        return result
 
     def _merge_with_people_ids(self, kwargs, people_ids_to_query):
         people_ids_filter = kwargs.pop('person_ids', None)
@@ -331,8 +351,8 @@ class StudyWrapper(object):
             kwargs['real_attr_filter'] = []
         kwargs['real_attr_filter'] += genomic_scores_filter
 
-    def _transform_gene_weights(self, weights_loader, kwargs):
-        if not weights_loader:
+    def _transform_gene_weights(self, kwargs):
+        if not self.weights_loader:
             return
 
         gene_weights = kwargs.pop('geneWeights', {})
@@ -341,8 +361,8 @@ class StudyWrapper(object):
         range_start = gene_weights.get('rangeStart', None)
         range_end = gene_weights.get('rangeEnd', None)
 
-        if weight_name and weight_name in weights_loader:
-            weight = weights_loader[gene_weights.get('weight')]
+        if weight_name and weight_name in self.weights_loader:
+            weight = self.weights_loader[gene_weights.get('weight')]
 
             genes = weight.get_genes(range_start, range_end)
 

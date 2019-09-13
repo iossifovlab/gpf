@@ -7,8 +7,6 @@ import functools
 import logging
 
 from dae.utils.vcf_utils import mat2str
-from dae.utils.dae_utils import split_iterable
-from dae.utils.query_base import EffectTypesMixin
 
 LOGGER = logging.getLogger(__name__)
 
@@ -199,24 +197,3 @@ def get_variants_web_download(
         itertools.islice(web_preview['rows'], max_variants_count)
 
     return web_preview
-
-
-def add_gene_weight_columns(
-        weights_loader, variants_iterable, gene_weights_columns):
-    for variants_chunk in split_iterable(variants_iterable, 5000):
-        for variant in variants_chunk:
-            for allele in variant.alt_alleles:
-                genes = gene_effect_get_genes(allele.effects).split(';')
-                gene = genes[0]
-
-                gene_weights_values = {}
-                for gwc in gene_weights_columns:
-                    gene_weights = weights_loader[gwc]
-                    if gene != '':
-                        gene_weights_values[gwc] =\
-                            gene_weights.to_dict().get(gene, '')
-                    else:
-                        gene_weights_values[gwc] = ''
-
-                allele.update_attributes(gene_weights_values)
-            yield variant
