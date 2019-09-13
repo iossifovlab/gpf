@@ -111,41 +111,12 @@ def transform_variants_to_lists(variants, preview_columns, people_group):
             yield row_variant
 
 
-def get_person_color(member, people_group):
-    if member.generated:
-        return '#E0E0E0'
-    if len(people_group) == 0:
-        return '#FFFFFF'
-
-    source = people_group['source']
-    people_group_attribute = member.get_attr(source)
-    domain = list(filter(lambda d: d['name'] == people_group_attribute,
-                         people_group['domain'].values()))
-
-    if domain and people_group_attribute:
-        return domain[0]['color']
-    else:
-        return people_group['default']['color']
-
-
 def generate_pedigree(allele, people_group):
     result = []
     best_st = np.sum(allele.gt == allele.allele_index, axis=0)
 
     for index, member in enumerate(allele.members_in_order):
-        result.append([
-            allele.family_id,
-            member.person_id,
-            member.mom_id,
-            member.dad_id,
-            member.sex.short(),
-            str(member.role),
-            get_person_color(member, people_group),
-            member.layout_position,
-            member.generated,
-            best_st[index],
-            0
-        ])
+        result.append(member.get_wdae_member(people_group, best_st[index]))
 
     return result
 
