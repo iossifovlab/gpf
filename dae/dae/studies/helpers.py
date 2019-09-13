@@ -128,8 +128,7 @@ def get_variants_web(dataset, query, genotype_attrs, variants_hard_max=2000):
     if not people_group:
         people_group = []
 
-    rows = transform_variants_to_lists(
-        variants, list(genotype_attrs.values()), people_group)
+    rows = transform_variants_to_lists(variants, genotype_attrs, people_group)
 
     if variants_hard_max is not None:
         limited_rows = itertools.islice(rows, variants_hard_max+1)
