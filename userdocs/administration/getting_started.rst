@@ -15,17 +15,14 @@ If you are using Ubuntu, you can run:
     sudo apt-get install wget
 
 
-Setup GPF Development Environment
-#################################
+GPF Installation
+################
 
 The GPF system is developed in Python and supports Python 3.6 and up. The
 recommended way to setup the GPF development environment is to use Anaconda.
 
-Setup Anaconda Environment
-++++++++++++++++++++++++++
-
 Download and install Anaconda
-*****************************
++++++++++++++++++++++++++++++
 
 Download Anaconda from the Anaconda distribution page
 (https://www.anaconda.com/distribution/):
@@ -49,16 +46,16 @@ and install it in your local environment, following the installer instructions:
     Anaconda environment activated, and you'll have access to the ``conda`` commands
     used below.
 
-Install GPF conda package
-*************************
+Install GPF
++++++++++++
 
-Create the `gpf` environment:
+Create an empty conda `gpf` environment:
 
 .. code-block:: bash
 
     conda create -n gpf
 
-To use this environment, you need to execute the following command:
+To use this environment, you need to activate it using the following command:
 
 .. code-block:: bash
 
@@ -71,11 +68,11 @@ environment:
 
     conda install -c conda-forge -c bioconda -c iossifovlab gpf_wdae
 
-This command is going to install GPF and all dependencies of GPF.
+This command is going to install GPF and all its dependencies.
 
 
 Bootstrap GPF
-#############
++++++++++++++
 
 To start working with GPF, you will need a startup data instance. There are
 two GPF startup instances that are aligned with different versions of the
@@ -178,16 +175,39 @@ The GPF import tools import studies data into Impala. To make using GPF
 easier, we provide a Docker container with Apache Impala. To run it, you
 can use::
 
-    docker run --rm \
+    docker run \
+        --name gpf_impala \
         --hostname impala \
+        -p 8020:8020 \
         -p 9870:9870 \
         -p 9864:9864 \
-        -p 8020:8020 \
         -p 21050:21050 \
         -p 25000:25000 \
         -p 25010:25010 \
         -p 25020:25020 \
         seqpipe/seqpipe-docker-impala:latest
+
+This command creates and starts Docker container named `gpf_impala`, that
+contains all the components needed for running Apache Impala.
+
+.. note::
+    The option `-p` (`--port`) used in `docker run` command instructs the 
+    Docker to make specified port accessible from the host environment. For
+    example `-p 8020:8020` makes port 8020 from docker container `gpf_impala`
+    accessible from `localhost`. The ports specified in this command are:
+
+        - 8020 - port for accessing HDFS
+        - 9870 - port for Web interface to HDFS Named Node (optional)
+        - 9864 - port for Web interface to HDFS Data Node (optional)
+        - 21050 - port for accessing Impala
+        - 25000 - port for Web interface to Impala deamon  (optional)
+        - 25010 - port for Web interface to Impala state store  (optional)
+        - 25020 - port for Web interface to Impala catalog  (optional)
+
+.. note::
+    In case you need to stop and start this container multiple times you can
+    use Docker comands `docker stop gpf_impala` and `docker start gpf_impala`.
+
 
 Simple study import
 +++++++++++++++++++
@@ -213,7 +233,7 @@ which will output a short help message::
 
     usage: simple_study_import.py [-h] [--id <study ID>] [--vcf <VCF filename>]
                                 [--denovo <de Novo variants filename>]
-                                [-o <output directory>]
+                                [-o <output directory>] [--skip-reports]
                                 <pedigree filename>
 
     simple import of new study data
@@ -223,16 +243,20 @@ which will output a short help message::
 
     optional arguments:
     -h, --help            show this help message and exit
-    --id <study ID>       unique study ID to use
+    --id <study ID>       Unique study ID to use. If not specified the basename
+                            of the family pedigree file is used for study ID
     --vcf <VCF filename>  VCF file to import
     --denovo <de Novo variants filename>
                             DAE denovo variants file
     -o <output directory>, --out <output directory>
-                            output directory. If none specified, "data/" directory
-                            is used [default: data/]
+                            output directory for storing intermediate parquet
+                            files. If none specified, "parquet/" directory inside
+                            GPF instance study directory is used [default: None]
+    --skip-reports        skip running report generation [default: False]
 
-Example import of VCF variants
-******************************
+
+Example import of variants
+**************************
 
 Let's say you have a pedigree file ``comp.ped`` describing family information,
 a VCF file ``comp.vcf`` with transmitted variants and a list of de Novo
@@ -246,10 +270,39 @@ To import this data as a study into the GPF instance:
     cd $DAE_DB_DIR/studies/comp
 
 
-* run ``simple_study_import.py`` to import the data; this tool expects three
-  arguments - study ID to use, pedigree file name and VCF file name::
+* run ``simple_study_import.py`` to import the VCF variants; this command uses
+  three arguments - study ID to use, pedigree file name and VCF file name::
 
-        simple_study_import.py comp.ped --denovo comp.tsv --vcf comp.vcf
+        simple_study_import.py --id comp_vcf \
+            --denovo comp.tsv \
+            --vcf comp.vcf \
+            comp.ped 
+
+  This command creates a study with ID `comp_vcf` that contains all VCF
+  variants.
+
+
+* run ``simple_study_import.py`` to import the de Novo variants; this command 
+  uses three arguments - study ID to use, pedigree file name and VCF file
+  name::
+        simple_study_import.py --id comp_denovo \
+            --denovo comp.tsv \
+            --vcf comp.vcf \
+            comp.ped 
+
+  This command creates a study with ID `comp_denovo` that contains all de
+  Novo variants.
+
+* run ``simple_study_import.py`` to import all VCF and de Novo variants;
+  this command uses four arguments - study ID to use, pedigree file name,
+  VCF file name and de Novo variants file name::
+        simple_study_import.py --id comp_all \
+            --denovo comp.tsv \
+            --vcf comp.vcf \
+            comp.ped 
+
+  This command creates a study with ID `comp_all` that contains all
+  VCF and de Novo variants.
 
 
 Example import of de Novo variants
@@ -274,95 +327,6 @@ and run ``simple_study_import.py`` tool::
 To see the imported variants, restart the GPF development web server and find
 `iossifov_2014` study.
 
-
-Generate Variant Reports (optional)
-+++++++++++++++++++++++++++++++++++
-
-To generate families and de Novo variants report, you should use
-``generate_common_report.py``. This tool supports the option ``--show-studies``
-to list all studies and datasets configured in the GPF instance::
-
-    generate_common_report.py --show-studies
-
-To generate the families and variants reports for a given configured study
-or dataset, you can use the ``--studies`` option.
-For example, to generate the families and
-variants reports for the `quad` study, you should use::
-
-    generate_common_report.py --studies comp
-
-
-Generate Denovo Gene Sets (optional)
-++++++++++++++++++++++++++++++++++++
-
-To generate de Novo Gene sets, you should use the
-``generate_denovo_gene_sets.py`` tool. This tool supports the option
-``--show-studies`` to list all studies and datasets configured in the
-GPF instance::
-
-    generate_denovo_gene_sets.py --show-studies
-
-To generate the de Novo gene sets for a given configured study
-or dataset, you can use ``--studies`` option.
-For example, to generate the de Novo
-gene sets for the `quad` study, you should use::
-
-    generate_denovo_gene_sets.py --studies comp
-
-
-Get Genomic Scores Database (optional)
-######################################
-
-To annotate variants with genomic scores you will need a genomic scores
-database or at least genomic scores you plan to use. You can find some
-genomic scores for HG19 at:
-
-https://iossifovlab.com/distribution/public/genomic-scores-hg19/
-
-Download and untar the genomic scores you want to use into a separate
-directory. For example, if you want to use `gnomAD_exome` and `gnomAD_genome`
-frequencies:
-
-.. code:: bash
-
-    mkdir genomic-scores-hg19
-    cd genomic-scores-hg19
-    wget -c https://iossifovlab.com/distribution/public/genomic-scores-hg19/gnomAD_exome-hg19.tar
-    wget -c https://iossifovlab.com/distribution/public/genomic-scores-hg19/gnomAD_genome-hg19.tar
-    tar xvf gnomAD_exome-hg19.tar
-    tar xvf gnomAD_genome-hg19.tar
-
-This will create two subdirectories inside your `genomic-scores-hg19`
-directory, that contain `gnomAD_exome` and `gnomAD_genome`
-frequencies prepared to be used by GPF annotation pipeline and GPF import tools.
-
-Annotation configuration
-++++++++++++++++++++++++
-
-If you want to use some genomic scores, you must edit the GPF annotation
-pipeline configuration file:
-
-.. code::
-
-    gpf_test/annotation.conf
-
-This configuration pipeline contains some examples on how to configure
-annotation with `MPC` and `CADD` genomic scores and
-for `gnomAD exome` and `gnomAD genome` frequencies. Comment out
-the appropriate example and adjust it according to your needs.
-
-The genomic scores folders inside the directory generated by
-``wdae_bootstrap.sh`` - ``genomic-scores-hg19`` and ``genomic-scores-hg38`` are
-the default locations where the annotation pipeline will resolve the
-interpolation strings ``%(GENOMIC_SCORES_HG19)s`` and
-``%(GENOMIC_SCORES_HG38)s``, respectively. These interpolation strings are used
-when specifying the location of the genomic score to use
-(e.g. ``%(GENOMIC_SCORES_HG19)s/CADD/CADD.bedgraph.gz``).
-
-You can put your genomic scores inside these directories, or you can specify a
-custom ``GENOMIC_SCORES_HG19`` path at the top of the annotation configuration
-file. Beware that this will likely break genomic scores which were specified
-using the old path.
 
 
 Example Usage of GPF Python Interface
@@ -451,11 +415,10 @@ Or, if you are interested in 'missense' variants only in people with role
 
     >> 3
 
-For more information see:
 
 
-Work with Phenotype Data
-########################
+Getting Started with Phenotype Data
+###################################
 
 Simple Pheno Import Tool
 ++++++++++++++++++++++++
@@ -650,3 +613,101 @@ configuration.
 
 In the above `comp` configuration, the last column ``pheno`` is a Phenotype
 Column.
+
+
+
+Dataset Statitistics and de Novo Gene Sets
+##########################################
+
+Generate Variant Reports (optional)
++++++++++++++++++++++++++++++++++++
+
+To generate families and de Novo variants report, you should use
+``generate_common_report.py``. This tool supports the option ``--show-studies``
+to list all studies and datasets configured in the GPF instance::
+
+    generate_common_report.py --show-studies
+
+To generate the families and variants reports for a given configured study
+or dataset, you can use the ``--studies`` option.
+For example, to generate the families and
+variants reports for the `quad` study, you should use::
+
+    generate_common_report.py --studies comp
+
+
+Generate Denovo Gene Sets (optional)
+++++++++++++++++++++++++++++++++++++
+
+To generate de Novo Gene sets, you should use the
+``generate_denovo_gene_sets.py`` tool. This tool supports the option
+``--show-studies`` to list all studies and datasets configured in the
+GPF instance::
+
+    generate_denovo_gene_sets.py --show-studies
+
+To generate the de Novo gene sets for a given configured study
+or dataset, you can use ``--studies`` option.
+For example, to generate the de Novo
+gene sets for the `quad` study, you should use::
+
+    generate_denovo_gene_sets.py --studies comp
+
+
+Getting Started with Annotation Pipeline
+########################################
+
+
+Get Genomic Scores Database (optional)
+++++++++++++++++++++++++++++++++++++++
+
+To annotate variants with genomic scores you will need a genomic scores
+database or at least genomic scores you plan to use. You can find some
+genomic scores for HG19 at:
+
+https://iossifovlab.com/distribution/public/genomic-scores-hg19/
+
+Download and untar the genomic scores you want to use into a separate
+directory. For example, if you want to use `gnomAD_exome` and `gnomAD_genome`
+frequencies:
+
+.. code:: bash
+
+    mkdir genomic-scores-hg19
+    cd genomic-scores-hg19
+    wget -c https://iossifovlab.com/distribution/public/genomic-scores-hg19/gnomAD_exome-hg19.tar
+    wget -c https://iossifovlab.com/distribution/public/genomic-scores-hg19/gnomAD_genome-hg19.tar
+    tar xvf gnomAD_exome-hg19.tar
+    tar xvf gnomAD_genome-hg19.tar
+
+This will create two subdirectories inside your `genomic-scores-hg19`
+directory, that contain `gnomAD_exome` and `gnomAD_genome`
+frequencies prepared to be used by GPF annotation pipeline and GPF import tools.
+
+Annotation configuration
+++++++++++++++++++++++++
+
+If you want to use some genomic scores, you must edit the GPF annotation
+pipeline configuration file:
+
+.. code::
+
+    gpf_test/annotation.conf
+
+This configuration pipeline contains some examples on how to configure
+annotation with `MPC` and `CADD` genomic scores and
+for `gnomAD exome` and `gnomAD genome` frequencies. Comment out
+the appropriate example and adjust it according to your needs.
+
+The genomic scores folders inside the directory generated by
+``wdae_bootstrap.sh`` - ``genomic-scores-hg19`` and ``genomic-scores-hg38`` are
+the default locations where the annotation pipeline will resolve the
+interpolation strings ``%(GENOMIC_SCORES_HG19)s`` and
+``%(GENOMIC_SCORES_HG38)s``, respectively. These interpolation strings are used
+when specifying the location of the genomic score to use
+(e.g. ``%(GENOMIC_SCORES_HG19)s/CADD/CADD.bedgraph.gz``).
+
+You can put your genomic scores inside these directories, or you can specify a
+custom ``GENOMIC_SCORES_HG19`` path at the top of the annotation configuration
+file. Beware that this will likely break genomic scores which were specified
+using the old path.
