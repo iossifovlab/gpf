@@ -172,22 +172,13 @@ class StudyWrapper(object):
             else:
                 del(kwargs['studyFilters'])
 
-        pheno_filter_args = kwargs.pop('phenoFilters', None)
-
-        if pheno_filter_args:
-            assert isinstance(pheno_filter_args, list)
-            assert self.pheno_db
-
-            people_ids_to_query = self._transform_pheno_filters_to_people_ids(
-                pheno_filter_args)
-            people_ids_to_query = self._merge_with_people_ids(
-                kwargs, people_ids_to_query)
-
-            if len(people_ids_to_query) == 0:
+        if 'phenoFilters' in kwargs:
+            kwargs = self._transform_pheno_filter(kwargs)
+            if kwargs is None:
                 return
-            assert not kwargs.get('person_ids'), \
-                "Rethink how to combine person ids"
-            kwargs['person_ids'] = list(people_ids_to_query)
+
+        if 'person_ids' in kwargs:
+            kwargs['person_ids'] = list(kwargs['person_ids'])
 
         variants_from_studies = itertools.islice(
             self.study.query_variants(**kwargs), limit)
@@ -278,6 +269,7 @@ class StudyWrapper(object):
 
         return list(zip(pheno_column_dfs, pheno_column_names))
 
+
     def _merge_with_people_ids(self, kwargs, people_ids_to_query):
         people_ids_filter = kwargs.pop('person_ids', None)
         result = people_ids_to_query
@@ -285,30 +277,6 @@ class StudyWrapper(object):
             result = people_ids_to_query.intersection(people_ids_filter)
 
         return result
-
-    def _transform_pheno_filters_to_people_ids(self, pheno_filter_args):
-        people_ids = []
-        for pheno_filter_arg in pheno_filter_args:
-            if not self.pheno_db.has_measure(pheno_filter_arg['measure']):
-                continue
-            pheno_constraints = self._get_pheno_filter_constraints(
-                pheno_filter_arg)
-
-            pheno_filter = self.pheno_filter_builder.make_filter(
-                pheno_filter_arg['measure'], pheno_constraints)
-
-            measure_df = self.pheno_db.get_measure_values_df(
-                pheno_filter_arg['measure'],
-                roles=[pheno_filter_arg["role"]])
-
-            measure_df = pheno_filter.apply(measure_df)
-
-            people_ids.append(set(measure_df['person_id']))
-
-        if not people_ids:
-            return set()
-
-        return functools.reduce(set.intersection, people_ids)
 
     def _get_pheno_filter_constraints(self, pheno_filter):
         measure_type = MeasureType.from_str(pheno_filter['measureType'])
@@ -511,6 +479,49 @@ class StudyWrapper(object):
         kwargs.pop('presentInRole')
 
         self._add_roles_to_query(roles_query, kwargs)
+
+    def _transform_pheno_filters_to_people_ids(self, pheno_filter_args):
+        people_ids = []
+        for pheno_filter_arg in pheno_filter_args:
+            if not self.pheno_db.has_measure(pheno_filter_arg['measure']):
+                continue
+            pheno_constraints = self._get_pheno_filter_constraints(
+                pheno_filter_arg)
+
+            pheno_filter = self.pheno_filter_builder.make_filter(
+                pheno_filter_arg['measure'], pheno_constraints)
+
+            measure_df = self.pheno_db.get_measure_values_df(
+                pheno_filter_arg['measure'],
+                roles=[pheno_filter_arg["role"]])
+
+            measure_df = pheno_filter.apply(measure_df)
+
+            people_ids.append(set(measure_df['person_id']))
+
+        if not people_ids:
+            return set()
+
+        return functools.reduce(set.intersection, people_ids)
+
+    def _transform_pheno_filter(self, kwargs):
+        pheno_filter_args = kwargs['phenoFilters']
+
+        assert isinstance(pheno_filter_args, list)
+        assert self.pheno_db
+
+        people_ids_to_query = self._transform_pheno_filters_to_people_ids(
+            pheno_filter_args)
+        people_ids_to_query = self._merge_with_people_ids(
+            kwargs, people_ids_to_query)
+
+        if len(people_ids_to_query) == 0:
+            return None
+        assert not kwargs.get('person_ids'), \
+            "Rethink how to combine person ids"
+        kwargs['person_ids'] = people_ids_to_query
+
+        return kwargs
 
     def _add_roles_to_query(self, roles_query, kwargs):
         if not roles_query:
