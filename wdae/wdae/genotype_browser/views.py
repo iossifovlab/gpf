@@ -31,15 +31,6 @@ class QueryBaseView(views.APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
     permission_classes = (IsDatasetAllowed,)
 
-    datasets_cache = {}
-
-    def get_dataset_wdae_wrapper(self, dataset_id):
-        if dataset_id not in self.datasets_cache:
-            self.datasets_cache[dataset_id] =\
-                self.variants_db.get_wdae_wrapper(dataset_id)
-
-        return self.datasets_cache[dataset_id]
-
     def __init__(self):
         self.variants_db = get_studies_manager().get_variants_db()
 
@@ -63,7 +54,7 @@ class QueryPreviewView(QueryBaseView):
             dataset_id = data.pop('datasetId')
             self.check_object_permissions(request, dataset_id)
 
-            dataset = self.get_dataset_wdae_wrapper(dataset_id)
+            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
 
             # LOGGER.info("dataset " + str(dataset))
             response = dataset.get_variants_web_preview(
@@ -72,7 +63,6 @@ class QueryPreviewView(QueryBaseView):
                 variants_hard_max=self.MAX_VARIANTS)
 
             # pprint.pprint(response)
-            response['legend'] = dataset.get_legend(**data)
 
             return Response(response, status=status.HTTP_200_OK)
         except NotAuthenticated:
@@ -112,16 +102,9 @@ class QueryDownloadView(QueryBaseView):
 
         try:
             dataset_id = data.pop('datasetId')
-
             self.check_object_permissions(request, dataset_id)
 
-            dataset = self.get_dataset_wdae_wrapper(dataset_id)
-
-            columns = dataset.download_columns
-            try:
-                columns.pop('pedigree')
-            except KeyError:
-                pass
+            dataset = self.variants_db.get_wdae_wrapper(dataset_id)
 
             download_limit = None
             if not (user.is_authenticated and user.has_unlimitted_download):
@@ -133,13 +116,14 @@ class QueryDownloadView(QueryBaseView):
                 variants_hard_max=self.DOWNLOAD_LIMIT
             )
 
+            columns = variants_data['columns']
             rows = variants_data['rows']
 
             response = StreamingHttpResponse(
                 map(join_line, itertools.chain([columns], rows)),
                 content_type='text/tsv')
 
-            response['Content-Disposition'] =\
+            response['Content-Disposition'] = \
                 'attachment; filename=variants.tsv'
             response['Expires'] = '0'
             return response

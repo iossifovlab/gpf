@@ -251,13 +251,18 @@ class StudyWrapper(object):
 
         web_preview['count'] = count
         web_preview['rows'] = list(web_preview['rows'][:max_variants_count])
+        web_preview['legend'] = self.get_legend(**query)
 
         return web_preview
 
     def get_variants_web_download(
             self, query, max_variants_count=1000, variants_hard_max=2000):
+        columns = self.download_columns
+        if 'pedigree' in columns:
+            columns.pop('pedigree')
+
         web_preview = self.get_variants_web(
-            query, self.download_columns, variants_hard_max)
+            query, columns, variants_hard_max)
 
         web_preview['rows'] =\
             itertools.islice(web_preview['rows'], max_variants_count)
