@@ -8,12 +8,13 @@ import sys
 import os
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import traceback
-import hashlib
 
 from dae.pheno import pheno_db
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
 
 from dae.configuration.config_parser_base import ConfigParserBase
+
+from dae.utils.filehash import sha256sum
 
 
 class CLIError(Exception):
@@ -30,41 +31,26 @@ class CLIError(Exception):
         return self.msg
 
 
-def hashsum(filename, hasher, blocksize=65536):
-    with open(filename, 'rb') as f:
-        for block in iter(lambda: f.read(blocksize), b''):
-            hasher.update(block)
-    return hasher.hexdigest()
-
-
-def md5sum(filename, blocksize=65536):
-    return hashsum(filename, hashlib.md5(), blocksize)
-
-
-def sha256sum(filename, blocksize=65536):
-    return hashsum(filename, hashlib.sha256(), blocksize)
-
-
 def calc_dbfile_hashsum(dbfilename):
     assert os.path.exists(dbfilename)
 
     base, _ext = os.path.splitext(dbfilename)
     hashfilename = '{}.hash'.format(base)
     if not os.path.exists(hashfilename):
-        hashsum = sha256sum(dbfilename)
+        hash_sum = sha256sum(dbfilename)
         with open(hashfilename, 'w') as f:
-            f.write(hashsum)
+            f.write(hash_sum)
     else:
         dbtime = os.path.getmtime(dbfilename)
         hashtime = os.path.getmtime(hashfilename)
         if hashtime >= dbtime:
             with open(hashfilename, 'r') as f:
-                hashsum = f.read().strip()
+                hash_sum = f.read().strip()
         else:
-            hashsum = sha256sum(dbfilename)
+            hash_sum = sha256sum(dbfilename)
             with open(hashfilename, 'w') as f:
-                f.write(hashsum)
-    return hashsum
+                f.write(hash_sum)
+    return hash_sum
 
 
 def build_pheno_browser(dbfile, pheno_name, output_dir, regression_conf_path):
@@ -78,12 +64,12 @@ def build_pheno_browser(dbfile, pheno_name, output_dir, regression_conf_path):
                                    output_dir, pheno_regressions)
     prep.run()
 
-    # hashsum = calc_dbfile_hashsum(dbfile)
+    # hash_sum = calc_dbfile_hashsum(dbfile)
     # hashfile = os.path.join(
     #     output_dir,
     #     '{}.hash'.format(pheno_name))
     # with open(hashfile, 'w') as f:
-    #     f.write(hashsum)
+    #     f.write(hash_sum)
 
 
 def main(argv=None):  # IGNORE:C0111

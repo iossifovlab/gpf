@@ -5,8 +5,10 @@ import traceback
 import numpy as np
 
 from dae.utils.vcf_utils import mat2str
-from dae.utils.dae_utils import split_iterable
-from dae.utils.effect_utils import expand_effect_types
+from dae.utils.dae_utils import split_iterable, \
+    members_in_order_get_family_structure
+from dae.utils.effect_utils import expand_effect_types, ge2str, gd2str, \
+    gene_effect_get_worst_effect, gene_effect_get_genes
 
 from dae.RegionOperations import Region
 from dae.pheno.common import MeasureType
@@ -18,43 +20,6 @@ from dae.backends.attributes_query import role_query, variant_type_converter, \
 from dae.studies.genotype_browser_config_parser import \
     GenotypeBrowserConfigParser
 from dae.studies.people_group_config_parser import PeopleGroupConfigParser
-
-
-def merge_dicts(*dicts):
-    result = {}
-    for dictionary in dicts:
-        result.update(dictionary)
-    return result
-
-
-def ge2str(eff):
-    return "|".join([
-        "{}:{}".format(g.symbol, g.effect) for g in eff.genes])
-
-
-def gd2str(eff):
-    return "|".join([
-        "{}:{}".format(t.transcript_id, t.details)
-        for t in eff.transcripts.values()])
-
-
-def gene_effect_get_worst_effect(gs):
-    if gs is None:
-        return ''
-    return ','.join([gs.worst])
-
-
-def gene_effect_get_genes(gs):
-    if gs is None:
-        return ''
-    genes_set = set([x.symbol for x in gs.genes])
-    genes = sorted(list(genes_set))
-
-    return ';'.join(genes)
-
-
-def get_standard_attr(property, aa):
-    return getattr(aa, property)
 
 
 class StudyWrapper(object):
@@ -176,10 +141,10 @@ class StudyWrapper(object):
                 for p in aa.members_in_order])
     }
 
-    SPECIAL_ATTRS = merge_dicts(
-        SPECIAL_ATTRS_FORMAT,
-        STANDARD_ATTRS_LAMBDAS
-    )
+    SPECIAL_ATTRS = {
+        **SPECIAL_ATTRS_FORMAT,
+        **STANDARD_ATTRS_LAMBDAS
+    }
 
     def generate_pedigree(self, allele, people_group):
         result = []

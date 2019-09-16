@@ -169,3 +169,29 @@ def expand_effect_types(effect_types):
         else:
             result += EffectTypesMixin.EFFECT_TYPES_MAPPING[effect]
     return result
+
+
+def ge2str(eff):
+    return "|".join([
+        "{}:{}".format(g.symbol, g.effect) for g in eff.genes])
+
+
+def gd2str(eff):
+    return "|".join([
+        "{}:{}".format(t.transcript_id, t.details)
+        for t in eff.transcripts.values()])
+
+
+def gene_effect_get_worst_effect(gs):
+    if gs is None:
+        return ''
+    return ','.join([gs.worst])
+
+
+def gene_effect_get_genes(gs):
+    if gs is None:
+        return ''
+    genes_set = set([x.symbol for x in gs.genes])
+    genes = sorted(list(genes_set))
+
+    return ';'.join(genes)
