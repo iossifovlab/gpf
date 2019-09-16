@@ -165,19 +165,6 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         return column_slots
 
     @staticmethod
-    def _parse_column_labels(genotype_columns):
-        column_labels = {}
-        for gc in genotype_columns.values():
-            if 'source' in gc and gc['source'] is not None:
-                column_labels[gc['source']] = gc['name']
-
-            for slot in gc['slots']:
-                if slot['source'] is not None:
-                    column_labels[slot['source']] = slot['name']
-
-        return column_labels
-
-    @staticmethod
     def _parse_gene_weights_columns(genotype_columns):
         gene_weights_columns = genotype_columns.get('weights', None)
 
@@ -217,9 +204,6 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
                 config_section.genotypeColumns,
                 config_section.get('downloadColumns', [])
             )
-
-        config_section.column_labels = \
-            cls._parse_column_labels(config_section.genotypeColumns)
 
         config_section.gene_weights_columns = \
             cls._parse_gene_weights_columns(config_section.genotypeColumns)

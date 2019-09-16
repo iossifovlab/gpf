@@ -79,7 +79,6 @@ class StudyWrapper(object):
         download_columns = []
         pheno_column_slots = []
         gene_weights_columns = []
-        column_labels = {}
 
         present_in_role = []
 
@@ -91,8 +90,6 @@ class StudyWrapper(object):
                 pheno_column_slots = genotype_browser_config.pheno_column_slots
             gene_weights_columns = genotype_browser_config.gene_weights_columns
 
-            column_labels = genotype_browser_config.column_labels
-
             if genotype_browser_config.present_in_role:
                 present_in_role = genotype_browser_config.present_in_role
 
@@ -100,7 +97,6 @@ class StudyWrapper(object):
         self.download_columns = download_columns
         self.pheno_column_slots = pheno_column_slots
         self.gene_weights_columns = gene_weights_columns
-        self.column_labels = column_labels
 
         if self.config.people_group_config:
             self.people_group = self.config.people_group_config.people_group
@@ -794,6 +790,3 @@ class StudyWrapper(object):
 
             dataset_description[config_key] = \
                 parser.get_config_description(config)
-
-    def get_column_labels(self):
-        return self.column_labels
