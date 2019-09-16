@@ -116,7 +116,7 @@ class QueryDownloadView(QueryBaseView):
                 variants_hard_max=self.DOWNLOAD_LIMIT
             )
 
-            columns = variants_data['columns']
+            columns = variants_data['cols']
             rows = variants_data['rows']
 
             response = StreamingHttpResponse(

@@ -193,7 +193,7 @@ class StudyWrapper(object):
             limited_rows = itertools.islice(rows, variants_hard_max+1)
 
         return {
-            'cols': columns,
+            'cols': list(columns),
             'rows': limited_rows
         }
 
