@@ -8,7 +8,7 @@ from dae.configuration.config_parser_base import VerificationError
 from dae.gene.score_config_parser import ScoreConfigParser, \
     verify_impala_identifier
 
-from fixtures.impala_reserved_words import IMPALA_RESERVED_WORDS
+from dae.gene.tests.fixtures.impala_reserved_words import IMPALA_RESERVED_WORDS
 
 
 def test_verifier_function_error_accumulation():
