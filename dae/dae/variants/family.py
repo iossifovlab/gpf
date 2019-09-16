@@ -60,6 +60,36 @@ class Person(object):
     def get_attr(self, item):
         return str(self.atts.get(item))
 
+    def _get_person_color(self, people_group):
+        if self.generated:
+            return '#E0E0E0'
+        if len(people_group) == 0:
+            return '#FFFFFF'
+
+        source = people_group['source']
+        people_group_attribute = self.get_attr(source)
+        domain = people_group['domain'][people_group_attribute]
+
+        if domain and people_group_attribute:
+            return domain['color']
+        else:
+            return people_group['default']['color']
+
+    def get_wdae_member(self, people_group, best_st):
+        return [
+            self.family_id,
+            self.person_id,
+            self.mom_id,
+            self.dad_id,
+            self.sex.short(),
+            str(self.role),
+            self._get_person_color(people_group),
+            self.layout_position,
+            self.generated,
+            best_st,
+            0
+        ]
+
 
 class Family(object):
 

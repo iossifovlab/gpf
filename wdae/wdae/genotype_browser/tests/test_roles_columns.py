@@ -5,7 +5,8 @@ from rest_framework import status
 
 pytestmark = pytest.mark.usefixtures("mock_studies_manager")
 
-URL = "/api/v3/genotype_browser/preview"
+PREVIEW_URL = "/api/v3/genotype_browser/preview"
+DOWNLOAD_URL = "/api/v3/genotype_browser/download"
 
 
 def test_variants_have_roles_columns(db, admin_client):
@@ -13,7 +14,7 @@ def test_variants_have_roles_columns(db, admin_client):
         "datasetId": "quads_f1"
     }
     response = admin_client.post(
-        URL, json.dumps(data), content_type='application/json')
+        PREVIEW_URL, json.dumps(data), content_type='application/json')
     assert status.HTTP_200_OK == response.status_code
     res = response.data
 
@@ -26,7 +27,7 @@ def test_variants_have_roles_columns_values(db, admin_client):
         "datasetId": "quads_f1"
     }
     response = admin_client.post(
-        URL, json.dumps(data), content_type='application/json')
+        PREVIEW_URL, json.dumps(data), content_type='application/json')
     assert status.HTTP_200_OK == response.status_code
     res = response.data
 
@@ -42,3 +43,20 @@ def test_variants_have_roles_columns_values(db, admin_client):
         print("row:", row[in_child_index])
         assert row[in_child_index] == in_child_expected[i], i
         assert row[from_parents_index] == from_parents_expected[i], i
+
+
+def test_download_variants_have_roles_columns(db, admin_client):
+    data = {
+        "queryData": "{\"datasetId\": \"quads_f1\"}"
+    }
+
+    response = admin_client.post(
+        DOWNLOAD_URL, json.dumps(data), content_type='application/json')
+    assert response.status_code == status.HTTP_200_OK
+    res = list(response.streaming_content)
+    assert res
+    assert res[0]
+    header = res[0].decode("utf-8")[:-1].split('\t')
+
+    assert 'in childs' in header
+    assert 'from parents' in header

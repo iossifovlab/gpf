@@ -16,7 +16,7 @@ from users_api.authentication import SessionAuthenticationWithoutCSRF
 
 from datasets_api.studies_manager import get_studies_manager
 
-from dae.utils.query_base import GeneSymsMixin
+from dae.utils.gene_utils import GeneSymsMixin
 
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 

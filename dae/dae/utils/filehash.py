@@ -1,8 +1,3 @@
-'''
-Created on May 24, 2017
-
-@author: lubo
-'''
 import hashlib
 
 

@@ -288,15 +288,13 @@ def test_query_study_filter(composite_dataset_wrapper):
     ({'weight': 'LGD_rank', 'rangeStart': 1000.0, 'rangeEnd': 2000.0}, 0),
     ({'weight': 'ala bala', 'rangeStart': 1000.0, 'rangeEnd': 2000.0}, 5),
 ])
-def test_query_gene_weights(
-        geneWeights, count, quads_f2_dataset_wrapper, weights_loader):
+def test_query_gene_weights(geneWeights, count, quads_f2_dataset_wrapper):
     variants = list(quads_f2_dataset_wrapper.query_variants(
-        weights_loader=weights_loader, geneWeights=geneWeights))
+        geneWeights=geneWeights))
 
     assert len(variants) == count
 
-    all_variants = list(quads_f2_dataset_wrapper.query_variants(
-        geneWeights=geneWeights))
+    all_variants = list(quads_f2_dataset_wrapper.query_variants())
 
     assert len(all_variants) == 5
 

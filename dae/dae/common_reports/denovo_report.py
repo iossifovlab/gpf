@@ -3,7 +3,7 @@ from copy import deepcopy
 from collections import OrderedDict
 
 from dae.variants.family import FamiliesBase
-from dae.utils.query_base import EffectTypesMixin
+from dae.utils.effect_utils import EffectTypesMixin
 
 
 class EffectCell(object):

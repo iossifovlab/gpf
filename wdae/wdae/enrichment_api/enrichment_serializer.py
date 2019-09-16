@@ -4,7 +4,7 @@ Created on May 4, 2017
 @author: lubo
 '''
 from dae.enrichment_tool.event_counters import EnrichmentResult
-from dae.utils.query_base import EffectTypesMixin
+from dae.utils.effect_utils import EffectTypesMixin
 from functools import reduce
 
 

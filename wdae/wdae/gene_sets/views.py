@@ -61,7 +61,6 @@ class GeneSetsView(GeneSetsBaseView):
         url = 'gene_sets/gene_set_download'
         return '{}?{}'.format(url, urlencode(query))
 
-    # @profile('/home/lubo/gene_sets.prof')
     def post(self, request):
         data = request.data
         if 'geneSetsCollection' not in data:

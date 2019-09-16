@@ -51,3 +51,9 @@ def split_iterable(iterable, max_chunk_length=5000):
 
     if i != 0:
         yield result
+
+
+def members_in_order_get_family_structure(mio):
+    return "".join([
+        "{}{}".format(p.role.name, p.sex.short()) for p in mio
+    ])
