@@ -43,7 +43,10 @@ class StudyWrapper(object):
         download_columns = []
         pheno_column_slots = []
         gene_weights_columns = []
+        roles_columns = []
 
+        people_group = {}
+        pheno_filters = []
         present_in_role = []
 
         if self.config.genotype_browser_config:
@@ -53,7 +56,9 @@ class StudyWrapper(object):
             if genotype_browser_config.pheno_column_slots:
                 pheno_column_slots = genotype_browser_config.pheno_column_slots
             gene_weights_columns = genotype_browser_config.gene_weights_columns
+            roles_columns = self.config.genotype_browser_config.roles_columns
 
+            pheno_filters = genotype_browser_config.pheno_filters
             if genotype_browser_config.present_in_role:
                 present_in_role = genotype_browser_config.present_in_role
 
@@ -61,11 +66,13 @@ class StudyWrapper(object):
         self.download_columns = download_columns
         self.pheno_column_slots = pheno_column_slots
         self.gene_weights_columns = gene_weights_columns
+        self.roles_columns = roles_columns
 
         if self.config.people_group_config:
-            self.people_group = self.config.people_group_config.people_group
-        else:
-            self.people_group = {}
+            people_group = self.config.people_group_config.people_group
+
+        self.people_group = people_group
+        self.pheno_filters = pheno_filters
         self.present_in_role = present_in_role
 
         if len(self.people_group) != 0:
@@ -85,17 +92,13 @@ class StudyWrapper(object):
         if pheno_db:
             self.pheno_db = pheno_factory.get_pheno_db(pheno_db)
 
-            if self.config.genotype_browser_config:
-                genotype_browser_config = self.config.genotype_browser_config
-                pheno_filters = genotype_browser_config.pheno_filters
-                if pheno_filters:
-                    self.pheno_filters_in_config = {
-                        self._get_pheno_filter_key(pf.measureFilter)
-                        for pf in pheno_filters
-                        if pf['measureFilter']['filterType'] == 'single'
-                    }
-                    self.pheno_filter_builder = \
-                        PhenoFilterBuilder(self.pheno_db)
+            if self.pheno_filters:
+                self.pheno_filters_in_config = {
+                    self._get_pheno_filter_key(pf.measureFilter)
+                    for pf in self.pheno_filters
+                    if pf['measureFilter']['filterType'] == 'single'
+                }
+                self.pheno_filter_builder = PhenoFilterBuilder(self.pheno_db)
 
     @staticmethod
     def _get_pheno_filter_key(pheno_filter, measure_key='measure'):
@@ -306,39 +309,34 @@ class StudyWrapper(object):
             yield variant
 
     def _add_additional_columns(self, variants_iterable):
-        roles_columns = None
-        if self.config.genotype_browser_config:
-            roles_columns = self.config.genotype_browser_config.roles_columns
-
         for variants_chunk in split_iterable(variants_iterable, 5000):
             families = {variant.family_id for variant in variants_chunk}
 
-            pheno_column_values = None
-            if self.pheno_db and self.config.genotype_browser_config:
-                pheno_column_values = self._get_all_pheno_values(families)
+            pheno_column_values = self._get_all_pheno_values(families)
 
             for variant in variants_chunk:
-                pheno_values = None
-                if pheno_column_values:
-                    pheno_values = self._get_pheno_values_for_variant(
-                        variant, pheno_column_values)
+                pheno_values = self._get_pheno_values_for_variant(
+                    variant, pheno_column_values
+                )
 
                 for allele in variant.alt_alleles:
+                    roles_values = self._get_all_roles_values(allele)
+                    gene_weights_values = self._get_gene_weights_values(allele)
+
                     if pheno_values:
                         allele.update_attributes(pheno_values)
 
-                    if roles_columns:
-                        roles_values = self._get_all_roles_values(
-                            allele, roles_columns)
+                    if roles_values:
                         allele.update_attributes(roles_values)
 
-                    gene_weights_values = self._get_gene_weights_values(
-                        allele)
                     allele.update_attributes(gene_weights_values)
 
                 yield variant
 
     def _get_pheno_values_for_variant(self, variant, pheno_column_values):
+        if not pheno_column_values:
+            return None
+
         pheno_values = {}
 
         for pheno_column_df, pheno_column_name in pheno_column_values:
@@ -354,6 +352,9 @@ class StudyWrapper(object):
         return pheno_values
 
     def _get_all_pheno_values(self, families):
+        if not self.pheno_db or not self.pheno_column_slots:
+            return None
+
         pheno_column_dfs = []
         pheno_column_names = []
 
@@ -385,11 +386,14 @@ class StudyWrapper(object):
 
         return gene_weights_values
 
-    def _get_all_roles_values(self, allele, roles_values):
+    def _get_all_roles_values(self, allele):
+        if not self.roles_columns:
+            return None
+
         result = {}
-        for roles_value in roles_values:
-            result[roles_value.destination] = "".join(self._get_roles_value(
-                allele, roles_value.roles))
+        for roles_value in self.roles_columns:
+            result[roles_value.destination] = \
+                "".join(self._get_roles_value(allele, roles_value.roles))
 
         return result
 
