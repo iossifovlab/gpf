@@ -1,4 +1,36 @@
 from dae.configuration.config_parser_base import ConfigParserBase
+from dae.configuration.utils import IMPALA_RESERVED_WORDS
+
+
+def verify_impala_identifier(value):
+    errs = []
+    errmsg = "ERROR: The value '{}' ".format(value)
+
+    if not isinstance(value, str):
+        errs.append(errmsg + "must be of type str, not {}!"
+                    .format(type(value)))
+    if not 1 < len(value) < 128:
+        errs.append(errmsg + "must be between 1 and 128 symbols!")
+    if not value.isascii():
+        errs.append(errmsg + "must be ASCII!")
+    if not value.replace('_', '').isalnum():
+        errs.append(errmsg + ("must only contain alphanumeric"
+                              " symbols and underscores!"))
+    if not value[0].isalpha():
+        errs.append(errmsg + ("must begin with an"
+                              " alphabetic character!"))
+
+    if value.lower() in IMPALA_RESERVED_WORDS:
+        errs.append(errmsg + "is an Impala reserved word!")
+
+    assert not errs, '\n'.join(errs) + '\n'
+
+    if not value.islower():
+        print(("WARNING: The value '{}' should be lowercase!"
+               " Converting to lowercase...").format(value))
+        value = value.lower()
+
+    return value
 
 
 class ScoreConfigParser(ConfigParserBase):
@@ -16,9 +48,9 @@ class ScoreConfigParser(ConfigParserBase):
         'genomicScores': 'selected_genomic_score_values',
     }
 
-    IMPALA_IDENTIFIERS = (
-        'id',
-    )
+    VERIFY_VALUES = {
+        'id': verify_impala_identifier
+    }
 
     @classmethod
     def _parse_genomic_scores(cls, genomic_scores):

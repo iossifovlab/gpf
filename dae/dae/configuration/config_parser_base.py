@@ -3,7 +3,12 @@ from box import Box
 from configparser import ConfigParser
 
 from dae.configuration.utils import parser_to_dict
-from dae.configuration.utils import IMPALA_RESERVED_WORDS
+
+
+class VerificationError(Exception):
+
+    def __init__(self, message):
+        self.message = message
 
 
 class CaseSensitiveConfigParser(ConfigParser):
@@ -29,7 +34,7 @@ class ConfigParserBase(object):
     CAST_TO_BOOL = ()
     CAST_TO_INT = ()
     FILTER_SELECTORS = {}
-    IMPALA_IDENTIFIERS = ()
+    VERIFY_VALUES = {}
 
     @classmethod
     def read_and_parse_directory_configurations(
@@ -189,7 +194,10 @@ class ConfigParserBase(object):
         config_section = cls._cast_to_bool(config_section)
         config_section = cls._cast_to_int(config_section)
         config_section = cls._filter_selectors(config_section)
-        config_section = cls._verify_impala_identifiers(config_section)
+
+        # This one should remain last so as to avoid having a seemingly valid
+        # value be rendered invalid by one of the previous transformations
+        config_section = cls._verify_values(config_section)
 
         return config_section
 
@@ -291,22 +299,17 @@ class ConfigParserBase(object):
         return config
 
     @classmethod
-    def _verify_impala_identifiers(cls, config):
-        for key in cls.IMPALA_IDENTIFIERS:
+    def _verify_values(cls, config):
+        exception_messages = []
+
+        for key, verify_func in cls.VERIFY_VALUES.items():
             if key in config:
-                errmsg = "The value '{}' of key '{}' ".format(config[key], key)
-                assert 1 < len(config[key]) < 128, \
-                    errmsg + "must be between 1 and 128 symbols!"
-                assert config[key].isascii(), \
-                    errmsg + "must be ASCII!"
-                assert config[key].islower(), \
-                    errmsg + "must be lowercase!"
-                assert config[key].replace('_', '').isalnum(), \
-                    (errmsg + "must only contain"
-                     " alphanumeric symbols and underscores!")
-                assert config[key][0].isalpha(), \
-                    (errmsg + "must begin with an"
-                     " alphabetic character!")
-                assert config[key] not in IMPALA_RESERVED_WORDS, \
-                    errmsg + "is an Impala reserved word!"
+                try:
+                    config[key] = verify_func(config[key])
+                except Exception as e:
+                    exception_messages.append('[{}]: {}'.format(key, str(e)))
+
+        if exception_messages:
+            raise VerificationError('\n'.join(exception_messages))
+
         return config
