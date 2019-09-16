@@ -39,7 +39,6 @@ class StudyWrapper(object):
         self.weights_loader = weights_loader
 
     def _init_wdae_config(self):
-
         preview_columns = []
         download_columns = []
         pheno_column_slots = []
@@ -115,30 +114,25 @@ class StudyWrapper(object):
     }
 
     STANDARD_ATTRS = {
-        "family": "family_id",
-        "location": "cshl_location",
-        "variant": "cshl_variant",
+        'family': 'family_id',
+        'location': 'cshl_location',
+        'variant': 'cshl_variant',
     }
 
     STANDARD_ATTRS_LAMBDAS = {
-        key: functools.partial(get_standard_attr, val)
+        key: lambda aa, val=val: getattr(aa, val)
         for key, val in STANDARD_ATTRS.items()
     }
 
     SPECIAL_ATTRS_FORMAT = {
-        "genotype": lambda aa: mat2str(aa.genotype),
-        "effects": lambda aa: ge2str(aa.effect),
-        "genes": lambda aa: gene_effect_get_genes(aa.effect),
-        "worst_effect":
-            lambda aa: gene_effect_get_worst_effect(aa.effect),
-        "effect_details":
-            lambda aa: gd2str(aa.effect),
-        "best_st":
-            lambda aa: mat2str(aa.best_st),
-        "family_structure":
-            lambda aa: "".join([
-                "{}{}".format(p.role.name, p.sex.short())
-                for p in aa.members_in_order])
+        'genotype': lambda aa: mat2str(aa.genotype),
+        'effects': lambda aa: ge2str(aa.effect),
+        'genes': lambda aa: gene_effect_get_genes(aa.effect),
+        'worst_effect': lambda aa: gene_effect_get_worst_effect(aa.effect),
+        'effect_details': lambda aa: gd2str(aa.effect),
+        'best_st': lambda aa: mat2str(aa.best_st),
+        'family_structure': lambda aa:
+            members_in_order_get_family_structure(aa.members_in_order)
     }
 
     SPECIAL_ATTRS = {
@@ -155,12 +149,7 @@ class StudyWrapper(object):
 
         return result
 
-    def query_list_variants(self, sources, **kwargs):
-        people_group_id = kwargs.get('peopleGroup', {}).get('id', None)
-        people_group = self.get_people_group(people_group_id)
-        if not people_group:
-            people_group = {}
-
+    def query_list_variants(self, sources, people_group, **kwargs):
         for v in self.query_variants(**kwargs):
             for aa in v.matched_alleles:
                 assert not aa.is_reference_allele
@@ -189,8 +178,13 @@ class StudyWrapper(object):
                 yield row_variant
 
     def get_variants_web(self, query, genotype_attrs, variants_hard_max=2000):
+        people_group_id = query.get('peopleGroup', {}).get('id', None)
+        people_group = self.get_people_group(people_group_id)
+        if not people_group:
+            people_group = {}
+
         columns, sources = zip(*list(genotype_attrs.items()))
-        rows = self.query_list_variants(sources, **query)
+        rows = self.query_list_variants(sources, people_group, **query)
 
         if variants_hard_max is not None:
             limited_rows = itertools.islice(rows, variants_hard_max+1)
