@@ -18,6 +18,10 @@ if [[ -z $INSTALL_DIRNAME ]]; then
     export INSTALL_DIRNAME=data-${REFERENCE_GENOME}-startup
 fi
 
+export CONDA_ENV=$(conda env list | grep "*" | sed "s/ /\t/g" | cut -f 1)
+echo "Active conda environment: $CONDA_ENV"
+
+
 echo "Bootstrapping GPF into '$INSTALL_DIRNAME'"
 
 if [[ -d "${INSTALL_DIRNAME}" ]]; then
@@ -35,7 +39,7 @@ wget -c https://iossifovlab.com/distribution/public/$DATA_ARCHIVE
 mkdir $INSTALL_DIRNAME && \
     tar xzf $DATA_ARCHIVE -C $INSTALL_DIRNAME --strip-components 1
 
-# rm $DATA_ARCHIVE
+rm $DATA_ARCHIVE
 
 cd $INSTALL_DIRNAME
 export DAE_DB_DIR=`pwd`
@@ -53,6 +57,8 @@ wdaemanage.py user_create research@iossifovlab.com -p secret
 
 cat <<EOF > setenv.sh
 #!/bin/bash
+
+conda activate ${CONDA_ENV}
 
 export DAE_DB_DIR=$DAE_DB_DIR
 export DAE_GENOMIC_SCORES_HG19=$DAE_DB_DIR/genomic-scores-hg19
