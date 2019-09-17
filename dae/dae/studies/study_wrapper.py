@@ -171,12 +171,16 @@ class StudyWrapper(object):
                             )
                         else:
                             attribute = aa.get_attribute(source, '')
-                            if not isinstance(attribute, str):
+
+                            if not isinstance(attribute, str) and \
+                                    not isinstance(attribute, list):
                                 if attribute is None or math.isnan(attribute):
                                     attribute = ''
                                 elif math.isinf(attribute):
                                     attribute = 'inf'
+
                             row_variant.append(attribute)
+
                     except (AttributeError, KeyError):
                         traceback.print_exc()
                         row_variant.append('')
@@ -354,8 +358,8 @@ class StudyWrapper(object):
             assert len(variant_pheno_value_df.columns) == 1
             column = variant_pheno_value_df.columns[0]
 
-            pheno_values[pheno_column_name] = ",".join(
-                map(str, variant_pheno_value_df[column].tolist()))
+            pheno_values[pheno_column_name] = \
+                list(variant_pheno_value_df[column].map(str).tolist())
 
         return pheno_values
 

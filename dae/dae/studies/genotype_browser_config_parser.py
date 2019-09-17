@@ -52,21 +52,16 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
             return None
 
         for pheno_filter in pheno_filters.values():
-            mf = pheno_filter.filter
-            mf = cls._split_str_option_list(mf, separator=':')
-            if mf[0] == 'single':
-                filter_type, role, measure = mf
-                measure_filter = {
-                    'filterType': filter_type,
-                    'role': role,
-                    'measure': measure
-                }
-            elif mf[0] == 'multi':
-                filter_type, role = mf
-                measure_filter = {
-                    'filterType': filter_type,
-                    'role': role
-                }
+            filter_type, role, *measure = \
+                cls._split_str_option_list(pheno_filter.filter, separator=':')
+            measure = measure[0] if measure else None
+
+            measure_filter = {
+                'filterType': filter_type,
+                'role': role
+            }
+            if measure is not None:
+                measure_filter['measure'] = measure
 
             pheno_filter.id = pheno_filter.name
             pheno_filter.measureFilter = measure_filter
@@ -80,16 +75,18 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
 
             column_slots = []
             for slot in slots:
-                role, source, label = \
+                role, source, label, *label_format = \
                     cls._split_str_option_list(slot, separator=':')
-                column_slots.append(
-                    {
-                        'id': '{}.{}'.format(role, source),
-                        'name': label,
-                        'role': role,
-                        'measure': source,
-                        'source': '{}.{}'.format(role, source),
-                    })
+                label_format = label_format[0] if label_format else '%s'
+
+                column_slots.append({
+                    'id': '{}.{}'.format(role, source),
+                    'name': label,
+                    'role': role,
+                    'measure': source,
+                    'source': '{}.{}'.format(role, source),
+                    'format': label_format
+                })
 
             pheno.slots = column_slots
 
@@ -102,23 +99,17 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
 
             column_slots = []
             for slot in slots or []:
-                slot_arr = cls._split_str_option_list(slot, separator=':')
-                if len(slot_arr) == 1:
-                    source = slot_arr[0]
-                    label = slot_arr[0]
-                    label_format = "%s"
-                elif len(slot_arr) == 2:
-                    source, label = slot_arr
-                    label_format = "%s"
-                elif len(slot_arr) == 3:
-                    source, label, label_format = slot_arr
-                column_slots.append(
-                    {
-                        'id': source,
-                        'name': label,
-                        'source': source,
-                        'format': label_format
-                    })
+                source, *slot_arr = \
+                    cls._split_str_option_list(slot, separator=':')
+                label = slot_arr[0] if len(slot_arr) > 0 else source
+                label_format = slot_arr[1] if len(slot_arr) > 1 else '%s'
+
+                column_slots.append({
+                    'id': source,
+                    'name': label,
+                    'source': source,
+                    'format': label_format
+                })
 
             genotype_column.slots = column_slots
 
