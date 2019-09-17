@@ -16,4 +16,4 @@ def test_get_genomic_scores(user_client):
     assert len(data) == 3
 
     assert sorted([gs['score'] for gs in data]) == \
-        sorted(['SCORE-raw_rankscore', 'SCORE-raw', 'SCORE_phred'])
+        sorted(['score_raw_rankscore', 'score_raw', 'score_phred'])
