@@ -78,8 +78,9 @@ def test_overlap_enrichment_result_dict(f1_trio):
     assert enrichment_results['all'].overlapped == [['PLEKHN1']]
 
     assert str(enrichment_results['all']) == \
-        'EnrichmentResult(all): events=3; overlapped=1; expected=0.12; '\
-        'pvalue=0.54'
+        'EnrichmentResult(all): events=3; overlapped=1; ' \
+        'expected=0.12345; '\
+        'pvalue=0.54321'
 
 
 def test_counter_base_counters():

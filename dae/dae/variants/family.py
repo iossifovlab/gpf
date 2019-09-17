@@ -50,6 +50,9 @@ class Person(object):
     def has_parent(self):
         return self.has_dad() or self.has_mom()
 
+    def has_both_parents(self):
+        return self.has_dad() and self.has_mom()
+
     def has_generated_parent(self):
         return ((self.has_dad() and self.dad.generated) or
                 (self.has_mom() and self.mom.generated))
@@ -185,6 +188,24 @@ class Family(object):
     def members_ids(self):
         return self.ped_df['person_id'].values
 
+    @staticmethod
+    def persons_with_parents(families):
+        person = []
+        for fam in list(families.values()):
+            for p in fam.members_in_order:
+                if p.has_attr('with_parents'):
+                    with_parents = p.get_attr('with_parents')
+                    if with_parents == '1':
+                        person.append(p)
+                elif p.has_both_parents() and (not p.has_generated_parent()):
+                    person.append(p)
+        return person
+
+    @staticmethod
+    def persons_ids(persons):
+        return sorted([p.person_id for p in persons])
+
+
 
 class FamiliesBase(object):
 
@@ -221,23 +242,8 @@ class FamiliesBase(object):
                     person.append(p)
         return person
 
-    def persons_with_parents(self):
-        person = []
-        for fam in list(self.families.values()):
-            for p in fam.members_in_order:
-                if p.has_attr('with_parents'):
-                    with_parents = p.get_attr('with_parents')
-                    if with_parents == '1':
-                        person.append(p)
-                elif p.has_parent() and (not p.has_generated_parent()):
-                    person.append(p)
-        return person
-
     def persons_index(self, persons):
         return sorted([p.index for p in persons])
-
-    def persons_id(self, persons):
-        return sorted([p.person_id for p in persons])
 
     @staticmethod
     def load_simple_family_file(infile, sep="\t"):
