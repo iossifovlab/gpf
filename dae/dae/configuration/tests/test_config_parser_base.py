@@ -4,7 +4,8 @@ from box import Box
 
 from dae.configuration.tests.conftest import relative_to_this_test_folder
 
-from dae.configuration.config_parser_base import ConfigParserBase
+from dae.configuration.config_parser_base import ConfigParserBase, \
+    VerificationError
 
 
 class ConfigParserTestWrapper(ConfigParserBase):
@@ -31,6 +32,11 @@ class ConfigParserTestWrapper(ConfigParserBase):
         'selector': 'selected',
         'selector_no_selected': None,
         'missing': None
+    }
+    VERIFY_VALUES = {
+        'to_verify1': len,
+        'to_verify2': len,
+        'to_verify3': len,
     }
 
 
@@ -478,3 +484,23 @@ def test_filter_selectors():
     assert config['selector_no_selected']['b']['id'] == 'b'
 
     assert config['list'] == 'a,b'
+
+
+def test_verify_values():
+    with pytest.raises(VerificationError) as excinfo:
+        ConfigParserTestWrapper._verify_values(
+            Box({'to_verify1': 1, 'to_verify2': 'a,b', 'to_verify3': True})
+        )
+
+    assert str(excinfo.value) == \
+        ("[to_verify1]: object of type 'int' has no len()\n"
+         "[to_verify3]: object of type 'bool' has no len()")
+
+
+    config = ConfigParserTestWrapper._verify_values(
+        Box({'to_verify1': [1], 'to_verify2': 'ab', 'to_verify3': [1, 2, 3]})
+    )
+
+    assert config.to_verify1 == 1
+    assert config.to_verify2 == 2
+    assert config.to_verify3 == 3
