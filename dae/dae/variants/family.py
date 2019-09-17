@@ -50,6 +50,9 @@ class Person(object):
     def has_parent(self):
         return self.has_dad() or self.has_mom()
 
+    def has_both_parents(self):
+        return self.has_dad() and self.has_mom()
+
     def has_generated_parent(self):
         return ((self.has_dad() and self.dad.generated) or
                 (self.has_mom() and self.mom.generated))
@@ -229,7 +232,7 @@ class FamiliesBase(object):
                     with_parents = p.get_attr('with_parents')
                     if with_parents == '1':
                         person.append(p)
-                elif p.has_parent() and (not p.has_generated_parent()):
+                elif p.has_both_parents() and (not p.has_generated_parent()):
                     person.append(p)
         return person
 

@@ -39,10 +39,14 @@ class VariantsDb(object):
                 WeightsLoader(config=gene_info_config.gene_weights)
         self.weights_loader = weights_loader
 
-        defaults = None
+        defaults = {
+            'values': {
+                'dae_data_dir': self.dae_config.dae_data_dir
+            }
+        }
         if dae_config.default_configuration and \
                 dae_config.default_configuration.conf_file:
-            defaults = {'conf': dae_config.default_configuration.conf_file}
+            defaults['conf'] = dae_config.default_configuration.conf_file
 
         self.study_configs = \
             StudyConfigParser.read_and_parse_directory_configurations(

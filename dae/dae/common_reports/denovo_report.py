@@ -2,7 +2,6 @@ import numpy as np
 from copy import deepcopy
 from collections import OrderedDict
 
-from dae.variants.family import FamiliesBase
 from dae.utils.effect_utils import EffectTypesMixin
 
 
@@ -15,8 +14,7 @@ class EffectCell(object):
         self.effect = effect
 
         self.effect_types_converter = EffectTypesMixin()
-        families_base = FamiliesBase()
-        families_base.families = study.families
+        families_base = study.backend
 
         people_with_filter = self._people_with_filter()
         people_with_parents = families_base.persons_with_parents()

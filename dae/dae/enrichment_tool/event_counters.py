@@ -81,7 +81,7 @@ class EnrichmentResult(object):
 
     def __repr__(self):
         return "EnrichmentResult({}): events={}; overlapped={}; " \
-            "expected={:.2g}; pvalue={:.2g}".format(
+            "expected={}; pvalue={}".format(
                 self.name, len(self.events), len(self.overlapped),
                 self.expected, self.pvalue)
 

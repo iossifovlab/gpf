@@ -39,17 +39,16 @@ class GenotypeHelper(object):
         seen = set()
         counter = Counter()
 
-        for fid, fam in list(self.dataset.families.items()):
-            for p in fam.get_people_with_roles([Role.prb, Role.sib]):
-                iid = "{}:{}".format(fid, p.person_id)
-                if iid in seen:
-                    continue
+        for p in self.dataset.backend.persons_with_parents():
+            iid = "{}:{}".format(p.family_id, p.person_id)
+            if iid in seen:
+                continue
 
-                if p.atts[self.people_group.source] != self.people_group_value:
-                    continue
+            if p.get_attr(self.people_group.source) != self.people_group_value:
+                continue
 
-                counter[p.sex.name] += 1
-                seen.add(iid)
+            counter[p.sex.name] += 1
+            seen.add(iid)
         self._children_stats = counter
 
         return self._children_stats

@@ -40,10 +40,13 @@ class EnrichmentConfigParser(ConfigParserBase):
             model.id = model.name
 
             if model.file is not None:
-                model.filename = os.path.join(
-                    os.path.split(config_file)[0],
-                    'enrichment/{}'.format(model.file)
-                )
+                if os.path.isabs(model.file):
+                    model.filename = model.file
+                else:
+                    model.filename = os.path.join(
+                        os.path.split(config_file)[0],
+                        'enrichment/{}'.format(model.file)
+                    )
 
         return model_config
 
