@@ -3,7 +3,7 @@ from copy import deepcopy
 from collections import OrderedDict
 
 from dae.utils.effect_utils import EffectTypesMixin
-
+from dae.variants.family import Family
 
 class EffectCell(object):
 
@@ -14,12 +14,11 @@ class EffectCell(object):
         self.effect = effect
 
         self.effect_types_converter = EffectTypesMixin()
-        families_base = study.backend
 
         people_with_filter = self._people_with_filter()
-        people_with_parents = families_base.persons_with_parents()
+        people_with_parents = Family.persons_with_parents(study.families)
         people_with_parents_ids =\
-            set(families_base.persons_id(people_with_parents))
+            set(Family.persons_ids(people_with_parents))
 
         variants = self._get_variants(
             people_with_filter, people_with_parents_ids)

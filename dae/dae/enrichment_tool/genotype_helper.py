@@ -6,6 +6,7 @@ Created on Apr 24, 2017
 from collections import Counter
 
 from dae.variants.attributes import Inheritance, Role
+from dae.variants.family import Family
 
 
 class GenotypeHelper(object):
@@ -39,7 +40,7 @@ class GenotypeHelper(object):
         seen = set()
         counter = Counter()
 
-        for p in self.dataset.backend.persons_with_parents():
+        for p in Family.persons_with_parents(self.dataset.families):
             iid = "{}:{}".format(p.family_id, p.person_id)
             if iid in seen:
                 continue
