@@ -149,7 +149,9 @@ class StudyWrapper(object):
         best_st = np.sum(allele.gt == allele.allele_index, axis=0)
 
         for index, member in enumerate(allele.members_in_order):
-            result.append(member.get_wdae_member(people_group, best_st[index]))
+            result.append(
+                self.get_wdae_member(member, people_group, best_st[index])
+            )
 
         return result
 
