@@ -125,7 +125,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         return genotype_columns
 
     @classmethod
-    def _parse_in_roles_column(cls, in_roles):
+    def _parse_in_role_columns(cls, in_roles):
         for in_role in in_roles.values():
             in_role.roles = [
                 Role.from_name(el)
@@ -210,8 +210,8 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
 
         config_section.presentInRole = \
             cls._parse_present_in_role(config_section.get('presentInRole', {}))
-        config_section.roles_columns = \
-            cls._parse_in_roles_column(config_section.get('inRoles', {}))
+        config_section.in_role_columns = \
+            cls._parse_in_role_columns(config_section.get('inRoles', {}))
 
         config_section.genotypeColumns = \
             list(config_section.genotypeColumns.values())

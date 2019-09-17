@@ -43,7 +43,7 @@ class StudyWrapper(object):
         download_columns = []
         pheno_column_slots = []
         gene_weights_columns = []
-        roles_columns = []
+        in_role_columns = []
 
         people_group = {}
         pheno_filters = []
@@ -56,7 +56,8 @@ class StudyWrapper(object):
             if genotype_browser_config.pheno_column_slots:
                 pheno_column_slots = genotype_browser_config.pheno_column_slots
             gene_weights_columns = genotype_browser_config.gene_weights_columns
-            roles_columns = self.config.genotype_browser_config.roles_columns
+            in_role_columns = \
+                self.config.genotype_browser_config.in_role_columns
 
             pheno_filters = genotype_browser_config.pheno_filters
             if genotype_browser_config.present_in_role:
@@ -66,7 +67,7 @@ class StudyWrapper(object):
         self.download_columns = download_columns
         self.pheno_column_slots = pheno_column_slots
         self.gene_weights_columns = gene_weights_columns
-        self.roles_columns = roles_columns
+        self.in_role_columns = in_role_columns
 
         if self.config.people_group_config:
             people_group = self.config.people_group_config.people_group
@@ -387,11 +388,11 @@ class StudyWrapper(object):
         return gene_weights_values
 
     def _get_all_roles_values(self, allele):
-        if not self.roles_columns:
+        if not self.in_role_columns:
             return None
 
         result = {}
-        for roles_value in self.roles_columns:
+        for roles_value in self.in_role_columns:
             result[roles_value.destination] = \
                 "".join(self._get_roles_value(allele, roles_value.roles))
 
