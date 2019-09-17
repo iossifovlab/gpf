@@ -124,6 +124,7 @@ def test_composite_dataset_config_genotype_browser_overwrite(
     download_columns = genotype_browser_config.download_columns
     print(download_columns)
 
-    assert download_columns == \
-        ['family', 'phenotype', 'variant', 'best', 'fromparent',
-         'inchild', 'effect', 'count', 'geneeffect', 'effectdetails']
+    assert download_columns == [
+        'family', 'phenotype', 'variant', 'best', 'fromparent', 'inchild',
+        'effect', 'count', 'geneeffect', 'effectdetails'
+    ]

@@ -84,13 +84,13 @@ def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
             {
                 'source': 'inChS',
                 'name': 'in child',
-                'id': 'inChS',
+                'id': 'genotype.in child',
                 'format': '%s'
             },
             {
                 'source': 'fromParentS',
                 'name': 'from parent',
-                'id': 'fromParentS',
+                'id': 'genotype.from parent',
                 'format': '%s'
             }
         ]),
@@ -98,20 +98,20 @@ def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
             {
                 'source': 'worstEffect',
                 'name': 'worst effect type',
-                'id': 'worstEffect',
+                'id': 'effect.worst effect type',
                 'format': '%s'
             },
             {
                 'source': 'genes',
                 'name': 'genes',
-                'id': 'genes',
+                'id': 'effect.genes',
                 'format': '%s'
             }
         ]),
         ('best', 'family genotype', 'bestSt', []),
         ('iq', 'Proband IQs', None, [
             {
-                'id': 'prb.diagnosis_summary.best_nonverbal_iq',
+                'id': 'iq.NvIQ',
                 'name': 'NvIQ',
                 'role': 'role',
                 'measure': 'diagnosis_summary.best_nonverbal_iq',
@@ -119,7 +119,7 @@ def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
                 'format': 'NvIQ %.2f'
             },
             {
-                'id': 'prb.diagnosis_summary.best_verbal_iq',
+                'id': 'iq.vIQ',
                 'name': 'vIQ',
                 'role': 'role',
                 'measure': 'diagnosis_summary.best_verbal_iq',

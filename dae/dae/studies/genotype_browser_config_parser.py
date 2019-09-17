@@ -80,7 +80,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
                 label_format = label_format[0] if label_format else '%s'
 
                 column_slots.append({
-                    'id': '{}.{}'.format(role, source),
+                    'id': f'{pheno.id}.{label}',
                     'name': label,
                     'role': role,
                     'measure': source,
@@ -105,7 +105,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
                 label_format = slot_arr[1] if len(slot_arr) > 1 else '%s'
 
                 column_slots.append({
-                    'id': source,
+                    'id': f'{genotype_column.id}.{label}',
                     'name': label,
                     'source': source,
                     'format': label_format
@@ -137,21 +137,28 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         return list(present_in_roles.values())
 
     @staticmethod
-    def _parse_column_slots(id_column, genotype_columns, columns):
+    def _parse_column_slots(genotype_columns, selected_columns):
         column_slots = {}
-        for column in columns:
+        for column in selected_columns:
             genotype_column = genotype_columns.get(column, None)
 
             if not genotype_column:
                 continue
 
             if genotype_column.get('source', None):
-                column_slots[genotype_column[id_column]] = \
-                    genotype_column['source']
+                column_slots[genotype_column['id']] = {
+                    'id': genotype_column['id'],
+                    'name': genotype_column['name'],
+                    'source': genotype_column['source']
+                }
 
-            for slot in genotype_column['slots']:
+            for slot in genotype_column.get('slots', []):
                 if slot['source'] is not None:
-                    column_slots[slot[id_column]] = slot['source']
+                    column_slots[slot['id']] = {
+                        'id': slot['id'],
+                        'name': slot['name'],
+                        'source': slot['source']
+                    }
 
         return column_slots
 
@@ -185,16 +192,16 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         config_section.genotypeColumns.update(config_section.pheno_columns)
         config_section.preview_columns_slots = \
             cls._parse_column_slots(
-                'source',
                 config_section.genotypeColumns,
                 config_section.get('previewColumns', [])
             )
         config_section.download_columns_slots = \
             cls._parse_column_slots(
-                'name',
                 config_section.genotypeColumns,
                 config_section.get('downloadColumns', [])
             )
+        if 'pedigree' in config_section.download_columns_slots:
+            config_section.download_columns_slots.pop('pedigree')
 
         config_section.gene_weights_columns = \
             cls._parse_gene_weights_columns(config_section.genotypeColumns)

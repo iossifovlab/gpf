@@ -187,57 +187,49 @@ class StudyWrapper(object):
 
                 yield row_variant
 
-    def get_variants_web(self, query, genotype_attrs, variants_hard_max=2000):
+    def get_variant_web_rows(self, query, sources, variants_hard_max=2000):
         people_group_id = query.get('peopleGroup', {}).get('id', None)
         people_group = self.get_people_group(people_group_id)
         if not people_group:
             people_group = {}
 
-        columns, sources = zip(*list(genotype_attrs.items()))
         rows = self.query_list_variants(sources, people_group, **query)
 
         if variants_hard_max is not None:
             limited_rows = itertools.islice(rows, variants_hard_max+1)
 
-        return {
-            'cols': list(columns),
-            'rows': limited_rows
-        }
+        return limited_rows
 
     def get_variants_wdae_preview(
             self, query, max_variants_count=1000, variants_hard_max=2000):
-        variants_data = self.get_variants_web(
-            query, self.preview_columns, variants_hard_max
-        )
+        columns, sources = zip(*[
+            (attr['id'], attr['source'])
+            for attr in self.preview_columns.values()
+        ])
+        rows = self.get_variant_web_rows(query, sources, variants_hard_max)
+        rows = list(rows)
 
-        variants_data['rows'] = list(variants_data['rows'])
-
-        if variants_hard_max is None or\
-                len(variants_data['rows']) < variants_hard_max:
-            count = str(len(variants_data['rows']))
+        if variants_hard_max is None or len(rows) < variants_hard_max:
+            count = str(len(rows))
         else:
             count = 'more than {}'.format(variants_hard_max)
 
+        variants_data = {}
         variants_data['count'] = count
-        variants_data['rows'] = \
-            list(variants_data['rows'][:max_variants_count])
+        variants_data['rows'] = list(rows[:max_variants_count])
+        variants_data['cols'] = list(columns)
         variants_data['legend'] = self.get_legend(**query)
 
         return variants_data
 
     def get_variants_wdae_download(
             self, query, max_variants_count=1000, variants_hard_max=2000):
-        columns = self.download_columns
-        if 'pedigree' in columns:
-            columns.pop('pedigree')
-
-        variants_data = self.get_variants_web(
-            query, columns, variants_hard_max)
-
-        variants_data['rows'] =\
-            itertools.islice(variants_data['rows'], max_variants_count)
-        columns = variants_data['cols']
-        rows = variants_data['rows']
+        columns, sources = zip(*[
+            (attr['name'], attr['source'])
+            for attr in self.download_columns.values()
+        ])
+        rows = self.get_variant_web_rows(query, sources, variants_hard_max)
+        rows = itertools.islice(rows, max_variants_count)
 
         wdae_download = map(join_line, itertools.chain([columns], rows))
 
