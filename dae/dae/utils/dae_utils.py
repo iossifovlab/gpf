@@ -53,6 +53,11 @@ def split_iterable(iterable, max_chunk_length=5000):
         yield result
 
 
+def join_line(l, sep='\t'):
+    tl = map(lambda v: '' if v is None or v == 'None' else str(v), l)
+    return sep.join(tl) + '\n'
+
+
 def members_in_order_get_family_structure(mio):
     return "".join([
         "{}{}".format(p.role.name, p.sex.short()) for p in mio

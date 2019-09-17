@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import Group
 from guardian.shortcuts import assign_perm
-from helpers.logger import LOGGER
+from utils.logger import LOGGER
 
 
 class Dataset(models.Model):

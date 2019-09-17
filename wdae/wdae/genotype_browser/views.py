@@ -11,11 +11,9 @@ from rest_framework.exceptions import NotAuthenticated
 import json
 import logging
 import traceback
-import itertools
 
-from helpers.logger import log_filter
-from helpers.logger import LOGGER
-from helpers.dae_query import join_line
+from utils.logger import log_filter
+from utils.logger import LOGGER
 
 from datasets_api.studies_manager import get_studies_manager
 from datasets_api.permissions import IsDatasetAllowed
@@ -57,10 +55,11 @@ class QueryPreviewView(QueryBaseView):
             dataset = self.variants_db.get_wdae_wrapper(dataset_id)
 
             # LOGGER.info("dataset " + str(dataset))
-            response = dataset.get_variants_web_preview(
+            response = dataset.get_variants_wdae_preview(
                 data,
                 max_variants_count=self.MAX_SHOWN_VARIANTS,
-                variants_hard_max=self.MAX_VARIANTS)
+                variants_hard_max=self.MAX_VARIANTS
+            )
 
             # pprint.pprint(response)
 
@@ -110,18 +109,14 @@ class QueryDownloadView(QueryBaseView):
             if not (user.is_authenticated and user.has_unlimitted_download):
                 download_limit = self.DOWNLOAD_LIMIT
 
-            variants_data = dataset.get_variants_web_download(
+            variants_data = dataset.get_variants_wdae_download(
                 data,
                 max_variants_count=download_limit,
                 variants_hard_max=self.DOWNLOAD_LIMIT
             )
 
-            columns = variants_data['cols']
-            rows = variants_data['rows']
-
-            response = StreamingHttpResponse(
-                map(join_line, itertools.chain([columns], rows)),
-                content_type='text/tsv')
+            response = \
+                StreamingHttpResponse(variants_data, content_type='text/tsv')
 
             response['Content-Disposition'] = \
                 'attachment; filename=variants.tsv'

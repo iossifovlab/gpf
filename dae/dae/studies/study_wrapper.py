@@ -5,7 +5,7 @@ import traceback
 import numpy as np
 
 from dae.utils.vcf_utils import mat2str
-from dae.utils.dae_utils import split_iterable, \
+from dae.utils.dae_utils import split_iterable, join_line, \
     members_in_order_get_family_structure
 from dae.utils.effect_utils import expand_effect_types, ge2str, gd2str, \
     gene_effect_get_worst_effect, gene_effect_get_genes
@@ -198,39 +198,44 @@ class StudyWrapper(object):
             'rows': limited_rows
         }
 
-    def get_variants_web_preview(
+    def get_variants_wdae_preview(
             self, query, max_variants_count=1000, variants_hard_max=2000):
-        web_preview = self.get_variants_web(
+        variants_data = self.get_variants_web(
             query, self.preview_columns, variants_hard_max
         )
 
-        web_preview['rows'] = list(web_preview['rows'])
+        variants_data['rows'] = list(variants_data['rows'])
 
         if variants_hard_max is None or\
-                len(web_preview['rows']) < variants_hard_max:
-            count = str(len(web_preview['rows']))
+                len(variants_data['rows']) < variants_hard_max:
+            count = str(len(variants_data['rows']))
         else:
             count = 'more than {}'.format(variants_hard_max)
 
-        web_preview['count'] = count
-        web_preview['rows'] = list(web_preview['rows'][:max_variants_count])
-        web_preview['legend'] = self.get_legend(**query)
+        variants_data['count'] = count
+        variants_data['rows'] = \
+            list(variants_data['rows'][:max_variants_count])
+        variants_data['legend'] = self.get_legend(**query)
 
-        return web_preview
+        return variants_data
 
-    def get_variants_web_download(
+    def get_variants_wdae_download(
             self, query, max_variants_count=1000, variants_hard_max=2000):
         columns = self.download_columns
         if 'pedigree' in columns:
             columns.pop('pedigree')
 
-        web_preview = self.get_variants_web(
+        variants_data = self.get_variants_web(
             query, columns, variants_hard_max)
 
-        web_preview['rows'] =\
-            itertools.islice(web_preview['rows'], max_variants_count)
+        variants_data['rows'] =\
+            itertools.islice(variants_data['rows'], max_variants_count)
+        columns = variants_data['cols']
+        rows = variants_data['rows']
 
-        return web_preview
+        wdae_download = map(join_line, itertools.chain([columns], rows))
+
+        return wdae_download
 
     # Not implemented:
     # callSet

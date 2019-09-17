@@ -24,7 +24,7 @@ from .models import VerificationPath
 from .serializers import UserSerializer
 from .serializers import UserWithoutEmailSerializer
 from .serializers import BulkGroupOperationSerializer
-from helpers.logger import log_filter, LOGGER
+from utils.logger import log_filter, LOGGER
 
 
 class UserViewSet(viewsets.ModelViewSet):
