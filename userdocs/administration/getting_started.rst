@@ -153,8 +153,8 @@ Import a Demo Dataset
 In the GPF startup data instance there are some demo studies already
 imported and configured:
 
+    * `comp` with a couple of variant in a complex family
     * `multi` with a couple of variants in a multigenerational family
-    * ...
 
 .. note::
     You can download some more publicly available studies, which are prepared to be
@@ -191,7 +191,7 @@ This command creates and starts Docker container named `gpf_impala`
 containing all the components needed for running Apache Impala.
 
 .. note::
-    The option `-p` (`--port`) used in `docker run` command instructs the 
+    The option `-p` (`--port`) used in `docker run` command instructs the
     Docker to make specified port accessible from the host environment. For
     example `-p 8020:8020` makes port 8020 from docker container `gpf_impala`
     accessible from `localhost`. The ports specified in this command are:
@@ -274,22 +274,20 @@ To import this data as a study into the GPF instance:
   three arguments - study ID to use, pedigree file name and VCF file name::
 
         simple_study_import.py --id comp_vcf \
-            --denovo comp.tsv \
             --vcf comp.vcf \
-            comp.ped 
+            comp.ped
 
   This command creates a study with ID `comp_vcf` that contains all VCF
   variants.
 
 
-* run ``simple_study_import.py`` to import the de Novo variants; this command 
+* run ``simple_study_import.py`` to import the de Novo variants; this command
   uses three arguments - study ID to use, pedigree file name and VCF file
   name::
 
         simple_study_import.py --id comp_denovo \
             --denovo comp.tsv \
-            --vcf comp.vcf \
-            comp.ped 
+            comp.ped
 
   This command creates a study with ID `comp_denovo` that contains all de
   Novo variants.
@@ -301,7 +299,7 @@ To import this data as a study into the GPF instance:
         simple_study_import.py --id comp_all \
             --denovo comp.tsv \
             --vcf comp.vcf \
-            comp.ped 
+            comp.ped
 
   This command creates a study with ID `comp_all` that contains all
   VCF and de Novo variants.
@@ -322,7 +320,7 @@ To import this data as a study into the GPF instance:
         f1             1:865664       sub(G->A)      2 2 1 2/0 0 1 0
         f1             1:865691       sub(C->T)      2 2 1 2/0 0 1 0
         f2             1:865664       sub(G->A)      2 2 1 2/0 0 1 0
-        f2             1:865691       sub(C->T)      2 2 1 2/0 0 1 0        
+        f2             1:865691       sub(C->T)      2 2 1 2/0 0 1 0
 
 
 
