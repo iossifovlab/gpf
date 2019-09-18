@@ -28,6 +28,7 @@ class GPFInstance(object):
         self.weights_factory = \
             WeightsFactory(config=self.gene_info_config.gene_weights)
 
-        self.variants_db = \
-            VariantsDb(self.dae_config, weights_factory=self.weights_factory)
+        self.variants_db = VariantsDb(
+            self.dae_config, self.pheno_factory, self.weights_factory
+        )
         self.common_report_facade = CommonReportFacade(self.variants_db)
