@@ -124,4 +124,15 @@ class DAEConfigParser(ConfigParserBase):
                 if config.genomic_scores_db else None,
         }
 
+        if config.gpfjs:
+            filepath = config.gpfjs.permission_denied_prompt
+            assert os.path.exists(filepath), filepath
+            with open(filepath, 'r') as prompt_file:
+                config.gpfjs.permission_denied_prompt = prompt_file.read()
+        else:
+            config.gpfjs = dict()
+            config.gpfjs['permission_denied_prompt'] = \
+               ('This is a default permission denied prompt.'
+                ' Please log in or register.')
+
         return config
