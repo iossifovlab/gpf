@@ -1,9 +1,10 @@
 import os
+
 from dae.configuration.dae_config_parser import DAEConfigParser
 
-from dae.studies.variants_db import VariantsDb
+from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.common_reports.common_report_facade import CommonReportFacade
+from dae.studies.variants_db import VariantsDb
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.scores import ScoresFactory
@@ -23,18 +24,11 @@ from threading import Lock
 __all__ = ['get_studies_manager']
 
 
-class CommonReportsManager(object):
-
-    def __init__(self, dae_config, vdb):
-        self.dae_config = dae_config
-        self.vdb = vdb
-
-        self.common_report_facade = CommonReportFacade(self.vdb)
-
-
 class StudiesManager(object):
 
     def __init__(self, dae_config=None):
+        self.gpf_instance = GPFInstance()
+
         if dae_config is None:
             dae_config = DAEConfigParser.read_and_parse_file_configuration()
         self.dae_config = dae_config
@@ -45,11 +39,11 @@ class StudiesManager(object):
         self.weights_factory = None
 
         self.gene_sets_collections = None
-        self.common_reports = None
+        self.common_report_facade = None
 
     def reload_dataset(self):
         self.vdb = VariantsDb(self.dae_config)
-        self.common_reports = CommonReportsManager(self.dae_config, self.vdb)
+        self.common_report_facade = self.gpf_instance.common_report_facade
 
         for study_id in self.vdb.get_all_ids():
             Dataset.recreate_dataset_perm(study_id, [])
@@ -78,13 +72,13 @@ class StudiesManager(object):
         if self.vdb is None:
             self.reload_dataset()
             assert self.vdb is not None
-            assert self.common_reports is not None
+            assert self.common_report_facade is not None
 
         return self.vdb
 
     def get_common_report_facade(self):
         self.get_variants_db()
-        return self.common_reports.common_report_facade
+        return self.common_report_facade
 
     def get_gene_info_config(self):
         self.get_variants_db()

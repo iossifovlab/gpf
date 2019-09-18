@@ -2,10 +2,7 @@ import pytest
 
 import os
 
-from dae.studies.variants_db import VariantsDb
-from dae.configuration.dae_config_parser import DAEConfigParser
-
-from dae.common_reports.common_report_facade import CommonReportFacade
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 from datasets_api.studies_manager import StudiesManager
 
@@ -16,23 +13,18 @@ def fixtures_dir():
 
 
 @pytest.fixture(scope='session')
-def dae_config_fixture():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
-    return dae_config
+def gpf_instance():
+    return GPFInstance(work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='session')
-def vdb_fixture(dae_config_fixture):
-    vdb = VariantsDb(dae_config_fixture)
-    return vdb
+def dae_config_fixture(gpf_instance):
+    return gpf_instance.dae_config
 
 
 @pytest.fixture(scope='session')
-def common_report_facade(vdb_fixture):
-    common_report_facade = CommonReportFacade(vdb_fixture)
-
-    return common_report_facade
+def common_report_facade(gpf_instance):
+    return gpf_instance.common_report_facade
 
 
 @pytest.fixture(scope='module')

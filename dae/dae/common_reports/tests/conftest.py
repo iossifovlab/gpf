@@ -4,12 +4,10 @@ import os
 from box import Box
 from copy import deepcopy
 
-from dae.studies.variants_db import VariantsDb
-from dae.configuration.dae_config_parser import DAEConfigParser
-
 from dae.common_reports.filter import Filter, FilterObject, FilterObjects
 from dae.common_reports.people_group_info import PeopleGroupsInfo
-from dae.common_reports.common_report_facade import CommonReportFacade
+
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 def fixtures_dir():
@@ -28,23 +26,18 @@ def datasets_dir():
 
 
 @pytest.fixture(scope='session')
-def dae_config_fixture():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
-    return dae_config
+def gpf_instance():
+    return GPFInstance(work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='session')
-def vdb_fixture(dae_config_fixture):
-    vdb = VariantsDb(dae_config_fixture)
-    return vdb
+def vdb_fixture(gpf_instance):
+    return gpf_instance.variants_db
 
 
 @pytest.fixture(scope='session')
-def common_report_facade(vdb_fixture):
-    common_report_facade = CommonReportFacade(vdb_fixture)
-
-    return common_report_facade
+def common_report_facade(gpf_instance):
+    return gpf_instance.common_report_facade
 
 
 @pytest.fixture(scope='session')
