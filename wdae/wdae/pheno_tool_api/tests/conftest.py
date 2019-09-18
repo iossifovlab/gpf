@@ -2,8 +2,7 @@ import pytest
 import os
 
 from dae.gpf_instance.gpf_instance import GPFInstance
-
-from datasets_api.studies_manager import StudiesManager
+from gpf_instance.gpf_instance import reload_datasets
 
 
 def fixtures_dir():
@@ -17,11 +16,9 @@ def gpf_instance():
 
 
 @pytest.fixture(scope='function')
-def mock_studies_manager(db, gpf_instance):
-    return StudiesManager(gpf_instance)
-
-
-@pytest.fixture(scope='function', autouse=True)
-def replace_studies_manager(mocker, mock_studies_manager):
-    mocker.patch('pheno_tool_api.views.get_studies_manager',
-                 return_value=mock_studies_manager)
+def mock_gpf_instance(db, mocker, gpf_instance):
+    reload_datasets(gpf_instance.variants_db)
+    mocker.patch(
+        'pheno_tool_api.views.get_gpf_instance',
+        return_value=gpf_instance
+    )

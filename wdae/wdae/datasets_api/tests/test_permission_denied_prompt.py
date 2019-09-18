@@ -1,7 +1,7 @@
 import pytest
 
 
-pytestmark = pytest.mark.usefixtures("mock_studies_manager")
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
 def test_permission_denied_prompt_through_user_client(user_client):

@@ -4,14 +4,14 @@ import json
 
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures("mock_studies_manager")
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
-URL = "/api/v3/genotype_browser/preview"
+URL = '/api/v3/genotype_browser/preview'
 
 
 def test_simple_query_preview(db, admin_client):
     data = {
-        "datasetId": "quads_f1"
+        'datasetId': 'quads_f1'
     }
     response = admin_client.post(
         URL, json.dumps(data), content_type='application/json')
@@ -23,7 +23,7 @@ def test_simple_query_preview(db, admin_client):
 
 def test_query_preview_have_pheno_columns(db, admin_client):
     data = {
-        "datasetId": "quads_f1"
+        'datasetId': 'quads_f1'
     }
     response = admin_client.post(
         URL, json.dumps(data), content_type='application/json')
@@ -41,7 +41,7 @@ def test_query_preview_have_pheno_columns(db, admin_client):
 
 def test_query_preview_have_pheno_column_values(db, admin_client):
     data = {
-        "datasetId": "quads_f1"
+        'datasetId': 'quads_f1'
     }
     response = admin_client.post(
         URL, json.dumps(data), content_type='application/json')

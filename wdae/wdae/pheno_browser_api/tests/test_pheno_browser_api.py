@@ -1,17 +1,12 @@
-'''
-Created on Apr 21, 2017
-
-@author: lubo
-'''
 import pytest
 
 
-pytestmark = pytest.mark.usefixtures("mock_studies_manager")
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
-URL = "/api/v3/pheno_browser/instruments"
-MEASURES_URL = "/api/v3/pheno_browser/measures"
-DOWNLOAD_URL = "/api/v3/pheno_browser/download"
+URL = '/api/v3/pheno_browser/instruments'
+MEASURES_URL = '/api/v3/pheno_browser/measures'
+DOWNLOAD_URL = '/api/v3/pheno_browser/download'
 
 
 def test_instruments_missing_dataset_id(admin_client):
@@ -27,7 +22,7 @@ def test_instruments_missing_dataset_id_forbidden(user_client):
 
 
 def test_instruments(admin_client):
-    url = "{}?dataset_id=quads_f1_ds".format(URL)
+    url = '{}?dataset_id=quads_f1_ds'.format(URL)
     response = admin_client.get(url)
 
     assert response.status_code == 200
@@ -37,7 +32,7 @@ def test_instruments(admin_client):
 
 
 def test_instruments_forbidden(user_client):
-    url = "{}?dataset_id=quads_f1_ds".format(URL)
+    url = '{}?dataset_id=quads_f1_ds'.format(URL)
     response = user_client.get(url)
 
     assert response.status_code == 403
@@ -49,7 +44,7 @@ def test_instruments_forbidden(user_client):
 
 
 def test_measures(admin_client):
-    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
+    url = '{}?dataset_id=quads_f1_ds&instrument=instrument1'.format(
         MEASURES_URL)
     response = admin_client.get(url)
 
@@ -62,7 +57,7 @@ def test_measures(admin_client):
 
 def test_measures_forbidden(user_client, user):
     print(user.groups.all())
-    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
+    url = '{}?dataset_id=quads_f1_ds&instrument=instrument1'.format(
         MEASURES_URL)
     response = user_client.get(url)
 
@@ -75,18 +70,18 @@ def test_measures_forbidden(user_client, user):
 
 
 def test_download(admin_client):
-    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
+    url = '{}?dataset_id=quads_f1_ds&instrument=instrument1'.format(
         DOWNLOAD_URL)
     response = admin_client.get(url)
 
     assert response.status_code == 200
 
-    header = response.content.decode("utf-8").split()[0].split(',')
+    header = response.content.decode('utf-8').split()[0].split(',')
     assert header[0] == 'person_id'
 
 
 def test_download_forbidden(user_client):
-    url = "{}?dataset_id=quads_f1_ds&instrument=instrument1".format(
+    url = '{}?dataset_id=quads_f1_ds&instrument=instrument1'.format(
         DOWNLOAD_URL)
     response = user_client.get(url)
 

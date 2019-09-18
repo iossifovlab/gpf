@@ -1,12 +1,12 @@
 import pytest
 
-from datasets_api.studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
 
-pytestmark = pytest.mark.usefixtures("mock_studies_manager")
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
 def test_get_gene_weights_factory(db):
-    weights_factory = get_studies_manager().get_weights_factory()
+    weights_factory = get_gpf_instance().weights_factory
 
     assert weights_factory is not None
 

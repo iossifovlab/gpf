@@ -1,15 +1,10 @@
-'''
-Created on Dec 10, 2015
-
-@author: lubo
-'''
 from rest_framework import views, status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
 
 import numpy as np
 
-from datasets_api.studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
 
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
@@ -17,7 +12,7 @@ from users_api.authentication import SessionAuthenticationWithoutCSRF
 class GeneWeightsListView(views.APIView):
 
     def __init__(self):
-        self.weights_factory = get_studies_manager().get_weights_factory()
+        self.weights_factory = get_gpf_instance().weights_factory
 
     def get_gene_weights(self, weights):
         return [
@@ -42,7 +37,7 @@ class GeneWeightsListView(views.APIView):
 class GeneWeightsDownloadView(views.APIView):
 
     def __init__(self):
-        self.weights_factory = get_studies_manager().get_weights_factory()
+        self.weights_factory = get_gpf_instance().weights_factory
 
     def get(self, request, weight):
         tsv = self.weights_factory[weight].to_tsv()
@@ -58,7 +53,7 @@ class GeneWeightsGetGenesView(views.APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
-        self.weights_factory = get_studies_manager().get_weights_factory()
+        self.weights_factory = get_gpf_instance().weights_factory
 
     def prepare_data(self, data):
         if 'weight' not in data:
@@ -86,7 +81,7 @@ class GeneWeightsPartitionsView(views.APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
-        self.weights_factory = get_studies_manager().get_weights_factory()
+        self.weights_factory = get_gpf_instance().weights_factory
 
     def post(self, request):
         data = request.data

@@ -3,7 +3,7 @@ import pytest
 import json
 
 
-pytestmark = pytest.mark.usefixtures('mock_studies_manager')
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
 def test_enrichment_models(admin_client):

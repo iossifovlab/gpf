@@ -2,11 +2,10 @@ import os
 import pytest
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+from gpf_instance.gpf_instance import reload_datasets
 
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set import DenovoGeneSet
-
-from datasets_api.studies_manager import StudiesManager
 
 
 def fixtures_dir():
@@ -25,18 +24,16 @@ def variants_db_fixture(gpf_instance):
 
 
 @pytest.fixture(scope='function')
-def studies_manager(db, gpf_instance):
-    return StudiesManager(gpf_instance)
-
-
-@pytest.fixture(scope='function')
-def mock_studies_manager(mocker, studies_manager):
+def mock_gpf_instance(db, mocker, gpf_instance):
+    reload_datasets(gpf_instance.variants_db)
     mocker.patch(
-        'gene_sets.views.get_studies_manager',
-        return_value=studies_manager)
+        'gene_sets.views.get_gpf_instance',
+        return_value=gpf_instance
+    )
     mocker.patch(
-        'datasets_api.permissions.get_studies_manager',
-        return_value=studies_manager)
+        'datasets_api.permissions.get_gpf_instance',
+        return_value=gpf_instance
+    )
 
 
 @pytest.fixture(scope='function')
