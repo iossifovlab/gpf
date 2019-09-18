@@ -41,8 +41,8 @@ class StudyWrapper(object):
     def _init_wdae_config(self):
         preview_columns = []
         download_columns = []
-        pheno_column_slots = []
-        gene_weights_columns = []
+        pheno_columns = []
+        gene_weight_columns = []
         in_role_columns = []
 
         people_group = {}
@@ -51,11 +51,11 @@ class StudyWrapper(object):
 
         if self.config.genotype_browser_config:
             genotype_browser_config = self.config.genotype_browser_config
-            preview_columns = genotype_browser_config.preview_columns_slots
-            download_columns = genotype_browser_config.download_columns_slots
-            if genotype_browser_config.pheno_column_slots:
-                pheno_column_slots = genotype_browser_config.pheno_column_slots
-            gene_weights_columns = genotype_browser_config.gene_weights_columns
+            preview_columns = genotype_browser_config.preview_columns
+            download_columns = genotype_browser_config.download_columns
+            if genotype_browser_config.pheno_columns:
+                pheno_columns = genotype_browser_config.pheno_columns
+            gene_weight_columns = genotype_browser_config.gene_weight_columns
             in_role_columns = \
                 self.config.genotype_browser_config.in_role_columns
 
@@ -65,8 +65,8 @@ class StudyWrapper(object):
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
-        self.pheno_column_slots = pheno_column_slots
-        self.gene_weights_columns = gene_weights_columns
+        self.pheno_columns = pheno_columns
+        self.gene_weight_columns = gene_weight_columns
         self.in_role_columns = in_role_columns
 
         if self.config.people_group_config:
@@ -356,13 +356,13 @@ class StudyWrapper(object):
         return pheno_values
 
     def _get_all_pheno_values(self, families):
-        if not self.pheno_db or not self.pheno_column_slots:
+        if not self.pheno_db or not self.pheno_columns:
             return None
 
         pheno_column_dfs = []
         pheno_column_names = []
 
-        for slot in self.pheno_column_slots:
+        for slot in self.pheno_columns:
             pheno_column_dfs.append(
                 self.pheno_db.get_measure_values_df(
                     slot.measure,
@@ -377,7 +377,7 @@ class StudyWrapper(object):
         gene = genes[0]
 
         gene_weights_values = {}
-        for gwc in self.gene_weights_columns:
+        for gwc in self.gene_weight_columns:
             if gwc not in self.weights_loader:
                 continue
 
