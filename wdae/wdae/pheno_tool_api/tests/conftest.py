@@ -1,8 +1,8 @@
 import pytest
 import os
 
-from dae.configuration.dae_config_parser import DAEConfigParser
-from dae.studies.variants_db import VariantsDb
+from dae.gpf_instance.gpf_instance import GPFInstance
+
 from datasets_api.studies_manager import StudiesManager
 
 
@@ -11,20 +11,14 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
-@pytest.fixture(scope='session')
-def mock_dae_config():
-    return DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
+@pytest.fixture(scope='function')
+def gpf_instance():
+    return GPFInstance(work_dir=fixtures_dir())
 
 
-@pytest.fixture(scope='session')
-def mock_vdb(mock_dae_config):
-    return VariantsDb(mock_dae_config)
-
-
-@pytest.fixture(scope='session')
-def mock_studies_manager(mock_dae_config):
-    return StudiesManager(mock_dae_config)
+@pytest.fixture(scope='function')
+def mock_studies_manager(gpf_instance):
+    return StudiesManager(gpf_instance)
 
 
 @pytest.fixture(scope='function', autouse=True)

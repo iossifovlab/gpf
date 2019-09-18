@@ -1,11 +1,10 @@
 import os
 import pytest
 
+from dae.gpf_instance.gpf_instance import GPFInstance
+
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set import DenovoGeneSet
-
-from dae.configuration.dae_config_parser import DAEConfigParser
-from dae.studies.variants_db import VariantsDb
 
 from datasets_api.studies_manager import StudiesManager
 
@@ -16,21 +15,18 @@ def fixtures_dir():
 
 
 @pytest.fixture(scope='function')
-def dae_config_fixture():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
-    return dae_config
+def gpf_instance():
+    return GPFInstance(work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='function')
-def variants_db_fixture(dae_config_fixture):
-    vdb = VariantsDb(dae_config_fixture)
-    return vdb
+def variants_db_fixture(gpf_instance):
+    return gpf_instance.variants_db
 
 
 @pytest.fixture(scope='function')
-def studies_manager(dae_config_fixture):
-    return StudiesManager(dae_config_fixture)
+def studies_manager(gpf_instance):
+    return StudiesManager(gpf_instance)
 
 
 @pytest.fixture(scope='function')

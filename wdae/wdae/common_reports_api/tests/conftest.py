@@ -18,11 +18,6 @@ def gpf_instance():
 
 
 @pytest.fixture(scope='session')
-def dae_config_fixture(gpf_instance):
-    return gpf_instance.dae_config
-
-
-@pytest.fixture(scope='session')
 def common_report_facade(gpf_instance):
     return gpf_instance.common_report_facade
 
@@ -46,8 +41,8 @@ def use_common_reports(common_report_facade):
 
 
 @pytest.fixture()
-def studies_manager(dae_config_fixture):
-    return StudiesManager(dae_config_fixture)
+def studies_manager(gpf_instance):
+    return StudiesManager(gpf_instance)
 
 
 @pytest.fixture()

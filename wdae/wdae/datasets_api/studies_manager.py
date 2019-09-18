@@ -1,10 +1,6 @@
 import os
 
-from dae.configuration.dae_config_parser import DAEConfigParser
-
 from dae.gpf_instance.gpf_instance import GPFInstance
-
-from dae.studies.variants_db import VariantsDb
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.scores import ScoresFactory
@@ -26,12 +22,12 @@ __all__ = ['get_studies_manager']
 
 class StudiesManager(object):
 
-    def __init__(self, dae_config=None):
-        self.gpf_instance = GPFInstance()
+    def __init__(self, gpf_instance=None):
+        if gpf_instance is None:
+            gpf_instance = GPFInstance()
+        self.gpf_instance = gpf_instance
 
-        if dae_config is None:
-            dae_config = DAEConfigParser.read_and_parse_file_configuration()
-        self.dae_config = dae_config
+        self.dae_config = gpf_instance.dae_config
         self.vdb = None
 
         self.scores_factory = None
@@ -39,11 +35,10 @@ class StudiesManager(object):
         self.weights_factory = None
 
         self.gene_sets_collections = None
-        self.common_report_facade = None
+        self.common_report_facade = gpf_instance.common_report_facade
 
     def reload_dataset(self):
-        self.vdb = VariantsDb(self.dae_config)
-        self.common_report_facade = self.gpf_instance.common_report_facade
+        self.vdb = self.gpf_instance.variants_db
 
         for study_id in self.vdb.get_all_ids():
             Dataset.recreate_dataset_perm(study_id, [])

@@ -8,33 +8,33 @@ from .conftest import fixtures_dir
 pytestmark = pytest.mark.usefixtures("mock_studies_manager")
 
 
-def test_missing_permission_denied_prompt(dae_config_fixture):
-    sm = StudiesManager(dae_config_fixture)
+def test_missing_permission_denied_prompt(gpf_instance):
+    sm = StudiesManager(gpf_instance)
     assert sm.get_permission_denied_prompt() == \
         ('This is a default permission denied prompt.'
          ' Please log in or register.')
 
 
-def test_permission_denied_prompt_from_file(dae_config_fixture):
+def test_permission_denied_prompt_from_file(gpf_instance):
     filepath = os.path.join(fixtures_dir(), 'permissionDeniedPrompt.md')
 
-    dae_config_fixture.gpfjs = Box()
-    dae_config_fixture.gpfjs.permission_denied_prompt = filepath
+    gpf_instance.dae_config.gpfjs = Box()
+    gpf_instance.dae_config.gpfjs.permission_denied_prompt = filepath
 
-    sm = StudiesManager(dae_config_fixture)
+    sm = StudiesManager(gpf_instance)
     assert sm.get_permission_denied_prompt() == \
         ('This is a real permission denied prompt.'
          ' The StudiesManager has successfully loaded the file.\n')
 
 
-def test_permission_denied_prompt_from_nonexistent_file(dae_config_fixture):
+def test_permission_denied_prompt_from_nonexistent_file(gpf_instance):
     filepath = os.path.join(fixtures_dir(), 'nonExistentFile.someFormat')
 
-    dae_config_fixture.gpfjs = Box()
-    dae_config_fixture.gpfjs.permission_denied_prompt = filepath
+    gpf_instance.dae_config.gpfjs = Box()
+    gpf_instance.dae_config.gpfjs.permission_denied_prompt = filepath
 
     with pytest.raises(AssertionError):
-        sm = StudiesManager(dae_config_fixture)
+        sm = StudiesManager(gpf_instance)
         sm.get_permission_denied_prompt()
 
 
@@ -49,11 +49,11 @@ def test_permission_denied_prompt_through_user_client(user_client):
 
 
 def test_permission_denied_prompt_from_file_through_user_client(
-        dae_config_fixture, user_client):
+        gpf_instance, user_client):
     filepath = os.path.join(fixtures_dir(), 'permissionDeniedPrompt.md')
 
-    dae_config_fixture.gpfjs = Box()
-    dae_config_fixture.gpfjs.permission_denied_prompt = filepath
+    gpf_instance.dae_config.gpfjs = Box()
+    gpf_instance.dae_config.gpfjs.permission_denied_prompt = filepath
 
     response = user_client.get('/api/v3/datasets/denied_prompt')
 
@@ -65,11 +65,11 @@ def test_permission_denied_prompt_from_file_through_user_client(
 
 
 def test_permission_denied_prompt_from_nonexistent_file_through_user_client(
-        dae_config_fixture, user_client):
+        gpf_instance, user_client):
     filepath = os.path.join(fixtures_dir(), 'nonExistentFile.someFormat')
 
-    dae_config_fixture.gpfjs = Box()
-    dae_config_fixture.gpfjs.permission_denied_prompt = filepath
+    gpf_instance.dae_config.gpfjs = Box()
+    gpf_instance.dae_config.gpfjs.permission_denied_prompt = filepath
 
     with pytest.raises(AssertionError):
-        response = user_client.get('/api/v3/datasets/denied_prompt')
+        user_client.get('/api/v3/datasets/denied_prompt')

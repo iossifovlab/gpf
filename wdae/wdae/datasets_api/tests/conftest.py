@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 from datasets_api.studies_manager import StudiesManager
 
@@ -12,15 +12,13 @@ def fixtures_dir():
 
 
 @pytest.fixture(scope='function')
-def dae_config_fixture():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
-    return dae_config
+def gpf_instance():
+    return GPFInstance(work_dir=fixtures_dir())
 
 
 @pytest.fixture()
-def studies_manager(dae_config_fixture):
-    return StudiesManager(dae_config_fixture)
+def studies_manager(gpf_instance):
+    return StudiesManager(gpf_instance)
 
 
 @pytest.fixture()
