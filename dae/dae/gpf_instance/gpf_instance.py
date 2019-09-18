@@ -2,6 +2,8 @@ from dae.common_reports.common_report_facade import CommonReportFacade
 
 from dae.configuration.dae_config_parser import DAEConfigParser
 
+from dae.enrichment_tool.background_facade import BackgroundFacade
+
 from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.weights import WeightsFactory
 from dae.gene.score_config_parser import ScoreConfigParser
@@ -39,4 +41,7 @@ class GPFInstance(object):
         self.variants_db = VariantsDb(
             self.dae_config, self.pheno_factory, self.weights_factory
         )
+
         self.common_report_facade = CommonReportFacade(self.variants_db)
+
+        self.background_facade = BackgroundFacade(self.variants_db)

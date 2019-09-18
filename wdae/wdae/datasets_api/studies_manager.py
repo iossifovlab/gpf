@@ -3,8 +3,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.gene.gene_set_collections import GeneSetsCollections
 from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
 
-from dae.enrichment_tool.background_facade import BackgroundFacade
-
 from .models import Dataset
 
 from threading import Lock
@@ -20,7 +18,7 @@ class StudiesManager(object):
             gpf_instance = GPFInstance()
         self.gpf_instance = gpf_instance
 
-        self.dae_config = gpf_instance.dae_config
+        self.dae_config = self.gpf_instance.dae_config
         self.vdb = self.gpf_instance.variants_db
 
         self.scores_factory = self.gpf_instance.scores_factory
@@ -28,7 +26,8 @@ class StudiesManager(object):
         self.weights_factory = self.gpf_instance.weights_factory
 
         self.gene_sets_collections = None
-        self.common_report_facade = gpf_instance.common_report_facade
+        self.common_report_facade = self.gpf_instance.common_report_facade
+        self.background_facade = self.gpf_instance.background_facade
 
         self.reload_datasets()
 
@@ -39,8 +38,6 @@ class StudiesManager(object):
         self.gene_sets_collections = GeneSetsCollections(
             self.vdb, self.gene_info_config)
         self.denovo_gene_set_facade = DenovoGeneSetFacade(self.vdb)
-
-        self.background_facade = BackgroundFacade(self.vdb)
 
     def get_variants_db(self):
         return self.vdb

@@ -7,7 +7,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.enrichment_tool.config import EnrichmentConfigParser
 from dae.enrichment_tool.background import CodingLenBackground, \
     SamochaBackground
-from dae.enrichment_tool.background_facade import BackgroundFacade
 
 
 def fixtures_dir():
@@ -47,5 +46,5 @@ def f1_trio_samocha_background(f1_trio_enrichment_config):
 
 
 @pytest.fixture(scope='session')
-def background_facade(variants_db_fixture):
-    return BackgroundFacade(variants_db_fixture)
+def background_facade(gpf_instance):
+    return gpf_instance.background_facade
