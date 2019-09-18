@@ -153,7 +153,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
 
-    'helpers',
+    'utils',
 
     'gene_weights',
     'gene_sets',

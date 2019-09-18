@@ -7,13 +7,11 @@ from rest_framework import views, status
 from rest_framework.response import Response
 from django.http.response import StreamingHttpResponse
 
-import itertools
 import numpy as np
 
 from datasets_api.studies_manager import get_studies_manager
 
 from users_api.authentication import SessionAuthenticationWithoutCSRF
-from helpers.dae_query import join_line
 
 
 class GeneWeightsListView(views.APIView):
@@ -47,14 +45,9 @@ class GeneWeightsDownloadView(views.APIView):
         self.weights_loader = get_studies_manager().get_weights_loader()
 
     def get(self, request, weight):
-        df = self.weights_loader[weight].df
-        columns = df.columns.values.tolist()
-        m = [[str(getattr(x, col)) for col in columns]
-             for x in df.itertuples()]
-        m = itertools.chain([columns], m)
+        tsv = self.weights_loader[weight].to_tsv()
 
-        response = StreamingHttpResponse(list(map(join_line, m)),
-                                         content_type='text/csv')
+        response = StreamingHttpResponse(tsv, content_type='text/csv')
 
         response['Content-Disposition'] = 'attachment; filename=weights.csv'
         response['Expires'] = '0'

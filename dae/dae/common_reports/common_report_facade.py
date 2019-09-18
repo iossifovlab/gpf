@@ -4,6 +4,8 @@ import json
 from dae.common_reports.config import CommonReportsConfigParser
 from dae.common_reports.common_report import CommonReport
 
+from dae.utils.dae_utils import join_line
+
 
 class CommonReportFacade(object):
 
@@ -70,6 +72,39 @@ class CommonReportFacade(object):
     def generate_all_common_reports(self):
         for common_report_id in self.variants_db.get_all_ids():
             self.generate_common_report(common_report_id)
+
+    def get_families_data(self, study_id):
+        study = self.variants_db.get(study_id)
+        if not study:
+            return None
+
+        data = []
+        data.append([
+            'familyId', 'personId', 'dadId', 'momId', 'gender', 'status',
+            'role', 'study'
+        ])
+
+        families = list(study.families.values())
+        families.sort(key=lambda f: f.family_id)
+        for f in families:
+            for p in f.members_in_order:
+                if p.generated:
+                    continue
+
+                row = [
+                    p.family_id,
+                    p.person_id,
+                    p.dad_id,
+                    p.mom_id,
+                    p.sex,
+                    p.status,
+                    p.role,
+                    study.name,
+                ]
+
+                data.append(row)
+
+        return map(join_line, data)
 
     def load_cache(self, common_report_ids=None):
         if common_report_ids is None:

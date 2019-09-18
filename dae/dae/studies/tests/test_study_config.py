@@ -12,14 +12,14 @@ def test_study_config_year(study_configs):
     assert study_config.year == ''
 
 
-@pytest.mark.parametrize("option_name,expected_value", [
-    ("file_format", "vcf"),
-    ("name", "QUADS_F1"),
-    ("id", "quads_f1"),
-    ("description", "QUADS F1"),
-    ("phenotypeTool", True),
-    ("phenotypeBrowser", False),
-    ("phenoDB", ""),
+@pytest.mark.parametrize('option_name,expected_value', [
+    ('file_format', 'vcf'),
+    ('name', 'QUADS_F1'),
+    ('id', 'quads_f1'),
+    ('description', 'QUADS F1'),
+    ('phenotypeTool', True),
+    ('phenotypeBrowser', False),
+    ('phenoDB', ''),
 ])
 def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
     assert quads_f1_config is not None
@@ -27,21 +27,21 @@ def test_quads_f1_config_dict(quads_f1_config, option_name, expected_value):
     assert quads_f1_config[option_name] == expected_value
 
 
-@pytest.mark.parametrize("option_name,expected_value", [
-    ("file_format", "vcf"),
-    ("name", "QUADS_F1"),
-    ("id", "quads_f1"),
-    ("description", "QUADS F1"),
-    ("phenotypeTool", True),
-    ("phenotypeBrowser", False),
+@pytest.mark.parametrize('option_name,expected_value', [
+    ('file_format', 'vcf'),
+    ('name', 'QUADS_F1'),
+    ('id', 'quads_f1'),
+    ('description', 'QUADS F1'),
+    ('phenotypeTool', True),
+    ('phenotypeBrowser', False),
 
-    ("phenotype_tool", True),
-    ("phenotype_browser", False),
-    ("pheno_db", ''),
-    ("year", ''),
-    ("pub_med", ''),
-    ("years", []),
-    ("pub_meds", []),
+    ('phenotype_tool', True),
+    ('phenotype_browser', False),
+    ('pheno_db', ''),
+    ('year', ''),
+    ('pub_med', ''),
+    ('years', []),
+    ('pub_meds', []),
 ])
 def test_quads_f1_config_attr(quads_f1_config, option_name, expected_value):
     assert quads_f1_config is not None
@@ -49,15 +49,15 @@ def test_quads_f1_config_attr(quads_f1_config, option_name, expected_value):
     assert getattr(quads_f1_config, option_name) == expected_value
 
 
-@pytest.mark.parametrize("option_name,expected_value", [
-    ("hasPresentInChild", False),
-    ("hasPresentInParent", False),
-    ("hasFamilyFilters", False),
-    ("hasPedigreeSelector", True),
-    ("hasCNV", False),
-    ("hasComplex", False),
-    ("hasStudyFilters", True),
-    ("phenoFilters", None),
+@pytest.mark.parametrize('option_name,expected_value', [
+    ('hasPresentInChild', False),
+    ('hasPresentInParent', False),
+    ('hasFamilyFilters', False),
+    ('hasPedigreeSelector', True),
+    ('hasCNV', False),
+    ('hasComplex', False),
+    ('hasStudyFilters', True),
+    ('phenoFilters', None),
 ])
 def test_quads_f1_config_genotype_browser(
         quads_f1_config, option_name, expected_value):
@@ -79,28 +79,62 @@ def test_quads_f1_config_genotype_browser_present_in_role(quads_f1_config):
 
 
 @pytest.mark.parametrize(
-    "option_name,expected_name,expected_source,expected_slots", [
-        ("genotype", "genotype", "pedigree", [
-            {'source': "inChS", 'name': 'in child', 'id': 'inChS',
-             'format': '%s'},
-            {'source': "fromParentS", 'name': 'from parent',
-             'id': 'fromParentS', 'format': '%s'}
+    'option_name,expected_name,expected_source,expected_slots', [
+        ('genotype', 'genotype', 'pedigree', [
+            {
+                'source': 'inChS',
+                'name': 'in child',
+                'id': 'genotype.in child',
+                'format': '%s'
+            },
+            {
+                'source': 'fromParentS',
+                'name': 'from parent',
+                'id': 'genotype.from parent',
+                'format': '%s'
+            }
         ]),
-        ("effect", "effect", None, [
-            {'source': "worstEffect", 'name': 'worst effect type',
-             'id': 'worstEffect', 'format': '%s'},
-            {'source': "genes", 'name': 'genes', 'id': 'genes',
-             'format': '%s'}
+        ('effect', 'effect', None, [
+            {
+                'source': 'worstEffect',
+                'name': 'worst effect type',
+                'id': 'effect.worst effect type',
+                'format': '%s'
+            },
+            {
+                'source': 'genes',
+                'name': 'genes',
+                'id': 'effect.genes',
+                'format': '%s'
+            }
         ]),
-        ("best", "family genotype", "bestSt", []),
+        ('best', 'family genotype', 'bestSt', []),
+        ('iq', 'Proband IQs', None, [
+            {
+                'id': 'iq.NvIQ',
+                'name': 'NvIQ',
+                'role': 'role',
+                'measure': 'diagnosis_summary.best_nonverbal_iq',
+                'source': 'prb.diagnosis_summary.best_nonverbal_iq',
+                'format': 'NvIQ %.2f'
+            },
+            {
+                'id': 'iq.vIQ',
+                'name': 'vIQ',
+                'role': 'role',
+                'measure': 'diagnosis_summary.best_verbal_iq',
+                'source': 'prb.diagnosis_summary.best_verbal_iq',
+                'format': '%s'
+            }
+        ]),
     ]
 )
-def test_quads_f1_config_genotype_browser_genotype_column(
+def test_quads_f1_config_genotype_browser_columns(
         quads_f1_config, option_name, expected_name, expected_source,
         expected_slots):
     genotype_browser_config = quads_f1_config.genotype_browser_config
 
-    assert len(genotype_browser_config['genotypeColumns']) == 13
+    assert len(genotype_browser_config['genotypeColumns']) == 14
 
     genotype_column = list(filter(
         lambda gc: gc['id'] == option_name,

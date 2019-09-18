@@ -3,10 +3,13 @@ Created on Nov 7, 2016
 
 @author: lubo
 '''
-from collections import OrderedDict
+import itertools
 import numpy as np
+from collections import OrderedDict
 
 from dae.gene.genomic_values import GenomicValues
+
+from dae.utils.dae_utils import join_line
 
 
 class Weights(GenomicValues):
@@ -113,6 +116,17 @@ class Weights(GenomicValues):
         `weight`.
         """
         return self.df
+
+    def to_list(self):
+        columns = self.df.applymap(str).columns.tolist()
+        values = self.df.applymap(str).values.tolist()
+
+        return itertools.chain([columns], values)
+
+    def to_tsv(self):
+        df_list = self.to_list()
+
+        return map(join_line, df_list)
 
     @staticmethod
     def load_gene_weights(gene_weight_id, config):

@@ -5,7 +5,7 @@ import traceback
 import numpy as np
 
 from dae.utils.vcf_utils import mat2str
-from dae.utils.dae_utils import split_iterable, \
+from dae.utils.dae_utils import split_iterable, join_line, \
     members_in_order_get_family_structure
 from dae.utils.effect_utils import expand_effect_types, ge2str, gd2str, \
     gene_effect_get_worst_effect, gene_effect_get_genes
@@ -41,9 +41,9 @@ class StudyWrapper(object):
     def _init_wdae_config(self):
         preview_columns = []
         download_columns = []
-        pheno_column_slots = []
-        gene_weights_columns = []
-        roles_columns = []
+        pheno_columns = []
+        gene_weight_columns = []
+        in_role_columns = []
 
         people_group = {}
         pheno_filters = []
@@ -51,12 +51,13 @@ class StudyWrapper(object):
 
         if self.config.genotype_browser_config:
             genotype_browser_config = self.config.genotype_browser_config
-            preview_columns = genotype_browser_config.preview_columns_slots
-            download_columns = genotype_browser_config.download_columns_slots
-            if genotype_browser_config.pheno_column_slots:
-                pheno_column_slots = genotype_browser_config.pheno_column_slots
-            gene_weights_columns = genotype_browser_config.gene_weights_columns
-            roles_columns = self.config.genotype_browser_config.roles_columns
+            preview_columns = genotype_browser_config.preview_columns
+            download_columns = genotype_browser_config.download_columns
+            if genotype_browser_config.pheno_columns:
+                pheno_columns = genotype_browser_config.pheno_columns
+            gene_weight_columns = genotype_browser_config.gene_weight_columns
+            in_role_columns = \
+                self.config.genotype_browser_config.in_role_columns
 
             pheno_filters = genotype_browser_config.pheno_filters
             if genotype_browser_config.present_in_role:
@@ -64,9 +65,9 @@ class StudyWrapper(object):
 
         self.preview_columns = preview_columns
         self.download_columns = download_columns
-        self.pheno_column_slots = pheno_column_slots
-        self.gene_weights_columns = gene_weights_columns
-        self.roles_columns = roles_columns
+        self.pheno_columns = pheno_columns
+        self.gene_weight_columns = gene_weight_columns
+        self.in_role_columns = in_role_columns
 
         if self.config.people_group_config:
             people_group = self.config.people_group_config.people_group
@@ -148,7 +149,9 @@ class StudyWrapper(object):
         best_st = np.sum(allele.gt == allele.allele_index, axis=0)
 
         for index, member in enumerate(allele.members_in_order):
-            result.append(member.get_wdae_member(people_group, best_st[index]))
+            result.append(
+                self.get_wdae_member(member, people_group, best_st[index])
+            )
 
         return result
 
@@ -168,68 +171,69 @@ class StudyWrapper(object):
                             )
                         else:
                             attribute = aa.get_attribute(source, '')
-                            if not isinstance(attribute, str):
+
+                            if not isinstance(attribute, str) and \
+                                    not isinstance(attribute, list):
                                 if attribute is None or math.isnan(attribute):
                                     attribute = ''
                                 elif math.isinf(attribute):
                                     attribute = 'inf'
+
                             row_variant.append(attribute)
+
                     except (AttributeError, KeyError):
                         traceback.print_exc()
                         row_variant.append('')
 
                 yield row_variant
 
-    def get_variants_web(self, query, genotype_attrs, variants_hard_max=2000):
+    def get_variant_web_rows(self, query, sources, variants_hard_max=2000):
         people_group_id = query.get('peopleGroup', {}).get('id', None)
         people_group = self.get_people_group(people_group_id)
         if not people_group:
             people_group = {}
 
-        columns, sources = zip(*list(genotype_attrs.items()))
         rows = self.query_list_variants(sources, people_group, **query)
 
         if variants_hard_max is not None:
             limited_rows = itertools.islice(rows, variants_hard_max+1)
 
-        return {
-            'cols': list(columns),
-            'rows': limited_rows
-        }
+        return limited_rows
 
-    def get_variants_web_preview(
+    def get_variants_wdae_preview(
             self, query, max_variants_count=1000, variants_hard_max=2000):
-        web_preview = self.get_variants_web(
-            query, self.preview_columns, variants_hard_max
-        )
+        columns, sources = zip(*[
+            (attr['id'], attr['source'])
+            for attr in self.preview_columns.values()
+        ])
+        rows = self.get_variant_web_rows(query, sources, variants_hard_max)
+        rows = list(rows)
 
-        web_preview['rows'] = list(web_preview['rows'])
-
-        if variants_hard_max is None or\
-                len(web_preview['rows']) < variants_hard_max:
-            count = str(len(web_preview['rows']))
+        if variants_hard_max is None or len(rows) < variants_hard_max:
+            count = str(len(rows))
         else:
             count = 'more than {}'.format(variants_hard_max)
 
-        web_preview['count'] = count
-        web_preview['rows'] = list(web_preview['rows'][:max_variants_count])
-        web_preview['legend'] = self.get_legend(**query)
+        variants_data = {}
+        variants_data['count'] = count
+        variants_data['rows'] = list(rows[:max_variants_count])
+        variants_data['cols'] = list(columns)
+        variants_data['legend'] = self.get_legend(**query)
 
-        return web_preview
+        return variants_data
 
-    def get_variants_web_download(
+    def get_variants_wdae_download(
             self, query, max_variants_count=1000, variants_hard_max=2000):
-        columns = self.download_columns
-        if 'pedigree' in columns:
-            columns.pop('pedigree')
+        columns, sources = zip(*[
+            (attr['name'], attr['source'])
+            for attr in self.download_columns.values()
+        ])
+        rows = self.get_variant_web_rows(query, sources, variants_hard_max)
+        rows = itertools.islice(rows, max_variants_count)
 
-        web_preview = self.get_variants_web(
-            query, columns, variants_hard_max)
+        wdae_download = map(join_line, itertools.chain([columns], rows))
 
-        web_preview['rows'] =\
-            itertools.islice(web_preview['rows'], max_variants_count)
-
-        return web_preview
+        return wdae_download
 
     # Not implemented:
     # callSet
@@ -346,19 +350,19 @@ class StudyWrapper(object):
             assert len(variant_pheno_value_df.columns) == 1
             column = variant_pheno_value_df.columns[0]
 
-            pheno_values[pheno_column_name] = ",".join(
-                map(str, variant_pheno_value_df[column].tolist()))
+            pheno_values[pheno_column_name] = \
+                list(variant_pheno_value_df[column].map(str).tolist())
 
         return pheno_values
 
     def _get_all_pheno_values(self, families):
-        if not self.pheno_db or not self.pheno_column_slots:
+        if not self.pheno_db or not self.pheno_columns:
             return None
 
         pheno_column_dfs = []
         pheno_column_names = []
 
-        for slot in self.pheno_column_slots:
+        for slot in self.pheno_columns:
             pheno_column_dfs.append(
                 self.pheno_db.get_measure_values_df(
                     slot.measure,
@@ -373,7 +377,7 @@ class StudyWrapper(object):
         gene = genes[0]
 
         gene_weights_values = {}
-        for gwc in self.gene_weights_columns:
+        for gwc in self.gene_weight_columns:
             if gwc not in self.weights_loader:
                 continue
 
@@ -387,11 +391,11 @@ class StudyWrapper(object):
         return gene_weights_values
 
     def _get_all_roles_values(self, allele):
-        if not self.roles_columns:
+        if not self.in_role_columns:
             return None
 
         result = {}
-        for roles_value in self.roles_columns:
+        for roles_value in self.in_role_columns:
             result[roles_value.destination] = \
                 "".join(self._get_roles_value(allele, roles_value.roles))
 

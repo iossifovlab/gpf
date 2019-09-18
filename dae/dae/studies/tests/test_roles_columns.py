@@ -1,11 +1,11 @@
-def test_all_roles_columns_are_present_in_config(quads_f1_dataset_wrapper):
-    roles_cols = quads_f1_dataset_wrapper.config.genotype_browser_config. \
-        roles_columns
+def test_all_in_role_columns_are_present_in_config(quads_f1_dataset_wrapper):
+    in_role_cols = quads_f1_dataset_wrapper.config.genotype_browser_config. \
+        in_role_columns
 
-    assert roles_cols
-    roles_cols_ids = [role.id for role in roles_cols]
+    assert in_role_cols
+    in_role_cols_ids = [role.id for role in in_role_cols]
 
-    assert roles_cols_ids == ['inChild', 'fromParent']
+    assert in_role_cols_ids == ['inChild', 'fromParent']
 
 
 def test_alleles_have_roles_columns(quads_f1_dataset_wrapper):

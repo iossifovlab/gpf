@@ -18,8 +18,8 @@ def test_variants_have_roles_columns(db, admin_client):
     assert status.HTTP_200_OK == response.status_code
     res = response.data
 
-    assert 'inChS' in res['cols']
-    assert 'fromParentS' in res['cols']
+    assert 'genotype.in child' in res['cols']
+    assert 'genotype.from parent' in res['cols']
 
 
 def test_variants_have_roles_columns_values(db, admin_client):
@@ -31,8 +31,8 @@ def test_variants_have_roles_columns_values(db, admin_client):
     assert status.HTTP_200_OK == response.status_code
     res = response.data
 
-    in_child_index = res['cols'].index('inChS')
-    from_parents_index = res['cols'].index('fromParentS')
+    in_child_index = res['cols'].index('genotype.in child')
+    from_parents_index = res['cols'].index('genotype.from parent')
 
     in_child_expected = ['prbM', 'prbM']
     from_parents_expected = ['momF', 'dadM']

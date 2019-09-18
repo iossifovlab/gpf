@@ -48,6 +48,36 @@ class StudyBase(object):
 
         return people_group_with_id
 
+    def _get_person_color(self, person, people_group):
+        if person.generated:
+            return '#E0E0E0'
+        if len(people_group) == 0:
+            return '#FFFFFF'
+
+        source = people_group['source']
+        people_group_attribute = person.get_attr(source)
+        domain = people_group['domain'].get(people_group_attribute, None)
+
+        if domain and people_group_attribute:
+            return domain['color']
+        else:
+            return people_group['default']['color']
+
+    def get_wdae_member(self, member, people_group, best_st):
+        return [
+            member.family_id,
+            member.person_id,
+            member.mom_id,
+            member.dad_id,
+            member.sex.short(),
+            str(member.role),
+            self._get_person_color(member, people_group),
+            member.layout_position,
+            member.generated,
+            best_st,
+            0
+        ]
+
 
 class Study(StudyBase):
 
