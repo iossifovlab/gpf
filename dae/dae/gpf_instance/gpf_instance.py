@@ -7,6 +7,8 @@ from dae.gene.weights import WeightsFactory
 
 from dae.studies.variants_db import VariantsDb
 
+from dae.pheno.pheno_factory import PhenoFactory
+
 
 class GPFInstance(object):
 
@@ -14,6 +16,8 @@ class GPFInstance(object):
         self.dae_config = DAEConfigParser.read_and_parse_file_configuration(
             config_file=config_file, work_dir=work_dir, defaults=defaults
         )
+
+        self.pheno_factory = PhenoFactory(dae_config=self.dae_config)
 
         self.gene_info_config = \
             GeneInfoConfigParser.read_and_parse_file_configuration(

@@ -1,4 +1,5 @@
 import pytest
+
 import tempfile
 import shutil
 import os
@@ -35,14 +36,8 @@ def output_dir(request):
 
 
 @pytest.fixture(scope='session')
-def fake_dae_conf(gpf_instance):
-    return gpf_instance.dae_config
-
-
-@pytest.fixture(scope='session')
-def fake_pheno_factory(fake_dae_conf):
-    from dae.pheno.pheno_factory import PhenoFactory
-    return PhenoFactory(fake_dae_conf)
+def fake_pheno_factory(gpf_instance):
+    return gpf_instance.pheno_factory
 
 
 @pytest.fixture(scope='session')

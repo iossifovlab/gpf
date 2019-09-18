@@ -88,9 +88,8 @@ def fi1_df(fake_instrument_filename):
 
 
 @pytest.fixture(scope='session')
-def fake_pheno_factory(fake_dae_conf):
-    from dae.pheno.pheno_factory import PhenoFactory
-    return PhenoFactory(fake_dae_conf)
+def fake_pheno_factory(gpf_instance):
+    return gpf_instance.pheno_factory
 
 
 @pytest.fixture(scope='session')

@@ -1,7 +1,5 @@
 import os
 
-from dae.pheno.pheno_factory import PhenoFactory
-
 from dae.studies.study import Study
 from dae.studies.dataset import Dataset
 from dae.studies.study_wrapper import StudyWrapper
@@ -19,15 +17,13 @@ class VariantsDb(object):
 
     FILE_FORMATS = set(['vcf', 'impala'])
 
-    def __init__(self, dae_config, pheno_factory=None, weights_factory=None):
+    def __init__(self, dae_config, pheno_factory, weights_factory):
         self.dae_config = dae_config
 
+        assert pheno_factory
         assert weights_factory
 
-        if pheno_factory is None:
-            pheno_factory = PhenoFactory(dae_config=dae_config)
         self.pheno_factory = pheno_factory
-
         self.weights_factory = weights_factory
 
         defaults = {

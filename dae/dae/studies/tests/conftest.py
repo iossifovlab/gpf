@@ -1,9 +1,9 @@
-import os
 import pytest
+
+import os
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.pheno.pheno_factory import PhenoFactory
 from dae.studies.study_wrapper import StudyWrapper
 from dae.studies.study_config_parser import StudyConfigParser
 from dae.studies.dataset_config_parser import DatasetConfigParser
@@ -40,8 +40,8 @@ def variants_db_fixture(gpf_instance):
 
 
 @pytest.fixture(scope='module')
-def pheno_factory(dae_config_fixture):
-    return PhenoFactory(dae_config_fixture)
+def pheno_factory(gpf_instance):
+    return gpf_instance.pheno_factory
 
 
 @pytest.fixture(scope='module')
