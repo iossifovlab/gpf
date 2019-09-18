@@ -169,7 +169,7 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         if not gene_weights_columns:
             return []
 
-        return [gwc['id'] for gwc in gene_weights_columns.get('slots', [])]
+        return [gwc['source'] for gwc in gene_weights_columns.get('slots', [])]
 
     @classmethod
     def parse(cls, config):
