@@ -28,12 +28,12 @@ def variants_db_fixture(gpf_instance):
 
 
 @pytest.fixture(scope='function')
-def studies_manager(gpf_instance):
+def studies_manager(db, gpf_instance):
     return StudiesManager(gpf_instance)
 
 
 @pytest.fixture(scope='function')
-def mock_studies_manager(db, mocker, studies_manager):
+def mock_studies_manager(mocker, studies_manager):
     mocker.patch(
         'enrichment_api.views.get_studies_manager',
         return_value=studies_manager)

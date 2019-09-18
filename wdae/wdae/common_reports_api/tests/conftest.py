@@ -41,12 +41,12 @@ def use_common_reports(common_report_facade):
 
 
 @pytest.fixture()
-def studies_manager(gpf_instance):
+def studies_manager(db, gpf_instance):
     return StudiesManager(gpf_instance)
 
 
 @pytest.fixture()
-def mock_studies_manager(db, mocker, studies_manager):
+def mock_studies_manager(mocker, studies_manager):
     mocker.patch(
         'common_reports_api.views.get_studies_manager',
         return_value=studies_manager)

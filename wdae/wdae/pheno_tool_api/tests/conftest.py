@@ -17,7 +17,7 @@ def gpf_instance():
 
 
 @pytest.fixture(scope='function')
-def mock_studies_manager(gpf_instance):
+def mock_studies_manager(db, gpf_instance):
     return StudiesManager(gpf_instance)
 
 
