@@ -1,7 +1,5 @@
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.gene.gene_set_collections import GeneSetsCollections
-
 from .models import Dataset
 
 from threading import Lock
@@ -24,9 +22,10 @@ class StudiesManager(object):
         self.gene_info_config = self.gpf_instance.gene_info_config
         self.weights_factory = self.gpf_instance.weights_factory
 
-        self.common_report_facade = self.gpf_instance.common_report_facade
-        self.gene_sets_collections = None
+        self.gene_sets_collections = self.gpf_instance.gene_sets_collections
         self.denovo_gene_set_facade = self.gpf_instance.denovo_gene_set_facade
+
+        self.common_report_facade = self.gpf_instance.common_report_facade
         self.background_facade = self.gpf_instance.background_facade
 
         self.reload_datasets()
@@ -34,9 +33,6 @@ class StudiesManager(object):
     def reload_datasets(self):
         for study_id in self.vdb.get_all_ids():
             Dataset.recreate_dataset_perm(study_id, [])
-
-        self.gene_sets_collections = GeneSetsCollections(
-            self.vdb, self.gene_info_config)
 
     def get_variants_db(self):
         return self.vdb
