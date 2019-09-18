@@ -179,16 +179,16 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         config.genotypeColumns.update(config.pheno_columns)
 
         config.preview_columns = cls._parse_column_slots(
-            config.genotype_columns, config.get('previewColumns', [])
+            config.genotypeColumns, config.get('previewColumns', [])
         )
         config.download_columns = cls._parse_column_slots(
-            config.genotype_columns, config.get('downloadColumns', [])
+            config.genotypeColumns, config.get('downloadColumns', [])
         )
         if 'pedigree' in config.download_columns:
             config.download_columns.pop('pedigree')
 
         config.gene_weight_columns = \
-            cls._parse_gene_weight_columns(config.genotype_columns)
+            cls._parse_gene_weight_columns(config.genotypeColumns)
 
         config.in_role_columns = \
             cls._parse_in_role_columns(config.get('inRoles', {}))
