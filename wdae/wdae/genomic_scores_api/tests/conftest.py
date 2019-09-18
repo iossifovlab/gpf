@@ -24,7 +24,6 @@ def studies_manager(gpf_instance):
 
 @pytest.fixture(scope='function')
 def mock_studies_manager(db, mocker, studies_manager):
-    studies_manager.reload_dataset()
     mocker.patch(
         'genomic_scores_api.views.get_studies_manager',
         return_value=studies_manager)

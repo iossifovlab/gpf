@@ -84,7 +84,6 @@ def get_studies_manager():
         try:
             if _studies_manager is None:
                 sm = StudiesManager()
-                sm.reload_dataset()
                 _studies_manager = sm
         finally:
             _studies_manager_lock.release()
