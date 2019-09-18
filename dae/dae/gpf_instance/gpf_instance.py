@@ -4,6 +4,8 @@ from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.weights import WeightsFactory
+from dae.gene.score_config_parser import ScoreConfigParser
+from dae.gene.scores import ScoresFactory
 
 from dae.studies.variants_db import VariantsDb
 
@@ -24,9 +26,15 @@ class GPFInstance(object):
                 self.dae_config.gene_info_db.conf_file,
                 self.dae_config.dae_data_dir
             )
-
         self.weights_factory = \
             WeightsFactory(config=self.gene_info_config.gene_weights)
+
+        self.score_config = \
+            ScoreConfigParser.read_and_parse_file_configuration(
+                self.dae_config.genomic_scores_db.conf_file,
+                self.dae_config.dae_data_dir
+            )
+        self.scores_factory = ScoresFactory(self.score_config)
 
         self.variants_db = VariantsDb(
             self.dae_config, self.pheno_factory, self.weights_factory

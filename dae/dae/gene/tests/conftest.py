@@ -8,11 +8,9 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.utils.fixtures import change_environment
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
-from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set import DenovoGeneSet
 from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
-from dae.gene.scores import ScoresFactory
 
 from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 
@@ -98,15 +96,12 @@ def weights_factory(gpf_instance):
 
 @pytest.fixture(scope='session')
 def score_config(dae_config_fixture):
-    return ScoreConfigParser.read_and_parse_file_configuration(
-        dae_config_fixture.genomic_scores_db.conf_file,
-        dae_config_fixture.dae_data_dir
-    )
+    return gpf_instance.score_config
 
 
 @pytest.fixture(scope='session')
-def scores_factory(score_config):
-    return ScoresFactory(score_config)
+def scores_factory(gpf_instance):
+    return gpf_instance.scores_factory
 
 
 def get_denovo_gene_set_by_id(variants_db_fixture, dgs_id):
