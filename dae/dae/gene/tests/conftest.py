@@ -7,10 +7,8 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.utils.fixtures import change_environment
 
-from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set import DenovoGeneSet
-from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
 
 from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 
@@ -47,12 +45,28 @@ def variants_db_fixture(gpf_instance):
 
 
 @pytest.fixture(scope='session')
-def gene_info_config(dae_config_fixture):
-    gene_info_config = GeneInfoConfigParser.read_and_parse_file_configuration(
-        dae_config_fixture.gene_info_db.conf_file,
-        dae_config_fixture.dae_data_dir
-    )
-    return gene_info_config
+def gene_info_config(gpf_instance):
+    return gpf_instance.gene_info_config
+
+
+@pytest.fixture(scope='session')
+def weights_factory(gpf_instance):
+    return gpf_instance.weights_factory
+
+
+@pytest.fixture(scope='session')
+def score_config(dae_config_fixture):
+    return gpf_instance.score_config
+
+
+@pytest.fixture(scope='session')
+def scores_factory(gpf_instance):
+    return gpf_instance.scores_factory
+
+
+@pytest.fixture(scope='session')
+def denovo_gene_set_facade(gpf_instance):
+    return gpf_instance.denovo_gene_set_facade
 
 
 @pytest.fixture(scope='module')
@@ -89,21 +103,6 @@ def calc_gene_sets(request, denovo_gene_sets, denovo_gene_set_f4):
     request.addfinalizer(remove_gene_sets)
 
 
-@pytest.fixture(scope='session')
-def weights_factory(gpf_instance):
-    return gpf_instance.weights_factory
-
-
-@pytest.fixture(scope='session')
-def score_config(dae_config_fixture):
-    return gpf_instance.score_config
-
-
-@pytest.fixture(scope='session')
-def scores_factory(gpf_instance):
-    return gpf_instance.scores_factory
-
-
 def get_denovo_gene_set_by_id(variants_db_fixture, dgs_id):
     denovo_gene_set_config = DenovoGeneSetConfigParser.parse(
         variants_db_fixture.get_config(dgs_id))
@@ -125,11 +124,6 @@ def denovo_gene_sets(variants_db_fixture):
 @pytest.fixture(scope='session')
 def denovo_gene_set_f4(variants_db_fixture):
     return get_denovo_gene_set_by_id(variants_db_fixture, 'f4_trio')
-
-
-@pytest.fixture(scope='session')
-def denovo_gene_set_facade(variants_db_fixture):
-    return DenovoGeneSetFacade(variants_db_fixture)
 
 
 @pytest.fixture(scope='session')

@@ -1,7 +1,6 @@
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.gene.gene_set_collections import GeneSetsCollections
-from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
 
 from .models import Dataset
 
@@ -25,8 +24,9 @@ class StudiesManager(object):
         self.gene_info_config = self.gpf_instance.gene_info_config
         self.weights_factory = self.gpf_instance.weights_factory
 
-        self.gene_sets_collections = None
         self.common_report_facade = self.gpf_instance.common_report_facade
+        self.gene_sets_collections = None
+        self.denovo_gene_set_facade = self.gpf_instance.denovo_gene_set_facade
         self.background_facade = self.gpf_instance.background_facade
 
         self.reload_datasets()
@@ -37,7 +37,6 @@ class StudiesManager(object):
 
         self.gene_sets_collections = GeneSetsCollections(
             self.vdb, self.gene_info_config)
-        self.denovo_gene_set_facade = DenovoGeneSetFacade(self.vdb)
 
     def get_variants_db(self):
         return self.vdb

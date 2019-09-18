@@ -3,8 +3,6 @@ import argparse
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
-
 
 def main(gpf_instance=None, argv=None):
     description = 'Generate genovo gene sets tool'
@@ -23,9 +21,7 @@ def main(gpf_instance=None, argv=None):
 
     if gpf_instance is None:
         gpf_instance = GPFInstance()
-    variants_db = gpf_instance.variants_db
-
-    dgsf = DenovoGeneSetFacade(variants_db)
+    dgsf = gpf_instance.denovo_gene_set_facade
 
     if args.show_studies:
         for study_id in dgsf.get_all_denovo_gene_set_ids():
