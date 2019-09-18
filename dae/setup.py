@@ -36,6 +36,7 @@ setuptools.setup(
         'dae/tools/vcf2parquet.py',
         'dae/annotation/annotation_pipeline.py',
         'dae/tools/generate_histogram.py',
+        'dae/tools/run_gpf_impala.sh',
     ],
 
     classifiers=[
