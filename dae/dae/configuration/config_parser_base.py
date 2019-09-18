@@ -5,6 +5,12 @@ from configparser import ConfigParser
 from dae.configuration.utils import parser_to_dict
 
 
+class VerificationError(Exception):
+
+    def __init__(self, message):
+        self.message = message
+
+
 class CaseSensitiveConfigParser(ConfigParser):
     """
     Modified ConfigParser that allows case sensitive options.
@@ -28,6 +34,7 @@ class ConfigParserBase(object):
     CAST_TO_BOOL = ()
     CAST_TO_INT = ()
     FILTER_SELECTORS = {}
+    VERIFY_VALUES = {}
 
     @classmethod
     def read_and_parse_directory_configurations(
@@ -188,6 +195,10 @@ class ConfigParserBase(object):
         config_section = cls._cast_to_int(config_section)
         config_section = cls._filter_selectors(config_section)
 
+        # This one should remain last so as to avoid having a seemingly valid
+        # value be rendered invalid by one of the previous transformations
+        config_section = cls._verify_values(config_section)
+
         return config_section
 
     @classmethod
@@ -284,5 +295,21 @@ class ConfigParserBase(object):
                     selector.id = selector_id
 
                 config[key][selector_id] = selector
+
+        return config
+
+    @classmethod
+    def _verify_values(cls, config):
+        exception_messages = []
+
+        for key, verify_func in cls.VERIFY_VALUES.items():
+            if key in config:
+                try:
+                    config[key] = verify_func(config[key])
+                except Exception as e:
+                    exception_messages.append('[{}]: {}'.format(key, str(e)))
+
+        if exception_messages:
+            raise VerificationError('\n'.join(exception_messages))
 
         return config
