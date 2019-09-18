@@ -15,29 +15,29 @@ from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.impala_variants import ImpalaFamilyVariants
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
-from dae.gene.weights import WeightsLoader
+from dae.gene.weights import WeightsFactory
 
 
 class VariantsDb(object):
 
     FILE_FORMATS = set(['vcf', 'impala'])
 
-    def __init__(self, dae_config, pheno_factory=None, weights_loader=None):
+    def __init__(self, dae_config, pheno_factory=None, weights_factory=None):
         self.dae_config = dae_config
 
         if pheno_factory is None:
             pheno_factory = PhenoFactory(dae_config=dae_config)
         self.pheno_factory = pheno_factory
 
-        if weights_loader is None:
+        if weights_factory is None:
             gene_info_config = \
                 GeneInfoConfigParser.read_and_parse_file_configuration(
                     dae_config.gene_info_db.conf_file, dae_config.dae_data_dir
                 )
 
-            weights_loader =  \
-                WeightsLoader(config=gene_info_config.gene_weights)
-        self.weights_loader = weights_loader
+            weights_factory =  \
+                WeightsFactory(config=gene_info_config.gene_weights)
+        self.weights_factory = weights_factory
 
         defaults = {
             'values': {
@@ -216,7 +216,7 @@ class VariantsDb(object):
             return
         self._study_cache[study_id] = study
         self._study_wrapper_cache[study_id] = \
-            StudyWrapper(study, self.pheno_factory, self.weights_loader)
+            StudyWrapper(study, self.pheno_factory, self.weights_factory)
 
     def load_dataset_cache(self, dataset_ids=None):
         if dataset_ids is None:
@@ -240,7 +240,7 @@ class VariantsDb(object):
             return
         self._dataset_cache[dataset_id] = dataset
         self._dataset_wrapper_cache[dataset_id] = \
-            StudyWrapper(dataset, self.pheno_factory, self.weights_loader)
+            StudyWrapper(dataset, self.pheno_factory, self.weights_factory)
 
     def _impala_configuration(self, study_config):
         assert study_config.file_format == 'impala'

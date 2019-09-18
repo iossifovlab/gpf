@@ -26,10 +26,10 @@ class Scores(GenomicValues):
         return self.df['scores'].values
 
 
-class ScoreLoader(object):
+class ScoresFactory(object):
 
     def __init__(self, config, *args, **kwargs):
-        super(ScoreLoader, self).__init__(*args, **kwargs)
+        super(ScoresFactory, self).__init__(*args, **kwargs)
         self.config = config
 
         self.scores = OrderedDict()

@@ -1,8 +1,3 @@
-'''
-Created on Mar 29, 2018
-
-@author: lubo
-'''
 import os
 import shutil
 
@@ -15,8 +10,8 @@ from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set import DenovoGeneSet
 from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
-from dae.gene.weights import WeightsLoader
-from dae.gene.scores import ScoreLoader
+from dae.gene.weights import WeightsFactory
+from dae.gene.scores import ScoresFactory
 
 from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
 # Used by pytest
@@ -84,8 +79,8 @@ def calc_gene_sets(request, denovo_gene_sets, denovo_gene_set_f4):
 
 
 @pytest.fixture(scope='session')
-def weights_loader(gene_info_config):
-    return WeightsLoader(config=gene_info_config.gene_weights)
+def weights_factory(gene_info_config):
+    return WeightsFactory(config=gene_info_config.gene_weights)
 
 
 @pytest.fixture(scope='session')
@@ -97,8 +92,8 @@ def score_config(dae_config_fixture):
 
 
 @pytest.fixture(scope='session')
-def score_loader(score_config):
-    return ScoreLoader(score_config)
+def scores_factory(score_config):
+    return ScoresFactory(score_config)
 
 
 @pytest.fixture(scope='session')

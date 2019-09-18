@@ -6,8 +6,8 @@ from dae.studies.variants_db import VariantsDb
 from dae.common_reports.common_report_facade import CommonReportFacade
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
-from dae.gene.scores import ScoreLoader
-from dae.gene.weights import WeightsLoader
+from dae.gene.scores import ScoresFactory
+from dae.gene.weights import WeightsFactory
 from dae.gene.score_config_parser import ScoreConfigParser
 
 from dae.gene.gene_set_collections import GeneSetsCollections
@@ -40,9 +40,9 @@ class StudiesManager(object):
         self.dae_config = dae_config
         self.vdb = None
 
-        self.score_loader = None
+        self.scores_factory = None
         self.gene_info_config = None
-        self.weights_loader = None
+        self.weights_factory = None
 
         self.gene_sets_collections = None
         self.common_reports = None
@@ -58,14 +58,14 @@ class StudiesManager(object):
             self.dae_config.genomic_scores_db.conf_file,
             self.dae_config.dae_data_dir
         )
-        self.score_loader = ScoreLoader(score_config)
+        self.scores_factory = ScoresFactory(score_config)
 
         self.gene_info_config = \
             GeneInfoConfigParser.read_and_parse_file_configuration(
                 self.dae_config.gene_info_db.conf_file,
                 self.dae_config.dae_data_dir
             )
-        self.weights_loader = WeightsLoader(
+        self.weights_factory = WeightsFactory(
             config=self.gene_info_config.gene_weights)
 
         self.gene_sets_collections = GeneSetsCollections(
@@ -90,14 +90,14 @@ class StudiesManager(object):
         self.get_variants_db()
         return self.gene_info_config
 
-    def get_score_loader(self):
+    def get_scores_factory(self):
         self.get_variants_db()
-        assert self.score_loader is not None
-        return self.score_loader
+        assert self.scores_factory is not None
+        return self.scores_factory
 
-    def get_weights_loader(self):
+    def get_weights_factory(self):
         self.get_variants_db()
-        return self.weights_loader
+        return self.weights_factory
 
     def get_gene_sets_collections(self):
         self.get_variants_db()

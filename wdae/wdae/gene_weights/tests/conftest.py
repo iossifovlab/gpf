@@ -4,7 +4,7 @@ import pytest
 from dae.configuration.dae_config_parser import DAEConfigParser
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
-from dae.gene.weights import WeightsLoader
+from dae.gene.weights import WeightsFactory
 
 from datasets_api.studies_manager import StudiesManager
 
@@ -34,16 +34,16 @@ def mock_studies_manager(db, mocker, studies_manager):
         'gene_weights.views.get_studies_manager',
         return_value=studies_manager)
     mocker.patch(
-        'gene_weights.tests.test_gene_weights_loader.get_studies_manager',
+        'gene_weights.tests.test_gene_weights_factory.get_studies_manager',
         return_value=studies_manager)
 
 
 @pytest.fixture()
-def weights_loader(dae_config_fixture):
+def weights_factory(dae_config_fixture):
     gene_info_config = GeneInfoConfigParser.read_and_parse_file_configuration(
         dae_config_fixture.gene_info_db.conf_file,
         dae_config_fixture.dae_data_dir
     )
-    weights_loader = WeightsLoader(config=gene_info_config.gene_weights)
+    weights_factory = WeightsFactory(config=gene_info_config.gene_weights)
 
-    return weights_loader
+    return weights_factory
