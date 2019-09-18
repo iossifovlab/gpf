@@ -447,14 +447,17 @@ demo phenotype database inside the ``pheno`` directory::
 
     cd gpf_test/pheno
 
+This phenotype database is ``comp_pheno``. It has already been imported into the
+GPF instance, but its initial files have also been included in order to demonstrate
+how a phenotype database may be imported.
+
 The included files are:
 
-* | ``comp_pheno.ped`` - the pedigree file for all families included into the
-  | database;
+* ``comp_pheno.ped`` - the pedigree file for all families included into the database;
 
-* `instruments` - directory, containing all instruments;
+* ``instruments`` - directory, containing all instruments;
 
-* ``instruments/i1.csv`` - all measurements for instrument `i1`.
+* ``instruments/i1.csv`` - all measurements for instrument ``i1``.
 
 * ``comp_pheno_data_dictionary.tsv`` - descriptions for all measurements
 
@@ -469,7 +472,7 @@ directly to the DAE data directory specified in your environment.
 .. code::
 
     simple_pheno_import.py -p comp_pheno.ped \
-        -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno \
+        -i instruments/ -d comp_pheno_data_dictionary.tsv -o comp_pheno_manual_import \
         --regression comp_pheno_regressions.conf
 
 Options used in this command are as follows:
@@ -479,7 +482,7 @@ Options used in this command are as follows:
 * | ``-d`` option specifies the name of the data dictionary file for the
   | phenotype database
 
-* | ``-i`` option allows to spcecify the directory where instruments
+* | ``-i`` option allows to specify the directory where instruments
   | are located;
 
 * | ``-o`` options specifies the name of the output phenotype database that
@@ -494,40 +497,50 @@ You can use ``-h`` option to see all options supported by the
 Configure Phenotype Database
 ++++++++++++++++++++++++++++
 
-The newly imported phenotype database has an automatically generated
-configuration file.
+Phenotype databases have a short configuration file (whose filenames
+usually end with the extension ``.conf``) which points
+the system to their files, as well as specifying some
+other properties. When importing a phenotype database through the
+`simple_pheno_import.py` tool, a configuration file is automatically
+generated. You may inspect the ``comp_pheno_manual_import`` directory
+to see the configuration file generated from the import tool:
 
 .. code::
 
     [phenoDB]
-    dbfile = comp_pheno.db
-    browser_dbfile = browser/comp_pheno_browser.db
-    browser_images_dir = browser/comp_pheno
-    browser_images_url = /static/comp_pheno
+    name = comp_pheno_manual_import
+    dbfile = %(wd)s/comp_pheno_manual_import.db
+    browser_dbfile = %(wd)s/browser/comp_pheno_manual_import_browser.db
+    browser_images_dir = %(wd)s/browser/comp_pheno_manual_import
+    browser_images_url = /static/comp_pheno_manual_import
 
 Configure Phenotype Browser
 +++++++++++++++++++++++++++
 
+To demonstrate how a study is configured with a phenotype database, we will
+be working with the manually imported ``comp_all`` study.
+
 The phenotype databases could be attached to one or more studies and datasets.
-If you want to attach `comp_pheno` phenotype database to `comp` study you need
-to specify it in the `comp` stydy configuration file ``comp.conf``:
+If you want to attach ``comp_pheno_manual_import`` phenotype
+database to ``comp_all`` study, you need to specify it in the ``comp_all``
+study configuration file ``comp_all.conf``:
 
 .. code::
 
     [study]
 
-    id = comp
+    id = comp_all
     prefix = data/
-    phenoDB = comp_pheno
+    phenoDB = comp_pheno_manual_import
 
-and to enable the phenotype browser you should add:
+and to enable the phenotype browser you must add:
 
 .. code::
 
     phenotypeBrowser = yes
 
 If you restart the GPF system WEB interface after this change you should be
-able to see `Phenotype Browser` tab in `comp` dataset.
+able to see `Phenotype Browser` tab in `comp_all` dataset.
 
 Configure Phenotype Filters in Genotype Browser
 +++++++++++++++++++++++++++++++++++++++++++++++
@@ -630,9 +643,45 @@ configuration.
     previewColumns = family,variant,genotype,effect,weights,scores3,scores5,pheno
 
 
-In the above `comp` configuration, the last column ``pheno`` is a Phenotype
+In the above ``comp_all`` configuration, the last column ``pheno`` is a Phenotype
 Column.
 
+
+Enabling the Phenotype tool
++++++++++++++++++++++++++++
+
+To enable the Phenotype tool for a study, you must edit
+its configuration file and set the appropriate property, as with
+the Phenotype browser. Open the configuration file ``comp_all.conf``:
+
+.. code::
+
+    [study]
+
+    id = comp
+    prefix = data/
+    phenoDB = comp_pheno
+    phenotypeBrowser = yes
+    genotypeBrowser = yes
+
+
+You can enable the Phenotype tool using the following property:
+
+.. code::
+
+   phenotypeTool = yes
+
+
+Restart the GPF development web server and select the `comp_all` study.
+You should see a :ref:`phenotool-ui` tab. Once you have selected it, you can select
+a phenotype measure of your choice. To get the tool to acknowledge the variants
+in the ``comp_all`` study, select the `All` option of the `Present in Parent` field.
+Since the effect types of the variants in the comp study are only `Missense` and `Synonymous`,
+you may wish to de-select the `LGDs` option under the `Effect Types` field.
+There are is also the option to normalize the results by one or two measures
+configured as regressors - age and non-verbal IQ.
+
+Click on the `Report` button to produce the results.
 
 
 Dataset Statitistics and de Novo Gene Sets

@@ -192,6 +192,8 @@ datasets to tests hypotheses driven by their own research against the large amou
 
    Figure 6
 
+.. _phenotool-ui:
+
 Phenotype Tool
 --------------
 
