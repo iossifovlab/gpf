@@ -3,6 +3,8 @@ import shutil
 
 import pytest
 
+from dae.gpf_instance.gpf_instance import GPFInstance
+
 from dae.utils.fixtures import change_environment
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
@@ -10,7 +12,6 @@ from dae.gene.score_config_parser import ScoreConfigParser
 from dae.gene.denovo_gene_set_config import DenovoGeneSetConfigParser
 from dae.gene.denovo_gene_set import DenovoGeneSet
 from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
-from dae.gene.weights import WeightsFactory
 from dae.gene.scores import ScoresFactory
 
 from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
@@ -33,6 +34,11 @@ def mock_property(mocker):
         file_mock = mocker.patch(property, new_callable=mocker.PropertyMock)
         file_mock.return_value = mock_value
     return result
+
+
+@pytest.fixture(scope='session')
+def gpf_instance():
+    return GPFInstance(work_dir=fixtures_dir())
 
 
 @pytest.fixture(scope='session')
@@ -79,8 +85,8 @@ def calc_gene_sets(request, denovo_gene_sets, denovo_gene_set_f4):
 
 
 @pytest.fixture(scope='session')
-def weights_factory(gene_info_config):
-    return WeightsFactory(config=gene_info_config.gene_weights)
+def weights_factory(gpf_instance):
+    return gpf_instance.weights_factory
 
 
 @pytest.fixture(scope='session')

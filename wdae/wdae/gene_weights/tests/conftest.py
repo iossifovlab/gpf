@@ -3,9 +3,6 @@ import pytest
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
-from dae.gene.gene_info_config import GeneInfoConfigParser
-from dae.gene.weights import WeightsFactory
-
 from datasets_api.studies_manager import StudiesManager
 
 
@@ -42,11 +39,5 @@ def mock_studies_manager(db, mocker, studies_manager):
 
 
 @pytest.fixture(scope='function')
-def weights_factory(dae_config_fixture):
-    gene_info_config = GeneInfoConfigParser.read_and_parse_file_configuration(
-        dae_config_fixture.gene_info_db.conf_file,
-        dae_config_fixture.dae_data_dir
-    )
-    weights_factory = WeightsFactory(config=gene_info_config.gene_weights)
-
-    return weights_factory
+def weights_factory(gpf_instance):
+    return gpf_instance.weights_factory

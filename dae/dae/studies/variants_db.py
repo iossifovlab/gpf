@@ -14,9 +14,6 @@ from dae.backends.configure import Configure
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.impala_variants import ImpalaFamilyVariants
 
-from dae.gene.gene_info_config import GeneInfoConfigParser
-from dae.gene.weights import WeightsFactory
-
 
 class VariantsDb(object):
 
@@ -25,18 +22,12 @@ class VariantsDb(object):
     def __init__(self, dae_config, pheno_factory=None, weights_factory=None):
         self.dae_config = dae_config
 
+        assert weights_factory
+
         if pheno_factory is None:
             pheno_factory = PhenoFactory(dae_config=dae_config)
         self.pheno_factory = pheno_factory
 
-        if weights_factory is None:
-            gene_info_config = \
-                GeneInfoConfigParser.read_and_parse_file_configuration(
-                    dae_config.gene_info_db.conf_file, dae_config.dae_data_dir
-                )
-
-            weights_factory =  \
-                WeightsFactory(config=gene_info_config.gene_weights)
         self.weights_factory = weights_factory
 
         defaults = {

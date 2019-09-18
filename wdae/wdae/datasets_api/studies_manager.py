@@ -4,7 +4,6 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.gene.gene_info_config import GeneInfoConfigParser
 from dae.gene.scores import ScoresFactory
-from dae.gene.weights import WeightsFactory
 from dae.gene.score_config_parser import ScoreConfigParser
 
 from dae.gene.gene_set_collections import GeneSetsCollections
@@ -54,8 +53,7 @@ class StudiesManager(object):
                 self.dae_config.gene_info_db.conf_file,
                 self.dae_config.dae_data_dir
             )
-        self.weights_factory = WeightsFactory(
-            config=self.gene_info_config.gene_weights)
+        self.weights_factory = self.gpf_instance.weights_factory
 
         self.gene_sets_collections = GeneSetsCollections(
             self.vdb, self.gene_info_config)

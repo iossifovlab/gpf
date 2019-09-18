@@ -2,6 +2,9 @@ from dae.common_reports.common_report_facade import CommonReportFacade
 
 from dae.configuration.dae_config_parser import DAEConfigParser
 
+from dae.gene.gene_info_config import GeneInfoConfigParser
+from dae.gene.weights import WeightsFactory
+
 from dae.studies.variants_db import VariantsDb
 
 
@@ -11,5 +14,16 @@ class GPFInstance(object):
         self.dae_config = DAEConfigParser.read_and_parse_file_configuration(
             config_file=config_file, work_dir=work_dir, defaults=defaults
         )
-        self.variants_db = VariantsDb(self.dae_config)
+
+        self.gene_info_config = \
+            GeneInfoConfigParser.read_and_parse_file_configuration(
+                self.dae_config.gene_info_db.conf_file,
+                self.dae_config.dae_data_dir
+            )
+
+        self.weights_factory = \
+            WeightsFactory(config=self.gene_info_config.gene_weights)
+
+        self.variants_db = \
+            VariantsDb(self.dae_config, weights_factory=self.weights_factory)
         self.common_report_facade = CommonReportFacade(self.variants_db)

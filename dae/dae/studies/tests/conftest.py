@@ -1,16 +1,12 @@
 import os
 import pytest
 
+from dae.gpf_instance.gpf_instance import GPFInstance
+
 from dae.pheno.pheno_factory import PhenoFactory
 from dae.studies.study_wrapper import StudyWrapper
 from dae.studies.study_config_parser import StudyConfigParser
 from dae.studies.dataset_config_parser import DatasetConfigParser
-from dae.studies.variants_db import VariantsDb
-
-from dae.gene.gene_info_config import GeneInfoConfigParser
-from dae.gene.weights import WeightsFactory
-
-from dae.configuration.dae_config_parser import DAEConfigParser
 
 
 def fixtures_dir():
@@ -29,16 +25,18 @@ def datasets_dir():
 
 
 @pytest.fixture(scope='session')
+def gpf_instance():
+    return GPFInstance(work_dir=fixtures_dir())
+
+
+@pytest.fixture(scope='session')
 def dae_config_fixture():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
-    return dae_config
+    return gpf_instance.dae_config
 
 
 @pytest.fixture(scope='module')
-def variants_db_fixture(dae_config_fixture):
-    vdb = VariantsDb(dae_config_fixture)
-    return vdb
+def variants_db_fixture(gpf_instance):
+    return gpf_instance.variants_db
 
 
 @pytest.fixture(scope='module')
@@ -47,17 +45,8 @@ def pheno_factory(dae_config_fixture):
 
 
 @pytest.fixture(scope='module')
-def gene_info_config(dae_config_fixture):
-    gene_info_config = GeneInfoConfigParser.read_and_parse_file_configuration(
-        dae_config_fixture.gene_info_db.conf_file,
-        dae_config_fixture.dae_data_dir
-    )
-    return gene_info_config
-
-
-@pytest.fixture(scope='module')
-def weights_factory(gene_info_config):
-    return WeightsFactory(config=gene_info_config.gene_weights)
+def weights_factory(gpf_instance):
+    return gpf_instance.weights_factory
 
 
 @pytest.fixture(scope='module')
