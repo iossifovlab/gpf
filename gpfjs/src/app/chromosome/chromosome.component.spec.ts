@@ -162,10 +162,10 @@ describe('ChromosomeComponentVariants', () => {
 
   it('should be created', () => {
     let gpData: Map<string, any> = new Map([
-      ['location', '1:1450'],
-      ['worst_effect', 'nonsense'],
-      ['inChS', 'prbM'],
-      ['genes', 'TESTGENE'],
+      ['variant.location', '1:1450'],
+      ['effect.worst effect type', 'nonsense'],
+      ['genotype.in child', 'prbM'],
+      ['effect.genes', 'TESTGENE'],
     ]);
 
     component.chromEl.genotypePreviews = [gpData];
@@ -179,10 +179,10 @@ describe('ChromosomeComponentVariants', () => {
   xit('should create popovers containing genes and location', () => {
     // TODO
     let gpData: Map<string, any> = new Map([
-      ['location', '1:1450'],
-      ['worst_effect', 'nonsense'],
-      ['inChS', 'prbM'],
-      ['genes', 'TESTGENE'],
+      ['variant.location', '1:1450'],
+      ['effect.worst effect type', 'nonsense'],
+      ['genotype.in child', 'prbM'],
+      ['effect.genes', 'TESTGENE'],
     ]);
 
     component.chromEl.genotypePreviews = [gpData];
@@ -195,10 +195,10 @@ describe('ChromosomeComponentVariants', () => {
 
   it('should assign a valid link to the ucsc genome browser', () => {
     let gpData: Map<string, any> = new Map([
-      ['location', '1:1450'],
-      ['worst_effect', 'nonsense'],
-      ['inChS', 'prbM'],
-      ['genes', 'TESTGENE'],
+      ['variant.location', '1:1450'],
+      ['effect.worst effect type', 'nonsense'],
+      ['genotype.in child', 'prbM'],
+      ['effect.genes', 'TESTGENE'],
     ]);
 
     component.chromEl.genotypePreviews = [gpData];
@@ -212,14 +212,14 @@ describe('ChromosomeComponentVariants', () => {
 
   it('should determine the max stacking index correctly (probands)', () => {
     let gpData: Map<string, any> = new Map([
-      ['location', '1:1450'],
-      ['worst_effect', 'nonsense'],
-      ['genes', 'TESTGENE'],
+      ['variant.location', '1:1450'],
+      ['effect.worst effect type', 'nonsense'],
+      ['effect.genes', 'TESTGENE'],
     ]);
 
     let gpDataArr = [];
     ['prbM', 'prbM', 'prbM', 'sibM', 'sibM'].forEach((inChS) => {
-      gpDataArr.push(new Map(gpData.set('inChS', inChS)));
+      gpDataArr.push(new Map(gpData.set('genotype.in child', inChS)));
     });
 
     component.chromEl.genotypePreviews = gpDataArr;
@@ -232,14 +232,14 @@ describe('ChromosomeComponentVariants', () => {
 
   it('should determine the max stacking index correctly (siblings)', () => {
     let gpData: Map<string, any> = new Map([
-      ['location', '1:1450'],
-      ['worst_effect', 'nonsense'],
-      ['genes', 'TESTGENE'],
+      ['variant.location', '1:1450'],
+      ['effect.worst effect type', 'nonsense'],
+      ['effect.genes', 'TESTGENE'],
     ]);
 
     let gpDataArr = [];
     ['prbM', 'prbM', 'sibM', 'sibM', 'sibM', 'sibM', 'sibM'].forEach((inChS) => {
-      gpDataArr.push(new Map(gpData.set('inChS', inChS)));
+      gpDataArr.push(new Map(gpData.set('genotype.in child', inChS)));
     });
 
     component.chromEl.genotypePreviews = gpDataArr;
@@ -252,10 +252,10 @@ describe('ChromosomeComponentVariants', () => {
 
   it('should draw proband variants on top of the chromosome', () => {
     let gpData: Map<string, any> = new Map([
-      ['location', '1:1450'],
-      ['inChS', 'prbM'],
-      ['worst_effect', 'nonsense'],
-      ['genes', 'TESTGENE'],
+      ['variant.location', '1:1450'],
+      ['genotype.in child', 'prbM'],
+      ['effect.worst effect type', 'nonsense'],
+      ['effect.genes', 'TESTGENE'],
     ]);
     component.chromEl.genotypePreviews = [gpData];
     component.chromEl.ngOnChanges();
@@ -270,10 +270,10 @@ describe('ChromosomeComponentVariants', () => {
 
   it('should draw sibling variants on bottom of the chromosome', () => {
     let gpData: Map<string, any> = new Map([
-      ['location', '1:1450'],
-      ['inChS', 'sibM'],
-      ['worst_effect', 'nonsense'],
-      ['genes', 'TESTGENE'],
+      ['variant.location', '1:1450'],
+      ['genotype.in child', 'sibM'],
+      ['effect.worst effect type', 'nonsense'],
+      ['effect.genes', 'TESTGENE'],
     ]);
     component.chromEl.genotypePreviews = [gpData];
     component.chromEl.ngOnChanges();
@@ -290,11 +290,11 @@ describe('ChromosomeComponentVariants', () => {
   ].forEach((variantType) => {
     it('should assign the star figure to the following variants', async(() => {
       let gpData: Map<string, any> = new Map([
-        ['location', '1:1450'],
-        ['inChS', 'prbM'],
-        ['genes', 'TESTGENE'],
+        ['variant.location', '1:1450'],
+        ['genotype.in child', 'prbM'],
+        ['effect.genes', 'TESTGENE'],
       ]);
-      gpData.set('worst_effect', variantType);
+      gpData.set('effect.worst effect type', variantType);
       component.chromEl.genotypePreviews = [gpData];
       component.chromEl.ngOnChanges();
       fixture.detectChanges();
@@ -310,11 +310,11 @@ describe('ChromosomeComponentVariants', () => {
   ].forEach((variantType) => {
     it('should assign the square figure to the following variants', async(() => {
       let gpData: Map<string, any> = new Map([
-        ['location', '1:1450'],
-        ['inChS', 'prbM'],
-        ['genes', 'TESTGENE'],
+        ['variant.location', '1:1450'],
+        ['genotype.in child', 'prbM'],
+        ['effect.genes', 'TESTGENE'],
       ]);
-      gpData.set('worst_effect', variantType);
+      gpData.set('effect.worst effect type', variantType);
       component.chromEl.genotypePreviews = [gpData];
       component.chromEl.ngOnChanges();
       fixture.detectChanges();
@@ -330,11 +330,11 @@ describe('ChromosomeComponentVariants', () => {
   ].forEach((variantType) => {
     it('should assign the circle figure to the following variants', async(() => {
       let gpData: Map<string, any> = new Map([
-        ['location', '1:1450'],
-        ['inChS', 'prbM'],
-        ['genes', 'TESTGENE'],
+        ['variant.location', '1:1450'],
+        ['genotype.in child', 'prbM'],
+        ['effect.genes', 'TESTGENE'],
       ]);
-      gpData.set('worst_effect', variantType);
+      gpData.set('effect.worst effect type', variantType);
       component.chromEl.genotypePreviews = [gpData];
       component.chromEl.ngOnChanges();
       fixture.detectChanges();
@@ -355,12 +355,12 @@ describe('ChromosomeComponentVariants', () => {
         ['prbU', 'green'],
       ]);
       let gpData: Map<string, any> = new Map([
-        ['location', '1:1450'],
-        ['genes', 'TESTGENE'],
-        ['worst_effect', 'nonsense']
+        ['variant.location', '1:1450'],
+        ['effect.genes', 'TESTGENE'],
+        ['effect.worst effect type', 'nonsense']
       ]);
 
-      gpData.set('inChS', inChS);
+      gpData.set('genotype.in child', inChS);
       component.chromEl.genotypePreviews = [gpData];
       component.chromEl.ngOnChanges();
       fixture.detectChanges();

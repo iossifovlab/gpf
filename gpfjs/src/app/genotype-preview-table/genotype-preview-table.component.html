@@ -6,15 +6,15 @@
                 </gpf-table-header>
                 <gpf-table-header>
                     <gpf-table-subheader *ngFor="let slot of column.slots" caption="{{ slot.name }}"
-                      [comparator]=comparator(slot.source)>
+                      [comparator]=comparator(slot.id)>
                     </gpf-table-subheader>
                 </gpf-table-header>
                 <gpf-table-content>
                     <gpf-table-subcontent *ngIf="column.source; else slots">
                         <gpf-genotype-preview-field
                             *gpfTableCellContent="let data"
-                            [field]="column.source"
-                            [value]="data.get(column.source)"
+                            [field]="column.id"
+                            [value]="data.get(column.id)"
                             [format]="column.format">
                         </gpf-genotype-preview-field>
                     </gpf-table-subcontent>
@@ -22,8 +22,8 @@
                         <gpf-table-subcontent *ngFor="let slot of column.slots">
                             <gpf-genotype-preview-field
                                 *gpfTableCellContent="let data"
-                                [field]="slot.source"
-                                [value]="data.get(slot.source)"
+                                [field]="slot.id"
+                                [value]="data.get(slot.id)"
                                 [format]="slot.format">
                             </gpf-genotype-preview-field>
                         </gpf-table-subcontent>

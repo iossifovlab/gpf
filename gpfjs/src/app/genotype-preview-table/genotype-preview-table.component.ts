@@ -14,7 +14,7 @@ export class GenotypePreviewTableComponent {
   ) { }
 
   comparator(field: string) {
-    if (field === 'location') {
+    if (field === 'variant.location') {
       return this.locationComparator;
     } else {
       return (a: GenotypePreview, b: GenotypePreview) => {
@@ -63,8 +63,8 @@ export class GenotypePreviewTableComponent {
       return +str;
     };
 
-    const leftVar = a.get('location');
-    const rightVar = b.get('location');
+    const leftVar = a.get('variant.location');
+    const rightVar = b.get('variant.location');
 
     const leftArr = leftVar.split(':');
     const rightArr = rightVar.split(':');
