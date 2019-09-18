@@ -5,8 +5,6 @@ import os
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.studies.study_wrapper import StudyWrapper
-from dae.studies.study_config_parser import StudyConfigParser
-from dae.studies.dataset_config_parser import DatasetConfigParser
 
 
 def fixtures_dir():
@@ -50,11 +48,8 @@ def weights_factory(gpf_instance):
 
 
 @pytest.fixture(scope='module')
-def study_configs(dae_config_fixture):
-    return StudyConfigParser.read_and_parse_directory_configurations(
-        dae_config_fixture.studies_db.dir,
-        defaults={'conf': dae_config_fixture.default_configuration.conf_file}
-    )
+def study_configs(variants_db_fixture):
+    return variants_db_fixture.study_configs
 
 
 @pytest.fixture(scope='module')
@@ -149,13 +144,8 @@ def quads_in_parent_wrapper(quads_in_parent, pheno_factory, weights_factory):
 
 
 @pytest.fixture(scope='module')
-def dataset_configs(dae_config_fixture, study_configs):
-    return DatasetConfigParser.read_and_parse_directory_configurations(
-        datasets_dir(),
-        study_configs,
-        defaults={'conf': dae_config_fixture.default_configuration.conf_file},
-        fail_silently=True
-    )
+def dataset_configs(variants_db_fixture):
+    return variants_db_fixture.dataset_configs
 
 
 @pytest.fixture(scope='module')
