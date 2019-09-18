@@ -269,7 +269,7 @@ def test_permission_denied_prompt_from_file(fixturedir):
 
     override = {
         'gpfjs': {
-            'permissionDeniedPrompt': filepath,
+            'permissionDeniedPromptFile': filepath,
         }
     }
 
@@ -288,7 +288,7 @@ def test_permission_denied_prompt_from_nonexistent_file(fixturedir):
 
     override = {
         'gpfjs': {
-            'permissionDeniedPrompt': filepath,
+            'permissionDeniedPromptFile': filepath,
         }
     }
 
