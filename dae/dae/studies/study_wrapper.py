@@ -39,10 +39,10 @@ class StudyWrapper(object):
         self.weights_factory = weights_factory
 
     def _init_wdae_config(self):
-        preview_columns = []
-        download_columns = []
-        pheno_columns = []
-        gene_weight_columns = []
+        preview_column_slots = []
+        download_column_slots = []
+        pheno_column_slots = []
+        gene_weight_column_sources = []
         in_role_columns = []
 
         people_group = {}
@@ -51,11 +51,13 @@ class StudyWrapper(object):
 
         if self.config.genotype_browser_config:
             genotype_browser_config = self.config.genotype_browser_config
-            preview_columns = genotype_browser_config.preview_columns
-            download_columns = genotype_browser_config.download_columns
-            if genotype_browser_config.pheno_columns:
-                pheno_columns = genotype_browser_config.pheno_columns
-            gene_weight_columns = genotype_browser_config.gene_weight_columns
+            preview_column_slots = genotype_browser_config.preview_column_slots
+            download_column_slots = \
+                genotype_browser_config.download_column_slots
+            if genotype_browser_config.pheno_column_slots:
+                pheno_column_slots = genotype_browser_config.pheno_column_slots
+            gene_weight_column_sources = \
+                genotype_browser_config.gene_weight_column_sources
             in_role_columns = \
                 self.config.genotype_browser_config.in_role_columns
 
@@ -63,10 +65,10 @@ class StudyWrapper(object):
             if genotype_browser_config.present_in_role:
                 present_in_role = genotype_browser_config.present_in_role
 
-        self.preview_columns = preview_columns
-        self.download_columns = download_columns
-        self.pheno_columns = pheno_columns
-        self.gene_weight_columns = gene_weight_columns
+        self.preview_column_slots = preview_column_slots
+        self.download_column_slots = download_column_slots
+        self.pheno_column_slots = pheno_column_slots
+        self.gene_weight_column_sources = gene_weight_column_sources
         self.in_role_columns = in_role_columns
 
         if self.config.people_group_config:
@@ -204,7 +206,7 @@ class StudyWrapper(object):
             self, query, max_variants_count=1000, variants_hard_max=2000):
         columns, sources = zip(*[
             (attr['id'], attr['source'])
-            for attr in self.preview_columns.values()
+            for attr in self.preview_column_slots.values()
         ])
         rows = self.get_variant_web_rows(query, sources, variants_hard_max)
         rows = list(rows)
@@ -226,7 +228,7 @@ class StudyWrapper(object):
             self, query, max_variants_count=1000, variants_hard_max=2000):
         columns, sources = zip(*[
             (attr['name'], attr['source'])
-            for attr in self.download_columns.values()
+            for attr in self.download_column_slots.values()
         ])
         rows = self.get_variant_web_rows(query, sources, variants_hard_max)
         rows = itertools.islice(rows, max_variants_count)
@@ -356,13 +358,13 @@ class StudyWrapper(object):
         return pheno_values
 
     def _get_all_pheno_values(self, families):
-        if not self.pheno_db or not self.pheno_columns:
+        if not self.pheno_db or not self.pheno_column_slots:
             return None
 
         pheno_column_dfs = []
         pheno_column_names = []
 
-        for slot in self.pheno_columns:
+        for slot in self.pheno_column_slots:
             pheno_column_dfs.append(
                 self.pheno_db.get_measure_values_df(
                     slot.measure,
@@ -377,7 +379,7 @@ class StudyWrapper(object):
         gene = genes[0]
 
         gene_weights_values = {}
-        for gwc in self.gene_weight_columns:
+        for gwc in self.gene_weight_column_sources:
             if gwc not in self.weights_factory:
                 continue
 

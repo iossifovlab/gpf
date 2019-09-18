@@ -178,23 +178,23 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         config.pheno_columns = cls._parse_pheno_column(config.get('pheno', {}))
         config.genotypeColumns.update(config.pheno_columns)
 
-        config.preview_columns = cls._parse_column_slots(
+        config.preview_column_slots = cls._parse_column_slots(
             config.genotypeColumns, config.get('previewColumns', [])
         )
-        config.download_columns = cls._parse_column_slots(
+        config.download_column_slots = cls._parse_column_slots(
             config.genotypeColumns, config.get('downloadColumns', [])
         )
-        if 'pedigree' in config.download_columns:
-            config.download_columns.pop('pedigree')
+        if 'pedigree' in config.download_column_slots:
+            config.download_column_slots.pop('pedigree')
 
-        config.gene_weight_columns = \
+        config.gene_weight_column_sources = \
             cls._parse_gene_weight_columns(config.genotypeColumns)
 
         config.in_role_columns = \
             cls._parse_in_role_columns(config.get('inRoles', {}))
 
         config.genotypeColumns = list(config.genotypeColumns.values())
-        config.pheno_columns = [
+        config.pheno_column_slots = [
             s
             for pc in config.pop('pheno_columns').values()
             for s in pc['slots']
