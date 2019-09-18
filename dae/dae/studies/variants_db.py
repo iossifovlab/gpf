@@ -20,8 +20,8 @@ class VariantsDb(object):
     def __init__(self, dae_config, pheno_factory, weights_factory):
         self.dae_config = dae_config
 
-        assert pheno_factory
-        assert weights_factory
+        assert pheno_factory is not None
+        assert weights_factory is not None
 
         self.pheno_factory = pheno_factory
         self.weights_factory = weights_factory
