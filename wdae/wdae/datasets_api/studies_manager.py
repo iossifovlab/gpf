@@ -1,5 +1,3 @@
-import os
-
 from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.gene.gene_set_collections import GeneSetsCollections
@@ -70,16 +68,7 @@ class StudiesManager(object):
         return self.background_facade
 
     def get_permission_denied_prompt(self):
-
-        if self.dae_config.gpfjs:
-            filepath = self.dae_config.gpfjs.permission_denied_prompt
-            assert os.path.exists(filepath), filepath
-            with open(filepath, 'r') as prompt_file:
-                contents = prompt_file.read()
-            return contents
-
-        return ('This is a default permission denied prompt.'
-                ' Please log in or register.')
+        return self.dae_config.gpfjs.permission_denied_prompt
 
 
 _studies_manager = None

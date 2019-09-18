@@ -256,3 +256,44 @@ def test_dae_config_override_environment_and_params(monkeypatch, fixturedir):
     assert config.impala.db == 'test-impala-db'
     assert config.hdfs.host == '10.0.0.1'
     assert config.hdfs.port == 2048
+
+
+def test_missing_permission_denied_prompt(dae_config):
+    assert dae_config.gpfjs.permission_denied_prompt == \
+        ('This is a default permission denied prompt.'
+         ' Please log in or register.')
+
+
+def test_permission_denied_prompt_from_file(fixturedir):
+    filepath = os.path.join(fixturedir, 'permissionDeniedPrompt.md')
+
+    override = {
+        'gpfjs': {
+            'permissionDeniedPromptFile': filepath,
+        }
+    }
+
+    dae_config = DAEConfigParser.read_and_parse_file_configuration(
+        config_file="dae_test.conf", work_dir=fixturedir,
+        defaults={'override': override}
+    )
+
+    assert dae_config.gpfjs.permission_denied_prompt == \
+        ('This is a real permission denied prompt.'
+         ' The config parser has successfully loaded the file.\n')
+
+
+def test_permission_denied_prompt_from_nonexistent_file(fixturedir):
+    filepath = os.path.join(fixturedir, 'nonExistentFile.someFormat')
+
+    override = {
+        'gpfjs': {
+            'permissionDeniedPromptFile': filepath,
+        }
+    }
+
+    with pytest.raises(AssertionError):
+        DAEConfigParser.read_and_parse_file_configuration(
+            config_file="dae_test.conf", work_dir=fixturedir,
+            defaults={'override': override}
+        )
