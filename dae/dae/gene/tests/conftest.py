@@ -1,7 +1,7 @@
+import pytest
+
 import os
 import shutil
-
-import pytest
 
 from dae.gpf_instance.gpf_instance import GPFInstance
 
@@ -15,9 +15,6 @@ from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
 from dae.gene.scores import ScoresFactory
 
 from dae.utils.fixtures import path_to_fixtures as _path_to_fixtures
-# Used by pytest
-from dae.configuration.dae_config_parser import DAEConfigParser
-from dae.studies.variants_db import VariantsDb
 
 
 def fixtures_dir():
@@ -39,6 +36,16 @@ def mock_property(mocker):
 @pytest.fixture(scope='session')
 def gpf_instance():
     return GPFInstance(work_dir=fixtures_dir())
+
+
+@pytest.fixture(scope='session')
+def dae_config_fixture(gpf_instance):
+    return gpf_instance.dae_config
+
+
+@pytest.fixture(scope='session')
+def variants_db_fixture(gpf_instance):
+    return gpf_instance.variants_db
 
 
 @pytest.fixture(scope='session')
@@ -100,19 +107,6 @@ def score_config(dae_config_fixture):
 @pytest.fixture(scope='session')
 def scores_factory(score_config):
     return ScoresFactory(score_config)
-
-
-@pytest.fixture(scope='session')
-def dae_config_fixture():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
-    return dae_config
-
-
-@pytest.fixture(scope='session')
-def variants_db_fixture(dae_config_fixture):
-    vdb = VariantsDb(dae_config_fixture)
-    return vdb
 
 
 def get_denovo_gene_set_by_id(variants_db_fixture, dgs_id):

@@ -3,8 +3,8 @@ from dae.annotation.tests.conftest import relative_to_this_test_folder
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
 
-def test_annotation_config_cli_options(dae_config_fixture):
-    cli_options = annotation_config_cli_options(dae_config_fixture)
+def test_annotation_config_cli_options(gpf_instance):
+    cli_options = annotation_config_cli_options(gpf_instance)
 
     assert len(cli_options) == 9
 

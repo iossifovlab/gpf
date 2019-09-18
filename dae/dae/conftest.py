@@ -10,7 +10,7 @@ from io import StringIO
 
 from box import Box
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
 
@@ -31,6 +31,16 @@ def relative_to_this_test_folder(path):
         "tests",
         path
     )
+
+
+@pytest.fixture(scope='session')
+def gpf_instance():
+    return GPFInstance()
+
+
+@pytest.fixture(scope='session')
+def dae_config_fixture(gpf_instance):
+    return gpf_instance.dae_config
 
 
 @pytest.fixture
@@ -84,9 +94,8 @@ def annotation_pipeline_config():
 
 
 @pytest.fixture(scope='session')
-def annotation_pipeline_default_config():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration()
-    return dae_config.annotation.conf_file
+def annotation_pipeline_default_config(dae_config_fixture):
+    return dae_config_fixture.annotation.conf_file
 
 
 @pytest.fixture(scope='session')
@@ -408,7 +417,7 @@ DATA_IMPORT_COUNT = 0
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, test_hdfs, test_impala_helpers, reimport):
+        request, test_hdfs, test_impala_helpers, reimport, dae_config_fixture):
 
     global DATA_IMPORT_COUNT
     DATA_IMPORT_COUNT += 1
@@ -418,8 +427,8 @@ def data_import(
     temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
     test_hdfs.mkdir(temp_dirname)
 
-    dae_config = DAEConfigParser.read_and_parse_file_configuration()
-    annotation_pipeline = construct_import_annotation_pipeline(dae_config)
+    annotation_pipeline = \
+        construct_import_annotation_pipeline(dae_config_fixture)
 
     def fin():
         test_hdfs.delete(temp_dirname, recursive=True)
@@ -444,7 +453,7 @@ def data_import(
                         impala_test_dbname(), impala.tables.pedigree):
                 continue
             impala_config = import_vcf(
-                dae_config, annotation_pipeline,
+                dae_config_fixture, annotation_pipeline,
                 vcf.pedigree, vcf.vcf,
                 region=None, bucket_index=0,
                 output=temp_dirname,

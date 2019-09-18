@@ -5,10 +5,11 @@ import pandas as pd
 from io import StringIO
 
 from box import Box
+
 from dae.annotation.tools.file_io import IOManager, IOType
 from dae.annotation.tools.score_file_io import ScoreFile, TabixAccess
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 def relative_to_this_test_folder(path):
@@ -18,11 +19,9 @@ def relative_to_this_test_folder(path):
     )
 
 
-@pytest.fixture(scope='session')
-def dae_config_fixture():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=relative_to_this_test_folder('fixtures'))
-    return dae_config
+@pytest.fixture(scope='function')
+def gpf_instance():
+    return GPFInstance(work_dir=relative_to_this_test_folder('fixtures'))
 
 
 @pytest.fixture

@@ -11,7 +11,7 @@ import sys
 import pysam
 import argparse
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
@@ -168,14 +168,14 @@ def import_dae_denovo(
     )
 
 
-def init_parser_dae_common(dae_config, parser):
+def init_parser_dae_common(gpf_instance, parser):
     parser.add_argument(
         'families', type=str,
         metavar='<families filename>',
         help='families file in pedigree format'
     )
 
-    options = annotation_config_cli_options(dae_config)
+    options = annotation_config_cli_options(gpf_instance)
     for name, args in options:
         parser.add_argument(name, **args)
 
@@ -211,9 +211,9 @@ def init_parser_dae_common(dae_config, parser):
     )
 
 
-def init_parser_denovo(dae_config, subparsers):
+def init_parser_denovo(gpf_instance, subparsers):
     parser_denovo = subparsers.add_parser('denovo')
-    init_parser_dae_common(dae_config, parser_denovo)
+    init_parser_dae_common(gpf_instance, parser_denovo)
 
     parser_denovo.add_argument(
         'variants', type=str,
@@ -222,9 +222,9 @@ def init_parser_denovo(dae_config, subparsers):
     )
 
 
-def init_transmitted_common(dae_config, parser):
+def init_transmitted_common(gpf_instance, parser):
 
-    init_parser_dae_common(dae_config, parser)
+    init_parser_dae_common(gpf_instance, parser)
 
     parser.add_argument(
         'summary', type=str,
@@ -238,10 +238,10 @@ def init_transmitted_common(dae_config, parser):
     )
 
 
-def init_parser_dae(dae_config, subparsers):
+def init_parser_dae(gpf_instance, subparsers):
     parser_dae = subparsers.add_parser('dae')
 
-    init_transmitted_common(dae_config, parser_dae)
+    init_transmitted_common(gpf_instance, parser_dae)
 
     parser_dae.add_argument(
         '--region', type=str,
@@ -251,10 +251,10 @@ def init_parser_dae(dae_config, subparsers):
     )
 
 
-def init_parser_make(dae_config, subparsers):
+def init_parser_make(gpf_instance, subparsers):
     parser = subparsers.add_parser('make')
 
-    init_transmitted_common(dae_config, parser)
+    init_transmitted_common(gpf_instance, parser)
 
     parser.add_argument(
         '-l', '--len', type=int,
@@ -271,7 +271,7 @@ def init_parser_make(dae_config, subparsers):
     )
 
 
-def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
+def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description='Convert DAE file to parquet')
 
@@ -281,18 +281,19 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
         description='choose what type of data to convert',
         help='denovo or transmitted study')
 
-    init_parser_denovo(dae_config, subparsers)
-    init_parser_dae(dae_config, subparsers)
-    init_parser_make(dae_config, subparsers)
+    init_parser_denovo(gpf_instance, subparsers)
+    init_parser_dae(gpf_instance, subparsers)
+    init_parser_make(gpf_instance, subparsers)
 
     parser_args = parser.parse_args(argv)
     return parser_args
 
 
 if __name__ == "__main__":
-    dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    gpf_instance = GPFInstance()
+    dae_config = gpf_instance.dae_config
 
-    argv = parse_cli_arguments(dae_config, sys.argv[1:])
+    argv = parse_cli_arguments(gpf_instance, sys.argv[1:])
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, argv)
 

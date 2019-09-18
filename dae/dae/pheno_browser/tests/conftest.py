@@ -1,14 +1,9 @@
-'''
-Created on Apr 10, 2017
-
-@author: lubo
-'''
-from __future__ import unicode_literals
 import pytest
 import tempfile
 import shutil
 import os
-from dae.configuration.dae_config_parser import DAEConfigParser
+
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 def relative_to_this_folder(path):
@@ -23,6 +18,11 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
+@pytest.fixture(scope='session')
+def gpf_instance():
+    return GPFInstance(work_dir=fixtures_dir())
+
+
 @pytest.fixture
 def output_dir(request):
     tmpdir = tempfile.mkdtemp(prefix='pheno_browser')
@@ -35,9 +35,8 @@ def output_dir(request):
 
 
 @pytest.fixture(scope='session')
-def fake_dae_conf():
-    return DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
+def fake_dae_conf(gpf_instance):
+    return gpf_instance.dae_config
 
 
 @pytest.fixture(scope='session')

@@ -2,7 +2,8 @@ import pytest
 
 from box import Box
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
+
 from dae.tools.dae2parquet import parse_cli_arguments, import_dae_denovo, \
     dae_build_transmitted, dae_build_makefile
 
@@ -28,9 +29,10 @@ def test_dae2parquet_denovo(
         dae_denovo_config.family_filename,
         dae_denovo_config.denovo_filename,
     ]
-    dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    gpf_instance = GPFInstance()
+    dae_config = gpf_instance.dae_config
 
-    argv = parse_cli_arguments(dae_config, argv)
+    argv = parse_cli_arguments(gpf_instance, argv)
 
     assert argv is not None
     assert argv.type == 'denovo'
@@ -86,9 +88,10 @@ def test_dae2parquet_transmitted(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
     ]
-    dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    gpf_instance = GPFInstance()
+    dae_config = gpf_instance.dae_config
 
-    argv = parse_cli_arguments(dae_config, argv)
+    argv = parse_cli_arguments(gpf_instance, argv)
 
     assert argv is not None
     assert argv.type == 'dae'
@@ -145,9 +148,10 @@ def test_dae2parquet_make(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
     ]
-    dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    gpf_instance = GPFInstance()
+    dae_config = gpf_instance.dae_config
 
-    argv = parse_cli_arguments(dae_config, argv)
+    argv = parse_cli_arguments(gpf_instance, argv)
 
     assert argv is not None
     assert argv.type == 'make'
@@ -171,9 +175,10 @@ def dae_iossifov2014_thrift(
             config.family_filename,
             config.denovo_filename,
         ]
-        dae_config = DAEConfigParser.read_and_parse_file_configuration()
+        gpf_instance = GPFInstance()
+        dae_config = gpf_instance.dae_config
 
-        argv = parse_cli_arguments(dae_config, argv)
+        argv = parse_cli_arguments(gpf_instance, argv)
 
         assert argv is not None
         assert argv.type == 'denovo'

@@ -1,7 +1,8 @@
 from dae.GenomesDB import GenomesDB
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
 
-dae_config = DAEConfigParser.read_and_parse_file_configuration()
+gpf_instance = GPFInstance()
+dae_config = gpf_instance.dae_config
 
 genomesDB = GenomesDB(dae_config.dae_data_dir, dae_config.genomes_db.confFile)

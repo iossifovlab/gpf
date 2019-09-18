@@ -7,7 +7,8 @@ import time
 import glob
 import shutil
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
+
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.tools.vcf2parquet import import_vcf
@@ -16,7 +17,7 @@ from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.hdfs_helpers import HdfsHelpers
 
 
-def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
+def parse_cli_arguments(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description='simple import of new study data',
         conflict_handler='resolve',
@@ -144,22 +145,24 @@ def generate_study_config(dae_config, study_id, output):
         ))
 
 
-def generate_common_report(dae_config, study_id):
+def generate_common_report(gpf_instance, study_id):
     from dae.tools.generate_common_report import main
     argv = ['--studies', study_id]
-    main(dae_config, argv)
+    main(gpf_instance, argv)
 
 
-def generate_denovo_gene_sets(dae_config, study_id):
+def generate_denovo_gene_sets(gpf_instance, study_id):
     from dae.tools.generate_denovo_gene_sets import main
     argv = ['--studies', study_id]
 
-    main(dae_config, argv)
+    main(gpf_instance, argv)
 
 
 if __name__ == "__main__":
-    dae_config = DAEConfigParser.read_and_parse_file_configuration()
-    argv = parse_cli_arguments(dae_config, sys.argv[1:])
+    gpf_instance = GPFInstance()
+    dae_config = gpf_instance.dae_config
+
+    argv = parse_cli_arguments(sys.argv[1:])
     if argv.id is not None:
         study_id = argv.id
     else:
@@ -210,14 +213,14 @@ if __name__ == "__main__":
     if not argv.skip_reports:
         print("generating common reports...", file=sys.stderr)
         start = time.time()
-        generate_common_report(dae_config, study_id)
+        generate_common_report(gpf_instance, study_id)
         print("DONE: generating common reports in {:.2f} sec".format(
             time.time() - start
             ), file=sys.stderr)
 
         print("generating de Novo gene sets...", file=sys.stderr)
         start = time.time()
-        generate_denovo_gene_sets(dae_config, study_id)
+        generate_denovo_gene_sets(gpf_instance, study_id)
         print("DONE: generating de Novo gene sets in {:.2f} sec".format(
             time.time() - start
             ), file=sys.stderr)

@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 import argparse
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
+
 from dae.gene.denovo_gene_set_facade import DenovoGeneSetFacade
-from dae.studies.variants_db import VariantsDb
 
 
-def main(dae_config=None, argv=None):
+def main(gpf_instance=None, argv=None):
     description = 'Generate genovo gene sets tool'
     parser = argparse.ArgumentParser(description=description)
 
@@ -21,9 +21,9 @@ def main(dae_config=None, argv=None):
 
     args = parser.parse_args(argv)
 
-    if dae_config is None:
-        dae_config = DAEConfigParser.read_and_parse_file_configuration()
-    variants_db = VariantsDb(dae_config)
+    if gpf_instance is None:
+        gpf_instance = GPFInstance()
+    variants_db = gpf_instance.variants_db
 
     dgsf = DenovoGeneSetFacade(variants_db)
 

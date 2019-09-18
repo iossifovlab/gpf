@@ -16,7 +16,7 @@ from dae.annotation.tools.file_io import IOType, IOManager
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 from dae.annotation.tools.utils import AnnotatorFactory
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 def run_tabix(filename):
@@ -81,8 +81,8 @@ class PipelineAnnotator(CompositeVariantAnnotator):
                 schema.remove_column(vcol)
 
 
-def main_cli_options(dae_config):
-    options = annotation_config_cli_options(dae_config)
+def main_cli_options(gpf_instance):
+    options = annotation_config_cli_options(gpf_instance)
     options.extend([
             ('infile', {
                 'nargs': '?',
@@ -131,14 +131,15 @@ def main_cli_options(dae_config):
 
 
 def pipeline_main(argv):
-    dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    gpf_instance = GPFInstance()
+    dae_config = gpf_instance.dae_config
 
     desc = "Program to annotate variants combining multiple annotating tools"
     parser = argparse.ArgumentParser(
         description=desc, conflict_handler='resolve',
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    for name, args in main_cli_options(dae_config):
+    for name, args in main_cli_options(gpf_instance):
         parser.add_argument(name, **args)
 
     options = parser.parse_args()

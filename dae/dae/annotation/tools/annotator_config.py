@@ -3,13 +3,13 @@ from dae.DAE import genomesDB
 from dae.configuration.config_parser_base import ConfigParserBase
 
 
-def annotation_config_cli_options(dae_config):
+def annotation_config_cli_options(gpf_instance):
     options = [
         ('--annotation', {
             'help': 'config file location; default is "annotation.conf" '
             'in the instance data directory $DAE_DB_DIR '
             '[default: %(default)s]',
-            'default': dae_config.annotation.conf_file,
+            'default': gpf_instance.dae_config.annotation.conf_file,
             'action': 'store',
             'dest': 'annotation_config',
         }),
