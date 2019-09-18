@@ -52,7 +52,7 @@ export class GenotypePreviewChromosomesComponent implements OnInit, OnChanges {
     if (changes.genotypePreviewsArray) {
       if (this.genotypePreviewsArray) {
         this.genotypePreviewsByChromosome = _.groupBy(this.genotypePreviewsArray.genotypePreviews,
-          genotypePreview => genotypePreview.get('location').split(':')[0]);
+          genotypePreview => genotypePreview.get('variant.location').split(':')[0]);
       } else {
         this.genotypePreviewsByChromosome = null;
       }

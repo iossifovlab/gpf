@@ -83,7 +83,7 @@ describe('GenotypePreviewTableComponent', () => {
   });
 
   it('should have working comparator', () => {
-    expect(component.comparator('location')).toBe(component.locationComparator);
+    expect(component.comparator('variant.location')).toBe(component.locationComparator);
 
     expect(component.comparator('field')(
       GenotypePreview.fromJson('0', {rows: [[null]], cols: ['field']}),
@@ -106,18 +106,18 @@ describe('GenotypePreviewTableComponent', () => {
     )).toBe(-10);
 
     expect(component.locationComparator(
-      GenotypePreview.fromJson('0', {rows: [['X:123']], cols: ['location']}),
-      GenotypePreview.fromJson('0', {rows: [['1:123']], cols: ['location']})
+      GenotypePreview.fromJson('0', {rows: [['X:123']], cols: ['variant.location']}),
+      GenotypePreview.fromJson('0', {rows: [['1:123']], cols: ['variant.location']})
     )).toBe(99);
 
     expect(component.locationComparator(
-      GenotypePreview.fromJson('0', {rows: [['Y:125']], cols: ['location']}),
-      GenotypePreview.fromJson('0', {rows: [['Y:113']], cols: ['location']})
+      GenotypePreview.fromJson('0', {rows: [['Y:125']], cols: ['variant.location']}),
+      GenotypePreview.fromJson('0', {rows: [['Y:113']], cols: ['variant.location']})
     )).toBe(12);
 
     expect(component.locationComparator(
-      GenotypePreview.fromJson('0', {rows: [['Y:125']], cols: ['location']}),
-      GenotypePreview.fromJson('0', {rows: [['M:113']], cols: ['location']})
+      GenotypePreview.fromJson('0', {rows: [['Y:125']], cols: ['variant.location']}),
+      GenotypePreview.fromJson('0', {rows: [['M:113']], cols: ['variant.location']})
     )).toBe(-1);
   });
 });
