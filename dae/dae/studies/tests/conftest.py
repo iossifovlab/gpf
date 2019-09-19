@@ -28,7 +28,7 @@ def gpf_instance():
 
 
 @pytest.fixture(scope='session')
-def dae_config_fixture():
+def dae_config_fixture(gpf_instance):
     return gpf_instance.dae_config
 
 

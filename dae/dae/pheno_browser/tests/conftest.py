@@ -4,7 +4,10 @@ import tempfile
 import shutil
 import os
 
-from dae.gpf_instance.gpf_instance import GPFInstance
+
+from dae.configuration.dae_config_parser import DAEConfigParser
+
+from dae.pheno.pheno_factory import PhenoFactory
 
 
 def relative_to_this_folder(path):
@@ -12,16 +15,6 @@ def relative_to_this_folder(path):
         os.path.dirname(os.path.realpath(__file__)),
         path
     )
-
-
-def fixtures_dir():
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'fixtures'))
-
-
-@pytest.fixture(scope='session')
-def gpf_instance():
-    return GPFInstance(work_dir=fixtures_dir())
 
 
 @pytest.fixture
@@ -36,8 +29,15 @@ def output_dir(request):
 
 
 @pytest.fixture(scope='session')
-def fake_pheno_factory(gpf_instance):
-    return gpf_instance.pheno_factory
+def dae_config_fixture():
+    return DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=relative_to_this_folder('fixtures')
+    )
+
+
+@pytest.fixture(scope='session')
+def fake_pheno_factory(dae_config_fixture):
+    return PhenoFactory(dae_config_fixture)
 
 
 @pytest.fixture(scope='session')

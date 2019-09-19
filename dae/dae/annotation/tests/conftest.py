@@ -6,10 +6,12 @@ from io import StringIO
 
 from box import Box
 
+from dae.gpf_instance.gpf_instance import GPFInstance
+
+from dae.configuration.dae_config_parser import DAEConfigParser
+
 from dae.annotation.tools.file_io import IOManager, IOType
 from dae.annotation.tools.score_file_io import ScoreFile, TabixAccess
-
-from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 def relative_to_this_test_folder(path):
@@ -20,8 +22,18 @@ def relative_to_this_test_folder(path):
 
 
 @pytest.fixture(scope='function')
-def gpf_instance():
-    return GPFInstance(work_dir=relative_to_this_test_folder('fixtures'))
+def dae_config_fixture():
+    return DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=relative_to_this_test_folder('fixtures')
+    )
+
+
+@pytest.fixture(scope='function')
+def mock_gpf_instance(mocker, dae_config_fixture):
+    mocker.patch('dae.gpf_instance.gpf_instance.GPFInstance')
+    gpf_instance = GPFInstance()
+    gpf_instance.dae_config = dae_config_fixture
+    return gpf_instance
 
 
 @pytest.fixture

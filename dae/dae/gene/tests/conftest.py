@@ -55,7 +55,7 @@ def weights_factory(gpf_instance):
 
 
 @pytest.fixture(scope='session')
-def score_config(dae_config_fixture):
+def score_config(gpf_instance):
     return gpf_instance.score_config
 
 
