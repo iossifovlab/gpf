@@ -553,13 +553,13 @@ this:
 
     [genotypeBrowser]
 
-    phenoFilters.filters = sampleContinuousFilter
+    selectedPhenoFiltersValues = sampleContinuousFilter
 
     phenoFilters.sampleContinuousFilter.name = sampleFilterName
     phenoFilters.sampleContinuousFilter.type = continuous
     phenoFilters.sampleContinuousFilter.filter = multi:prb
 
-``phenoFilters.filters`` is a comma separated list of ids of the defined
+``selectedPhenoFiltersValues`` is a comma separated list of ids of the defined
 Phenotype Filters. Each phenotype filter is expected to have a
 ``phenoFilters.<pheno_filter_id>`` configuration.
 
@@ -605,15 +605,15 @@ To add a Phenotype Column you need to define it in the study or dataset config:
 
     [genotypeBrowser]
 
-    pheno.columns = pheno
+    selectedPhenoColumnValues = pheno
 
     pheno.pheno.name = Measures
     pheno.pheno.slots = prb:i1.age:Age,
         prb:i1.iq:Iq
 
 
-The ``pheno.columns`` property is a comma separated list of ids for each Pheno
-Column. Each Pheno Column has to have a ``pheno.<measure_id>`` configuration with
+The ``selectedPhenoColumnValues`` property is a comma separated list of ids for each Pheno
+Column to display. Each Pheno Column has to have a ``pheno.<measure_id>`` configuration with
 the following properties:
 
 * | ``pheno.<measure_id>.name`` - the display name of the pheno column group
