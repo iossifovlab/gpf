@@ -16,15 +16,16 @@ def test_enrichment_tool(
     pg = f1_trio.get_people_group('phenotype')
     gh = GenotypeHelper(f1_trio, pg, 'autism')
     children_stats = gh.get_children_stats()
+    children_by_sex = gh.children_by_sex()
 
     enrichment_events = enrichment_tool.calc(
         ['missense', 'synonymous'], ['SAMD11', 'PLEKHN1', 'POGZ'], variants,
-        children_stats)
+        children_by_sex)
 
-    assert len(enrichment_events['all'].events) == 3
+    assert len(enrichment_events['all'].events) == 2
     assert enrichment_events['all'].events == \
-        [['SAMD11'], ['SAMD11'], ['PLEKHN1']]
-    assert enrichment_events['all'].expected == 3.0
+        [['SAMD11'], ['SAMD11']]
+    assert enrichment_events['all'].expected == 2.0
     assert enrichment_events['all'].pvalue == 1.0
     assert len(enrichment_events['rec'].events) == 1
     assert enrichment_events['rec'].events == [['SAMD11']]
@@ -34,9 +35,9 @@ def test_enrichment_tool(
     assert enrichment_events['male'].events == [['SAMD11']]
     assert enrichment_events['male'].expected == 1.0
     assert enrichment_events['male'].pvalue == 1.0
-    assert len(enrichment_events['female'].events) == 2
-    assert enrichment_events['female'].events == [['SAMD11'], ['PLEKHN1']]
-    assert enrichment_events['female'].expected == 2.0
+    assert len(enrichment_events['female'].events) == 1
+    assert enrichment_events['female'].events == [['SAMD11']]
+    assert enrichment_events['female'].expected == 1.0
     assert enrichment_events['female'].pvalue == 1.0
     assert len(enrichment_events['unspecified'].events) == 0
     assert enrichment_events['unspecified'].events == []

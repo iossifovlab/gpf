@@ -44,15 +44,18 @@ def test_calc_stats(f1_trio, f1_trio_samocha_background):
     variants = list(f1_trio.query_variants(
         inheritance=str(Inheritance.denovo.name)))
     event_counter = EventsCounter()
-    enrichment_events = event_counter.events(variants)
 
     pg = f1_trio.get_people_group('phenotype')
     gh = GenotypeHelper(f1_trio, pg, 'autism')
     children_stats = gh.get_children_stats()
+    children_by_sex = gh.children_by_sex()
 
-    assert len(enrichment_events['all'].events) == 3
+    enrichment_events = event_counter.events(
+        variants, children_by_sex, set(['missense', 'synonymous']))
+
+    assert len(enrichment_events['all'].events) == 2
     assert enrichment_events['all'].events == \
-        [['SAMD11'], ['SAMD11'], ['PLEKHN1']]
+        [['SAMD11'], ['SAMD11']]
     assert enrichment_events['all'].expected is None
     assert enrichment_events['all'].pvalue is None
     assert len(enrichment_events['rec'].events) == 1
@@ -63,8 +66,8 @@ def test_calc_stats(f1_trio, f1_trio_samocha_background):
     assert enrichment_events['male'].events == [['SAMD11']]
     assert enrichment_events['male'].expected is None
     assert enrichment_events['male'].pvalue is None
-    assert len(enrichment_events['female'].events) == 2
-    assert enrichment_events['female'].events == [['SAMD11'], ['PLEKHN1']]
+    assert len(enrichment_events['female'].events) == 1
+    assert enrichment_events['female'].events == [['SAMD11']]
     assert enrichment_events['female'].expected is None
     assert enrichment_events['female'].pvalue is None
     assert len(enrichment_events['unspecified'].events) == 0
@@ -74,26 +77,26 @@ def test_calc_stats(f1_trio, f1_trio_samocha_background):
 
     ee = f1_trio_samocha_background.calc_stats(
         'missense', enrichment_events,
-        ['SAMD11', 'PLEKHN1', 'POGZ'], children_stats)
+        ['SAMD11', 'PLEKHN1', 'POGZ'], children_by_sex)
 
     assert ee == enrichment_events
 
-    assert len(ee['all'].events) == 3
-    assert ee['all'].events == [['SAMD11'], ['SAMD11'], ['PLEKHN1']]
+    assert len(ee['all'].events) == 2
+    assert ee['all'].events == [['SAMD11'], ['SAMD11']]
     assert ee['all'].expected == 30.0
-    assert ee['all'].pvalue == pytest.approx(9.322e-10)
+    assert ee['all'].pvalue == pytest.approx(9.002e-11)
     assert len(ee['rec'].events) == 1
     assert ee['rec'].events == [['SAMD11']]
-    assert ee['rec'].expected == 10.0
-    assert ee['rec'].pvalue == pytest.approx(0.00099879845)
+    assert ee['rec'].expected == 15.0
+    assert ee['rec'].pvalue == pytest.approx(9.788e-6, rel=1e-3)
     assert len(ee['male'].events) == 1
     assert ee['male'].events == [['SAMD11']]
     assert ee['male'].expected == 15.0
-    assert ee['male'].pvalue == pytest.approx(9.78887425e-06)
-    assert len(ee['female'].events) == 2
-    assert ee['female'].events == [['SAMD11'], ['PLEKHN1']]
+    assert ee['male'].pvalue == pytest.approx(9.788e-06, rel=1e-3)
+    assert len(ee['female'].events) == 1
+    assert ee['female'].events == [['SAMD11'],]
     assert ee['female'].expected == 15.0
-    assert ee['female'].pvalue == pytest.approx(7.861689e-05)
+    assert ee['female'].pvalue == pytest.approx(9.788e-06, rel=1e-3)
     assert len(ee['unspecified'].events) == 0
     assert ee['unspecified'].events == []
     assert ee['unspecified'].expected is None
