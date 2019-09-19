@@ -2,7 +2,13 @@ from box import Box
 
 from dae.configuration.config_parser_base import ConfigParserBase
 
-from dae.variants.attributes import Role
+from dae.variants.attributes import Role, Inheritance
+
+
+def verify_inheritance_types(str_list):
+    for string in str_list:
+        assert Inheritance.from_name(string)
+    return str_list
 
 
 class GenotypeBrowserConfigParser(ConfigParserBase):
@@ -36,6 +42,8 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         'selectedPresentInRoleValues',
         'roles',
         'columns',
+        'inheritanceTypes',
+        'defaultInheritanceTypeFilters',
     ]
 
     FILTER_SELECTORS = {
@@ -44,6 +52,11 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         'genotype': 'selectedGenotypeColumnValues',
         'inRoles': 'selectedInRolesValues',
         'presentInRole': 'selectedPresentInRoleValues'
+    }
+
+    VERIFY_VALUES = {
+        'inheritanceTypes': verify_inheritance_types,
+        'defaultInheritanceTypeFilters': verify_inheritance_types,
     }
 
     @classmethod
@@ -232,7 +245,8 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
             'hasPresentInRole', 'hasCNV', 'hasComplex', 'hasFamilyFilters',
             'hasStudyFilters', 'hasStudyTypes', 'hasGraphicalPreview',
             'previewColumns', 'rolesFilterOptions', 'genotypeColumns',
-            'phenoFilters', 'familyFilters', 'presentInRole', 'downloadColumns'
+            'phenoFilters', 'familyFilters', 'presentInRole', 'downloadColumns',
+            'inheritanceTypes', 'defaultInheritanceTypeFilters',
         ]
 
     @classmethod

@@ -212,7 +212,8 @@ class Inheritance(enum.Enum):
 
     @staticmethod
     def from_name(name):
-        assert name in Inheritance.__members__
+        assert name in Inheritance.__members__, \
+            'Inheritance type {} does not exist!'.format(name)
         return Inheritance[name]
 
     def __repr__(self):
