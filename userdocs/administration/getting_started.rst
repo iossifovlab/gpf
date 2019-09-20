@@ -470,8 +470,31 @@ Now if you locate the `iossifov_2014` study in the browser you should be able
 to use the tool from `Enrichment Tool` tab of study.
 
 
+Getting Started with Preview Columns
+####################################
+
+For each study we can specify the available columns in the preview and download
+of variants.
 
 
+.. code::
+
+    cd $DAE_DB_DIR/studies/comp_vcf
+
+
+Edit the configuratio file `comp_vcf.conf` and add following lines
+
+.. code::
+
+    [genotypeBrowser]
+    
+    genotype.freq.name = Frequency
+    genotype.freq.slots = exome_gnomad_af_percent:exome gnomad:E %%.3f,
+        genome_gnomad_af_percent:genome gnomad:G %%.3f,
+        af_allele_freq:study freq:S %%.3f
+
+This overwrites the definition of existing preview column `Frequency` to
+include not only the gnomAD frequencies, but also to include allele frequency.
 
 
 Getting Started with Phenotype Data
