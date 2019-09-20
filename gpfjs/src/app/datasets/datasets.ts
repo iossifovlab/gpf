@@ -205,6 +205,8 @@ export class GenotypeBrowser {
       PhenoFilter.fromJsonArray(json['phenoFilters']),
       PhenoFilter.fromJsonArray(json['familyFilters']),
       PresentInRole.fromJsonArray(json['presentInRole']),
+      json['inheritanceTypes'],
+      json['defaultInheritanceTypeFilters'],
     );
   }
 
@@ -225,6 +227,8 @@ export class GenotypeBrowser {
     readonly phenoFilters: Array<PhenoFilter>,
     readonly familyFilters: Array<PhenoFilter>,
     readonly presentInRole: PresentInRole[],
+    readonly inheritanceTypes: string[],
+    readonly defaultInheritanceTypeFilters: string[],
   ) {
     this.columns = _.filter(this.allColumns,
       (column: AdditionalColumn) => this.previewColumnsIds.indexOf(column.id) > -1);

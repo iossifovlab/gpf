@@ -28,6 +28,14 @@
         <div *ngIf="hasStudyTypes | async" class="col-lg-2">
             <gpf-study-types></gpf-study-types>
         </div>
+
 		<gpf-effecttypes [hasCNV]="hasCNV | async" class="panel-row col-lg-4"> </gpf-effecttypes>
+
+        <gpf-inheritancetypes
+            *ngIf="inheritanceTypes | async"
+            [availableInheritanceTypes]="inheritanceTypes | async"
+            [selectedInheritanceTypes]="defaultInheritanceTypeFilters | async"
+            class="panel-row col-lg-3">
+        </gpf-inheritancetypes>
 	</div>
 </div>
