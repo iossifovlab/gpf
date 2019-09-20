@@ -16,7 +16,7 @@ setuptools.setup(
     packages=setuptools.find_packages(
         where='.',
         exclude=[
-            'dae.docs', 
+            'dae.docs',
             'dae.tests',
             '*.tests.*',
             '*.tests',
