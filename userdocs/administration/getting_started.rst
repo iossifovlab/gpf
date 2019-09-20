@@ -473,16 +473,18 @@ to use the tool from `Enrichment Tool` tab of study.
 Getting Started with Preview Columns
 ####################################
 
-For each study we can specify the available columns in the preview and download
-of variants.
+For each study we can specify the columns that are shown in the preview of
+variants and in the downloaded variants.
 
+As an example we are going to redefine `Frequency` column in `comp_vcf`
+study imported in previous example.
 
 .. code::
 
     cd $DAE_DB_DIR/studies/comp_vcf
 
 
-Edit the configuratio file `comp_vcf.conf` and add following lines
+Edit the configuration file `comp_vcf.conf` and add following lines
 
 .. code::
 
