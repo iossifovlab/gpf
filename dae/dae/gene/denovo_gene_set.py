@@ -349,6 +349,7 @@ class DenovoGeneSet(object):
 
                 effect = aa.effect
                 for gene in effect.genes:
-                    cache.setdefault(gene.symbol, set()).add(family_id)
+                    if gene.effect in search_args.get('effect_types', set()):
+                        cache.setdefault(gene.symbol, set()).add(family_id)
 
         return cache

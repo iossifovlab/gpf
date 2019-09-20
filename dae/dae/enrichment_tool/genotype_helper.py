@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, defaultdict
 
 from dae.variants.attributes import Inheritance
 from dae.variants.family import Family
@@ -11,6 +11,7 @@ class GenotypeHelper(object):
         self.people_group = people_group
         self.people_group_value = people_group_value
         self._children_stats = None
+        self._children_by_sex = None
 
     def get_variants(self, effect_types):
         people_with_people_group = self.dataset.get_people_with_people_group(
@@ -29,22 +30,31 @@ class GenotypeHelper(object):
 
         return list(variants)
 
+    def children_by_sex(self):
+        if self._children_by_sex is None:
+            self._children_by_sex = defaultdict(set)
+            seen = set()
+
+            for p in Family.persons_with_parents(self.dataset.families):
+                iid = "{}:{}".format(p.family_id, p.person_id)
+                if iid in seen:
+                    continue
+
+                if p.get_attr(self.people_group.source) != \
+                        self.people_group_value:
+                    continue
+
+                self._children_by_sex[p.sex.name].add(p.person_id)
+                seen.add(iid)
+        return self._children_by_sex
+
     def get_children_stats(self):
         if self._children_stats is not None:
             return self._children_stats
-        seen = set()
         counter = Counter()
-
-        for p in Family.persons_with_parents(self.dataset.families):
-            iid = "{}:{}".format(p.family_id, p.person_id)
-            if iid in seen:
-                continue
-
-            if p.get_attr(self.people_group.source) != self.people_group_value:
-                continue
-
-            counter[p.sex.name] += 1
-            seen.add(iid)
+        persons_by_sex = self.children_by_sex()
+        for sex, persons in persons_by_sex.items():
+            counter[sex] = len(persons)
         self._children_stats = counter
 
         return self._children_stats
