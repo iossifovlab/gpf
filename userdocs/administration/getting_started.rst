@@ -182,26 +182,37 @@ can use the script::
 
     run_gpf_impala.sh
 
-This command creates and starts Docker container named `gpf_impala`
-containing all the components needed for running Apache Impala.
+This script pulls out Apache Impala image from 
+`dockerhub <https://cloud.docker.com/u/seqpipe/repository/docker/seqpipe/seqpipe-docker-impala>`_,
+creates and starts Docker container named `gpf_impala`
+containing all the components needed for running Apache Impala. When the
+Apache Impala container is ready for use the script will print a message::
+
+    ...
+    ===============================================
+    GPF Apache Impala container is READY...
+    ===============================================
+
 
 .. note::
-    In case you need to stop and start this container multiple times you can
-    use Docker comands `docker stop gpf_impala` and `docker start gpf_impala`.
+    In case you need to stop this containeryou can
+    use Docker comands `docker stop gpf_impala`. For starting the `gpf_impala`
+    container use `run_gpf_impala.sh`.
 
 .. note::
-    The option `-p` (`--port`) used in `docker run` command instructs the
-    Docker to make specified port accessible from the host environment. For
-    example `-p 8020:8020` makes port 8020 from docker container `gpf_impala`
-    accessible from `localhost`. The ports specified in this command are:
+    Following ports are used by `gpf_impala` container:
 
         - 8020 - port for accessing HDFS
-        - 9870 - port for Web interface to HDFS Named Node (optional)
-        - 9864 - port for Web interface to HDFS Data Node (optional)
+        - 9870 - port for Web interface to HDFS Named Node
+        - 9864 - port for Web interface to HDFS Data Node
         - 21050 - port for accessing Impala
-        - 25000 - port for Web interface to Impala deamon  (optional)
-        - 25010 - port for Web interface to Impala state store  (optional)
-        - 25020 - port for Web interface to Impala catalog  (optional)
+        - 25000 - port for Web interface to Impala deamon
+        - 25010 - port for Web interface to Impala state store
+        - 25020 - port for Web interface to Impala catalog
+
+    Please make sure that this ports are not in use on the host where you are
+    starting `gpf_impala` conatiner.
+
 
 
 Simple study import
