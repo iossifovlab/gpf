@@ -29,11 +29,18 @@ def dae_config_fixture():
 
 
 @pytest.fixture(scope='function')
-def mock_gpf_instance(mocker, dae_config_fixture):
+def mocked_gpf_instance(mocker, mock_genomes_db, dae_config_fixture):
     mocker.patch('dae.gpf_instance.gpf_instance.GPFInstance')
+
     gpf_instance = GPFInstance()
     gpf_instance.dae_config = dae_config_fixture
+
     return gpf_instance
+
+
+@pytest.fixture(scope='function')
+def mocked_genomes_db(mocked_gpf_instance):
+    return mocked_gpf_instance.genomes_db
 
 
 @pytest.fixture
@@ -42,8 +49,8 @@ def variants_io(request):
     def build(fixture_name, options=Box({})):
         io_options = options.to_dict()
         io_config = {
-            "infile": relative_to_this_test_folder(fixture_name),
-            "outfile": "-",
+            'infile': relative_to_this_test_folder(fixture_name),
+            'outfile': '-',
         }
         io_options.update(io_config)
 
@@ -57,7 +64,7 @@ def variants_io(request):
 def expected_df():
     def build(data):
         infile = StringIO(str(data))
-        df = pd.read_csv(infile, sep="\t")
+        df = pd.read_csv(infile, sep='\t')
         return df
     return build
 
@@ -65,7 +72,7 @@ def expected_df():
 @pytest.fixture
 def score_file():
     score_filename = relative_to_this_test_folder(
-        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+        'fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz')
 
     score_file_instance = ScoreFile(score_filename)
     assert score_file_instance is not None

@@ -1,5 +1,3 @@
-from dae.DAE import genomesDB
-
 from dae.configuration.config_parser_base import ConfigParserBase
 
 
@@ -40,7 +38,11 @@ def annotation_config_cli_options(gpf_instance):
         }),
         ('--Graw', {
             'help': 'genome file location [default: %(default)s]',
-            'default': genomesDB.get_genome_file(),
+            'default': gpf_instance.genomes_db.get_genome_file(),
+        }),
+        ('--Traw', {
+            'help': 'gene model id [default: %(default)s]',
+            'default': gpf_instance.genomes_db.get_gene_model_id(),
         }),
     ]
 
@@ -55,12 +57,12 @@ class AnnotationConfigParser(ConfigParserBase):
 
     @classmethod
     def read_and_parse_file_configuration(
-            cls, options, config_file, work_dir, defaults=None):
+            cls, options, config_file, work_dir, genomes_db, defaults=None):
         if defaults is None:
             defaults = {}
+        if 'values' not in defaults:
+            defaults['values'] = {}
         for key, option in options.items():
-            if 'values' not in defaults:
-                defaults['values'] = {}
             defaults['values'][f'options.{key}'] = option
 
         config = super(AnnotationConfigParser, cls).read_file_configuration(
@@ -69,13 +71,13 @@ class AnnotationConfigParser(ConfigParserBase):
 
         config.options = options
 
-        config = cls.parse(config)
+        config = cls.parse(config, genomes_db)
 
         return config
 
     @classmethod
-    def parse(cls, config):
-        config = cls._setup_defaults(config)
+    def parse(cls, config, genomes_db):
+        config = cls._setup_defaults(config, genomes_db)
 
         config['columns'] = {}
         config['native_columns'] = []
@@ -88,17 +90,17 @@ class AnnotationConfigParser(ConfigParserBase):
                 continue
             if 'annotator' not in config_section:
                 continue
-            config_section = cls.parse_section(config_section)
+            config_section = cls.parse_section(config_section, genomes_db)
 
             config['sections'].append(config_section)
 
         return config
 
     @classmethod
-    def parse_section(cls, config_section):
+    def parse_section(cls, config_section, genomes_db):
         assert 'annotator' in config_section, config_section
 
-        config_section = cls._setup_defaults(config_section)
+        config_section = cls._setup_defaults(config_section, genomes_db)
 
         config_section = \
             super(AnnotationConfigParser, cls).parse_section(config_section)
@@ -122,7 +124,7 @@ class AnnotationConfigParser(ConfigParserBase):
         return config_section
 
     @staticmethod
-    def _setup_defaults(config):
+    def _setup_defaults(config, genomes_db):
         if config.options.vcf:
             assert not config.options.v, [config.annotator, config.options.v]
 
@@ -139,11 +141,16 @@ class AnnotationConfigParser(ConfigParserBase):
                 config.options.x = 'location'
             if config.options.v is None:
                 config.options.v = 'variant'
-        if config.options.Graw is None:
-            config.genome_file = genomesDB.get_genome_file()
-        else:
-            config.genome_file = config.options.Graw
-        assert config.genome_file is not None
+
+        if config.options.prom_len is None:
+            config.options.prom_len = 0
+
+        config.genomes_db = genomes_db
+        config.genome = genomes_db.get_genome(config.options.Graw)
+        config.gene_models = genomes_db.get_gene_models(config.options.Traw)
+        assert config.genomes_db is not None
+        assert config.genome is not None
+        assert config.gene_models is not None
 
         return config
 

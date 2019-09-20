@@ -21,7 +21,7 @@ from dae.gpf_instance.gpf_instance import GPFInstance
 
 def run_tabix(filename):
     def run_command(cmd):
-        print("executing", cmd)
+        print('executing', cmd)
         try:
             subprocess.check_output(cmd, shell=True)
         except subprocess.CalledProcessError as ex:
@@ -29,13 +29,13 @@ def run_tabix(filename):
             output = ex.output
 
             print(status, output)
-            raise Exception("FAILURE AT: " + cmd)
+            raise Exception('FAILURE AT: ' + cmd)
 
-    cmd = "bgzip -c {filename} > {filename}.bgz".format(
+    cmd = 'bgzip -c {filename} > {filename}.bgz'.format(
         filename=filename)
     run_command(cmd)
 
-    cmd = "tabix -s 1 -b 2 -e 2 -S 1 -f {filename}.bgz".format(
+    cmd = 'tabix -s 1 -b 2 -e 2 -S 1 -f {filename}.bgz'.format(
         filename=filename)
     run_command(cmd)
 
@@ -46,10 +46,10 @@ class PipelineAnnotator(CompositeVariantAnnotator):
         super(PipelineAnnotator, self).__init__(config)
 
     @staticmethod
-    def build(options, config_file, work_dir, defaults=None):
+    def build(options, config_file, work_dir, genomes_db, defaults=None):
         pipeline_config = \
             AnnotationConfigParser.read_and_parse_file_configuration(
-                options, config_file, work_dir, defaults
+                options, config_file, work_dir, genomes_db, defaults
             )
         assert pipeline_config.sections
 
@@ -84,48 +84,48 @@ class PipelineAnnotator(CompositeVariantAnnotator):
 def main_cli_options(gpf_instance):
     options = annotation_config_cli_options(gpf_instance)
     options.extend([
-            ('infile', {
-                'nargs': '?',
-                'action': 'store',
-                'default': '-',
-                'help': 'path to input file; defaults to stdin '
-                '[default: %(default)s]'
-            }),
-            ('outfile', {
-                'nargs': '?',
-                'action': 'store',
-                'default': '-',
-                'help': 'path to output file; defaults to stdout '
-                '[default: %(default)s]'
-            }),
-            ('--region', {
-                'help': 'work only in the specified region '
-                '[default: %(default)s]',
-                'default': None,
-                'action': 'store'
-            }),
-            ('--read-parquet', {
-                'help': 'read from a parquet file [default: %(default)s]',
-                'action': 'store_true',
-                'default': False,
-            }),
-            ('--write-parquet', {
-                'help': 'write to a parquet file [default: %(default)s]',
-                'action': 'store_true',
-                'default': False,
-            }),
-            ('--notabix', {
-                'help': 'skip running bgzip and tabix on the annotated files '
-                '[default: %(default)s]',
-                'default': False,
-                'action': 'store_true',
-            }),
-            ('--mode', {
-                'help': 'annotator mode; available modes are '
-                '`replace` and `append` [default: %(default)s]',
-                'default': '"replace"',
-                'action': 'store'
-            }),
+        ('infile', {
+            'nargs': '?',
+            'action': 'store',
+            'default': '-',
+            'help': 'path to input file; defaults to stdin '
+            '[default: %(default)s]'
+        }),
+        ('outfile', {
+            'nargs': '?',
+            'action': 'store',
+            'default': '-',
+            'help': 'path to output file; defaults to stdout '
+            '[default: %(default)s]'
+        }),
+        ('--region', {
+            'help': 'work only in the specified region '
+            '[default: %(default)s]',
+            'default': None,
+            'action': 'store'
+        }),
+        ('--read-parquet', {
+            'help': 'read from a parquet file [default: %(default)s]',
+            'action': 'store_true',
+            'default': False,
+        }),
+        ('--write-parquet', {
+            'help': 'write to a parquet file [default: %(default)s]',
+            'action': 'store_true',
+            'default': False,
+        }),
+        ('--notabix', {
+            'help': 'skip running bgzip and tabix on the annotated files '
+            '[default: %(default)s]',
+            'default': False,
+            'action': 'store_true',
+        }),
+        ('--mode', {
+            'help': 'annotator mode; available modes are '
+            '`replace` and `append` [default: %(default)s]',
+            'default': '"replace"',
+            'action': 'store'
+        }),
     ])
     return options
 
@@ -133,8 +133,9 @@ def main_cli_options(gpf_instance):
 def pipeline_main(argv):
     gpf_instance = GPFInstance()
     dae_config = gpf_instance.dae_config
+    genomes_db = gpf_instance.genomes_db
 
-    desc = "Program to annotate variants combining multiple annotating tools"
+    desc = 'Program to annotate variants combining multiple annotating tools'
     parser = argparse.ArgumentParser(
         description=desc, conflict_handler='resolve',
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -165,19 +166,19 @@ def pipeline_main(argv):
     start = time.time()
 
     pipeline = PipelineAnnotator.build(
-        options, config_filename, dae_config.dae_data_dir,
+        options, config_filename, dae_config.dae_data_dir, genomes_db,
         defaults={'values': dae_config.annotation_defaults})
     assert pipeline is not None
 
     with IOManager(options, reader_type, writer_type) as io_manager:
         pipeline.annotate_file(io_manager)
 
-    print("# PROCESSING DETAILS:", file=sys.stderr)
-    print("#", time.asctime(), file=sys.stderr)
-    print("#", " ".join(sys.argv[1:]), file=sys.stderr)
+    print('# PROCESSING DETAILS:', file=sys.stderr)
+    print('#', time.asctime(), file=sys.stderr)
+    print('#', ' '.join(sys.argv[1:]), file=sys.stderr)
 
     print(
-        "The program was running for [h:m:s]:",
+        'The program was running for [h:m:s]:',
         str(datetime.timedelta(seconds=round(time.time()-start, 0))),
         file=sys.stderr)
 

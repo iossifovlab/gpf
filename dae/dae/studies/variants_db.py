@@ -17,14 +17,17 @@ class VariantsDb(object):
 
     FILE_FORMATS = set(['vcf', 'impala'])
 
-    def __init__(self, dae_config, pheno_factory, weights_factory):
+    def __init__(
+            self, dae_config, pheno_factory, weights_factory, genomes_db):
         self.dae_config = dae_config
 
         assert pheno_factory is not None
         assert weights_factory is not None
+        assert genomes_db is not None
 
         self.pheno_factory = pheno_factory
         self.weights_factory = weights_factory
+        self.genomes_db = genomes_db
 
         defaults = {
             'values': {
@@ -276,10 +279,15 @@ class VariantsDb(object):
         if study_config.file_format == 'impala':
             impala_config = self._impala_configuration(study_config).impala
             impala_connection = self._make_impala_connection()
-            variants = ImpalaFamilyVariants(impala_config, impala_connection)
+            variants = ImpalaFamilyVariants(
+                impala_config, impala_connection,
+                self.genomes_db.get_gene_models()
+            )
             return Study(study_config, variants)
         else:
-            variants = RawFamilyVariants(prefix=study_config.prefix)
+            variants = RawFamilyVariants(
+                prefix=study_config.prefix, genomes_db=self.genomes_db
+            )
 
             return Study(study_config, variants)
 

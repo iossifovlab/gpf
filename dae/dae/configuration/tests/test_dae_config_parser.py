@@ -13,12 +13,12 @@ def relative_to_this_test_folder(path):
 
 @pytest.fixture
 def fixturedir():
-    return relative_to_this_test_folder("fixtures")
+    return relative_to_this_test_folder('fixtures')
 
 
 @pytest.fixture
 def dae_config(fixturedir):
-    filename = "dae_test.conf"
+    filename = 'dae_test.conf'
     config = DAEConfigParser.read_and_parse_file_configuration(
         config_file=filename, work_dir=fixturedir, environment_override=False)
     return config
@@ -26,25 +26,25 @@ def dae_config(fixturedir):
 
 def test_configuration_sections_simple(fixturedir):
     sections = DAEConfigParser.read_and_parse_file_configuration(
-        "test_config.conf",
+        'test_config.conf',
         fixturedir
     )
     assert sections is not None
 
-    genomes_config = sections.get("genomes")
+    genomes_config = sections.get('genomes')
     assert genomes_config is not None
 
     assert genomes_config.conf_file is not None
-    assert "genomes.conf" in genomes_config.conf_file
+    assert 'genomes.conf' in genomes_config.conf_file
 
     assert genomes_config.confFile is not None
-    assert "genomes.conf" in genomes_config.confFile
+    assert 'genomes.conf' in genomes_config.confFile
 
-    gene_info = sections.get("geneInfo")
+    gene_info = sections.get('geneInfo')
     assert gene_info is not None
 
     assert gene_info.conf_file is not None
-    assert "geneInfo.conf" in gene_info.conf_file
+    assert 'geneInfo.conf' in gene_info.conf_file
 
 
 def test_dae_config_simple(fixturedir, dae_config):
@@ -55,26 +55,26 @@ def test_dae_config_simple(fixturedir, dae_config):
     assert dae_config.pheno_db is not None
     print(dae_config.pheno_db)
 
-    assert dae_config.pheno_db.dir == os.path.join(fixturedir, "pheno")
+    assert dae_config.pheno_db.dir == os.path.join(fixturedir, 'pheno')
     assert dae_config.pheno_db.conf_file == \
-        os.path.join(fixturedir, "phenoDB.conf")
+        os.path.join(fixturedir, 'phenoDB.conf')
 
-    assert dae_config.gene_info_db.dir == os.path.join(fixturedir, "geneInfo")
+    assert dae_config.gene_info_db.dir == os.path.join(fixturedir, 'geneInfo')
     assert dae_config.gene_info_db.conf_file == \
-        os.path.join(fixturedir, "geneInfoDB.conf")
+        os.path.join(fixturedir, 'geneInfoDB.conf')
 
     assert dae_config.genomes_db.dir == \
-        os.path.join(fixturedir, "genomes")
+        os.path.join(fixturedir, 'genomes')
     assert dae_config.genomes_db.conf_file == \
-        os.path.join(fixturedir, "genomesDB.conf")
+        os.path.join(fixturedir, 'genomesDB.conf')
 
     assert dae_config.genomic_scores_db.dir == \
-        os.path.join(fixturedir, "genomicScores")
+        os.path.join(fixturedir, 'genomicScores')
     assert dae_config.genomic_scores_db.conf_file == \
-        os.path.join(fixturedir, "genomicScores.conf")
+        os.path.join(fixturedir, 'genomicScores.conf')
 
     assert dae_config.default_configuration.conf_file == \
-        os.path.join(fixturedir, "defaultConfiguration.conf")
+        os.path.join(fixturedir, 'defaultConfiguration.conf')
 
 
 def test_dae_config_genomic_scores_dirs(dae_config):
@@ -128,7 +128,7 @@ def test_dae_config_override_environment(monkeypatch, fixturedir):
     }
     monkeypatch.setattr(os, 'environ', envs)
 
-    filename = "dae_test.conf"
+    filename = 'dae_test.conf'
     config = DAEConfigParser.read_and_parse_file_configuration(
         config_file=filename, work_dir=fixturedir, environment_override=True
     )
@@ -160,7 +160,7 @@ def test_dae_config_non_override_environment(monkeypatch, fixturedir):
     }
     monkeypatch.setattr(os, 'environ', envs)
 
-    filename = "dae_test.conf"
+    filename = 'dae_test.conf'
     config = DAEConfigParser.read_and_parse_file_configuration(
         config_file=filename, work_dir=fixturedir, environment_override=False
     )
@@ -179,7 +179,7 @@ def test_dae_config_non_override_environment(monkeypatch, fixturedir):
 def test_dae_config_override_params(fixturedir):
     scores_hg19_dir = os.path.join(fixturedir, 'genomic_scores_db/hg19')
     scores_hg38_dir = os.path.join(fixturedir, 'genomic_scores_db/hg38')
-    filename = "dae_test.conf"
+    filename = 'dae_test.conf'
 
     default_sections = {
         'Impala': {
@@ -226,7 +226,7 @@ def test_dae_config_override_environment_and_params(monkeypatch, fixturedir):
     }
     monkeypatch.setattr(os, 'environ', envs)
 
-    filename = "dae_test.conf"
+    filename = 'dae_test.conf'
 
     default_sections = {
         'Impala': {
@@ -274,7 +274,7 @@ def test_permission_denied_prompt_from_file(fixturedir):
     }
 
     dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        config_file="dae_test.conf", work_dir=fixturedir,
+        config_file='dae_test.conf', work_dir=fixturedir,
         defaults={'override': override}
     )
 
@@ -294,6 +294,6 @@ def test_permission_denied_prompt_from_nonexistent_file(fixturedir):
 
     with pytest.raises(AssertionError):
         DAEConfigParser.read_and_parse_file_configuration(
-            config_file="dae_test.conf", work_dir=fixturedir,
+            config_file='dae_test.conf', work_dir=fixturedir,
             defaults={'override': override}
         )

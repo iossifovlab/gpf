@@ -2,8 +2,6 @@ import pytest
 
 from box import Box
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 from dae.tools.dae2parquet import parse_cli_arguments, import_dae_denovo, \
     dae_build_transmitted, dae_build_makefile
 
@@ -18,8 +16,8 @@ from dae.RegionOperations import Region
 @pytest.mark.xfail(reason="import of de novo variants does not work in Impala")
 def test_dae2parquet_denovo(
         dae_denovo_config, annotation_pipeline_config,
-        annotation_scores_dirname,
-        temp_dirname):
+        annotation_scores_dirname, temp_dirname,
+        global_gpf_instance, dae_config_fixture, genomes_db):
 
     argv = [
         'denovo',
@@ -29,21 +27,20 @@ def test_dae2parquet_denovo(
         dae_denovo_config.family_filename,
         dae_denovo_config.denovo_filename,
     ]
-    gpf_instance = GPFInstance()
-    dae_config = gpf_instance.dae_config
+    genome = genomes_db.get_genome()
 
-    argv = parse_cli_arguments(gpf_instance, argv)
+    argv = parse_cli_arguments(global_gpf_instance, argv)
 
     assert argv is not None
     assert argv.type == 'denovo'
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults={'values': {
+        dae_config_fixture, argv, genomes_db, defaults={'values': {
             'scores_dirname': annotation_scores_dirname,
         }})
 
     import_dae_denovo(
-        dae_config, annotation_pipeline,
+        dae_config_fixture, genome, annotation_pipeline,
         argv.families, argv.variants, family_format=argv.family_format,
         output=argv.output)
 
@@ -76,8 +73,8 @@ def test_dae2parquet_denovo(
 @pytest.mark.xfail(reason="annotation on import not ready for Impala")
 def test_dae2parquet_transmitted(
         dae_transmitted_config, annotation_pipeline_config,
-        annotation_scores_dirname,
-        temp_dirname):
+        annotation_scores_dirname, temp_dirname,
+        global_gpf_instance, dae_config_fixture, genomes_db):
 
     argv = [
         'dae',
@@ -88,21 +85,19 @@ def test_dae2parquet_transmitted(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
     ]
-    gpf_instance = GPFInstance()
-    dae_config = gpf_instance.dae_config
 
-    argv = parse_cli_arguments(gpf_instance, argv)
+    argv = parse_cli_arguments(global_gpf_instance, argv)
 
     assert argv is not None
     assert argv.type == 'dae'
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults={'values': {
+        dae_config_fixture, argv, genomes_db, defaults={'values': {
             'scores_dirname': annotation_scores_dirname,
         }})
 
     dae_build_transmitted(
-        dae_config, annotation_pipeline, argv, defaults={
+        dae_config_fixture, annotation_pipeline, argv, defaults={
             'scores_dirname': annotation_scores_dirname,
         })
 
@@ -135,8 +130,8 @@ def test_dae2parquet_transmitted(
 @pytest.mark.xfail
 def test_dae2parquet_make(
         dae_transmitted_config, annotation_pipeline_config,
-        annotation_scores_dirname,
-        temp_dirname):
+        annotation_scores_dirname, temp_dirname,
+        global_gpf_instance, dae_config_fixture, genomes_db):
 
     argv = [
         'make',
@@ -148,22 +143,21 @@ def test_dae2parquet_make(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
     ]
-    gpf_instance = GPFInstance()
-    dae_config = gpf_instance.dae_config
+    genome = genomes_db.get_genome()
 
-    argv = parse_cli_arguments(gpf_instance, argv)
+    argv = parse_cli_arguments(global_gpf_instance, argv)
 
     assert argv is not None
     assert argv.type == 'make'
 
-    dae_build_makefile(
-        dae_config, argv)
+    dae_build_makefile(dae_config_fixture, genome, argv)
 
 
 @pytest.fixture
 def dae_iossifov2014_thrift(
-        dae_iossifov2014_config,
-        annotation_scores_dirname, temp_dirname):  # FIXME:, parquet_thrift):
+        dae_iossifov2014_config, annotation_scores_dirname, temp_dirname,
+        global_gpf_instance, dae_config_fixture,
+        genomes_db):  # FIXME:, parquet_thrift):
 
     def build(annotation_config):
         config = dae_iossifov2014_config
@@ -175,21 +169,20 @@ def dae_iossifov2014_thrift(
             config.family_filename,
             config.denovo_filename,
         ]
-        gpf_instance = GPFInstance()
-        dae_config = gpf_instance.dae_config
+        genome = genomes_db.get_genome()
 
-        argv = parse_cli_arguments(gpf_instance, argv)
+        argv = parse_cli_arguments(global_gpf_instance, argv)
 
         assert argv is not None
         assert argv.type == 'denovo'
 
         annotation_pipeline = construct_import_annotation_pipeline(
-            dae_config, argv, defaults={'values': {
+            dae_config_fixture, argv, genomes_db, defaults={'values': {
                 'scores_dirname': annotation_scores_dirname,
             }})
 
         import_dae_denovo(
-            dae_config, annotation_pipeline,
+            dae_config_fixture, genome, annotation_pipeline,
             argv.families, argv.variants, family_format=argv.family_format,
             output=argv.output)
 

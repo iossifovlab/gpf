@@ -17,7 +17,6 @@ from cyvcf2 import VCF
 
 from dae.backends.import_commons import build_contig_regions, \
     contigs_makefile_generate
-from dae.backends.vcf.builder import get_genome
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.backends.impala.import_tools import variants_iterator_to_parquet
@@ -31,18 +30,18 @@ def get_contigs(vcf_filename):
     return vcf.seqnames
 
 
-def create_vcf_variants(config, region=None):
+def create_vcf_variants(config, genomes_db, region=None):
 
     freq_annotator = VcfAlleleFrequencyAnnotator()
 
     fvars = RawFamilyVariants(
         config=config, annotator=freq_annotator,
-        region=region)
+        region=region, genomes_db=genomes_db)
     return fvars
 
 
 def import_vcf(
-        dae_config, annotation_pipeline,
+        dae_config, genomes_db, annotation_pipeline,
         pedigree_filename, vcf_filename,
         region=None, bucket_index=1, rows=10000, output='.',
         study_id=None, filesystem=None):
@@ -67,7 +66,7 @@ def import_vcf(
         output, bucket_index=bucket_index, db=None, study_id=study_id).impala
     print("converting into ", impala_config, file=sys.stderr)
 
-    fvars = create_vcf_variants(vcf_config, region)
+    fvars = create_vcf_variants(vcf_config, genomes_db, region)
 
     fvars.annot_df = annotation_pipeline.annotate_df(fvars.annot_df)
 
@@ -155,14 +154,13 @@ def parser_make_arguments(gpf_instance, subparsers):
     )
 
 
-def generate_makefile(dae_config, argv):
+def generate_makefile(dae_config, genome, argv):
     assert os.path.exists(argv.vcf)
     assert os.path.exists(argv.pedigree)
 
     vcf_filename = argv.vcf
     ped_filename = argv.pedigree
 
-    genome = get_genome(genome_file=None)
     data_contigs = get_contigs(vcf_filename)
     build_contigs = build_contig_regions(genome, argv.len)
 
@@ -179,17 +177,19 @@ def generate_makefile(dae_config, argv):
 if __name__ == "__main__":
     gpf_instance = GPFInstance()
     dae_config = gpf_instance.dae_config
+    genomes_db = gpf_instance.genomes_db
+    genome = genomes_db.get_genome()
 
     argv = parse_cli_arguments(gpf_instance, sys.argv[1:])
 
     if argv.type == 'make':
-        generate_makefile(dae_config, argv)
+        generate_makefile(dae_config, genome, argv)
     elif argv.type == 'vcf':
         annotation_pipeline = construct_import_annotation_pipeline(
-            dae_config, argv)
+            dae_config, genomes_db, argv)
 
         import_vcf(
-            dae_config, annotation_pipeline,
+            dae_config, genomes_db, annotation_pipeline,
             argv.pedigree, argv.vcf,
             region=argv.region, bucket_index=argv.bucket_index,
             output=argv.output)

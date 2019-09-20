@@ -1,13 +1,6 @@
-'''
-Created on Mar 19, 2018
-
-@author: lubo
-'''
 import os
 
 from box import Box
-
-from dae.GeneModelFiles import load_gene_models
 
 from ..configure import Configure
 
@@ -19,31 +12,10 @@ from dae.annotation.tools.annotator_config import AnnotationConfigParser
 from dae.annotation.tools.effect_annotator import VariantEffectAnnotator
 
 
-def get_genome(genome_file=None):
-    if genome_file is not None:
-        assert os.path.exists(genome_file)
-        from dae.GenomeAccess import openRef
-        return openRef(genome_file)
-    else:
-        from dae.DAE import genomesDB
-        return genomesDB.get_genome()  # @UndefinedVariable
-
-
-def get_gene_models(gene_models_file=None):
-    if gene_models_file is not None:
-        assert os.path.exists(gene_models_file)
-        return load_gene_models(gene_models_file)
-    else:
-        from dae.DAE import genomesDB
-        return genomesDB.get_gene_models()  # @UndefinedVariable
-
-
-def effect_annotator_builder(
-        genome_file=None, gene_models_file=None,
-        genome=None, gene_models=None,):
+def effect_annotator_builder(genomes_db):
     options = Box({
-        "vcf": True,
-        "direct": False,
+        'vcf': True,
+        'direct': False,
         'r': 'reference',
         'a': 'alternative',
         'c': 'chrom',
@@ -64,45 +36,71 @@ def effect_annotator_builder(
         Box({
             'options': options,
             'columns': columns,
-            'annotator': 'effect_annotator.VariantEffectAnnotator',
-        })
+            'annotator': 'effect_annotator.VariantEffectAnnotator'
+        }),
+        genomes_db
     )
 
-    annotator = VariantEffectAnnotator(
-        config,
-        genome_file=genome_file, genome=genome,
-        gene_models_file=gene_models_file, gene_models=gene_models)
+    annotator = VariantEffectAnnotator(config)
 
     assert annotator is not None
 
     return annotator
 
 
-def variants_builder(
-        prefix, genome_file=None, gene_models_file=None,
-        genome=None, gene_models=None,
-        force_reannotate=False):
+def save_annotation_to_csv(annot_df, filename, sep="\t"):
+    def convert_array_of_strings_to_string(a):
+        if not a:
+            return None
+        return RawVariantsLoader.SEP1.join(a)
+
+    vars_df = annot_df.copy()
+    vars_df['effect_gene_genes'] = vars_df['effect_gene_genes'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df['effect_gene_types'] = vars_df['effect_gene_types'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df['effect_details_transcript_ids'] = \
+        vars_df['effect_details_transcript_ids'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df['effect_details_details'] = \
+        vars_df['effect_details_details'].\
+        apply(convert_array_of_strings_to_string)
+    vars_df.to_csv(
+        filename,
+        index=False,
+        sep=sep
+    )
+
+
+def save_annotation_file(annot_df, filename, sep='\t', storage='csv'):
+    assert storage == 'csv'
+    if storage == 'csv':
+        save_annotation_to_csv(annot_df, filename, sep)
+    # elif storage == 'parquet':
+    #     save_summary_to_parquet(annot_df, filename)
+    #     # vars_df.to_parquet(filename, engine='pyarrow')
+    else:
+        raise ValueError("unexpected output format: {}".format(storage))
+
+
+def variants_builder(prefix, genomes_db, force_reannotate=False):
+    assert genomes_db is not None
 
     conf = Configure.from_prefix_vcf(prefix)
 
     if os.path.exists(conf.vcf.annotation) and not force_reannotate:
-        fvars = RawFamilyVariants(conf)
+        fvars = RawFamilyVariants(conf, genomes_db=genomes_db)
         return fvars
-
-    if genome is None:
-        genome = get_genome(genome_file)
-    if gene_models is None:
-        gene_models = get_gene_models(gene_models_file)
 
     # effect_annotator = VcfVariantEffectsAnnotator(genome, gene_models)
     freq_annotator = VcfAlleleFrequencyAnnotator()
-    effect_annotator = effect_annotator_builder(
-        genome_file=genome_file, genome=genome,
-        gene_models_file=gene_models_file, gene_models=gene_models)
+    effect_annotator = effect_annotator_builder(genomes_db)
 
-    fvars = RawFamilyVariants(conf, annotator=freq_annotator)
+    fvars = RawFamilyVariants(
+        conf, annotator=freq_annotator, genomes_db=genomes_db
+    )
     fvars.annot_df = effect_annotator.annotate_df(fvars.annot_df)
 
-    RawVariantsLoader.save_annotation_file(fvars.annot_df, conf.vcf.annotation)
+    save_annotation_file(fvars.annot_df, conf.vcf.annotation)
 
     return fvars

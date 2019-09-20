@@ -1,3 +1,5 @@
+from dae.GenomesDB import GenomesDB
+
 from dae.common_reports.common_report_facade import CommonReportFacade
 
 from dae.configuration.dae_config_parser import DAEConfigParser
@@ -23,6 +25,11 @@ class GPFInstance(object):
             config_file=config_file, work_dir=work_dir, defaults=defaults
         )
 
+        self.genomes_db = GenomesDB(
+            self.dae_config.dae_data_dir,
+            self.dae_config.genomes_db.conf_file
+        )
+
         self.pheno_factory = PhenoFactory(dae_config=self.dae_config)
 
         self.gene_info_config = \
@@ -41,7 +48,8 @@ class GPFInstance(object):
         self.scores_factory = ScoresFactory(self.score_config)
 
         self.variants_db = VariantsDb(
-            self.dae_config, self.pheno_factory, self.weights_factory
+            self.dae_config, self.pheno_factory, self.weights_factory,
+            self.genomes_db
         )
 
         self.common_report_facade = CommonReportFacade(self.variants_db)

@@ -1,8 +1,6 @@
 import pytest
 from box import Box
 
-from dae.gpf_instance.gpf_instance import GPFInstance
-
 from dae.annotation.tools.file_io_parquet import ParquetReader
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
@@ -15,8 +13,8 @@ from dae.tools.vcf2parquet import parse_cli_arguments, import_vcf, \
 @pytest.mark.xfail(reason="annotation on import not ready for Impala")
 def test_vcf2parquet_vcf(
         vcf_import_config, annotation_pipeline_config,
-        annotation_scores_dirname,
-        temp_dirname):
+        annotation_scores_dirname, temp_dirname,
+        global_gpf_instance, dae_config_fixture, genomes_db):
 
     argv = [
         'vcf',
@@ -26,18 +24,16 @@ def test_vcf2parquet_vcf(
         vcf_import_config.vcf
     ]
 
-    gpf_instance = GPFInstance()
-    dae_config = gpf_instance.dae_config
-    argv = parse_cli_arguments(gpf_instance, argv)
+    argv = parse_cli_arguments(global_gpf_instance, argv)
     assert argv.type == 'vcf'
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv, defaults={'values': {
+        dae_config_fixture, argv, genomes_db, defaults={'values': {
             "scores_dirname": annotation_scores_dirname,
         }})
 
     import_vcf(
-        dae_config, annotation_pipeline,
+        dae_config_fixture, genomes_db, annotation_pipeline,
         argv.pedigree, argv.vcf,
         region=argv.region, bucket_index=argv.bucket_index,
         output=argv.output)
@@ -71,8 +67,8 @@ def test_vcf2parquet_vcf(
 @pytest.mark.xfail(reason="annotation on import not ready for Impala")
 def test_vcf2parquet_make(
         vcf_import_config, annotation_pipeline_config,
-        annotation_scores_dirname,
-        temp_dirname):
+        annotation_scores_dirname, temp_dirname,
+        global_gpf_instance, dae_config_fixture, default_genome):
 
     argv = [
         'make',
@@ -82,9 +78,7 @@ def test_vcf2parquet_make(
         vcf_import_config.vcf
     ]
 
-    gpf_instance = GPFInstance()
-    dae_config = gpf_instance.dae_config
-    argv = parse_cli_arguments(gpf_instance, argv)
+    argv = parse_cli_arguments(global_gpf_instance, argv)
     assert argv.type == 'make'
 
-    generate_makefile(dae_config, argv)
+    generate_makefile(dae_config_fixture, default_genome, argv)

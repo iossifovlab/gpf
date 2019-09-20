@@ -19,6 +19,7 @@ from dae.backends.dae.raw_dae import RawDAE, RawDenovo
 from dae.backends.vcf.raw_vcf import RawFamilyVariants
 from dae.backends.vcf.annotate_allele_frequencies import \
     VcfAlleleFrequencyAnnotator
+from dae.backends.vcf.builder import variants_builder
 
 from dae.backends.import_commons import \
     construct_import_annotation_pipeline
@@ -28,26 +29,68 @@ from dae.tools.vcf2parquet import import_vcf
 def relative_to_this_test_folder(path):
     return os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
-        "tests",
+        'tests',
         path
     )
 
 
 @pytest.fixture(scope='session')
-def gpf_instance():
+def global_gpf_instance():
     return GPFInstance()
 
 
 @pytest.fixture(scope='session')
-def dae_config_fixture(gpf_instance):
-    return gpf_instance.dae_config
+def dae_config_fixture(global_gpf_instance):
+    return global_gpf_instance.dae_config
+
+
+@pytest.fixture(scope='session')
+def genomes_db(global_gpf_instance):
+    return global_gpf_instance.genomes_db
+
+
+@pytest.fixture(scope='session')
+def default_genome(global_gpf_instance):
+    return global_gpf_instance.genomes_db.get_genome()
+
+
+@pytest.fixture(scope='session')
+def default_gene_models(global_gpf_instance):
+    return global_gpf_instance.genomes_db.get_gene_models()
+
+
+@pytest.fixture(scope='function')
+def mock_genomes_db(mocker):
+    genome = mocker.Mock()
+    genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
+
+    mocker.patch(
+        'dae.GenomesDB.GenomesDB.__init__', return_value=None
+    )
+
+    mocker.patch(
+        'dae.GenomesDB.GenomesDB.get_genome',
+        return_value=genome
+    )
+    mocker.patch(
+        'dae.GenomesDB.GenomesDB.get_gene_models',
+        return_value='Gene Models'
+    )
+    mocker.patch(
+        'dae.GenomesDB.GenomesDB.get_genome_file',
+        return_value='./genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa'
+    )
+    mocker.patch(
+        'dae.GenomesDB.GenomesDB.get_gene_model_id',
+        return_value='RefSeq2013'
+    )
 
 
 @pytest.fixture
 def result_df():
     def build(data):
         infile = StringIO(str(data))
-        df = pd.read_csv(infile, sep="\t")
+        df = pd.read_csv(infile, sep='\t')
         return df
     return build
 
@@ -89,7 +132,7 @@ def fixture_dirname(request):
 @pytest.fixture(scope='session')
 def annotation_pipeline_config():
     filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.conf")
+        'fixtures/annotation_pipeline/import_annotation.conf')
     return filename
 
 
@@ -101,42 +144,42 @@ def annotation_pipeline_default_config(dae_config_fixture):
 @pytest.fixture(scope='session')
 def annotation_scores_dirname():
     filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/")
+        'fixtures/annotation_pipeline/')
     return filename
 
 
 @pytest.fixture(scope='session')
-def annotation_pipeline_vcf():
+def annotation_pipeline_vcf(genomes_db):
     filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.conf")
+        'fixtures/annotation_pipeline/import_annotation.conf')
 
     options = Box({
-            "default_arguments": None,
-            "vcf": True,
-            # "mode": "overwrite",
+            'default_arguments': None,
+            'vcf': True,
+            # 'mode': 'overwrite',
         },
         default_box=True,
         default_box_attr=None)
 
-    work_dir = relative_to_this_test_folder("fixtures/")
+    work_dir = relative_to_this_test_folder('fixtures/')
 
     pipeline = PipelineAnnotator.build(
-        options, filename, work_dir,
+        options, filename, work_dir, genomes_db,
         defaults={'values': {
-            "scores_dirname": relative_to_this_test_folder(
-                "fixtures/annotation_pipeline/")
+            'scores_dirname': relative_to_this_test_folder(
+                'fixtures/annotation_pipeline/')
         }})
     return pipeline
 
 
 @pytest.fixture(scope='session')
-def annotation_pipeline_internal():
+def annotation_pipeline_internal(genomes_db):
     filename = relative_to_this_test_folder(
-        "fixtures/annotation_pipeline/import_annotation.conf")
+        'fixtures/annotation_pipeline/import_annotation.conf')
 
     options = Box({
-            "default_arguments": None,
-            "vcf": True,
+            'default_arguments': None,
+            'vcf': True,
             'c': 'chrom',
             'p': 'position',
             'r': 'reference',
@@ -145,35 +188,21 @@ def annotation_pipeline_internal():
         default_box=True,
         default_box_attr=None)
 
-    work_dir = relative_to_this_test_folder("fixtures/")
+    work_dir = relative_to_this_test_folder('fixtures/')
 
     pipeline = PipelineAnnotator.build(
-        options, filename, work_dir,
+        options, filename, work_dir, genomes_db,
         defaults={'values': {
-            "scores_dirname": relative_to_this_test_folder(
-                "fixtures/annotation_pipeline/")
+            'scores_dirname': relative_to_this_test_folder(
+                'fixtures/annotation_pipeline/')
         }})
     return pipeline
-
-
-@pytest.fixture(scope='session')
-def default_genome():
-    from dae.DAE import genomesDB
-    genome = genomesDB.get_genome()  # @UndefinedVariable
-    return genome
-
-
-@pytest.fixture(scope='session')
-def default_gene_models():
-    from dae.DAE import genomesDB
-    gene_models = genomesDB.get_gene_models("RefSeq2013")
-    return gene_models
 
 
 @pytest.fixture
 def dae_denovo_config():
     fullpath = relative_to_this_test_folder(
-        "fixtures/dae_denovo/denovo"
+        'fixtures/dae_denovo/denovo'
     )
     config = Configure.from_prefix_denovo(fullpath)
     return config.denovo
@@ -195,7 +224,7 @@ def dae_denovo(
 @pytest.fixture
 def dae_transmitted_config():
     fullpath = relative_to_this_test_folder(
-        "fixtures/dae_transmitted/transmission"
+        'fixtures/dae_transmitted/transmission'
     )
     config = Configure.from_prefix_dae(fullpath)
     return config.dae
@@ -219,7 +248,7 @@ def dae_transmitted(
 @pytest.fixture
 def vcf_import_config():
     fullpath = relative_to_this_test_folder(
-        "fixtures/vcf_import/effects_trio"
+        'fixtures/vcf_import/effects_trio'
     )
     config = Configure.from_prefix_vcf(fullpath)
     return config.vcf
@@ -227,12 +256,15 @@ def vcf_import_config():
 
 @pytest.fixture
 def vcf_import_raw(
-        vcf_import_config, default_genome, annotation_pipeline_internal):
+        vcf_import_config, default_genome, annotation_pipeline_internal,
+        genomes_db):
     freq_annotator = VcfAlleleFrequencyAnnotator()
 
     fvars = RawFamilyVariants(
         prefix=vcf_import_config.prefix,
-        annotator=freq_annotator)
+        annotator=freq_annotator,
+        genomes_db=genomes_db
+    )
     fvars.annot_df = annotation_pipeline_internal.annotate_df(fvars.annot_df)
 
     return fvars
@@ -257,7 +289,7 @@ def fixture_select(
 @pytest.fixture(scope='session')
 def dae_iossifov2014_config():
     fullpath = relative_to_this_test_folder(
-        "fixtures/dae_iossifov2014/iossifov2014"
+        'fixtures/dae_iossifov2014/iossifov2014'
     )
     config = Configure.from_prefix_denovo(fullpath)
     return config.denovo
@@ -278,15 +310,10 @@ def dae_iossifov2014(
 
 
 @pytest.fixture(scope='session')
-def variants_vcf(default_genome, default_gene_models):
+def variants_vcf(genomes_db):
     def builder(path):
-        from dae.backends.vcf.builder import variants_builder
-
-        a_path = os.path.join(
-            relative_to_this_test_folder('fixtures'), path)
-        fvars = variants_builder(
-            a_path, genome=default_genome, gene_models=default_gene_models,
-            force_reannotate=True)
+        a_path = os.path.join(relative_to_this_test_folder('fixtures'), path)
+        fvars = variants_builder(a_path, genomes_db, force_reannotate=True)
         return fvars
     return builder
 
@@ -295,8 +322,8 @@ def variants_vcf(default_genome, default_gene_models):
 def variants_implementations(
         variants_vcf, variants_impala):
     impls = {
-        "variants_vcf": variants_vcf,
-        "variants_impala": variants_impala,
+        'variants_vcf': variants_vcf,
+        'variants_impala': variants_impala,
     }
     return impls
 
@@ -310,7 +337,7 @@ def variants_impl(variants_implementations):
 def config_dae():
     def builder(path):
         fullpath = relative_to_this_test_folder(
-            os.path.join("fixtures", path))
+            os.path.join('fixtures', path))
         config = Configure.from_prefix_dae(fullpath)
         return config
     return builder
@@ -335,7 +362,7 @@ def raw_dae(config_dae, default_genome):
 def config_denovo():
     def builder(path):
         fullpath = relative_to_this_test_folder(
-            os.path.join("fixtures", path))
+            os.path.join('fixtures', path))
         config = Configure.from_prefix_denovo(fullpath)
         return config
     return builder
@@ -360,14 +387,14 @@ def impala_test_dbname():
 
 def pytest_addoption(parser):
     parser.addoption(
-        "--reimport", action="store_true", default=False,
-        help="force reimport"
+        '--reimport', action='store_true', default=False,
+        help='force reimport'
     )
 
 
 @pytest.fixture(scope='session')
 def reimport(request):
-    return bool(request.config.getoption("--reimport"))
+    return bool(request.config.getoption('--reimport'))
 
 
 # Impala backend
@@ -388,7 +415,7 @@ def test_impala_helpers(request):
 
 def collect_vcf(dirname):
     result = []
-    pattern = os.path.join(dirname, "*.vcf")
+    pattern = os.path.join(dirname, '*.vcf')
     for filename in glob.glob(pattern):
         prefix = os.path.splitext(filename)[0]
         vcf_config = Configure.from_prefix_vcf(prefix).vcf
@@ -417,7 +444,8 @@ DATA_IMPORT_COUNT = 0
 
 @pytest.fixture(scope='session')
 def data_import(
-        request, test_hdfs, test_impala_helpers, reimport, dae_config_fixture):
+        request, test_hdfs, test_impala_helpers, reimport, dae_config_fixture,
+        genomes_db):
 
     global DATA_IMPORT_COUNT
     DATA_IMPORT_COUNT += 1
@@ -428,7 +456,7 @@ def data_import(
     test_hdfs.mkdir(temp_dirname)
 
     annotation_pipeline = \
-        construct_import_annotation_pipeline(dae_config_fixture)
+        construct_import_annotation_pipeline(dae_config_fixture, genomes_db)
 
     def fin():
         test_hdfs.delete(temp_dirname, recursive=True)
@@ -440,11 +468,11 @@ def data_import(
             test_impala_helpers.create_database(impala_test_dbname())
 
         vcfdirname = relative_to_this_test_folder(
-            os.path.join("fixtures", dirname))
+            os.path.join('fixtures', dirname))
         vcf_configs = collect_vcf(vcfdirname)
 
         for vcf in vcf_configs:
-            print("importing vcf:", vcf.vcf)
+            print('importing vcf:', vcf.vcf)
             impala = build_impala_config(vcf)
             if not reimport and \
                     test_impala_helpers.check_table(
@@ -453,7 +481,7 @@ def data_import(
                         impala_test_dbname(), impala.tables.pedigree):
                 continue
             impala_config = import_vcf(
-                dae_config_fixture, annotation_pipeline,
+                dae_config_fixture, genomes_db, annotation_pipeline,
                 vcf.pedigree, vcf.vcf,
                 region=None, bucket_index=0,
                 output=temp_dirname,
@@ -461,21 +489,23 @@ def data_import(
             impala_config['db'] = impala_test_dbname()
             test_impala_helpers.import_variants(impala_config)
 
-    build("backends/")
+    build('backends/')
     return True
 
 
 @pytest.fixture(scope='session')
-def variants_impala(request, data_import, test_impala_helpers):
+def variants_impala(
+        request, data_import, test_impala_helpers, default_gene_models):
 
     def builder(path):
         from dae.backends.impala.impala_variants import ImpalaFamilyVariants
 
         vcf_prefix = relative_to_this_test_folder(
-            os.path.join("fixtures", path))
+            os.path.join('fixtures', path))
         vcf_config = Configure.from_prefix_vcf(vcf_prefix).vcf
         impala_config = build_impala_config(vcf_config)
         fvars = ImpalaFamilyVariants(
-            impala_config, test_impala_helpers.connection)
+            impala_config, test_impala_helpers.connection, default_gene_models
+        )
         return fvars
     return builder

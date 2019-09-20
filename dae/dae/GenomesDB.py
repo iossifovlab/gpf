@@ -45,10 +45,23 @@ class GenomesDB(object):
         genome_file = self.config.genome[genome_id].chr_all_file
         return genome_file
 
+    def get_gene_model_id(self, genome_id=None):
+        if not genome_id:
+            genome_id = self.default_genome
+        gene_model_id = self.config.genome[genome_id].default_gene_model
+
+        return gene_model_id
+
     def get_genome(self, genome_id=None):
         genome_file = self.get_genome_file(genome_id)
 
         return openRef(genome_file)
+
+    def get_gene_model(self, gene_model_id, genome_id):
+        gene_model_file = \
+            self.config.genome[genome_id].gene_model[gene_model_id].file
+
+        return load_gene_models(gene_model_file)
 
     def get_pars_x_test(self):
         regions_x = self.config.PARs.regions.x.region
@@ -62,13 +75,13 @@ class GenomesDB(object):
         if not genome_id:
             genome_id = self.default_genome
         if not gene_model_id:
-            gene_model_id = self.config.genome[genome_id].default_gene_model
+            gene_model_id = self.get_gene_model_id(genome_id)
+
         key = genome_id + gene_model_id
         if key not in self._gene_models:
-            gene_model_file = \
-                self.config.genome[genome_id].gene_model[gene_model_id].file
-            gmDb = load_gene_models(gene_model_file)
-            self._gene_models[key] = gmDb
+            gene_model = self.get_gene_model(gene_model_id, genome_id)
+            self._gene_models[key] = gene_model
+
         return self._gene_models[key]
 
     def get_mito_genome(self, mito_genome_id=None):

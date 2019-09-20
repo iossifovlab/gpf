@@ -161,6 +161,8 @@ def generate_denovo_gene_sets(gpf_instance, study_id):
 if __name__ == "__main__":
     gpf_instance = GPFInstance()
     dae_config = gpf_instance.dae_config
+    genomes_db = gpf_instance.genomes_db
+    genome = genomes_db.get_genome()
 
     argv = parse_cli_arguments(sys.argv[1:])
     if argv.id is not None:
@@ -180,19 +182,19 @@ if __name__ == "__main__":
     assert argv.vcf is not None or argv.denovo is not None
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv)
+        dae_config, genomes_db, argv)
 
     denovo_parquet = None
     vcf_parquet = None
 
     if argv.vcf is not None:
         vcf_parquet = import_vcf(
-            dae_config, annotation_pipeline,
+            dae_config, genomes_db, annotation_pipeline,
             argv.pedigree, argv.vcf,
             output=output, study_id=study_id)
     if argv.denovo is not None:
         denovo_parquet = import_dae_denovo(
-            dae_config, annotation_pipeline,
+            dae_config, genome, annotation_pipeline,
             argv.pedigree, argv.denovo,
             output=output, family_format='pedigree',
             study_id=study_id)
