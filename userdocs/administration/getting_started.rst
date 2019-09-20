@@ -378,18 +378,18 @@ This should return a list of all studies' IDs:
 
 .. code-block:: python3
 
-    ['iossifov_2014',
-    'iossifov_2014_small',
-    'trio',
-    'quad',
-    'multi',
-    'ivan']
+    ['multi',
+     'comp',
+     'comp_vcf',
+     'comp_denovo',
+     'comp_all',
+     'iossifov_2014']
 
 To get a specific study and query it, you can use:
 
 .. code-block:: python3
 
-    st = vdb.get_study("trio")
+    st = vdb.get_study("comp_denovo")
     vs = st.query_variants()
     vs = list(vs)
 
@@ -405,40 +405,36 @@ you can use:
         for aa in v.alt_alleles:
             print(aa)
 
-    1:865582 C->T f1
-    1:865583 G->A f1
-    1:865624 G->A f1
-    1:865627 G->A f1
     1:865664 G->A f1
+    1:865691 C->T f3
+    1:865664 G->A f3
+    1:865691 C->T f2
     1:865691 C->T f1
-    1:878109 C->G f1
-    1:901921 G->A f1
-    1:905956 CGGCTCGGAAGG->C f1
-    1:1222518 C->A f1
+
 
 The ``query_variants`` interface allows you to specify what kind of variants
-you are interested in. For example, if you only need 'missense' variants, you
+you are interested in. For example, if you only need 'splice-site' variants, you
 can use:
 
 .. code-block:: python3
 
-    st = vdb.get_study("iossifov_2014_small")
-    vs = st.query_variants(effect_types=['missense'])
+    st = vdb.get_study("iossifov_2014")
+    vs = st.query_variants(effect_types=['splice-site'])
     vs = list(vs)
     print(len(vs))
 
-    >> 6
+    >> 85
 
-Or, if you are interested in 'missense' variants only in people with role
+Or, if you are interested in 'splice-site' variants only in people with role
 'prb' you can use:
 
 .. code-block:: python3
 
-    vs = st.query_variants(effect_types=['missense'], roles='prb')
+    vs = st.query_variants(effect_types=['splice-site'], roles='prb')
     vs = list(vs)
     len(vs)
 
-    >> 3
+    >> 60
 
 
 
