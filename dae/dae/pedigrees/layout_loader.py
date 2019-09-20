@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 from dae.pedigrees.pedigrees import FamilyConnections
-from dae.pedigrees.layout import Layout, IndividualWithCoordinates, layout_parser
+from dae.pedigrees.layout import Layout, IndividualWithCoordinates, \
+    layout_parser
 
 
 class LayoutLoader(object):

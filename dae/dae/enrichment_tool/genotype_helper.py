@@ -1,11 +1,6 @@
-'''
-Created on Apr 24, 2017
-
-@author: lubo
-'''
 from collections import Counter
 
-from dae.variants.attributes import Inheritance, Role
+from dae.variants.attributes import Inheritance
 from dae.variants.family import Family
 
 
