@@ -79,6 +79,10 @@ def mock_genomes_db(mocker):
         return_value=genome
     )
     mocker.patch(
+        'dae.GenomesDB.GenomesDB.get_genome_from_file',
+        return_value=genome
+    )
+    mocker.patch(
         'dae.GenomesDB.GenomesDB.get_gene_models',
         return_value='Gene Models'
     )
