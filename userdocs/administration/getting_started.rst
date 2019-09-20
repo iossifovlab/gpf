@@ -437,6 +437,42 @@ Or, if you are interested in 'splice-site' variants only in people with role
     >> 60
 
 
+Getting Started with Enrichment Tool
+####################################
+
+For studies, that include de Novo variants you can enable Enrichment Tool.
+As an example let us enable Enrichment Tool for the already imported `iossifov_2014`
+study.
+
+Go to the directory, where the configuration file of the `iossifov_2014`
+study is located::
+
+    cd $DAE_DB_DIR/studies/iossifov_2014
+
+Edit the study configuration file `iossifov_2014.conf` to add the line::
+
+    enrichmentTool = yes
+
+Ater the the editing the configuration file should look like::
+
+    [study]
+
+    id = iossifov_2014
+    file_format = impala
+
+    enrichmentTool = yes
+
+Restart the `wdaemanage.py`::
+
+    wdaemanage runserver 0.0.0.0:8000
+
+Now if you locate the `iossifov_2014` study in the browser you should be able
+to use the tool from `Enrichment Tool` tab of study.
+
+
+
+
+
 
 Getting Started with Phenotype Data
 ###################################
