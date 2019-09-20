@@ -64,7 +64,7 @@ def dae_build_transmitted(
         argv.output, bucket_index=argv.bucket_index,
         db=None, study_id=study_id).impala
 
-    variants_iterator_to_parquet(
+    return variants_iterator_to_parquet(
         fvars,
         impala_config,
         bucket_index=argv.bucket_index,
@@ -195,7 +195,7 @@ def init_parser_dae_common(gpf_instance, parser):
     )
 
     parser.add_argument(
-        '-r', '--rows', type=int,
+        '--rows', type=int,
         default=100000,
         dest='rows', metavar='rows',
         help='row group size'

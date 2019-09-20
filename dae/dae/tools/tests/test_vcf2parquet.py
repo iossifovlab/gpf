@@ -1,16 +1,12 @@
-import pytest
 from box import Box
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
-from dae.backends.configure import Configure
-
 from dae.tools.vcf2parquet import parse_cli_arguments, import_vcf, \
     generate_makefile
 
 
-@pytest.mark.xfail(reason="annotation on import not ready for Impala")
 def test_vcf2parquet_vcf(
         vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
@@ -28,20 +24,18 @@ def test_vcf2parquet_vcf(
     assert argv.type == 'vcf'
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config_fixture, argv, genomes_db, defaults={'values': {
+        dae_config_fixture, genomes_db, argv, defaults={'values': {
             "scores_dirname": annotation_scores_dirname,
         }})
 
-    import_vcf(
+    vcf_parquet = import_vcf(
         dae_config_fixture, genomes_db, annotation_pipeline,
         argv.pedigree, argv.vcf,
         region=argv.region, bucket_index=argv.bucket_index,
         output=argv.output)
 
-    parquet_summary = Configure.from_prefix_parquet(
-        temp_dirname, bucket_index=argv.bucket_index).parquet.summary_variant
     summary = ParquetReader(Box({
-        'infile': parquet_summary,
+        'infile': vcf_parquet.files.variant,
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
@@ -54,17 +48,12 @@ def test_vcf2parquet_vcf(
     assert schema['score2'].type_name == 'float'
     assert schema['score4'].type_name == 'float'
 
-    # print(schema['effect_gene_genes'])
-    assert schema['effect_gene_genes'].type_name == 'list(str)'
-    assert schema['effect_gene_types'].type_name == 'list(str)'
-    assert schema['effect_details_transcript_ids'].type_name == 'list(str)'
-    assert schema['effect_details_details'].type_name == 'list(str)'
-
-    assert schema['effect_genes'].type_name == 'list(str)'
-    assert schema['effect_details'].type_name == 'list(str)'
+    assert schema['effect_gene'].type_name == 'str'
+    assert schema['effect_type'].type_name == 'str'
+    assert schema['effect_data'].type_name == 'str'
+    assert schema['worst_effect'].type_name == 'str'
 
 
-@pytest.mark.xfail(reason="annotation on import not ready for Impala")
 def test_vcf2parquet_make(
         vcf_import_config, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,

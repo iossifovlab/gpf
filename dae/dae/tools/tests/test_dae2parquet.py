@@ -2,10 +2,12 @@ import pytest
 
 from box import Box
 
+from dae.conftest import impala_test_dbname
+
 from dae.tools.dae2parquet import parse_cli_arguments, import_dae_denovo, \
     dae_build_transmitted, dae_build_makefile
 
-from dae.backends.configure import Configure
+from dae.backends.impala.impala_variants import ImpalaFamilyVariants
 from dae.backends.import_commons import construct_import_annotation_pipeline
 
 from dae.annotation.tools.file_io_parquet import ParquetReader
@@ -13,7 +15,6 @@ from dae.annotation.tools.file_io_parquet import ParquetReader
 from dae.RegionOperations import Region
 
 
-@pytest.mark.xfail(reason="import of de novo variants does not work in Impala")
 def test_dae2parquet_denovo(
         dae_denovo_config, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
@@ -35,19 +36,18 @@ def test_dae2parquet_denovo(
     assert argv.type == 'denovo'
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config_fixture, argv, genomes_db, defaults={'values': {
+        dae_config_fixture, genomes_db, argv, defaults={'values': {
             'scores_dirname': annotation_scores_dirname,
         }})
 
-    import_dae_denovo(
+    denovo_parquet = import_dae_denovo(
         dae_config_fixture, genome, annotation_pipeline,
         argv.families, argv.variants, family_format=argv.family_format,
-        output=argv.output)
+        output=argv.output
+    )
 
-    parquet_summary = Configure.from_prefix_parquet(
-        temp_dirname).parquet.summary_variant
     summary = ParquetReader(Box({
-        'infile': parquet_summary,
+        'infile': denovo_parquet.files.variant,
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
@@ -60,17 +60,12 @@ def test_dae2parquet_denovo(
     assert schema['score2'].type_name == 'float'
     assert schema['score4'].type_name == 'float'
 
-    # print(schema['effect_gene_genes'])
-    assert schema['effect_gene_genes'].type_name == 'list(str)'
-    assert schema['effect_gene_types'].type_name == 'list(str)'
-    assert schema['effect_details_transcript_ids'].type_name == 'list(str)'
-    assert schema['effect_details_details'].type_name == 'list(str)'
-
-    assert schema['effect_genes'].type_name == 'list(str)'
-    assert schema['effect_details'].type_name == 'list(str)'
+    assert schema['effect_gene'].type_name == 'str'
+    assert schema['effect_type'].type_name == 'str'
+    assert schema['effect_data'].type_name == 'str'
+    assert schema['worst_effect'].type_name == 'str'
 
 
-@pytest.mark.xfail(reason="annotation on import not ready for Impala")
 def test_dae2parquet_transmitted(
         dae_transmitted_config, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
@@ -85,6 +80,7 @@ def test_dae2parquet_transmitted(
         dae_transmitted_config.summary_filename,
         dae_transmitted_config.toomany_filename,
     ]
+    genome = genomes_db.get_genome()
 
     argv = parse_cli_arguments(global_gpf_instance, argv)
 
@@ -92,19 +88,17 @@ def test_dae2parquet_transmitted(
     assert argv.type == 'dae'
 
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config_fixture, argv, genomes_db, defaults={'values': {
+        dae_config_fixture, genomes_db, argv, defaults={'values': {
             'scores_dirname': annotation_scores_dirname,
         }})
 
-    dae_build_transmitted(
-        dae_config_fixture, annotation_pipeline, argv, defaults={
+    transmitted_parquet = dae_build_transmitted(
+        dae_config_fixture, annotation_pipeline, genome, argv, defaults={
             'scores_dirname': annotation_scores_dirname,
         })
 
-    parquet_summary = Configure.from_prefix_parquet(
-        temp_dirname).parquet.summary_variant
     summary = ParquetReader(Box({
-        'infile': parquet_summary,
+        'infile': transmitted_parquet.files.variant,
     }, default_box=True, default_box_attr=None))
     summary._setup()
     summary._cleanup()
@@ -117,17 +111,12 @@ def test_dae2parquet_transmitted(
     assert schema['score2'].type_name == 'float'
     assert schema['score4'].type_name == 'float'
 
-    # print(schema['effect_gene_genes'])
-    assert schema['effect_gene_genes'].type_name == 'list(str)'
-    assert schema['effect_gene_types'].type_name == 'list(str)'
-    assert schema['effect_details_transcript_ids'].type_name == 'list(str)'
-    assert schema['effect_details_details'].type_name == 'list(str)'
-
-    assert schema['effect_genes'].type_name == 'list(str)'
-    assert schema['effect_details'].type_name == 'list(str)'
+    assert schema['effect_gene'].type_name == 'str'
+    assert schema['effect_type'].type_name == 'str'
+    assert schema['effect_data'].type_name == 'str'
+    assert schema['worst_effect'].type_name == 'str'
 
 
-@pytest.mark.xfail
 def test_dae2parquet_make(
         dae_transmitted_config, annotation_pipeline_config,
         annotation_scores_dirname, temp_dirname,
@@ -155,9 +144,16 @@ def test_dae2parquet_make(
 
 @pytest.fixture
 def dae_iossifov2014_thrift(
-        dae_iossifov2014_config, annotation_scores_dirname, temp_dirname,
-        global_gpf_instance, dae_config_fixture,
-        genomes_db):  # FIXME:, parquet_thrift):
+        request, dae_iossifov2014_config, annotation_scores_dirname,
+        temp_dirname, global_gpf_instance, dae_config_fixture, genomes_db,
+        test_impala_helpers, test_hdfs):
+
+    temp_dirname = test_hdfs.tempdir(prefix='variants_', suffix='_data')
+    test_hdfs.mkdir(temp_dirname)
+
+    def fin():
+        test_hdfs.delete(temp_dirname, recursive=True)
+    request.addfinalizer(fin)
 
     def build(annotation_config):
         config = dae_iossifov2014_config
@@ -170,6 +166,7 @@ def dae_iossifov2014_thrift(
             config.denovo_filename,
         ]
         genome = genomes_db.get_genome()
+        gene_models = genomes_db.get_gene_models()
 
         argv = parse_cli_arguments(global_gpf_instance, argv)
 
@@ -177,28 +174,31 @@ def dae_iossifov2014_thrift(
         assert argv.type == 'denovo'
 
         annotation_pipeline = construct_import_annotation_pipeline(
-            dae_config_fixture, argv, genomes_db, defaults={'values': {
+            dae_config_fixture, genomes_db, argv, defaults={'values': {
                 'scores_dirname': annotation_scores_dirname,
             }})
 
-        import_dae_denovo(
+        denovo_parquet = import_dae_denovo(
             dae_config_fixture, genome, annotation_pipeline,
             argv.families, argv.variants, family_format=argv.family_format,
-            output=argv.output)
+            output=argv.output, filesystem=test_hdfs.filesystem()
+        )
+        assert denovo_parquet is not None
 
-        parquet_config = Configure.from_prefix_parquet(
-            temp_dirname).parquet
-        assert parquet_config is not None
+        denovo_parquet['db'] = impala_test_dbname()
+        test_impala_helpers.import_variants(denovo_parquet)
 
-        return None  # FIXME: parquet_thrift(parquet_config)
+        fvars = ImpalaFamilyVariants(
+            denovo_parquet, test_impala_helpers.connection, gene_models
+        )
+        return fvars
 
     return build
 
 
-@pytest.mark.xfail(reason="import of de novo variants does not work in Impala")
 @pytest.mark.parametrize("annotation_config", [
     'annotation_pipeline_config',
-    # 'annotation_pipeline_default_config'
+    'annotation_pipeline_default_config'
 ])
 @pytest.mark.parametrize("region,cshl_location,effect_type", [
     (Region('15', 80137553, 80137553), '15:80137554', 'noEnd'),
@@ -223,9 +223,7 @@ def test_dae2parquet_iossifov2014_variant_coordinates(
     annotation_pipeline_config = fixture_select(annotation_config)
     fvars = dae_iossifov2014_thrift(annotation_pipeline_config)
 
-    vs = fvars.query_variants(
-        regions=[region]
-    )
+    vs = fvars.query_variants(regions=[region])
     vs = list(vs)
     print(vs)
     assert len(vs) == 1

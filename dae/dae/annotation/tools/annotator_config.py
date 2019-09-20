@@ -146,7 +146,7 @@ class AnnotationConfigParser(ConfigParserBase):
             config.options.prom_len = 0
 
         config.genomes_db = genomes_db
-        config.genome = genomes_db.get_genome(config.options.Graw)
+        config.genome = genomes_db.get_genome_from_file(config.options.Graw)
         config.gene_models = genomes_db.get_gene_models(config.options.Traw)
         assert config.genomes_db is not None
         assert config.genome is not None
