@@ -62,7 +62,7 @@ export class InheritancetypesComponent extends QueryStateWithErrorsProvider
   }
 
   getDisplayName(inheritanceType: string) {
-    return inheritanceTypeDisplayNames[inheritanceType];
+    return inheritanceTypeDisplayNames[inheritanceType] || inheritanceType;
   }
 
   selectAll() {
