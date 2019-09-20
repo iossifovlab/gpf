@@ -12,7 +12,7 @@ def fixtures_dir():
 
 
 @pytest.fixture(scope='function')
-def gpf_instance():
+def gpf_instance(mock_genomes_db):
     return GPFInstance(work_dir=fixtures_dir())
 
 

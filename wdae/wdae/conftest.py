@@ -63,3 +63,30 @@ def user_client(user, client):
 def admin_client(admin, client):
     client.login(email=admin.email, password="secret")
     return client
+
+
+@pytest.fixture(scope='function')
+def mock_genomes_db(mocker):
+    genome = mocker.Mock()
+    genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
+
+    mocker.patch(
+        'dae.GenomesDB.GenomesDB.__init__', return_value=None
+    )
+
+    mocker.patch(
+        'dae.GenomesDB.GenomesDB.get_genome',
+        return_value=genome
+    )
+    mocker.patch(
+        'dae.GenomesDB.GenomesDB.get_gene_models',
+        return_value='Gene Models'
+    )
+    mocker.patch(
+        'dae.GenomesDB.GenomesDB.get_genome_file',
+        return_value='./genomes/GATK_ResourceBundle_5777_b37_phiX174/chrAll.fa'
+    )
+    mocker.patch(
+        'dae.GenomesDB.GenomesDB.get_gene_model_id',
+        return_value='RefSeq2013'
+    )

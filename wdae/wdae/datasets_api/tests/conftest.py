@@ -11,11 +11,11 @@ def fixtures_dir():
 
 
 @pytest.fixture(scope='function')
-def gpf_instance():
+def gpf_instance(mock_genomes_db):
     return GPFInstance(work_dir=fixtures_dir())
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def mock_gpf_instance(db, mocker, gpf_instance):
     reload_datasets(gpf_instance.variants_db)
     mocker.patch(
