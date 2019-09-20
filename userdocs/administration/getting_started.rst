@@ -725,7 +725,6 @@ the Phenotype browser. Open the configuration file ``comp_all.conf``:
     prefix = data/
     phenoDB = comp_pheno
     phenotypeBrowser = yes
-    genotypeBrowser = yes
 
 
 You can enable the Phenotype tool using the following property:
