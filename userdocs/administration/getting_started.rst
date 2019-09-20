@@ -151,44 +151,43 @@ Import a Demo Dataset
 #####################
 
 In the GPF startup data instance there are some demo studies already
-imported and configured:
+that are already configured:
 
-    * `comp` with a couple of variant in a complex family
-    * `multi` with a couple of variants in a multigenerational family
+    * `multi` with some VCF variants in a multigenerational family
+    * `comp` contains de Novo and VCF variants and phenotype database
 
 .. note::
     You can download some more publicly available studies, which are prepared to be
-    included into the GPF startup data instance.
+    imported into the GPF startup data instance.
 
 To demonstrate how to import new study data into the GPF data instance, we
 will reproduce the necessary steps for importing the `comp` study data.
 
-Start or Configure Apache Impala
+Start local Apache Impala
 ++++++++++++++++++++++++++++++++
+
+By default GPF uses Apache Impala as a backend for storing genomic variants.
+The GPF import tools import studies data into Impala.
+
+To start a local instance of Apache Impala you will need an installed
+Docker (https://www.docker.com/get-started).
 
 .. note::
    Docker can be installed by following the instructions at
    https://docs.docker.com/install/linux/docker-ce/ubuntu/.
 
-By default GPF uses Apache Impala as a backend for storing genomic variants.
-The GPF import tools import studies data into Impala. To make using GPF
+To make using GPF
 easier, we provide a Docker container with Apache Impala. To run it, you
-can use::
+can use the script::
 
-    docker run \
-        --name gpf_impala \
-        --hostname impala \
-        -p 8020:8020 \
-        -p 9870:9870 \
-        -p 9864:9864 \
-        -p 21050:21050 \
-        -p 25000:25000 \
-        -p 25010:25010 \
-        -p 25020:25020 \
-        seqpipe/seqpipe-docker-impala:latest
+    run_gpf_impala.sh
 
 This command creates and starts Docker container named `gpf_impala`
 containing all the components needed for running Apache Impala.
+
+.. note::
+    In case you need to stop and start this container multiple times you can
+    use Docker comands `docker stop gpf_impala` and `docker start gpf_impala`.
 
 .. note::
     The option `-p` (`--port`) used in `docker run` command instructs the
@@ -203,10 +202,6 @@ containing all the components needed for running Apache Impala.
         - 25000 - port for Web interface to Impala deamon  (optional)
         - 25010 - port for Web interface to Impala state store  (optional)
         - 25020 - port for Web interface to Impala catalog  (optional)
-
-.. note::
-    In case you need to stop and start this container multiple times you can
-    use Docker comands `docker stop gpf_impala` and `docker start gpf_impala`.
 
 
 Simple study import
