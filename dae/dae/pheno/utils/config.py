@@ -75,9 +75,12 @@ class PhenoRegressionConfigParser(ConfigParserBase):
 
         for regression, regression_section in config['regression'].items():
             error_message += ' The section "{}" is invalid!'.format(regression)
+
             assert 'instrument_name' in regression_section, error_message
             assert 'measure_name' in regression_section, error_message
             assert 'display_name' in regression_section, error_message
             assert 'jitter' in regression_section, error_message
+
+            regression_section['jitter'] = float(regression_section['jitter'])
 
         return config
