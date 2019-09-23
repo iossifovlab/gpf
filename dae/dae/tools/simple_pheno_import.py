@@ -63,6 +63,15 @@ def pheno_cli_parser():
     return parser
 
 
+def verify_pheno_db_name(input_name):
+    pheno_db_name = os.path.normpath(input_name)
+    # check that the given pheno name is not a directory path
+    split_path = os.path.split(pheno_db_name)
+    assert not split_path[0], \
+        '"{}" is a directory path!'.format(pheno_db_name)
+    return pheno_db_name
+
+
 def generate_pheno_db_config(args):
     config = ConfigParser()
     config['phenoDB'] = {}
@@ -112,6 +121,8 @@ def main(argv):
         if args.pheno_name is None:
             print("missing pheno db name", sys.stderr)
             raise ValueError()
+
+        args.pheno_name = verify_pheno_db_name(args.pheno_name)
 
         pheno_db_dir = os.path.join(
             dae_conf.pheno_db.dir,
