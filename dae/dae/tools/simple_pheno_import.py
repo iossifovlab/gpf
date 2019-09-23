@@ -77,12 +77,14 @@ def generate_pheno_db_config(args):
     config['phenoDB'] = {}
     section = config['phenoDB']
     section['name'] = args.pheno_name
-    section['dbfile'] = '%(wd)s' + os.path.basename(args.pheno_db_filename)
+    section['dbfile'] = os.path.join('%(wd)s', os.path.basename(args.pheno_db_filename))
+
     # TODO
     # Should the regression config be written to the pheno db config?
-    section['browser_dbfile'] = \
-        '%(wd)s/browser/{}_browser.db'.format(args.pheno_name)
-    section['browser_images_dir'] = '%(wd)s/browser/images'
+    section['browser_dbfile'] = os.path.join(
+        '%(wd)s', 'browser', '{}_browser.db'.format(args.pheno_name))
+    section['browser_images_dir'] = os.path.join(
+        '%(wd)s', 'browser', 'images')
     section['browser_images_url'] = \
         '/static/{}/browser/images/'.format(args.pheno_name)
     return config
