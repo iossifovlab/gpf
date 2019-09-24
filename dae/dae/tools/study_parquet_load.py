@@ -40,7 +40,7 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 def load_study_parquet(
         gpf_instance=None, study_ids=None, parquet_directories=None):
     if gpf_instance is None:
-        gpf_instance = GPFInstance
+        gpf_instance = GPFInstance()
     dae_config = gpf_instance.dae_config
     variants_db = gpf_instance.variants_db
 
