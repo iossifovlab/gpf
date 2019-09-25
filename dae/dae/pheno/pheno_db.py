@@ -273,13 +273,13 @@ class PhenoDB(object):
         s = s.select_from(
             self.db.family.join(self.db.person)
         )
-        if roles:
+        if roles is not None:
             s = s.where(self.db.person.c.role.in_(roles))
-        if person_ids:
+        if person_ids is not None:
             s = s.where(
                 self.db.person.c.person_id.in_(person_ids)
             )
-        if family_ids:
+        if family_ids is not None:
             s = s.where(
                 self.db.family.c.family_id.in_(family_ids)
             )
@@ -373,13 +373,13 @@ class PhenoDB(object):
         )
         s = s.where(self.db.measure.c.measure_id == measure.measure_id)
 
-        if roles:
+        if roles is not None:
             s = s.where(self.db.person.c.role.in_(roles))
-        if person_ids:
+        if person_ids is not None:
             s = s.where(
                 self.db.person.c.person_id.in_(person_ids)
             )
-        if family_ids:
+        if family_ids is not None:
             s = s.where(
                 self.db.family.c.family_id.in_(family_ids)
             )
