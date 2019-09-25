@@ -118,8 +118,7 @@ class PhenoDB(object):
         self.db = DbManager(dbfile=dbfile)
         self.db.build()
 
-    def _get_measures_df(
-            self, instrument=None, measure_type=None):
+    def _get_measures_df(self, instrument=None, measure_type=None):
         """
         Returns data frame containing measures information.
 
