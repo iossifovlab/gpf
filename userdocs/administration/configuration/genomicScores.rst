@@ -1,3 +1,5 @@
+.. _genomic_scores_db:
+
 Genomic Scores Configuration
 ============================
 

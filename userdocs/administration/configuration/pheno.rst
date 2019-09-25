@@ -1,3 +1,5 @@
+.. _pheno_db:
+
 Phenotype Database Configuration
 ================================
 

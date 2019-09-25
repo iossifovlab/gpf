@@ -1,3 +1,5 @@
+.. _study_and_dataset:
+
 Study and Dataset Configuration
 ===============================
 
