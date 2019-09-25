@@ -43,7 +43,6 @@ section of the common report. The effect groups are part of the variants
 query. Possible options for the effect groups and effect types that they
 contain are listed :ref:`here <allowed_values_gene_effect_groups>`.
 
-
 effect_types
 ------------
 
@@ -56,8 +55,6 @@ section of the common report. The effect types are part of the variants query.
 Possible options for effect types are listed
 :ref:`here <allowed_values_gene_effect_types>`.
 
-
-
 draw_all_families
 -----------------
 
@@ -68,6 +65,12 @@ draw_all_families
 This property defines whether to draw all families in the
 ``Families by pedigree`` section of the common report. This property takes
 a :ref:`boolean <allowed_values_booleans>` value.
+
+DEFAULT
+  .. exec::
+    from dae.common_reports.config import CommonReportsConfigParser
+
+    print(f'``{CommonReportsConfigParser.DRAW_ALL_FAMILIES_DEFAULT}``')
 
 families_count_show_id
 ----------------------
@@ -89,6 +92,9 @@ file_path
   file_path = {string}
 
 This property difines file path of the common report file.
+
+DEFAULT
+  ``{directory of the config file}/common_report.json``
 
 enabled
 -------
