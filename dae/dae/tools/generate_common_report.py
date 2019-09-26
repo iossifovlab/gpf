@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 import argparse
 
-from dae.studies.variants_db import VariantsDb
-from dae.configuration.dae_config_parser import DAEConfigParser
-
-from dae.common_reports.common_report_facade import CommonReportFacade
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
-def main(dae_config=None, argv=None):
+def main(gpf_instance=None, argv=None):
     description = 'Generate common reports tool'
     parser = argparse.ArgumentParser(description=description)
 
@@ -22,11 +19,10 @@ def main(dae_config=None, argv=None):
 
     args = parser.parse_args(argv)
 
-    if dae_config is None:
-        dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    if gpf_instance is None:
+        gpf_instance = GPFInstance()
 
-    vdb = VariantsDb(dae_config)
-    common_report_facade = CommonReportFacade(vdb)
+    common_report_facade = gpf_instance.common_report_facade
 
     if args.show_studies:
         for study_id in common_report_facade.get_all_common_report_ids():

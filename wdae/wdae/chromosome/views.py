@@ -2,12 +2,13 @@ import pandas as pd
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from datasets_api.studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
 
 
 class ChromosomeView(APIView):
+
     def __init__(self):
-        gene_info_config = get_studies_manager().get_gene_info_config()
+        gene_info_config = get_gpf_instance().gene_info_config
         self.chromosomes = []
 
         csvfile = gene_info_config.chromosomes.file

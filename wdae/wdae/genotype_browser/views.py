@@ -1,8 +1,3 @@
-'''
-Created on Feb 6, 2017
-
-@author: lubo
-'''
 from django.http.response import StreamingHttpResponse
 from rest_framework import views, status
 from rest_framework.response import Response
@@ -15,7 +10,7 @@ import traceback
 from utils.logger import log_filter
 from utils.logger import LOGGER
 
-from datasets_api.studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
 from datasets_api.permissions import IsDatasetAllowed
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
@@ -30,7 +25,7 @@ class QueryBaseView(views.APIView):
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        self.variants_db = get_studies_manager().get_variants_db()
+        self.variants_db = get_gpf_instance().variants_db
 
 
 class QueryPreviewView(QueryBaseView):

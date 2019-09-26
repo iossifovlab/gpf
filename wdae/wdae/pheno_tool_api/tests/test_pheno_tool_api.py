@@ -1,10 +1,16 @@
+import pytest
+
 import copy
 import json
-import pytest
+
 from rest_framework import status
 
-TOOL_URL = "/api/v3/pheno_tool"
-TOOL_DOWNLOAD_URL = "/api/v3/pheno_tool/download"
+
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
+
+
+TOOL_URL = '/api/v3/pheno_tool'
+TOOL_DOWNLOAD_URL = '/api/v3/pheno_tool/download'
 
 QUERY = {
     'datasetId': 'fake_study',
@@ -22,8 +28,10 @@ QUERY = {
 def test_pheno_tool_view_valid_request(user_client):
     query = copy.deepcopy(QUERY)
 
-    response = user_client.post(TOOL_URL, json.dumps(query), format='json',
-                                content_type='application/json')
+    response = user_client.post(
+        TOOL_URL, json.dumps(query), format='json',
+        content_type='application/json'
+    )
     assert response.status_code == status.HTTP_200_OK
 
 

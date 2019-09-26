@@ -1,14 +1,13 @@
-'''
-Created on Apr 10, 2017
-
-@author: lubo
-'''
-from __future__ import unicode_literals
 import pytest
+
 import tempfile
 import shutil
 import os
+
+
 from dae.configuration.dae_config_parser import DAEConfigParser
+
+from dae.pheno.pheno_factory import PhenoFactory
 
 
 def relative_to_this_folder(path):
@@ -16,11 +15,6 @@ def relative_to_this_folder(path):
         os.path.dirname(os.path.realpath(__file__)),
         path
     )
-
-
-def fixtures_dir():
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
 @pytest.fixture
@@ -35,15 +29,15 @@ def output_dir(request):
 
 
 @pytest.fixture(scope='session')
-def fake_dae_conf():
+def dae_config_fixture():
     return DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
+        work_dir=relative_to_this_folder('fixtures')
+    )
 
 
 @pytest.fixture(scope='session')
-def fake_pheno_factory(fake_dae_conf):
-    from dae.pheno.pheno_factory import PhenoFactory
-    return PhenoFactory(fake_dae_conf)
+def fake_pheno_factory(dae_config_fixture):
+    return PhenoFactory(dae_config_fixture)
 
 
 @pytest.fixture(scope='session')

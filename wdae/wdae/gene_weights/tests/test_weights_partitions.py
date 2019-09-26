@@ -2,15 +2,15 @@ import pytest
 
 import json
 
-pytestmark = pytest.mark.usefixtures("mock_studies_manager")
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
 def test_gene_weights_partitions(user_client):
-    url = "/api/v3/gene_weights/partitions"
+    url = '/api/v3/gene_weights/partitions'
     data = {
-        "weight": "LGD_rank",
-        "min": 1.5,
-        "max": 5.0,
+        'weight': 'LGD_rank',
+        'min': 1.5,
+        'max': 5.0,
     }
     response = user_client.post(
         url, json.dumps(data), content_type='application/json', format='json')
@@ -18,11 +18,11 @@ def test_gene_weights_partitions(user_client):
 
 
 def test_gene_weights_partitions_rvis(user_client):
-    url = "/api/v3/gene_weights/partitions"
+    url = '/api/v3/gene_weights/partitions'
     data = {
-        "weight": "RVIS_rank",
-        "min": 1,
-        "max": 100,
+        'weight': 'RVIS_rank',
+        'min': 1,
+        'max': 100,
     }
     response = user_client.post(
         url, json.dumps(data), content_type='application/json', format='json')
@@ -30,11 +30,11 @@ def test_gene_weights_partitions_rvis(user_client):
 
 
 def test_bad_gene_weight_partition(user_client):
-    url = "/api/v3/gene_weights/partitions"
+    url = '/api/v3/gene_weights/partitions'
     data = {
-        "weight": "ala-bala",
-        "min": -8,
-        "max": -3,
+        'weight': 'ala-bala',
+        'min': -8,
+        'max': -3,
     }
     response = user_client.post(
         url, json.dumps(data), content_type='application/json', format='json')
@@ -42,11 +42,11 @@ def test_bad_gene_weight_partition(user_client):
 
 
 def test_full_patition(user_client):
-    url = "/api/v3/gene_weights/partitions"
+    url = '/api/v3/gene_weights/partitions'
     data = {
-        "weight": "RVIS_rank",
-        "min": 0,
-        "max": 1000,
+        'weight': 'RVIS_rank',
+        'min': 0,
+        'max': 1000,
     }
     response = user_client.post(
         url, json.dumps(data), content_type='application/json', format='json')

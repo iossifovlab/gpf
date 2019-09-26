@@ -9,7 +9,7 @@ import pytest
 
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures('mock_studies_manager')
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
 EXAMPLE_REQUEST_F1 = {

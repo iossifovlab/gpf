@@ -1,8 +1,3 @@
-'''
-Created on Nov 7, 2016
-
-@author: lubo
-'''
 import itertools
 import numpy as np
 from collections import OrderedDict
@@ -147,7 +142,7 @@ class Weights(GenomicValues):
         return weights
 
 
-class WeightsLoader(object):
+class WeightsFactory(object):
     """
     Helper class used to load all defined gene weights.
 
@@ -155,7 +150,7 @@ class WeightsLoader(object):
     """
 
     def __init__(self, config, *args, **kwargs):
-        super(WeightsLoader, self).__init__(*args, **kwargs)
+        super(WeightsFactory, self).__init__(*args, **kwargs)
         self.config = config
 
         self.weights = OrderedDict()

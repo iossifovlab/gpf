@@ -3,7 +3,10 @@ import pytest
 from dae.enrichment_tool.event_counters import EnrichmentResult
 
 
-def test_serialize(db, enrichment_serializer):
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
+
+
+def test_serialize(enrichment_serializer):
     serialize = enrichment_serializer.serialize()
 
     assert len(serialize) == 2
@@ -134,8 +137,7 @@ def test_serialize(db, enrichment_serializer):
     assert female_serialized['overlapFilter']['geneSymbols'] == {'SAMD11'}
 
 
-def test_serialize_error(
-        db, f1_trio, enrichment_builder, enrichment_serializer):
+def test_serialize_error(f1_trio, enrichment_builder, enrichment_serializer):
     male_er = EnrichmentResult('male')
     male_er.events = [['SAMD11'], ['SAMD11'], ['POGZ']]
     male_er.overlapped = [['SAMD11']]

@@ -5,10 +5,13 @@ import pandas as pd
 from io import StringIO
 
 from box import Box
-from dae.annotation.tools.file_io import IOManager, IOType
-from dae.annotation.tools.score_file_io import ScoreFile, TabixAccess
+
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.configuration.dae_config_parser import DAEConfigParser
+
+from dae.annotation.tools.file_io import IOManager, IOType
+from dae.annotation.tools.score_file_io import ScoreFile, TabixAccess
 
 
 def relative_to_this_test_folder(path):
@@ -18,11 +21,26 @@ def relative_to_this_test_folder(path):
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def dae_config_fixture():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=relative_to_this_test_folder('fixtures'))
-    return dae_config
+    return DAEConfigParser.read_and_parse_file_configuration(
+        work_dir=relative_to_this_test_folder('fixtures')
+    )
+
+
+@pytest.fixture(scope='function')
+def mocked_gpf_instance(mocker, mock_genomes_db, dae_config_fixture):
+    mocker.patch('dae.gpf_instance.gpf_instance.GPFInstance')
+
+    gpf_instance = GPFInstance()
+    gpf_instance.dae_config = dae_config_fixture
+
+    return gpf_instance
+
+
+@pytest.fixture(scope='function')
+def mocked_genomes_db(mocked_gpf_instance):
+    return mocked_gpf_instance.genomes_db
 
 
 @pytest.fixture
@@ -31,8 +49,8 @@ def variants_io(request):
     def build(fixture_name, options=Box({})):
         io_options = options.to_dict()
         io_config = {
-            "infile": relative_to_this_test_folder(fixture_name),
-            "outfile": "-",
+            'infile': relative_to_this_test_folder(fixture_name),
+            'outfile': '-',
         }
         io_options.update(io_config)
 
@@ -46,7 +64,7 @@ def variants_io(request):
 def expected_df():
     def build(data):
         infile = StringIO(str(data))
-        df = pd.read_csv(infile, sep="\t")
+        df = pd.read_csv(infile, sep='\t')
         return df
     return build
 
@@ -54,7 +72,7 @@ def expected_df():
 @pytest.fixture
 def score_file():
     score_filename = relative_to_this_test_folder(
-        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+        'fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz')
 
     score_file_instance = ScoreFile(score_filename)
     assert score_file_instance is not None

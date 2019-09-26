@@ -143,3 +143,63 @@ def test_min_max_measure_values(fphdb):
 
         error = np.abs(mmax - df[measure.measure_id].max())
         assert error < 1E-5, measure.measure_id
+
+
+def test_get_persons_df_person_ids(fphdb):
+    res = fphdb.get_persons_df(
+        person_ids=[],
+        family_ids=['f1', 'f2', 'f3'],
+        roles=['prb']
+    )
+    assert res.empty
+
+
+def test_get_persons_df_family_ids(fphdb):
+    res = fphdb.get_persons_df(
+        person_ids=['f1.p1', 'f2.p1', 'f3.p1'],
+        family_ids=[],
+        roles=['prb']
+    )
+    assert res.empty
+
+
+def test_get_persons_df_roles(fphdb):
+    res = fphdb.get_persons_df(
+        person_ids=['f1.p1', 'f2.p1', 'f3.p1'],
+        family_ids=['f1', 'f2', 'f3'],
+        roles=[]
+    )
+    assert res.empty
+
+
+def test_raw_get_measure_values_df_person_ids(fphdb):
+    test_measure = fphdb.get_measure('i1.m1')
+    res = fphdb._raw_get_measure_values_df(
+        test_measure,
+        person_ids=[],
+        family_ids=['f1', 'f2', 'f3'],
+        roles=['prb']
+    )
+    assert res.empty
+
+
+def test_raw_get_measure_values_df_family_ids(fphdb):
+    test_measure = fphdb.get_measure('i1.m1')
+    res = fphdb._raw_get_measure_values_df(
+        test_measure,
+        person_ids=['f1.p1', 'f2.p1', 'f3.p1'],
+        family_ids=[],
+        roles=['prb']
+    )
+    assert res.empty
+
+
+def test_raw_get_measure_values_df_roles(fphdb):
+    test_measure = fphdb.get_measure('i1.m1')
+    res = fphdb._raw_get_measure_values_df(
+        test_measure,
+        person_ids=['f1.p1', 'f2.p1', 'f3.p1'],
+        family_ids=['f1', 'f2', 'f3'],
+        roles=[]
+    )
+    assert res.empty

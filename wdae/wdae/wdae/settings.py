@@ -1,9 +1,5 @@
-'''
-Created on Sep 2, 2015
-
-@author: lubo
-'''
-from .default_settings import *  # @UnusedWildImport
+# flake8: noqa
+from .default_settings import *
 
 ALLOWED_HOSTS += ['localhost']
 

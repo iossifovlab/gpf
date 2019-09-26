@@ -1,19 +1,23 @@
 #!/usr/bin/env python
 
-# Oct 9th 2013
-# written by Ewa
 import sys
 import optparse
 import os.path
-from dae import GenomeAccess
-from dae.GeneModelFiles import load_gene_models
-from dae.variant_annotation.annotator import VariantAnnotator as VariantAnnotation
 import time
 import datetime
-from dae.DAE import genomesDB
+
+from dae.gpf_instance.gpf_instance import GPFInstance
+
+from dae import GenomeAccess
+from dae.GeneModelFiles import load_gene_models
+from dae.variant_annotation.annotator import \
+    VariantAnnotator as VariantAnnotation
 
 
 start = time.time()
+
+gpf_instance = GPFInstance()
+genomes_db = gpf_instance.genomes_db
 
 
 desc = """Program to annotate variants (substitutions & indels & cnvs)"""
@@ -184,21 +188,21 @@ seqCol = assign_values(opts.q)
 lengthCol = assign_values(opts.l)
 
 if opts.G is None and opts.Graw is None:
-    GA = genomesDB.get_genome()
+    GA = genomes_db.get_genome()
     if opts.T is None and opts.Traw is None:
-        gmDB = genomesDB.get_gene_models()
+        gmDB = genomes_db.get_gene_models()
     elif opts.Traw is None:
-        gmDB = genomesDB.get_gene_models(opts.T)
+        gmDB = genomes_db.get_gene_models(opts.T)
     else:
         gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 
 
 elif opts.Graw is None:
-    GA = genomesDB.get_genome(opts.G)
+    GA = genomes_db.get_genome(opts.G)
     if opts.T is None and opts.Traw is None:
-        gmDB = genomesDB.get_gene_models(genomeId=opts.G)
+        gmDB = genomes_db.get_gene_models(genomeId=opts.G)
     elif opts.Traw is None:
-        gmDB = genomesDB.get_gene_models(opts.T, genomeId=opts.G)
+        gmDB = genomes_db.get_gene_models(opts.T, genomeId=opts.G)
     else:
         gmDB = load_gene_models(opts.Traw, None, opts.TrawFormat)
 

@@ -1,22 +1,16 @@
 #!/usr/bin/env python
 
-'''
-Created on Jul 23, 2018
-
-@author: lubo
-'''
 import os
 import sys
 
 import pysam
 import argparse
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.annotation.tools.file_io_parquet import ParquetSchema
 from dae.annotation.tools.annotator_config import annotation_config_cli_options
 
-from dae.backends.vcf.builder import get_genome
 from dae.backends.configure import Configure
 from dae.backends.dae.raw_dae import RawDAE, RawDenovo
 
@@ -34,7 +28,7 @@ def get_contigs(tabixfilename):
 
 
 def dae_build_transmitted(
-        dae_config, annotation_pipeline, argv, defaults={},
+        dae_config, annotation_pipeline, genome, argv, defaults={},
         study_id=None, filesystem=None):
 
     config = Configure.from_dict({
@@ -45,7 +39,6 @@ def dae_build_transmitted(
         }})
 
     assert argv.output is not None
-    genome = get_genome(genome_file=None)
 
     fvars = RawDAE(
         config.dae.summary_filename,
@@ -71,7 +64,7 @@ def dae_build_transmitted(
         argv.output, bucket_index=argv.bucket_index,
         db=None, study_id=study_id).impala
 
-    variants_iterator_to_parquet(
+    return variants_iterator_to_parquet(
         fvars,
         impala_config,
         bucket_index=argv.bucket_index,
@@ -82,9 +75,8 @@ def dae_build_transmitted(
     )
 
 
-def dae_build_makefile(dae_config, argv):
+def dae_build_makefile(dae_config, genome, argv):
     data_contigs = get_contigs(argv.summary)
-    genome = get_genome(genome_file=None)
     build_contigs = build_contig_regions(genome, argv.len)
 
     family_format = ""
@@ -118,7 +110,7 @@ def dae_build_makefile(dae_config, argv):
 
 
 def import_dae_denovo(
-        dae_config, annotation_pipeline,
+        dae_config, genome, annotation_pipeline,
         families_filename, variants_filename,
         family_format='pedigree', output='.', rows=10000,
         bucket_index=0, defaults={}, study_id=None, filesystem=None):
@@ -129,7 +121,6 @@ def import_dae_denovo(
             'family_filename': families_filename
         }})
 
-    genome = get_genome()
     fvars = RawDenovo(
         config.denovo.denovo_filename,
         config.denovo.family_filename,
@@ -168,14 +159,14 @@ def import_dae_denovo(
     )
 
 
-def init_parser_dae_common(dae_config, parser):
+def init_parser_dae_common(gpf_instance, parser):
     parser.add_argument(
         'families', type=str,
         metavar='<families filename>',
         help='families file in pedigree format'
     )
 
-    options = annotation_config_cli_options(dae_config)
+    options = annotation_config_cli_options(gpf_instance)
     for name, args in options:
         parser.add_argument(name, **args)
 
@@ -204,16 +195,16 @@ def init_parser_dae_common(dae_config, parser):
     )
 
     parser.add_argument(
-        '-r', '--rows', type=int,
+        '--rows', type=int,
         default=100000,
         dest='rows', metavar='rows',
         help='row group size'
     )
 
 
-def init_parser_denovo(dae_config, subparsers):
+def init_parser_denovo(gpf_instance, subparsers):
     parser_denovo = subparsers.add_parser('denovo')
-    init_parser_dae_common(dae_config, parser_denovo)
+    init_parser_dae_common(gpf_instance, parser_denovo)
 
     parser_denovo.add_argument(
         'variants', type=str,
@@ -222,9 +213,9 @@ def init_parser_denovo(dae_config, subparsers):
     )
 
 
-def init_transmitted_common(dae_config, parser):
+def init_transmitted_common(gpf_instance, parser):
 
-    init_parser_dae_common(dae_config, parser)
+    init_parser_dae_common(gpf_instance, parser)
 
     parser.add_argument(
         'summary', type=str,
@@ -238,10 +229,10 @@ def init_transmitted_common(dae_config, parser):
     )
 
 
-def init_parser_dae(dae_config, subparsers):
+def init_parser_dae(gpf_instance, subparsers):
     parser_dae = subparsers.add_parser('dae')
 
-    init_transmitted_common(dae_config, parser_dae)
+    init_transmitted_common(gpf_instance, parser_dae)
 
     parser_dae.add_argument(
         '--region', type=str,
@@ -251,10 +242,10 @@ def init_parser_dae(dae_config, subparsers):
     )
 
 
-def init_parser_make(dae_config, subparsers):
+def init_parser_make(gpf_instance, subparsers):
     parser = subparsers.add_parser('make')
 
-    init_transmitted_common(dae_config, parser)
+    init_transmitted_common(gpf_instance, parser)
 
     parser.add_argument(
         '-l', '--len', type=int,
@@ -271,7 +262,7 @@ def init_parser_make(dae_config, subparsers):
     )
 
 
-def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
+def parse_cli_arguments(gpf_instance, argv=sys.argv[1:]):
     parser = argparse.ArgumentParser(
         description='Convert DAE file to parquet')
 
@@ -281,24 +272,27 @@ def parse_cli_arguments(dae_config, argv=sys.argv[1:]):
         description='choose what type of data to convert',
         help='denovo or transmitted study')
 
-    init_parser_denovo(dae_config, subparsers)
-    init_parser_dae(dae_config, subparsers)
-    init_parser_make(dae_config, subparsers)
+    init_parser_denovo(gpf_instance, subparsers)
+    init_parser_dae(gpf_instance, subparsers)
+    init_parser_make(gpf_instance, subparsers)
 
     parser_args = parser.parse_args(argv)
     return parser_args
 
 
 if __name__ == "__main__":
-    dae_config = DAEConfigParser.read_and_parse_file_configuration()
+    gpf_instance = GPFInstance()
+    dae_config = gpf_instance.dae_config
+    genomes_db = gpf_instance.genomes_db
+    genome = genomes_db.get_genome()
 
-    argv = parse_cli_arguments(dae_config, sys.argv[1:])
+    argv = parse_cli_arguments(gpf_instance, sys.argv[1:])
     annotation_pipeline = construct_import_annotation_pipeline(
-        dae_config, argv)
+        dae_config, genomes_db, argv)
 
     if argv.type == 'denovo':
         import_dae_denovo(
-            dae_config, annotation_pipeline,
+            dae_config, genome, annotation_pipeline,
             argv.families, argv.variants,
             family_format=argv.family_format,
             output=argv.output,
@@ -306,7 +300,7 @@ if __name__ == "__main__":
         )
     elif argv.type == 'dae':
         dae_build_transmitted(
-            dae_config, annotation_pipeline, argv,
+            dae_config, genome, annotation_pipeline, argv,
             defaults=dae_config.annotation_defaults)
     elif argv.type == 'make':
-        dae_build_makefile(dae_config, argv)
+        dae_build_makefile(dae_config, genome, argv)

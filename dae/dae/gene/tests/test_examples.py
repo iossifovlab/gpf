@@ -1,8 +1,6 @@
-'''
-Created on Apr 16, 2018
+import pytest
 
-@author: lubo
-'''
+pytestmark = pytest.mark.usefixtures('gene_info_cache_dir', 'calc_gene_sets')
 
 """
 Denovo Gene Sets are configured into study configuration. There is a section

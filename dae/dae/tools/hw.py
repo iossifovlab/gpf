@@ -8,7 +8,12 @@ from scipy import stats
 import numpy.random as rnd
 
 from .vrtIOutil import ReaderStat, Writer, tooManyFile
-from DAE import genomesDB as genomes_db
+
+from dae.gpf_instance.gpf_instance import GPFInstance
+
+
+gpf_instance = GPFInstance()
+genomes_db = gpf_instance.genomes_db
 
 
 # family based data and mom and dad ordered state
@@ -35,7 +40,7 @@ def xMF(xstr, pp):
             diplo_flag[1] = False
 
     cnt[0][0] = pp / 2 - cnt[0][1] - cnt[0][2]
-    cnt[1][0] = pp /2 - cnt[1][1] - cnt[1][2]
+    cnt[1][0] = pp / 2 - cnt[1][1] - cnt[1][2]
 
     return cnt, diplo_flag
 
@@ -54,8 +59,8 @@ def randomSampling(cnt, genF, smpl_size=10000, flagX=False):
         p = (1.0 * cnt[1] + 2.0 * cnt[2]) / (1.5 * s)
         q = 1. - p
 
-        v = rnd.multinomial( s / 2, [q*q, 2*p*q, p*p], size=smpl_size)
-        w = rnd.multinomial( s / 2, [q, p, 0], size=smpl_size)
+        v = rnd.multinomial(s / 2, [q*q, 2*p*q, p*p], size=smpl_size)
+        w = rnd.multinomial(s / 2, [q, p, 0], size=smpl_size)
 
         x = v + w
     else:

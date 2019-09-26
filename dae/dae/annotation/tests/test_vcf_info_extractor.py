@@ -9,15 +9,15 @@ from dae.annotation.tools.file_io import IOManager, IOType
 @pytest.fixture
 def vcf_io(request):
     io_config = {
-        "infile": relative_to_this_test_folder("fixtures/vcf_input.tsv"),
-        "outfile": "-",
+        'infile': relative_to_this_test_folder('fixtures/vcf_input.tsv'),
+        'outfile': '-',
     }
     io_config = Box(io_config, default_box=True, default_box_attr=None)
     io_manager = IOManager(io_config, IOType.TSV, IOType.TSV)
     return io_manager
 
 
-def test_vcf_info_extractor(capsys, vcf_io):
+def test_vcf_info_extractor(capsys, vcf_io, genomes_db):
 
     expected_output = \
         ('extracted-AC\textracted-AB\textracted-AT\textracted-AZ\n'
@@ -27,7 +27,7 @@ def test_vcf_info_extractor(capsys, vcf_io):
          '\t13.324234\t10.453e+10\t\n')
 
     opts = Box({
-        "mode": "overwrite",
+        'mode': 'overwrite',
     }, default_box=True, default_box_attr=None)
 
     section_config = AnnotationConfigParser.parse_section(
@@ -40,7 +40,8 @@ def test_vcf_info_extractor(capsys, vcf_io):
                 'AZ': 'extracted-AZ'
             },
             'annotator': 'vcf_info_extractor.VCFInfoExtractor'
-        })
+        }),
+        genomes_db
     )
 
     with vcf_io as io_manager:
@@ -56,4 +57,4 @@ def test_vcf_info_extractor(capsys, vcf_io):
     print(captured.err)
     print(expected_output)
     assert captured.out == expected_output
-#     assert captured.err == "Processed 4 lines.\n"
+#     assert captured.err == 'Processed 4 lines.\n'

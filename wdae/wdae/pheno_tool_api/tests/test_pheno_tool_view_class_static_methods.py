@@ -1,7 +1,12 @@
 import pytest
+
 from dae.variants.attributes import Sex
-from pheno_tool_api.views import PhenoToolView
 from dae.pheno_tool.pheno_common import PhenoResult
+
+from pheno_tool_api.views import PhenoToolView
+
+
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
 def test_pheno_tool_view_build_report_description():

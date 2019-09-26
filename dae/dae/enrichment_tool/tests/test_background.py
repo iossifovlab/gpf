@@ -1,7 +1,7 @@
 # from enrichment_tool.background import BackgroundBase, SynonymousBackground,\
 #     CodingLenBackground, SamochaBackground
-from dae.enrichment_tool.background import BackgroundBase, CodingLenBackground, \
-    SamochaBackground
+from dae.enrichment_tool.background import BackgroundBase, \
+    CodingLenBackground, SamochaBackground
 
 
 def test_background_base_backgrounds():
