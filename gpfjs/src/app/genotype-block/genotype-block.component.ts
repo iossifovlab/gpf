@@ -24,6 +24,8 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
   presentInRole: Observable<Array<PresentInRole>>;
   selectedDataset$: Observable<Dataset>;
   rolesFilterOptions: Observable<Array<string>>;
+  inheritanceTypeFilter: Observable<Array<string>>;
+  selectedInheritanceTypeFilterValues: Observable<Array<string>>;
 
   constructor(
     private datasetsService: DatasetsService
@@ -34,6 +36,7 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
   ngAfterViewInit() {
     this.selectedDataset$ = this.datasetsService.getSelectedDataset();
     const selectedDataset$ = this.selectedDataset$;
+
     this.hasCNV = selectedDataset$.map(dataset => {
       if (!dataset || !dataset.genotypeBrowserConfig) {
         return false;
@@ -93,6 +96,18 @@ export class GenotypeBlockComponent extends QueryStateCollector implements After
         return [];
       }
       return dataset.genotypeBrowserConfig.rolesFilterOptions;
+    });
+    this.inheritanceTypeFilter = selectedDataset$.map(dataset => {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
+        return [];
+      }
+      return dataset.genotypeBrowserConfig.inheritanceTypeFilter;
+    });
+    this.selectedInheritanceTypeFilterValues = selectedDataset$.map(dataset => {
+      if (!dataset || !dataset.genotypeBrowserConfig) {
+        return [];
+      }
+      return dataset.genotypeBrowserConfig.selectedInheritanceTypeFilterValues;
     });
   }
 
