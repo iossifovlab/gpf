@@ -234,9 +234,9 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
             cls._parse_present_in_role(config_section.get('presentInRole', {}))
 
         if config_section.selected_inheritance_type_filter_values:
-            assert config_section.inheritance_type_filters
+            assert config_section.inheritance_type_filter
             assert all([
-                inheritance_type in config_section.inheritance_type_filters
+                inheritance_type in config_section.inheritance_type_filter
                 for inheritance_type
                 in config_section.selected_inheritance_type_filter_values
             ])
