@@ -49,11 +49,6 @@ mkdir -p genomic-scores-hg19
 mkdir -p genomic-scores-hg38
 
 mkdir wdae
-cd wdae
-
-wdaemanage.py migrate
-wdaemanage.py user_create admin@iossifovlab.com -p secret -g any_dataset:admin
-wdaemanage.py user_create research@iossifovlab.com -p secret
 
 cat <<EOF > setenv.sh
 #!/bin/bash
@@ -65,5 +60,11 @@ export DAE_GENOMIC_SCORES_HG19=$DAE_DB_DIR/genomic-scores-hg19
 export DAE_GENOMIC_SCORES_HG38=$DAE_DB_DIR/genomic-scores-hg38
 
 EOF
+
+cd wdae
+
+wdaemanage.py migrate
+wdaemanage.py user_create admin@iossifovlab.com -p secret -g any_dataset:admin
+wdaemanage.py user_create research@iossifovlab.com -p secret
 
 cd -
