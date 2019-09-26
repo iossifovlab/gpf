@@ -125,11 +125,11 @@ structure:
 Run GPF web server
 ##################
 
-Enter into ``gpf_test/wdae`` and source ``setenv.sh`` file:
+Enter into ``gpf_test/`` and source ``setenv.sh`` file:
 
 .. code-block:: bash
 
-    cd gpf_test/wdae
+    cd gpf_test/
     source ./setenv.sh
 
 You are now ready to run the GPF development web server:
