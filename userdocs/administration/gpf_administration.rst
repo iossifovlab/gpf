@@ -9,3 +9,4 @@ GPF Administration
    configurations
    pedigree_generation
    pheno
+   data_appendix
