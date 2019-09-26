@@ -178,7 +178,7 @@ class Layout(object):
                     if (individual.individual.are_mates(
                             other_individual.individual)):
                         middle_x = \
-                            (individual.x_center 
+                            (individual.x_center
                              + other_individual.x_center)/2.0
                         if are_next_to_eachother:
                             self.lines.append(Line(
@@ -201,9 +201,8 @@ class Layout(object):
                         self.lines.append(line)
 
                         percent_x = \
-                                (middle_x - individual.x_center) / \
-                                (other_individual.x_center -
-                                 individual.x_center)
+                            (middle_x - individual.x_center) / \
+                            (other_individual.x_center - individual.x_center)
                         center_y = line.inverse_curve_y_at(percent_x)
 
                         self.lines.append(Line(

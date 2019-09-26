@@ -6,10 +6,11 @@ import glob
 from box import Box
 from collections import OrderedDict
 
+from dae.gpf_instance.gpf_instance import GPFInstance
+
 from dae.annotation.tools.annotator_config import AnnotationConfigParser, \
     VariantAnnotatorConfig
 
-from dae.configuration.dae_config_parser import DAEConfigParser
 from dae.configuration.config_parser_base import CaseSensitiveConfigParser
 from dae.configuration.utils import parser_to_dict, flatten_dict
 
@@ -32,7 +33,8 @@ class PipelineConfigWrapper(VariantAnnotatorConfig):
     def build(cls, config_file):
         options = Box({}, default_box=True, default_box_attr=None)
 
-        dae_config = DAEConfigParser.read_and_parse_file_configuration()
+        gpf_instance = GPFInstance()
+        dae_config = gpf_instance.dae_config
         defaults = dae_config.annotation_defaults
 
         configuration = \

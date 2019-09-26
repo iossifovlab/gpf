@@ -1,7 +1,5 @@
 import os
 
-from dae.pheno.pheno_factory import PhenoFactory
-
 from dae.studies.study import Study
 from dae.studies.dataset import Dataset
 from dae.studies.study_wrapper import StudyWrapper
@@ -14,30 +12,22 @@ from dae.backends.configure import Configure
 from dae.backends.impala.impala_helpers import ImpalaHelpers
 from dae.backends.impala.impala_variants import ImpalaFamilyVariants
 
-from dae.gene.gene_info_config import GeneInfoConfigParser
-from dae.gene.weights import WeightsLoader
-
 
 class VariantsDb(object):
 
     FILE_FORMATS = set(['vcf', 'impala'])
 
-    def __init__(self, dae_config, pheno_factory=None, weights_loader=None):
+    def __init__(
+            self, dae_config, pheno_factory, weights_factory, genomes_db):
         self.dae_config = dae_config
 
-        if pheno_factory is None:
-            pheno_factory = PhenoFactory(dae_config=dae_config)
+        assert pheno_factory is not None
+        assert weights_factory is not None
+        assert genomes_db is not None
+
         self.pheno_factory = pheno_factory
-
-        if weights_loader is None:
-            gene_info_config = \
-                GeneInfoConfigParser.read_and_parse_file_configuration(
-                    dae_config.gene_info_db.conf_file, dae_config.dae_data_dir
-                )
-
-            weights_loader =  \
-                WeightsLoader(config=gene_info_config.gene_weights)
-        self.weights_loader = weights_loader
+        self.weights_factory = weights_factory
+        self.genomes_db = genomes_db
 
         defaults = {
             'values': {
@@ -216,7 +206,7 @@ class VariantsDb(object):
             return
         self._study_cache[study_id] = study
         self._study_wrapper_cache[study_id] = \
-            StudyWrapper(study, self.pheno_factory, self.weights_loader)
+            StudyWrapper(study, self.pheno_factory, self.weights_factory)
 
     def load_dataset_cache(self, dataset_ids=None):
         if dataset_ids is None:
@@ -240,7 +230,7 @@ class VariantsDb(object):
             return
         self._dataset_cache[dataset_id] = dataset
         self._dataset_wrapper_cache[dataset_id] = \
-            StudyWrapper(dataset, self.pheno_factory, self.weights_loader)
+            StudyWrapper(dataset, self.pheno_factory, self.weights_factory)
 
     def _impala_configuration(self, study_config):
         assert study_config.file_format == 'impala'
@@ -289,10 +279,15 @@ class VariantsDb(object):
         if study_config.file_format == 'impala':
             impala_config = self._impala_configuration(study_config).impala
             impala_connection = self._make_impala_connection()
-            variants = ImpalaFamilyVariants(impala_config, impala_connection)
+            variants = ImpalaFamilyVariants(
+                impala_config, impala_connection,
+                self.genomes_db.get_gene_models()
+            )
             return Study(study_config, variants)
         else:
-            variants = RawFamilyVariants(prefix=study_config.prefix)
+            variants = RawFamilyVariants(
+                prefix=study_config.prefix, genomes_db=self.genomes_db
+            )
 
             return Study(study_config, variants)
 

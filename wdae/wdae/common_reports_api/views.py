@@ -1,22 +1,16 @@
-'''
-Created on Aug 3, 2015
-
-@author: lubo
-'''
 from django.http.response import StreamingHttpResponse
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from datasets_api.studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
 from datasets_api.permissions import IsDatasetAllowed
 
 
 class VariantReportsView(APIView):
 
     def __init__(self):
-        self.common_reports_facade =\
-            get_studies_manager().get_common_report_facade()
+        self.common_reports_facade = get_gpf_instance().common_report_facade
 
     def get(self, request, common_report_id=None):
         assert common_report_id
@@ -41,8 +35,7 @@ class VariantReportsView(APIView):
 class FamiliesDataDownloadView(APIView):
 
     def __init__(self):
-        self.common_reports_facade =\
-            get_studies_manager().get_common_report_facade()
+        self.common_reports_facade = get_gpf_instance().common_report_facade
 
     def get(self, request, common_report_id):
         report = self.common_reports_facade.get_common_report(common_report_id)

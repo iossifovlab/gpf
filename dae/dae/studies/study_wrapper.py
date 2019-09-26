@@ -24,7 +24,7 @@ from dae.studies.people_group_config_parser import PeopleGroupConfigParser
 
 class StudyWrapper(object):
 
-    def __init__(self, study, pheno_factory, weights_loader, *args, **kwargs):
+    def __init__(self, study, pheno_factory, weights_factory, *args, **kwargs):
         super(StudyWrapper, self).__init__(*args, **kwargs)
         assert study is not None
 
@@ -36,7 +36,7 @@ class StudyWrapper(object):
         self.pheno_factory = pheno_factory
         self._init_pheno(self.pheno_factory)
 
-        self.weights_loader = weights_loader
+        self.weights_factory = weights_factory
 
     def _init_wdae_config(self):
         preview_column_slots = []
@@ -385,10 +385,10 @@ class StudyWrapper(object):
 
         gene_weights_values = {}
         for gwc in self.gene_weight_column_sources:
-            if gwc not in self.weights_loader:
+            if gwc not in self.weights_factory:
                 continue
 
-            gene_weights = self.weights_loader[gwc]
+            gene_weights = self.weights_factory[gwc]
             if gene != '':
                 gene_weights_values[gwc] =\
                     gene_weights.to_dict().get(gene, '')
@@ -481,7 +481,7 @@ class StudyWrapper(object):
         kwargs['real_attr_filter'] += genomic_scores_filter
 
     def _transform_gene_weights(self, kwargs):
-        if not self.weights_loader:
+        if not self.weights_factory:
             return
 
         gene_weights = kwargs.pop('geneWeights', {})
@@ -490,8 +490,8 @@ class StudyWrapper(object):
         range_start = gene_weights.get('rangeStart', None)
         range_end = gene_weights.get('rangeEnd', None)
 
-        if weight_name and weight_name in self.weights_loader:
-            weight = self.weights_loader[gene_weights.get('weight')]
+        if weight_name and weight_name in self.weights_factory:
+            weight = self.weights_factory[gene_weights.get('weight')]
 
             genes = weight.get_genes(range_start, range_end)
 

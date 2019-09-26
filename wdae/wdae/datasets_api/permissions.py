@@ -1,11 +1,6 @@
-'''
-Created on Jul 5, 2017
-
-@author: lubo
-'''
 from rest_framework import permissions
 
-from .studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
 from .models import Dataset
 from guardian.utils import get_anonymous_user
 
@@ -30,7 +25,7 @@ class IsDatasetAllowed(permissions.BasePermission):
 
     @staticmethod
     def permitted_datasets(user):
-        dataset_ids = get_studies_manager().get_variants_db().get_all_ids()
+        dataset_ids = get_gpf_instance().variants_db.get_all_ids()
 
         return list(filter(
             lambda dataset_id: IsDatasetAllowed.user_has_permission(

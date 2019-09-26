@@ -12,18 +12,18 @@ from .conftest import relative_to_this_test_folder
 
 
 @pytest.fixture(scope='session')
-def effect_annotator():
+def effect_annotator(genomes_db):
     options = Box({
-        "vcf": True,
-        "direct": False,
+        'vcf': True,
+        'direct': False,
         'r': 'reference',
         'a': 'alternative',
         'c': 'chrom',
         'p': 'position',
 
-        # "c": "CSHL:chr",
-        # "p": "CSHL:position",
-        # "v": "CSHL:variant",
+        # 'c': 'CSHL:chr',
+        # 'p': 'CSHL:position',
+        # 'v': 'CSHL:variant',
     }, default_box=True, default_box_attr=None)
 
     columns = {
@@ -37,7 +37,8 @@ def effect_annotator():
             'options': options,
             'columns': columns,
             'annotator': 'effect_annotator.EffectAnnotator'
-        })
+        }),
+        genomes_db
     )
 
     annotator = EffectAnnotator(config)
@@ -47,10 +48,10 @@ def effect_annotator():
 
 
 @pytest.fixture(scope='session')
-def variant_effect_annotator():
+def variant_effect_annotator(genomes_db):
     options = Box({
-        "direct": False,
-        "vcf": True,
+        'direct': False,
+        'vcf': True,
         'r': 'reference',
         'a': 'alternative',
         'c': 'chrom',
@@ -75,7 +76,8 @@ def variant_effect_annotator():
             'options': options,
             'columns': columns,
             'annotator': 'effect_annotator.VariantEffectAnnotator'
-        })
+        }),
+        genomes_db
     )
 
     annotator = VariantEffectAnnotator(config)
@@ -85,7 +87,7 @@ def variant_effect_annotator():
 
 
 def test_effect_annotator(effect_annotator, variants_io, capsys):
-    with variants_io("fixtures/effects_trio_multi-eff.txt") as io_manager:
+    with variants_io('fixtures/effects_trio_multi-eff.txt') as io_manager:
 
         captured = capsys.readouterr()
 
@@ -100,7 +102,7 @@ def test_effect_annotator(effect_annotator, variants_io, capsys):
 
 def test_effect_annotator_df(variant_effect_annotator):
     df = pd.read_csv(
-        relative_to_this_test_folder("fixtures/effects_trio_multi-eff.txt"),
+        relative_to_this_test_folder('fixtures/effects_trio_multi-eff.txt'),
         dtype={
             'chrom': str,
             'position': np.int32,
@@ -136,7 +138,7 @@ def test_effect_annotators_compare(
     assert effect_annotator is not None
     assert variant_effect_annotator is not None
     df = pd.read_csv(
-        relative_to_this_test_folder("fixtures/effects_trio_multi-eff.txt"),
+        relative_to_this_test_folder('fixtures/effects_trio_multi-eff.txt'),
         dtype={
             'chrom': str,
             'position': np.int32,

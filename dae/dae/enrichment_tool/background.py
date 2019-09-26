@@ -67,7 +67,7 @@ class BackgroundCommon(BackgroundBase):
             p=background_prob)
 
     def calc_stats(self, effect_type, enrichment_events,
-                   gene_set, children_stats):
+                   gene_set, children_by_sex):
 
         gene_syms = [gs.upper() for gs in gene_set]
         overlap_enrichment_result_dict(enrichment_events, gene_syms)
@@ -256,7 +256,11 @@ class SamochaBackground(BackgroundBase):
         return self.background
 
     def calc_stats(self, effect_type, enrichment_results,
-                   gene_set, children_stats):
+                   gene_set, children_by_sex):
+
+        children_stats = Counter()
+        for sex, persons in children_by_sex.items():
+            children_stats[sex] = len(persons)
 
         overlap_enrichment_result_dict(enrichment_results, gene_set)
 

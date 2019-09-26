@@ -1,8 +1,3 @@
-'''
-Created on Feb 17, 2017
-
-@author: lubo
-'''
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 
 
@@ -35,7 +30,7 @@ class EnrichmentBuilder(object):
                 effect_type,
                 self.gene_syms,
                 gh.get_variants(effect_type),
-                gh.get_children_stats())
+                gh.children_by_sex())
 
             results[effect_type] = enrichment_results
         results['childrenStats'] = gh.get_children_stats()

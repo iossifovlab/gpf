@@ -6,8 +6,7 @@ import argparse
 import time
 from copy import deepcopy
 
-from dae.configuration.dae_config_parser import DAEConfigParser
-from dae.studies.variants_db import VariantsDb
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 from dae.tools.simple_study_import import impala_load_study
 
@@ -39,10 +38,11 @@ def parse_cli_arguments(argv=sys.argv[1:]):
 
 
 def load_study_parquet(
-        dae_config=None, study_ids=None, parquet_directories=None):
-    if dae_config is None:
-        dae_config = DAEConfigParser.read_and_parse_file_configuration()
-    variants_db = VariantsDb(dae_config)
+        gpf_instance=None, study_ids=None, parquet_directories=None):
+    if gpf_instance is None:
+        gpf_instance = GPFInstance()
+    dae_config = gpf_instance.dae_config
+    variants_db = gpf_instance.variants_db
 
     if study_ids is None:
         study_ids = variants_db.get_studies_ids()

@@ -1,15 +1,12 @@
-'''
-Created on Aug 10, 2016
 
-@author: lubo
-'''
 from django.db import IntegrityError, transaction
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import BaseUserManager, Group
 from django.shortcuts import get_object_or_404, get_list_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
-from rest_framework.decorators import action
 import django.contrib.auth
+
+from rest_framework.decorators import action
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -18,12 +15,14 @@ from rest_framework import viewsets
 from rest_framework.authentication import SessionAuthentication
 from rest_framework import permissions
 from rest_framework import filters
+
 from .authentication import \
     SessionAuthenticationWithUnauthenticatedCSRF
 from .models import VerificationPath
 from .serializers import UserSerializer
 from .serializers import UserWithoutEmailSerializer
 from .serializers import BulkGroupOperationSerializer
+
 from utils.logger import log_filter, LOGGER
 
 

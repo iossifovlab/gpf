@@ -1,5 +1,7 @@
 import pytest
+
 from box import Box
+
 from dae.annotation.tests.conftest import relative_to_this_test_folder
 from dae.annotation.tools.file_io import TSVGzipReader, \
         TabixReaderVariants, parquet_enabled
@@ -26,9 +28,9 @@ def test_column_coercion():
         == list(map(recursive_coerce, col4))
 
 
-@pytest.mark.parametrize("filename", [
-    "fixtures/input3.tsv.gz",
-    "fixtures/input3_no_tabix_header.tsv.gz"
+@pytest.mark.parametrize('filename', [
+    'fixtures/input3.tsv.gz',
+    'fixtures/input3_no_tabix_header.tsv.gz'
 ])
 def test_tabix_reader_header(filename):
     filename = relative_to_this_test_folder(filename)
@@ -43,30 +45,30 @@ def test_tabix_reader_header(filename):
 
 
 @pytest.mark.parametrize(
-    "filename,has_prefix,region,total_count,check_region",
+    'filename,has_prefix,region,total_count,check_region',
     [
-        ("fixtures/input3.tsv.gz", True, "chr2:20001-20004",
-         4, "chr2:20001-20004"),
-        ("fixtures/input3.tsv.gz", True, "2:20001-20004",
-         4, "chr2:20001-20004"),
-        ("fixtures/input4.tsv.gz", False, "2:20001-20004",
-         4, "2:20001-20004"),
-        ("fixtures/input4.tsv.gz", False, "chr2:20001-20004",
-         4, "2:20001-20004"),
-        ("fixtures/input3.tsv.gz", True, "chr3:10000-20004",
-         5, "chr3:10000-20004"),
-        ("fixtures/input3.tsv.gz", True, "3:10000-20004",
-         5, "chr3:10000-20004"),
-        ("fixtures/input4.tsv.gz", False, "3:10000-20004",
-         5, "3:10000-20004"),
-        ("fixtures/input4.tsv.gz", False, "chr3:10000-20004",
-         5, "3:10000-20004"),
-        ("fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz",
-         False, "3:10000-20004",
-         15, "3:10000-20004"),
-        ("fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz",
-         False, "chr3:10000-20004",
-         15, "3:10000-20004"),
+        ('fixtures/input3.tsv.gz', True, 'chr2:20001-20004',
+         4, 'chr2:20001-20004'),
+        ('fixtures/input3.tsv.gz', True, '2:20001-20004',
+         4, 'chr2:20001-20004'),
+        ('fixtures/input4.tsv.gz', False, '2:20001-20004',
+         4, '2:20001-20004'),
+        ('fixtures/input4.tsv.gz', False, 'chr2:20001-20004',
+         4, '2:20001-20004'),
+        ('fixtures/input3.tsv.gz', True, 'chr3:10000-20004',
+         5, 'chr3:10000-20004'),
+        ('fixtures/input3.tsv.gz', True, '3:10000-20004',
+         5, 'chr3:10000-20004'),
+        ('fixtures/input4.tsv.gz', False, '3:10000-20004',
+         5, '3:10000-20004'),
+        ('fixtures/input4.tsv.gz', False, 'chr3:10000-20004',
+         5, '3:10000-20004'),
+        ('fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz',
+         False, '3:10000-20004',
+         15, '3:10000-20004'),
+        ('fixtures/TEST3CADD/TEST3whole_genome_SNVs.tsv.gz',
+         False, 'chr3:10000-20004',
+         15, '3:10000-20004'),
     ]
 )
 def test_tabix_chrom_prefix(
@@ -74,7 +76,7 @@ def test_tabix_chrom_prefix(
     filename = relative_to_this_test_folder(filename)
 
     options = Box({
-        "region": region,
+        'region': region,
     }, default_box=True, default_box_attr=None)
 
     with TabixReaderVariants(options, filename) as reader:

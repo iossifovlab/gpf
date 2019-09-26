@@ -18,7 +18,7 @@ if [[ -z $INSTALL_DIRNAME ]]; then
     export INSTALL_DIRNAME=data-${REFERENCE_GENOME}-startup
 fi
 
-export CONDA_ENV=$(conda env list | grep "*" | sed "s/ /\t/g" | cut -f 1)
+export CONDA_ENV=$(conda env list | grep "*" | sed "s/[[:space:]]\+/\t/g" | cut -f 3)
 echo "Active conda environment: $CONDA_ENV"
 
 

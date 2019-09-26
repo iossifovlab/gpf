@@ -1,13 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from datasets_api.studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
 
 
 class GenomicScoresView(APIView):
 
     def __init__(self):
-        self.score_loader = get_studies_manager().get_score_loader()
+        self.scores_factory = get_gpf_instance().scores_factory
 
     def get_genomic_scores(self, scores):
         return [
@@ -24,7 +24,7 @@ class GenomicScoresView(APIView):
         ]
 
     def get(self, request):
-        scores = self.score_loader.get_scores()
+        scores = self.scores_factory.get_scores()
         genomic_scores = self.get_genomic_scores(scores)
 
         return Response(genomic_scores)

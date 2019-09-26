@@ -135,7 +135,8 @@ def contigs_makefile_generate(
     print("\n\n".join(makefile), file=outfile)
 
 
-def construct_import_annotation_pipeline(dae_config, argv=None, defaults=None):
+def construct_import_annotation_pipeline(
+        dae_config, genomes_db, argv=None, defaults=None):
     if defaults is None:
         defaults = {}
 
@@ -164,6 +165,6 @@ def construct_import_annotation_pipeline(dae_config, argv=None, defaults=None):
     annotation_defaults.update(defaults)
 
     pipeline = PipelineAnnotator.build(
-        options, config_filename, dae_config.dae_data_dir,
+        options, config_filename, dae_config.dae_data_dir, genomes_db,
         defaults=annotation_defaults)
     return pipeline

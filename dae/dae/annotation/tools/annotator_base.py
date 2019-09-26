@@ -10,27 +10,26 @@ from dae.annotation.tools.utils import LineMapper
 
 from dae.utils.dae_utils import dae2vcf_variant
 from dae.variants.variant import SummaryAllele
-import dae.GenomeAccess
 
 
 class AnnotatorBase(object):
 
-    """
+    '''
     `AnnotatorBase` is base class of all `Annotators`.
-    """
+    '''
 
     def __init__(self, config):
         assert isinstance(config, Box)
 
         self.config = config
 
-        self.mode = "replace"
-        if self.config.options.mode == "replace":
-            self.mode = "replace"
-        elif self.config.options.mode == "append":
-            self.mode = "append"
-        elif self.config.options.mode == "overwrite":
-            self.mode = "overwrite"
+        self.mode = 'replace'
+        if self.config.options.mode == 'replace':
+            self.mode = 'replace'
+        elif self.config.options.mode == 'append':
+            self.mode = 'append'
+        elif self.config.options.mode == 'overwrite':
+            self.mode = 'overwrite'
 
     def build_output_line(self, annotation_line):
         output_columns = self.config.output_columns
@@ -42,9 +41,9 @@ class AnnotatorBase(object):
         raise NotImplementedError()
 
     def annotate_file(self, file_io_manager):
-        """
+        '''
             Method for annotating file from `Annotator`.
-        """
+        '''
         self.schema = deepcopy(file_io_manager.reader.schema)
         self.collect_annotator_schema(self.schema)
         file_io_manager.writer.schema = self.schema
@@ -69,7 +68,7 @@ class AnnotatorBase(object):
             try:
                 self.line_annotation(annotation_line)
             except Exception:
-                print("Problems annotating line:", line, file=sys.stderr)
+                print('Problems annotating line:', line, file=sys.stderr)
                 print(annotation_line, file=sys.stderr)
                 traceback.print_exc(file=sys.stderr)
 
@@ -86,10 +85,10 @@ class AnnotatorBase(object):
         return res_df
 
     def line_annotation(self, annotation_line):
-        """
+        '''
             Method returning annotations for the given line
             in the order from new_columns parameter.
-        """
+        '''
         raise NotImplementedError()
 
 
@@ -156,13 +155,13 @@ class DAEBuilder(VariantBuilder):
         self.position = self.config.options.p
         self.location = self.config.options.x
         if self.variant is None:
-            self.variant = "variant"
+            self.variant = 'variant'
         if self.location is None:
-            self.location = "location"
+            self.location = 'location'
         if self.chrom is None:
-            self.chrom = "chr"
+            self.chrom = 'chr'
         if self.position is None:
-            self.position = "position"
+            self.position = 'position'
 
     def build_variant(self, aline):
         variant = aline[self.variant]
@@ -215,13 +214,11 @@ class VariantAnnotatorBase(AnnotatorBase):
 
         assert isinstance(config, Box)
 
-        self.genome = None
+        self.genome = self.config.genome
 
         if self.config.options.vcf:
             self.variant_builder = VCFBuilder(self.config, self.genome)
         else:
-            self.genome = dae.GenomeAccess.openRef(self.config.genome_file)
-            assert self.genome is not None
             self.variant_builder = DAEBuilder(self.config, self.genome)
 
         if not self.config.virtual_columns:

@@ -1,8 +1,8 @@
 import os
 import pytest
 
-from dae.configuration.dae_config_parser import DAEConfigParser
-from datasets_api.studies_manager import StudiesManager
+from dae.gpf_instance.gpf_instance import GPFInstance
+from gpf_instance.gpf_instance import reload_datasets
 
 
 def fixtures_dir():
@@ -10,21 +10,15 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
-@pytest.fixture()
-def dae_config_fixture():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
-    return dae_config
+@pytest.fixture(scope='function')
+def gpf_instance(mock_genomes_db):
+    return GPFInstance(work_dir=fixtures_dir())
 
 
-@pytest.fixture()
-def studies_manager(dae_config_fixture):
-    return StudiesManager(dae_config_fixture)
-
-
-@pytest.fixture()
-def mock_studies_manager(db, mocker, studies_manager):
-    studies_manager.reload_dataset()
+@pytest.fixture(scope='function')
+def mock_gpf_instance(db, mocker, gpf_instance):
+    reload_datasets(gpf_instance.variants_db)
     mocker.patch(
-        'pheno_browser_api.views.get_studies_manager',
-        return_value=studies_manager)
+        'pheno_browser_api.views.get_gpf_instance',
+        return_value=gpf_instance
+    )

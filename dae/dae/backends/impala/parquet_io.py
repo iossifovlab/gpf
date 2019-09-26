@@ -2,7 +2,6 @@ import sys
 import time
 import itertools
 import traceback
-from collections import defaultdict
 
 import numpy as np
 import pyarrow as pa
@@ -145,7 +144,7 @@ class VariantsParquetWriter(object):
 
     def _process_family_variant(
         self, bucket_index,  summary_variant_index, family_variant_index,
-        family_variant):
+            family_variant):
 
         effect_data = \
             self.parquet_serializer.serialize_variant_effects(
@@ -194,13 +193,11 @@ class VariantsParquetWriter(object):
                     [summary], [frequency], [genomic_scores],
                     effect_genes, [family], member):
 
-
                 self.data.data_append('bucket_index', bucket_index)
 
                 for d in (s, freq, gs, e, f, m):
                     for key, val in d._asdict().items():
                         self.data.data_append(key, val)
-
 
     def variants_table(self, bucket_index=0, rows=10000):
 

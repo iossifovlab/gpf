@@ -1,8 +1,3 @@
-'''
-Created on Feb 16, 2017
-
-@author: lubo
-'''
 import ast
 from copy import deepcopy
 from rest_framework import views, status
@@ -11,7 +6,7 @@ from django.http.response import StreamingHttpResponse
 import itertools
 from django.utils.http import urlencode
 
-from datasets_api.studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
 from datasets_api.permissions import IsDatasetAllowed
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
@@ -21,8 +16,8 @@ class GeneSetsBaseView(views.APIView):
     permission_classes = (IsDatasetAllowed,)
 
     def __init__(self):
-        self.gscs = get_studies_manager().get_gene_sets_collections()
-        self.dgsf = get_studies_manager().get_denovo_gene_set_facade()
+        self.gscs = get_gpf_instance().gene_sets_collections
+        self.dgsf = get_gpf_instance().denovo_gene_set_facade
         print("datasets loaded in view")
 
 

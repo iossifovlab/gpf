@@ -496,7 +496,6 @@ def test_verify_values():
         ("[to_verify1]: object of type 'int' has no len()\n"
          "[to_verify3]: object of type 'bool' has no len()")
 
-
     config = ConfigParserTestWrapper._verify_values(
         Box({'to_verify1': [1], 'to_verify2': 'ab', 'to_verify3': [1, 2, 3]})
     )
