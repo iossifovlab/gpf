@@ -74,7 +74,8 @@ pipeline {
     stage('Setup') {
       steps {
         script {
-          docker.build("${DOCKER_IMAGE}", ". -f ${SOURCE_DIR}/Dockerfile")
+          docker.build("${DOCKER_IMAGE}",
+          ". -f ${SOURCE_DIR}/Dockerfile --build-arg SOURCE_DIR=./\$(basename ${SOURCE_DIR})")
         }
       }
     }
