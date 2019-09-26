@@ -84,10 +84,10 @@ _____
 
 .. code-block:: ini
 
-  range = <min value>,<max value>
+  range = <<min value>,<max value>>
 
-The range domain of the score - its lowest and largest possible
-values separated by a comma.
+The range domain of the score - its lowest and largest possible values
+separated by a comma.
 
 help_file
 _________
