@@ -29,6 +29,7 @@ pipeline {
       -v ${DOCUMENTATION_DIR}:${DOCKER_DOCUMENTATION_DIR} \
       -v ${SOURCE_DIR}:${DOCKER_SOURCE_DIR} \
       -v ${DAE_DB_DIR}:${DOCKER_DAE_DB_DIR} \
+      -v ${SOURCE_DIR}:${DOCKER_DOCUMENTATION_DIR}/userdocs/development/gpf \
       -v ${DAE_GENOMIC_SCORES_HG19}:${DOCKER_DAE_GENOMIC_SCORES_HG19} \
       -v ${DAE_GENOMIC_SCORES_HG38}:${DOCKER_DAE_GENOMIC_SCORES_HG38}
     """
@@ -56,11 +57,6 @@ pipeline {
             url: 'git@github.com:iossifovlab/gpf.git'
           ]]
         ])
-
-        sh '''
-          rm ${DOCUMENTATION_DIR}/userdocs/development/gpf || true
-          ln -s ${SOURCE_DIR} ${DOCUMENTATION_DIR}/userdocs/development/gpf
-        '''
       }
     }
 
