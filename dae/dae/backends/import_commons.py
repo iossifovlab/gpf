@@ -162,7 +162,9 @@ def construct_import_annotation_pipeline(
     options = Box(options, default_box=True, default_box_attr=None)
 
     annotation_defaults = {'values': dae_config.annotation_defaults}
+    values = {**annotation_defaults['values'], **defaults.get('values', {})}
     annotation_defaults.update(defaults)
+    annotation_defaults['values'] = values
 
     pipeline = PipelineAnnotator.build(
         options, config_filename, dae_config.dae_data_dir, genomes_db,
