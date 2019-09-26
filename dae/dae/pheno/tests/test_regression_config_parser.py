@@ -1,16 +1,12 @@
 import pytest
 
-import os.path
 from dae.pheno.utils.config import PhenoRegressionConfigParser
-from dae.pheno.tests.conftest import fixtures_dir
+from dae.pheno.tests.conftest import relative_to_this_folder
 
 
 def test_load_valid_regression_config():
-    path = os.path.join(
-        fixtures_dir(),
-        'regression_configs',
-        'sample_regression_config.conf'
-    )
+    path = relative_to_this_folder(
+        'fixtures/regression_configs/sample_regression_config.conf')
 
     config = PhenoRegressionConfigParser.\
         read_and_parse_file_configuration(path, '')
@@ -42,11 +38,8 @@ def test_load_valid_regression_config():
 
 
 def test_load_valid_embedded_regression_config():
-    path = os.path.join(
-        fixtures_dir(),
-        'regression_configs',
-        'embedded_regression_config.conf'
-    )
+    path = relative_to_this_folder(
+        'fixtures/regression_configs/embedded_regression_config.conf')
 
     config = PhenoRegressionConfigParser.\
         read_and_parse_file_configuration(path, '')
@@ -78,11 +71,8 @@ def test_load_valid_embedded_regression_config():
 
 
 def test_load_empty_regression_config():
-    path = os.path.join(
-        fixtures_dir(),
-        'regression_configs',
-        'empty_regression_config.conf'
-    )
+    path = relative_to_this_folder(
+        'fixtures/regression_configs/empty_regression_config.conf')
     with pytest.raises(AssertionError) as excinfo:
         PhenoRegressionConfigParser.read_and_parse_file_configuration(path, '')
 
@@ -97,7 +87,9 @@ def test_load_empty_regression_config():
     ('invalid_regression_config_d.conf'),
 ])
 def test_load_invalid_regression_configs(config):
-    path = os.path.join(fixtures_dir(), 'regression_configs', config)
+    path = relative_to_this_folder(
+        'fixtures/regression_configs/{}'.format(config))
+
     with pytest.raises(AssertionError) as excinfo:
         PhenoRegressionConfigParser.read_and_parse_file_configuration(path, '')
     assert str(excinfo.value) == \
