@@ -56,6 +56,7 @@ pipeline {
         ])
 
         sh '''
+          rm ${DOCUMENTATION_DIR}/userdocs/development/gpf
           ln -s ${SOURCE_DIR} ${DOCUMENTATION_DIR}/userdocs/development/gpf
         '''
       }
