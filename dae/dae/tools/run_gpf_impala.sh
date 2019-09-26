@@ -36,7 +36,7 @@ docker exec gpf_impala /wait-for-it.sh -h localhost -p 21050 -t 300
 
 echo ""
 echo "==============================================="
-echo "GPF Apache Impala container is READY..."
+echo "Local GPF Apache Impala container is READY..."
 echo "==============================================="
 echo ""
 
