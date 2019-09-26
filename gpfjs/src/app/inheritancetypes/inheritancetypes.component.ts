@@ -16,10 +16,10 @@ export class InheritancetypesComponent extends QueryStateWithErrorsProvider
     implements OnInit, OnChanges {
 
   @Input()
-  availableInheritanceTypes: Array<string>;
+  inheritanceTypeFilter: Array<string>;
 
   @Input()
-  selectedInheritanceTypes: Array<string>;
+  selectedInheritanceTypeFilterValues: Array<string>;
 
   inheritanceTypes: InheritanceTypes;
 
@@ -33,22 +33,22 @@ export class InheritancetypesComponent extends QueryStateWithErrorsProvider
     this.stateRestoreService.getState(this.constructor.name)
       .take(1)
       .subscribe(state => {
-        if (state['inheritanceTypes']) {
-          this.inheritanceTypes.selected = state['inheritanceTypes'];
+        if (state['inheritanceTypeFilter']) {
+          this.inheritanceTypes.selected = state['inheritanceTypeFilter'];
         }
       });
   }
 
   ngOnChanges() {
     this.inheritanceTypes = new InheritanceTypes(
-      this.availableInheritanceTypes, this.selectedInheritanceTypes
+      this.inheritanceTypeFilter, this.selectedInheritanceTypeFilterValues
     );
   }
 
   getState() {
     return this.validateAndGetState(this.inheritanceTypes)
       .map(inheritanceTypes => ({
-        inheritanceTypes: Array.from(inheritanceTypes.selected)
+        inheritanceTypeFilter: Array.from(inheritanceTypes.selected)
       }));
   }
 

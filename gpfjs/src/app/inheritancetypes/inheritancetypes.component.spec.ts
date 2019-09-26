@@ -10,8 +10,8 @@ import { InheritancetypesComponent } from './inheritancetypes.component';
 @Component({
   template: `
     <gpf-inheritancetypes #inheritancetypesdom
-      [availableInheritanceTypes]="inheritanceTypesSample"
-      [selectedInheritanceTypes]="selectedInheritanceTypesSample"
+      [inheritanceTypeFilter]="inheritanceTypesSample"
+      [selectedInheritanceTypeFilterValues]="selectedInheritanceTypesSample"
     >
     </gpf-inheritancetypes>`
 })

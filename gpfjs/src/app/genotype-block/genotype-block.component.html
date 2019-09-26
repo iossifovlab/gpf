@@ -32,9 +32,9 @@
 		<gpf-effecttypes [hasCNV]="hasCNV | async" class="panel-row col-lg-4"> </gpf-effecttypes>
 
         <gpf-inheritancetypes
-            *ngIf="inheritanceTypes | async"
-            [availableInheritanceTypes]="inheritanceTypes | async"
-            [selectedInheritanceTypes]="defaultInheritanceTypeFilters | async"
+            *ngIf="inheritanceTypeFilter | async"
+            [inheritanceTypeFilter]="inheritanceTypeFilter | async"
+            [selectedInheritanceTypeFilterValues]="selectedInheritanceTypeFilterValues | async"
             class="panel-row col-lg-3">
         </gpf-inheritancetypes>
 	</div>
