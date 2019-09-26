@@ -2,6 +2,31 @@ Genotype Browser Section
 ========================
 
 
+inheritanceTypeFilter
+---------------------
+
+.. code-block:: ini
+
+  inheritanceTypeFilter = {comma-separated list of inheritance types}
+
+This is a list of inheritance types that will be available
+as filters in the Genotype Browser.
+You can see the available values :ref:`here <allowed_values_inheritance>`.
+
+
+selectedInheritanceTypeFilterValues
+-----------------------------------
+
+.. code-block:: ini
+
+  selectedInheritanceTypeFilterValues = {comma-separated list of inheritance types}
+
+This is a list of inheritance type filters that will be selected by default
+on a study/dataset's page in the Genotype Browser. Note that these values must
+be present in the ``inheritanceTypeFilter`` property.
+You can see the available values :ref:`here <allowed_values_inheritance>`.
+
+
 Preview columns
 ---------------
 
