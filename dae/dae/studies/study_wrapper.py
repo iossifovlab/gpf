@@ -307,6 +307,11 @@ class StudyWrapper(object):
         if 'person_ids' in kwargs:
             kwargs['person_ids'] = list(kwargs['person_ids'])
 
+        if 'inheritanceTypeFilter' in kwargs:
+            kwargs['inheritance'] = \
+                'any({})'.format(','.join(kwargs['inheritanceTypeFilter']))
+            kwargs.pop('inheritanceTypeFilter')
+
         variants_from_studies = itertools.islice(
             self.study.query_variants(**kwargs), limit)
 

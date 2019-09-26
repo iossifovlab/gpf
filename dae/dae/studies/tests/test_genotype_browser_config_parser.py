@@ -1,5 +1,6 @@
+import pytest
 from dae.studies.genotype_browser_config_parser import \
-    GenotypeBrowserConfigParser
+    GenotypeBrowserConfigParser, verify_inheritance_types
 
 
 def test_genotype_browser_parse_variables():
@@ -15,6 +16,7 @@ def test_genotype_browser_parse_variables():
         'familyFilters', 'selectedPhenoFiltersValues',
         'selectedGenotypeColumnValues', 'selectedInRolesValues',
         'selectedPresentInRoleValues', 'roles', 'columns',
+        'inheritanceTypeFilter', 'selectedInheritanceTypeFilterValues',
     ]
     assert GenotypeBrowserConfigParser.FILTER_SELECTORS == {
         'phenoFilters': 'selectedPhenoFiltersValues',
@@ -24,6 +26,11 @@ def test_genotype_browser_parse_variables():
         'presentInRole': 'selectedPresentInRoleValues'
     }
 
+    assert GenotypeBrowserConfigParser.VERIFY_VALUES == {
+        'inheritanceTypeFilter': verify_inheritance_types,
+        'selectedInheritanceTypeFilterValues': verify_inheritance_types
+    }
+
 
 def test_get_description_keys():
     assert GenotypeBrowserConfigParser._get_description_keys() == [
@@ -31,7 +38,8 @@ def test_get_description_keys():
         'hasPresentInRole', 'hasCNV', 'hasComplex', 'hasFamilyFilters',
         'hasStudyFilters', 'hasStudyTypes', 'hasGraphicalPreview',
         'previewColumns', 'rolesFilterOptions', 'genotypeColumns',
-        'phenoFilters', 'familyFilters', 'presentInRole', 'downloadColumns'
+        'phenoFilters', 'familyFilters', 'presentInRole', 'downloadColumns',
+        'inheritanceTypeFilter', 'selectedInheritanceTypeFilterValues',
     ]
 
 
@@ -45,3 +53,11 @@ def test_get_config_description(quads_f1_config):
 
     for key in description.keys():
         assert description[key] == quads_f1_config.genotype_browser_config[key]
+
+
+def test_inheritance_types_validation():
+    assert verify_inheritance_types(['mendelian', 'denovo']) == \
+        ['mendelian', 'denovo']
+    with pytest.raises(AssertionError) as excinfo:
+        verify_inheritance_types(['mendelian', 'nonexistent', 'denovo'])
+    assert str(excinfo.value) == 'Inheritance type nonexistent does not exist!'
