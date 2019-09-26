@@ -16,13 +16,23 @@ ______
 
 .. code-block:: ini
 
-  scores = {genomic score name},{genomic score name 2},(...)
+  scores = {genomic score id 1},{genomic score id 2},{...}
 
 A comma-separated list of selected genomic scores. If this property is missing
 then all deffind scores in this file are selected.
 
-[genomicScores.{score name}]
+[genomicScores.{score id}]
 ----------------------------
+
+id
+__
+
+.. code-block:: ini
+
+  id = {genomic score identifier}
+
+Identifier of the genomic score. Default value is {score id} from the score
+section.
 
 file
 ____
