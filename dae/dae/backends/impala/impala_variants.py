@@ -18,18 +18,18 @@ from dae.variants.attributes import Role, Status, Sex
 
 
 class ImpalaFamilyVariants(FamiliesBase):
-    QUOTE = "'"
-    WHERE = """
+    QUOTE = '\''
+    WHERE = '''
         WHERE
             {where}
-    """
+    '''
 
     GENE_REGIONS_HEURISTIC_CUTOFF = 20
     GENE_REGIONS_HEURISTIC_EXTEND = 20000
 
     MAX_CHILD_NUMBER = 9999
 
-    def __init__(self, config, impala_connection, gene_models=None):
+    def __init__(self, config, impala_connection, gene_models):
 
         super(ImpalaFamilyVariants, self).__init__()
 
@@ -43,12 +43,14 @@ class ImpalaFamilyVariants(FamiliesBase):
         self.families_build(self.ped_df, family_class=Family)
         self.schema = self.variant_schema()
         self.serializer = ParquetSerializer(schema=self.schema)
+
+        assert gene_models is not None
         self.gene_models = gene_models
 
     def count_variants(self, **kwargs):
         with self.impala.cursor() as cursor:
             query = self.build_count_query(self.config, **kwargs)
-            # print("COUNT QUERY:", query)
+            # print('COUNT QUERY:', query)
             cursor.execute(query)
             row = next(cursor)
             return row[0]
@@ -75,7 +77,7 @@ class ImpalaFamilyVariants(FamiliesBase):
                 return_unknown=return_unknown,
                 limit=limit)
 
-            # print("FINAL QUERY: ", query)
+            # print('FINAL QUERY: ', query)
             cursor.execute(query)
             for row in cursor:
                 chrom, position, reference, alternatives_data, \
@@ -98,9 +100,9 @@ class ImpalaFamilyVariants(FamiliesBase):
 
     def load_pedigree(self):
         with self.impala.cursor() as cursor:
-            q = """
+            q = '''
                 SELECT * FROM {db}.{pedigree}
-            """.format(db=self.config.db, pedigree=self.config.tables.pedigree)
+            '''.format(db=self.config.db, pedigree=self.config.tables.pedigree)
 
             cursor.execute(q)
             ped_df = as_pandas(cursor)
@@ -129,9 +131,9 @@ class ImpalaFamilyVariants(FamiliesBase):
 
     def variant_schema(self):
         with self.impala.cursor() as cursor:
-            q = """
+            q = '''
                 DESCRIBE {db}.{variant}
-            """.format(db=self.config.db, variant=self.config.tables.variant)
+            '''.format(db=self.config.db, variant=self.config.tables.variant)
 
             cursor.execute(q)
             df = as_pandas(cursor)
@@ -143,9 +145,9 @@ class ImpalaFamilyVariants(FamiliesBase):
 
     def pedigree_schema(self):
         with self.impala.cursor() as cursor:
-            q = """
+            q = '''
                 DESCRIBE {db}.{pedigree}
-            """.format(db=self.config.db, pedigree=self.config.tables.pedigree)
+            '''.format(db=self.config.db, pedigree=self.config.tables.pedigree)
 
             cursor.execute(q)
             df = as_pandas(cursor)
@@ -168,20 +170,20 @@ class ImpalaFamilyVariants(FamiliesBase):
             left, right = attr_range
             if left is None:
                 assert right is not None
-                query.append("({} <= {})".format(attr_name, right))
+                query.append('({} <= {})'.format(attr_name, right))
             elif right is None:
                 assert left is not None
-                query.append("({} >= {})".format(attr_name, left))
+                query.append('({} >= {})'.format(attr_name, left))
             else:
                 query.append(
-                    "({attr} >= {left} AND {attr} <= {right})".format(
+                    '({attr} >= {left} AND {attr} <= {right})'.format(
                         attr=attr_name, left=left, right=right))
         return ' AND '.join(query)
 
     def _build_ultra_rare_where(self, ultra_rare):
         assert ultra_rare
         return self._build_real_attr_where(
-            real_attr_filter=[("af_allele_count", (1, 1))])
+            real_attr_filter=[('af_allele_count', (1, 1))])
 
     def _build_regions_where(self, regions):
         assert isinstance(regions, list), regions
@@ -189,8 +191,8 @@ class ImpalaFamilyVariants(FamiliesBase):
         for region in regions:
             assert isinstance(region, Region)
             where.append(
-               "(`chrom` = {q}{chrom}{q} AND `position` >= {start} AND "
-               "`position` <= {stop})"
+               '(`chrom` = {q}{chrom}{q} AND `position` >= {start} AND '
+               '`position` <= {stop})'
                .format(
                     q=self.QUOTE,
                     chrom=region.chrom,
@@ -214,7 +216,7 @@ class ImpalaFamilyVariants(FamiliesBase):
             values = [
                 ' {q}{val}{q} '.format(
                     q=self.QUOTE,
-                    val=val.replace("'", "\\'"))
+                    val=val.replace('\'', '\\\''))
                 for val in query_values]
 
             where = []
@@ -227,7 +229,7 @@ class ImpalaFamilyVariants(FamiliesBase):
 
                 where.append(w)
 
-            where_clause = " OR ".join(["( {} )".format(w) for w in where])
+            where_clause = ' OR '.join(['( {} )'.format(w) for w in where])
             return where_clause
 
     def _build_bitwise_attr_where(
@@ -246,20 +248,13 @@ class ImpalaFamilyVariants(FamiliesBase):
         res = transformer.transform(tree)
         return res
 
-    def get_gene_models(self):
-        if self.gene_models is None:
-            from dae.DAE import genomesDB
-            self.gene_models = genomesDB.get_gene_models()
-        return self.gene_models
-
     def _build_gene_regions_heuristic(self, genes, regions):
         assert genes is not None
         if len(genes) > 0 and len(genes) <= self.GENE_REGIONS_HEURISTIC_CUTOFF:
             if regions is None:
                 regions = []
-            gene_models = self.get_gene_models()
             for gs in genes:
-                for gm in gene_models.gene_models_by_gene_name(gs):
+                for gm in self.gene_models.gene_models_by_gene_name(gs):
                     regions.append(
                         Region(
                             gm.chr,
@@ -271,30 +266,30 @@ class ImpalaFamilyVariants(FamiliesBase):
 
     def _build_rare_heuristic(self, ultra_rare, real_attr_filter):
         if 'rare' not in self.schema:
-            return ""
+            return ''
         if ultra_rare:
-            return "rare = 1"
+            return 'rare = 1'
         if real_attr_filter:
             for name, (begin, end) in real_attr_filter:
                 if name == 'af_allele_freq':
                     if end <= 5.0:
-                        return "rare = 1"
+                        return 'rare = 1'
                     if begin > 5.0:
-                        return "rare = 0"
-        return ""
+                        return 'rare = 0'
+        return ''
 
     def _build_ultra_rare_heuristic(self, ultra_rare):
         if 'ultra_rare' not in self.schema:
-            return ""
+            return ''
         if ultra_rare:
-            return "ultra_rare = 1"
-        return ""
+            return 'ultra_rare = 1'
+        return ''
 
     def _build_family_bin_heuristic(self, family_ids, person_ids):
         if 'family_bin' not in self.schema:
-            return ""
+            return ''
         if 'family_bin' not in self.pedigree_schema:
-            return ""
+            return ''
         family_bins = set()
         if family_ids:
             family_ids = set(family_ids)
@@ -312,18 +307,18 @@ class ImpalaFamilyVariants(FamiliesBase):
             )
 
         if family_bins:
-            w = ", ".join(family_bins)
-            return "family_bin IN {w}".format(w=w)
+            w = ', '.join(family_bins)
+            return 'family_bin IN {w}'.format(w=w)
 
-        return ""
+        return ''
 
     def _build_return_reference_and_return_unknown(
             self, return_reference=None, return_unknown=None):
         if not return_reference:
-            return "allele_index > 0"
+            return 'allele_index > 0'
         elif not return_unknown:
-            return "allele_index >= 0"
-        return ""
+            return 'allele_index >= 0'
+        return ''
 
     def _build_where(
             self,
@@ -388,12 +383,12 @@ class ImpalaFamilyVariants(FamiliesBase):
 
         where = [w for w in where if w]
 
-        where_clause = ""
+        where_clause = ''
 
         if where:
             where_clause = self.WHERE.format(
-                where=" AND ".join([
-                    "( {} )".format(w) for w in where])
+                where=' AND '.join([
+                    '( {} )'.format(w) for w in where])
             )
 
         return where_clause
@@ -418,10 +413,10 @@ class ImpalaFamilyVariants(FamiliesBase):
             return_reference=return_reference,
             return_unknown=return_unknown)
 
-        limit_clause = ""
+        limit_clause = ''
         if limit:
-            limit_clause = "LIMIT {}".format(limit)
-        return """
+            limit_clause = 'LIMIT {}'.format(limit)
+        return '''
             SELECT
                 chrom,
                 `position`,
@@ -449,7 +444,7 @@ class ImpalaFamilyVariants(FamiliesBase):
                 frequency_data,
                 genomic_scores_data
             {limit_clause}
-            """.format(
+            '''.format(
             db=config.db, variant=config.tables.variant,
             where_clause=where_clause,
             limit_clause=limit_clause)
@@ -474,7 +469,7 @@ class ImpalaFamilyVariants(FamiliesBase):
             return_reference=return_reference,
             return_unknown=return_unknown)
 
-        return """
+        return '''
             SELECT
                 COUNT(
                     DISTINCT
@@ -484,6 +479,6 @@ class ImpalaFamilyVariants(FamiliesBase):
                 )
             FROM {db}.{variant}
             {where_clause}
-            """.format(
+            '''.format(
             db=config.db, variant=config.tables.variant,
             where_clause=where_clause)

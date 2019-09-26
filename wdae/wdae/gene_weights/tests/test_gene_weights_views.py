@@ -2,11 +2,11 @@ import pytest
 
 import json
 
-pytestmark = pytest.mark.usefixtures("mock_studies_manager")
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
 def test_gene_weights_list_view(user_client):
-    url = "/api/v3/gene_weights"
+    url = '/api/v3/gene_weights'
     response = user_client.get(url)
     assert response.status_code == 200
 
@@ -22,11 +22,11 @@ def test_gene_weights_list_view(user_client):
 
 
 def test_gene_weights_get_genes_view(user_client):
-    url = "/api/v3/gene_weights/genes"
+    url = '/api/v3/gene_weights/genes'
     data = {
-        "weight": "LGD_rank",
-        "min": 1.5,
-        "max": 5.0,
+        'weight': 'LGD_rank',
+        'min': 1.5,
+        'max': 5.0,
     }
     response = user_client.post(
         url, json.dumps(data), content_type='application/json', format='json')

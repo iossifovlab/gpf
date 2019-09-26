@@ -2,12 +2,8 @@ import pytest
 
 import os
 
-from dae.studies.variants_db import VariantsDb
-from dae.configuration.dae_config_parser import DAEConfigParser
-
-from dae.common_reports.common_report_facade import CommonReportFacade
-
-from datasets_api.studies_manager import StudiesManager
+from dae.gpf_instance.gpf_instance import GPFInstance
+from gpf_instance.gpf_instance import reload_datasets
 
 
 def fixtures_dir():
@@ -15,27 +11,17 @@ def fixtures_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures'))
 
 
-@pytest.fixture(scope='session')
-def dae_config_fixture():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
-    return dae_config
+@pytest.fixture(scope='function')
+def gpf_instance(mock_genomes_db):
+    return GPFInstance(work_dir=fixtures_dir())
 
 
-@pytest.fixture(scope='session')
-def vdb_fixture(dae_config_fixture):
-    vdb = VariantsDb(dae_config_fixture)
-    return vdb
+@pytest.fixture(scope='function')
+def common_report_facade(gpf_instance):
+    return gpf_instance.common_report_facade
 
 
-@pytest.fixture(scope='session')
-def common_report_facade(vdb_fixture):
-    common_report_facade = CommonReportFacade(vdb_fixture)
-
-    return common_report_facade
-
-
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
 def use_common_reports(common_report_facade):
     all_configs = common_report_facade.get_all_common_report_configs()
     temp_files = [config.file_path for config in all_configs]
@@ -53,14 +39,10 @@ def use_common_reports(common_report_facade):
             os.remove(temp_file)
 
 
-@pytest.fixture()
-def studies_manager(dae_config_fixture):
-    return StudiesManager(dae_config_fixture)
-
-
-@pytest.fixture()
-def mock_studies_manager(db, mocker, studies_manager):
-    studies_manager.reload_dataset()
+@pytest.fixture(scope='function')
+def mock_gpf_instance(db, mocker, gpf_instance):
+    reload_datasets(gpf_instance.variants_db)
     mocker.patch(
-        'common_reports_api.views.get_studies_manager',
-        return_value=studies_manager)
+        'common_reports_api.views.get_gpf_instance',
+        return_value=gpf_instance
+    )

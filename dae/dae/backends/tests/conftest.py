@@ -1,8 +1,3 @@
-'''
-Created on Feb 7, 2018
-
-@author: lubo
-'''
 from io import StringIO
 
 import pytest
@@ -20,21 +15,21 @@ def allele_freq_annotator():
     return VcfAlleleFrequencyAnnotator()
 
 
-PED1 = """
+PED1 = '''
 # SIMPLE TRIO
 familyId,    personId,    dadId,    momId,    sex,   status,    role
 f1,          d1,          0,        0,        1,     1,         dad
 f1,          m1,          0,        0,        2,     1,         mom
 f1,          p1,          d1,       m1,       1,     2,         prb
-"""
+'''
 
 
 @pytest.fixture(scope='session')
 def fam1():
     ped_df = FamiliesBase.load_pedigree_file(
-        StringIO(PED1), sep=",")
+        StringIO(PED1), sep=',')
 
-    family = Family.from_df("f1", ped_df)
+    family = Family.from_df('f1', ped_df)
     assert len(family.trios) == 1
     return family
 
@@ -42,9 +37,9 @@ def fam1():
 @pytest.fixture(scope='session')
 def sv():
     return SummaryVariant([
-        SummaryAllele("1", 11539, "T", None, 0, 0),
-        SummaryAllele("1", 11539, "T", "TA", 0, 1),
-        SummaryAllele("1", 11539, "T", "TG", 0, 2)
+        SummaryAllele('1', 11539, 'T', None, 0, 0),
+        SummaryAllele('1', 11539, 'T', 'TA', 0, 1),
+        SummaryAllele('1', 11539, 'T', 'TG', 0, 2)
     ])
 
 

@@ -1,14 +1,7 @@
-'''
-Created on Feb 8, 2018
-
-@author: lubo
-'''
 import os
 
 import numpy as np
 import pandas as pd
-
-from dae.utils.vcf_utils import GENOTYPE_TYPE
 
 from dae.variants.family import FamiliesBase
 from dae.variants.family import Family
@@ -94,7 +87,7 @@ class RawFamilyVariants(FamiliesBase):
 
     def __init__(self, config=None, prefix=None, annotator=None, region=None,
                  transmission_type='transmitted',
-                 variant_factory=VariantFactory):
+                 variant_factory=VariantFactory, genomes_db=None):
         super(RawFamilyVariants, self).__init__()
         if prefix is not None:
             config = Configure.from_prefix_vcf(prefix)
@@ -107,7 +100,8 @@ class RawFamilyVariants(FamiliesBase):
         self.VF = variant_factory
         self.prefix = prefix
         self.transmission_type = transmission_type
-        self._load(annotator, region)
+
+        self._load(annotator, region, genomes_db)
 
     def is_empty(self):
         return len(self.annot_df) == 0
@@ -146,8 +140,8 @@ class RawFamilyVariants(FamiliesBase):
 
         return FamiliesBase.load_pedigree_file(self.config.pedigree)
 
-    def _load(self, annotator, region):
-        loader = RawVariantsLoader(self.config)
+    def _load(self, annotator, region, genomes_db):
+        loader = RawVariantsLoader(self.config, genomes_db)
         self.ped_df = self._load_pedigree()
 
         self.vcf = loader.load_vcf(region)

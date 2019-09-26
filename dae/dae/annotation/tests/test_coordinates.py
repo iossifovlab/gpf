@@ -5,7 +5,7 @@ from dae.variants.variant import SummaryAllele
 
 
 @pytest.mark.parametrize(
-    "variant,check_pos,check_cshl_pos,check_ref,check_alt",
+    'variant,check_pos,check_cshl_pos,check_ref,check_alt',
     [
         ('sub(A->T)', 150013938, 150013938, 'A', 'T'),
         ('ins(AA)', 150013937, 150013938, 'A', 'AAA'),
@@ -17,9 +17,7 @@ def test_dae2vcf(
     genome = mocker.Mock()
     genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
 
-    pos, ref, alt = dae2vcf_variant(
-        'chr1', 150013938, variant, genome
-    )
+    pos, ref, alt = dae2vcf_variant('chr1', 150013938, variant, genome)
 
     assert pos == check_pos
     assert ref == check_ref
@@ -29,5 +27,5 @@ def test_dae2vcf(
     assert summary is not None
 
     assert summary.cshl_position == check_cshl_pos
-    assert summary.cshl_location == "chr1:{}".format(check_cshl_pos)
+    assert summary.cshl_location == f'chr1:{check_cshl_pos}'
     assert summary.cshl_variant == variant

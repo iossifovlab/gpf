@@ -11,18 +11,18 @@ from dae.backends.vcf.loader import RawVariantsLoader
 
 
 @pytest.fixture(scope='session')
-def effect_annotator():
+def effect_annotator(genomes_db):
     options = Box({
-        "vcf": True,
-        "direct": False,
+        'vcf': True,
+        'direct': False,
         'r': 'reference',
         'a': 'alternative',
         'c': 'chrom',
         'p': 'position',
 
-        # "c": "CSHL:chr",
-        # "p": "CSHL:position",
-        # "v": "CSHL:variant",
+        # 'c': 'CSHL:chr',
+        # 'p': 'CSHL:position',
+        # 'v': 'CSHL:variant',
     }, default_box=True, default_box_attr=None)
 
     columns = {
@@ -40,7 +40,8 @@ def effect_annotator():
             'options': options,
             'columns': columns,
             'annotator': 'effect_annotator.VariantEffectAnnotator'
-        })
+        }),
+        genomes_db
     )
 
     annotator = VariantEffectAnnotator(config)
@@ -50,7 +51,7 @@ def effect_annotator():
 
 
 def test_effect_annotator(effect_annotator, variants_io, capsys):
-    with variants_io("fixtures/effects_trio_multi-eff.txt") as io_manager:
+    with variants_io('fixtures/effects_trio_multi-eff.txt') as io_manager:
 
         captured = capsys.readouterr()
 
@@ -66,7 +67,7 @@ def test_effect_annotator(effect_annotator, variants_io, capsys):
 def test_effect_annotator_df(effect_annotator):
 
     df = RawVariantsLoader.load_annotation_file(
-        relative_to_this_test_folder("fixtures/effects_trio_multi-eff.txt")
+        relative_to_this_test_folder('fixtures/effects_trio_multi-eff.txt')
     )
 
     columns = [

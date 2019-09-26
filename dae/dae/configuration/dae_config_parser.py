@@ -17,7 +17,10 @@ class DAEConfigParser(ConfigParserBase):
         }, 'HDFS': {
             'baseDir': '/tmp',
             'port': '0'
-        }
+        }, 'gpfjs': {
+            'permissionDeniedPrompt': ('This is a default permission denied'
+                                       ' prompt. Please log in or register.')
+        },
     }
 
     @staticmethod
@@ -123,5 +126,11 @@ class DAEConfigParser(ConfigParserBase):
                 config.genomic_scores_db.scores_hg38_dir
                 if config.genomic_scores_db else None,
         }
+
+        if config.gpfjs.permission_denied_prompt_file:
+            filepath = config.gpfjs.permission_denied_prompt_file
+            assert os.path.exists(filepath), filepath
+            with open(filepath, 'r') as prompt_file:
+                config.gpfjs.permission_denied_prompt = prompt_file.read()
 
         return config

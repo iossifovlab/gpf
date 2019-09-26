@@ -1,5 +1,10 @@
+import pytest
 
-def test_build(db, enrichment_builder):
+
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
+
+
+def test_build(enrichment_builder):
     assert enrichment_builder
     build = enrichment_builder.build()
 
@@ -10,7 +15,7 @@ def test_build(db, enrichment_builder):
         sorted(['autism', 'unaffected'])
 
 
-def test_build_people_group_selector(db, enrichment_builder, f1_trio):
+def test_build_people_group_selector(enrichment_builder, f1_trio):
     assert enrichment_builder
     people_group = f1_trio.get_people_group('phenotype')
     build = enrichment_builder.build_people_group_selector(

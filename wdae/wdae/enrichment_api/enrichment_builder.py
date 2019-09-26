@@ -1,8 +1,3 @@
-'''
-Created on Feb 17, 2017
-
-@author: lubo
-'''
 from dae.enrichment_tool.genotype_helper import GenotypeHelper
 
 

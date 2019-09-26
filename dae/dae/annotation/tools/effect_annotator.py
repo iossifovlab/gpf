@@ -1,13 +1,8 @@
 #!/usr/bin/env python
-import os
-import itertools
-# import sys
-# import traceback
 
+import itertools
 from collections import OrderedDict
 
-import dae.GenomeAccess
-from dae.GeneModelFiles import load_gene_models
 from dae.variant_annotation.annotator import VariantAnnotator
 
 from dae.annotation.tools.annotator_base import VariantAnnotatorBase
@@ -18,7 +13,14 @@ class EffectAnnotatorBase(VariantAnnotatorBase):
     def __init__(self, config, **kwargs):
         super(EffectAnnotatorBase, self).__init__(config)
 
-        self._init_effect_annotator(**kwargs)
+        self.genome = config.genome
+        self.gene_models = config.gene_models
+
+        self.effect_annotator = VariantAnnotator(
+            self.genome, self.gene_models,
+            promoter_len=self.config.options.prom_len
+        )
+
         self.columns = OrderedDict()
         for col_name, col_type in self.COLUMNS_SCHEMA:
             self.columns[col_name] = \
@@ -29,40 +31,6 @@ class EffectAnnotatorBase(VariantAnnotatorBase):
         for col_name, col_type in self.COLUMNS_SCHEMA:
             if self.columns.get(col_name, None):
                 schema.create_column(self.columns[col_name], col_type)
-
-    def _init_effect_annotator(
-            self, genome_file=None, gene_models_file=None,
-            genome=None, gene_models=None):
-
-        if genome is None:
-            if self.config.options.Graw is None and genome_file is None:
-                from dae.DAE import genomesDB as genomes_db
-                genome = genomes_db.get_genome()
-            else:
-                if genome_file is None:
-                    assert self.config.options.Graw is not None
-                    genome_file = self.config.options.Graw
-                assert os.path.exists(genome_file)
-                genome = dae.GenomeAccess.openRef(genome_file)
-
-        assert genome is not None
-
-        if gene_models is None:
-            if self.config.options.Traw is None and gene_models_file is None:
-                from dae.DAE import genomesDB as genomes_db
-                gene_models = genomes_db.get_gene_models()
-            else:
-                if gene_models_file is None:
-                    gene_models_file = self.config.options.Traw
-                assert os.path.exists(gene_models_file)
-                gene_models = load_gene_models(gene_models_file)
-
-        assert gene_models is not None
-
-        if self.config.options.prom_len is None:
-            self.config.options.prom_len = 0
-        self.effect_annotator = VariantAnnotator(
-            genome, gene_models, promoter_len=self.config.options.prom_len)
 
     def _not_found(self, aline):
         for col_name, col_conf in self.columns.items():
@@ -119,7 +87,6 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
         ('effect_details_genes', 'list(str)'),
         ('effect_details_details', 'list(str)'),
         ('effect_details', 'list(str)'),
-        # ('effect_details_hgvs', 'list(str)')
     ]
 
     def __init__(self, config, **kwargs):
@@ -153,7 +120,6 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
         aline[self.columns['effect_details']] = [
             "{}:{}:{}".format(t, g, d) for t, g, d in zip(r[3], r[4], r[5])
         ]
-        # aline[self.columns['effect_details_hgvs']] = r[6]
 
     def wrap_effects(self, effects):
         return self.effect_simplify(effects)
@@ -210,20 +176,10 @@ class VariantEffectAnnotator(EffectAnnotatorBase):
         transcripts = []
         genes = []
         details = []
-        # hgvs = []
         for effect in effects:
             transcripts.append(effect.transcript_id)
             genes.append(effect.gene)
             details.append(effect.create_effect_details())
-            # try:
-            #     hgvs.append(cls.effect_to_HGVS(effect))
-            # except Exception:
-            #     hgvs.append('')
-            #     print(
-            #         "Problems calculating hgvs:",
-            #         transcripts[-1], genes[-1], details[-1],
-            #         file=sys.stderr)
-            #     traceback.print_exc(file=sys.stderr)
 
         return (transcripts, genes, details)
 

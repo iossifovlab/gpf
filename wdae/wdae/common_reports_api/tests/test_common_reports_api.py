@@ -2,8 +2,7 @@ import pytest
 
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures(
-    'mock_studies_manager', 'use_common_reports')
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance', 'use_common_reports')
 
 
 def test_variant_reports(admin_client):

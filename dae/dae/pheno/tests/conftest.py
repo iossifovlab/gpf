@@ -1,20 +1,18 @@
-'''
-Created on Nov 21, 2016
-
-@author: lubo
-'''
 import pytest
+
 import os
 import pandas as pd
-from dae.pheno.prepare.ped2individuals import SPARKCsvPedigreeReader
-from dae.pheno.prepare.individuals2ped import InternalCsvIndividualsReader
 import tempfile
 import shutil
-from dae.pheno.common import default_config
-from dae.pheno.utils.config import PhenoConfigParser
 from box import Box
 
 from dae.configuration.dae_config_parser import DAEConfigParser
+
+from dae.pheno.prepare.ped2individuals import SPARKCsvPedigreeReader
+from dae.pheno.prepare.individuals2ped import InternalCsvIndividualsReader
+from dae.pheno.common import default_config
+from dae.pheno.utils.config import PhenoConfigParser
+from dae.pheno.pheno_factory import PhenoFactory
 
 
 def relative_to_this_folder(path):
@@ -57,15 +55,11 @@ def family_pedigree(csv_pedigree_reader, family_pedigree_file):
     return csv_pedigree_reader.read_filename(family_pedigree_file)
 
 
-def fixtures_dir():
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'fixtures'))
-
-
 @pytest.fixture(scope='session')
 def fake_dae_conf():
     return DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
+        work_dir=relative_to_this_folder('fixtures')
+    )
 
 
 @pytest.fixture(scope='session')
@@ -88,7 +82,6 @@ def fi1_df(fake_instrument_filename):
 
 @pytest.fixture(scope='session')
 def fake_pheno_factory(fake_dae_conf):
-    from dae.pheno.pheno_factory import PhenoFactory
     return PhenoFactory(fake_dae_conf)
 
 

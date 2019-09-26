@@ -46,8 +46,6 @@ class StudyConfigParserBase(ConfigParserBase):
         if os.path.exists(config_section.description):
             with open(config_section.description) as desc:
                 config_section.description = desc.read()
-        else:
-            config_section.description = config_section.description
 
         return config_section
 

@@ -1,7 +1,8 @@
-from datasets_api.studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
+
+from datasets_api.permissions import IsDatasetAllowed
 
 from dae.utils.gene_utils import GeneSymsMixin
-from datasets_api.permissions import IsDatasetAllowed
 
 
 def expand_gene_set(request_function):
@@ -10,7 +11,7 @@ def expand_gene_set(request_function):
             gene_sets_collection_id, gene_set_id, gene_sets_types = \
                 GeneSymsMixin.get_gene_set_query(**request.data)
             if gene_sets_collection_id == 'denovo':
-                dgsf = get_studies_manager().get_denovo_gene_set_facade()
+                dgsf = get_gpf_instance().denovo_gene_set_facade
                 gene_set = dgsf.get_denovo_gene_set(
                     gene_sets_collection_id,
                     gene_set_id,
@@ -19,7 +20,7 @@ def expand_gene_set(request_function):
                 )
             else:
                 gene_sets_collections =\
-                    get_studies_manager().get_gene_sets_collections()
+                    get_gpf_instance().gene_sets_collections
                 gene_set = gene_sets_collections.get_gene_set(
                     gene_sets_collection_id, gene_set_id, gene_sets_types,
                     IsDatasetAllowed.permitted_datasets(request.user))

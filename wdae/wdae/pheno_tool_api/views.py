@@ -2,16 +2,21 @@ import traceback
 import json
 import logging
 from collections import Counter
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.exceptions import NotAuthenticated
+
 from django.http.response import StreamingHttpResponse
-from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
-from dae.variants.attributes import Sex
+
 from gene_sets.expand_gene_set_decorator import expand_gene_set
 from users_api.authentication import SessionAuthenticationWithoutCSRF
-from datasets_api.studies_manager import get_studies_manager
+
+from dae.pheno_tool.tool import PhenoTool, PhenoToolHelper
+from dae.variants.attributes import Sex
+
+from gpf_instance.gpf_instance import get_gpf_instance
 
 
 logger = logging.getLogger(__name__)
@@ -22,7 +27,7 @@ class PhenoToolView(APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
-        self._variants_db = get_studies_manager().get_variants_db()
+        self._variants_db = get_gpf_instance().variants_db
 
     @staticmethod
     def get_result_by_sex(result, sex):

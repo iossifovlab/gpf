@@ -63,7 +63,7 @@ class Configure(ConfigBox):
     @staticmethod
     def from_prefix_denovo(prefix):
         denovo_filename = '{}.txt'.format(prefix)
-        family_filename = "{}.families.txt".format(prefix)
+        family_filename = "{}_families.txt".format(prefix)
 
         conf = {
             'denovo': {

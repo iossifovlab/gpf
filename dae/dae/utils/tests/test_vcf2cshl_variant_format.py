@@ -56,32 +56,32 @@ def test_vcf2cshl_variant_format2():
 
     ps, vs, ls = vcf2cshl(1, 'AA', 'AC', trimmer=trim_str_back)
     assert ps == 2
-    assert vs == "sub(A->C)"
+    assert vs == 'sub(A->C)'
     assert ls == 1
 
     ps, vs, ls = vcf2cshl(1, 'AA', 'AAA', trimmer=trim_str_back)
     assert ps == 1
-    assert vs == "ins(A)"
+    assert vs == 'ins(A)'
     assert ls == 1
 
     ps, vs, ls = vcf2cshl(1, 'AA', 'AC', trimmer=trim_str_back)
     assert ps == 2
-    assert vs == "sub(A->C)"
+    assert vs == 'sub(A->C)'
     assert ls == 1
 
     ps, vs, ls = vcf2cshl(1, 'AA', 'CA', trimmer=trim_str_back)
     assert ps == 1
-    assert vs == "sub(A->C)"
+    assert vs == 'sub(A->C)'
     assert ls == 1
 
     ps, vs, ls = vcf2cshl(1, 'AA', 'ACAAC', trimmer=trim_str_back)
     assert ps == 2
-    assert vs == "complex(A->CAAC)"
+    assert vs == 'complex(A->CAAC)'
     assert ls == 4
 
     ps, vs, ls = vcf2cshl(1, 'AA', 'CAAAAA', trimmer=trim_str_back)
     assert ps == 1
-    assert vs == "ins(CAAA)"
+    assert vs == 'ins(CAAA)'
     assert ls == 4
 
 
@@ -93,42 +93,42 @@ def test_vcf2cshl_variant_format3():
 
     ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'AAAAAC', trimmer=trim_str_back)
     assert ps == 6
-    assert vs == "sub(A->C)"
+    assert vs == 'sub(A->C)'
     assert ls == 1
 
     ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'AAA', trimmer=trim_str_back)
     assert ps == 1
-    assert vs == "del(3)"
+    assert vs == 'del(3)'
     assert ls == 3
 
     ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'A', trimmer=trim_str_back)
     assert ps == 1
-    assert vs == "del(5)"
+    assert vs == 'del(5)'
     assert ls == 5
 
     ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'ACAAAA', trimmer=trim_str_back)
     assert ps == 2
-    assert vs == "sub(A->C)"
+    assert vs == 'sub(A->C)'
     assert ls == 1
 
     ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'CAAAAAA', trimmer=trim_str_back)
     assert ps == 1
-    assert vs == "ins(C)"
+    assert vs == 'ins(C)'
     assert ls == 1
 
     ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'AACAAC', trimmer=trim_str_back)
     assert ps == 3
-    assert vs == "complex(AAAA->CAAC)"
+    assert vs == 'complex(AAAA->CAAC)'
     assert ls == 4
 
     ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'CAAAAA', trimmer=trim_str_back)
     assert ps == 1
-    assert vs == "sub(A->C)"
+    assert vs == 'sub(A->C)'
     assert ls == 1
 
     ps, vs, ls = vcf2cshl(1, 'AAAAAA', 'AAAAAAC', trimmer=trim_str_back)
     assert ps == 7
-    assert vs == "ins(C)"
+    assert vs == 'ins(C)'
     assert ls == 1
 
 
@@ -142,18 +142,18 @@ def test_insert_long():
     assert ps == 2  # FIXME
 
 
-def test_cshl_to_vcf_problem():
-    chrom = "2"
+def test_cshl_to_vcf_problem(default_genome):
+    chrom = '2'
     position = 242815433
-    variant = "sub(G->A)"
+    variant = 'sub(G->A)'
 
     position1, reference, alternative = \
-        dae2vcf_variant(chrom, position, variant)
+        dae2vcf_variant(chrom, position, variant, default_genome)
     print(chrom, position, reference, alternative)
-    assert chrom == "2"
+    assert chrom == '2'
     assert position == position1
-    assert reference == "G"
-    assert alternative == "A"
+    assert reference == 'G'
+    assert alternative == 'A'
 
     position2, variant2, length = vcf2cshl(
         position, reference, alternative, trimmer=trim_str_back)
@@ -165,13 +165,13 @@ def test_cshl_to_vcf_problem():
 
 def test_spark_v3_problems_check():
 
-    # chrom = "1"
+    # chrom = '1'
     position = 865461
-    ref = "AGCCCCACCTTCCTCTCCTCCT"
-    alt = "AGCCCCACCTTCCTCTCCTCCT" \
-        "GCCCCACCTTCCTCTCCTCCT"
+    ref = 'AGCCCCACCTTCCTCTCCTCCT'
+    alt = 'AGCCCCACCTTCCTCTCCTCCT' \
+        'GCCCCACCTTCCTCTCCTCCT'
 
     pos1, var1, len1 = vcf2cshl(position, ref, alt, trimmer=trim_str_back)
 
-    assert var1 == "ins(GCCCCACCTTCCTCTCCTCCT)"
+    assert var1 == 'ins(GCCCCACCTTCCTCTCCTCCT)'
     assert pos1 == position + 1

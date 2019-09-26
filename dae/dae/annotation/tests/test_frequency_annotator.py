@@ -8,56 +8,50 @@ from dae.annotation.tools.annotator_config import AnnotationConfigParser
 
 
 expected_warnings = \
-    "WARNING test_freq.tsv.gz: " \
-    "multiple variant occurrences of 1:20002 sub(C->A)\n"
+    'WARNING test_freq.tsv.gz: ' \
+    'multiple variant occurrences of 1:20002 sub(C->A)\n'
 
 
 expected_result_freq = \
-    """RESULT_FREQ\tRESULT_FREQ_2
+    '''RESULT_FREQ\tRESULT_FREQ_2
 0.1\t0.8
 0.5\t1.2
 \t
 0.7\t1.4
-"""
+'''
 
 
-def test_frequency_annotator(mocker, variants_io, expected_df, capsys):
+def test_frequency_annotator(
+        variants_io, expected_df, capsys, mocked_genomes_db):
+    options = Box({
+        'vcf': True,
+        'direct': False,
+        'mode': 'overwrite',
+        'scores_file': relative_to_this_test_folder(
+                'fixtures/TESTFreq/test_freq.tsv.gz')
+    }, default_box=True, default_box_attr=None)
 
-    genome = mocker.Mock()
-    genome.getSequence = lambda _, start, end: 'A' * (end - start + 1)
+    columns = {
+        'all_altFreq': 'RESULT_FREQ',
+        'all_altFreq2': 'RESULT_FREQ_2'
+    }
 
-    with mocker.patch('dae.GenomeAccess.openRef') as genome_mock:
-        genome_mock.return_value = genome
+    config = AnnotationConfigParser.parse_section(
+        Box({
+            'options': options,
+            'columns': columns,
+            'annotator': 'frequency_annotator.FrequencyAnnotator'
+        }),
+        mocked_genomes_db
+    )
 
-        options = Box({
-            "vcf": True,
-            "Graw": "fake_genome_ref_file",
-            "direct": False,
-            "mode": "overwrite",
-            "scores_file": relative_to_this_test_folder(
-                    "fixtures/TESTFreq/test_freq.tsv.gz")
-        }, default_box=True, default_box_attr=None)
+    with variants_io('fixtures/freq_test_1.tsv') as io_manager:
+        freq_annotator = FrequencyAnnotator(config)
+        assert freq_annotator is not None
 
-        columns = {
-            'all_altFreq': 'RESULT_FREQ',
-            'all_altFreq2': 'RESULT_FREQ_2'
-        }
+        captured = capsys.readouterr()
 
-        config = AnnotationConfigParser.parse_section(
-            Box({
-                'options': options,
-                'columns': columns,
-                'annotator': 'frequency_annotator.FrequencyAnnotator'
-            })
-        )
-
-        with variants_io("fixtures/freq_test_1.tsv") as io_manager:
-            freq_annotator = FrequencyAnnotator(config)
-            assert freq_annotator is not None
-
-            captured = capsys.readouterr()
-
-            freq_annotator.annotate_file(io_manager)
+        freq_annotator.annotate_file(io_manager)
 
     captured = capsys.readouterr()
     print(captured.err)

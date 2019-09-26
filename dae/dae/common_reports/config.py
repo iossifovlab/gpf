@@ -28,6 +28,8 @@ class CommonReportsConfigParser(ConfigParserBase):
         'people_groups_info': 'peopleGroups'
     }
 
+    DRAW_ALL_FAMILIES_DEFAULT = False
+
     @classmethod
     def parse(cls, config):
         if not config or not config.study_config or \
@@ -47,8 +49,9 @@ class CommonReportsConfigParser(ConfigParserBase):
 
         config_section.id = config.id
 
-        config_section.draw_all_families = \
-            config_section.get('draw_all_families', False)
+        config_section.draw_all_families = config_section.get(
+            'draw_all_families', cls.DRAW_ALL_FAMILIES_DEFAULT
+        )
 
         config_section.groups = OrderedDict([
             (group.split(':')[1].strip(),

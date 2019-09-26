@@ -1,6 +1,7 @@
 # from enrichment_tool.background import SynonymousBackground, \
 #     CodingLenBackground, SamochaBackground
-from dae.enrichment_tool.background import CodingLenBackground, SamochaBackground
+from dae.enrichment_tool.background import CodingLenBackground, \
+    SamochaBackground
 
 
 def test_get_study_background(background_facade):

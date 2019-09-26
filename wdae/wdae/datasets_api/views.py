@@ -1,14 +1,9 @@
-'''
-Created on Jan 20, 2017
-
-@author: lubo
-'''
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from guardian.shortcuts import get_groups_with_perms
 
-from .studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
 from .models import Dataset
 from groups_api.serializers import GroupSerializer
 
@@ -19,8 +14,7 @@ class DatasetView(APIView):
         # assert self.datasets is not None
 
         if variants_db is None:
-            variants_db = get_studies_manager()\
-                .get_variants_db()
+            variants_db = get_gpf_instance().variants_db
         self.variants_db = variants_db
 
     def augment_accessibility(self, dataset, user):
@@ -66,7 +60,7 @@ class PermissionDeniedPromptView(APIView):
 
     def __init__(self):
         self.permission_denied_prompt = \
-            get_studies_manager().get_permission_denied_prompt()
+            get_gpf_instance().dae_config.gpfjs.permission_denied_prompt
 
     def get(self, request):
         return Response({'data': self.permission_denied_prompt})
