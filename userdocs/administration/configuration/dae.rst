@@ -170,13 +170,6 @@ ________
 The absolute filepath to the genomesDB configuration file. You can see
 more about this configuration :ref:`here <genomes_db>`.
 
-dir
-___
-
-.. code-block:: ini
-
-  dir = {TODO}
-
 [genomicScoresDB]
 -----------------
 
@@ -189,13 +182,6 @@ ________
 
 The absolute filepath to the genomicScoresDB configuration file. You can see
 more about this configuration :ref:`here <genomic_scores_db>`.
-
-dir
-___
-
-.. code-block:: ini
-
-  dir = {TODO}
 
 scores_hg19_dir
 _______________
@@ -234,13 +220,6 @@ ________
 The absolute filepath to the annotation configuration file. You can see more
 about this configuration :ref:`here <annotation>`.
 
-dir
-___
-
-.. code-block:: ini
-
-  dir = {TODO}
-
 [phenoDB]
 ---------
 
@@ -268,13 +247,6 @@ ________
 
 The absolute filepath to the geneInfoDB configuration file. You can see more
 about this configuration :ref:`here <gene_info_db>`.
-
-dir
-___
-
-.. code-block:: ini
-
-  dir = {TODO}
 
 [defaultConfiguration]
 ----------------------
