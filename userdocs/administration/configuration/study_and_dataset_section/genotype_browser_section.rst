@@ -1,3 +1,5 @@
+.. _genotype_browser_section:
+
 Genotype Browser Section
 ========================
 

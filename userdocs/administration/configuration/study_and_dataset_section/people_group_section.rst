@@ -1,4 +1,4 @@
-.. _peopleGroup:
+.. _people_group_section:
 
 People Group Section
 ====================

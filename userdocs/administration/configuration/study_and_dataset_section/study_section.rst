@@ -1,3 +1,5 @@
+.. _study_section:
+
 Study Section
 =============
 

@@ -1,3 +1,5 @@
+.. _common_report_section:
+
 [commonReport]
 ==============
 
@@ -13,8 +15,9 @@ peopleGroups
   peopleGroups = {comma-separated list of people groups}
 
 ``peopleGroups`` is a comma-separated list of ids of people groups (defined in
-the :ref:`peopleGroup` section in the study config), indicating for which
-people groups to generate the ``Families by pedigree`` part of common report.
+the :ref:`people_group_section` section in the study config), indicating for
+which people groups to generate the ``Families by pedigree`` part of common
+report.
 
 groups
 ------
