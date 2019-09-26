@@ -319,3 +319,22 @@ class FamiliesBase(object):
         ped_df = ped_df.sort_values(by=['familyId', 'role_order'])
         ped_df = ped_df.drop(axis=1, columns=['role_order'])
         return ped_df
+
+    @staticmethod
+    def save_pedigree(ped_df, filename):
+        df = ped_df.copy()
+
+        df = df.rename(columns={
+            'person_id': 'personId',
+            'family_id': 'familyId',
+            'mom_id': 'momId',
+            'dad_id': 'dadId',
+            'sample_id': 'sampleId',
+        })
+        df.sex = df.sex.apply(lambda v: v.name)
+        df.role = df.role.apply(lambda v: v.name)
+        df.status = df.status.apply(lambda v: v.name)
+
+        df.to_csv(
+            filename, index=False,
+            sep='\t')

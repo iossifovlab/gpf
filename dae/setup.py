@@ -37,6 +37,7 @@ setuptools.setup(
         'dae/annotation/annotation_pipeline.py',
         'dae/tools/generate_histogram.py',
         'dae/tools/run_gpf_impala.sh',
+        'dae/tools/simple_family2pedigree.py',
     ],
 
     classifiers=[
