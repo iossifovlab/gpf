@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -e
 
 cd userdocs/development/gpf/dae/dae/docs
 make clean html
