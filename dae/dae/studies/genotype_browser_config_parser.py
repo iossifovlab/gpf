@@ -233,6 +233,14 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         config_section.presentInRole = \
             cls._parse_present_in_role(config_section.get('presentInRole', {}))
 
+        if config_section.selected_inheritance_type_filter_values:
+            assert config_section.inheritance_type_filters
+            assert all([
+                inheritance_type in config_section.inheritance_type_filters
+                for inheritance_type
+                in config_section.selected_inheritance_type_filter_values
+            ])
+
         return Box(
             config_section, camel_killer_box=True, default_box=True,
             default_box_attr=None

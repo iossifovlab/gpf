@@ -1,4 +1,5 @@
 import pytest
+from box import Box
 from dae.studies.genotype_browser_config_parser import \
     GenotypeBrowserConfigParser, verify_inheritance_types
 
@@ -61,3 +62,34 @@ def test_inheritance_types_validation():
     with pytest.raises(AssertionError) as excinfo:
         verify_inheritance_types(['mendelian', 'nonexistent', 'denovo'])
     assert str(excinfo.value) == 'Inheritance type nonexistent does not exist!'
+
+
+def test_inheritance_types_selected_without_available():
+    genotype_browser_config = {
+        'genotypeBrowser': {
+            'selectedInheritanceTypeFilterValues': 'denovo, reference'
+        }
+    }
+    genotype_browser_config = Box(
+        genotype_browser_config, camel_killer_box=True,
+        default_box=True, default_box_attr=None
+    )
+
+    with pytest.raises(AssertionError) as excinfo:
+        GenotypeBrowserConfigParser.parse(genotype_browser_config)
+
+
+def test_inheritance_types_selecting_nonavailable_filters():
+    genotype_browser_config = {
+        'genotypeBrowser': {
+            'inheritanceTypeFilter': 'mendelian, denovo',
+            'selectedInheritanceTypeFilterValues': 'denovo, reference'
+        }
+    }
+    genotype_browser_config = Box(
+        genotype_browser_config, camel_killer_box=True,
+        default_box=True, default_box_attr=None
+    )
+
+    with pytest.raises(AssertionError) as excinfo:
+        GenotypeBrowserConfigParser.parse(genotype_browser_config)
