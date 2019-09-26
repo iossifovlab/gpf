@@ -1,0 +1,8 @@
+**/*.pyc
+containers/
+coverage/
+gpf/
+data-hg19-startup/
+gpf-html.tar.gz
+gpf-user-html.tar.gz
+data-hg19-startup-latest.tar.gz
