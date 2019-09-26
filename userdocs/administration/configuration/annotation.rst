@@ -22,7 +22,7 @@ annotator
 
 .. code-block:: ini
 
-  annotator = {annotator python file name}.{annotator class name}
+  annotator = <annotator python file name>.<annotator class name>
 
 This property indicates the type of the annotator.
 
@@ -60,7 +60,7 @@ options.*
 
 .. code-block:: ini
 
-  options.{option name} = value
+  options.<option name> = value
 
 These are custom options that will be passed to the annotator.
 Each annotator provides different options that can be set.
@@ -100,7 +100,7 @@ columns.*
 
 .. code-block:: ini
 
-  columns.{raw/original column name} = {output column name}
+  columns.<raw/original column name> = <output column name>
 
 This option simultaneously describes which columns must be added to
 the output file and what their name will be. The pool of available

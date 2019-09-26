@@ -17,7 +17,7 @@ ____
 
 .. code-block:: ini
 
-  host = {HDFS hostname}
+  host = <HDFS hostname>
 
 ENVIRONMENT OVERRIDE
   ``DAE_HDFS_HOST``
@@ -29,7 +29,7 @@ ____
 
 .. code-block:: ini
 
-  port = {HDFS port number}
+  port = <HDFS port number>
 
 DEFAULT
   .. exec::
@@ -47,7 +47,7 @@ _______
 
 .. code-block:: ini
 
-  baseDir = {TODO}
+  baseDir = <TODO>
 
 DEFAULT
   .. exec::
@@ -65,7 +65,7 @@ ____
 
 .. code-block:: ini
 
-  host = {Impala hostname}
+  host = <Impala hostname>
 
 ENVIRONMENT OVERRIDE
   ``DAE_IMPALA_HOST``
@@ -77,7 +77,7 @@ ____
 
 .. code-block:: ini
 
-  port = {Impala port number}
+  port = <Impala port number>
 
 DEFAULT
   .. exec::
@@ -95,7 +95,7 @@ __
 
 .. code-block:: ini
 
-  db = {Impala database name}
+  db = <Impala database name>
 
 DEFAULT
   .. exec::
@@ -117,7 +117,7 @@ ________
 
 .. code-block:: ini
 
-  confFile = {studies db config file}
+  confFile = <studies db config file>
 
 The absolute filepath to the studiesDB configuration file. You can see more
 about this configuration :ref:`here <studies_and_datasets_db>`.
@@ -127,7 +127,7 @@ ___
 
 .. code-block:: ini
 
-  dir = {directory containing studies}
+  dir = <directory containing studies>
 
 Directory containing studies data. This directory is expected to contain study
 configurations. You can see more about study and dataset configurations
@@ -141,7 +141,7 @@ ________
 
 .. code-block:: ini
 
-  confFile = {datasets db config file}
+  confFile = <datasets db config file>
 
 The absolute filepath to the datasetsDB configuration file. You can see more
 about this configuration :ref:`here <studies_and_datasets_db>`.
@@ -151,7 +151,7 @@ ___
 
 .. code-block:: ini
 
-  dir = {directory containing datasets}
+  dir = <directory containing datasets>
 
 Directory containing datasets data. This directory is expected to contain
 dataset configurations. You can see more about study and dataset configurations
@@ -165,7 +165,7 @@ ________
 
 .. code-block:: ini
 
-  confFile = {genomes db config file path}
+  confFile = <genomes db config file path>
 
 The absolute filepath to the genomesDB configuration file. You can see
 more about this configuration :ref:`here <genomes_db>`.
@@ -178,7 +178,7 @@ ________
 
 .. code-block:: ini
 
-  confFile = {genomic scores db file path}
+  confFile = <genomic scores db file path>
 
 The absolute filepath to the genomicScoresDB configuration file. You can see
 more about this configuration :ref:`here <genomic_scores_db>`.
@@ -188,7 +188,7 @@ _______________
 
 .. code-block:: ini
 
-  scores_hg19_dir = {dir containing hg19 genomic scores}
+  scores_hg19_dir = <dir containing hg19 genomic scores>
 
 ENVIRONMENT OVERRIDE
   ``DAE_GENOMIC_SCORES_HG19``
@@ -200,7 +200,7 @@ _______________
 
 .. code-block:: ini
 
-  scores_hg38_dir = {dir containing hg38 genomic scores}
+  scores_hg38_dir = <dir containing hg38 genomic scores>
 
 ENVIRONMENT OVERRIDE
   ``DAE_GENOMIC_SCORES_HG38``
@@ -215,7 +215,7 @@ ________
 
 .. code-block:: ini
 
-  confFile = {annotation file path}
+  confFile = <annotation file path>
 
 The absolute filepath to the annotation configuration file. You can see more
 about this configuration :ref:`here <annotation>`.
@@ -228,7 +228,7 @@ ___
 
 .. code-block:: ini
 
-  dir = {phenotype databases directory}
+  dir = <phenotype databases directory>
 
 The absolute filepath to the directory containing phenotype databases.
 The system will traverse this path and load any INI configuration
@@ -243,7 +243,7 @@ ________
 
 .. code-block:: ini
 
-  confFile = {gene info db file path}
+  confFile = <gene info db file path>
 
 The absolute filepath to the geneInfoDB configuration file. You can see more
 about this configuration :ref:`here <gene_info_db>`.
@@ -256,7 +256,7 @@ ________
 
 .. code-block:: ini
 
-  confFile = {defaultConfiguration file path}
+  confFile = <defaultConfiguration file path>
 
 The absolute filepath to the defaultConfiguration file. The configuration in
 this file is used as default configuration for studies and datasets. You can
@@ -270,7 +270,7 @@ __________________________
 
 .. code-block:: ini
 
-  permissionDeniedPromptFile = {the markdown filepath}
+  permissionDeniedPromptFile = <the markdown filepath>
 
 The absolute filepath to the permissionDeniedPromptFile file. This file
 contains markdown to show in gpfjs when access is denied to a user. Content of
@@ -281,7 +281,7 @@ ______________________
 
 .. code-block:: ini
 
-  permissionDeniedPrompt = {the markdown string}
+  permissionDeniedPrompt = <the markdown string>
 
 DEFAULT
   .. exec::

@@ -9,7 +9,7 @@ inheritanceTypeFilter
 
 .. code-block:: ini
 
-  inheritanceTypeFilter = {comma-separated list of inheritance types}
+  inheritanceTypeFilter = <comma-separated list of inheritance types>
 
 This is a list of inheritance types that will be available
 as filters in the Genotype Browser.
@@ -21,7 +21,7 @@ selectedInheritanceTypeFilterValues
 
 .. code-block:: ini
 
-  selectedInheritanceTypeFilterValues = {comma-separated list of inheritance types}
+  selectedInheritanceTypeFilterValues = <comma-separated list of inheritance types>
 
 This is a list of inheritance type filters that will be selected by default
 on a study/dataset's page in the Genotype Browser. Note that these values must
