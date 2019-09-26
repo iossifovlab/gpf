@@ -1,6 +1,8 @@
 from dae.annotation.tests.conftest import relative_to_this_test_folder
 
-from dae.annotation.tools.annotator_config import annotation_config_cli_options
+from dae.annotation.tools.annotator_config import \
+    annotation_config_cli_options, \
+    AnnotationConfigParser
 
 
 def test_annotation_config_cli_options(mocked_gpf_instance):
@@ -18,3 +20,17 @@ def test_annotation_config_cli_options(mocked_gpf_instance):
 
     assert cli_options[-1][0] == '--Traw'
     assert cli_options[-1][1]['default'] == 'RefSeq2013'
+
+
+def test_annotation_config_options_parsing(mocked_gpf_instance,
+                                           mock_genomes_db):
+
+    annotator_config = \
+        AnnotationConfigParser.read_and_parse_file_configuration(
+            {},
+            relative_to_this_test_folder('fixtures/dummy_annotator.conf'),
+            relative_to_this_test_folder(''),
+            mocked_gpf_instance.genomes_db
+        )
+
+    assert annotator_config.step_sample_annotator.options.vcf is False
