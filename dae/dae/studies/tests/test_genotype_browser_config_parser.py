@@ -16,7 +16,7 @@ def test_genotype_browser_parse_variables():
         'familyFilters', 'selectedPhenoFiltersValues',
         'selectedGenotypeColumnValues', 'selectedInRolesValues',
         'selectedPresentInRoleValues', 'roles', 'columns',
-        'inheritanceTypes', 'defaultInheritanceTypeFilters',
+        'inheritanceTypeFilter', 'selectedInheritanceTypeFilterValues',
     ]
     assert GenotypeBrowserConfigParser.FILTER_SELECTORS == {
         'phenoFilters': 'selectedPhenoFiltersValues',
@@ -27,8 +27,8 @@ def test_genotype_browser_parse_variables():
     }
 
     assert GenotypeBrowserConfigParser.VERIFY_VALUES == {
-        'inheritanceTypes': verify_inheritance_types,
-        'defaultInheritanceTypeFilters': verify_inheritance_types
+        'inheritanceTypeFilter': verify_inheritance_types,
+        'selectedInheritanceTypeFilterValues': verify_inheritance_types
     }
 
 
@@ -39,7 +39,7 @@ def test_get_description_keys():
         'hasStudyFilters', 'hasStudyTypes', 'hasGraphicalPreview',
         'previewColumns', 'rolesFilterOptions', 'genotypeColumns',
         'phenoFilters', 'familyFilters', 'presentInRole', 'downloadColumns',
-        'inheritanceTypes', 'defaultInheritanceTypeFilters',
+        'inheritanceTypeFilter', 'selectedInheritanceTypeFilterValues',
     ]
 
 

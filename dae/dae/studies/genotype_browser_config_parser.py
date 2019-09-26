@@ -42,8 +42,8 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
         'selectedPresentInRoleValues',
         'roles',
         'columns',
-        'inheritanceTypes',
-        'defaultInheritanceTypeFilters',
+        'inheritanceTypeFilter',
+        'selectedInheritanceTypeFilterValues',
     ]
 
     FILTER_SELECTORS = {
@@ -55,8 +55,8 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
     }
 
     VERIFY_VALUES = {
-        'inheritanceTypes': verify_inheritance_types,
-        'defaultInheritanceTypeFilters': verify_inheritance_types,
+        'inheritanceTypeFilter': verify_inheritance_types,
+        'selectedInheritanceTypeFilterValues': verify_inheritance_types,
     }
 
     @classmethod
@@ -245,8 +245,9 @@ class GenotypeBrowserConfigParser(ConfigParserBase):
             'hasPresentInRole', 'hasCNV', 'hasComplex', 'hasFamilyFilters',
             'hasStudyFilters', 'hasStudyTypes', 'hasGraphicalPreview',
             'previewColumns', 'rolesFilterOptions', 'genotypeColumns',
-            'phenoFilters', 'familyFilters', 'presentInRole', 'downloadColumns',
-            'inheritanceTypes', 'defaultInheritanceTypeFilters',
+            'phenoFilters', 'familyFilters',
+            'presentInRole', 'downloadColumns',
+            'inheritanceTypeFilter', 'selectedInheritanceTypeFilterValues',
         ]
 
     @classmethod
