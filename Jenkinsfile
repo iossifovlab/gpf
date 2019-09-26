@@ -11,6 +11,7 @@ pipeline {
   }
   environment {
     DOCKER_IMAGE="seqpipe/gpf-documentation:${env.BRANCH_NAME}"
+    GPF_DOCKER_IMAGE="iossifovlab/gpf-base:documentation_${env.BRANCH_NAME}"
 
     DOCUMENTATION_DIR="${env.WORKSPACE}"
     SOURCE_DIR="${env.WORKSPACE}/gpf"
@@ -73,10 +74,14 @@ pipeline {
 
     stage('Setup') {
       steps {
-        script {
-          docker.build("${DOCKER_IMAGE}",
-          ". -f ${SOURCE_DIR}/Dockerfile --build-arg SOURCE_DIR=./\$(basename ${SOURCE_DIR})")
-        }
+        docker.build(
+            "${GPF_DOCKER_IMAGE}",
+            ". -f ${SOURCE_DIR}/Dockerfile --build-arg SOURCE_DIR=./\$(basename ${SOURCE_DIR})"
+          )
+          docker.build(
+            "${DOCKER_IMAGE}",
+            ". -f ${DOCUMENTATION_DIR}/Dockerfile --build-arg GPF_DOCKER_IMAGE=${GPF_DOCKER_IMAGE}"
+          )
       }
     }
 

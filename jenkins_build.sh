@@ -2,15 +2,15 @@
 
 set -e
 
-cd dae && pip install -e . && cd -
-cd wdae && pip install -e . && cd -
+cd ${DAE_SOURCE_DIR}/dae && pip install -e . && cd -
+cd ${DAE_SOURCE_DIR}/wdae && pip install -e . && cd -
 
-cd /documentation/userdocs/development/gpf/dae/dae/docs
+cd ${DOCUMENTATION_DIR}/userdocs/development/gpf/dae/dae/docs
 make clean html
 tar zcvf ../../../../../../gpf-html.tar.gz -C _build/ html/
 cd -
 
-cd /documentation/userdocs
+cd ${DOCUMENTATION_DIR}/userdocs
 make clean html
 tar zcvf ../gpf-user-html.tar.gz -C _build/ html/
 cd -
