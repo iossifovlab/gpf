@@ -83,7 +83,7 @@ def dae_build_makefile(dae_config, genome, argv):
     if argv.family_format == 'simple':
         family_format = "-f simple"
     elif argv.family_format == 'pedigree':
-        family_format = "-f simple"
+        family_format = "-f pedigree"
     else:
         raise ValueError("unexpected family format: {}".format(
             argv.family_format
