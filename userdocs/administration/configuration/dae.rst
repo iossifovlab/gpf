@@ -117,7 +117,10 @@ ________
 
 .. code-block:: ini
 
-  confFile = {TODO}
+  confFile = {studies db config file}
+
+The absolute filepath to the studiesDB configuration file. You can see more
+about this configuration :ref:`here <studies_and_datasets_db>`.
 
 dir
 ___
@@ -138,7 +141,10 @@ ________
 
 .. code-block:: ini
 
-  confFile = {TODO}
+  confFile = {datasets db config file}
+
+The absolute filepath to the datasetsDB configuration file. You can see more
+about this configuration :ref:`here <studies_and_datasets_db>`.
 
 dir
 ___
