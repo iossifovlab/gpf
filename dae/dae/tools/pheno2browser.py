@@ -12,8 +12,6 @@ import traceback
 from dae.pheno import pheno_db
 from dae.pheno_browser.prepare_data import PreparePhenoBrowserBase
 
-from dae.configuration.config_parser_base import ConfigParserBase
-
 from dae.utils.filehash import sha256sum
 
 
@@ -53,12 +51,10 @@ def calc_dbfile_hashsum(dbfilename):
     return hash_sum
 
 
-def build_pheno_browser(dbfile, pheno_name, output_dir, regression_conf_path):
+def build_pheno_browser(dbfile, pheno_name, output_dir,
+                        pheno_regressions=None):
     phenodb = pheno_db.PhenoDB(dbfile=dbfile)
     phenodb.load()
-
-    pheno_regressions = \
-        ConfigParserBase.read_file_configuration(regression_conf_path, '')
 
     prep = PreparePhenoBrowserBase(pheno_name, phenodb,
                                    output_dir, pheno_regressions)

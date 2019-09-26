@@ -56,3 +56,31 @@ class PhenoConfigParser(ConfigParserBase):
         cls._assert_pheno_paths({config.name: config})
 
         return config
+
+
+class PhenoRegressionConfigParser(ConfigParserBase):
+    '''
+    A parser for phenotype regression configurations.
+    Verifies that the regression configuration is correct.
+    '''
+
+    @classmethod
+    def parse(cls, config):
+        error_message = \
+            '{} is not a valid regression config!'.format(config.config_file)
+
+        assert 'regression' in config, error_message
+
+        config = super(PhenoRegressionConfigParser, cls).parse(config)
+
+        for regression, regression_section in config['regression'].items():
+            error_message += ' The section "{}" is invalid!'.format(regression)
+
+            assert 'instrument_name' in regression_section, error_message
+            assert 'measure_name' in regression_section, error_message
+            assert 'display_name' in regression_section, error_message
+            assert 'jitter' in regression_section, error_message
+
+            regression_section['jitter'] = float(regression_section['jitter'])
+
+        return config
