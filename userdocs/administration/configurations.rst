@@ -5,12 +5,13 @@ System Configuration
    :maxdepth: 2
 
    configuration/dae
-   configuration/defaultConfiguration
-   configuration/annotation
-   configuration/genomicScores
-   configuration/geneInfo
+   configuration/studies_and_datasets_db_configuration
    configuration/genomesDB
+   configuration/genomicScores
+   configuration/annotation
    configuration/pheno
    configuration/regression
+   configuration/geneInfo
+   configuration/defaultConfiguration
    configuration/study_and_dataset_configuration
    configuration/allowed_values

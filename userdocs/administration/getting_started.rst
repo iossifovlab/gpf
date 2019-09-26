@@ -182,7 +182,7 @@ can use the script::
 
     run_gpf_impala.sh
 
-This script pulls out Apache Impala image from 
+This script pulls out Apache Impala image from
 `dockerhub <https://cloud.docker.com/u/seqpipe/repository/docker/seqpipe/seqpipe-docker-impala>`_,
 creates and starts Docker container named `gpf_impala`
 containing all the components needed for running Apache Impala. When the
@@ -441,8 +441,8 @@ Getting Started with Enrichment Tool
 ####################################
 
 For studies, that include de Novo variants you can enable Enrichment Tool.
-As an example let us enable Enrichment Tool for the already imported `iossifov_2014`
-study.
+As an example let us enable Enrichment Tool for the already imported
+`iossifov_2014` study.
 
 Go to the directory, where the configuration file of the `iossifov_2014`
 study is located::
@@ -489,7 +489,7 @@ Edit the configuration file `comp_vcf.conf` and add following lines
 .. code::
 
     [genotypeBrowser]
-    
+
     genotype.freq.name = Frequency
     genotype.freq.slots = exome_gnomad_af_percent:exome gnomad:E %%.3f,
         genome_gnomad_af_percent:genome gnomad:G %%.3f,
@@ -510,13 +510,14 @@ demo phenotype database inside the ``pheno`` directory::
 
     cd gpf_test/pheno
 
-This phenotype database is ``comp_pheno``. It has already been imported into the
-GPF instance, but its initial files have also been included in order to demonstrate
-how a phenotype database may be imported.
+This phenotype database is ``comp_pheno``. It has already been imported into
+the GPF instance, but its initial files have also been included in order to
+demonstrate how a phenotype database may be imported.
 
 The included files are:
 
-* ``comp_pheno.ped`` - the pedigree file for all families included into the database;
+* | ``comp_pheno.ped`` - the pedigree file for all families included into the
+   database;
 
 * ``instruments`` - directory, containing all instruments;
 
@@ -543,16 +544,16 @@ Options used in this command are as follows:
 * ``-p`` option allows to specify the pedigree file;
 
 * | ``-d`` option specifies the name of the data dictionary file for the
-  | phenotype database
+   phenotype database
 
 * | ``-i`` option allows to specify the directory where instruments
-  | are located;
+   are located;
 
 * | ``-o`` options specifies the name of the output phenotype database that
-  | will be used in phenotype browser;
+   will be used in phenotype browser;
 
 * | ``--regression`` option specifies a path to a pheno regression config which
-  | describes a list of measures to make regressions against
+   describes a list of measures to make regressions against
 
 You can use ``-h`` option to see all options supported by the
 ``simple_pheno_import.py`` tool.
@@ -619,7 +620,7 @@ this:
     selectedPhenoFiltersValues = sampleContinuousFilter
 
     phenoFilters.sampleContinuousFilter.name = sampleFilterName
-    phenoFilters.sampleContinuousFilter.type = continuous
+    phenoFilters.sampleContinuousFilter.measureType = continuous
     phenoFilters.sampleContinuousFilter.filter = multi:prb
 
 ``selectedPhenoFiltersValues`` is a comma separated list of ids of the defined
@@ -629,10 +630,11 @@ Phenotype Filters. Each phenotype filter is expected to have a
 The required configuration options for each pheno filter are:
 
 * | ``phenoFilters.<pheno_filter_id>.name`` - name to use when showing the
-  | pheno filter in the Genotype Browser Table Preview.
+   pheno filter in the Genotype Browser Table Preview.
 
-* | ``phenoFilters.<pheno_filter_id>.type`` - the type of the pheno filter. One
-  | of ``continuous``, ``categorical``, ``ordinal`` or ``raw``.
+* | ``phenoFilters.<pheno_filter_id>.measureType`` - the measure type of the
+   pheno filter. One of ``continuous``, ``categorical``, ``ordinal`` or
+   ``raw``.
 
 * ``phenoFilters.<pheno_filter_id>.filter`` - the definition of the filter.
 
@@ -640,17 +642,17 @@ The definition of a pheno filter has the format
 ``<filter_type>:<role>(:<measure_id>)``. Each of these
 
 * | ``filter_type`` - either ``single`` or ``multiple``. A single filter is
-  | used to filter on only one specified measure (specified by
-  | ``<measure_id>``). A ``multiple`` pheno filter allows the user to choose
-  | which measure to use for filtering. The available measures depend on the
-  | ``phenoFilters.<pheno_filter_id>.type`` field.
+   used to filter on only one specified measure (specified by
+   ``<measure_id>``). A ``multiple`` pheno filter allows the user to choose
+   which measure to use for filtering. The available measures depend on the
+   ``phenoFilters.<pheno_filter_id>.type`` field.
 
 * | ``role`` - which persons' phenotype data to use for this filter. Ex.
-  | ``prb`` uses the probands' values for filtering. When the role matches more
-  | than one person the first is chosen.
+   ``prb`` uses the probands' values for filtering. When the role matches more
+   than one person the first is chosen.
 
 * | ``measure_id`` - id of the measure to be used for a ``single`` filter. Not
-  | used when a ``multiple`` filter is being defined.
+   used when a ``multiple`` filter is being defined.
 
 After adding the configuration for Phenotype Filters and reloading the Genotype
 Browser the Advanced option of the Family Filters should be present.
@@ -675,22 +677,22 @@ To add a Phenotype Column you need to define it in the study or dataset config:
         prb:i1.iq:Iq
 
 
-The ``selectedPhenoColumnValues`` property is a comma separated list of ids for each Pheno
-Column to display. Each Pheno Column has to have a ``pheno.<measure_id>`` configuration with
-the following properties:
+The ``selectedPhenoColumnValues`` property is a comma separated list of ids for
+each Pheno Column to display. Each Pheno Column has to have a
+``pheno.<measure_id>`` configuration with the following properties:
 
 * | ``pheno.<measure_id>.name`` - the display name of the pheno column group
-  | used in the Genotype Browser Preview table.
+   used in the Genotype Browser Preview table.
 
 * | ``pheno.<measure_id>.slots`` - comma separated definitions for all pheno
-  | columns.
+   columns.
 
 The Phenotype Column definition has the following structure:
 ``<role>:<measure_id>:<name>``, where:
 
 * | ``<role>`` - role of the person whose pheno values will be displayed. If
-  | the role matches two or more people all of their values will be shown,
-  | separated with a comma.
+   the role matches two or more people all of their values will be shown,
+   separated with a comma.
 
 * ``<measure_id>`` - id of the measure whose values will be displayed.
 
@@ -706,8 +708,8 @@ configuration.
     previewColumns = family,variant,genotype,effect,weights,scores3,scores5,pheno
 
 
-In the above ``comp_all`` configuration, the last column ``pheno`` is a Phenotype
-Column.
+In the above ``comp_all`` configuration, the last column ``pheno`` is a
+Phenotype Column.
 
 
 Enabling the Phenotype tool
@@ -725,7 +727,6 @@ the Phenotype browser. Open the configuration file ``comp_all.conf``:
     prefix = data/
     phenoDB = comp_pheno
     phenotypeBrowser = yes
-    genotypeBrowser = yes
 
 
 You can enable the Phenotype tool using the following property:
@@ -736,13 +737,14 @@ You can enable the Phenotype tool using the following property:
 
 
 Restart the GPF development web server and select the `comp_all` study.
-You should see a :ref:`phenotool-ui` tab. Once you have selected it, you can select
-a phenotype measure of your choice. To get the tool to acknowledge the variants
-in the ``comp_all`` study, select the `All` option of the `Present in Parent` field.
-Since the effect types of the variants in the comp study are only `Missense` and `Synonymous`,
-you may wish to de-select the `LGDs` option under the `Effect Types` field.
-There are is also the option to normalize the results by one or two measures
-configured as regressors - age and non-verbal IQ.
+You should see a :ref:`phenotool-ui` tab. Once you have selected it, you can
+select a phenotype measure of your choice. To get the tool to acknowledge the
+variants in the ``comp_all`` study, select the `All` option of the
+`Present in Parent` field. Since the effect types of the variants in the comp
+study are only `Missense` and `Synonymous`, you may wish to de-select the
+`LGDs` option under the `Effect Types` field. There are is also the option to
+normalize the results by one or two measures configured as regressors - age and
+non-verbal IQ.
 
 Click on the `Report` button to produce the results.
 
