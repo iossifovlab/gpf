@@ -59,17 +59,12 @@ def test_dae_config_simple(fixturedir, dae_config):
     assert dae_config.pheno_db.conf_file == \
         os.path.join(fixturedir, 'phenoDB.conf')
 
-    assert dae_config.gene_info_db.dir == os.path.join(fixturedir, 'geneInfo')
     assert dae_config.gene_info_db.conf_file == \
         os.path.join(fixturedir, 'geneInfoDB.conf')
 
-    assert dae_config.genomes_db.dir == \
-        os.path.join(fixturedir, 'genomes')
     assert dae_config.genomes_db.conf_file == \
         os.path.join(fixturedir, 'genomesDB.conf')
 
-    assert dae_config.genomic_scores_db.dir == \
-        os.path.join(fixturedir, 'genomicScores')
     assert dae_config.genomic_scores_db.conf_file == \
         os.path.join(fixturedir, 'genomicScores.conf')
 
