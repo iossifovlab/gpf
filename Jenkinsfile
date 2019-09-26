@@ -74,7 +74,8 @@ pipeline {
 
     stage('Setup') {
       steps {
-        docker.build(
+        script {
+          docker.build(
             "${GPF_DOCKER_IMAGE}",
             ". -f ${SOURCE_DIR}/Dockerfile --build-arg SOURCE_DIR=./\$(basename ${SOURCE_DIR})"
           )
@@ -82,6 +83,7 @@ pipeline {
             "${DOCKER_IMAGE}",
             ". -f ${DOCUMENTATION_DIR}/Dockerfile --build-arg GPF_DOCKER_IMAGE=${GPF_DOCKER_IMAGE}"
           )
+        }
       }
     }
 
