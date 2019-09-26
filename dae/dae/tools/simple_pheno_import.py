@@ -13,6 +13,7 @@ from dae.pheno.prepare.ped_prepare import PrepareVariables
 from dae.tools.pheno2browser import build_pheno_browser
 
 from dae.gpf_instance.gpf_instance import GPFInstance
+from dae.pheno.utils.config import PhenoRegressionConfigParser
 
 
 def pheno_cli_parser():
@@ -77,8 +78,8 @@ def generate_pheno_db_config(args):
     config['phenoDB'] = {}
     section = config['phenoDB']
     section['name'] = args.pheno_name
-    section['dbfile'] = os.path.join('%(wd)s', os.path.basename(args.pheno_db_filename))
-
+    section['dbfile'] = os.path.join(
+        '%(wd)s', os.path.basename(args.pheno_db_filename))
     # TODO
     # Should the regression config be written to the pheno db config?
     section['browser_dbfile'] = os.path.join(
@@ -131,7 +132,6 @@ def main(argv):
             dae_conf.pheno_db.dir,
             args.pheno_name
         )
-
         if not os.path.exists(pheno_db_dir):
             os.makedirs(pheno_db_dir)
 
@@ -155,6 +155,10 @@ def main(argv):
             os.makedirs(args.browser_dir)
 
         config = parse_pheno_db_config(args)
+        regressions = PhenoRegressionConfigParser.\
+            read_and_parse_file_configuration(args.regression, '') \
+            if args.regression else None
+
         prep = PrepareVariables(config)
         prep.build_pedigree(args.pedigree)
         prep.build_variables(args.instruments, args.data_dictionary)
@@ -162,7 +166,7 @@ def main(argv):
         build_pheno_browser(
             args.pheno_db_filename, args.pheno_name,
             args.browser_dir,
-            args.regression
+            regressions
         )
 
         pheno_conf_path = os.path.join(

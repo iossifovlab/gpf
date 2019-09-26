@@ -120,7 +120,7 @@ def temp_filename(request):
     request.addfinalizer(fin)
     output = os.path.join(
         dirname,
-        'annotation.tmp'
+        'temp_filename.tmp'
     )
     return output
 
