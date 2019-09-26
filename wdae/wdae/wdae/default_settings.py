@@ -154,6 +154,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
 
     'utils',
+    'gpf_instance',
 
     'gene_weights',
     'gene_sets',

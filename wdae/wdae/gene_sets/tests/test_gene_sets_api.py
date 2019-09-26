@@ -1,8 +1,3 @@
-'''
-Created on Feb 16, 2017
-
-@author: lubo
-'''
 import pytest
 
 from urllib.parse import urlencode
@@ -11,7 +6,7 @@ from rest_framework import status
 import json
 
 
-pytestmark = pytest.mark.usefixtures('mock_studies_manager', 'calc_gene_sets')
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance', 'calc_gene_sets')
 
 
 def name_in_gene_sets(gene_sets, name, count=None):
@@ -29,7 +24,7 @@ def name_in_gene_sets(gene_sets, name, count=None):
 
 
 def test_gene_sets_collections(db, admin_client):
-    url = "/api/v3/gene_sets/gene_sets_collections"
+    url = '/api/v3/gene_sets/gene_sets_collections'
     response = admin_client.get(url,)
     assert status.HTTP_200_OK == response.status_code, repr(response.content)
 
@@ -42,13 +37,13 @@ def test_gene_sets_collections(db, admin_client):
 
 
 def test_gene_set_download(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {
-        "geneSetsCollection": "denovo",
-        "geneSet": "Synonymous",
-        "geneSetsTypes": {
-            "f1_group": {
-                "phenotype": ["autism", "unaffected"]
+        'geneSetsCollection': 'denovo',
+        'geneSet': 'Synonymous',
+        'geneSetsTypes': {
+            'f1_group': {
+                'phenotype': ['autism', 'unaffected']
             }
         }
     }
@@ -64,13 +59,13 @@ def test_gene_set_download(db, admin_client):
 
 
 def test_gene_set_download_synonymous_recurrent(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {
-        "geneSetsCollection": "denovo",
-        "geneSet": "Synonymous.Recurrent",
-        "geneSetsTypes": {
-            "f2_group": {
-                "phenotype": ["autism"]
+        'geneSetsCollection': 'denovo',
+        'geneSet': 'Synonymous.Recurrent',
+        'geneSetsTypes': {
+            'f2_group': {
+                'phenotype': ['autism']
             }
         }
     }
@@ -83,13 +78,13 @@ def test_gene_set_download_synonymous_recurrent(db, admin_client):
 
 
 def test_denovo_gene_set_not_found(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {
-        "geneSetsCollection": "denovo",
-        "geneSet": "Synonymous.BadBad",
-        "geneSetsTypes": {
-            "f1_group": {
-                "phenotype": ["autism"]
+        'geneSetsCollection': 'denovo',
+        'geneSet': 'Synonymous.BadBad',
+        'geneSetsTypes': {
+            'f1_group': {
+                'phenotype': ['autism']
             }
         }
     }
@@ -99,10 +94,10 @@ def test_denovo_gene_set_not_found(db, admin_client):
 
 
 def test_main_gene_set_not_found(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {
-        "geneSetsCollection": "main",
-        "geneSet": "BadBadName",
+        'geneSetsCollection': 'main',
+        'geneSet': 'BadBadName',
     }
     response = admin_client.post(
         url, json.dumps(query), content_type='application/json', format='json')
@@ -110,10 +105,10 @@ def test_main_gene_set_not_found(db, admin_client):
 
 
 def test_bad_gene_set_collection_not_found(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {
-        "geneSetsCollection": "BadBadName",
-        "geneSet": "BadBadName",
+        'geneSetsCollection': 'BadBadName',
+        'geneSet': 'BadBadName',
     }
     response = admin_client.post(
         url, json.dumps(query), content_type='application/json', format='json')
@@ -121,17 +116,17 @@ def test_bad_gene_set_collection_not_found(db, admin_client):
 
 
 def test_get_gene_set_download_synonymous_autism(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {
-        "geneSetsCollection": "denovo",
-        "geneSet": "Synonymous",
-        "geneSetsTypes": {
-            "f1_group": {
-                "phenotype": ["autism"]
+        'geneSetsCollection': 'denovo',
+        'geneSet': 'Synonymous',
+        'geneSetsTypes': {
+            'f1_group': {
+                'phenotype': ['autism']
             }
         }
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = '{}?{}'.format(url, urlencode(query))
     response = admin_client.get(request)
     assert status.HTTP_200_OK == response.status_code, repr(response.content)
     result = list(response.streaming_content)
@@ -141,17 +136,17 @@ def test_get_gene_set_download_synonymous_autism(db, admin_client):
 
 
 def test_get_gene_set_download_synonymous_recurrent(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {
-        "geneSetsCollection": "denovo",
-        "geneSet": "Synonymous.Recurrent",
-        "geneSetsTypes": {
-            "f2_group": {
-                "phenotype": ["autism"]
+        'geneSetsCollection': 'denovo',
+        'geneSet': 'Synonymous.Recurrent',
+        'geneSetsTypes': {
+            'f2_group': {
+                'phenotype': ['autism']
             }
         }
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = '{}?{}'.format(url, urlencode(query))
     response = admin_client.get(request)
     assert status.HTTP_200_OK == response.status_code, repr(response.content)
     result = list(response.streaming_content)
@@ -160,17 +155,17 @@ def test_get_gene_set_download_synonymous_recurrent(db, admin_client):
 
 
 def test_get_gene_set_download_synonymous_triple(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {
-        "geneSetsCollection": "denovo",
-        "geneSet": "Synonymous.Triple",
-        "geneSetsTypes": {
-            "f3_group": {
-                "phenotype": ["autism"]
+        'geneSetsCollection': 'denovo',
+        'geneSet': 'Synonymous.Triple',
+        'geneSetsTypes': {
+            'f3_group': {
+                'phenotype': ['autism']
             }
         }
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = '{}?{}'.format(url, urlencode(query))
     response = admin_client.get(request)
     assert status.HTTP_200_OK == response.status_code, repr(response.content)
     result = list(response.streaming_content)
@@ -179,58 +174,58 @@ def test_get_gene_set_download_synonymous_triple(db, admin_client):
 
 
 def test_get_denovo_gene_set_not_found(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {
-        "geneSetsCollection": "denovo",
-        "geneSet": "Synonymous.BadBad",
-        "geneSetsTypes": {
-            "f1_group": {
-                "phenotype": ["autism"]
+        'geneSetsCollection': 'denovo',
+        'geneSet': 'Synonymous.BadBad',
+        'geneSetsTypes': {
+            'f1_group': {
+                'phenotype': ['autism']
             }
         }
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = '{}?{}'.format(url, urlencode(query))
     response = admin_client.get(request)
     assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
 
 def test_get_main_gene_set_not_found(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {
-        "geneSetsCollection": "main",
-        "geneSet": "BadBadName",
+        'geneSetsCollection': 'main',
+        'geneSet': 'BadBadName',
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = '{}?{}'.format(url, urlencode(query))
     response = admin_client.get(request)
     assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
 
 def test_get_bad_gene_set_collection_not_found(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {
-        "geneSetsCollection": "BadBadName",
-        "geneSet": "BadBadName",
+        'geneSetsCollection': 'BadBadName',
+        'geneSet': 'BadBadName',
     }
-    request = "{}?{}".format(url, urlencode(query))
+    request = '{}?{}'.format(url, urlencode(query))
     response = admin_client.get(request)
     assert status.HTTP_404_NOT_FOUND == response.status_code, repr(response)
 
 
 def test_get_gene_set_collection_empty_query(db, admin_client):
-    url = "/api/v3/gene_sets/gene_set_download"
+    url = '/api/v3/gene_sets/gene_set_download'
     query = {}
-    request = "{}?{}".format(url, urlencode(query))
+    request = '{}?{}'.format(url, urlencode(query))
     response = admin_client.get(request)
     assert status.HTTP_400_BAD_REQUEST == response.status_code, repr(response)
 
 
 def test_gene_sets(db, admin_client):
-    url = "/api/v3/gene_sets/gene_sets"
+    url = '/api/v3/gene_sets/gene_sets'
     query = {
-        "geneSetsCollection": "denovo",
-        "geneSetsTypes": {
-            "f1_group": {
-                "phenotype": ["autism"]
+        'geneSetsCollection': 'denovo',
+        'geneSetsTypes': {
+            'f1_group': {
+                'phenotype': ['autism']
             }
         }
     }
@@ -242,7 +237,7 @@ def test_gene_sets(db, admin_client):
 
 
 def test_gene_sets_empty_query(db, admin_client):
-    url = "/api/v3/gene_sets/gene_sets"
+    url = '/api/v3/gene_sets/gene_sets'
     query = {}
     response = admin_client.post(
         url, json.dumps(query), content_type='application/json', format='json')
@@ -251,9 +246,9 @@ def test_gene_sets_empty_query(db, admin_client):
 
 
 def test_gene_sets_missing(db, admin_client):
-    url = "/api/v3/gene_sets/gene_sets"
+    url = '/api/v3/gene_sets/gene_sets'
     query = {
-        "geneSetsCollection": "BadBadName"
+        'geneSetsCollection': 'BadBadName'
     }
     response = admin_client.post(
         url, json.dumps(query), content_type='application/json', format='json')

@@ -1,16 +1,8 @@
-'''
-Created on Jul 12, 2018
-
-@author: lubo
-'''
 import pytest
 
 from dae.RegionOperations import Region
 
 from dae.utils.vcf_utils import mat2str
-from dae.variants.attributes import Inheritance
-
-from ..attributes_query import inheritance_query
 
 
 def test_f1_check_all_variants_effects(variants_vcf):

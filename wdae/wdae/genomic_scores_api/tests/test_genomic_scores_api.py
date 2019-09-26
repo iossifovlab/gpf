@@ -2,7 +2,7 @@ import pytest
 
 from rest_framework import status
 
-pytestmark = pytest.mark.usefixtures('mock_studies_manager')
+pytestmark = pytest.mark.usefixtures('mock_gpf_instance')
 
 
 def test_get_genomic_scores(user_client):

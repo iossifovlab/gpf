@@ -5,6 +5,7 @@ from collections import OrderedDict
 from dae.utils.effect_utils import EffectTypesMixin
 from dae.variants.family import Family
 
+
 class EffectCell(object):
 
     def __init__(self, study, denovo_variants, filter_object, effect):

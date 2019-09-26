@@ -22,12 +22,12 @@ def test_generate_all_common_reports(common_report_facade):
     assert len(common_report_facade._common_report_cache) == 4
 
 
-def test_get_common_report(common_report_facade):
+def test_get_common_report(generate_common_reports, common_report_facade):
     assert common_report_facade.get_common_report('Study1')
     assert common_report_facade.get_common_report('Study10') is None
 
 
-def test_get_all_common_reports(common_report_facade):
+def test_get_all_common_reports(generate_common_reports, common_report_facade):
     assert len(common_report_facade.get_all_common_reports()) == 4
 
 

@@ -14,30 +14,6 @@ import pandas as pd
 #     read_summary_from_parquet
 
 
-def save_annotation_to_csv(annot_df, filename, sep="\t"):
-    def convert_array_of_strings_to_string(a):
-        if not a:
-            return None
-        return RawVariantsLoader.SEP1.join(a)
-
-    vars_df = annot_df.copy()
-    vars_df['effect_gene_genes'] = vars_df['effect_gene_genes'].\
-        apply(convert_array_of_strings_to_string)
-    vars_df['effect_gene_types'] = vars_df['effect_gene_types'].\
-        apply(convert_array_of_strings_to_string)
-    vars_df['effect_details_transcript_ids'] = \
-        vars_df['effect_details_transcript_ids'].\
-        apply(convert_array_of_strings_to_string)
-    vars_df['effect_details_details'] = \
-        vars_df['effect_details_details'].\
-        apply(convert_array_of_strings_to_string)
-    vars_df.to_csv(
-        filename,
-        index=False,
-        sep=sep
-    )
-
-
 class VCFVariantWrapper(object):
     def __init__(self, v):
         self.v = v
@@ -85,8 +61,9 @@ class RawVariantsLoader(object):
     SEP2 = '|'
     SEP3 = ':'
 
-    def __init__(self, config):
+    def __init__(self, config, genomes_db):
         self.config = config
+        self.genomes_db = genomes_db
 
     def load_annotation(self, storage='csv'):
         assert self.config.annotation
@@ -97,7 +74,7 @@ class RawVariantsLoader(object):
         else:
             # TODO: add test for this
             from .builder import variants_builder
-            variants_builder(self.config.prefix)
+            variants_builder(self.config.prefix, self.genomes_db)
             return self.load_annotation_file(
                 self.config.annotation, storage=storage)
 
@@ -153,17 +130,6 @@ class RawVariantsLoader(object):
         #     return annot_df
         else:
             raise ValueError("unexpected input format: {}".format(storage))
-
-    @classmethod
-    def save_annotation_file(cls, annot_df, filename, sep='\t', storage='csv'):
-        assert storage == 'csv'
-        if storage == 'csv':
-            save_annotation_to_csv(annot_df, filename, sep)
-        # elif storage == 'parquet':
-        #     save_summary_to_parquet(annot_df, filename)
-        #     # vars_df.to_parquet(filename, engine='pyarrow')
-        else:
-            raise ValueError("unexpected output format: {}".format(storage))
 
     def load_vcf(self, region=None):
         assert self.config.vcf

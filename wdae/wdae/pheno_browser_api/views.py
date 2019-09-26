@@ -1,8 +1,3 @@
-'''
-Created on Apr 21, 2017
-
-@author: lubo
-'''
 import os
 import numpy as np
 
@@ -13,7 +8,7 @@ from rest_framework import status
 from django.conf import settings
 from django.http.response import HttpResponse
 
-from datasets_api.studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 from datasets_api.permissions import IsDatasetAllowed
 
@@ -23,7 +18,7 @@ from dae.pheno_browser.db import DbManager
 class PhenoBrowserBaseView(APIView):
 
     def __init__(self):
-        self.variants_db = get_studies_manager().get_variants_db()
+        self.variants_db = get_gpf_instance().variants_db
         self.pheno_config = self.variants_db.pheno_factory.config
 
     def get_cache_dir(self, dbname):

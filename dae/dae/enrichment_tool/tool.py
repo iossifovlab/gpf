@@ -1,9 +1,3 @@
-'''
-Created on Nov 8, 2016
-
-@author: lubo
-'''
-
 class EnrichmentTool(object):
 
     def __init__(self, config, background, event_counter):

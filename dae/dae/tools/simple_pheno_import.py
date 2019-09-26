@@ -12,7 +12,7 @@ from dae.pheno.common import default_config, dump_config, check_config_pheno_db
 from dae.pheno.prepare.ped_prepare import PrepareVariables
 from dae.tools.pheno2browser import build_pheno_browser
 
-from dae.configuration.dae_config_parser import DAEConfigParser
+from dae.gpf_instance.gpf_instance import GPFInstance
 from dae.pheno.utils.config import PhenoRegressionConfigParser
 
 
@@ -64,17 +64,28 @@ def pheno_cli_parser():
     return parser
 
 
+def verify_pheno_db_name(input_name):
+    pheno_db_name = os.path.normpath(input_name)
+    # check that the given pheno name is not a directory path
+    split_path = os.path.split(pheno_db_name)
+    assert not split_path[0], \
+        '"{}" is a directory path!'.format(pheno_db_name)
+    return pheno_db_name
+
+
 def generate_pheno_db_config(args):
     config = ConfigParser()
     config['phenoDB'] = {}
     section = config['phenoDB']
     section['name'] = args.pheno_name
-    section['dbfile'] = '%(wd)s' + os.path.basename(args.pheno_db_filename)
+    section['dbfile'] = os.path.join(
+        '%(wd)s', os.path.basename(args.pheno_db_filename))
     # TODO
     # Should the regression config be written to the pheno db config?
-    section['browser_dbfile'] = \
-        '%(wd)s/browser/{}_browser.db'.format(args.pheno_name)
-    section['browser_images_dir'] = '%(wd)s/browser/images'
+    section['browser_dbfile'] = os.path.join(
+        '%(wd)s', 'browser', '{}_browser.db'.format(args.pheno_name))
+    section['browser_images_dir'] = os.path.join(
+        '%(wd)s', 'browser', 'images')
     section['browser_images_url'] = \
         '/static/{}/browser/images/'.format(args.pheno_name)
     return config
@@ -100,7 +111,8 @@ def main(argv):
     try:
         # Setup argument parser
 
-        dae_conf = DAEConfigParser.read_and_parse_file_configuration()
+        gpf_instance = GPFInstance()
+        dae_conf = gpf_instance.dae_config
 
         parser = pheno_cli_parser()
         args = parser.parse_args(argv)
@@ -113,6 +125,8 @@ def main(argv):
         if args.pheno_name is None:
             print("missing pheno db name", sys.stderr)
             raise ValueError()
+
+        args.pheno_name = verify_pheno_db_name(args.pheno_name)
 
         pheno_db_dir = os.path.join(
             dae_conf.pheno_db.dir,

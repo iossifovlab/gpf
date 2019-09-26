@@ -1,11 +1,6 @@
-'''
-Created on Apr 24, 2017
-
-@author: lubo
-'''
 from collections import Counter, defaultdict
 
-from dae.variants.attributes import Inheritance, Role
+from dae.variants.attributes import Inheritance
 from dae.variants.family import Family
 
 
@@ -45,7 +40,8 @@ class GenotypeHelper(object):
                 if iid in seen:
                     continue
 
-                if p.get_attr(self.people_group.source) != self.people_group_value:
+                if p.get_attr(self.people_group.source) != \
+                        self.people_group_value:
                     continue
 
                 self._children_by_sex[p.sex.name].add(p.person_id)
@@ -55,7 +51,6 @@ class GenotypeHelper(object):
     def get_children_stats(self):
         if self._children_stats is not None:
             return self._children_stats
-        seen = set()
         counter = Counter()
         persons_by_sex = self.children_by_sex()
         for sex, persons in persons_by_sex.items():

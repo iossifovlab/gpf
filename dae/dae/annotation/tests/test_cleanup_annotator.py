@@ -3,15 +3,15 @@ from box import Box
 from dae.annotation.tools.cleanup_annotator import CleanupAnnotator
 from dae.annotation.tools.annotator_config import AnnotationConfigParser
 
-expected_cleanup_output = """location
+expected_cleanup_output = '''location
 4:4372372973
 10:4372372973
 X:4372
 Y:4372
-"""
+'''
 
 
-def test_cleanup_annotator(capsys, variants_io):
+def test_cleanup_annotator(capsys, variants_io, genomes_db):
     opts = Box({}, default_box=True, default_box_attr=None)
 
     section_config = AnnotationConfigParser.parse_section(
@@ -21,7 +21,8 @@ def test_cleanup_annotator(capsys, variants_io):
                 'cleanup': 'id, variant',
             },
             'annotator': 'cleanup_annotator.CleanupAnnotator'
-        })
+        }),
+        genomes_db
     )
 
     with variants_io('fixtures/input.tsv') as io_manager:

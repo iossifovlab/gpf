@@ -45,7 +45,7 @@ def test_regions_non_intersecting():
 
 def test_load_config():
     score_filename = relative_to_this_test_folder(
-        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+        'fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz')
     config_filename = \
         relative_to_this_test_folder('fixtures/sample_score_config.conf')
 
@@ -67,16 +67,16 @@ def test_tabix_threshold_values():
 
 def test_line_adapter(score_file):
     score_filename = relative_to_this_test_folder(
-        "fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz")
+        'fixtures/TESTphastCons100way/TESTphastCons100way.bedGraph.gz')
 
     score_file = ScoreFile(score_filename)
     assert score_file is not None
 
-    line = LineAdapter(score_file, ["1", "10", "20", "1", "10", "20", "30"])
+    line = LineAdapter(score_file, ['1', '10', '20', '1', '10', '20', '30'])
     assert line.pos_begin == 10
 
 
-@pytest.mark.parametrize("access_type", ['sequential', 'direct'])
+@pytest.mark.parametrize('access_type', ['sequential', 'direct'])
 def test_tabix_accessors_simple(score_file, access_type):
     if access_type == 'sequential':
         res = score_file.accessor._fetch_sequential('1', 10918, 10920)
@@ -98,7 +98,7 @@ def test_tabix_sequential_access_reset_backward(score_file, mocker):
             res[0][2] >= check_pos
 
     assert score_file.accessor._region_reset.call_count == 2
-    score_file.accessor._region_reset.assert_called_with("1:20001")
+    score_file.accessor._region_reset.assert_called_with('1:20001')
 
 
 def test_tabix_sequential_access_reset_different_chrom(score_file, mocker):
@@ -111,7 +111,7 @@ def test_tabix_sequential_access_reset_different_chrom(score_file, mocker):
             res[0][2] >= check_pos
 
     assert score_file.accessor._region_reset.call_count == 2
-    score_file.accessor._region_reset.assert_called_with("2:20001")
+    score_file.accessor._region_reset.assert_called_with('2:20001')
 
 
 def test_tabix_sequential_access_reset_long_jump_ahead(score_file, mocker):
@@ -124,13 +124,13 @@ def test_tabix_sequential_access_reset_long_jump_ahead(score_file, mocker):
             res[0][2] >= check_pos
 
     assert score_file.accessor._region_reset.call_count == 2
-    score_file.accessor._region_reset.assert_called_with("1:20005")
+    score_file.accessor._region_reset.assert_called_with('1:20005')
 
 
-@pytest.mark.parametrize("chrom,pos_start,pos_end,count", [
-    ("7", 20000, 20000, 1),
-    ("7", 19999, 20000, 1),
-    ("7", 19999, 20005, 5),
+@pytest.mark.parametrize('chrom,pos_start,pos_end,count', [
+    ('7', 20000, 20000, 1),
+    ('7', 19999, 20000, 1),
+    ('7', 19999, 20005, 5),
 ])
 def test_tabix_sequential_access_na_values(score_file, chrom,
                                            pos_start, pos_end, count):

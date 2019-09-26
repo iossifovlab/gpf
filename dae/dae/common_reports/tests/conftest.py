@@ -4,12 +4,10 @@ import os
 from box import Box
 from copy import deepcopy
 
-from dae.studies.variants_db import VariantsDb
-from dae.configuration.dae_config_parser import DAEConfigParser
-
 from dae.common_reports.filter import Filter, FilterObject, FilterObjects
 from dae.common_reports.people_group_info import PeopleGroupsInfo
-from dae.common_reports.common_report_facade import CommonReportFacade
+
+from dae.gpf_instance.gpf_instance import GPFInstance
 
 
 def fixtures_dir():
@@ -27,94 +25,91 @@ def datasets_dir():
         os.path.join(os.path.dirname(__file__), 'fixtures/datasets'))
 
 
-@pytest.fixture(scope='session')
-def dae_config_fixture():
-    dae_config = DAEConfigParser.read_and_parse_file_configuration(
-        work_dir=fixtures_dir())
-    return dae_config
+@pytest.fixture(scope='function')
+def gpf_instance(mock_genomes_db):
+    gpf_instance = GPFInstance(work_dir=fixtures_dir())
+
+    return gpf_instance
 
 
-@pytest.fixture(scope='session')
-def vdb_fixture(dae_config_fixture):
-    vdb = VariantsDb(dae_config_fixture)
-    return vdb
+@pytest.fixture(scope='function')
+def vdb_fixture(gpf_instance):
+    return gpf_instance.variants_db
 
 
-@pytest.fixture(scope='session')
-def common_report_facade(vdb_fixture):
-    common_report_facade = CommonReportFacade(vdb_fixture)
-
-    return common_report_facade
+@pytest.fixture(scope='function')
+def common_report_facade(gpf_instance):
+    return gpf_instance.common_report_facade
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def study1(vdb_fixture):
     return vdb_fixture.get_study_wdae_wrapper("Study1")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def study2(vdb_fixture):
     return vdb_fixture.get_study_wdae_wrapper("Study2")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def study4(vdb_fixture):
     return vdb_fixture.get_study_wdae_wrapper("study4")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def dataset1(vdb_fixture):
     return vdb_fixture.get_dataset_wdae_wrapper("Dataset1")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def study1_config(vdb_fixture):
     return vdb_fixture.get_study_config("Study1")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def dataset2_config(vdb_fixture):
     return vdb_fixture.get_dataset_config("Dataset2")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def dataset3_config(vdb_fixture):
     return vdb_fixture.get_dataset_config("Dataset3")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def dataset4_config(vdb_fixture):
     return vdb_fixture.get_dataset_config("Dataset4")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def groups():
     return {
         'Role and Diagnosis': ['role', 'phenotype']
     }
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def selected_people_groups(groups):
     return ['phenotype']
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def people_groups(study1_config):
     return study1_config.people_group_config.people_group
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def people_groups_info(study1, selected_people_groups, people_groups):
     return PeopleGroupsInfo(study1, selected_people_groups, people_groups)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def filter_role():
     return Filter('role', 'mom', column_value='Mother')
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def filter_people_group():
     return Filter('phenotype', 'pheno', column_value='Pheno')
 
@@ -124,18 +119,18 @@ def filter_object(filter_role):
     return FilterObject([filter_role])
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def filter_objects(study1, people_groups_info, groups):
     return FilterObjects.get_filter_objects(study1, people_groups_info, groups)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def families_groups(study1):
     return [study1.families['f4'], study1.families['f5'],
             study1.families['f7'], study1.families['f8']]
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def denovo_variants_ds1(dataset1):
     denovo_variants = dataset1.query_variants(
         limit=None,
@@ -148,7 +143,7 @@ def denovo_variants_ds1(dataset1):
     return denovo_variants
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 def common_reports_config(
         study1, study1_config, people_groups, selected_people_groups, groups):
     common_report_config = \
@@ -169,7 +164,12 @@ def common_reports_config(
     )
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='function')
+def generate_common_reports(common_report_facade):
+    common_report_facade.generate_all_common_reports()
+
+
+@pytest.fixture(scope='function')
 def remove_common_reports(common_report_facade):
     all_configs = common_report_facade.get_all_common_report_configs()
     temp_files = [config.file_path for config in all_configs]

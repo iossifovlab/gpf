@@ -1,11 +1,15 @@
 #!/bin/env python
-from DAE import genomesDB
+
 import re
 import sys
 import csv
 
-GA = genomesDB.get_genome()
-gmDB = genomesDB.get_gene_models()
+from dae.gpf_instance.gpf_instance import GPFInstance
+
+gpf_instance = GPFInstance()
+genomes_db = gpf_instance.genomes_db
+
+GENOME = genomes_db.get_genome()
 
 subRE = re.compile(r'^sub\(([ACGT])->([ACGT])\)$')
 insRE = re.compile(r'^ins\(([ACGT]+)\)$')
@@ -13,24 +17,24 @@ delRE = re.compile(r'^del\((\d+)\)$')
 
 
 def vcfVarFormat(loc, var):
-    chr, pos = loc.split(":")
+    chrom, pos = loc.split(":")
     pos = int(pos)
 
     mS = subRE.match(var)
     if mS:
-        return chr, pos, mS.group(1), mS.group(2)
+        return chrom, pos, mS.group(1), mS.group(2)
 
     mI = insRE.match(var)
     if mI:
         sq = mI.group(1)
-        rfS = GA.getSequence(chr, pos-1, pos-1)
-        return chr, pos-1, rfS, rfS+sq
+        rfS = GENOME.getSequence(chrom, pos-1, pos-1)
+        return chrom, pos-1, rfS, rfS+sq
 
     mD = delRE.match(var)
     if mD:
         ln = int(mD.group(1))
-        rfS = GA.getSequence(chr, pos - 1, pos + ln - 1)
-        return chr, pos-1, rfS, rfS[0]
+        rfS = GENOME.getSequence(chrom, pos - 1, pos + ln - 1)
+        return chrom, pos-1, rfS, rfS[0]
 
     raise Exception('weird variant:' + var)
 

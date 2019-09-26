@@ -220,7 +220,8 @@ class PositionMultiScoreAnnotator(CompositeVariantAnnotator):
                 'options': options,
                 'columns': columns,
                 'annotator': 'score_annotator.VariantScoreAnnotator'
-            })
+            }),
+            self.config.genomes_db
         )
 
         annotator = PositionScoreAnnotator(variant_config)

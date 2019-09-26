@@ -1,8 +1,3 @@
-'''
-Created on Feb 17, 2017
-
-@author: lubo
-'''
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
@@ -14,7 +9,7 @@ from .enrichment_serializer import EnrichmentSerializer
 
 from users_api.authentication import SessionAuthenticationWithoutCSRF
 
-from datasets_api.studies_manager import get_studies_manager
+from gpf_instance.gpf_instance import get_gpf_instance
 
 from dae.utils.gene_utils import GeneSymsMixin
 
@@ -33,7 +28,7 @@ LOGGER = logging.getLogger(__name__)
 class EnrichmentModelsView(APIView):
 
     def __init__(self):
-        self.background_facade = get_studies_manager().get_background_facade()
+        self.background_facade = get_gpf_instance().background_facade
 
     def get_from_config(self, dataset_id, key):
         enrichment_config = \
@@ -62,10 +57,10 @@ class EnrichmentTestView(APIView):
     authentication_classes = (SessionAuthenticationWithoutCSRF, )
 
     def __init__(self):
-        self.variants_db = get_studies_manager().get_variants_db()
-        self.background_facade = get_studies_manager().get_background_facade()
+        self.variants_db = get_gpf_instance().variants_db
+        self.background_facade = get_gpf_instance().background_facade
 
-        self.gene_info_config = get_studies_manager().get_gene_info_config()
+        self.gene_info_config = get_gpf_instance().gene_info_config
 
     def enrichment_description(self, query):
         gene_set = query.get('geneSet')

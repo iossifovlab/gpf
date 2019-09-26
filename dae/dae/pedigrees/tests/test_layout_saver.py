@@ -53,7 +53,8 @@ def test_save(
         return open(name, *args, **kwargs) if name != output_filename else name
 
     with mocker.patch(
-            dae.pedigrees.layout_saver.__name__ + '.open', side_effect=new_open):
+        dae.pedigrees.layout_saver.__name__ + '.open',
+            side_effect=new_open):
         # o.
         with mocker.patch(
                 'csv.DictWriter',

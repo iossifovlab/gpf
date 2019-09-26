@@ -1,4 +1,3 @@
-
 from box import Box
 
 from dae.annotation.annotation_pipeline import PipelineAnnotator
@@ -7,26 +6,25 @@ from dae.annotation.tools.file_io_parquet import ParquetSchema
 from .conftest import relative_to_this_test_folder
 
 
-def test_pipeline_schema():
-    filename = relative_to_this_test_folder(
-        "fixtures/import_annotation.conf")
+def test_pipeline_schema(genomes_db):
+    filename = relative_to_this_test_folder('fixtures/import_annotation.conf')
 
     options = Box({
-            "default_arguments": None,
-            "vcf": True,
-            "mode": "overwrite",
+            'default_arguments': None,
+            'vcf': True,
+            'mode': 'overwrite',
         },
         default_box=True,
         default_box_attr=None)
 
-    work_dir = relative_to_this_test_folder("fixtures/")
+    work_dir = relative_to_this_test_folder('fixtures/')
 
     pipeline = PipelineAnnotator.build(
-        options, filename, work_dir,
-        defaults={'values': {"fixtures_dir": work_dir}}
+        options, filename, work_dir, genomes_db,
+        defaults={'values': {'fixtures_dir': work_dir}}
     )
     assert pipeline is not None
-    # print("pipeline annotators:", len(pipeline.annotators))
+    # print('pipeline annotators:', len(pipeline.annotators))
 
     schema = ParquetSchema()
     pipeline.collect_annotator_schema(schema)

@@ -1,8 +1,3 @@
-'''
-Created on Mar 5, 2018
-
-@author: lubo
-'''
 import re
 
 SUB_COMPLEX_RE = re.compile(r'^(sub|complex)\(([NACGT]+)->([NACGT]+)\)$')
@@ -10,11 +5,7 @@ INS_RE = re.compile(r'^ins\(([NACGT]+)\)$')
 DEL_RE = re.compile(r'^del\((\d+)\)$')
 
 
-def dae2vcf_variant(chrom, position, var, genome=None):
-    if genome is None:
-        from dae.DAE import genomesDB
-        genome = genomesDB.get_genome()
-
+def dae2vcf_variant(chrom, position, var, genome):
     match = SUB_COMPLEX_RE.match(var)
     if match:
         return position, match.group(2), match.group(3)
@@ -59,6 +50,4 @@ def join_line(l, sep='\t'):
 
 
 def members_in_order_get_family_structure(mio):
-    return "".join([
-        "{}{}".format(p.role.name, p.sex.short()) for p in mio
-    ])
+    return ''.join([f'{p.role.name}{p.sex.short()}' for p in mio])

@@ -1,6 +1,6 @@
 
-from dae.pedigrees.pedigrees import FamilyConnections, MatingUnit, SibshipUnit, \
-    Individual
+from dae.pedigrees.pedigrees import FamilyConnections, MatingUnit, \
+    SibshipUnit, Individual
 from dae.variants.attributes import Role, Sex
 
 NO_RANK = -3673473456
