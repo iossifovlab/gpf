@@ -126,3 +126,14 @@ ____________
 This property defines a list of effect types for the enrichment tool groups.
 The effect types are part of the variants query. Possible options for effect
 types are listed :ref:`here <allowed_values_gene_effect_types>`.
+
+enabled
+_______
+
+.. code-block:: ini
+
+  enabled = <boolean>
+
+This property enables the enrichment functionality for the study. This
+property takes a :ref:`boolean <allowed_values_booleans>` value.
+
