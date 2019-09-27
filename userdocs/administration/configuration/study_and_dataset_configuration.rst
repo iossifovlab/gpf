@@ -14,3 +14,4 @@ Study and Dataset Configuration
    study_and_dataset_section/genotype_browser_section
    study_and_dataset_section/common_report_section
    study_and_dataset_section/denovo_gene_sets_section
+   study_and_dataset_section/enrichment
