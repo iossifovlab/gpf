@@ -4,12 +4,13 @@ Common Reports Section
 ======================
 
 The configuration section for a common report follows the general INI format
-and must properly describe a common report for a single study.
+and must properly describe a common report for a single study. Its name must be
+``commonReport`` - this will indicate that it is a common report section.
 
 [commonReport]
 --------------
 
-Down below are are explained proprties of this section.
+Down below are explained proprties of this section.
 
 peopleGroups
 ____________
@@ -110,5 +111,5 @@ _______
 
   enabled = <boolean>
 
-This property enables the common report functionality for the study.
-This property takes a :ref:`boolean <allowed_values_booleans>` value.
+This property enables the common report functionality for the study. This
+property takes a :ref:`boolean <allowed_values_booleans>` value.
