@@ -183,6 +183,9 @@ class PhenoTool(object):
     def _normalize_df(df, measure_id, normalize_by=[]):
         assert not df.empty
 
+        assert measure_id in df
+        assert all([measure_id in df for measure_id in normalize_by])
+
         if not normalize_by:
             dn = pd.Series(
                 index=df.index, data=df[measure_id].values)

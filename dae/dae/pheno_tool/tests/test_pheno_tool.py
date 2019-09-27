@@ -201,6 +201,28 @@ def test_normalize_df_no_normalize_by():
     assert pd.DataFrame.equals(normalized, expected)
 
 
+def test_normalize_df_does_not_contain_measure_id():
+    pheno_df = pd.DataFrame([{'person_id': 112233, 'i1.m2': 1e6,
+                              'i1.m3': 1e3},
+                             {'person_id': 445566, 'i1.m2': 2e12,
+                              'i1.m3': 1e-3}],
+                            columns=['person_id', 'i1.m2', 'i1.m3'])
+
+    with pytest.raises(AssertionError):
+        PhenoTool._normalize_df(pheno_df, 'i1.m1', normalize_by=['i1.m2'])
+
+
+def test_normalize_df_does_not_contain_normalize_measure_id():
+    pheno_df = pd.DataFrame([{'person_id': 112233, 'i1.m1': 1e6,
+                              'i1.m2': 1e3},
+                             {'person_id': 445566, 'i1.m1': 2e12,
+                              'i1.m2': 1e-3}],
+                            columns=['person_id', 'i1.m1', 'i1.m2'])
+
+    with pytest.raises(AssertionError):
+        PhenoTool._normalize_df(pheno_df, 'i1.m1', normalize_by=['i1.m3'])
+
+
 def test_calc_base_stats():
     count, mean, std = PhenoTool._calc_base_stats(
         [1, 2, 3, 4, 5, 6, 7, 8, 9])
