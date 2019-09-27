@@ -74,7 +74,7 @@ class PhenoToolView(APIView):
         tool = PhenoTool(
             helper.study.pheno_db,
             measure_id=data['measureId'],
-            person_ids_=person_ids,
+            person_ids=person_ids,
             normalize_by=data['normalizeBy']
         )
         return helper, tool
