@@ -148,21 +148,18 @@ def generate_study_config(dae_config, study_id, output):
 def generate_common_report(gpf_instance, study_id):
     from dae.tools.generate_common_report import main
     argv = ['--studies', study_id]
-    main(gpf_instance, argv)
+    main(gpf_instance=gpf_instance, argv=argv)
 
 
 def generate_denovo_gene_sets(gpf_instance, study_id):
     from dae.tools.generate_denovo_gene_sets import main
     argv = ['--studies', study_id]
-
-    main(gpf_instance, argv)
+    main(gpf_instance=gpf_instance, argv=argv)
 
 
 if __name__ == "__main__":
     gpf_instance = GPFInstance()
     dae_config = gpf_instance.dae_config
-    genomes_db = gpf_instance.genomes_db
-    genome = genomes_db.get_genome()
 
     argv = parse_cli_arguments(sys.argv[1:])
     if argv.id is not None:
@@ -181,6 +178,8 @@ if __name__ == "__main__":
 
     assert argv.vcf is not None or argv.denovo is not None
 
+    genomes_db = gpf_instance.genomes_db
+    genome = genomes_db.get_genome()
     annotation_pipeline = construct_import_annotation_pipeline(
         dae_config, genomes_db, argv)
 
@@ -213,16 +212,19 @@ if __name__ == "__main__":
     impala_load_study(dae_config, study_id, output)
 
     if not argv.skip_reports:
+        # needs to reload the configuration, hence gpf_instance=None
+        gpf_instance_reload = GPFInstance()
+
         print("generating common reports...", file=sys.stderr)
         start = time.time()
-        generate_common_report(gpf_instance, study_id)
+        generate_common_report(gpf_instance_reload, study_id)
         print("DONE: generating common reports in {:.2f} sec".format(
             time.time() - start
             ), file=sys.stderr)
 
         print("generating de Novo gene sets...", file=sys.stderr)
         start = time.time()
-        generate_denovo_gene_sets(gpf_instance, study_id)
+        generate_denovo_gene_sets(gpf_instance_reload, study_id)
         print("DONE: generating de Novo gene sets in {:.2f} sec".format(
             time.time() - start
             ), file=sys.stderr)
