@@ -1,14 +1,18 @@
 .. _common_report_section:
 
-[commonReport]
-==============
+Common Reports Section
+======================
 
 The configuration section for a common report follows the general INI format
-and must properly describe a common report for a single study. Its properties
-are explained below.
+and must properly describe a common report for a single study.
+
+[commonReport]
+--------------
+
+Down below are are explained proprties of this section.
 
 peopleGroups
-------------
+____________
 
 .. code-block:: ini
 
@@ -20,7 +24,7 @@ which people groups to generate the ``Families by pedigree`` part of common
 report.
 
 groups
-------
+______
 
 .. code-block:: ini
 
@@ -35,7 +39,7 @@ This property defines the common report groups for the ``Families by number``
 and ``De Novo Variants`` sections.
 
 effect_groups
--------------
+_____________
 
 .. code-block:: ini
 
@@ -47,7 +51,7 @@ query. Possible options for the effect groups and effect types that they
 contain are listed :ref:`here <allowed_values_gene_effect_groups>`.
 
 effect_types
-------------
+____________
 
 .. code-block:: ini
 
@@ -59,7 +63,7 @@ Possible options for effect types are listed
 :ref:`here <allowed_values_gene_effect_types>`.
 
 draw_all_families
------------------
+_________________
 
 .. code-block:: ini
 
@@ -76,7 +80,7 @@ DEFAULT
     print(f'``{CommonReportsConfigParser.DRAW_ALL_FAMILIES_DEFAULT}``')
 
 families_count_show_id
-----------------------
+______________________
 
 .. code-block:: ini
 
@@ -88,7 +92,7 @@ of all family ids. Other family pedigrees will only have the amount of such
 families displayed. This property takes an integer value.
 
 file_path
----------
+_________
 
 .. code-block:: ini
 
@@ -100,7 +104,7 @@ DEFAULT
   ``<directory of the config file>/common_report.json``
 
 enabled
--------
+_______
 
 .. code-block:: ini
 
