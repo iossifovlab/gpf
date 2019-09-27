@@ -4,4 +4,4 @@ GPF Development
 .. toctree::
    :maxdepth: 3
 
-   gpf/DAE/docs/index
+   ../gpf/dae/dae/docs/index
