@@ -162,7 +162,25 @@ def construct_import_annotation_pipeline(
     options = Box(options, default_box=True, default_box_attr=None)
 
     annotation_defaults = {'values': dae_config.annotation_defaults}
-    annotation_defaults.update(defaults)
+
+    def recursive_dict_update(input_dict, updater_dict):
+        # FIXME !
+        # This method cannot handle nested dictionaries
+        # that hold a reference to the dictionary that
+        # contains them. If such a dictionary is given
+        # to this function, it will reach the maximum
+        # recursion depth.
+
+        result_dict = dict(input_dict)
+        for key, val in updater_dict.items():
+            if key in result_dict and type(val) is dict:
+                result_dict[key] = recursive_dict_update(
+                    result_dict[key], updater_dict[key])
+            else:
+                result_dict[key] = updater_dict[key]
+        return result_dict
+
+    annotation_defaults = recursive_dict_update(annotation_defaults, defaults)
 
     pipeline = PipelineAnnotator.build(
         options, config_filename, dae_config.dae_data_dir, genomes_db,
