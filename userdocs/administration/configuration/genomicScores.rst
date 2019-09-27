@@ -19,7 +19,7 @@ ______
   scores = <genomic score id 1>,<genomic score id 2>,<...>
 
 A comma-separated list of selected genomic scores. If this property is missing
-then all deffind scores in this file are selected.
+then all defined scores in this file are selected.
 
 [genomicScores.<score id>]
 ----------------------------

@@ -41,7 +41,7 @@ ________________________
   selectedBackgroundValues = <comma-separated list of background ids>
 
 A comma-separated list of selected background models. If this property is
-missing then all deffind background models in this section are selected.
+missing then all defined background models in this section are selected.
 
 background.<background model id>.file
 _____________________________________
@@ -93,7 +93,7 @@ ______________________
   selectedCountingValues = <comma-separated list of counting ids>
 
 A comma-separated list of selected countings. If this property is missing then
-all deffind countings in this section are selected.
+all defined countings in this section are selected.
 
 counting.<counting id>.name
 ___________________________

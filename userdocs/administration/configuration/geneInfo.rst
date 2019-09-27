@@ -74,7 +74,7 @@ ___________
   weights = <gene weight id 1>,<gene weight id 2>,<...>
 
 A comma-separated list of selected gene weights. If this property is missing
-then all deffind weights with section name ``[geneWeights.<gene weight id>]``
+then all defined weights with section name ``[geneWeights.<gene weight id>]``
 in this file are selected.
 
 [geneWeights.<gene weight id>]

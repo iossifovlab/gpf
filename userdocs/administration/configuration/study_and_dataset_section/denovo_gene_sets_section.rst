@@ -65,5 +65,5 @@ _______
 
   enabled = <boolean>
 
-This property enables the common report functionality for the study. This
+This property enables the denovo gene sets functionality for the study. This
 property takes a :ref:`boolean <allowed_values_booleans>` value.
