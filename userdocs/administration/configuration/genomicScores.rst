@@ -16,12 +16,12 @@ ______
 
 .. code-block:: ini
 
-  scores = {genomic score id 1},{genomic score id 2},{...}
+  scores = <genomic score id 1>,<genomic score id 2>,<...>
 
 A comma-separated list of selected genomic scores. If this property is missing
 then all deffind scores in this file are selected.
 
-[genomicScores.{score id}]
+[genomicScores.<score id>]
 ----------------------------
 
 id
@@ -29,9 +29,9 @@ __
 
 .. code-block:: ini
 
-  id = {genomic score identifier}
+  id = <genomic score identifier>
 
-Identifier of the genomic score. Default value is {score id} from the score
+Identifier of the genomic score. Default value is <score id> from the score
 section.
 
 file
@@ -39,7 +39,7 @@ ____
 
 .. code-block:: ini
 
-  file = {path to genomic score histogram file}
+  file = <path to genomic score histogram file>
 
 The absolute path to the score's histogram file.
 
@@ -48,7 +48,7 @@ ____
 
 .. code-block:: ini
 
-  desc = {description}
+  desc = <description>
 
 A brief description of the genomic score.
 
@@ -57,7 +57,7 @@ ____
 
 .. code-block:: ini
 
-  bins = {amount of bins}
+  bins = <amount of bins>
 
 The amount of bins in the score's histogram. The value must be an integer.
 
@@ -66,7 +66,7 @@ ______
 
 .. code-block:: ini
 
-  yscale = {linear / log}
+  yscale = <linear / log>
 
 The scale for the Y axis of the score's histogram.
 
@@ -75,7 +75,7 @@ ______
 
 .. code-block:: ini
 
-  xscale = {linear / log}
+  xscale = <linear / log>
 
 The scale for the X axis of the score's histogram.
 
@@ -84,16 +84,16 @@ _____
 
 .. code-block:: ini
 
-  range = {min value},{max value}
+  range = <<min value>,<max value>>
 
-The range domain of the score - its lowest and largest possible
-values separated by a comma.
+The range domain of the score - its lowest and largest possible values
+separated by a comma.
 
 help_file
 _________
 
 .. code-block:: ini
 
-  help_file = {path to help file}
+  help_file = <path to help file>
 
 The absolute path to the score's help file in markdown format.

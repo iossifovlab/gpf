@@ -1,3 +1,5 @@
+.. _default_section:
+
 DEFAULT Section
 ===============
 

@@ -18,7 +18,7 @@ ____
 
 .. code-block:: ini
 
-  name = {pheno db name}
+  name = <pheno db name>
 
 This is the unique name of the phenotype database. It can be used in the
 configuration files of studies and datasets to attach the phenotype
@@ -29,7 +29,7 @@ ______
 
 .. code-block:: ini
 
-  dbfile = {sqlite3 pheno db path}
+  dbfile = <sqlite3 pheno db path>
 
 The path to the SQLite3 phenotype database file, relative to the
 configuration file.
@@ -39,7 +39,7 @@ ______________
 
 .. code-block:: ini
 
-  browser_dbfile = {sqlite3 pheno browser db path}
+  browser_dbfile = <sqlite3 pheno browser db path>
 
 The path to the SQLite3 phenotype **browser** database file, relative to the
 configuration file.
@@ -49,7 +49,7 @@ __________________
 
 .. code-block:: ini
 
-  browser_images_dir = {images directory path}
+  browser_images_dir = <images directory path>
 
 The path to the directory containing the measure images for the browser,
 relative to the configuration file.
@@ -59,7 +59,7 @@ __________________
 
 .. code-block:: ini
 
-  browser_images_url = /static/{images directory path}/
+  browser_images_url = /static/<images directory path>/
 
 The path to the directory containing the measure images for the browser,
 relative to the *static root directory*. The trailing slash is required.

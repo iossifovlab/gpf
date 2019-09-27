@@ -1,3 +1,5 @@
+.. _common_report_section:
+
 [commonReport]
 ==============
 
@@ -10,18 +12,19 @@ peopleGroups
 
 .. code-block:: ini
 
-  peopleGroups = {comma-separated list of people groups}
+  peopleGroups = <comma-separated list of people groups>
 
 ``peopleGroups`` is a comma-separated list of ids of people groups (defined in
-the :ref:`peopleGroup` section in the study config), indicating for which
-people groups to generate the ``Families by pedigree`` part of common report.
+the :ref:`people_group_section` section in the study config), indicating for
+which people groups to generate the ``Families by pedigree`` part of common
+report.
 
 groups
 ------
 
 .. code-block:: ini
 
-  groups = {<column1>,<column2>:<name of common report group>|<column3>:<name of common report group>}
+  groups = <<column1>,<column2>:<name of common report group>|<column3>:<name of common report group>>
 
 The format of this property is a list of common report groups separated by
 ``|``. Each group is composed of two parts, separated by ``:`` - the first part
@@ -36,7 +39,7 @@ effect_groups
 
 .. code-block:: ini
 
-  effect_groups = {comma-separated list of effect groups}
+  effect_groups = <comma-separated list of effect groups>
 
 This property defines a list of effect groups for the ``De Novo Variants``
 section of the common report. The effect groups are part of the variants
@@ -48,7 +51,7 @@ effect_types
 
 .. code-block:: ini
 
-  effect_types = {comma-separated list of effect types}
+  effect_types = <comma-separated list of effect types>
 
 This property defines a list of effect types for the ``De Novo Variants``
 section of the common report. The effect types are part of the variants query.
@@ -60,7 +63,7 @@ draw_all_families
 
 .. code-block:: ini
 
-  draw_all_families = {boolean}
+  draw_all_families = <boolean>
 
 This property defines whether to draw all families in the
 ``Families by pedigree`` section of the common report. This property takes
@@ -77,7 +80,7 @@ families_count_show_id
 
 .. code-block:: ini
 
-  families_count_show_id = {max amount of family pedigrees with a family ids list}
+  families_count_show_id = <max amount of family pedigrees with a family ids list>
 
 This property defines the maximum number of family pedigrees in the
 ``Families by number`` section of the common report for which to display a list
@@ -89,19 +92,19 @@ file_path
 
 .. code-block:: ini
 
-  file_path = {string}
+  file_path = <string>
 
 This property difines file path of the common report file.
 
 DEFAULT
-  ``{directory of the config file}/common_report.json``
+  ``<directory of the config file>/common_report.json``
 
 enabled
 -------
 
 .. code-block:: ini
 
-  enabled = {boolean}
+  enabled = <boolean>
 
 This property enables the common report functionality for the study.
 This property takes a :ref:`boolean <allowed_values_booleans>` value.
