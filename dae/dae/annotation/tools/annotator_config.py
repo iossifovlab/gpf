@@ -1,6 +1,13 @@
 from dae.configuration.config_parser_base import ConfigParserBase
 
 
+def verify_bool(inp_val):
+    if type(inp_val) is bool:
+        return inp_val
+    else:
+        return ConfigParserBase._str_to_bool(inp_val)
+
+
 def annotation_config_cli_options(gpf_instance):
     options = [
         ('--annotation', {
@@ -100,6 +107,13 @@ class AnnotationConfigParser(ConfigParserBase):
     def parse_section(cls, config_section, genomes_db):
         assert 'annotator' in config_section, config_section
 
+        # TODO Fix this!
+        # Keep this before calling _setup_defaults
+        # This is a bit of a hack right now, since _setup_defaults
+        # needs the options to have been parsed properly
+        config_section.options = AnnotationOptionsSectionParser.parse_section(
+            config_section.get('options', {}))
+
         config_section = cls._setup_defaults(config_section, genomes_db)
 
         config_section = \
@@ -153,6 +167,15 @@ class AnnotationConfigParser(ConfigParserBase):
         assert config.gene_models is not None
 
         return config
+
+
+class AnnotationOptionsSectionParser(ConfigParserBase):
+
+    # TODO
+    # very hacky, fix asap
+    VERIFY_VALUES = {
+        'vcf': verify_bool
+    }
 
 
 class ScoreFileConfigParser(ConfigParserBase):

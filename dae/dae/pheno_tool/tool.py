@@ -104,14 +104,14 @@ class PhenoTool(object):
 
     `measure_id` -- a phenotype measure ID
 
-    `person_ids_` -- an optional list of person IDs to filter the phenotype
+    `person_ids` -- an optional list of person IDs to filter the phenotype
     database with
 
     `normalize_by` -- list of continuous measure names. Default value is
     an empty list
     """
 
-    def __init__(self, pheno_db, measure_id, person_ids_=[],
+    def __init__(self, pheno_db, measure_id, person_ids=None,
                  normalize_by=[]):
 
         self.pheno_db = pheno_db
@@ -128,10 +128,14 @@ class PhenoTool(object):
         all_measures = [self.measure_id] + self.normalize_by
 
         pheno_df = self.pheno_db.get_persons_values_df(
-            all_measures, person_ids=person_ids_, roles=[Role.prb])
+            all_measures, person_ids=person_ids, roles=[Role.prb])
 
-        self.pheno_df = self._normalize_df(pheno_df.dropna(), self.measure_id,
-                                           self.normalize_by)
+        self.pheno_df = pheno_df.dropna()
+
+        if not self.pheno_df.empty:
+            self.pheno_df = self._normalize_df(
+                self.pheno_df, self.measure_id, self.normalize_by
+            )
 
     def _init_normalize_measures(self, normalize_by):
         normalize_by = [self._get_normalize_measure_id(normalize_measure)
@@ -162,7 +166,9 @@ class PhenoTool(object):
 
     @staticmethod
     def join_pheno_df_with_variants(pheno_df, variants):
-        assert(isinstance(variants, Counter))
+        assert not pheno_df.empty
+        assert isinstance(variants, Counter)
+
         persons_variants = pd.DataFrame(
             data=list(variants.items()),
             columns=['person_id', 'variant_count'])
@@ -175,6 +181,11 @@ class PhenoTool(object):
 
     @staticmethod
     def _normalize_df(df, measure_id, normalize_by=[]):
+        assert not df.empty
+
+        assert measure_id in df
+        assert all([measure_id in df for measure_id in normalize_by])
+
         if not normalize_by:
             dn = pd.Series(
                 index=df.index, data=df[measure_id].values)
@@ -263,8 +274,13 @@ class PhenoTool(object):
         is `False`.
 
         """
-        merged_df = PhenoTool.join_pheno_df_with_variants(self.pheno_df,
-                                                          variants)
+        if not self.pheno_df.empty:
+            merged_df = PhenoTool.join_pheno_df_with_variants(
+                self.pheno_df, variants
+            )
+        else:
+            merged_df = self.pheno_df
+
         if not sex_split:
             return self._calc_stats(merged_df, None)
         else:

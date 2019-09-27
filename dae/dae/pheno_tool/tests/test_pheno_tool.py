@@ -17,6 +17,19 @@ def test_init_pheno_df(fake_pheno_db):
                                         'i1.m1', 'i1.m2', 'normalized'}
 
 
+def test_init_empty_person_ids(fake_pheno_db):
+    pheno_tool = PhenoTool(fake_pheno_db, 'i1.m1', person_ids=[])
+    assert pheno_tool
+
+
+def test_init_empty_person_ids_normalize(fake_pheno_db):
+    pheno_tool = PhenoTool(fake_pheno_db, 'i1.m1',
+                           person_ids=[],
+                           normalize_by=[{'instrument_name': 'i1',
+                                          'measure_name': 'm2'}])
+    assert pheno_tool
+
+
 def test_init_nonexistent_measure(fake_pheno_db):
     with pytest.raises(AssertionError):
         PhenoTool(fake_pheno_db, 'i1.??')
@@ -31,7 +44,7 @@ def test_init_non_continuous_or_ordinal_measure(fake_pheno_db):
 
 def test_init_with_person_ids(fake_pheno_db):
     pheno_tool = PhenoTool(fake_pheno_db, 'i1.m1',
-                           person_ids_=['f1.p1', 'f3.p1', 'f5.p1', 'f7.p1'])
+                           person_ids=['f1.p1', 'f3.p1', 'f5.p1', 'f7.p1'])
 
     assert set(pheno_tool.pheno_df['person_id']) == \
         set(['f1.p1', 'f3.p1', 'f5.p1', 'f7.p1'])
@@ -145,6 +158,13 @@ def test_join_pheno_df_with_variants_non_counter_variants():
             pd.DataFrame(columns=['person_id']), set())
 
 
+def test_join_pheno_df_with_empty_pheno_df():
+    pheno_df = pd.DataFrame([], columns=['person_id', 'measure_value'])
+    variants = Counter({112233: 1})
+    with pytest.raises(AssertionError):
+        PhenoTool.join_pheno_df_with_variants(pheno_df, variants)
+
+
 def test_normalize_df():
     pheno_df = pd.DataFrame([{'person_id': 112233, 'i1.m1': 1e6,
                               'i1.m2': 1e3},
@@ -179,6 +199,28 @@ def test_normalize_df_no_normalize_by():
                             columns=['person_id', 'i1.m1', 'normalized'])
     normalized = PhenoTool._normalize_df(pheno_df, 'i1.m1')
     assert pd.DataFrame.equals(normalized, expected)
+
+
+def test_normalize_df_does_not_contain_measure_id():
+    pheno_df = pd.DataFrame([{'person_id': 112233, 'i1.m2': 1e6,
+                              'i1.m3': 1e3},
+                             {'person_id': 445566, 'i1.m2': 2e12,
+                              'i1.m3': 1e-3}],
+                            columns=['person_id', 'i1.m2', 'i1.m3'])
+
+    with pytest.raises(AssertionError):
+        PhenoTool._normalize_df(pheno_df, 'i1.m1', normalize_by=['i1.m2'])
+
+
+def test_normalize_df_does_not_contain_normalize_measure_id():
+    pheno_df = pd.DataFrame([{'person_id': 112233, 'i1.m1': 1e6,
+                              'i1.m2': 1e3},
+                             {'person_id': 445566, 'i1.m1': 2e12,
+                              'i1.m2': 1e-3}],
+                            columns=['person_id', 'i1.m1', 'i1.m2'])
+
+    with pytest.raises(AssertionError):
+        PhenoTool._normalize_df(pheno_df, 'i1.m1', normalize_by=['i1.m3'])
 
 
 def test_calc_base_stats():
@@ -331,3 +373,87 @@ def test_calc_split_by_sex(mocker, fake_pheno_db):
         pheno_tool._calc_stats.call_args_list[1][0]
     assert merged_df.equals(call_arg_df)
     assert call_arg_sex_split is Sex.F
+
+
+def test_calc_empty_pheno_df(fake_pheno_db):
+    pheno_tool = PhenoTool(fake_pheno_db, 'i1.m1', person_ids=[])
+    variants = Counter({
+        'f4.p1': 1, 'f5.p1': 1,
+        'f7.p1': 1, 'f10.p1': 1,
+        'f12.p1': 1, 'f16.p1': 1,
+        'f24.p1': 1, 'f25.p1': 1,
+        'f30.p1': 1, 'f32.p1': 1,
+    })
+
+    res = pheno_tool.calc(variants)
+    assert isinstance(res, PhenoResult)
+    assert res.positive_count == 0
+    assert res.positive_mean == 0
+    assert res.positive_deviation == 0
+    assert res.negative_count == 0
+    assert res.negative_mean == 0
+    assert res.negative_deviation == 0
+    assert res.pvalue == 'NA'
+
+    resM, resF = pheno_tool.calc(variants, sex_split=True).values()
+    assert isinstance(resM, PhenoResult)
+    assert isinstance(resF, PhenoResult)
+
+    assert resM.positive_count == 0
+    assert resM.positive_mean == 0
+    assert resM.positive_deviation == 0
+    assert resM.negative_count == 0
+    assert resM.negative_mean == 0
+    assert resM.negative_deviation == 0
+    assert resM.pvalue == 'NA'
+
+    assert resF.positive_count == 0
+    assert resF.positive_mean == 0
+    assert resF.positive_deviation == 0
+    assert resF.negative_count == 0
+    assert resF.negative_mean == 0
+    assert resF.negative_deviation == 0
+    assert resF.pvalue == 'NA'
+
+
+def test_calc_empty_variants(fake_pheno_db):
+    pheno_tool = PhenoTool(fake_pheno_db, 'i1.m1')
+    variants = Counter({})
+
+    res = pheno_tool.calc(variants)
+    assert isinstance(res, PhenoResult)
+    assert res.positive_count == 0
+    assert res.positive_mean == 0
+    assert res.positive_deviation == 0
+    assert res.negative_count == len(pheno_tool.pheno_df)
+    assert res.negative_mean
+    assert res.negative_deviation
+    assert res.pvalue == 'NA'
+
+    resM, resF = pheno_tool.calc(variants, sex_split=True).values()
+    assert isinstance(resM, PhenoResult)
+    assert isinstance(resF, PhenoResult)
+
+    assert resM.positive_count == 0
+    assert resM.positive_mean == 0
+    assert resM.positive_deviation == 0
+    assert resM.negative_count == res.negative_count - resF.negative_count
+    assert resM.negative_mean
+    assert resM.negative_deviation
+    assert resM.pvalue == 'NA'
+
+    assert resF.positive_count == 0
+    assert resF.positive_mean == 0
+    assert resF.positive_deviation == 0
+    assert resF.negative_count == res.negative_count - resM.negative_count
+    assert resF.negative_mean
+    assert resF.negative_deviation
+    assert resF.pvalue == 'NA'
+
+
+def test_normalize_df_by_empty_df(fake_pheno_db):
+    pheno_df = fake_pheno_db.get_persons_values_df(
+        ['i1.m1', 'i1.m2'], person_ids=[])
+
+    with pytest.raises(AssertionError):
+        PhenoTool._normalize_df(pheno_df, 'i1.m1', 'i1.m2')
