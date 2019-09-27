@@ -125,11 +125,11 @@ structure:
 Run GPF web server
 ##################
 
-Enter into ``gpf_test/wdae`` and source ``setenv.sh`` file:
+Enter into ``gpf_test/`` and source ``setenv.sh`` file:
 
 .. code-block:: bash
 
-    cd gpf_test/wdae
+    cd gpf_test/
     source ./setenv.sh
 
 You are now ready to run the GPF development web server:
@@ -190,14 +190,29 @@ Apache Impala container is ready for use the script will print a message::
 
     ...
     ===============================================
-    GPF Apache Impala container is READY...
+    Local GPF Apache Impala container is READY...
     ===============================================
 
 
 .. note::
-    In case you need to stop this containeryou can
+    In case you need to stop this container you can
     use Docker comands `docker stop gpf_impala`. For starting the `gpf_impala`
     container use `run_gpf_impala.sh`.
+
+.. note::
+    Here is a list of some useful Docker commands:
+
+        - `docker ps` shows all running docker containers;
+
+        - `docker logs -f gpf_impala` shows log from `gpf_impala` container;
+
+        - `docker stop gpf_impala` stops the running `gpf_impala` container;
+
+        - `docker start gpf_impala` starts existing stopped `gpf_impala`
+          container;
+        
+        - `docker rm gpf_impala` removes existing and stopped `gpf_impala`
+          container.
 
 .. note::
     Following ports are used by `gpf_impala` container:
